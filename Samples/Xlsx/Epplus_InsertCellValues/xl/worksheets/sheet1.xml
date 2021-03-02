@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<worksheet xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+    xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+    <dimension ref="A1:B2" />
+    <sheetViews>
+        <sheetView workbookViewId="0" />
+    </sheetViews>
+    <sheetFormatPr defaultRowHeight="15" />
+    <sheetData>
+        <row r="1">
+            <c r="A1" s="0" t="s">
+                <v>0</v>
+            </c>
+            <c r="B1" s="0">
+                <v>44257.384891898146</v>
+            </c>
+        </row>
+        <row r="2">
+            <c r="A2" s="0">
+                <f>=MID(A1, 7, 5)</f>
+            </c>
+            <c r="B2" s="0">
+                <v>123</v>
+            </c>
+        </row>
+    </sheetData>
+    <headerFooter />
+</worksheet>

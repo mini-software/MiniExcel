@@ -1,0 +1,37 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+    <numFmts count="0" />
+    <fonts count="1">
+        <font>
+            <sz val="11" />
+            <name val="Calibri" />
+        </font>
+    </fonts>
+    <fills count="2">
+        <fill>
+            <patternFill patternType="none" />
+        </fill>
+        <fill>
+            <patternFill patternType="gray125" />
+        </fill>
+    </fills>
+    <borders count="1">
+        <border>
+            <left />
+            <right />
+            <top />
+            <bottom />
+            <diagonal />
+        </border>
+    </borders>
+    <cellStyleXfs count="1">
+        <xf numFmtId="0" fontId="0" />
+    </cellStyleXfs>
+    <cellXfs count="1">
+        <xf numFmtId="0" applyNumberFormat="1" fontId="0" applyFont="1" xfId="0" applyProtection="1" />
+    </cellXfs>
+    <cellStyles count="1">
+        <cellStyle name="Normal" xfId="0" builtinId="0" />
+    </cellStyles>
+    <dxfs count="0" />
+</styleSheet>

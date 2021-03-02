@@ -11,32 +11,55 @@
   <Namespace>System.IO.Compression</Namespace>
   <Namespace>System.Net.Http</Namespace>
   <Namespace>System.Threading.Tasks</Namespace>
+  <Namespace>System.IO.Packaging</Namespace>
 </Query>
 
 void Main()
 {
+	//Read();
+	Create();
+}
+
+void Read()
+{
+	//
+	{
+		// idea from : [Reading and Writing to Excel 2007 or Excel 2010 from C# - Part II: Basics | Robert MacLean](https://www.sadev.co.za/content/reading-and-writing-excel-2007-or-excel-2010-c-part-ii-basics)
+		Package xlsxPackage = Package.Open(@"D:\git\MiniExcel\Samples\Xlsx\OpenXmlSDK_InsertCellValues\OpenXmlSDK_InsertCellValues.xlsx", FileMode.Open, FileAccess.ReadWrite);
+		var allParts = xlsxPackage.GetParts().ToList();
+		PackagePart worksheetPart = (from part in allParts
+										 where part.ContentType.Equals("application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml")
+										 select part).FirstOrDefault();
+		XElement worksheet = XElement.Load(XmlReader.Create(worksheetPart.GetStream()));
+
+	}
+}
+
+void Create()
+{
 	var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
 	Console.WriteLine(path);
 
-	MiniExcelHelper.CreateEmptyFie(path);
+	//MiniExcelHelper.CreateEmptyFie(path);
 	//MiniExcelHelper.Create(path, new[] {1,2,3,4,5});
-	//MiniExcelHelper.Create(path, new[] { new { x = "<", y = 12}, new { x = ">", y = 22} });
-	//MiniExcelHelper.Create(path, new[] {
-	//	new { a = "Hello World", b = 1234567890,c = true,d=DateTime.Now },
-	//	new { a = "<test></test>", b = -1234567890,c=false,d=DateTime.Now.Date}
-	//});
+	MiniExcelHelper.Create(path, new[] {
+		new { a = @"""<>+-*//}{\\n", b = 1234567890,c = true,d=DateTime.Now },
+		new { a = "<test>Hello World</test>", b = -1234567890,c=false,d=DateTime.Now.Date}
+	});
 
 	// TODO: Dapper Row
 
 	// TODO: Dictionary
 
 	// TODO: Datatable
-	ProcessStartInfo psi = new ProcessStartInfo
-	{
-		FileName = path,
-		UseShellExecute = true
-	};
-	Process.Start(psi);
+	
+	
+	//ProcessStartInfo psi = new ProcessStartInfo
+	//{
+	//	FileName = path,
+	//	UseShellExecute = true
+	//};
+	//Process.Start(psi);
 }
 
 namespace MiniExcel
@@ -47,18 +70,18 @@ namespace MiniExcel
 	using System.Text;
 	using MiniExcel;
 
-	public class MiniExcelHelper
+	public static class MiniExcelHelper
 	{
 		public static Dictionary<string, object> GetDefaultFilesTree()
 		{
 			return new Dictionary<string, object>()
 			{
-				{"[Content_Types].xml",defaultContent_TypesXml},
-				{@"_rels\.rels",defaultRels},
-				{@"xl\_rels\workbook.xml.rels",defaultWorkbookXmlRels},
-				{@"xl\styles.xml",defaultStylesXml},
-				{@"xl\workbook.xml",defaultWorkbookXml},
-				{@"xl\worksheets\sheet1.xml",defaultSheetXml},
+				{"[Content_Types].xml",DefualtXml.defaultContent_TypesXml},
+				{@"_rels\.rels",DefualtXml.defaultRels},
+				{@"xl\_rels\workbook.xml.rels",DefualtXml.defaultWorkbookXmlRels},
+				{@"xl\styles.xml",DefualtXml.defaultStylesXml},
+				{@"xl\workbook.xml",DefualtXml.defaultWorkbookXml},
+				{@"xl\worksheets\sheet1.xml",DefualtXml.defaultSheetXml},
 			};
 		}
 
@@ -92,7 +115,7 @@ namespace MiniExcel
 						foreach (var p in props)
 						{
 							var columname = Helper.ConvertXyToCell(xIndex, yIndex);
-							sb.Append($"<x:c t=\"str\">");
+							sb.Append($"<x:c r=\"{columname}\" t=\"str\">");
 							sb.Append($"<x:v>{p.Name}");
 							sb.Append($"</x:v>");
 							sb.Append($"</x:c>");
@@ -179,23 +202,25 @@ namespace MiniExcel
 			}
 		}
 
-		private const string defaultRels = @"<?xml version=""1.0"" encoding=""utf-8""?>
+		internal static class DefualtXml
+		{
+			internal const string defaultRels = @"<?xml version=""1.0"" encoding=""utf-8""?>
 <Relationships xmlns=""http://schemas.openxmlformats.org/package/2006/relationships"">
     <Relationship Type=""http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument"" Target=""/xl/workbook.xml"" Id=""Rfc2254092b6248a9"" />
 </Relationships>";
 
-		private const string defaultSheetXml = @"<?xml version=""1.0"" encoding=""utf-8""?>
+			internal const string defaultSheetXml = @"<?xml version=""1.0"" encoding=""utf-8""?>
 <x:worksheet xmlns:x=""http://schemas.openxmlformats.org/spreadsheetml/2006/main"">
     <x:sheetData>
     </x:sheetData>
 </x:worksheet>";
-		private const string defaultWorkbookXmlRels = @"<?xml version=""1.0"" encoding=""utf-8""?>
+			internal const string defaultWorkbookXmlRels = @"<?xml version=""1.0"" encoding=""utf-8""?>
 <Relationships xmlns=""http://schemas.openxmlformats.org/package/2006/relationships"">
     <Relationship Type=""http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet"" Target=""/xl/worksheets/sheet1.xml"" Id=""R1274d0d920f34a32"" />
     <Relationship Type=""http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles"" Target=""/xl/styles.xml"" Id=""R3db9602ace774fdb"" />
 </Relationships>";
 
-		private const string defaultStylesXml = @"<?xml version=""1.0"" encoding=""utf-8""?>
+			internal const string defaultStylesXml = @"<?xml version=""1.0"" encoding=""utf-8""?>
 <x:styleSheet xmlns:x=""http://schemas.openxmlformats.org/spreadsheetml/2006/main"">
     <x:fonts>
         <x:font />
@@ -215,7 +240,7 @@ namespace MiniExcel
     </x:cellXfs>
 </x:styleSheet>";
 
-		private const string defaultWorkbookXml = @"<?xml version=""1.0"" encoding=""utf-8""?>
+			internal const string defaultWorkbookXml = @"<?xml version=""1.0"" encoding=""utf-8""?>
 <x:workbook xmlns:r=""http://schemas.openxmlformats.org/officeDocument/2006/relationships""
     xmlns:x=""http://schemas.openxmlformats.org/spreadsheetml/2006/main"">
     <x:sheets>
@@ -223,28 +248,27 @@ namespace MiniExcel
     </x:sheets>
 </x:workbook>";
 
-		private const string defaultContent_TypesXml = @"<?xml version=""1.0"" encoding=""utf-8""?>
+			internal const string defaultContent_TypesXml = @"<?xml version=""1.0"" encoding=""utf-8""?>
 <Types xmlns=""http://schemas.openxmlformats.org/package/2006/content-types"">
     <Default Extension=""xml"" ContentType=""application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"" />
     <Default Extension=""rels"" ContentType=""application/vnd.openxmlformats-package.relationships+xml"" />
     <Override PartName=""/xl/worksheets/sheet1.xml"" ContentType=""application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"" />
     <Override PartName=""/xl/styles.xml"" ContentType=""application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"" />
 </Types>";
+		}
 
-
-
-		private static class Helper
+		internal static class Helper
 		{
-			public static string GetValue(object value) => value == null ? "" : value.ToString().Replace("<", "&lt;").Replace(">", "&gt;");
+			internal static string GetValue(object value) => value == null ? "" : value.ToString().Replace("<", "&lt;").Replace(">", "&gt;");
 
 			/// <summary>X=CellLetter,Y=CellNumber,ex:A1=(1,1),B2=(2,2)</summary>
-			public static string ConvertXyToCell(Tuple<int, int> xy)
+			internal static string ConvertXyToCell(Tuple<int, int> xy)
 			{
 				return ConvertXyToCell(xy.Item1, xy.Item2);
 			}
 
 			/// <summary>X=CellLetter,Y=CellNumber,ex:A1=(1,1),B2=(2,2)</summary>
-			public static string ConvertXyToCell(int x, int y)
+			internal static string ConvertXyToCell(int x, int y)
 			{
 				int dividend = x;
 				string columnName = String.Empty;
@@ -260,7 +284,7 @@ namespace MiniExcel
 			}
 
 			/// <summary>X=CellLetter,Y=CellNumber,ex:A1=(1,1),B2=(2,2)</summary>
-			public static Tuple<int, int> ConvertCellToXY(string cell)
+			internal static Tuple<int, int> ConvertCellToXY(string cell)
 			{
 				const string keys = " ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 				const int mode = 26;
@@ -275,7 +299,7 @@ namespace MiniExcel
 				return Tuple.Create(x, int.Parse(cellNumber));
 			}
 
-			public static string GetCellNumber(string cell)
+			internal static string GetCellNumber(string cell)
 			{
 				string cellNumber = string.Empty;
 				for (int i = 0; i < cell.Length; i++)
@@ -286,7 +310,7 @@ namespace MiniExcel
 				return cellNumber;
 			}
 
-			public static string GetCellLetter(string cell)
+			internal static string GetCellLetter(string cell)
 			{
 				string GetCellLetter = string.Empty;
 				for (int i = 0; i < cell.Length; i++)

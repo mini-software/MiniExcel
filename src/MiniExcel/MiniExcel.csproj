@@ -11,7 +11,7 @@
     <PackageProjectUrl>https://github.com/shps951023/MiniExcel</PackageProjectUrl>
     <PackageIconUrl>https://raw.githubusercontent.com/shps951023/ImageHosting/master/img/2019-01-17.13.18.32-image.png</PackageIconUrl>
     <TargetFrameworks>net461;netstandard2.0;net5.0</TargetFrameworks>
-    <Version>0.0.1</Version>
+    <Version>0.0.1-beta</Version>
     <PackageReleaseNotes></PackageReleaseNotes>
     <RepositoryType>Github</RepositoryType>
   </PropertyGroup>

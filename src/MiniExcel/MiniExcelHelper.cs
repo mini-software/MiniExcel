@@ -21,7 +21,7 @@
 
         public static void Create(string path, object value, string startCell = "A1", bool printHeader = true)
         {
-            var xy = CellUtil.ConvertCellToXY(startCell);
+            var xy = XlsxUtils.ConvertCellToXY(startCell);
 
             var filesTree = DefaultFilesTree;
             {
@@ -48,7 +48,7 @@
                         var xIndex = xy.Item1;
                         foreach (var p in props)
                         {
-                            var columname = CellUtil.ConvertXyToCell(xIndex, yIndex);
+                            var columname = XlsxUtils.ConvertXyToCell(xIndex, yIndex);
                             sb.Append($"<x:c r=\"{columname}\" t=\"str\">");
                             sb.Append($"<x:v>{p.Name}");
                             sb.Append($"</x:v>");
@@ -66,7 +66,7 @@
                         foreach (var p in props)
                         {
                             var cellValue = p.GetValue(v);
-                            var cellValueStr = CellUtil.GetValue(cellValue);
+                            var cellValueStr = XlsxUtils.GetValue(cellValue);
                             var t = "t=\"str\"";
                             {
                                 if (decimal.TryParse(cellValueStr, out var outV))
@@ -82,7 +82,7 @@
                                     cellValueStr = ((DateTime)cellValue).ToOADate().ToString();
                                 }
                             }
-                            var columname = CellUtil.ConvertXyToCell(xIndex, yIndex);
+                            var columname = XlsxUtils.ConvertXyToCell(xIndex, yIndex);
                             sb.Append($"<x:c r=\"{columname}\" {t}>");
                             sb.Append($"<x:v>{cellValueStr}");
                             sb.Append($"</x:v>");
@@ -99,7 +99,8 @@
 <x:sheetData>{sb.ToString()}</x:sheetData>
 </x:worksheet>";
             }
-            CreateZipFileStream(path, filesTree);
+
+            CreateXlsxFile(path, filesTree);
         }
 
         public static Dictionary<string, object> Read(string fileName)
@@ -169,7 +170,7 @@
             return XElement.Load(XmlReader.Create(worksheetPart.GetStream()));
         }
 
-        private static FileStream CreateZipFileStream(string path, Dictionary<string, ZipPackageInfo> zipPackageInfos)
+        private static void CreateXlsxFile(string path, Dictionary<string, ZipPackageInfo> zipPackageInfos)
         {
             using (FileStream stream = new FileStream(path, FileMode.CreateNew))
             using (Package zip = System.IO.Packaging.ZipPackage.Open(stream, FileMode.OpenOrCreate))
@@ -185,12 +186,11 @@
                         foreach (var b in bytes)
                             dest.WriteByte(b);
                 }
-                return stream;
             }
         }
     }
 
-    internal static class CellUtil
+    internal static class XlsxUtils
     {
         internal static string GetValue(object value) => value == null ? "" : value.ToString().Replace("<", "&lt;").Replace(">", "&gt;");
 

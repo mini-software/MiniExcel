@@ -11,4 +11,10 @@
 
 You can install the package [from NuGet](https://www.nuget.org/packages/MiniExcel)
 
+### TODO
 
+Please Check [Issues · todo](https://github.com/shps951023/MiniExcel/labels/todo)
+
+## Release Notes
+
+Please Check [Release Notes](https://github.com/shps951023/MiniExcel/tree/master/docs)

@@ -1,4 +1,4 @@
-# ![Logo](https://raw.githubusercontent.com/shps951023/ImageHosting/master/img/2019-01-17.13.18.32-image.png) MiniExcel.NET
+# <img src="https://raw.githubusercontent.com/shps951023/ImageHosting/master/img/2019-01-17.13.18.32-image.png" style="width: 40px;"/> MiniExcel.NET
 
 | [![NuGet](https://img.shields.io/nuget/v/MiniExcel.svg)](https://www.nuget.org/packages/MiniExcel) | ![](https://img.shields.io/nuget/dt/MiniExcel.svg) | 
 | -------- | -------- | 

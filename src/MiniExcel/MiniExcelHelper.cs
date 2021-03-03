@@ -3,7 +3,7 @@
     using System;
     using System.Collections.Generic;
     using System.IO;
-    using System.IO.Packaging;
+    using System.IO.Compression;
     using System.Linq;
     using System.Text;
     using System.Xml;
@@ -12,12 +12,39 @@
     {
         internal static Dictionary<string, ZipPackageInfo> DefaultFilesTree => new Dictionary<string, ZipPackageInfo>()
         {
-            { @"/_rels/.rels",new ZipPackageInfo(DefualtXml.defaultRels, "application/vnd.openxmlformats-package.relationships+xml")},
-            { @"/xl/_rels/workbook.xml.rels",new ZipPackageInfo(DefualtXml.defaultWorkbookXmlRels, "application/vnd.openxmlformats-package.relationships+xml")},
-            { @"/xl/styles.xml",new ZipPackageInfo(DefualtXml.defaultStylesXml, "application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml")},
-            { @"/xl/workbook.xml",new ZipPackageInfo(DefualtXml.defaultWorkbookXml, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml")},
-            { @"/xl/worksheets/sheet1.xml",new ZipPackageInfo(DefualtXml.defaultSheetXml, "application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml")},
+            { @"_rels/.rels",new ZipPackageInfo(DefualtXml.defaultRels, "application/vnd.openxmlformats-package.relationships+xml")},
+            { @"xl/_rels/workbook.xml.rels",new ZipPackageInfo(DefualtXml.defaultWorkbookXmlRels, "application/vnd.openxmlformats-package.relationships+xml")},
+            { @"xl/styles.xml",new ZipPackageInfo(DefualtXml.defaultStylesXml, "application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml")},
+            { @"xl/workbook.xml",new ZipPackageInfo(DefualtXml.defaultWorkbookXml, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml")},
+            { @"xl/worksheets/sheet1.xml",new ZipPackageInfo(DefualtXml.defaultSheetXml, "application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml")},
         };
+
+        private static FileStream CreateZipFileStream(string path, Dictionary<string, object> filesTree)
+        {
+            var utf8WithBom = new System.Text.UTF8Encoding(true);  // 用true来指定包含bom
+            using (FileStream stream = new FileStream(path, FileMode.CreateNew))
+            {
+                using (ZipArchive archive = new ZipArchive(stream, ZipArchiveMode.Create, false, UTF8Encoding.UTF8))
+                {
+                    foreach (var fileTree in filesTree)
+                    {
+                        ZipArchiveEntry entry = archive.CreateEntry(fileTree.Key);
+                        using (var zipStream = entry.Open())
+                        {
+                            //var bytes = utf8WithBom.GetBytes(fileTree.Value.ToString());
+                            //zipStream.Write(bytes, 0, bytes.Length);
+
+                            using (StreamWriter writer = new StreamWriter(zipStream, utf8WithBom))
+                            {
+                                writer.Write(fileTree.Value.ToString()); //entry contents "baz123"
+                            }
+                        }
+
+                    }
+                }
+                return stream;
+            }
+        }
 
         public static void Create(string path, object value, string startCell = "A1", bool printHeader = true)
         {
@@ -94,7 +121,7 @@
                     }
                 }
 
-                filesTree[@"/xl/worksheets/sheet1.xml"].Xml = $@"<?xml version=""1.0"" encoding=""utf-8""?>
+                filesTree[@"xl/worksheets/sheet1.xml"].Xml = $@"<?xml version=""1.0"" encoding=""utf-8""?>
 <x:worksheet xmlns:x=""http://schemas.openxmlformats.org/spreadsheetml/2006/main"">
 <x:sheetData>{sb.ToString()}</x:sheetData>
 </x:worksheet>";
@@ -103,88 +130,103 @@
             CreateXlsxFile(path, filesTree);
         }
 
-        public static Dictionary<string, object> Read(string fileName)
-        {
-            var parsedCells = new Dictionary<string, object>();
-            using (Package xlsxPackage = Package.Open(fileName, FileMode.Open, FileAccess.Read))
-            {
-                var allParts = xlsxPackage.GetParts();
+        //public static Dictionary<string, object> Read(string fileName)
+        //{
+        //    var parsedCells = new Dictionary<string, object>();
+        //    using (Package xlsxPackage = Package.Open(fileName, FileMode.Open, FileAccess.Read))
+        //    {
+        //        var allParts = xlsxPackage.GetParts();
 
 
-                var worksheetElement = GetFirstWorksheet(allParts);
-                var cells = from c in worksheetElement.Descendants(ExcelNamespaces.excelNamespace + "c")
-                            select c;
+        //        var worksheetElement = GetFirstWorksheet(allParts);
+        //        var cells = from c in worksheetElement.Descendants(ExcelNamespaces.excelNamespace + "c")
+        //                    select c;
 
-                var sharedStrings = GetSharedStrings(allParts);
-                foreach (XElement cell in cells)
-                {
-                    var r = cell.Attribute("r");
-                    {
-                        var cellPosition = r.Value;
-                        var v = cell.Descendants(ExcelNamespaces.excelNamespace + "v").SingleOrDefault()?.Value;
-                        var t = cell.Attribute("t")?.Value;
-                        if (t == "s")
-                        {
-                            parsedCells.Add(cellPosition, sharedStrings[Convert.ToInt32(v)]);
-                        }
-                        else
-                        {
-                            parsedCells.Add(cellPosition, v);
-                        }
-                    }
+        //        var sharedStrings = GetSharedStrings(allParts);
+        //        foreach (XElement cell in cells)
+        //        {
+        //            var r = cell.Attribute("r");
+        //            {
+        //                var cellPosition = r.Value;
+        //                var v = cell.Descendants(ExcelNamespaces.excelNamespace + "v").SingleOrDefault()?.Value;
+        //                var t = cell.Attribute("t")?.Value;
+        //                if (t == "s")
+        //                {
+        //                    parsedCells.Add(cellPosition, sharedStrings[Convert.ToInt32(v)]);
+        //                }
+        //                else
+        //                {
+        //                    parsedCells.Add(cellPosition, v);
+        //                }
+        //            }
 
-                }
-            }
+        //        }
+        //    }
 
-            return parsedCells;
-        }
+        //    return parsedCells;
+        //}
 
-        private static Dictionary<int, string> GetSharedStrings(PackagePartCollection allParts)
-        {
-            var sharedStringsPart = (from part in allParts
-                                     where part.ContentType.Equals("application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml")
-                                     select part).SingleOrDefault();
-            if (sharedStringsPart == null)
-                return null;
+        //private static Dictionary<int, string> GetSharedStrings(PackagePartCollection allParts)
+        //{
+        //    var sharedStringsPart = (from part in allParts
+        //                             where part.ContentType.Equals("application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml")
+        //                             select part).SingleOrDefault();
+        //    if (sharedStringsPart == null)
+        //        return null;
 
 
-            Dictionary<int, string> sharedStrings = new Dictionary<int, string>();
-            var sharedStringsElement = XElement.Load(XmlReader.Create(sharedStringsPart.GetStream()));
-            IEnumerable<XElement> sharedStringsElements = from s in sharedStringsElement.Descendants(ExcelNamespaces.excelNamespace + "t")
-                                                          select s;
-            int Counter = 0;
-            foreach (XElement sharedString in sharedStringsElements)
-            {
-                sharedStrings.Add(Counter, sharedString.Value);
-                Counter++;
-            }
-            return sharedStrings;
-        }
+        //    Dictionary<int, string> sharedStrings = new Dictionary<int, string>();
+        //    var sharedStringsElement = XElement.Load(XmlReader.Create(sharedStringsPart.GetStream()));
+        //    IEnumerable<XElement> sharedStringsElements = from s in sharedStringsElement.Descendants(ExcelNamespaces.excelNamespace + "t")
+        //                                                  select s;
+        //    int Counter = 0;
+        //    foreach (XElement sharedString in sharedStringsElements)
+        //    {
+        //        sharedStrings.Add(Counter, sharedString.Value);
+        //        Counter++;
+        //    }
+        //    return sharedStrings;
+        //}
 
-        private static XElement GetFirstWorksheet(PackagePartCollection allParts)
-        {
-            PackagePart worksheetPart = (from part in allParts
-                                         where part.ContentType.Equals("application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml")
-                                         select part).FirstOrDefault();
+        //private static XElement GetFirstWorksheet(PackagePartCollection allParts)
+        //{
+        //    PackagePart worksheetPart = (from part in allParts
+        //                                 where part.ContentType.Equals("application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml")
+        //                                 select part).FirstOrDefault();
 
-            return XElement.Load(XmlReader.Create(worksheetPart.GetStream()));
-        }
+        //    return XElement.Load(XmlReader.Create(worksheetPart.GetStream()));
+        //}
 
+        private readonly static UTF8Encoding _utf8WithBom = new System.Text.UTF8Encoding(true);
         private static void CreateXlsxFile(string path, Dictionary<string, ZipPackageInfo> zipPackageInfos)
         {
-            using (FileStream stream = new FileStream(path, FileMode.CreateNew))
-            using (Package zip = System.IO.Packaging.ZipPackage.Open(stream, FileMode.OpenOrCreate))
+            using (FileStream stream = new FileStream(path, FileMode.CreateNew))  
+            using (ZipArchive archive = new ZipArchive(stream, ZipArchiveMode.Create, false, UTF8Encoding.UTF8))
             {
+                //[Content_Types].xml
+                {
+                    var sb = new StringBuilder(@"<?xml version=""1.0"" encoding=""UTF-8"" standalone=""yes""?>
+<Types xmlns=""http://schemas.openxmlformats.org/package/2006/content-types"">
+    <Default ContentType=""application/xml"" Extension=""xml""/>
+    <Default ContentType=""application/vnd.openxmlformats-package.relationships+xml"" Extension=""rels""/>");
+                    foreach (var p in zipPackageInfos)
+                    {
+                        sb.AppendLine($"<Override ContentType=\"{p.Value.ContentType}\" PartName=\"/{p.Key}\" />");
+                    }
+                    sb.AppendLine("</Types>");
+
+                    ZipArchiveEntry entry = archive.CreateEntry("[Content_Types].xml");
+                    using (var zipStream = entry.Open())
+                    using (StreamWriter writer = new StreamWriter(zipStream, _utf8WithBom))
+                        writer.Write(sb.ToString());
+                }
+
                 foreach (var p in zipPackageInfos)
                 {
-                    Uri uri = PackUriHelper.CreatePartUri(new Uri(p.Key, UriKind.Relative));
-                    if (zip.PartExists(uri))
-                        zip.DeletePart(uri);
-                    PackagePart part = zip.CreatePart(uri, p.Value.ContentType, p.Value.CompressionOption);
-                    var bytes = Encoding.ASCII.GetBytes(p.Value.Xml.ToString());
-                    using (Stream dest = part.GetStream())
-                        foreach (var b in bytes)
-                            dest.WriteByte(b);
+                    ZipArchiveEntry entry = archive.CreateEntry(p.Key);
+                    using (var zipStream = entry.Open())
+                    using (StreamWriter writer = new StreamWriter(zipStream, _utf8WithBom))
+                        writer.Write(p.Value.Xml.ToString());
                 }
             }
         }

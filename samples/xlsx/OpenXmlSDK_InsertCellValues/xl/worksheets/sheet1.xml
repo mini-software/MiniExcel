@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<x:worksheet xmlns:x="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+    <x:sheetData>
+        <x:row>
+            <x:c t="n">
+                <x:v>1</x:v>
+            </x:c>
+            <x:c t="str">
+                <x:v>"&lt;&gt;+}{\nHello World</x:v>
+            </x:c>
+            <x:c t="b">
+                <x:v>1</x:v>
+            </x:c>
+            <x:c t="d">
+                <x:v>2021-03-02T08:47:12</x:v>
+            </x:c>
+        </x:row>
+        <x:row>
+            <x:c t="n">
+                <x:v>1</x:v>
+            </x:c>
+            <x:c t="str">
+                <x:v>"&lt;&gt;+}{\nHello World</x:v>
+            </x:c>
+            <x:c t="b">
+                <x:v>1</x:v>
+            </x:c>
+            <x:c t="d">
+                <x:v>2021-03-02T08:47:12</x:v>
+            </x:c>
+        </x:row>
+    </x:sheetData>
+</x:worksheet>

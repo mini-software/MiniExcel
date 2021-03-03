@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<table xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="xr xr3"
+    xmlns:xr="http://schemas.microsoft.com/office/spreadsheetml/2014/revision"
+    xmlns:xr3="http://schemas.microsoft.com/office/spreadsheetml/2016/revision3" id="1" xr:uid="{9C58A101-3C77-4989-9FCA-74828397CC61}" name="Table1" displayName="Table1" ref="A1:C3" totalsRowShown="0">
+    <autoFilter ref="A1:C3" xr:uid="{939768B6-0C64-4D34-9336-C7F652B5CA48}"/>
+    <tableColumns count="3">
+        <tableColumn id="1" xr3:uid="{0A9B5E5B-D870-4411-94E1-E37976552221}" name="A"/>
+        <tableColumn id="2" xr3:uid="{AC8D6872-3AF8-46B7-B8CA-B5B35AC186B9}" name="B"/>
+        <tableColumn id="3" xr3:uid="{CB40C861-B6BE-4427-A96C-E0CAC768D949}" name="C"/>
+    </tableColumns>
+    <tableStyleInfo name="TableStyleMedium2" showFirstColumn="0" showLastColumn="0" showRowStripes="1" showColumnStripes="0"/>
+</table>

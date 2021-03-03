@@ -1,4 +1,3 @@
-~$*
 /*.suo
 .vs/
 .vscode/
@@ -15,10 +14,5 @@ NuGet.exe
 *.ide/
 *.lock.json
 *.coverage
-Test.DB.*
-TestResults/
-Dapper.Tests/*.sdf
-Dapper.Tests/SqlServerTypes/
 .dotnet/*
-BenchmarkDotNet.Artifacts/
 .idea/

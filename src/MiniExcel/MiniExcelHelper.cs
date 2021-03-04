@@ -6,51 +6,23 @@
     using System.IO.Compression;
     using System.Linq;
     using System.Text;
-    using System.Xml;
     using System.Xml.Linq;
-    public static class MiniExcelHelper
+    public static partial class MiniExcelHelper
     {
-        internal static Dictionary<string, ZipPackageInfo> DefaultFilesTree => new Dictionary<string, ZipPackageInfo>()
+        private static Dictionary<string, ZipPackageInfo> GetDefaultFiles() => new Dictionary<string, ZipPackageInfo>()
         {
-            { @"_rels/.rels",new ZipPackageInfo(DefualtXml.defaultRels, "application/vnd.openxmlformats-package.relationships+xml")},
-            { @"xl/_rels/workbook.xml.rels",new ZipPackageInfo(DefualtXml.defaultWorkbookXmlRels, "application/vnd.openxmlformats-package.relationships+xml")},
-            { @"xl/styles.xml",new ZipPackageInfo(DefualtXml.defaultStylesXml, "application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml")},
-            { @"xl/workbook.xml",new ZipPackageInfo(DefualtXml.defaultWorkbookXml, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml")},
-            { @"xl/worksheets/sheet1.xml",new ZipPackageInfo(DefualtXml.defaultSheetXml, "application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml")},
+            { @"_rels/.rels",new ZipPackageInfo(DefualtXml.DefaultRels, "application/vnd.openxmlformats-package.relationships+xml")},
+            { @"xl/_rels/workbook.xml.rels",new ZipPackageInfo(DefualtXml.DefaultWorkbookXmlRels, "application/vnd.openxmlformats-package.relationships+xml")},
+            { @"xl/styles.xml",new ZipPackageInfo(DefualtXml.DefaultStylesXml, "application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml")},
+            { @"xl/workbook.xml",new ZipPackageInfo(DefualtXml.DefaultWorkbookXml, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml")},
+            { @"xl/worksheets/sheet1.xml",new ZipPackageInfo(DefualtXml.DefaultSheetXml, "application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml")},
         };
 
-        private static FileStream CreateZipFileStream(string path, Dictionary<string, object> filesTree)
-        {
-            var utf8WithBom = new System.Text.UTF8Encoding(true);  // 用true来指定包含bom
-            using (FileStream stream = new FileStream(path, FileMode.CreateNew))
-            {
-                using (ZipArchive archive = new ZipArchive(stream, ZipArchiveMode.Create, false, UTF8Encoding.UTF8))
-                {
-                    foreach (var fileTree in filesTree)
-                    {
-                        ZipArchiveEntry entry = archive.CreateEntry(fileTree.Key);
-                        using (var zipStream = entry.Open())
-                        {
-                            //var bytes = utf8WithBom.GetBytes(fileTree.Value.ToString());
-                            //zipStream.Write(bytes, 0, bytes.Length);
-
-                            using (StreamWriter writer = new StreamWriter(zipStream, utf8WithBom))
-                            {
-                                writer.Write(fileTree.Value.ToString()); //entry contents "baz123"
-                            }
-                        }
-
-                    }
-                }
-                return stream;
-            }
-        }
-
-        public static void Create(string path, object value, string startCell = "A1", bool printHeader = true)
+        public static void Create(string filePath, object value, string startCell = "A1", bool printHeader = true)
         {
             var xy = XlsxUtils.ConvertCellToXY(startCell);
 
-            var filesTree = DefaultFilesTree;
+            var defaultFiles = GetDefaultFiles();
             {
                 var sb = new StringBuilder();
 
@@ -121,86 +93,88 @@
                     }
                 }
 
-                filesTree[@"xl/worksheets/sheet1.xml"].Xml = $@"<?xml version=""1.0"" encoding=""utf-8""?>
+                defaultFiles[@"xl/worksheets/sheet1.xml"].Xml = $@"<?xml version=""1.0"" encoding=""utf-8""?>
 <x:worksheet xmlns:x=""http://schemas.openxmlformats.org/spreadsheetml/2006/main"">
 <x:sheetData>{sb.ToString()}</x:sheetData>
 </x:worksheet>";
             }
 
-            CreateXlsxFile(path, filesTree);
+            CreateXlsxFile(filePath, defaultFiles);
         }
 
-        //public static Dictionary<string, object> Read(string fileName)
-        //{
-        //    var parsedCells = new Dictionary<string, object>();
-        //    using (Package xlsxPackage = Package.Open(fileName, FileMode.Open, FileAccess.Read))
-        //    {
-        //        var allParts = xlsxPackage.GetParts();
+        public static XlsxWorkbook Read(string path)
+        {
+            using (FileStream stream = new FileStream(path, FileMode.Open))
+            using (ZipArchive archive = new ZipArchive(stream, ZipArchiveMode.Read, false, UTF8Encoding.UTF8))
+            {
+                return GetXlsxWorkbook(archive);
+            }
+        }
+
+        private static string ConvertToString(ZipArchiveEntry entry)
+        {
+            using (var eStream = entry.Open())
+            using (var reader = new StreamReader(eStream))
+                return reader.ReadToEnd();
+        }
+
+        private static XlsxWorkbook GetXlsxWorkbook(ZipArchive archive)
+        {
+            XlsxWorkbook w = new XlsxWorkbook();
+            {
+                var xml = ConvertToString(archive.Entries.SingleOrDefault(s => s.FullName == ("xl/workbook.xml")));
+                var xl = XElement.Parse(xml);
+                var xSheets = xl.Descendants(ExcelNamespaces.excelNamespace + "sheet").Select(s => new
+                {
+                    name = s.Attribute("name")?.Value?.ToString(),
+                    sheetId = s.Attribute("sheetId")?.Value?.ToString(),
+                    id = s.Attribute("id")?.Value?.ToString()
+                });
+
+                var wss = new List<XlsxWorksheet>();
+                w.Worksheets = wss;
+                foreach (var xs in xSheets)
+                {
+                    var e = archive.Entries.SingleOrDefault(s => s.FullName == ($"xl/worksheets/{xs.name.ToLowerInvariant()}.xml"));
+                    var ws = GetXlsxWorksheet(ConvertToString(e));
+                    ws.Name = xs.name;
+                    ws.SheetID = xs.sheetId;
+                    ws.ID = xs.id;
+                    wss.Add(ws);
+                }
+            }
+            return w;
+        }
+
+        private static XlsxWorksheet GetXlsxWorksheet(string xml)
+        {
+            var xl = XElement.Parse(xml);
+            var rows = xl.Descendants(ExcelNamespaces.excelNamespace + "row")
+                 .Select(
+                      x => new XlsxRow
+                      {
+                          RowNumber = x.Attribute("r")?.Value?.ToString(),
+                          Cells = x.Descendants(ExcelNamespaces.excelNamespace + "c")?.Select(cell =>
+                              new XlsxCell
+                              {
+                                  Address = cell.Attribute("r")?.Value?.ToString(),
+                                  Value = cell.Descendants(ExcelNamespaces.excelNamespace + "v").SingleOrDefault()?.Value?.ToString(),
+                                  FormulaA1 = cell.Descendants(ExcelNamespaces.excelNamespace + "f").SingleOrDefault()?.Value?.ToString(),
+                                  DataType = cell.Attribute("t")?.Value?.ToString(),
+                              }
+                           ).ToList()
+                      }
+                 );
+            var ws = new XlsxWorksheet();
+            ws.Rows = rows;
+            return ws;
+        }
 
 
-        //        var worksheetElement = GetFirstWorksheet(allParts);
-        //        var cells = from c in worksheetElement.Descendants(ExcelNamespaces.excelNamespace + "c")
-        //                    select c;
-
-        //        var sharedStrings = GetSharedStrings(allParts);
-        //        foreach (XElement cell in cells)
-        //        {
-        //            var r = cell.Attribute("r");
-        //            {
-        //                var cellPosition = r.Value;
-        //                var v = cell.Descendants(ExcelNamespaces.excelNamespace + "v").SingleOrDefault()?.Value;
-        //                var t = cell.Attribute("t")?.Value;
-        //                if (t == "s")
-        //                {
-        //                    parsedCells.Add(cellPosition, sharedStrings[Convert.ToInt32(v)]);
-        //                }
-        //                else
-        //                {
-        //                    parsedCells.Add(cellPosition, v);
-        //                }
-        //            }
-
-        //        }
-        //    }
-
-        //    return parsedCells;
-        //}
-
-        //private static Dictionary<int, string> GetSharedStrings(PackagePartCollection allParts)
-        //{
-        //    var sharedStringsPart = (from part in allParts
-        //                             where part.ContentType.Equals("application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml")
-        //                             select part).SingleOrDefault();
-        //    if (sharedStringsPart == null)
-        //        return null;
-
-
-        //    Dictionary<int, string> sharedStrings = new Dictionary<int, string>();
-        //    var sharedStringsElement = XElement.Load(XmlReader.Create(sharedStringsPart.GetStream()));
-        //    IEnumerable<XElement> sharedStringsElements = from s in sharedStringsElement.Descendants(ExcelNamespaces.excelNamespace + "t")
-        //                                                  select s;
-        //    int Counter = 0;
-        //    foreach (XElement sharedString in sharedStringsElements)
-        //    {
-        //        sharedStrings.Add(Counter, sharedString.Value);
-        //        Counter++;
-        //    }
-        //    return sharedStrings;
-        //}
-
-        //private static XElement GetFirstWorksheet(PackagePartCollection allParts)
-        //{
-        //    PackagePart worksheetPart = (from part in allParts
-        //                                 where part.ContentType.Equals("application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml")
-        //                                 select part).FirstOrDefault();
-
-        //    return XElement.Load(XmlReader.Create(worksheetPart.GetStream()));
-        //}
-
-        private readonly static UTF8Encoding _utf8WithBom = new System.Text.UTF8Encoding(true);
+        private readonly static UTF8Encoding Utf8WithBom = new System.Text.UTF8Encoding(true);
         private static void CreateXlsxFile(string path, Dictionary<string, ZipPackageInfo> zipPackageInfos)
         {
-            using (FileStream stream = new FileStream(path, FileMode.CreateNew))  
+            using (FileStream stream = new FileStream(path, FileMode.CreateNew))
             using (ZipArchive archive = new ZipArchive(stream, ZipArchiveMode.Create, false, UTF8Encoding.UTF8))
             {
                 //[Content_Types].xml
@@ -217,7 +191,7 @@
 
                     ZipArchiveEntry entry = archive.CreateEntry("[Content_Types].xml");
                     using (var zipStream = entry.Open())
-                    using (StreamWriter writer = new StreamWriter(zipStream, _utf8WithBom))
+                    using (StreamWriter writer = new StreamWriter(zipStream, Utf8WithBom))
                         writer.Write(sb.ToString());
                 }
 
@@ -225,75 +199,10 @@
                 {
                     ZipArchiveEntry entry = archive.CreateEntry(p.Key);
                     using (var zipStream = entry.Open())
-                    using (StreamWriter writer = new StreamWriter(zipStream, _utf8WithBom))
+                    using (StreamWriter writer = new StreamWriter(zipStream, Utf8WithBom))
                         writer.Write(p.Value.Xml.ToString());
                 }
             }
-        }
-    }
-
-    internal static class XlsxUtils
-    {
-        internal static string GetValue(object value) => value == null ? "" : value.ToString().Replace("<", "&lt;").Replace(">", "&gt;");
-
-        /// <summary>X=CellLetter,Y=CellNumber,ex:A1=(1,1),B2=(2,2)</summary>
-        internal static string ConvertXyToCell(Tuple<int, int> xy)
-        {
-            return ConvertXyToCell(xy.Item1, xy.Item2);
-        }
-
-        /// <summary>X=CellLetter,Y=CellNumber,ex:A1=(1,1),B2=(2,2)</summary>
-        internal static string ConvertXyToCell(int x, int y)
-        {
-            int dividend = x;
-            string columnName = String.Empty;
-            int modulo;
-
-            while (dividend > 0)
-            {
-                modulo = (dividend - 1) % 26;
-                columnName = Convert.ToChar(65 + modulo).ToString() + columnName;
-                dividend = (int)((dividend - modulo) / 26);
-            }
-            return $"{columnName}{y}";
-        }
-
-        /// <summary>X=CellLetter,Y=CellNumber,ex:A1=(1,1),B2=(2,2)</summary>
-        internal static Tuple<int, int> ConvertCellToXY(string cell)
-        {
-            const string keys = " ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-            const int mode = 26;
-
-            var x = 0;
-            var cellLetter = GetCellLetter(cell);
-            //AA=27,ZZ=702
-            for (int i = 0; i < cellLetter.Length; i++)
-                x = x * mode + keys.IndexOf(cellLetter[i]);
-
-            var cellNumber = GetCellNumber(cell);
-            return Tuple.Create(x, int.Parse(cellNumber));
-        }
-
-        internal static string GetCellNumber(string cell)
-        {
-            string cellNumber = string.Empty;
-            for (int i = 0; i < cell.Length; i++)
-            {
-                if (Char.IsDigit(cell[i]))
-                    cellNumber += cell[i];
-            }
-            return cellNumber;
-        }
-
-        internal static string GetCellLetter(string cell)
-        {
-            string GetCellLetter = string.Empty;
-            for (int i = 0; i < cell.Length; i++)
-            {
-                if (Char.IsLetter(cell[i]))
-                    GetCellLetter += cell[i];
-            }
-            return GetCellLetter;
         }
     }
 }

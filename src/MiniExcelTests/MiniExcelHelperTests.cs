@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using System.IO;
 using OfficeOpenXml;
 using ClosedXML.Excel;
+using System.IO.Packaging;
 
 namespace MiniExcel.Tests
 {
@@ -76,6 +77,29 @@ namespace MiniExcel.Tests
                 Assert.True(ws.Cell("B2").Value.ToString() == @"1234567890");
                 Assert.True(ws.Cell("C2").Value.ToString() == true.ToString());
                 Assert.True(ws.Cell("D2").Value.ToString() == now.ToString());
+            }
+            File.Delete(path);
+        }
+
+        [Fact()]
+        public void ContentTypeUriContentTypeReadCheckTest()
+        {
+            var now = DateTime.Now;
+            var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
+            MiniExcelHelper.Create(path, new[] {
+                  new { a = @"""<>+-*//}{\\n", b = 1234567890,c = true,d= now},
+                  new { a = "<test>Hello World</test>", b = -1234567890,c=false,d=now.Date}
+             });
+            using (Package zip = System.IO.Packaging.Package.Open(path, FileMode.Open))
+            {
+                var allParts = zip.GetParts().Select(s => new { s.CompressionOption, s.ContentType, s.Uri, s.Package.GetType().Name })
+                    .ToDictionary(s=>s.Uri.ToString(),s=>s)
+                    ;
+                Assert.True(allParts[@"/xl/styles.xml"].ContentType == "application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml") ;
+                Assert.True(allParts[@"/xl/workbook.xml"].ContentType == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml");
+                Assert.True(allParts[@"/xl/worksheets/sheet1.xml"].ContentType == "application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml");
+                Assert.True(allParts[@"/xl/_rels/workbook.xml.rels"].ContentType == "application/vnd.openxmlformats-package.relationships+xml");
+                Assert.True(allParts[@"/_rels/.rels"].ContentType == "application/vnd.openxmlformats-package.relationships+xml");
             }
             File.Delete(path);
         }

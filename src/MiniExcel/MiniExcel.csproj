@@ -18,15 +18,6 @@
   <ItemGroup>
     <Folder Include="Properties\" />
   </ItemGroup>
-  <!--<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0'">
-    <PackageReference Include="System.IO.Packaging" Version="5.0.0" />
-  </ItemGroup>
-  <ItemGroup Condition=" '$(TargetFramework)' == 'net5.0'">
-    <PackageReference Include="System.IO.Packaging" Version="5.0.0" />
-  </ItemGroup>
-  <ItemGroup Condition=" '$(TargetFramework)' == 'net461'">
-    <PackageReference Include="System.IO.Packaging" Version="5.0.0" />
-  </ItemGroup>-->
   <ItemGroup>
     <Reference Include="System.IO.Compression" />
   </ItemGroup>

@@ -1,4 +1,4 @@
-﻿namespace MiniExcel
+﻿namespace MiniExcelLibs
 {
     using System.Collections.Generic;
     public class XlsxRow

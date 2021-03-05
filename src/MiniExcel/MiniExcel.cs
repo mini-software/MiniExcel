@@ -1,4 +1,4 @@
-﻿namespace MiniExcel
+﻿namespace MiniExcelLibs
 {
     using System;
     using System.Collections;
@@ -9,7 +9,7 @@
     using System.Linq;
     using System.Text;
     using System.Xml.Linq;
-    public static partial class MiniExcelHelper
+    public static partial class MiniExcel
     {
         private static Dictionary<string, ZipPackageInfo> GetDefaultFiles() => new Dictionary<string, ZipPackageInfo>()
         {

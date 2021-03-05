@@ -1,4 +1,4 @@
-﻿namespace MiniExcel
+﻿namespace MiniExcelLibs
 {
     using System.Xml.Linq;
     internal static class ExcelNamespaces

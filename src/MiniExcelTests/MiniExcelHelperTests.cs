@@ -9,6 +9,7 @@ using System.IO;
 using OfficeOpenXml;
 using ClosedXML.Excel;
 using System.IO.Packaging;
+using System.Data;
 
 namespace MiniExcel.Tests
 {
@@ -49,6 +50,41 @@ namespace MiniExcel.Tests
                     Console.WriteLine();
                 }
             }
+        }
+
+        [Fact()]
+        public void CreateDataTableTest()
+        {
+            var now = DateTime.Now;
+            var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
+            var table = new DataTable();
+            {
+                table.Columns.Add("a", typeof(string));
+                table.Columns.Add("b", typeof(decimal));
+                table.Columns.Add("c", typeof(bool));
+                table.Columns.Add("d", typeof(DateTime));
+                table.Rows.Add(@"""<>+-*//}{\\n", 1234567890,true, now);
+                table.Rows.Add(@"<test>Hello World</test>", -1234567890,false, now.Date);
+            }
+
+            MiniExcelHelper.Create(path, table);
+
+            using (var p = new ExcelPackage(new FileInfo(path)))
+            {
+                var ws = p.Workbook.Worksheets.First();
+
+                Assert.True(ws.Cells["A1"].Value.ToString() == "a");
+                Assert.True(ws.Cells["B1"].Value.ToString() == "b");
+                Assert.True(ws.Cells["C1"].Value.ToString() == "c");
+                Assert.True(ws.Cells["D1"].Value.ToString() == "d");
+
+                Assert.True(ws.Cells["A2"].Value.ToString() == @"""<>+-*//}{\\n");
+                Assert.True(ws.Cells["B2"].Value.ToString() == @"1234567890");
+                Assert.True(ws.Cells["C2"].Value.ToString() == true.ToString());
+                Assert.True(ws.Cells["D2"].Value.ToString() == now.ToString());
+            }
+
+            File.Delete(path);
         }
 
         [Fact()]

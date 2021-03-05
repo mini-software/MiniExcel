@@ -1,7 +1,9 @@
 ﻿namespace MiniExcel
 {
     using System;
+    using System.Collections;
     using System.Collections.Generic;
+    using System.Data;
     using System.IO;
     using System.IO.Compression;
     using System.Linq;
@@ -28,12 +30,67 @@
 
                 var yIndex = xy.Item2;
 
-                if (value is System.Collections.ICollection)
+                if (value is DataTable)
                 {
-                    var _vs = value as System.Collections.ICollection;
+                    var dt = value as DataTable;
+                    if (printHeader)
+                    {
+                        sb.AppendLine($"<x:row r=\"{yIndex.ToString()}\">");
+                        var xIndex = xy.Item1;
+                        foreach (DataColumn c in dt.Columns)
+                        {
+                            var columname = XlsxUtils.ConvertXyToCell(xIndex, yIndex);
+                            sb.Append($"<x:c r=\"{columname}\" t=\"str\">");
+                            sb.Append($"<x:v>{c.ColumnName}");
+                            sb.Append($"</x:v>");
+                            sb.Append($"</x:c>");
+                            xIndex++;
+                        }
+                        sb.AppendLine($"</x:row>");
+                        yIndex++;
+                    }
+
+                    for (int i = 0; i < dt.Rows.Count; i++)
+                    {
+                        sb.AppendLine($"<x:row r=\"{yIndex.ToString()}\">");
+                        var xIndex = xy.Item1;
+
+                        for (int j = 0; j < dt.Columns.Count; j++)
+                        {
+                            var cellValue = dt.Rows[i][j];
+                            var cellValueStr = XlsxUtils.EncodeXML(cellValue);
+                            var t = "t=\"str\"";
+                            {
+                                if (decimal.TryParse(cellValueStr, out var outV))
+                                    t = "t=\"n\"";
+                                if (cellValue is bool)
+                                {
+                                    t = "t=\"b\"";
+                                    cellValueStr = (bool)cellValue ? "1" : "0";
+                                }
+                                if (cellValue is DateTime || cellValue is DateTime?)
+                                {
+                                    t = "s=\"1\"";
+                                    cellValueStr = ((DateTime)cellValue).ToOADate().ToString();
+                                }
+                            }
+                            var columname = XlsxUtils.ConvertXyToCell(xIndex, yIndex);
+                            sb.Append($"<x:c r=\"{columname}\" {t}>");
+                            sb.Append($"<x:v>{cellValueStr}");
+                            sb.Append($"</x:v>");
+                            sb.Append($"</x:c>");
+                            xIndex++;
+                        }
+                        sb.AppendLine($"</x:row>");
+                        yIndex++;
+                    }
+                }
+                else if (value is System.Collections.ICollection)
+                {
+                    var collection = value as System.Collections.ICollection;
                     object firstValue = null;
                     {
-                        foreach (var v in _vs)
+                        foreach (var v in collection)
                         {
                             firstValue = v;
                             break;
@@ -58,14 +115,14 @@
                         yIndex++;
                     }
 
-                    foreach (var v in _vs)
+                    foreach (var v in collection)
                     {
                         sb.AppendLine($"<x:row r=\"{yIndex.ToString()}\">");
                         var xIndex = xy.Item1;
                         foreach (var p in props)
                         {
                             var cellValue = p.GetValue(v);
-                            var cellValueStr = XlsxUtils.GetValue(cellValue);
+                            var cellValueStr = XlsxUtils.EncodeXML(cellValue);
                             var t = "t=\"str\"";
                             {
                                 if (decimal.TryParse(cellValueStr, out var outV))

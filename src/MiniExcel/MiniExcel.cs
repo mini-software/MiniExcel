@@ -159,7 +159,7 @@
             CreateXlsxFile(filePath, defaultFiles);
         }
 
-        public static XlsxWorkbook Read(string path)
+        public static XlsxWorkbook ConvertAsXlsxWorkbook(string path)
         {
             using (FileStream stream = new FileStream(path, FileMode.Open))
             using (ZipArchive archive = new ZipArchive(stream, ZipArchiveMode.Read, false, UTF8Encoding.UTF8))

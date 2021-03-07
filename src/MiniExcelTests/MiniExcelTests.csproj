@@ -1,10 +1,16 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netcoreapp2.0;net461;</TargetFrameworks>
+    <TargetFrameworks>net461;</TargetFrameworks>
 
     <IsPackable>false</IsPackable>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Helper\**" />
+    <EmbeddedResource Remove="Helper\**" />
+    <None Remove="Helper\**" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="ClosedXML" Version="0.95.4" />
@@ -18,10 +24,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\MiniExcel\MiniExcelLibs.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Helper\" />
   </ItemGroup>
 
 </Project>

@@ -20,7 +20,7 @@ namespace MiniExcelLibs.Tests
         public void ReadMultipleSheetsTest()
         {
             var path = @"..\..\..\..\..\samples\xlsx\TestMultiSheet.xlsx";
-            var w = MiniExcel.Read(path);
+            var w = MiniExcel.ConvertAsXlsxWorkbook(path);
             var wss = w.Worksheets;
             Assert.True(wss.Count() == 3);
 
@@ -37,7 +37,7 @@ namespace MiniExcelLibs.Tests
         public void ReadForeachSheetsRowsCellsTest()
         {
             var path = @"..\..\..\..\..\samples\xlsx\TestMultiSheet.xlsx";
-            var w = MiniExcel.Read(path);
+            var w = MiniExcel.ConvertAsXlsxWorkbook(path);
             var wss = w.Worksheets;
             foreach (var ws in wss)
             {

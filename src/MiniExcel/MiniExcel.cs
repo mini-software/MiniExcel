@@ -159,6 +159,72 @@
             CreateXlsxFile(filePath, defaultFiles);
         }
 
+        public static IEnumerable<Dictionary<int, object>> Query(string path)
+        {
+            using (FileStream stream = new FileStream(path, FileMode.Open))
+            using (ZipArchive archive = new ZipArchive(stream, ZipArchiveMode.Read, false, UTF8Encoding.UTF8))
+            {
+                //sharedStrings must in memory cache
+                Dictionary<int, string> GetSharedStrings()
+                {
+                    var sharedStringsEntry = archive.Entries.SingleOrDefault(w => w.FullName == "xl/sharedStrings.xml");
+                    var xml = ConvertToString(sharedStringsEntry);
+                    var xl = XElement.Parse(xml);
+                    var ts = xl.Descendants(ExcelXName.T).Select((s, i) => new { i, v = s.Value?.ToString() })
+                         .ToDictionary(s => s.i, s => s.v)
+                    ;
+                    return ts;
+                }
+
+                var sharedStrings = GetSharedStrings();
+                
+                var rowIndexMaximum = int.MinValue;
+                var columnIndexMaximum = int.MinValue;
+
+                //notice: for performance just read first one and no care the order
+                var firstSheetEntry = archive.Entries.First(w => w.FullName.StartsWith("xl/worksheets/", StringComparison.OrdinalIgnoreCase));
+                {
+                    var xml = ConvertToString(firstSheetEntry);
+                    var xl = XElement.Parse(xml);
+
+                    foreach (var row in xl.Descendants(ExcelXName.Row))
+                    {
+                        //
+                        var datarow = new Dictionary<int, object>();
+                        {
+                            var r = row.Attribute("r")?.Value?.ToString();
+
+                            var rowIndex = int.MinValue;
+                            if (int.TryParse(r, out var _rowIndex))
+                                rowIndex = _rowIndex - 1; // The row attribute is 1 - based				
+                            rowIndexMaximum = Math.Max(rowIndexMaximum, rowIndex);
+                        }
+
+                        foreach (var cell in row.Descendants(ExcelXName.C))
+                        {
+                            var t = cell.Attribute("t")?.Value?.ToString();
+                            var v = cell.Descendants(ExcelXName.V).SingleOrDefault()?.Value;
+                            if (t == "s")
+                            {
+                                if (!string.IsNullOrEmpty(v))
+                                    v = sharedStrings[int.Parse(v)];
+                            }
+
+                            var r = cell.Attribute("r")?.Value?.ToString();
+                            {
+                                var cellIndex = XlsxUtils.GetColumnIndex(r) - 1;
+                                columnIndexMaximum = Math.Max(columnIndexMaximum, cellIndex);
+
+                                datarow.Add(cellIndex, v);
+                            }
+                        }
+                        yield return datarow;
+                    }
+                }
+            }
+        }
+
+
         public static XlsxWorkbook ConvertAsXlsxWorkbook(string path)
         {
             using (FileStream stream = new FileStream(path, FileMode.Open))
@@ -181,7 +247,7 @@
             {
                 var xml = ConvertToString(archive.Entries.SingleOrDefault(s => s.FullName == ("xl/workbook.xml")));
                 var xl = XElement.Parse(xml);
-                var xSheets = xl.Descendants(ExcelNamespaces.excelNamespace + "sheet").Select(s => new
+                var xSheets = xl.Descendants(ExcelXName.Sheet).Select(s => new
                 {
                     name = s.Attribute("name")?.Value?.ToString(),
                     sheetId = s.Attribute("sheetId")?.Value?.ToString(),
@@ -206,17 +272,17 @@
         private static XlsxWorksheet GetXlsxWorksheet(string xml)
         {
             var xl = XElement.Parse(xml);
-            var rows = xl.Descendants(ExcelNamespaces.excelNamespace + "row")
+            var rows = xl.Descendants(ExcelXName.Row)
                  .Select(
                       x => new XlsxRow
                       {
                           RowNumber = x.Attribute("r")?.Value?.ToString(),
-                          Cells = x.Descendants(ExcelNamespaces.excelNamespace + "c")?.Select(cell =>
+                          Cells = x.Descendants(ExcelXName.C)?.Select(cell =>
                               new XlsxCell
                               {
                                   Address = cell.Attribute("r")?.Value?.ToString(),
-                                  Value = cell.Descendants(ExcelNamespaces.excelNamespace + "v").SingleOrDefault()?.Value?.ToString(),
-                                  FormulaA1 = cell.Descendants(ExcelNamespaces.excelNamespace + "f").SingleOrDefault()?.Value?.ToString(),
+                                  Value = cell.Descendants(ExcelXName.V).SingleOrDefault()?.Value?.ToString(),
+                                  FormulaA1 = cell.Descendants(ExcelXName.R).SingleOrDefault()?.Value?.ToString(),
                                   DataType = cell.Attribute("t")?.Value?.ToString(),
                               }
                            ).ToList()

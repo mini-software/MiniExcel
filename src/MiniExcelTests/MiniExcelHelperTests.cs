@@ -15,6 +15,12 @@ namespace MiniExcelLibs.Tests
 {
     public class MiniExcelHelperTests
     {
+        [Fact()]
+        public void QueryTest()
+        {
+            var path = @"..\..\..\..\..\samples\xlsx\TestCenterEmptyRow\TestCenterEmptyRow.xlsx";
+            var rows = MiniExcel.Query(path).ToList();
+        }
 
         [Fact()]
         public void ReadMultipleSheetsTest()

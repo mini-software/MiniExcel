@@ -36,6 +36,11 @@
         /// <summary>X=CellLetter,Y=CellNumber,ex:A1=(1,1),B2=(2,2)</summary>
         internal static Tuple<int, int> ConvertCellToXY(string cell)
         {
+            return Tuple.Create(GetColumnIndex(cell), GetCellNumber(cell));
+        }
+
+        internal static int GetColumnIndex(string cell)
+        {
             const string keys = " ABCDEFGHIJKLMNOPQRSTUVWXYZ";
             const int mode = 26;
 
@@ -45,20 +50,21 @@
             for (int i = 0; i < cellLetter.Length; i++)
                 x = x * mode + keys.IndexOf(cellLetter[i]);
 
-            var cellNumber = GetCellNumber(cell);
-            return Tuple.Create(x, int.Parse(cellNumber));
+            return x;
         }
 
-        internal static string GetCellNumber(string cell)
-        {
-            string cellNumber = string.Empty;
-            for (int i = 0; i < cell.Length; i++)
-            {
-                if (Char.IsDigit(cell[i]))
-                    cellNumber += cell[i];
-            }
-            return cellNumber;
-        }
+	internal static int GetCellNumber(string cell)
+	{
+		if (string.IsNullOrEmpty(cell))
+			throw new Exception("cell is null or empty");
+		string cellNumber = string.Empty;
+		for (int i = 0; i < cell.Length; i++)
+		{
+			if (Char.IsDigit(cell[i]))
+				cellNumber += cell[i];
+		}
+		return int.Parse(cellNumber);
+	}
 
         internal static string GetCellLetter(string cell)
         {

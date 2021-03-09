@@ -39,7 +39,7 @@ internal class Worksheet
 }
 
 // You can define other methods, fields, classes and namespaces here
-public class MiniExcel
+public class XlsxImpl
 {
 	internal static Worksheet ConvertAsSheet(string path)
 	{
@@ -63,8 +63,6 @@ public class MiniExcel
 			//notice: for performance just read first one and no care the order
 			var rowIndexMaximum = int.MinValue;
 			var columnIndexMaximum = int.MinValue;
-
-
 
 			var datarows = new Dictionary<int, Dictionary<int, object>>();
 			var firstSheetEntry = archive.Entries.First(w => w.FullName.StartsWith("xl/worksheets/", StringComparison.OrdinalIgnoreCase));
@@ -99,7 +97,7 @@ public class MiniExcel
 
 						var r = cell.Attribute("r")?.Value?.ToString();
 						{
-							var cellIndex = GetColumnIndex(r) - 1;
+							var cellIndex = XlsxUtils.GetCellColumnIndex(r) - 1;
 							columnIndexMaximum = Math.Max(columnIndexMaximum, cellIndex);
 
 							datarow.Add(cellIndex, v);
@@ -120,21 +118,65 @@ public class MiniExcel
 		using (var reader = new StreamReader(eStream))
 			return reader.ReadToEnd();
 	}
+}
+
+internal static class XlsxUtils
+{
+	/// <summary>
+	/// Encode to XML (special characteres: &apos; &quot; &gt; &lt; &amp;)
+	/// </summary>
+	internal static string EncodeXML(object value) => value == null
+			? ""
+			: value.ToString().Replace("&", "&amp;").Replace("<", "&lt;").Replace(">", "&gt;").Replace("\"", "&quot;").Replace("'", "&apos;");
 
 	/// <summary>X=CellLetter,Y=CellNumber,ex:A1=(1,1),B2=(2,2)</summary>
-	internal static void ConvertCellToXY(string cell,out int x,out int y)
+	internal static string ConvertXyToCell(Tuple<int, int> xy)
 	{
-		x=GetColumnIndex(cell);
-		y=GetCellNumber(cell);
+		return ConvertXyToCell(xy.Item1, xy.Item2);
 	}
 
-	internal static int GetColumnIndex(string cell)
+	/// <summary>X=CellLetter,Y=CellNumber,ex:A1=(1,1),B2=(2,2)</summary>
+	internal static string ConvertXyToCell(int x, int y)
+	{
+		int dividend = x;
+		string columnName = String.Empty;
+		int modulo;
+
+		while (dividend > 0)
+		{
+			modulo = (dividend - 1) % 26;
+			columnName = Convert.ToChar(65 + modulo).ToString() + columnName;
+			dividend = (int)((dividend - modulo) / 26);
+		}
+		return $"{columnName}{y}";
+	}
+
+	/// <summary>X=CellLetter,Y=CellNumber,ex:A1=(1,1),B2=(2,2)</summary>
+	internal static Tuple<int, int> ConvertCellToXY(string cell)
+	{
+		return Tuple.Create(GetCellColumnIndex(cell), GetCellRowNumber(cell));
+	}
+
+	internal static int GetColumnNumber(string name)
+	{
+		int number = -1;
+		int pow = 1;
+		for (int i = name.Length - 1; i >= 0; i--)
+		{
+			number += (name[i] - 'A' + 1) * pow;
+			pow *= 26;
+		}
+
+		return number;
+	}
+
+	internal static int GetCellColumnIndex(string cell)
 	{
 		const string keys = " ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 		const int mode = 26;
 
 		var x = 0;
-		var cellLetter = GetCellLetter(cell);
+		var cellLetter = GetCellColumnLetter(cell);
 		//AA=27,ZZ=702
 		for (int i = 0; i < cellLetter.Length; i++)
 			x = x * mode + keys.IndexOf(cellLetter[i]);
@@ -142,7 +184,7 @@ public class MiniExcel
 		return x;
 	}
 
-	internal static int GetCellNumber(string cell)
+	internal static int GetCellRowNumber(string cell)
 	{
 		if (string.IsNullOrEmpty(cell))
 			throw new Exception("cell is null or empty");
@@ -155,7 +197,7 @@ public class MiniExcel
 		return int.Parse(cellNumber);
 	}
 
-	internal static string GetCellLetter(string cell)
+	internal static string GetCellColumnLetter(string cell)
 	{
 		string GetCellLetter = string.Empty;
 		for (int i = 0; i < cell.Length; i++)
@@ -164,6 +206,21 @@ public class MiniExcel
 				GetCellLetter += cell[i];
 		}
 		return GetCellLetter;
+	}
+
+	internal static string ConvertColumnName(int x)
+	{
+		int dividend = x;
+		string columnName = String.Empty;
+		int modulo;
+
+		while (dividend > 0)
+		{
+			modulo = (dividend - 1) % 26;
+			columnName = Convert.ToChar(65 + modulo).ToString() + columnName;
+			dividend = (int)((dividend - modulo) / 26);
+		}
+		return columnName;
 	}
 }
 
@@ -195,7 +252,7 @@ public class XlsxEasyRowsValueReader : IDataReader
 
 	public XlsxEasyRowsValueReader(string filePath)
 	{
- 		_Sheets[0] = MiniExcel.ConvertAsSheet(filePath);
+ 		_Sheets[0] = XlsxImpl.ConvertAsSheet(filePath);
 	}
 
 	public int RowCount {get{return _Sheets[0].RowCount;}}
@@ -214,16 +271,10 @@ public class XlsxEasyRowsValueReader : IDataReader
 		return true;
 	}
 
-	public string GetName(int i) => Helper.ConvertColumnName(i + 1);
+	public string GetName(int i) => XlsxUtils.ConvertColumnName(i + 1);
 
 
-	public int GetOrdinal(string name)
-	{
-		//TODO
-		var keys = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".ToCharArray().ToList();
-		var dic = keys.ToDictionary(s => s, s => keys.IndexOf(s));
-		return dic[(name[0])];
-	}
+	public int GetOrdinal(string name) =>XlsxUtils.GetCellColumnIndex(name);
 
 	public object GetValue(int i)
 	{
@@ -312,7 +363,7 @@ public class XlsxEasyRowsValueReader : IDataReader
 
 }
 
-internal static class Helper
+internal static class DictionaryHelper
 {
 	public static TValue GetValueOrDefault<TKey, TValue>
 	(this IDictionary<TKey, TValue> dictionary,
@@ -331,20 +382,5 @@ internal static class Helper
 		TValue value;
 		return dictionary.TryGetValue(key, out value) ? value
 			 : defaultValueProvider();
-	}
-
-	internal static string ConvertColumnName(int x)
-	{
-		int dividend = x;
-		string columnName = String.Empty;
-		int modulo;
-
-		while (dividend > 0)
-		{
-			modulo = (dividend - 1) % 26;
-			columnName = Convert.ToChar(65 + modulo).ToString() + columnName;
-			dividend = (int)((dividend - modulo) / 26);
-		}
-		return columnName;
 	}
 }

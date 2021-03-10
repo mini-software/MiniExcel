@@ -1,5 +1,7 @@
 ﻿namespace MiniExcelLibs
 {
+    using MiniExcelLibs.OpenXml;
+    using MiniExcelLibs.Zip;
     using System;
     using System.Collections;
     using System.Collections.Generic;
@@ -9,8 +11,10 @@
     using System.Linq;
     using System.Text;
     using System.Xml.Linq;
+
     public static partial class MiniExcel
     {
+
         private static Dictionary<string, ZipPackageInfo> GetDefaultFiles() => new Dictionary<string, ZipPackageInfo>()
         {
             { @"_rels/.rels",new ZipPackageInfo(DefualtXml.DefaultRels, "application/vnd.openxmlformats-package.relationships+xml")},
@@ -22,7 +26,7 @@
 
         public static void Create(string filePath, object value, string startCell = "A1", bool printHeader = true)
         {
-            var xy = XlsxUtils.ConvertCellToXY(startCell);
+            var xy = OpenXmlUtils.ConvertCellToXY(startCell);
 
             var defaultFiles = GetDefaultFiles();
             {
@@ -39,7 +43,7 @@
                         var xIndex = xy.Item1;
                         foreach (DataColumn c in dt.Columns)
                         {
-                            var columname = XlsxUtils.ConvertXyToCell(xIndex, yIndex);
+                            var columname = OpenXmlUtils.ConvertXyToCell(xIndex, yIndex);
                             sb.Append($"<x:c r=\"{columname}\" t=\"str\">");
                             sb.Append($"<x:v>{c.ColumnName}");
                             sb.Append($"</x:v>");
@@ -58,7 +62,7 @@
                         for (int j = 0; j < dt.Columns.Count; j++)
                         {
                             var cellValue = dt.Rows[i][j];
-                            var cellValueStr = XlsxUtils.EncodeXML(cellValue);
+                            var cellValueStr = OpenXmlUtils.EncodeXML(cellValue);
                             var t = "t=\"str\"";
                             {
                                 if (decimal.TryParse(cellValueStr, out var outV))
@@ -74,7 +78,7 @@
                                     cellValueStr = ((DateTime)cellValue).ToOADate().ToString();
                                 }
                             }
-                            var columname = XlsxUtils.ConvertXyToCell(xIndex, yIndex);
+                            var columname = OpenXmlUtils.ConvertXyToCell(xIndex, yIndex);
                             sb.Append($"<x:c r=\"{columname}\" {t}>");
                             sb.Append($"<x:v>{cellValueStr}");
                             sb.Append($"</x:v>");
@@ -104,7 +108,7 @@
                         var xIndex = xy.Item1;
                         foreach (var p in props)
                         {
-                            var columname = XlsxUtils.ConvertXyToCell(xIndex, yIndex);
+                            var columname = OpenXmlUtils.ConvertXyToCell(xIndex, yIndex);
                             sb.Append($"<x:c r=\"{columname}\" t=\"str\">");
                             sb.Append($"<x:v>{p.Name}");
                             sb.Append($"</x:v>");
@@ -122,7 +126,7 @@
                         foreach (var p in props)
                         {
                             var cellValue = p.GetValue(v);
-                            var cellValueStr = XlsxUtils.EncodeXML(cellValue);
+                            var cellValueStr = OpenXmlUtils.EncodeXML(cellValue);
                             var t = "t=\"str\"";
                             {
                                 if (decimal.TryParse(cellValueStr, out var outV))
@@ -138,7 +142,7 @@
                                     cellValueStr = ((DateTime)cellValue).ToOADate().ToString();
                                 }
                             }
-                            var columname = XlsxUtils.ConvertXyToCell(xIndex, yIndex);
+                            var columname = OpenXmlUtils.ConvertXyToCell(xIndex, yIndex);
                             sb.Append($"<x:c r=\"{columname}\" {t}>");
                             sb.Append($"<x:v>{cellValueStr}");
                             sb.Append($"</x:v>");
@@ -159,9 +163,35 @@
             CreateXlsxFile(filePath, defaultFiles);
         }
 
-        public static IEnumerable<Dictionary<int, object>> Query(string path)
+        public static Dictionary<int, Dictionary<int, object>> Query(string path)
         {
-            using (FileStream stream = new FileStream(path, FileMode.Open))
+            using (var stream = File.OpenRead(path))
+            {
+                return stream.Query();
+            }
+        }
+
+        public static Dictionary<int, Dictionary<int, object>> Query(this Stream stream)
+        {
+            using (var reader = new ExcelOpenXmlReader(stream))
+            {
+                var d = new Dictionary<int, Dictionary<int, object>>();
+                while (reader.Read())
+                {
+                    var dic = new Dictionary<int, object>();
+                    for (int i = 0; i < reader.FieldCount; i++)
+                    {
+                        var v = reader.GetValue(i);
+                        dic.Add(i, v);
+                    }
+                    d.Add(reader.CurrentRowIndex, dic);
+                }
+                return d;
+            }
+        }
+
+        internal static IEnumerable<Dictionary<int, object>> QueryImpl(this FileStream stream)
+        {
             using (ZipArchive archive = new ZipArchive(stream, ZipArchiveMode.Read, false, UTF8Encoding.UTF8))
             {
                 //sharedStrings must in memory cache
@@ -212,7 +242,7 @@
 
                             var r = cell.Attribute("r")?.Value?.ToString();
                             {
-                                var cellIndex = XlsxUtils.GetCellColumnIndex(r) - 1;
+                                var cellIndex = OpenXmlUtils.GetCellColumnIndex(r) - 1;
                                 columnIndexMaximum = Math.Max(columnIndexMaximum, cellIndex);
 
                                 datarow.Add(cellIndex, v);
@@ -224,75 +254,12 @@
             }
         }
 
-
-        public static XlsxWorkbook ConvertAsXlsxWorkbook(string path)
-        {
-            using (FileStream stream = new FileStream(path, FileMode.Open))
-            using (ZipArchive archive = new ZipArchive(stream, ZipArchiveMode.Read, false, UTF8Encoding.UTF8))
-            {
-                return GetXlsxWorkbook(archive);
-            }
-        }
-
         private static string ConvertToString(ZipArchiveEntry entry)
         {
             using (var eStream = entry.Open())
             using (var reader = new StreamReader(eStream))
                 return reader.ReadToEnd();
         }
-
-        private static XlsxWorkbook GetXlsxWorkbook(ZipArchive archive)
-        {
-            XlsxWorkbook w = new XlsxWorkbook();
-            {
-                var xml = ConvertToString(archive.Entries.SingleOrDefault(s => s.FullName == ("xl/workbook.xml")));
-                var xl = XElement.Parse(xml);
-                var xSheets = xl.Descendants(ExcelXName.Sheet).Select(s => new
-                {
-                    name = s.Attribute("name")?.Value?.ToString(),
-                    sheetId = s.Attribute("sheetId")?.Value?.ToString(),
-                    id = s.Attribute("id")?.Value?.ToString()
-                });
-
-                var wss = new List<XlsxWorksheet>();
-                w.Worksheets = wss;
-                foreach (var xs in xSheets)
-                {
-                    var e = archive.Entries.SingleOrDefault(s => s.FullName == ($"xl/worksheets/{xs.name.ToLowerInvariant()}.xml"));
-                    var ws = GetXlsxWorksheet(ConvertToString(e));
-                    ws.Name = xs.name;
-                    ws.SheetID = xs.sheetId;
-                    ws.ID = xs.id;
-                    wss.Add(ws);
-                }
-            }
-            return w;
-        }
-
-        private static XlsxWorksheet GetXlsxWorksheet(string xml)
-        {
-            var xl = XElement.Parse(xml);
-            var rows = xl.Descendants(ExcelXName.Row)
-                 .Select(
-                      x => new XlsxRow
-                      {
-                          RowNumber = x.Attribute("r")?.Value?.ToString(),
-                          Cells = x.Descendants(ExcelXName.C)?.Select(cell =>
-                              new XlsxCell
-                              {
-                                  Address = cell.Attribute("r")?.Value?.ToString(),
-                                  Value = cell.Descendants(ExcelXName.V).SingleOrDefault()?.Value?.ToString(),
-                                  FormulaA1 = cell.Descendants(ExcelXName.R).SingleOrDefault()?.Value?.ToString(),
-                                  DataType = cell.Attribute("t")?.Value?.ToString(),
-                              }
-                           ).ToList()
-                      }
-                 );
-            var ws = new XlsxWorksheet();
-            ws.Rows = rows;
-            return ws;
-        }
-
 
         private readonly static UTF8Encoding Utf8WithBom = new System.Text.UTF8Encoding(true);
         private static void CreateXlsxFile(string path, Dictionary<string, ZipPackageInfo> zipPackageInfos)

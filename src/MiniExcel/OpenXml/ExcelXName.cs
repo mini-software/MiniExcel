@@ -1,4 +1,4 @@
-﻿namespace MiniExcelLibs
+﻿namespace MiniExcelLibs.OpenXml
 {
     using System.Xml.Linq;
     internal static class ExcelXName

@@ -19,43 +19,12 @@ namespace MiniExcelLibs.Tests
         public void QueryTest()
         {
             var path = @"..\..\..\..\..\samples\xlsx\TestCenterEmptyRow\TestCenterEmptyRow.xlsx";
-            var rows = MiniExcel.Query(path).ToList();
-        }
-
-        [Fact()]
-        public void ReadMultipleSheetsTest()
-        {
-            var path = @"..\..\..\..\..\samples\xlsx\TestMultiSheet.xlsx";
-            var w = MiniExcel.ConvertAsXlsxWorkbook(path);
-            var wss = w.Worksheets;
-            Assert.True(wss.Count() == 3);
-
-            Assert.True(w.GetWorksheet(0).Name == "Sheet2");
-            Assert.True(w.GetWorksheet(1).Name == "Sheet1");
-            Assert.True(w.GetWorksheet(2).Name == "Sheet3");
-
-            Assert.True(w.GetWorksheet("Sheet2").Name == "Sheet2");
-            Assert.True(w.GetWorksheet("Sheet1").Name == "Sheet1");
-            Assert.True(w.GetWorksheet("Sheet3").Name == "Sheet3");
-        }
-
-        [Fact()]
-        public void ReadForeachSheetsRowsCellsTest()
-        {
-            var path = @"..\..\..\..\..\samples\xlsx\TestMultiSheet.xlsx";
-            var w = MiniExcel.ConvertAsXlsxWorkbook(path);
-            var wss = w.Worksheets;
-            foreach (var ws in wss)
+            using (var stream = File.OpenRead(path))
             {
-                Console.WriteLine($"==== {ws.SheetID}.Sheet Name : {ws.Name} ====");
-                foreach (var row in ws.Rows)
-                {
-                    Console.Write($"RowNumber:{row.RowNumber} | ");
-                    foreach (var cell in row.Cells)
-                        Console.Write($"Address:{cell.Address}&value:{cell.Value}");
-                    Console.WriteLine();
-                }
+                var rows = stream.Query();
+                var v = rows.Values;
             }
+            
         }
 
         [Fact()]

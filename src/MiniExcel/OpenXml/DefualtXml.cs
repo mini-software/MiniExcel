@@ -1,4 +1,4 @@
-﻿namespace MiniExcelLibs
+﻿namespace MiniExcelLibs.OpenXml
 {
     internal static class DefualtXml
     {

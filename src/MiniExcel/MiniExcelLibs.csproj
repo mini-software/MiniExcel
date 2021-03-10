@@ -24,9 +24,6 @@
     <RepositoryType>Github</RepositoryType>
   </PropertyGroup>
   <ItemGroup>
-    <Folder Include="Properties\" />
-  </ItemGroup>
-  <ItemGroup>
     <Reference Include="System.IO.Compression" />
   </ItemGroup>
 </Project>

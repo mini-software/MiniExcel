@@ -1,7 +1,7 @@
 ﻿namespace MiniExcelLibs.OpenXml
 {
     using System.Xml.Linq;
-    internal static class ExcelXName
+    internal static class ExcelOpenXmlXName
     {
 	   internal readonly static XNamespace ExcelNamespace = XNamespace.Get("http://schemas.openxmlformats.org/spreadsheetml/2006/main");
 	   internal readonly static XNamespace ExcelRelationshipsNamepace = XNamespace.Get("http://schemas.openxmlformats.org/officeDocument/2006/relationships");
@@ -12,7 +12,7 @@
 	   internal readonly static XName C;
 	   internal readonly static XName Dimension;
 	   internal readonly static XName Sheet;
-	   static ExcelXName()
+	   static ExcelOpenXmlXName()
 	   {
 		  Row = XNamespace.Get("http://schemas.openxmlformats.org/spreadsheetml/2006/main") + "row";
 		  R = XNamespace.Get("http://schemas.openxmlformats.org/spreadsheetml/2006/main") + "r";

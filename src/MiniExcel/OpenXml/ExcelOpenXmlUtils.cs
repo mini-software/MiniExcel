@@ -1,7 +1,7 @@
 ﻿namespace MiniExcelLibs.OpenXml
 {
     using System;
-    internal static class OpenXmlUtils
+    internal static class ExcelOpenXmlUtils
     {
 	   /// <summary>
 	   /// Encode to XML (special characteres: &apos; &quot; &gt; &lt; &amp;)

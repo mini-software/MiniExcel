@@ -26,7 +26,7 @@
 
         public static void Create(string filePath, object value, string startCell = "A1", bool printHeader = true)
         {
-            var xy = OpenXmlUtils.ConvertCellToXY(startCell);
+            var xy = ExcelOpenXmlUtils.ConvertCellToXY(startCell);
 
             var defaultFiles = GetDefaultFiles();
             {
@@ -43,7 +43,7 @@
                         var xIndex = xy.Item1;
                         foreach (DataColumn c in dt.Columns)
                         {
-                            var columname = OpenXmlUtils.ConvertXyToCell(xIndex, yIndex);
+                            var columname = ExcelOpenXmlUtils.ConvertXyToCell(xIndex, yIndex);
                             sb.Append($"<x:c r=\"{columname}\" t=\"str\">");
                             sb.Append($"<x:v>{c.ColumnName}");
                             sb.Append($"</x:v>");
@@ -62,7 +62,7 @@
                         for (int j = 0; j < dt.Columns.Count; j++)
                         {
                             var cellValue = dt.Rows[i][j];
-                            var cellValueStr = OpenXmlUtils.EncodeXML(cellValue);
+                            var cellValueStr = ExcelOpenXmlUtils.EncodeXML(cellValue);
                             var t = "t=\"str\"";
                             {
                                 if (decimal.TryParse(cellValueStr, out var outV))
@@ -78,7 +78,7 @@
                                     cellValueStr = ((DateTime)cellValue).ToOADate().ToString();
                                 }
                             }
-                            var columname = OpenXmlUtils.ConvertXyToCell(xIndex, yIndex);
+                            var columname = ExcelOpenXmlUtils.ConvertXyToCell(xIndex, yIndex);
                             sb.Append($"<x:c r=\"{columname}\" {t}>");
                             sb.Append($"<x:v>{cellValueStr}");
                             sb.Append($"</x:v>");
@@ -108,7 +108,7 @@
                         var xIndex = xy.Item1;
                         foreach (var p in props)
                         {
-                            var columname = OpenXmlUtils.ConvertXyToCell(xIndex, yIndex);
+                            var columname = ExcelOpenXmlUtils.ConvertXyToCell(xIndex, yIndex);
                             sb.Append($"<x:c r=\"{columname}\" t=\"str\">");
                             sb.Append($"<x:v>{p.Name}");
                             sb.Append($"</x:v>");
@@ -126,7 +126,7 @@
                         foreach (var p in props)
                         {
                             var cellValue = p.GetValue(v);
-                            var cellValueStr = OpenXmlUtils.EncodeXML(cellValue);
+                            var cellValueStr = ExcelOpenXmlUtils.EncodeXML(cellValue);
                             var t = "t=\"str\"";
                             {
                                 if (decimal.TryParse(cellValueStr, out var outV))
@@ -142,7 +142,7 @@
                                     cellValueStr = ((DateTime)cellValue).ToOADate().ToString();
                                 }
                             }
-                            var columname = OpenXmlUtils.ConvertXyToCell(xIndex, yIndex);
+                            var columname = ExcelOpenXmlUtils.ConvertXyToCell(xIndex, yIndex);
                             sb.Append($"<x:c r=\"{columname}\" {t}>");
                             sb.Append($"<x:v>{cellValueStr}");
                             sb.Append($"</x:v>");
@@ -190,17 +190,19 @@
             }
         }
 
-        internal static IEnumerable<Dictionary<int, object>> QueryImpl(this FileStream stream)
+        internal static Worksheet GetFirstSheet(Stream stream)
         {
             using (ZipArchive archive = new ZipArchive(stream, ZipArchiveMode.Read, false, UTF8Encoding.UTF8))
             {
+                var rows = new Dictionary<int, Dictionary<int, object>>();
+
                 //sharedStrings must in memory cache
                 Dictionary<int, string> GetSharedStrings()
                 {
                     var sharedStringsEntry = archive.Entries.SingleOrDefault(w => w.FullName == "xl/sharedStrings.xml");
                     var xml = ConvertToString(sharedStringsEntry);
                     var xl = XElement.Parse(xml);
-                    var ts = xl.Descendants(ExcelXName.T).Select((s, i) => new { i, v = s.Value?.ToString() })
+                    var ts = xl.Descendants(ExcelOpenXmlXName.T).Select((s, i) => new { i, v = s.Value?.ToString() })
                          .ToDictionary(s => s.i, s => s.v)
                     ;
                     return ts;
@@ -217,7 +219,7 @@
                     var xml = ConvertToString(firstSheetEntry);
                     var xl = XElement.Parse(xml);
 
-                    foreach (var row in xl.Descendants(ExcelXName.Row))
+                    foreach (var row in xl.Descendants(ExcelOpenXmlXName.Row))
                     {
                         //
                         var datarow = new Dictionary<int, object>();
@@ -228,12 +230,14 @@
                             if (int.TryParse(r, out var _rowIndex))
                                 rowIndex = _rowIndex - 1; // The row attribute is 1 - based				
                             rowIndexMaximum = Math.Max(rowIndexMaximum, rowIndex);
+
+                            rows.Add(rowIndex, datarow);
                         }
 
-                        foreach (var cell in row.Descendants(ExcelXName.C))
+                        foreach (var cell in row.Descendants(ExcelOpenXmlXName.C))
                         {
                             var t = cell.Attribute("t")?.Value?.ToString();
-                            var v = cell.Descendants(ExcelXName.V).SingleOrDefault()?.Value;
+                            var v = cell.Descendants(ExcelOpenXmlXName.V).SingleOrDefault()?.Value;
                             if (t == "s")
                             {
                                 if (!string.IsNullOrEmpty(v))
@@ -242,15 +246,21 @@
 
                             var r = cell.Attribute("r")?.Value?.ToString();
                             {
-                                var cellIndex = OpenXmlUtils.GetCellColumnIndex(r) - 1;
+                                var cellIndex = ExcelOpenXmlUtils.GetCellColumnIndex(r) - 1;
                                 columnIndexMaximum = Math.Max(columnIndexMaximum, cellIndex);
 
                                 datarow.Add(cellIndex, v);
                             }
                         }
-                        yield return datarow;
+                        
                     }
                 }
+
+                return new Worksheet {
+                    Rows = rows,
+                    FieldCount = columnIndexMaximum + 1,
+                    RowCount = rowIndexMaximum + 1
+                };
             }
         }
 

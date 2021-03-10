@@ -8,16 +8,16 @@
 
     internal class ExcelOpenXmlReader : IDataReader
     {
-        private static Worksheet[] _Sheets = new Worksheet[1];
-        private Dictionary<int, Dictionary<int, object>> _Rows { get { return _Sheets[0].Rows; } }
+        private static Worksheet _Sheet ;
+        private Dictionary<int, Dictionary<int, object>> _Rows { get { return _Sheet.Rows; } }
 
         public ExcelOpenXmlReader(Stream stream)
         {
-            _Sheets[0].Rows = stream.Query();
+            _Sheet = MiniExcel.GetFirstSheet(stream);
         }
 
-        public int RowCount { get { return _Sheets[0].RowCount; } }
-        public int FieldCount { get { return _Sheets[0].FieldCount; } }
+        public int RowCount { get { return _Sheet.RowCount; } }
+        public int FieldCount { get { return _Sheet.FieldCount; } }
         public int Depth { get; private set; }
         public int CurrentRowIndex { get { return Depth - 1; } }
 
@@ -32,10 +32,10 @@
             return true;
         }
 
-        public string GetName(int i) => OpenXmlUtils.ConvertColumnName(i + 1);
+        public string GetName(int i) => ExcelOpenXmlUtils.ConvertColumnName(i + 1);
 
 
-        public int GetOrdinal(string name) => OpenXmlUtils.GetCellColumnIndex(name);
+        public int GetOrdinal(string name) => ExcelOpenXmlUtils.GetCellColumnIndex(name);
 
         public object GetValue(int i)
         {

@@ -22,9 +22,51 @@ namespace MiniExcelLibs.Tests
             using (var stream = File.OpenRead(path))
             {
                 var rows = stream.Query();
-                var v = rows.Values;
+
+                Assert.Equal("a", rows[0][0]);
+                Assert.Equal("b", rows[0][1]);
+                Assert.Equal("c", rows[0][2]);
+                Assert.Equal("d", rows[0][3]);
+
+                Assert.Equal("1", rows[1][0]);
+                Assert.Null(rows[1][1]);
+                Assert.Equal("3", rows[1][2]);
+                Assert.Null(rows[1][3]);
+
+                Assert.Null(rows[2][0]);
+                Assert.Equal("2", rows[2][1]);
+                Assert.Null(rows[2][2]);
+                Assert.Equal("4", rows[2][3]);
+
+                Assert.Null(rows[3][0]);
+                Assert.Null(rows[3][1]);
+                Assert.Null(rows[3][2]);
+                Assert.Null(rows[3][3]);
             }
-            
+
+            {
+                var rows = MiniExcel.Query(path);
+
+                Assert.Equal("a", rows[0][0]);
+                Assert.Equal("b", rows[0][1]);
+                Assert.Equal("c", rows[0][2]);
+                Assert.Equal("d", rows[0][3]);
+
+                Assert.Equal("1", rows[1][0]);
+                Assert.Null(rows[1][1]);
+                Assert.Equal("3", rows[1][2]);
+                Assert.Null(rows[1][3]);
+
+                Assert.Null(rows[2][0]);
+                Assert.Equal("2", rows[2][1]);
+                Assert.Null(rows[2][2]);
+                Assert.Equal("4", rows[2][3]);
+
+                Assert.Null(rows[3][0]);
+                Assert.Null(rows[3][1]);
+                Assert.Null(rows[3][2]);
+                Assert.Null(rows[3][3]);
+            }
         }
 
         [Fact()]

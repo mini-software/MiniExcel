@@ -212,7 +212,7 @@
 
                             var r = cell.Attribute("r")?.Value?.ToString();
                             {
-                                var cellIndex = XlsxUtils.GetColumnIndex(r) - 1;
+                                var cellIndex = XlsxUtils.GetCellColumnIndex(r) - 1;
                                 columnIndexMaximum = Math.Max(columnIndexMaximum, cellIndex);
 
                                 datarow.Add(cellIndex, v);

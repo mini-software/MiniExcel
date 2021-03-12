@@ -16,7 +16,7 @@
 		  // TODO: it can recode better performance 
 		  var cell = (IDictionary<string, object>)new ExpandoObject();
 		  for (int i = 0; i <= maxColumnIndex; i++)
-			 cell.Add(i.ToString(), DBNull.Value);
+			 cell.Add(i.ToString(), null);
 		  return cell;
 	   }
 
@@ -26,7 +26,7 @@
 		  // TODO: it can recode better performance 
 		  var cell = (IDictionary<string, object>)new ExpandoObject();
 		  foreach (var hr in hearrows)
-			 cell.Add(hr.Value, DBNull.Value);
+			 cell.Add(hr.Value, null);
 		  return cell;
 	   }
 

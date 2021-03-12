@@ -28,6 +28,16 @@ void Main()
 
 	using (var stream = File.OpenRead(path))
 	{
+		var rows = stream.Query() as IEnumerable<object>;
+		var rows1 = stream.Query() as IEnumerable<dynamic>;
+		var rows2 = stream.Query() as IEnumerable<ExpandoObject>;
+		var rows3 = stream.Query() as IEnumerable<IDictionary>;
+		var type = rows.GetType();
+		foreach (IDictionary<string,object> element in rows)
+		{
+			
+		}
+		
 		Console.WriteLine(stream.Query());
 	}
 
@@ -56,6 +66,7 @@ internal class ExcelOpenXmlSheetReader
 	{
 		T = XNamespace.Get("http://schemas.openxmlformats.org/spreadsheetml/2006/main") + "t";
 	}
+	
 	internal Dictionary<int, string> GetSharedStrings(ZipArchiveEntry sharedStringsEntry)
 	{
 		var xl = XElement.Load(sharedStringsEntry.Open());
@@ -297,7 +308,7 @@ internal static class Helpers
 		// TODO: it can recode better performance 
 		var cell = (IDictionary<string, object>)new ExpandoObject();
 		for (int i = 0; i <= maxColumnIndex; i++)
-			cell.Add(i.ToString(), null);
+			cell.Add(i.ToString(), DBNull.Value);
 		return cell;
 	}
 
@@ -307,7 +318,7 @@ internal static class Helpers
 		// TODO: it can recode better performance 
 		var cell = (IDictionary<string, object>)new ExpandoObject();
 		foreach (var hr in hearrows)
-			cell.Add(hr.Value, null);
+			cell.Add(hr.Value, DBNull.Value);
 		return cell;
 	}
 

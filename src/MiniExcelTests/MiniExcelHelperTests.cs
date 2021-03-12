@@ -1,15 +1,14 @@
 ﻿using Xunit;
-using MiniExcelLibs;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.IO;
 using OfficeOpenXml;
 using ClosedXML.Excel;
 using System.IO.Packaging;
 using System.Data;
+using ExcelDataReader;
+using System.Collections.Generic;
+using System.Dynamic;
 
 namespace MiniExcelLibs.Tests
 {
@@ -22,50 +21,42 @@ namespace MiniExcelLibs.Tests
             using (var stream = File.OpenRead(path))
             {
                 var rows = stream.Query();
+                foreach (var item in rows)
+                {
+                    
+                }
+            }
+        }
 
-                Assert.Equal("a", rows[0][0]);
-                Assert.Equal("b", rows[0][1]);
-                Assert.Equal("c", rows[0][2]);
-                Assert.Equal("d", rows[0][3]);
+        [Fact()]
+        public void QueryExcelDataReaderCheckTest()
+        {
+#if NETCOREAPP3_1 || NET5_0
+            System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
+#endif
+            var path = @"..\..\..\..\..\samples\xlsx\TestCenterEmptyRow\TestCenterEmptyRow.xlsx";
 
-                Assert.Equal("1", rows[1][0]);
-                Assert.Null(rows[1][1]);
-                Assert.Equal("3", rows[1][2]);
-                Assert.Null(rows[1][3]);
-
-                Assert.Null(rows[2][0]);
-                Assert.Equal("2", rows[2][1]);
-                Assert.Null(rows[2][2]);
-                Assert.Equal("4", rows[2][3]);
-
-                Assert.Null(rows[3][0]);
-                Assert.Null(rows[3][1]);
-                Assert.Null(rows[3][2]);
-                Assert.Null(rows[3][3]);
+            DataSet exceldatareaderResult;
+            using (var stream = File.OpenRead(path))
+            using (var reader = ExcelReaderFactory.CreateReader(stream))
+            {
+                exceldatareaderResult = reader.AsDataSet();
             }
 
+            using (var stream = File.OpenRead(path))
             {
-                var rows = MiniExcel.Query(path);
-
-                Assert.Equal("a", rows[0][0]);
-                Assert.Equal("b", rows[0][1]);
-                Assert.Equal("c", rows[0][2]);
-                Assert.Equal("d", rows[0][3]);
-
-                Assert.Equal("1", rows[1][0]);
-                Assert.Null(rows[1][1]);
-                Assert.Equal("3", rows[1][2]);
-                Assert.Null(rows[1][3]);
-
-                Assert.Null(rows[2][0]);
-                Assert.Equal("2", rows[2][1]);
-                Assert.Null(rows[2][2]);
-                Assert.Equal("4", rows[2][3]);
-
-                Assert.Null(rows[3][0]);
-                Assert.Null(rows[3][1]);
-                Assert.Null(rows[3][2]);
-                Assert.Null(rows[3][3]);
+                var rows = stream.Query().ToList();
+                foreach (IDictionary<string, object> row in rows)
+                {
+                    var rowIndex = rows.IndexOf(row);
+                    var keys = row.Keys;
+                    foreach (var key in keys)
+                    {
+                        var eV = exceldatareaderResult.Tables[0].Rows[rowIndex][int.Parse(key)];
+                        var v = row[key];
+                        Assert.Equal(eV, v);
+                    }
+                }
             }
         }
 

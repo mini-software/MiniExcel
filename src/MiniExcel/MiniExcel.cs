@@ -3,14 +3,11 @@
     using MiniExcelLibs.OpenXml;
     using MiniExcelLibs.Zip;
     using System;
-    using System.Collections;
     using System.Collections.Generic;
     using System.Data;
     using System.IO;
     using System.IO.Compression;
-    using System.Linq;
     using System.Text;
-    using System.Xml.Linq;
 
     public static partial class MiniExcel
     {
@@ -163,112 +160,9 @@
             CreateXlsxFile(filePath, defaultFiles);
         }
 
-        public static Dictionary<int, Dictionary<int, object>> Query(string path)
+        public static IEnumerable<dynamic> Query(this Stream stream, bool UseHeaderRow = false)
         {
-            using (var stream = File.OpenRead(path))
-            {
-                return stream.Query();
-            }
-        }
-
-        public static Dictionary<int, Dictionary<int, object>> Query(this Stream stream)
-        {
-            using (var reader = new ExcelOpenXmlReader(stream))
-            {
-                var d = new Dictionary<int, Dictionary<int, object>>();
-                while (reader.Read())
-                {
-                    var dic = new Dictionary<int, object>();
-                    for (int i = 0; i < reader.FieldCount; i++)
-                    {
-                        var v = reader.GetValue(i);
-                        dic.Add(i, v);
-                    }
-                    d.Add(reader.CurrentRowIndex, dic);
-                }
-                return d;
-            }
-        }
-
-        internal static Worksheet GetFirstSheet(Stream stream)
-        {
-            using (ZipArchive archive = new ZipArchive(stream, ZipArchiveMode.Read, false, UTF8Encoding.UTF8))
-            {
-                var rows = new Dictionary<int, Dictionary<int, object>>();
-
-                //sharedStrings must in memory cache
-                Dictionary<int, string> GetSharedStrings()
-                {
-                    var sharedStringsEntry = archive.Entries.SingleOrDefault(w => w.FullName == "xl/sharedStrings.xml");
-                    var xml = ConvertToString(sharedStringsEntry);
-                    var xl = XElement.Parse(xml);
-                    var ts = xl.Descendants(ExcelOpenXmlXName.T).Select((s, i) => new { i, v = s.Value?.ToString() })
-                         .ToDictionary(s => s.i, s => s.v)
-                    ;
-                    return ts;
-                }
-
-                var sharedStrings = GetSharedStrings();
-                
-                var rowIndexMaximum = int.MinValue;
-                var columnIndexMaximum = int.MinValue;
-
-                //notice: for performance just read first one and no care the order
-                var firstSheetEntry = archive.Entries.First(w => w.FullName.StartsWith("xl/worksheets/", StringComparison.OrdinalIgnoreCase));
-                {
-                    var xml = ConvertToString(firstSheetEntry);
-                    var xl = XElement.Parse(xml);
-
-                    foreach (var row in xl.Descendants(ExcelOpenXmlXName.Row))
-                    {
-                        //
-                        var datarow = new Dictionary<int, object>();
-                        {
-                            var r = row.Attribute("r")?.Value?.ToString();
-
-                            var rowIndex = int.MinValue;
-                            if (int.TryParse(r, out var _rowIndex))
-                                rowIndex = _rowIndex - 1; // The row attribute is 1 - based				
-                            rowIndexMaximum = Math.Max(rowIndexMaximum, rowIndex);
-
-                            rows.Add(rowIndex, datarow);
-                        }
-
-                        foreach (var cell in row.Descendants(ExcelOpenXmlXName.C))
-                        {
-                            var t = cell.Attribute("t")?.Value?.ToString();
-                            var v = cell.Descendants(ExcelOpenXmlXName.V).SingleOrDefault()?.Value;
-                            if (t == "s")
-                            {
-                                if (!string.IsNullOrEmpty(v))
-                                    v = sharedStrings[int.Parse(v)];
-                            }
-
-                            var r = cell.Attribute("r")?.Value?.ToString();
-                            {
-                                var cellIndex = ExcelOpenXmlUtils.GetCellColumnIndex(r) - 1;
-                                columnIndexMaximum = Math.Max(columnIndexMaximum, cellIndex);
-
-                                datarow.Add(cellIndex, v);
-                            }
-                        }
-                        
-                    }
-                }
-
-                return new Worksheet {
-                    Rows = rows,
-                    FieldCount = columnIndexMaximum + 1,
-                    RowCount = rowIndexMaximum + 1
-                };
-            }
-        }
-
-        private static string ConvertToString(ZipArchiveEntry entry)
-        {
-            using (var eStream = entry.Open())
-            using (var reader = new StreamReader(eStream))
-                return reader.ReadToEnd();
+            return new ExcelOpenXmlSheetReader().QueryImpl(stream, UseHeaderRow);
         }
 
         private readonly static UTF8Encoding Utf8WithBom = new System.Text.UTF8Encoding(true);

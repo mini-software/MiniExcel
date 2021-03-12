@@ -17,18 +17,26 @@
 void Main()
 {
 	var path = @"D:\git\MiniExcel\samples\xlsx\TestDimensionCenterEmptyRows\TestDimensionCenterEmptyRows.xlsx";
+	//using (var stream = File.OpenRead(path))
+	//{
+	//	var list = stream.Query();
+	//	foreach (var e in list)
+	//	{
+	//		Console.WriteLine(e);
+	//	}
+	//}
+
 	using (var stream = File.OpenRead(path))
 	{
-		var list = stream.Query();
-		foreach (var e in list)
-		{
-			Console.WriteLine(e);
-		}
+		Console.WriteLine(stream.Query());
 	}
 
+	using (var stream = File.OpenRead(path))
+	{
+		Console.WriteLine(stream.Query(true));
+	}
 
-
-	Console.WriteLine("======");
+	//Console.WriteLine("======");
 	//using(var stream = File.OpenRead(path))
 	//	Console.WriteLine(stream.GetValues(false).ToList());
 }
@@ -78,7 +86,7 @@ internal class ExcelOpenXmlSheetReader
 
 					if (!XmlReaderHelper.ReadFirstContent(reader))
 						yield break;
-						
+
 					var maxRowIndex = -1;
 					var maxColumnIndex = -1;
 					while (!reader.EOF)
@@ -121,13 +129,21 @@ internal class ExcelOpenXmlSheetReader
 									if (!XmlReaderHelper.ReadFirstContent(reader))
 										continue;
 									
-									var cell = Helpers.GetExpandoObject();
-									// TODO: strong type mapping can ignore this
-									// TODO: it can recode better performance 
-									for (int i = 0; i <= maxColumnIndex; i++)
-										cell.Add(i.ToString(),null);
-
+									// fill empty rows
 									{
+										if (nextRowIndex < rowIndex)
+										{
+											for (int i = nextRowIndex; i < rowIndex; i++)
+											if (UseHeaderRow)
+												yield return Helpers.GetEmptyExpandoObject(headRows);
+											else
+												yield return Helpers.GetEmptyExpandoObject(maxColumnIndex);
+										}
+									}
+
+									// Set Cells
+									{
+										var cell = UseHeaderRow ? Helpers.GetEmptyExpandoObject(headRows):Helpers.GetEmptyExpandoObject(maxColumnIndex);
 										var columnIndex = 0;
 										while (!reader.EOF)
 										{
@@ -142,7 +158,7 @@ internal class ExcelOpenXmlSheetReader
 													if (rowIndex == 0)
 														headRows.Add(columnIndex, cellValue.ToString());
 													else
-														cell.Add(headRows[columnIndex], cellValue);
+														cell[headRows[columnIndex]]= cellValue;
 												}
 												else
 													cell[columnIndex.ToString()] = cellValue;
@@ -150,12 +166,12 @@ internal class ExcelOpenXmlSheetReader
 											else if (!XmlReaderHelper.SkipContent(reader))
 												break;
 										}
+
+										if (UseHeaderRow && rowIndex == 0)
+											continue;
+
+										yield return cell;
 									}
-
-									if (UseHeaderRow && rowIndex == 0)
-										continue;
-
-									yield return cell;
 								}
 								else if (!XmlReaderHelper.SkipContent(reader))
 								{
@@ -275,9 +291,24 @@ internal static class Helpers
 {
 	private static readonly Regex EscapeRegex = new Regex("_x([0-9A-F]{4,4})_");
 
-	public static IDictionary<string, object> GetExpandoObject()
+	public static IDictionary<string, object> GetEmptyExpandoObject(int maxColumnIndex)
 	{
-		return (IDictionary<string, object>)new ExpandoObject() ;
+		// TODO: strong type mapping can ignore this
+		// TODO: it can recode better performance 
+		var cell = (IDictionary<string, object>)new ExpandoObject();
+		for (int i = 0; i <= maxColumnIndex; i++)
+			cell.Add(i.ToString(), null);
+		return cell;
+	}
+
+	public static IDictionary<string, object> GetEmptyExpandoObject(Dictionary<int, string> hearrows)
+	{
+		// TODO: strong type mapping can ignore this
+		// TODO: it can recode better performance 
+		var cell = (IDictionary<string, object>)new ExpandoObject();
+		foreach (var hr in hearrows)
+			cell.Add(hr.Value, null);
+		return cell;
 	}
 
 

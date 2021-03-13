@@ -1,14 +1,15 @@
-| [![NuGet](https://img.shields.io/nuget/v/MiniExcel.svg)](https://www.nuget.org/packages/MiniExcel) | ![](https://img.shields.io/nuget/dt/MiniExcel.svg) | 
-| -------- | -------- | 
+[![NuGet](https://img.shields.io/nuget/v/MiniExcel.svg)](https://www.nuget.org/packages/MiniExcel)  
+[![](https://img.shields.io/nuget/dt/MiniExcel.svg)](https://www.nuget.org/packages/MiniExcel)  
+
 
 ### Features
-- Support IEnumerable Lazy & Real `Step By Step one row read` not until all rows data read in memory
+- `Avoid large file OOM(out of memoery)` by IEnumerable Lazy `Step By Step getting one row cells` not until all rows read in memory  
 e.g:  Comparison of MiniExcel Query and ExcelDataReader/EPPlus/ClosedXml of reading large Xlsx File
 ![miniexcel_lazy_load](https://user-images.githubusercontent.com/12729184/111034290-e5588a80-844f-11eb-8c84-6fdb6fb8f403.gif)
-- Mini (DLL Size Only 20KB) and Easy to use.
+- Mini (DLL Size Only 20KB) and easy to use.
 - Support .NET Standard 2.0/.NET 4.6/.NET 5
-- Without Any Third Party Library Dependencies
-- Support Anonymous Types,Dapper Dynamic Query,List/Array/Set/Enumrable,DataTable,Dictionary
+- Without any third party library dependencies
+- Support dynamic/type mapping query and create by anonymous Types/DapperRows/List/Array/Set/Enumrable/DataTable/Dictionary
 
 ### Installation
 

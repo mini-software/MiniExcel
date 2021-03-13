@@ -3,8 +3,8 @@
 
 ### Features
 - Support IEnumerable Lazy & Real `Step By Step one row read` not until all rows data read in memory
-e.g:  Comparison of MiniExcel Query and ExcelDataReader of Reading Large Xlsx File
-![](https://user-images.githubusercontent.com/12729184/110884175-9f9ca480-831f-11eb-9795-cf0b9f386955.gif)
+e.g:  Comparison of MiniExcel Query and ExcelDataReader/EPPlus/ClosedXml of reading large Xlsx File
+![miniexcel_lazy_load](https://user-images.githubusercontent.com/12729184/111034290-e5588a80-844f-11eb-8c84-6fdb6fb8f403.gif)
 - Mini (DLL Size Only 20KB) and Easy to use.
 - Support .NET Standard 2.0/.NET 4.6/.NET 5
 - Without Any Third Party Library Dependencies

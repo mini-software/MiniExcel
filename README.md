@@ -8,7 +8,7 @@ e.g:  Comparison of MiniExcel Query and ExcelDataReader/EPPlus/ClosedXml of read
 - Mini (DLL Size Only 20KB) and easy to use.
 - Support .NET Standard 2.0/.NET 4.6/.NET 5
 - Without any third party library dependencies
-- Support dynamic/type mapping query and create by anonymous Types/DapperRows/List/Array/Set/Enumrable/DataTable/Dictionary
+- Support dynamic/type mapping query and create by AnonymousType/DapperRows/List/Array/Set/Enumrable/DataTable/Dictionary
 
 ### Installation
 
@@ -51,6 +51,36 @@ using (var stream = File.OpenRead(path))
     Assert.Equal(2, rows[1].Column2);
 }
 ```
+
+### Create Excel Xlsx file by ICollection Anonymous Type/Datatable
+```
+var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
+MiniExcel.Create(path, new[] {
+    new { Column1 = "MiniExcel", Column2 = 1 },
+    new { Column1 = "Github", Column2 = 2}
+});
+```
+
+Datatable:  
+```
+var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
+var table = new DataTable();
+{
+    table.Columns.Add("Column1", typeof(string));
+    table.Columns.Add("Column2", typeof(decimal));
+    table.Rows.Add("MiniExcel", 1);
+    table.Rows.Add("Github", 2);
+}
+
+MiniExcel.Create(path, table);
+```
+
+Create File Result : 
+
+| Column1 | Column2 | 
+| -------- | -------- | 
+| MiniExcel     | 1     |  
+| Github     | 2     | 
 
 
 ### TODO

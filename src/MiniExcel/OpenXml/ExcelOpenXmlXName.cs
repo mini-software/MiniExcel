@@ -1,5 +1,7 @@
 ﻿namespace MiniExcelLibs.OpenXml
 {
+    using System;
+    using System.Collections.Generic;
     using System.Xml.Linq;
     internal static class ExcelOpenXmlXName
     {

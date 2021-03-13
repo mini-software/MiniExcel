@@ -5,7 +5,7 @@
     <Product>MiniExcel</Product>
     <PackageTags>excel;xlsx;micro-helper;mini;openxml;helper;</PackageTags>
     <Description>
-      A high performance Micro-Helper without any third party library and supporting Excel xlsx create and read etc..
+      A high performance Excel Xlsx Micro-Helper without any third party library and supporting create and dynamic/type mapping query etc..
 
       Github : https://github.com/shps951023/MiniExcel
       Issues : https://github.com/shps951023/MiniExcel/issues

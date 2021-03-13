@@ -3,10 +3,12 @@
 ## Release  Notes
 
 ### 0.0.3-beta
+- Support Query dynamic and IEnumrable lazy loading to avoid OOM
 - MiniExcelHelper.Create value type change to ICollection
-- MiniExcelHelper.Create Support DataTable,Dapper Dynamic Query,Dictionary
 - Encode XML Value `&apos; &quot; &gt; &lt; &amp;`
-- Support Rear<Type>("input.xlsx")
+- Check Multiple Sheet Index Order
+- Dynamic Query support A,B,C.. column name key
+- Support insert empty Rows between rows
 
 ### 0.0.2-beta
 - Remove System.IO.Packaging.Package Dependency, and replaced by System.IO.Compression.ZipArchive

@@ -8,14 +8,116 @@ using System.IO.Packaging;
 using System.Data;
 using ExcelDataReader;
 using System.Collections.Generic;
-using System.Dynamic;
+using MiniExcelLibs.Utils;
 
 namespace MiniExcelLibs.Tests
 {
     public class MiniExcelHelperTests
     {
         [Fact()]
-        public void QueryTest()
+        public void CenterEmptyRowsQueryTest()
+        {
+            var path = @"..\..\..\..\..\samples\xlsx\TestCenterEmptyRow\TestCenterEmptyRow.xlsx";
+            using (var stream = File.OpenRead(path))
+            {
+                var rows = stream.Query().ToList();
+
+                Assert.Equal("a", rows[0].A);
+                Assert.Equal("b", rows[0].B);
+                Assert.Equal("c", rows[0].C);
+                Assert.Equal("d", rows[0].D);
+
+                Assert.Equal(1, rows[1].A);
+                Assert.Equal(null, rows[1].B);
+                Assert.Equal(3, rows[1].C);
+                Assert.Equal(null, rows[1].D);
+
+                Assert.Equal(null, rows[2].A);
+                Assert.Equal(2, rows[2].B);
+                Assert.Equal(null, rows[2].C);
+                Assert.Equal(4, rows[2].D);
+
+                Assert.Equal(null, rows[3].A);
+                Assert.Equal(null, rows[3].B);
+                Assert.Equal(null, rows[3].C);
+                Assert.Equal(null, rows[3].D);
+
+                Assert.Equal(1, rows[4].A);
+                Assert.Equal(null, rows[4].B);
+                Assert.Equal(3, rows[4].C);
+                Assert.Equal(null, rows[4].D);
+
+                Assert.Equal(null, rows[5].A);
+                Assert.Equal(2, rows[5].B);
+                Assert.Equal(null, rows[5].C);
+                Assert.Equal(4, rows[5].D);
+
+            }
+
+            using (var stream = File.OpenRead(path))
+            {
+                var rows = stream.Query(useHeaderRow: true).ToList();
+
+                Assert.Equal(1, rows[0].a);
+                Assert.Equal(null, rows[0].b);
+                Assert.Equal(3, rows[0].c);
+                Assert.Equal(null, rows[0].d);
+
+                Assert.Equal(null, rows[1].a);
+                Assert.Equal(2, rows[1].b);
+                Assert.Equal(null, rows[1].c);
+                Assert.Equal(4, rows[1].d);
+
+                Assert.Equal(null, rows[2].a);
+                Assert.Equal(null, rows[2].b);
+                Assert.Equal(null, rows[2].c);
+                Assert.Equal(null, rows[2].d);
+
+                Assert.Equal(1, rows[3].a);
+                Assert.Equal(null, rows[3].b);
+                Assert.Equal(3, rows[3].c);
+                Assert.Equal(null, rows[3].d);
+
+                Assert.Equal(null, rows[4].a);
+                Assert.Equal(2, rows[4].b);
+                Assert.Equal(null, rows[4].c);
+                Assert.Equal(4, rows[4].d);
+            }
+        }
+
+        [Fact()]
+        public void TestDynamicQueryBasic_WithoutHead()
+        {
+            var path = @"..\..\..\..\..\samples\xlsx\TestDynamicQueryBasic_WithoutHead.xlsx";
+            using (var stream = File.OpenRead(path))
+            {
+                var rows = stream.Query().ToList();
+
+                Assert.Equal("MiniExcel", rows[0].A);
+                Assert.Equal(1, rows[0].B);
+                Assert.Equal("Github", rows[1].A);
+                Assert.Equal(2, rows[1].B);
+            }
+        }
+
+        [Fact()]
+        public void TestDynamicQueryBasic_useHeaderRow()
+        {
+            var path = @"..\..\..\..\..\samples\xlsx\TestDynamicQueryBasic.xlsx";
+            using (var stream = File.OpenRead(path))
+            {
+                var rows = stream.Query(useHeaderRow:true).ToList();
+
+                Assert.Equal("MiniExcel", rows[0].Column1);
+                Assert.Equal(1, rows[0].Column2);
+                Assert.Equal("Github", rows[1].Column1);
+                Assert.Equal(2, rows[1].Column2);
+            }
+        }
+
+        //TODO:
+        //[Fact()]
+        public void QueryAvoidOOMSqlInsertTest()
         {
             var path = @"..\..\..\..\..\samples\xlsx\TestCenterEmptyRow\TestCenterEmptyRow.xlsx";
             using (var stream = File.OpenRead(path))
@@ -23,18 +125,19 @@ namespace MiniExcelLibs.Tests
                 var rows = stream.Query();
                 foreach (var item in rows)
                 {
-                    
+
                 }
             }
         }
 
-        [Fact()]
-        public void QueryExcelDataReaderCheckTest()
+        [Theory()]
+        [InlineData(@"..\..\..\..\..\samples\xlsx\ExcelDataReaderCollections\TestChess.xlsx")]
+        [InlineData(@"..\..\..\..\..\samples\xlsx\TestCenterEmptyRow\TestCenterEmptyRow.xlsx")]
+        public void QueryExcelDataReaderCheckTest(string path)
         {
 #if NETCOREAPP3_1 || NET5_0
             System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
 #endif
-            var path = @"..\..\..\..\..\samples\xlsx\TestCenterEmptyRow\TestCenterEmptyRow.xlsx";
 
             DataSet exceldatareaderResult;
             using (var stream = File.OpenRead(path))
@@ -46,6 +149,40 @@ namespace MiniExcelLibs.Tests
             using (var stream = File.OpenRead(path))
             {
                 var rows = stream.Query().ToList();
+                Assert.Equal(exceldatareaderResult.Tables[0].Rows.Count , rows.Count);
+                foreach (IDictionary<string, object> row in rows)
+                {
+                    var rowIndex = rows.IndexOf(row);
+                    var keys = row.Keys;
+                    foreach (var key in keys)
+                    {
+                        var eV = exceldatareaderResult.Tables[0].Rows[rowIndex][MiniExcelLibs.Utils.Helpers.GetColumnIndex(key)];
+                        var v = row[key]==null?DBNull.Value:row[key];
+                        Assert.Equal(eV, v);
+                    }
+                }
+            }
+        }
+
+        //[Theory()]
+        //[InlineData(@"..\..\..\..\..\samples\xlsx\ExcelDataReaderCollections\TestOpen\TestOpen.xlsx")]
+        public void QueryExcelDataReaderCheckTypeMappingTest(string path)
+        {
+#if NETCOREAPP3_1 || NET5_0
+            System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
+#endif
+
+            DataSet exceldatareaderResult;
+            using (var stream = File.OpenRead(path))
+            using (var reader = ExcelReaderFactory.CreateReader(stream))
+            {
+                exceldatareaderResult = reader.AsDataSet();
+            }
+
+            using (var stream = File.OpenRead(path))
+            {
+                var rows = stream.Query().ToList();
+                Assert.Equal(exceldatareaderResult.Tables[0].Rows.Count, rows.Count);
                 foreach (IDictionary<string, object> row in rows)
                 {
                     var rowIndex = rows.IndexOf(row);
@@ -53,7 +190,7 @@ namespace MiniExcelLibs.Tests
                     foreach (var key in keys)
                     {
                         var eV = exceldatareaderResult.Tables[0].Rows[rowIndex][int.Parse(key)];
-                        var v = row[key];
+                        var v = row[key] == null ? DBNull.Value : row[key];
                         Assert.Equal(eV, v);
                     }
                 }

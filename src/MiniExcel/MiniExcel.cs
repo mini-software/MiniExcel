@@ -1,6 +1,7 @@
 ﻿namespace MiniExcelLibs
 {
     using MiniExcelLibs.OpenXml;
+    using MiniExcelLibs.Utils;
     using MiniExcelLibs.Zip;
     using System;
     using System.Collections.Generic;
@@ -11,7 +12,6 @@
 
     public static partial class MiniExcel
     {
-
         private static Dictionary<string, ZipPackageInfo> GetDefaultFiles() => new Dictionary<string, ZipPackageInfo>()
         {
             { @"_rels/.rels",new ZipPackageInfo(DefualtXml.DefaultRels, "application/vnd.openxmlformats-package.relationships+xml")},
@@ -160,9 +160,9 @@
             CreateXlsxFile(filePath, defaultFiles);
         }
 
-        public static IEnumerable<dynamic> Query(this Stream stream, bool UseHeaderRow = false)
+        public static IEnumerable<dynamic> Query(this Stream stream, bool useHeaderRow = false)
         {
-            return new ExcelOpenXmlSheetReader().QueryImpl(stream, UseHeaderRow);
+            return new ExcelOpenXmlSheetReader().QueryImpl(stream, useHeaderRow);
         }
 
         private readonly static UTF8Encoding Utf8WithBom = new System.Text.UTF8Encoding(true);

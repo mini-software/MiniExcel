@@ -76,10 +76,65 @@ namespace MiniExcelLibs.OpenXml
             }
         }
 
-        private List<SheetRecord> _sheetRecords = null; 
+
+        private const string NsSpreadsheetMl = @"http://schemas.openxmlformats.org/spreadsheetml/2006/main";
+        internal IEnumerable<ExtendedFormat> ReadStyle(ReadOnlyCollection<ZipArchiveEntry> entries)
+        {
+            using (var stream = entries.Single(w => w.FullName == "xl/styles.xml").Open())
+            using (XmlReader reader = XmlReader.Create(stream, XmlSettings))
+            {
+                if (!reader.IsStartElement("styleSheet", NsSpreadsheetMl))
+                {
+                    yield break;
+                }
+
+                if (!XmlReaderHelper.ReadFirstContent(reader))
+                {
+                    yield break;
+                }
+
+                while (!reader.EOF)
+                {
+                    if (reader.IsStartElement("cellXfs", NsSpreadsheetMl))
+                    {
+                        if (!XmlReaderHelper.ReadFirstContent(reader))
+                        {
+                            yield break;
+                        }
+                        while (!reader.EOF)
+                        {
+                            if (reader.IsStartElement("xf", NsSpreadsheetMl))
+                            {
+                                int.TryParse(reader.GetAttribute("xfId"), out var xfId);
+                                int.TryParse(reader.GetAttribute("numFmtId"), out var numFmtId);
+
+                                yield return new ExtendedFormat()
+                                {
+                                    ParentCellStyleXf = xfId,
+                                    NumberFormatIndex = numFmtId,
+                                };
+                                reader.Skip();
+                            }
+                            else if (!XmlReaderHelper.SkipContent(reader))
+                            {
+                                break;
+                            }
+                        }
+                    }
+                    else if (!XmlReaderHelper.SkipContent(reader))
+                    {
+                        break;
+                    }
+                }
+            }
+        }
+
+        private List<SheetRecord> _sheetRecords = null;
+        private List<ExtendedFormat> _styles = null;
         internal void ReadWorkbookRels(ReadOnlyCollection<ZipArchiveEntry> entries)
         {
             _sheetRecords= ReadWorkbook(entries).ToList();
+            //_styles = ReadStyle(entries).ToList();
 
             using (var stream = entries.Single(w=> w.FullName == "xl/_rels/workbook.xml.rels").Open())
             using (XmlReader reader = XmlReader.Create(stream, XmlSettings))
@@ -143,7 +198,6 @@ namespace MiniExcelLibs.OpenXml
                 {
                     using (XmlReader reader = XmlReader.Create(firstSheetEntryStream, XmlSettings))
                     {
-                        //http://schemas.openxmlformats.org/spreadsheetml/2006/main
                         const string ns = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
                         if (!reader.IsStartElement("worksheet", ns))
                             yield break;
@@ -226,7 +280,7 @@ namespace MiniExcelLibs.OpenXml
                                                             cell[headRows[columnIndex]] = cellValue;
                                                     }
                                                     else
-                                                        cell[columnIndex.ToString()] = cellValue;
+                                                        cell[Helpers.GetAlphabetColumnName(columnIndex)] = cellValue;
                                                 }
                                                 else if (!XmlReaderHelper.SkipContent(reader))
                                                     break;
@@ -257,6 +311,8 @@ namespace MiniExcelLibs.OpenXml
 
         private object ReadCell(XmlReader reader, int nextColumnIndex, out int columnIndex)
         {
+            int xfIndex = -1;
+            var aS = reader.GetAttribute("s");
             var aT = reader.GetAttribute("t");
             var aR = reader.GetAttribute("r");
 
@@ -269,6 +325,12 @@ namespace MiniExcelLibs.OpenXml
             if (!XmlReaderHelper.ReadFirstContent(reader))
                 return null;
 
+            if (aS != null)
+            {
+                if (int.TryParse(aS, NumberStyles.Any, CultureInfo.InvariantCulture, out var styleIndex))
+                    xfIndex = styleIndex;
+            }
+
 
             object value = null;
             while (!reader.EOF)
@@ -277,23 +339,24 @@ namespace MiniExcelLibs.OpenXml
                 {
                     string rawValue = reader.ReadElementContentAsString();
                     if (!string.IsNullOrEmpty(rawValue))
-                        ConvertCellValue(rawValue, aT, out value);
+                        ConvertCellValue(rawValue, aT, xfIndex, out value);
                 }
                 else if (reader.IsStartElement("is", "http://schemas.openxmlformats.org/spreadsheetml/2006/main"))
                 {
                     string rawValue = StringHelper.ReadStringItem(reader);
                     if (!string.IsNullOrEmpty(rawValue))
-                        ConvertCellValue(rawValue, aT, out value);
+                        ConvertCellValue(rawValue, aT, xfIndex, out value);
                 }
                 else if (!XmlReaderHelper.SkipContent(reader))
                 {
                     break;
                 }
             }
+
             return value;
         }
 
-        private void ConvertCellValue(string rawValue, string aT, out object value)
+        private void ConvertCellValue(string rawValue, string aT,int xfIndex, out object value)
         {
             const NumberStyles style = NumberStyles.Any;
             var invariantCulture = CultureInfo.InvariantCulture;
@@ -335,6 +398,17 @@ namespace MiniExcelLibs.OpenXml
                     if (double.TryParse(rawValue, style, invariantCulture, out double number))
                     {
                         value = number;
+                        //TODO:Convert Date
+                        //TODO:IsDate1904
+                        //var format = Workbook.GetNumberFormatString(numberFormatIndex);
+                        //if (format != null)
+                        //{
+                        //    if (format.IsDateTimeFormat)
+                        //        return Helpers.ConvertFromOATime(number, false);
+                        //    if (format.IsTimeSpanFormat)
+                        //        return TimeSpan.FromDays(number);
+                        //}
+
                         return;
                     }
 

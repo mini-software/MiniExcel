@@ -5,18 +5,42 @@
     using System.Dynamic;
     using System.Globalization;
     using System.Text.RegularExpressions;
-
+    
     internal static class Helpers
     {
 	   private static readonly Regex EscapeRegex = new Regex("_x([0-9A-F]{4,4})_");
+	   private static Dictionary<int, string> _IntMappingAlphabet = new Dictionary<int, string>();
+	   private static Dictionary<string, int> _AlphabetMappingInt = new Dictionary<string, int>();
+	   static Helpers()
+	   {
+		  for (int i = 0; i <= 255; i++)
+		  {
+			 _IntMappingAlphabet.Add(i, IntToLetters(i));
+			 _AlphabetMappingInt.Add(IntToLetters(i), i);
+		  }
+	   }
 
+	   public static string GetAlphabetColumnName(int ColumnIndex) => _IntMappingAlphabet[ColumnIndex];
+	   public static int GetColumnIndex(string columnName) => _AlphabetMappingInt[columnName];
+
+	   internal static string IntToLetters(int value)
+	   {
+		  value = value + 1;
+		  string result = string.Empty;
+		  while (--value >= 0)
+		  {
+			 result = (char)('A' + value % 26) + result;
+			 value /= 26;
+		  }
+		  return result;
+	   }
 	   public static IDictionary<string, object> GetEmptyExpandoObject(int maxColumnIndex)
 	   {
 		  // TODO: strong type mapping can ignore this
 		  // TODO: it can recode better performance 
 		  var cell = (IDictionary<string, object>)new ExpandoObject();
 		  for (int i = 0; i <= maxColumnIndex; i++)
-			 cell.Add(i.ToString(), null);
+			 cell.Add(GetAlphabetColumnName(i), null);
 		  return cell;
 	   }
 

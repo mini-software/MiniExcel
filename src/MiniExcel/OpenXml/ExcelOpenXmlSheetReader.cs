@@ -17,6 +17,8 @@ namespace MiniExcelLibs.OpenXml
         internal Dictionary<int, string> GetSharedStrings(ReadOnlyCollection<ZipArchiveEntry> entries)
         {
             var sharedStringsEntry = entries.SingleOrDefault(w => w.FullName == "xl/sharedStrings.xml");
+            if (sharedStringsEntry == null)
+                return null;
             using (var reader = sharedStringsEntry.Open())
             {
                 var xl = XElement.Load(reader);

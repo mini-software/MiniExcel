@@ -5,9 +5,8 @@
 - `Avoid large file OOM(out of memoery)` by IEnumerable Lazy `Step By Step getting one row cells` not until all rows read in memory  
 e.g:  Comparison of MiniExcel Query and ExcelDataReader/EPPlus/ClosedXml of reading large Xlsx File
 ![miniexcel_lazy_load](https://user-images.githubusercontent.com/12729184/111034290-e5588a80-844f-11eb-8c84-6fdb6fb8f403.gif)
-- Mini (DLL Size Only 20KB) and easy to use.
 - Support .NET Standard 2.0/.NET 4.6/.NET 5
-- Without any third party library dependencies
+- Mini(40KB) without any third party library dependencies
 - Support dynamic/type mapping query and create by AnonymousType/DapperRows/List/Array/Set/Enumrable/DataTable/Dictionary
 
 ### Installation

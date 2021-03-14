@@ -2,6 +2,9 @@
 
 ## Release  Notes
 
+### 0.0.5-beta
+- Release remove `assembly: InternalsVisibleTo`
+
 ### 0.0.4-beta
 - Support SaveAs Stream
 

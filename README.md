@@ -90,6 +90,30 @@ using (var stream = new FileStream(path, FileMode.CreateNew))
 }
 ```
 
+### Query First
+
+```C#
+using (var stream = File.OpenRead(path))
+    Assert.Equal("HelloWorld", stream.QueryFirst().A);
+```
+
+### SQLite & Dapper `Large Size File` SQL Insert Avoid OOM (out of memory) 
+
+```C#
+using (var connection = new SQLiteConnection(connectionString))
+{
+    connection.Open();
+    using (var transaction = connection.BeginTransaction())
+    using (var stream = File.OpenRead(path))
+    {
+	   var rows = stream.Query();
+	   foreach (var row in rows)
+			 connection.Execute("insert into T (A,B) values (@A,@B)", new { row.A, row.B }, transaction: transaction);
+	   transaction.Commit();
+    }
+}
+```
+
 ### ASP.NET Core 3.1 or MVC 5 Download Excel Xlsx API Demo
 
 ```C#

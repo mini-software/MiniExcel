@@ -271,6 +271,60 @@ namespace MiniExcelLibs.Tests
         }
 
         [Fact()]
+        public void BasicSaveAsStreamTest()
+        {
+            {
+                var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
+                var values = new[] {
+                      new { Column1 = "MiniExcel", Column2 = 1 },
+                      new { Column1 = "Github", Column2 = 2}
+                };
+                using (var stream = new FileStream(path, FileMode.CreateNew))
+                {
+                    stream.SaveAs(values);
+                }
+
+                using (var stream = File.OpenRead(path))
+                {
+                    var rows = stream.Query(useHeaderRow: true).ToList();
+
+                    Assert.Equal("MiniExcel", rows[0].Column1);
+                    Assert.Equal(1, rows[0].Column2);
+                    Assert.Equal("Github", rows[1].Column1);
+                    Assert.Equal(2, rows[1].Column2);
+                };
+
+                File.Delete(path);
+            }
+            {
+                var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
+                var values = new[] {
+                      new { Column1 = "MiniExcel", Column2 = 1 },
+                      new { Column1 = "Github", Column2 = 2}
+                };
+                using (var stream = new MemoryStream())
+                using (var fileStream = new FileStream(path, FileMode.Create))
+                {
+                    stream.SaveAs(values);
+                    stream.Seek(0, SeekOrigin.Begin);
+                    stream.CopyTo(fileStream);
+                }
+
+                using (var stream = File.OpenRead(path))
+                {
+                    var rows = stream.Query(useHeaderRow: true).ToList();
+
+                    Assert.Equal("MiniExcel", rows[0].Column1);
+                    Assert.Equal(1, rows[0].Column2);
+                    Assert.Equal("Github", rows[1].Column1);
+                    Assert.Equal(2, rows[1].Column2);
+                };
+
+                File.Delete(path);
+            }
+        }
+
+        [Fact()]
         public void SpecialAndTypeCreateTest()
         {
             var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");

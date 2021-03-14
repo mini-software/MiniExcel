@@ -2,6 +2,9 @@
 
 ## Release  Notes
 
+### 0.0.4-beta
+- Support SaveAs Stream
+
 ### 0.0.3-beta
 - Support Query dynamic and IEnumrable lazy loading to avoid OOM
 - MiniExcelHelper.Create value type change to ICollection

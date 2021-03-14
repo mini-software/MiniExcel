@@ -21,7 +21,17 @@
             { @"xl/worksheets/sheet1.xml",new ZipPackageInfo(DefualtXml.DefaultSheetXml, "application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml")},
         };
 
+        public static void SaveAs(this Stream stream,object value, string startCell = "A1", bool printHeader = true)
+        {
+            SaveAsImpl(stream,GetCreateXlsxInfos(value, startCell, printHeader));
+        }
+
         public static void Create(string filePath, object value, string startCell = "A1", bool printHeader = true)
+        {
+            CreateXlsxFile(filePath, GetCreateXlsxInfos(value, startCell, printHeader));
+        }
+
+        private static Dictionary<string, ZipPackageInfo> GetCreateXlsxInfos(object value, string startCell, bool printHeader)
         {
             var xy = ExcelOpenXmlUtils.ConvertCellToXY(startCell);
 
@@ -157,7 +167,7 @@
 </x:worksheet>";
             }
 
-            CreateXlsxFile(filePath, defaultFiles);
+            return defaultFiles;
         }
 
         public static IEnumerable<dynamic> Query(this Stream stream, bool useHeaderRow = false)
@@ -169,33 +179,43 @@
         private static void CreateXlsxFile(string path, Dictionary<string, ZipPackageInfo> zipPackageInfos)
         {
             using (FileStream stream = new FileStream(path, FileMode.CreateNew))
-            using (ZipArchive archive = new ZipArchive(stream, ZipArchiveMode.Create, false, UTF8Encoding.UTF8))
+            using(ZipArchive archive = new ZipArchive(stream, ZipArchiveMode.Create, false, Utf8WithBom))
+                CreteXlsxImpl(zipPackageInfos, archive);
+        }
+        private static void SaveAsImpl(Stream stream,Dictionary<string, ZipPackageInfo> zipPackageInfos)
+        {
+            using (var archive = new ZipArchive(stream, ZipArchiveMode.Create, true, Utf8WithBom))
             {
-                //[Content_Types].xml
-                {
-                    var sb = new StringBuilder(@"<?xml version=""1.0"" encoding=""UTF-8"" standalone=""yes""?>
+                CreteXlsxImpl(zipPackageInfos, archive);
+            }
+        }
+
+        private static void CreteXlsxImpl(Dictionary<string, ZipPackageInfo> zipPackageInfos, ZipArchive archive)
+        {
+            //[Content_Types].xml
+            {
+                var sb = new StringBuilder(@"<?xml version=""1.0"" encoding=""UTF-8"" standalone=""yes""?>
 <Types xmlns=""http://schemas.openxmlformats.org/package/2006/content-types"">
     <Default ContentType=""application/xml"" Extension=""xml""/>
     <Default ContentType=""application/vnd.openxmlformats-package.relationships+xml"" Extension=""rels""/>");
-                    foreach (var p in zipPackageInfos)
-                    {
-                        sb.AppendLine($"<Override ContentType=\"{p.Value.ContentType}\" PartName=\"/{p.Key}\" />");
-                    }
-                    sb.AppendLine("</Types>");
-
-                    ZipArchiveEntry entry = archive.CreateEntry("[Content_Types].xml");
-                    using (var zipStream = entry.Open())
-                    using (StreamWriter writer = new StreamWriter(zipStream, Utf8WithBom))
-                        writer.Write(sb.ToString());
-                }
-
                 foreach (var p in zipPackageInfos)
                 {
-                    ZipArchiveEntry entry = archive.CreateEntry(p.Key);
-                    using (var zipStream = entry.Open())
-                    using (StreamWriter writer = new StreamWriter(zipStream, Utf8WithBom))
-                        writer.Write(p.Value.Xml.ToString());
+                    sb.AppendLine($"<Override ContentType=\"{p.Value.ContentType}\" PartName=\"/{p.Key}\" />");
                 }
+                sb.AppendLine("</Types>");
+
+                ZipArchiveEntry entry = archive.CreateEntry("[Content_Types].xml");
+                using (var zipStream = entry.Open())
+                using (StreamWriter writer = new StreamWriter(zipStream, Utf8WithBom))
+                    writer.Write(sb.ToString());
+            }
+
+            foreach (var p in zipPackageInfos)
+            {
+                ZipArchiveEntry entry = archive.CreateEntry(p.Key);
+                using (var zipStream = entry.Open())
+                using (StreamWriter writer = new StreamWriter(zipStream, Utf8WithBom))
+                    writer.Write(p.Value.Xml.ToString());
             }
         }
     }

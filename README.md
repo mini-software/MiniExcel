@@ -53,7 +53,7 @@ using (var stream = File.OpenRead(path))
 ```
 
 ### Create Excel Xlsx file by ICollection Anonymous Type/Datatable
-```
+```C#
 var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
 MiniExcel.Create(path, new[] {
     new { Column1 = "MiniExcel", Column2 = 1 },
@@ -62,7 +62,7 @@ MiniExcel.Create(path, new[] {
 ```
 
 Datatable:  
-```
+```C#
 var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
 var table = new DataTable();
 {
@@ -82,6 +82,14 @@ Create File Result :
 | MiniExcel     | 1     |  
 | Github     | 2     | 
 
+### SaveAs Stream
+
+```C#
+using (var stream = new FileStream(path, FileMode.CreateNew))
+{
+    stream.SaveAs(values);
+}
+```
 
 ### TODO
 

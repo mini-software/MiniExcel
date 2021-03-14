@@ -27,7 +27,7 @@
             stream.Position = 0;
         }
 
-        public static void Create(string filePath, object value, string startCell = "A1", bool printHeader = true)
+        public static void SaveAs(string filePath, object value, string startCell = "A1", bool printHeader = true)
         {
             CreateXlsxFile(filePath, GetCreateXlsxInfos(value, startCell, printHeader));
         }

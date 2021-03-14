@@ -214,7 +214,7 @@ namespace MiniExcelLibs.Tests
                     table.Rows.Add(@"<test>Hello World</test>", -1234567890, false, now.Date);
                 }
 
-                MiniExcel.Create(path, table);
+                MiniExcel.SaveAs(path, table);
 
                 using (var p = new ExcelPackage(new FileInfo(path)))
                 {
@@ -244,7 +244,7 @@ namespace MiniExcelLibs.Tests
                     table.Rows.Add("Github", 2);
                 }
 
-                MiniExcel.Create(path, table);
+                MiniExcel.SaveAs(path, table);
             }
         }
 
@@ -252,7 +252,7 @@ namespace MiniExcelLibs.Tests
         public void BasicCreateTest()
         {
             var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
-            MiniExcel.Create(path, new[] {
+            MiniExcel.SaveAs(path, new[] {
                   new { Column1 = "MiniExcel", Column2 = 1 },
                   new { Column1 = "Github", Column2 = 2}
             });
@@ -328,7 +328,7 @@ namespace MiniExcelLibs.Tests
         public void SpecialAndTypeCreateTest()
         {
             var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
-            MiniExcel.Create(path, new[] {
+            MiniExcel.SaveAs(path, new[] {
                   new { a = @"""<>+-*//}{\\n", b = 1234567890,c = true,d=DateTime.Now },
                   new { a = "<test>Hello World</test>", b = -1234567890,c=false,d=DateTime.Now.Date}
              });
@@ -344,7 +344,7 @@ namespace MiniExcelLibs.Tests
         {
             var now = DateTime.Now;
             var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
-            MiniExcel.Create(path, new[] {
+            MiniExcel.SaveAs(path, new[] {
                   new { a = @"""<>+-*//}{\\n", b = 1234567890,c = true,d= now},
                   new { a = "<test>Hello World</test>", b = -1234567890,c=false,d=now.Date}
              });
@@ -370,7 +370,7 @@ namespace MiniExcelLibs.Tests
         {
             var now = DateTime.Now;
             var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
-            MiniExcel.Create(path, new[] {
+            MiniExcel.SaveAs(path, new[] {
                   new { a = @"""<>+-*//}{\\n", b = 1234567890,c = true,d= now},
                   new { a = "<test>Hello World</test>", b = -1234567890,c=false,d=now.Date}
              });
@@ -396,7 +396,7 @@ namespace MiniExcelLibs.Tests
         {
             var now = DateTime.Now;
             var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
-            MiniExcel.Create(path, new[] {
+            MiniExcel.SaveAs(path, new[] {
                   new { a = @"""<>+-*//}{\\n", b = 1234567890,c = true,d= now},
                   new { a = "<test>Hello World</test>", b = -1234567890,c=false,d=now.Date}
              });

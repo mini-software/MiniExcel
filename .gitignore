@@ -16,3 +16,4 @@ NuGet.exe
 *.coverage
 .dotnet/*
 .idea/
+/src/packages

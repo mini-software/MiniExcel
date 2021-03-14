@@ -146,6 +146,10 @@ public class ExcelController : Controller
 
 Please Check [Issues · todo](https://github.com/shps951023/MiniExcel/labels/todo)
 
-## Release Notes
+### Release Notes
 
 Please Check [Release Notes](https://github.com/shps951023/MiniExcel/tree/master/docs)
+
+### Reference 
+
+- [ExcelDataReader](https://github.com/ExcelDataReader/ExcelDataReader)

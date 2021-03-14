@@ -1,4 +1,7 @@
-﻿namespace MiniExcelLibs.Utils
+﻿/**
+ This Class Modified from ExcelDataReader : https://github.com/ExcelDataReader/ExcelDataReader
+ **/
+namespace MiniExcelLibs.Utils
 {
     using System.Xml;
 

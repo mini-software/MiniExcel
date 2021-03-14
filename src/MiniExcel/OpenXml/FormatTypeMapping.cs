@@ -2,11 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
-
-    /// <summary>
-    /// Parse ECMA-376 number format strings from Excel and other spreadsheet softwares.
-    /// </summary>
-    public class FormatTypeMapping
+    internal class FormatTypeMapping
     {
         private static Dictionary<int, FormatTypeMapping> Formats { get; } = new Dictionary<int, FormatTypeMapping>()
         {
@@ -70,12 +66,8 @@
 
         public Type FormatType { get; }
     }
-    public class ExtendedFormat
+    internal class ExtendedFormat
     {
-        /// <summary>
-        /// Gets or sets the index to the parent Cell Style CF record with overrides for this XF. Only used with Cell XFs.
-        /// 0xFFF means no override
-        /// </summary>
         public int ParentCellStyleXf { get; set; }
         public int NumberFormatIndex { get; set; }
     }

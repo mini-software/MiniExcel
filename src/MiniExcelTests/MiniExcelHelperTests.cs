@@ -118,21 +118,6 @@ namespace MiniExcelLibs.Tests
             }
         }
 
-        //TODO:
-        //[Fact()]
-        public void QueryAvoidOOMSqlInsertTest()
-        {
-            var path = @"..\..\..\..\..\samples\xlsx\TestCenterEmptyRow\TestCenterEmptyRow.xlsx";
-            using (var stream = File.OpenRead(path))
-            {
-                var rows = stream.Query();
-                foreach (var item in rows)
-                {
-
-                }
-            }
-        }
-
         [Theory()]
         [InlineData(@"..\..\..\..\..\samples\xlsx\ExcelDataReaderCollections\TestChess.xlsx")]
         [InlineData(@"..\..\..\..\..\samples\xlsx\TestCenterEmptyRow\TestCenterEmptyRow.xlsx")]
@@ -254,10 +239,7 @@ namespace MiniExcelLibs.Tests
         {
             var path = @"..\..\..\..\..\samples\xlsx\Test1,000,000x10\Test1,000,000x10.xlsx";
             using (var stream = File.OpenRead(path))
-            {
-                var b = stream.QueryFirst().A;
                 Assert.Equal("HelloWorld", stream.QueryFirst().A);
-            }
         }
 
         [Fact()]

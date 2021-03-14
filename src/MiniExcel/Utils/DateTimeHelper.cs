@@ -1,7 +1,6 @@
-﻿/*
- Code from ExcelDataReader : https://github.com/ExcelDataReader/ExcelDataReader/blob/master/src/ExcelDataReader/Core/Helpers.cs
- */
-
+﻿/**
+ This Class Code from ExcelDataReader : https://github.com/ExcelDataReader/ExcelDataReader
+ **/
 namespace MiniExcelLibs.Utils
 {
     using System;

@@ -91,6 +91,35 @@ using (var stream = new FileStream(path, FileMode.CreateNew))
 }
 ```
 
+### ASP.NET Core 3.1 Download Excel Xlsx Demo
+
+```C#
+public class Startup
+{
+    public void ConfigureServices(IServiceCollection services) => services.AddMvc();
+    public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+    {
+        app.UseRouting();
+        app.UseEndpoints(endpoints => endpoints.MapDefaultControllerRoute());
+    }
+}
+public class HomeController : Controller
+{
+    public IActionResult Index()
+    {
+        var values = new[] {
+            new { Column1 = "MiniExcel", Column2 = 1 },
+            new { Column1 = "Github", Column2 = 2}
+        };
+        var stream = new MemoryStream();
+        stream.SaveAs(values);
+        return File(stream,
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            "demo.xlsx");
+    }
+}
+```
+
 ### TODO
 
 Please Check [Issues · todo](https://github.com/shps951023/MiniExcel/labels/todo)

@@ -24,6 +24,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{3E370222-8
 		..\docs\README.md = ..\docs\README.md
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MiniExcel.Tests.AspNetCore", "MiniExcel.Tests.AspNetCore\MiniExcel.Tests.AspNetCore.csproj", "{08A441E8-3F5B-4FB8-A973-131CD1303292}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -38,6 +40,10 @@ Global
 		{1B30A8E7-11E1-4A74-95CD-46E36B928F44}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1B30A8E7-11E1-4A74-95CD-46E36B928F44}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1B30A8E7-11E1-4A74-95CD-46E36B928F44}.Release|Any CPU.Build.0 = Release|Any CPU
+		{08A441E8-3F5B-4FB8-A973-131CD1303292}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{08A441E8-3F5B-4FB8-A973-131CD1303292}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{08A441E8-3F5B-4FB8-A973-131CD1303292}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{08A441E8-3F5B-4FB8-A973-131CD1303292}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -45,6 +51,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{097903C9-1F81-4427-B4C8-530CB59687B8} = {CC1E0601-AEC9-42D7-8F6A-3FB3939EED16}
 		{1B30A8E7-11E1-4A74-95CD-46E36B928F44} = {359A7094-3353-48F2-B3E1-FE9E59698318}
+		{08A441E8-3F5B-4FB8-A973-131CD1303292} = {359A7094-3353-48F2-B3E1-FE9E59698318}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {51DF25DA-2DCB-4883-90FE-399DA950D4F2}

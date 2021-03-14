@@ -6,7 +6,7 @@
 e.g:  Comparison of MiniExcel Query and ExcelDataReader/EPPlus/ClosedXml of reading large Xlsx File
 ![miniexcel_lazy_load](https://user-images.githubusercontent.com/12729184/111034290-e5588a80-844f-11eb-8c84-6fdb6fb8f403.gif)
 - Support .NET Standard 2.0/.NET 4.6/.NET 5
-- Mini(40KB) without any third party library dependencies
+- Mini without any third party library dependencies
 - Support dynamic/type mapping query and create by AnonymousType/DapperRows/List/Array/Set/Enumrable/DataTable/Dictionary
 
 ### Installation
@@ -90,21 +90,12 @@ using (var stream = new FileStream(path, FileMode.CreateNew))
 }
 ```
 
-### ASP.NET Core 3.1 Download Excel Xlsx Demo
+### ASP.NET Core 3.1 or MVC 5 Download Excel Xlsx API Demo
 
 ```C#
-public class Startup
+public class ExcelController : Controller
 {
-    public void ConfigureServices(IServiceCollection services) => services.AddMvc();
-    public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
-    {
-        app.UseRouting();
-        app.UseEndpoints(endpoints => endpoints.MapDefaultControllerRoute());
-    }
-}
-public class HomeController : Controller
-{
-    public IActionResult Index()
+    public IActionResult Download()
     {
         var values = new[] {
             new { Column1 = "MiniExcel", Column2 = 1 },

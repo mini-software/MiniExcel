@@ -10,6 +10,8 @@ using ExcelDataReader;
 using System.Collections.Generic;
 using MiniExcelLibs.Utils;
 using System.Threading;
+using System.Data.SQLite;
+using Dapper;
 
 namespace MiniExcelLibs.Tests
 {
@@ -233,7 +235,6 @@ namespace MiniExcelLibs.Tests
 
                 File.Delete(path);
             }
-
             {
                 var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
                 var table = new DataTable();
@@ -246,6 +247,52 @@ namespace MiniExcelLibs.Tests
 
                 MiniExcel.SaveAs(path, table);
             }
+        }
+
+        [Fact()]
+        public void QueryFirstAvoidLargeFileOOMTest()
+        {
+            var path = @"..\..\..\..\..\samples\xlsx\Test1,000,000x10\Test1,000,000x10.xlsx";
+            using (var stream = File.OpenRead(path))
+            {
+                var b = stream.QueryFirst().A;
+                Assert.Equal("HelloWorld", stream.QueryFirst().A);
+            }
+        }
+
+        [Fact()]
+        public void SQLiteInsertTest()
+        {
+            // Avoid SQL Insert Large Size Xlsx OOM
+            var path = @"..\..\..\..\..\samples\xlsx\Test5x2.xlsx";
+            var tempSqlitePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.db");
+            var connectionString = $"Data Source={tempSqlitePath};Version=3;";
+
+            using (var connection = new SQLiteConnection(connectionString))
+            {
+                connection.Execute(@"create table T (A varchar(20),B varchar(20));");
+            }
+
+            using (var connection = new SQLiteConnection(connectionString))
+            {
+                connection.Open();
+                using (var transaction = connection.BeginTransaction())
+                using (var stream = File.OpenRead(path))
+                {
+                    var rows = stream.Query();
+                    foreach (var row in rows)
+                        connection.Execute("insert into T (A,B) values (@A,@B)", new { row.A, row.B }, transaction: transaction);
+                    transaction.Commit();
+                }
+            }
+
+            using (var connection = new SQLiteConnection(connectionString))
+            {
+                var result = connection.Query("select * from T");
+                Assert.Equal(5, result.Count());
+            }
+
+            File.Delete(tempSqlitePath);
         }
 
         [Fact()]

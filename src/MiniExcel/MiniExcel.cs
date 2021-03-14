@@ -1,7 +1,7 @@
 ﻿namespace MiniExcelLibs
 {
     using MiniExcelLibs.OpenXml;
-    using MiniExcelLibs.Utils;
+    using System.Linq;
     using MiniExcelLibs.Zip;
     using System;
     using System.Collections.Generic;
@@ -174,6 +174,11 @@
         public static IEnumerable<dynamic> Query(this Stream stream, bool useHeaderRow = false)
         {
             return new ExcelOpenXmlSheetReader().QueryImpl(stream, useHeaderRow);
+        }
+
+        public static dynamic QueryFirst(this Stream stream, bool useHeaderRow = false)
+        {
+            return new ExcelOpenXmlSheetReader().QueryImpl(stream, useHeaderRow).First();
         }
 
         private readonly static UTF8Encoding Utf8WithBom = new System.Text.UTF8Encoding(true);

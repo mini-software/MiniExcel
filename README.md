@@ -54,7 +54,7 @@ using (var stream = File.OpenRead(path))
 ### Create Excel Xlsx file by ICollection Anonymous Type/Datatable
 ```C#
 var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
-MiniExcel.Create(path, new[] {
+MiniExcel.SaveAs(path, new[] {
     new { Column1 = "MiniExcel", Column2 = 1 },
     new { Column1 = "Github", Column2 = 2}
 });
@@ -71,7 +71,7 @@ var table = new DataTable();
     table.Rows.Add("Github", 2);
 }
 
-MiniExcel.Create(path, table);
+MiniExcel.SaveAs(path, table);
 ```
 
 Create File Result : 

@@ -2,6 +2,9 @@
 
 ## Release  Notes
 
+### 0.0.6-beta
+- [Breaking Changes]Replace Create by SavaAs
+
 ### 0.0.5-beta
 - Release remove `assembly: InternalsVisibleTo`
 

@@ -24,6 +24,7 @@
         public static void SaveAs(this Stream stream,object value, string startCell = "A1", bool printHeader = true)
         {
             SaveAsImpl(stream,GetCreateXlsxInfos(value, startCell, printHeader));
+            stream.Position = 0;
         }
 
         public static void Create(string filePath, object value, string startCell = "A1", bool printHeader = true)

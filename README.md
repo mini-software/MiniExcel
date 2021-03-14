@@ -97,6 +97,10 @@ using (var stream = File.OpenRead(path))
     Assert.Equal("HelloWorld", stream.QueryFirst().A);
 ```
 
+performance:  MiniExcel/ExcelDataReader/ClosedXML/EPPlus  
+![queryfirst](https://user-images.githubusercontent.com/12729184/111072392-6037a900-8515-11eb-9693-5ce2dad1e460.gif)
+
+
 ### SQLite & Dapper `Large Size File` SQL Insert Avoid OOM (out of memory) 
 
 ```C#
@@ -113,6 +117,10 @@ using (var connection = new SQLiteConnection(connectionString))
     }
 }
 ```
+
+performance:
+![image](https://user-images.githubusercontent.com/12729184/111072579-2dda7b80-8516-11eb-9843-c01a1edc88ec.png)
+
 
 ### ASP.NET Core 3.1 or MVC 5 Download Excel Xlsx API Demo
 

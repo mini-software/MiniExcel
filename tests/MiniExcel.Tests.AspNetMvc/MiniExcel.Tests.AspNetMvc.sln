@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31025.194
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MiniExcel.Tests.AspNetMvc", "MiniExcel.Tests.AspNetMvc.csproj", "{EFA5A752-A230-4955-9769-06320690CB5F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{EFA5A752-A230-4955-9769-06320690CB5F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EFA5A752-A230-4955-9769-06320690CB5F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EFA5A752-A230-4955-9769-06320690CB5F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EFA5A752-A230-4955-9769-06320690CB5F}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {5544749F-0A81-4EF6-A786-99CCCDA1DF3A}
+	EndGlobalSection
+EndGlobal

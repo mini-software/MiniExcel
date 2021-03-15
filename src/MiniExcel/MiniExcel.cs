@@ -180,6 +180,26 @@
             return QueryImpl<T>(stream);
         }
 
+        public static T QueryFirst<T>(this Stream stream) where T : class, new()
+        {
+            return QueryImpl<T>(stream).First();
+        }
+
+        public static T QueryFirstOrDefault<T>(this Stream stream) where T : class, new()
+        {
+            return QueryImpl<T>(stream).FirstOrDefault();
+        }
+
+        public static T QuerySingle<T>(this Stream stream) where T : class, new()
+        {
+            return QueryImpl<T>(stream).Single();
+        }
+
+        public static T QuerySingleOrDefault<T>(this Stream stream) where T : class, new()
+        {
+            return QueryImpl<T>(stream).SingleOrDefault();
+        }
+
         public static IEnumerable<dynamic> Query(this Stream stream, bool useHeaderRow = false)
         {
             return new ExcelOpenXmlSheetReader().QueryImpl(stream, useHeaderRow);

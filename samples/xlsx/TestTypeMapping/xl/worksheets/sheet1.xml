@@ -1,0 +1,2343 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"
+    xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="x14ac xr xr2 xr3"
+    xmlns:x14ac="http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac"
+    xmlns:xr="http://schemas.microsoft.com/office/spreadsheetml/2014/revision"
+    xmlns:xr2="http://schemas.microsoft.com/office/spreadsheetml/2015/revision2"
+    xmlns:xr3="http://schemas.microsoft.com/office/spreadsheetml/2016/revision3" xr:uid="{00000000-0001-0000-0000-000000000000}">
+    <dimension ref="A1:G101"/>
+    <sheetViews>
+        <sheetView tabSelected="1" workbookViewId="0">
+            <selection activeCell="G1" sqref="G1"/>
+        </sheetView>
+    </sheetViews>
+    <sheetFormatPr defaultRowHeight="14.4" x14ac:dyDescent="0.3"/>
+    <sheetData>
+        <row r="1" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A1" t="s">
+                <v>0</v>
+            </c>
+            <c r="B1" t="s">
+                <v>1</v>
+            </c>
+            <c r="C1" t="s">
+                <v>2</v>
+            </c>
+            <c r="D1" t="s">
+                <v>3</v>
+            </c>
+            <c r="E1" t="s">
+                <v>4</v>
+            </c>
+            <c r="F1" t="s">
+                <v>5</v>
+            </c>
+            <c r="G1" t="s">
+                <v>6</v>
+            </c>
+        </row>
+        <row r="2" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A2" t="s">
+                <v>7</v>
+            </c>
+            <c r="B2" t="s">
+                <v>8</v>
+            </c>
+            <c r="C2" t="s">
+                <v>9</v>
+            </c>
+            <c r="D2">
+                <v>36</v>
+            </c>
+            <c r="E2" t="s">
+                <v>10</v>
+            </c>
+            <c r="F2" t="s">
+                <v>11</v>
+            </c>
+            <c r="G2">
+                <v>5019.12</v>
+            </c>
+        </row>
+        <row r="3" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A3" t="s">
+                <v>12</v>
+            </c>
+            <c r="B3" t="s">
+                <v>13</v>
+            </c>
+            <c r="C3" t="s">
+                <v>14</v>
+            </c>
+            <c r="D3">
+                <v>44</v>
+            </c>
+            <c r="E3" t="s">
+                <v>15</v>
+            </c>
+            <c r="F3" t="s">
+                <v>16</v>
+            </c>
+            <c r="G3">
+                <v>7028.46</v>
+            </c>
+        </row>
+        <row r="4" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A4" t="s">
+                <v>17</v>
+            </c>
+            <c r="B4" t="s">
+                <v>18</v>
+            </c>
+            <c r="C4" t="s">
+                <v>19</v>
+            </c>
+            <c r="D4">
+                <v>33</v>
+            </c>
+            <c r="E4" t="s">
+                <v>15</v>
+            </c>
+            <c r="F4" t="s">
+                <v>20</v>
+            </c>
+            <c r="G4">
+                <v>3835.7</v>
+            </c>
+        </row>
+        <row r="5" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A5" t="s">
+                <v>21</v>
+            </c>
+            <c r="B5" t="s">
+                <v>22</v>
+            </c>
+            <c r="C5" t="s">
+                <v>23</v>
+            </c>
+            <c r="D5">
+                <v>32</v>
+            </c>
+            <c r="E5" t="s">
+                <v>10</v>
+            </c>
+            <c r="F5" t="s">
+                <v>24</v>
+            </c>
+            <c r="G5">
+                <v>9351.7099999999991</v>
+            </c>
+        </row>
+        <row r="6" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A6" t="s">
+                <v>25</v>
+            </c>
+            <c r="B6" t="s">
+                <v>26</v>
+            </c>
+            <c r="C6" t="s">
+                <v>27</v>
+            </c>
+            <c r="D6">
+                <v>18</v>
+            </c>
+            <c r="E6" t="s">
+                <v>15</v>
+            </c>
+            <c r="F6" t="s">
+                <v>28</v>
+            </c>
+            <c r="G6">
+                <v>8209.76</v>
+            </c>
+        </row>
+        <row r="7" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A7" t="s">
+                <v>29</v>
+            </c>
+            <c r="B7" t="s">
+                <v>30</v>
+            </c>
+            <c r="C7" t="s">
+                <v>31</v>
+            </c>
+            <c r="D7">
+                <v>60</v>
+            </c>
+            <c r="E7" t="s">
+                <v>10</v>
+            </c>
+            <c r="F7" t="s">
+                <v>32</v>
+            </c>
+            <c r="G7">
+                <v>4288.18</v>
+            </c>
+        </row>
+        <row r="8" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A8" t="s">
+                <v>33</v>
+            </c>
+            <c r="B8" t="s">
+                <v>34</v>
+            </c>
+            <c r="C8" t="s">
+                <v>35</v>
+            </c>
+            <c r="D8">
+                <v>30</v>
+            </c>
+            <c r="E8" t="s">
+                <v>10</v>
+            </c>
+            <c r="F8" t="s">
+                <v>36</v>
+            </c>
+            <c r="G8">
+                <v>3248.12</v>
+            </c>
+        </row>
+        <row r="9" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A9" t="s">
+                <v>37</v>
+            </c>
+            <c r="B9" t="s">
+                <v>38</v>
+            </c>
+            <c r="C9" t="s">
+                <v>39</v>
+            </c>
+            <c r="D9">
+                <v>52</v>
+            </c>
+            <c r="E9" t="s">
+                <v>15</v>
+            </c>
+            <c r="F9" t="s">
+                <v>40</v>
+            </c>
+            <c r="G9">
+                <v>2586.66</v>
+            </c>
+        </row>
+        <row r="10" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A10" t="s">
+                <v>41</v>
+            </c>
+            <c r="B10" t="s">
+                <v>42</v>
+            </c>
+            <c r="C10" t="s">
+                <v>43</v>
+            </c>
+            <c r="D10">
+                <v>34</v>
+            </c>
+            <c r="E10" t="s">
+                <v>15</v>
+            </c>
+            <c r="F10" t="s">
+                <v>44</v>
+            </c>
+            <c r="G10">
+                <v>5970.74</v>
+            </c>
+        </row>
+        <row r="11" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A11" t="s">
+                <v>45</v>
+            </c>
+            <c r="B11" t="s">
+                <v>46</v>
+            </c>
+            <c r="C11" t="s">
+                <v>47</v>
+            </c>
+            <c r="D11">
+                <v>43</v>
+            </c>
+            <c r="E11" t="s">
+                <v>10</v>
+            </c>
+            <c r="F11" t="s">
+                <v>48</v>
+            </c>
+            <c r="G11">
+                <v>1057.57</v>
+            </c>
+        </row>
+        <row r="12" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A12" t="s">
+                <v>49</v>
+            </c>
+            <c r="B12" t="s">
+                <v>50</v>
+            </c>
+            <c r="C12" t="s">
+                <v>51</v>
+            </c>
+            <c r="D12">
+                <v>47</v>
+            </c>
+            <c r="E12" t="s">
+                <v>10</v>
+            </c>
+            <c r="F12" t="s">
+                <v>52</v>
+            </c>
+            <c r="G12">
+                <v>9307.98</v>
+            </c>
+        </row>
+        <row r="13" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A13" t="s">
+                <v>53</v>
+            </c>
+            <c r="B13" t="s">
+                <v>54</v>
+            </c>
+            <c r="C13" t="s">
+                <v>55</v>
+            </c>
+            <c r="D13">
+                <v>44</v>
+            </c>
+            <c r="E13" t="s">
+                <v>15</v>
+            </c>
+            <c r="F13" t="s">
+                <v>56</v>
+            </c>
+            <c r="G13">
+                <v>6389.64</v>
+            </c>
+        </row>
+        <row r="14" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A14" t="s">
+                <v>57</v>
+            </c>
+            <c r="B14" t="s">
+                <v>58</v>
+            </c>
+            <c r="C14" t="s">
+                <v>59</v>
+            </c>
+            <c r="D14">
+                <v>52</v>
+            </c>
+            <c r="E14" t="s">
+                <v>10</v>
+            </c>
+            <c r="F14" t="s">
+                <v>60</v>
+            </c>
+            <c r="G14">
+                <v>8804.6</v>
+            </c>
+        </row>
+        <row r="15" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A15" t="s">
+                <v>61</v>
+            </c>
+            <c r="B15" t="s">
+                <v>62</v>
+            </c>
+            <c r="C15" t="s">
+                <v>63</v>
+            </c>
+            <c r="D15">
+                <v>54</v>
+            </c>
+            <c r="E15" t="s">
+                <v>15</v>
+            </c>
+            <c r="F15" t="s">
+                <v>64</v>
+            </c>
+            <c r="G15">
+                <v>8527.6299999999992</v>
+            </c>
+        </row>
+        <row r="16" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A16" t="s">
+                <v>65</v>
+            </c>
+            <c r="B16" t="s">
+                <v>66</v>
+            </c>
+            <c r="C16" t="s">
+                <v>67</v>
+            </c>
+            <c r="D16">
+                <v>51</v>
+            </c>
+            <c r="E16" t="s">
+                <v>15</v>
+            </c>
+            <c r="F16" t="s">
+                <v>68</v>
+            </c>
+            <c r="G16">
+                <v>4616.82</v>
+            </c>
+        </row>
+        <row r="17" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A17" t="s">
+                <v>69</v>
+            </c>
+            <c r="B17" t="s">
+                <v>70</v>
+            </c>
+            <c r="C17" t="s">
+                <v>71</v>
+            </c>
+            <c r="D17">
+                <v>20</v>
+            </c>
+            <c r="E17" t="s">
+                <v>10</v>
+            </c>
+            <c r="F17" t="s">
+                <v>72</v>
+            </c>
+            <c r="G17">
+                <v>401.75</v>
+            </c>
+        </row>
+        <row r="18" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A18" t="s">
+                <v>73</v>
+            </c>
+            <c r="B18" t="s">
+                <v>74</v>
+            </c>
+            <c r="C18" t="s">
+                <v>75</v>
+            </c>
+            <c r="D18">
+                <v>23</v>
+            </c>
+            <c r="E18" t="s">
+                <v>15</v>
+            </c>
+            <c r="F18" t="s">
+                <v>76</v>
+            </c>
+            <c r="G18">
+                <v>5624.33</v>
+            </c>
+        </row>
+        <row r="19" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A19" t="s">
+                <v>77</v>
+            </c>
+            <c r="B19" t="s">
+                <v>78</v>
+            </c>
+            <c r="C19" t="s">
+                <v>79</v>
+            </c>
+            <c r="D19">
+                <v>20</v>
+            </c>
+            <c r="E19" t="s">
+                <v>15</v>
+            </c>
+            <c r="F19" t="s">
+                <v>80</v>
+            </c>
+            <c r="G19">
+                <v>123.2</v>
+            </c>
+        </row>
+        <row r="20" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A20" t="s">
+                <v>81</v>
+            </c>
+            <c r="B20" t="s">
+                <v>82</v>
+            </c>
+            <c r="C20" t="s">
+                <v>83</v>
+            </c>
+            <c r="D20">
+                <v>38</v>
+            </c>
+            <c r="E20" t="s">
+                <v>15</v>
+            </c>
+            <c r="F20" t="s">
+                <v>84</v>
+            </c>
+            <c r="G20">
+                <v>6161.41</v>
+            </c>
+        </row>
+        <row r="21" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A21" t="s">
+                <v>85</v>
+            </c>
+            <c r="B21" t="s">
+                <v>86</v>
+            </c>
+            <c r="C21" t="s">
+                <v>87</v>
+            </c>
+            <c r="D21">
+                <v>26</v>
+            </c>
+            <c r="E21" t="s">
+                <v>10</v>
+            </c>
+            <c r="F21" t="s">
+                <v>88</v>
+            </c>
+            <c r="G21">
+                <v>5616.12</v>
+            </c>
+        </row>
+        <row r="22" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A22" t="s">
+                <v>89</v>
+            </c>
+            <c r="B22" t="s">
+                <v>90</v>
+            </c>
+            <c r="C22" t="s">
+                <v>91</v>
+            </c>
+            <c r="D22">
+                <v>54</v>
+            </c>
+            <c r="E22" t="s">
+                <v>15</v>
+            </c>
+            <c r="F22" t="s">
+                <v>92</v>
+            </c>
+            <c r="G22">
+                <v>844.25</v>
+            </c>
+        </row>
+        <row r="23" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A23" t="s">
+                <v>93</v>
+            </c>
+            <c r="B23" t="s">
+                <v>94</v>
+            </c>
+            <c r="C23" t="s">
+                <v>95</v>
+            </c>
+            <c r="D23">
+                <v>48</v>
+            </c>
+            <c r="E23" t="s">
+                <v>15</v>
+            </c>
+            <c r="F23" t="s">
+                <v>96</v>
+            </c>
+            <c r="G23">
+                <v>1891.27</v>
+            </c>
+        </row>
+        <row r="24" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A24" t="s">
+                <v>97</v>
+            </c>
+            <c r="B24" t="s">
+                <v>98</v>
+            </c>
+            <c r="C24" t="s">
+                <v>99</v>
+            </c>
+            <c r="D24">
+                <v>36</v>
+            </c>
+            <c r="E24" t="s">
+                <v>10</v>
+            </c>
+            <c r="F24" t="s">
+                <v>100</v>
+            </c>
+            <c r="G24">
+                <v>642.92999999999995</v>
+            </c>
+        </row>
+        <row r="25" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A25" t="s">
+                <v>101</v>
+            </c>
+            <c r="B25" t="s">
+                <v>102</v>
+            </c>
+            <c r="C25" t="s">
+                <v>103</v>
+            </c>
+            <c r="D25">
+                <v>39</v>
+            </c>
+            <c r="E25" t="s">
+                <v>10</v>
+            </c>
+            <c r="F25" t="s">
+                <v>104</v>
+            </c>
+            <c r="G25">
+                <v>2320.4899999999998</v>
+            </c>
+        </row>
+        <row r="26" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A26" t="s">
+                <v>105</v>
+            </c>
+            <c r="B26" t="s">
+                <v>106</v>
+            </c>
+            <c r="C26" t="s">
+                <v>107</v>
+            </c>
+            <c r="D26">
+                <v>54</v>
+            </c>
+            <c r="E26" t="s">
+                <v>10</v>
+            </c>
+            <c r="F26" t="s">
+                <v>108</v>
+            </c>
+            <c r="G26">
+                <v>6947.08</v>
+            </c>
+        </row>
+        <row r="27" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A27" t="s">
+                <v>109</v>
+            </c>
+            <c r="B27" t="s">
+                <v>110</v>
+            </c>
+            <c r="C27" t="s">
+                <v>111</v>
+            </c>
+            <c r="D27">
+                <v>39</v>
+            </c>
+            <c r="E27" t="s">
+                <v>15</v>
+            </c>
+            <c r="F27" t="s">
+                <v>112</v>
+            </c>
+            <c r="G27">
+                <v>9052.67</v>
+            </c>
+        </row>
+        <row r="28" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A28" t="s">
+                <v>113</v>
+            </c>
+            <c r="B28" t="s">
+                <v>114</v>
+            </c>
+            <c r="C28" t="s">
+                <v>115</v>
+            </c>
+            <c r="D28">
+                <v>31</v>
+            </c>
+            <c r="E28" t="s">
+                <v>15</v>
+            </c>
+            <c r="F28" t="s">
+                <v>116</v>
+            </c>
+            <c r="G28">
+                <v>9364.1200000000008</v>
+            </c>
+        </row>
+        <row r="29" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A29" t="s">
+                <v>117</v>
+            </c>
+            <c r="B29" t="s">
+                <v>118</v>
+            </c>
+            <c r="C29" t="s">
+                <v>119</v>
+            </c>
+            <c r="D29">
+                <v>33</v>
+            </c>
+            <c r="E29" t="s">
+                <v>10</v>
+            </c>
+            <c r="F29" t="s">
+                <v>120</v>
+            </c>
+            <c r="G29">
+                <v>5542.36</v>
+            </c>
+        </row>
+        <row r="30" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A30" t="s">
+                <v>121</v>
+            </c>
+            <c r="B30" t="s">
+                <v>122</v>
+            </c>
+            <c r="C30" t="s">
+                <v>123</v>
+            </c>
+            <c r="D30">
+                <v>43</v>
+            </c>
+            <c r="E30" t="s">
+                <v>15</v>
+            </c>
+            <c r="F30" t="s">
+                <v>124</v>
+            </c>
+            <c r="G30">
+                <v>2846.99</v>
+            </c>
+        </row>
+        <row r="31" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A31" t="s">
+                <v>125</v>
+            </c>
+            <c r="B31" t="s">
+                <v>126</v>
+            </c>
+            <c r="C31" t="s">
+                <v>79</v>
+            </c>
+            <c r="D31">
+                <v>40</v>
+            </c>
+            <c r="E31" t="s">
+                <v>15</v>
+            </c>
+            <c r="F31" t="s">
+                <v>127</v>
+            </c>
+            <c r="G31">
+                <v>4930.8599999999997</v>
+            </c>
+        </row>
+        <row r="32" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A32" t="s">
+                <v>128</v>
+            </c>
+            <c r="B32" t="s">
+                <v>129</v>
+            </c>
+            <c r="C32" t="s">
+                <v>130</v>
+            </c>
+            <c r="D32">
+                <v>27</v>
+            </c>
+            <c r="E32" t="s">
+                <v>10</v>
+            </c>
+            <c r="F32" t="s">
+                <v>131</v>
+            </c>
+            <c r="G32">
+                <v>2008.3</v>
+            </c>
+        </row>
+        <row r="33" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A33" t="s">
+                <v>132</v>
+            </c>
+            <c r="B33" t="s">
+                <v>133</v>
+            </c>
+            <c r="C33" t="s">
+                <v>134</v>
+            </c>
+            <c r="D33">
+                <v>28</v>
+            </c>
+            <c r="E33" t="s">
+                <v>10</v>
+            </c>
+            <c r="F33" t="s">
+                <v>135</v>
+            </c>
+            <c r="G33">
+                <v>1527.49</v>
+            </c>
+        </row>
+        <row r="34" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A34" t="s">
+                <v>136</v>
+            </c>
+            <c r="B34" t="s">
+                <v>137</v>
+            </c>
+            <c r="C34" t="s">
+                <v>138</v>
+            </c>
+            <c r="D34">
+                <v>21</v>
+            </c>
+            <c r="E34" t="s">
+                <v>15</v>
+            </c>
+            <c r="F34" t="s">
+                <v>139</v>
+            </c>
+            <c r="G34">
+                <v>1850.07</v>
+            </c>
+        </row>
+        <row r="35" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A35" t="s">
+                <v>140</v>
+            </c>
+            <c r="B35" t="s">
+                <v>141</v>
+            </c>
+            <c r="C35" t="s">
+                <v>142</v>
+            </c>
+            <c r="D35">
+                <v>50</v>
+            </c>
+            <c r="E35" t="s">
+                <v>10</v>
+            </c>
+            <c r="F35" t="s">
+                <v>143</v>
+            </c>
+            <c r="G35">
+                <v>6070.33</v>
+            </c>
+        </row>
+        <row r="36" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A36" t="s">
+                <v>144</v>
+            </c>
+            <c r="B36" t="s">
+                <v>145</v>
+            </c>
+            <c r="C36" t="s">
+                <v>146</v>
+            </c>
+            <c r="D36">
+                <v>45</v>
+            </c>
+            <c r="E36" t="s">
+                <v>10</v>
+            </c>
+            <c r="F36" t="s">
+                <v>147</v>
+            </c>
+            <c r="G36">
+                <v>1244.6500000000001</v>
+            </c>
+        </row>
+        <row r="37" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A37" t="s">
+                <v>148</v>
+            </c>
+            <c r="B37" t="s">
+                <v>149</v>
+            </c>
+            <c r="C37" t="s">
+                <v>150</v>
+            </c>
+            <c r="D37">
+                <v>43</v>
+            </c>
+            <c r="E37" t="s">
+                <v>10</v>
+            </c>
+            <c r="F37" t="s">
+                <v>151</v>
+            </c>
+            <c r="G37">
+                <v>9777.42</v>
+            </c>
+        </row>
+        <row r="38" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A38" t="s">
+                <v>152</v>
+            </c>
+            <c r="B38" t="s">
+                <v>153</v>
+            </c>
+            <c r="C38" t="s">
+                <v>154</v>
+            </c>
+            <c r="D38">
+                <v>59</v>
+            </c>
+            <c r="E38" t="s">
+                <v>15</v>
+            </c>
+            <c r="F38" t="s">
+                <v>155</v>
+            </c>
+            <c r="G38">
+                <v>4922.2700000000004</v>
+            </c>
+        </row>
+        <row r="39" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A39" t="s">
+                <v>156</v>
+            </c>
+            <c r="B39" t="s">
+                <v>157</v>
+            </c>
+            <c r="C39" t="s">
+                <v>158</v>
+            </c>
+            <c r="D39">
+                <v>38</v>
+            </c>
+            <c r="E39" t="s">
+                <v>10</v>
+            </c>
+            <c r="F39" t="s">
+                <v>159</v>
+            </c>
+            <c r="G39">
+                <v>7241.36</v>
+            </c>
+        </row>
+        <row r="40" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A40" t="s">
+                <v>160</v>
+            </c>
+            <c r="B40" t="s">
+                <v>161</v>
+            </c>
+            <c r="C40" t="s">
+                <v>162</v>
+            </c>
+            <c r="D40">
+                <v>36</v>
+            </c>
+            <c r="E40" t="s">
+                <v>10</v>
+            </c>
+            <c r="F40" t="s">
+                <v>163</v>
+            </c>
+            <c r="G40">
+                <v>3138.38</v>
+            </c>
+        </row>
+        <row r="41" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A41" t="s">
+                <v>164</v>
+            </c>
+            <c r="B41" t="s">
+                <v>165</v>
+            </c>
+            <c r="C41" t="s">
+                <v>166</v>
+            </c>
+            <c r="D41">
+                <v>56</v>
+            </c>
+            <c r="E41" t="s">
+                <v>10</v>
+            </c>
+            <c r="F41" t="s">
+                <v>167</v>
+            </c>
+            <c r="G41">
+                <v>4646.3500000000004</v>
+            </c>
+        </row>
+        <row r="42" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A42" t="s">
+                <v>168</v>
+            </c>
+            <c r="B42" t="s">
+                <v>169</v>
+            </c>
+            <c r="C42" t="s">
+                <v>170</v>
+            </c>
+            <c r="D42">
+                <v>58</v>
+            </c>
+            <c r="E42" t="s">
+                <v>15</v>
+            </c>
+            <c r="F42" t="s">
+                <v>171</v>
+            </c>
+            <c r="G42">
+                <v>2425.42</v>
+            </c>
+        </row>
+        <row r="43" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A43" t="s">
+                <v>172</v>
+            </c>
+            <c r="B43" t="s">
+                <v>173</v>
+            </c>
+            <c r="C43" t="s">
+                <v>174</v>
+            </c>
+            <c r="D43">
+                <v>21</v>
+            </c>
+            <c r="E43" t="s">
+                <v>10</v>
+            </c>
+            <c r="F43" t="s">
+                <v>175</v>
+            </c>
+            <c r="G43">
+                <v>9757.07</v>
+            </c>
+        </row>
+        <row r="44" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A44" t="s">
+                <v>176</v>
+            </c>
+            <c r="B44" t="s">
+                <v>177</v>
+            </c>
+            <c r="C44" t="s">
+                <v>178</v>
+            </c>
+            <c r="D44">
+                <v>50</v>
+            </c>
+            <c r="E44" t="s">
+                <v>15</v>
+            </c>
+            <c r="F44" t="s">
+                <v>179</v>
+            </c>
+            <c r="G44">
+                <v>1691.34</v>
+            </c>
+        </row>
+        <row r="45" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A45" t="s">
+                <v>180</v>
+            </c>
+            <c r="B45" t="s">
+                <v>181</v>
+            </c>
+            <c r="C45" t="s">
+                <v>182</v>
+            </c>
+            <c r="D45">
+                <v>43</v>
+            </c>
+            <c r="E45" t="s">
+                <v>10</v>
+            </c>
+            <c r="F45" t="s">
+                <v>183</v>
+            </c>
+            <c r="G45">
+                <v>584.89</v>
+            </c>
+        </row>
+        <row r="46" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A46" t="s">
+                <v>184</v>
+            </c>
+            <c r="B46" t="s">
+                <v>185</v>
+            </c>
+            <c r="C46" t="s">
+                <v>186</v>
+            </c>
+            <c r="D46">
+                <v>46</v>
+            </c>
+            <c r="E46" t="s">
+                <v>15</v>
+            </c>
+            <c r="F46" t="s">
+                <v>187</v>
+            </c>
+            <c r="G46">
+                <v>8397.92</v>
+            </c>
+        </row>
+        <row r="47" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A47" t="s">
+                <v>188</v>
+            </c>
+            <c r="B47" t="s">
+                <v>189</v>
+            </c>
+            <c r="C47" t="s">
+                <v>190</v>
+            </c>
+            <c r="D47">
+                <v>15</v>
+            </c>
+            <c r="E47" t="s">
+                <v>10</v>
+            </c>
+            <c r="F47" t="s">
+                <v>191</v>
+            </c>
+            <c r="G47">
+                <v>1116.7</v>
+            </c>
+        </row>
+        <row r="48" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A48" t="s">
+                <v>192</v>
+            </c>
+            <c r="B48" t="s">
+                <v>193</v>
+            </c>
+            <c r="C48" t="s">
+                <v>194</v>
+            </c>
+            <c r="D48">
+                <v>29</v>
+            </c>
+            <c r="E48" t="s">
+                <v>10</v>
+            </c>
+            <c r="F48" t="s">
+                <v>195</v>
+            </c>
+            <c r="G48">
+                <v>7803.64</v>
+            </c>
+        </row>
+        <row r="49" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A49" t="s">
+                <v>196</v>
+            </c>
+            <c r="B49" t="s">
+                <v>22</v>
+            </c>
+            <c r="C49" t="s">
+                <v>197</v>
+            </c>
+            <c r="D49">
+                <v>23</v>
+            </c>
+            <c r="E49" t="s">
+                <v>15</v>
+            </c>
+            <c r="F49" t="s">
+                <v>198</v>
+            </c>
+            <c r="G49">
+                <v>5980.76</v>
+            </c>
+        </row>
+        <row r="50" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A50" t="s">
+                <v>199</v>
+            </c>
+            <c r="B50" t="s">
+                <v>74</v>
+            </c>
+            <c r="C50" t="s">
+                <v>200</v>
+            </c>
+            <c r="D50">
+                <v>48</v>
+            </c>
+            <c r="E50" t="s">
+                <v>10</v>
+            </c>
+            <c r="F50" t="s">
+                <v>201</v>
+            </c>
+            <c r="G50">
+                <v>9075.98</v>
+            </c>
+        </row>
+        <row r="51" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A51" t="s">
+                <v>202</v>
+            </c>
+            <c r="B51" t="s">
+                <v>203</v>
+            </c>
+            <c r="C51" t="s">
+                <v>204</v>
+            </c>
+            <c r="D51">
+                <v>41</v>
+            </c>
+            <c r="E51" t="s">
+                <v>10</v>
+            </c>
+            <c r="F51" t="s">
+                <v>205</v>
+            </c>
+            <c r="G51">
+                <v>4068.87</v>
+            </c>
+        </row>
+        <row r="52" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A52" t="s">
+                <v>206</v>
+            </c>
+            <c r="B52" t="s">
+                <v>207</v>
+            </c>
+            <c r="C52" t="s">
+                <v>208</v>
+            </c>
+            <c r="D52">
+                <v>21</v>
+            </c>
+            <c r="E52" t="s">
+                <v>15</v>
+            </c>
+            <c r="F52" t="s">
+                <v>209</v>
+            </c>
+            <c r="G52">
+                <v>1398.26</v>
+            </c>
+        </row>
+        <row r="53" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A53" t="s">
+                <v>210</v>
+            </c>
+            <c r="B53" t="s">
+                <v>211</v>
+            </c>
+            <c r="C53" t="s">
+                <v>212</v>
+            </c>
+            <c r="D53">
+                <v>43</v>
+            </c>
+            <c r="E53" t="s">
+                <v>15</v>
+            </c>
+            <c r="F53" t="s">
+                <v>213</v>
+            </c>
+            <c r="G53">
+                <v>8895.57</v>
+            </c>
+        </row>
+        <row r="54" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A54" t="s">
+                <v>214</v>
+            </c>
+            <c r="B54" t="s">
+                <v>215</v>
+            </c>
+            <c r="C54" t="s">
+                <v>216</v>
+            </c>
+            <c r="D54">
+                <v>52</v>
+            </c>
+            <c r="E54" t="s">
+                <v>15</v>
+            </c>
+            <c r="F54" t="s">
+                <v>217</v>
+            </c>
+            <c r="G54">
+                <v>6912.27</v>
+            </c>
+        </row>
+        <row r="55" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A55" t="s">
+                <v>218</v>
+            </c>
+            <c r="B55" t="s">
+                <v>219</v>
+            </c>
+            <c r="C55" t="s">
+                <v>220</v>
+            </c>
+            <c r="D55">
+                <v>33</v>
+            </c>
+            <c r="E55" t="s">
+                <v>10</v>
+            </c>
+            <c r="F55" t="s">
+                <v>221</v>
+            </c>
+            <c r="G55">
+                <v>2324.0300000000002</v>
+            </c>
+        </row>
+        <row r="56" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A56" t="s">
+                <v>222</v>
+            </c>
+            <c r="B56" t="s">
+                <v>223</v>
+            </c>
+            <c r="C56" t="s">
+                <v>224</v>
+            </c>
+            <c r="D56">
+                <v>27</v>
+            </c>
+            <c r="E56" t="s">
+                <v>15</v>
+            </c>
+            <c r="F56" t="s">
+                <v>225</v>
+            </c>
+            <c r="G56">
+                <v>535.38</v>
+            </c>
+        </row>
+        <row r="57" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A57" t="s">
+                <v>226</v>
+            </c>
+            <c r="B57" t="s">
+                <v>227</v>
+            </c>
+            <c r="C57" t="s">
+                <v>228</v>
+            </c>
+            <c r="D57">
+                <v>54</v>
+            </c>
+            <c r="E57" t="s">
+                <v>15</v>
+            </c>
+            <c r="F57" t="s">
+                <v>229</v>
+            </c>
+            <c r="G57">
+                <v>8126.1</v>
+            </c>
+        </row>
+        <row r="58" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A58" t="s">
+                <v>230</v>
+            </c>
+            <c r="B58" t="s">
+                <v>231</v>
+            </c>
+            <c r="C58" t="s">
+                <v>232</v>
+            </c>
+            <c r="D58">
+                <v>39</v>
+            </c>
+            <c r="E58" t="s">
+                <v>15</v>
+            </c>
+            <c r="F58" t="s">
+                <v>233</v>
+            </c>
+            <c r="G58">
+                <v>2169.54</v>
+            </c>
+        </row>
+        <row r="59" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A59" t="s">
+                <v>234</v>
+            </c>
+            <c r="B59" t="s">
+                <v>235</v>
+            </c>
+            <c r="C59" t="s">
+                <v>236</v>
+            </c>
+            <c r="D59">
+                <v>47</v>
+            </c>
+            <c r="E59" t="s">
+                <v>10</v>
+            </c>
+            <c r="F59" t="s">
+                <v>237</v>
+            </c>
+            <c r="G59">
+                <v>7160.57</v>
+            </c>
+        </row>
+        <row r="60" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A60" t="s">
+                <v>238</v>
+            </c>
+            <c r="B60" t="s">
+                <v>239</v>
+            </c>
+            <c r="C60" t="s">
+                <v>240</v>
+            </c>
+            <c r="D60">
+                <v>60</v>
+            </c>
+            <c r="E60" t="s">
+                <v>10</v>
+            </c>
+            <c r="F60" t="s">
+                <v>241</v>
+            </c>
+            <c r="G60">
+                <v>6829.48</v>
+            </c>
+        </row>
+        <row r="61" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A61" t="s">
+                <v>242</v>
+            </c>
+            <c r="B61" t="s">
+                <v>243</v>
+            </c>
+            <c r="C61" t="s">
+                <v>244</v>
+            </c>
+            <c r="D61">
+                <v>45</v>
+            </c>
+            <c r="E61" t="s">
+                <v>15</v>
+            </c>
+            <c r="F61" t="s">
+                <v>245</v>
+            </c>
+            <c r="G61">
+                <v>2381.8000000000002</v>
+            </c>
+        </row>
+        <row r="62" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A62" t="s">
+                <v>246</v>
+            </c>
+            <c r="B62" t="s">
+                <v>247</v>
+            </c>
+            <c r="C62" t="s">
+                <v>248</v>
+            </c>
+            <c r="D62">
+                <v>21</v>
+            </c>
+            <c r="E62" t="s">
+                <v>10</v>
+            </c>
+            <c r="F62" t="s">
+                <v>249</v>
+            </c>
+            <c r="G62">
+                <v>1750.13</v>
+            </c>
+        </row>
+        <row r="63" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A63" t="s">
+                <v>250</v>
+            </c>
+            <c r="B63" t="s">
+                <v>215</v>
+            </c>
+            <c r="C63" t="s">
+                <v>251</v>
+            </c>
+            <c r="D63">
+                <v>45</v>
+            </c>
+            <c r="E63" t="s">
+                <v>10</v>
+            </c>
+            <c r="F63" t="s">
+                <v>252</v>
+            </c>
+            <c r="G63">
+                <v>7321.65</v>
+            </c>
+        </row>
+        <row r="64" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A64" t="s">
+                <v>253</v>
+            </c>
+            <c r="B64" t="s">
+                <v>254</v>
+            </c>
+            <c r="C64" t="s">
+                <v>255</v>
+            </c>
+            <c r="D64">
+                <v>26</v>
+            </c>
+            <c r="E64" t="s">
+                <v>15</v>
+            </c>
+            <c r="F64" t="s">
+                <v>256</v>
+            </c>
+            <c r="G64">
+                <v>9369.5</v>
+            </c>
+        </row>
+        <row r="65" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A65" t="s">
+                <v>257</v>
+            </c>
+            <c r="B65" t="s">
+                <v>258</v>
+            </c>
+            <c r="C65" t="s">
+                <v>259</v>
+            </c>
+            <c r="D65">
+                <v>29</v>
+            </c>
+            <c r="E65" t="s">
+                <v>15</v>
+            </c>
+            <c r="F65" t="s">
+                <v>260</v>
+            </c>
+            <c r="G65">
+                <v>8971.66</v>
+            </c>
+        </row>
+        <row r="66" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A66" t="s">
+                <v>261</v>
+            </c>
+            <c r="B66" t="s">
+                <v>262</v>
+            </c>
+            <c r="C66" t="s">
+                <v>263</v>
+            </c>
+            <c r="D66">
+                <v>49</v>
+            </c>
+            <c r="E66" t="s">
+                <v>15</v>
+            </c>
+            <c r="F66" t="s">
+                <v>264</v>
+            </c>
+            <c r="G66">
+                <v>6788.09</v>
+            </c>
+        </row>
+        <row r="67" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A67" t="s">
+                <v>265</v>
+            </c>
+            <c r="B67" t="s">
+                <v>266</v>
+            </c>
+            <c r="C67" t="s">
+                <v>267</v>
+            </c>
+            <c r="D67">
+                <v>15</v>
+            </c>
+            <c r="E67" t="s">
+                <v>10</v>
+            </c>
+            <c r="F67" t="s">
+                <v>268</v>
+            </c>
+            <c r="G67">
+                <v>8107.1</v>
+            </c>
+        </row>
+        <row r="68" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A68" t="s">
+                <v>269</v>
+            </c>
+            <c r="B68" t="s">
+                <v>270</v>
+            </c>
+            <c r="C68" t="s">
+                <v>271</v>
+            </c>
+            <c r="D68">
+                <v>18</v>
+            </c>
+            <c r="E68" t="s">
+                <v>15</v>
+            </c>
+            <c r="F68" t="s">
+                <v>272</v>
+            </c>
+            <c r="G68">
+                <v>1929.31</v>
+            </c>
+        </row>
+        <row r="69" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A69" t="s">
+                <v>273</v>
+            </c>
+            <c r="B69" t="s">
+                <v>274</v>
+            </c>
+            <c r="C69" t="s">
+                <v>275</v>
+            </c>
+            <c r="D69">
+                <v>15</v>
+            </c>
+            <c r="E69" t="s">
+                <v>15</v>
+            </c>
+            <c r="F69" t="s">
+                <v>276</v>
+            </c>
+            <c r="G69">
+                <v>8088.66</v>
+            </c>
+        </row>
+        <row r="70" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A70" t="s">
+                <v>277</v>
+            </c>
+            <c r="B70" t="s">
+                <v>278</v>
+            </c>
+            <c r="C70" t="s">
+                <v>279</v>
+            </c>
+            <c r="D70">
+                <v>42</v>
+            </c>
+            <c r="E70" t="s">
+                <v>15</v>
+            </c>
+            <c r="F70" t="s">
+                <v>280</v>
+            </c>
+            <c r="G70">
+                <v>3860.38</v>
+            </c>
+        </row>
+        <row r="71" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A71" t="s">
+                <v>281</v>
+            </c>
+            <c r="B71" t="s">
+                <v>282</v>
+            </c>
+            <c r="C71" t="s">
+                <v>283</v>
+            </c>
+            <c r="D71">
+                <v>43</v>
+            </c>
+            <c r="E71" t="s">
+                <v>10</v>
+            </c>
+            <c r="F71" t="s">
+                <v>284</v>
+            </c>
+            <c r="G71">
+                <v>5918.39</v>
+            </c>
+        </row>
+        <row r="72" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A72" t="s">
+                <v>285</v>
+            </c>
+            <c r="B72" t="s">
+                <v>13</v>
+            </c>
+            <c r="C72" t="s">
+                <v>286</v>
+            </c>
+            <c r="D72">
+                <v>58</v>
+            </c>
+            <c r="E72" t="s">
+                <v>15</v>
+            </c>
+            <c r="F72" t="s">
+                <v>287</v>
+            </c>
+            <c r="G72">
+                <v>4239.75</v>
+            </c>
+        </row>
+        <row r="73" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A73" t="s">
+                <v>288</v>
+            </c>
+            <c r="B73" t="s">
+                <v>289</v>
+            </c>
+            <c r="C73" t="s">
+                <v>290</v>
+            </c>
+            <c r="D73">
+                <v>25</v>
+            </c>
+            <c r="E73" t="s">
+                <v>10</v>
+            </c>
+            <c r="F73" t="s">
+                <v>291</v>
+            </c>
+            <c r="G73">
+                <v>6392.62</v>
+            </c>
+        </row>
+        <row r="74" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A74" t="s">
+                <v>292</v>
+            </c>
+            <c r="B74" t="s">
+                <v>293</v>
+            </c>
+            <c r="C74" t="s">
+                <v>294</v>
+            </c>
+            <c r="D74">
+                <v>17</v>
+            </c>
+            <c r="E74" t="s">
+                <v>10</v>
+            </c>
+            <c r="F74" t="s">
+                <v>295</v>
+            </c>
+            <c r="G74">
+                <v>8300.6200000000008</v>
+            </c>
+        </row>
+        <row r="75" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A75" t="s">
+                <v>296</v>
+            </c>
+            <c r="B75" t="s">
+                <v>297</v>
+            </c>
+            <c r="C75" t="s">
+                <v>298</v>
+            </c>
+            <c r="D75">
+                <v>15</v>
+            </c>
+            <c r="E75" t="s">
+                <v>10</v>
+            </c>
+            <c r="F75" t="s">
+                <v>299</v>
+            </c>
+            <c r="G75">
+                <v>8059.69</v>
+            </c>
+        </row>
+        <row r="76" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A76" t="s">
+                <v>300</v>
+            </c>
+            <c r="B76" t="s">
+                <v>301</v>
+            </c>
+            <c r="C76" t="s">
+                <v>302</v>
+            </c>
+            <c r="D76">
+                <v>58</v>
+            </c>
+            <c r="E76" t="s">
+                <v>10</v>
+            </c>
+            <c r="F76" t="s">
+                <v>303</v>
+            </c>
+            <c r="G76">
+                <v>1552.31</v>
+            </c>
+        </row>
+        <row r="77" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A77" t="s">
+                <v>304</v>
+            </c>
+            <c r="B77" t="s">
+                <v>305</v>
+            </c>
+            <c r="C77" t="s">
+                <v>306</v>
+            </c>
+            <c r="D77">
+                <v>37</v>
+            </c>
+            <c r="E77" t="s">
+                <v>15</v>
+            </c>
+            <c r="F77" t="s">
+                <v>307</v>
+            </c>
+            <c r="G77">
+                <v>5437.66</v>
+            </c>
+        </row>
+        <row r="78" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A78" t="s">
+                <v>308</v>
+            </c>
+            <c r="B78" t="s">
+                <v>309</v>
+            </c>
+            <c r="C78" t="s">
+                <v>310</v>
+            </c>
+            <c r="D78">
+                <v>32</v>
+            </c>
+            <c r="E78" t="s">
+                <v>15</v>
+            </c>
+            <c r="F78" t="s">
+                <v>311</v>
+            </c>
+            <c r="G78">
+                <v>4166.07</v>
+            </c>
+        </row>
+        <row r="79" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A79" t="s">
+                <v>312</v>
+            </c>
+            <c r="B79" t="s">
+                <v>313</v>
+            </c>
+            <c r="C79" t="s">
+                <v>314</v>
+            </c>
+            <c r="D79">
+                <v>34</v>
+            </c>
+            <c r="E79" t="s">
+                <v>15</v>
+            </c>
+            <c r="F79" t="s">
+                <v>315</v>
+            </c>
+            <c r="G79">
+                <v>666.78</v>
+            </c>
+        </row>
+        <row r="80" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A80" t="s">
+                <v>316</v>
+            </c>
+            <c r="B80" t="s">
+                <v>317</v>
+            </c>
+            <c r="C80" t="s">
+                <v>318</v>
+            </c>
+            <c r="D80">
+                <v>51</v>
+            </c>
+            <c r="E80" t="s">
+                <v>15</v>
+            </c>
+            <c r="F80" t="s">
+                <v>319</v>
+            </c>
+            <c r="G80">
+                <v>7911.6</v>
+            </c>
+        </row>
+        <row r="81" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A81" t="s">
+                <v>320</v>
+            </c>
+            <c r="B81" t="s">
+                <v>321</v>
+            </c>
+            <c r="C81" t="s">
+                <v>322</v>
+            </c>
+            <c r="D81">
+                <v>26</v>
+            </c>
+            <c r="E81" t="s">
+                <v>10</v>
+            </c>
+            <c r="F81" t="s">
+                <v>323</v>
+            </c>
+            <c r="G81">
+                <v>7375.74</v>
+            </c>
+        </row>
+        <row r="82" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A82" t="s">
+                <v>324</v>
+            </c>
+            <c r="B82" t="s">
+                <v>110</v>
+            </c>
+            <c r="C82" t="s">
+                <v>228</v>
+            </c>
+            <c r="D82">
+                <v>56</v>
+            </c>
+            <c r="E82" t="s">
+                <v>10</v>
+            </c>
+            <c r="F82" t="s">
+                <v>325</v>
+            </c>
+            <c r="G82">
+                <v>3272.37</v>
+            </c>
+        </row>
+        <row r="83" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A83" t="s">
+                <v>326</v>
+            </c>
+            <c r="B83" t="s">
+                <v>327</v>
+            </c>
+            <c r="C83" t="s">
+                <v>328</v>
+            </c>
+            <c r="D83">
+                <v>40</v>
+            </c>
+            <c r="E83" t="s">
+                <v>10</v>
+            </c>
+            <c r="F83" t="s">
+                <v>329</v>
+            </c>
+            <c r="G83">
+                <v>485.05</v>
+            </c>
+        </row>
+        <row r="84" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A84" t="s">
+                <v>330</v>
+            </c>
+            <c r="B84" t="s">
+                <v>331</v>
+            </c>
+            <c r="C84" t="s">
+                <v>332</v>
+            </c>
+            <c r="D84">
+                <v>38</v>
+            </c>
+            <c r="E84" t="s">
+                <v>15</v>
+            </c>
+            <c r="F84" t="s">
+                <v>333</v>
+            </c>
+            <c r="G84">
+                <v>1114.8599999999999</v>
+            </c>
+        </row>
+        <row r="85" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A85" t="s">
+                <v>334</v>
+            </c>
+            <c r="B85" t="s">
+                <v>335</v>
+            </c>
+            <c r="C85" t="s">
+                <v>336</v>
+            </c>
+            <c r="D85">
+                <v>54</v>
+            </c>
+            <c r="E85" t="s">
+                <v>10</v>
+            </c>
+            <c r="F85" t="s">
+                <v>337</v>
+            </c>
+            <c r="G85">
+                <v>1144.24</v>
+            </c>
+        </row>
+        <row r="86" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A86" t="s">
+                <v>338</v>
+            </c>
+            <c r="B86" t="s">
+                <v>339</v>
+            </c>
+            <c r="C86" t="s">
+                <v>340</v>
+            </c>
+            <c r="D86">
+                <v>17</v>
+            </c>
+            <c r="E86" t="s">
+                <v>10</v>
+            </c>
+            <c r="F86" t="s">
+                <v>341</v>
+            </c>
+            <c r="G86">
+                <v>3334.11</v>
+            </c>
+        </row>
+        <row r="87" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A87" t="s">
+                <v>342</v>
+            </c>
+            <c r="B87" t="s">
+                <v>343</v>
+            </c>
+            <c r="C87" t="s">
+                <v>344</v>
+            </c>
+            <c r="D87">
+                <v>34</v>
+            </c>
+            <c r="E87" t="s">
+                <v>15</v>
+            </c>
+            <c r="F87" t="s">
+                <v>345</v>
+            </c>
+            <c r="G87">
+                <v>8829.91</v>
+            </c>
+        </row>
+        <row r="88" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A88" t="s">
+                <v>346</v>
+            </c>
+            <c r="B88" t="s">
+                <v>347</v>
+            </c>
+            <c r="C88" t="s">
+                <v>348</v>
+            </c>
+            <c r="D88">
+                <v>38</v>
+            </c>
+            <c r="E88" t="s">
+                <v>15</v>
+            </c>
+            <c r="F88" t="s">
+                <v>349</v>
+            </c>
+            <c r="G88">
+                <v>5634.03</v>
+            </c>
+        </row>
+        <row r="89" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A89" t="s">
+                <v>350</v>
+            </c>
+            <c r="B89" t="s">
+                <v>351</v>
+            </c>
+            <c r="C89" t="s">
+                <v>224</v>
+            </c>
+            <c r="D89">
+                <v>44</v>
+            </c>
+            <c r="E89" t="s">
+                <v>10</v>
+            </c>
+            <c r="F89" t="s">
+                <v>352</v>
+            </c>
+            <c r="G89">
+                <v>4408.8999999999996</v>
+            </c>
+        </row>
+        <row r="90" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A90" t="s">
+                <v>353</v>
+            </c>
+            <c r="B90" t="s">
+                <v>354</v>
+            </c>
+            <c r="C90" t="s">
+                <v>355</v>
+            </c>
+            <c r="D90">
+                <v>30</v>
+            </c>
+            <c r="E90" t="s">
+                <v>10</v>
+            </c>
+            <c r="F90" t="s">
+                <v>356</v>
+            </c>
+            <c r="G90">
+                <v>2283.4699999999998</v>
+            </c>
+        </row>
+        <row r="91" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A91" t="s">
+                <v>357</v>
+            </c>
+            <c r="B91" t="s">
+                <v>358</v>
+            </c>
+            <c r="C91" t="s">
+                <v>359</v>
+            </c>
+            <c r="D91">
+                <v>56</v>
+            </c>
+            <c r="E91" t="s">
+                <v>15</v>
+            </c>
+            <c r="F91" t="s">
+                <v>360</v>
+            </c>
+            <c r="G91">
+                <v>695.29</v>
+            </c>
+        </row>
+        <row r="92" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A92" t="s">
+                <v>361</v>
+            </c>
+            <c r="B92" t="s">
+                <v>362</v>
+            </c>
+            <c r="C92" t="s">
+                <v>363</v>
+            </c>
+            <c r="D92">
+                <v>41</v>
+            </c>
+            <c r="E92" t="s">
+                <v>15</v>
+            </c>
+            <c r="F92" t="s">
+                <v>364</v>
+            </c>
+            <c r="G92">
+                <v>4649.95</v>
+            </c>
+        </row>
+        <row r="93" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A93" t="s">
+                <v>365</v>
+            </c>
+            <c r="B93" t="s">
+                <v>366</v>
+            </c>
+            <c r="C93" t="s">
+                <v>367</v>
+            </c>
+            <c r="D93">
+                <v>46</v>
+            </c>
+            <c r="E93" t="s">
+                <v>10</v>
+            </c>
+            <c r="F93" t="s">
+                <v>368</v>
+            </c>
+            <c r="G93">
+                <v>946.11</v>
+            </c>
+        </row>
+        <row r="94" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A94" t="s">
+                <v>369</v>
+            </c>
+            <c r="B94" t="s">
+                <v>370</v>
+            </c>
+            <c r="C94" t="s">
+                <v>371</v>
+            </c>
+            <c r="D94">
+                <v>34</v>
+            </c>
+            <c r="E94" t="s">
+                <v>15</v>
+            </c>
+            <c r="F94" t="s">
+                <v>372</v>
+            </c>
+            <c r="G94">
+                <v>125.33</v>
+            </c>
+        </row>
+        <row r="95" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A95" t="s">
+                <v>373</v>
+            </c>
+            <c r="B95" t="s">
+                <v>374</v>
+            </c>
+            <c r="C95" t="s">
+                <v>375</v>
+            </c>
+            <c r="D95">
+                <v>35</v>
+            </c>
+            <c r="E95" t="s">
+                <v>10</v>
+            </c>
+            <c r="F95" t="s">
+                <v>376</v>
+            </c>
+            <c r="G95">
+                <v>5811.17</v>
+            </c>
+        </row>
+        <row r="96" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A96" t="s">
+                <v>377</v>
+            </c>
+            <c r="B96" t="s">
+                <v>378</v>
+            </c>
+            <c r="C96" t="s">
+                <v>379</v>
+            </c>
+            <c r="D96">
+                <v>20</v>
+            </c>
+            <c r="E96" t="s">
+                <v>10</v>
+            </c>
+            <c r="F96" t="s">
+                <v>380</v>
+            </c>
+            <c r="G96">
+                <v>7626.66</v>
+            </c>
+        </row>
+        <row r="97" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A97" t="s">
+                <v>381</v>
+            </c>
+            <c r="B97" t="s">
+                <v>382</v>
+            </c>
+            <c r="C97" t="s">
+                <v>383</v>
+            </c>
+            <c r="D97">
+                <v>19</v>
+            </c>
+            <c r="E97" t="s">
+                <v>10</v>
+            </c>
+            <c r="F97" t="s">
+                <v>384</v>
+            </c>
+            <c r="G97">
+                <v>899.61</v>
+            </c>
+        </row>
+        <row r="98" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A98" t="s">
+                <v>385</v>
+            </c>
+            <c r="B98" t="s">
+                <v>386</v>
+            </c>
+            <c r="C98" t="s">
+                <v>387</v>
+            </c>
+            <c r="D98">
+                <v>31</v>
+            </c>
+            <c r="E98" t="s">
+                <v>15</v>
+            </c>
+            <c r="F98" t="s">
+                <v>388</v>
+            </c>
+            <c r="G98">
+                <v>7563.52</v>
+            </c>
+        </row>
+        <row r="99" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A99" t="s">
+                <v>389</v>
+            </c>
+            <c r="B99" t="s">
+                <v>390</v>
+            </c>
+            <c r="C99" t="s">
+                <v>391</v>
+            </c>
+            <c r="D99">
+                <v>35</v>
+            </c>
+            <c r="E99" t="s">
+                <v>10</v>
+            </c>
+            <c r="F99" t="s">
+                <v>392</v>
+            </c>
+            <c r="G99">
+                <v>7527.3</v>
+            </c>
+        </row>
+        <row r="100" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A100" t="s">
+                <v>393</v>
+            </c>
+            <c r="B100" t="s">
+                <v>394</v>
+            </c>
+            <c r="C100" t="s">
+                <v>395</v>
+            </c>
+            <c r="D100">
+                <v>29</v>
+            </c>
+            <c r="E100" t="s">
+                <v>15</v>
+            </c>
+            <c r="F100" t="s">
+                <v>396</v>
+            </c>
+            <c r="G100">
+                <v>5061.12</v>
+            </c>
+        </row>
+        <row r="101" spans="1:7" x14ac:dyDescent="0.3">
+            <c r="A101" t="s">
+                <v>397</v>
+            </c>
+            <c r="B101" t="s">
+                <v>398</v>
+            </c>
+            <c r="C101" t="s">
+                <v>399</v>
+            </c>
+            <c r="D101">
+                <v>45</v>
+            </c>
+            <c r="E101" t="s">
+                <v>10</v>
+            </c>
+            <c r="F101" t="s">
+                <v>400</v>
+            </c>
+            <c r="G101">
+                <v>2893.68</v>
+            </c>
+        </row>
+    </sheetData>
+    <sheetProtection formatCells="0" formatColumns="0" formatRows="0" insertColumns="0" insertRows="0" insertHyperlinks="0" deleteColumns="0" deleteRows="0" sort="0" autoFilter="0" pivotTables="0"/>
+    <pageMargins left="0.7" right="0.7" top="0.75" bottom="0.75" header="0.3" footer="0.3"/>
+</worksheet>

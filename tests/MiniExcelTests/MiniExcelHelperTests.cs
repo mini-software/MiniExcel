@@ -12,6 +12,7 @@ using MiniExcelLibs.Utils;
 using System.Threading;
 using System.Data.SQLite;
 using Dapper;
+using System.Globalization;
 
 namespace MiniExcelLibs.Tests
 {
@@ -117,6 +118,59 @@ namespace MiniExcelLibs.Tests
                 Assert.Equal(2, rows[1].Column2);
             }
         }
+
+
+
+        public class DemoPocoHelloWorld
+        {
+            public string HelloWorld { get; set; }
+        }
+
+        public class UserAccount
+        {
+            public Guid ID { get; set; }
+            public string Name { get; set; }
+            public DateTime BoD { get; set; }
+            public int Age { get; set; }
+            public bool VIP { get; set; }
+            public decimal Points { get; set; }
+            public int IgnoredProperty { get { return 1; } }
+        }
+
+        [Fact()]
+        public void QueryStrongTypeMapping_Test()
+        {
+            var path = @"..\..\..\..\..\samples\xlsx\TestTypeMapping.xlsx";
+            using (var stream = File.OpenRead(path))
+            {
+                var rows = stream.Query<UserAccount>().ToList();
+
+                Assert.Equal(100,rows.Count());
+
+                Assert.Equal(Guid.Parse("78DE23D2-DCB6-BD3D-EC67-C112BBC322A2"), rows[0].ID);
+                Assert.Equal("Wade", rows[0].Name);
+                Assert.Equal(DateTime.ParseExact("27/09/2020","dd/MM/yyyy", CultureInfo.InvariantCulture), rows[0].BoD);
+                Assert.Equal(36, rows[0].Age);
+                Assert.Equal(false, rows[0].VIP);
+                Assert.Equal(decimal.Parse("5019.12"), rows[0].Points);
+                Assert.Equal(1, rows[0].IgnoredProperty);
+            }
+        }
+
+        [Fact()]
+        public void LargeFileQueryStrongTypeMapping_Test()
+        {
+            var path = @"..\..\..\..\..\samples\xlsx\Test1,000,000x10\Test1,000,000x10.xlsx";
+            using (var stream = File.OpenRead(path))
+            {
+                var rows = stream.Query<DemoPocoHelloWorld>().Take(2).ToList();
+
+                Assert.Equal("HelloWorld", rows[0].HelloWorld);
+                Assert.Equal("HelloWorld", rows[1].HelloWorld);
+            }
+        }
+
+
 
         [Theory()]
         [InlineData(@"..\..\..\..\..\samples\xlsx\ExcelDataReaderCollections\TestChess.xlsx")]

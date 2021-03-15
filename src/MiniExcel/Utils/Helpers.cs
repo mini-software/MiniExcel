@@ -7,6 +7,8 @@ namespace MiniExcelLibs.Utils
     using System.Collections.Generic;
     using System.Dynamic;
     using System.Globalization;
+    using System.Linq;
+    using System.Reflection;
     using System.Text.RegularExpressions;
     
     internal static class Helpers
@@ -60,6 +62,13 @@ namespace MiniExcelLibs.Utils
 			 if(!cell.ContainsKey(hr.Value))
 				cell.Add(hr.Value, null);
 		  return cell;
+	   }
+
+	   public static IEnumerable<PropertyInfo> GetPropertiesWithSetter(Type type)
+	   {
+		  return type.GetProperties(BindingFlags.SetProperty |
+					BindingFlags.Public |
+					BindingFlags.Instance).Where(prop => prop.GetSetMethod() != null);
 	   }
 
 

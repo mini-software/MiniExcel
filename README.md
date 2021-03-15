@@ -8,10 +8,35 @@ e.g:  Comparison of MiniExcel Query and ExcelDataReader/EPPlus/ClosedXml of read
 - Support .NET Standard 2.0/.NET 4.6/.NET 5
 - Mini without any third party library dependencies
 - Support dynamic/type mapping query and create by AnonymousType/DapperRows/List/Array/Set/Enumrable/DataTable/Dictionary
+- [Dapper](https://github.com/StackExchange/Dapper) query style 
 
 ### Installation
 
 You can install the package [from NuGet](https://www.nuget.org/packages/MiniExcel)
+
+### Release Notes
+
+Please Check [Release Notes](https://github.com/shps951023/MiniExcel/tree/master/docs)
+
+### Execute a query and map the results to a strongly typed IEnumerable
+
+```C#
+public class UserAccount
+{
+    public Guid ID { get; set; }
+    public string Name { get; set; }
+    public DateTime BoD { get; set; }
+    public int Age { get; set; }
+    public bool VIP { get; set; }
+    public decimal Points { get; set; }
+}
+
+using (var stream = File.OpenRead(path))
+    var rows = stream.Query<UserAccount>();
+```
+
+![image](https://user-images.githubusercontent.com/12729184/111107423-c8c46b80-8591-11eb-982f-c97a2dafb379.png)
+
 
 ### Execute a query and map it to a list of dynamic objects without using head
 
@@ -50,6 +75,8 @@ using (var stream = File.OpenRead(path))
     Assert.Equal(2, rows[1].Column2);
 }
 ```
+
+### Query Mapping Type
 
 ### Create Excel Xlsx file by ICollection Anonymous Type/Datatable
 ```C#
@@ -144,12 +171,14 @@ public class ExcelController : Controller
 
 ### TODO
 
-Please Check [Issues · todo](https://github.com/shps951023/MiniExcel/labels/todo)
+Please Check [Project · todo](https://github.com/shps951023/MiniExcel/projects/1?fullscreen=true)
 
-### Release Notes
+### Limitations and caveats 
 
-Please Check [Release Notes](https://github.com/shps951023/MiniExcel/tree/master/docs)
+- Custom datetime/timespan format can't mapping to DateTime/TimeSpan type
+- Same column name use last right one 
 
 ### Reference 
 
-- [ExcelDataReader](https://github.com/ExcelDataReader/ExcelDataReader)
+- Query logic learn from [ExcelDataReader](https://github.com/ExcelDataReader/ExcelDataReader)
+- Query Style learn from [StackExchange/Dapper](https://github.com/StackExchange/Dapper)

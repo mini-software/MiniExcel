@@ -2,6 +2,13 @@
 
 ## Release  Notes
 
+### 0.1.0-preview
+- Add Query strongly typed mapping
+- Add QueryFirstOrDefault、QuerySingle、QuerySingleOrDefault
+
+### 0.0.7-beta
+- Add QueryFirst method
+
 ### 0.0.6-beta
 - [Breaking Changes]Replace Create by SavaAs
 

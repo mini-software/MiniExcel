@@ -9,6 +9,8 @@
     using System.IO;
     using System.IO.Compression;
     using System.Text;
+    using System.Reflection;
+    using MiniExcelLibs.Utils;
 
     public static partial class MiniExcel
     {
@@ -20,6 +22,8 @@
             { @"xl/workbook.xml",new ZipPackageInfo(DefualtXml.DefaultWorkbookXml, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml")},
             { @"xl/worksheets/sheet1.xml",new ZipPackageInfo(DefualtXml.DefaultSheetXml, "application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml")},
         };
+
+        private readonly static UTF8Encoding Utf8WithBom = new System.Text.UTF8Encoding(true);
 
         public static void SaveAs(this Stream stream,object value, string startCell = "A1", bool printHeader = true)
         {
@@ -109,7 +113,7 @@
                         }
                     }
                     var type = firstValue.GetType();
-                    var props = type.GetProperties();
+                    var props = type.GetProperties(BindingFlags.Instance | BindingFlags.Public);
                     if (printHeader)
                     {
                         sb.AppendLine($"<x:row r=\"{yIndex.ToString()}\">");
@@ -171,6 +175,11 @@
             return defaultFiles;
         }
 
+        public static IEnumerable<T> Query<T>(this Stream stream) where T : class , new()
+        {
+            return QueryImpl<T>(stream);
+        }
+
         public static IEnumerable<dynamic> Query(this Stream stream, bool useHeaderRow = false)
         {
             return new ExcelOpenXmlSheetReader().QueryImpl(stream, useHeaderRow);
@@ -181,7 +190,54 @@
             return new ExcelOpenXmlSheetReader().QueryImpl(stream, useHeaderRow).First();
         }
 
-        private readonly static UTF8Encoding Utf8WithBom = new System.Text.UTF8Encoding(true);
+        public static dynamic QueryFirstOrDefault(this Stream stream, bool useHeaderRow = false)
+        {
+            return new ExcelOpenXmlSheetReader().QueryImpl(stream, useHeaderRow).FirstOrDefault();
+        }
+
+        public static dynamic QuerySingle(this Stream stream, bool useHeaderRow = false)
+        {
+            return new ExcelOpenXmlSheetReader().QueryImpl(stream, useHeaderRow).Single();
+        }
+
+        public static dynamic QuerySingleOrDefault(this Stream stream, bool useHeaderRow = false)
+        {
+            return new ExcelOpenXmlSheetReader().QueryImpl(stream, useHeaderRow).SingleOrDefault();
+        }
+
+        private static IEnumerable<T> QueryImpl<T>(this Stream stream) where T : class, new()
+        {
+            var type = typeof(T);
+            var props = Helpers.GetPropertiesWithSetter(type);
+            foreach (var item in new ExcelOpenXmlSheetReader().QueryImpl(stream, true))
+            {
+                var v = new T();
+                foreach (var p in props)
+                {
+                    if (item.ContainsKey(p.Name))
+                    {
+                        object newV = null;
+                        if (p.PropertyType == typeof(Guid))
+                            newV = Guid.Parse(item[p.Name].ToString());
+                        else if (p.PropertyType == typeof(DateTime))
+                        {
+                            var bs = item[p.Name].ToString();
+                            if (DateTime.TryParse(bs, out var _v))
+                                newV = _v;
+                            else
+                                newV = DateTime.ParseExact(bs, "dd/MM/yyyy", System.Globalization.CultureInfo.InvariantCulture);
+                        }
+                        else
+                            newV = Convert.ChangeType(item[p.Name], p.PropertyType);
+                        p.SetValue(v, newV);
+                    }
+                }
+                yield return v;
+            }
+        }
+
+
+
         private static void CreateXlsxFile(string path, Dictionary<string, ZipPackageInfo> zipPackageInfos)
         {
             using (FileStream stream = new FileStream(path, FileMode.CreateNew))

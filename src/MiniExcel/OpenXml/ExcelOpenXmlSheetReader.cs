@@ -177,7 +177,7 @@ namespace MiniExcelLibs.OpenXml
 
         private static Dictionary<int, string> _SharedStrings;
 
-        internal IEnumerable<object> QueryImpl(Stream stream, bool UseHeaderRow = false)
+        internal IEnumerable<IDictionary<string, object>> QueryImpl(Stream stream, bool UseHeaderRow = false)
         {
             using (ZipArchive archive = new ZipArchive(stream, ZipArchiveMode.Read, false, UTF8Encoding.UTF8))
             {

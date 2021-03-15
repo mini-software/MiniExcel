@@ -43,7 +43,11 @@ namespace MiniExcelLibs.Utils
 		  // TODO: it can recode better performance 
 		  var cell = (IDictionary<string, object>)new ExpandoObject();
 		  for (int i = 0; i <= maxColumnIndex; i++)
-			 cell.Add(GetAlphabetColumnName(i), null);
+            {
+			 var key = GetAlphabetColumnName(i);
+			 if (!cell.ContainsKey(key))
+				cell.Add(key, null);
+		  }
 		  return cell;
 	   }
 
@@ -53,7 +57,8 @@ namespace MiniExcelLibs.Utils
 		  // TODO: it can recode better performance 
 		  var cell = (IDictionary<string, object>)new ExpandoObject();
 		  foreach (var hr in hearrows)
-			 cell.Add(hr.Value, null);
+			 if(!cell.ContainsKey(hr.Value))
+				cell.Add(hr.Value, null);
 		  return cell;
 	   }
 

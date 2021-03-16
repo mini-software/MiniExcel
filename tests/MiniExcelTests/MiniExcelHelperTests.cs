@@ -16,7 +16,7 @@ using System.Globalization;
 
 namespace MiniExcelLibs.Tests
 {
-    public class MiniExcelHelperTests
+    public partial class MiniExcelHelperTests
     {
         [Fact()]
         public void CenterEmptyRowsQueryTest()
@@ -154,6 +154,25 @@ namespace MiniExcelLibs.Tests
                 Assert.Equal(false, rows[0].VIP);
                 Assert.Equal(decimal.Parse("5019.12"), rows[0].Points);
                 Assert.Equal(1, rows[0].IgnoredProperty);
+            }
+        }
+
+
+        public class AutoCheckType
+        {
+            public Guid? @guid { get; set; }
+            public bool? @bool { get; set; }
+            public DateTime? datetime { get; set; }
+            public string @string { get; set; }
+        }
+
+        [Fact()]
+        public void AutoCheckTypeTest()
+        {
+            var path = @"..\..\..\..\..\samples\xlsx\TestTypeMapping_AutoCheckFormat.xlsx";
+            using (var stream = FileHelper.OpenRead(path))
+            {
+                var rows = stream.Query<AutoCheckType>().ToList();
             }
         }
 

@@ -11,6 +11,7 @@
     using System.Text;
     using System.Reflection;
     using MiniExcelLibs.Utils;
+    using System.Globalization;
 
     public static partial class MiniExcel
     {
@@ -33,7 +34,7 @@
 
         public static void SaveAs(string filePath, object value, string startCell = "A1", bool printHeader = true)
         {
-            CreateXlsxFile(filePath, GetCreateXlsxInfos(value, startCell, printHeader));
+            SaveAsImpl(filePath, GetCreateXlsxInfos(value, startCell, printHeader));
         }
 
         private static Dictionary<string, ZipPackageInfo> GetCreateXlsxInfos(object value, string startCell, bool printHeader)
@@ -237,18 +238,37 @@
                     if (item.ContainsKey(p.Name))
                     {
                         object newV = null;
-                        if (p.PropertyType == typeof(Guid))
-                            newV = Guid.Parse(item[p.Name].ToString());
-                        else if (p.PropertyType == typeof(DateTime))
+                        object itemValue = (object)item[p.Name];
+                        if (itemValue == null)
                         {
-                            var bs = item[p.Name].ToString();
-                            if (DateTime.TryParse(bs, out var _v))
+                            yield return v;
+                        }
+                        else if (p.PropertyType == typeof(Guid) || p.PropertyType == typeof(Guid?))
+                            newV = Guid.Parse(itemValue.ToString());
+                        else if (p.PropertyType == typeof(DateTime) || p.PropertyType == typeof(DateTime?))
+                        {
+                            var vs = itemValue.ToString();
+                            if (DateTime.TryParse(vs, out var _v))
                                 newV = _v;
+                            else if (DateTime.TryParseExact(vs, "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out var _v2))
+                                newV = _v2;
+                            else if (double.TryParse(vs, out var _d))
+                                newV = DateTimeHelper.FromOADate(_d);
                             else
-                                newV = DateTime.ParseExact(bs, "dd/MM/yyyy", System.Globalization.CultureInfo.InvariantCulture);
+                                throw new InvalidCastException($"{vs} can't cast to datetime");
+                        }
+                        else if (p.PropertyType == typeof(bool) || p.PropertyType == typeof(bool?))
+                        {
+                            var vs = itemValue.ToString();
+                            if (vs == "1")
+                                newV = true;
+                            else if (vs == "0")
+                                newV = false;
+                            else
+                                newV = bool.Parse(vs);
                         }
                         else
-                            newV = Convert.ChangeType(item[p.Name], p.PropertyType);
+                            newV = Convert.ChangeType(itemValue, p.PropertyType);
                         p.SetValue(v, newV);
                     }
                 }
@@ -256,9 +276,7 @@
             }
         }
 
-
-
-        private static void CreateXlsxFile(string path, Dictionary<string, ZipPackageInfo> zipPackageInfos)
+        private static void SaveAsImpl(string path, Dictionary<string, ZipPackageInfo> zipPackageInfos)
         {
             using (FileStream stream = new FileStream(path, FileMode.CreateNew))
             using(ZipArchive archive = new ZipArchive(stream, ZipArchiveMode.Create, false, Utf8WithBom))

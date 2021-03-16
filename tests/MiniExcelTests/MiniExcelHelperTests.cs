@@ -13,6 +13,7 @@ using System.Threading;
 using System.Data.SQLite;
 using Dapper;
 using System.Globalization;
+using MiniExcelLibs.Tests.Utils;
 
 namespace MiniExcelLibs.Tests
 {
@@ -217,7 +218,7 @@ namespace MiniExcelLibs.Tests
                     var keys = row.Keys;
                     foreach (var key in keys)
                     {
-                        var eV = exceldatareaderResult.Tables[0].Rows[rowIndex][MiniExcelLibs.Utils.Helpers.GetColumnIndex(key)];
+                        var eV = exceldatareaderResult.Tables[0].Rows[rowIndex][Helpers.GetColumnIndex(key)];
                         var v = row[key] == null ? DBNull.Value : row[key];
                         Assert.Equal(eV, v);
                     }

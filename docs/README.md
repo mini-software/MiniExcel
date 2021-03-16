@@ -2,6 +2,12 @@
 
 ## Release  Notes
 
+### 0.2.1  
+- Optimize bool and datetime auto check
+
+### 0.2.0  
+- Release to nuget.org
+
 ### 0.1.0-preview
 - Add Query strongly typed mapping
 - Add QueryFirstOrDefault、QuerySingle、QuerySingleOrDefault

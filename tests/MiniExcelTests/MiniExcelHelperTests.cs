@@ -226,6 +226,31 @@ namespace MiniExcelLibs.Tests
             }
         }
 
+        [Fact()]
+        public void QuerySheetWithoutRAttribute()
+        {
+            var path = @"..\..\..\..\..\samples\xlsx\TestWihoutRAttribute.xlsx";
+            using (var stream = File.OpenRead(path))
+            {
+                var rows = stream.Query().ToList();
+                var keys = (rows.First() as IDictionary<string, object>).Keys;
+
+                Assert.Equal(2, rows.Count());
+                Assert.Equal(5, keys.Count());
+
+                Assert.Equal(1, rows[0].A);
+                //Assert.Equal(@""" <> +}{\nHello World]", (string)rows[0].B);
+                Assert.Equal(null, rows[0].C);
+                Assert.Equal(null, rows[0].D);
+                Assert.Equal(null, rows[0].E);
+
+                Assert.Equal(1, rows[1].A);
+                Assert.Equal("\"<>+}{\\nHello World", rows[1].B);
+                Assert.Equal(true, rows[1].C);
+                Assert.Equal("2021-03-16T19:10:21", rows[1].D);
+            }
+        }
+
         //[Theory()]
         //[InlineData(@"..\..\..\..\..\samples\xlsx\ExcelDataReaderCollections\TestOpen\TestOpen.xlsx")]
 //        public void QueryExcelDataReaderCheckTypeMappingTest(string path)

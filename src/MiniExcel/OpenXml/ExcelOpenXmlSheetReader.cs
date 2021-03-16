@@ -134,10 +134,10 @@ namespace MiniExcelLibs.OpenXml
         private List<SheetRecord> _sheetRecords = null;
         internal void ReadWorkbookRels(ReadOnlyCollection<ZipArchiveEntry> entries)
         {
-            _sheetRecords= ReadWorkbook(entries).ToList();
+            _sheetRecords = ReadWorkbook(entries).ToList();
             //_styles = ReadStyle(entries).ToList();
 
-            using (var stream = entries.Single(w=> w.FullName == "xl/_rels/workbook.xml.rels").Open())
+            using (var stream = entries.Single(w => w.FullName == "xl/_rels/workbook.xml.rels").Open())
             using (XmlReader reader = XmlReader.Create(stream, XmlSettings))
             {
                 if (!reader.IsStartElement("Relationships", "http://schemas.openxmlformats.org/package/2006/relationships"))
@@ -176,6 +176,8 @@ namespace MiniExcelLibs.OpenXml
 
         private static Dictionary<int, string> _SharedStrings;
 
+        private const string ns = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
+
         internal IEnumerable<IDictionary<string, object>> QueryImpl(Stream stream, bool UseHeaderRow = false)
         {
             using (ZipArchive archive = new ZipArchive(stream, ZipArchiveMode.Read, false, UTF8Encoding.UTF8))
@@ -195,102 +197,95 @@ namespace MiniExcelLibs.OpenXml
                 else
                     firstSheetEntry = sheets.Single();
 
+
+                // TODO: need to optimize performance
+                var withoutCR = false;
+
+                var maxRowIndex = -1;
+                var maxColumnIndex = -1;
                 using (var firstSheetEntryStream = firstSheetEntry.Open())
+                using (XmlReader reader = XmlReader.Create(firstSheetEntryStream, XmlSettings))
                 {
+                    while (reader.Read())
+                    {                      
+                        if (reader.IsStartElement("c",ns))
+                        {
+                            var r = reader.GetAttribute("r");
+                            if (r != null)
+                            {
+                                if (ReferenceHelper.ParseReference(r, out var column, out var row))
+                                {
+                                    column = column - 1;
+                                    row = row - 1;
+                                    maxRowIndex = Math.Max(maxRowIndex, row);
+                                    maxColumnIndex = Math.Max(maxColumnIndex, column);
+                                }
+                            }
+                            else
+                            {
+                                withoutCR = true;
+                                break;
+                            }
+                        }
+                        //this method logic depends on dimension to get maxcolumnIndex, if without dimension then it need to foreach all rows first time to get maxColumn and maxRowColumn
+                        else if (reader.IsStartElement("dimension", ns))
+                        {
+                            var @ref = reader.GetAttribute("ref");
+                            if (string.IsNullOrEmpty(@ref))
+                                throw new InvalidOperationException("Without sheet dimension data");
+                            var rs = @ref.Split(':');
+                            if (ReferenceHelper.ParseReference(rs[1], out int cIndex, out int rIndex))
+                            {
+                                maxColumnIndex = cIndex - 1;
+                                maxRowIndex = rIndex - 1;
+                                break;
+                            }
+                            else
+                                throw new InvalidOperationException("Invaild sheet dimension start data");
+                        }
+                    }
+                }
+
+                if (withoutCR)
+                {
+                    using (var firstSheetEntryStream = firstSheetEntry.Open())
                     using (XmlReader reader = XmlReader.Create(firstSheetEntryStream, XmlSettings))
                     {
-                        const string ns = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
                         if (!reader.IsStartElement("worksheet", ns))
                             yield break;
-
-
                         if (!XmlReaderHelper.ReadFirstContent(reader))
                             yield break;
-
-                        var maxRowIndex = -1;
-                        var maxColumnIndex = -1;
                         while (!reader.EOF)
                         {
-                            //TODO: will dimension after sheetData?
-                            //this method logic depends on dimension to get maxcolumnIndex, if without dimension then it need to foreach all rows first time to get maxColumn and maxRowColumn
-                            if (reader.IsStartElement("dimension", ns))
-                            {
-                                var @ref = reader.GetAttribute("ref");
-                                if (string.IsNullOrEmpty(@ref))
-                                    throw new InvalidOperationException("Without sheet dimension data");
-                                var rs = @ref.Split(':');
-                                if (ReferenceHelper.ParseReference(rs[1], out int cIndex, out int rIndex))
-                                {
-                                    maxColumnIndex = cIndex - 1;
-                                    maxRowIndex = rIndex - 1;
-                                }
-                                else
-                                    throw new InvalidOperationException("Invaild sheet dimension start data");
-                            }
                             if (reader.IsStartElement("sheetData", ns))
                             {
                                 if (!XmlReaderHelper.ReadFirstContent(reader))
-                                {
                                     continue;
-                                }
 
-                                Dictionary<int, string> headRows = new Dictionary<int, string>();
-                                int rowIndex = -1;
-                                int nextRowIndex = 0;
                                 while (!reader.EOF)
                                 {
                                     if (reader.IsStartElement("row", ns))
                                     {
-                                        nextRowIndex = rowIndex + 1;
-                                        if (int.TryParse(reader.GetAttribute("r"), out int arValue))
-                                            rowIndex = arValue - 1; // The row attribute is 1-based
-                                        else
-                                            rowIndex++;
+                                        maxRowIndex++;
+                                            
                                         if (!XmlReaderHelper.ReadFirstContent(reader))
                                             continue;
 
-                                        // fill empty rows
+                                        //Cells
                                         {
-                                            if (nextRowIndex < rowIndex)
-                                            {
-                                                for (int i = nextRowIndex; i < rowIndex; i++)
-                                                    if (UseHeaderRow)
-                                                        yield return Helpers.GetEmptyExpandoObject(headRows);
-                                                    else
-                                                        yield return Helpers.GetEmptyExpandoObject(maxColumnIndex);
-                                            }
-                                        }
-
-                                        // Set Cells
-                                        {
-                                            var cell = UseHeaderRow ? Helpers.GetEmptyExpandoObject(headRows) : Helpers.GetEmptyExpandoObject(maxColumnIndex);
-                                            var columnIndex = 0;
+                                            var cellIndex = -1;
                                             while (!reader.EOF)
                                             {
                                                 if (reader.IsStartElement("c", ns))
                                                 {
-                                                    var cellValue = ReadCell(reader, columnIndex, out var _columnIndex);
-                                                    columnIndex = _columnIndex;
-
-                                                    //if not using First Head then using 1,2,3 as index
-                                                    if (UseHeaderRow)
-                                                    {
-                                                        if (rowIndex == 0)
-                                                            headRows.Add(columnIndex, cellValue.ToString());
-                                                        else
-                                                            cell[headRows[columnIndex]] = cellValue;
-                                                    }
-                                                    else
-                                                        cell[Helpers.GetAlphabetColumnName(columnIndex)] = cellValue;
+                                                    cellIndex++;
+                                                    maxColumnIndex = Math.Max(maxColumnIndex, cellIndex);
                                                 }
-                                                else if (!XmlReaderHelper.SkipContent(reader))
+                                                    
+                                                
+                                                if (!XmlReaderHelper.SkipContent(reader))
                                                     break;
                                             }
-
-                                            if (UseHeaderRow && rowIndex == 0)
-                                                continue;
-
-                                            yield return cell;
                                         }
                                     }
                                     else if (!XmlReaderHelper.SkipContent(reader))
@@ -298,27 +293,119 @@ namespace MiniExcelLibs.OpenXml
                                         break;
                                     }
                                 }
-
                             }
                             else if (!XmlReaderHelper.SkipContent(reader))
                             {
                                 break;
                             }
                         }
+
+                    }
+                }
+
+
+                using (var firstSheetEntryStream = firstSheetEntry.Open())
+                using (XmlReader reader = XmlReader.Create(firstSheetEntryStream, XmlSettings))
+                {
+                    if (!reader.IsStartElement("worksheet", ns))
+                        yield break;
+
+                    if (!XmlReaderHelper.ReadFirstContent(reader))
+                        yield break;
+
+                    while (!reader.EOF)
+                    {
+                        if (reader.IsStartElement("sheetData", ns))
+                        {
+                            if (!XmlReaderHelper.ReadFirstContent(reader))
+                                continue;
+
+                            Dictionary<int, string> headRows = new Dictionary<int, string>();
+                            int rowIndex = -1;
+                            int nextRowIndex = 0;
+                            while (!reader.EOF)
+                            {
+                                if (reader.IsStartElement("row", ns))
+                                {
+                                    nextRowIndex = rowIndex + 1;
+                                    if (int.TryParse(reader.GetAttribute("r"), out int arValue))
+                                        rowIndex = arValue - 1; // The row attribute is 1-based
+                                    else
+                                        rowIndex++;
+                                    if (!XmlReaderHelper.ReadFirstContent(reader))
+                                        continue;
+
+                                    // fill empty rows
+                                    {
+                                        if (nextRowIndex < rowIndex)
+                                        {
+                                            for (int i = nextRowIndex; i < rowIndex; i++)
+                                                if (UseHeaderRow)
+                                                    yield return Helpers.GetEmptyExpandoObject(headRows);
+                                                else
+                                                    yield return Helpers.GetEmptyExpandoObject(maxColumnIndex);
+                                        }
+                                    }
+
+                                    // Set Cells
+                                    {
+                                        var cell = UseHeaderRow ? Helpers.GetEmptyExpandoObject(headRows) : Helpers.GetEmptyExpandoObject(maxColumnIndex);
+                                        var columnIndex = withoutCR ? -1 : 0;
+                                        while (!reader.EOF)
+                                        {
+                                            if (reader.IsStartElement("c", ns))
+                                            {
+                                                var cellValue = ReadCell(reader, columnIndex, withoutCR, out var _columnIndex);
+                                                columnIndex = _columnIndex;
+
+                                                //if not using First Head then using 1,2,3 as index
+                                                if (UseHeaderRow)
+                                                {
+                                                    if (rowIndex == 0)
+                                                        headRows.Add(columnIndex, cellValue.ToString());
+                                                    else
+                                                        cell[headRows[columnIndex]] = cellValue;
+                                                }
+                                                else
+                                                    cell[Helpers.GetAlphabetColumnName(columnIndex)] = cellValue;
+                                            }
+                                            else if (!XmlReaderHelper.SkipContent(reader))
+                                                break;
+                                        }
+
+                                        if (UseHeaderRow && rowIndex == 0)
+                                            continue;
+
+                                        yield return cell;
+                                    }
+                                }
+                                else if (!XmlReaderHelper.SkipContent(reader))
+                                {
+                                    break;
+                                }
+                            }
+
+                        }
+                        else if (!XmlReaderHelper.SkipContent(reader))
+                        {
+                            break;
+                        }
                     }
                 }
             }
         }
 
-        private object ReadCell(XmlReader reader, int nextColumnIndex, out int columnIndex)
+        private object ReadCell(XmlReader reader, int nextColumnIndex,bool withoutCR, out int columnIndex)
         {
             int xfIndex = -1;
             var aS = reader.GetAttribute("s");
             var aT = reader.GetAttribute("t");
             var aR = reader.GetAttribute("r");
 
+            if(withoutCR)
+                columnIndex = nextColumnIndex + 1;
             //TODO:need to check only need nextColumnIndex or columnIndex
-            if (ReferenceHelper.ParseReference(aR, out int referenceColumn, out _))
+            else if (ReferenceHelper.ParseReference(aR, out int referenceColumn, out _))
                 columnIndex = referenceColumn - 1; // ParseReference is 1-based
             else
                 columnIndex = nextColumnIndex;
@@ -357,7 +444,7 @@ namespace MiniExcelLibs.OpenXml
             return value;
         }
 
-        private void ConvertCellValue(string rawValue, string aT,int xfIndex, out object value)
+        private void ConvertCellValue(string rawValue, string aT, int xfIndex, out object value)
         {
             const NumberStyles style = NumberStyles.Any;
             var invariantCulture = CultureInfo.InvariantCulture;

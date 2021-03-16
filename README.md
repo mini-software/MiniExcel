@@ -36,7 +36,9 @@ using (var stream = File.OpenRead(path))
 ![image](https://user-images.githubusercontent.com/12729184/111107423-c8c46b80-8591-11eb-982f-c97a2dafb379.png)
 
 
-### Execute a query and map it to a list of dynamic objects without using head
+### Execute a query and map it to a list of dynamic objects without using head 
+
+* dynamic key is `A.B.C.D..`
 
 | MiniExcel     | 1     | 
 | -------- | -------- | 

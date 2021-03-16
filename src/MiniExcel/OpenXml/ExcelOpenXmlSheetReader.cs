@@ -132,7 +132,6 @@ namespace MiniExcelLibs.OpenXml
         }
 
         private List<SheetRecord> _sheetRecords = null;
-        private List<ExtendedFormat> _styles = null;
         internal void ReadWorkbookRels(ReadOnlyCollection<ZipArchiveEntry> entries)
         {
             _sheetRecords= ReadWorkbook(entries).ToList();

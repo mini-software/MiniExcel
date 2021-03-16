@@ -152,7 +152,7 @@ namespace MiniExcelLibs.Tests
                 Assert.Equal("Wade", rows[0].Name);
                 Assert.Equal(DateTime.ParseExact("27/09/2020","dd/MM/yyyy", CultureInfo.InvariantCulture), rows[0].BoD);
                 Assert.Equal(36, rows[0].Age);
-                Assert.Equal(false, rows[0].VIP);
+                Assert.False(rows[0].VIP);
                 Assert.Equal(decimal.Parse("5019.12"), rows[0].Points);
                 Assert.Equal(1, rows[0].IgnoredProperty);
             }
@@ -218,7 +218,7 @@ namespace MiniExcelLibs.Tests
                     var keys = row.Keys;
                     foreach (var key in keys)
                     {
-                        var eV = exceldatareaderResult.Tables[0].Rows[rowIndex][Helpers.GetColumnIndex(key)];
+                        var eV = exceldatareaderResult.Tables[0].Rows[rowIndex][MiniExcelLibs.Tests.Utils.Helpers.GetColumnIndex(key)];
                         var v = row[key] == null ? DBNull.Value : row[key];
                         Assert.Equal(eV, v);
                     }
@@ -228,36 +228,36 @@ namespace MiniExcelLibs.Tests
 
         //[Theory()]
         //[InlineData(@"..\..\..\..\..\samples\xlsx\ExcelDataReaderCollections\TestOpen\TestOpen.xlsx")]
-        public void QueryExcelDataReaderCheckTypeMappingTest(string path)
-        {
-#if NETCOREAPP3_1 || NET5_0
-            System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
-#endif
+//        public void QueryExcelDataReaderCheckTypeMappingTest(string path)
+//        {
+//#if NETCOREAPP3_1 || NET5_0
+//            System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
+//#endif
 
-            DataSet exceldatareaderResult;
-            using (var stream = File.OpenRead(path))
-            using (var reader = ExcelReaderFactory.CreateReader(stream))
-            {
-                exceldatareaderResult = reader.AsDataSet();
-            }
+//            DataSet exceldatareaderResult;
+//            using (var stream = File.OpenRead(path))
+//            using (var reader = ExcelReaderFactory.CreateReader(stream))
+//            {
+//                exceldatareaderResult = reader.AsDataSet();
+//            }
 
-            using (var stream = File.OpenRead(path))
-            {
-                var rows = stream.Query().ToList();
-                Assert.Equal(exceldatareaderResult.Tables[0].Rows.Count, rows.Count);
-                foreach (IDictionary<string, object> row in rows)
-                {
-                    var rowIndex = rows.IndexOf(row);
-                    var keys = row.Keys;
-                    foreach (var key in keys)
-                    {
-                        var eV = exceldatareaderResult.Tables[0].Rows[rowIndex][int.Parse(key)];
-                        var v = row[key] == null ? DBNull.Value : row[key];
-                        Assert.Equal(eV, v);
-                    }
-                }
-            }
-        }
+//            using (var stream = File.OpenRead(path))
+//            {
+//                var rows = stream.Query().ToList();
+//                Assert.Equal(exceldatareaderResult.Tables[0].Rows.Count, rows.Count);
+//                foreach (IDictionary<string, object> row in rows)
+//                {
+//                    var rowIndex = rows.IndexOf(row);
+//                    var keys = row.Keys;
+//                    foreach (var key in keys)
+//                    {
+//                        var eV = exceldatareaderResult.Tables[0].Rows[rowIndex][int.Parse(key)];
+//                        var v = row[key] == null ? DBNull.Value : row[key];
+//                        Assert.Equal(eV, v);
+//                    }
+//                }
+//            }
+//        }
 
         [Fact()]
         public void CreateDataTableTest()

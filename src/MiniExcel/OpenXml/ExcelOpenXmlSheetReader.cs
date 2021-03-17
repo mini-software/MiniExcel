@@ -19,9 +19,9 @@ namespace MiniExcelLibs.OpenXml
             var sharedStringsEntry = entries.SingleOrDefault(w => w.FullName == "xl/sharedStrings.xml");
             if (sharedStringsEntry == null)
                 return null;
-            using (var reader = sharedStringsEntry.Open())
+            using (var stream = sharedStringsEntry.Open())
             {
-                var xl = XElement.Load(reader);
+                var xl = XElement.Load(stream);
                 var ts = xl.Descendants(ExcelOpenXmlXName.T).Select((s, i) => new { i, v = s.Value?.ToString() })
                       .ToDictionary(s => s.i, s => s.v)
                 ;
@@ -234,7 +234,8 @@ namespace MiniExcelLibs.OpenXml
                             if (string.IsNullOrEmpty(@ref))
                                 throw new InvalidOperationException("Without sheet dimension data");
                             var rs = @ref.Split(':');
-                            if (ReferenceHelper.ParseReference(rs[1], out int cIndex, out int rIndex))
+                            // issue : https://github.com/shps951023/MiniExcel/issues/102
+                            if (ReferenceHelper.ParseReference(rs.Length==2?rs[1]:rs[0], out int cIndex, out int rIndex))
                             {
                                 maxColumnIndex = cIndex - 1;
                                 maxRowIndex = rIndex - 1;

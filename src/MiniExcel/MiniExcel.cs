@@ -42,6 +42,7 @@
             var xy = ExcelOpenXmlUtils.ConvertCellToXY(startCell);
 
             var defaultFiles = GetDefaultFiles();
+            var dimensionRef = string.Empty;
             {
                 var sb = new StringBuilder();
 
@@ -50,6 +51,15 @@
                 if (value is DataTable)
                 {
                     var dt = value as DataTable;
+
+                    var maxRowIndex = dt.Rows.Count;
+                    var maxColumnIndex = dt.Columns.Count;
+                    // dimension
+                    {
+                        if (maxRowIndex == 0 && maxColumnIndex == 0)
+                            dimensionRef = "A1";
+                    }
+
                     if (printHeader)
                     {
                         sb.AppendLine($"<x:row r=\"{yIndex.ToString()}\">");
@@ -169,6 +179,7 @@
 
                 defaultFiles[@"xl/worksheets/sheet1.xml"].Xml = $@"<?xml version=""1.0"" encoding=""utf-8""?>
 <x:worksheet xmlns:x=""http://schemas.openxmlformats.org/spreadsheetml/2006/main"">
+<dimension ref=""{dimensionRef}""/>
 <x:sheetData>{sb.ToString()}</x:sheetData>
 </x:worksheet>";
             }

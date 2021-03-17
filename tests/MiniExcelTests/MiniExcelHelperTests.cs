@@ -274,11 +274,40 @@ namespace MiniExcelLibs.Tests
         public void SaveAsFileWithDimension()
         {
             {
-                var now = DateTime.Now;
                 var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
                 var table = new DataTable();
                 MiniExcel.SaveAs(path, table);
                 Assert.Equal("A1", GetFirstSheetDimensionRefValue(path));
+                File.Delete(path);
+            }
+
+            {
+                var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
+                var table = new DataTable();
+                {
+                    table.Columns.Add("a", typeof(string));
+                    table.Columns.Add("b", typeof(decimal));
+                    table.Columns.Add("c", typeof(bool));
+                    table.Columns.Add("d", typeof(DateTime));
+                    table.Rows.Add(@"""<>+-*//}{\\n", 1234567890);
+                    table.Rows.Add(@"<test>Hello World</test>", -1234567890, false, DateTime.Now);
+                }
+                MiniExcel.SaveAs(path, table);
+                Assert.Equal("A1:D2", GetFirstSheetDimensionRefValue(path));
+                File.Delete(path);
+            }
+
+            {
+                var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
+                var table = new DataTable();
+                {
+                    table.Columns.Add("a", typeof(string));
+                    table.Rows.Add(@"A");
+                    table.Rows.Add(@"B");
+                }
+                MiniExcel.SaveAs(path, table);
+                Assert.Equal("A2", GetFirstSheetDimensionRefValue(path));
+                File.Delete(path);
             }
         }
 

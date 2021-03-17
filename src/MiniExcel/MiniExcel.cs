@@ -58,6 +58,10 @@
                     {
                         if (maxRowIndex == 0 && maxColumnIndex == 0)
                             dimensionRef = "A1";
+                        else if ( maxColumnIndex == 1)
+                            dimensionRef = $"A{maxRowIndex}";
+                        else
+                            dimensionRef =  $"A1:{Helpers.GetAlphabetColumnName(maxColumnIndex-1)}{maxRowIndex}";
                     }
 
                     if (printHeader)

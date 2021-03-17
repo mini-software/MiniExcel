@@ -3,7 +3,9 @@
 ## Release  Notes
 
 ### 0.2.1  
-- Optimize bool and datetime auto check
+- Optimize type mapping bool and datetime auto check
+- Query Support xl/worksheets/Sheet Xml Xml `<c>` without `r` attribute or without `<dimension>` but `<c>` with `r` attribute, but now performance is slow than with dimension ([](https://github.com/shps951023/MiniExcel/issues/2))
+
 
 ### 0.2.0  
 - Release to nuget.org

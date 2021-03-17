@@ -21,12 +21,17 @@ void Main()
 	Console.WriteLine("start memory usage: " + System.Diagnostics.Process.GetCurrentProcess().WorkingSet64 / (1024 * 1024) + $"MB");
 
 	System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
-	var path = @"D:\git\MiniExcel\samples\xlsx\OpenXmlSDK_InsertCellValues\OpenXmlSDK_InsertCellValues.xlsx";
+	var path = @"D:\git\MiniExcel\samples\xlsx\TestTypeMapping_AutoCheckFormat.csv";
 	using (var stream = File.OpenRead(path))
-	using (var reader = ExcelReaderFactory.CreateReader(stream))
+	using (var reader = ExcelReaderFactory.CreateCsvReader(stream))
 	{
-		reader.Read();
-		Console.WriteLine("A1 : " +reader.GetValue(0));
+		while (reader.Read())
+		{
+			for (var i = 0; i < reader.FieldCount; i++)
+				Console.Write($"| {reader.GetValue(i).GetType().Name}:{reader.GetValue(i)} |");
+		    Console.WriteLine();
+		}
+		
 		Console.WriteLine("end memory usage: " + System.Diagnostics.Process.GetCurrentProcess().WorkingSet64 / (1024 * 1024) + $"MB & run time : {sw.ElapsedMilliseconds}ms");
 	}
 }

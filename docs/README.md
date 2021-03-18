@@ -2,6 +2,11 @@
 
 ## Release  Notes
 
+### 0.2.2 
+- SavaAs support xl/sheet dimension
+- [Breaking Changes] SaveAs value type from object to DataTable & ICollection
+- Bug fix: ICollection with type but no data error (https://github.com/shps951023/MiniExcel/issues/105)
+
 ### 0.2.1  
 - Optimize type mapping bool and datetime auto check
 - Query Support xl/worksheets/Sheet Xml Xml `<c>` without `r` attribute or without `<dimension>` but `<c>` with `r` attribute, but now performance is slow than with dimension ([](https://github.com/shps951023/MiniExcel/issues/2))

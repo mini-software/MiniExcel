@@ -12,6 +12,7 @@
     using System.Reflection;
     using MiniExcelLibs.Utils;
     using System.Globalization;
+    using System.Collections;
 
     public static partial class MiniExcel
     {
@@ -26,13 +27,24 @@
 
         private readonly static UTF8Encoding Utf8WithBom = new System.Text.UTF8Encoding(true);
 
-        public static void SaveAs(this Stream stream,object value, string startCell = "A1", bool printHeader = true)
+        public static void SaveAs(this Stream stream, DataTable value, string startCell = "A1", bool printHeader = true)
         {
-            SaveAsImpl(stream,GetCreateXlsxInfos(value, startCell, printHeader));
+            SaveAsImpl(stream, GetCreateXlsxInfos(value, startCell, printHeader));
             stream.Position = 0;
         }
 
-        public static void SaveAs(string filePath, object value, string startCell = "A1", bool printHeader = true)
+        public static void SaveAs(this Stream stream, ICollection value, string startCell = "A1", bool printHeader = true)
+        {
+            SaveAsImpl(stream, GetCreateXlsxInfos(value, startCell, printHeader));
+            stream.Position = 0;
+        }
+
+        public static void SaveAs(string filePath, DataTable value, string startCell = "A1", bool printHeader = true)
+        {
+            SaveAsImpl(filePath, GetCreateXlsxInfos(value, startCell, printHeader));
+        }
+
+        public static void SaveAs(string filePath, ICollection value, string startCell = "A1", bool printHeader = true)
         {
             SaveAsImpl(filePath, GetCreateXlsxInfos(value, startCell, printHeader));
         }
@@ -42,7 +54,12 @@
             var xy = ExcelOpenXmlUtils.ConvertCellToXY(startCell);
 
             var defaultFiles = GetDefaultFiles();
-            var dimensionRef = string.Empty;
+
+            // dimension
+            var dimensionRef = "A1";
+            var maxRowIndex = 0;
+            var maxColumnIndex = 0;
+
             {
                 var sb = new StringBuilder();
 
@@ -52,17 +69,10 @@
                 {
                     var dt = value as DataTable;
 
-                    var maxRowIndex = dt.Rows.Count;
-                    var maxColumnIndex = dt.Columns.Count;
                     // dimension
-                    {
-                        if (maxRowIndex == 0 && maxColumnIndex == 0)
-                            dimensionRef = "A1";
-                        else if ( maxColumnIndex == 1)
-                            dimensionRef = $"A{maxRowIndex}";
-                        else
-                            dimensionRef =  $"A1:{Helpers.GetAlphabetColumnName(maxColumnIndex-1)}{maxRowIndex}";
-                    }
+                    maxRowIndex = dt.Rows.Count;
+                    maxColumnIndex = dt.Columns.Count;
+
 
                     if (printHeader)
                     {
@@ -119,16 +129,12 @@
                 else if (value is System.Collections.ICollection)
                 {
                     var collection = value as System.Collections.ICollection;
-                    object firstValue = null;
-                    {
-                        foreach (var v in collection)
-                        {
-                            firstValue = v;
-                            break;
-                        }
-                    }
-                    var type = firstValue.GetType();
-                    var props = type.GetProperties(BindingFlags.Instance | BindingFlags.Public);
+
+                    var props = Helpers.GetSubtypeProperties(collection);
+                    maxColumnIndex = props.Length;
+                    if (props.Length == 0)
+                        throw new InvalidOperationException($"Properties count is 0");
+
                     if (printHeader)
                     {
                         sb.AppendLine($"<x:row r=\"{yIndex.ToString()}\">");
@@ -179,6 +185,17 @@
                         sb.AppendLine($"</x:row>");
                         yIndex++;
                     }
+                    maxRowIndex = yIndex-1;
+                }
+
+                // dimension
+                {
+                    if (maxRowIndex == 0 && maxColumnIndex == 0)
+                        dimensionRef = "A1";
+                    else if (maxColumnIndex == 1)
+                        dimensionRef = $"A{maxRowIndex}";
+                    else
+                        dimensionRef = $"A1:{Helpers.GetAlphabetColumnName(maxColumnIndex - 1)}{maxRowIndex}";
                 }
 
                 defaultFiles[@"xl/worksheets/sheet1.xml"].Xml = $@"<?xml version=""1.0"" encoding=""utf-8""?>
@@ -191,7 +208,7 @@
             return defaultFiles;
         }
 
-        public static IEnumerable<T> Query<T>(this Stream stream) where T : class , new()
+        public static IEnumerable<T> Query<T>(this Stream stream) where T : class, new()
         {
             return QueryImpl<T>(stream);
         }
@@ -294,10 +311,10 @@
         private static void SaveAsImpl(string path, Dictionary<string, ZipPackageInfo> zipPackageInfos)
         {
             using (FileStream stream = new FileStream(path, FileMode.CreateNew))
-            using(ZipArchive archive = new ZipArchive(stream, ZipArchiveMode.Create, false, Utf8WithBom))
+            using (ZipArchive archive = new ZipArchive(stream, ZipArchiveMode.Create, false, Utf8WithBom))
                 CreteXlsxImpl(zipPackageInfos, archive);
         }
-        private static void SaveAsImpl(Stream stream,Dictionary<string, ZipPackageInfo> zipPackageInfos)
+        private static void SaveAsImpl(Stream stream, Dictionary<string, ZipPackageInfo> zipPackageInfos)
         {
             using (var archive = new ZipArchive(stream, ZipArchiveMode.Create, true, Utf8WithBom))
             {

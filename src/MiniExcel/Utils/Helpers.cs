@@ -4,6 +4,7 @@
 namespace MiniExcelLibs.Utils
 {
     using System;
+    using System.Collections;
     using System.Collections.Generic;
     using System.Dynamic;
     using System.Globalization;
@@ -64,13 +65,29 @@ namespace MiniExcelLibs.Utils
 		  return cell;
 	   }
 
-	   public static IEnumerable<PropertyInfo> GetPropertiesWithSetter(Type type)
+	   public static IEnumerable<PropertyInfo> GetPropertiesWithSetter(this Type type)
 	   {
 		  return type.GetProperties(BindingFlags.SetProperty |
 					BindingFlags.Public |
 					BindingFlags.Instance).Where(prop => prop.GetSetMethod() != null);
 	   }
 
+	   public static PropertyInfo[] GetSubtypeProperties(ICollection value)
+	   {
+		  var collectionType = value.GetType();
+
+		  Type gType;
+		  if (collectionType.IsGenericTypeDefinition || collectionType.IsGenericType)
+			 gType = collectionType.GetGenericArguments().Single();
+		  else if (collectionType.IsArray)
+			 gType = collectionType.GetElementType();
+		  else
+			 throw new NotImplementedException($"{collectionType.Name} type not implemented,please issue for me, https://github.com/shps951023/MiniExcel/issues");
+		  if (typeof(IDictionary).IsAssignableFrom(gType))
+			 throw new NotImplementedException($"{gType.Name} type not implemented,please issue for me, https://github.com/shps951023/MiniExcel/issues");
+		  var props = gType.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+		  return props;
+	   }
 
 	   public static string ConvertEscapeChars(string input)
 	   {

@@ -270,6 +270,48 @@ namespace MiniExcelLibs.Tests
             }
         }
 
+        public class SaveAsFileWithDimensionByICollectionTestType
+        {
+            public string A { get; set; }
+            public string B { get; set; }
+        }
+        [Fact()]
+        public void SaveAsFileWithDimensionByICollection()
+        {
+            //List<strongtype>
+            {
+                var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
+                var values = new List<SaveAsFileWithDimensionByICollectionTestType>() 
+                {
+                    new SaveAsFileWithDimensionByICollectionTestType{A="A",B="B"},
+                    new SaveAsFileWithDimensionByICollectionTestType{A="A",B="B"},
+                };
+                MiniExcel.SaveAs(path, values);
+                Assert.Equal("A1:B3", GetFirstSheetDimensionRefValue(path));
+                File.Delete(path);
+            }
+
+            //Array<anoymous>
+            {
+                var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
+                var values = new []
+                {
+                    new {A="A",B="B"},
+                    new {A="A",B="B"},
+                };
+                MiniExcel.SaveAs(path, values);
+                Assert.Equal("A1:B3", GetFirstSheetDimensionRefValue(path));
+                File.Delete(path);
+            }
+
+            // without properties
+            {
+                var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
+                var values = new List<int>();
+                Assert.Throws<InvalidOperationException>(() => MiniExcel.SaveAs(path, values));
+            }
+        }
+
         [Fact()]
         public void SaveAsFileWithDimension()
         {
@@ -368,6 +410,7 @@ namespace MiniExcelLibs.Tests
             {
                 var now = DateTime.Now;
                 var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
+
                 var table = new DataTable();
                 {
                     table.Columns.Add("a", typeof(string));

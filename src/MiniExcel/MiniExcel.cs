@@ -16,15 +16,6 @@
 
     public static partial class MiniExcel
     {
-        private static Dictionary<string, ZipPackageInfo> GetDefaultFiles() => new Dictionary<string, ZipPackageInfo>()
-        {
-            { @"_rels/.rels",new ZipPackageInfo(DefualtXml.DefaultRels, "application/vnd.openxmlformats-package.relationships+xml")},
-            { @"xl/_rels/workbook.xml.rels",new ZipPackageInfo(DefualtXml.DefaultWorkbookXmlRels, "application/vnd.openxmlformats-package.relationships+xml")},
-            { @"xl/styles.xml",new ZipPackageInfo(DefualtXml.DefaultStylesXml, "application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml")},
-            { @"xl/workbook.xml",new ZipPackageInfo(DefualtXml.DefaultWorkbookXml, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml")},
-            { @"xl/worksheets/sheet1.xml",new ZipPackageInfo(DefualtXml.DefaultSheetXml, "application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml")},
-        };
-
         private readonly static UTF8Encoding Utf8WithBom = new System.Text.UTF8Encoding(true);
 
         public static void SaveAs(this Stream stream, DataTable value, string startCell = "A1", bool printHeader = true)
@@ -49,11 +40,61 @@
             SaveAsImpl(filePath, GetCreateXlsxInfos(value, startCell, printHeader));
         }
 
+        public static IEnumerable<T> Query<T>(this Stream stream) where T : class, new()
+        {
+            return QueryImpl<T>(stream);
+        }
+
+        public static T QueryFirst<T>(this Stream stream) where T : class, new()
+        {
+            return QueryImpl<T>(stream).First();
+        }
+
+        public static T QueryFirstOrDefault<T>(this Stream stream) where T : class, new()
+        {
+            return QueryImpl<T>(stream).FirstOrDefault();
+        }
+
+        public static T QuerySingle<T>(this Stream stream) where T : class, new()
+        {
+            return QueryImpl<T>(stream).Single();
+        }
+
+        public static T QuerySingleOrDefault<T>(this Stream stream) where T : class, new()
+        {
+            return QueryImpl<T>(stream).SingleOrDefault();
+        }
+
+        public static IEnumerable<dynamic> Query(this Stream stream, bool useHeaderRow = false)
+        {
+            return new ExcelOpenXmlSheetReader().QueryImpl(stream, useHeaderRow);
+        }
+
+        public static dynamic QueryFirst(this Stream stream, bool useHeaderRow = false)
+        {
+            return new ExcelOpenXmlSheetReader().QueryImpl(stream, useHeaderRow).First();
+        }
+
+        public static dynamic QueryFirstOrDefault(this Stream stream, bool useHeaderRow = false)
+        {
+            return new ExcelOpenXmlSheetReader().QueryImpl(stream, useHeaderRow).FirstOrDefault();
+        }
+
+        public static dynamic QuerySingle(this Stream stream, bool useHeaderRow = false)
+        {
+            return new ExcelOpenXmlSheetReader().QueryImpl(stream, useHeaderRow).Single();
+        }
+
+        public static dynamic QuerySingleOrDefault(this Stream stream, bool useHeaderRow = false)
+        {
+            return new ExcelOpenXmlSheetReader().QueryImpl(stream, useHeaderRow).SingleOrDefault();
+        }
+
         private static Dictionary<string, ZipPackageInfo> GetCreateXlsxInfos(object value, string startCell, bool printHeader)
         {
             var xy = ExcelOpenXmlUtils.ConvertCellToXY(startCell);
 
-            var defaultFiles = GetDefaultFiles();
+            var defaultFiles = DefualtXml.GetDefaultFiles();
 
             // dimension
             var dimensionRef = "A1";
@@ -185,7 +226,7 @@
                         sb.AppendLine($"</x:row>");
                         yIndex++;
                     }
-                    maxRowIndex = yIndex-1;
+                    maxRowIndex = yIndex - 1;
                 }
 
                 // dimension
@@ -206,56 +247,6 @@
             }
 
             return defaultFiles;
-        }
-
-        public static IEnumerable<T> Query<T>(this Stream stream) where T : class, new()
-        {
-            return QueryImpl<T>(stream);
-        }
-
-        public static T QueryFirst<T>(this Stream stream) where T : class, new()
-        {
-            return QueryImpl<T>(stream).First();
-        }
-
-        public static T QueryFirstOrDefault<T>(this Stream stream) where T : class, new()
-        {
-            return QueryImpl<T>(stream).FirstOrDefault();
-        }
-
-        public static T QuerySingle<T>(this Stream stream) where T : class, new()
-        {
-            return QueryImpl<T>(stream).Single();
-        }
-
-        public static T QuerySingleOrDefault<T>(this Stream stream) where T : class, new()
-        {
-            return QueryImpl<T>(stream).SingleOrDefault();
-        }
-
-        public static IEnumerable<dynamic> Query(this Stream stream, bool useHeaderRow = false)
-        {
-            return new ExcelOpenXmlSheetReader().QueryImpl(stream, useHeaderRow);
-        }
-
-        public static dynamic QueryFirst(this Stream stream, bool useHeaderRow = false)
-        {
-            return new ExcelOpenXmlSheetReader().QueryImpl(stream, useHeaderRow).First();
-        }
-
-        public static dynamic QueryFirstOrDefault(this Stream stream, bool useHeaderRow = false)
-        {
-            return new ExcelOpenXmlSheetReader().QueryImpl(stream, useHeaderRow).FirstOrDefault();
-        }
-
-        public static dynamic QuerySingle(this Stream stream, bool useHeaderRow = false)
-        {
-            return new ExcelOpenXmlSheetReader().QueryImpl(stream, useHeaderRow).Single();
-        }
-
-        public static dynamic QuerySingleOrDefault(this Stream stream, bool useHeaderRow = false)
-        {
-            return new ExcelOpenXmlSheetReader().QueryImpl(stream, useHeaderRow).SingleOrDefault();
         }
 
         private static IEnumerable<T> QueryImpl<T>(this Stream stream) where T : class, new()

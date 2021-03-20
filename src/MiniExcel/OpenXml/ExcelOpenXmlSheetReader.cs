@@ -40,23 +40,17 @@ namespace MiniExcelLibs.OpenXml
             using (XmlReader reader = XmlReader.Create(stream, XmlSettings))
             {
                 if (!reader.IsStartElement("workbook", ns))
-                {
                     yield break;
-                }
 
                 if (!XmlReaderHelper.ReadFirstContent(reader))
-                {
                     yield break;
-                }
 
                 while (!reader.EOF)
                 {
                     if (reader.IsStartElement("sheets", ns))
                     {
                         if (!XmlReaderHelper.ReadFirstContent(reader))
-                        {
                             continue;
-                        }
 
                         while (!reader.EOF)
                         {
@@ -508,17 +502,6 @@ namespace MiniExcelLibs.OpenXml
                     if (double.TryParse(rawValue, style, invariantCulture, out double number))
                     {
                         value = number;
-                        //TODO:Convert Date
-                        //TODO:IsDate1904
-                        //var format = Workbook.GetNumberFormatString(numberFormatIndex);
-                        //if (format != null)
-                        //{
-                        //    if (format.IsDateTimeFormat)
-                        //        return Helpers.ConvertFromOATime(number, false);
-                        //    if (format.IsTimeSpanFormat)
-                        //        return TimeSpan.FromDays(number);
-                        //}
-
                         return;
                     }
 

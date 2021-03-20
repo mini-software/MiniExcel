@@ -4,15 +4,18 @@
     <x:sheetPr>
         <x:outlinePr summaryBelow="1" summaryRight="1" />
     </x:sheetPr>
-    <x:dimension ref="A1:A1" />
+    <x:dimension ref="A1:B1" />
     <x:sheetViews>
         <x:sheetView workbookViewId="0" />
     </x:sheetViews>
     <x:sheetFormatPr defaultRowHeight="15" />
     <x:sheetData>
-        <x:row r="1" spans="1:1">
+        <x:row r="1" spans="1:2">
             <x:c r="A1" s="1">
-                <x:v>44274.8758969329</x:v>
+                <x:v>44275.9859064005</x:v>
+            </x:c>
+            <x:c r="B1" s="2" t="n">
+                <x:v>0.416666666666667</x:v>
             </x:c>
         </x:row>
     </x:sheetData>

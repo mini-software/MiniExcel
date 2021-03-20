@@ -187,8 +187,11 @@ namespace MiniExcelLibs.Tests
             var path = @"..\..\..\..\..\samples\xlsx\TestDatetimeSpanFormat_ClosedXml.xlsx";
             using (var stream = FileHelper.OpenRead(path))
             {
-                var a = stream.QueryFirst().A;
-                Assert.Equal(DateTime.Parse("2021-03-19T21:01:17.4950000"), (DateTime)a);
+                var row = stream.QueryFirst();
+                var a = row.A;
+                var b = row.B;
+                Assert.Equal(DateTime.Parse("2021-03-20T23:39:42.3130000"), (DateTime)a);
+                Assert.Equal(TimeSpan.FromHours(10), (TimeSpan)b);
             }
         }
 

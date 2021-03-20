@@ -1,4 +1,6 @@
-﻿namespace MiniExcelLibs.Zip
+﻿using System;
+
+namespace MiniExcelLibs.Zip
 {
     internal class ZipPackageInfo
     {

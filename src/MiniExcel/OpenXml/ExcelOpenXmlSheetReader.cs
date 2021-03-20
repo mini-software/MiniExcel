@@ -1,4 +1,5 @@
 ﻿using MiniExcelLibs.Utils;
+using MiniExcelLibs.Zip;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -6,17 +7,21 @@ using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using System.Text;
 using System.Xml;
 using System.Xml.Linq;
 
 namespace MiniExcelLibs.OpenXml
 {
-    internal partial class ExcelOpenXmlSheetReader
+    internal class ExcelOpenXmlSheetReader
     {
-        internal Dictionary<int, string> GetSharedStrings(ReadOnlyCollection<ZipArchiveEntry> entries)
+        private const string ns = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
+        private List<SheetRecord> _sheetRecords = null;
+        private Dictionary<int, string> _SharedStrings;
+        private ExcelOpenXmlStyles _style;
+
+        internal Dictionary<int, string> GetSharedStrings(ExcelOpenXmlZip archive)
         {
-            var sharedStringsEntry = entries.SingleOrDefault(w => w.FullName == "xl/sharedStrings.xml");
+            var sharedStringsEntry = archive.GetEntry("xl/sharedStrings.xml");
             if (sharedStringsEntry == null)
                 return null;
             using (var stream = sharedStringsEntry.Open())
@@ -24,7 +29,7 @@ namespace MiniExcelLibs.OpenXml
                 var xl = XElement.Load(stream);
                 var ts = xl.Descendants(ExcelOpenXmlXName.T).Select((s, i) => new { i, v = s.Value?.ToString() })
                       .ToDictionary(s => s.i, s => s.v)
-                ;
+                ;//TODO:need recode
                 return ts;
             }
         }
@@ -34,7 +39,7 @@ namespace MiniExcelLibs.OpenXml
             using (var stream = entries.Single(w => w.FullName == "xl/workbook.xml").Open())
             using (XmlReader reader = XmlReader.Create(stream, XmlSettings))
             {
-                if (!reader.IsStartElement("workbook", "http://schemas.openxmlformats.org/spreadsheetml/2006/main"))
+                if (!reader.IsStartElement("workbook", ns))
                 {
                     yield break;
                 }
@@ -46,7 +51,7 @@ namespace MiniExcelLibs.OpenXml
 
                 while (!reader.EOF)
                 {
-                    if (reader.IsStartElement("sheets", "http://schemas.openxmlformats.org/spreadsheetml/2006/main"))
+                    if (reader.IsStartElement("sheets", ns))
                     {
                         if (!XmlReaderHelper.ReadFirstContent(reader))
                         {
@@ -55,7 +60,7 @@ namespace MiniExcelLibs.OpenXml
 
                         while (!reader.EOF)
                         {
-                            if (reader.IsStartElement("sheet", "http://schemas.openxmlformats.org/spreadsheetml/2006/main"))
+                            if (reader.IsStartElement("sheet", ns))
                             {
                                 yield return new SheetRecord(
                                     reader.GetAttribute("name"),
@@ -77,15 +82,13 @@ namespace MiniExcelLibs.OpenXml
                 }
             }
         }
-
-
-        private const string NsSpreadsheetMl = @"http://schemas.openxmlformats.org/spreadsheetml/2006/main";
+        
         internal IEnumerable<ExtendedFormat> ReadStyle(ReadOnlyCollection<ZipArchiveEntry> entries)
         {
             using (var stream = entries.Single(w => w.FullName == "xl/styles.xml").Open())
             using (XmlReader reader = XmlReader.Create(stream, XmlSettings))
             {
-                if (!reader.IsStartElement("styleSheet", NsSpreadsheetMl))
+                if (!reader.IsStartElement("styleSheet", ns))
                 {
                     yield break;
                 }
@@ -97,7 +100,7 @@ namespace MiniExcelLibs.OpenXml
 
                 while (!reader.EOF)
                 {
-                    if (reader.IsStartElement("cellXfs", NsSpreadsheetMl))
+                    if (reader.IsStartElement("cellXfs", ns))
                     {
                         if (!XmlReaderHelper.ReadFirstContent(reader))
                         {
@@ -105,7 +108,7 @@ namespace MiniExcelLibs.OpenXml
                         }
                         while (!reader.EOF)
                         {
-                            if (reader.IsStartElement("xf", NsSpreadsheetMl))
+                            if (reader.IsStartElement("xf", ns))
                             {
                                 int.TryParse(reader.GetAttribute("xfId"), out var xfId);
                                 int.TryParse(reader.GetAttribute("numFmtId"), out var numFmtId);
@@ -131,7 +134,7 @@ namespace MiniExcelLibs.OpenXml
             }
         }
 
-        private List<SheetRecord> _sheetRecords = null;
+        
         internal void ReadWorkbookRels(ReadOnlyCollection<ZipArchiveEntry> entries)
         {
             _sheetRecords = ReadWorkbook(entries).ToList();
@@ -174,15 +177,12 @@ namespace MiniExcelLibs.OpenXml
             }
         }
 
-        private static Dictionary<int, string> _SharedStrings;
-
-        private const string ns = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
-
         internal IEnumerable<IDictionary<string, object>> QueryImpl(Stream stream, bool UseHeaderRow = false)
         {
-            using (ZipArchive archive = new ZipArchive(stream, ZipArchiveMode.Read, false, UTF8Encoding.UTF8))
+            using (var archive = new ExcelOpenXmlZip(stream))
             {
-                _SharedStrings = GetSharedStrings(archive.Entries);
+                _SharedStrings = GetSharedStrings(archive);
+                
 
                 // if sheets count > 1 need to read xl/_rels/workbook.xml.rels and 
                 var sheets = archive.Entries.Where(w => w.FullName.StartsWith("xl/worksheets/sheet", StringComparison.OrdinalIgnoreCase)
@@ -356,19 +356,48 @@ namespace MiniExcelLibs.OpenXml
                                         {
                                             if (reader.IsStartElement("c", ns))
                                             {
+                                                var aS = reader.GetAttribute("s");
                                                 var cellValue = ReadCell(reader, columnIndex, withoutCR, out var _columnIndex);
                                                 columnIndex = _columnIndex;
 
-                                                //if not using First Head then using 1,2,3 as index
-                                                if (UseHeaderRow)
+                                                // xfindex 
+                                                if (!string.IsNullOrEmpty(aS))
                                                 {
-                                                    if (rowIndex == 0)
-                                                        headRows.Add(columnIndex, cellValue.ToString());
+                                                    int xfIndex = -1;
+                                                    if(int.TryParse(aS, NumberStyles.Any, CultureInfo.InvariantCulture, out var styleIndex))
+                                                    {
+                                                        xfIndex = styleIndex;
+                                                    }
+                                                    // only when have s attribute then load styles xml data
+                                                    if (_style == null)
+                                                        _style = new ExcelOpenXmlStyles(archive);
+                                                    //if not using First Head then using 1,2,3 as index
+                                                    if (UseHeaderRow)
+                                                    {
+                                                        if (rowIndex == 0)
+                                                            headRows.Add(columnIndex, _style.ConvertValueByStyleFormat(xfIndex, cellValue).ToString());
+                                                        else
+                                                        {
+                                                            var v = _style.ConvertValueByStyleFormat(int.Parse(aS), cellValue);
+                                                            cell[headRows[columnIndex]] = _style.ConvertValueByStyleFormat(xfIndex, cellValue);
+                                                        }
+                                                    }
                                                     else
-                                                        cell[headRows[columnIndex]] = cellValue;
+                                                        cell[Helpers.GetAlphabetColumnName(columnIndex)] = _style.ConvertValueByStyleFormat(xfIndex, cellValue);
                                                 }
                                                 else
-                                                    cell[Helpers.GetAlphabetColumnName(columnIndex)] = cellValue;
+                                                {
+                                                    //if not using First Head then using 1,2,3 as index
+                                                    if (UseHeaderRow)
+                                                    {
+                                                        if (rowIndex == 0)
+                                                            headRows.Add(columnIndex, cellValue.ToString());
+                                                        else
+                                                            cell[headRows[columnIndex]] = cellValue;
+                                                    }
+                                                    else
+                                                        cell[Helpers.GetAlphabetColumnName(columnIndex)] = cellValue;
+                                                }
                                             }
                                             else if (!XmlReaderHelper.SkipContent(reader))
                                                 break;
@@ -399,7 +428,6 @@ namespace MiniExcelLibs.OpenXml
         private object ReadCell(XmlReader reader, int nextColumnIndex,bool withoutCR, out int columnIndex)
         {
             int xfIndex = -1;
-            var aS = reader.GetAttribute("s");
             var aT = reader.GetAttribute("t");
             var aR = reader.GetAttribute("r");
 
@@ -414,23 +442,16 @@ namespace MiniExcelLibs.OpenXml
             if (!XmlReaderHelper.ReadFirstContent(reader))
                 return null;
 
-            if (aS != null)
-            {
-                if (int.TryParse(aS, NumberStyles.Any, CultureInfo.InvariantCulture, out var styleIndex))
-                    xfIndex = styleIndex;
-            }
-
-
             object value = null;
             while (!reader.EOF)
             {
-                if (reader.IsStartElement("v", "http://schemas.openxmlformats.org/spreadsheetml/2006/main"))
+                if (reader.IsStartElement("v", ns))
                 {
                     string rawValue = reader.ReadElementContentAsString();
                     if (!string.IsNullOrEmpty(rawValue))
                         ConvertCellValue(rawValue, aT, xfIndex, out value);
                 }
-                else if (reader.IsStartElement("is", "http://schemas.openxmlformats.org/spreadsheetml/2006/main"))
+                else if (reader.IsStartElement("is", ns))
                 {
                     string rawValue = StringHelper.ReadStringItem(reader);
                     if (!string.IsNullOrEmpty(rawValue))
@@ -513,5 +534,4 @@ namespace MiniExcelLibs.OpenXml
             XmlResolver = null,
         };
     }
-
 }

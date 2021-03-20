@@ -14,7 +14,7 @@
     using System.Globalization;
     using System.Collections;
 
-    public static partial class MiniExcel
+    public static class MiniExcel
     {
         private readonly static UTF8Encoding Utf8WithBom = new System.Text.UTF8Encoding(true);
 

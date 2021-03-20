@@ -182,6 +182,17 @@ namespace MiniExcelLibs.Tests
         }
 
         [Fact()]
+        public void TestDatetimeSpanFormat_ClosedXml()
+        {
+            var path = @"..\..\..\..\..\samples\xlsx\TestDatetimeSpanFormat_ClosedXml.xlsx";
+            using (var stream = FileHelper.OpenRead(path))
+            {
+                var a = stream.QueryFirst().A;
+                Assert.Equal(DateTime.Parse("2021-03-19T21:01:17.4950000"), (DateTime)a);
+            }
+        }
+
+        [Fact()]
         public void LargeFileQueryStrongTypeMapping_Test()
         {
             var path = @"..\..\..\..\..\samples\xlsx\Test1,000,000x10\Test1,000,000x10.xlsx";
@@ -227,6 +238,16 @@ namespace MiniExcelLibs.Tests
                         Assert.Equal(eV, v);
                     }
                 }
+            }
+        }
+
+        [Fact()]
+        public void QueryCustomStyle()
+        {
+            var path = @"..\..\..\..\..\samples\xlsx\TestWihoutRAttribute.xlsx";
+            using (var stream = File.OpenRead(path))
+            {
+
             }
         }
 

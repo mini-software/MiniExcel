@@ -4,8 +4,9 @@
 e.g:  Comparison of MiniExcel Query and ExcelDataReader/EPPlus/ClosedXml of reading large Xlsx File
 ![miniexcel_lazy_load](https://user-images.githubusercontent.com/12729184/111034290-e5588a80-844f-11eb-8c84-6fdb6fb8f403.gif)
 - Support .NET Standard 2.0/.NET 4.6/.NET 5
-- Mini without any third party library dependencies
-- Support dynamic/type mapping query and create by AnonymousType/DapperRows/List/Array/Set/Enumrable/DataTable/Dictionary
+- Mini (Less than 100KB) and without any third party library dependencies
+- Like Dapper dynamic/type mapping query 
+- Create excel by AnonymousType/DapperRows/List/Array/Set/Enumrable/DataTable/Dictionary
 - [Dapper](https://github.com/StackExchange/Dapper) query style 
 
 ### Installation

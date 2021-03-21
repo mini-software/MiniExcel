@@ -86,6 +86,8 @@ namespace MiniExcelLibs.Utils
 		  if (typeof(IDictionary).IsAssignableFrom(gType))
 			 throw new NotImplementedException($"{gType.Name} type not implemented,please issue for me, https://github.com/shps951023/MiniExcel/issues");
 		  var props = gType.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+		  if (props.Length == 0)
+			 throw new InvalidOperationException($"Properties count is 0");
 		  return props;
 	   }
 

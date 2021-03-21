@@ -487,6 +487,45 @@ namespace MiniExcelLibs.Tests
         }
 
         [Fact()]
+        public void QueryDapperRows()
+        {
+            var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
+            var connectionString = $"Data Source=:memory:";
+            
+            using (var connection = new SQLiteConnection(connectionString))
+            {
+                var rows = connection.Query(@"select 1 A,2 B union all select 3 A,4 B") ;
+                MiniExcel.SaveAs(path, rows);
+            }
+
+
+            using (var stream = File.OpenRead(path))
+            {
+                var rows = stream.Query(useHeaderRow: true).ToList();
+
+                Assert.Equal(1, rows[0].A);
+                Assert.Equal(2, rows[0].B);
+                Assert.Equal(3, rows[1].A);
+                Assert.Equal(4, rows[1].B);
+            }
+
+            File.Delete(path);
+        }
+
+        //[Fact()]
+        //public void QueryDapperRows()
+        //{
+        //    var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
+        //    var connectionString = $"Data Source=:memory:";
+
+        //    using (var connection = new SQLiteConnection(connectionString))
+        //    {
+        //        var rows = connection.Query(@"select 1 A,2 B union all select 3 A,4 B").ToList();
+        //        MiniExcel.SaveAs(path, rows);
+        //    }
+        //}
+
+        [Fact()]
         public void SQLiteInsertTest()
         {
             // Avoid SQL Insert Large Size Xlsx OOM

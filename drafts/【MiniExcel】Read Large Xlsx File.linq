@@ -31,9 +31,16 @@ void Main()
 	var path = @"D:\git\MiniExcel\samples\xlsx\Test1,000,000x10\Test1,000,000x10.xlsx";
 	using (var stream = File.OpenRead(path))
 	{
+		var i = 0;
 		foreach (var v in stream.Query())
-			Assert.Equal(v,v);
-		
+		{
+			Assert.Equal(v, v);
+			i++;
+			if (i % 100000 == 0)
+			{
+				Console.WriteLine($"time.{i} memory usage: " + System.Diagnostics.Process.GetCurrentProcess().WorkingSet64 / (1024 * 1024) + $"MB & run time : {sw.ElapsedMilliseconds}ms");
+			}
+		}
 		Console.WriteLine("end memory usage: " + System.Diagnostics.Process.GetCurrentProcess().WorkingSet64 / (1024 * 1024) + $"MB & run time : {sw.ElapsedMilliseconds}ms");
 	}
 }

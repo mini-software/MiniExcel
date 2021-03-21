@@ -28,10 +28,15 @@ void Main()
 	using (var stream = File.OpenRead(path))
 	using (var reader = ExcelReaderFactory.CreateReader(stream))
 	{
+		var i = 0;
 		while (reader.Read())
 		{
-			for (var i = 0; i < reader.FieldCount; i++)
-				Assert.Equal(reader?.GetValue(i),reader?.GetValue(i));
+			Assert.Equal(reader?.GetValue(0), reader?.GetValue(0));
+			i++;
+			if (i % 100000 == 0)
+			{
+				Console.WriteLine($"time.{i} memory usage: " + System.Diagnostics.Process.GetCurrentProcess().WorkingSet64 / (1024 * 1024) + $"MB & run time : {sw.ElapsedMilliseconds}ms");
+			}
 		}
 		Console.WriteLine("end memory usage: " + System.Diagnostics.Process.GetCurrentProcess().WorkingSet64 / (1024 * 1024) + $"MB & run time : {sw.ElapsedMilliseconds}ms");
 	}

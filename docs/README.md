@@ -2,6 +2,9 @@
 
 ## Release  Notes
 
+### 0.2.4
+- Support SaveAs by IEnumerable of DapperRow and IDictionary<string,object>
+
 ### 0.2.3
 - [Bug] Fix ShMemory leak and static problem.
 - Support style datetime format mapping to datetime type.

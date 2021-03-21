@@ -102,6 +102,25 @@ var table = new DataTable();
 MiniExcel.SaveAs(path, table);
 ```
 
+Dapper:  
+```C#
+using (var connection = GetConnection(connectionString))
+{
+    var rows = connection.Query(@"select 'MiniExcel' as Column1,1 as Column2 union all select 'Github',2");
+    MiniExcel.SaveAs(path, rows);
+}
+```
+
+`IEnumerable<IDictionary<string, object>>`
+```C#
+var values = new List<Dictionary<string, object>>()
+{
+    new Dictionary<string,object>{{ "Column1", "MiniExcel" }, { "Column2", 1 } },
+    new Dictionary<string,object>{{ "Column1", "Github" }, { "Column2", 2 } }
+};
+MiniExcel.SaveAs(path, values);
+```
+
 Create File Result : 
 
 | Column1 | Column2 | 

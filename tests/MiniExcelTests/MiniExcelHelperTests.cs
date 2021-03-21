@@ -491,10 +491,10 @@ namespace MiniExcelLibs.Tests
         {
             var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
             var connectionString = $"Data Source=:memory:";
-            
-            using (var connection = new SQLiteConnection(connectionString))
+
+            using (var connection = GetConnection(connectionString))
             {
-                var rows = connection.Query(@"select 1 A,2 B union all select 3 A,4 B") ;
+                var rows = connection.Query(@"select 'MiniExcel' as Column1,1 as Column2 union all select 'Github',2");
                 MiniExcel.SaveAs(path, rows);
             }
 
@@ -503,13 +503,44 @@ namespace MiniExcelLibs.Tests
             {
                 var rows = stream.Query(useHeaderRow: true).ToList();
 
-                Assert.Equal(1, rows[0].A);
-                Assert.Equal(2, rows[0].B);
-                Assert.Equal(3, rows[1].A);
-                Assert.Equal(4, rows[1].B);
+                Assert.Equal("MiniExcel", rows[0].Column1);
+                Assert.Equal(1, rows[0].Column2);
+                Assert.Equal("Github", rows[1].Column1);
+                Assert.Equal(2, rows[1].Column2);
             }
 
             File.Delete(path);
+        }
+
+        [Fact()]
+        public void QueryDictionaryStringAndObjectTest()
+        {
+            var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
+
+            var values = new List<Dictionary<string, object>>()
+            {
+                new Dictionary<string,object>{{ "Column1", "MiniExcel" }, { "Column2", 1 } },
+                new Dictionary<string,object>{{ "Column1", "Github" }, { "Column2", 2 } }
+            };
+            MiniExcel.SaveAs(path, values);
+
+
+            using (var stream = File.OpenRead(path))
+            {
+                var rows = stream.Query(useHeaderRow: true).ToList();
+
+                Assert.Equal("MiniExcel", rows[0].Column1);
+                Assert.Equal(1, rows[0].Column2);
+                Assert.Equal("Github", rows[1].Column1);
+                Assert.Equal(2, rows[1].Column2);
+            }
+
+            File.Delete(path);
+        }
+
+        private static SQLiteConnection GetConnection(string connectionString)
+        {
+            return new SQLiteConnection(connectionString);
         }
 
         //[Fact()]

@@ -512,6 +512,38 @@ namespace MiniExcelLibs.Tests
             File.Delete(path);
         }
 
+
+        public class Demo
+        {
+            public string Column1 { get; set; }
+            public decimal Column2 { get; set; }
+        }
+        [Fact()]
+        public void QueryByStrongTypeTest()
+        {
+            var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
+
+            var values = new List<Demo>()
+            {
+                new Demo { Column1= "MiniExcel" ,Column2 = 1 },
+                new Demo { Column1 = "Github", Column2 = 2 }
+            };
+            MiniExcel.SaveAs(path, values);
+
+
+            using (var stream = File.OpenRead(path))
+            {
+                var rows = stream.Query(useHeaderRow: true).ToList();
+
+                Assert.Equal("MiniExcel", rows[0].Column1);
+                Assert.Equal(1, rows[0].Column2);
+                Assert.Equal("Github", rows[1].Column1);
+                Assert.Equal(2, rows[1].Column2);
+            }
+
+            File.Delete(path);
+        }
+
         [Fact()]
         public void QueryDictionaryStringAndObjectTest()
         {

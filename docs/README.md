@@ -2,8 +2,9 @@
 
 ## Release  Notes
 
-### 0.2.4
+### 0.3.0
 - Support SaveAs by IEnumerable of DapperRow and IDictionary<string,object>
+- Support dynamic query timespan style format mapping to timespan type.
 
 ### 0.2.3
 - [Bug] Fix ShMemory leak and static problem.

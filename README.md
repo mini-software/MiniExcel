@@ -77,9 +77,20 @@ using (var stream = File.OpenRead(path))
 }
 ```
 
-### Query Mapping Type
+### Query First
 
-### Create Excel Xlsx file by ICollection Anonymous Type/Datatable
+```C#
+using (var stream = File.OpenRead(path))
+    Assert.Equal("HelloWorld", stream.QueryFirst().A);
+```
+
+performance:  MiniExcel/ExcelDataReader/ClosedXML/EPPlus  
+![queryfirst](https://user-images.githubusercontent.com/12729184/111072392-6037a900-8515-11eb-9693-5ce2dad1e460.gif)
+
+
+### Create Excel Xlsx file
+
+Anonymous or strongly type:
 ```C#
 var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
 MiniExcel.SaveAs(path, new[] {
@@ -137,16 +148,6 @@ using (var stream = new FileStream(path, FileMode.CreateNew))
 }
 ```
 
-### Query First
-
-```C#
-using (var stream = File.OpenRead(path))
-    Assert.Equal("HelloWorld", stream.QueryFirst().A);
-```
-
-performance:  MiniExcel/ExcelDataReader/ClosedXML/EPPlus  
-![queryfirst](https://user-images.githubusercontent.com/12729184/111072392-6037a900-8515-11eb-9693-5ce2dad1e460.gif)
-
 
 ### SQLite & Dapper `Large Size File` SQL Insert Avoid OOM (out of memory) 
 
@@ -195,7 +196,6 @@ Please Check [Project · todo](https://github.com/shps951023/MiniExcel/projects/
 
 ### Limitations and caveats 
 
-- Custom datetime/timespan format can't mapping to DateTime/TimeSpan type
 - Same column name use last right one 
 - Must be a non-abstract type with a public parameterless constructor 
 

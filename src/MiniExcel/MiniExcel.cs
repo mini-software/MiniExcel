@@ -2,31 +2,47 @@
 {
     using MiniExcelLibs.OpenXml;
     using System.Linq;
-    using MiniExcelLibs.Zip;
-    using System;
     using System.Collections.Generic;
-    using System.Data;
     using System.IO;
-    using System.IO.Compression;
     using System.Text;
-    using System.Reflection;
-    using MiniExcelLibs.Utils;
-    using System.Globalization;
-    using System.Collections;
+    using System;
+    using MiniExcelLibs.Csv;
 
     public static partial class MiniExcel
     {
         private readonly static UTF8Encoding Utf8WithBom = new System.Text.UTF8Encoding(true);
+       
 
-        public static void SaveAs(this Stream stream, object value, string startCell = "A1", bool printHeader = true)
+        public static void SaveAs(this Stream stream, object value, string startCell = "A1", bool printHeader = true, ExcelType excelType = ExcelType.Xlsx)
         {
-            SaveAsImpl(stream, GetCreateXlsxInfos(value, startCell, printHeader));
-            stream.Position = 0;
+            switch (excelType)
+            {
+                case ExcelType.Csv:
+                    CsvImpl.SaveAs(stream, value);
+                    break;
+                case ExcelType.Xlsx:
+                    SaveAsImpl(stream, GetCreateXlsxInfos(value, startCell, printHeader));
+                    //stream.Position = 0;
+                    break;
+                default:
+                    throw new NotSupportedException($"Extension : {excelType} not suppprt");
+            }
         }
 
         public static void SaveAs(string filePath, object value, string startCell = "A1", bool printHeader = true)
         {
-            SaveAsImpl(filePath, GetCreateXlsxInfos(value, startCell, printHeader));
+            var extension = Path.GetExtension(filePath).ToLowerInvariant();
+            switch (extension)
+            {
+                case ".csv":
+                    CsvImpl.SaveAs(filePath, value);
+                    break;
+                case ".xlsx":
+                    SaveAsImpl(filePath, GetCreateXlsxInfos(value, startCell, printHeader));
+                    break;
+                default:
+                    throw new NotSupportedException($"Extension : {extension} not suppprt");
+            }
         }
 
         public static IEnumerable<T> Query<T>(this Stream stream) where T : class, new()

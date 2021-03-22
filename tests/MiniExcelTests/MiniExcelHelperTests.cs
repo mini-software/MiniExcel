@@ -8,15 +8,11 @@ using System.IO.Packaging;
 using System.Data;
 using ExcelDataReader;
 using System.Collections.Generic;
-using MiniExcelLibs.Utils;
-using System.Threading;
 using System.Data.SQLite;
 using Dapper;
 using System.Globalization;
-using MiniExcelLibs.Tests.Utils;
 using System.IO.Compression;
 using System.Text;
-using System.Xml;
 using System.Xml.Linq;
 
 namespace MiniExcelLibs.Tests

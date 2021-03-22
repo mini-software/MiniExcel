@@ -1,7 +1,6 @@
 ﻿namespace MiniExcelLibs
 {
     using MiniExcelLibs.OpenXml;
-    using System.Linq;
     using MiniExcelLibs.Zip;
     using System;
     using System.Collections.Generic;
@@ -9,7 +8,6 @@
     using System.IO;
     using System.IO.Compression;
     using System.Text;
-    using System.Reflection;
     using MiniExcelLibs.Utils;
     using System.Globalization;
     using System.Collections;

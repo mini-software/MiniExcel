@@ -17,7 +17,7 @@
                     CsvWriter.SaveAs(stream, value);
                     break;
                 case ExcelType.XLSX:
-                    SaveAsImpl(stream, GetCreateXlsxInfos(value, startCell, printHeader));
+                    ExcelOpenXmlSheetWriter.SaveAs(stream, value, startCell, printHeader);
                     break;
                 default:
                     throw new NotSupportedException($"Extension : {excelType} not suppprt");
@@ -34,7 +34,7 @@
                     CsvWriter.SaveAs(filePath, value);
                     break;
                 case ExcelType.XLSX:
-                    SaveAsImpl(filePath, GetCreateXlsxInfos(value, startCell, printHeader));
+                    ExcelOpenXmlSheetWriter.SaveAs(filePath, value, startCell, printHeader);
                     break;
                 default:
                     throw new NotSupportedException($"Extension : {Path.GetExtension(filePath)} not suppprt");

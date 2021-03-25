@@ -537,19 +537,6 @@ namespace MiniExcelLibs.Tests
             return new SQLiteConnection(connectionString);
         }
 
-        //[Fact()]
-        //public void QueryDapperRows()
-        //{
-        //    var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
-        //    var connectionString = $"Data Source=:memory:";
-
-        //    using (var connection = new SQLiteConnection(connectionString))
-        //    {
-        //        var rows = connection.Query(@"select 1 A,2 B union all select 3 A,4 B").ToList();
-        //        MiniExcel.SaveAs(path, rows);
-        //    }
-        //}
-
         [Fact()]
         public void SQLiteInsertTest()
         {

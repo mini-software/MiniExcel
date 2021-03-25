@@ -1,7 +1,5 @@
 [![NuGet](https://img.shields.io/nuget/v/MiniExcel.svg)](https://www.nuget.org/packages/MiniExcel)  [![](https://img.shields.io/nuget/dt/MiniExcel.svg)](https://www.nuget.org/packages/MiniExcel)  [![Build status](https://ci.appveyor.com/api/projects/status/b2vustrwsuqx45f4/branch/master?svg=true)](https://ci.appveyor.com/project/shps951023/miniexcel/branch/master)
 
----
-
 A high performance and easy Excel(xlsx,csv) Micro-Helper that avoids OOM and without any third party dependencies to create file or dynamic/type mapping query etc..
 
 ### Features
@@ -21,7 +19,7 @@ You can install the package [from NuGet](https://www.nuget.org/packages/MiniExce
 
 Please Check [Release Notes](https://github.com/shps951023/MiniExcel/tree/master/docs)
 
-### Execute a query and map the results to a strongly typed IEnumerable
+### Execute a query and map the results to a strongly typed IEnumerable [[Try it]](https://dotnetfiddle.net/3QDl6P)
 
 ```C#
 public class UserAccount
@@ -41,7 +39,7 @@ using (var stream = File.OpenRead(path))
 ![image](https://user-images.githubusercontent.com/12729184/111107423-c8c46b80-8591-11eb-982f-c97a2dafb379.png)
 
 
-### Execute a query and map it to a list of dynamic objects without using head 
+### Execute a query and map it to a list of dynamic objects without using head [[Try it]](https://dotnetfiddle.net/3QDl6P)
 
 * dynamic key is `A.B.C.D..`
 
@@ -61,7 +59,7 @@ using (var stream = File.OpenRead(path))
 }
 ```
 
-### Execute a query with first header row
+### Execute a query with first header row [[Try it]](https://dotnetfiddle.net/3QDl6P)
 
 | Column1 | Column2 | 
 | -------- | -------- | 
@@ -92,9 +90,9 @@ performance:  MiniExcel/ExcelDataReader/ClosedXML/EPPlus
 ![queryfirst](https://user-images.githubusercontent.com/12729184/111072392-6037a900-8515-11eb-9693-5ce2dad1e460.gif)
 
 
-### Create Excel Xlsx file
+### Create Excel Xlsx file [[Try it]](https://dotnetfiddle.net/3QDl6P)
 
-Anonymous or strongly type:
+Anonymous or strongly type: 
 ```C#
 var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
 MiniExcel.SaveAs(path, new[] {
@@ -143,10 +141,10 @@ Create File Result :
 | MiniExcel     | 1     |  
 | Github     | 2     | 
 
-### SaveAs Stream
+### SaveAs Stream [[Try it]](https://dotnetfiddle.net/JOen0e)
 
 ```C#
-using (var stream = new FileStream(path, FileMode.CreateNew))
+using (var stream = File.Create(path))
 {
     stream.SaveAs(values);
 }
@@ -201,6 +199,10 @@ Default system will auto check file path or stream is from xlsx or csv, but if y
 stream.SaveAs(excelType:ExcelType.CSV);
 //or
 stream.SaveAs(excelType:ExcelType.XLSX);
+//or
+stream.Query(excelType:ExcelType.CSV);
+//or
+stream.Query(excelType:ExcelType.XLSX);
 ```
 
 ### TODO

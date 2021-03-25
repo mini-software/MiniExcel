@@ -121,8 +121,6 @@ namespace MiniExcelLibs.Tests
             }
         }
 
-
-
         public class DemoPocoHelloWorld
         {
             public string HelloWorld { get; set; }
@@ -184,7 +182,7 @@ namespace MiniExcelLibs.Tests
             var path = @"..\..\..\..\..\samples\xlsx\TestDatetimeSpanFormat_ClosedXml.xlsx";
             using (var stream = FileHelper.OpenRead(path))
             {
-                var row = stream.QueryFirst();
+                var row = stream.Query().First();
                 var a = row.A;
                 var b = row.B;
                 Assert.Equal(DateTime.Parse("2021-03-20T23:39:42.3130000"), (DateTime)a);
@@ -447,7 +445,7 @@ namespace MiniExcelLibs.Tests
         {
             var path = @"..\..\..\..\..\samples\xlsx\Test1,000,000x10\Test1,000,000x10.xlsx";
             using (var stream = File.OpenRead(path))
-                Assert.Equal("HelloWorld", stream.QueryFirst().A);
+                Assert.Equal("HelloWorld", stream.Query().First().A);
         }
 
         [Fact()]

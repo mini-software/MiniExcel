@@ -4,9 +4,9 @@
 
 ### 0.4.0
 - Support create CSV by file path or stream 
-- Add MiniExcel.Query("file path")
 - Support custom configuration setting
 - Support auto/manual specify excel type way
+- [Breaking Changes] Remove Query First/FirstOrDefault/Single/SingleOrDefault, user can use LINQ method do it.
 
 ### 0.3.0
 - Support SaveAs by IEnumerable of DapperRow and IDictionary<string,object>

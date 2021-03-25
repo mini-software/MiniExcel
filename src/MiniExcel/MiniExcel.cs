@@ -41,56 +41,9 @@
             }
         }
 
-        public static IEnumerable<T> Query<T>(string path) where T : class, new()
-        {
-            using (var stream = File.OpenRead(path))
-            {
-                return QueryImpl<T>(stream);
-            }
-        }
-
         public static IEnumerable<T> Query<T>(this Stream stream) where T : class, new()
         {
             return QueryImpl<T>(stream);
-        }
-
-        public static T QueryFirst<T>(this Stream stream) where T : class, new()
-        {
-            return QueryImpl<T>(stream).First();
-        }
-
-        public static T QueryFirstOrDefault<T>(this Stream stream) where T : class, new()
-        {
-            return QueryImpl<T>(stream).FirstOrDefault();
-        }
-
-        public static T QuerySingle<T>(this Stream stream) where T : class, new()
-        {
-            return QueryImpl<T>(stream).Single();
-        }
-
-        public static T QuerySingleOrDefault<T>(this Stream stream) where T : class, new()
-        {
-            return QueryImpl<T>(stream).SingleOrDefault();
-        }
-
-        public static IEnumerable<dynamic> Query(string path, bool useHeaderRow = false, ExcelType excelType = ExcelType.UNKNOWN,IConfiguration configuration=null) 
-        {
-            if (excelType == ExcelType.UNKNOWN)
-                excelType = GetExcelType(path);
-            //using (var stream = File.OpenRead(path))
-            Stream stream = null;
-            {
-                switch (excelType)
-                {
-                    case ExcelType.CSV:
-                        return new CsvReader().Query(path, useHeaderRow, (CsvConfiguration)configuration);
-                    case ExcelType.XLSX:
-                        return new ExcelOpenXmlSheetReader().Query(stream, useHeaderRow);
-                    default:
-                        throw new NotSupportedException($"Extension : {Path.GetExtension(path)} not suppprt");
-                }
-            }
         }
 
         public static IEnumerable<dynamic> Query(this Stream stream, bool useHeaderRow = false, ExcelType excelType = ExcelType.UNKNOWN, IConfiguration configuration = null)
@@ -106,26 +59,6 @@
                 default:
                     throw new NotSupportedException($"Please Issue for me");
             }
-        }
-
-        public static dynamic QueryFirst(this Stream stream, bool useHeaderRow = false)
-        {
-            return new ExcelOpenXmlSheetReader().Query(stream, useHeaderRow).First();
-        }
-
-        public static dynamic QueryFirstOrDefault(this Stream stream, bool useHeaderRow = false)
-        {
-            return new ExcelOpenXmlSheetReader().Query(stream, useHeaderRow).FirstOrDefault();
-        }
-
-        public static dynamic QuerySingle(this Stream stream, bool useHeaderRow = false)
-        {
-            return new ExcelOpenXmlSheetReader().Query(stream, useHeaderRow).Single();
-        }
-
-        public static dynamic QuerySingleOrDefault(this Stream stream, bool useHeaderRow = false)
-        {
-            return new ExcelOpenXmlSheetReader().Query(stream, useHeaderRow).SingleOrDefault();
         }
     }
 }

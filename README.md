@@ -80,7 +80,7 @@ using (var stream = File.OpenRead(path))
 
 ```C#
 using (var stream = File.OpenRead(path))
-    Assert.Equal("HelloWorld", stream.QueryFirst().A);
+    Assert.Equal("HelloWorld", stream.Query().First().A);
 ```
 
 performance:  MiniExcel/ExcelDataReader/ClosedXML/EPPlus  

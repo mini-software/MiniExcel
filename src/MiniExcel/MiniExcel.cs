@@ -41,9 +41,20 @@
             }
         }
 
-        public static IEnumerable<T> Query<T>(this Stream stream) where T : class, new()
+        public static IEnumerable<T> Query<T>(this Stream stream, ExcelType excelType = ExcelType.UNKNOWN, IConfiguration configuration = null) where T : class, new()
         {
-            return new ExcelOpenXmlSheetReader().Query<T>(stream);
+            if (excelType == ExcelType.UNKNOWN)
+                excelType = GetExcelType(stream);
+            switch (excelType)
+            {
+                case ExcelType.CSV:
+                    return new CsvReader().Query<T>(stream, (CsvConfiguration)configuration);
+                case ExcelType.XLSX:
+                    return new ExcelOpenXmlSheetReader().Query<T>(stream);
+                default:
+                    throw new NotSupportedException($"Please Issue for me");
+            }
+            
         }
 
         public static IEnumerable<dynamic> Query(this Stream stream, bool useHeaderRow = false, ExcelType excelType = ExcelType.UNKNOWN, IConfiguration configuration = null)

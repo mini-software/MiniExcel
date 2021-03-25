@@ -4,8 +4,8 @@
 
 ### 0.4.0
 - Support create CSV by file path or stream 
-- Support custom configuration setting
-- Support auto/manual specify excel type way
+- Support csv custom configuration setting
+- Support auto/manual specify excel type (xlsx or csv)
 - [Breaking Changes] Remove Query First/FirstOrDefault/Single/SingleOrDefault, user can use LINQ method do it.
 
 ### 0.3.0

@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -10,52 +11,96 @@ namespace MiniExcelLibs.Csv
 {
     public class CsvReader
     {
-	   internal IEnumerable<IDictionary<string, object>> Query(Stream stream, bool useHeaderRow, CsvConfiguration configuration)
-	   {
-		  if (configuration == null)
-			 configuration = CsvConfiguration.GetDefaultConfiguration();
-		  //note: why duplicate code can see #124 issue
-		  using (var reader = configuration.GetStreamReaderFunc(stream))
-		  {
-			 char[] seperators = { configuration.Seperator };
+        internal IEnumerable<IDictionary<string, object>> Query(Stream stream, bool useHeaderRow, CsvConfiguration configuration)
+        {
+            if (configuration == null)
+                configuration = CsvConfiguration.GetDefaultConfiguration();
+            using (var reader = configuration.GetStreamReaderFunc(stream))
+            {
+                char[] seperators = { configuration.Seperator };
 
-			 var row = string.Empty;
-			 string[] read;
-			 var firstRow = true;
-			 Dictionary<int, string> headRows = new Dictionary<int, string>();
-			 while ((row = reader.ReadLine()) != null)
-			 {
-				read = row.Split(seperators, StringSplitOptions.None);
+                var row = string.Empty;
+                string[] read;
+                var firstRow = true;
+                Dictionary<int, string> headRows = new Dictionary<int, string>();
+                while ((row = reader.ReadLine()) != null)
+                {
+                    read = row.Split(seperators, StringSplitOptions.None);
 
-				//header
-				if (useHeaderRow)
-				{
-				    if (firstRow)
-				    {
-					   firstRow = false;
-					   for (int i = 0; i <= read.Length - 1; i++)
-						  headRows.Add(i, read[i]);
-					   continue;
-				    }
+                    //header
+                    if (useHeaderRow)
+                    {
+                        if (firstRow)
+                        {
+                            firstRow = false;
+                            for (int i = 0; i <= read.Length - 1; i++)
+                                headRows.Add(i, read[i]);
+                            continue;
+                        }
 
-				    var cell = Helpers.GetEmptyExpandoObject(headRows);
-				    for (int i = 0; i <= read.Length - 1; i++)
-					   cell[headRows[i]] = read[i];
+                        var cell = Helpers.GetEmptyExpandoObject(headRows);
+                        for (int i = 0; i <= read.Length - 1; i++)
+                            cell[headRows[i]] = read[i];
 
-				    yield return cell;
-				    continue;
-				}
+                        yield return cell;
+                        continue;
+                    }
 
 
-				//body
-				{
-				    var cell = Helpers.GetEmptyExpandoObject(read.Length - 1);
-				    for (int i = 0; i <= read.Length - 1; i++)
-					   cell[Helpers.GetAlphabetColumnName(i)] = read[i];
-				    yield return cell;
-				}
-			 }
-		  }
-	   }
+                    //body
+                    {
+                        var cell = Helpers.GetEmptyExpandoObject(read.Length - 1);
+                        for (int i = 0; i <= read.Length - 1; i++)
+                            cell[Helpers.GetAlphabetColumnName(i)] = read[i];
+                        yield return cell;
+                    }
+                }
+            }
+        }
+
+        internal IEnumerable<T> Query<T>(Stream stream, CsvConfiguration configuration) where T : class, new()
+        {
+            var type = typeof(T);
+            var props = Helpers.GetPropertiesWithSetter(type);
+            Dictionary<int, PropertyInfo> idxProps = new Dictionary<int, PropertyInfo>();
+            if (configuration == null)
+                configuration = CsvConfiguration.GetDefaultConfiguration();
+            using (var reader = configuration.GetStreamReaderFunc(stream))
+            {
+                char[] seperators = { configuration.Seperator };
+
+                var row = string.Empty;
+                string[] read;
+
+                //header
+                {
+                    row = reader.ReadLine();
+                    read = row.Split(seperators, StringSplitOptions.None);
+                    var index = 0;
+                    foreach (var v in read)
+                    {
+                        var p = props.SingleOrDefault(w => w.Name == v);
+                        if (p != null)
+                            idxProps.Add(index,p);
+                        index++;
+                    }
+                }
+                {
+                    while ((row = reader.ReadLine()) != null)
+                    {
+                        read = row.Split(seperators, StringSplitOptions.None);
+
+                        //body
+                        {
+                            var cell = new T();
+                            foreach (var p in idxProps)
+                                p.Value.SetValue(cell, read[p.Key]);
+                            yield return cell;
+                        }
+                    }
+
+                }
+            }
+        }
     }
 }

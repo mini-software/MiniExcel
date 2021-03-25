@@ -391,39 +391,6 @@ namespace MiniExcelLibs.Tests
             return refV;
         }
 
-        //[Theory()]
-        //[InlineData(@"..\..\..\..\..\samples\xlsx\ExcelDataReaderCollections\TestOpen\TestOpen.xlsx")]
-        //        public void QueryExcelDataReaderCheckTypeMappingTest(string path)
-        //        {
-        //#if NETCOREAPP3_1 || NET5_0
-        //            System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
-        //#endif
-
-        //            DataSet exceldatareaderResult;
-        //            using (var stream = File.OpenRead(path))
-        //            using (var reader = ExcelReaderFactory.CreateReader(stream))
-        //            {
-        //                exceldatareaderResult = reader.AsDataSet();
-        //            }
-
-        //            using (var stream = File.OpenRead(path))
-        //            {
-        //                var rows = stream.Query().ToList();
-        //                Assert.Equal(exceldatareaderResult.Tables[0].Rows.Count, rows.Count);
-        //                foreach (IDictionary<string, object> row in rows)
-        //                {
-        //                    var rowIndex = rows.IndexOf(row);
-        //                    var keys = row.Keys;
-        //                    foreach (var key in keys)
-        //                    {
-        //                        var eV = exceldatareaderResult.Tables[0].Rows[rowIndex][int.Parse(key)];
-        //                        var v = row[key] == null ? DBNull.Value : row[key];
-        //                        Assert.Equal(eV, v);
-        //                    }
-        //                }
-        //            }
-        //        }
-
         [Fact()]
         public void CreateDataTableTest()
         {

@@ -2,6 +2,12 @@
 {
     public enum ExcelType
     {
-        Csv,Xls,Xlsx
+        XLSX,
+        XLS,
+        CSV,
+        /// <summary>
+        /// Will auto check excel type by stream or file path
+        /// </summary>
+        UNKNOWN
     }
 }

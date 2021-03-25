@@ -75,6 +75,35 @@ namespace MiniExcelLibs.Utils
 			 throw new ArgumentException("OA Date out of range");
 		  return millis * TicksPerMillisecond;
 	   }
+
+	   public static double AdjustOADateTime(double value, bool date1904)
+	   {
+		  if (!date1904)
+		  {
+			 // Workaround for 1900 leap year bug in Excel
+			 if (value >= 0.0 && value < 60.0)
+				return value + 1;
+		  }
+		  else
+		  {
+			 return value + 1462.0;
+		  }
+
+		  return value;
+	   }
+
+	   public static bool IsValidOADateTime(double value)
+	   {
+		  return value > DateTimeHelper.OADateMinAsDouble && value < DateTimeHelper.OADateMaxAsDouble;
+	   }
+
+	   public static object ConvertFromOATime(double value, bool date1904)
+	   {
+		  var dateValue = AdjustOADateTime(value, date1904);
+		  if (IsValidOADateTime(dateValue))
+			 return DateTimeHelper.FromOADate(dateValue);
+		  return value;
+	   }
     }
 
 }

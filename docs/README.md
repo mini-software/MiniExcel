@@ -3,7 +3,10 @@
 ## Release  Notes
 
 ### 0.4.0
-- Support create CSV file or stream by SaveAs
+- Support create CSV by file path or stream 
+- Add MiniExcel.Query("file path")
+- Support custom configuration setting
+- Support auto/manual specify excel type way
 
 ### 0.3.0
 - Support SaveAs by IEnumerable of DapperRow and IDictionary<string,object>

@@ -171,7 +171,7 @@ namespace MiniExcelLibs.OpenXml
             }
         }
 
-        internal IEnumerable<IDictionary<string, object>> QueryImpl(Stream stream, bool UseHeaderRow = false)
+        internal IEnumerable<IDictionary<string, object>> Query(Stream stream, bool UseHeaderRow = false)
         {
             using (var archive = new ExcelOpenXmlZip(stream))
             {
@@ -197,6 +197,8 @@ namespace MiniExcelLibs.OpenXml
 
                 var maxRowIndex = -1;
                 var maxColumnIndex = -1;
+
+                //TODO: merge one open read
                 using (var firstSheetEntryStream = firstSheetEntry.Open())
                 using (XmlReader reader = XmlReader.Create(firstSheetEntryStream, XmlSettings))
                 {

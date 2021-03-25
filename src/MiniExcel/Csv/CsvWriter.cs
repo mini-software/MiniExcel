@@ -1,15 +1,17 @@
-﻿using System;
+﻿using MiniExcelLibs.Utils;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 
 namespace MiniExcelLibs.Csv
 {
-    internal static partial class CsvImpl
+    internal partial class CsvWriter
     {
-	   internal static void SaveAs(this Stream stream, object input)
+	   internal static void SaveAs(Stream stream, object input)
 	   {
 		  using (StreamWriter writer = new StreamWriter(stream))
 		  {
@@ -37,9 +39,20 @@ namespace MiniExcelLibs.Csv
 	   }
 	   internal static void SaveAs(string path, object input)
 	   {
-		  using (var stream = File.Create(path))
-		  {
-			 stream.SaveAs(input);
+		  Stream stream = null;
+		  try
+            {
+			 stream = File.Create(path);
+			 CsvWriter.SaveAs(stream, input);
+		  }
+            catch (Exception)
+            {
+			 stream?.Dispose();
+			 throw;
+            }
+            finally
+            {
+			 stream?.Dispose();
 		  }
 	   }
     }

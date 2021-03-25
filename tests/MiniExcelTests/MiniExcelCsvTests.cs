@@ -9,6 +9,33 @@ namespace MiniExcelLibs.Tests
 {
     public class MiniExcelCsvTests
     {
+	   [Fact()]
+	   public void Create2x2_Test()
+        {
+		  var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.csv");
+		  MiniExcel.SaveAs(path, new[] {
+			 new { c1 = "A1" ,c2 = "B1"},
+			 new { c1 = "A2" ,c2 = "B2"},
+		  });
+
+            using (var stream = File.OpenRead(path))
+            {
+                var rows = stream.Query(useHeaderRow: true).ToList();
+                Assert.Equal("A1", rows[0].c1);
+                Assert.Equal("B1", rows[0].c2);
+                Assert.Equal("A2", rows[1].c1);
+                Assert.Equal("B2", rows[1].c2);
+            }
+
+            {
+			 var rows = MiniExcel.Query(path,useHeaderRow: true).ToList();
+			 Assert.Equal("A1", rows[0].c1);
+			 Assert.Equal("B1", rows[0].c2);
+			 Assert.Equal("A2", rows[1].c1);
+			 Assert.Equal("B2", rows[1].c2);
+		  }
+	   }
+
         [Fact()]
 	   public void Delimiters_Test()
         {
@@ -44,7 +71,7 @@ namespace MiniExcelLibs.Tests
 
             using (var stream = File.Create(path))
             {
-                stream.SaveAs(records,excelType:ExcelType.Csv);
+                stream.SaveAs(records,excelType:ExcelType.CSV);
             }
 
 		  var content = File.ReadAllText(path);

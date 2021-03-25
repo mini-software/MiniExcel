@@ -1,12 +1,17 @@
 [![NuGet](https://img.shields.io/nuget/v/MiniExcel.svg)](https://www.nuget.org/packages/MiniExcel)  [![](https://img.shields.io/nuget/dt/MiniExcel.svg)](https://www.nuget.org/packages/MiniExcel)  [![Build status](https://ci.appveyor.com/api/projects/status/b2vustrwsuqx45f4/branch/master?svg=true)](https://ci.appveyor.com/project/shps951023/miniexcel/branch/master)
+
+---
+
+A high performance and easy Excel(xlsx,csv) Micro-Helper that avoids OOM and without any third party dependencies to create file or dynamic/type mapping query etc..
+
 ### Features
-- Avoid large file OOM(out of memoery) by IEnumerable Lazy `Step By Step getting one row cells` not until all rows read in memory  
+- Avoid large file OOM(out of memoery) by IEnumerable Lazy loading `step by step getting one row cells` not until all rows read in memory  
 e.g:  Comparison between MiniExcel Query and ExcelDataReader/EPPlus/ClosedXml of reading large Xlsx File
 ![miniexcel_lazy_load](https://user-images.githubusercontent.com/12729184/111034290-e5588a80-844f-11eb-8c84-6fdb6fb8f403.gif)
-- Support .NET Standard 2.0/.NET 4.6/.NET 5
 - Mini (Less than 100KB) and without any third party library dependencies
 - Like Dapper dynamic/type mapping query style 
-- Create excel file or stream by AnonymousType/DapperRows/List/Array/Set/Enumrable/DataTable/Dictionary
+- Create excel file or stream by AnonymousType/DapperRows/Enumrable/DataTable/Dictionary
+- Support .NET Standard 2.0/.NET 4.6/.NET 5
 
 ### Installation
 

@@ -14,6 +14,7 @@ using System.Globalization;
 using System.IO.Compression;
 using System.Text;
 using System.Xml.Linq;
+using static MiniExcelLibs.Tests.Utils.MiniExcelOpenXml;
 
 namespace MiniExcelLibs.Tests
 {

@@ -1,9 +1,9 @@
 ﻿using System;
 using System.IO;
 
-namespace MiniExcelLibs.Tests
+namespace MiniExcelLibs.Tests.Utils
 {
-    public partial class MiniExcelHelperTests
+    public partial class MiniExcelOpenXml
     {
         public class FileHelper
         {

@@ -43,7 +43,7 @@
 
         public static IEnumerable<T> Query<T>(this Stream stream) where T : class, new()
         {
-            return QueryImpl<T>(stream);
+            return new ExcelOpenXmlSheetReader().Query<T>(stream);
         }
 
         public static IEnumerable<dynamic> Query(this Stream stream, bool useHeaderRow = false, ExcelType excelType = ExcelType.UNKNOWN, IConfiguration configuration = null)

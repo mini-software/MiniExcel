@@ -252,56 +252,6 @@
             return value is IEnumerable<IDictionary<string, object>>;
         }
 
-        private static IEnumerable<T> QueryImpl<T>(this Stream stream) where T : class, new()
-        {
-            var type = typeof(T);
-            var props = Helpers.GetPropertiesWithSetter(type);
-            foreach (var item in new ExcelOpenXmlSheetReader().Query(stream, true))
-            {
-                var v = new T();
-                foreach (var p in props)
-                {
-                    if (item.ContainsKey(p.Name))
-                    {
-                        object newV = null;
-                        object itemValue = (object)item[p.Name];
-                        if (itemValue == null)
-                        {
-                            yield return v;
-                        }
-                        else if (p.PropertyType == typeof(Guid) || p.PropertyType == typeof(Guid?))
-                            newV = Guid.Parse(itemValue.ToString());
-                        else if (p.PropertyType == typeof(DateTime) || p.PropertyType == typeof(DateTime?))
-                        {
-                            var vs = itemValue.ToString();
-                            if (DateTime.TryParse(vs, out var _v))
-                                newV = _v;
-                            else if (DateTime.TryParseExact(vs, "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out var _v2))
-                                newV = _v2;
-                            else if (double.TryParse(vs, out var _d))
-                                newV = DateTimeHelper.FromOADate(_d);
-                            else
-                                throw new InvalidCastException($"{vs} can't cast to datetime");
-                        }
-                        else if (p.PropertyType == typeof(bool) || p.PropertyType == typeof(bool?))
-                        {
-                            var vs = itemValue.ToString();
-                            if (vs == "1")
-                                newV = true;
-                            else if (vs == "0")
-                                newV = false;
-                            else
-                                newV = bool.Parse(vs);
-                        }
-                        else
-                            newV = Convert.ChangeType(itemValue, p.PropertyType);
-                        p.SetValue(v, newV);
-                    }
-                }
-                yield return v;
-            }
-        }
-
         private static void SaveAsImpl(string path, Dictionary<string, ZipPackageInfo> zipPackageInfos)
         {
             using (FileStream stream = new FileStream(path, FileMode.CreateNew))

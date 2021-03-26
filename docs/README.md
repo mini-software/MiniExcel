@@ -2,6 +2,11 @@
 
 ## Release  Notes
 
+### 0.5.0
+- Support OpenXml Xlsx SaveAs writer mode that avoids OOM
+- [Breaking Change] Remove SaveAs startCell parameter
+- [Bug] Fix SaveAs dimension printHeader:true not correct 
+
 ### 0.4.0
 - Support create CSV by file path or stream 
 - Support csv custom configuration setting

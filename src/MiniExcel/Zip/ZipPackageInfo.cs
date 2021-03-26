@@ -1,14 +1,15 @@
 ﻿using System;
+using System.IO.Compression;
 
 namespace MiniExcelLibs.Zip
 {
     internal class ZipPackageInfo
     {
-        public string Xml { get; set; }
+        public ZipArchiveEntry ZipArchiveEntry { get; set; }
         public string ContentType { get; set; }
-        public ZipPackageInfo(string xml, string contentType)
+        public ZipPackageInfo(ZipArchiveEntry zipArchiveEntry, string contentType)
         {
-            Xml = xml;
+            this.ZipArchiveEntry = zipArchiveEntry;
             ContentType = contentType;
         }
     }

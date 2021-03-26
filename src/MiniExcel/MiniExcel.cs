@@ -9,7 +9,7 @@
     using MiniExcelLibs.Csv;
     public static partial class MiniExcel
     {
-        public static void SaveAs(this Stream stream, object value, string startCell = "A1", bool printHeader = true, ExcelType excelType = ExcelType.XLSX)
+        public static void SaveAs(this Stream stream, object value, bool printHeader = true, ExcelType excelType = ExcelType.XLSX)
         {
             switch (excelType)
             {
@@ -17,14 +17,14 @@
                     CsvWriter.SaveAs(stream, value);
                     break;
                 case ExcelType.XLSX:
-                    ExcelOpenXmlSheetWriter.SaveAs(stream, value, startCell, printHeader);
+                    ExcelOpenXmlSheetWriter.SaveAs(stream, value, printHeader);
                     break;
                 default:
                     throw new NotSupportedException($"Extension : {excelType} not suppprt");
             }
         }
 
-        public static void SaveAs(string filePath, object value, string startCell = "A1", bool printHeader = true, ExcelType excelType = ExcelType.UNKNOWN)
+        public static void SaveAs(string filePath, object value, bool printHeader = true, ExcelType excelType = ExcelType.UNKNOWN)
         {
             if (excelType == ExcelType.UNKNOWN)
                 excelType = GetExcelType(filePath);
@@ -34,7 +34,7 @@
                     CsvWriter.SaveAs(filePath, value);
                     break;
                 case ExcelType.XLSX:
-                    ExcelOpenXmlSheetWriter.SaveAs(filePath, value, startCell, printHeader);
+                    ExcelOpenXmlSheetWriter.SaveAs(filePath, value, printHeader);
                     break;
                 default:
                     throw new NotSupportedException($"Extension : {Path.GetExtension(filePath)} not suppprt");

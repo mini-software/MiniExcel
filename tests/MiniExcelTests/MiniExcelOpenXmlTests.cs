@@ -343,7 +343,7 @@ namespace MiniExcelLibs.Tests
                     using (var stream = File.OpenRead(path))
                     {
                         var rows = stream.Query(useHeaderRow: false).ToList();
-                        Assert.Equal(0, rows.Count);
+                        Assert.Empty(rows);
                     }
                     Assert.Equal("A1:B1", GetFirstSheetDimensionRefValue(path));
                 }
@@ -355,7 +355,7 @@ namespace MiniExcelLibs.Tests
                     using (var stream = File.OpenRead(path))
                     {
                         var rows = stream.Query(useHeaderRow: false).ToList();
-                        Assert.Equal(1, rows.Count);
+                        Assert.Single(rows);
                         Assert.Equal("A", rows[0].A);
                         Assert.Equal("B", rows[0].B);
                     }
@@ -419,7 +419,7 @@ namespace MiniExcelLibs.Tests
                     using (var stream = File.OpenRead(path))
                     {
                         var rows = stream.Query().ToList();
-                        Assert.Equal(1, rows.Count); //TODO:
+                        Assert.Single(rows); //TODO:
                     }
                     File.Delete(path);
                 }

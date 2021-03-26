@@ -74,7 +74,6 @@ namespace MiniExcelLibs.OpenXml
             var xy = ExcelOpenXmlUtils.ConvertCellToXY("A1");
 
             // dimension
-            var dimensionRef = "";
             var maxRowIndex = 0;
             var maxColumnIndex = 0;
 

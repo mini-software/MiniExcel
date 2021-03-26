@@ -1,4 +1,5 @@
-[![NuGet](https://img.shields.io/nuget/v/MiniExcel.svg)](https://www.nuget.org/packages/MiniExcel)  [![](https://img.shields.io/nuget/dt/MiniExcel.svg)](https://www.nuget.org/packages/MiniExcel)  [![Build status](https://ci.appveyor.com/api/projects/status/b2vustrwsuqx45f4/branch/master?svg=true)](https://ci.appveyor.com/project/shps951023/miniexcel/branch/master)
+[![NuGet](https://img.shields.io/nuget/v/MiniExcel.svg)](https://www.nuget.org/packages/MiniExcel)  [![](https://img.shields.io/nuget/dt/MiniExcel.svg)](https://www.nuget.org/packages/MiniExcel)  [![Build status](https://ci.appveyor.com/api/projects/status/b2vustrwsuqx45f4/branch/master?svg=true)](https://ci.appveyor.com/project/shps951023/miniexcel/branch/master) [![.NET Framework](https://img.shields.io/badge/.NET%20Framework-%3E%3D%204.6-red.svg)](#) [![.NET Standard](https://img.shields.io/badge/.NET%20Standard-%3E%3D%202.0-red.svg)](#)  [![.NET Standard](https://img.shields.io/badge/.NET%20Standard-%3E%3D%202.0-red.svg)](#) [![.NET](https://img.shields.io/badge/.NET%20-%3E%3D%205.0-red.svg)](#) 
+ 
 
 A high performance and easy Excel(xlsx,csv) Micro-Helper that avoids OOM and without any third party dependencies to create file or dynamic/type mapping query etc..
 
@@ -9,10 +10,6 @@ e.g:  Comparison between MiniExcel Query and ExcelDataReader/EPPlus/ClosedXml of
 - Mini (Less than 100KB) and without any third party library dependencies
 - Like Dapper dynamic/type mapping query style 
 - Create excel file or stream by AnonymousType/DapperRows/Enumrable/DataTable/Dictionary
-
-### Support .NET Version
-
- .NET Standard 2.0/.NET 4.6/.NET 5
 
 ### Installation
 

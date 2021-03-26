@@ -62,30 +62,28 @@
 		  return cell;
 	   }
 
-	   public static IEnumerable<PropertyInfo> GetPropertiesWithSetter(this Type type)
+	   public static PropertyInfo[] GetProperties(this Type type)
 	   {
-		  return type.GetProperties(BindingFlags.SetProperty |
+		  return type.GetProperties(
 					BindingFlags.Public |
-					BindingFlags.Instance).Where(prop => prop.GetSetMethod() != null);
+					BindingFlags.Instance);
 	   }
 
-	   public static PropertyInfo[] GetSubtypeProperties(ICollection value)
-	   {
-		  var collectionType = value.GetType();
+        public static PropertyInfo[] GetPropertiesWithSetter(this Type type)
+        {
+            return type.GetProperties(BindingFlags.SetProperty |
+                         BindingFlags.Public |
+                         BindingFlags.Instance).Where(prop => prop.GetSetMethod() != null).ToArray();
+        }
 
-		  Type gType;
-		  if (collectionType.IsGenericTypeDefinition || collectionType.IsGenericType)
-			 gType = collectionType.GetGenericArguments().Single();
-		  else if (collectionType.IsArray)
-			 gType = collectionType.GetElementType();
-		  else
-			 throw new NotImplementedException($"{collectionType.Name} type not implemented,please issue for me, https://github.com/shps951023/MiniExcel/issues");
-		  if (typeof(IDictionary).IsAssignableFrom(gType))
-			 throw new NotImplementedException($"{gType.Name} type not implemented,please issue for me, https://github.com/shps951023/MiniExcel/issues");
-		  var props = gType.GetProperties(BindingFlags.Public | BindingFlags.Instance);
-		  if (props.Length == 0)
-			 throw new InvalidOperationException($"Properties count is 0");
-		  return props;
+        internal static bool IsAssignableFromIDictionary<T>()
+	   {
+		  return typeof(IDictionary).IsAssignableFrom(typeof(T));
+	   }
+
+	   internal static bool IsDapperRows<T>()
+	   {
+		  return typeof(IDictionary<string,object>).IsAssignableFrom(typeof(T));
 	   }
 
 	   private static readonly Regex EscapeRegex = new Regex("_x([0-9A-F]{4,4})_");

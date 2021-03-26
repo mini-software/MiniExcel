@@ -61,7 +61,7 @@ namespace MiniExcelLibs.Csv
         internal IEnumerable<T> Query<T>(Stream stream, CsvConfiguration configuration) where T : class, new()
         {
             var type = typeof(T);
-            var props = Helpers.GetPropertiesWithSetter(type);
+            var props = Helpers.GetProperties(type);
             Dictionary<int, PropertyInfo> idxProps = new Dictionary<int, PropertyInfo>();
             if (configuration == null)
                 configuration = CsvConfiguration.GetDefaultConfiguration();

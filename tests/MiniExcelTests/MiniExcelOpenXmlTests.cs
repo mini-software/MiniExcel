@@ -345,7 +345,7 @@ namespace MiniExcelLibs.Tests
                         var rows = stream.Query(useHeaderRow: false).ToList();
                         Assert.Empty(rows);
                     }
-                    Assert.Equal("A1:B1", GetFirstSheetDimensionRefValue(path));
+                    Assert.Equal("A1", GetFirstSheetDimensionRefValue(path));
                 }
                 File.Delete(path);
 
@@ -403,7 +403,14 @@ namespace MiniExcelLibs.Tests
             {
                 var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
                 var values = new List<int>();
-                Assert.Throws<InvalidOperationException>(() => MiniExcel.SaveAs(path, values));
+                MiniExcel.SaveAs(path, values);
+                using (var stream = File.OpenRead(path))
+                {
+                    var rows = stream.Query(useHeaderRow: true).ToList();
+                    Assert.Empty(rows);
+                }
+                File.Delete(path);
+                //Assert.Throws<InvalidOperationException>(() => MiniExcel.SaveAs(path, values));
             }
         }
 
@@ -566,18 +573,35 @@ namespace MiniExcelLibs.Tests
                 Assert.Equal("HelloWorld", stream.Query().First().A);
         }
 
+        [Fact]
+        public void EmptyTest()
+        {
+            {
+                var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
+                using (var connection = GetConnection("Data Source=:memory:"))
+                {
+                    var rows = connection.Query(@"with cte as (select 1 id,2 val) select * from cte where 1=2");
+                    MiniExcel.SaveAs(path, rows);
+                }
+                using (var stream = File.OpenRead(path))
+                {
+                    var rows = stream.Query(useHeaderRow: true).ToList();
+                    Assert.Empty(rows);
+                }
+                File.Delete(path);
+            }
+        }
+
         [Fact()]
         public void QueryDapperRows()
         {
             var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
-            var connectionString = $"Data Source=:memory:";
 
-            using (var connection = GetConnection(connectionString))
+            using (var connection = GetConnection("Data Source=:memory:"))
             {
                 var rows = connection.Query(@"select 'MiniExcel' as Column1,1 as Column2 union all select 'Github',2");
                 MiniExcel.SaveAs(path, rows);
             }
-
 
             using (var stream = File.OpenRead(path))
             {
@@ -590,6 +614,24 @@ namespace MiniExcelLibs.Tests
             }
 
             File.Delete(path);
+
+            // ToList
+            //using (var connection = GetConnection("Data Source=:memory:"))
+            //{
+            //    var rows = connection.Query(@"select 'MiniExcel' as Column1,1 as Column2 union all select 'Github',2").ToList();
+            //    MiniExcel.SaveAs(path, rows);
+            //}
+
+            //using (var stream = File.OpenRead(path))
+            //{
+            //    var rows = stream.Query(useHeaderRow: true).ToList();
+
+            //    Assert.Equal("MiniExcel", rows[0].Column1);
+            //    Assert.Equal(1, rows[0].Column2);
+            //    Assert.Equal("Github", rows[1].Column1);
+            //    Assert.Equal(2, rows[1].Column2);
+            //}
+            //File.Delete(path);
         }
 
 

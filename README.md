@@ -9,7 +9,10 @@ e.g:  Comparison between MiniExcel Query and ExcelDataReader/EPPlus/ClosedXml of
 - Mini (Less than 100KB) and without any third party library dependencies
 - Like Dapper dynamic/type mapping query style 
 - Create excel file or stream by AnonymousType/DapperRows/Enumrable/DataTable/Dictionary
-- Support .NET Standard 2.0/.NET 4.6/.NET 5
+
+### Support .NET Version
+
+ .NET Standard 2.0/.NET 4.6/.NET 5
 
 ### Installation
 
@@ -204,6 +207,14 @@ stream.Query(excelType:ExcelType.CSV);
 //or
 stream.Query(excelType:ExcelType.XLSX);
 ```
+
+### Important Note
+
+MiniExcel support parameter IEnumerable lazy loading, If you want to use least memory, please do not call methods such as ToList
+
+e.g : ToList or not memory usage  
+![image](https://user-images.githubusercontent.com/12729184/112587389-752b0b00-8e38-11eb-8a52-cfb76c57e5eb.png)
+
 
 ### TODO
 

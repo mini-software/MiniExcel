@@ -76,11 +76,6 @@
                          BindingFlags.Instance).Where(prop => prop.GetSetMethod() != null).ToArray();
         }
 
-        internal static bool IsAssignableFromIDictionary<T>()
-	   {
-		  return typeof(IDictionary).IsAssignableFrom(typeof(T));
-	   }
-
 	   internal static bool IsDapperRows<T>()
 	   {
 		  return typeof(IDictionary<string,object>).IsAssignableFrom(typeof(T));

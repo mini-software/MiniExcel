@@ -2,6 +2,9 @@
 
 ## Release  Notes
 
+### 0.7.0
+- [Breaking Change] SaveAs value parameter change type check logic
+
 ### 0.6.0
 - [New] SaveAs support parameter IEnumerable lazy loading
 - [Breaking Change] Remove SaveAs by object, now only support Datatable,IEnumerable<T>,ICollection<T>

@@ -12,7 +12,7 @@
 
     public static partial class MiniExcel
     {
-        public static void SaveAs(this Stream stream, DataTable value, bool printHeader = true, ExcelType excelType = ExcelType.XLSX)
+        public static void SaveAs(this Stream stream, object value, bool printHeader = true, ExcelType excelType = ExcelType.XLSX)
         {
             switch (excelType)
             {
@@ -27,71 +27,7 @@
             }
         }
 
-        public static void SaveAs<T>(this Stream stream, ICollection<T> value, bool printHeader = true, ExcelType excelType = ExcelType.XLSX)
-        {
-            switch (excelType)
-            {
-                case ExcelType.CSV:
-                    CsvWriter.SaveAs(stream, value);
-                    break;
-                case ExcelType.XLSX:
-                    ExcelOpenXmlSheetWriter.SaveAs(stream, value, printHeader);
-                    break;
-                default:
-                    throw new NotSupportedException($"Extension : {excelType} not suppprt");
-            }
-        }
-
-        public static void SaveAs<T>(this Stream stream, IEnumerable<T> value, bool printHeader = true, ExcelType excelType = ExcelType.XLSX)
-        {
-            switch (excelType)
-            {
-                case ExcelType.CSV:
-                    CsvWriter.SaveAs(stream, value);
-                    break;
-                case ExcelType.XLSX:
-                    ExcelOpenXmlSheetWriter.SaveAs(stream, value, printHeader);
-                    break;
-                default:
-                    throw new NotSupportedException($"Extension : {excelType} not suppprt");
-            }
-        }
-
-        public static void SaveAs(string filePath, DataTable value, bool printHeader = true, ExcelType excelType = ExcelType.UNKNOWN)
-        {
-            if (excelType == ExcelType.UNKNOWN)
-                excelType = GetExcelType(filePath);
-            switch (excelType)
-            {
-                case ExcelType.CSV:
-                    CsvWriter.SaveAs(filePath, value);
-                    break;
-                case ExcelType.XLSX:
-                    ExcelOpenXmlSheetWriter.SaveAs(filePath, value, printHeader);
-                    break;
-                default:
-                    throw new NotSupportedException($"Extension : {Path.GetExtension(filePath)} not suppprt");
-            }
-        }
-
-        public static void SaveAs<T>(string filePath, ICollection<T> value, bool printHeader = true, ExcelType excelType = ExcelType.UNKNOWN)
-        {
-            if (excelType == ExcelType.UNKNOWN)
-                excelType = GetExcelType(filePath);
-            switch (excelType)
-            {
-                case ExcelType.CSV:
-                    CsvWriter.SaveAs(filePath, value);
-                    break;
-                case ExcelType.XLSX:
-                    ExcelOpenXmlSheetWriter.SaveAs(filePath, value, printHeader);
-                    break;
-                default:
-                    throw new NotSupportedException($"Extension : {Path.GetExtension(filePath)} not suppprt");
-            }
-        }
-
-        public static void SaveAs<T>(string filePath, IEnumerable<T> value, bool printHeader = true, ExcelType excelType = ExcelType.UNKNOWN)
+        public static void SaveAs(string filePath, object value, bool printHeader = true, ExcelType excelType = ExcelType.UNKNOWN)
         {
             if (excelType == ExcelType.UNKNOWN)
                 excelType = GetExcelType(filePath);
@@ -121,7 +57,6 @@
                 default:
                     throw new NotSupportedException($"Please Issue for me");
             }
-            
         }
 
         public static IEnumerable<dynamic> Query(this Stream stream, bool useHeaderRow = false, ExcelType excelType = ExcelType.UNKNOWN, IConfiguration configuration = null)

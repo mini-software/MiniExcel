@@ -145,11 +145,11 @@ namespace MiniExcelLibs.Tests
             {
                 var rows = stream.Query<UserAccount>().ToList();
 
-                Assert.Equal(100,rows.Count());
+                Assert.Equal(100, rows.Count());
 
                 Assert.Equal(Guid.Parse("78DE23D2-DCB6-BD3D-EC67-C112BBC322A2"), rows[0].ID);
                 Assert.Equal("Wade", rows[0].Name);
-                Assert.Equal(DateTime.ParseExact("27/09/2020","dd/MM/yyyy", CultureInfo.InvariantCulture), rows[0].BoD);
+                Assert.Equal(DateTime.ParseExact("27/09/2020", "dd/MM/yyyy", CultureInfo.InvariantCulture), rows[0].BoD);
                 Assert.Equal(36, rows[0].Age);
                 Assert.False(rows[0].VIP);
                 Assert.Equal(decimal.Parse("5019.12"), rows[0].Points);
@@ -300,7 +300,7 @@ namespace MiniExcelLibs.Tests
             //List<strongtype>
             {
                 var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
-                var values = new List<SaveAsFileWithDimensionByICollectionTestType>() 
+                var values = new List<SaveAsFileWithDimensionByICollectionTestType>()
                 {
                     new SaveAsFileWithDimensionByICollectionTestType{A="A",B="B"},
                     new SaveAsFileWithDimensionByICollectionTestType{A="A",B="B"},
@@ -309,7 +309,7 @@ namespace MiniExcelLibs.Tests
                 {
                     using (var stream = File.OpenRead(path))
                     {
-                        var rows = stream.Query(useHeaderRow:false).ToList();
+                        var rows = stream.Query(useHeaderRow: false).ToList();
                         Assert.Equal(3, rows.Count);
                         Assert.Equal("A", rows[0].A);
                         Assert.Equal("A", rows[1].A);
@@ -327,7 +327,7 @@ namespace MiniExcelLibs.Tests
                 Assert.Equal("A1:B3", GetFirstSheetDimensionRefValue(path));
                 File.Delete(path);
 
-                MiniExcel.SaveAs(path, values,false);
+                MiniExcel.SaveAs(path, values, false);
                 Assert.Equal("A1:B2", GetFirstSheetDimensionRefValue(path));
                 File.Delete(path);
             }
@@ -338,7 +338,7 @@ namespace MiniExcelLibs.Tests
                 var values = new List<SaveAsFileWithDimensionByICollectionTestType>()
                 {
                 };
-                MiniExcel.SaveAs(path, values,false);
+                MiniExcel.SaveAs(path, values, false);
                 {
                     using (var stream = File.OpenRead(path))
                     {
@@ -355,19 +355,17 @@ namespace MiniExcelLibs.Tests
                     using (var stream = File.OpenRead(path))
                     {
                         var rows = stream.Query(useHeaderRow: false).ToList();
-                        Assert.Single(rows);
-                        Assert.Equal("A", rows[0].A);
-                        Assert.Equal("B", rows[0].B);
+                        Assert.Empty(rows);
                     }
                 }
-                Assert.Equal("A1:B1", GetFirstSheetDimensionRefValue(path));
+                Assert.Equal("A1", GetFirstSheetDimensionRefValue(path));
                 File.Delete(path);
             }
 
             //Array<anoymous>
             {
                 var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
-                var values = new []
+                var values = new[]
                 {
                     new {A="A",B="B"},
                     new {A="A",B="B"},
@@ -394,7 +392,7 @@ namespace MiniExcelLibs.Tests
                 Assert.Equal("A1:B3", GetFirstSheetDimensionRefValue(path));
                 File.Delete(path);
 
-                MiniExcel.SaveAs(path, values,false);
+                MiniExcel.SaveAs(path, values, false);
                 Assert.Equal("A1:B2", GetFirstSheetDimensionRefValue(path));
                 File.Delete(path);
             }
@@ -431,7 +429,7 @@ namespace MiniExcelLibs.Tests
                     File.Delete(path);
                 }
 
-                MiniExcel.SaveAs(path, table,printHeader:false);
+                MiniExcel.SaveAs(path, table, printHeader: false);
                 Assert.Equal("A1", GetFirstSheetDimensionRefValue(path));
                 File.Delete(path);
             }
@@ -453,7 +451,7 @@ namespace MiniExcelLibs.Tests
                 {
                     using (var stream = File.OpenRead(path))
                     {
-                        var rows = stream.Query(useHeaderRow:true).ToList();
+                        var rows = stream.Query(useHeaderRow: true).ToList();
                         Assert.Equal(2, rows.Count);
                         Assert.Equal(@"""<>+-*//}{\\n", rows[0].a);
                         Assert.Equal(1234567890, rows[0].b);
@@ -476,7 +474,7 @@ namespace MiniExcelLibs.Tests
 
 
 
-                MiniExcel.SaveAs(path, table,printHeader:false);
+                MiniExcel.SaveAs(path, table, printHeader: false);
                 Assert.Equal("A1:D2", GetFirstSheetDimensionRefValue(path));
                 File.Delete(path);
             }
@@ -592,16 +590,78 @@ namespace MiniExcelLibs.Tests
             }
         }
 
-        [Fact()]
-        public void QueryDapperRows()
+        [Fact]
+        public void SaveAsByIEnumerableIDictionary()
         {
             var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
 
+            {
+                var values = new List<Dictionary<string, object>>()
+                {
+                    new Dictionary<string, object>(){ { "Column1","MiniExcel"},{ "Column2", 1} },
+                     new Dictionary<string, object>(){ { "Column1", "Github" },{ "Column2", 2} },
+                };
+                MiniExcel.SaveAs(path, values);
+
+                using (var stream = File.OpenRead(path))
+                {
+                    var rows = stream.Query(useHeaderRow: false).ToList();
+                    Assert.Equal("Column1", rows[0].A);
+                    Assert.Equal("Column2", rows[0].B);
+                    Assert.Equal("MiniExcel", rows[1].A);
+                    Assert.Equal(1, rows[1].B);
+                    Assert.Equal("Github", rows[2].A);
+                    Assert.Equal(2, rows[2].B);
+                }
+
+                using (var stream = File.OpenRead(path))
+                {
+                    var rows = stream.Query(useHeaderRow: true).ToList();
+
+                    Assert.Equal(2, rows.Count);
+                    Assert.Equal("MiniExcel", rows[0].Column1);
+                    Assert.Equal(1, rows[0].Column2);
+                    Assert.Equal("Github", rows[1].Column1);
+                    Assert.Equal(2, rows[1].Column2);
+                }
+
+                Assert.Equal("A1:B3", GetFirstSheetDimensionRefValue(path));
+                File.Delete(path);
+            }
+
+            {
+                var values = new List<Dictionary<int, object>>()
+                {
+                    new Dictionary<int, object>(){ { 1,"MiniExcel"},{ 2, 1} },
+                     new Dictionary<int, object>(){ { 1, "Github" },{ 2, 2} },
+                };
+                MiniExcel.SaveAs(path, values);
+
+                using (var stream = File.OpenRead(path))
+                {
+                    var rows = stream.Query(useHeaderRow: false).ToList();
+                    Assert.Equal(3,rows.Count);
+                }
+
+                Assert.Equal("A1:B3", GetFirstSheetDimensionRefValue(path));
+                File.Delete(path);
+            }
+        }
+
+        [Fact()]
+        public void SaveAsByDapperRows()
+        {
+            var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
+
+
+            // Dapper Query
             using (var connection = GetConnection("Data Source=:memory:"))
             {
                 var rows = connection.Query(@"select 'MiniExcel' as Column1,1 as Column2 union all select 'Github',2");
                 MiniExcel.SaveAs(path, rows);
             }
+
+            Assert.Equal("A1:B3", GetFirstSheetDimensionRefValue(path));
 
             using (var stream = File.OpenRead(path))
             {
@@ -615,23 +675,60 @@ namespace MiniExcelLibs.Tests
 
             File.Delete(path);
 
+            // Empty
+            using (var connection = GetConnection("Data Source=:memory:"))
+            {
+                var rows = connection.Query(@"with cte as (select 'MiniExcel' as Column1,1 as Column2 union all select 'Github',2)select * from cte where 1=2").ToList();
+                MiniExcel.SaveAs(path, rows);
+            }
+
+            using (var stream = File.OpenRead(path))
+            {
+                var rows = stream.Query(useHeaderRow: false).ToList();
+                Assert.Empty(rows);
+            }
+
+            using (var stream = File.OpenRead(path))
+            {
+                var rows = stream.Query(useHeaderRow: true).ToList();
+                Assert.Empty(rows);
+            }
+
+            Assert.Equal("A1", GetFirstSheetDimensionRefValue(path));
+            File.Delete(path);
+
+
             // ToList
-            //using (var connection = GetConnection("Data Source=:memory:"))
-            //{
-            //    var rows = connection.Query(@"select 'MiniExcel' as Column1,1 as Column2 union all select 'Github',2").ToList();
-            //    MiniExcel.SaveAs(path, rows);
-            //}
+            using (var connection = GetConnection("Data Source=:memory:"))
+            {
+                var rows = connection.Query(@"select 'MiniExcel' as Column1,1 as Column2 union all select 'Github',2").ToList();
+                MiniExcel.SaveAs(path, rows);
+            }
 
-            //using (var stream = File.OpenRead(path))
-            //{
-            //    var rows = stream.Query(useHeaderRow: true).ToList();
+            Assert.Equal("A1:B3", GetFirstSheetDimensionRefValue(path));
 
-            //    Assert.Equal("MiniExcel", rows[0].Column1);
-            //    Assert.Equal(1, rows[0].Column2);
-            //    Assert.Equal("Github", rows[1].Column1);
-            //    Assert.Equal(2, rows[1].Column2);
-            //}
-            //File.Delete(path);
+            using (var stream = File.OpenRead(path))
+            {
+                var rows = stream.Query(useHeaderRow: false).ToList();
+
+                Assert.Equal("Column1", rows[0].A);
+                Assert.Equal("Column2", rows[0].B);
+                Assert.Equal("MiniExcel", rows[1].A);
+                Assert.Equal(1, rows[1].B);
+                Assert.Equal("Github", rows[2].A);
+                Assert.Equal(2, rows[2].B);
+            }
+
+            using (var stream = File.OpenRead(path))
+            {
+                var rows = stream.Query(useHeaderRow: true).ToList();
+
+                Assert.Equal("MiniExcel", rows[0].Column1);
+                Assert.Equal(1, rows[0].Column2);
+                Assert.Equal("Github", rows[1].Column1);
+                Assert.Equal(2, rows[1].Column2);
+            }
+            File.Delete(path);
         }
 
 
@@ -740,7 +837,7 @@ namespace MiniExcelLibs.Tests
                   new { Column1 = "MiniExcel", Column2 = 1 },
                   new { Column1 = "Github", Column2 = 2}
             });
-
+            
             using (var stream = File.OpenRead(path))
             {
                 var rows = stream.Query(useHeaderRow: true).ToList();
@@ -750,6 +847,8 @@ namespace MiniExcelLibs.Tests
                 Assert.Equal("Github", rows[1].Column1);
                 Assert.Equal(2, rows[1].Column2);
             }
+
+            Assert.Equal("A1:B3", GetFirstSheetDimensionRefValue(path));
 
             File.Delete(path);
         }

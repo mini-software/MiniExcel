@@ -7,6 +7,7 @@ using System.Data;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
@@ -15,70 +16,13 @@ namespace MiniExcelLibs.OpenXml
 {
     internal class ExcelOpenXmlSheetWriter
     {
-        internal static void SaveAs(string path, DataTable value, bool printHeader)
+        internal static void SaveAs(string path, object value, bool printHeader)
         {
-            //StreamWriter writer, ZipArchive archive,object value, bool printHeader
             using (FileStream stream = new FileStream(path, FileMode.CreateNew))
-            using (var archive = new ZipArchive(stream, ZipArchiveMode.Create, true, Utf8WithBom))
-            {
-                var defaults = DefualtOpenXml.GenerateDefaultOpenXml(archive);
-                var sheetPath = "xl/worksheets/sheet1.xml";
-                {
-                    ZipArchiveEntry entry = archive.CreateEntry(sheetPath);
-                    using (var zipStream = entry.Open())
-                    using (StreamWriter writer = new StreamWriter(zipStream, Utf8WithBom))
-                    {
-                        GenerateSheet(writer, archive, value, printHeader);
-                    }
-                    defaults.Add(sheetPath, new ZipPackageInfo(entry, "application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"));
-                }
-                GenerateContentTypesXml(archive, defaults);
-            }
+                SaveAs(stream, value, printHeader);
         }
 
-        internal static void SaveAs<T>(string path, ICollection<T> value, bool printHeader)
-        {
-            //StreamWriter writer, ZipArchive archive,object value, bool printHeader
-            using (FileStream stream = new FileStream(path, FileMode.CreateNew))
-            using (var archive = new ZipArchive(stream, ZipArchiveMode.Create, true, Utf8WithBom))
-            {
-                var defaults = DefualtOpenXml.GenerateDefaultOpenXml(archive);
-                var sheetPath = "xl/worksheets/sheet1.xml";
-                {
-                    ZipArchiveEntry entry = archive.CreateEntry(sheetPath);
-                    using (var zipStream = entry.Open())
-                    using (StreamWriter writer = new StreamWriter(zipStream, Utf8WithBom))
-                    {
-                        GenerateSheet(writer, archive, value, printHeader);
-                    }
-                    defaults.Add(sheetPath, new ZipPackageInfo(entry, "application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"));
-                }
-                GenerateContentTypesXml(archive, defaults);
-            }
-        }
-
-        internal static void SaveAs<T>(string path, IEnumerable<T> value, bool printHeader)
-        {
-            //StreamWriter writer, ZipArchive archive,object value, bool printHeader
-            using (FileStream stream = new FileStream(path, FileMode.CreateNew))
-            using (var archive = new ZipArchive(stream, ZipArchiveMode.Create, true, Utf8WithBom))
-            {
-                var defaults = DefualtOpenXml.GenerateDefaultOpenXml(archive);
-                var sheetPath = "xl/worksheets/sheet1.xml";
-                {
-                    ZipArchiveEntry entry = archive.CreateEntry(sheetPath);
-                    using (var zipStream = entry.Open())
-                    using (StreamWriter writer = new StreamWriter(zipStream, Utf8WithBom))
-                    {
-                        GenerateSheet(writer, archive, value, printHeader);
-                    }
-                    defaults.Add(sheetPath, new ZipPackageInfo(entry, "application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"));
-                }
-                GenerateContentTypesXml(archive, defaults);
-            }
-        }
-
-        internal static void SaveAs(Stream stream, DataTable value, bool printHeader)
+        internal static void SaveAs(Stream stream, object value, bool printHeader)
         {
             using (var archive = new ZipArchive(stream, ZipArchiveMode.Create, true, Utf8WithBom))
             {
@@ -89,472 +33,263 @@ namespace MiniExcelLibs.OpenXml
                     using (var zipStream = entry.Open())
                     using (StreamWriter writer = new StreamWriter(zipStream, Utf8WithBom))
                     {
-                        GenerateSheet(writer, archive, value, printHeader);
-                    }
-                    packages.Add(sheetPath,new ZipPackageInfo(entry, "application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"));
-                }
-                GenerateContentTypesXml(archive, packages);
-            }
-        }
+                        if (value == null)
+                        {
+                            WriteEmptySheet(writer);
+                            goto End;
+                        }
 
-        internal static void SaveAs<T>(Stream stream, ICollection<T> value, bool printHeader)
-        {
-            using (var archive = new ZipArchive(stream, ZipArchiveMode.Create, true, Utf8WithBom))
-            {
-                var packages = DefualtOpenXml.GenerateDefaultOpenXml(archive);
-                var sheetPath = "xl/worksheets/sheet1.xml";
-                {
-                    ZipArchiveEntry entry = archive.CreateEntry(sheetPath);
-                    using (var zipStream = entry.Open())
-                    using (StreamWriter writer = new StreamWriter(zipStream, Utf8WithBom))
-                    {
-                        GenerateSheet(writer, archive, value, printHeader);
+                        var type = value.GetType();
+
+                        //var genericType = type.GetGenericArguments()[0]; not 100% right
+                        Type genericType = null;
+
+                        //DapperRow
+                        if (value is IEnumerable)
+                        {
+                            var values = value as IEnumerable;
+
+                            var rowCount = 0;
+
+                            var maxColumnIndex = 0;
+                            List<object> keys = new List<object>();
+                            PropertyInfo[] props = null;
+                            string mode = null;
+
+                            {
+                                foreach (var item in values) //TODO: need to optimize
+                                {
+                                    rowCount = checked(rowCount + 1);
+                                    if (item != null && mode == null)
+                                    {
+                                        if (item is IDictionary<string, object>)
+                                        {
+                                            var item2 = item as IDictionary<string, object>;
+                                            mode = "IDictionary<string, object>";
+                                            maxColumnIndex = item2.Keys.Count;
+                                            foreach (var key in item2.Keys)
+                                                keys.Add(key);
+                                        }
+                                        else if (item is IDictionary)
+                                        {
+                                            var item2 = item as IDictionary;
+                                            mode = "IDictionary";
+                                            maxColumnIndex = item2.Keys.Count;
+                                            foreach (var key in item2.Keys)
+                                                keys.Add(key);
+                                        }
+                                        else
+                                        {
+                                            mode = "Properties";
+                                            genericType = item.GetType();
+                                            props = Helpers.GetProperties(genericType);
+                                            //props = genericType.GetProperties();
+                                            if (props.Length == 0)
+                                                throw new InvalidOperationException($"Generic Type : {genericType} valid properties count is 0, if you have trouble please issue for me.");
+                                            maxColumnIndex = props.Length;
+                                        }
+
+                                        // not re-foreach key point
+                                        var collection = value as ICollection;
+                                        if (collection != null)
+                                        {
+                                            rowCount = checked((value as ICollection).Count);
+                                            break;
+                                        }
+                                        continue;
+                                    }
+                                }
+                            }
+
+                            if (rowCount == 0)
+                            {
+                                WriteEmptySheet(writer);
+                                goto End;
+                            }
+
+                            writer.Write($@"<?xml version=""1.0"" encoding=""utf-8""?><x:worksheet xmlns:x=""http://schemas.openxmlformats.org/spreadsheetml/2006/main"">");
+                            // dimension 
+
+                            var maxRowIndex = rowCount + (printHeader && rowCount > 0 ? 1 : 0);  //TODO:it can optimize
+                            writer.Write($@"<dimension ref=""{GetDimension(maxRowIndex, maxColumnIndex)}""/><x:sheetData>");
+
+                            //header
+                            var yIndex = 1;
+                            var xIndex = 1;
+                            if (printHeader)
+                            {
+                                var cellIndex = xIndex;
+                                writer.Write($"<x:row r=\"{yIndex.ToString()}\">");
+                                if (props != null)
+                                {
+                                    foreach (var p in props)
+                                    {
+                                        var columname = ExcelOpenXmlUtils.ConvertXyToCell(cellIndex, yIndex);
+                                        writer.Write($"<x:c r=\"{columname}\" t=\"str\"><x:v>{p.Name}</x:v></x:c>");
+                                        cellIndex++;
+                                    }
+                                }
+                                else
+                                {
+                                    foreach (var key in keys)
+                                    {
+                                        var columname = ExcelOpenXmlUtils.ConvertXyToCell(cellIndex, yIndex);
+                                        writer.Write($"<x:c r=\"{columname}\" t=\"str\"><x:v>{key}</x:v></x:c>");
+                                        cellIndex++;
+                                    }
+                                }
+                                writer.Write($"</x:row>");
+                                yIndex++;
+                            }
+
+                            if (mode == "IDictionary<string, object>") //Dapper Row
+                                GenerateSheetByDapperRow(writer, archive, value as IEnumerable, genericType, printHeader, rowCount, keys.Cast<string>().ToList(), xIndex, yIndex);
+                            else if (mode == "IDictionary") //IDictionary
+                                GenerateSheetByIDictionary(writer, archive, value as IEnumerable, genericType, printHeader, rowCount, keys, xIndex, yIndex);
+                            else if (mode == "Properties")
+                                GenerateSheetByProperties(writer, archive, value as IEnumerable, genericType,props, printHeader, rowCount, keys, xIndex, yIndex);
+                            else
+                                throw new NotImplementedException($"Type {type.Name} & genericType {genericType.Name} not Implemented. please issue for me.");
+                            writer.Write("</x:sheetData></x:worksheet>");
+                        }
+                        else if (value is DataTable)
+                        {
+                            GenerateSheetByDataTable(writer, archive, value as DataTable, printHeader);
+                        }
+                        else
+                        {
+                            throw new NotImplementedException($"Type {type.Name} & genericType {genericType.Name} not Implemented. please issue for me.");
+                        }
+                        //TODO:
+
                     }
+                End:
                     packages.Add(sheetPath, new ZipPackageInfo(entry, "application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"));
                 }
                 GenerateContentTypesXml(archive, packages);
             }
         }
 
-        internal static void SaveAs<T>(Stream stream, IEnumerable<T> value, bool printHeader)
+        private static void WriteEmptySheet(StreamWriter writer)
         {
-            using (var archive = new ZipArchive(stream, ZipArchiveMode.Create, true, Utf8WithBom))
+            writer.Write($@"<?xml version=""1.0"" encoding=""utf-8""?><x:worksheet xmlns:x=""http://schemas.openxmlformats.org/spreadsheetml/2006/main""><dimension ref=""A1""/><x:sheetData></x:sheetData></x:worksheet>");
+        }
+
+        internal static void GenerateSheetByDapperRow(StreamWriter writer, ZipArchive archive, IEnumerable value, Type genericType, bool printHeader, int rowCount, List<string> keys, int xIndex = 1, int yIndex = 1)
+        {
+            //body
+            foreach (IDictionary<string, object> v in value)
             {
-                var packages = DefualtOpenXml.GenerateDefaultOpenXml(archive);
-                var sheetPath = "xl/worksheets/sheet1.xml";
+                writer.Write($"<x:row r=\"{yIndex.ToString()}\">");
+                var cellIndex = xIndex;
+                foreach (var key in keys)
                 {
-                    ZipArchiveEntry entry = archive.CreateEntry(sheetPath);
-                    using (var zipStream = entry.Open())
-                    using (StreamWriter writer = new StreamWriter(zipStream, Utf8WithBom))
+                    var cellValue = v[key];
+                    var cellValueStr = ExcelOpenXmlUtils.EncodeXML(cellValue);
+                    var t = "t=\"str\"";
                     {
-                        GenerateSheet(writer, archive, value, printHeader);
+                        if (decimal.TryParse(cellValueStr, out var outV))
+                            t = "t=\"n\"";
+                        if (cellValue is bool)
+                        {
+                            t = "t=\"b\"";
+                            cellValueStr = (bool)cellValue ? "1" : "0";
+                        }
+                        if (cellValue is DateTime || cellValue is DateTime?)
+                        {
+                            t = "s=\"1\"";
+                            cellValueStr = ((DateTime)cellValue).ToOADate().ToString();
+                        }
                     }
-                    packages.Add(sheetPath, new ZipPackageInfo(entry, "application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"));
+                    var columname = ExcelOpenXmlUtils.ConvertXyToCell(cellIndex, yIndex);
+                    writer.Write($"<x:c r=\"{columname}\" {t}>");
+                    writer.Write($"<x:v>{cellValueStr}");
+                    writer.Write($"</x:v>");
+                    writer.Write($"</x:c>");
+                    cellIndex++;
                 }
-                GenerateContentTypesXml(archive, packages);
+                writer.Write($"</x:row>");
+                yIndex++;
             }
         }
 
-        internal static void GenerateSheet<T>(StreamWriter writer, ZipArchive archive, ICollection<T> value, bool printHeader)
+        internal static void GenerateSheetByIDictionary(StreamWriter writer, ZipArchive archive, IEnumerable value, Type genericType, bool printHeader, int rowCount, List<object> keys, int xIndex = 1, int yIndex = 1)
         {
-            var xy = ExcelOpenXmlUtils.ConvertCellToXY("A1");
-            var yIndex = xy.Item2;
-
-            writer.Write($@"<?xml version=""1.0"" encoding=""utf-8""?><x:worksheet xmlns:x=""http://schemas.openxmlformats.org/spreadsheetml/2006/main"">");
-
-            var cnt = value.Count;
-            if (value == null || cnt == 0)
+            //body
+            foreach (IDictionary v in value)
             {
-                if (printHeader)
+                writer.Write($"<x:row r=\"{yIndex.ToString()}\">");
+                var cellIndex = xIndex;
+                foreach (var key in keys)
                 {
-                    var props = Helpers.GetProperties(typeof(T));
-                    var maxColumnIndex = props.Length;
-                    var maxRowIndex = cnt + (printHeader && cnt > 0 ? 1 : 0);  //TODO:it can optimize
-                    writer.Write($@"<dimension ref=""{GetDimension(maxRowIndex, maxColumnIndex)}""/><x:sheetData>");
-                    writer.Write($"<x:row r=\"{yIndex.ToString()}\">");
-                    var xIndex = xy.Item1;
-                    foreach (var p in props)
+                    var cellValue = v[key];
+                    var cellValueStr = ExcelOpenXmlUtils.EncodeXML(cellValue);
+                    var t = "t=\"str\"";
                     {
-                        var columname = ExcelOpenXmlUtils.ConvertXyToCell(xIndex, yIndex);
-                        writer.Write($"<x:c r=\"{columname}\" t=\"str\">");
-                        writer.Write($"<x:v>{p.Name}");
-                        writer.Write($"</x:v>");
-                        writer.Write($"</x:c>");
-                        xIndex++;
-                    }
-                    writer.Write($"</x:row>");
-                    writer.Write("</x:sheetData></x:worksheet>");
-                }
-                else
-                    writer.Write($@"<dimension ref=""A1""/><x:sheetData></x:sheetData></x:worksheet>");
-
-                return;
-            }
-
-            if (Helpers.IsAssignableFromIDictionary<T>())
-            {
-                var firstTime = true;
-                ICollection keys = null;
-                foreach (IDictionary v in value)
-                {
-                    // head
-                    if (firstTime)
-                    {
-                        firstTime = false;
-                        if (v == null)
-                            continue;
-                        keys = v.Keys;
-
-
-                        // dimension 
-                        var maxColumnIndex = keys.Count;
-                        var maxRowIndex = cnt + (printHeader && cnt > 0 ? 1 : 0);  //TODO:it can optimize
-                        writer.Write($@"<dimension ref=""{GetDimension(maxRowIndex, maxColumnIndex)}""/><x:sheetData>");
-
-
-                        if (printHeader)
+                        if (decimal.TryParse(cellValueStr, out var outV))
+                            t = "t=\"n\"";
+                        if (cellValue is bool)
                         {
-                            writer.Write($"<x:row r=\"{yIndex.ToString()}\">");
-                            var xIndex = xy.Item1;
-                            foreach (var key in keys)
-                            {
-                                var columname = ExcelOpenXmlUtils.ConvertXyToCell(xIndex, yIndex);
-                                writer.Write($"<x:c r=\"{columname}\" t=\"str\">");
-                                writer.Write($"<x:v>{key}");
-                                writer.Write($"</x:v>");
-                                writer.Write($"</x:c>");
-                                xIndex++;
-                            }
-                            writer.Write($"</x:row>");
-                            yIndex++;
+                            t = "t=\"b\"";
+                            cellValueStr = (bool)cellValue ? "1" : "0";
+                        }
+                        if (cellValue is DateTime || cellValue is DateTime?)
+                        {
+                            t = "s=\"1\"";
+                            cellValueStr = ((DateTime)cellValue).ToOADate().ToString();
                         }
                     }
-
-                    //body
-                    {
-                        writer.Write($"<x:row r=\"{yIndex.ToString()}\">");
-                        var xIndex = xy.Item1;
-                        foreach (var p in keys)
-                        {
-                            var cellValue = v[p];
-                            var cellValueStr = ExcelOpenXmlUtils.EncodeXML(cellValue);
-                            var t = "t=\"str\"";
-                            {
-                                if (decimal.TryParse(cellValueStr, out var outV))
-                                    t = "t=\"n\"";
-                                if (cellValue is bool)
-                                {
-                                    t = "t=\"b\"";
-                                    cellValueStr = (bool)cellValue ? "1" : "0";
-                                }
-                                if (cellValue is DateTime || cellValue is DateTime?)
-                                {
-                                    t = "s=\"1\"";
-                                    cellValueStr = ((DateTime)cellValue).ToOADate().ToString();
-                                }
-                            }
-                            var columname = ExcelOpenXmlUtils.ConvertXyToCell(xIndex, yIndex);
-                            writer.Write($"<x:c r=\"{columname}\" {t}>");
-                            writer.Write($"<x:v>{cellValueStr}");
-                            writer.Write($"</x:v>");
-                            writer.Write($"</x:c>");
-                            xIndex++;
-                        }
-                        writer.Write($"</x:row>");
-                        yIndex++;
-                    }
+                    var columname = ExcelOpenXmlUtils.ConvertXyToCell(cellIndex, yIndex);
+                    writer.Write($"<x:c r=\"{columname}\" {t}>");
+                    writer.Write($"<x:v>{cellValueStr}");
+                    writer.Write($"</x:v>");
+                    writer.Write($"</x:c>");
+                    cellIndex++;
                 }
+                writer.Write($"</x:row>");
+                yIndex++;
             }
-            else
-            {
-                // demension
-                var props = Helpers.GetProperties(typeof(T));
-                var maxColumnIndex = props.Length;
-                var maxRowIndex = cnt + (printHeader && cnt > 0 ? 1 : 0);  //TODO:it can optimize
-                writer.Write($@"<dimension ref=""{GetDimension(maxRowIndex, maxColumnIndex)}""/><x:sheetData>");
-
-                if (printHeader)
-                {
-                    writer.Write($"<x:row r=\"{yIndex.ToString()}\">");
-                    var xIndex = xy.Item1;
-                    foreach (var p in props)
-                    {
-                        var columname = ExcelOpenXmlUtils.ConvertXyToCell(xIndex, yIndex);
-                        writer.Write($"<x:c r=\"{columname}\" t=\"str\">");
-                        writer.Write($"<x:v>{p.Name}");
-                        writer.Write($"</x:v>");
-                        writer.Write($"</x:c>");
-                        xIndex++;
-                    }
-                    writer.Write($"</x:row>");
-                    yIndex++;
-                }
-
-                foreach (var v in value)
-                {
-                    writer.Write($"<x:row r=\"{yIndex.ToString()}\">");
-                    var xIndex = xy.Item1;
-                    foreach (var p in props)
-                    {
-                        var cellValue = p.GetValue(v);
-                        var cellValueStr = ExcelOpenXmlUtils.EncodeXML(cellValue);
-                        var t = "t=\"str\"";
-                        {
-                            if (decimal.TryParse(cellValueStr, out var outV))
-                                t = "t=\"n\"";
-                            if (cellValue is bool)
-                            {
-                                t = "t=\"b\"";
-                                cellValueStr = (bool)cellValue ? "1" : "0";
-                            }
-                            if (cellValue is DateTime || cellValue is DateTime?)
-                            {
-                                t = "s=\"1\"";
-                                cellValueStr = ((DateTime)cellValue).ToOADate().ToString();
-                            }
-                        }
-                        var columname = ExcelOpenXmlUtils.ConvertXyToCell(xIndex, yIndex);
-                        writer.Write($"<x:c r=\"{columname}\" {t}>");
-                        writer.Write($"<x:v>{cellValueStr}");
-                        writer.Write($"</x:v>");
-                        writer.Write($"</x:c>");
-                        xIndex++;
-                    }
-                    writer.Write($"</x:row>");
-                    yIndex++;
-                }
-            }
-            writer.Write("</x:sheetData></x:worksheet>");
         }
 
-        internal static void GenerateSheet<T>(StreamWriter writer, ZipArchive archive, IEnumerable<T> value, bool printHeader)
+        internal static void GenerateSheetByProperties(StreamWriter writer, ZipArchive archive, IEnumerable value, Type genericType, PropertyInfo[] props, bool printHeader, int rowCount, List<object> keys, int xIndex = 1, int yIndex = 1)
         {
-            var xy = ExcelOpenXmlUtils.ConvertCellToXY("A1");
-            writer.Write($@"<?xml version=""1.0"" encoding=""utf-8""?><x:worksheet xmlns:x=""http://schemas.openxmlformats.org/spreadsheetml/2006/main"">");
-            var yIndex = xy.Item2;
-
-            var cnt = value.Count();
-            if (value == null || cnt == 0)
+            //body
+            foreach (var v in value)
             {
-                if (printHeader)
+                writer.Write($"<x:row r=\"{yIndex.ToString()}\">");
+                var cellIndex = xIndex;
+                foreach (var p in props)
                 {
-                    var props = Helpers.GetProperties(typeof(T));
-                    var maxColumnIndex = props.Length;
-                    var maxRowIndex = cnt + (printHeader && cnt > 0 ? 1 : 0);  //TODO:it can optimize
-                    writer.Write($@"<dimension ref=""{GetDimension(maxRowIndex, maxColumnIndex)}""/><x:sheetData>");
-                    writer.Write($"<x:row r=\"{yIndex.ToString()}\">");
-                    var xIndex = xy.Item1;
-                    foreach (var p in props)
+                    var cellValue = p.GetValue(v);
+                    var cellValueStr = ExcelOpenXmlUtils.EncodeXML(cellValue);
+                    var t = "t=\"str\"";
                     {
-                        var columname = ExcelOpenXmlUtils.ConvertXyToCell(xIndex, yIndex);
-                        writer.Write($"<x:c r=\"{columname}\" t=\"str\">");
-                        writer.Write($"<x:v>{p.Name}");
-                        writer.Write($"</x:v>");
-                        writer.Write($"</x:c>");
-                        xIndex++;
+                        if (decimal.TryParse(cellValueStr, out var outV))
+                            t = "t=\"n\"";
+                        if (cellValue is bool)
+                        {
+                            t = "t=\"b\"";
+                            cellValueStr = (bool)cellValue ? "1" : "0";
+                        }
+                        if (cellValue is DateTime || cellValue is DateTime?)
+                        {
+                            t = "s=\"1\"";
+                            cellValueStr = ((DateTime)cellValue).ToOADate().ToString();
+                        }
                     }
-                    writer.Write($"</x:row>");
-                    writer.Write("</x:sheetData></x:worksheet>");
+                    var columname = ExcelOpenXmlUtils.ConvertXyToCell(cellIndex, yIndex);
+                    writer.Write($"<x:c r=\"{columname}\" {t}>");
+                    writer.Write($"<x:v>{cellValueStr}");
+                    writer.Write($"</x:v>");
+                    writer.Write($"</x:c>");
+                    cellIndex++;
                 }
-                else
-                {
-                    writer.Write($@"<dimension ref=""A1""/><x:sheetData></x:sheetData></x:worksheet>");
-                }
-                return;
+                writer.Write($"</x:row>");
+                yIndex++;
             }
-
-            if (value is IEnumerable<IDictionary<string,object>>)
-            {
-                var firstTime = true;
-                ICollection<string> keys = null;
-                foreach (IDictionary<string,object> v in value)
-                {
-                    // head
-                    if (firstTime)
-                    {
-                        firstTime = false;
-                        if (v == null)
-                            continue;
-                        keys = v.Keys;
-
-                        // dimension 
-                        var maxColumnIndex = keys.Count;
-
-                        var maxRowIndex = cnt + (printHeader && cnt > 0 ? 1 : 0);  //TODO:it can optimize
-                        writer.Write($@"<dimension ref=""{GetDimension(maxRowIndex, maxColumnIndex)}""/><x:sheetData>");
-
-
-                        if (printHeader)
-                        {
-                            writer.Write($"<x:row r=\"{yIndex.ToString()}\">");
-                            var xIndex = xy.Item1;
-                            foreach (var key in keys)
-                            {
-                                var columname = ExcelOpenXmlUtils.ConvertXyToCell(xIndex, yIndex);
-                                writer.Write($"<x:c r=\"{columname}\" t=\"str\">");
-                                writer.Write($"<x:v>{key}");
-                                writer.Write($"</x:v>");
-                                writer.Write($"</x:c>");
-                                xIndex++;
-                            }
-                            writer.Write($"</x:row>");
-                            yIndex++;
-                        }
-                    }
-
-                    //body
-                    {
-                        writer.Write($"<x:row r=\"{yIndex.ToString()}\">");
-                        var xIndex = xy.Item1;
-                        foreach (var p in keys)
-                        {
-                            var cellValue = v[p];
-                            var cellValueStr = ExcelOpenXmlUtils.EncodeXML(cellValue);
-                            var t = "t=\"str\"";
-                            {
-                                if (decimal.TryParse(cellValueStr, out var outV))
-                                    t = "t=\"n\"";
-                                if (cellValue is bool)
-                                {
-                                    t = "t=\"b\"";
-                                    cellValueStr = (bool)cellValue ? "1" : "0";
-                                }
-                                if (cellValue is DateTime || cellValue is DateTime?)
-                                {
-                                    t = "s=\"1\"";
-                                    cellValueStr = ((DateTime)cellValue).ToOADate().ToString();
-                                }
-                            }
-                            var columname = ExcelOpenXmlUtils.ConvertXyToCell(xIndex, yIndex);
-                            writer.Write($"<x:c r=\"{columname}\" {t}>");
-                            writer.Write($"<x:v>{cellValueStr}");
-                            writer.Write($"</x:v>");
-                            writer.Write($"</x:c>");
-                            xIndex++;
-                        }
-                        writer.Write($"</x:row>");
-                        yIndex++;
-                    }
-                }
-            }
-            else if (Helpers.IsAssignableFromIDictionary<T>())
-            {
-                var firstTime = true;
-                ICollection keys = null;
-                foreach (IDictionary v in value)
-                {
-                    // head
-                    if (firstTime)
-                    {
-                        firstTime = false;
-                        if (v == null)
-                            continue;
-                        keys = v.Keys;
-
-                        // dimension 
-                        var maxColumnIndex = keys.Count;
-                        
-                        var maxRowIndex = cnt + (printHeader && cnt > 0 ? 1 : 0);  //TODO:it can optimize
-                        writer.Write($@"<dimension ref=""{GetDimension(maxRowIndex, maxColumnIndex)}""/><x:sheetData>");
-
-
-                        if (printHeader)
-                        {
-                            writer.Write($"<x:row r=\"{yIndex.ToString()}\">");
-                            var xIndex = xy.Item1;
-                            foreach (var key in keys)
-                            {
-                                var columname = ExcelOpenXmlUtils.ConvertXyToCell(xIndex, yIndex);
-                                writer.Write($"<x:c r=\"{columname}\" t=\"str\">");
-                                writer.Write($"<x:v>{key}");
-                                writer.Write($"</x:v>");
-                                writer.Write($"</x:c>");
-                                xIndex++;
-                            }
-                            writer.Write($"</x:row>");
-                            yIndex++;
-                        }
-                    }
-
-                    //body
-                    {
-                        writer.Write($"<x:row r=\"{yIndex.ToString()}\">");
-                        var xIndex = xy.Item1;
-                        foreach (var p in keys)
-                        {
-                            var cellValue = v[p];
-                            var cellValueStr = ExcelOpenXmlUtils.EncodeXML(cellValue);
-                            var t = "t=\"str\"";
-                            {
-                                if (decimal.TryParse(cellValueStr, out var outV))
-                                    t = "t=\"n\"";
-                                if (cellValue is bool)
-                                {
-                                    t = "t=\"b\"";
-                                    cellValueStr = (bool)cellValue ? "1" : "0";
-                                }
-                                if (cellValue is DateTime || cellValue is DateTime?)
-                                {
-                                    t = "s=\"1\"";
-                                    cellValueStr = ((DateTime)cellValue).ToOADate().ToString();
-                                }
-                            }
-                            var columname = ExcelOpenXmlUtils.ConvertXyToCell(xIndex, yIndex);
-                            writer.Write($"<x:c r=\"{columname}\" {t}>");
-                            writer.Write($"<x:v>{cellValueStr}");
-                            writer.Write($"</x:v>");
-                            writer.Write($"</x:c>");
-                            xIndex++;
-                        }
-                        writer.Write($"</x:row>");
-                        yIndex++;
-                    }
-                }
-            }
-            else
-            {
-                // demension
-                var props = Helpers.GetProperties(typeof(T));
-                var maxColumnIndex = props.Length;
-                var maxRowIndex = cnt + (printHeader && cnt > 0 ? 1 : 0);  //TODO:it can optimize
-                writer.Write($@"<dimension ref=""{GetDimension(maxRowIndex, maxColumnIndex)}""/><x:sheetData>");
-
-                if (printHeader)
-                {
-                    writer.Write($"<x:row r=\"{yIndex.ToString()}\">");
-                    var xIndex = xy.Item1;
-                    foreach (var p in props)
-                    {
-                        var columname = ExcelOpenXmlUtils.ConvertXyToCell(xIndex, yIndex);
-                        writer.Write($"<x:c r=\"{columname}\" t=\"str\">");
-                        writer.Write($"<x:v>{p.Name}");
-                        writer.Write($"</x:v>");
-                        writer.Write($"</x:c>");
-                        xIndex++;
-                    }
-                    writer.Write($"</x:row>");
-                    yIndex++;
-                }
-
-                foreach (var v in value)
-                {
-                    writer.Write($"<x:row r=\"{yIndex.ToString()}\">");
-                    var xIndex = xy.Item1;
-                    foreach (var p in props)
-                    {
-                        var cellValue = p.GetValue(v);
-                        var cellValueStr = ExcelOpenXmlUtils.EncodeXML(cellValue);
-                        var t = "t=\"str\"";
-                        {
-                            if (decimal.TryParse(cellValueStr, out var outV))
-                                t = "t=\"n\"";
-                            if (cellValue is bool)
-                            {
-                                t = "t=\"b\"";
-                                cellValueStr = (bool)cellValue ? "1" : "0";
-                            }
-                            if (cellValue is DateTime || cellValue is DateTime?)
-                            {
-                                t = "s=\"1\"";
-                                cellValueStr = ((DateTime)cellValue).ToOADate().ToString();
-                            }
-                        }
-                        var columname = ExcelOpenXmlUtils.ConvertXyToCell(xIndex, yIndex);
-                        writer.Write($"<x:c r=\"{columname}\" {t}>");
-                        writer.Write($"<x:v>{cellValueStr}");
-                        writer.Write($"</x:v>");
-                        writer.Write($"</x:c>");
-                        xIndex++;
-                    }
-                    writer.Write($"</x:row>");
-                    yIndex++;
-                }
-            }
-
-            writer.Write("</x:sheetData></x:worksheet>");
         }
 
-        internal static void GenerateSheet(StreamWriter writer, ZipArchive archive,DataTable value, bool printHeader)
+        internal static void GenerateSheetByDataTable(StreamWriter writer, ZipArchive archive, DataTable value, bool printHeader)
         {
             var xy = ExcelOpenXmlUtils.ConvertCellToXY("A1");
 
@@ -564,7 +299,7 @@ namespace MiniExcelLibs.OpenXml
                 var yIndex = xy.Item2;
 
                 // dimension
-                var maxRowIndex = value.Rows.Count + (printHeader && value.Rows.Count >0 ? 1 :0);
+                var maxRowIndex = value.Rows.Count + (printHeader && value.Rows.Count > 0 ? 1 : 0);
                 var maxColumnIndex = value.Columns.Count;
                 writer.Write($@"<dimension ref=""{GetDimension(maxRowIndex, maxColumnIndex)}""/><x:sheetData>");
 
@@ -653,10 +388,5 @@ namespace MiniExcelLibs.OpenXml
         }
 
         private readonly static UTF8Encoding Utf8WithBom = new System.Text.UTF8Encoding(true);
-
-        private static bool IsDapperRowOrDictionaryStringObject(object value)
-        {
-            return value is IEnumerable<IDictionary<string, object>>;
-        }
     }
 }

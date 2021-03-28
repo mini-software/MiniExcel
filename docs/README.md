@@ -3,6 +3,7 @@
 ## Release  Notes
 
 ### 0.7.0
+- Optimize SaveAs logic
 - [Breaking Change] SaveAs value parameter change type check logic
 
 ### 0.6.0

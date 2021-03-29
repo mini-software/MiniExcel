@@ -23,7 +23,7 @@ Please Check [Release Notes](https://github.com/shps951023/MiniExcel/tree/master
 
 Please Check [Project · todo](https://github.com/shps951023/MiniExcel/projects/1?fullscreen=true)
 
-### Execute a query and map the results to a strongly typed IEnumerable [[Try it]](https://dotnetfiddle.net/fv58u3)
+### Execute a query and map the results to a strongly typed IEnumerable [[Try it]](https://dotnetfiddle.net/w5WD1J)
 
 Recommand to use Stream.Query because of better efficiency.
 
@@ -49,7 +49,7 @@ using (var stream = File.OpenRead(path))
 ![image](https://user-images.githubusercontent.com/12729184/111107423-c8c46b80-8591-11eb-982f-c97a2dafb379.png)
 
 
-### Execute a query and map it to a list of dynamic objects without using head [[Try it]](https://dotnetfiddle.net/fv58u3)
+### Execute a query and map it to a list of dynamic objects without using head [[Try it]](https://dotnetfiddle.net/w5WD1J)
 
 * dynamic key is `A.B.C.D..`
 
@@ -73,7 +73,7 @@ using (var stream = File.OpenRead(path))
 }
 ```
 
-### Execute a query with first header row [[Try it]](https://dotnetfiddle.net/fv58u3)
+### Execute a query with first header row [[Try it]](https://dotnetfiddle.net/w5WD1J)
 
 note : same column name use last right one 
 
@@ -122,7 +122,7 @@ Performance between MiniExcel/ExcelDataReader/ClosedXML/EPPlus
 ![queryfirst](https://user-images.githubusercontent.com/12729184/111072392-6037a900-8515-11eb-9693-5ce2dad1e460.gif)
 
 
-### Create Excel file [[Try it]](https://dotnetfiddle.net/fv58u3)
+### Create Excel file [[Try it]](https://dotnetfiddle.net/w5WD1J)
 
 note : must be a non-abstract type with a public parameterless constructor .
 

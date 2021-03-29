@@ -121,6 +121,15 @@ namespace MiniExcelLibs.Tests
                 Assert.Equal("Github", rows[1].Column1);
                 Assert.Equal(2, rows[1].Column2);
             }
+
+            {
+                var rows = MiniExcel.Query(path,useHeaderRow: true).ToList();
+
+                Assert.Equal("MiniExcel", rows[0].Column1);
+                Assert.Equal(1, rows[0].Column2);
+                Assert.Equal("Github", rows[1].Column1);
+                Assert.Equal(2, rows[1].Column2);
+            }
         }
 
         public class DemoPocoHelloWorld
@@ -146,6 +155,20 @@ namespace MiniExcelLibs.Tests
             using (var stream = File.OpenRead(path))
             {
                 var rows = stream.Query<UserAccount>().ToList();
+
+                Assert.Equal(100, rows.Count());
+
+                Assert.Equal(Guid.Parse("78DE23D2-DCB6-BD3D-EC67-C112BBC322A2"), rows[0].ID);
+                Assert.Equal("Wade", rows[0].Name);
+                Assert.Equal(DateTime.ParseExact("27/09/2020", "dd/MM/yyyy", CultureInfo.InvariantCulture), rows[0].BoD);
+                Assert.Equal(36, rows[0].Age);
+                Assert.False(rows[0].VIP);
+                Assert.Equal(decimal.Parse("5019.12"), rows[0].Points);
+                Assert.Equal(1, rows[0].IgnoredProperty);
+            }
+
+            {
+                var rows = MiniExcel.Query<UserAccount>(path).ToList();
 
                 Assert.Equal(100, rows.Count());
 
@@ -203,9 +226,13 @@ namespace MiniExcelLibs.Tests
                 Assert.Equal("HelloWorld", rows[0].HelloWorld);
                 Assert.Equal("HelloWorld", rows[1].HelloWorld);
             }
+            {
+                var rows = MiniExcel.Query<DemoPocoHelloWorld>(path).Take(2).ToList();
+
+                Assert.Equal("HelloWorld", rows[0].HelloWorld);
+                Assert.Equal("HelloWorld", rows[1].HelloWorld);
+            }
         }
-
-
 
         [Theory()]
         [InlineData(@"..\..\..\..\..\samples\xlsx\ExcelDataReaderCollections\TestChess.xlsx")]

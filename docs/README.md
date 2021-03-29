@@ -2,6 +2,9 @@
 
 ## Release  Notes
 
+### 0.8.0
+- [New] Add MiniExcel.Query by file path method
+
 ### 0.7.0
 - Optimize SaveAs logic
 - [Breaking Change] SaveAs value parameter change type check logic

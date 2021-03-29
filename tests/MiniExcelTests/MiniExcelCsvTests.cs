@@ -32,6 +32,14 @@ namespace MiniExcelLibs.Tests
                 Assert.Equal("A2", rows[1].c1);
                 Assert.Equal("B2", rows[1].c2);
             }
+
+		  {
+			 var rows = MiniExcel.Query(path,useHeaderRow: true).ToList();
+			 Assert.Equal("A1", rows[0].c1);
+			 Assert.Equal("B1", rows[0].c2);
+			 Assert.Equal("A2", rows[1].c1);
+			 Assert.Equal("B2", rows[1].c2);
+		  }
 	   }
 
         [Fact()]
@@ -51,7 +59,15 @@ namespace MiniExcelLibs.Tests
                 Assert.Equal("A2", rows[1].c1);
                 Assert.Equal("B2", rows[1].c2);
             }
-        }
+
+		  {
+			 var rows = MiniExcel.Query<Test>(path).ToList();
+			 Assert.Equal("A1", rows[0].c1);
+			 Assert.Equal("B1", rows[0].c2);
+			 Assert.Equal("A2", rows[1].c1);
+			 Assert.Equal("B2", rows[1].c2);
+		  }
+	   }
 
         [Fact()]
 	   public void Delimiters_Test()

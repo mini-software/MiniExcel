@@ -44,6 +44,13 @@
             }
         }
 
+        public static IEnumerable<T> Query<T>(string path, ExcelType excelType = ExcelType.UNKNOWN, IConfiguration configuration = null) where T : class, new()
+        {
+            using (var stream = File.OpenRead(path))
+                foreach (var item in Query<T>(stream, excelType, configuration))
+                    yield return item;
+        }
+
         public static IEnumerable<T> Query<T>(this Stream stream, ExcelType excelType = ExcelType.UNKNOWN, IConfiguration configuration = null) where T : class, new()
         {
             if (excelType == ExcelType.UNKNOWN)
@@ -57,6 +64,13 @@
                 default:
                     throw new NotSupportedException($"Please Issue for me");
             }
+        }
+
+        public static IEnumerable<dynamic> Query(string path, bool useHeaderRow = false, ExcelType excelType = ExcelType.UNKNOWN, IConfiguration configuration = null) 
+        {
+            using (var stream = File.OpenRead(path))
+                foreach (var item in Query(stream, useHeaderRow, excelType, configuration))
+                    yield return item;
         }
 
         public static IEnumerable<dynamic> Query(this Stream stream, bool useHeaderRow = false, ExcelType excelType = ExcelType.UNKNOWN, IConfiguration configuration = null)

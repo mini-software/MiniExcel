@@ -5,8 +5,8 @@
     <Product>MiniExcel</Product>
     <PackageTags>excel;xlsx;micro-helper;mini;openxml;helper;</PackageTags>
     <Description>
-      A high performance and easy Excel(xlsx,csv) Micro-Helper that avoids OOM and without any third party dependencies to create file or dynamic/type mapping query etc..
-
+      A high performance and easy Excel(xlsx,csv) Micro-Helper that avoids OOM and without third party dependencies to create or dynamic/type POCO mapping query etc..
+      
       Github : https://github.com/shps951023/MiniExcel
       Issues : https://github.com/shps951023/MiniExcel/issues
       Todo : https://github.com/shps951023/MiniExcel/projects/1?fullscreen=true

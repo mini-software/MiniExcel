@@ -19,6 +19,10 @@ You can install the package [from NuGet](https://www.nuget.org/packages/MiniExce
 
 Please Check [Release Notes](https://github.com/shps951023/MiniExcel/tree/master/docs)
 
+### TODO
+
+Please Check [Project · todo](https://github.com/shps951023/MiniExcel/projects/1?fullscreen=true)
+
 ### Execute a query and map the results to a strongly typed IEnumerable [[Try it]](https://dotnetfiddle.net/fv58u3)
 
 Recommand to use Stream.Query because of better efficiency.
@@ -71,6 +75,10 @@ using (var stream = File.OpenRead(path))
 
 ### Execute a query with first header row [[Try it]](https://dotnetfiddle.net/fv58u3)
 
+note : same column name use last right one 
+
+Input Excel :  
+
 | Column1 | Column2 | 
 | -------- | -------- | 
 | MiniExcel     | 1     |  
@@ -116,7 +124,7 @@ Performance between MiniExcel/ExcelDataReader/ClosedXML/EPPlus
 
 ### Create Excel file [[Try it]](https://dotnetfiddle.net/fv58u3)
 
-Note : Must be a non-abstract type with a public parameterless constructor .
+note : must be a non-abstract type with a public parameterless constructor .
 
 Anonymous or strongly type: 
 ```C#
@@ -179,6 +187,8 @@ using (var stream = File.Create(path))
 
 ### SQLite & Dapper `Large Size File` SQL Insert Avoid OOM (out of memory) 
 
+note : please don't call ToList/ToArray methods after Query, it'll load all data into memory
+
 ```C#
 using (var connection = new SQLiteConnection(connectionString))
 {
@@ -239,13 +249,8 @@ e.g : ToList or not memory usage
 ![image](https://user-images.githubusercontent.com/12729184/112587389-752b0b00-8e38-11eb-8a52-cfb76c57e5eb.png)
 
 
-### TODO
-
-Please Check [Project · todo](https://github.com/shps951023/MiniExcel/projects/1?fullscreen=true)
-
 ### Limitations and caveats 
-
-- Same column name use last right one 
+- Not support xls and encrypted file now
 
 ### Reference
 

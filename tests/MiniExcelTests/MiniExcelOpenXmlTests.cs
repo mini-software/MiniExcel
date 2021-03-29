@@ -575,11 +575,25 @@ namespace MiniExcelLibs.Tests
         }
 
         [Fact()]
-        public void QueryFirstAvoidLargeFileOOMTest()
+        public void QueryByLINQExtensionsAvoidLargeFileOOMTest()
         {
             var path = @"..\..\..\..\..\samples\xlsx\Test1,000,000x10\Test1,000,000x10.xlsx";
+
+            {
+                var row = MiniExcel.Query(path).First();
+                Assert.Equal("HelloWorld", row.A);
+            }
+
             using (var stream = File.OpenRead(path))
-                Assert.Equal("HelloWorld", stream.Query().First().A);
+            {
+                var row = stream.Query().First();
+                Assert.Equal("HelloWorld", row.A);
+            }
+
+            {
+                var rows = MiniExcel.Query(path).Take(10);
+                Assert.Equal(10, rows.Count());
+            }
         }
 
         [Fact]

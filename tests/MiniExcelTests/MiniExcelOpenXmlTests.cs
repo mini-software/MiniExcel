@@ -15,11 +15,13 @@ using System.IO.Compression;
 using System.Text;
 using System.Xml.Linq;
 using static MiniExcelLibs.Tests.Utils.MiniExcelOpenXml;
+using MiniExcelLibs.Tests.Utils;
 
 namespace MiniExcelLibs.Tests
 {
     public partial class MiniExcelHelperTests
     {
+
         [Fact()]
         public void CenterEmptyRowsQueryTest()
         {
@@ -324,11 +326,11 @@ namespace MiniExcelLibs.Tests
                     }
                 }
 
-                Assert.Equal("A1:B3", GetFirstSheetDimensionRefValue(path));
+                Assert.Equal("A1:B3", Helpers.GetFirstSheetDimensionRefValue(path));
                 File.Delete(path);
 
                 MiniExcel.SaveAs(path, values, false);
-                Assert.Equal("A1:B2", GetFirstSheetDimensionRefValue(path));
+                Assert.Equal("A1:B2", Helpers.GetFirstSheetDimensionRefValue(path));
                 File.Delete(path);
             }
 
@@ -345,7 +347,7 @@ namespace MiniExcelLibs.Tests
                         var rows = stream.Query(useHeaderRow: false).ToList();
                         Assert.Empty(rows);
                     }
-                    Assert.Equal("A1", GetFirstSheetDimensionRefValue(path));
+                    Assert.Equal("A1", Helpers.GetFirstSheetDimensionRefValue(path));
                 }
                 File.Delete(path);
 
@@ -358,7 +360,7 @@ namespace MiniExcelLibs.Tests
                         Assert.Empty(rows);
                     }
                 }
-                Assert.Equal("A1", GetFirstSheetDimensionRefValue(path));
+                Assert.Equal("A1", Helpers.GetFirstSheetDimensionRefValue(path));
                 File.Delete(path);
             }
 
@@ -389,11 +391,11 @@ namespace MiniExcelLibs.Tests
                     }
                 }
 
-                Assert.Equal("A1:B3", GetFirstSheetDimensionRefValue(path));
+                Assert.Equal("A1:B3", Helpers.GetFirstSheetDimensionRefValue(path));
                 File.Delete(path);
 
                 MiniExcel.SaveAs(path, values, false);
-                Assert.Equal("A1:B2", GetFirstSheetDimensionRefValue(path));
+                Assert.Equal("A1:B2", Helpers.GetFirstSheetDimensionRefValue(path));
                 File.Delete(path);
             }
 
@@ -419,7 +421,7 @@ namespace MiniExcelLibs.Tests
                 var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
                 var table = new DataTable();
                 MiniExcel.SaveAs(path, table);
-                Assert.Equal("A1", GetFirstSheetDimensionRefValue(path));
+                Assert.Equal("A1", Helpers.GetFirstSheetDimensionRefValue(path));
                 {
                     using (var stream = File.OpenRead(path))
                     {
@@ -430,7 +432,7 @@ namespace MiniExcelLibs.Tests
                 }
 
                 MiniExcel.SaveAs(path, table, printHeader: false);
-                Assert.Equal("A1", GetFirstSheetDimensionRefValue(path));
+                Assert.Equal("A1", Helpers.GetFirstSheetDimensionRefValue(path));
                 File.Delete(path);
             }
 
@@ -446,7 +448,7 @@ namespace MiniExcelLibs.Tests
                     table.Rows.Add(@"<test>Hello World</test>", -1234567890, false, DateTime.Now);
                 }
                 MiniExcel.SaveAs(path, table);
-                Assert.Equal("A1:D3", GetFirstSheetDimensionRefValue(path));
+                Assert.Equal("A1:D3", Helpers.GetFirstSheetDimensionRefValue(path));
 
                 {
                     using (var stream = File.OpenRead(path))
@@ -475,7 +477,7 @@ namespace MiniExcelLibs.Tests
 
 
                 MiniExcel.SaveAs(path, table, printHeader: false);
-                Assert.Equal("A1:D2", GetFirstSheetDimensionRefValue(path));
+                Assert.Equal("A1:D2", Helpers.GetFirstSheetDimensionRefValue(path));
                 File.Delete(path);
             }
 
@@ -490,31 +492,13 @@ namespace MiniExcelLibs.Tests
                     table.Rows.Add(@"B");
                 }
                 MiniExcel.SaveAs(path, table);
-                Assert.Equal("A3", GetFirstSheetDimensionRefValue(path));
+                Assert.Equal("A3", Helpers.GetFirstSheetDimensionRefValue(path));
                 File.Delete(path);
             }
         }
 
-        private static string GetFirstSheetDimensionRefValue(string path)
-        {
-            string refV;
-            using (var stream = File.OpenRead(path))
-            using (ZipArchive archive = new ZipArchive(stream, ZipArchiveMode.Read, false, Encoding.UTF8))
-            {
-                var sheet = archive.Entries.Single(w => w.FullName.StartsWith("xl/worksheets/sheet1", StringComparison.OrdinalIgnoreCase));
-                using (var sheetStream = sheet.Open())
-                {
-                    var dimension = XElement.Load(sheetStream)
-                         .Descendants("dimension");
-                    refV = dimension.Single().Attribute("ref").Value;
-                }
-            }
-
-            return refV;
-        }
-
         [Fact()]
-        public void CreateDataTableTest()
+        public void SaveAsByDataTableTest()
         {
             {
                 var now = DateTime.Now;
@@ -625,7 +609,7 @@ namespace MiniExcelLibs.Tests
                     Assert.Equal(2, rows[1].Column2);
                 }
 
-                Assert.Equal("A1:B3", GetFirstSheetDimensionRefValue(path));
+                Assert.Equal("A1:B3", Helpers.GetFirstSheetDimensionRefValue(path));
                 File.Delete(path);
             }
 
@@ -643,7 +627,7 @@ namespace MiniExcelLibs.Tests
                     Assert.Equal(3,rows.Count);
                 }
 
-                Assert.Equal("A1:B3", GetFirstSheetDimensionRefValue(path));
+                Assert.Equal("A1:B3", Helpers.GetFirstSheetDimensionRefValue(path));
                 File.Delete(path);
             }
         }
@@ -661,7 +645,7 @@ namespace MiniExcelLibs.Tests
                 MiniExcel.SaveAs(path, rows);
             }
 
-            Assert.Equal("A1:B3", GetFirstSheetDimensionRefValue(path));
+            Assert.Equal("A1:B3", Helpers.GetFirstSheetDimensionRefValue(path));
 
             using (var stream = File.OpenRead(path))
             {
@@ -694,7 +678,7 @@ namespace MiniExcelLibs.Tests
                 Assert.Empty(rows);
             }
 
-            Assert.Equal("A1", GetFirstSheetDimensionRefValue(path));
+            Assert.Equal("A1", Helpers.GetFirstSheetDimensionRefValue(path));
             File.Delete(path);
 
 
@@ -705,7 +689,7 @@ namespace MiniExcelLibs.Tests
                 MiniExcel.SaveAs(path, rows);
             }
 
-            Assert.Equal("A1:B3", GetFirstSheetDimensionRefValue(path));
+            Assert.Equal("A1:B3", Helpers.GetFirstSheetDimensionRefValue(path));
 
             using (var stream = File.OpenRead(path))
             {
@@ -738,7 +722,7 @@ namespace MiniExcelLibs.Tests
             public decimal Column2 { get; set; }
         }
         [Fact()]
-        public void QueryByStrongTypeTest()
+        public void QueryByStrongTypeParameterTest()
         {
             var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
 
@@ -764,7 +748,7 @@ namespace MiniExcelLibs.Tests
         }
 
         [Fact()]
-        public void QueryDictionaryStringAndObjectTest()
+        public void QueryByDictionaryStringAndObjectParameterTest()
         {
             var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
 
@@ -830,7 +814,7 @@ namespace MiniExcelLibs.Tests
         }
 
         [Fact()]
-        public void BasicCreateTest()
+        public void SaveAsBasicCreateTest()
         {
             var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
             MiniExcel.SaveAs(path, new[] {
@@ -848,13 +832,13 @@ namespace MiniExcelLibs.Tests
                 Assert.Equal(2, rows[1].Column2);
             }
 
-            Assert.Equal("A1:B3", GetFirstSheetDimensionRefValue(path));
+            Assert.Equal("A1:B3", Helpers.GetFirstSheetDimensionRefValue(path));
 
             File.Delete(path);
         }
 
         [Fact()]
-        public void BasicSaveAsStreamTest()
+        public void SaveAsBasicStreamTest()
         {
             {
                 var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
@@ -908,7 +892,7 @@ namespace MiniExcelLibs.Tests
         }
 
         [Fact()]
-        public void SpecialAndTypeCreateTest()
+        public void SaveAsSpecialAndTypeCreateTest()
         {
             var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
             MiniExcel.SaveAs(path, new[] {
@@ -923,7 +907,7 @@ namespace MiniExcelLibs.Tests
         }
 
         [Fact()]
-        public void EpplusCanReadTest()
+        public void SaveAsFileEpplusCanReadTest()
         {
             var now = DateTime.Now;
             var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
@@ -949,7 +933,7 @@ namespace MiniExcelLibs.Tests
         }
 
         [Fact()]
-        public void ClosedXmlCanReadTest()
+        public void SavaAsClosedXmlCanReadTest()
         {
             var now = DateTime.Now;
             var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");

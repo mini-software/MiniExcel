@@ -7,10 +7,14 @@ namespace MiniExcelLibs.Tests.Utils
     using System.Collections.Generic;
     using System.Dynamic;
     using System.Globalization;
+    using System.IO;
+    using System.IO.Compression;
     using System.Linq;
     using System.Reflection;
+    using System.Text;
     using System.Text.RegularExpressions;
-    
+    using System.Xml.Linq;
+
     internal static class Helpers
     {
 	   private static Dictionary<int, string> _IntMappingAlphabet = new Dictionary<int, string>();
@@ -37,6 +41,25 @@ namespace MiniExcelLibs.Tests.Utils
 			 value /= 26;
 		  }
 		  return result;
+	   }
+
+
+	   internal static string GetFirstSheetDimensionRefValue(string path)
+	   {
+		  string refV;
+		  using (var stream = File.OpenRead(path))
+		  using (ZipArchive archive = new ZipArchive(stream, ZipArchiveMode.Read, false, Encoding.UTF8))
+		  {
+			 var sheet = archive.Entries.Single(w => w.FullName.StartsWith("xl/worksheets/sheet1", StringComparison.OrdinalIgnoreCase));
+			 using (var sheetStream = sheet.Open())
+			 {
+				var dimension = XElement.Load(sheetStream)
+					.Descendants("dimension");
+				refV = dimension.Single().Attribute("ref").Value;
+			 }
+		  }
+
+		  return refV;
 	   }
     }
 

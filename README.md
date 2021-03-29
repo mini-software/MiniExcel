@@ -21,6 +21,8 @@ Please Check [Release Notes](https://github.com/shps951023/MiniExcel/tree/master
 
 ### Execute a query and map the results to a strongly typed IEnumerable [[Try it]](https://dotnetfiddle.net/fv58u3)
 
+Recommand to use Stream.Query because of better efficiency.
+
 ```C#
 public class UserAccount
 {
@@ -31,6 +33,10 @@ public class UserAccount
     public bool VIP { get; set; }
     public decimal Points { get; set; }
 }
+
+var rows = MiniExcel.Query<UserAccount>(path);
+
+// or
 
 using (var stream = File.OpenRead(path))
     var rows = stream.Query<UserAccount>();
@@ -48,6 +54,10 @@ using (var stream = File.OpenRead(path))
 | Github     | 2     | 
 
 ```C#
+
+var rows = MiniExcel.Query(path).ToList();
+
+// or 
 using (var stream = File.OpenRead(path))
 {
     var rows = stream.Query().ToList();
@@ -68,6 +78,11 @@ using (var stream = File.OpenRead(path))
 
 
 ```C#
+
+var rows = MiniExcel.Query(useHeaderRow:true).ToList();
+
+// or
+
 using (var stream = File.OpenRead(path))
 {
     var rows = stream.Query(useHeaderRow:true).ToList();
@@ -79,18 +94,29 @@ using (var stream = File.OpenRead(path))
 }
 ```
 
-### Query First
+### Query Support LINQ Extension First/Take/Skip ...etc
 
+Query First
 ```C#
+var row = MiniExcel.Query(path).First();
+Assert.Equal("HelloWorld", row.A);
+
+// or
+
 using (var stream = File.OpenRead(path))
-    Assert.Equal("HelloWorld", stream.Query().First().A);
+{
+    var row = stream.Query().First();
+    Assert.Equal("HelloWorld", row.A);
+}
 ```
 
-performance:  MiniExcel/ExcelDataReader/ClosedXML/EPPlus  
+Performance between MiniExcel/ExcelDataReader/ClosedXML/EPPlus  
 ![queryfirst](https://user-images.githubusercontent.com/12729184/111072392-6037a900-8515-11eb-9693-5ce2dad1e460.gif)
 
 
-### Create Excel Xlsx file [[Try it]](https://dotnetfiddle.net/fv58u3)
+### Create Excel file [[Try it]](https://dotnetfiddle.net/fv58u3)
+
+Note : Must be a non-abstract type with a public parameterless constructor .
 
 Anonymous or strongly type: 
 ```C#
@@ -220,7 +246,6 @@ Please Check [Project · todo](https://github.com/shps951023/MiniExcel/projects/
 ### Limitations and caveats 
 
 - Same column name use last right one 
-- Must be a non-abstract type with a public parameterless constructor 
 
 ### Reference
 

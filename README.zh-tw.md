@@ -1,25 +1,28 @@
 [![NuGet](https://img.shields.io/nuget/v/MiniExcel.svg)](https://www.nuget.org/packages/MiniExcel)  [![](https://img.shields.io/nuget/dt/MiniExcel.svg)](https://www.nuget.org/packages/MiniExcel)  [![Build status](https://ci.appveyor.com/api/projects/status/b2vustrwsuqx45f4/branch/master?svg=true)](https://ci.appveyor.com/project/shps951023/miniexcel/branch/master) [![.NET Framework](https://img.shields.io/badge/.NET%20Framework-%3E%3D%204.6.1-red.svg)](#)  [![.NET Standard](https://img.shields.io/badge/.NET%20Standard-%3E%3D%202.0-red.svg)](#) [![.NET](https://img.shields.io/badge/.NET%20-%3E%3D%205.0-red.svg)](#) 
- 
+
+---
+
+## [English](README.md) /  [繁體中文](README.zh-tw.md)
+
+---
+
 MiniExcel 簡單、高效避免OOM的.NET處理Excel工具。
 
 ---
 
-- [English](README.md)
-- [繁體中文](README.zh-tw.md)
+### 簡介
 
----
-
-
-目前主流框架大多需要將資料全載入到記憶體方便操作，但會導致記憶體消耗問題，MiniExcel嘗試以 stream 角度重寫底層算法邏輯，能讓原本1000多MB占用降低到幾MB，避免記憶體不夠情況。
+目前主流框架大多需要將資料全載入到記憶體方便操作，但這會導致記憶體消耗問題，MiniExcel 嘗試以 Stream 角度寫底層算法邏輯，能讓原本1000多MB占用降低到幾MB，避免記憶體不夠情況。
 
 ### 特點
 - 低記憶體耗用，避免OOM(out of memoery)
-- 支持`即時`操作一行一行資料
+- 支持`即時`操作每行資料
 ![miniexcel_lazy_load](https://user-images.githubusercontent.com/12729184/111034290-e5588a80-844f-11eb-8c84-6fdb6fb8f403.gif)
 - 兼具搭配 LINQ 延遲查詢特性，能辦到低消耗、快速分頁等複雜查詢
 圖片:與主流框架對比的消耗、效率差  
 ![queryfirst](https://user-images.githubusercontent.com/12729184/111072392-6037a900-8515-11eb-9693-5ce2dad1e460.gif)
 - 輕量，不依賴任何套件，DLL小於100KB
+- 簡便操作的 Dapper API 風格
 
 ### 安裝
 
@@ -32,6 +35,33 @@ MiniExcel 簡單、高效避免OOM的.NET處理Excel工具。
 ### TODO
 
 請查看 [Project · todo](https://github.com/shps951023/MiniExcel/projects/1?fullscreen=true)
+
+### 性能測試
+
+以 [**Test1,000,000x10.xlsx**](https://github.com/shps951023/MiniExcel/blob/master/samples/xlsx/Test1%2C000%2C000x10/Test1%2C000%2C000x10.xlsx) 做基準做性能測試，總共 10 萬筆 "HelloWorld"，檔案大小 23 MB
+
+Benchmarks  邏輯可以在 [MiniExcel.Benchmarks](https://github.com/shps951023/MiniExcel/tree/master/benchmarks/MiniExcel.Benchmarks) 查看或是提交 PR，運行指令
+
+```
+dotnet run -p .\benchmarks\MiniExcel.Benchmarks\ -c Release -f netcoreapp3.1 -- -f * --join
+```
+
+最後一次運行結果 :  
+
+```
+BenchmarkDotNet=v0.12.1, OS=Windows 10.0.19042
+Intel Core i7-7700 CPU 3.60GHz (Kaby Lake), 1 CPU, 8 logical and 4 physical cores
+  [Host]     : .NET Framework 4.8 (4.8.4341.0), X64 RyuJIT
+  Job-ZYYABG : .NET Framework 4.8 (4.8.4341.0), X64 RyuJIT
+IterationCount=3  LaunchCount=3  WarmupCount=3  
+```
+
+| 框架            |     記憶體耗用 |       方法 |            平均 |            誤差 |        標準偏差 |        Gen 0 |       Gen 1 |      Gen 2 |
+| --------------- | -------------: | ---------: | --------------: | --------------: | --------------: | -----------: | ----------: | ---------: |
+| MiniExcel       |      299.71 KB | QueryFirst |        564.4 μs |        36.35 μs |        21.63 μs |      72.2656 |     17.5781 |          - |
+| ExcelDataReader |  2629975.14 KB | QueryFirst | 12,455,316.6 μs |   266,606.83 μs |   158,653.45 μs |  642000.0000 |   1000.0000 |          - |
+| Epplus          |  6258769.32 KB | QueryFirst | 23,369,553.1 μs | 2,909,345.17 μs | 1,731,304.64 μs | 1081000.0000 | 273000.0000 | 13000.0000 |
+| ClosedXml       | 12650295.38 KB | QueryFirst | 60,567,701.6 μs | 3,905,377.40 μs | 2,324,027.45 μs | 2036000.0000 | 708000.0000 | 10000.0000 |
 
 ### Query 查詢 Excel 返回`強型別` IEnumerable 資料 [[Try it]](https://dotnetfiddle.net/w5WD1J)
 
@@ -63,9 +93,9 @@ using (var stream = File.OpenRead(path))
 
 * Key 系統預設為 `A,B,C,D...Z`
 
-| MiniExcel     | 1     | 
-| -------- | -------- | 
-| Github     | 2     | 
+| MiniExcel     | 1     |
+| -------- | -------- |
+| Github     | 2     |
 
 ```C#
 
@@ -89,10 +119,10 @@ note : 同名以右邊數據為準
 
 Input Excel :  
 
-| Column1 | Column2 | 
-| -------- | -------- | 
-| MiniExcel     | 1     |  
-| Github     | 2     | 
+| Column1 | Column2 |
+| -------- | -------- |
+| MiniExcel     | 1     |
+| Github     | 2     |
 
 
 ```C#
@@ -127,7 +157,6 @@ using (var stream = File.OpenRead(path))
     Assert.Equal("HelloWorld", row.A);
 }
 ```
-
 
 ### 建立 Excel 檔案 [[Try it]](https://dotnetfiddle.net/w5WD1J)
 
@@ -181,10 +210,10 @@ MiniExcel.SaveAs(path, values);
 
 output : 
 
-| Column1 | Column2 | 
-| -------- | -------- | 
-| MiniExcel     | 1     |  
-| Github     | 2     | 
+| Column1 | Column2 |
+| -------- | -------- |
+| MiniExcel     | 1     |
+| Github     | 2     |
 
 ### SaveAs 支援 Stream [[Try it]](https://dotnetfiddle.net/JOen0e)
 
@@ -219,7 +248,7 @@ using (var connection = new SQLiteConnection(connectionString))
 ![image](https://user-images.githubusercontent.com/12729184/111072579-2dda7b80-8516-11eb-9843-c01a1edc88ec.png)
 
 
-### ASP.NET Core 3.1 or MVC 5 下載 Excel Xlsx API Demo
+### 例子 : ASP.NET Core 3.1 or MVC 5 下載 Excel Xlsx API Demo
 
 ```C#
 public class ExcelController : Controller
@@ -253,7 +282,7 @@ stream.Query(excelType:ExcelType.XLSX);
 ```
 
 
-### 不足之處
+### 侷限與警告
 - 目前不支援 xls 或是加密檔案。
 
 ### 參考

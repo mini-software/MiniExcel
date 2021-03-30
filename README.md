@@ -2,8 +2,7 @@
  
 ---
 
-- [English](README.md)
-- [繁體中文](README.zh-tw.md)
+[English](README.md) /  [繁體中文](README.zh-tw.md)
 
 ---
 
@@ -14,8 +13,6 @@ A high performance and easy Excel(xlsx,csv) Micro-Helper that avoids OOM and wit
 - Avoid large file OOM(out of memoery) by IEnumerable Lazy loading `step by step getting one row cells` not until all rows read in memory  
 e.g:  Comparison between MiniExcel Query and ExcelDataReader/EPPlus/ClosedXml of reading large Xlsx File
 ![miniexcel_lazy_load](https://user-images.githubusercontent.com/12729184/111034290-e5588a80-844f-11eb-8c84-6fdb6fb8f403.gif)
-- 即時顯示數據，而不是先等數據全載入記憶體
-- 支持延遲加載特性，減少集合查詢的次數，特別適合做分頁查詢
 - Mini (Less than 100KB) and without any third party library dependencies
 - Like Dapper dynamic/type mapping query style 
 - Create excel file or stream by AnonymousType/DapperRows/Enumrable/DataTable/Dictionary

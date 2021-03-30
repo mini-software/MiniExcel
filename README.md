@@ -1,21 +1,25 @@
 [![NuGet](https://img.shields.io/nuget/v/MiniExcel.svg)](https://www.nuget.org/packages/MiniExcel)  [![](https://img.shields.io/nuget/dt/MiniExcel.svg)](https://www.nuget.org/packages/MiniExcel)  [![Build status](https://ci.appveyor.com/api/projects/status/b2vustrwsuqx45f4/branch/master?svg=true)](https://ci.appveyor.com/project/shps951023/miniexcel/branch/master) [![.NET Framework](https://img.shields.io/badge/.NET%20Framework-%3E%3D%204.6.1-red.svg)](#)  [![.NET Standard](https://img.shields.io/badge/.NET%20Standard-%3E%3D%202.0-red.svg)](#) [![.NET](https://img.shields.io/badge/.NET%20-%3E%3D%205.0-red.svg)](#) 
- 
+
 ---
 
 [English](README.md) /  [繁體中文](README.zh-tw.md)
 
 ---
 
+### Introduction
 
-A high performance and easy Excel(xlsx,csv) Micro-Helper that avoids OOM and without third party dependencies to create or dynamic/type POCO mapping query etc..
+MiniExcel is simple and efficient to avoid OOM's .NET processing Excel tool.
+
+At present, most popular frameworks need to load all the data into the memory to facilitate operation, but it will cause memory consumption problems. MiniExcel tries to use algorithm from a stream to reduce the original 1000 MB occupation to a few MB to avoid OOM(out of memory).
 
 ### Features
-- Avoid large file OOM(out of memoery) by IEnumerable Lazy loading `step by step getting one row cells` not until all rows read in memory  
-e.g:  Comparison between MiniExcel Query and ExcelDataReader/EPPlus/ClosedXml of reading large Xlsx File
-![miniexcel_lazy_load](https://user-images.githubusercontent.com/12729184/111034290-e5588a80-844f-11eb-8c84-6fdb6fb8f403.gif)
-- Mini (Less than 100KB) and without any third party library dependencies
-- Like Dapper dynamic/type mapping query style 
-- Create excel file or stream by AnonymousType/DapperRows/Enumrable/DataTable/Dictionary
+- Low memory consumption, avoid OOM (out of memory)
+- Support `real-time` operation of each row of data
+  ![miniexcel_lazy_load](https://user-images.githubusercontent.com/12729184/111034290-e5588a80-844f-11eb-8c84-6fdb6fb8f403.gif)
+- Support LINQ deferred execution, it can do low-consumption, fast paging and other complex queries
+  ![queryfirst](https://user-images.githubusercontent.com/12729184/111072392-6037a900-8515-11eb-9693-5ce2dad1e460.gif)
+- Lightweight, does not with any third-party dependencies, DLL is less than 100KB
+- Easy Dapper API style
 
 ### Installation
 
@@ -28,6 +32,35 @@ Please Check [Release Notes](https://github.com/shps951023/MiniExcel/tree/master
 ### TODO
 
 Please Check [Project · todo](https://github.com/shps951023/MiniExcel/projects/1?fullscreen=true)
+
+### Performance
+
+ [**Test1,000,000x10.xlsx**](https://github.com/shps951023/MiniExcel/blob/master/samples/xlsx/Test1%2C000%2C000x10/Test1%2C000%2C000x10.xlsx) as performance test basic file,A total of 10,000,000 "HelloWorld" with a file size of 23 MB
+
+Benchmarks  logic can be found in  [MiniExcel.Benchmarks](https://github.com/shps951023/MiniExcel/tree/master/benchmarks/MiniExcel.Benchmarks) ,and test cli
+
+```
+dotnet run -p .\benchmarks\MiniExcel.Benchmarks\ -c Release -f netcoreapp3.1 -- -f * --join
+```
+
+Output from the latest run is :  
+
+```
+BenchmarkDotNet=v0.12.1, OS=Windows 10.0.19042
+Intel Core i7-7700 CPU 3.60GHz (Kaby Lake), 1 CPU, 8 logical and 4 physical cores
+  [Host]     : .NET Framework 4.8 (4.8.4341.0), X64 RyuJIT
+  Job-ZYYABG : .NET Framework 4.8 (4.8.4341.0), X64 RyuJIT
+IterationCount=3  LaunchCount=3  WarmupCount=3  
+```
+
+| METHOD                     |   mEMORY uSAGE |            Mean |           Error |          StdDev |        Gen 0 |       Gen 1 |      Gen 2 |
+| -------------------------- | -------------: | --------------: | --------------: | --------------: | -----------: | ----------: | ---------: |
+| MiniExcel QueryFirst       |      299.71 KB |        564.4 μs |        36.35 μs |        21.63 μs |      72.2656 |     17.5781 |          - |
+| ExcelDataReader QueryFirst |  2629975.14 KB | 12,455,316.6 μs |   266,606.83 μs |   158,653.45 μs |  642000.0000 |   1000.0000 |          - |
+| Epplus QueryFirst          |  6258769.32 KB | 23,369,553.1 μs | 2,909,345.17 μs | 1,731,304.64 μs | 1081000.0000 | 273000.0000 | 13000.0000 |
+| ClosedXml QueryFirst       | 12650295.38 KB | 60,567,701.6 μs | 3,905,377.40 μs | 2,324,027.45 μs | 2036000.0000 | 708000.0000 | 10000.0000 |
+
+
 
 ### Execute a query and map the results to a strongly typed IEnumerable [[Try it]](https://dotnetfiddle.net/w5WD1J)
 
@@ -59,9 +92,9 @@ using (var stream = File.OpenRead(path))
 
 * dynamic key is `A.B.C.D..`
 
-| MiniExcel     | 1     | 
-| -------- | -------- | 
-| Github     | 2     | 
+| MiniExcel     | 1     |
+| -------- | -------- |
+| Github     | 2     |
 
 ```C#
 
@@ -85,10 +118,10 @@ note : same column name use last right one
 
 Input Excel :  
 
-| Column1 | Column2 | 
-| -------- | -------- | 
-| MiniExcel     | 1     |  
-| Github     | 2     | 
+| Column1 | Column2 |
+| -------- | -------- |
+| MiniExcel     | 1     |
+| Github     | 2     |
 
 
 ```C#
@@ -130,7 +163,14 @@ Performance between MiniExcel/ExcelDataReader/ClosedXML/EPPlus
 
 ### Create Excel file [[Try it]](https://dotnetfiddle.net/w5WD1J)
 
-note : must be a non-abstract type with a public parameterless constructor .
+1. Must be a non-abstract type with a public parameterless constructor .
+
+2. MiniExcel support parameter IEnumerable Deferred Execution, If you want to use least memory, please do not call methods such as ToList
+
+e.g : ToList or not memory usage  
+![image](https://user-images.githubusercontent.com/12729184/112587389-752b0b00-8e38-11eb-8a52-cfb76c57e5eb.png)
+
+
 
 Anonymous or strongly type: 
 ```C#
@@ -176,10 +216,10 @@ MiniExcel.SaveAs(path, values);
 
 Create File Result : 
 
-| Column1 | Column2 | 
-| -------- | -------- | 
-| MiniExcel     | 1     |  
-| Github     | 2     | 
+| Column1 | Column2 |
+| -------- | -------- |
+| MiniExcel     | 1     |
+| Github     | 2     |
 
 ### SaveAs Stream [[Try it]](https://dotnetfiddle.net/JOen0e)
 
@@ -191,7 +231,7 @@ using (var stream = File.Create(path))
 ```
 
 
-### SQLite & Dapper `Large Size File` SQL Insert Avoid OOM (out of memory) 
+### SQLite & Dapper `Large Size File` SQL Insert Avoid OOM
 
 note : please don't call ToList/ToArray methods after Query, it'll load all data into memory
 
@@ -246,13 +286,6 @@ stream.Query(excelType:ExcelType.CSV);
 //or
 stream.Query(excelType:ExcelType.XLSX);
 ```
-
-### Important Note
-
-MiniExcel support parameter IEnumerable Deferred Execution, If you want to use least memory, please do not call methods such as ToList
-
-e.g : ToList or not memory usage  
-![image](https://user-images.githubusercontent.com/12729184/112587389-752b0b00-8e38-11eb-8a52-cfb76c57e5eb.png)
 
 
 ### Limitations and caveats 

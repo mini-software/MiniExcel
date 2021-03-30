@@ -2,15 +2,13 @@
 
 ---
 
-## [English](README.md) /  [繁體中文](README.zh-tw.md)
-
----
-
-MiniExcel 簡單、高效避免OOM的.NET處理Excel工具。
+[English](README.md) /  [繁體中文](README.zh-tw.md)
 
 ---
 
 ### 簡介
+
+MiniExcel 簡單、高效避免OOM的.NET處理Excel工具。
 
 目前主流框架大多需要將資料全載入到記憶體方便操作，但這會導致記憶體消耗問題，MiniExcel 嘗試以 Stream 角度寫底層算法邏輯，能讓原本1000多MB占用降低到幾MB，避免記憶體不夠情況。
 

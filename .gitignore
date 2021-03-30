@@ -17,3 +17,4 @@ NuGet.exe
 .dotnet/*
 .idea/
 /src/packages
+/BenchmarkDotNet.Artifacts

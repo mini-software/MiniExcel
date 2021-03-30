@@ -35,9 +35,9 @@ Please Check [Project · todo](https://github.com/shps951023/MiniExcel/projects/
 
 ### Performance
 
- [**Test1,000,000x10.xlsx**](https://github.com/shps951023/MiniExcel/blob/master/samples/xlsx/Test1%2C000%2C000x10/Test1%2C000%2C000x10.xlsx) as performance test basic file,A total of 10,000,000 "HelloWorld" with a file size of 23 MB
+[**Test1,000,000x10.xlsx**](https://github.com/shps951023/MiniExcel/blob/master/samples/xlsx/Test1%2C000%2C000x10/Test1%2C000%2C000x10.xlsx) as performance test basic file,A total of 10,000,000 "HelloWorld" with a file size of 23 MB
 
-Benchmarks  logic can be found in  [MiniExcel.Benchmarks](https://github.com/shps951023/MiniExcel/tree/master/benchmarks/MiniExcel.Benchmarks) ,and test cli
+Benchmarks  logic can be found in  [MiniExcel.Benchmarks](https://github.com/shps951023/MiniExcel/tree/master/benchmarks/MiniExcel.Benchmarks) , and test cli
 
 ```
 dotnet run -p .\benchmarks\MiniExcel.Benchmarks\ -c Release -f netcoreapp3.1 -- -f * --join
@@ -53,12 +53,27 @@ Intel Core i7-7700 CPU 3.60GHz (Kaby Lake), 1 CPU, 8 logical and 4 physical core
 IterationCount=3  LaunchCount=3  WarmupCount=3  
 ```
 
-| Method                     |   Memory Usage |            Mean |           Error |          StdDev |        Gen 0 |       Gen 1 |      Gen 2 |
-| -------------------------- | -------------: | --------------: | --------------: | --------------: | -----------: | ----------: | ---------: |
-| MiniExcel QueryFirst       |      299.71 KB |        564.4 μs |        36.35 μs |        21.63 μs |      72.2656 |     17.5781 |          - |
-| ExcelDataReader QueryFirst |  2629975.14 KB | 12,455,316.6 μs |   266,606.83 μs |   158,653.45 μs |  642000.0000 |   1000.0000 |          - |
-| Epplus QueryFirst          |  6258769.32 KB | 23,369,553.1 μs | 2,909,345.17 μs | 1,731,304.64 μs | 1081000.0000 | 273000.0000 | 13000.0000 |
-| ClosedXml QueryFirst       | 12650295.38 KB | 60,567,701.6 μs | 3,905,377.40 μs | 2,324,027.45 μs | 2036000.0000 | 708000.0000 | 10000.0000 |
+| Method                       | Max Memory Usage |             Mean |        Gen 0 |       Gen 1 |      Gen 2 |
+| ---------------------------- | ---------------: | ---------------: | -----------: | ----------: | ---------: |
+| 'MiniExcel QueryFirst'       |         0.109 MB |         726.4 us |            - |           - |          - |
+| 'ExcelDataReader QueryFirst' |         15.24 MB |  10,664,238.2 us |  566000.0000 |   1000.0000 |          - |
+| 'MiniExcel Query'            |          17.3 MB |  14,179,334.8 us |  367000.0000 |  96000.0000 |  7000.0000 |
+| 'Epplus QueryFirst'          |         1,452 MB |  18,198,015.4 us |  535000.0000 | 132000.0000 |  9000.0000 |
+| 'ExcelDataReader Query'      |          17.3 MB |  22,565,088.7 us | 1210000.0000 |   2000.0000 |          - |
+| 'Epplus Query'               |         1,451 MB |  23,647,471.1 us | 1451000.0000 | 133000.0000 |  9000.0000 |
+| 'OpenXmlSDK Query'           |         1,412 MB |  52,003,270.1 us |  978000.0000 | 353000.0000 | 11000.0000 |
+| 'OpenXmlSDK QueryFirst'      |         1,413 MB |  52,348,659.1 us |  978000.0000 | 353000.0000 | 11000.0000 |
+| 'ClosedXml QueryFirst'       |         2,158 MB |  66,188,979.6 us | 2156000.0000 | 575000.0000 |  9000.0000 |
+| 'ClosedXml Query'            |         2,184 MB | 191,434,126.6 us | 2165000.0000 | 577000.0000 | 10000.0000 |
+
+
+| Method                   | Max Memory Usage |             Mean |        Gen 0 |        Gen 1 |      Gen 2 |
+| ------------------------ | ---------------: | ---------------: | -----------: | -----------: | ---------: |
+| 'MiniExcel Create Xlsx'  |            15 MB |  11,531,819.8 us | 1020000.0000 |            - |          - |
+| 'Epplus Create Xlsx'     |         1,204 MB |  22,509,717.7 us | 1370000.0000 |   60000.0000 | 30000.0000 |
+| 'OpenXmlSdk Create Xlsx' |         2,621 MB |  42,473,998.9 us | 1370000.0000 |  460000.0000 | 50000.0000 |
+| 'ClosedXml Create Xlsx'  |         7,141 MB | 140,939,928.6 us | 5520000.0000 | 1500000.0000 | 80000.0000 |
+
 
 
 

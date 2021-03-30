@@ -36,7 +36,7 @@ MiniExcel 簡單、高效避免OOM的.NET處理Excel工具。
 
 ### 性能測試
 
-以 [**Test1,000,000x10.xlsx**](https://github.com/shps951023/MiniExcel/blob/master/samples/xlsx/Test1%2C000%2C000x10/Test1%2C000%2C000x10.xlsx) 做基準做性能測試，總共 10 萬筆 "HelloWorld"，檔案大小 23 MB
+以 [**Test1,000,000x10.xlsx**](https://github.com/shps951023/MiniExcel/blob/master/samples/xlsx/Test1%2C000%2C000x10/Test1%2C000%2C000x10.xlsx) 做基準做性能測試，總共 1千萬筆 "HelloWorld"，檔案大小 23 MB
 
 Benchmarks  邏輯可以在 [MiniExcel.Benchmarks](https://github.com/shps951023/MiniExcel/tree/master/benchmarks/MiniExcel.Benchmarks) 查看或是提交 PR，運行指令
 

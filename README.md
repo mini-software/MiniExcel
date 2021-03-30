@@ -53,7 +53,7 @@ Intel Core i7-7700 CPU 3.60GHz (Kaby Lake), 1 CPU, 8 logical and 4 physical core
 IterationCount=3  LaunchCount=3  WarmupCount=3  
 ```
 
-| METHOD                     |   mEMORY uSAGE |            Mean |           Error |          StdDev |        Gen 0 |       Gen 1 |      Gen 2 |
+| Method                     |   Memory Usage |            Mean |           Error |          StdDev |        Gen 0 |       Gen 1 |      Gen 2 |
 | -------------------------- | -------------: | --------------: | --------------: | --------------: | -----------: | ----------: | ---------: |
 | MiniExcel QueryFirst       |      299.71 KB |        564.4 μs |        36.35 μs |        21.63 μs |      72.2656 |     17.5781 |          - |
 | ExcelDataReader QueryFirst |  2629975.14 KB | 12,455,316.6 μs |   266,606.83 μs |   158,653.45 μs |  642000.0000 |   1000.0000 |          - |

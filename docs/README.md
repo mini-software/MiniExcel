@@ -10,7 +10,7 @@
 - [Breaking Change] SaveAs value parameter change type check logic
 
 ### 0.6.0
-- [New] SaveAs support parameter IEnumerable lazy loading
+- [New] SaveAs support parameter IEnumerable deferred execution
 - [Breaking Change] Remove SaveAs by object, now only support Datatable,IEnumerable<T>,ICollection<T>
 - [Bug] Fix empty rows generate excel error (issue: #128)
 
@@ -62,7 +62,7 @@
 - [New] Support SaveAs Stream
 
 ### 0.0.3-beta
-- [New] Support Query dynamic and IEnumrable lazy loading to avoid OOM
+- [New] Support Query dynamic and IEnumrable Deferred Execution to avoid OOM
 - [New] MiniExcelHelper.Create value type change to ICollection
 - [New] Encode XML Value `&apos; &quot; &gt; &lt; &amp;`
 - [New] Check Multiple Sheet Index Order

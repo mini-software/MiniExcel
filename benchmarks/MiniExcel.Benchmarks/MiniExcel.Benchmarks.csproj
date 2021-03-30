@@ -6,11 +6,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="BenchmarkDotNet" Version="0.12.1" />
     <PackageReference Include="ClosedXML" Version="0.95.4" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\..\src\MiniExcel\MiniExcelLibs.csproj" />
+    <PackageReference Include="DocumentFormat.OpenXml" Version="2.12.3" />
+    <PackageReference Include="EPPlus" Version="4.5.3.3" />
+    <PackageReference Include="ExcelDataReader" Version="3.6.0" />
+    <PackageReference Include="MiniExcel" Version="0.8.0" />
   </ItemGroup>
 
 </Project>

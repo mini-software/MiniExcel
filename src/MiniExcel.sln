@@ -12,6 +12,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		..\appveyor.yml = ..\appveyor.yml
 		..\LICENSE.md = ..\LICENSE.md
 		..\README.md = ..\README.md
+		..\README.zh-Hans.md = ..\README.zh-Hans.md
+		..\README.zh-tw.md = ..\README.zh-tw.md
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{CC1E0601-AEC9-42D7-8F6A-3FB3939EED16}"
@@ -25,7 +27,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{3E370222-8
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MiniExcelTests", "..\tests\MiniExcelTests\MiniExcelTests.csproj", "{77F2C86B-0F17-4370-AB38-A089F9DF4ED5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MiniExcel.Benchmarks", "..\benchmarks\MiniExcel.Benchmarks\MiniExcel.Benchmarks.csproj", "{1888285A-B130-48D5-A628-DC85B623FAB8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MiniExcel.Benchmarks", "..\benchmarks\MiniExcel.Benchmarks\MiniExcel.Benchmarks.csproj", "{1888285A-B130-48D5-A628-DC85B623FAB8}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "benchmarks", "benchmarks", "{77A8A169-168B-457F-AB5F-48F30D6BB33C}"
 EndProject

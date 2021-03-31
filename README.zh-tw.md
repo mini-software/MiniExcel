@@ -2,7 +2,7 @@
 
 ---
 
-[English](README.md) /  [繁體中文](README.zh-tw.md)
+[English](README.md) / [繁體中文](README.zh-tw.md) / [简体中文](README.zh-Hans.md)
 
 ---
 
@@ -175,8 +175,8 @@ using (var stream = File.OpenRead(path))
 
 ### 建立 Excel 檔案 [[Try it]](https://dotnetfiddle.net/w5WD1J)
 
-1. 必須是 non-abstract 類別有公開建構式   
-2. MiniExcel SaveAs 支援 `IEnumerable參數``延遲查詢`，除非必要請不要使用 ToList 等方法讀取全部資料到記憶體，請看圖片了解差異   
+1. 必須是 non-abstract 類別有 public parameterless constructor
+2. MiniExcel SaveAs 支援 `IEnumerable參數``延遲查詢`，除非必要請不要使用 ToList 等方法讀取全部資料到記憶體
 
 圖片 : 是否呼叫 ToList 的記憶體差別  
 ![image](https://user-images.githubusercontent.com/12729184/112587389-752b0b00-8e38-11eb-8a52-cfb76c57e5eb.png)
@@ -298,6 +298,7 @@ stream.Query(excelType:ExcelType.XLSX);
 
 ### 侷限與警告
 - 目前不支援 xls (97-2003) 或是加密檔案。
+- 不支援樣式、字體、寬度等`修改`，因為 MiniExcel 概念是只專注於值資料，藉此降低記憶體消耗跟提升效率。
 
 ### 參考
 - 讀取邏輯 :  [ExcelDataReader](https://github.com/ExcelDataReader/ExcelDataReader)   

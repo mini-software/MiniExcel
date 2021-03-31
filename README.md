@@ -2,7 +2,7 @@
 
 ---
 
-[English](README.md) /  [繁體中文](README.zh-tw.md)
+[English](README.md) /  [繁體中文](README.zh-tw.md) / [简体中文](README.zh-Hans.md)
 
 ---
 

@@ -77,58 +77,6 @@ namespace MiniExcelLibs.OpenXml
             }
         }
         
-        internal IEnumerable<ExtendedFormat> ReadStyle(ReadOnlyCollection<ZipArchiveEntry> entries)
-        {
-            using (var stream = entries.Single(w => w.FullName == "xl/styles.xml").Open())
-            using (XmlReader reader = XmlReader.Create(stream, XmlSettings))
-            {
-                if (!reader.IsStartElement("styleSheet", ns))
-                {
-                    yield break;
-                }
-
-                if (!XmlReaderHelper.ReadFirstContent(reader))
-                {
-                    yield break;
-                }
-
-                while (!reader.EOF)
-                {
-                    if (reader.IsStartElement("cellXfs", ns))
-                    {
-                        if (!XmlReaderHelper.ReadFirstContent(reader))
-                        {
-                            yield break;
-                        }
-                        while (!reader.EOF)
-                        {
-                            if (reader.IsStartElement("xf", ns))
-                            {
-                                int.TryParse(reader.GetAttribute("xfId"), out var xfId);
-                                int.TryParse(reader.GetAttribute("numFmtId"), out var numFmtId);
-
-                                yield return new ExtendedFormat()
-                                {
-                                    ParentCellStyleXf = xfId,
-                                    NumberFormatIndex = numFmtId,
-                                };
-                                reader.Skip();
-                            }
-                            else if (!XmlReaderHelper.SkipContent(reader))
-                            {
-                                break;
-                            }
-                        }
-                    }
-                    else if (!XmlReaderHelper.SkipContent(reader))
-                    {
-                        break;
-                    }
-                }
-            }
-        }
-
-        
         internal void ReadWorkbookRels(ReadOnlyCollection<ZipArchiveEntry> entries)
         {
             _sheetRecords = ReadWorkbook(entries).ToList();

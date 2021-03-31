@@ -12,8 +12,10 @@ MiniExcel is simple and efficient to avoid OOM's .NET processing Excel tool.
 
 At present, most popular frameworks need to load all the data into the memory to facilitate operation, but it will cause memory consumption problems. MiniExcel tries to use algorithm from a stream to reduce the original 1000 MB occupation to a few MB to avoid OOM(out of memory).
 
+![image](https://user-images.githubusercontent.com/12729184/113086657-ab8bd000-9214-11eb-9563-c970ac1ee35e.png)
+
 ### Features
-- Low memory consumption, avoid OOM (out of memory)
+- Low memory consumption, avoid OOM (out of memory) and full GC
 - Support `real-time` operation of each row of data
   ![miniexcel_lazy_load](https://user-images.githubusercontent.com/12729184/111034290-e5588a80-844f-11eb-8c84-6fdb6fb8f403.gif)
 - Support LINQ deferred execution, it can do low-consumption, fast paging and other complex queries

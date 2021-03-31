@@ -10,13 +10,16 @@
 
 MiniExcel 簡單、高效避免OOM的.NET處理Excel工具。
 
+
 目前主流框架大多需要將資料全載入到記憶體方便操作，但這會導致記憶體消耗問題，MiniExcel 嘗試以 Stream 角度寫底層算法邏輯，能讓原本1000多MB占用降低到幾MB，避免記憶體不夠情況。
 
+![image](https://user-images.githubusercontent.com/12729184/113084691-1804d000-9211-11eb-9b08-cbb89d9ecdc2.png)
+
 ### 特點
-- 低記憶體耗用，避免OOM(out of memoery)
+- 低記憶體耗用，避免OOM(out of memoery)、頻繁 Full GC 情況
 - 支持`即時`操作每行資料
 ![miniexcel_lazy_load](https://user-images.githubusercontent.com/12729184/111034290-e5588a80-844f-11eb-8c84-6fdb6fb8f403.gif)
-- 兼具搭配 LINQ 延遲查詢特性，能辦到低消耗、快速分頁等複雜查詢
+- 兼具搭配 LINQ 延遲查詢特性，能辦到低消耗、快速分頁等複雜查詢  
 圖片:與主流框架對比的消耗、效率差  
 ![queryfirst](https://user-images.githubusercontent.com/12729184/111072392-6037a900-8515-11eb-9693-5ce2dad1e460.gif)
 - 輕量，不依賴任何套件，DLL小於100KB
@@ -36,7 +39,7 @@ MiniExcel 簡單、高效避免OOM的.NET處理Excel工具。
 
 ### 性能測試
 
-以 [**Test1,000,000x10.xlsx**](https://github.com/shps951023/MiniExcel/blob/master/samples/xlsx/Test1%2C000%2C000x10/Test1%2C000%2C000x10.xlsx) 做基準與主流框架做性能測試，總共 1千萬筆 "HelloWorld"，檔案大小 23 MB
+以 [**Test1,000,000x10.xlsx**](https://github.com/shps951023/MiniExcel/blob/master/samples/xlsx/Test1%2C000%2C000x10/Test1%2C000%2C000x10.xlsx) 做基準與主流框架做性能測試，總共 1千萬筆 "HelloWorld"，檔案大小 23 MB   
 
 Benchmarks  邏輯可以在 [MiniExcel.Benchmarks](https://github.com/shps951023/MiniExcel/tree/master/benchmarks/MiniExcel.Benchmarks) 查看或是提交 PR，運行指令
 
@@ -127,9 +130,9 @@ using (var stream = File.OpenRead(path))
 
 ### 查詢資料以第一行數據當Key [[Try it]](https://dotnetfiddle.net/w5WD1J)
 
-note : 同名以右邊數據為準
+note : 同名以右邊數據為準   
 
-Input Excel :  
+Input Excel :    
 
 | Column1 | Column2 |
 | -------- | -------- |
@@ -172,10 +175,10 @@ using (var stream = File.OpenRead(path))
 
 ### 建立 Excel 檔案 [[Try it]](https://dotnetfiddle.net/w5WD1J)
 
-1. 必須是 non-abstract 類別有公開建構式
-2. MiniExcel SaveAs 支援 `IEnumerable參數``延遲查詢`，除非必要請不要使用 ToList 等方法讀取全部資料到記憶體，請看圖片了解差異
+1. 必須是 non-abstract 類別有公開建構式   
+2. MiniExcel SaveAs 支援 `IEnumerable參數``延遲查詢`，除非必要請不要使用 ToList 等方法讀取全部資料到記憶體，請看圖片了解差異   
 
-圖片 : 是否呼叫 ToList 的記憶體差別
+圖片 : 是否呼叫 ToList 的記憶體差別  
 ![image](https://user-images.githubusercontent.com/12729184/112587389-752b0b00-8e38-11eb-8a52-cfb76c57e5eb.png)
 
 Anonymous or strongly type: 
@@ -293,10 +296,9 @@ stream.Query(excelType:ExcelType.CSV);
 stream.Query(excelType:ExcelType.XLSX);
 ```
 
-
 ### 侷限與警告
-- 目前不支援 xls 或是加密檔案。
+- 目前不支援 xls (97-2003) 或是加密檔案。
 
 ### 參考
-- 讀取邏輯　:  [ExcelDataReader](https://github.com/ExcelDataReader/ExcelDataReader)   
+- 讀取邏輯 :  [ExcelDataReader](https://github.com/ExcelDataReader/ExcelDataReader)   
 - API 設計方式 :　[StackExchange/Dapper](https://github.com/StackExchange/Dapper)    

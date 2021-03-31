@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="12" uniqueCount="12">
+    <si>
+        <t>{{Users.ID}}</t>
+    </si>
+    <si>
+        <t>ID</t>
+    </si>
+    <si>
+        <t>Name</t>
+    </si>
+    <si>
+        <t>Age</t>
+    </si>
+    <si>
+        <t>InDate</t>
+    </si>
+    <si>
+        <t>VIP</t>
+    </si>
+    <si>
+        <t>Points</t>
+    </si>
+    <si>
+        <t>{{Users.Name}}</t>
+    </si>
+    <si>
+        <t>{{Users.Age}</t>
+    </si>
+    <si>
+        <t>{{Users.InDate}}</t>
+    </si>
+    <si>
+        <t>{{Users.VIP}}</t>
+    </si>
+    <si>
+        <t>{{Users.Points}}</t>
+    </si>
+</sst>

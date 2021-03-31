@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"
+    xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="x14ac xr xr2 xr3"
+    xmlns:x14ac="http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac"
+    xmlns:xr="http://schemas.microsoft.com/office/spreadsheetml/2014/revision"
+    xmlns:xr2="http://schemas.microsoft.com/office/spreadsheetml/2015/revision2"
+    xmlns:xr3="http://schemas.microsoft.com/office/spreadsheetml/2016/revision3" xr:uid="{E23F737E-CDD0-4D26-9404-2F35B2B5E7E3}">
+    <dimension ref="A1:F2"/>
+    <sheetViews>
+        <sheetView tabSelected="1" workbookViewId="0">
+            <selection activeCell="F2" sqref="F2"/>
+        </sheetView>
+    </sheetViews>
+    <sheetFormatPr defaultRowHeight="14.4" x14ac:dyDescent="0.3"/>
+    <cols>
+        <col min="1" max="1" width="11.6640625" customWidth="1"/>
+        <col min="2" max="2" width="14" customWidth="1"/>
+        <col min="3" max="3" width="11.33203125" customWidth="1"/>
+        <col min="4" max="4" width="15.109375" customWidth="1"/>
+        <col min="5" max="5" width="11.6640625" customWidth="1"/>
+        <col min="6" max="6" width="12.77734375" customWidth="1"/>
+    </cols>
+    <sheetData>
+        <row r="1" spans="1:6" x14ac:dyDescent="0.3">
+            <c r="A1" t="s">
+                <v>1</v>
+            </c>
+            <c r="B1" t="s">
+                <v>2</v>
+            </c>
+            <c r="C1" t="s">
+                <v>3</v>
+            </c>
+            <c r="D1" t="s">
+                <v>4</v>
+            </c>
+            <c r="E1" t="s">
+                <v>5</v>
+            </c>
+            <c r="F1" t="s">
+                <v>6</v>
+            </c>
+        </row>
+        <row r="2" spans="1:6" x14ac:dyDescent="0.3">
+            <c r="A2" t="s">
+                <v>0</v>
+            </c>
+            <c r="B2" t="s">
+                <v>7</v>
+            </c>
+            <c r="C2" t="s">
+                <v>8</v>
+            </c>
+            <c r="D2" t="s">
+                <v>9</v>
+            </c>
+            <c r="E2" t="s">
+                <v>10</v>
+            </c>
+            <c r="F2" t="s">
+                <v>11</v>
+            </c>
+        </row>
+    </sheetData>
+    <pageMargins left="0.7" right="0.7" top="0.75" bottom="0.75" header="0.3" footer="0.3"/>
+    <pageSetup paperSize="9" orientation="portrait" r:id="rId1"/>
+</worksheet>

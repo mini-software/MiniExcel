@@ -5,6 +5,7 @@
 ### 0.9.0
 - [Bug] Solve cannot convert Cell value to Nullable<T> (issue #138)
 - [Bug] Solve System.IO.Compression referencing twice  (issue #97)
+- [Bug] StrongTypeMapping Query empty row will be generated repeatedly
 
 ### 0.8.0
 - [New] Add MiniExcel.Query by file path method

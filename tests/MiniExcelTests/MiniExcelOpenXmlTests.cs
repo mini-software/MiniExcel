@@ -19,7 +19,8 @@ using MiniExcelLibs.Tests.Utils;
 
 namespace MiniExcelLibs.Tests
 {
-    public partial class MiniExcelHelperTests
+
+    public partial class MiniExcelOpenXmlTests
     {
 
         [Fact()]

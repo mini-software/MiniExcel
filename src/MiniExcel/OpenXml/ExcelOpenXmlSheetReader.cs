@@ -86,14 +86,10 @@ namespace MiniExcelLibs.OpenXml
             using (XmlReader reader = XmlReader.Create(stream, XmlSettings))
             {
                 if (!reader.IsStartElement("Relationships", "http://schemas.openxmlformats.org/package/2006/relationships"))
-                {
                     return;
-                }
 
                 if (!XmlReaderHelper.ReadFirstContent(reader))
-                {
                     return;
-                }
 
                 while (!reader.EOF)
                 {
@@ -123,6 +119,7 @@ namespace MiniExcelLibs.OpenXml
         {
             using (var archive = new ExcelOpenXmlZip(stream))
             {
+                //TODO:need to optimize
                 _SharedStrings = GetSharedStrings(archive);
                 
 
@@ -382,12 +379,22 @@ namespace MiniExcelLibs.OpenXml
                     {
                         object newV = null;
                         object itemValue = (object)item[p.Name];
+
                         if (itemValue == null)
+                            continue;
+
+                        // solve : https://github.com/shps951023/MiniExcel/issues/138
+                        var gt = Nullable.GetUnderlyingType(p.PropertyType);
+                        if(gt != null)
                         {
-                            yield return v;
+                            var vT = itemValue.GetType();
+                            if (vT == gt)
+                                newV = itemValue;
                         }
                         else if (p.PropertyType == typeof(Guid) || p.PropertyType == typeof(Guid?))
+                        {
                             newV = Guid.Parse(itemValue.ToString());
+                        }
                         else if (p.PropertyType == typeof(DateTime) || p.PropertyType == typeof(DateTime?))
                         {
                             var vs = itemValue.ToString();

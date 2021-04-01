@@ -41,7 +41,6 @@ namespace MiniExcelLibs.OpenXml
 
                         var type = value.GetType();
 
-                        //var genericType = type.GetGenericArguments()[0]; not 100% right
                         Type genericType = null;
 
                         //DapperRow
@@ -358,12 +357,12 @@ namespace MiniExcelLibs.OpenXml
             writer.Write("</x:sheetData></x:worksheet>");
         }
 
-        private static void GenerateContentTypesXml(ZipArchive archive, Dictionary<string, ZipPackageInfo> defaults)
+        private static void GenerateContentTypesXml(ZipArchive archive, Dictionary<string, ZipPackageInfo> packages)
         {
             //[Content_Types].xml 
 
             var sb = new StringBuilder(@"<?xml version=""1.0"" encoding=""UTF-8"" standalone=""yes""?><Types xmlns=""http://schemas.openxmlformats.org/package/2006/content-types""><Default ContentType=""application/xml"" Extension=""xml""/><Default ContentType=""application/vnd.openxmlformats-package.relationships+xml"" Extension=""rels""/>");
-            foreach (var p in defaults)
+            foreach (var p in packages)
                 sb.Append($"<Override ContentType=\"{p.Value.ContentType}\" PartName=\"/{p.Key}\" />");
             sb.Append("</Types>");
 

@@ -369,12 +369,13 @@ namespace MiniExcelLibs.OpenXml
         internal IEnumerable<T> Query<T>(Stream stream) where T : class, new()
         {
             var type = typeof(T);
-            var props = Helpers.GetPropertiesWithSetter(type);
+            var props = Helpers.GetPropertiesWithSetterAndExcludeNullableType(type);
             foreach (var item in new ExcelOpenXmlSheetReader().Query(stream, true))
             {
                 var v = new T();
-                foreach (var p in props)
+                foreach (var pInfo in props)
                 {
+                    var p = pInfo.Property;
                     if (item.ContainsKey(p.Name))
                     {
                         object newV = null;
@@ -382,20 +383,12 @@ namespace MiniExcelLibs.OpenXml
 
                         if (itemValue == null)
                             continue;
-
-                        // solve : https://github.com/shps951023/MiniExcel/issues/138
-                        var gt = Nullable.GetUnderlyingType(p.PropertyType);
-                        if(gt != null)
-                        {
-                            var vT = itemValue.GetType();
-                            if (vT == gt)
-                                newV = itemValue;
-                        }
-                        else if (p.PropertyType == typeof(Guid) || p.PropertyType == typeof(Guid?))
+                        
+                        if (pInfo.ExcludeNullableType == typeof(Guid))
                         {
                             newV = Guid.Parse(itemValue.ToString());
                         }
-                        else if (p.PropertyType == typeof(DateTime) || p.PropertyType == typeof(DateTime?))
+                        else if (pInfo.ExcludeNullableType == typeof(DateTime))
                         {
                             var vs = itemValue.ToString();
                             if (DateTime.TryParse(vs, out var _v))
@@ -407,7 +400,7 @@ namespace MiniExcelLibs.OpenXml
                             else
                                 throw new InvalidCastException($"{vs} can't cast to datetime");
                         }
-                        else if (p.PropertyType == typeof(bool) || p.PropertyType == typeof(bool?))
+                        else if (pInfo.ExcludeNullableType == typeof(bool))
                         {
                             var vs = itemValue.ToString();
                             if (vs == "1")
@@ -417,8 +410,9 @@ namespace MiniExcelLibs.OpenXml
                             else
                                 newV = bool.Parse(vs);
                         }
+                        // solve : https://github.com/shps951023/MiniExcel/issues/138
                         else
-                            newV = Convert.ChangeType(itemValue, p.PropertyType);
+                            newV = Convert.ChangeType(itemValue, pInfo.ExcludeNullableType);
                         p.SetValue(v, newV);
                     }
                 }

@@ -6,7 +6,7 @@
     <PackageTags>excel;xlsx;micro-helper;mini;openxml;helper;</PackageTags>
     <Description>
       A high performance and easy Excel(xlsx,csv) Micro-Helper that avoids OOM and without third party dependencies to create or dynamic/type POCO mapping query etc..
-      
+
       Github : https://github.com/shps951023/MiniExcel
       Issues : https://github.com/shps951023/MiniExcel/issues
       Todo : https://github.com/shps951023/MiniExcel/projects/1?fullscreen=true
@@ -23,7 +23,7 @@
     <PackageReleaseNotes>Please Check [Release Notes](https://github.com/shps951023/MiniExcel/tree/master/docs)</PackageReleaseNotes>
     <RepositoryType>Github</RepositoryType>
   </PropertyGroup>
-  <ItemGroup>
-    <Reference Include="System.IO.Compression" />
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net461'">
+    <Reference Include="System.IO.Compression"  />
   </ItemGroup>
 </Project>

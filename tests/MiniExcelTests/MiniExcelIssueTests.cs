@@ -15,6 +15,26 @@ namespace MiniExcelLibs.Tests
             {
                 var rows = MiniExcel.Query(path, true).ToList();
                 Assert.Equal(6, rows.Count);
+
+                foreach (var index in new[] { 0, 2, 5 })
+                {
+                    Assert.Equal(1, rows[index].實單每日損益);
+                    Assert.Equal(2, rows[index].程式每日損益);
+                    Assert.Equal("測試商品1", rows[index].商品);
+                    Assert.Equal(111.11, rows[index].滿倉口數);
+                    Assert.Equal(111.11, rows[index].波段);
+                    Assert.Equal(111.11, rows[index].當沖);
+                }
+
+                foreach (var index in new[] { 1, 3, 4 })
+                {
+                    Assert.Null(rows[index].實單每日損益);
+                    Assert.Null(rows[index].程式每日損益);
+                    Assert.Null(rows[index].商品);
+                    Assert.Null(rows[index].滿倉口數);
+                    Assert.Null(rows[index].波段);
+                    Assert.Null(rows[index].當沖);
+                }
             }
             {
 

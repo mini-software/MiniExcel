@@ -301,8 +301,8 @@ namespace MiniExcelLibs.OpenXml
                                                 var cellValue = ReadCell(reader, columnIndex, withoutCR, out var _columnIndex);
                                                 columnIndex = _columnIndex;
 
-                                                // xfindex 
-                                                if (!string.IsNullOrEmpty(aS))
+                                                // TODO: bad code smell 
+                                                if (!string.IsNullOrEmpty(aS)) // if c with s meaning is custom style need to check type by xl/style.xml
                                                 {
                                                     int xfIndex = -1;
                                                     if(int.TryParse(aS, NumberStyles.Any, CultureInfo.InvariantCulture, out var styleIndex))
@@ -316,28 +316,48 @@ namespace MiniExcelLibs.OpenXml
                                                     if (UseHeaderRow)
                                                     {
                                                         if (rowIndex == 0)
-                                                            headRows.Add(columnIndex, _style.ConvertValueByStyleFormat(xfIndex, cellValue).ToString());
+                                                        {
+                                                            var customStyleCellValue = _style.ConvertValueByStyleFormat(xfIndex, cellValue)?.ToString();
+                                                            if(!string.IsNullOrWhiteSpace(customStyleCellValue))
+                                                                headRows.Add(columnIndex, customStyleCellValue);
+                                                        }
                                                         else
                                                         {
-                                                            var v = _style.ConvertValueByStyleFormat(int.Parse(aS), cellValue);
-                                                            cell[headRows[columnIndex]] = _style.ConvertValueByStyleFormat(xfIndex, cellValue);
+                                                            if (headRows.ContainsKey(columnIndex))
+                                                            {
+                                                                var key = headRows[columnIndex];
+                                                                var v = _style.ConvertValueByStyleFormat(int.Parse(aS), cellValue);
+                                                                cell[key] = _style.ConvertValueByStyleFormat(xfIndex, cellValue);
+                                                            }
                                                         }
                                                     }
                                                     else
+                                                    {
+                                                        //if not using First Head then using A,B,C as index
                                                         cell[Helpers.GetAlphabetColumnName(columnIndex)] = _style.ConvertValueByStyleFormat(xfIndex, cellValue);
+                                                    }
                                                 }
                                                 else
                                                 {
-                                                    //if not using First Head then using 1,2,3 as index
                                                     if (UseHeaderRow)
                                                     {
                                                         if (rowIndex == 0)
-                                                            headRows.Add(columnIndex, cellValue.ToString());
+                                                        {
+                                                            var valueString = cellValue?.ToString();
+                                                            if (!string.IsNullOrWhiteSpace(valueString))
+                                                                headRows.Add(columnIndex, valueString);
+                                                        }
                                                         else
-                                                            cell[headRows[columnIndex]] = cellValue;
+                                                        {
+                                                            if (headRows.ContainsKey(columnIndex))
+                                                                cell[headRows[columnIndex]] = cellValue;
+                                                        }
                                                     }
                                                     else
+                                                    {
+                                                        //if not using First Head then using A,B,C as index
                                                         cell[Helpers.GetAlphabetColumnName(columnIndex)] = cellValue;
+                                                    }
                                                 }
                                             }
                                             else if (!XmlReaderHelper.SkipContent(reader))

@@ -2,6 +2,10 @@
 
 ## Release  Notes
 
+### 0.10.0
+- [New] Query dynamic with first head will ignore blank/whitespace columns
+- [New] Query type mapping support Custom POCO excel column name/ignore attribute
+
 ### 0.9.1 
 - [Bug] Solve cannot convert Cell value to Nullable<T> (issue #138)
 

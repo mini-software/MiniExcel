@@ -16,6 +16,7 @@ using System.Text;
 using System.Xml.Linq;
 using static MiniExcelLibs.Tests.Utils.MiniExcelOpenXml;
 using MiniExcelLibs.Tests.Utils;
+using static MiniExcelLibs.Utils.Helpers;
 
 namespace MiniExcelLibs.Tests
 {
@@ -23,6 +24,57 @@ namespace MiniExcelLibs.Tests
     public partial class MiniExcelOpenXmlTests
     {
 
+        [Fact]
+        public void CustomAttributeWihoutVaildPropertiesTest()
+        {
+            var path = @"..\..\..\..\..\samples\xlsx\TestCustomExcelColumnAttribute.xlsx";
+            Assert.Throws<System.InvalidOperationException>(() => MiniExcel.Query<CustomAttributesWihoutVaildPropertiesTestPoco>(path).ToList());
+        }
+
+        [Fact]
+        public void CustomAttributesTest()
+        {
+            var path = @"..\..\..\..\..\samples\xlsx\TestCustomExcelColumnAttribute.xlsx";
+            var rows = MiniExcel.Query<ExcelAttributeDemo>(path).ToList();
+            Assert.Equal(10, rows.Count);
+            Assert.Equal("Column1", rows[0].Test1);
+            Assert.Equal("Column2", rows[0].Test2);
+            Assert.Null(rows[0].Test3);
+            Assert.Equal("Test4", rows[0].Test4);
+            Assert.Null(rows[0].Test5);
+            Assert.Null(rows[0].Test6);
+        }
+
+        public class CustomAttributesWihoutVaildPropertiesTestPoco
+        {
+            [ExcelIgnore]
+            public string Test3 { get; set; }
+            public string Test5 { get; }
+            public string Test6 { get; private set; }
+        }
+
+        public class ExcelAttributeDemo
+        {
+            [ExcelColumnName("Column1")]
+            public string Test1 { get; set; }
+            [ExcelColumnName("Column2")]
+            public string Test2 { get; set; }
+            [ExcelIgnore]
+            public string Test3 { get; set; }
+            public string Test4 { get; set; }
+            public string Test5 { get; }
+            public string Test6 { get; private set; }
+        }
+
+        [Fact()]
+        public void QueryCastToIDictionary()
+        {
+            var path = @"..\..\..\..\..\samples\xlsx\TestCenterEmptyRow\TestCenterEmptyRow.xlsx";
+            foreach (IDictionary<string, object> row in MiniExcel.Query(path))
+            {
+
+            }
+        }
         [Fact()]
         public void CenterEmptyRowsQueryTest()
         {

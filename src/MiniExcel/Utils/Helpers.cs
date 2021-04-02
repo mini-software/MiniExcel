@@ -9,7 +9,7 @@
     using System.Reflection;
     using System.Text.RegularExpressions;
 
-    internal static class Helpers
+    internal static partial class Helpers
     {
         private static Dictionary<int, string> _IntMappingAlphabet = new Dictionary<int, string>();
         private static Dictionary<string, int> _AlphabetMappingInt = new Dictionary<string, int>();
@@ -69,30 +69,44 @@
                          BindingFlags.Instance);
         }
 
-        internal class PropertyInfoAndNullableUnderLyingType
+        internal class ExcelCustomPropertyInfo
         {
+            public int? ExcelColumnIndex { get; set; }
+            public string ExcelColumnName { get; set; }
             public PropertyInfo Property { get; set; }
             public Type ExcludeNullableType { get; set; }
             public bool Nullable { get; internal set; }
         }
 
-
-        public static PropertyInfoAndNullableUnderLyingType[] GetPropertiesWithSetterAndExcludeNullableType(this Type type)
+        internal static List<ExcelCustomPropertyInfo> GetExcelCustomPropertyInfos(Type type)
         {
-            return type.GetProperties(BindingFlags.SetProperty | BindingFlags.Public | BindingFlags.Instance)
-                .Where(prop => prop.GetSetMethod() != null)
-                // solve : https://github.com/shps951023/MiniExcel/issues/138
-                .Select(p =>
-                {
-                    var gt = Nullable.GetUnderlyingType(p.PropertyType);
-                    return new PropertyInfoAndNullableUnderLyingType
-                    {
-                        Property = p,
-                        ExcludeNullableType = gt ?? p.PropertyType,
-                        Nullable = gt != null ? true : false
-                    };
-                })
-                .ToArray();
+            var props = type.GetProperties(BindingFlags.SetProperty | BindingFlags.Public | BindingFlags.Instance)
+                 .Where(prop => prop.GetSetMethod() != null
+                      &&
+                      !(prop.GetCustomAttribute<ExcelIgnoreAttribute>()?.ExcelIgnore == true)
+                 ) /*ignore without set*/
+                 // solve : https://github.com/shps951023/MiniExcel/issues/138
+                 .Select(p =>
+                 {
+                     var gt = Nullable.GetUnderlyingType(p.PropertyType);
+                     return new ExcelCustomPropertyInfo
+                     {
+                         Property = p,
+                         ExcludeNullableType = gt ?? p.PropertyType,
+                         Nullable = gt != null ? true : false
+                     };
+                 })
+                 .ToList();
+            if (props.Count == 0)
+                throw new InvalidOperationException($"{type.Name} un-ignore properties count can't be 0");
+
+            foreach (var cp in props)
+            {
+                cp.ExcelColumnName = cp.Property.GetCustomAttribute<ExcelColumnNameAttribute>()?.ExcelColumnName;
+                if (cp.ExcelColumnName == null)
+                    cp.ExcelColumnName = cp.Property.Name;
+            }
+            return props;
         }
 
         internal static bool IsDapperRows<T>()

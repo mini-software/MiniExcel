@@ -389,17 +389,16 @@ namespace MiniExcelLibs.OpenXml
         internal IEnumerable<T> Query<T>(Stream stream) where T : class, new()
         {
             var type = typeof(T);
-            var props = Helpers.GetPropertiesWithSetterAndExcludeNullableType(type);
+            var props = Helpers.GetExcelCustomPropertyInfos(type);
             foreach (var item in new ExcelOpenXmlSheetReader().Query(stream, true))
             {
                 var v = new T();
                 foreach (var pInfo in props)
                 {
-                    var p = pInfo.Property;
-                    if (item.ContainsKey(p.Name))
+                    if (item.ContainsKey(pInfo.ExcelColumnName))
                     {
                         object newV = null;
-                        object itemValue = (object)item[p.Name];
+                        object itemValue = (object)item[pInfo.ExcelColumnName];
 
                         if (itemValue == null)
                             continue;
@@ -433,7 +432,7 @@ namespace MiniExcelLibs.OpenXml
                         // solve : https://github.com/shps951023/MiniExcel/issues/138
                         else
                             newV = Convert.ChangeType(itemValue, pInfo.ExcludeNullableType);
-                        p.SetValue(v, newV);
+                        pInfo.Property.SetValue(v, newV);
                     }
                 }
                 yield return v;

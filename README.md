@@ -248,6 +248,42 @@ using (var stream = File.Create(path))
 ```
 
 
+
+### Excel Column Name/Ignore Attribute
+
+e.g
+
+input excel :  
+
+| Test1 | Test2 | Test3 | Test4 | Test5 | Test6 | Column1 | Column2 |
+| ----- | ----- | ----- | ----- | ----- | ----- | ------- | ------- |
+| Test1 | Test2 | Test3 | Test4 | Test5 | Test6 | Column1 | Column2 |
+
+```C#
+public class ExcelAttributeDemo
+{
+    [ExcelColumnName("Column1")]
+    public string Test1 { get; set; }
+    [ExcelColumnName("Column2")]
+    public string Test2 { get; set; }
+    [ExcelIgnore]
+    public string Test3 { get; set; }
+    public string Test4 { get; set; }
+    public string Test5 { get; }
+    public string Test6 { get; private set; }
+}
+
+var rows = MiniExcel.Query<ExcelAttributeDemo>(path).ToList();
+Assert.Equal("Column1", rows[0].Test1);
+Assert.Equal("Column2", rows[0].Test2);
+Assert.Null(rows[0].Test3);
+Assert.Equal("Test4", rows[0].Test4);
+Assert.Null(rows[0].Test5);
+Assert.Null(rows[0].Test6);
+```
+
+
+
 ### SQLite & Dapper `Large Size File` SQL Insert Avoid OOM
 
 note : please don't call ToList/ToArray methods after Query, it'll load all data into memory
@@ -305,7 +341,20 @@ stream.Query(excelType:ExcelType.XLSX);
 ```
 
 
+
+### Dynamic Query cast row to `IDictionary<string,object>` 
+
+```C#
+foreach(IDictionary<string,object> row = MiniExcel.Query(path))
+{
+    //..
+}
+```
+
+
+
 ### Limitations and caveats 
+
 - Not support xls and encrypted file now
 
 ### Reference

@@ -11,12 +11,9 @@ using System.Collections.Generic;
 using System.Data.SQLite;
 using Dapper;
 using System.Globalization;
-using System.IO.Compression;
-using System.Text;
-using System.Xml.Linq;
 using static MiniExcelLibs.Tests.Utils.MiniExcelOpenXml;
 using MiniExcelLibs.Tests.Utils;
-using static MiniExcelLibs.Utils.Helpers;
+using MiniExcelLibs.Attributes;
 
 namespace MiniExcelLibs.Tests
 {

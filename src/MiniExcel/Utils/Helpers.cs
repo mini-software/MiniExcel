@@ -1,5 +1,6 @@
 ﻿namespace MiniExcelLibs.Utils
 {
+    using MiniExcelLibs.Attributes;
     using System;
     using System.Collections;
     using System.Collections.Generic;

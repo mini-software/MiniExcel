@@ -24,6 +24,6 @@
     <RepositoryType>Github</RepositoryType>
   </PropertyGroup>
   <ItemGroup Condition=" '$(TargetFramework)' == 'net461'">
-    <Reference Include="System.IO.Compression"  />
+    <Reference Include="System.IO.Compression" />
   </ItemGroup>
 </Project>

@@ -2,7 +2,7 @@
 
 ---
 
-[English](README.md) /  [繁體中文](README.zh-tw.md) / [简体中文](README.zh-Hans.md)
+[English](https://github.com/shps951023/MiniExcel) / [繁體中文](https://github.com/shps951023/MiniExcel/blob/master/README.zh-tw.md) / [简体中文](https://github.com/shps951023/MiniExcel/blob/master/README.zh-Hans.md)README.zh-Hans.md)
 
 ---
 

@@ -81,33 +81,32 @@
 
         internal static List<ExcelCustomPropertyInfo> GetExcelCustomPropertyInfos(Type type)
         {
-            var props = type.GetProperties(BindingFlags.SetProperty | BindingFlags.Public | BindingFlags.Instance)
-                 .Where(prop => prop.GetSetMethod() != null
-                      &&
-                      !(prop.GetCustomAttribute<ExcelIgnoreAttribute>()?.ExcelIgnore == true)
-                 ) /*ignore without set*/
+            List<ExcelCustomPropertyInfo> props = GetExcelPropertyInfo(type, BindingFlags.SetProperty | BindingFlags.Public | BindingFlags.Instance)
+                .Where(prop => prop.Property.IsSupportSetMethod() && !prop.Property.GetAttributeValue((ExcelIgnoreAttribute x) => x.ExcelIgnore))
+                .ToList() /*ignore without set*/;
+
+            if (props.Count == 0)
+                throw new InvalidOperationException($"{type.Name} un-ignore properties count can't be 0");
+
+            return props;
+        }
+
+        private static IEnumerable<ExcelCustomPropertyInfo> GetExcelPropertyInfo(Type type, BindingFlags bindingFlags)
+        {
+            return type.GetProperties(bindingFlags)
                  // solve : https://github.com/shps951023/MiniExcel/issues/138
                  .Select(p =>
                  {
                      var gt = Nullable.GetUnderlyingType(p.PropertyType);
+                     var excelAttr = p.GetAttribute<ExcelColumnNameAttribute>();
                      return new ExcelCustomPropertyInfo
                      {
                          Property = p,
                          ExcludeNullableType = gt ?? p.PropertyType,
-                         Nullable = gt != null ? true : false
+                         Nullable = gt != null ? true : false,
+                         ExcelColumnName = excelAttr?.ExcelColumnName ?? p.Name
                      };
-                 })
-                 .ToList();
-            if (props.Count == 0)
-                throw new InvalidOperationException($"{type.Name} un-ignore properties count can't be 0");
-
-            foreach (var cp in props)
-            {
-                cp.ExcelColumnName = cp.Property.GetCustomAttribute<ExcelColumnNameAttribute>()?.ExcelColumnName;
-                if (cp.ExcelColumnName == null)
-                    cp.ExcelColumnName = cp.Property.Name;
-            }
-            return props;
+                 });
         }
 
         internal static bool IsDapperRows<T>()

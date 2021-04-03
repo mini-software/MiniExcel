@@ -353,3 +353,7 @@ foreach(IDictionary<string,object> row = MiniExcel.Query(path))
 ### 參考
 - 讀取邏輯 :  [ExcelDataReader](https://github.com/ExcelDataReader/ExcelDataReader)   
 - API 設計方式 :　[StackExchange/Dapper](https://github.com/StackExchange/Dapper)    
+
+### Contributors :  
+
+![](https://contrib.rocks/image?repo=shps951023/MiniExcel)

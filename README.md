@@ -361,3 +361,7 @@ foreach(IDictionary<string,object> row = MiniExcel.Query(path))
 
 - [ExcelDataReader](https://github.com/ExcelDataReader/ExcelDataReader)   
 - [StackExchange/Dapper](https://github.com/StackExchange/Dapper)    
+
+### Contributors :  
+
+![](https://contrib.rocks/image?repo=shps951023/MiniExcel)

@@ -1,24 +1,19 @@
-﻿namespace MiniExcelLibs.Attributes
+namespace MiniExcelLibs.Attributes
 {
+    using MiniExcelLibs.Utils;
     using System;
     [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false)]
     public class ExcelColumnNameAttribute : Attribute
     {
         public string ExcelColumnName { get; set; }
-
-        public int? ExcelColumnIndex { get; set; }
-
-        public ExcelColumnNameAttribute(string excelColumnName) : this(excelColumnName,0) { }
-
-        public ExcelColumnNameAttribute(string excelColumnName, int columnIndex) {
-            ExcelColumnName = excelColumnName;
-            ExcelColumnIndex = columnIndex;
-        }
+        public ExcelColumnNameAttribute(string excelColumnName) => ExcelColumnName = excelColumnName;
     }
 
-    [AttributeUsage(AttributeTargets.Class , AllowMultiple = false)]
-    public class ExcelAttribute : Attribute
+    [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false)]
+    public class ExcelColumnIndexAttribute : Attribute
     {
-        
+	   public int ExcelColumnIndex { get; set; }
+	   public ExcelColumnIndexAttribute(string columnName) => ExcelColumnIndex = Helpers.GetColumnIndex(columnName);
+	   public ExcelColumnIndexAttribute(int columnIndex) => ExcelColumnIndex = columnIndex;
     }
 }

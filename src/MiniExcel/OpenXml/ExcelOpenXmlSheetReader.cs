@@ -12,7 +12,7 @@ using System.Xml.Linq;
 
 namespace MiniExcelLibs.OpenXml
 {
-    internal class ExcelOpenXmlSheetReader
+    internal class ExcelOpenXmlSheetReader : IExcelReader
     {
         private const string ns = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
         private List<SheetRecord> _sheetRecords = null;
@@ -76,7 +76,7 @@ namespace MiniExcelLibs.OpenXml
                 }
             }
         }
-        
+
         internal void ReadWorkbookRels(ReadOnlyCollection<ZipArchiveEntry> entries)
         {
             _sheetRecords = ReadWorkbook(entries).ToList();
@@ -115,13 +115,13 @@ namespace MiniExcelLibs.OpenXml
             }
         }
 
-        internal IEnumerable<IDictionary<string, object>> Query(Stream stream, bool UseHeaderRow = false)
+        public IEnumerable<IDictionary<string, object>> Query(Stream stream, bool UseHeaderRow = false)
         {
             using (var archive = new ExcelOpenXmlZip(stream))
             {
                 //TODO:need to optimize
                 _SharedStrings = GetSharedStrings(archive);
-                
+
 
                 // if sheets count > 1 need to read xl/_rels/workbook.xml.rels and 
                 var sheets = archive.Entries.Where(w => w.FullName.StartsWith("xl/worksheets/sheet", StringComparison.OrdinalIgnoreCase)
@@ -148,8 +148,8 @@ namespace MiniExcelLibs.OpenXml
                 using (XmlReader reader = XmlReader.Create(firstSheetEntryStream, XmlSettings))
                 {
                     while (reader.Read())
-                    {                      
-                        if (reader.IsStartElement("c",ns))
+                    {
+                        if (reader.IsStartElement("c", ns))
                         {
                             var r = reader.GetAttribute("r");
                             if (r != null)
@@ -176,7 +176,7 @@ namespace MiniExcelLibs.OpenXml
                                 throw new InvalidOperationException("Without sheet dimension data");
                             var rs = @ref.Split(':');
                             // issue : https://github.com/shps951023/MiniExcel/issues/102
-                            if (ReferenceHelper.ParseReference(rs.Length==2?rs[1]:rs[0], out int cIndex, out int rIndex))
+                            if (ReferenceHelper.ParseReference(rs.Length == 2 ? rs[1] : rs[0], out int cIndex, out int rIndex))
                             {
                                 maxColumnIndex = cIndex - 1;
                                 maxRowIndex = rIndex - 1;
@@ -209,7 +209,7 @@ namespace MiniExcelLibs.OpenXml
                                     if (reader.IsStartElement("row", ns))
                                     {
                                         maxRowIndex++;
-                                            
+
                                         if (!XmlReaderHelper.ReadFirstContent(reader))
                                             continue;
 
@@ -223,8 +223,8 @@ namespace MiniExcelLibs.OpenXml
                                                     cellIndex++;
                                                     maxColumnIndex = Math.Max(maxColumnIndex, cellIndex);
                                                 }
-                                                    
-                                                
+
+
                                                 if (!XmlReaderHelper.SkipContent(reader))
                                                     break;
                                             }
@@ -305,7 +305,7 @@ namespace MiniExcelLibs.OpenXml
                                                 if (!string.IsNullOrEmpty(aS)) // if c with s meaning is custom style need to check type by xl/style.xml
                                                 {
                                                     int xfIndex = -1;
-                                                    if(int.TryParse(aS, NumberStyles.Any, CultureInfo.InvariantCulture, out var styleIndex))
+                                                    if (int.TryParse(aS, NumberStyles.Any, CultureInfo.InvariantCulture, out var styleIndex))
                                                     {
                                                         xfIndex = styleIndex;
                                                     }
@@ -318,7 +318,7 @@ namespace MiniExcelLibs.OpenXml
                                                         if (rowIndex == 0)
                                                         {
                                                             var customStyleCellValue = _style.ConvertValueByStyleFormat(xfIndex, cellValue)?.ToString();
-                                                            if(!string.IsNullOrWhiteSpace(customStyleCellValue))
+                                                            if (!string.IsNullOrWhiteSpace(customStyleCellValue))
                                                                 headRows.Add(columnIndex, customStyleCellValue);
                                                         }
                                                         else
@@ -386,7 +386,7 @@ namespace MiniExcelLibs.OpenXml
             }
         }
 
-        internal IEnumerable<T> Query<T>(Stream stream) where T : class, new()
+        public IEnumerable<T> Query<T>(Stream stream) where T : class, new()
         {
             var type = typeof(T);
             var props = Helpers.GetExcelCustomPropertyInfos(type);
@@ -402,7 +402,7 @@ namespace MiniExcelLibs.OpenXml
 
                         if (itemValue == null)
                             continue;
-                        
+
                         if (pInfo.ExcludeNullableType == typeof(Guid))
                         {
                             newV = Guid.Parse(itemValue.ToString());
@@ -439,13 +439,13 @@ namespace MiniExcelLibs.OpenXml
             }
         }
 
-        private object ReadCell(XmlReader reader, int nextColumnIndex,bool withoutCR, out int columnIndex)
+        private object ReadCell(XmlReader reader, int nextColumnIndex, bool withoutCR, out int columnIndex)
         {
             int xfIndex = -1;
             var aT = reader.GetAttribute("t");
             var aR = reader.GetAttribute("r");
 
-            if(withoutCR)
+            if (withoutCR)
                 columnIndex = nextColumnIndex + 1;
             //TODO:need to check only need nextColumnIndex or columnIndex
             else if (ReferenceHelper.ParseReference(aR, out int referenceColumn, out _))

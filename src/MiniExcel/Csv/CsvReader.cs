@@ -9,12 +9,12 @@ using System.Threading.Tasks;
 
 namespace MiniExcelLibs.Csv
 {
-    public class CsvReader
+    public class CsvReader : IExcelReader
     {
-        internal IEnumerable<IDictionary<string, object>> Query(Stream stream, bool useHeaderRow, CsvConfiguration configuration)
+        public IEnumerable<IDictionary<string, object>> Query(Stream stream, bool useHeaderRow)
         {
-            if (configuration == null)
-                configuration = CsvConfiguration.GetDefaultConfiguration();
+          
+            var configuration = new CsvConfiguration();
             using (var reader = configuration.GetStreamReaderFunc(stream))
             {
                 char[] seperators = { configuration.Seperator };
@@ -58,13 +58,12 @@ namespace MiniExcelLibs.Csv
             }
         }
 
-        internal IEnumerable<T> Query<T>(Stream stream, CsvConfiguration configuration) where T : class, new()
+        public IEnumerable<T> Query<T>(Stream stream) where T : class, new()
         {
             var type = typeof(T);
             var props = Helpers.GetProperties(type);
             Dictionary<int, PropertyInfo> idxProps = new Dictionary<int, PropertyInfo>();
-            if (configuration == null)
-                configuration = CsvConfiguration.GetDefaultConfiguration();
+            var configuration = new CsvConfiguration();
             using (var reader = configuration.GetStreamReaderFunc(stream))
             {
                 char[] seperators = { configuration.Seperator };

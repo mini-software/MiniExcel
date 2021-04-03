@@ -14,7 +14,7 @@ namespace MiniExcelLibs.Csv
 	   public static string ConvertToCsvValue(string value)
 	   {
 		  if (value == null)
-			 return "";
+			 return string.Empty;
 		  if (value.Contains("\""))
 		  {
 			 value = value.Replace("\"", "\"\"");

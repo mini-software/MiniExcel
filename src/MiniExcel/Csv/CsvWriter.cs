@@ -9,9 +9,9 @@ using System.Text;
 
 namespace MiniExcelLibs.Csv
 {
-    internal partial class CsvWriter
+    internal class CsvWriter : IExcelWriter
     {
-	   internal static void SaveAs(Stream stream, object input)
+	   public void SaveAs(Stream stream, object input)
 	   {
 		  using (StreamWriter writer = new StreamWriter(stream))
 		  {
@@ -35,24 +35,6 @@ namespace MiniExcelLibs.Csv
 				writer.Write(string.Join(",", values));
 				writer.Write(Environment.NewLine);
 			 }
-		  }
-	   }
-	   internal static void SaveAs(string path, object input)
-	   {
-		  Stream stream = null;
-		  try
-            {
-			 stream = File.Create(path);
-			 CsvWriter.SaveAs(stream, input);
-		  }
-            catch (Exception)
-            {
-			 stream?.Dispose();
-			 throw;
-            }
-            finally
-            {
-			 stream?.Dispose();
 		  }
 	   }
     }

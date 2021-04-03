@@ -14,34 +14,15 @@
     {
         public static void SaveAs(this Stream stream, object value, bool printHeader = true, ExcelType excelType = ExcelType.XLSX)
         {
-            switch (excelType)
-            {
-                case ExcelType.CSV:
-                    CsvWriter.SaveAs(stream, value);
-                    break;
-                case ExcelType.XLSX:
-                    ExcelOpenXmlSheetWriter.SaveAs(stream, value, printHeader);
-                    break;
-                default:
-                    throw new NotSupportedException($"Extension : {excelType} not suppprt");
-            }
+            ExcelFacorty.GetExcelProvider(excelType, printHeader).SaveAs(stream, value);
         }
 
         public static void SaveAs(string filePath, object value, bool printHeader = true, ExcelType excelType = ExcelType.UNKNOWN)
         {
             if (excelType == ExcelType.UNKNOWN)
                 excelType = GetExcelType(filePath);
-            switch (excelType)
-            {
-                case ExcelType.CSV:
-                    CsvWriter.SaveAs(filePath, value);
-                    break;
-                case ExcelType.XLSX:
-                    ExcelOpenXmlSheetWriter.SaveAs(filePath, value, printHeader);
-                    break;
-                default:
-                    throw new NotSupportedException($"Extension : {Path.GetExtension(filePath)} not suppprt");
-            }
+
+            ExcelFacorty.GetExcelProvider(excelType, printHeader).SaveAs(filePath, value);
         }
 
         public static IEnumerable<T> Query<T>(string path, ExcelType excelType = ExcelType.UNKNOWN, IConfiguration configuration = null) where T : class, new()
@@ -55,15 +36,8 @@
         {
             if (excelType == ExcelType.UNKNOWN)
                 excelType = GetExcelType(stream);
-            switch (excelType)
-            {
-                case ExcelType.CSV:
-                    return new CsvReader().Query<T>(stream, (CsvConfiguration)configuration);
-                case ExcelType.XLSX:
-                    return new ExcelOpenXmlSheetReader().Query<T>(stream);
-                default:
-                    throw new NotSupportedException($"Please Issue for me");
-            }
+
+            return ExcelFacorty.GetExcelProvider(excelType).Query<T>(stream);
         }
 
         public static IEnumerable<dynamic> Query(string path, bool useHeaderRow = false, ExcelType excelType = ExcelType.UNKNOWN, IConfiguration configuration = null) 
@@ -77,15 +51,8 @@
         {
             if (excelType == ExcelType.UNKNOWN)
                 excelType = GetExcelType(stream);
-            switch (excelType)
-            {
-                case ExcelType.CSV:
-                    return new CsvReader().Query(stream, useHeaderRow, (CsvConfiguration)configuration);
-                case ExcelType.XLSX:
-                    return new ExcelOpenXmlSheetReader().Query(stream, useHeaderRow);
-                default:
-                    throw new NotSupportedException($"Please Issue for me");
-            }
+
+            return ExcelFacorty.GetExcelProvider(excelType, useHeaderRow).Query(stream, useHeaderRow);
         }
     }
 }

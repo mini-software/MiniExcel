@@ -14,15 +14,15 @@ using System.Xml.Linq;
 
 namespace MiniExcelLibs.OpenXml
 {
-    internal class ExcelOpenXmlSheetWriter
+    internal class ExcelOpenXmlSheetWriter : IExcelWriter
     {
-        internal static void SaveAs(string path, object value, bool printHeader)
+        private readonly bool printHeader;
+        public ExcelOpenXmlSheetWriter(bool printHeader)
         {
-            using (FileStream stream = new FileStream(path, FileMode.CreateNew))
-                SaveAs(stream, value, printHeader);
+            this.printHeader = printHeader;
         }
 
-        internal static void SaveAs(Stream stream, object value, bool printHeader)
+        public void SaveAs(Stream stream, object value)
         {
             using (var archive = new ZipArchive(stream, ZipArchiveMode.Create, true, Utf8WithBom))
             {
@@ -142,18 +142,18 @@ namespace MiniExcelLibs.OpenXml
                             }
 
                             if (mode == "IDictionary<string, object>") //Dapper Row
-                                GenerateSheetByDapperRow(writer, archive, value as IEnumerable, genericType, printHeader, rowCount, keys.Cast<string>().ToList(), xIndex, yIndex);
+                                GenerateSheetByDapperRow(writer, archive, value as IEnumerable, genericType, rowCount, keys.Cast<string>().ToList(), xIndex, yIndex);
                             else if (mode == "IDictionary") //IDictionary
-                                GenerateSheetByIDictionary(writer, archive, value as IEnumerable, genericType, printHeader, rowCount, keys, xIndex, yIndex);
+                                GenerateSheetByIDictionary(writer, archive, value as IEnumerable, genericType, rowCount, keys, xIndex, yIndex);
                             else if (mode == "Properties")
-                                GenerateSheetByProperties(writer, archive, value as IEnumerable, genericType,props, printHeader, rowCount, keys, xIndex, yIndex);
+                                GenerateSheetByProperties(writer, archive, value as IEnumerable, genericType,props, rowCount, keys, xIndex, yIndex);
                             else
                                 throw new NotImplementedException($"Type {type.Name} & genericType {genericType.Name} not Implemented. please issue for me.");
                             writer.Write("</x:sheetData></x:worksheet>");
                         }
                         else if (value is DataTable)
                         {
-                            GenerateSheetByDataTable(writer, archive, value as DataTable, printHeader);
+                            GenerateSheetByDataTable(writer, archive, value as DataTable);
                         }
                         else
                         {
@@ -169,12 +169,12 @@ namespace MiniExcelLibs.OpenXml
             }
         }
 
-        private static void WriteEmptySheet(StreamWriter writer)
+        private void WriteEmptySheet(StreamWriter writer)
         {
             writer.Write($@"<?xml version=""1.0"" encoding=""utf-8""?><x:worksheet xmlns:x=""http://schemas.openxmlformats.org/spreadsheetml/2006/main""><dimension ref=""A1""/><x:sheetData></x:sheetData></x:worksheet>");
         }
 
-        internal static void GenerateSheetByDapperRow(StreamWriter writer, ZipArchive archive, IEnumerable value, Type genericType, bool printHeader, int rowCount, List<string> keys, int xIndex = 1, int yIndex = 1)
+        internal void GenerateSheetByDapperRow(StreamWriter writer, ZipArchive archive, IEnumerable value, Type genericType, int rowCount, List<string> keys, int xIndex = 1, int yIndex = 1)
         {
             //body
             foreach (IDictionary<string, object> v in value)
@@ -212,7 +212,7 @@ namespace MiniExcelLibs.OpenXml
             }
         }
 
-        internal static void GenerateSheetByIDictionary(StreamWriter writer, ZipArchive archive, IEnumerable value, Type genericType, bool printHeader, int rowCount, List<object> keys, int xIndex = 1, int yIndex = 1)
+        internal void GenerateSheetByIDictionary(StreamWriter writer, ZipArchive archive, IEnumerable value, Type genericType, int rowCount, List<object> keys, int xIndex = 1, int yIndex = 1)
         {
             //body
             foreach (IDictionary v in value)
@@ -250,7 +250,7 @@ namespace MiniExcelLibs.OpenXml
             }
         }
 
-        internal static void GenerateSheetByProperties(StreamWriter writer, ZipArchive archive, IEnumerable value, Type genericType, PropertyInfo[] props, bool printHeader, int rowCount, List<object> keys, int xIndex = 1, int yIndex = 1)
+        internal void GenerateSheetByProperties(StreamWriter writer, ZipArchive archive, IEnumerable value, Type genericType, PropertyInfo[] props, int rowCount, List<object> keys, int xIndex = 1, int yIndex = 1)
         {
             //body
             foreach (var v in value)
@@ -288,7 +288,7 @@ namespace MiniExcelLibs.OpenXml
             }
         }
 
-        internal static void GenerateSheetByDataTable(StreamWriter writer, ZipArchive archive, DataTable value, bool printHeader)
+        internal void GenerateSheetByDataTable(StreamWriter writer, ZipArchive archive, DataTable value)
         {
             var xy = ExcelOpenXmlUtils.ConvertCellToXY("A1");
 
@@ -357,7 +357,7 @@ namespace MiniExcelLibs.OpenXml
             writer.Write("</x:sheetData></x:worksheet>");
         }
 
-        private static void GenerateContentTypesXml(ZipArchive archive, Dictionary<string, ZipPackageInfo> packages)
+        private void GenerateContentTypesXml(ZipArchive archive, Dictionary<string, ZipPackageInfo> packages)
         {
             //[Content_Types].xml 
 
@@ -372,7 +372,7 @@ namespace MiniExcelLibs.OpenXml
                 writer.Write(sb.ToString());
         }
 
-        private static string GetDimension(int maxRowIndex, int maxColumnIndex)
+        private string GetDimension(int maxRowIndex, int maxColumnIndex)
         {
             string dimensionRef;
             if (maxRowIndex == 0 && maxColumnIndex == 0)
@@ -386,6 +386,6 @@ namespace MiniExcelLibs.OpenXml
             return dimensionRef;
         }
 
-        private readonly static UTF8Encoding Utf8WithBom = new System.Text.UTF8Encoding(true);
+        private readonly UTF8Encoding Utf8WithBom = new System.Text.UTF8Encoding(true);
     }
 }

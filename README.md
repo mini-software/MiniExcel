@@ -31,9 +31,9 @@ You can install the package [from NuGet](https://www.nuget.org/packages/MiniExce
 
 Please Check [Release Notes](https://github.com/shps951023/MiniExcel/tree/master/docs)
 
-### TODO
+### Discussions / TODO 
 
-Please Check [Project · todo](https://github.com/shps951023/MiniExcel/projects/1?fullscreen=true)
+Please Check [Discussions](https://github.com/shps951023/MiniExcel/discussions) / [TODO](https://github.com/shps951023/MiniExcel/projects/1?fullscreen=true)
 
 ### Performance
 

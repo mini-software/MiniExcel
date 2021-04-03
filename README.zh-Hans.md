@@ -34,9 +34,9 @@ MiniExcel 简单、高效避免OOM的.NET处理Excel工具。
 
 请查看 [Release Notes](https://github.com/shps951023/MiniExcel/tree/master/docs)
 
-### TODO
+### Discussions / TODO 
 
-请查看 [Project · todo](https://github.com/shps951023/MiniExcel/projects/1?fullscreen=true)
+请查看 [Discussions](https://github.com/shps951023/MiniExcel/discussions) / [TODO](https://github.com/shps951023/MiniExcel/projects/1?fullscreen=true)
 
 ### 性能测试
 

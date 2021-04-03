@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace MiniExcelLibs.Csv
 {
-    public class CsvReader : IExcelReader
+    internal class CsvReader : IExcelReader
     {
         public IEnumerable<IDictionary<string, object>> Query(Stream stream, bool useHeaderRow)
         {

@@ -12,7 +12,7 @@ using System.Xml.Linq;
 
 namespace MiniExcelLibs.OpenXml
 {
-    public class ExcelOpenXmlProvider : ExcelProviderBase
+    internal class ExcelOpenXmlProvider : ExcelProviderBase
     {
         private IExcelReader _excelReader;
         private IExcelWriter _excelWriter;

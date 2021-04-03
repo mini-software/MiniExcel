@@ -390,7 +390,7 @@ namespace MiniExcelLibs.OpenXml
         {
             var type = typeof(T);
             var props = Helpers.GetExcelCustomPropertyInfos(type);
-            foreach (var item in new ExcelOpenXmlSheetReader().Query(stream, true))
+            foreach (var item in Query(stream, true))
             {
                 var v = new T();
                 foreach (var pInfo in props)
@@ -398,7 +398,7 @@ namespace MiniExcelLibs.OpenXml
                     if (item.ContainsKey(pInfo.ExcelColumnName))
                     {
                         object newV = null;
-                        object itemValue = (object)item[pInfo.ExcelColumnName];
+                        object itemValue = item[pInfo.ExcelColumnName];
 
                         if (itemValue == null)
                             continue;

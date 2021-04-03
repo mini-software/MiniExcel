@@ -104,7 +104,6 @@
                          Property = p,
                          ExcludeNullableType = gt ?? p.PropertyType,
                          Nullable = gt != null ? true : false,
-                         ExcelColumnIndex = excelAttr?.ExcelColumnIndex > 0 ? excelAttr.ExcelColumnIndex : null,
                          ExcelColumnName = excelAttr?.ExcelColumnName ?? p.Name
                      };
                  });

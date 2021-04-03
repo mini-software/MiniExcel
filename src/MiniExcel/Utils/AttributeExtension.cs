@@ -46,12 +46,6 @@
             return GetValueOrDefault(selector, attr);
         }
 
-        /// <summary>
-        /// 是否使用此標籤
-        /// </summary>
-        /// <typeparam name="TAttribute"></typeparam>
-        /// <param name="prop"></param>
-        /// <returns></returns>
         internal static bool IsUseAttribute<TAttribute>(this PropertyInfo prop)
         {
             return Attribute.GetCustomAttribute(prop, typeof(TAttribute)) != null;

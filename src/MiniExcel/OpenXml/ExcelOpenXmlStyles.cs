@@ -12,13 +12,6 @@
         private Dictionary<int, StyleRecord> _cellXfs = new Dictionary<int, StyleRecord>();
         private Dictionary<int, StyleRecord> _cellStyleXfs = new Dictionary<int, StyleRecord>();
 
-        private static readonly XmlReaderSettings XmlSettings = new XmlReaderSettings
-        {
-            IgnoreComments = true,
-            IgnoreWhitespace = true,
-            XmlResolver = null,
-        };
-
         public ExcelOpenXmlStyles(ExcelOpenXmlZip zip)
         {
             using (var Reader = zip.GetXmlReader(@"xl/styles.xml"))

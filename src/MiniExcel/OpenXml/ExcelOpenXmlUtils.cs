@@ -7,7 +7,7 @@
 	   /// Encode to XML (special characteres: &apos; &quot; &gt; &lt; &amp;)
 	   /// </summary>
 	   internal static string EncodeXML(object value) => value == null
-			   ? ""
+			   ? string.Empty
 			   : value.ToString().Replace("&", "&amp;").Replace("<", "&lt;").Replace(">", "&gt;").Replace("\"", "&quot;").Replace("'", "&apos;");
 
 	   /// <summary>X=CellLetter,Y=CellNumber,ex:A1=(1,1),B2=(2,2)</summary>

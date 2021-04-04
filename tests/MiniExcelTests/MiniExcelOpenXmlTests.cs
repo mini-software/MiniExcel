@@ -29,7 +29,7 @@ namespace MiniExcelLibs.Tests
         }
 
         [Fact]
-        public void CustomAttributesTest()
+        public void QueryCustomAttributesTest()
         {
             var path = @"..\..\..\..\..\samples\xlsx\TestCustomExcelColumnAttribute.xlsx";
             var rows = MiniExcel.Query<ExcelAttributeDemo>(path).ToList();
@@ -40,6 +40,34 @@ namespace MiniExcelLibs.Tests
             Assert.Equal("Test4", rows[0].Test4);
             Assert.Null(rows[0].Test5);
             Assert.Null(rows[0].Test6);
+        }
+
+        [Fact]
+        public void SaveAsCustomAttributesTest()
+        {
+            var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
+            var input = Enumerable.Range(1, 3).Select(
+                s => new ExcelAttributeDemo
+                {
+                    Test1 = "Test1",
+                    Test2 = "Test2",
+                    Test3 = "Test3",
+                    Test4 = "Test4",
+                }
+            );
+            MiniExcel.SaveAs(path, input);
+            {
+                var rows = MiniExcel.Query(path,true).ToList();
+                var first = rows[0] as IDictionary<string, object>;
+                Assert.Equal(new[] { "Column1", "Column2", "Test4", "Test5", "Test6" },first.Keys);
+                Assert.Equal("Test1", rows[0].Column1);
+                Assert.Equal("Test2", rows[0].Column2);
+                Assert.Equal("Test4", rows[0].Test4);
+                Assert.Null(rows[0].Test5);
+                Assert.Null(rows[0].Test6);
+
+                Assert.Equal(3,rows.Count);
+            }
         }
 
         public class CustomAttributesWihoutVaildPropertiesTestPoco
@@ -173,7 +201,7 @@ namespace MiniExcelLibs.Tests
             }
 
             {
-                var rows = MiniExcel.Query(path,useHeaderRow: true).ToList();
+                var rows = MiniExcel.Query(path, useHeaderRow: true).ToList();
 
                 Assert.Equal("MiniExcel", rows[0].Column1);
                 Assert.Equal(1, rows[0].Column2);
@@ -715,7 +743,7 @@ namespace MiniExcelLibs.Tests
                 using (var stream = File.OpenRead(path))
                 {
                     var rows = stream.Query(useHeaderRow: false).ToList();
-                    Assert.Equal(3,rows.Count);
+                    Assert.Equal(3, rows.Count);
                 }
 
                 Assert.Equal("A1:B3", Helpers.GetFirstSheetDimensionRefValue(path));
@@ -912,7 +940,7 @@ namespace MiniExcelLibs.Tests
                   new { Column1 = "MiniExcel", Column2 = 1 },
                   new { Column1 = "Github", Column2 = 2}
             });
-            
+
             using (var stream = File.OpenRead(path))
             {
                 var rows = stream.Query(useHeaderRow: true).ToList();

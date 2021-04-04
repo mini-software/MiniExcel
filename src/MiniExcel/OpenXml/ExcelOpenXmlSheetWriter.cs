@@ -9,6 +9,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using static MiniExcelLibs.Utils.Helpers;
 
 namespace MiniExcelLibs.OpenXml
 {
@@ -50,7 +51,7 @@ namespace MiniExcelLibs.OpenXml
 
                             var maxColumnIndex = 0;
                             List<object> keys = new List<object>();
-                            PropertyInfo[] props = null;
+                            List<ExcelCustomPropertyInfo> props = null;
                             string mode = null;
 
                             {
@@ -79,11 +80,8 @@ namespace MiniExcelLibs.OpenXml
                                         {
                                             mode = "Properties";
                                             genericType = item.GetType();
-                                            props = Helpers.GetProperties(genericType);
-                                            //props = genericType.GetProperties();
-                                            if (props.Length == 0)
-                                                throw new InvalidOperationException($"Generic Type : {genericType} valid properties count is 0, if you have trouble please issue for me.");
-                                            maxColumnIndex = props.Length;
+                                            props = Helpers.GetSaveAsProperties(genericType);
+                                            maxColumnIndex = props.Count;
                                         }
 
                                         // not re-foreach key point
@@ -122,7 +120,7 @@ namespace MiniExcelLibs.OpenXml
                                     foreach (var p in props)
                                     {
                                         var columname = ExcelOpenXmlUtils.ConvertXyToCell(cellIndex, yIndex);
-                                        writer.Write($"<x:c r=\"{columname}\" t=\"str\"><x:v>{p.Name}</x:v></x:c>");
+                                        writer.Write($"<x:c r=\"{columname}\" t=\"str\"><x:v>{p.ExcelColumnName}</x:v></x:c>");
                                         cellIndex++;
                                     }
                                 }
@@ -248,7 +246,7 @@ namespace MiniExcelLibs.OpenXml
             }
         }
 
-        internal void GenerateSheetByProperties(StreamWriter writer, ZipArchive archive, IEnumerable value, Type genericType, PropertyInfo[] props, int rowCount, List<object> keys, int xIndex = 1, int yIndex = 1)
+        internal void GenerateSheetByProperties(StreamWriter writer, ZipArchive archive, IEnumerable value, Type genericType, List<ExcelCustomPropertyInfo> props, int rowCount, List<object> keys, int xIndex = 1, int yIndex = 1)
         {
             //body
             foreach (var v in value)
@@ -257,7 +255,7 @@ namespace MiniExcelLibs.OpenXml
                 var cellIndex = xIndex;
                 foreach (var p in props)
                 {
-                    var cellValue = p.GetValue(v);
+                    var cellValue = p.Property.GetValue(v);
                     var cellValueStr = ExcelOpenXmlUtils.EncodeXML(cellValue);
                     var t = "t=\"str\"";
                     {

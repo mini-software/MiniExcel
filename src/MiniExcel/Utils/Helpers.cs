@@ -22,8 +22,8 @@
             }
         }
 
-        public static string GetAlphabetColumnName(int ColumnIndex) => _IntMappingAlphabet[ColumnIndex];
-        public static int GetColumnIndex(string columnName) => _AlphabetMappingInt[columnName];
+        internal static string GetAlphabetColumnName(int ColumnIndex) => _IntMappingAlphabet[ColumnIndex];
+        internal static int GetColumnIndex(string columnName) => _AlphabetMappingInt[columnName];
 
         internal static string IntToLetters(int value)
         {
@@ -37,7 +37,7 @@
             return result;
         }
 
-        public static IDictionary<string, object> GetEmptyExpandoObject(int maxColumnIndex)
+        internal static IDictionary<string, object> GetEmptyExpandoObject(int maxColumnIndex)
         {
             // TODO: strong type mapping can ignore this
             // TODO: it can recode better performance 
@@ -51,7 +51,7 @@
             return cell;
         }
 
-        public static IDictionary<string, object> GetEmptyExpandoObject(Dictionary<int, string> hearrows)
+        internal static IDictionary<string, object> GetEmptyExpandoObject(Dictionary<int, string> hearrows)
         {
             // TODO: strong type mapping can ignore this
             // TODO: it can recode better performance 
@@ -62,11 +62,16 @@
             return cell;
         }
 
-        public static PropertyInfo[] GetProperties(this Type type)
+        internal static List<ExcelCustomPropertyInfo> GetSaveAsProperties(this Type type)
         {
-            return type.GetProperties(
-                         BindingFlags.Public |
-                         BindingFlags.Instance);
+            List<ExcelCustomPropertyInfo> props = GetExcelPropertyInfo(type, BindingFlags.Public | BindingFlags.Instance)
+                .Where(prop => prop.Property.GetGetMethod() != null && !prop.Property.GetAttributeValue((ExcelIgnoreAttribute x) => x.ExcelIgnore))
+                .ToList() /*ignore without set*/;
+
+            if (props.Count == 0)
+                throw new InvalidOperationException($"{type.Name} un-ignore properties count can't be 0");
+
+            return props;
         }
 
         internal class ExcelCustomPropertyInfo
@@ -106,11 +111,6 @@
                          ExcelColumnName = excelAttr?.ExcelColumnName ?? p.Name
                      };
                  });
-        }
-
-        internal static bool IsDapperRows<T>()
-        {
-            return typeof(IDictionary<string, object>).IsAssignableFrom(typeof(T));
         }
 
         private static readonly Regex EscapeRegex = new Regex("_x([0-9A-F]{4,4})_");

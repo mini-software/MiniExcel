@@ -59,7 +59,7 @@ namespace MiniExcelLibs.Csv
         public IEnumerable<T> Query<T>(Stream stream) where T : class, new()
         {
             var type = typeof(T);
-            var props = Helpers.GetProperties(type);
+            var props = Helpers.GetSaveAsProperties(type);
             Dictionary<int, PropertyInfo> idxProps = new Dictionary<int, PropertyInfo>();
             var configuration = new CsvConfiguration();
             using (var reader = configuration.GetStreamReaderFunc(stream))
@@ -76,9 +76,9 @@ namespace MiniExcelLibs.Csv
                     var index = 0;
                     foreach (var v in read)
                     {
-                        var p = props.SingleOrDefault(w => w.Name == v);
+                        var p = props.SingleOrDefault(w => w.ExcelColumnName == v);
                         if (p != null)
-                            idxProps.Add(index, p);
+                            idxProps.Add(index, p.Property);
                         index++;
                     }
                 }

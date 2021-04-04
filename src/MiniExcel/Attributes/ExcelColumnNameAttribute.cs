@@ -12,8 +12,8 @@ namespace MiniExcelLibs.Attributes
     [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false)]
     public class ExcelColumnIndexAttribute : Attribute
     {
-	   public int ExcelColumnIndex { get; set; }
-	   public ExcelColumnIndexAttribute(string columnName) => ExcelColumnIndex = Helpers.GetColumnIndex(columnName);
-	   public ExcelColumnIndexAttribute(int columnIndex) => ExcelColumnIndex = columnIndex;
+        public int ExcelColumnIndex { get; set; }
+        public ExcelColumnIndexAttribute(string columnName) => ExcelColumnIndex = Helpers.GetColumnIndex(columnName);
+        public ExcelColumnIndexAttribute(int columnIndex) => ExcelColumnIndex = columnIndex;
     }
 }

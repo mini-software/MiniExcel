@@ -4,7 +4,6 @@
     using MiniExcelLibs.Zip;
     using System;
     using System.Collections.Generic;
-    using System.Xml;
     internal class ExcelOpenXmlStyles
     {
         const string NsSpreadsheetMl = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";

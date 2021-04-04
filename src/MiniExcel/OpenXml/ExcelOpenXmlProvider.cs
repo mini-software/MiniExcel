@@ -1,14 +1,5 @@
-﻿using MiniExcelLibs.Utils;
-using MiniExcelLibs.Zip;
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Globalization;
+﻿using System.Collections.Generic;
 using System.IO;
-using System.IO.Compression;
-using System.Linq;
-using System.Xml;
-using System.Xml.Linq;
 
 namespace MiniExcelLibs.OpenXml
 {
@@ -25,7 +16,7 @@ namespace MiniExcelLibs.OpenXml
 
         public override IEnumerable<IDictionary<string, object>> Query(Stream stream, bool UseHeaderRow = false)
         {
-             return _excelReader.Query(stream, UseHeaderRow);
+            return _excelReader.Query(stream, UseHeaderRow);
         }
 
         public override IEnumerable<T> Query<T>(Stream stream)

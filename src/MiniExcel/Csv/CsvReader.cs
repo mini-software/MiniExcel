@@ -4,8 +4,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MiniExcelLibs.Csv
 {
@@ -13,7 +11,7 @@ namespace MiniExcelLibs.Csv
     {
         public IEnumerable<IDictionary<string, object>> Query(Stream stream, bool useHeaderRow)
         {
-          
+
             var configuration = new CsvConfiguration();
             using (var reader = configuration.GetStreamReaderFunc(stream))
             {
@@ -80,7 +78,7 @@ namespace MiniExcelLibs.Csv
                     {
                         var p = props.SingleOrDefault(w => w.Name == v);
                         if (p != null)
-                            idxProps.Add(index,p);
+                            idxProps.Add(index, p);
                         index++;
                     }
                 }

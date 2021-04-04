@@ -1,6 +1,4 @@
 ﻿namespace MiniExcelLibs
 {
-    public interface IConfiguration{
-        
-    }
+    public interface IConfiguration { }
 }

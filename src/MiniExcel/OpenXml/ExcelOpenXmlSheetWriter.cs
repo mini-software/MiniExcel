@@ -9,8 +9,6 @@ using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using System.Threading.Tasks;
-using System.Xml.Linq;
 
 namespace MiniExcelLibs.OpenXml
 {
@@ -146,7 +144,7 @@ namespace MiniExcelLibs.OpenXml
                             else if (mode == "IDictionary") //IDictionary
                                 GenerateSheetByIDictionary(writer, archive, value as IEnumerable, genericType, rowCount, keys, xIndex, yIndex);
                             else if (mode == "Properties")
-                                GenerateSheetByProperties(writer, archive, value as IEnumerable, genericType,props, rowCount, keys, xIndex, yIndex);
+                                GenerateSheetByProperties(writer, archive, value as IEnumerable, genericType, props, rowCount, keys, xIndex, yIndex);
                             else
                                 throw new NotImplementedException($"Type {type.Name} & genericType {genericType.Name} not Implemented. please issue for me.");
                             writer.Write("</x:sheetData></x:worksheet>");

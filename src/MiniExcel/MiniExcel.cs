@@ -1,14 +1,7 @@
 ﻿namespace MiniExcelLibs
 {
-    using MiniExcelLibs.OpenXml;
-    using System.Linq;
     using System.Collections.Generic;
     using System.IO;
-    using System.Text;
-    using System;
-    using MiniExcelLibs.Csv;
-    using System.Data;
-    using System.Collections;
 
     public static partial class MiniExcel
     {
@@ -40,7 +33,7 @@
             return ExcelFacorty.GetExcelProvider(excelType).Query<T>(stream);
         }
 
-        public static IEnumerable<dynamic> Query(string path, bool useHeaderRow = false, ExcelType excelType = ExcelType.UNKNOWN, IConfiguration configuration = null) 
+        public static IEnumerable<dynamic> Query(string path, bool useHeaderRow = false, ExcelType excelType = ExcelType.UNKNOWN, IConfiguration configuration = null)
         {
             using (var stream = File.OpenRead(path))
                 foreach (var item in Query(stream, useHeaderRow, excelType, configuration))

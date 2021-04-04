@@ -7,12 +7,14 @@
     /// <summary>
     /// use statics factory,If want to do OCP we can use a Interface factory to instead of  statics factory
     /// </summary>
-    internal class ExcelFacorty {
-
-        internal static ExcelProviderBase GetExcelProvider(ExcelType excelType) {
-            return GetExcelProvider(excelType,true);
+    internal class ExcelFacorty
+    {
+        internal static ExcelProviderBase GetExcelProvider(ExcelType excelType)
+        {
+            return GetExcelProvider(excelType, true);
         }
-        internal static ExcelProviderBase GetExcelProvider(ExcelType excelType,bool useHeaderRow) {
+        internal static ExcelProviderBase GetExcelProvider(ExcelType excelType, bool useHeaderRow)
+        {
             switch (excelType)
             {
                 case ExcelType.CSV:

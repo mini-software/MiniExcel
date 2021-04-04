@@ -69,9 +69,9 @@ namespace MiniExcelLibs.OpenXml
             ;
 
         //TODO:read from static generated file looks like more better?
-        internal static Dictionary<string,ZipPackageInfo> GenerateDefaultOpenXml(ZipArchive archive)
+        internal static Dictionary<string, ZipPackageInfo> GenerateDefaultOpenXml(ZipArchive archive)
         {
-            var defaults = new Dictionary<string, Tuple<string,string>>()
+            var defaults = new Dictionary<string, Tuple<string, string>>()
             {
                 { @"_rels/.rels", new Tuple<string,string>(DefualtOpenXml.DefaultRels, "application/vnd.openxmlformats-package.relationships+xml")},
                 { @"xl/_rels/workbook.xml.rels", new Tuple<string,string>(DefualtOpenXml.DefaultWorkbookXmlRels, "application/vnd.openxmlformats-package.relationships+xml")},

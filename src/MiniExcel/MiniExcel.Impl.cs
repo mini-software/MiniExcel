@@ -2,7 +2,6 @@
 {
     using System;
     using System.IO;
-
     public static partial class MiniExcel
     {
         internal static ExcelType GetExcelType(string filePath)

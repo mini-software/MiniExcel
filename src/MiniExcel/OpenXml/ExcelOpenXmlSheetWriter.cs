@@ -14,10 +14,10 @@ namespace MiniExcelLibs.OpenXml
 {
     internal class ExcelOpenXmlSheetWriter : IExcelWriter
     {
-        private readonly bool printHeader;
+        private readonly bool _printHeader;
         public ExcelOpenXmlSheetWriter(bool printHeader)
         {
-            this.printHeader = printHeader;
+            this._printHeader = printHeader;
         }
 
         public void SaveAs(Stream stream, object value)
@@ -107,13 +107,13 @@ namespace MiniExcelLibs.OpenXml
                             writer.Write($@"<?xml version=""1.0"" encoding=""utf-8""?><x:worksheet xmlns:x=""http://schemas.openxmlformats.org/spreadsheetml/2006/main"">");
                             // dimension 
 
-                            var maxRowIndex = rowCount + (printHeader && rowCount > 0 ? 1 : 0);  //TODO:it can optimize
+                            var maxRowIndex = rowCount + (_printHeader && rowCount > 0 ? 1 : 0);  //TODO:it can optimize
                             writer.Write($@"<dimension ref=""{GetDimension(maxRowIndex, maxColumnIndex)}""/><x:sheetData>");
 
                             //header
                             var yIndex = 1;
                             var xIndex = 1;
-                            if (printHeader)
+                            if (_printHeader)
                             {
                                 var cellIndex = xIndex;
                                 writer.Write($"<x:row r=\"{yIndex.ToString()}\">");
@@ -296,11 +296,11 @@ namespace MiniExcelLibs.OpenXml
                 var yIndex = xy.Item2;
 
                 // dimension
-                var maxRowIndex = value.Rows.Count + (printHeader && value.Rows.Count > 0 ? 1 : 0);
+                var maxRowIndex = value.Rows.Count + (_printHeader && value.Rows.Count > 0 ? 1 : 0);
                 var maxColumnIndex = value.Columns.Count;
                 writer.Write($@"<dimension ref=""{GetDimension(maxRowIndex, maxColumnIndex)}""/><x:sheetData>");
 
-                if (printHeader)
+                if (_printHeader)
                 {
                     writer.Write($"<x:row r=\"{yIndex.ToString()}\">");
                     var xIndex = xy.Item1;

@@ -337,7 +337,7 @@ stream.Query(excelType:ExcelType.XLSX);
 ### Dynamic Query 轉成 `IDictionary<string,object>` 資料
 
 ```C#
-foreach(IDictionary<string,object> row = MiniExcel.Query(path))
+foreach(IDictionary<string,object> row in MiniExcel.Query(path))
 {
     //..
 }

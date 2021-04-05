@@ -1,5 +1,6 @@
 ﻿namespace MiniExcelLibs.OpenXml
 {
+    using MiniExcelLibs.Utils;
     using System;
     internal static class ExcelOpenXmlUtils
     {
@@ -8,7 +9,7 @@
         /// </summary>
         internal static string EncodeXML(object value) => value == null
                   ? string.Empty
-                  : value.ToString().Replace("&", "&amp;").Replace("<", "&lt;").Replace(">", "&gt;").Replace("\"", "&quot;").Replace("'", "&apos;");
+                  : XmlEncoder.EncodeString(value.ToString()).Replace("&", "&amp;").Replace("<", "&lt;").Replace(">", "&gt;").Replace("\"", "&quot;").Replace("'", "&apos;");
 
         /// <summary>X=CellLetter,Y=CellNumber,ex:A1=(1,1),B2=(2,2)</summary>
         internal static string ConvertXyToCell(Tuple<int, int> xy)

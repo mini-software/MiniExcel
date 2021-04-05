@@ -20,6 +20,21 @@ namespace MiniExcelLibs.Tests
 
     public partial class MiniExcelOpenXmlTests
     {
+        [Fact]
+        public void SaveAsControlChracter()
+        {
+            string path = GetTempXlsxPath();
+            char[] chars = new char[] {'\u0000','\u0001','\u0002','\u0003','\u0004','\u0005','\u0006','\u0007','\u0008',
+                '\u0009', //<HT>
+	            '\u000A', //<LF>
+	            '\u000B','\u000C',
+                 '\u000D', //<CR>
+	            '\u000E','\u000F','\u0010','\u0011','\u0012','\u0013','\u0014','\u0015','\u0016',
+                 '\u0017','\u0018','\u0019','\u001A','\u001B','\u001C','\u001D','\u001E','\u001F','\u007F'
+            };
+            var input = chars.Select(s => new { Test = s.ToString() });
+            MiniExcel.SaveAs(path, input);
+        }
 
         [Fact]
         public void CustomAttributeWihoutVaildPropertiesTest()
@@ -45,7 +60,7 @@ namespace MiniExcelLibs.Tests
         [Fact]
         public void SaveAsCustomAttributesTest()
         {
-            var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
+            string path = GetTempXlsxPath();
             var input = Enumerable.Range(1, 3).Select(
                 s => new ExcelAttributeDemo
                 {
@@ -57,17 +72,22 @@ namespace MiniExcelLibs.Tests
             );
             MiniExcel.SaveAs(path, input);
             {
-                var rows = MiniExcel.Query(path,true).ToList();
+                var rows = MiniExcel.Query(path, true).ToList();
                 var first = rows[0] as IDictionary<string, object>;
-                Assert.Equal(new[] { "Column1", "Column2", "Test4", "Test5", "Test6" },first.Keys);
+                Assert.Equal(new[] { "Column1", "Column2", "Test4", "Test5", "Test6" }, first.Keys);
                 Assert.Equal("Test1", rows[0].Column1);
                 Assert.Equal("Test2", rows[0].Column2);
                 Assert.Equal("Test4", rows[0].Test4);
                 Assert.Null(rows[0].Test5);
                 Assert.Null(rows[0].Test6);
 
-                Assert.Equal(3,rows.Count);
+                Assert.Equal(3, rows.Count);
             }
+        }
+
+        private static string GetTempXlsxPath()
+        {
+            return Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
         }
 
         public class CustomAttributesWihoutVaildPropertiesTestPoco

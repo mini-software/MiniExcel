@@ -9,6 +9,18 @@ namespace MiniExcelLibs.Tests
     public partial class MiniExcelIssueTests
     {
         /// <summary>
+        /// https://github.com/shps951023/MiniExcel/issues/153
+        /// </summary>
+        [Fact]
+        public void Issue153()
+        {
+            var path = @"..\..\..\..\..\samples\xlsx\TestIssue153.xlsx";
+            var rows = MiniExcel.Query(path,true).First() as IDictionary<string,object>;
+            Assert.Equal(new[] { "序号", "代号", "新代号", "名称", "XXX" , "部门名称" , "单位" , "ERP工时   (小时)A", "工时(秒) A/3600", "标准人工工时(秒)", "生产标准机器工时(秒)", "财务、标准机器工时(秒)", "更新日期", "产品机种", "备注","最近一次修改前的标准工时(秒)", "最近一次修改前的标准机时(秒)", "备注1" }
+                ,rows.Keys);
+        }
+
+        /// <summary>
         /// https://github.com/shps951023/MiniExcel/issues/137
         /// </summary>
         [Fact]

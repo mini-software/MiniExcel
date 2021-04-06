@@ -16,21 +16,42 @@ namespace MiniExcelLibs.OpenXml
     {
         private const string ns = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
         private List<SheetRecord> _sheetRecords = null;
-        private Dictionary<int, string> _SharedStrings;
+        private List<string> _SharedStrings;
         private ExcelOpenXmlStyles _style;
 
-        internal Dictionary<int, string> GetSharedStrings(ExcelOpenXmlZip archive)
+        internal List<string> GetSharedStrings(ExcelOpenXmlZip archive)
         {
             var sharedStringsEntry = archive.GetEntry("xl/sharedStrings.xml");
             if (sharedStringsEntry == null)
                 return null;
             using (var stream = sharedStringsEntry.Open())
             {
-                var xl = XElement.Load(stream);
-                var ts = xl.Descendants(ExcelOpenXmlXName.T).Select((s, i) => new { i, v = s.Value?.ToString() })
-                      .ToDictionary(s => s.i, s => s.v)
-                ;//TODO:need recode
-                return ts;
+                return GetSharedStrings(stream).ToList();
+            }
+        }
+
+        private IEnumerable<string> GetSharedStrings(Stream stream)
+        {
+            using (var reader = XmlReader.Create(stream))
+            {
+                if (!reader.IsStartElement("sst", "http://schemas.openxmlformats.org/spreadsheetml/2006/main"))
+                    yield break;
+
+                if (!XmlReaderHelper.ReadFirstContent(reader))
+                    yield break;
+
+                while (!reader.EOF)
+                {
+                    if (reader.IsStartElement("si", "http://schemas.openxmlformats.org/spreadsheetml/2006/main"))
+                    {
+                        var value = StringHelper.ReadStringItem(reader);
+                        yield return value;
+                    }
+                    else if (!XmlReaderHelper.SkipContent(reader))
+                    {
+                        break;
+                    }
+                }
             }
         }
 
@@ -490,14 +511,13 @@ namespace MiniExcelLibs.OpenXml
                 case "s": //// if string
                     if (int.TryParse(rawValue, style, invariantCulture, out var sstIndex))
                     {
-                        if (_SharedStrings.ContainsKey(sstIndex))
+                        if (sstIndex >= 0 && sstIndex < _SharedStrings.Count)
+                        {
                             value = _SharedStrings[sstIndex];
-                        else
-                            value = sstIndex;
-                        return;
+                            return;
+                        }
                     }
-
-                    value = rawValue;
+                    value = null;
                     return;
                 case "inlineStr": //// if string inline
                 case "str": //// if cached formula string

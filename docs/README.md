@@ -4,7 +4,7 @@
 
 ### 0.10.2
 - [Bug] Fix SharedStrings get wrong index (issue [#153](https://github.com/shps951023/MiniExcel/issues/153))
-- [Bug] SaveAs support control character encoding 
+- [Bug] SaveAs support control character encoding (issue [Issue #149](https://github.com/shps951023/MiniExcel/issues/149))
 
 ### 0.10.1
 - [New] SaveAs support POCO excel column name/ignore attribute

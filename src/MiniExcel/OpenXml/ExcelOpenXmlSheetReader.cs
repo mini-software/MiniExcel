@@ -450,6 +450,11 @@ namespace MiniExcelLibs.OpenXml
                             else
                                 newV = bool.Parse(vs);
                         }
+                        else if (pInfo.Property.PropertyType == typeof(string))
+                        {
+                            //var vs = ;
+                            newV = XmlEncoder.DecodeString(itemValue?.ToString());
+                        }
                         // solve : https://github.com/shps951023/MiniExcel/issues/138
                         else
                             newV = Convert.ChangeType(itemValue, pInfo.ExcludeNullableType);
@@ -513,7 +518,8 @@ namespace MiniExcelLibs.OpenXml
                     {
                         if (sstIndex >= 0 && sstIndex < _SharedStrings.Count)
                         {
-                            value = _SharedStrings[sstIndex];
+                            //value = Helpers.ConvertEscapeChars(_SharedStrings[sstIndex]);
+                            value = XmlEncoder.DecodeString(_SharedStrings[sstIndex]);
                             return;
                         }
                     }
@@ -521,7 +527,7 @@ namespace MiniExcelLibs.OpenXml
                     return;
                 case "inlineStr": //// if string inline
                 case "str": //// if cached formula string
-                    value = Helpers.ConvertEscapeChars(rawValue);
+                    value = XmlEncoder.DecodeString(rawValue);
                     return;
                 case "b": //// boolean
                     value = rawValue == "1";

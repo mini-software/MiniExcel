@@ -34,7 +34,19 @@ namespace MiniExcelLibs.Tests
             };
             var input = chars.Select(s => new { Test = s.ToString() });
             MiniExcel.SaveAs(path, input);
+
+            var rows2 = MiniExcel.Query(path, true).Select(s => s.Test).ToArray();
+
+            var rows1 = MiniExcel.Query<SaveAsControlChracterVO>(path).Select(s => s.Test).ToArray();
+
+            
         }
+
+        public class SaveAsControlChracterVO
+        {
+            public string Test { get; set; }
+        }
+
 
         [Fact]
         public void CustomAttributeWihoutVaildPropertiesTest()

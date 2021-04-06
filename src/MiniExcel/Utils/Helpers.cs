@@ -112,13 +112,6 @@
                      };
                  });
         }
-
-        private static readonly Regex EscapeRegex = new Regex("_x([0-9A-F]{4,4})_");
-        public static string ConvertEscapeChars(string input)
-        {
-            return EscapeRegex.Replace(input, m => ((char)uint.Parse(m.Groups[1].Value, NumberStyles.HexNumber)).ToString());
-        }
-
     }
 
 }

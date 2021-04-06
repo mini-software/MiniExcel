@@ -3,11 +3,61 @@ using System;
 using System.Linq;
 using System.IO;
 using System.Collections.Generic;
+using System.Diagnostics;
+using Xunit.Abstractions;
 
 namespace MiniExcelLibs.Tests
 {
     public partial class MiniExcelIssueTests
     {
+        private readonly ITestOutputHelper output;
+        public MiniExcelIssueTests(ITestOutputHelper output)
+        {
+            this.output = output;
+        }
+        /// <summary>
+        /// https://github.com/shps951023/MiniExcel/issues/149
+        /// </summary>
+        [Fact]
+        public void Issue149()
+        {
+            var chars = new char[] {'\u0000','\u0001','\u0002','\u0003','\u0004','\u0005','\u0006','\u0007','\u0008',
+                '\u0009', //<HT>
+	           '\u000A', //<LF>
+	           '\u000B','\u000C',
+                '\u000D', //<CR>
+	           '\u000E','\u000F','\u0010','\u0011','\u0012','\u0013','\u0014','\u0015','\u0016',
+                '\u0017','\u0018','\u0019','\u001A','\u001B','\u001C','\u001D','\u001E','\u001F','\u007F'
+            }.Select(s => s.ToString()).ToArray();
+
+            {
+                var path = @"..\..\..\..\..\samples\xlsx\TestIssue149.xlsx";
+                var rows = MiniExcel.Query(path).Select(s => (string)s.A).ToList();
+                for (int i = 0; i < chars.Length; i++)
+                {
+                    //output.WriteLine($"{i} , {chars[i]} , {rows[i]}");
+                    if (i == 13)
+                        continue;
+                    Assert.Equal(chars[i], rows[i]);
+                }
+            }
+
+            {
+                string path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
+                var input = chars.Select(s => new { Test = s.ToString() });
+                MiniExcel.SaveAs(path, input);
+
+                var rows = MiniExcel.Query(path,true).Select(s => (string)s.Test).ToList();
+                for (int i = 0; i < chars.Length; i++)
+                {
+                    output.WriteLine($"{i} , {chars[i]} , {rows[i]}");
+                    if (i == 13 || i == 9 || i == 10)
+                        continue;
+                    Assert.Equal(chars[i], rows[i]);
+                }
+            }
+        }
+
         /// <summary>
         /// https://github.com/shps951023/MiniExcel/issues/153
         /// </summary>

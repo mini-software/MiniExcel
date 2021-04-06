@@ -2,6 +2,9 @@
 
 ## Release  Notes
 
+### 0.10.3 
+- [Bug] Fix Query SharedStrings control character not encoding (issue [Issue #149](https://github.com/shps951023/MiniExcel/issues/149))
+
 ### 0.10.2
 - [Bug] Fix SharedStrings get wrong index (issue [#153](https://github.com/shps951023/MiniExcel/issues/153))
 - [Bug] SaveAs support control character encoding (issue [Issue #149](https://github.com/shps951023/MiniExcel/issues/149))

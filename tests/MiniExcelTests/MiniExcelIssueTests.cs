@@ -56,6 +56,26 @@ namespace MiniExcelLibs.Tests
                     Assert.Equal(chars[i], rows[i]);
                 }
             }
+
+            {
+                string path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
+                var input = chars.Select(s => new { Test = s.ToString() });
+                MiniExcel.SaveAs(path, input);
+
+                var rows = MiniExcel.Query<Issue149VO>(path).Select(s => (string)s.Test).ToList();
+                for (int i = 0; i < chars.Length; i++)
+                {
+                    output.WriteLine($"{i} , {chars[i]} , {rows[i]}");
+                    if (i == 13 || i == 9 || i == 10)
+                        continue;
+                    Assert.Equal(chars[i], rows[i]);
+                }
+            }
+        }
+
+        public class Issue149VO
+        {
+            public string Test { get; set; }
         }
 
         /// <summary>

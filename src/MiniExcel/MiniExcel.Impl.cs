@@ -13,10 +13,10 @@
                     return ExcelType.CSV;
                 case ".xlsx":
                     return ExcelType.XLSX;
-                case ".xls":
-                    return ExcelType.XLS;
+                //case ".xls":
+                //    return ExcelType.XLS;
                 default:
-                    throw new NotSupportedException($"Extension : {extension} not suppprt");
+                    throw new NotSupportedException($"Extension : {extension} not suppprt, or you can specify exceltype.");
             }
         }
 
@@ -29,13 +29,13 @@
             switch (flag)
             {
                 // Old office format (can be any office file)
-                case 0xE011CFD0:
-                    return ExcelType.XLS;
+                //case 0xE011CFD0:
+                //    return ExcelType.XLS;
                 // New office format (can be any ZIP archive)
                 case 0x04034B50:
                     return ExcelType.XLSX;
                 default:
-                    return ExcelType.CSV;
+                    return ExcelType.CSV; //TODO:need to optimize
             }
         }
     }

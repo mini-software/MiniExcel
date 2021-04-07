@@ -3,7 +3,7 @@
     public enum ExcelType
     {
         XLSX,
-        XLS,
+        //XLS,
         CSV,
         /// <summary>
         /// Will auto check excel type by stream or file path

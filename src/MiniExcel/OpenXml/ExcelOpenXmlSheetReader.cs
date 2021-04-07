@@ -19,127 +19,16 @@ namespace MiniExcelLibs.OpenXml
         private List<string> _sharedStrings;
         private ExcelOpenXmlStyles _style;
         private string _sheetName;
+        private static readonly XmlReaderSettings _xmlSettings = new XmlReaderSettings
+        {
+            IgnoreComments = true,
+            IgnoreWhitespace = true,
+            XmlResolver = null,
+        };
         public ExcelOpenXmlSheetReader(string sheetName)
         {
             this._sheetName = sheetName;
         }
-        internal List<string> GetSharedStrings(ExcelOpenXmlZip archive)
-        {
-            var sharedStringsEntry = archive.GetEntry("xl/sharedStrings.xml");
-            if (sharedStringsEntry == null)
-                return null;
-            using (var stream = sharedStringsEntry.Open())
-            {
-                return GetSharedStrings(stream).ToList();
-            }
-        }
-
-        private IEnumerable<string> GetSharedStrings(Stream stream)
-        {
-            using (var reader = XmlReader.Create(stream))
-            {
-                if (!reader.IsStartElement("sst", "http://schemas.openxmlformats.org/spreadsheetml/2006/main"))
-                    yield break;
-
-                if (!XmlReaderHelper.ReadFirstContent(reader))
-                    yield break;
-
-                while (!reader.EOF)
-                {
-                    if (reader.IsStartElement("si", "http://schemas.openxmlformats.org/spreadsheetml/2006/main"))
-                    {
-                        var value = StringHelper.ReadStringItem(reader);
-                        yield return value;
-                    }
-                    else if (!XmlReaderHelper.SkipContent(reader))
-                    {
-                        break;
-                    }
-                }
-            }
-        }
-
-        internal IEnumerable<SheetRecord> ReadWorkbook(ReadOnlyCollection<ZipArchiveEntry> entries)
-        {
-            using (var stream = entries.Single(w => w.FullName == "xl/workbook.xml").Open())
-            using (XmlReader reader = XmlReader.Create(stream, XmlSettings))
-            {
-                if (!reader.IsStartElement("workbook", _ns))
-                    yield break;
-
-                if (!XmlReaderHelper.ReadFirstContent(reader))
-                    yield break;
-
-                while (!reader.EOF)
-                {
-                    if (reader.IsStartElement("sheets", _ns))
-                    {
-                        if (!XmlReaderHelper.ReadFirstContent(reader))
-                            continue;
-
-                        while (!reader.EOF)
-                        {
-                            if (reader.IsStartElement("sheet", _ns))
-                            {
-                                yield return new SheetRecord(
-                                    reader.GetAttribute("name"),
-                                    uint.Parse(reader.GetAttribute("sheetId")),
-                                    reader.GetAttribute("id", "http://schemas.openxmlformats.org/officeDocument/2006/relationships")
-                                );
-                                reader.Skip();
-                            }
-                            else if (!XmlReaderHelper.SkipContent(reader))
-                            {
-                                break;
-                            }
-                        }
-                    }
-                    else if (!XmlReaderHelper.SkipContent(reader))
-                    {
-                        yield break;
-                    }
-                }
-            }
-        }
-
-        internal void ReadWorkbookRels(ReadOnlyCollection<ZipArchiveEntry> entries)
-        {
-            _sheetRecords = ReadWorkbook(entries).ToList();
-            //_styles = ReadStyle(entries).ToList();
-
-            using (var stream = entries.Single(w => w.FullName == "xl/_rels/workbook.xml.rels").Open())
-            using (XmlReader reader = XmlReader.Create(stream, XmlSettings))
-            {
-                if (!reader.IsStartElement("Relationships", "http://schemas.openxmlformats.org/package/2006/relationships"))
-                    return;
-
-                if (!XmlReaderHelper.ReadFirstContent(reader))
-                    return;
-
-                while (!reader.EOF)
-                {
-                    if (reader.IsStartElement("Relationship", "http://schemas.openxmlformats.org/package/2006/relationships"))
-                    {
-                        string rid = reader.GetAttribute("Id");
-                        foreach (var sheet in _sheetRecords)
-                        {
-                            if (sheet.Rid == rid)
-                            {
-                                sheet.Path = reader.GetAttribute("Target");
-                                break;
-                            }
-                        }
-
-                        reader.Skip();
-                    }
-                    else if (!XmlReaderHelper.SkipContent(reader))
-                    {
-                        break;
-                    }
-                }
-            }
-        }
-
         public IEnumerable<IDictionary<string, object>> Query(Stream stream, bool UseHeaderRow = false)
         {
             using (var archive = new ExcelOpenXmlZip(stream))
@@ -179,7 +68,7 @@ namespace MiniExcelLibs.OpenXml
 
                 //TODO: merge one open read
                 using (var firstSheetEntryStream = sheetEntry.Open())
-                using (XmlReader reader = XmlReader.Create(firstSheetEntryStream, XmlSettings))
+                using (XmlReader reader = XmlReader.Create(firstSheetEntryStream, _xmlSettings))
                 {
                     while (reader.Read())
                     {
@@ -225,7 +114,7 @@ namespace MiniExcelLibs.OpenXml
                 if (withoutCR)
                 {
                     using (var firstSheetEntryStream = sheetEntry.Open())
-                    using (XmlReader reader = XmlReader.Create(firstSheetEntryStream, XmlSettings))
+                    using (XmlReader reader = XmlReader.Create(firstSheetEntryStream, _xmlSettings))
                     {
                         if (!reader.IsStartElement("worksheet", _ns))
                             yield break;
@@ -281,7 +170,7 @@ namespace MiniExcelLibs.OpenXml
 
 
                 using (var firstSheetEntryStream = sheetEntry.Open())
-                using (XmlReader reader = XmlReader.Create(firstSheetEntryStream, XmlSettings))
+                using (XmlReader reader = XmlReader.Create(firstSheetEntryStream, _xmlSettings))
                 {
                     if (!reader.IsStartElement("worksheet", _ns))
                         yield break;
@@ -419,7 +308,6 @@ namespace MiniExcelLibs.OpenXml
                 }
             }
         }
-
         public IEnumerable<T> Query<T>(Stream stream) where T : class, new()
         {
             var type = typeof(T);
@@ -477,7 +365,119 @@ namespace MiniExcelLibs.OpenXml
                 yield return v;
             }
         }
+        private List<string> GetSharedStrings(ExcelOpenXmlZip archive)
+        {
+            var sharedStringsEntry = archive.GetEntry("xl/sharedStrings.xml");
+            if (sharedStringsEntry == null)
+                return null;
+            using (var stream = sharedStringsEntry.Open())
+            {
+                return GetSharedStrings(stream).ToList();
+            }
+        }
+        private IEnumerable<string> GetSharedStrings(Stream stream)
+        {
+            using (var reader = XmlReader.Create(stream))
+            {
+                if (!reader.IsStartElement("sst", "http://schemas.openxmlformats.org/spreadsheetml/2006/main"))
+                    yield break;
 
+                if (!XmlReaderHelper.ReadFirstContent(reader))
+                    yield break;
+
+                while (!reader.EOF)
+                {
+                    if (reader.IsStartElement("si", "http://schemas.openxmlformats.org/spreadsheetml/2006/main"))
+                    {
+                        var value = StringHelper.ReadStringItem(reader);
+                        yield return value;
+                    }
+                    else if (!XmlReaderHelper.SkipContent(reader))
+                    {
+                        break;
+                    }
+                }
+            }
+        }
+        private IEnumerable<SheetRecord> ReadWorkbook(ReadOnlyCollection<ZipArchiveEntry> entries)
+        {
+            using (var stream = entries.Single(w => w.FullName == "xl/workbook.xml").Open())
+            using (XmlReader reader = XmlReader.Create(stream, _xmlSettings))
+            {
+                if (!reader.IsStartElement("workbook", _ns))
+                    yield break;
+
+                if (!XmlReaderHelper.ReadFirstContent(reader))
+                    yield break;
+
+                while (!reader.EOF)
+                {
+                    if (reader.IsStartElement("sheets", _ns))
+                    {
+                        if (!XmlReaderHelper.ReadFirstContent(reader))
+                            continue;
+
+                        while (!reader.EOF)
+                        {
+                            if (reader.IsStartElement("sheet", _ns))
+                            {
+                                yield return new SheetRecord(
+                                    reader.GetAttribute("name"),
+                                    uint.Parse(reader.GetAttribute("sheetId")),
+                                    reader.GetAttribute("id", "http://schemas.openxmlformats.org/officeDocument/2006/relationships")
+                                );
+                                reader.Skip();
+                            }
+                            else if (!XmlReaderHelper.SkipContent(reader))
+                            {
+                                break;
+                            }
+                        }
+                    }
+                    else if (!XmlReaderHelper.SkipContent(reader))
+                    {
+                        yield break;
+                    }
+                }
+            }
+        }
+        private void ReadWorkbookRels(ReadOnlyCollection<ZipArchiveEntry> entries)
+        {
+            _sheetRecords = ReadWorkbook(entries).ToList();
+            //_styles = ReadStyle(entries).ToList();
+
+            using (var stream = entries.Single(w => w.FullName == "xl/_rels/workbook.xml.rels").Open())
+            using (XmlReader reader = XmlReader.Create(stream, _xmlSettings))
+            {
+                if (!reader.IsStartElement("Relationships", "http://schemas.openxmlformats.org/package/2006/relationships"))
+                    return;
+
+                if (!XmlReaderHelper.ReadFirstContent(reader))
+                    return;
+
+                while (!reader.EOF)
+                {
+                    if (reader.IsStartElement("Relationship", "http://schemas.openxmlformats.org/package/2006/relationships"))
+                    {
+                        string rid = reader.GetAttribute("Id");
+                        foreach (var sheet in _sheetRecords)
+                        {
+                            if (sheet.Rid == rid)
+                            {
+                                sheet.Path = reader.GetAttribute("Target");
+                                break;
+                            }
+                        }
+
+                        reader.Skip();
+                    }
+                    else if (!XmlReaderHelper.SkipContent(reader))
+                    {
+                        break;
+                    }
+                }
+            }
+        }
         private object ReadCell(XmlReader reader, int nextColumnIndex, bool withoutCR, out int columnIndex)
         {
             int xfIndex = -1;
@@ -518,7 +518,6 @@ namespace MiniExcelLibs.OpenXml
 
             return value;
         }
-
         private void ConvertCellValue(string rawValue, string aT, int xfIndex, out object value)
         {
             const NumberStyles style = NumberStyles.Any;
@@ -568,14 +567,5 @@ namespace MiniExcelLibs.OpenXml
                     return;
             }
         }
-
-        private static readonly XmlReaderSettings XmlSettings = new XmlReaderSettings
-        {
-            IgnoreComments = true,
-            IgnoreWhitespace = true,
-            XmlResolver = null,
-        };
-
-
     }
 }

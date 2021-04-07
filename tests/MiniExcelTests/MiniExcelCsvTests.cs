@@ -15,7 +15,37 @@ namespace MiniExcelLibs.Tests
 		  public string c2 { get; set; }
 	   }
 
-	   [Fact()]
+        [Fact]
+        public void CsvExcelTypeTest()
+        {
+            {
+                var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.csv");
+                var input = new[] { new { A = "Test1", B = "Test2" } };
+                MiniExcel.SaveAs(path, input);
+
+                var texts = File.ReadAllLines(path);
+                Assert.Equal("A,B", texts[0]);
+                Assert.Equal("Test1,Test2", texts[1]);
+
+                {
+                    var rows = MiniExcel.Query(path).ToList();
+                    Assert.Equal("A", rows[0].A);
+                    Assert.Equal("B", rows[0].B);
+                    Assert.Equal("Test1", rows[1].A);
+                    Assert.Equal("Test2", rows[1].B);
+                }
+
+                using (var reader = new StreamReader(path))
+                using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+                {
+                    var rows = csv.GetRecords<dynamic>().ToList();
+                    Assert.Equal("Test1", rows[0].A);
+                    Assert.Equal("Test2", rows[0].B);
+                }
+            }
+        }
+
+        [Fact()]
 	   public void Create2x2_Test()
         {
 		  var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.csv");

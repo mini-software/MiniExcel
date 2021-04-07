@@ -4,8 +4,10 @@
     using System.IO;
     public static partial class MiniExcel
     {
-        internal static ExcelType GetExcelType(string filePath)
+        internal static ExcelType GetExcelType(string filePath, ExcelType excelType)
         {
+            if (excelType != ExcelType.UNKNOWN)
+                return excelType;
             var extension = Path.GetExtension(filePath).ToLowerInvariant();
             switch (extension)
             {
@@ -20,8 +22,10 @@
             }
         }
 
-        internal static ExcelType GetExcelType(Stream stream)
+        internal static ExcelType GetExcelType(Stream stream, ExcelType excelType)
         {
+            if (excelType != ExcelType.UNKNOWN)
+                return excelType;
             var buffer = new byte[512];
             stream.Read(buffer, 0, buffer.Length);
             var flag = BitConverter.ToUInt32(buffer, 0);

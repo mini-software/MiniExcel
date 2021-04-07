@@ -7,12 +7,12 @@ namespace MiniExcelLibs.OpenXml
     {
         private IExcelReader _excelReader;
         private IExcelWriter _excelWriter;
-        public ExcelOpenXmlProvider(bool printHeader)
+
+        public ExcelOpenXmlProvider(bool printHeader, string sheetName)
         {
             _excelWriter = new ExcelOpenXmlSheetWriter(printHeader);
-            _excelReader = new ExcelOpenXmlSheetReader();
+            _excelReader = new ExcelOpenXmlSheetReader(sheetName);
         }
-
 
         public override IEnumerable<IDictionary<string, object>> Query(Stream stream, bool UseHeaderRow = false)
         {

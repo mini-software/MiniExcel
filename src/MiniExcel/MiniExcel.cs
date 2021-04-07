@@ -5,20 +5,20 @@
 
     public static partial class MiniExcel
     {
-        public static void SaveAs(string path, object value, bool printHeader = true, ExcelType excelType = ExcelType.UNKNOWN)
+        public static void SaveAs(string path, object value, bool printHeader = true, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN)
         {
             using (FileStream stream = new FileStream(path, FileMode.CreateNew))
-                SaveAs(stream, value, printHeader, GetExcelType(path, excelType));
+                SaveAs(stream, value, printHeader, sheetName, GetExcelType(path, excelType));
         }
 
         /// <summary>
         /// Default SaveAs Xlsx file
         /// </summary>
-        public static void SaveAs(this Stream stream, object value, bool printHeader = true, ExcelType excelType = ExcelType.XLSX)
+        public static void SaveAs(this Stream stream, object value, bool printHeader = true, string sheetName = null, ExcelType excelType = ExcelType.XLSX)
         {
             if (excelType == ExcelType.UNKNOWN)
                 throw new InvalidDataException("Please specify excelType");
-            ExcelFacorty.GetExcelProvider(excelType, printHeader).SaveAs(stream, value);
+            ExcelFacorty.GetExcelProvider(excelType, printHeader, sheetName).SaveAs(stream, value);
         }
 
         public static IEnumerable<T> Query<T>(string path, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, IConfiguration configuration = null) where T : class, new()
@@ -30,19 +30,19 @@
 
         public static IEnumerable<T> Query<T>(this Stream stream, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, IConfiguration configuration = null) where T : class, new()
         {
-            return ExcelFacorty.GetExcelProvider(GetExcelType(stream, excelType)).Query<T>(stream);
+            return ExcelFacorty.GetExcelProvider(GetExcelType(stream, excelType), sheetName).Query<T>(stream);
         }
 
-        public static IEnumerable<dynamic> Query(string path, bool useHeaderRow = false, ExcelType excelType = ExcelType.UNKNOWN, IConfiguration configuration = null)
+        public static IEnumerable<dynamic> Query(string path, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, IConfiguration configuration = null)
         {
             using (var stream = File.OpenRead(path))
-                foreach (var item in Query(stream, useHeaderRow, GetExcelType(path, excelType), configuration))
+                foreach (var item in Query(stream, useHeaderRow, sheetName, GetExcelType(path, excelType), configuration))
                     yield return item;
         }
 
-        public static IEnumerable<dynamic> Query(this Stream stream, bool useHeaderRow = false, ExcelType excelType = ExcelType.UNKNOWN, IConfiguration configuration = null)
+        public static IEnumerable<dynamic> Query(this Stream stream, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, IConfiguration configuration = null)
         {
-            return ExcelFacorty.GetExcelProvider(GetExcelType(stream, excelType), useHeaderRow).Query(stream, useHeaderRow);
+            return ExcelFacorty.GetExcelProvider(GetExcelType(stream, excelType), useHeaderRow, sheetName).Query(stream, useHeaderRow);
         }
     }
 }

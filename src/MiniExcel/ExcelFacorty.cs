@@ -9,18 +9,18 @@
     /// </summary>
     internal class ExcelFacorty
     {
-        internal static ExcelProviderBase GetExcelProvider(ExcelType excelType)
+        internal static ExcelProviderBase GetExcelProvider(ExcelType excelType, string sheetName)
         {
-            return GetExcelProvider(excelType, true);
+            return GetExcelProvider(excelType, true, sheetName);
         }
-        internal static ExcelProviderBase GetExcelProvider(ExcelType excelType, bool useHeaderRow)
+        internal static ExcelProviderBase GetExcelProvider(ExcelType excelType, bool useHeaderRow, string sheetName)
         {
             switch (excelType)
             {
                 case ExcelType.CSV:
                     return new CsvProvider();
                 case ExcelType.XLSX:
-                    return new ExcelOpenXmlProvider(useHeaderRow);
+                    return new ExcelOpenXmlProvider(useHeaderRow, sheetName);
                 default:
                     throw new NotSupportedException($"Please Issue for me");
             }

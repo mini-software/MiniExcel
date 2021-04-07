@@ -17,7 +17,6 @@ using MiniExcelLibs.Attributes;
 
 namespace MiniExcelLibs.Tests
 {
-
     public partial class MiniExcelOpenXmlTests
     {
         [Fact]
@@ -39,7 +38,7 @@ namespace MiniExcelLibs.Tests
 
             var rows1 = MiniExcel.Query<SaveAsControlChracterVO>(path).Select(s => s.Test).ToArray();
 
-            
+
         }
 
         public class SaveAsControlChracterVO

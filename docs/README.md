@@ -4,6 +4,7 @@
 - [New] Added GetSheetNames method support multi-sheets Query
 - [New] Query support by sheet name
 - [New] Csv SaveAs support DataTable/Dictionary parameters
+- [New] CsvConfiguration support custom newLine & seperator & GetStreamReaderFunc
 - [Optimization] Optimizz SaveAs/Query excel file type auto-check
 
 ### 0.10.3 

@@ -282,7 +282,23 @@ Assert.Null(rows[0].Test5);
 Assert.Null(rows[0].Test6);
 ```
 
+### Query by sheet name
 
+```C#
+MiniExcel.Query(path, sheetName: "SheetName");
+//or
+stream.Query(sheetName: "SheetName");
+```
+
+### Query all sheet name and rows
+
+```C#
+var sheetNames = MiniExcel.GetSheetNames(path).ToList();
+foreach (var sheetName in sheetNames)
+{
+    var rows = MiniExcel.Query(path, sheetName: sheetName);
+}
+```
 
 ### SQLite & Dapper `Large Size File` SQL Insert Avoid OOM
 

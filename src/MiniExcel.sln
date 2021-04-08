@@ -12,8 +12,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		..\appveyor.yml = ..\appveyor.yml
 		..\LICENSE.md = ..\LICENSE.md
 		..\README.md = ..\README.md
-		..\README.zh-Hans.md = ..\README.zh-Hans.md
-		..\README.zh-tw.md = ..\README.zh-tw.md
+		..\README.zh-CN.md = ..\README.zh-CN.md
+		..\README.zh-Hant.md = ..\README.zh-Hant.md
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{CC1E0601-AEC9-42D7-8F6A-3FB3939EED16}"

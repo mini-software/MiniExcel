@@ -21,7 +21,7 @@
         {
             if (excelType == ExcelType.UNKNOWN)
                 throw new InvalidDataException("Please specify excelType");
-            ExcelWriterFactory.GetProvider(stream,excelType).SaveAs(value, printHeader);
+            ExcelWriterFactory.GetProvider(stream, excelType).SaveAs(value, printHeader);
         }
 
         public static IEnumerable<T> Query<T>(string path, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, IConfiguration configuration = null) where T : class, new()
@@ -33,7 +33,7 @@
 
         public static IEnumerable<T> Query<T>(this Stream stream, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, IConfiguration configuration = null) where T : class, new()
         {
-            return ExcelReaderFactory.GetProvider(stream,GetExcelType(stream, excelType)).Query<T>(sheetName);
+            return ExcelReaderFactory.GetProvider(stream, GetExcelType(stream, excelType)).Query<T>(sheetName);
         }
 
         public static IEnumerable<dynamic> Query(string path, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, IConfiguration configuration = null)
@@ -45,56 +45,21 @@
 
         public static IEnumerable<dynamic> Query(this Stream stream, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, IConfiguration configuration = null)
         {
-            return ExcelReaderFactory.GetProvider(stream,GetExcelType(stream, excelType)).Query(useHeaderRow, sheetName);
+            return ExcelReaderFactory.GetProvider(stream, GetExcelType(stream, excelType)).Query(useHeaderRow, sheetName);
         }
 
-        public static GridReader QueryMultiple(string path, bool useHeaderRow = false)
+        public static IEnumerable<string> GetSheetNames(string path)
         {
-            // only xlsx support this
-            return new GridReader(path);
-        }
-    }
-
-    public class GridReader : IDisposable
-    {
-        private string _path;
-        private List<SheetRecord> _sheetRecords;
-        private int _sheetIndex = 0;
-
-        public GridReader(string path)
-        {
-            _path = path;
-
             using (var stream = File.OpenRead(path))
-            using (var archive = new ExcelOpenXmlZip(stream))
-            {
-                _sheetRecords = ExcelOpenXmlSheetReader.GetWorkbookRels(archive.Entries);
-            }
+                foreach (var item in GetSheetNames(stream))
+                    yield return item;
         }
 
-        public IEnumerable<string> GetSheetNames()
+        public static IEnumerable<string> GetSheetNames(this Stream stream)
         {
-            foreach (var item in _sheetRecords)
-            {
+            var archive = new ExcelOpenXmlZip(stream);
+            foreach (var item in ExcelOpenXmlSheetReader.GetWorkbookRels(archive.Entries))
                 yield return item.Name;
-            }
-        }
-
-        public void Dispose()
-        {
-            //if (archive != null)
-            //{
-            //    archive.Dispose();
-            //    archive = null;
-            //}
-            GC.SuppressFinalize(this);
-        }
-
-        public IEnumerable<dynamic> Read(bool useHeaderRow = false)
-        {
-            var sheetRecord = _sheetRecords[_sheetIndex];//TODO
-            _sheetIndex = _sheetIndex + 1;
-            return MiniExcel.Query(_path,useHeaderRow, sheetRecord.Name);
         }
     }
 }

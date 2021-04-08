@@ -53,6 +53,12 @@ namespace MiniExcelLibs.Tests
                     Assert.Equal(2, rows[0].A);
                     Assert.Equal(2, rows[0].B);
                 }
+                {
+                    var rows = stream.Query(sheetName: "Sheet1").ToList();
+                    Assert.Equal(12, rows.Count);
+                    Assert.Equal(2, rows[0].A);
+                    Assert.Equal(2, rows[0].B);
+                }
             }
         }
 
@@ -72,14 +78,26 @@ namespace MiniExcelLibs.Tests
         public void MultiSheetsQueryTest()
         {
             var path = @"..\..\..\..\..\samples\xlsx\TestMultiSheet.xlsx";
-            using (var multi = MiniExcel.QueryMultiple(path))
             {
-                var names = multi.GetSheetNames().ToList();
-                Assert.Equal(new[] { "Sheet2", "Sheet1", "Sheet3" }, names);
+                var sheetNames = MiniExcel.GetSheetNames(path).ToList();
+                foreach (var sheetName in sheetNames)
+                {
+                    var rows = MiniExcel.Query(path, sheetName: sheetName);
+                }
+                    
+                Assert.Equal(new[] { "Sheet2", "Sheet1", "Sheet3" }, sheetNames);
+            }
 
-                var sheet2Rows = multi.Read().ToList();
-                var sheet1Rows = multi.Read().ToList();
-                var sheet3Rows = multi.Read().ToList();
+            {
+                using (var stream = File.OpenRead(path))
+                {
+                    var sheetNames = stream.GetSheetNames().ToList();
+                    Assert.Equal(new[] { "Sheet2", "Sheet1", "Sheet3" }, sheetNames);
+                    foreach (var sheetName in sheetNames)
+                    {
+                        var rows = stream.Query(sheetName: sheetName);
+                    }
+                }
             }
         }
     }

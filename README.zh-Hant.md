@@ -274,7 +274,23 @@ Assert.Null(rows[0].Test5);
 Assert.Null(rows[0].Test6);
 ```
 
+### 查詢指定 Sheet 名稱
 
+```C#
+MiniExcel.Query(path, sheetName: "SheetName");
+//or
+stream.Query(sheetName: "SheetName");
+```
+
+### 查詢所有 Sheet 名稱跟資料
+
+```C#
+var sheetNames = MiniExcel.GetSheetNames(path).ToList();
+foreach (var sheetName in sheetNames)
+{
+    var rows = MiniExcel.Query(path, sheetName: sheetName);
+}
+```
 
 ### 例子 : SQLite & Dapper 讀取大數據新增到資料庫
 

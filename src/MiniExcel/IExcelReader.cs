@@ -5,7 +5,7 @@ namespace MiniExcelLibs
 {
     internal interface IExcelReader
     {
-        IEnumerable<IDictionary<string, object>> Query(Stream stream, bool UseHeaderRow = false);
-        IEnumerable<T> Query<T>(Stream stream) where T : class, new();
+        IEnumerable<IDictionary<string, object>> Query(bool UseHeaderRow, string sheetName);
+        IEnumerable<T> Query<T>(string sheetName) where T : class, new();
     }
 }

@@ -4,6 +4,6 @@ namespace MiniExcelLibs
 {
     internal interface IExcelWriter
     {
-        void SaveAs(Stream stream, object value);
+        void SaveAs(object value, bool printHeader);
     }
 }

@@ -15,22 +15,23 @@ namespace MiniExcelLibs.OpenXml
 {
     internal class ExcelOpenXmlSheetWriter : IExcelWriter
     {
-        private readonly bool _printHeader;
-        public ExcelOpenXmlSheetWriter(bool printHeader)
+        private readonly UTF8Encoding _utf8WithBom = new System.Text.UTF8Encoding(true);
+        private Stream _stream;
+        public ExcelOpenXmlSheetWriter(Stream stream)
         {
-            this._printHeader = printHeader;
+            this._stream = stream;
         }
 
-        public void SaveAs(Stream stream, object value)
+        public void SaveAs(object value,bool printHeader)
         {
-            using (var archive = new ZipArchive(stream, ZipArchiveMode.Create, true, Utf8WithBom))
+            using (var archive = new ZipArchive(_stream, ZipArchiveMode.Create, true, _utf8WithBom))
             {
                 var packages = DefualtOpenXml.GenerateDefaultOpenXml(archive);
                 var sheetPath = "xl/worksheets/sheet1.xml";
                 {
                     ZipArchiveEntry entry = archive.CreateEntry(sheetPath);
                     using (var zipStream = entry.Open())
-                    using (StreamWriter writer = new StreamWriter(zipStream, Utf8WithBom))
+                    using (StreamWriter writer = new StreamWriter(zipStream, _utf8WithBom))
                     {
                         if (value == null)
                         {
@@ -105,13 +106,13 @@ namespace MiniExcelLibs.OpenXml
                             writer.Write($@"<?xml version=""1.0"" encoding=""utf-8""?><x:worksheet xmlns:x=""http://schemas.openxmlformats.org/spreadsheetml/2006/main"">");
                             // dimension 
 
-                            var maxRowIndex = rowCount + (_printHeader && rowCount > 0 ? 1 : 0);  //TODO:it can optimize
+                            var maxRowIndex = rowCount + (printHeader && rowCount > 0 ? 1 : 0);  //TODO:it can optimize
                             writer.Write($@"<dimension ref=""{GetDimension(maxRowIndex, maxColumnIndex)}""/><x:sheetData>");
 
                             //header
                             var yIndex = 1;
                             var xIndex = 1;
-                            if (_printHeader)
+                            if (printHeader)
                             {
                                 var cellIndex = xIndex;
                                 writer.Write($"<x:row r=\"{yIndex.ToString()}\">");
@@ -149,7 +150,7 @@ namespace MiniExcelLibs.OpenXml
                         }
                         else if (value is DataTable)
                         {
-                            GenerateSheetByDataTable(writer, archive, value as DataTable);
+                            GenerateSheetByDataTable(writer, archive, value as DataTable, printHeader);
                         }
                         else
                         {
@@ -284,7 +285,7 @@ namespace MiniExcelLibs.OpenXml
             }
         }
 
-        internal void GenerateSheetByDataTable(StreamWriter writer, ZipArchive archive, DataTable value)
+        internal void GenerateSheetByDataTable(StreamWriter writer, ZipArchive archive, DataTable value, bool printHeader)
         {
             var xy = ExcelOpenXmlUtils.ConvertCellToXY("A1");
 
@@ -294,11 +295,11 @@ namespace MiniExcelLibs.OpenXml
                 var yIndex = xy.Item2;
 
                 // dimension
-                var maxRowIndex = value.Rows.Count + (_printHeader && value.Rows.Count > 0 ? 1 : 0);
+                var maxRowIndex = value.Rows.Count + (printHeader && value.Rows.Count > 0 ? 1 : 0);
                 var maxColumnIndex = value.Columns.Count;
                 writer.Write($@"<dimension ref=""{GetDimension(maxRowIndex, maxColumnIndex)}""/><x:sheetData>");
 
-                if (_printHeader)
+                if (printHeader)
                 {
                     writer.Write($"<x:row r=\"{yIndex.ToString()}\">");
                     var xIndex = xy.Item1;
@@ -364,7 +365,7 @@ namespace MiniExcelLibs.OpenXml
 
             ZipArchiveEntry entry = archive.CreateEntry("[Content_Types].xml");
             using (var zipStream = entry.Open())
-            using (StreamWriter writer = new StreamWriter(zipStream, Utf8WithBom))
+            using (StreamWriter writer = new StreamWriter(zipStream, _utf8WithBom))
                 writer.Write(sb.ToString());
         }
 
@@ -381,7 +382,5 @@ namespace MiniExcelLibs.OpenXml
                 dimensionRef = $"A1:{Helpers.GetAlphabetColumnName(maxColumnIndex - 1)}{maxRowIndex}";
             return dimensionRef;
         }
-
-        private readonly UTF8Encoding Utf8WithBom = new System.Text.UTF8Encoding(true);
     }
 }

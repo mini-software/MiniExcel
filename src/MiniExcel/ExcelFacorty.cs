@@ -3,24 +3,34 @@
     using MiniExcelLibs.OpenXml;
     using System;
     using MiniExcelLibs.Csv;
+    using System.IO;
 
-    /// <summary>
-    /// use statics factory,If want to do OCP we can use a Interface factory to instead of  statics factory
-    /// </summary>
-    internal class ExcelFacorty
+    internal class ExcelWriterFactory
     {
-        internal static ExcelProviderBase GetExcelProvider(ExcelType excelType, string sheetName)
-        {
-            return GetExcelProvider(excelType, true, sheetName);
-        }
-        internal static ExcelProviderBase GetExcelProvider(ExcelType excelType, bool useHeaderRow, string sheetName)
+        internal static IExcelWriter GetProvider(Stream stream,ExcelType excelType)
         {
             switch (excelType)
             {
                 case ExcelType.CSV:
-                    return new CsvProvider();
+                    return new CsvWriter(stream);
                 case ExcelType.XLSX:
-                    return new ExcelOpenXmlProvider(useHeaderRow, sheetName);
+                    return new ExcelOpenXmlSheetWriter(stream);
+                default:
+                    throw new NotSupportedException($"Please Issue for me");
+            }
+        }
+    }
+
+    internal class ExcelReaderFactory
+    { 
+        internal static IExcelReader GetProvider(Stream stream, ExcelType excelType)
+        {
+            switch (excelType)
+            {
+                case ExcelType.CSV:
+                    return new CsvReader(stream);
+                case ExcelType.XLSX:
+                    return new ExcelOpenXmlSheetReader(stream);
                 default:
                     throw new NotSupportedException($"Please Issue for me");
             }

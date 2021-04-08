@@ -8,9 +8,16 @@ namespace MiniExcelLibs.Csv
 {
     internal class CsvWriter : IExcelWriter
     {
-        public void SaveAs(Stream stream, object input)
+        private Stream _stream;
+
+        public CsvWriter(Stream stream)
         {
-            using (StreamWriter writer = new StreamWriter(stream))
+            this._stream = stream;
+        }
+
+        public void SaveAs(object input, bool printHeader)
+        {
+            using (StreamWriter writer = new StreamWriter(_stream))
             {
                 // notice : if first one is null then it can't get Type infomation
                 var first = true;

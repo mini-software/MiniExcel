@@ -1,6 +1,7 @@
 ﻿using Xunit;
 using System.Linq;
 using System;
+using System.IO;
 
 namespace MiniExcelLibs.Tests
 {
@@ -30,6 +31,55 @@ namespace MiniExcelLibs.Tests
             }
             {
                 Assert.Throws<InvalidOperationException>(() => MiniExcel.Query(path, sheetName: "xxxx").ToList());
+            }
+
+            using (var stream = File.OpenRead(path))
+            {
+                {
+                    var rows = stream.Query(sheetName: "Sheet3").ToList();
+                    Assert.Equal(5, rows.Count);
+                    Assert.Equal(3, rows[0].A);
+                    Assert.Equal(3, rows[0].B);
+                }
+                {
+                    var rows = stream.Query(sheetName: "Sheet2").ToList();
+                    Assert.Equal(12, rows.Count);
+                    Assert.Equal(1, rows[0].A);
+                    Assert.Equal(1, rows[0].B);
+                }
+                {
+                    var rows = stream.Query(sheetName: "Sheet1").ToList();
+                    Assert.Equal(12, rows.Count);
+                    Assert.Equal(2, rows[0].A);
+                    Assert.Equal(2, rows[0].B);
+                }
+            }
+        }
+
+        [Fact]
+        public void MultiSheetsQueryBasicTest()
+        {
+            var path = @"..\..\..\..\..\samples\xlsx\TestMultiSheet.xlsx";
+            using (var stream = File.OpenRead(path))
+            {
+                var sheet1 = stream.Query(sheetName: "Sheet1");
+                var sheet2 = stream.Query(sheetName: "Sheet2");
+                var sheet3 = stream.Query(sheetName: "Sheet3");
+            }
+        }
+
+        [Fact]
+        public void MultiSheetsQueryTest()
+        {
+            var path = @"..\..\..\..\..\samples\xlsx\TestMultiSheet.xlsx";
+            using (var multi = MiniExcel.QueryMultiple(path))
+            {
+                var names = multi.GetSheetNames().ToList();
+                Assert.Equal(new[] { "Sheet2", "Sheet1", "Sheet3" }, names);
+
+                var sheet2Rows = multi.Read().ToList();
+                var sheet1Rows = multi.Read().ToList();
+                var sheet3Rows = multi.Read().ToList();
             }
         }
     }

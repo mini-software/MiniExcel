@@ -354,7 +354,7 @@ namespace MiniExcelLibs.Tests
 
             DataSet exceldatareaderResult;
             using (var stream = File.OpenRead(path))
-            using (var reader = ExcelReaderFactory.CreateReader(stream))
+            using (var reader = ExcelDataReader.ExcelReaderFactory.CreateReader(stream))
             {
                 exceldatareaderResult = reader.AsDataSet();
             }

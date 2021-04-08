@@ -15,50 +15,52 @@ namespace MiniExcelLibs.OpenXml
     internal class ExcelOpenXmlSheetReader : IExcelReader
     {
         private const string _ns = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
-        private List<SheetRecord> _sheetRecords = null;
+        private List<SheetRecord> _sheetRecords;
         private List<string> _sharedStrings;
         private ExcelOpenXmlStyles _style;
-        private string _sheetName;
+        private ExcelOpenXmlZip _archive;
         private static readonly XmlReaderSettings _xmlSettings = new XmlReaderSettings
         {
             IgnoreComments = true,
             IgnoreWhitespace = true,
             XmlResolver = null,
         };
-        public ExcelOpenXmlSheetReader(string sheetName)
+        
+        public ExcelOpenXmlSheetReader(Stream stream)
         {
-            this._sheetName = sheetName;
+            _archive = new ExcelOpenXmlZip(stream);
         }
-        public IEnumerable<IDictionary<string, object>> Query(Stream stream, bool UseHeaderRow = false)
+        
+        public IEnumerable<IDictionary<string, object>> Query(bool UseHeaderRow, string sheetName)
         {
-            using (var archive = new ExcelOpenXmlZip(stream))
+            //using (var archive = new ExcelOpenXmlZip(stream))
+            //var archive = new ExcelOpenXmlZip(stream);
             {
                 //TODO:need to optimize
-                _sharedStrings = GetSharedStrings(archive);
+                SetSharedStrings(_archive);
 
 
                 // if sheets count > 1 need to read xl/_rels/workbook.xml.rels and 
-                var sheets = archive.Entries.Where(w => w.FullName.StartsWith("xl/worksheets/sheet", StringComparison.OrdinalIgnoreCase)
+                var sheets = _archive.Entries.Where(w => w.FullName.StartsWith("xl/worksheets/sheet", StringComparison.OrdinalIgnoreCase)
                     || w.FullName.StartsWith("/xl/worksheets/sheet", StringComparison.OrdinalIgnoreCase)
                 );
                 ZipArchiveEntry sheetEntry = null;
-                if (_sheetName != null)
+                if (sheetName != null)
                 {
-                    ReadWorkbookRels(archive.Entries);
-                    var s = _sheetRecords.SingleOrDefault(_ => _.Name == _sheetName);
+                    SetWorkbookRels(_archive.Entries);
+                    var s = _sheetRecords.SingleOrDefault(_ => _.Name == sheetName);
                     if (s == null)
                         throw new InvalidOperationException("Please check sheetName/Index is correct");
                     sheetEntry = sheets.Single(w => w.FullName == $"xl/{s.Path}" || w.FullName == $"/xl/{s.Path}");
                 }
                 else if (sheets.Count() > 1)
                 {
-                    ReadWorkbookRels(archive.Entries);
+                    SetWorkbookRels(_archive.Entries);
                     var s = _sheetRecords[0];
                     sheetEntry = sheets.Single(w => w.FullName == $"xl/{s.Path}" || w.FullName == $"/xl/{s.Path}");
                 }
                 else
                     sheetEntry = sheets.Single();
-
 
                 // TODO: need to optimize performance
                 var withoutCR = false;
@@ -234,7 +236,7 @@ namespace MiniExcelLibs.OpenXml
                                                     }
                                                     // only when have s attribute then load styles xml data
                                                     if (_style == null)
-                                                        _style = new ExcelOpenXmlStyles(archive);
+                                                        _style = new ExcelOpenXmlStyles(_archive);
                                                     //if not using First Head then using 1,2,3 as index
                                                     if (UseHeaderRow)
                                                     {
@@ -308,11 +310,13 @@ namespace MiniExcelLibs.OpenXml
                 }
             }
         }
-        public IEnumerable<T> Query<T>(Stream stream) where T : class, new()
+        
+        
+        public IEnumerable<T> Query<T>( string sheetName) where T : class, new()
         {
             var type = typeof(T);
             var props = Helpers.GetExcelCustomPropertyInfos(type);
-            foreach (var item in Query(stream, true))
+            foreach (var item in Query(true, sheetName))
             {
                 var v = new T();
                 foreach (var pInfo in props)
@@ -365,16 +369,20 @@ namespace MiniExcelLibs.OpenXml
                 yield return v;
             }
         }
-        private List<string> GetSharedStrings(ExcelOpenXmlZip archive)
+        
+        private void SetSharedStrings(ExcelOpenXmlZip archive)
         {
+            if (_sharedStrings != null)
+                return;
             var sharedStringsEntry = archive.GetEntry("xl/sharedStrings.xml");
             if (sharedStringsEntry == null)
-                return null;
+                return;
             using (var stream = sharedStringsEntry.Open())
             {
-                return GetSharedStrings(stream).ToList();
+                _sharedStrings = GetSharedStrings(stream).ToList();
             }
         }
+        
         private IEnumerable<string> GetSharedStrings(Stream stream)
         {
             using (var reader = XmlReader.Create(stream))
@@ -399,7 +407,15 @@ namespace MiniExcelLibs.OpenXml
                 }
             }
         }
-        private IEnumerable<SheetRecord> ReadWorkbook(ReadOnlyCollection<ZipArchiveEntry> entries)
+        
+        private void SetWorkbookRels(ReadOnlyCollection<ZipArchiveEntry> entries)
+        {
+            if (_sheetRecords != null)
+                return;
+            _sheetRecords = GetWorkbookRels(entries);
+        }
+        
+        internal static IEnumerable<SheetRecord> ReadWorkbook(ReadOnlyCollection<ZipArchiveEntry> entries)
         {
             using (var stream = entries.Single(w => w.FullName == "xl/workbook.xml").Open())
             using (XmlReader reader = XmlReader.Create(stream, _xmlSettings))
@@ -441,26 +457,26 @@ namespace MiniExcelLibs.OpenXml
                 }
             }
         }
-        private void ReadWorkbookRels(ReadOnlyCollection<ZipArchiveEntry> entries)
+        
+        internal static List<SheetRecord> GetWorkbookRels(ReadOnlyCollection<ZipArchiveEntry> entries)
         {
-            _sheetRecords = ReadWorkbook(entries).ToList();
-            //_styles = ReadStyle(entries).ToList();
+            var sheetRecords = ReadWorkbook(entries).ToList();
 
             using (var stream = entries.Single(w => w.FullName == "xl/_rels/workbook.xml.rels").Open())
             using (XmlReader reader = XmlReader.Create(stream, _xmlSettings))
             {
                 if (!reader.IsStartElement("Relationships", "http://schemas.openxmlformats.org/package/2006/relationships"))
-                    return;
+                    return null;
 
                 if (!XmlReaderHelper.ReadFirstContent(reader))
-                    return;
+                    return null;
 
                 while (!reader.EOF)
                 {
                     if (reader.IsStartElement("Relationship", "http://schemas.openxmlformats.org/package/2006/relationships"))
                     {
                         string rid = reader.GetAttribute("Id");
-                        foreach (var sheet in _sheetRecords)
+                        foreach (var sheet in sheetRecords)
                         {
                             if (sheet.Rid == rid)
                             {
@@ -477,7 +493,10 @@ namespace MiniExcelLibs.OpenXml
                     }
                 }
             }
+
+            return sheetRecords;
         }
+        
         private object ReadCell(XmlReader reader, int nextColumnIndex, bool withoutCR, out int columnIndex)
         {
             int xfIndex = -1;
@@ -518,6 +537,7 @@ namespace MiniExcelLibs.OpenXml
 
             return value;
         }
+        
         private void ConvertCellValue(string rawValue, string aT, int xfIndex, out object value)
         {
             const NumberStyles style = NumberStyles.Any;

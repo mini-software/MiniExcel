@@ -14,13 +14,13 @@ namespace MiniExcelLibs.Csv
         {
             this._stream = stream;
         }
-        public IEnumerable<IDictionary<string, object>> Query(bool useHeaderRow, string sheetName)
+        public IEnumerable<IDictionary<string, object>> Query(bool useHeaderRow, string sheetName, IConfiguration configuration)
         {
+            var cf = configuration==null ? CsvConfiguration.DefaultConfiguration : (CsvConfiguration)configuration;
 
-            var configuration = new CsvConfiguration();
-            using (var reader = configuration.GetStreamReaderFunc(_stream))
+            using (var reader = cf.GetStreamReaderFunc(_stream))
             {
-                char[] seperators = { configuration.Seperator };
+                char[] seperators = { cf.Seperator };
 
                 var row = string.Empty;
                 string[] read;
@@ -61,15 +61,16 @@ namespace MiniExcelLibs.Csv
             }
         }
 
-        public IEnumerable<T> Query<T>(string sheetName) where T : class, new()
+        public IEnumerable<T> Query<T>(string sheetName, IConfiguration configuration) where T : class, new()
         {
+            var cf = configuration == null ? CsvConfiguration.DefaultConfiguration : (CsvConfiguration)configuration;
+
             var type = typeof(T);
             var props = Helpers.GetSaveAsProperties(type);
             Dictionary<int, PropertyInfo> idxProps = new Dictionary<int, PropertyInfo>();
-            var configuration = new CsvConfiguration();
-            using (var reader = configuration.GetStreamReaderFunc(_stream))
+            using (var reader = cf.GetStreamReaderFunc(_stream))
             {
-                char[] seperators = { configuration.Seperator };
+                char[] seperators = { cf.Seperator };
 
                 var row = string.Empty;
                 string[] read;

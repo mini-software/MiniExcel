@@ -31,7 +31,7 @@ namespace MiniExcelLibs.OpenXml
             _archive = new ExcelOpenXmlZip(stream);
         }
 
-        public IEnumerable<IDictionary<string, object>> Query(bool UseHeaderRow, string sheetName)
+        public IEnumerable<IDictionary<string, object>> Query(bool UseHeaderRow, string sheetName, IConfiguration configuration)
         {
             //TODO:need to optimize
             SetSharedStrings(_archive);
@@ -307,11 +307,11 @@ namespace MiniExcelLibs.OpenXml
         }
 
 
-        public IEnumerable<T> Query<T>(string sheetName) where T : class, new()
+        public IEnumerable<T> Query<T>(string sheetName, IConfiguration configuration) where T : class, new()
         {
             var type = typeof(T);
             var props = Helpers.GetExcelCustomPropertyInfos(type);
-            foreach (var item in Query(true, sheetName))
+            foreach (var item in Query(true, sheetName, configuration))
             {
                 var v = new T();
                 foreach (var pInfo in props)

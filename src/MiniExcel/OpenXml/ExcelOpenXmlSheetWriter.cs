@@ -22,7 +22,7 @@ namespace MiniExcelLibs.OpenXml
             this._stream = stream;
         }
 
-        public void SaveAs(object value,bool printHeader)
+        public void SaveAs(object value,bool printHeader, IConfiguration configuration)
         {
             using (var archive = new ZipArchive(_stream, ZipArchiveMode.Create, true, _utf8WithBom))
             {
@@ -55,6 +55,8 @@ namespace MiniExcelLibs.OpenXml
                             List<ExcelCustomPropertyInfo> props = null;
                             string mode = null;
 
+                            // reason : https://stackoverflow.com/questions/66797421/how-replace-top-format-mark-after-streamwriter-writing
+                            // check mode & get maxRowCount & maxColumnIndex
                             {
                                 foreach (var item in values) //TODO: need to optimize
                                 {
@@ -139,11 +141,11 @@ namespace MiniExcelLibs.OpenXml
                             }
 
                             if (mode == "IDictionary<string, object>") //Dapper Row
-                                GenerateSheetByDapperRow(writer, archive, value as IEnumerable, genericType, rowCount, keys.Cast<string>().ToList(), xIndex, yIndex);
+                                GenerateSheetByDapperRow(writer, archive, value as IEnumerable, rowCount, keys.Cast<string>().ToList(), xIndex, yIndex);
                             else if (mode == "IDictionary") //IDictionary
-                                GenerateSheetByIDictionary(writer, archive, value as IEnumerable, genericType, rowCount, keys, xIndex, yIndex);
+                                GenerateSheetByIDictionary(writer, archive, value as IEnumerable, rowCount, keys, xIndex, yIndex);
                             else if (mode == "Properties")
-                                GenerateSheetByProperties(writer, archive, value as IEnumerable, genericType, props, rowCount, keys, xIndex, yIndex);
+                                GenerateSheetByProperties(writer, archive, value as IEnumerable, props, rowCount, xIndex, yIndex);
                             else
                                 throw new NotImplementedException($"Type {type.Name} & genericType {genericType.Name} not Implemented. please issue for me.");
                             writer.Write("</x:sheetData></x:worksheet>");
@@ -171,7 +173,7 @@ namespace MiniExcelLibs.OpenXml
             writer.Write($@"<?xml version=""1.0"" encoding=""utf-8""?><x:worksheet xmlns:x=""http://schemas.openxmlformats.org/spreadsheetml/2006/main""><dimension ref=""A1""/><x:sheetData></x:sheetData></x:worksheet>");
         }
 
-        internal void GenerateSheetByDapperRow(StreamWriter writer, ZipArchive archive, IEnumerable value, Type genericType, int rowCount, List<string> keys, int xIndex = 1, int yIndex = 1)
+        internal void GenerateSheetByDapperRow(StreamWriter writer, ZipArchive archive, IEnumerable value, int rowCount, List<string> keys, int xIndex = 1, int yIndex = 1)
         {
             //body
             foreach (IDictionary<string, object> v in value)
@@ -209,7 +211,7 @@ namespace MiniExcelLibs.OpenXml
             }
         }
 
-        internal void GenerateSheetByIDictionary(StreamWriter writer, ZipArchive archive, IEnumerable value, Type genericType, int rowCount, List<object> keys, int xIndex = 1, int yIndex = 1)
+        internal void GenerateSheetByIDictionary(StreamWriter writer, ZipArchive archive, IEnumerable value, int rowCount, List<object> keys, int xIndex = 1, int yIndex = 1)
         {
             //body
             foreach (IDictionary v in value)
@@ -247,7 +249,7 @@ namespace MiniExcelLibs.OpenXml
             }
         }
 
-        internal void GenerateSheetByProperties(StreamWriter writer, ZipArchive archive, IEnumerable value, Type genericType, List<ExcelCustomPropertyInfo> props, int rowCount, List<object> keys, int xIndex = 1, int yIndex = 1)
+        internal void GenerateSheetByProperties(StreamWriter writer, ZipArchive archive, IEnumerable value, List<ExcelCustomPropertyInfo> props, int rowCount, int xIndex = 1, int yIndex = 1)
         {
             //body
             foreach (var v in value)

@@ -1,11 +1,10 @@
-
-
 ## Release  Notes
 
 ### 0.11.0
 - [New] Added GetSheetNames method support multi-sheets Query
 - [New] Query support by sheet name
-- Optimiz SaveAs/Query excel file type auto-check
+- [New] Csv SaveAs support DataTable/Dictionary parameters
+- [Optimization] Optimizz SaveAs/Query excel file type auto-check
 
 ### 0.10.3 
 - [Bug] Fix Query SharedStrings control character not encoding (issue [Issue #149](https://github.com/shps951023/MiniExcel/issues/149))

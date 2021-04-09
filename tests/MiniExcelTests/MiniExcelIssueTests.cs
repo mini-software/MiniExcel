@@ -5,6 +5,10 @@ using System.IO;
 using System.Collections.Generic;
 using System.Diagnostics;
 using Xunit.Abstractions;
+using static MiniExcelLibs.Tests.MiniExcelOpenXmlTests;
+using System.Globalization;
+using OfficeOpenXml;
+using Newtonsoft.Json;
 
 namespace MiniExcelLibs.Tests
 {
@@ -15,6 +19,61 @@ namespace MiniExcelLibs.Tests
         {
             this.output = output;
         }
+
+        /// <summary>
+        /// https://github.com/shps951023/MiniExcel/issues/157
+        /// </summary>
+        [Fact]
+        public void Issue157()
+        {
+            {
+                var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
+                Console.WriteLine("==== SaveAs by strongly type ====");
+                var input = JsonConvert.DeserializeObject<IEnumerable<UserAccount>>("[{\"ID\":\"78de23d2-dcb6-bd3d-ec67-c112bbc322a2\",\"Name\":\"Wade\",\"BoD\":\"2020-09-27T00:00:00\",\"Age\":5019,\"VIP\":false,\"Points\":5019.12,\"IgnoredProperty\":null},{\"ID\":\"20d3bfce-27c3-ad3e-4f70-35c81c7e8e45\",\"Name\":\"Felix\",\"BoD\":\"2020-10-25T00:00:00\",\"Age\":7028,\"VIP\":true,\"Points\":7028.46,\"IgnoredProperty\":null},{\"ID\":\"52013bf0-9aeb-48e6-e5f5-e9500afb034f\",\"Name\":\"Phelan\",\"BoD\":\"2021-10-04T00:00:00\",\"Age\":3836,\"VIP\":true,\"Points\":3835.7,\"IgnoredProperty\":null},{\"ID\":\"3b97b87c-7afe-664f-1af5-6914d313ae25\",\"Name\":\"Samuel\",\"BoD\":\"2020-06-21T00:00:00\",\"Age\":9352,\"VIP\":false,\"Points\":9351.71,\"IgnoredProperty\":null},{\"ID\":\"9a989c43-d55f-5306-0d2f-0fbafae135bb\",\"Name\":\"Raymond\",\"BoD\":\"2021-07-12T00:00:00\",\"Age\":8210,\"VIP\":true,\"Points\":8209.76,\"IgnoredProperty\":null}]");
+                MiniExcel.SaveAs(path, input);
+
+                var rows = MiniExcel.Query(path, sheetName: "Sheet1").ToList();
+                Assert.Equal(6, rows.Count());
+                Assert.Equal("Sheet1", MiniExcel.GetSheetNames(path).First());
+
+                using (var p = new ExcelPackage(new FileInfo(path)))
+                {
+                    var ws = p.Workbook.Worksheets.First();
+                    Assert.Equal("Sheet1", ws.Name);
+                    Assert.Equal("Sheet1", p.Workbook.Worksheets["Sheet1"].Name);
+                }
+            }
+            {
+                var path = @"..\..\..\..\..\samples\xlsx\TestIssue157.xlsx";
+
+                {
+                    var rows = MiniExcel.Query(path, sheetName: "Sheet1").ToList();
+                    Assert.Equal(6, rows.Count());
+                    Assert.Equal("Sheet1", MiniExcel.GetSheetNames(path).First());
+                }
+                using (var p = new ExcelPackage(new FileInfo(path)))
+                {
+                    var ws = p.Workbook.Worksheets.First();
+                    Assert.Equal("Sheet1", ws.Name);
+                    Assert.Equal("Sheet1", p.Workbook.Worksheets["Sheet1"].Name);
+                }
+
+                using (var stream = File.OpenRead(path))
+                {
+                    var rows = MiniExcel.Query<UserAccount>(path, sheetName: "Sheet1").ToList();
+                    Assert.Equal(5, rows.Count());
+
+                    Assert.Equal(Guid.Parse("78DE23D2-DCB6-BD3D-EC67-C112BBC322A2"), rows[0].ID);
+                    Assert.Equal("Wade", rows[0].Name);
+                    Assert.Equal(DateTime.ParseExact("27/09/2020", "dd/MM/yyyy", CultureInfo.InvariantCulture), rows[0].BoD);
+                    Assert.False(rows[0].VIP);
+                    Assert.Equal(decimal.Parse("5019.12"), rows[0].Points);
+                    Assert.Equal(1, rows[0].IgnoredProperty);
+                }
+            }
+
+        }
+
         /// <summary>
         /// https://github.com/shps951023/MiniExcel/issues/149
         /// </summary>

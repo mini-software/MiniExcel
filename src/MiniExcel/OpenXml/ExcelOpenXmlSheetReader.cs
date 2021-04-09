@@ -47,7 +47,7 @@ namespace MiniExcelLibs.OpenXml
                 var s = _sheetRecords.SingleOrDefault(_ => _.Name == sheetName);
                 if (s == null)
                     throw new InvalidOperationException("Please check sheetName/Index is correct");
-                sheetEntry = sheets.Single(w => w.FullName == $"xl/{s.Path}" || w.FullName == $"/xl/{s.Path}");
+                sheetEntry = sheets.Single(w => w.FullName == $"xl/{s.Path}" || w.FullName == $"/xl/{s.Path}" || w.FullName == s.Path || s.Path == $"/{w.FullName}" );
             }
             else if (sheets.Count() > 1)
             {

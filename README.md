@@ -24,7 +24,7 @@ At present, most popular frameworks need to load all the data into the memory to
 - Easy Dapper API style
 
 ### Demo
-- LINQPad : [Basic Demo](drafts/【MiniExcel】Basic%20Demo.linq)
+- LINQPad : Download [Basic Demo.linq](http://share.linqpad.net/qmqj3r.linq)
 
 ### Installation
 

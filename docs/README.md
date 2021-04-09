@@ -10,7 +10,7 @@
 - [New] Query support by sheet name
 - [New] Csv SaveAs support DataTable/Dictionary parameters
 - [New] CsvConfiguration support custom newLine & seperator & GetStreamReaderFunc
-- [Optimization] Optimizz SaveAs/Query excel file type auto-check
+- [Optimization] Optimize SaveAs/Query excel file type auto-check
 
 ### 0.10.3 
 - [Bug] Fix Query SharedStrings control character not encoding (issue [Issue #149](https://github.com/shps951023/MiniExcel/issues/149))

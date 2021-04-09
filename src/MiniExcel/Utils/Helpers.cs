@@ -4,10 +4,8 @@
     using System;
     using System.Collections.Generic;
     using System.Dynamic;
-    using System.Globalization;
     using System.Linq;
     using System.Reflection;
-    using System.Text.RegularExpressions;
 
     internal static partial class Helpers
     {
@@ -71,7 +69,56 @@
             if (props.Count == 0)
                 throw new InvalidOperationException($"{type.Name} un-ignore properties count can't be 0");
 
-            return props;
+            // TODO: complex case like mix with columnindex and columnname
+
+            // TODO: get header columns and index first
+
+
+            // https://github.com/shps951023/MiniExcel/issues/142
+            //TODO: need optimize performance
+            {
+                var withCustomIndexProps = props.Where(w => w.ExcelColumnIndex != null && w.ExcelColumnIndex > -1);
+                if (withCustomIndexProps.GroupBy(g => g.ExcelColumnIndex).Any(_ => _.Count() > 1))
+                    throw new InvalidOperationException($"Duplicate column name");
+
+                var maxColumnIndex = props.Count -1 ;
+                if (withCustomIndexProps.Any())
+                    maxColumnIndex  = Math.Max((int)withCustomIndexProps.Max(w => w.ExcelColumnIndex), maxColumnIndex);
+
+                var withoutCustomIndexProps = props.Where(w => w.ExcelColumnIndex == null).ToList();
+
+                List<ExcelCustomPropertyInfo> newProps = new List<ExcelCustomPropertyInfo>();
+                var index = 0;
+                for (int i = 0; i <= maxColumnIndex; i++)
+                {
+                    var p1 = withCustomIndexProps.SingleOrDefault(s => s.ExcelColumnIndex == i);
+                    if (p1 != null)
+                    {
+                        newProps.Add(p1);
+                    }
+                    else
+                    {
+                        var p2 = withoutCustomIndexProps.ElementAtOrDefault(index);
+                        if (p2 == null)
+                        {
+                            newProps.Add(null);
+                        }
+                        else
+                        {
+                            p2.ExcelColumnIndex = i;
+                            newProps.Add(p2);
+                        }
+                        index++;
+                    }
+                }
+
+                return newProps;
+            }
+
+
+
+
+            
         }
 
         internal class ExcelCustomPropertyInfo
@@ -102,13 +149,15 @@
                  .Select(p =>
                  {
                      var gt = Nullable.GetUnderlyingType(p.PropertyType);
-                     var excelAttr = p.GetAttribute<ExcelColumnNameAttribute>();
+                     var excelNameAttr = p.GetAttribute<ExcelColumnNameAttribute>();
+                     var excelIndexAttr = p.GetAttribute<ExcelColumnIndexAttribute>();
                      return new ExcelCustomPropertyInfo
                      {
                          Property = p,
                          ExcludeNullableType = gt ?? p.PropertyType,
                          Nullable = gt != null ? true : false,
-                         ExcelColumnName = excelAttr?.ExcelColumnName ?? p.Name
+                         ExcelColumnName = excelNameAttr?.ExcelColumnName ?? p.Name,
+                         ExcelColumnIndex = excelIndexAttr?.ExcelColumnIndex
                      };
                  });
         }

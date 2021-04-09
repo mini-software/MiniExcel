@@ -9,6 +9,7 @@ using static MiniExcelLibs.Tests.MiniExcelOpenXmlTests;
 using System.Globalization;
 using OfficeOpenXml;
 using Newtonsoft.Json;
+using MiniExcelLibs.Attributes;
 
 namespace MiniExcelLibs.Tests
 {
@@ -18,6 +19,78 @@ namespace MiniExcelLibs.Tests
         public MiniExcelIssueTests(ITestOutputHelper output)
         {
             this.output = output;
+        }
+
+        [Fact]
+        public void Issue142()
+        {
+            {
+                var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
+                MiniExcel.SaveAs(path, new Issue142VO[] { new Issue142VO { } });
+
+                var rows = MiniExcel.Query(path).ToList();
+
+                Assert.Equal("MyProperty4", rows[0].A);
+                Assert.Equal("CustomColumnName", rows[0].B);
+                Assert.Equal("MyProperty5", rows[0].C);
+                Assert.Equal("MyProperty2", rows[0].D);
+                Assert.Equal("MyProperty6", rows[0].E);
+                Assert.Equal(null, rows[0].F);
+                Assert.Equal("MyProperty3", rows[0].G);
+
+                Assert.Equal(0, rows[1].A);
+                Assert.Equal(0, rows[1].B);
+                Assert.Equal(0, rows[1].C);
+                Assert.Equal(0, rows[1].D);
+                Assert.Equal(0, rows[1].E);
+                Assert.Equal(null, rows[1].F);   
+                Assert.Equal(0, rows[1].G);
+
+            }
+
+            {
+                var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.csv");
+                MiniExcel.SaveAs(path, new Issue142VO[] { new Issue142VO { } });
+
+                var expected = @"MyProperty4,CustomColumnName,MyProperty5,MyProperty2,MyProperty6,,MyProperty3
+0,0,0,0,0,,0
+";
+                Assert.Equal(expected, File.ReadAllText(path));
+            }
+
+            {
+                var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.csv");
+                var input = new Issue142VoDuplicateColumnName[] { new Issue142VoDuplicateColumnName { } };
+                Assert.Throws<InvalidOperationException>(() => MiniExcel.SaveAs(path, input));
+            }
+        }
+
+        public class Issue142VO
+        {
+            [ExcelColumnName("CustomColumnName")]
+            public int MyProperty1 { get; set; }  //index = 1
+            [ExcelIgnore]
+            public int MyProperty7 { get; set; } //index = null
+            public int MyProperty2 { get; set; } //index = 3
+            [ExcelColumnIndex(6)]
+            public int MyProperty3 { get; set; } //index = 6
+            [ExcelColumnIndex("A")] // equal column index 0
+            public int MyProperty4 { get; set; }
+            [ExcelColumnIndex(2)]
+            public int MyProperty5 { get; set; } //index = 2
+            public int MyProperty6 { get; set; } //index = 4
+        }
+
+        public class Issue142VoDuplicateColumnName
+        {
+            [ExcelColumnIndex("A")]
+            public int MyProperty1 { get; set; } 
+            [ExcelColumnIndex("A")]
+            public int MyProperty2 { get; set; }
+            
+            public int MyProperty3 { get; set; }
+            [ExcelColumnIndex("B")]
+            public int MyProperty4 { get; set; }
         }
 
         /// <summary>
@@ -126,7 +199,7 @@ namespace MiniExcelLibs.Tests
                 var input = chars.Select(s => new { Test = s.ToString() });
                 MiniExcel.SaveAs(path, input);
 
-                var rows = MiniExcel.Query(path,true).Select(s => (string)s.Test).ToList();
+                var rows = MiniExcel.Query(path, true).Select(s => (string)s.Test).ToList();
                 for (int i = 0; i < chars.Length; i++)
                 {
                     output.WriteLine($"{i} , {chars[i]} , {rows[i]}");
@@ -164,9 +237,9 @@ namespace MiniExcelLibs.Tests
         public void Issue153()
         {
             var path = @"..\..\..\..\..\samples\xlsx\TestIssue153.xlsx";
-            var rows = MiniExcel.Query(path,true).First() as IDictionary<string,object>;
-            Assert.Equal(new[] { "序号", "代号", "新代号", "名称", "XXX" , "部门名称" , "单位" , "ERP工时   (小时)A", "工时(秒) A/3600", "标准人工工时(秒)", "生产标准机器工时(秒)", "财务、标准机器工时(秒)", "更新日期", "产品机种", "备注","最近一次修改前的标准工时(秒)", "最近一次修改前的标准机时(秒)", "备注1" }
-                ,rows.Keys);
+            var rows = MiniExcel.Query(path, true).First() as IDictionary<string, object>;
+            Assert.Equal(new[] { "序号", "代号", "新代号", "名称", "XXX", "部门名称", "单位", "ERP工时   (小时)A", "工时(秒) A/3600", "标准人工工时(秒)", "生产标准机器工时(秒)", "财务、标准机器工时(秒)", "更新日期", "产品机种", "备注", "最近一次修改前的标准工时(秒)", "最近一次修改前的标准机时(秒)", "备注1" }
+                , rows.Keys);
         }
 
         /// <summary>
@@ -235,7 +308,7 @@ namespace MiniExcelLibs.Tests
                 var rows = MiniExcel.Query<Issue137ExcelRow>(path).ToList();
                 Assert.Equal(10, rows.Count);
                 {
-                    var row = rows[0] ;
+                    var row = rows[0];
                     Assert.Equal(1, row.比例);
                     Assert.Equal("MTX", row.商品);
                     Assert.Equal(10, row.滿倉口數);
@@ -291,9 +364,9 @@ namespace MiniExcelLibs.Tests
 
                 var rows = MiniExcel.Query<Issue138ExcelRow>(path).ToList();
                 Assert.Equal(6, rows.Count);
-                Assert.Equal(new DateTime(2021,3,1), rows[0].date);
+                Assert.Equal(new DateTime(2021, 3, 1), rows[0].date);
 
-                foreach (var index in new[] { 0,2,5})
+                foreach (var index in new[] { 0, 2, 5 })
                 {
                     Assert.Equal(1, rows[index].實單每日損益);
                     Assert.Equal(2, rows[index].程式每日損益);

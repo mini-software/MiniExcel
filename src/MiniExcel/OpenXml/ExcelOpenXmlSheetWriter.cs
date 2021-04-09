@@ -126,6 +126,12 @@ namespace MiniExcelLibs.OpenXml
                                 {
                                     foreach (var p in props)
                                     {
+                                        if (p == null)
+                                        {
+                                            cellIndex++; //reason : https://github.com/shps951023/MiniExcel/issues/142
+                                            continue;
+                                        }
+
                                         var columname = ExcelOpenXmlUtils.ConvertXyToCell(cellIndex, yIndex);
                                         writer.Write($"<x:c r=\"{columname}\" t=\"str\"><x:v>{p.ExcelColumnName}</x:v></x:c>");
                                         cellIndex++;
@@ -262,6 +268,11 @@ namespace MiniExcelLibs.OpenXml
                 var cellIndex = xIndex;
                 foreach (var p in props)
                 {
+                    if (p == null) //reason:https://github.com/shps951023/MiniExcel/issues/142
+                    {
+                        cellIndex++;
+                        continue;
+                    }
                     var cellValue = p.Property.GetValue(v);
                     var cellValueStr = ExcelOpenXmlUtils.EncodeXML(cellValue);
                     var t = "t=\"str\"";

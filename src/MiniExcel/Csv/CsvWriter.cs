@@ -89,7 +89,7 @@ namespace MiniExcelLibs.Csv
                     {
                         if (props != null)
                         {
-                            writer.Write(string.Join(seperator, props.Select(s => CsvHelpers.ConvertToCsvValue(s.ExcelColumnName))));
+                            writer.Write(string.Join(seperator, props.Select(s => CsvHelpers.ConvertToCsvValue(s?.ExcelColumnName))));
                             writer.Write(newLine);
                         }
                         else if (keys.Count>0)
@@ -149,7 +149,7 @@ namespace MiniExcelLibs.Csv
         {
             foreach (var v in value)
             {
-                var values = props.Select(s => CsvHelpers.ConvertToCsvValue(s.Property.GetValue(v)?.ToString()));
+                var values = props.Select(s => CsvHelpers.ConvertToCsvValue(s?.Property.GetValue(v)?.ToString()));
                 writer.Write(string.Join(seperator, values));
                 writer.Write(newLine);
             }

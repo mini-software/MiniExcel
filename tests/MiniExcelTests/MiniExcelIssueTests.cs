@@ -21,6 +21,26 @@ namespace MiniExcelLibs.Tests
         }
 
         /// <summary>
+        /// https://github.com/shps951023/MiniExcel/issues/150
+        /// </summary>
+        [Fact]
+        public void Issue150()
+        {
+            var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
+            //MiniExcel.SaveAs(path, new[] { "1", "2" });
+            Assert.Throws<NotImplementedException>(() => MiniExcel.SaveAs(path, new[] { 1, 2 }));
+            File.Delete(path);
+            Assert.Throws<NotImplementedException>(() => MiniExcel.SaveAs(path, new[] { "1", "2" }));
+            File.Delete(path);
+            Assert.Throws<NotImplementedException>(() => MiniExcel.SaveAs(path, new[] { '1', '2' }));
+            File.Delete(path);
+            Assert.Throws<NotImplementedException>(() => MiniExcel.SaveAs(path, new[] { DateTime.Now }));
+            File.Delete(path);
+            Assert.Throws<NotImplementedException>(() => MiniExcel.SaveAs(path, new[] { Guid.NewGuid() }));
+            File.Delete(path);
+        }
+
+        /// <summary>
         /// https://github.com/shps951023/MiniExcel/issues/157
         /// </summary>
         [Fact]

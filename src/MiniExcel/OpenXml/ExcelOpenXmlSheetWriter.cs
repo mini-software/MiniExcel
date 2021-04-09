@@ -83,6 +83,10 @@ namespace MiniExcelLibs.OpenXml
                                         {
                                             mode = "Properties";
                                             genericType = item.GetType();
+                                            if (genericType.IsValueType)
+                                                throw new NotImplementedException($"MiniExcel not support only {genericType.Name} value generic type");
+                                            else if (genericType == typeof(string) || genericType == typeof(DateTime) || genericType == typeof(Guid))
+                                                throw new NotImplementedException($"MiniExcel not support only {genericType.Name} generic type");
                                             props = Helpers.GetSaveAsProperties(genericType);
                                             maxColumnIndex = props.Count;
                                         }

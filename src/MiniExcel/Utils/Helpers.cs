@@ -69,11 +69,6 @@
             if (props.Count == 0)
                 throw new InvalidOperationException($"{type.Name} un-ignore properties count can't be 0");
 
-            // TODO: complex case like mix with columnindex and columnname
-
-            // TODO: get header columns and index first
-
-
             // https://github.com/shps951023/MiniExcel/issues/142
             //TODO: need optimize performance
             {
@@ -111,14 +106,8 @@
                         index++;
                     }
                 }
-
                 return newProps;
             }
-
-
-
-
-            
         }
 
         internal class ExcelCustomPropertyInfo
@@ -130,7 +119,7 @@
             public bool Nullable { get; internal set; }
         }
 
-        internal static List<ExcelCustomPropertyInfo> GetExcelCustomPropertyInfos(Type type)
+        internal static List<ExcelCustomPropertyInfo> GetExcelCustomPropertyInfos(Type type, string[] headers)
         {
             List<ExcelCustomPropertyInfo> props = GetExcelPropertyInfo(type, BindingFlags.SetProperty | BindingFlags.Public | BindingFlags.Instance)
                 .Where(prop => prop.Property.IsSupportSetMethod() && !prop.Property.GetAttributeValue((ExcelIgnoreAttribute x) => x.ExcelIgnore))
@@ -138,6 +127,24 @@
 
             if (props.Count == 0)
                 throw new InvalidOperationException($"{type.Name} un-ignore properties count can't be 0");
+
+            {
+                var withCustomIndexProps = props.Where(w => w.ExcelColumnIndex != null && w.ExcelColumnIndex > -1);
+                if (withCustomIndexProps.GroupBy(g => g.ExcelColumnIndex).Any(_ => _.Count() > 1))
+                    throw new InvalidOperationException($"Duplicate column name");
+
+                foreach (var p in props)
+                {
+                    if(p.ExcelColumnIndex != null)
+                    {
+                        if (p.ExcelColumnIndex >= headers.Length)
+                            throw new ArgumentException($"ExcelColumnIndex {p.ExcelColumnIndex} over haeder max index {headers.Length}");
+                        p.ExcelColumnName = headers[(int)p.ExcelColumnIndex];
+                        if (p.ExcelColumnName == null)
+                            throw new InvalidOperationException($"{p.Property.DeclaringType.Name} {p.Property.Name}'s ExcelColumnIndex {p.ExcelColumnIndex} can't find excel column name");
+                    }
+                }
+            }
 
             return props;
         }

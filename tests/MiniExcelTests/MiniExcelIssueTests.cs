@@ -26,36 +26,63 @@ namespace MiniExcelLibs.Tests
         {
             {
                 var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
-                MiniExcel.SaveAs(path, new Issue142VO[] { new Issue142VO { } });
+                MiniExcel.SaveAs(path, new Issue142VO[] { new Issue142VO { MyProperty1= "MyProperty1", MyProperty2= "MyProperty2", MyProperty3= "MyProperty3", MyProperty4= "MyProperty4", MyProperty5= "MyProperty5", MyProperty6= "MyProperty6", MyProperty7= "MyProperty7" } });
 
-                var rows = MiniExcel.Query(path).ToList();
+                {
+                    var rows = MiniExcel.Query(path).ToList();
 
-                Assert.Equal("MyProperty4", rows[0].A);
-                Assert.Equal("CustomColumnName", rows[0].B);
-                Assert.Equal("MyProperty5", rows[0].C);
-                Assert.Equal("MyProperty2", rows[0].D);
-                Assert.Equal("MyProperty6", rows[0].E);
-                Assert.Equal(null, rows[0].F);
-                Assert.Equal("MyProperty3", rows[0].G);
+                    Assert.Equal("MyProperty4", rows[0].A);
+                    Assert.Equal("CustomColumnName", rows[0].B); //note
+                    Assert.Equal("MyProperty5", rows[0].C);
+                    Assert.Equal("MyProperty2", rows[0].D);
+                    Assert.Equal("MyProperty6", rows[0].E);
+                    Assert.Equal(null, rows[0].F);
+                    Assert.Equal("MyProperty3", rows[0].G);
 
-                Assert.Equal(0, rows[1].A);
-                Assert.Equal(0, rows[1].B);
-                Assert.Equal(0, rows[1].C);
-                Assert.Equal(0, rows[1].D);
-                Assert.Equal(0, rows[1].E);
-                Assert.Equal(null, rows[1].F);   
-                Assert.Equal(0, rows[1].G);
+                    Assert.Equal("MyProperty4", rows[0].A);
+                    Assert.Equal("CustomColumnName", rows[0].B); //note
+                    Assert.Equal("MyProperty5", rows[0].C);
+                    Assert.Equal("MyProperty2", rows[0].D);
+                    Assert.Equal("MyProperty6", rows[0].E);
+                    Assert.Equal(null, rows[0].F);
+                    Assert.Equal("MyProperty3", rows[0].G);
+                }
+
+                {
+                    var rows = MiniExcel.Query<Issue142VO>(path).ToList();
+
+
+                    Assert.Equal("MyProperty4", rows[0].MyProperty4);
+                    Assert.Equal("MyProperty1", rows[0].MyProperty1); //note
+                    Assert.Equal("MyProperty5", rows[0].MyProperty5);
+                    Assert.Equal("MyProperty2", rows[0].MyProperty2);
+                    Assert.Equal("MyProperty6", rows[0].MyProperty6);
+                    Assert.Null(rows[0].MyProperty7);
+                    Assert.Equal("MyProperty3", rows[0].MyProperty3);
+                }
 
             }
 
             {
                 var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.csv");
-                MiniExcel.SaveAs(path, new Issue142VO[] { new Issue142VO { } });
-
+                MiniExcel.SaveAs(path, new Issue142VO[] { new Issue142VO { MyProperty1 = "MyProperty1", MyProperty2 = "MyProperty2", MyProperty3 = "MyProperty3", MyProperty4 = "MyProperty4", MyProperty5 = "MyProperty5", MyProperty6 = "MyProperty6", MyProperty7 = "MyProperty7" } });
                 var expected = @"MyProperty4,CustomColumnName,MyProperty5,MyProperty2,MyProperty6,,MyProperty3
-0,0,0,0,0,,0
+MyProperty4,MyProperty1,MyProperty5,MyProperty2,MyProperty6,,MyProperty3
 ";
                 Assert.Equal(expected, File.ReadAllText(path));
+
+                {
+                    var rows = MiniExcel.Query<Issue142VO>(path).ToList();
+
+
+                    Assert.Equal("MyProperty4", rows[0].MyProperty4);
+                    Assert.Equal("MyProperty1", rows[0].MyProperty1); //note
+                    Assert.Equal("MyProperty5", rows[0].MyProperty5);
+                    Assert.Equal("MyProperty2", rows[0].MyProperty2);
+                    Assert.Equal("MyProperty6", rows[0].MyProperty6);
+                    Assert.Null(rows[0].MyProperty7);
+                    Assert.Equal("MyProperty3", rows[0].MyProperty3);
+                }
             }
 
             {
@@ -65,20 +92,58 @@ namespace MiniExcelLibs.Tests
             }
         }
 
+        [Fact]
+        public void Issue142_Query()
+        {
+            {
+                var path = @"..\..\..\..\..\samples\xlsx\TestIssue142.xlsx";
+                Assert.Throws<InvalidOperationException>(() => MiniExcel.Query<Issue142VoExcelColumnNameNotFound>(path).ToList());
+            }
+
+            {
+                var path = @"..\..\..\..\..\samples\xlsx\TestIssue142.xlsx";
+                Assert.Throws<ArgumentException>(() => MiniExcel.Query<Issue142VoOverIndex>(path).ToList());
+            }
+
+            {
+                var path = @"..\..\..\..\..\samples\xlsx\TestIssue142.xlsx";
+                var rows = MiniExcel.Query<Issue142VO>(path).ToList();
+                Assert.Equal("CustomColumnName", rows[0].MyProperty1);
+                Assert.Null(rows[0].MyProperty7);
+                Assert.Equal("MyProperty2", rows[0].MyProperty2);
+                Assert.Equal("MyProperty103", rows[0].MyProperty3);
+                Assert.Equal("MyProperty100", rows[0].MyProperty4);
+                Assert.Equal("MyProperty102", rows[0].MyProperty5);
+                Assert.Equal("MyProperty6", rows[0].MyProperty6);
+            }
+            
+            {
+                var path = @"..\..\..\..\..\samples\csv\TestIssue142.csv";
+                var rows = MiniExcel.Query<Issue142VO>(path).ToList();
+                Assert.Equal("CustomColumnName", rows[0].MyProperty1);
+                Assert.Null(rows[0].MyProperty7);
+                Assert.Equal("MyProperty2", rows[0].MyProperty2);
+                Assert.Equal("MyProperty103", rows[0].MyProperty3);
+                Assert.Equal("MyProperty100", rows[0].MyProperty4);
+                Assert.Equal("MyProperty102", rows[0].MyProperty5);
+                Assert.Equal("MyProperty6", rows[0].MyProperty6);
+            }
+        }
+
         public class Issue142VO
         {
             [ExcelColumnName("CustomColumnName")]
-            public int MyProperty1 { get; set; }  //index = 1
+            public string MyProperty1 { get; set; }  //index = 1
             [ExcelIgnore]
-            public int MyProperty7 { get; set; } //index = null
-            public int MyProperty2 { get; set; } //index = 3
+            public string MyProperty7 { get; set; } //index = null
+            public string MyProperty2 { get; set; } //index = 3
             [ExcelColumnIndex(6)]
-            public int MyProperty3 { get; set; } //index = 6
+            public string MyProperty3 { get; set; } //index = 6
             [ExcelColumnIndex("A")] // equal column index 0
-            public int MyProperty4 { get; set; }
+            public string MyProperty4 { get; set; }
             [ExcelColumnIndex(2)]
-            public int MyProperty5 { get; set; } //index = 2
-            public int MyProperty6 { get; set; } //index = 4
+            public string MyProperty5 { get; set; } //index = 2
+            public string MyProperty6 { get; set; } //index = 4
         }
 
         public class Issue142VoDuplicateColumnName
@@ -91,6 +156,18 @@ namespace MiniExcelLibs.Tests
             public int MyProperty3 { get; set; }
             [ExcelColumnIndex("B")]
             public int MyProperty4 { get; set; }
+        }
+
+        public class Issue142VoOverIndex
+        {
+            [ExcelColumnIndex("Z")]
+            public int MyProperty1 { get; set; }
+        }
+
+        public class Issue142VoExcelColumnNameNotFound
+        {
+            [ExcelColumnIndex("B")]
+            public int MyProperty1 { get; set; }
         }
 
         /// <summary>

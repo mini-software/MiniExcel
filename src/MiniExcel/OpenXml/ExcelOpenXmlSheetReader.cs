@@ -9,6 +9,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
+using static MiniExcelLibs.Utils.Helpers;
 
 namespace MiniExcelLibs.OpenXml
 {
@@ -47,7 +48,7 @@ namespace MiniExcelLibs.OpenXml
                 var s = _sheetRecords.SingleOrDefault(_ => _.Name == sheetName);
                 if (s == null)
                     throw new InvalidOperationException("Please check sheetName/Index is correct");
-                sheetEntry = sheets.Single(w => w.FullName == $"xl/{s.Path}" || w.FullName == $"/xl/{s.Path}" || w.FullName == s.Path || s.Path == $"/{w.FullName}" );
+                sheetEntry = sheets.Single(w => w.FullName == $"xl/{s.Path}" || w.FullName == $"/xl/{s.Path}" || w.FullName == s.Path || s.Path == $"/{w.FullName}");
             }
             else if (sheets.Count() > 1)
             {
@@ -310,12 +311,22 @@ namespace MiniExcelLibs.OpenXml
         public IEnumerable<T> Query<T>(string sheetName, IConfiguration configuration) where T : class, new()
         {
             var type = typeof(T);
-            var props = Helpers.GetExcelCustomPropertyInfos(type);
+
+            var first = true;
+            List<ExcelCustomPropertyInfo> props = null;
+            var headers = Query(false, sheetName, configuration).FirstOrDefault()?.Values?.Select(s=>s?.ToString())?.ToArray(); //TODO:need to optimize
             foreach (var item in Query(true, sheetName, configuration))
             {
+                if (first)
+                {
+                    //TODO: alert don't duplicate column name
+                    props = Helpers.GetExcelCustomPropertyInfos(type, headers);
+                    first = false;
+                }
                 var v = new T();
                 foreach (var pInfo in props)
                 {
+                    //TODO:don't need to check every time?
                     if (item.ContainsKey(pInfo.ExcelColumnName))
                     {
                         object newV = null;

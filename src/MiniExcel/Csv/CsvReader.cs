@@ -66,7 +66,7 @@ namespace MiniExcelLibs.Csv
             var cf = configuration == null ? CsvConfiguration.DefaultConfiguration : (CsvConfiguration)configuration;
 
             var type = typeof(T);
-            var props = Helpers.GetSaveAsProperties(type);
+            
             Dictionary<int, PropertyInfo> idxProps = new Dictionary<int, PropertyInfo>();
             using (var reader = cf.GetStreamReaderFunc(_stream))
             {
@@ -79,6 +79,7 @@ namespace MiniExcelLibs.Csv
                 {
                     row = reader.ReadLine();
                     read = row.Split(seperators, StringSplitOptions.None);
+                    var props = Helpers.GetExcelCustomPropertyInfos(type, read);
                     var index = 0;
                     foreach (var v in read)
                     {

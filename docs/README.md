@@ -1,5 +1,10 @@
 ## Release  Notes
 
+### 0.11.1
+- [New] Support Support ColumnIndex Attribute [#142](https://github.com/shps951023/MiniExcel/issues/142) & [#I3I3EB](https://gitee.com/dotnetchina/MiniExcel/issues/I3I3EB)
+- [Bug] Fix issue #157 : Special conditions will get the wrong worksheet name
+- [Update] issue #150 : SaveAs input IEnuerable<valuetype> should throw clear msg exception
+
 ### 0.11.0
 - [New] Added GetSheetNames method support multi-sheets Query
 - [New] Query support by sheet name

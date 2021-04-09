@@ -23,6 +23,9 @@ At present, most popular frameworks need to load all the data into the memory to
 - Lightweight, does not with any third-party dependencies, DLL is less than 100KB
 - Easy Dapper API style
 
+### Demo
+- LINQPad : [Basic Demo](drafts/【MiniExcel】Basic Demo.linq)
+
 ### Installation
 
 You can install the package [from NuGet](https://www.nuget.org/packages/MiniExcel)

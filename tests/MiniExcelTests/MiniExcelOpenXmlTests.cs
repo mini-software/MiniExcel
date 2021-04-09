@@ -46,6 +46,21 @@ namespace MiniExcelLibs.Tests
             public string Test { get; set; }
         }
 
+        public class ExcelAttributeDemo
+        {
+            [ExcelColumnName("Column1")]
+            public string Test1 { get; set; }
+            [ExcelColumnName("Column2")]
+            public string Test2 { get; set; }
+            [ExcelIgnore]
+            public string Test3 { get; set; }
+            [ExcelColumnIndex("I")] // system will convert "I" to 8 index
+            public string Test4 { get; set; }
+            public string Test5 { get; } //wihout set will ignore
+            public string Test6 { get; private set; } //un-public set will ignore
+            [ExcelColumnIndex(3)] // start with 0
+            public string Test7 { get; set; }
+        }
 
         [Fact]
         public void CustomAttributeWihoutVaildPropertiesTest()
@@ -59,13 +74,13 @@ namespace MiniExcelLibs.Tests
         {
             var path = @"..\..\..\..\..\samples\xlsx\TestCustomExcelColumnAttribute.xlsx";
             var rows = MiniExcel.Query<ExcelAttributeDemo>(path).ToList();
-            Assert.Equal(10, rows.Count);
             Assert.Equal("Column1", rows[0].Test1);
             Assert.Equal("Column2", rows[0].Test2);
             Assert.Null(rows[0].Test3);
-            Assert.Equal("Test4", rows[0].Test4);
+            Assert.Equal("Test7", rows[0].Test4);
             Assert.Null(rows[0].Test5);
             Assert.Null(rows[0].Test6);
+            Assert.Equal("Test4", rows[0].Test7);
         }
 
         [Fact]
@@ -109,18 +124,7 @@ namespace MiniExcelLibs.Tests
             public string Test6 { get; private set; }
         }
 
-        public class ExcelAttributeDemo
-        {
-            [ExcelColumnName("Column1")]
-            public string Test1 { get; set; }
-            [ExcelColumnName("Column2")]
-            public string Test2 { get; set; }
-            [ExcelIgnore]
-            public string Test3 { get; set; }
-            public string Test4 { get; set; }
-            public string Test5 { get; }
-            public string Test6 { get; private set; }
-        }
+
 
         [Fact()]
         public void QueryCastToIDictionary()

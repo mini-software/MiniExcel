@@ -247,16 +247,13 @@ using (var stream = File.Create(path))
 ```
 
 
-
-### Excel Column Name/Ignore Attribute
+### Excel Column Name/Index/Ignore Attribute
 
 e.g
 
 input excel :  
 
-| Test1 | Test2 | Test3 | Test4 | Test5 | Test6 | Column1 | Column2 |
-| ----- | ----- | ----- | ----- | ----- | ----- | ------- | ------- |
-| Test1 | Test2 | Test3 | Test4 | Test5 | Test6 | Column1 | Column2 |
+![image](https://user-images.githubusercontent.com/12729184/114230869-3e163700-99ac-11eb-9a90-2039d4b4b313.png)
 
 ```C#
 public class ExcelAttributeDemo
@@ -267,18 +264,22 @@ public class ExcelAttributeDemo
     public string Test2 { get; set; }
     [ExcelIgnore]
     public string Test3 { get; set; }
-    public string Test4 { get; set; }
-    public string Test5 { get; }
-    public string Test6 { get; private set; }
+    [ExcelColumnIndex("I")] // system will convert "I" to 8 index
+    public string Test4 { get; set; } 
+    public string Test5 { get; } //wihout set will ignore
+    public string Test6 { get; private set; } //un-public set will ignore
+    [ExcelColumnIndex(3)] // start with 0
+    public string Test7 { get; set; }
 }
 
 var rows = MiniExcel.Query<ExcelAttributeDemo>(path).ToList();
 Assert.Equal("Column1", rows[0].Test1);
 Assert.Equal("Column2", rows[0].Test2);
 Assert.Null(rows[0].Test3);
-Assert.Equal("Test4", rows[0].Test4);
+Assert.Equal("Test7", rows[0].Test4);
 Assert.Null(rows[0].Test5);
 Assert.Null(rows[0].Test6);
+Assert.Equal("Test4", rows[0].Test7);
 ```
 
 ### 查询指定 Sheet 名称

@@ -26,7 +26,7 @@ MiniExcel 簡單、高效避免OOM的.NET處理Excel工具。
 - 簡便操作的 Dapper API 風格
 
 ### Demo
-- LINQPad : [Basic Demo](drafts/【MiniExcel】Basic Demo.linq)
+- LINQPad : [Basic Demo](drafts/【MiniExcel】Basic%20Demo.linq)
 
 ### 安裝
 

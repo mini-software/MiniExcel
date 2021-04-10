@@ -23,6 +23,8 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{3E370222-8E9E-45E8-8DCD-E5F41EE52A39}"
 	ProjectSection(SolutionItems) = preProject
 		..\docs\README.md = ..\docs\README.md
+		..\docs\README.zh-CN.md = ..\docs\README.zh-CN.md
+		..\docs\README.zh-Hant.md = ..\docs\README.zh-Hant.md
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MiniExcelTests", "..\tests\MiniExcelTests\MiniExcelTests.csproj", "{77F2C86B-0F17-4370-AB38-A089F9DF4ED5}"

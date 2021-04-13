@@ -21,7 +21,7 @@ void Main2()
 {
 	Stopwatch sw = new Stopwatch();
 	sw.Start();
-	Console.WriteLine("start memory usage: " + System.Diagnostics.Process.GetCurrentProcess().WorkingSet64 / (1024 * 1024) + $"MB");
+	Console.WriteLine("start memory usage: " + Process.GetCurrentProcess().WorkingSet64 / (1024 * 1024) + $"MB");
 
 	var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.zip");
 	using (var stream = File.Create(path))

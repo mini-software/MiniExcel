@@ -100,7 +100,7 @@ namespace MiniExcelLibs.Tests
             {
                 var rows = MiniExcel.Query(path, true).ToList();
                 var first = rows[0] as IDictionary<string, object>;
-                Assert.Equal(new[] { "Column1", "Column2", "Test4", "Test5", "Test6" }, first.Keys);
+                Assert.Equal(new[] { "Column1", "Column2", "Test5", "Test7", "Test6", "Test4" }, first.Keys);
                 Assert.Equal("Test1", rows[0].Column1);
                 Assert.Equal("Test2", rows[0].Column2);
                 Assert.Equal("Test4", rows[0].Test4);

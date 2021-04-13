@@ -122,7 +122,7 @@
         internal static List<ExcelCustomPropertyInfo> GetExcelCustomPropertyInfos(Type type, string[] headers)
         {
             List<ExcelCustomPropertyInfo> props = GetExcelPropertyInfo(type, BindingFlags.SetProperty | BindingFlags.Public | BindingFlags.Instance)
-                .Where(prop => prop.Property.IsSupportSetMethod() && !prop.Property.GetAttributeValue((ExcelIgnoreAttribute x) => x.ExcelIgnore))
+                .Where(prop => prop.Property.GetSetMethod() != null && !prop.Property.GetAttributeValue((ExcelIgnoreAttribute x) => x.ExcelIgnore))
                 .ToList() /*ignore without set*/;
 
             if (props.Count == 0)

@@ -35,7 +35,7 @@ namespace MiniExcelLibs.OpenXml
         public IEnumerable<IDictionary<string, object>> Query(bool UseHeaderRow, string sheetName, IConfiguration configuration)
         {
             //TODO:need to optimize
-            SetSharedStrings(_archive);
+            SetSharedStrings();
 
             // if sheets count > 1 need to read xl/_rels/workbook.xml.rels  
             var sheets = _archive.Entries.Where(w => w.FullName.StartsWith("xl/worksheets/sheet", StringComparison.OrdinalIgnoreCase)
@@ -376,17 +376,24 @@ namespace MiniExcelLibs.OpenXml
             }
         }
 
-        private void SetSharedStrings(ExcelOpenXmlZip archive)
+        private void SetSharedStrings()
         {
             if (_sharedStrings != null)
                 return;
-            var sharedStringsEntry = archive.GetEntry("xl/sharedStrings.xml");
+            var sharedStringsEntry = _archive.GetEntry("xl/sharedStrings.xml");
             if (sharedStringsEntry == null)
                 return;
             using (var stream = sharedStringsEntry.Open())
             {
                 _sharedStrings = GetSharedStrings(stream).ToList();
             }
+        }
+
+        internal List<string> GetSharedStrings()
+        {
+            if (_sharedStrings == null)
+                SetSharedStrings();
+            return _sharedStrings;
         }
 
         private IEnumerable<string> GetSharedStrings(Stream stream)

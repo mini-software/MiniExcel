@@ -7,6 +7,9 @@
 
 ---
 
+### 0.12.0
+- [New] 支持`填充Excel`模式 ，借由 SaveAsByTemplate 方法以模板填充数据，
+
 ### 0.11.1
 - [New] 支持 ColumnIndex Attribute [#142](https://github.com/shps951023/MiniExcel/issues/142) & [#I3I3EB](https://gitee.com/dotnetchina/MiniExcel/issues/I3I3EB)
 - [Bug] 修正 issue #157 : 特别情况无法使用指定 sheet name 查询

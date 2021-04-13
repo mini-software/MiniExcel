@@ -15,7 +15,7 @@ namespace MiniExcelLibs.OpenXml
 {
     internal class ExcelOpenXmlSheetWriter : IExcelWriter
     {
-        private readonly UTF8Encoding _utf8WithBom = new System.Text.UTF8Encoding(true);
+        private readonly static UTF8Encoding _utf8WithBom = new System.Text.UTF8Encoding(true);
         private Stream _stream;
         public ExcelOpenXmlSheetWriter(Stream stream)
         {

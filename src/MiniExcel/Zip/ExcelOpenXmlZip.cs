@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.IO.Compression;
+using System.Text;
 using System.Xml;
 
 namespace MiniExcelLibs.Zip
@@ -13,7 +14,7 @@ namespace MiniExcelLibs.Zip
 	   private readonly Dictionary<string, ZipArchiveEntry> _entries;
 	   private bool _disposed;
 	   private Stream _zipStream;
-	   private ZipArchive _zipFile;
+	   internal ZipArchive ZipFile;
 	   public ReadOnlyCollection<ZipArchiveEntry> Entries;
 	   private static readonly XmlReaderSettings XmlSettings = new XmlReaderSettings
 	   {
@@ -21,13 +22,13 @@ namespace MiniExcelLibs.Zip
 		  IgnoreWhitespace = true,
 		  XmlResolver = null,
 	   };
-	   public ExcelOpenXmlZip(Stream fileStream)
+	   public ExcelOpenXmlZip(Stream fileStream, ZipArchiveMode mode= ZipArchiveMode.Read, bool leaveOpen = false, Encoding entryNameEncoding=null)
 	   {
 		  _zipStream = fileStream ?? throw new ArgumentNullException(nameof(fileStream));
-		  _zipFile = new ZipArchive(fileStream);
+		  ZipFile = new ZipArchive(fileStream, mode, leaveOpen, entryNameEncoding);
 		  _entries = new Dictionary<string, ZipArchiveEntry>(StringComparer.OrdinalIgnoreCase);
-		  Entries = _zipFile.Entries; //TODO:need to remove
-		  foreach (var entry in _zipFile.Entries)
+		  Entries = ZipFile.Entries; //TODO:need to remove
+		  foreach (var entry in ZipFile.Entries)
 		  {
 			 _entries.Add(entry.FullName.Replace('\\', '/'), entry);
 		  }
@@ -67,10 +68,10 @@ namespace MiniExcelLibs.Zip
 		  {
 			 if (disposing)
 			 {
-				if (_zipFile != null)
+				if (ZipFile != null)
 				{
-				    _zipFile.Dispose();
-				    _zipFile = null;
+				    ZipFile.Dispose();
+				    ZipFile = null;
 				}
 
 				if (_zipStream != null)

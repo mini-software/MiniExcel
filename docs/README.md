@@ -6,6 +6,9 @@
 
 ---
 
+### 0.12.0
+- [New] Support `Filling Excel` by SaveAsByTemplate method to fill data into excel by xlsx template
+
 ### 0.11.1
 - [New] Support ColumnIndex Attribute [#142](https://github.com/shps951023/MiniExcel/issues/142) & [#I3I3EB](https://gitee.com/dotnetchina/MiniExcel/issues/I3I3EB)
 - [Bug] Fix issue #157 : Special conditions will get the wrong worksheet name

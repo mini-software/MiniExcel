@@ -57,33 +57,33 @@ namespace MiniExcelTests
         }
 
         //[Fact]
-        public void PerformanceTest()
-        {
-            // MiniExcel
-            {
-                var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
-                var templatePath = @"..\..\..\..\..\samples\xlsx\TestTemplateBasicIEmumerableFill.xlsx";
-                var value = new
-                {
-                    employees = Enumerable.Range(1, 1000000).Select(s => new { name = "Jack", department = "HR" })
-                };
-                MiniExcel.SaveAsByTemplate(path, templatePath, value);
-            }
+        //public void PerformanceTest()
+        //{
+        //    // MiniExcel
+        //    {
+        //        var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
+        //        var templatePath = @"..\..\..\..\..\samples\xlsx\TestTemplateBasicIEmumerableFill.xlsx";
+        //        var value = new
+        //        {
+        //            employees = Enumerable.Range(1, 1000000).Select(s => new { name = "Jack", department = "HR" })
+        //        };
+        //        MiniExcel.SaveAsByTemplate(path, templatePath, value);
+        //    }
 
-            // ClosexXml.Report
-            {
-                var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
-                var templatePath = @"..\..\..\..\..\samples\xlsx\TestTemplateBasicIEmumerableFill_ClosedXML_Report.xlsx";
-                var template = new ClosedXML.Report.XLTemplate(templatePath);
-                var value = new
-                {
-                    employees = Enumerable.Range(1, 1000000).Select(s => new { name = "Jack", department = "HR" })
-                };
-                template.AddVariable(value);
-                template.Generate();
-                template.SaveAs(path);
-            }
-        }
+        //    // ClosexXml.Report
+        //    {
+        //        var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
+        //        var templatePath = @"..\..\..\..\..\samples\xlsx\TestTemplateBasicIEmumerableFill_ClosedXML_Report.xlsx";
+        //        var template = new ClosedXML.Report.XLTemplate(templatePath);
+        //        var value = new
+        //        {
+        //            employees = Enumerable.Range(1, 1000000).Select(s => new { name = "Jack", department = "HR" })
+        //        };
+        //        template.AddVariable(value);
+        //        template.Generate();
+        //        template.SaveAs(path);
+        //    }
+        //}
 
         [Fact]
         public void TestIEnumerable()

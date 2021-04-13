@@ -6,7 +6,7 @@
 
 ---
 
-### 0.12.0
+### 0.12.0-beta
 - [New] Support `Filling Excel` by SaveAsByTemplate method to fill data into excel by xlsx template
 
 ### 0.11.1

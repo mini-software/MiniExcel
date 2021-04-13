@@ -4,6 +4,10 @@
 
 [English](README.md) / [繁體中文](README.zh-Hant.md) / [简体中文](README.zh-CN.md)
 
+----
+
+QQ : 813100564  / [.NET MiniExcel Group](https://www.facebook.com/groups/502512817441194)  
+
 ---
 
 ### 简介
@@ -39,9 +43,9 @@ MiniExcel 简单、高效避免OOM的.NET处理Excel工具。
 
 请查看 [Release Notes](https://github.com/shps951023/MiniExcel/tree/master/docs)
 
-### Discussions / TODO 
+### TODO 
 
-请查看 [Discussions](https://github.com/shps951023/MiniExcel/discussions) / [TODO](https://github.com/shps951023/MiniExcel/projects/1?fullscreen=true)
+请查看  [TODO](https://github.com/shps951023/MiniExcel/projects/1?fullscreen=true)
 
 ### 性能测试
 
@@ -239,6 +243,19 @@ output :
 | MiniExcel | 1       |
 | Github    | 2       |
 
+### SaveAs 支援 Stream [[Try it]](https://dotnetfiddle.net/JOen0e)
+
+```C#
+using (var stream = File.Create(path))
+{
+    stream.SaveAs(values);
+}
+```
+
+
+
+
+
 ### 模板填充 Excel
 
 #### 1. 基本填充
@@ -273,14 +290,111 @@ var value = new Dictionary<string, object>()
 MiniExcel.SaveAsByTemplate(path, templatePath, value);
 ```
 
-### SaveAs 支援 Stream [[Try it]](https://dotnetfiddle.net/JOen0e)
+
+
+#### 2. IEnumerable 数据填充
+
+> Note1: 同行从左往右以第一个 IEnumerableUse 当列表来源 (不支持同列多集合)
+
+模板:   
+![image](https://user-images.githubusercontent.com/12729184/114564652-14f2f080-9ca3-11eb-831f-09e3fedbc5fc.png)
+
+最终效果: 
+![image](https://user-images.githubusercontent.com/12729184/114564204-b2015980-9ca2-11eb-900d-e21249f93f7c.png)
+
+代码:
 
 ```C#
-using (var stream = File.Create(path))
+//1. By POCO
+var value = new
 {
-    stream.SaveAs(values);
-}
+    employees = new[] {
+        new {name="Jack",department="HR"},
+        new {name="Lisa",department="HR"},
+        new {name="John",department="HR"},
+        new {name="Mike",department="IT"},
+        new {name="Neo",department="IT"},
+        new {name="Loan",department="IT"}
+    }
+};
+MiniExcel.SaveAsByTemplate(path, templatePath, value);
+
+//2. By Dictionary
+var value = new Dictionary<string, object>()
+{
+    ["employees"] = new[] {
+        new {name="Jack",department="HR"},
+        new {name="Lisa",department="HR"},
+        new {name="John",department="HR"},
+        new {name="Mike",department="IT"},
+        new {name="Neo",department="IT"},
+        new {name="Loan",department="IT"}
+    }
+};
+MiniExcel.SaveAsByTemplate(path, templatePath, value);
 ```
+
+
+
+#### 3. 复杂数据填充
+
+> Note: 支持多 sheet 填充,并共用同一组参数
+
+模板: 
+
+![image](https://user-images.githubusercontent.com/12729184/114565255-acf0da00-9ca3-11eb-8a7f-8131b2265ae8.png)
+
+最终效果: 
+
+![image](https://user-images.githubusercontent.com/12729184/114565329-bf6b1380-9ca3-11eb-85e3-3969e8bf6378.png)
+
+代码:  
+
+```C#
+// 1. By POCO
+var value = new
+{
+    title = "FooCompany",
+    managers = new[] {
+        new {name="Jack",department="HR"},
+        new {name="Loan",department="IT"}
+    },
+    employees = new[] {
+        new {name="Wade",department="HR"},
+        new {name="Felix",department="HR"},
+        new {name="Eric",department="IT"},
+        new {name="Keaton",department="IT"}
+    }
+};
+MiniExcel.SaveAsByTemplate(path, templatePath, value);
+
+// 2. By Dictionary
+var value = new Dictionary<string, object>()
+{
+    ["title"] = "FooCompany",
+    ["managers"] = new[] {
+        new {name="Jack",department="HR"},
+        new {name="Loan",department="IT"}
+    },
+    ["employees"] = new[] {
+        new {name="Wade",department="HR"},
+        new {name="Felix",department="HR"},
+        new {name="Eric",department="IT"},
+        new {name="Keaton",department="IT"}
+    }
+};
+MiniExcel.SaveAsByTemplate(path, templatePath, value);
+```
+
+#### 4. 大数据填充效率比较
+
+> NOTE: 在 MiniExcel 使用 IEnumerable 延迟 ( 不ToList ) 可以节省内存使用
+
+![image](https://user-images.githubusercontent.com/12729184/114577091-5046ec80-9cae-11eb-924b-087c7becf8da.png)
+
+
+
+
 
 
 ### Excel Column Name/Index/Ignore Attribute

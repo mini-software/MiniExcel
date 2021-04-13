@@ -4,6 +4,10 @@
 
 [English](README.md) / [繁體中文](README.zh-Hant.md) / [简体中文](README.zh-CN.md)
 
+----
+
+QQ : 813100564  / [.NET MiniExcel FB Group](https://www.facebook.com/groups/502512817441194)  
+
 ---
 
 ### Introduction
@@ -36,9 +40,9 @@ You can install the package [from NuGet](https://www.nuget.org/packages/MiniExce
 
 Please Check [Release Notes](https://github.com/shps951023/MiniExcel/tree/master/docs)
 
-### Discussions / TODO 
+### TODO 
 
-Please Check [Discussions](https://github.com/shps951023/MiniExcel/discussions) / [TODO](https://github.com/shps951023/MiniExcel/projects/1?fullscreen=true)
+Please Check  [TODO](https://github.com/shps951023/MiniExcel/projects/1?fullscreen=true)
 
 ### Performance
 
@@ -243,6 +247,19 @@ Create File Result :
 | MiniExcel     | 1     |
 | Github     | 2     |
 
+### SaveAs Stream [[Try it]](https://dotnetfiddle.net/JOen0e)
+
+```C#
+using (var stream = File.Create(path))
+{
+    stream.SaveAs(values);
+}
+```
+
+
+
+
+
 
 
 ### Fill Data To Excel Template
@@ -281,16 +298,106 @@ MiniExcel.SaveAsByTemplate(path, templatePath, value);
 
 
 
+#### 2. IEnumerable Data Fill
+
+> Note1: Use the first IEnumerable of the same column as the basis for filling list
+
+Template:  
+![image](https://user-images.githubusercontent.com/12729184/114564652-14f2f080-9ca3-11eb-831f-09e3fedbc5fc.png)
+
+Result:  
+![image](https://user-images.githubusercontent.com/12729184/114564204-b2015980-9ca2-11eb-900d-e21249f93f7c.png)
+
+Code:  
+```C#
+//1. By POCO
+var value = new
+{
+    employees = new[] {
+        new {name="Jack",department="HR"},
+        new {name="Lisa",department="HR"},
+        new {name="John",department="HR"},
+        new {name="Mike",department="IT"},
+        new {name="Neo",department="IT"},
+        new {name="Loan",department="IT"}
+    }
+};
+MiniExcel.SaveAsByTemplate(path, templatePath, value);
+
+//2. By Dictionary
+var value = new Dictionary<string, object>()
+{
+    ["employees"] = new[] {
+        new {name="Jack",department="HR"},
+        new {name="Lisa",department="HR"},
+        new {name="John",department="HR"},
+        new {name="Mike",department="IT"},
+        new {name="Neo",department="IT"},
+        new {name="Loan",department="IT"}
+    }
+};
+MiniExcel.SaveAsByTemplate(path, templatePath, value);
+```
 
 
-### SaveAs Stream [[Try it]](https://dotnetfiddle.net/JOen0e)
+
+#### 3. Complex Data Fill
+
+> Note: Support multi-sheets and using same varible
+
+Template:  
+
+![image](https://user-images.githubusercontent.com/12729184/114565255-acf0da00-9ca3-11eb-8a7f-8131b2265ae8.png)
+
+Result:  
+
+![image](https://user-images.githubusercontent.com/12729184/114565329-bf6b1380-9ca3-11eb-85e3-3969e8bf6378.png)
 
 ```C#
-using (var stream = File.Create(path))
+// 1. By POCO
+var value = new
 {
-    stream.SaveAs(values);
-}
+    title = "FooCompany",
+    managers = new[] {
+        new {name="Jack",department="HR"},
+        new {name="Loan",department="IT"}
+    },
+    employees = new[] {
+        new {name="Wade",department="HR"},
+        new {name="Felix",department="HR"},
+        new {name="Eric",department="IT"},
+        new {name="Keaton",department="IT"}
+    }
+};
+MiniExcel.SaveAsByTemplate(path, templatePath, value);
+
+// 2. By Dictionary
+var value = new Dictionary<string, object>()
+{
+    ["title"] = "FooCompany",
+    ["managers"] = new[] {
+        new {name="Jack",department="HR"},
+        new {name="Loan",department="IT"}
+    },
+    ["employees"] = new[] {
+        new {name="Wade",department="HR"},
+        new {name="Felix",department="HR"},
+        new {name="Eric",department="IT"},
+        new {name="Keaton",department="IT"}
+    }
+};
+MiniExcel.SaveAsByTemplate(path, templatePath, value);
 ```
+
+#### 4. Fill Big Data Performance
+
+> NOTE: Using IEnumerable deferred execution not ToList can save max memory usage in MiniExcel
+
+![image](https://user-images.githubusercontent.com/12729184/114577091-5046ec80-9cae-11eb-924b-087c7becf8da.png)
+
+
+
+
 
 
 
@@ -368,6 +475,9 @@ using (var connection = new SQLiteConnection(connectionString))
 
 performance:
 ![image](https://user-images.githubusercontent.com/12729184/111072579-2dda7b80-8516-11eb-9843-c01a1edc88ec.png)
+
+
+
 
 
 ### ASP.NET Core 3.1 or MVC 5 Download Excel Xlsx API Demo

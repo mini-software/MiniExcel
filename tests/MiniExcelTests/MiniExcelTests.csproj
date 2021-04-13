@@ -14,6 +14,7 @@
 
   <ItemGroup>
     <PackageReference Include="ClosedXML" Version="0.95.4" />
+    <PackageReference Include="ClosedXML.Report" Version="0.2.1" />
     <PackageReference Include="CsvHelper" Version="26.0.1" />
     <PackageReference Include="Dapper" Version="1.60.6" />
     <PackageReference Include="EPPlus" Version="4.5.3.3" />

@@ -43,7 +43,6 @@ namespace MiniExcelLibs.OpenXml
 
 		  //TODO:DataTable & DapperRow
 
-
 		  //TODO: copy new bytes 
 		  using (var templateStream = File.Open(templatePath, FileMode.Open, FileAccess.Read, FileShare.Read))
 		  {
@@ -52,10 +51,10 @@ namespace MiniExcelLibs.OpenXml
 			 var reader = new ExcelOpenXmlSheetReader(stream);
 			 var _archive = new ExcelOpenXmlZip(stream, mode: ZipArchiveMode.Update, false, Encoding.UTF8);
 			 {
-				//TODO: read sharedString
+				//read sharedString
 				var sharedStrings = reader.GetSharedStrings();
 
-				//TODO: read all xlsx sheets
+				//read all xlsx sheets
 				var sheets = _archive.ZipFile.Entries.Where(w => w.FullName.StartsWith("xl/worksheets/sheet", StringComparison.OrdinalIgnoreCase)
 					|| w.FullName.StartsWith("/xl/worksheets/sheet", StringComparison.OrdinalIgnoreCase)
 				).ToList();
@@ -71,33 +70,9 @@ namespace MiniExcelLibs.OpenXml
 				    ns.AddNamespace("x", "http://schemas.openxmlformats.org/spreadsheetml/2006/main");
 
 				    var worksheet = doc.SelectSingleNode("/x:worksheet", ns);
-				    var isPrefix = worksheet.Name.Contains(":");
-
 				    var rows = doc.SelectNodes($"/x:worksheet/x:sheetData/x:row", ns);
 
-				    foreach (XmlElement row in rows)
-				    {
-					   var cs = row.SelectNodes($"x:c", ns);
-					   foreach (XmlElement c in cs)
-					   {
-						  var t = c.GetAttribute("t");
-						  var v = c.SelectSingleNode("x:v", ns);
-						  if (v == null || v.InnerText == null) //![image](https://user-images.githubusercontent.com/12729184/114363496-075a3f80-9bab-11eb-9883-8e3fec10765c.png)
-							 continue;
 
-						  if (t == "s")
-						  {
-							 //need to check sharedstring not exist
-							 if (sharedStrings.ElementAtOrDefault(int.Parse(v.InnerText)) != null)
-							 {
-								v.InnerText = sharedStrings[int.Parse(v.InnerText)];
-								// change type = str and replace its value
-								c.SetAttribute("t", "str");
-							 }
-							 //TODO: remove sharedstring 
-						  }
-					   }
-				    }
 				    sheetStream.Dispose();
 
 				    var fullName = sheet.FullName;
@@ -105,7 +80,7 @@ namespace MiniExcelLibs.OpenXml
 				    ZipArchiveEntry entry = _archive.ZipFile.CreateEntry(fullName);
 				    using (var zipStream = entry.Open())
 				    {
-					   ExcelOpenXmlTemplate.GenerateSheetXml(zipStream, doc.InnerXml, values);
+					   ExcelOpenXmlTemplate.GenerateSheetXml(zipStream, doc.InnerXml, values, sharedStrings);
 					   //doc.Save(zipStream); //don't do it beacause : ![image](https://user-images.githubusercontent.com/12729184/114361127-61a5d100-9ba8-11eb-9bb9-34f076ee28a2.png)
 				    }
 				}
@@ -129,16 +104,44 @@ namespace MiniExcelLibs.OpenXml
 		  throw new InvalidDataException("can't get parameter type information");
 	   }
 
-	   public static void GenerateSheetXml(Stream stream, string sheetXml, Dictionary<string, object> inputMaps, XmlWriterSettings xmlWriterSettings = null)
+	   public static void GenerateSheetXml(Stream stream, string sheetXml, Dictionary<string, object> inputMaps,List<string> sharedStrings, XmlWriterSettings xmlWriterSettings = null)
 	   {
 		  var doc = new XmlDocument();
 		  doc.LoadXml(sheetXml);
+
+
 
 		  XmlNamespaceManager ns = new XmlNamespaceManager(doc.NameTable);
 		  ns.AddNamespace("x", "http://schemas.openxmlformats.org/spreadsheetml/2006/main");
 
 		  var worksheet = doc.SelectSingleNode("/x:worksheet", ns);
 		  var sheetData = doc.SelectSingleNode("/x:worksheet/x:sheetData", ns);
+
+		  // ==== update sharedstring ====
+		  var rows = sheetData.SelectNodes($"x:row", ns);
+		  foreach (XmlElement row in rows)
+		  {
+			 var cs = row.SelectNodes($"x:c", ns);
+			 foreach (XmlElement c in cs)
+			 {
+				var t = c.GetAttribute("t");
+				var v = c.SelectSingleNode("x:v", ns);
+				if (v == null || v.InnerText == null) //![image](https://user-images.githubusercontent.com/12729184/114363496-075a3f80-9bab-11eb-9883-8e3fec10765c.png)
+				    continue;
+
+				if (t == "s")
+				{
+				    //need to check sharedstring not exist
+				    if (sharedStrings.ElementAtOrDefault(int.Parse(v.InnerText)) != null)
+				    {
+					   v.InnerText = sharedStrings[int.Parse(v.InnerText)];
+					   // change type = str and replace its value
+					   c.SetAttribute("t", "str");
+				    }
+				    //TODO: remove sharedstring 
+				}
+			 }
+		  }
 
 		  // ==== Dimension ====
 		  // note : dimension need to put on the top ![image](https://user-images.githubusercontent.com/12729184/114507911-5dd88400-9c66-11eb-94c6-82ed7bdb5aab.png)
@@ -149,7 +152,6 @@ namespace MiniExcelLibs.OpenXml
 
 		  if (dimension != null)
 		  {
-			 var rows = sheetData.SelectNodes($"x:row", ns);
 			 var maxRowIndexDiff = 0;
 			 foreach (XmlElement row in rows)
 			 {
@@ -210,8 +212,7 @@ namespace MiniExcelLibs.OpenXml
 			 writer.Write("<sheetData>");
 			 int originRowIndex;
 			 int rowIndexDiff = 0;
-			 var rows = newSheetData.SelectNodes($"x:row", ns);
-			 foreach (XmlElement row in rows)
+			 foreach (XmlElement row in newSheetData.SelectNodes($"x:row", ns))
 			 {
 				var rowCotainIEnumerable = false;
 				IEnumerable ienumerable = null;
@@ -320,6 +321,7 @@ namespace MiniExcelLibs.OpenXml
 
 					   newRowIndex++;
 					   writer.Write(CleanXml(newRow.OuterXml));
+					   newRow = null;
 				    }
 				}
 				else

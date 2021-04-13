@@ -32,10 +32,14 @@ void Main()
 			var rows = MiniExcel.Query(path);
 			Console.WriteLine(rows);
 		}
-
 		{
 			Console.WriteLine("==== Query dynamic with useHeaderRow ====");
 			var rows = MiniExcel.Query(path,useHeaderRow:true);
+			Console.WriteLine(rows);
+		}
+		{
+			Console.WriteLine("==== Query by sheetName ====");
+			var rows = MiniExcel.Query(path, useHeaderRow: true,sheetName:"Sheet1");
 			Console.WriteLine(rows);
 		}
 		{

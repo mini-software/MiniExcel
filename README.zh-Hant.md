@@ -26,7 +26,8 @@ MiniExcel 簡單、高效避免OOM的.NET處理Excel工具。
 - 簡便操作的 Dapper API 風格
 
 ### Demo
-- LINQPad : Download [Basic Demo.linq](http://share.linqpad.net/qmqj3r.linq)
+- LINQPad : Download [Basic Demo.linq](drafts/【MiniExcel】Basic%20Demo.linq)
+- Try it Online : [[Try it]](https://dotnetfiddle.net/w5WD1J)
 
 ### 安裝
 
@@ -232,6 +233,40 @@ output :
 | -------- | -------- |
 | MiniExcel     | 1     |
 | Github     | 2     |
+
+### 模板填充 Excel
+
+#### 1. 基本填充
+
+模板:  
+![image](https://user-images.githubusercontent.com/12729184/114537556-ed8d2b00-9c84-11eb-8303-a69f62c41e5b.png)
+
+最終效果:  
+![image](https://user-images.githubusercontent.com/12729184/114537490-d8180100-9c84-11eb-8c69-db58692f3a85.png)
+
+代碼:  
+```C#
+// 1. By POCO
+var value = new
+{
+    Name = "Jack",
+    CreateDate = new DateTime(2021, 01, 01),
+    VIP = true,
+    Points = 123
+};
+MiniExcel.SaveAsByTemplate(path, templatePath, value);
+
+
+// 2. By Dictionary
+var value = new Dictionary<string, object>()
+{
+    ["Name"] = "Jack",
+    ["CreateDate"] = new DateTime(2021, 01, 01),
+    ["VIP"] = true,
+    ["Points"] = 123
+};
+MiniExcel.SaveAsByTemplate(path, templatePath, value);
+```
 
 ### SaveAs 支援 Stream [[Try it]](https://dotnetfiddle.net/JOen0e)
 

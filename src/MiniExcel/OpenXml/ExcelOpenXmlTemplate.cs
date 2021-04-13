@@ -1,11 +1,14 @@
 ﻿
 namespace MiniExcelLibs.OpenXml
 {
+    using MiniExcelLibs.Zip;
     using System;
     using System.Collections;
     using System.Collections.Generic;
     using System.IO;
+    using System.IO.Compression;
     using System.Linq;
+    using System.Reflection;
     using System.Text;
     using System.Text.RegularExpressions;
     using System.Xml;
@@ -18,6 +21,114 @@ namespace MiniExcelLibs.OpenXml
 	   {
 		  _isExpressionRegex = new Regex("(?<={{).*?(?=}})");
 	   }
+
+	   internal static void SaveAsByTemplateImpl(Stream stream, string templatePath, object value)
+	   {
+		  //only support xlsx         
+		  Dictionary<string, object> values = null;
+		  if(value is Dictionary<string, object>)
+            {
+			 values = value as Dictionary<string, object>;
+		  }
+            else
+            {
+			 var type = value.GetType();
+			 var props = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+			 values = new Dictionary<string, object>();
+                foreach (var p in props)
+                {
+				values.Add(p.Name, p.GetValue(value));
+			 }
+            }
+
+		  //TODO:DataTable & DapperRow
+
+
+		  //TODO: copy new bytes 
+		  using (var templateStream = File.Open(templatePath, FileMode.Open, FileAccess.Read, FileShare.Read))
+		  {
+			 templateStream.CopyTo(stream);
+
+			 var reader = new ExcelOpenXmlSheetReader(stream);
+			 var _archive = new ExcelOpenXmlZip(stream, mode: ZipArchiveMode.Update, false, Encoding.UTF8);
+			 {
+				//TODO: read sharedString
+				var sharedStrings = reader.GetSharedStrings();
+
+				//TODO: read all xlsx sheets
+				var sheets = _archive.ZipFile.Entries.Where(w => w.FullName.StartsWith("xl/worksheets/sheet", StringComparison.OrdinalIgnoreCase)
+					|| w.FullName.StartsWith("/xl/worksheets/sheet", StringComparison.OrdinalIgnoreCase)
+				).ToList();
+
+				foreach (var sheet in sheets)
+				{
+				    var sheetStream = sheet.Open();
+
+				    var doc = new System.Xml.XmlDocument();
+				    doc.Load(sheetStream);
+
+				    XmlNamespaceManager ns = new XmlNamespaceManager(doc.NameTable);
+				    ns.AddNamespace("x", "http://schemas.openxmlformats.org/spreadsheetml/2006/main");
+
+				    var worksheet = doc.SelectSingleNode("/x:worksheet", ns);
+				    var isPrefix = worksheet.Name.Contains(":");
+
+				    var rows = doc.SelectNodes($"/x:worksheet/x:sheetData/x:row", ns);
+
+				    foreach (XmlElement row in rows)
+				    {
+					   var cs = row.SelectNodes($"x:c", ns);
+					   foreach (XmlElement c in cs)
+					   {
+						  var t = c.GetAttribute("t");
+						  var v = c.SelectSingleNode("x:v", ns);
+						  if (v == null || v.InnerText == null) //![image](https://user-images.githubusercontent.com/12729184/114363496-075a3f80-9bab-11eb-9883-8e3fec10765c.png)
+							 continue;
+
+						  if (t == "s")
+						  {
+							 //need to check sharedstring not exist
+							 if (sharedStrings.ElementAtOrDefault(int.Parse(v.InnerText)) != null)
+							 {
+								v.InnerText = sharedStrings[int.Parse(v.InnerText)];
+								// change type = str and replace its value
+								c.SetAttribute("t", "str");
+							 }
+							 //TODO: remove sharedstring 
+						  }
+					   }
+				    }
+				    sheetStream.Dispose();
+
+				    var fullName = sheet.FullName;
+				    sheet.Delete();
+				    ZipArchiveEntry entry = _archive.ZipFile.CreateEntry(fullName);
+				    using (var zipStream = entry.Open())
+				    {
+					   ExcelOpenXmlTemplate.GenerateSheetXml(zipStream, doc.InnerXml, values);
+					   //doc.Save(zipStream); //don't do it beacause : ![image](https://user-images.githubusercontent.com/12729184/114361127-61a5d100-9ba8-11eb-9bb9-34f076ee28a2.png)
+				    }
+				}
+			 }
+
+			 _archive.Dispose();
+		  }
+	   }
+
+	   private static Type GetIEnumerableRuntimeValueType(object v)
+	   {
+		  if (v == null)
+			 throw new InvalidDataException("input parameter value can't be null");
+		  foreach (var tv in v as IEnumerable)
+		  {
+			 if (tv != null)
+			 {
+				return tv.GetType();
+			 }
+		  }
+		  throw new InvalidDataException("can't get parameter type information");
+	   }
+
 	   public static void GenerateSheetXml(Stream stream, string sheetXml, Dictionary<string, object> inputMaps, XmlWriterSettings xmlWriterSettings = null)
 	   {
 		  var doc = new XmlDocument();
@@ -127,14 +238,13 @@ namespace MiniExcelLibs.OpenXml
 						  continue;
 
 					   var matchs = (_isExpressionRegex.Matches(v.InnerText).Cast<Match>().GroupBy(x => x.Value).Select(varGroup => varGroup.First().Value));
+					   var firstMatch = true;
 					   foreach (var item in matchs)
 					   {
 						  var keys = item.Split('.');
-						  var value = inputMaps[keys[0]];
-						  if (value is IEnumerable && !(value is string))
+						  var cellValue = inputMaps[keys[0]];
+						  if (cellValue is IEnumerable && !(cellValue is string))
 						  {
-
-
 							 if (propKeys == null)
 								propKeys = new List<string>();
 							 propKeys.Add(keys[1]); //TODO: check if not contain 1 index
@@ -143,7 +253,7 @@ namespace MiniExcelLibs.OpenXml
 							 {
 								ienumerableKey = keys[0];
 								// get ienumerable runtime type
-								foreach (var element in value as IEnumerable)
+								foreach (var element in cellValue as IEnumerable)
 								{
 								    if (element != null)
 								    {
@@ -152,14 +262,35 @@ namespace MiniExcelLibs.OpenXml
 								    }
 								}
 
-								ienumerable = value as IEnumerable;
+								ienumerable = cellValue as IEnumerable;
 								rowCotainIEnumerable = true;
 							 }
 						  }
 						  else
 						  {
-							 v.InnerText = v.InnerText.Replace($"{{{{{keys[0]}}}}}", value.ToString()); //TODO: auto check type and set value
+							 var cellValueStr = ExcelOpenXmlUtils.EncodeXML(cellValue);
+							 if(!firstMatch) // if matchs count over 1 need to set type=str ![image](https://user-images.githubusercontent.com/12729184/114530109-39d46d00-9c7d-11eb-8f6b-52ad8600aca3.png)
+                                    {
+								c.SetAttribute("t", "str");
+							 }
+							 else if (decimal.TryParse(cellValueStr, out var outV))
+                                    {
+                                        c.SetAttribute("t", "n");
+                                    }
+                                    else if (cellValue is bool)
+                                    {
+                                        c.SetAttribute("t", "b");
+                                        cellValueStr = (bool)cellValue ? "1" : "0";
+                                    }
+                                    else if (cellValue is DateTime || cellValue is DateTime?)
+                                    {
+                                        //c.SetAttribute("t", "d");
+                                        cellValueStr = ((DateTime)cellValue).ToString("yyyy-MM-dd HH:mm:ss");
+                                    }
+
+                                    v.InnerText = v.InnerText.Replace($"{{{{{keys[0]}}}}}", cellValueStr); //TODO: auto check type and set value
 						  }
+						  firstMatch = false;
 					   }
 				    }
 				}

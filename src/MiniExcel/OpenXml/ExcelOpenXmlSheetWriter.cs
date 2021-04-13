@@ -279,12 +279,12 @@ namespace MiniExcelLibs.OpenXml
                     {
                         if (decimal.TryParse(cellValueStr, out var outV))
                             t = "t=\"n\"";
-                        if (cellValue is bool)
+                        else if (cellValue is bool)
                         {
                             t = "t=\"b\"";
                             cellValueStr = (bool)cellValue ? "1" : "0";
                         }
-                        if (cellValue is DateTime || cellValue is DateTime?)
+                        else if (cellValue is DateTime || cellValue is DateTime?)
                         {
                             t = "s=\"1\"";
                             cellValueStr = ((DateTime)cellValue).ToOADate().ToString();

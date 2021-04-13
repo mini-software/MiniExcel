@@ -11,6 +11,52 @@ namespace MiniExcelTests
     public class MiniExcelTemplateTests
     {
         [Fact]
+        public void TemplateBasiTest()
+        {
+            var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
+            var templatePath = @"..\..\..\..\..\samples\xlsx\TestTemplateEasyFill.xlsx";
+
+            {
+                // 1. By POCO
+                var value = new
+                {
+                    Name = "Jack",
+                    CreateDate = new DateTime(2021, 01, 01),
+                    VIP = true,
+                    Points = 123
+                };
+                MiniExcel.SaveAsByTemplate(path, templatePath, value);
+
+                var rows = MiniExcel.Query(path).ToList();
+                Assert.Equal("Jack", rows[1].A);
+                Assert.Equal("2021-01-01 00:00:00", rows[1].B);
+                Assert.Equal(true, rows[1].C);
+                Assert.Equal(123, rows[1].D);
+                Assert.Equal("Jack has 123 points", rows[1].E);
+            }
+
+            {
+                // 2. By Dictionary
+                var value = new Dictionary<string, object>()
+                {
+                    ["Name"] = "Jack",
+                    ["CreateDate"] = new DateTime(2021, 01, 01),
+                    ["VIP"] = true,
+                    ["Points"] = 123
+                };
+                MiniExcel.SaveAsByTemplate(path, templatePath, value);
+
+                var rows = MiniExcel.Query(path).ToList();
+                Assert.Equal("Jack", rows[1].A);
+                Assert.Equal("2021-01-01 00:00:00", rows[1].B);
+                Assert.Equal(true, rows[1].C);
+                Assert.Equal(123, rows[1].D);
+                Assert.Equal("Jack has 123 points", rows[1].E);
+            }
+        }
+
+
+        [Fact]
         public void TemplateTest()
         {
             var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");

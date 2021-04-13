@@ -23,8 +23,10 @@ At present, most popular frameworks need to load all the data into the memory to
 - Lightweight, does not with any third-party dependencies, DLL is less than 100KB
 - Easy Dapper API style
 
+
 ### Demo
-- LINQPad : Download [Basic Demo.linq](http://share.linqpad.net/qmqj3r.linq)
+- LINQPad : Download [Basic Demo.linq](drafts/【MiniExcel】Basic%20Demo.linq)
+- Try it Online : [[Try it]](https://dotnetfiddle.net/w5WD1J)
 
 ### Installation
 
@@ -240,6 +242,46 @@ Create File Result :
 | -------- | -------- |
 | MiniExcel     | 1     |
 | Github     | 2     |
+
+
+
+### Fill Data To Excel Template
+
+#### 1. Basic Fill
+
+Template:  
+![image](https://user-images.githubusercontent.com/12729184/114537556-ed8d2b00-9c84-11eb-8303-a69f62c41e5b.png)
+
+Result:  
+![image](https://user-images.githubusercontent.com/12729184/114537490-d8180100-9c84-11eb-8c69-db58692f3a85.png)
+
+Code:  
+```C#
+// 1. By POCO
+var value = new
+{
+    Name = "Jack",
+    CreateDate = new DateTime(2021, 01, 01),
+    VIP = true,
+    Points = 123
+};
+MiniExcel.SaveAsByTemplate(path, templatePath, value);
+
+
+// 2. By Dictionary
+var value = new Dictionary<string, object>()
+{
+    ["Name"] = "Jack",
+    ["CreateDate"] = new DateTime(2021, 01, 01),
+    ["VIP"] = true,
+    ["Points"] = 123
+};
+MiniExcel.SaveAsByTemplate(path, templatePath, value);
+```
+
+
+
+
 
 ### SaveAs Stream [[Try it]](https://dotnetfiddle.net/JOen0e)
 

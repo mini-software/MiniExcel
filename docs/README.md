@@ -6,6 +6,13 @@
 
 ---
 
+### 0.12.1
+- [OPT] Optimize performance of filling excel
+- [OPT] Template IEnumerable generate support type auto mapping (Issue #177)
+- [New] Support GetColumns method #174
+- [New] Template support $rowindex keyword to get current row index
+- [Bug] Dimension without x prefix #175
+
 ### 0.12.0-beta
 - [New] Support `Filling Excel` by SaveAsByTemplate method to fill data into excel by xlsx template
 
@@ -19,7 +26,7 @@
 - [New] Query support by sheet name
 - [New] Csv SaveAs support DataTable/Dictionary parameters
 - [New] CsvConfiguration support custom newLine & seperator & GetStreamReaderFunc
-- [Optimization] Optimize SaveAs/Query excel file type auto-check
+- [OPT] Optimize SaveAs/Query excel file type auto-check
 
 ### 0.10.3(Don't use this version)
 - [Bug] Fix Query SharedStrings control character not encoding (issue [Issue #149](https://github.com/shps951023/MiniExcel/issues/149))

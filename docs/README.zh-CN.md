@@ -7,6 +7,14 @@
 
 ---
 
+### 0.12.1
+- [OPT] 优化填充 Excel 效率
+- [OPT] 模板集合列表支持类别自动判断 (Issue #177)
+- [New] 新增 GetColumns 方法 (Issue #174)
+- [New] 模板支持 $rowindex 关键字获取当前列索引
+- [Bug] Dimension 没有 x 字首 (Issue #175)
+
+
 ### 0.12.0-beta
 - [New] 支持`填充Excel`模式 ，借由 SaveAsByTemplate 方法以模板填充数据，
 

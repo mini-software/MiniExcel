@@ -359,14 +359,14 @@ namespace MiniExcelLibs.Tests
             {
                 var rows = stream.Query<DemoPocoHelloWorld>().Take(2).ToList();
 
-                Assert.Equal("HelloWorld1", rows[0].HelloWorld1);
-                Assert.Equal("HelloWorld1", rows[1].HelloWorld1);
+                Assert.Equal("HelloWorld2", rows[0].HelloWorld1);
+                Assert.Equal("HelloWorld3", rows[1].HelloWorld1);
             }
             {
                 var rows = MiniExcel.Query<DemoPocoHelloWorld>(path).Take(2).ToList();
 
-                Assert.Equal("HelloWorld1", rows[0].HelloWorld1);
-                Assert.Equal("HelloWorld1", rows[1].HelloWorld1);
+                Assert.Equal("HelloWorld2", rows[0].HelloWorld1);
+                Assert.Equal("HelloWorld3", rows[1].HelloWorld1);
             }
         }
 

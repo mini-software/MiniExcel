@@ -1,6 +1,7 @@
 ﻿
 namespace MiniExcelLibs.OpenXml
 {
+    using MiniExcelLibs.Utils;
     using MiniExcelLibs.Zip;
     using System;
     using System.Collections;
@@ -139,6 +140,8 @@ namespace MiniExcelLibs.OpenXml
 				    foreach (var item in matchs)
 				    {
 					   var keys = item.Split('.');
+					   if (keys[0].StartsWith("$")) //e.g:"$rowindex"
+						  continue;
 					   var value = inputMaps[keys[0]];
 					   if (value is IEnumerable && !(value is string))
 					   {
@@ -190,6 +193,7 @@ namespace MiniExcelLibs.OpenXml
 				IEnumerable ienumerable = null;
 				List<string> propKeys = null;
 				Type ienumerableGenricType = null;
+				IDictionary<string, PropertyInfo> props = null;
 				string ienumerableKey = null;
 
 				//TODO: some xlsx without r
@@ -204,18 +208,22 @@ namespace MiniExcelLibs.OpenXml
 				    {
 					   var cr = c.GetAttribute("r");
 					   var letter = new String(cr.Where(Char.IsLetter).ToArray());
-					   c.SetAttribute("r", $"{letter}{{{{{{MiniExcel_RowIndex}}}}}}");
+					   c.SetAttribute("r", $"{letter}{{{{$rowindex}}}}");
 
 					   var v = c.SelectSingleNode("x:v", _ns);
 					   if (v?.InnerText == null)
 						  continue;
 
 					   var matchs = (_isExpressionRegex.Matches(v.InnerText).Cast<Match>().GroupBy(x => x.Value).Select(varGroup => varGroup.First().Value));
-					   var firstMatch = true;
+					   var isMultiMatch = matchs.Count() > 1;
 					   foreach (var item in matchs)
 					   {
 						  var keys = item.Split('.');
+						  if (keys[0].StartsWith("$")) //e.g:"$rowindex"
+							 continue;
+
 						  var cellValue = inputMaps[keys[0]];
+
 						  if (cellValue is IEnumerable && !(cellValue is string))
 						  {
 							 if (propKeys == null)
@@ -231,6 +239,7 @@ namespace MiniExcelLibs.OpenXml
 								    if (element != null)
 								    {
 									   ienumerableGenricType = element.GetType();
+									   props = ienumerableGenricType.GetProperties(BindingFlags.Public|BindingFlags.Instance).ToDictionary(s=>s.Name,s=>s);
 									   break;
 								    }
 								}
@@ -238,11 +247,35 @@ namespace MiniExcelLibs.OpenXml
 								ienumerable = cellValue as IEnumerable;
 								rowCotainIEnumerable = true;
 							 }
+
+							 // auto check type https://github.com/shps951023/MiniExcel/issues/177
+							 var prop = props[keys[1]];
+							 var type = Nullable.GetUnderlyingType(prop.PropertyType); //avoid nullable 
+							 // 
+							 if (!props.ContainsKey(keys[1]))
+								throw new InvalidDataException($"{keys[0]} doesn't have {keys[1]} property");
+
+							 if (isMultiMatch)
+                                    {
+								c.SetAttribute("t", "str");
+							 }
+							 else if (Helpers.IsNumericType(type))
+                                    {
+								c.SetAttribute("t", "n");
+							 }
+							 else if (Type.GetTypeCode(type) == TypeCode.Boolean)
+                                    {
+								c.SetAttribute("t", "b");
+							 }
+							 else if (Type.GetTypeCode(type) == TypeCode.DateTime)
+							 {
+								c.SetAttribute("t", "str");
+							 }
 						  }
 						  else
 						  {
 							 var cellValueStr = ExcelOpenXmlUtils.EncodeXML(cellValue);
-							 if(!firstMatch) // if matchs count over 1 need to set type=str ![image](https://user-images.githubusercontent.com/12729184/114530109-39d46d00-9c7d-11eb-8f6b-52ad8600aca3.png)
+							 if(isMultiMatch) // if matchs count over 1 need to set type=str ![image](https://user-images.githubusercontent.com/12729184/114530109-39d46d00-9c7d-11eb-8f6b-52ad8600aca3.png)
                                     {
 								c.SetAttribute("t", "str");
 							 }
@@ -263,7 +296,6 @@ namespace MiniExcelLibs.OpenXml
 
                                     v.InnerText = v.InnerText.Replace($"{{{{{keys[0]}}}}}", cellValueStr); //TODO: auto check type and set value
 						  }
-						  firstMatch = false;
 					   }
 				    }
 				}
@@ -278,12 +310,27 @@ namespace MiniExcelLibs.OpenXml
 				    {
 					   var newRow = row.Clone() as XmlElement;
 					   newRow.SetAttribute("r", newRowIndex.ToString());
-					   newRow.InnerXml = row.InnerXml.Replace($"{{{{{{MiniExcel_RowIndex}}}}}}", newRowIndex.ToString());
+					   newRow.InnerXml = row.InnerXml.Replace($"{{{{$rowindex}}}}", newRowIndex.ToString());
 
 					   foreach (var key in propKeys)
 					   {
 						  var prop = ienumerableGenricType.GetProperty(key);
-						  newRow.InnerXml = newRow.InnerXml.Replace($"{{{{{ienumerableKey}.{key}}}}}", prop.GetValue(element).ToString());
+
+						  if (element == null)
+							 continue;
+						  var cellValue = prop.GetValue(element);
+						  var cellValueStr = ExcelOpenXmlUtils.EncodeXML(cellValue);
+						  if (cellValue is bool)
+						  {
+							 cellValueStr = (bool)cellValue ? "1" : "0";
+						  }
+						  else if (cellValue is DateTime || cellValue is DateTime?)
+						  {
+							 //c.SetAttribute("t", "d");
+							 cellValueStr = ((DateTime)cellValue).ToString("yyyy-MM-dd HH:mm:ss");
+						  }
+
+						  newRow.InnerXml = newRow.InnerXml.Replace($"{{{{{ienumerableKey}.{key}}}}}", cellValueStr);
 					   }
 
 					   // note: only first time need add diff ![image](https://user-images.githubusercontent.com/12729184/114494728-6bceda80-9c4f-11eb-9685-8b5ed054eabe.png)
@@ -299,7 +346,7 @@ namespace MiniExcelLibs.OpenXml
 				else
 				{
 				    row.SetAttribute("r", newRowIndex.ToString());
-				    row.InnerXml = row.InnerXml.Replace($"{{{{{{MiniExcel_RowIndex}}}}}}", newRowIndex.ToString());
+				    row.InnerXml = row.InnerXml.Replace($"{{{{$rowindex}}}}", newRowIndex.ToString());
 				    writer.Write(CleanXml(row.OuterXml));
 				}
 

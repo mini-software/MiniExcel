@@ -32,11 +32,11 @@ MiniExcel 簡單、高效避免OOM的.NET處理Excel查、寫、填充工具。
 
 ### Get Started
 
-- [讀 Excel](#讀%20Excel)
-- [寫 Excel](#寫%20Excel)
-- [模板填充 Excel](#模板填充%20Excel)
-- [Excel Column Name/Index/Ignore Attribute](#Excel%20Column%20Name/Index/Ignore%20Attribute)
-- [範例](#範例)
+- [讀 Excel](#getstart1)
+- [寫 Excel](#getstart2)
+- [模板填充 Excel](#getstart3)
+- [Excel Column Name/Index/Ignore Attribute](#getstart4)
+- [範例](#getstart5)
 
 
 
@@ -98,7 +98,7 @@ IterationCount=3  LaunchCount=3  WarmupCount=3
 
 
 
-### 讀 Excel
+### 讀 Excel <a name="getstart1"></a>
 
 
 
@@ -226,7 +226,7 @@ foreach(IDictionary<string,object> row in MiniExcel.Query(path))
 
 
 
-### 寫 Excel 
+### 寫 Excel  <a name="getstart2"></a>
 
 1. 必須是非abstract 類別有公開無參數構造函數
 2. MiniExcel SaveAs 支援 `IEnumerable參數延遲查詢`，除非必要請不要使用 ToList 等方法讀取全部資料到記憶體
@@ -299,7 +299,7 @@ using (var stream = File.Create(path))
 
 
 
-### 模板填充 Excel
+### 模板填充 Excel <a name="getstart3"></a>
 
 #### 1. 基本填充
 
@@ -436,7 +436,7 @@ MiniExcel.SaveAsByTemplate(path, templatePath, value);
 ![image](https://user-images.githubusercontent.com/12729184/114577091-5046ec80-9cae-11eb-924b-087c7becf8da.png)
 
 
-### Excel Column Name/Index/Ignore Attribute
+### Excel Column Name/Index/Ignore Attribute <a name="getstart4"></a>
 
 e.g
 
@@ -473,7 +473,7 @@ Assert.Equal("Test4", rows[0].Test7);
 
 
 
-### Excel 類別自動判斷
+### Excel 類別自動判斷 <a name="getstart5"></a>
 
 MiniExcel 預設會根據擴展名或是 Stream 類別判斷是 xlsx 還是 csv，但會有失準時候，請自行指定。
 

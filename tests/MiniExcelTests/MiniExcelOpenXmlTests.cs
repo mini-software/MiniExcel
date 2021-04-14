@@ -270,7 +270,7 @@ namespace MiniExcelLibs.Tests
 
         public class DemoPocoHelloWorld
         {
-            public string HelloWorld { get; set; }
+            public string HelloWorld1 { get; set; }
         }
 
         public class UserAccount
@@ -359,14 +359,14 @@ namespace MiniExcelLibs.Tests
             {
                 var rows = stream.Query<DemoPocoHelloWorld>().Take(2).ToList();
 
-                Assert.Equal("HelloWorld", rows[0].HelloWorld);
-                Assert.Equal("HelloWorld", rows[1].HelloWorld);
+                Assert.Equal("HelloWorld1", rows[0].HelloWorld1);
+                Assert.Equal("HelloWorld1", rows[1].HelloWorld1);
             }
             {
                 var rows = MiniExcel.Query<DemoPocoHelloWorld>(path).Take(2).ToList();
 
-                Assert.Equal("HelloWorld", rows[0].HelloWorld);
-                Assert.Equal("HelloWorld", rows[1].HelloWorld);
+                Assert.Equal("HelloWorld1", rows[0].HelloWorld1);
+                Assert.Equal("HelloWorld1", rows[1].HelloWorld1);
             }
         }
 
@@ -717,13 +717,13 @@ namespace MiniExcelLibs.Tests
 
             {
                 var row = MiniExcel.Query(path).First();
-                Assert.Equal("HelloWorld", row.A);
+                Assert.Equal("HelloWorld1", row.A);
             }
 
             using (var stream = File.OpenRead(path))
             {
                 var row = stream.Query().First();
-                Assert.Equal("HelloWorld", row.A);
+                Assert.Equal("HelloWorld1", row.A);
             }
 
             {

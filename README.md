@@ -19,9 +19,8 @@ At present, most popular frameworks need to load all the data into the memory to
 - Support `real-time` operation of each row of data
   ![miniexcel_lazy_load](https://user-images.githubusercontent.com/12729184/111034290-e5588a80-844f-11eb-8c84-6fdb6fb8f403.gif)
 - Support LINQ deferred execution, it can do low-consumption, fast paging and other complex queries
-  ![queryfirst](https://user-images.githubusercontent.com/12729184/111072392-6037a900-8515-11eb-9693-5ce2dad1e460.gif)
 - Lightweight, does not with any third-party dependencies, DLL is less than 100KB
-- Easy API style
+- Easy API style to read/write/fill excel
 
 ### Get Started
 
@@ -211,6 +210,8 @@ foreach (var sheetName in sheetNames)
 
 ```C#
 var columns = MiniExcel.GetColumns(path); // e.g result : ["A","B"...]
+
+var cnt = columns.Count;  // get column count
 ```
 
 #### 8. Dynamic Query cast row to `IDictionary<string,object>` 
@@ -538,7 +539,28 @@ public class ExcelController : Controller
 }
 ```
 
+####  3. Paging Query
 
+```C#
+void Main()
+{
+	var rows = MiniExcel.Query(path);
+	
+	Console.WriteLine("==== No.1 Page ====");
+	Console.WriteLine(Page(rows,pageSize:3,page:1));
+	Console.WriteLine("==== No.50 Page ====");
+	Console.WriteLine(Page(rows,pageSize:3,page:50));
+	Console.WriteLine("==== No.5000 Page ====");
+	Console.WriteLine(Page(rows,pageSize:3,page:5000));
+}
+
+public static IEnumerable<T> Page<T>(IEnumerable<T> en, int pageSize, int page)
+{
+	return en.Skip(page * pageSize).Take(pageSize);
+}
+```
+
+![20210419](https://user-images.githubusercontent.com/12729184/114679083-6ef4c400-9d3e-11eb-9f78-a86daa45fe46.gif)
 
 
 

@@ -24,8 +24,6 @@ MiniExcel简单、高效避免OOM的.NET处理Excel查、写、填充数据工�
 - 支持`即时`操作每行数据
 ![miniexcel_lazy_load](https://user-images.githubusercontent.com/12729184/111034290-e5588a80-844f-11eb-8c84-6fdb6fb8f403.gif)
 - 兼具搭配 LINQ 延迟查询特性，能办到低消耗、快速分页等复杂查询  
-图片:与主流框架对比的消耗、效率差  
-![queryfirst](https://user-images.githubusercontent.com/12729184/111072392-6037a900-8515-11eb-9693-5ce2dad1e460.gif)
 - 轻量，不依赖任何套件，DLL小于100KB
 - 简便操作的 API 风格
 
@@ -543,7 +541,28 @@ public class ExcelController : Controller
 }
 ```
 
+####  3. 分页查询
 
+```C#
+void Main()
+{
+	var rows = MiniExcel.Query(path);
+	
+	Console.WriteLine("==== No.1 Page ====");
+	Console.WriteLine(Page(rows,pageSize:3,page:1));
+	Console.WriteLine("==== No.50 Page ====");
+	Console.WriteLine(Page(rows,pageSize:3,page:50));
+	Console.WriteLine("==== No.5000 Page ====");
+	Console.WriteLine(Page(rows,pageSize:3,page:5000));
+}
+
+public static IEnumerable<T> Page<T>(IEnumerable<T> en, int pageSize, int page)
+{
+	return en.Skip(page * pageSize).Take(pageSize);
+}
+```
+
+![20210419](https://user-images.githubusercontent.com/12729184/114679083-6ef4c400-9d3e-11eb-9f78-a86daa45fe46.gif)
 
 
 

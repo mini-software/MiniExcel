@@ -24,19 +24,19 @@ namespace MiniExcelLibs.Tests
         public void GetColumnsTest()
         {
             {
-                var path = @"D:\git\MiniExcel\samples\xlsx\TestTypeMapping.xlsx";
+                var path = @"..\..\..\..\..\samples\xlsx\TestTypeMapping.xlsx";
                 var columns = MiniExcel.GetColumns(path);
                 Assert.Equal(new[] { "A", "B", "C", "D", "E", "F", "G", "H" }, columns);
             }
 
             {
-                var path = @"D:\git\MiniExcel\samples\xlsx\TestTypeMapping.xlsx";
+                var path = @"..\..\..\..\..\samples\xlsx\TestTypeMapping.xlsx";
                 var columns = MiniExcel.GetColumns(path);
                 Assert.Equal(8, columns.Count);
             }
 
             {
-                var path = @"D:\git\MiniExcel\samples\xlsx\TestEmpty.xlsx";
+                var path = @"..\..\..\..\..\samples\xlsx\TestEmpty.xlsx";
                 var columns = MiniExcel.GetColumns(path);
                 Assert.Null(columns);
             }

@@ -14,6 +14,7 @@
 
 void Main()
 {
+	// ==== Excel Query ====
 	{
 		var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
 		Console.WriteLine("==== SaveAs by strongly type ====");
@@ -48,6 +49,8 @@ void Main()
 			Console.WriteLine(sheets);
 		}
 	}
+	
+	// ==== Create/Save Excel ====
 	{
 		var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
 		Console.WriteLine("==== SaveAs by Anonymous ====");

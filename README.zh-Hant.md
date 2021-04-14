@@ -213,7 +213,15 @@ foreach (var sheetName in sheetNames)
 }
 ```
 
-#### 7. Dynamic Query 轉成 `IDictionary<string,object>` 資料
+#### 7. 查詢所有欄(列)
+
+```C#
+var columns = MiniExcel.GetColumns(path); // e.g result : ["A","B"...]
+
+var cnt = columns.Count;  // get column count
+```
+
+#### 8. Dynamic Query 轉成 `IDictionary<string,object>` 資料
 
 ```C#
 foreach(IDictionary<string,object> row in MiniExcel.Query(path))

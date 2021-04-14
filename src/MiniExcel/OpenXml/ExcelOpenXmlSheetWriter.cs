@@ -113,7 +113,7 @@ namespace MiniExcelLibs.OpenXml
                             // dimension 
 
                             var maxRowIndex = rowCount + (printHeader && rowCount > 0 ? 1 : 0);  //TODO:it can optimize
-                            writer.Write($@"<dimension ref=""{GetDimension(maxRowIndex, maxColumnIndex)}""/><x:sheetData>");
+                            writer.Write($@"<x:dimension ref=""{GetDimension(maxRowIndex, maxColumnIndex)}""/><x:sheetData>");
 
                             //header
                             var yIndex = 1;
@@ -180,7 +180,7 @@ namespace MiniExcelLibs.OpenXml
 
         private void WriteEmptySheet(StreamWriter writer)
         {
-            writer.Write($@"<?xml version=""1.0"" encoding=""utf-8""?><x:worksheet xmlns:x=""http://schemas.openxmlformats.org/spreadsheetml/2006/main""><dimension ref=""A1""/><x:sheetData></x:sheetData></x:worksheet>");
+            writer.Write($@"<?xml version=""1.0"" encoding=""utf-8""?><x:worksheet xmlns:x=""http://schemas.openxmlformats.org/spreadsheetml/2006/main""><x:dimension ref=""A1""/><x:sheetData></x:sheetData></x:worksheet>");
         }
 
         internal void GenerateSheetByDapperRow(StreamWriter writer, ZipArchive archive, IEnumerable value, int rowCount, List<string> keys, int xIndex = 1, int yIndex = 1)
@@ -314,7 +314,7 @@ namespace MiniExcelLibs.OpenXml
                 // dimension
                 var maxRowIndex = value.Rows.Count + (printHeader && value.Rows.Count > 0 ? 1 : 0);
                 var maxColumnIndex = value.Columns.Count;
-                writer.Write($@"<dimension ref=""{GetDimension(maxRowIndex, maxColumnIndex)}""/><x:sheetData>");
+                writer.Write($@"<x:dimension ref=""{GetDimension(maxRowIndex, maxColumnIndex)}""/><x:sheetData>");
 
                 if (printHeader)
                 {

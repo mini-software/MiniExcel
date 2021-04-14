@@ -69,6 +69,17 @@
                 yield return item.Name;
         }
 
+        public static ICollection<string> GetColumns(string path)
+        {
+            using (var stream = File.OpenRead(path))
+                return (Query(stream).FirstOrDefault() as IDictionary<string, object>)?.Keys;
+        }
+
+        public static ICollection<string> GetColumns(this Stream stream)
+        {
+            return (Query(stream).FirstOrDefault() as IDictionary<string, object>)?.Keys;
+        }
+
         public static void SaveAsByTemplate(string path, string templatePath, object value)
         {
             using(var stream = File.Create(path))

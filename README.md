@@ -207,7 +207,13 @@ foreach (var sheetName in sheetNames)
 }
 ```
 
-#### 7. Dynamic Query cast row to `IDictionary<string,object>` 
+#### 7. Get Columns 
+
+```C#
+var columns = MiniExcel.GetColumns(path); // e.g result : ["A","B"...]
+```
+
+#### 8. Dynamic Query cast row to `IDictionary<string,object>` 
 
 ```C#
 foreach(IDictionary<string,object> row in MiniExcel.Query(path))

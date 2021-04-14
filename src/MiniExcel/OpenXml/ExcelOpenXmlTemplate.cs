@@ -15,12 +15,15 @@ namespace MiniExcelLibs.OpenXml
 
     internal class ExcelOpenXmlTemplate
     {
-	   private const string _ns = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
+	   private static readonly XmlNamespaceManager _ns;
 	   private static readonly Regex _isExpressionRegex;
 	   static ExcelOpenXmlTemplate()
 	   {
 		  _isExpressionRegex = new Regex("(?<={{).*?(?=}})");
+		  _ns = new XmlNamespaceManager(new NameTable());
+		  _ns.AddNamespace("x", "http://schemas.openxmlformats.org/spreadsheetml/2006/main");
 	   }
+
 
 	   internal static void SaveAsByTemplateImpl(Stream stream, string templatePath, object value)
 	   {
@@ -42,7 +45,6 @@ namespace MiniExcelLibs.OpenXml
             }
 
 		  //TODO:DataTable & DapperRow
-
 		  //TODO: copy new bytes 
 		  using (var templateStream = File.Open(templatePath, FileMode.Open, FileAccess.Read, FileShare.Read))
 		  {
@@ -62,25 +64,12 @@ namespace MiniExcelLibs.OpenXml
 				foreach (var sheet in sheets)
 				{
 				    var sheetStream = sheet.Open();
-
-				    var doc = new System.Xml.XmlDocument();
-				    doc.Load(sheetStream);
-
-				    XmlNamespaceManager ns = new XmlNamespaceManager(doc.NameTable);
-				    ns.AddNamespace("x", "http://schemas.openxmlformats.org/spreadsheetml/2006/main");
-
-				    var worksheet = doc.SelectSingleNode("/x:worksheet", ns);
-				    var rows = doc.SelectNodes($"/x:worksheet/x:sheetData/x:row", ns);
-
-
-				    sheetStream.Dispose();
-
 				    var fullName = sheet.FullName;
-				    sheet.Delete();
+				    
 				    ZipArchiveEntry entry = _archive.ZipFile.CreateEntry(fullName);
 				    using (var zipStream = entry.Open())
 				    {
-					   ExcelOpenXmlTemplate.GenerateSheetXml(zipStream, doc.InnerXml, values, sharedStrings);
+					   ExcelOpenXmlTemplate.GenerateSheetXmlImpl(sheet,zipStream, sheetStream, values, sharedStrings);
 					   //doc.Save(zipStream); //don't do it beacause : ![image](https://user-images.githubusercontent.com/12729184/114361127-61a5d100-9ba8-11eb-9bb9-34f076ee28a2.png)
 				    }
 				}
@@ -89,43 +78,26 @@ namespace MiniExcelLibs.OpenXml
 			 _archive.Dispose();
 		  }
 	   }
-
-	   private static Type GetIEnumerableRuntimeValueType(object v)
-	   {
-		  if (v == null)
-			 throw new InvalidDataException("input parameter value can't be null");
-		  foreach (var tv in v as IEnumerable)
-		  {
-			 if (tv != null)
-			 {
-				return tv.GetType();
-			 }
-		  }
-		  throw new InvalidDataException("can't get parameter type information");
-	   }
-
-	   public static void GenerateSheetXml(Stream stream, string sheetXml, Dictionary<string, object> inputMaps,List<string> sharedStrings, XmlWriterSettings xmlWriterSettings = null)
+	   internal static void GenerateSheetXmlImpl(ZipArchiveEntry sheetZipEntry,Stream stream, Stream sheetStream, Dictionary<string, object> inputMaps,List<string> sharedStrings, XmlWriterSettings xmlWriterSettings = null)
 	   {
 		  var doc = new XmlDocument();
-		  doc.LoadXml(sheetXml);
+		  doc.Load(sheetStream);
+		  sheetStream.Dispose();
 
+		  sheetZipEntry.Delete(); // ZipArchiveEntry can't update directly, so need to delete then create logic
 
-
-		  XmlNamespaceManager ns = new XmlNamespaceManager(doc.NameTable);
-		  ns.AddNamespace("x", "http://schemas.openxmlformats.org/spreadsheetml/2006/main");
-
-		  var worksheet = doc.SelectSingleNode("/x:worksheet", ns);
-		  var sheetData = doc.SelectSingleNode("/x:worksheet/x:sheetData", ns);
+		  var worksheet = doc.SelectSingleNode("/x:worksheet", _ns);
+		  var sheetData = doc.SelectSingleNode("/x:worksheet/x:sheetData", _ns);
 
 		  // ==== update sharedstring ====
-		  var rows = sheetData.SelectNodes($"x:row", ns);
+		  var rows = sheetData.SelectNodes($"x:row", _ns);
 		  foreach (XmlElement row in rows)
 		  {
-			 var cs = row.SelectNodes($"x:c", ns);
+			 var cs = row.SelectNodes($"x:c", _ns);
 			 foreach (XmlElement c in cs)
 			 {
 				var t = c.GetAttribute("t");
-				var v = c.SelectSingleNode("x:v", ns);
+				var v = c.SelectSingleNode("x:v", _ns);
 				if (v == null || v.InnerText == null) //![image](https://user-images.githubusercontent.com/12729184/114363496-075a3f80-9bab-11eb-9883-8e3fec10765c.png)
 				    continue;
 
@@ -145,7 +117,7 @@ namespace MiniExcelLibs.OpenXml
 
 		  // ==== Dimension ====
 		  // note : dimension need to put on the top ![image](https://user-images.githubusercontent.com/12729184/114507911-5dd88400-9c66-11eb-94c6-82ed7bdb5aab.png)
-		  var dimension = doc.SelectSingleNode("/x:worksheet/x:dimension", ns) as XmlElement;
+		  var dimension = doc.SelectSingleNode("/x:worksheet/x:dimension", _ns) as XmlElement;
 		  // update dimension
 		  if (dimension == null)
 			 throw new NotImplementedException("Excel Dimension Xml is null, please issue file for me. https://github.com/shps951023/MiniExcel/issues");
@@ -157,9 +129,9 @@ namespace MiniExcelLibs.OpenXml
 			 {
 				IEnumerable ienumerable = null;
 
-				foreach (XmlElement c in row.SelectNodes($"x:c", ns))
+				foreach (XmlElement c in row.SelectNodes($"x:c", _ns))
 				{
-				    var v = c.SelectSingleNode("x:v", ns);
+				    var v = c.SelectSingleNode("x:v", _ns);
 				    if (v?.InnerText == null)
 					   continue;
 
@@ -212,7 +184,7 @@ namespace MiniExcelLibs.OpenXml
 			 writer.Write("<sheetData>");
 			 int originRowIndex;
 			 int rowIndexDiff = 0;
-			 foreach (XmlElement row in newSheetData.SelectNodes($"x:row", ns))
+			 foreach (XmlElement row in newSheetData.SelectNodes($"x:row", _ns))
 			 {
 				var rowCotainIEnumerable = false;
 				IEnumerable ienumerable = null;
@@ -227,14 +199,14 @@ namespace MiniExcelLibs.OpenXml
 
 				// check if contains IEnumerble row
 				{
-				    var cs = row.SelectNodes($"x:c", ns);
+				    var cs = row.SelectNodes($"x:c", _ns);
 				    foreach (XmlElement c in cs)
 				    {
 					   var cr = c.GetAttribute("r");
 					   var letter = new String(cr.Where(Char.IsLetter).ToArray());
 					   c.SetAttribute("r", $"{letter}{{{{{{MiniExcel_RowIndex}}}}}}");
 
-					   var v = c.SelectSingleNode("x:v", ns);
+					   var v = c.SelectSingleNode("x:v", _ns);
 					   if (v?.InnerText == null)
 						  continue;
 
@@ -336,6 +308,21 @@ namespace MiniExcelLibs.OpenXml
 			 writer.Write(contents[1]);
 		  }
 	   }
+
+	   private static Type GetIEnumerableRuntimeValueType(object v)
+	   {
+		  if (v == null)
+			 throw new InvalidDataException("input parameter value can't be null");
+		  foreach (var tv in v as IEnumerable)
+		  {
+			 if (tv != null)
+			 {
+				return tv.GetType();
+			 }
+		  }
+		  throw new InvalidDataException("can't get parameter type information");
+	   }
+
 	   private static string CleanXml(string xml)
 	   {
 		  //TODO: need to optimize

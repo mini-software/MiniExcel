@@ -1,4 +1,5 @@
 ﻿using MiniExcelLibs;
+using MiniExcelLibs.Tests.Utils;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -32,6 +33,9 @@ namespace MiniExcelTests
                 Assert.Equal(true, rows[1].C);
                 Assert.Equal(123, rows[1].D);
                 Assert.Equal("Jack has 123 points", rows[1].E);
+
+                var demension = Helpers.GetFirstSheetDimensionRefValue(path);
+                Assert.Equal("A1:E2", demension);
             }
 
             {
@@ -53,37 +57,11 @@ namespace MiniExcelTests
                 Assert.Equal(true, rows[1].C);
                 Assert.Equal(123, rows[1].D);
                 Assert.Equal("Jack has 123 points", rows[1].E);
+
+                var demension = Helpers.GetFirstSheetDimensionRefValue(path);
+                Assert.Equal("A1:E2", demension);
             }
         }
-
-        //[Fact]
-        //public void PerformanceTest()
-        //{
-        //    // MiniExcel
-        //    {
-        //        var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
-        //        var templatePath = @"..\..\..\..\..\samples\xlsx\TestTemplateBasicIEmumerableFill.xlsx";
-        //        var value = new
-        //        {
-        //            employees = Enumerable.Range(1, 1000000).Select(s => new { name = "Jack", department = "HR" })
-        //        };
-        //        MiniExcel.SaveAsByTemplate(path, templatePath, value);
-        //    }
-
-        //    // ClosexXml.Report
-        //    {
-        //        var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
-        //        var templatePath = @"..\..\..\..\..\samples\xlsx\TestTemplateBasicIEmumerableFill_ClosedXML_Report.xlsx";
-        //        var template = new ClosedXML.Report.XLTemplate(templatePath);
-        //        var value = new
-        //        {
-        //            employees = Enumerable.Range(1, 1000000).Select(s => new { name = "Jack", department = "HR" })
-        //        };
-        //        template.AddVariable(value);
-        //        template.Generate();
-        //        template.SaveAs(path);
-        //    }
-        //}
 
         [Fact]
         public void TestIEnumerable()
@@ -105,6 +83,9 @@ namespace MiniExcelTests
                     }
                 };
                 MiniExcel.SaveAsByTemplate(path, templatePath, value);
+
+                var demension = Helpers.GetFirstSheetDimensionRefValue(path);
+                Assert.Equal("A1:B7", demension);
             }
 
             {
@@ -124,6 +105,9 @@ namespace MiniExcelTests
                     }
                 };
                 MiniExcel.SaveAsByTemplate(path, templatePath, value);
+
+                var demension = Helpers.GetFirstSheetDimensionRefValue(path);
+                Assert.Equal("A1:B7", demension);
             }
         }
 
@@ -167,6 +151,9 @@ namespace MiniExcelTests
                 Assert.Equal("IT", rows[7].C);
                 Assert.Equal("Keaton", rows[8].B);
                 Assert.Equal("IT", rows[8].C);
+
+                var demension = Helpers.GetFirstSheetDimensionRefValue(path);
+                Assert.Equal("A1:C9", demension);
             }
 
 
@@ -207,6 +194,9 @@ namespace MiniExcelTests
                 Assert.Equal("IT", rows[7].C);
                 Assert.Equal("Keaton", rows[8].B);
                 Assert.Equal("IT", rows[8].C);
+
+                var demension = Helpers.GetFirstSheetDimensionRefValue(path);
+                Assert.Equal("A1:C9", demension);
             }
 
         }

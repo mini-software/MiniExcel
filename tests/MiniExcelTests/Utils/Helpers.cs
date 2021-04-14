@@ -3,6 +3,7 @@
  **/
 namespace MiniExcelLibs.Tests.Utils
 {
+    using MiniExcelLibs.OpenXml;
     using System;
     using System.Collections.Generic;
     using System.Dynamic;
@@ -13,7 +14,9 @@ namespace MiniExcelLibs.Tests.Utils
     using System.Reflection;
     using System.Text;
     using System.Text.RegularExpressions;
+    using System.Xml;
     using System.Xml.Linq;
+    using System.Xml.XPath;
 
     internal static class Helpers
     {
@@ -46,6 +49,8 @@ namespace MiniExcelLibs.Tests.Utils
 
 	   internal static string GetFirstSheetDimensionRefValue(string path)
 	   {
+		  var ns = new XmlNamespaceManager(new NameTable());
+		  ns.AddNamespace("x", "http://schemas.openxmlformats.org/spreadsheetml/2006/main");
 		  string refV;
 		  using (var stream = File.OpenRead(path))
 		  using (ZipArchive archive = new ZipArchive(stream, ZipArchiveMode.Read, false, Encoding.UTF8))
@@ -53,9 +58,9 @@ namespace MiniExcelLibs.Tests.Utils
 			 var sheet = archive.Entries.Single(w => w.FullName.StartsWith("xl/worksheets/sheet1", StringComparison.OrdinalIgnoreCase));
 			 using (var sheetStream = sheet.Open())
 			 {
-				var dimension = XElement.Load(sheetStream)
-					.Descendants("dimension");
-				refV = dimension.Single().Attribute("ref").Value;
+				var doc = XDocument.Load(sheetStream); ;
+				var dimension = doc.XPathSelectElement("/x:worksheet/x:dimension", ns);
+				refV = dimension.Attribute("ref").Value;
 			 }
 		  }
 

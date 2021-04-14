@@ -25,10 +25,14 @@ namespace MiniExcelLibs.Benchmarks
         {
 #if !DEBUG
             //new BenchmarkSwitcher(typeof(Program).Assembly).Run(args, new Config());
-            BenchmarkRunner.Run<XlsxBenchmark>();
+            //BenchmarkRunner.Run<XlsxBenchmark>();
+            BenchmarkRunner.Run<TemplateXlsxBenchmark>();
 #else
-            //BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args, new DebugInProcessConfig());
-            new XlsxBenchmark().ClosedXml_Query_Test();
+            //BenchmarkSwitcher.FromTypes(new[] { typeof(TemplateXlsxBenchmark) }).Run(args, new DebugInProcessConfig() );
+            //BenchmarkSwitcher.FromAssembly(typeof(TemplateXlsxBenchmark).Assembly).Run(args, new DebugConfig());
+            
+            new TemplateXlsxBenchmark().MiniExcel_Template_Generate_Test();
+            //new XlsxBenchmark().MiniExcelCreateTest();
 #endif
             Console.Read();
         }
@@ -48,6 +52,41 @@ namespace MiniExcelLibs.Benchmarks
         //public const string filePath = @"D:\git\MiniExcel\samples\xlsx\Test10x10.xlsx";
 #endif
     }
+
+    public class TemplateXlsxBenchmark : BenchmarkBase
+    {
+        [Benchmark(Description = "MiniExcel Template Generate")]
+        public void MiniExcel_Template_Generate_Test()
+        {
+            {
+                var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
+                var templatePath = @"D:\git\MiniExcel\samples\xlsx\TestTemplateBasicIEmumerableFill.xlsx";
+                var value = new
+                {
+                    employees = Enumerable.Range(1, 1000000).Select(s => new { name = "Jack", department = "HR" })
+                };
+                MiniExcel.SaveAsByTemplate(path, templatePath, value);
+            }
+        }
+
+        [Benchmark(Description = "ClosedXml.Report Template Generate")]
+        public void ClosedXml_Report_Template_Generate_Test()
+        {
+            {
+                var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
+                var templatePath = @"D:\git\MiniExcel\samples\xlsx\TestTemplateBasicIEmumerableFill_ClosedXML_Report.xlsx";
+                var template = new ClosedXML.Report.XLTemplate(templatePath);
+                var value = new
+                {
+                    employees = Enumerable.Range(1, 1000000).Select(s => new { name = "Jack", department = "HR" })
+                };
+                template.AddVariable(value);
+                template.Generate();
+                template.SaveAs(path);
+            }
+        }
+    }
+
 
     public class XlsxBenchmark: BenchmarkBase
     {

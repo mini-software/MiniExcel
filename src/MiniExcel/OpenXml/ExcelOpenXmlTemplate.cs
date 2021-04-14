@@ -316,8 +316,12 @@ namespace MiniExcelLibs.OpenXml
 					   {
 						  var prop = ienumerableGenricType.GetProperty(key);
 
-						  if (element == null)
+						  if (element == null) //![image](https://user-images.githubusercontent.com/12729184/114728510-bc3e5900-9d71-11eb-9721-8a414dca21a0.png)
+						  {
+							 newRow.InnerXml = newRow.InnerXml.Replace($"{{{{{ienumerableKey}.{key}}}}}", "");
 							 continue;
+						  }
+							 
 						  var cellValue = prop.GetValue(element);
 						  var cellValueStr = ExcelOpenXmlUtils.EncodeXML(cellValue);
 						  if (cellValue is bool)

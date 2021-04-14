@@ -36,7 +36,7 @@ namespace MiniExcelTests
                     Ts = new[] {
                         vo,
                         new TestIEnumerableTypeVO{},
-                        //null,
+                        null,
                         new TestIEnumerableTypeVO{},
                         vo
                     }
@@ -60,19 +60,34 @@ namespace MiniExcelTests
                 Assert.Null(rows[1].datetime);
                 Assert.Null(rows[1].Guid);
 
-                //Assert.Null(rows[2]);
+                // special input null but query is empty vo
+                Assert.Null(rows[2].@string);
+                Assert.Null(rows[2].@int);
+                Assert.Null(rows[2].@double);
+                Assert.Null(rows[2].@decimal);
+                Assert.Null(rows[2].@bool);
+                Assert.Null(rows[2].datetime);
+                Assert.Null(rows[2].Guid);
+
+                Assert.Null(rows[3].@string);
+                Assert.Null(rows[3].@int);
+                Assert.Null(rows[3].@double);
+                Assert.Null(rows[3].@decimal);
+                Assert.Null(rows[3].@bool);
+                Assert.Null(rows[3].datetime);
+                Assert.Null(rows[3].Guid);
 
 
-                Assert.Equal(vo.@string, rows[3].@string);
-                Assert.Equal(vo.@int, rows[3].@int);
-                Assert.Equal(vo.@double, rows[3].@double);
-                Assert.Equal(vo.@decimal, rows[3].@decimal);
-                Assert.Equal(vo.@bool, rows[3].@bool);
-                Assert.Equal(vo.datetime, rows[3].datetime);
-                Assert.Equal(vo.Guid, rows[3].Guid);
+                Assert.Equal(vo.@string, rows[4].@string);
+                Assert.Equal(vo.@int, rows[4].@int);
+                Assert.Equal(vo.@double, rows[4].@double);
+                Assert.Equal(vo.@decimal, rows[4].@decimal);
+                Assert.Equal(vo.@bool, rows[4].@bool);
+                Assert.Equal(vo.datetime, rows[4].datetime);
+                Assert.Equal(vo.Guid, rows[4].Guid);
 
                 var demension = Helpers.GetFirstSheetDimensionRefValue(path);
-                Assert.Equal("A1:G5", demension);
+                Assert.Equal("A1:G6", demension);
             }
         }
 

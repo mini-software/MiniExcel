@@ -6,14 +6,13 @@
 
 ---
 
-QQ : 813100564  / [.NET MiniExcel FB Group](https://www.facebook.com/groups/502512817441194)  
+Facebook : [.NET MiniExcel 討論群](https://www.facebook.com/groups/502512817441194)  
 
 ---
 
 ### 簡介
 
-MiniExcel 簡單、高效避免OOM的.NET處理Excel工具。
-
+MiniExcel 簡單、高效避免OOM的.NET處理Excel查、寫、填充工具。
 
 目前主流框架大多需要將資料全載入到記憶體方便操作，但這會導致記憶體消耗問題，MiniExcel 嘗試以 Stream 角度寫底層算法邏輯，能讓原本1000多MB占用降低到幾MB，避免記憶體不夠情況。
 
@@ -27,11 +26,22 @@ MiniExcel 簡單、高效避免OOM的.NET處理Excel工具。
 圖片:與主流框架對比的消耗、效率差  
 ![queryfirst](https://user-images.githubusercontent.com/12729184/111072392-6037a900-8515-11eb-9693-5ce2dad1e460.gif)
 - 輕量，不依賴任何套件，DLL小於100KB
-- 簡便操作的 Dapper API 風格
+- 簡便操作的 API 風格
+
+
+
+### Get Started
+
+- [讀 Excel](#讀 Excel)
+- [寫 Excel](#寫 Excel)
+- [模板填充 Excel](#模板填充 Excel)
+- [Excel Column Name/Index/Ignore Attribute](#Excel Column Name/Index/Ignore Attribute)
+- [範例](#範例)
+
+
 
 ### Demo
-- LINQPad : Download [Basic Demo.linq](drafts/【MiniExcel】Basic%20Demo.linq)
-- Try it Online : [[Try it]](https://dotnetfiddle.net/w5WD1J)
+- LINQPad : Download [Basic Demo.linq](drafts/[MiniExcel]Basic%20Demo.linq)
 
 ### 安裝
 
@@ -86,9 +96,13 @@ IterationCount=3  LaunchCount=3  WarmupCount=3
 | 'OpenXmlSdk Create Xlsx' |       2,621 MB |  42,473,998.9 us | 1370000.0000 |  460000.0000 | 50000.0000 |
 | 'ClosedXml Create Xlsx'  |       7,141 MB | 140,939,928.6 us | 5520000.0000 | 1500000.0000 | 80000.0000 |
 
-### Query 查詢 Excel 返回`強型別` IEnumerable 資料 [[Try it]](https://dotnetfiddle.net/w5WD1J)
 
-推薦使用 Stream.Query 效率會相對較好。
+
+### 讀 Excel
+
+
+
+#### 1. Query 查詢 Excel 返回`強型別` IEnumerable 資料 [[Try it]](https://dotnetfiddle.net/w5WD1J)
 
 ```C#
 public class UserAccount
@@ -112,7 +126,7 @@ using (var stream = File.OpenRead(path))
 ![image](https://user-images.githubusercontent.com/12729184/111107423-c8c46b80-8591-11eb-982f-c97a2dafb379.png)
 
 
-### Query 查詢 Excel 返回`Dynamic` IEnumerable 資料 [[Try it]](https://dotnetfiddle.net/w5WD1J)
+#### 2. Query 查詢 Excel 返回`Dynamic` IEnumerable 資料 [[Try it]](https://dotnetfiddle.net/w5WD1J)
 
 * Key 系統預設為 `A,B,C,D...Z`
 
@@ -136,9 +150,9 @@ using (var stream = File.OpenRead(path))
 }
 ```
 
-### 查詢資料以第一行數據當Key [[Try it]](https://dotnetfiddle.net/w5WD1J)
+#### 3. 查詢資料以第一行數據當Key [[Try it]](https://dotnetfiddle.net/w5WD1J)
 
-note : 同名以右邊數據為準   
+注意 : 同名以右邊數據為準   
 
 Input Excel :    
 
@@ -165,7 +179,7 @@ using (var stream = File.OpenRead(path))
 }
 ```
 
-### Query 查詢支援延遲加載(Deferred Execution)，能配合LINQ First/Take/Skip辦到低消耗、高效率複雜查詢
+#### 4. Query 查詢支援延遲加載(Deferred Execution)，能配合LINQ First/Take/Skip辦到低消耗、高效率複雜查詢
 
 Query First
 ```C#
@@ -181,15 +195,46 @@ using (var stream = File.OpenRead(path))
 }
 ```
 
-### 建立 Excel 檔案 [[Try it]](https://dotnetfiddle.net/w5WD1J)
+#### 5. 查詢指定 Sheet 名稱
 
-1. 必須是 non-abstract 類別有 public parameterless constructor
-2. MiniExcel SaveAs 支援 `IEnumerable參數``延遲查詢`，除非必要請不要使用 ToList 等方法讀取全部資料到記憶體
+```C#
+MiniExcel.Query(path, sheetName: "SheetName");
+//or
+stream.Query(sheetName: "SheetName");
+```
+
+#### 6. 查詢所有 Sheet 名稱跟資料
+
+```C#
+var sheetNames = MiniExcel.GetSheetNames(path).ToList();
+foreach (var sheetName in sheetNames)
+{
+    var rows = MiniExcel.Query(path, sheetName: sheetName);
+}
+```
+
+#### 7. Dynamic Query 轉成 `IDictionary<string,object>` 資料
+
+```C#
+foreach(IDictionary<string,object> row in MiniExcel.Query(path))
+{
+    //..
+}
+```
+
+
+
+
+
+### 寫 Excel 
+
+1. 必須是非abstract 類別有公開無參數構造函數
+2. MiniExcel SaveAs 支援 `IEnumerable參數延遲查詢`，除非必要請不要使用 ToList 等方法讀取全部資料到記憶體
 
 圖片 : 是否呼叫 ToList 的記憶體差別  
-![image](https://user-images.githubusercontent.com/12729184/112587389-752b0b00-8e38-11eb-8a52-cfb76c57e5eb.png)
 
-Anonymous or strongly type: 
+#### ![image](https://user-images.githubusercontent.com/12729184/112587389-752b0b00-8e38-11eb-8a52-cfb76c57e5eb.png)1. Anonymous or strongly type [[Try it]](https://dotnetfiddle.net/w5WD1J)
+
 ```C#
 var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
 MiniExcel.SaveAs(path, new[] {
@@ -198,7 +243,8 @@ MiniExcel.SaveAs(path, new[] {
 });
 ```
 
-Datatable:  
+#### 2. Datatable:  
+
 ```C#
 var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
 var table = new DataTable();
@@ -212,7 +258,8 @@ var table = new DataTable();
 MiniExcel.SaveAs(path, table);
 ```
 
-Dapper:  
+#### 3. Dapper
+
 ```C#
 using (var connection = GetConnection(connectionString))
 {
@@ -221,7 +268,8 @@ using (var connection = GetConnection(connectionString))
 }
 ```
 
-`IEnumerable<IDictionary<string, object>>`
+#### 4. `IEnumerable<IDictionary<string, object>>`
+
 ```C#
 var values = new List<Dictionary<string, object>>()
 {
@@ -238,7 +286,7 @@ output :
 | MiniExcel     | 1     |
 | Github     | 2     |
 
-### SaveAs 支援 Stream [[Try it]](https://dotnetfiddle.net/JOen0e)
+#### 5. SaveAs 支援 Stream [[Try it]](https://dotnetfiddle.net/JOen0e)
 
 ```C#
 using (var stream = File.Create(path))
@@ -246,6 +294,9 @@ using (var stream = File.Create(path))
     stream.SaveAs(values);
 }
 ```
+
+
+
 
 
 ### 模板填充 Excel
@@ -420,25 +471,27 @@ Assert.Null(rows[0].Test6);
 Assert.Equal("Test4", rows[0].Test7);
 ```
 
-### 查詢指定 Sheet 名稱
+
+
+### Excel 類別自動判斷
+
+MiniExcel 預設會根據擴展名或是 Stream 類別判斷是 xlsx 還是 csv，但會有失準時候，請自行指定。
 
 ```C#
-MiniExcel.Query(path, sheetName: "SheetName");
+stream.SaveAs(excelType:ExcelType.CSV);
 //or
-stream.Query(sheetName: "SheetName");
+stream.SaveAs(excelType:ExcelType.XLSX);
+//or
+stream.Query(excelType:ExcelType.CSV);
+//or
+stream.Query(excelType:ExcelType.XLSX);
 ```
 
-### 查詢所有 Sheet 名稱跟資料
 
-```C#
-var sheetNames = MiniExcel.GetSheetNames(path).ToList();
-foreach (var sheetName in sheetNames)
-{
-    var rows = MiniExcel.Query(path, sheetName: sheetName);
-}
-```
 
-### 例子 : SQLite & Dapper 讀取大數據新增到資料庫
+### 範例
+
+#### 1. SQLite & Dapper 讀取大數據新增到資料庫
 
 note : 請不要呼叫 call ToList/ToArray 等方法，這會將所有資料讀到記憶體內
 
@@ -461,7 +514,7 @@ using (var connection = new SQLiteConnection(connectionString))
 ![image](https://user-images.githubusercontent.com/12729184/111072579-2dda7b80-8516-11eb-9843-c01a1edc88ec.png)
 
 
-### 例子 : ASP.NET Core 3.1 or MVC 5 下載 Excel Xlsx API Demo
+#### 2. ASP.NET Core 3.1 or MVC 5 下載 Excel Xlsx API Demo
 
 ```C#
 public class ExcelController : Controller
@@ -481,29 +534,7 @@ public class ExcelController : Controller
 }
 ```
 
-### Excel 類別自動判斷
 
-MiniExcel 預設會根據擴展名或是 Stream 類別判斷是 xlsx 還是 csv，但會有失準時候，請自行指定。
-```C#
-stream.SaveAs(excelType:ExcelType.CSV);
-//or
-stream.SaveAs(excelType:ExcelType.XLSX);
-//or
-stream.Query(excelType:ExcelType.CSV);
-//or
-stream.Query(excelType:ExcelType.XLSX);
-```
-
-
-
-### Dynamic Query 轉成 `IDictionary<string,object>` 資料
-
-```C#
-foreach(IDictionary<string,object> row in MiniExcel.Query(path))
-{
-    //..
-}
-```
 
 
 
@@ -512,10 +543,12 @@ foreach(IDictionary<string,object> row in MiniExcel.Query(path))
 - 目前不支援 xls (97-2003) 或是加密檔案。
 - 不支援樣式、字體、寬度等`修改`，因為 MiniExcel 概念是只專注於值資料，藉此降低記憶體消耗跟提升效率。
 
+
+
 ### 參考
-- 讀取邏輯 :  [ExcelDataReader](https://github.com/ExcelDataReader/ExcelDataReader)   
+- 讀取邏輯 :  [ExcelDataReader](https://github.com/ExcelDataReader/ExcelDataReader)  / [ClosedXML](https://github.com/ClosedXML/ClosedXML)
 - API 設計方式 :　[StackExchange/Dapper](https://github.com/StackExchange/Dapper)    
 
-### Contributors :  
+### Contributors  
 
 ![](https://contrib.rocks/image?repo=shps951023/MiniExcel)

@@ -2,11 +2,7 @@
 
 ---
 
-[English](README.md) / [繁體中文](README.zh-Hant.md) / [简体中文](README.zh-CN.md)
-
-----
-
-QQ : 813100564  / [.NET MiniExcel FB Group](https://www.facebook.com/groups/502512817441194)  
+[English](README.md) / [简体中文](README.zh-CN.md) / [繁體中文](README.zh-Hant.md)
 
 ---
 
@@ -25,12 +21,19 @@ At present, most popular frameworks need to load all the data into the memory to
 - Support LINQ deferred execution, it can do low-consumption, fast paging and other complex queries
   ![queryfirst](https://user-images.githubusercontent.com/12729184/111072392-6037a900-8515-11eb-9693-5ce2dad1e460.gif)
 - Lightweight, does not with any third-party dependencies, DLL is less than 100KB
-- Easy Dapper API style
+- Easy API style
 
+### Get Started
+
+- [Excel Query](#Excel Query)
+- [Create Excel](#Create Excel)
+- [Fill Data To Excel Template](#Fill Data To Excel Template)
+- [Excel Column Name/Index/Ignore Attribute](#Excel Column Name/Index/Ignore Attribute)
+- [Examples](#Examples)
 
 ### Demo
+
 - LINQPad : Download [Basic Demo.linq](drafts/【MiniExcel】Basic%20Demo.linq)
-- Try it Online : [[Try it]](https://dotnetfiddle.net/w5WD1J)
 
 ### Installation
 
@@ -87,8 +90,9 @@ IterationCount=3  LaunchCount=3  WarmupCount=3
 
 
 
+### Excel Query 
 
-### Execute a query and map the results to a strongly typed IEnumerable [[Try it]](https://dotnetfiddle.net/w5WD1J)
+#### 1. Execute a query and map the results to a strongly typed IEnumerable [[Try it]](https://dotnetfiddle.net/w5WD1J)
 
 Recommand to use Stream.Query because of better efficiency.
 
@@ -113,8 +117,7 @@ using (var stream = File.OpenRead(path))
 
 ![image](https://user-images.githubusercontent.com/12729184/111107423-c8c46b80-8591-11eb-982f-c97a2dafb379.png)
 
-
-### Execute a query and map it to a list of dynamic objects without using head [[Try it]](https://dotnetfiddle.net/w5WD1J)
+#### 2. Execute a query and map it to a list of dynamic objects without using head [[Try it]](https://dotnetfiddle.net/w5WD1J)
 
 * dynamic key is `A.B.C.D..`
 
@@ -138,7 +141,7 @@ using (var stream = File.OpenRead(path))
 }
 ```
 
-### Execute a query with first header row [[Try it]](https://dotnetfiddle.net/w5WD1J)
+#### 3. Execute a query with first header row [[Try it]](https://dotnetfiddle.net/w5WD1J)
 
 note : same column name use last right one 
 
@@ -167,7 +170,7 @@ using (var stream = File.OpenRead(path))
 }
 ```
 
-### Query Support LINQ Extension First/Take/Skip ...etc
+#### 4. Query Support LINQ Extension First/Take/Skip ...etc
 
 Query First
 ```C#
@@ -186,8 +189,36 @@ using (var stream = File.OpenRead(path))
 Performance between MiniExcel/ExcelDataReader/ClosedXML/EPPlus  
 ![queryfirst](https://user-images.githubusercontent.com/12729184/111072392-6037a900-8515-11eb-9693-5ce2dad1e460.gif)
 
+#### 5. Query by sheet name
 
-### Create Excel file [[Try it]](https://dotnetfiddle.net/w5WD1J)
+```C#
+MiniExcel.Query(path, sheetName: "SheetName");
+//or
+stream.Query(sheetName: "SheetName");
+```
+
+#### 6. Query all sheet name and rows
+
+```C#
+var sheetNames = MiniExcel.GetSheetNames(path).ToList();
+foreach (var sheetName in sheetNames)
+{
+    var rows = MiniExcel.Query(path, sheetName: sheetName);
+}
+```
+
+#### 7. Dynamic Query cast row to `IDictionary<string,object>` 
+
+```C#
+foreach(IDictionary<string,object> row in MiniExcel.Query(path))
+{
+    //..
+}
+```
+
+
+
+### Create Excel 
 
 1. Must be a non-abstract type with a public parameterless constructor .
 
@@ -198,7 +229,8 @@ e.g : ToList or not memory usage
 
 
 
-Anonymous or strongly type: 
+#### 1. Anonymous or strongly type [[Try it]](https://dotnetfiddle.net/w5WD1J)
+
 ```C#
 var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
 MiniExcel.SaveAs(path, new[] {
@@ -207,7 +239,8 @@ MiniExcel.SaveAs(path, new[] {
 });
 ```
 
-Datatable:  
+#### 2. Datatable 
+
 ```C#
 var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
 var table = new DataTable();
@@ -221,7 +254,8 @@ var table = new DataTable();
 MiniExcel.SaveAs(path, table);
 ```
 
-Dapper:  
+#### 3. Dapper 
+
 ```C#
 using (var connection = GetConnection(connectionString))
 {
@@ -230,7 +264,8 @@ using (var connection = GetConnection(connectionString))
 }
 ```
 
-`IEnumerable<IDictionary<string, object>>`
+#### 4. `IEnumerable<IDictionary<string, object>>`
+
 ```C#
 var values = new List<Dictionary<string, object>>()
 {
@@ -247,7 +282,7 @@ Create File Result :
 | MiniExcel     | 1     |
 | Github     | 2     |
 
-### SaveAs Stream [[Try it]](https://dotnetfiddle.net/JOen0e)
+#### 5. SaveAs Stream [[Try it]](https://dotnetfiddle.net/JOen0e)
 
 ```C#
 using (var stream = File.Create(path))
@@ -255,10 +290,6 @@ using (var stream = File.Create(path))
     stream.SaveAs(values);
 }
 ```
-
-
-
-
 
 
 
@@ -436,25 +467,26 @@ Assert.Null(rows[0].Test6);
 Assert.Equal("Test4", rows[0].Test7);
 ```
 
-### Query by sheet name
 
+
+### Excel Type Auto Check
+
+Default system will auto check file path or stream is from xlsx or csv, but if you need to specify type, it can use excelType parameter.
 ```C#
-MiniExcel.Query(path, sheetName: "SheetName");
+stream.SaveAs(excelType:ExcelType.CSV);
 //or
-stream.Query(sheetName: "SheetName");
+stream.SaveAs(excelType:ExcelType.XLSX);
+//or
+stream.Query(excelType:ExcelType.CSV);
+//or
+stream.Query(excelType:ExcelType.XLSX);
 ```
 
-### Query all sheet name and rows
 
-```C#
-var sheetNames = MiniExcel.GetSheetNames(path).ToList();
-foreach (var sheetName in sheetNames)
-{
-    var rows = MiniExcel.Query(path, sheetName: sheetName);
-}
-```
 
-### SQLite & Dapper `Large Size File` SQL Insert Avoid OOM
+### Examples:
+
+#### 1. SQLite & Dapper `Large Size File` SQL Insert Avoid OOM
 
 note : please don't call ToList/ToArray methods after Query, it'll load all data into memory
 
@@ -480,7 +512,7 @@ performance:
 
 
 
-### ASP.NET Core 3.1 or MVC 5 Download Excel Xlsx API Demo
+#### 2. ASP.NET Core 3.1 or MVC 5 Download Excel Xlsx API Demo
 
 ```C#
 public class ExcelController : Controller
@@ -500,29 +532,7 @@ public class ExcelController : Controller
 }
 ```
 
-### Excel Type Auto Check
 
-Default system will auto check file path or stream is from xlsx or csv, but if you need to specify type, it can use excelType parameter.
-```C#
-stream.SaveAs(excelType:ExcelType.CSV);
-//or
-stream.SaveAs(excelType:ExcelType.XLSX);
-//or
-stream.Query(excelType:ExcelType.CSV);
-//or
-stream.Query(excelType:ExcelType.XLSX);
-```
-
-
-
-### Dynamic Query cast row to `IDictionary<string,object>` 
-
-```C#
-foreach(IDictionary<string,object> row in MiniExcel.Query(path))
-{
-    //..
-}
-```
 
 
 
@@ -532,9 +542,9 @@ foreach(IDictionary<string,object> row in MiniExcel.Query(path))
 
 ### Reference
 
-- [ExcelDataReader](https://github.com/ExcelDataReader/ExcelDataReader)   
+- [ExcelDataReader](https://github.com/ExcelDataReader/ExcelDataReader)  / [ClosedXML](https://github.com/ClosedXML/ClosedXML)
 - [StackExchange/Dapper](https://github.com/StackExchange/Dapper)    
 
-### Contributors :  
+### Contributors  
 
 ![](https://contrib.rocks/image?repo=shps951023/MiniExcel)

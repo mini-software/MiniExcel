@@ -32,10 +32,10 @@ MiniExcel 簡單、高效避免OOM的.NET處理Excel查、寫、填充工具。
 
 ### Get Started
 
-- [讀 Excel](#讀 Excel)
-- [寫 Excel](#寫 Excel)
-- [模板填充 Excel](#模板填充 Excel)
-- [Excel Column Name/Index/Ignore Attribute](#Excel Column Name/Index/Ignore Attribute)
+- [讀 Excel](#讀%20Excel)
+- [寫 Excel](#寫%20Excel)
+- [模板填充 Excel](#模板填充%20Excel)
+- [Excel Column Name/Index/Ignore Attribute](#Excel%20Column%20Name/Index/Ignore%20Attribute)
 - [範例](#範例)
 
 

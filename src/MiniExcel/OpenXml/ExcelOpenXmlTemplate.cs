@@ -218,7 +218,7 @@ namespace MiniExcelLibs.OpenXml
                                 continue;
 
                             var matchs = (_isExpressionRegex.Matches(v.InnerText).Cast<Match>().GroupBy(x => x.Value).Select(varGroup => varGroup.First().Value)).ToArray();
-                            var matchCnt = matchs.Count(); 
+                            var matchCnt = matchs.Length; 
                              var isMultiMatch = matchCnt > 1 || (matchCnt == 1 && v.InnerText != $"{{{{{matchs[0]}}}}}");
                             foreach (var item in matchs)
                             {

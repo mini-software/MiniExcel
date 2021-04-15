@@ -29,6 +29,13 @@ namespace MiniExcelTests
                 TotalStar = projects.Sum(s => s.Star)
             };
             MiniExcel.SaveAsByTemplate(path, templatePath, value);
+
+            var rows = MiniExcel.Query(path).ToList();
+            Assert.Equal("ITWeiHan Github Projects", rows[0].B);
+            Assert.Equal("Total Star : 178", rows[8].C);
+
+            var demension = Helpers.GetFirstSheetDimensionRefValue(path);
+            Assert.Equal("A1:D9", demension);
         }
 
         public class TestIEnumerableTypePoco

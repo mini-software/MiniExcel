@@ -6,6 +6,10 @@
 
 ---
 
+### 0.12.2
+- [Bug] Template concating cell value type problem #179
+- [Bug] Template fix non-nullable numeric type cell type is 'str' #180
+
 ### 0.12.1
 - [OPT] Optimize performance of filling excel
 - [OPT] Template IEnumerable generate support type auto mapping (Issue #177)

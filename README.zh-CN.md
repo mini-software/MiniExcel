@@ -442,6 +442,82 @@ MiniExcel.SaveAsByTemplate(path, templatePath, value);
 
 ![image](https://user-images.githubusercontent.com/12729184/114577091-5046ec80-9cae-11eb-924b-087c7becf8da.png)
 
+#### 5. Cell 值自动类别对应
+
+模板
+
+![image](https://user-images.githubusercontent.com/12729184/114802504-64830a80-9dd0-11eb-8d56-8e8c401b3ace.png)
+
+最终效果
+
+![image](https://user-images.githubusercontent.com/12729184/114802419-43221e80-9dd0-11eb-9ffe-a2ce34fe7076.png)
+
+类别
+
+```C#
+public class Poco
+{
+    public string @string { get; set; }
+    public int? @int { get; set; }
+    public decimal? @decimal { get; set; }
+    public double? @double { get; set; }
+    public DateTime? datetime { get; set; }
+    public bool? @bool { get; set; }
+    public Guid? Guid { get; set; }
+}
+```
+
+代码
+
+```C#
+var poco = new TestIEnumerableTypePoco { @string = "string", @int = 123, @decimal = decimal.Parse("123.45"), @double = (double)123.33, @datetime = new DateTime(2021, 4, 1), @bool = true, @Guid = Guid.NewGuid() };
+var value = new
+{
+    Ts = new[] {
+        poco,
+        new TestIEnumerableTypePoco{},
+        null,
+        poco
+    }
+};
+MiniExcel.SaveAsByTemplate(path, templatePath, value);
+```
+
+
+
+#### 6. Example :  列出 Github 专案
+
+模板
+
+![image-20210415103138835](https://i.loli.net/2021/04/15/KWIcwatZTEpDPjJ.png)
+
+最终效果
+
+![image-20210415103052651](https://i.loli.net/2021/04/15/wMTBoJyNDspnZqh.png)
+
+代码
+
+```C#
+var projects = new[]
+{
+    new {Name = "MiniExcel",Link="https://github.com/shps951023/MiniExcel",Star=146, CreateTime=new DateTime(2021,03,01)},
+    new {Name = "HtmlTableHelper",Link="https://github.com/shps951023/HtmlTableHelper",Star=16, CreateTime=new DateTime(2020,02,01)},
+    new {Name = "PocoClassGenerator",Link="https://github.com/shps951023/PocoClassGenerator",Star=16, CreateTime=new DateTime(2019,03,17)}
+};
+var value = new
+{
+    User = "ITWeiHan",
+    Projects = projects,
+    TotalStar = projects.Sum(s => s.Star)
+};
+MiniExcel.SaveAsByTemplate(path, templatePath, value);
+```
+
+
+
+
+
+
 
 ### Excel Column Name/Index/Ignore Attribute <a name="getstart4"></a>
 

@@ -11,8 +11,27 @@ namespace MiniExcelTests
 {
     public class MiniExcelTemplateTests
     {
+        [Fact]
+        public void TestGithubProject()
+        {
+            var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
+            var templatePath = @"..\..\..\..\..\samples\xlsx\TestTemplateGithubProjects.xlsx";
+            var projects = new[]
+            {
+                new {Name = "MiniExcel",Link="https://github.com/shps951023/MiniExcel",Star=146, CreateTime=new DateTime(2021,03,01)},
+                new {Name = "HtmlTableHelper",Link="https://github.com/shps951023/HtmlTableHelper",Star=16, CreateTime=new DateTime(2020,02,01)},
+                new {Name = "PocoClassGenerator",Link="https://github.com/shps951023/PocoClassGenerator",Star=16, CreateTime=new DateTime(2019,03,17)}
+            };
+            var value = new
+            {
+                User = "ITWeiHan",
+                Projects = projects,
+                TotalStar = projects.Sum(s => s.Star)
+            };
+            MiniExcel.SaveAsByTemplate(path, templatePath, value);
+        }
 
-        public class TestIEnumerableTypeVO
+        public class TestIEnumerableTypePoco
         {
             public string @string { get; set; }
             public int? @int { get; set; }
@@ -30,27 +49,27 @@ namespace MiniExcelTests
                 var templatePath = @"..\..\..\..\..\samples\xlsx\TestIEnumerableType.xlsx";
 
                 //1. By POCO
-                var vo = new TestIEnumerableTypeVO { @string = "string", @int = 123, @decimal = decimal.Parse("123.45"), @double = (double)123.33, @datetime = new DateTime(2021, 4, 1), @bool = true, @Guid = Guid.NewGuid() };
+                var poco = new TestIEnumerableTypePoco { @string = "string", @int = 123, @decimal = decimal.Parse("123.45"), @double = (double)123.33, @datetime = new DateTime(2021, 4, 1), @bool = true, @Guid = Guid.NewGuid() };
                 var value = new
                 {
                     Ts = new[] {
-                        vo,
-                        new TestIEnumerableTypeVO{},
+                        poco,
+                        new TestIEnumerableTypePoco{},
                         null,
-                        new TestIEnumerableTypeVO{},
-                        vo
+                        new TestIEnumerableTypePoco{},
+                        poco
                     }
                 };
                 MiniExcel.SaveAsByTemplate(path, templatePath, value);
 
-                var rows = MiniExcel.Query<TestIEnumerableTypeVO>(path).ToList();
-                Assert.Equal(vo.@string, rows[0].@string);
-                Assert.Equal(vo.@int, rows[0].@int);
-                Assert.Equal(vo.@double, rows[0].@double);
-                Assert.Equal(vo.@decimal, rows[0].@decimal);
-                Assert.Equal(vo.@bool, rows[0].@bool);
-                Assert.Equal(vo.datetime, rows[0].datetime);
-                Assert.Equal(vo.Guid, rows[0].Guid);
+                var rows = MiniExcel.Query<TestIEnumerableTypePoco>(path).ToList();
+                Assert.Equal(poco.@string, rows[0].@string);
+                Assert.Equal(poco.@int, rows[0].@int);
+                Assert.Equal(poco.@double, rows[0].@double);
+                Assert.Equal(poco.@decimal, rows[0].@decimal);
+                Assert.Equal(poco.@bool, rows[0].@bool);
+                Assert.Equal(poco.datetime, rows[0].datetime);
+                Assert.Equal(poco.Guid, rows[0].Guid);
 
                 Assert.Null(rows[1].@string);
                 Assert.Null(rows[1].@int);
@@ -78,16 +97,41 @@ namespace MiniExcelTests
                 Assert.Null(rows[3].Guid);
 
 
-                Assert.Equal(vo.@string, rows[4].@string);
-                Assert.Equal(vo.@int, rows[4].@int);
-                Assert.Equal(vo.@double, rows[4].@double);
-                Assert.Equal(vo.@decimal, rows[4].@decimal);
-                Assert.Equal(vo.@bool, rows[4].@bool);
-                Assert.Equal(vo.datetime, rows[4].datetime);
-                Assert.Equal(vo.Guid, rows[4].Guid);
+                Assert.Equal(poco.@string, rows[4].@string);
+                Assert.Equal(poco.@int, rows[4].@int);
+                Assert.Equal(poco.@double, rows[4].@double);
+                Assert.Equal(poco.@decimal, rows[4].@decimal);
+                Assert.Equal(poco.@bool, rows[4].@bool);
+                Assert.Equal(poco.datetime, rows[4].datetime);
+                Assert.Equal(poco.Guid, rows[4].Guid);
 
                 var demension = Helpers.GetFirstSheetDimensionRefValue(path);
                 Assert.Equal("A1:G6", demension);
+            }
+        }
+
+        [Fact]
+        public void TestTemplateTypeMapping()
+        {
+            {
+                var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
+                var templatePath = @"..\..\..\..\..\samples\xlsx\TestITemplateTypeAutoMapping.xlsx";
+
+                //1. By POCO
+                var value = new TestIEnumerableTypePoco { @string = "string", @int = 123, @decimal = decimal.Parse("123.45"), @double = (double)123.33, @datetime = new DateTime(2021, 4, 1), @bool = true, @Guid = Guid.NewGuid() };
+                MiniExcel.SaveAsByTemplate(path, templatePath, value);
+
+                var rows = MiniExcel.Query<TestIEnumerableTypePoco>(path).ToList();
+                Assert.Equal(value.@string, rows[0].@string);
+                Assert.Equal(value.@int, rows[0].@int);
+                Assert.Equal(value.@double, rows[0].@double);
+                Assert.Equal(value.@decimal, rows[0].@decimal);
+                Assert.Equal(value.@bool, rows[0].@bool);
+                Assert.Equal(value.datetime, rows[0].datetime);
+                Assert.Equal(value.Guid, rows[0].Guid);
+
+                var demension = Helpers.GetFirstSheetDimensionRefValue(path);
+                Assert.Equal("A1:G2", demension);
             }
         }
 
@@ -98,7 +142,7 @@ namespace MiniExcelTests
             var templatePath = @"..\..\..\..\..\samples\xlsx\TestTemplateCenterEmpty.xlsx";
             var value = new
             {
-                Tests = Enumerable.Range(1,5).Select((s,i)=>new { test1=i,test2=i })
+                Tests = Enumerable.Range(1, 5).Select((s, i) => new { test1 = i, test2 = i })
             };
             MiniExcel.SaveAsByTemplate(path, templatePath, value);
         }

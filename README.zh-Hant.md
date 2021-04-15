@@ -181,7 +181,8 @@ using (var stream = File.OpenRead(path))
 
 #### 4. Query 查詢支援延遲加載(Deferred Execution)，能配合LINQ First/Take/Skip辦到低消耗、高效率複雜查詢
 
-Query First
+舉例 : 查詢第一筆資料
+
 ```C#
 var row = MiniExcel.Query(path).First();
 Assert.Equal("HelloWorld", row.A);
@@ -194,6 +195,10 @@ using (var stream = File.OpenRead(path))
     Assert.Equal("HelloWorld", row.A);
 }
 ```
+
+與其他框架效率比較 :  
+
+![queryfirst](https://user-images.githubusercontent.com/12729184/111072392-6037a900-8515-11eb-9693-5ce2dad1e460.gif)
 
 #### 5. 查詢指定 Sheet 名稱
 

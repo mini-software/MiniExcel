@@ -88,7 +88,7 @@
 
         public static void SaveAsByTemplate(this Stream stream, string templatePath, object value)
         {
-            ExcelOpenXmlTemplate.SaveAsByTemplateImpl(stream, templatePath, value);
+            ExcelTemplateFactory.GetProvider(stream).SaveAsByTemplate(templatePath, value);
         }
     }
 }

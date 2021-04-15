@@ -36,4 +36,18 @@
             }
         }
     }
+
+    internal class ExcelTemplateFactory
+    {
+        internal static IExcelTemplate GetProvider(Stream stream, ExcelType excelType= ExcelType.XLSX)
+        {
+            switch (excelType)
+            {
+                case ExcelType.XLSX:
+                    return new ExcelOpenXmlTemplate(stream);
+                default:
+                    throw new NotSupportedException($"Please Issue for me");
+            }
+        }
+    }
 }

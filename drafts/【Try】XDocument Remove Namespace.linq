@@ -6,6 +6,7 @@
   <Namespace>Dapper</Namespace>
   <Namespace>MiniExcelLibs</Namespace>
   <Namespace>Newtonsoft.Json</Namespace>
+  <Namespace>System.IO.Compression</Namespace>
   <RemoveNamespace>System.Data</RemoveNamespace>
   <RemoveNamespace>System.Diagnostics</RemoveNamespace>
   <RemoveNamespace>System.Linq.Expressions</RemoveNamespace>
@@ -15,12 +16,61 @@
 </Query>
 
 void Main(){
-	var doc = XDocument.Parse(xml);
+
+	var xml2 = GetSheet1Xml(@"D:\git\MiniExcel\samples\xlsx\CloseXml_InsertCellValues\CloseXml_InsertCellValues.xlsx");
+
+	var doc = XDocument.Parse(xml2);
 
 	XmlNamespaceManager ns = new XmlNamespaceManager(new NameTable());
 	ns.AddNamespace("x", "http://schemas.openxmlformats.org/spreadsheetml/2006/main");
 
-	var dimension = doc.XPathSelectElement("/worksheet/dimension", ns);
+	Console.WriteLine(RemoveAllNamespaces(doc.ToString()));
+}
+
+internal static string GetSheet1Xml(string path)
+{
+	var ns = new XmlNamespaceManager(new NameTable());
+	ns.AddNamespace("x", "http://schemas.openxmlformats.org/spreadsheetml/2006/main");
+	string refV;
+	using (var stream = File.OpenRead(path))
+	using (ZipArchive archive = new ZipArchive(stream, ZipArchiveMode.Read, false, Encoding.UTF8))
+	{
+		var sheet = archive.Entries.Single(w => w.FullName.StartsWith("xl/worksheets/sheet1", StringComparison.OrdinalIgnoreCase)
+		   || w.FullName.StartsWith("/xl/worksheets/sheet1", StringComparison.OrdinalIgnoreCase)
+		);
+		using (var sheetStream = sheet.Open())
+		{
+			var doc = new XmlDocument();
+			doc.Load(sheetStream);
+			return doc.OuterXml.ToString();
+		}
+	}
+
+	return refV;
+}
+
+//Implemented based on interface, not part of algorithm
+public static string RemoveAllNamespaces(string xmlDocument)
+{
+	XElement xmlDocumentWithoutNs = RemoveAllNamespaces(XElement.Parse(xmlDocument));
+
+	return xmlDocumentWithoutNs.ToString();
+}
+
+//Core recursion function
+private static XElement RemoveAllNamespaces(XElement xmlDocument)
+{
+	if (!xmlDocument.HasElements)
+	{
+		XElement xElement = new XElement(xmlDocument.Name.LocalName);
+		xElement.Value = xmlDocument.Value;
+
+		foreach (XAttribute attribute in xmlDocument.Attributes())
+			xElement.Add(attribute);
+
+		return xElement;
+	}
+	return new XElement(xmlDocument.Name.LocalName, xmlDocument.Elements().Select(el => RemoveAllNamespaces(el)));
 }
 
 void Main2()

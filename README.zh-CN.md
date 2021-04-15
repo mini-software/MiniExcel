@@ -180,7 +180,8 @@ using (var stream = File.OpenRead(path))
 
 #### 4. Query 查询支援延迟加载(Deferred Execution)，能配合LINQ First/Take/Skip办到低消耗、高效率复杂查询
 
-Query First
+举例 : 查询第一笔数据
+
 ```C#
 var row = MiniExcel.Query(path).First();
 Assert.Equal("HelloWorld", row.A);
@@ -193,6 +194,10 @@ using (var stream = File.OpenRead(path))
     Assert.Equal("HelloWorld", row.A);
 }
 ```
+
+与其他框架效率比较 :  
+
+![queryfirst](https://user-images.githubusercontent.com/12729184/111072392-6037a900-8515-11eb-9693-5ce2dad1e460.gif)
 
 #### 5. 查询指定 Sheet 名称
 

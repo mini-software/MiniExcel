@@ -635,6 +635,40 @@ public static IEnumerable<T> Page<T>(IEnumerable<T> en, int pageSize, int page)
 
 
 
+### FQA
+
+#### Q: How to Query as DataTable
+
+Note : There will be no advantage *whatsoever* in using MiniExcel for a scenario involving `DataSet` or `DataTable`.
+
+```C#
+public static DataTable QueryAsDataTable(string path)
+{
+	var rows = MiniExcel.Query(path, true);
+	var dt = new DataTable();
+	var first = true;
+	foreach (IDictionary<string, object> row in rows)
+	{
+		if (first)
+		{
+			foreach (var key in row.Keys)
+			{
+				var type = row[key]?.GetType() ?? typeof(string);
+				dt.Columns.Add(key, type);
+			}
+
+			first = false;
+		}
+		dt.Rows.Add(row.Values.ToArray());
+	}
+	return dt;
+}
+```
+
+![image-20210415120352604](https://i.loli.net/2021/04/15/TbtP1GLDEgONueK.png)
+
+
+
 ### Limitations and caveats 
 
 - Not support xls and encrypted file now

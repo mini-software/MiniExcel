@@ -643,6 +643,40 @@ public static IEnumerable<T> Page<T>(IEnumerable<T> en, int pageSize, int page)
 
 
 
+### FQA
+
+#### Q: 如何將查詢結果轉為 DataTable
+
+提醒 : 不建議使用，因為DataTable會將數據`全載入記憶體`，失去MiniExcel低記憶體消耗功能。
+
+```C#
+public static DataTable QueryAsDataTable(string path)
+{
+	var rows = MiniExcel.Query(path, true);
+	var dt = new DataTable();
+	var first = true;
+	foreach (IDictionary<string, object> row in rows)
+	{
+		if (first)
+		{
+			foreach (var key in row.Keys)
+			{
+				var type = row[key]?.GetType() ?? typeof(string);
+				dt.Columns.Add(key, type);
+			}
+
+			first = false;
+		}
+		dt.Rows.Add(row.Values.ToArray());
+	}
+	return dt;
+}
+```
+
+![image-20210415120352604](https://i.loli.net/2021/04/15/TbtP1GLDEgONueK.png)
+
+
+
 ### 侷限與警告
 
 - 目前不支援 xls (97-2003) 或是加密檔案。

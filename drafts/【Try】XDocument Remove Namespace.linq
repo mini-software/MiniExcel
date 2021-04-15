@@ -14,11 +14,26 @@
   <RemoveNamespace>System.Transactions</RemoveNamespace>
 </Query>
 
-void Main()
-{
+void Main(){
 	var doc = XDocument.Parse(xml);
+
 	XmlNamespaceManager ns = new XmlNamespaceManager(new NameTable());
 	ns.AddNamespace("x", "http://schemas.openxmlformats.org/spreadsheetml/2006/main");
+
+	var dimension = doc.XPathSelectElement("/worksheet/dimension", ns);
+}
+
+void Main2()
+{
+	var doc = XDocument.Parse(xml);
+
+
+	XmlNamespaceManager ns = new XmlNamespaceManager(new NameTable());
+	ns.AddNamespace("x", "http://schemas.openxmlformats.org/spreadsheetml/2006/main");
+
+
+
+
 
 	var dimension = doc.XPathSelectElement("/x:worksheet/x:dimension", ns);
 	Console.WriteLine(dimension); //<dimension ref="A1:B100" xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" />

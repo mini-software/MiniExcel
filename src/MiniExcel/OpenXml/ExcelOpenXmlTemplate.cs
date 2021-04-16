@@ -106,13 +106,13 @@ namespace MiniExcelLibs.OpenXml
 
             //Q.Why so complex?
             //A.Because try to use string stream avoid OOM when rendering rows
-            sheetData.RemoveAll();
             sheetData.InnerText = "{{{{{{split}}}}}}"; //TODO: bad smell
-            var contents = doc.InnerXml.Split(new string[] { "<sheetData>{{{{{{split}}}}}}</sheetData>" }, StringSplitOptions.None); ;
+            var prefix = string.IsNullOrEmpty(sheetData.Prefix) ? "" : $"{sheetData.Prefix}:";
+            var contents = doc.InnerXml.Split(new string[] { $"<{prefix}sheetData>{{{{{{{{{{{{split}}}}}}}}}}}}</{prefix}sheetData>" }, StringSplitOptions.None); ;
             using (var writer = new StreamWriter(stream, Encoding.UTF8))
             {
                 writer.Write(contents[0]);
-                writer.Write("<sheetData>");
+                writer.Write($"<{prefix}sheetData>"); // prefix problem
                 int originRowIndex;
                 int rowIndexDiff = 0;
                 foreach (var xInfo in XRowInfos)
@@ -183,7 +183,7 @@ namespace MiniExcelLibs.OpenXml
                         writer.Write(CleanXml(row.OuterXml));
                     }
                 }
-                writer.Write("</sheetData>");
+                writer.Write($"</{prefix}sheetData>");
                 writer.Write(contents[1]);
             }
             #endregion

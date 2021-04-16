@@ -1,5 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
+    <TargetFrameworks>net461;netstandard2.0;net5.0</TargetFrameworks>
+    <Version>0.12.2</Version>
+  </PropertyGroup>
+  <PropertyGroup>
     <AssemblyName>MiniExcel</AssemblyName>
     <Title>MiniExcel</Title>
     <Product>MiniExcel</Product>
@@ -19,8 +23,6 @@
     <PackageProjectUrl>https://github.com/shps951023/MiniExcel</PackageProjectUrl>
     <RepositoryUrl>https://github.com/shps951023/MiniExcel</RepositoryUrl>
     <PackageIconUrl>https://raw.githubusercontent.com/shps951023/ImageHosting/master/img/2019-01-17.13.18.32-image.png</PackageIconUrl>
-    <TargetFrameworks>net461;netstandard2.0;net5.0</TargetFrameworks>
-    <Version>0.12.2</Version>
     <PackageReleaseNotes>Please Check [Release Notes](https://github.com/shps951023/MiniExcel/tree/master/docs)</PackageReleaseNotes>
     <RepositoryType>Github</RepositoryType>
   </PropertyGroup>

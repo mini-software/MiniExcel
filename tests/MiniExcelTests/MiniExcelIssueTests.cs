@@ -10,6 +10,7 @@ using System.Globalization;
 using OfficeOpenXml;
 using Newtonsoft.Json;
 using MiniExcelLibs.Attributes;
+using MiniExcelLibs.Tests.Utils;
 
 namespace MiniExcelLibs.Tests
 {
@@ -19,6 +20,99 @@ namespace MiniExcelLibs.Tests
         public MiniExcelIssueTests(ITestOutputHelper output)
         {
             this.output = output;
+        }
+
+        /// <summary>
+        /// https://github.com/shps951023/MiniExcel/issues/193
+        /// </summary>
+        [Fact]
+        public void Issue193()
+        {
+            {
+                var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
+                var templatePath = @"..\..\..\..\..\samples\xlsx\TestTemplateComplexWithNamespacePrefix.xlsx";
+
+                // 1. By Class
+                var value = new
+                {
+                    title = "FooCompany",
+                    managers = new[] {
+                        new {name="Jack",department="HR"},
+                        new {name="Loan",department="IT"}
+                    },
+                    employees = new[] {
+                        new {name="Wade",department="HR"},
+                        new {name="Felix",department="HR"},
+                        new {name="Eric",department="IT"},
+                        new {name="Keaton",department="IT"}
+                    }
+                };
+                MiniExcel.SaveAsByTemplate(path, templatePath, value);
+
+                var rows = MiniExcel.Query(path).ToList();
+                Assert.Equal("FooCompany", rows[0].A);
+                Assert.Equal("Jack", rows[2].B);
+                Assert.Equal("HR", rows[2].C);
+                Assert.Equal("Loan", rows[3].B);
+                Assert.Equal("IT", rows[3].C);
+
+                Assert.Equal("Wade", rows[5].B);
+                Assert.Equal("HR", rows[5].C);
+                Assert.Equal("Felix", rows[6].B);
+                Assert.Equal("HR", rows[6].C);
+
+                Assert.Equal("Eric", rows[7].B);
+                Assert.Equal("IT", rows[7].C);
+                Assert.Equal("Keaton", rows[8].B);
+                Assert.Equal("IT", rows[8].C);
+
+                var demension = Helpers.GetFirstSheetDimensionRefValue(path);
+                Assert.Equal("A1:C9", demension);
+            }
+
+
+            {
+                var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
+                var templatePath = @"..\..\..\..\..\samples\xlsx\TestTemplateComplex.xlsx";
+
+                // 2. By Dictionary
+                var value = new Dictionary<string, object>()
+                {
+                    ["title"] = "FooCompany",
+                    ["managers"] = new[] {
+                    new {name="Jack",department="HR"},
+                    new {name="Loan",department="IT"}
+                },
+                    ["employees"] = new[] {
+                    new {name="Wade",department="HR"},
+                    new {name="Felix",department="HR"},
+                    new {name="Eric",department="IT"},
+                    new {name="Keaton",department="IT"}
+                }
+                };
+                MiniExcel.SaveAsByTemplate(path, templatePath, value);
+
+                var rows = MiniExcel.Query(path).ToList();
+                Assert.Equal("FooCompany", rows[0].A);
+                Assert.Equal("Jack", rows[2].B);
+                Assert.Equal("HR", rows[2].C);
+                Assert.Equal("Loan", rows[3].B);
+                Assert.Equal("IT", rows[3].C);
+
+                Assert.Equal("Wade", rows[5].B);
+                Assert.Equal("HR", rows[5].C);
+                Assert.Equal("Felix", rows[6].B);
+                Assert.Equal("HR", rows[6].C);
+
+                Assert.Equal("Eric", rows[7].B);
+                Assert.Equal("IT", rows[7].C);
+                Assert.Equal("Keaton", rows[8].B);
+                Assert.Equal("IT", rows[8].C);
+
+                var demension = Helpers.GetFirstSheetDimensionRefValue(path);
+                Assert.Equal("A1:C9", demension);
+            }
+
         }
 
         [Fact]

@@ -7,6 +7,11 @@
 
 ---
 
+### 0.13.0
+- [New] 支持 .NET Framework 4.5 以上版本
+- [Bug] 修正特殊情况Excel模板含有 namespace prefixFix 会造成模板解析错误 #193
+- [OPT] 优化模板解析效率
+
 ### 0.12.2
 - [Bug] 修正模板串接 Cell 類別不是字串問題 #179
 - [Bug] 修正模板遇到非数字类别 t 是 str 問題 #180

@@ -15,7 +15,13 @@
   <RemoveNamespace>System.Transactions</RemoveNamespace>
 </Query>
 
-void Main(){
+void Main()
+{
+	Test3();
+}
+
+void Test1()
+{
 
 	var xml2 = GetSheet1Xml(@"D:\git\MiniExcel\samples\xlsx\CloseXml_InsertCellValues\CloseXml_InsertCellValues.xlsx");
 
@@ -25,6 +31,51 @@ void Main(){
 	ns.AddNamespace("x", "http://schemas.openxmlformats.org/spreadsheetml/2006/main");
 
 	Console.WriteLine(RemoveAllNamespaces(doc.ToString()));
+}
+
+void Test3()
+{
+	XmlNamespaceManager ns = new XmlNamespaceManager(new NameTable());
+	ns.AddNamespace("x", "http://schemas.openxmlformats.org/spreadsheetml/2006/main");
+	var doc = new XmlDocument();
+	doc.LoadXml(xml);
+	
+	
+	var dimension = doc.SelectSingleNode("/x:worksheet/x:dimension",ns);
+	//dimension.NamespaceURI ;
+	Console.WriteLine(dimension.OuterXml);
+}
+
+void Test2()
+{
+	var doc = XDocument.Parse(xml);
+	Console.WriteLine(xml);
+
+
+	XmlNamespaceManager ns = new XmlNamespaceManager(new NameTable());
+	ns.AddNamespace("x", "http://schemas.openxmlformats.org/spreadsheetml/2006/main");
+
+	var dimension = doc.XPathSelectElement("/x:worksheet/x:dimension", ns);
+	Console.WriteLine(dimension); //<dimension ref="A1:B100" xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" />
+
+	//WriteElement(dimension);
+	dimension.Name = dimension.Name.LocalName;
+	Console.WriteLine(dimension); //<dimension ref="A1:B100" />
+
+	XmlDocument xmlDocument = new XmlDocument();
+
+	XmlElement folioNode = xmlDocument.CreateElement("x", "dimension", "x"); //<x:dimension xmlns:x="x" />
+	Console.WriteLine(folioNode);
+
+	//Console.WriteLine(doc);
+
+	XContainer container = XElement.Parse(xml);
+
+	var x = XNamespace.Get("http://schemas.openxmlformats.org/spreadsheetml/2006/main");
+
+
+	XElement xmlTree = new XElement(x + "Item");
+	Console.WriteLine(xmlTree);
 }
 
 internal static string GetSheet1Xml(string path)
@@ -73,115 +124,11 @@ private static XElement RemoveAllNamespaces(XElement xmlDocument)
 	return new XElement(xmlDocument.Name.LocalName, xmlDocument.Elements().Select(el => RemoveAllNamespaces(el)));
 }
 
-void Main2()
-{
-	var doc = XDocument.Parse(xml);
 
 
-	XmlNamespaceManager ns = new XmlNamespaceManager(new NameTable());
-	ns.AddNamespace("x", "http://schemas.openxmlformats.org/spreadsheetml/2006/main");
-
-
-
-
-
-	var dimension = doc.XPathSelectElement("/x:worksheet/x:dimension", ns);
-	Console.WriteLine(dimension); //<dimension ref="A1:B100" xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" />
-	
-	//WriteElement(dimension);
-	dimension.Name=dimension.Name.LocalName;
-	Console.WriteLine(dimension); //<dimension ref="A1:B100" />
-	
-	XmlDocument xmlDocument = new XmlDocument();
-	
-	XmlElement folioNode = xmlDocument.CreateElement("x", "dimension", "x"); //<x:dimension xmlns:x="x" />
-	Console.WriteLine(folioNode);
-
-	//Console.WriteLine(doc);
-
-	XContainer container = XElement.Parse(xml);
-	
-	var x = XNamespace.Get("http://schemas.openxmlformats.org/spreadsheetml/2006/main") ;
-
-
-	XElement xmlTree = new XElement(x + "Item");
-	Console.WriteLine(xmlTree);
-}
-
-private void PushAncestors(XElement e)
-{
-	while (true)
-	{
-		e = e.Parent as XElement;
-		if (e == null)
-		{
-			break;
-		}
-		XAttribute xAttribute = e.LastAttribute;
-		if (xAttribute == null)
-		{
-			continue;
-		}
-		do
-		{
-			xAttribute = xAttribute.NextAttribute;
-			//if (xAttribute.IsNamespaceDeclaration)
-			//{
-			//	_resolver.AddFirst((xAttribute.Name.NamespaceName.Length == 0) ? string.Empty : xAttribute.Name.LocalName, XNamespace.Get(xAttribute.Value));
-			//}
-		}
-		while (xAttribute != e.LastAttribute);
-	}
-}
-
-//public string WriteElement(XElement e)
-//{
-//	var sb = new StringBuilder();
-//	PushAncestors(e);
-//	XElement xElement = e;
-//	XNode xNode = e;
-//	while (true)
-//	{
-//		e = xNode as XElement;
-//		if (e != null)
-//		{
-//			WriteStartElement(e);
-//			if (e.content == null)
-//			{
-//				WriteEndElement();
-//			}
-//			else
-//			{
-//				string text = e.content as string;
-//				if (text == null)
-//				{
-//					xNode = ((XNode)e.content).next;
-//					continue;
-//				}
-//				_writer.WriteString(text);
-//				WriteFullEndElement();
-//			}
-//		}
-//		else
-//		{
-//			xNode.WriteTo(_writer);
-//		}
-//		while (xNode != xElement && xNode == xNode.parent.content)
-//		{
-//			xNode = xNode.parent;
-//			WriteFullEndElement();
-//		}
-//		if (xNode != xElement)
-//		{
-//			xNode = xNode.next;
-//			continue;
-//		}
-//		break;
-//	}
-//}
 
 // You can define other methods, fields, classes and namespaces here
-const string xml =@"<?xml version=""1.0"" encoding=""utf-8""?>
+const string xml = @"<?xml version=""1.0"" encoding=""utf-8""?>
 <x:worksheet xmlns:r=""http://schemas.openxmlformats.org/officeDocument/2006/relationships""
     xmlns:x=""http://schemas.openxmlformats.org/spreadsheetml/2006/main"">
     <x:sheetPr>

@@ -6,6 +6,11 @@
 
 ---
 
+### 0.13.0
+- [New] Support .NET Framework 4.5
+- [Bug] Fix template excel that with namespace prefix will cause parsing error #193
+- [OPT] Optimize template paresing performance
+
 ### 0.12.2
 - [Bug] Template concating cell value type problem #179
 - [Bug] Template fix non-nullable numeric type cell type is 'str' #180

@@ -10,11 +10,13 @@
     <PackageTags>excel;xlsx;micro-helper;mini;openxml;helper;</PackageTags>
     <Description>
       A high performance and easy Excel(xlsx,csv) Micro-Helper that avoids OOM and without third-party dependencies to create or dynamic/type POCO mapping query etc..
-      * [New] Support template excel filling data
+      * Support excel template report generation with which you can easily export any data from your .NET classes to Excel.
 
       Github : https://github.com/shps951023/MiniExcel
       Issues : https://github.com/shps951023/MiniExcel/issues
       Todo : https://github.com/shps951023/MiniExcel/projects/1?fullscreen=true
+      Facebook : https://www.facebook.com/miniexcel
+      QQ : 813100564 
     </Description>
     <Authors>ITWeiHan</Authors>
     <Copyright>©2021 WeiHan Lin</Copyright>
@@ -22,7 +24,7 @@
     <PackageLicenseUrl>https://raw.githubusercontent.com/shps951023/MiniExcel/master/LICENSE.md</PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/shps951023/MiniExcel</PackageProjectUrl>
     <RepositoryUrl>https://github.com/shps951023/MiniExcel</RepositoryUrl>
-    <PackageIconUrl>https://raw.githubusercontent.com/shps951023/ImageHosting/master/img/2019-01-17.13.18.32-image.png</PackageIconUrl>
+    <PackageIconUrl>https://user-images.githubusercontent.com/12729184/115023335-39440c80-9ef1-11eb-8771-7260d1e50d5a.png</PackageIconUrl>
     <PackageReleaseNotes>Please Check [Release Notes](https://github.com/shps951023/MiniExcel/tree/master/docs)</PackageReleaseNotes>
     <RepositoryType>Github</RepositoryType>
   </PropertyGroup>

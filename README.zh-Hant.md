@@ -6,7 +6,7 @@
 
 ---
 
-Facebook : [.NET MiniExcel 討論群](https://www.facebook.com/groups/502512817441194)  
+Facebook : https://www.facebook.com/miniexcel
 
 ---
 

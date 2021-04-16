@@ -1,6 +1,4 @@
-
-
-[![NuGet](https://img.shields.io/nuget/v/MiniExcel.svg)](https://www.nuget.org/packages/MiniExcel)  [![](https://img.shields.io/nuget/dt/MiniExcel.svg)](https://www.nuget.org/packages/MiniExcel)  [![Build status](https://ci.appveyor.com/api/projects/status/b2vustrwsuqx45f4/branch/master?svg=true)](https://ci.appveyor.com/project/shps951023/miniexcel/branch/master) [![.NET Framework](https://img.shields.io/badge/.NET%20Framework-%3E%3D%204.5-red.svg)](#)  [![.NET Standard](https://img.shields.io/badge/.NET%20Standard-%3E%3D%202.0-red.svg)](#) [![.NET](https://img.shields.io/badge/.NET%20-%3E%3D%205.0-red.svg)](#) 
+[![NuGet](https://img.shields.io/nuget/v/MiniExcel.svg)](https://www.nuget.org/packages/MiniExcel)  [![](https://img.shields.io/nuget/dt/MiniExcel.svg)](https://www.nuget.org/packages/MiniExcel)  [![Build status](https://ci.appveyor.com/api/projects/status/b2vustrwsuqx45f4/branch/master?svg=true)](https://ci.appveyor.com/project/shps951023/miniexcel/branch/master) [![.NET Framework](https://img.shields.io/badge/.NET%20Framework-%3E%3D%204.5-red.svg)](#)  [![.NET Standard](https://img.shields.io/badge/.NET%20Standard-%3E%3D%202.0-red.svg)](#) [![.NET](https://img.shields.io/badge/.NET%20-%3E%3D%205.0-red.svg)](#) [![](https://img.shields.io/badge/Facebook-1877F2?logo=facebook&logoColor=white)](https://www.facebook.com/MiniExcel)
 
 ---
 
@@ -437,76 +435,7 @@ MiniExcel.SaveAsByTemplate(path, templatePath, value);
 
 
 
-#### 5. Cell Value Auto Type Mapping
 
-Template
-
-![image](https://user-images.githubusercontent.com/12729184/114802504-64830a80-9dd0-11eb-8d56-8e8c401b3ace.png)
-
-Result
-
-![image](https://user-images.githubusercontent.com/12729184/114802419-43221e80-9dd0-11eb-9ffe-a2ce34fe7076.png)
-
-Class
-
-```C#
-public class Poco
-{
-    public string @string { get; set; }
-    public int? @int { get; set; }
-    public decimal? @decimal { get; set; }
-    public double? @double { get; set; }
-    public DateTime? datetime { get; set; }
-    public bool? @bool { get; set; }
-    public Guid? Guid { get; set; }
-}
-```
-
-Code
-
-```C#
-var poco = new TestIEnumerableTypePoco { @string = "string", @int = 123, @decimal = decimal.Parse("123.45"), @double = (double)123.33, @datetime = new DateTime(2021, 4, 1), @bool = true, @Guid = Guid.NewGuid() };
-var value = new
-{
-    Ts = new[] {
-        poco,
-        new TestIEnumerableTypePoco{},
-        null,
-        poco
-    }
-};
-MiniExcel.SaveAsByTemplate(path, templatePath, value);
-```
-
-
-
-#### 6. Example :  List Github Projects
-
-Template
-
-![image-20210415103138835](https://i.loli.net/2021/04/15/KWIcwatZTEpDPjJ.png)
-
-Result
-
-![image-20210415103052651](https://i.loli.net/2021/04/15/wMTBoJyNDspnZqh.png)
-
-Code
-
-```C#
-var projects = new[]
-{
-    new {Name = "MiniExcel",Link="https://github.com/shps951023/MiniExcel",Star=146, CreateTime=new DateTime(2021,03,01)},
-    new {Name = "HtmlTableHelper",Link="https://github.com/shps951023/HtmlTableHelper",Star=16, CreateTime=new DateTime(2020,02,01)},
-    new {Name = "PocoClassGenerator",Link="https://github.com/shps951023/PocoClassGenerator",Star=16, CreateTime=new DateTime(2019,03,17)}
-};
-var value = new
-{
-    User = "ITWeiHan",
-    Projects = projects,
-    TotalStar = projects.Sum(s => s.Star)
-};
-MiniExcel.SaveAsByTemplate(path, templatePath, value);
-```
 
 
 
@@ -632,40 +561,6 @@ public static IEnumerable<T> Page<T>(IEnumerable<T> en, int pageSize, int page)
 ```
 
 ![20210419](https://user-images.githubusercontent.com/12729184/114679083-6ef4c400-9d3e-11eb-9f78-a86daa45fe46.gif)
-
-
-
-### FQA
-
-#### Q: How to Query as DataTable
-
-Note : There will be no advantage *whatsoever* in using MiniExcel for a scenario involving `DataSet` or `DataTable`.
-
-```C#
-public static DataTable QueryAsDataTable(string path)
-{
-	var rows = MiniExcel.Query(path, true);
-	var dt = new DataTable();
-	var first = true;
-	foreach (IDictionary<string, object> row in rows)
-	{
-		if (first)
-		{
-			foreach (var key in row.Keys)
-			{
-				var type = row[key]?.GetType() ?? typeof(string);
-				dt.Columns.Add(key, type);
-			}
-
-			first = false;
-		}
-		dt.Rows.Add(row.Values.ToArray());
-	}
-	return dt;
-}
-```
-
-![image-20210415120352604](https://i.loli.net/2021/04/15/TbtP1GLDEgONueK.png)
 
 
 

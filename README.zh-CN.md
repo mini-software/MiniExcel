@@ -684,7 +684,6 @@ public static DataTable QueryAsDataTable(string path)
 ### 局限与警告
 
 - 目前不支援 xls (97-2003) 或是加密文件。
-- 不支援样式、字体、宽度等`修改`，因为 MiniExcel 概念是只专注于值数据，借此降低内存消耗跟提升效率。
 
 
 

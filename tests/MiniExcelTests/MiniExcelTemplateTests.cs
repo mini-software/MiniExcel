@@ -278,25 +278,55 @@ namespace MiniExcelTests
                 };
                 MiniExcel.SaveAsByTemplate(path, templatePath, value);
 
-                var rows = MiniExcel.Query(path).ToList();
-                Assert.Equal("FooCompany", rows[0].A);
-                Assert.Equal("Jack", rows[2].B);
-                Assert.Equal("HR", rows[2].C);
-                Assert.Equal("Loan", rows[3].B);
-                Assert.Equal("IT", rows[3].C);
+                {
+                    var rows = MiniExcel.Query(path).ToList();
 
-                Assert.Equal("Wade", rows[5].B);
-                Assert.Equal("HR", rows[5].C);
-                Assert.Equal("Felix", rows[6].B);
-                Assert.Equal("HR", rows[6].C);
+                    Assert.Equal(9, rows.Count);
 
-                Assert.Equal("Eric", rows[7].B);
-                Assert.Equal("IT", rows[7].C);
-                Assert.Equal("Keaton", rows[8].B);
-                Assert.Equal("IT", rows[8].C);
+                    Assert.Equal("FooCompany", rows[0].A);
+                    Assert.Equal("Jack", rows[2].B);
+                    Assert.Equal("HR", rows[2].C);
+                    Assert.Equal("Loan", rows[3].B);
+                    Assert.Equal("IT", rows[3].C);
 
-                var demension = Helpers.GetFirstSheetDimensionRefValue(path);
-                Assert.Equal("A1:C9", demension);
+                    Assert.Equal("Wade", rows[5].B);
+                    Assert.Equal("HR", rows[5].C);
+                    Assert.Equal("Felix", rows[6].B);
+                    Assert.Equal("HR", rows[6].C);
+
+                    Assert.Equal("Eric", rows[7].B);
+                    Assert.Equal("IT", rows[7].C);
+                    Assert.Equal("Keaton", rows[8].B);
+                    Assert.Equal("IT", rows[8].C);
+
+                    var demension = Helpers.GetFirstSheetDimensionRefValue(path);
+                    Assert.Equal("A1:C9", demension);
+                }
+
+                {
+                    var rows = MiniExcel.Query(path,sheetName:"Sheet2").ToList();
+
+                    Assert.Equal(9, rows.Count);
+
+                    Assert.Equal("FooCompany", rows[0].A);
+                    Assert.Equal("Jack", rows[2].B);
+                    Assert.Equal("HR", rows[2].C);
+                    Assert.Equal("Loan", rows[3].B);
+                    Assert.Equal("IT", rows[3].C);
+
+                    Assert.Equal("Wade", rows[5].B);
+                    Assert.Equal("HR", rows[5].C);
+                    Assert.Equal("Felix", rows[6].B);
+                    Assert.Equal("HR", rows[6].C);
+
+                    Assert.Equal("Eric", rows[7].B);
+                    Assert.Equal("IT", rows[7].C);
+                    Assert.Equal("Keaton", rows[8].B);
+                    Assert.Equal("IT", rows[8].C);
+
+                    var demension = Helpers.GetFirstSheetDimensionRefValue(path);
+                    Assert.Equal("A1:C9", demension);
+                }
             }
 
 

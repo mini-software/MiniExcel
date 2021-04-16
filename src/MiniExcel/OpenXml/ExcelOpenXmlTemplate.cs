@@ -68,6 +68,7 @@ namespace MiniExcelLibs.OpenXml
 
                     foreach (var sheet in sheets)
                     {
+                        this.XRowInfos = new List<XRowInfo>(); //every time need to use new XRowInfos or it'll cause duplicate problem: https://user-images.githubusercontent.com/12729184/115003101-0fcab700-9ed8-11eb-9151-ca4d7b86d59e.png
                         var sheetStream = sheet.Open();
                         var fullName = sheet.FullName;
 
@@ -106,8 +107,10 @@ namespace MiniExcelLibs.OpenXml
 
             //Q.Why so complex?
             //A.Because try to use string stream avoid OOM when rendering rows
+            sheetData.RemoveAll();
             sheetData.InnerText = "{{{{{{split}}}}}}"; //TODO: bad smell
             var prefix = string.IsNullOrEmpty(sheetData.Prefix) ? "" : $"{sheetData.Prefix}:";
+            var endPrefix = string.IsNullOrEmpty(sheetData.Prefix) ? "" : $":{sheetData.Prefix}"; //![image](https://user-images.githubusercontent.com/12729184/115000066-fd02b300-9ed4-11eb-8e65-bf0014015134.png)
             var contents = doc.InnerXml.Split(new string[] { $"<{prefix}sheetData>{{{{{{{{{{{{split}}}}}}}}}}}}</{prefix}sheetData>" }, StringSplitOptions.None); ;
             using (var writer = new StreamWriter(stream, Encoding.UTF8))
             {
@@ -172,7 +175,7 @@ namespace MiniExcelLibs.OpenXml
                             first = false;
 
                             newRowIndex++;
-                            writer.Write(CleanXml(newRow.OuterXml));
+                            writer.Write(CleanXml(newRow.OuterXml, endPrefix));
                             newRow = null;
                         }
                     }
@@ -180,7 +183,7 @@ namespace MiniExcelLibs.OpenXml
                     {
                         row.SetAttribute("r", newRowIndex.ToString());
                         row.InnerXml = row.InnerXml.Replace($"{{{{$rowindex}}}}", newRowIndex.ToString());
-                        writer.Write(CleanXml(row.OuterXml));
+                        writer.Write(CleanXml(row.OuterXml, endPrefix));
                     }
                 }
                 writer.Write($"</{prefix}sheetData>");
@@ -189,10 +192,12 @@ namespace MiniExcelLibs.OpenXml
             #endregion
         }
 
-        private static string CleanXml(string xml)
+        private static string CleanXml(string xml,string endPrefix)
         {
             //TODO: need to optimize
-            return xml.Replace("xmlns:x14ac=\"http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac\"", "").Replace("xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"", "");
+            return xml
+                .Replace("xmlns:x14ac=\"http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac\"", "")
+                .Replace($"xmlns{endPrefix}=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"", "");
         }
     }
 }

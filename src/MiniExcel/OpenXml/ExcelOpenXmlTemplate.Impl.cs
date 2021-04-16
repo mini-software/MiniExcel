@@ -25,7 +25,7 @@ namespace MiniExcelLibs.OpenXml
             public IEnumerable CellIEnumerableValues { get; set; }
         }
 
-        private List<XRowInfo> XRowInfos = new List<XRowInfo>();
+        private List<XRowInfo> XRowInfos { get; set; }
 
         private void ReplaceSharedStringsToStr(List<string> sharedStrings, ref XmlNodeList rows)
         {

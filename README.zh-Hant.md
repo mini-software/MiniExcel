@@ -497,11 +497,11 @@ MiniExcel.SaveAsByTemplate(path, templatePath, value);
 
 模板
 
-![image-20210415103138835](https://i.loli.net/2021/04/15/KWIcwatZTEpDPjJ.png)
+![image](https://user-images.githubusercontent.com/12729184/115068665-221f1200-9f25-11eb-9820-3d7d9638cb03.png)
 
 最終效果
 
-![image-20210415103052651](https://i.loli.net/2021/04/15/wMTBoJyNDspnZqh.png)
+![image](https://user-images.githubusercontent.com/12729184/115068685-2814f300-9f25-11eb-96b5-0e7f21297f4d.png)
 
 代碼
 
@@ -678,7 +678,7 @@ public static DataTable QueryAsDataTable(string path)
 }
 ```
 
-![image-20210415120352604](https://i.loli.net/2021/04/15/TbtP1GLDEgONueK.png)
+![image](https://user-images.githubusercontent.com/12729184/115068722-3105c480-9f25-11eb-8f5a-994416754134.png)
 
 
 

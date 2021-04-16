@@ -562,6 +562,37 @@ public static IEnumerable<T> Page<T>(IEnumerable<T> en, int pageSize, int page)
 
 ![20210419](https://user-images.githubusercontent.com/12729184/114679083-6ef4c400-9d3e-11eb-9f78-a86daa45fe46.gif)
 
+### FQA
+
+#### Q: How to convert query results to DataTable
+
+Reminder: Not recommended, because DataTable will load all data into memory and lose MiniExcel's low memory consumption function.
+
+```C#
+public static DataTable QueryAsDataTable(string path)
+{
+	var rows = MiniExcel.Query(path, true);
+	var dt = new DataTable();
+	var first = true;
+	foreach (IDictionary<string, object> row in rows)
+	{
+		if (first)
+		{
+			foreach (var key in row.Keys)
+			{
+				var type = row[key]?.GetType() ?? typeof(string);
+				dt.Columns.Add(key, type);
+			}
+
+			first = false;
+		}
+		dt.Rows.Add(row.Values.ToArray());
+	}
+	return dt;
+}
+```
+
+![image](https://user-images.githubusercontent.com/12729184/115068722-3105c480-9f25-11eb-8f5a-994416754134.png)
 
 
 ### Limitations and caveats 

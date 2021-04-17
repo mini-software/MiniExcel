@@ -184,6 +184,59 @@ namespace MiniExcelTests
             {
                 var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
                 var templatePath = @"..\..\..\..\..\samples\xlsx\TestTemplateEasyFill.xlsx";
+                var templateBytes = File.ReadAllBytes(templatePath);
+                // 1. By POCO
+                var value = new
+                {
+                    Name = "Jack",
+                    CreateDate = new DateTime(2021, 01, 01),
+                    VIP = true,
+                    Points = 123
+                };
+                MiniExcel.SaveAsByTemplate(path, templateBytes, value);
+
+                var rows = MiniExcel.Query(path).ToList();
+                Assert.Equal("Jack", rows[1].A);
+                Assert.Equal("2021-01-01 00:00:00", rows[1].B);
+                Assert.Equal(true, rows[1].C);
+                Assert.Equal(123, rows[1].D);
+                Assert.Equal("Jack has 123 points", rows[1].E);
+
+                var demension = Helpers.GetFirstSheetDimensionRefValue(path);
+                Assert.Equal("A1:E2", demension);
+            }
+
+            {
+                var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
+                var templatePath = @"..\..\..\..\..\samples\xlsx\TestTemplateEasyFill.xlsx";
+                var templateBytes = File.ReadAllBytes(templatePath);
+                // 1. By POCO
+                var value = new
+                {
+                    Name = "Jack",
+                    CreateDate = new DateTime(2021, 01, 01),
+                    VIP = true,
+                    Points = 123
+                };
+                using (var stream = File.Create(path))
+                {
+                    stream.SaveAsByTemplate(templateBytes, value);
+                }
+
+                var rows = MiniExcel.Query(path).ToList();
+                Assert.Equal("Jack", rows[1].A);
+                Assert.Equal("2021-01-01 00:00:00", rows[1].B);
+                Assert.Equal(true, rows[1].C);
+                Assert.Equal(123, rows[1].D);
+                Assert.Equal("Jack has 123 points", rows[1].E);
+
+                var demension = Helpers.GetFirstSheetDimensionRefValue(path);
+                Assert.Equal("A1:E2", demension);
+            }
+
+            {
+                var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
+                var templatePath = @"..\..\..\..\..\samples\xlsx\TestTemplateEasyFill.xlsx";
                 // 2. By Dictionary
                 var value = new Dictionary<string, object>()
                 {

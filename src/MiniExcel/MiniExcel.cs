@@ -86,6 +86,12 @@
                 SaveAsByTemplate(stream, templatePath, value);
         }
 
+        public static void SaveAsByTemplate(string path, byte[] templateBytes, object value)
+        {
+            using (var stream = File.Create(path))
+                SaveAsByTemplate(stream, templateBytes, value);
+        }
+
         public static void SaveAsByTemplate(this Stream stream, string templatePath, object value)
         {
             ExcelTemplateFactory.GetProvider(stream).SaveAsByTemplate(templatePath, value);

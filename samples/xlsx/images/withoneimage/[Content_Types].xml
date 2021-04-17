@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+    <Override PartName="/xl/worksheets/_rels/sheet1.xml.rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+    <Override PartName="/xl/drawings/drawing1.xml" ContentType="application/vnd.openxmlformats-officedocument.drawing+xml"/>
+    <Override PartName="/xl/drawings/_rels/drawing1.xml.rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+    <Override PartName="/xl/media/image1.png" ContentType="image/png"/>
+    <Override PartName="/xl/media/image2.png" ContentType="image/png"/>
+    <Override PartName="/xl/media/image3.png" ContentType="image/png"/>
+    <Override PartName="/xl/media/image4.png" ContentType="image/png"/>
+    <Override PartName="/xl/media/image5.png" ContentType="image/png"/>
+    <Override PartName="/docProps/custom.xml" ContentType="application/vnd.openxmlformats-officedocument.custom-properties+xml"/>
+</Types>

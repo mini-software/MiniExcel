@@ -30,7 +30,19 @@ namespace MiniExcelLibs.OpenXml
         {
             stream = _strem;
         }
+
         public void SaveAsByTemplate(string templatePath, object value)
+        {
+            using (var stream = File.Open(templatePath, FileMode.Open, FileAccess.Read, FileShare.Read))
+                SaveAsByTemplateImpl(stream, value);
+        }
+        public void SaveAsByTemplate(byte[] templateBtyes, object value)
+        {
+            using (Stream stream = new MemoryStream(templateBtyes))
+                SaveAsByTemplateImpl(stream, value);
+        }
+
+        public void SaveAsByTemplateImpl(Stream templateStream, object value)
         {
             //only support xlsx         
             Dictionary<string, object> values = null;
@@ -49,9 +61,6 @@ namespace MiniExcelLibs.OpenXml
                 }
             }
             //TODO:DataTable & DapperRow
-
-            //TODO: copy new bytes 
-            using (var templateStream = File.Open(templatePath, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
                 templateStream.CopyTo(stream);
 

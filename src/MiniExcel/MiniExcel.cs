@@ -90,5 +90,10 @@
         {
             ExcelTemplateFactory.GetProvider(stream).SaveAsByTemplate(templatePath, value);
         }
+
+        public static void SaveAsByTemplate(this Stream stream, byte[] templateBytes, object value)
+        {
+            ExcelTemplateFactory.GetProvider(stream).SaveAsByTemplate(templateBytes, value);
+        }
     }
 }

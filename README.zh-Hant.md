@@ -608,7 +608,7 @@ using (var connection = new SQLiteConnection(connectionString))
 ```C#
 public class ExcelController : Controller
 {
-    public IActionResult Download()
+    public IActionResult DownloadExcel()
     {
         var values = new[] {
             new { Column1 = "MiniExcel", Column2 = 1 },
@@ -616,6 +616,32 @@ public class ExcelController : Controller
         };
         var stream = new MemoryStream();
         stream.SaveAs(values);
+        stream.Position = 0;
+        return File(stream,
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            "demo.xlsx");
+    }
+
+    public IActionResult DownloadExcelFromTmplate()
+    {
+        var templatePath = "TestTemplateComplex.xlsx";
+        var value = new Dictionary<string, object>()
+        {
+            ["title"] = "FooCompany",
+            ["managers"] = new[] {
+                new {name="Jack",department="HR"},
+                new {name="Loan",department="IT"}
+            },
+            ["employees"] = new[] {
+                new {name="Wade",department="HR"},
+                new {name="Felix",department="HR"},
+                new {name="Eric",department="IT"},
+                new {name="Keaton",department="IT"}
+            }
+        };
+        var stream = new MemoryStream();
+        stream.SaveAsByTemplate(templatePath, value);
+        stream.Position = 0;
         return File(stream,
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             "demo.xlsx");

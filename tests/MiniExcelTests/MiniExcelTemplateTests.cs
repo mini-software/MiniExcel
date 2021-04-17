@@ -339,15 +339,15 @@ namespace MiniExcelTests
                 {
                     ["title"] = "FooCompany",
                     ["managers"] = new[] {
-                    new {name="Jack",department="HR"},
-                    new {name="Loan",department="IT"}
-                },
+                        new {name="Jack",department="HR"},
+                        new {name="Loan",department="IT"}
+                    },
                     ["employees"] = new[] {
-                    new {name="Wade",department="HR"},
-                    new {name="Felix",department="HR"},
-                    new {name="Eric",department="IT"},
-                    new {name="Keaton",department="IT"}
-                }
+                        new {name="Wade",department="HR"},
+                        new {name="Felix",department="HR"},
+                        new {name="Eric",department="IT"},
+                        new {name="Keaton",department="IT"}
+                    }
                 };
                 MiniExcel.SaveAsByTemplate(path, templatePath, value);
 

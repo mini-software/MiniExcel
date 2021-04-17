@@ -13,5 +13,6 @@ namespace MiniExcelLibs
     {
         //TODO: add byte or stream templatePath
         void SaveAsByTemplate(string templatePath, object value);
+        void SaveAsByTemplate(byte[] templateBtyes, object value);
     }
 }

@@ -101,6 +101,7 @@ namespace MiniExcelLibs.OpenXml
                             if (xRowInfo.IEnumerableGenricType == null) //avoid duplicate to add rowindexdiff ![image](https://user-images.githubusercontent.com/12729184/114851348-522ac000-9e14-11eb-8244-4730754d6885.png)
                             {
                                 var first = true;
+                                //TODO:if CellIEnumerableValues is ICollection or Array then get length or Count
                                 foreach (var element in xRowInfo.CellIEnumerableValues) //TODO: optimize performance?
                                 {
                                     if (xRowInfo.IEnumerableGenricType == null)

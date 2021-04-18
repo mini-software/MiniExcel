@@ -592,17 +592,21 @@ namespace MiniExcelTests
                 var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
                 var templatePath = @"..\..\..\..\..\samples\xlsx\TestTemplateBasicIEmumerableFill.xlsx";
 
-                //2. By Dictionary
+                //3. By DataTable
+                var dt = new DataTable();
+                {
+                    dt.Columns.Add("name");
+                    dt.Columns.Add("department");
+                    dt.Rows.Add("Jack", "HR");
+                    dt.Rows.Add("Lisa", "HR");
+                    dt.Rows.Add("John", "HR");
+                    dt.Rows.Add("Mike", "IT");
+                    dt.Rows.Add("Neo", "IT");
+                    dt.Rows.Add("Loan", "IT");
+                }
                 var value = new Dictionary<string, object>()
                 {
-                    ["employees"] = new[] {
-                        new {name="Jack",department="HR"},
-                        new {name="Lisa",department="HR"},
-                        new {name="John",department="HR"},
-                        new {name="Mike",department="IT"},
-                        new {name="Neo",department="IT"},
-                        new {name="Loan",department="IT"}
-                    }
+                    ["employees"] = dt
                 };
                 MiniExcel.SaveAsByTemplate(path, templatePath, value);
 

@@ -313,6 +313,9 @@ using (var stream = File.Create(path))
 
 ### 模板填充 Excel <a name="getstart3"></a>
 
+- 宣告方式类似 Vue 模板 `{{变量名称}}`, 或是集合渲染 `{{集合名称.栏位名称}}`
+- 集合渲染支持 IEnumerable/DataTable/DapperRow
+
 #### 1. 基本填充
 
 模板:  

@@ -302,6 +302,9 @@ using (var stream = File.Create(path))
 
 ### Fill Data To Excel Template <a name="getstart3"></a>
 
+- The declaration is similar to Vue template `{{variable name}}`, or the collection rendering `{{collection name.field name}}`
+- Collection rendering support IEnumerable/DataTable/DapperRow
+
 #### 1. Basic Fill
 
 Template:  

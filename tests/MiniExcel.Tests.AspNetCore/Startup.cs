@@ -51,8 +51,8 @@ public class HomeController : Controller
 
     public IActionResult DownloadExcelFromTmplate()
     {
-        var templatePath = "TestTemplateComplex.xlsx";
-        var value = new Dictionary<string, object>()
+        string templatePath = "TestTemplateComplex.xlsx";
+        Dictionary<string, object> value = new Dictionary<string, object>()
         {
             ["title"] = "FooCompany",
             ["managers"] = new[] {
@@ -66,7 +66,7 @@ public class HomeController : Controller
                 new {name="Keaton",department="IT"}
             }
         };
-        var memoryStream = new MemoryStream();
+        MemoryStream memoryStream = new MemoryStream();
         memoryStream.SaveAsByTemplate(templatePath, value);
         memoryStream.Seek(0, SeekOrigin.Begin);
         return new FileStreamResult(memoryStream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
@@ -77,9 +77,9 @@ public class HomeController : Controller
 
     public IActionResult DownloadExcelFromTmplate_StremVersion()
     {
-        var templatePath = "TestTemplateComplex.xlsx";
-        var tytes = System.IO.File.ReadAllBytes(templatePath);
-        var value = new Dictionary<string, object>()
+        string templatePath = "TestTemplateComplex.xlsx";
+        byte[] bytes = System.IO.File.ReadAllBytes(templatePath);
+        Dictionary<string, object> value = new Dictionary<string, object>()
         {
             ["title"] = "FooCompany",
             ["managers"] = new[] {
@@ -93,8 +93,8 @@ public class HomeController : Controller
                 new {name="Keaton",department="IT"}
             }
         };
-        var memoryStream = new MemoryStream();
-        memoryStream.SaveAsByTemplate(tytes, value);
+        MemoryStream memoryStream = new MemoryStream();
+        memoryStream.SaveAsByTemplate(bytes, value);
         memoryStream.Seek(0, SeekOrigin.Begin);
         return new FileStreamResult(memoryStream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
         {

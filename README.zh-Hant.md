@@ -314,6 +314,12 @@ using (var stream = File.Create(path))
 
 ### 模板填充 Excel <a name="getstart3"></a>
 
+- 宣告方式類似 Vue 模板 `{{變量名稱}}`, 或是集合渲染 `{{集合名称.栏位名称}}`
+
+- 集合渲染支持 IEnumerable/DataTable/DapperRow
+
+
+
 #### 1. 基本填充
 
 模板:  
@@ -348,7 +354,7 @@ MiniExcel.SaveAsByTemplate(path, templatePath, value);
 
 
 
-#### 2. IEnumerable 數據填充
+#### 2. IEnumerable/DataTable 數據填充
 
 > Note1: 同行從左往右以第一個 IEnumerableUse 當列表來源 (不支持同列多集合)
 

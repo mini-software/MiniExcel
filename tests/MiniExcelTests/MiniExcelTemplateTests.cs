@@ -587,6 +587,28 @@ namespace MiniExcelTests
                 var demension = Helpers.GetFirstSheetDimensionRefValue(path);
                 Assert.Equal("A1:B7", demension);
             }
+
+            {
+                var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
+                var templatePath = @"..\..\..\..\..\samples\xlsx\TestTemplateBasicIEmumerableFill.xlsx";
+
+                //2. By Dictionary
+                var value = new Dictionary<string, object>()
+                {
+                    ["employees"] = new[] {
+                        new {name="Jack",department="HR"},
+                        new {name="Lisa",department="HR"},
+                        new {name="John",department="HR"},
+                        new {name="Mike",department="IT"},
+                        new {name="Neo",department="IT"},
+                        new {name="Loan",department="IT"}
+                    }
+                };
+                MiniExcel.SaveAsByTemplate(path, templatePath, value);
+
+                var demension = Helpers.GetFirstSheetDimensionRefValue(path);
+                Assert.Equal("A1:B7", demension);
+            }
         }
 
         [Fact]

@@ -7,6 +7,10 @@
 
 ---
 
+### 0.13.1
+- [New] SaveAsByTemplate 支持讀取模板 byte[],方便緩存跟支持多用戶同時讀取同一個模板 [#189](https://github.com/shps951023/MiniExcel/issues/189)
+- [Bug] 修正使用 stream SaveAs/SaveAsByTemplate 系統會自動關閉流 stream [#200](https://github.com/shps951023/MiniExcel/issues/200)
+
 ### 0.13.0
 - [New] 支持 .NET Framework 4.5 以上版本
 - [Bug] 修正特殊情況Excel模板含有 namespace prefixFix 會造成模板解析錯誤 #193

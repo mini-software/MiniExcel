@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using Xunit;
 
 namespace MiniExcelTests
@@ -357,7 +356,7 @@ namespace MiniExcelTests
                 }
 
                 {
-                    var rows = MiniExcel.Query(path,sheetName:"Sheet2").ToList();
+                    var rows = MiniExcel.Query(path, sheetName: "Sheet2").ToList();
 
                     Assert.Equal(9, rows.Count);
 

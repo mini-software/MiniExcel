@@ -6,6 +6,10 @@
 
 ---
 
+### 0.13.1
+- [New] SaveAsByTemplate by template bytes, convenient to cache and support multiple users to read the same template at the same time #189
+- [Bug] Fix after stream SaveAs/SaveAsByTemplate, miniexcel will close stream [#200](https://github.com/shps951023/MiniExcel/issues/200)
+
 ### 0.13.0
 - [New] Support .NET Framework 4.5
 - [Bug] Fix template excel that with namespace prefix will cause parsing error #193

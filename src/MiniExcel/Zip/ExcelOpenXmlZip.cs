@@ -14,7 +14,7 @@ namespace MiniExcelLibs.Zip
 	   private readonly Dictionary<string, ZipArchiveEntry> _entries;
 	   private bool _disposed;
 	   private Stream _zipStream;
-	   internal ZipArchive ZipFile;
+	   internal MiniExcelZipArchive ZipFile;
 	   public ReadOnlyCollection<ZipArchiveEntry> Entries;
 	   private static readonly XmlReaderSettings XmlSettings = new XmlReaderSettings
 	   {
@@ -25,7 +25,7 @@ namespace MiniExcelLibs.Zip
 	   public ExcelOpenXmlZip(Stream fileStream, ZipArchiveMode mode= ZipArchiveMode.Read, bool leaveOpen = false, Encoding entryNameEncoding=null)
 	   {
 		  _zipStream = fileStream ?? throw new ArgumentNullException(nameof(fileStream));
-		  ZipFile = new ZipArchive(fileStream, mode, leaveOpen, entryNameEncoding);
+		  ZipFile = new MiniExcelZipArchive(fileStream, mode, leaveOpen, entryNameEncoding);
 		  _entries = new Dictionary<string, ZipArchiveEntry>(StringComparer.OrdinalIgnoreCase);
 		  Entries = ZipFile.Entries; //TODO:need to remove
 		  foreach (var entry in ZipFile.Entries)
@@ -74,12 +74,12 @@ namespace MiniExcelLibs.Zip
 				    ZipFile = null;
 				}
 
-				if (_zipStream != null)
-				{
-				    _zipStream.Dispose();
-				    _zipStream = null;
-				}
-			 }
+                    if (_zipStream != null)
+                    {
+                        _zipStream.Dispose();
+                        _zipStream = null;
+                    }
+                }
 
 			 _disposed = true;
 		  }

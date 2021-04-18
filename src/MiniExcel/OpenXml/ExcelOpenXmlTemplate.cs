@@ -25,7 +25,7 @@ namespace MiniExcelLibs.OpenXml
             _ns.AddNamespace("x", "http://schemas.openxmlformats.org/spreadsheetml/2006/main");
         }
 
-        private Stream stream;
+        private readonly Stream stream;
         public ExcelOpenXmlTemplate(Stream _strem)
         {
             stream = _strem;
@@ -65,7 +65,7 @@ namespace MiniExcelLibs.OpenXml
                 templateStream.CopyTo(stream);
 
                 var reader = new ExcelOpenXmlSheetReader(stream);
-                var _archive = new ExcelOpenXmlZip(stream, mode: ZipArchiveMode.Update, false, Encoding.UTF8);
+                var _archive = new ExcelOpenXmlZip(stream, mode: ZipArchiveMode.Update, true, Encoding.UTF8);
                 {
                     //read sharedString
                     var sharedStrings = reader.GetSharedStrings();
@@ -90,9 +90,10 @@ namespace MiniExcelLibs.OpenXml
                     }
                 }
 
-                _archive.Dispose();
+                _archive.ZipFile.Dispose();
             }
         }
+
         private void GenerateSheetXmlImpl(ZipArchiveEntry sheetZipEntry, Stream stream, Stream sheetStream, Dictionary<string, object> inputMaps, List<string> sharedStrings, XmlWriterSettings xmlWriterSettings = null)
         {
             var doc = new XmlDocument();

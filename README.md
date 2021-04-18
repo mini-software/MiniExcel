@@ -519,7 +519,7 @@ performance:
 
 
 
-#### 2. ASP.NET Core 3.1 or MVC 5 Download Excel Xlsx API Demo
+#### 2. ASP.NET Core 3.1 or MVC 5 Download Excel Xlsx API Demo [Try it](tests/MiniExcel.Tests.AspNetCore)
 
 ```C#
 public class ExcelController : Controller
@@ -530,12 +530,13 @@ public class ExcelController : Controller
             new { Column1 = "MiniExcel", Column2 = 1 },
             new { Column1 = "Github", Column2 = 2}
         };
-        var stream = new MemoryStream();
-        stream.SaveAs(values);
-        stream.Position = 0;
-        return File(stream,
-            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            "demo.xlsx");
+        var memoryStream = new MemoryStream();
+        memoryStream.SaveAs(values);
+        memoryStream.Seek(0, SeekOrigin.Begin);
+        return new FileStreamResult(memoryStream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+        {
+            FileDownloadName = "demo.xlsx"
+        };
     }
 
     public IActionResult DownloadExcelFromTmplate()
@@ -555,12 +556,40 @@ public class ExcelController : Controller
                 new {name="Keaton",department="IT"}
             }
         };
-        var stream = new MemoryStream();
-        stream.SaveAsByTemplate(templatePath, value);
-        stream.Position = 0;
-        return File(stream,
-            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            "demo.xlsx");
+        var memoryStream = new MemoryStream();
+        memoryStream.SaveAsByTemplate(templatePath, value);
+        memoryStream.Seek(0, SeekOrigin.Begin);
+        return new FileStreamResult(memoryStream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+        {
+            FileDownloadName = "demo.xlsx"
+        };
+    }
+
+    public IActionResult DownloadExcelFromTmplate_StremVersion()
+    {
+        var templatePath = "TestTemplateComplex.xlsx";
+        var tytes = System.IO.File.ReadAllBytes(templatePath);
+        var value = new Dictionary<string, object>()
+        {
+            ["title"] = "FooCompany",
+            ["managers"] = new[] {
+                new {name="Jack",department="HR"},
+                new {name="Loan",department="IT"}
+            },
+            ["employees"] = new[] {
+                new {name="Wade",department="HR"},
+                new {name="Felix",department="HR"},
+                new {name="Eric",department="IT"},
+                new {name="Keaton",department="IT"}
+            }
+        };
+        var memoryStream = new MemoryStream();
+        memoryStream.SaveAsByTemplate(tytes, value);
+        memoryStream.Seek(0, SeekOrigin.Begin);
+        return new FileStreamResult(memoryStream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+        {
+            FileDownloadName = "demo.xlsx"
+        };
     }
 }
 ```

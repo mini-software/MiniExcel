@@ -3,15 +3,12 @@
     using MiniExcelLibs.OpenXml;
     using MiniExcelLibs.Zip;
     using System;
-    using System.Collections;
     using System.Collections.Generic;
     using System.IO;
     using System.IO.Compression;
     using System.Linq;
     using System.Reflection;
     using System.Text;
-    using System.Text.RegularExpressions;
-    using System.Xml;
 
     public static partial class MiniExcel
     {
@@ -82,7 +79,7 @@
 
         public static void SaveAsByTemplate(string path, string templatePath, object value)
         {
-            using(var stream = File.Create(path))
+            using (var stream = File.Create(path))
                 SaveAsByTemplate(stream, templatePath, value);
         }
 

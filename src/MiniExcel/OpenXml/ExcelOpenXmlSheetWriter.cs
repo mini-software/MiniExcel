@@ -24,7 +24,7 @@ namespace MiniExcelLibs.OpenXml
 
         public void SaveAs(object value,bool printHeader, IConfiguration configuration)
         {
-            using (var archive = new ZipArchive(_stream, ZipArchiveMode.Create, true, _utf8WithBom))
+            using (var archive = new MiniExcelZipArchive(_stream, ZipArchiveMode.Create, true, _utf8WithBom))
             {
                 var packages = DefualtOpenXml.GenerateDefaultOpenXml(archive);
                 var sheetPath = "xl/worksheets/sheet1.xml";
@@ -183,7 +183,7 @@ namespace MiniExcelLibs.OpenXml
             writer.Write($@"<?xml version=""1.0"" encoding=""utf-8""?><x:worksheet xmlns:x=""http://schemas.openxmlformats.org/spreadsheetml/2006/main""><x:dimension ref=""A1""/><x:sheetData></x:sheetData></x:worksheet>");
         }
 
-        internal void GenerateSheetByDapperRow(StreamWriter writer, ZipArchive archive, IEnumerable value, int rowCount, List<string> keys, int xIndex = 1, int yIndex = 1)
+        internal void GenerateSheetByDapperRow(StreamWriter writer, MiniExcelZipArchive archive, IEnumerable value, int rowCount, List<string> keys, int xIndex = 1, int yIndex = 1)
         {
             //body
             foreach (IDictionary<string, object> v in value)
@@ -221,7 +221,7 @@ namespace MiniExcelLibs.OpenXml
             }
         }
 
-        internal void GenerateSheetByIDictionary(StreamWriter writer, ZipArchive archive, IEnumerable value, int rowCount, List<object> keys, int xIndex = 1, int yIndex = 1)
+        internal void GenerateSheetByIDictionary(StreamWriter writer, MiniExcelZipArchive archive, IEnumerable value, int rowCount, List<object> keys, int xIndex = 1, int yIndex = 1)
         {
             //body
             foreach (IDictionary v in value)
@@ -259,7 +259,7 @@ namespace MiniExcelLibs.OpenXml
             }
         }
 
-        internal void GenerateSheetByProperties(StreamWriter writer, ZipArchive archive, IEnumerable value, List<ExcelCustomPropertyInfo> props, int rowCount, int xIndex = 1, int yIndex = 1)
+        internal void GenerateSheetByProperties(StreamWriter writer, MiniExcelZipArchive archive, IEnumerable value, List<ExcelCustomPropertyInfo> props, int rowCount, int xIndex = 1, int yIndex = 1)
         {
             //body
             foreach (var v in value)
@@ -302,7 +302,7 @@ namespace MiniExcelLibs.OpenXml
             }
         }
 
-        internal void GenerateSheetByDataTable(StreamWriter writer, ZipArchive archive, DataTable value, bool printHeader)
+        internal void GenerateSheetByDataTable(StreamWriter writer, MiniExcelZipArchive archive, DataTable value, bool printHeader)
         {
             var xy = ExcelOpenXmlUtils.ConvertCellToXY("A1");
 
@@ -371,7 +371,7 @@ namespace MiniExcelLibs.OpenXml
             writer.Write("</x:sheetData></x:worksheet>");
         }
 
-        private void GenerateContentTypesXml(ZipArchive archive, Dictionary<string, ZipPackageInfo> packages)
+        private void GenerateContentTypesXml(MiniExcelZipArchive archive, Dictionary<string, ZipPackageInfo> packages)
         {
             //[Content_Types].xml 
 

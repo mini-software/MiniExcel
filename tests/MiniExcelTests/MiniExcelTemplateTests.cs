@@ -3,6 +3,7 @@ using MiniExcelLibs;
 using MiniExcelLibs.Tests.Utils;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.IO;
 using System.Linq;
 using Xunit;
@@ -11,6 +12,147 @@ namespace MiniExcelTests
 {
     public class MiniExcelTemplateTests
     {
+        [Fact]
+        public void DatatableTemptyRowTest()
+        {
+            {
+                var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
+                var templatePath = @"..\..\..\..\..\samples\xlsx\TestTemplateComplex.xlsx";
+                var managers = new DataTable();
+                {
+                    managers.Columns.Add("name");
+                    managers.Columns.Add("department");
+                }
+                var employees = new DataTable();
+                {
+                    employees.Columns.Add("name");
+                    employees.Columns.Add("department");
+                }
+                var value = new Dictionary<string, object>()
+                {
+                    ["title"] = "FooCompany",
+                    ["managers"] = managers,
+                    ["employees"] = employees
+                };
+                MiniExcel.SaveAsByTemplate(path, templatePath, value);
+                {
+                    var rows = MiniExcel.Query(path).ToList();
+
+                    var demension = Helpers.GetFirstSheetDimensionRefValue(path);
+                    Assert.Equal("A1:C5", demension);
+                }
+            }
+            {
+                var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
+                var templatePath = @"..\..\..\..\..\samples\xlsx\TestTemplateComplex.xlsx";
+                var managers = new DataTable();
+                {
+                    managers.Columns.Add("name");
+                    managers.Columns.Add("department");
+                    managers.Rows.Add("Jack", "HR");
+                }
+                var employees = new DataTable();
+                {
+                    employees.Columns.Add("name");
+                    employees.Columns.Add("department");
+                    employees.Rows.Add("Wade", "HR");
+                }
+                var value = new Dictionary<string, object>()
+                {
+                    ["title"] = "FooCompany",
+                    ["managers"] = managers,
+                    ["employees"] = employees
+                };
+                MiniExcel.SaveAsByTemplate(path, templatePath, value);
+                {
+                    var rows = MiniExcel.Query(path).ToList();
+
+                    var demension = Helpers.GetFirstSheetDimensionRefValue(path);
+                    Assert.Equal("A1:C5", demension);
+                }
+            }
+        }
+
+        [Fact]
+        public void DatatableTest()
+        {
+            var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
+            var templatePath = @"..\..\..\..\..\samples\xlsx\TestTemplateComplex.xlsx";
+            var managers = new DataTable();
+            {
+                managers.Columns.Add("name");
+                managers.Columns.Add("department");
+                managers.Rows.Add("Jack", "HR");
+                managers.Rows.Add("Loan", "IT");
+            }
+            var employees = new DataTable();
+            {
+                employees.Columns.Add("name");
+                employees.Columns.Add("department");
+                employees.Rows.Add("Wade", "HR");
+                employees.Rows.Add("Felix", "HR");
+                employees.Rows.Add("Eric", "IT");
+                employees.Rows.Add("Keaton", "IT");
+            }
+            var value = new Dictionary<string, object>()
+            {
+                ["title"] = "FooCompany",
+                ["managers"] = managers,
+                ["employees"] = employees
+            };
+            MiniExcel.SaveAsByTemplate(path, templatePath, value);
+            {
+                var rows = MiniExcel.Query(path).ToList();
+
+                var demension = Helpers.GetFirstSheetDimensionRefValue(path);
+                Assert.Equal("A1:C9", demension);
+
+                Assert.Equal(9, rows.Count);
+
+                Assert.Equal("FooCompany", rows[0].A);
+                Assert.Equal("Jack", rows[2].B);
+                Assert.Equal("HR", rows[2].C);
+                Assert.Equal("Loan", rows[3].B);
+                Assert.Equal("IT", rows[3].C);
+
+                Assert.Equal("Wade", rows[5].B);
+                Assert.Equal("HR", rows[5].C);
+                Assert.Equal("Felix", rows[6].B);
+                Assert.Equal("HR", rows[6].C);
+
+                Assert.Equal("Eric", rows[7].B);
+                Assert.Equal("IT", rows[7].C);
+                Assert.Equal("Keaton", rows[8].B);
+                Assert.Equal("IT", rows[8].C);
+            }
+
+            {
+                var rows = MiniExcel.Query(path, sheetName: "Sheet2").ToList();
+
+                Assert.Equal(9, rows.Count);
+
+                Assert.Equal("FooCompany", rows[0].A);
+                Assert.Equal("Jack", rows[2].B);
+                Assert.Equal("HR", rows[2].C);
+                Assert.Equal("Loan", rows[3].B);
+                Assert.Equal("IT", rows[3].C);
+
+                Assert.Equal("Wade", rows[5].B);
+                Assert.Equal("HR", rows[5].C);
+                Assert.Equal("Felix", rows[6].B);
+                Assert.Equal("HR", rows[6].C);
+
+                Assert.Equal("Eric", rows[7].B);
+                Assert.Equal("IT", rows[7].C);
+                Assert.Equal("Keaton", rows[8].B);
+                Assert.Equal("IT", rows[8].C);
+
+                var demension = Helpers.GetFirstSheetDimensionRefValue(path);
+                Assert.Equal("A1:C9", demension);
+            }
+        }
+
+
         [Fact]
         public void DapperTemplateTest()
         {

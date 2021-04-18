@@ -3,6 +3,7 @@ using MiniExcelLibs.Zip;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Data;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -21,8 +22,9 @@ namespace MiniExcelLibs.OpenXml
             public string IEnumerablePropName { get; set; }
             public XmlElement Row { get; set; }
             public Type IEnumerableGenricType { get; set; }
-            public IDictionary<string, PropInfo > PropsMap { get; set; }
+            public IDictionary<string, PropInfo> PropsMap { get; set; }
             public bool IsDictionary { get; set; }
+            public bool IsDataTable { get; set; }
             public IEnumerable CellIEnumerableValues { get; set; }
         }
 
@@ -75,11 +77,10 @@ namespace MiniExcelLibs.OpenXml
                     //TODO: some xlsx without r
                     originRowIndex = int.Parse(row.GetAttribute("r"));
                     var newRowIndex = originRowIndex + rowIndexDiff;
+
                     if (xInfo.CellIEnumerableValues != null)
                     {
                         var first = true;
-
-                        
 
                         foreach (var item in xInfo.CellIEnumerableValues)
                         {
@@ -100,6 +101,42 @@ namespace MiniExcelLibs.OpenXml
                                     }
 
                                     var cellValue = dic[propInfo.Key];
+                                    if (cellValue == null)
+                                    {
+                                        newRow.InnerXml = newRow.InnerXml.Replace(key, "");
+                                        continue;
+                                    }
+
+
+                                    var cellValueStr = ExcelOpenXmlUtils.EncodeXML(cellValue);
+                                    var type = propInfo.Value.UnderlyingTypePropType;
+                                    if (type == typeof(bool))
+                                    {
+                                        cellValueStr = (bool)cellValue ? "1" : "0";
+                                    }
+                                    else if (type == typeof(DateTime))
+                                    {
+                                        //c.SetAttribute("t", "d");
+                                        cellValueStr = ((DateTime)cellValue).ToString("yyyy-MM-dd HH:mm:ss");
+                                    }
+
+                                    //TODO: ![image](https://user-images.githubusercontent.com/12729184/114848248-17735880-9e11-11eb-8258-63266bda0a1a.png)
+                                    newRow.InnerXml = newRow.InnerXml.Replace(key, cellValueStr);
+                                }
+                            }
+                            else if (xInfo.IsDataTable)
+                            {
+                                var datarow = item as DataRow;
+                                foreach (var propInfo in xInfo.PropsMap)
+                                {
+                                    var key = $"{{{{{xInfo.IEnumerablePropName}.{propInfo.Key}}}}}";
+                                    if (item == null) //![image](https://user-images.githubusercontent.com/12729184/114728510-bc3e5900-9d71-11eb-9721-8a414dca21a0.png)
+                                    {
+                                        newRow.InnerXml = newRow.InnerXml.Replace(key, "");
+                                        continue;
+                                    }
+
+                                    var cellValue = datarow[propInfo.Key];
                                     if (cellValue == null)
                                     {
                                         newRow.InnerXml = newRow.InnerXml.Replace(key, "");
@@ -279,9 +316,9 @@ namespace MiniExcelLibs.OpenXml
                                             {
                                                 xRowInfo.IsDictionary = true;
                                                 var dic = element as IDictionary<string, object>;
-                                                xRowInfo.PropsMap = dic.Keys.ToDictionary(key => key, key => dic[key] != null 
-                                                    ? new PropInfo { UnderlyingTypePropType= Nullable.GetUnderlyingType(dic[key].GetType()) ?? dic[key].GetType() } 
-                                                    : new PropInfo { UnderlyingTypePropType = typeof(object) } ) ;
+                                                xRowInfo.PropsMap = dic.Keys.ToDictionary(key => key, key => dic[key] != null
+                                                    ? new PropInfo { UnderlyingTypePropType = Nullable.GetUnderlyingType(dic[key].GetType()) ?? dic[key].GetType() }
+                                                    : new PropInfo { UnderlyingTypePropType = typeof(object) });
                                             }
                                             else
                                             {
@@ -296,14 +333,13 @@ namespace MiniExcelLibs.OpenXml
                                 }
                             }
 
-
                             //TODO: check if not contain 1 index
                             //only check first one match IEnumerable, so only render one collection at same row
 
                             // auto check type https://github.com/shps951023/MiniExcel/issues/177
                             var prop = xRowInfo.PropsMap[propNames[1]];
                             var type = prop.UnderlyingTypePropType; //avoid nullable 
-                                                                                    // 
+                                                                    // 
                             if (!xRowInfo.PropsMap.ContainsKey(propNames[1]))
                                 throw new InvalidDataException($"{propNames[0]} doesn't have {propNames[1]} property");
 
@@ -325,6 +361,43 @@ namespace MiniExcelLibs.OpenXml
                             }
 
                             break;
+                        }
+                        else if (cellValue is DataTable)
+                        {
+                            var dt = cellValue as DataTable;
+                            if (xRowInfo.CellIEnumerableValues == null)
+                            {
+                                xRowInfo.IEnumerablePropName = propNames[0];
+                                xRowInfo.IEnumerableGenricType = typeof(DataRow);
+                                xRowInfo.IsDataTable = true;
+                                xRowInfo.CellIEnumerableValues = dt.Rows.Cast<DataRow>(); //TODO: need to optimize performance
+                                maxRowIndexDiff = dt.Rows.Count <= 1 ? 0 : dt.Rows.Count;
+                                xRowInfo.PropsMap = dt.Columns.Cast<DataColumn>().ToDictionary(col => col.ColumnName, col =>
+                                    new PropInfo { UnderlyingTypePropType = Nullable.GetUnderlyingType(col.DataType) }
+                                );
+                            }
+
+                            var column = dt.Columns[propNames[1]];
+                            var type = Nullable.GetUnderlyingType(column.DataType) ?? column.DataType; //avoid nullable 
+                            if (!xRowInfo.PropsMap.ContainsKey(propNames[1]))
+                                throw new InvalidDataException($"{propNames[0]} doesn't have {propNames[1]} property");
+
+                            if (isMultiMatch)
+                            {
+                                c.SetAttribute("t", "str");
+                            }
+                            else if (Helpers.IsNumericType(type))
+                            {
+                                c.SetAttribute("t", "n");
+                            }
+                            else if (Type.GetTypeCode(type) == TypeCode.Boolean)
+                            {
+                                c.SetAttribute("t", "b");
+                            }
+                            else if (Type.GetTypeCode(type) == TypeCode.DateTime)
+                            {
+                                c.SetAttribute("t", "str");
+                            }
                         }
                         else
                         {

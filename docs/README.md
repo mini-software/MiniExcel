@@ -8,6 +8,7 @@
 
 ### 0.13.1
 - [New] SaveAsByTemplate by template bytes, convenient to cache and support multiple users to read the same template at the same time #189
+- [New] SaveAsByTemplate support input `IEnmerable<IDicionary<string,object>> or DapperRows` parameters [#201](https://github.com/shps951023/MiniExcel/issues/201)
 - [Bug] Fix after stream SaveAs/SaveAsByTemplate, miniexcel will close stream [#200](https://github.com/shps951023/MiniExcel/issues/200)
 
 ### 0.13.0

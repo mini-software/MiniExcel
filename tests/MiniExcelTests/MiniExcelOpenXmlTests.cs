@@ -737,7 +737,7 @@ namespace MiniExcelLibs.Tests
         {
             {
                 var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
-                using (var connection = GetConnection("Data Source=:memory:"))
+                using (var connection = Db.GetConnection("Data Source=:memory:"))
                 {
                     var rows = connection.Query(@"with cte as (select 1 id,2 val) select * from cte where 1=2");
                     MiniExcel.SaveAs(path, rows);
@@ -816,7 +816,7 @@ namespace MiniExcelLibs.Tests
 
 
             // Dapper Query
-            using (var connection = GetConnection("Data Source=:memory:"))
+            using (var connection = Db.GetConnection("Data Source=:memory:"))
             {
                 var rows = connection.Query(@"select 'MiniExcel' as Column1,1 as Column2 union all select 'Github',2");
                 MiniExcel.SaveAs(path, rows);
@@ -837,7 +837,7 @@ namespace MiniExcelLibs.Tests
             File.Delete(path);
 
             // Empty
-            using (var connection = GetConnection("Data Source=:memory:"))
+            using (var connection = Db.GetConnection("Data Source=:memory:"))
             {
                 var rows = connection.Query(@"with cte as (select 'MiniExcel' as Column1,1 as Column2 union all select 'Github',2)select * from cte where 1=2").ToList();
                 MiniExcel.SaveAs(path, rows);
@@ -860,7 +860,7 @@ namespace MiniExcelLibs.Tests
 
 
             // ToList
-            using (var connection = GetConnection("Data Source=:memory:"))
+            using (var connection = Db.GetConnection("Data Source=:memory:"))
             {
                 var rows = connection.Query(@"select 'MiniExcel' as Column1,1 as Column2 union all select 'Github',2").ToList();
                 MiniExcel.SaveAs(path, rows);
@@ -948,11 +948,6 @@ namespace MiniExcelLibs.Tests
             }
 
             File.Delete(path);
-        }
-
-        private static SQLiteConnection GetConnection(string connectionString)
-        {
-            return new SQLiteConnection(connectionString);
         }
 
         [Fact()]

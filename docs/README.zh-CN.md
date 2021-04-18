@@ -9,6 +9,7 @@
 
 ### 0.13.1
 - [New] SaveAsByTemplate 支持读取模板 byte[],方便缓存跟支持多用户同时读取同一个模板 #189
+- [New] SaveAsByTemplate 支持传入 `IEnmerable<IDicionary<string,object>> 或 DapperRows` 参数 [#201](https://github.com/shps951023/MiniExcel/issues/201)
 - [Bug] 修正使用 stream SaveAs/SaveAsByTemplate 系统会自动关闭流 stream [#200](https://github.com/shps951023/MiniExcel/issues/200)
 
 ### 0.13.0

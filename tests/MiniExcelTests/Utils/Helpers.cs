@@ -6,6 +6,7 @@ namespace MiniExcelLibs.Tests.Utils
     using MiniExcelLibs.OpenXml;
     using System;
     using System.Collections.Generic;
+    using System.Data.SQLite;
     using System.Dynamic;
     using System.Globalization;
     using System.IO;

@@ -1,4 +1,5 @@
-﻿using MiniExcelLibs;
+﻿using Dapper;
+using MiniExcelLibs;
 using MiniExcelLibs.Tests.Utils;
 using System;
 using System.Collections.Generic;
@@ -10,6 +11,146 @@ namespace MiniExcelTests
 {
     public class MiniExcelTemplateTests
     {
+        [Fact]
+        public void DapperTemplateTest()
+        {
+            var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
+            var templatePath = @"..\..\..\..\..\samples\xlsx\TestTemplateComplex.xlsx";
+
+            var connection = Db.GetConnection("Data Source=:memory:");
+            var value = new Dictionary<string, object>()
+            {
+                ["title"] = "FooCompany",
+                ["managers"] = connection.Query("select 'Jack' name,'HR' department union all select 'Loan','IT'"),
+                ["employees"] = connection.Query(@"select 'Wade' name,'HR' department union all select 'Felix','HR' union all select 'Eric','IT' union all select 'Keaton','IT'")
+            };
+            MiniExcel.SaveAsByTemplate(path, templatePath, value);
+
+            {
+                var rows = MiniExcel.Query(path).ToList();
+
+                Assert.Equal(9, rows.Count);
+
+                Assert.Equal("FooCompany", rows[0].A);
+                Assert.Equal("Jack", rows[2].B);
+                Assert.Equal("HR", rows[2].C);
+                Assert.Equal("Loan", rows[3].B);
+                Assert.Equal("IT", rows[3].C);
+
+                Assert.Equal("Wade", rows[5].B);
+                Assert.Equal("HR", rows[5].C);
+                Assert.Equal("Felix", rows[6].B);
+                Assert.Equal("HR", rows[6].C);
+
+                Assert.Equal("Eric", rows[7].B);
+                Assert.Equal("IT", rows[7].C);
+                Assert.Equal("Keaton", rows[8].B);
+                Assert.Equal("IT", rows[8].C);
+
+                var demension = Helpers.GetFirstSheetDimensionRefValue(path);
+                Assert.Equal("A1:C9", demension);
+            }
+
+            {
+                var rows = MiniExcel.Query(path, sheetName: "Sheet2").ToList();
+
+                Assert.Equal(9, rows.Count);
+
+                Assert.Equal("FooCompany", rows[0].A);
+                Assert.Equal("Jack", rows[2].B);
+                Assert.Equal("HR", rows[2].C);
+                Assert.Equal("Loan", rows[3].B);
+                Assert.Equal("IT", rows[3].C);
+
+                Assert.Equal("Wade", rows[5].B);
+                Assert.Equal("HR", rows[5].C);
+                Assert.Equal("Felix", rows[6].B);
+                Assert.Equal("HR", rows[6].C);
+
+                Assert.Equal("Eric", rows[7].B);
+                Assert.Equal("IT", rows[7].C);
+                Assert.Equal("Keaton", rows[8].B);
+                Assert.Equal("IT", rows[8].C);
+
+                var demension = Helpers.GetFirstSheetDimensionRefValue(path);
+                Assert.Equal("A1:C9", demension);
+            }
+        }
+
+
+        [Fact]
+        public void DictionaryTemplateTest()
+        {
+            var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
+            var templatePath = @"..\..\..\..\..\samples\xlsx\TestTemplateComplex.xlsx";
+
+            var value = new Dictionary<string, object>()
+            {
+                ["title"] = "FooCompany",
+                ["managers"] = new[] {
+                    new Dictionary<string, object>{["name"]="Jack",["department"]="HR"},
+                    new Dictionary<string, object>{["name"]="Loan",["department"]="IT"}
+                },
+                ["employees"] = new[] {
+                    new Dictionary<string, object>{["name"]="Wade",["department"]="HR"},
+                    new Dictionary<string, object>{["name"]="Felix",["department"]="HR"},
+                    new Dictionary<string, object>{["name"]="Eric",["department"]="IT"},
+                    new Dictionary<string, object>{["name"]="Keaton",["department"]="IT"}
+                }
+            };
+            MiniExcel.SaveAsByTemplate(path, templatePath, value);
+
+            {
+                var rows = MiniExcel.Query(path).ToList();
+
+                Assert.Equal(9, rows.Count);
+
+                Assert.Equal("FooCompany", rows[0].A);
+                Assert.Equal("Jack", rows[2].B);
+                Assert.Equal("HR", rows[2].C);
+                Assert.Equal("Loan", rows[3].B);
+                Assert.Equal("IT", rows[3].C);
+
+                Assert.Equal("Wade", rows[5].B);
+                Assert.Equal("HR", rows[5].C);
+                Assert.Equal("Felix", rows[6].B);
+                Assert.Equal("HR", rows[6].C);
+
+                Assert.Equal("Eric", rows[7].B);
+                Assert.Equal("IT", rows[7].C);
+                Assert.Equal("Keaton", rows[8].B);
+                Assert.Equal("IT", rows[8].C);
+
+                var demension = Helpers.GetFirstSheetDimensionRefValue(path);
+                Assert.Equal("A1:C9", demension);
+            }
+
+            {
+                var rows = MiniExcel.Query(path, sheetName: "Sheet2").ToList();
+
+                Assert.Equal(9, rows.Count);
+
+                Assert.Equal("FooCompany", rows[0].A);
+                Assert.Equal("Jack", rows[2].B);
+                Assert.Equal("HR", rows[2].C);
+                Assert.Equal("Loan", rows[3].B);
+                Assert.Equal("IT", rows[3].C);
+
+                Assert.Equal("Wade", rows[5].B);
+                Assert.Equal("HR", rows[5].C);
+                Assert.Equal("Felix", rows[6].B);
+                Assert.Equal("HR", rows[6].C);
+
+                Assert.Equal("Eric", rows[7].B);
+                Assert.Equal("IT", rows[7].C);
+                Assert.Equal("Keaton", rows[8].B);
+                Assert.Equal("IT", rows[8].C);
+
+                var demension = Helpers.GetFirstSheetDimensionRefValue(path);
+                Assert.Equal("A1:C9", demension);
+            }
+        }
+
         [Fact]
         public void TestGithubProject()
         {

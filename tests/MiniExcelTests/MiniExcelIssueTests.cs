@@ -11,6 +11,7 @@ using OfficeOpenXml;
 using Newtonsoft.Json;
 using MiniExcelLibs.Attributes;
 using MiniExcelLibs.Tests.Utils;
+using System.Data;
 
 namespace MiniExcelLibs.Tests
 {
@@ -21,6 +22,53 @@ namespace MiniExcelLibs.Tests
         {
             this.output = output;
         }
+
+        /// <summary>
+        /// https://github.com/shps951023/MiniExcel/issues/206
+        /// </summary>
+        [Fact]
+        public void Issue206()
+        {
+            {
+                var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
+                var templatePath = @"..\..\..\..\..\samples\xlsx\TestTemplateBasicIEmumerableFill.xlsx";
+
+                var dt = new DataTable();
+                {
+                    dt.Columns.Add("name");
+                    dt.Columns.Add("department");
+                }
+                var value = new Dictionary<string, object>()
+                {
+                    ["employees"] = dt
+                };
+                MiniExcel.SaveAsByTemplate(path, templatePath, value);
+
+                var demension = Helpers.GetFirstSheetDimensionRefValue(path);
+                Assert.Equal("A1:B2", demension);
+            }
+
+            {
+                var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
+                var templatePath = @"..\..\..\..\..\samples\xlsx\TestTemplateBasicIEmumerableFill.xlsx";
+
+                var dt = new DataTable();
+                {
+                    dt.Columns.Add("name");
+                    dt.Columns.Add("department");
+                    dt.Rows.Add("Jack", "HR");
+                }
+                var value = new Dictionary<string, object>()
+                {
+                    ["employees"] = dt
+                };
+                MiniExcel.SaveAsByTemplate(path, templatePath, value);
+
+                var demension = Helpers.GetFirstSheetDimensionRefValue(path);
+                Assert.Equal("A1:B2", demension);
+            }
+        }
+
 
         /// <summary>
         /// https://github.com/shps951023/MiniExcel/issues/193

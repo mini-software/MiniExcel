@@ -371,10 +371,19 @@ namespace MiniExcelLibs.OpenXml
                                 xRowInfo.IEnumerableGenricType = typeof(DataRow);
                                 xRowInfo.IsDataTable = true;
                                 xRowInfo.CellIEnumerableValues = dt.Rows.Cast<DataRow>(); //TODO: need to optimize performance
-                                maxRowIndexDiff = dt.Rows.Count <= 1 ? 0 : dt.Rows.Count;
+                                var first = true;
+                                foreach (var element in xRowInfo.CellIEnumerableValues)
+                                {
+                                    // ==== get demension max rowindex ====
+                                    if (!first) //avoid duplicate add first one, this row not add status  ![image](https://user-images.githubusercontent.com/12729184/114851829-d2512580-9e14-11eb-8e7d-520c89a7ebee.png)
+                                        maxRowIndexDiff++;
+                                    first = false;
+                                }
+                                //TODO:need to optimize
+                                //maxRowIndexDiff = dt.Rows.Count <= 1 ? 0 : dt.Rows.Count-1;
                                 xRowInfo.PropsMap = dt.Columns.Cast<DataColumn>().ToDictionary(col => col.ColumnName, col =>
-                                    new PropInfo { UnderlyingTypePropType = Nullable.GetUnderlyingType(col.DataType) }
-                                );
+                                new PropInfo { UnderlyingTypePropType = Nullable.GetUnderlyingType(col.DataType) }
+                            );
                             }
 
                             var column = dt.Columns[propNames[1]];

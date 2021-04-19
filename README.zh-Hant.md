@@ -360,7 +360,7 @@ MiniExcel.SaveAsByTemplate(path, templatePath, value);
 模板:   
 ![image](https://user-images.githubusercontent.com/12729184/114564652-14f2f080-9ca3-11eb-831f-09e3fedbc5fc.png)
 
-最終效果: 
+最終效果:   
 ![image](https://user-images.githubusercontent.com/12729184/114564204-b2015980-9ca2-11eb-900d-e21249f93f7c.png)
 
 代碼:
@@ -611,8 +611,22 @@ using (var connection = new SQLiteConnection(connectionString))
 #### 2. ASP.NET Core 3.1 or MVC 5 下載 Excel Xlsx API Demo [Try it](tests/MiniExcel.Tests.AspNetCore)
 
 ```C#
-public class ExcelController : Controller
+public class HomeController : Controller
 {
+    public IActionResult Index()
+    {
+        return new ContentResult
+        {
+            ContentType = "text/html",
+            StatusCode = (int)HttpStatusCode.OK,
+            Content = @"<html><body>
+<a href='Home/DownloadExcel'>DownloadExcel</a><br>
+<a href='Home/DownloadExcelFromTemplatePath'>DownloadExcelFromTemplatePath</a><br>
+<a href='Home/DownloadExcelFromTemplateBytes'>DownloadExcelFromTemplateBytes</a>
+</body></html>"
+        };
+    }
+
     public IActionResult DownloadExcel()
     {
         var values = new[] {
@@ -628,10 +642,11 @@ public class ExcelController : Controller
         };
     }
 
-    public IActionResult DownloadExcelFromTmplate()
+    public IActionResult DownloadExcelFromTemplatePath()
     {
-        var templatePath = "TestTemplateComplex.xlsx";
-        var value = new Dictionary<string, object>()
+        string templatePath = "TestTemplateComplex.xlsx";
+
+        Dictionary<string, object> value = new Dictionary<string, object>()
         {
             ["title"] = "FooCompany",
             ["managers"] = new[] {
@@ -645,7 +660,8 @@ public class ExcelController : Controller
                 new {name="Keaton",department="IT"}
             }
         };
-        var memoryStream = new MemoryStream();
+
+        MemoryStream memoryStream = new MemoryStream();
         memoryStream.SaveAsByTemplate(templatePath, value);
         memoryStream.Seek(0, SeekOrigin.Begin);
         return new FileStreamResult(memoryStream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
@@ -654,11 +670,20 @@ public class ExcelController : Controller
         };
     }
 
-    public IActionResult DownloadExcelFromTmplate_StremVersion()
+    private static Dictionary<string, Byte[]> TemplateBytesCache = new Dictionary<string, byte[]>();
+
+    static HomeController()
     {
-        var templatePath = "TestTemplateComplex.xlsx";
-        var tytes = System.IO.File.ReadAllBytes(templatePath);
-        var value = new Dictionary<string, object>()
+        string templatePath = "TestTemplateComplex.xlsx";
+        byte[] bytes = System.IO.File.ReadAllBytes(templatePath);
+        TemplateBytesCache.Add(templatePath, bytes);
+    }
+
+    public IActionResult DownloadExcelFromTemplateBytes()
+    {
+        byte[] bytes = TemplateBytesCache["TestTemplateComplex.xlsx"];
+
+        Dictionary<string, object> value = new Dictionary<string, object>()
         {
             ["title"] = "FooCompany",
             ["managers"] = new[] {
@@ -672,8 +697,9 @@ public class ExcelController : Controller
                 new {name="Keaton",department="IT"}
             }
         };
-        var memoryStream = new MemoryStream();
-        memoryStream.SaveAsByTemplate(tytes, value);
+
+        MemoryStream memoryStream = new MemoryStream();
+        memoryStream.SaveAsByTemplate(bytes, value);
         memoryStream.Seek(0, SeekOrigin.Begin);
         return new FileStreamResult(memoryStream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
         {

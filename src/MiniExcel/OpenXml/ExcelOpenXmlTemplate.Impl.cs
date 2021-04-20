@@ -44,7 +44,6 @@ namespace MiniExcelLibs.OpenXml
 
             sheetZipEntry.Delete(); // ZipArchiveEntry can't update directly, so need to delete then create logic
 
-            var worksheet = doc.SelectSingleNode("/x:worksheet", _ns);
             var sheetData = doc.SelectSingleNode("/x:worksheet/x:sheetData", _ns);
 
             var newSheetData = sheetData.Clone(); //avoid delete lost data
@@ -55,8 +54,11 @@ namespace MiniExcelLibs.OpenXml
             //Update dimension && Check if the column contains a collection and get type and properties infomations
             UpdateDimensionAndGetCollectionPropertiesInfos(inputMaps, ref doc, ref rows);
 
-            #region Render cell values
+            RenderRowsAndCells(stream, doc, sheetData);
+        }
 
+        private void RenderRowsAndCells(Stream stream, XmlDocument doc, XmlNode sheetData)
+        {
             //Q.Why so complex?
             //A.Because try to use string stream avoid OOM when rendering rows
             sheetData.RemoveAll();
@@ -219,7 +221,6 @@ namespace MiniExcelLibs.OpenXml
                 writer.Write($"</{prefix}sheetData>");
                 writer.Write(contents[1]);
             }
-            #endregion
         }
 
         private static string CleanXml(string xml, string endPrefix)

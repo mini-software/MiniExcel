@@ -1,24 +1,23 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>net45;netstandard2.0;net5.0</TargetFrameworks>
-    <Version>0.13.1</Version>
+    <Version>0.13.2</Version>
   </PropertyGroup>
   <PropertyGroup>
     <AssemblyName>MiniExcel</AssemblyName>
     <Title>MiniExcel</Title>
     <Product>MiniExcel</Product>
     <PackageTags>excel;xlsx;micro-helper;mini;openxml;helper;</PackageTags>
-    <Description>
-      A high performance and easy Excel(xlsx,csv) Micro-Helper that avoids OOM and without third-party dependencies to create or dynamic/type POCO mapping query etc..
-      * Support excel template report generation with which you can easily export any data from your .NET classes to Excel.
+    <Description>A high performance and easy Excel(xlsx,csv) Micro-Helper that avoids OOM and without third-party dependencies to create or dynamic/type POCO mapping query etc..
+* Support excel template report generation with which you can easily export any data from your .NET classes to Excel.
 
-      Github : https://github.com/shps951023/MiniExcel
-      China Gitee : https://gitee.com/dotnetchina/MiniExcel
-      Issues : github https://github.com/shps951023/MiniExcel/issues or China Gitee https://gitee.com/dotnetchina/MiniExcel/issues
-      Todo : https://github.com/shps951023/MiniExcel/projects/1?fullscreen=true
-      Facebook : https://www.facebook.com/miniexcel
-      China QQ : 813100564
-    </Description>
+Github : https://github.com/shps951023/MiniExcel
+Gitee : https://gitee.com/dotnetchina/MiniExcel
+Issues : github https://github.com/shps951023/MiniExcel/issues or Gitee https://gitee.com/dotnetchina/MiniExcel/issues
+Todo : https://github.com/shps951023/MiniExcel/projects/1?fullscreen=true
+Facebook : https://www.facebook.com/miniexcel
+QQ : 813100564
+</Description>
     <Authors>ITWeiHan</Authors>
     <Copyright>©2021 WeiHan Lin</Copyright>
     <license>https://raw.githubusercontent.com/shps951023/MiniExcel/master/LICENSE.md</license>
@@ -26,11 +25,7 @@
     <PackageProjectUrl>https://github.com/shps951023/MiniExcel</PackageProjectUrl>
     <RepositoryUrl>https://github.com/shps951023/MiniExcel</RepositoryUrl>
     <PackageIconUrl>https://user-images.githubusercontent.com/12729184/115023335-39440c80-9ef1-11eb-8771-7260d1e50d5a.png</PackageIconUrl>
-    <PackageReleaseNotes>
-      Please Check [Release Notes](https://github.com/shps951023/MiniExcel/tree/master/docs)
-      or
-      [China Gitee Release Notes](https://gitee.com/dotnetchina/MiniExcel/blob/master/docs/README.zh-CN.md)
-    </PackageReleaseNotes>
+    <PackageReleaseNotes>Please Check [Release Notes](https://github.com/shps951023/MiniExcel/tree/master/docs)</PackageReleaseNotes>
     <RepositoryType>Github</RepositoryType>
   </PropertyGroup>
   <ItemGroup Condition=" '$(TargetFramework)' == 'net461'">

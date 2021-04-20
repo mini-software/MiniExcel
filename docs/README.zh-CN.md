@@ -7,6 +7,9 @@
 
 ---
 
+### 0.13.2
+- [Bug] 列超过 255 行无法读取错误 [#208](https://github.com/shps951023/MiniExcel/issues/#208)
+
 ### 0.13.1
 - [New] SaveAsByTemplate 支持读取模板 byte[],方便缓存跟支持多用户同时读取同一个模板 #189
 - [New] SaveAsByTemplate 支持传入 `IEnmerable<IDicionary<string,object>> 或 DapperRows 或 DataTable` 参数 [#201](https://github.com/shps951023/MiniExcel/issues/201)

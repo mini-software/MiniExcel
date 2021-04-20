@@ -24,6 +24,18 @@ namespace MiniExcelLibs.Tests
         }
 
         /// <summary>
+        /// https://github.com/shps951023/MiniExcel/issues/208
+        /// </summary>
+        [Fact]
+        public void Issue208()
+        {
+            var path = @"..\..\..\..\..\samples\xlsx\TestIssue208.xlsx";
+            var columns = MiniExcel.GetColumns(path).ToList();
+            Assert.Equal(16384, columns.Count);
+            Assert.Equal("XFD", columns[16383]);
+        }
+
+        /// <summary>
         /// https://github.com/shps951023/MiniExcel/issues/206
         /// </summary>
         [Fact]

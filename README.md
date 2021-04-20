@@ -25,14 +25,16 @@ At present, most popular frameworks need to load all the data into the memory to
 ### Get Started
 
 - [Excel Query](#getstart1)
+
 - [Create Excel](#getstart2)
+
 - [Fill Data To Excel Template](#getstart3)
+
 - [Excel Column Name/Index/Ignore Attribute](#getstart4)
+
 - [Examples](#getstart5)
 
-### Demo
-
-- LINQPad : Download [Basic Demo.linq](drafts/【MiniExcel】Basic%20Demo.linq)
+  
 
 ### Installation
 

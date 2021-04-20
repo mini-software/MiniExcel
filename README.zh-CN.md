@@ -39,9 +39,6 @@ MiniExcel简单、高效避免OOM的.NET处理Excel查、写、填充数据工�
 
 
 
-### Demo
-- LINQPad : Download [Basic Demo.linq](drafts/[MiniExcel]Basic%20Demo.linq)
-
 ### 安装
 
 请查看 [from NuGet](https://www.nuget.org/packages/MiniExcel)

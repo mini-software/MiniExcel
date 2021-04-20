@@ -6,6 +6,9 @@
 
 ---
 
+### 0.13.2
+- [Bug] Fix Column more than 255 rows cannot be read error [#208](https://github.com/shps951023/MiniExcel/issues/#208)
+
 ### 0.13.1
 - [New] SaveAsByTemplate by template bytes, convenient to cache and support multiple users to read the same template at the same time #189
 - [New] SaveAsByTemplate support input `IEnmerable<IDicionary<string,object>> or DapperRows or DataTable` parameters [#201](https://github.com/shps951023/MiniExcel/issues/201)

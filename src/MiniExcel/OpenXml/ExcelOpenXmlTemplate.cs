@@ -61,7 +61,7 @@ namespace MiniExcelLibs.OpenXml
                     values.Add(p.Name, p.GetValue(value));
                 }
             }
-            //TODO:DataTable & DapperRow
+
             {
                 templateStream.CopyTo(stream);
 

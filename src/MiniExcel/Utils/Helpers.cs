@@ -4,24 +4,56 @@
     using System;
     using System.Collections.Generic;
     using System.Dynamic;
+    using System.IO;
     using System.Linq;
     using System.Reflection;
 
     internal static partial class Helpers
     {
-        private static Dictionary<int, string> _IntMappingAlphabet = new Dictionary<int, string>();
-        private static Dictionary<string, int> _AlphabetMappingInt = new Dictionary<string, int>();
+        private const int GENERAL_COLUMN_INDEX = 255;
+        private const int MAX_COLUMN_INDEX = 16383;
+        private static Dictionary<int, string> _IntMappingAlphabet;
+        private static Dictionary<string, int> _AlphabetMappingInt;
         static Helpers()
         {
-            for (int i = 0; i <= 255; i++)
+            if (_IntMappingAlphabet == null && _AlphabetMappingInt == null)
             {
-                _IntMappingAlphabet.Add(i, IntToLetters(i));
-                _AlphabetMappingInt.Add(IntToLetters(i), i);
+                _IntMappingAlphabet = new Dictionary<int, string>();
+                _AlphabetMappingInt = new Dictionary<string, int>();
+                for (int i = 0; i <= GENERAL_COLUMN_INDEX; i++)
+                {
+                    _IntMappingAlphabet.Add(i, IntToLetters(i));
+                    _AlphabetMappingInt.Add(IntToLetters(i), i);
+                }
             }
         }
 
-        internal static string GetAlphabetColumnName(int ColumnIndex) => _IntMappingAlphabet[ColumnIndex];
-        internal static int GetColumnIndex(string columnName) => _AlphabetMappingInt[columnName];
+        public static string GetAlphabetColumnName(int columnIndex)
+        {
+            CheckAndSetMaxColumnIndex(columnIndex);
+            return _IntMappingAlphabet[columnIndex];
+        }
+
+        public static int GetColumnIndex(string columnName)
+        {
+            var columnIndex = _AlphabetMappingInt[columnName];
+            CheckAndSetMaxColumnIndex(columnIndex);
+            return columnIndex;
+        }
+
+        private static void CheckAndSetMaxColumnIndex(int columnIndex)
+        {
+            if (columnIndex >= _IntMappingAlphabet.Count)
+            {
+                if (columnIndex > MAX_COLUMN_INDEX)
+                    throw new InvalidDataException($"ColumnIndex {columnIndex} over excel vaild max index.");
+                for (int i = _IntMappingAlphabet.Count; i <= columnIndex; i++)
+                {
+                    _IntMappingAlphabet.Add(i, IntToLetters(i));
+                    _AlphabetMappingInt.Add(IntToLetters(i), i);
+                }
+            }
+        }
 
         internal static string IntToLetters(int value)
         {

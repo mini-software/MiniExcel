@@ -6,6 +6,9 @@
 
 ---
 
+### 0.13.3
+- [New] Support open with read only mode, avoid error of The process cannot access the file because it is being used by another process [#87](https://github.com/shps951023/MiniExcel/issues/#87)
+
 ### 0.13.2
 - [Bug] Fix Column more than 255 rows cannot be read error [#208](https://github.com/shps951023/MiniExcel/issues/#208)
 

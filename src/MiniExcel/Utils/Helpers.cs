@@ -10,6 +10,11 @@
 
     internal static partial class Helpers
     {
+        public static FileStream OpenSharedRead(string path) => File.Open(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+    }
+
+    internal static partial class Helpers
+    {
         private const int GENERAL_COLUMN_INDEX = 255;
         private const int MAX_COLUMN_INDEX = 16383;
         private static Dictionary<int, string> _IntMappingAlphabet;

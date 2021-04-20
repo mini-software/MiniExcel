@@ -34,7 +34,7 @@ namespace MiniExcelLibs.OpenXml
 
         public void SaveAsByTemplate(string templatePath, object value)
         {
-            using (var stream = File.Open(templatePath, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (var stream = Helpers.OpenSharedRead(templatePath))
                 SaveAsByTemplateImpl(stream, value);
         }
         public void SaveAsByTemplate(byte[] templateBtyes, object value)

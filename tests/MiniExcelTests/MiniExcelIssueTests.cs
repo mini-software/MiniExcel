@@ -24,6 +24,25 @@ namespace MiniExcelLibs.Tests
         }
 
         /// <summary>
+        /// https://github.com/shps951023/MiniExcel/issues/87
+        /// </summary>
+        [Fact]
+        public void Issue87()
+        {
+            var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
+            var templatePath = @"..\..\..\..\..\samples\xlsx\TestTemplateCenterEmpty.xlsx";
+            var value = new
+            {
+                Tests = Enumerable.Range(1, 5).Select((s, i) => new { test1 = i, test2 = i })
+            };
+            using (var stream = File.OpenRead(templatePath))
+            {
+                var rows = MiniExcel.Query(templatePath).ToList();
+                MiniExcel.SaveAsByTemplate(path, templatePath, value);
+            }
+        }
+
+        /// <summary>
         /// https://github.com/shps951023/MiniExcel/issues/208
         /// </summary>
         [Fact]

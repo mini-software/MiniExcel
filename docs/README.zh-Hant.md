@@ -7,8 +7,11 @@
 
 ---
 
+### 0.13.3
+- [New] 支持 Excel 單純讀取模式，避免同時改模版又運行 MiniExcel 出現錯誤 "The process cannot access the file because it is being used by another process" [#87](https://github.com/shps951023/MiniExcel/issues/#87)
+
 ### 0.13.2
-- [Bug] 列超過 255 行無法讀取錯誤 [#208](https://github.com/shps951023/MiniExcel/issues/#208)
+- [Bug] 超過 255 列無法讀取錯誤 [#208](https://github.com/shps951023/MiniExcel/issues/#208)
 
 ### 0.13.1
 - [New] SaveAsByTemplate 支持讀取模板 byte[],方便緩存跟支持多用戶同時讀取同一個模板 [#189](https://github.com/shps951023/MiniExcel/issues/189)

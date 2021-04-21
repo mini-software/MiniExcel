@@ -24,8 +24,8 @@ namespace MiniExcelLibs.Tests
                 };
             MiniExcel.SaveAs(path, values,configuration: new MiniExcelLibs.Csv.CsvConfiguration() {Seperator=';'});
             var expected = @"a;b;c;d
-""""""<>+-*//}{\\n"";1234567890;True;""2021-01-01 12:00:00 AM""
-""<test>Hello World</test>"";-1234567890;False;""2021-01-02 12:00:00 AM""
+""""""<>+-*//}{\\n"";1234567890;True;""2021-01-01 00:00:00""
+""<test>Hello World</test>"";-1234567890;False;""2021-01-02 00:00:00""
 ";
             Assert.Equal(expected, File.ReadAllText(path));
         }
@@ -66,12 +66,12 @@ namespace MiniExcelLibs.Tests
                     Assert.Equal(@"""<>+-*//}{\\n", records[0].a);
                     Assert.Equal(@"1234567890", records[0].b);
                     Assert.Equal(@"True", records[0].c);
-                    Assert.Equal(@"2021-01-01 12:00:00 AM", records[0].d);
+                    Assert.Equal(@"2021-01-01 00:00:00", records[0].d);
 
                     Assert.Equal(@"<test>Hello World</test>", records[1].a);
                     Assert.Equal(@"-1234567890", records[1].b);
                     Assert.Equal(@"False", records[1].c);
-                    Assert.Equal(@"2021-01-02 12:00:00 AM", records[1].d);
+                    Assert.Equal(@"2021-01-02 00:00:00", records[1].d);
                 }
 
                 File.Delete(path);
@@ -95,14 +95,14 @@ namespace MiniExcelLibs.Tests
                         Assert.Equal(@"""<>+-*//}{\\n", row["1"]);
                         Assert.Equal(@"1234567890", row["2"]);
                         Assert.Equal(@"True", row["3"]);
-                        Assert.Equal(@"2021-01-01 12:00:00 AM", row["4"]);
+                        Assert.Equal(@"2021-01-01 00:00:00", row["4"]);
                     }
                     {
                         var row = records[1] as IDictionary<string, object>;
                         Assert.Equal(@"<test>Hello World</test>", row["1"]);
                         Assert.Equal(@"-1234567890", row["2"]);
                         Assert.Equal(@"False", row["3"]);
-                        Assert.Equal(@"2021-01-02 12:00:00 AM", row["4"]);
+                        Assert.Equal(@"2021-01-02 00:00:00", row["4"]);
                     }
                 }
 
@@ -144,12 +144,12 @@ namespace MiniExcelLibs.Tests
                     Assert.Equal(@"""<>+-*//}{\\n", records[0].a);
                     Assert.Equal(@"1234567890", records[0].b);
                     Assert.Equal(@"True", records[0].c);
-                    Assert.Equal(@"2021-01-01 12:00:00 AM", records[0].d);
+                    Assert.Equal(@"2021-01-01 00:00:00", records[0].d);
 
                     Assert.Equal(@"<test>Hello World</test>", records[1].a);
                     Assert.Equal(@"-1234567890", records[1].b);
                     Assert.Equal(@"False", records[1].c);
-                    Assert.Equal(@"2021-01-02 12:00:00 AM", records[1].d);
+                    Assert.Equal(@"2021-01-02 00:00:00", records[1].d);
                 }
 
                 File.Delete(path);

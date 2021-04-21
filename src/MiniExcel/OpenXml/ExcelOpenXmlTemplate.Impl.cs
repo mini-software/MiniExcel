@@ -45,24 +45,31 @@ namespace MiniExcelLibs.OpenXml
             sheetZipEntry.Delete(); // ZipArchiveEntry can't update directly, so need to delete then create logic
 
             var sheetData = doc.SelectSingleNode("/x:worksheet/x:sheetData", _ns);
-
             var newSheetData = sheetData.Clone(); //avoid delete lost data
             var rows = newSheetData.SelectNodes($"x:row", _ns);
 
+            //TODO:get merges 
+            //var mergeCells = doc.SelectSingleNode($"/x:worksheet/x:mergeCells", _ns);
+            //var newMergeCells = mergeCells.Clone();
+            //var mergeCell = mergeCells.SelectNodes($"x:mergeCell", _ns)
+            //    .Cast<XmlNode>()
+            //    .ToDictionary(s=>s.Attributes["ref"].Value,s=>s);
+            //foreach (var item in mergeCellsList)
+            //{
+            //    item.Value.RemoveAll();
+            //}
+
             ReplaceSharedStringsToStr(sharedStrings, ref rows);
-
-            //Update dimension && Check if the column contains a collection and get type and properties infomations
             UpdateDimensionAndGetCollectionPropertiesInfos(inputMaps, ref doc, ref rows);
-
-            RenderRowsAndCells(stream, doc, sheetData);
+            GenerateSheetXml(stream, doc, sheetData);
         }
 
-        private void RenderRowsAndCells(Stream stream, XmlDocument doc, XmlNode sheetData)
+        private void GenerateSheetXml(Stream stream, XmlDocument doc, XmlNode sheetData)
         {
             //Q.Why so complex?
             //A.Because try to use string stream avoid OOM when rendering rows
             sheetData.RemoveAll();
-            sheetData.InnerText = "{{{{{{split}}}}}}"; //TODO: bad smell
+            sheetData.InnerText = "{{{{{{split}}}}}}"; //TODO: bad code smell
             var prefix = string.IsNullOrEmpty(sheetData.Prefix) ? "" : $"{sheetData.Prefix}:";
             var endPrefix = string.IsNullOrEmpty(sheetData.Prefix) ? "" : $":{sheetData.Prefix}"; //![image](https://user-images.githubusercontent.com/12729184/115000066-fd02b300-9ed4-11eb-8e65-bf0014015134.png)
             var contents = doc.InnerXml.Split(new string[] { $"<{prefix}sheetData>{{{{{{{{{{{{split}}}}}}}}}}}}</{prefix}sheetData>" }, StringSplitOptions.None); ;
@@ -70,6 +77,8 @@ namespace MiniExcelLibs.OpenXml
             {
                 writer.Write(contents[0]);
                 writer.Write($"<{prefix}sheetData>"); // prefix problem
+
+                #region Generate rows and cells
                 int originRowIndex;
                 int rowIndexDiff = 0;
                 foreach (var xInfo in XRowInfos)
@@ -218,6 +227,8 @@ namespace MiniExcelLibs.OpenXml
                         writer.Write(CleanXml(row.OuterXml, endPrefix));
                     }
                 }
+                #endregion
+
                 writer.Write($"</{prefix}sheetData>");
                 writer.Write(contents[1]);
             }

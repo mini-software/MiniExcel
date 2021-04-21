@@ -10,7 +10,7 @@ namespace MiniExcelLibs.Tests
         [Fact]
         public void SpecifySheetNameQueryTest()
         {
-            var path = @"..\..\..\..\..\samples\xlsx\TestMultiSheet.xlsx";
+            var path = @"../../../../../samples/xlsx/TestMultiSheet.xlsx";
             {
                 var rows = MiniExcel.Query(path, sheetName: "Sheet3").ToList();
                 Assert.Equal(5, rows.Count);
@@ -65,7 +65,7 @@ namespace MiniExcelLibs.Tests
         [Fact]
         public void MultiSheetsQueryBasicTest()
         {
-            var path = @"..\..\..\..\..\samples\xlsx\TestMultiSheet.xlsx";
+            var path = @"../../../../../samples/xlsx/TestMultiSheet.xlsx";
             using (var stream = File.OpenRead(path))
             {
                 var sheet1 = stream.Query(sheetName: "Sheet1");
@@ -77,7 +77,7 @@ namespace MiniExcelLibs.Tests
         [Fact]
         public void MultiSheetsQueryTest()
         {
-            var path = @"..\..\..\..\..\samples\xlsx\TestMultiSheet.xlsx";
+            var path = @"../../../../../samples/xlsx/TestMultiSheet.xlsx";
             {
                 var sheetNames = MiniExcel.GetSheetNames(path).ToList();
                 foreach (var sheetName in sheetNames)

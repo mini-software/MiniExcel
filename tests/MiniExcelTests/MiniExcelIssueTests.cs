@@ -24,13 +24,33 @@ namespace MiniExcelLibs.Tests
         }
 
         /// <summary>
+        /// https://github.com/shps951023/MiniExcel/issues/207
+        /// </summary>
+        [Fact]
+        public void Issue207()
+        {
+            //var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
+            //var tempaltePath = @"../../../../../samples/xlsx/TestIssue207_Template_Merge_row_list_rendering_without_merge/template.xlsx";
+
+            //var value = new
+            //{
+            //    project = new[] {
+            //        new {name = "項目1",content="[]內容1,[]內容2,[]內容3,[]內容4,[]內容5"},
+            //        new {name = "項目2",content="[]內容1,[]內容2,[]內容3,[]內容4,[]內容5"},
+            //    }
+            //};
+
+            //MiniExcel.SaveAsByTemplate(path, tempaltePath, value);
+        }
+
+        /// <summary>
         /// https://github.com/shps951023/MiniExcel/issues/87
         /// </summary>
         [Fact]
         public void Issue87()
         {
             var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
-            var templatePath = @"..\..\..\..\..\samples\xlsx\TestTemplateCenterEmpty.xlsx";
+            var templatePath = @"../../../../../samples/xlsx/TestTemplateCenterEmpty.xlsx";
             var value = new
             {
                 Tests = Enumerable.Range(1, 5).Select((s, i) => new { test1 = i, test2 = i })
@@ -48,7 +68,7 @@ namespace MiniExcelLibs.Tests
         [Fact]
         public void Issue208()
         {
-            var path = @"..\..\..\..\..\samples\xlsx\TestIssue208.xlsx";
+            var path = @"../../../../../samples/xlsx/TestIssue208.xlsx";
             var columns = MiniExcel.GetColumns(path).ToList();
             Assert.Equal(16384, columns.Count);
             Assert.Equal("XFD", columns[16383]);
@@ -62,7 +82,7 @@ namespace MiniExcelLibs.Tests
         {
             {
                 var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
-                var templatePath = @"..\..\..\..\..\samples\xlsx\TestTemplateBasicIEmumerableFill.xlsx";
+                var templatePath = @"../../../../../samples/xlsx/TestTemplateBasicIEmumerableFill.xlsx";
 
                 var dt = new DataTable();
                 {
@@ -81,7 +101,7 @@ namespace MiniExcelLibs.Tests
 
             {
                 var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
-                var templatePath = @"..\..\..\..\..\samples\xlsx\TestTemplateBasicIEmumerableFill.xlsx";
+                var templatePath = @"../../../../../samples/xlsx/TestTemplateBasicIEmumerableFill.xlsx";
 
                 var dt = new DataTable();
                 {
@@ -109,7 +129,7 @@ namespace MiniExcelLibs.Tests
         {
             {
                 var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
-                var templatePath = @"..\..\..\..\..\samples\xlsx\TestTemplateComplexWithNamespacePrefix.xlsx";
+                var templatePath = @"../../../../../samples/xlsx/TestTemplateComplexWithNamespacePrefix.xlsx";
 
                 // 1. By Class
                 var value = new
@@ -132,7 +152,7 @@ namespace MiniExcelLibs.Tests
 
                 foreach (var sheetName in MiniExcel.GetSheetNames(path))
                 {
-                    var rows = MiniExcel.Query(path,sheetName: sheetName).ToList();
+                    var rows = MiniExcel.Query(path, sheetName: sheetName).ToList();
 
                     Assert.Equal(9, rows.Count);
 
@@ -164,7 +184,7 @@ namespace MiniExcelLibs.Tests
 
             {
                 var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
-                var templatePath = @"..\..\..\..\..\samples\xlsx\TestTemplateComplex.xlsx";
+                var templatePath = @"../../../../../samples/xlsx/TestTemplateComplex.xlsx";
 
                 // 2. By Dictionary
                 var value = new Dictionary<string, object>()
@@ -211,7 +231,7 @@ namespace MiniExcelLibs.Tests
         {
             {
                 var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
-                MiniExcel.SaveAs(path, new Issue142VO[] { new Issue142VO { MyProperty1= "MyProperty1", MyProperty2= "MyProperty2", MyProperty3= "MyProperty3", MyProperty4= "MyProperty4", MyProperty5= "MyProperty5", MyProperty6= "MyProperty6", MyProperty7= "MyProperty7" } });
+                MiniExcel.SaveAs(path, new Issue142VO[] { new Issue142VO { MyProperty1 = "MyProperty1", MyProperty2 = "MyProperty2", MyProperty3 = "MyProperty3", MyProperty4 = "MyProperty4", MyProperty5 = "MyProperty5", MyProperty6 = "MyProperty6", MyProperty7 = "MyProperty7" } });
 
                 {
                     var rows = MiniExcel.Query(path).ToList();
@@ -281,17 +301,17 @@ MyProperty4,MyProperty1,MyProperty5,MyProperty2,MyProperty6,,MyProperty3
         public void Issue142_Query()
         {
             {
-                var path = @"..\..\..\..\..\samples\xlsx\TestIssue142.xlsx";
+                var path = @"../../../../../samples/xlsx/TestIssue142.xlsx";
                 Assert.Throws<InvalidOperationException>(() => MiniExcel.Query<Issue142VoExcelColumnNameNotFound>(path).ToList());
             }
 
             {
-                var path = @"..\..\..\..\..\samples\xlsx\TestIssue142.xlsx";
+                var path = @"../../../../../samples/xlsx/TestIssue142.xlsx";
                 Assert.Throws<ArgumentException>(() => MiniExcel.Query<Issue142VoOverIndex>(path).ToList());
             }
 
             {
-                var path = @"..\..\..\..\..\samples\xlsx\TestIssue142.xlsx";
+                var path = @"../../../../../samples/xlsx/TestIssue142.xlsx";
                 var rows = MiniExcel.Query<Issue142VO>(path).ToList();
                 Assert.Equal("CustomColumnName", rows[0].MyProperty1);
                 Assert.Null(rows[0].MyProperty7);
@@ -301,9 +321,9 @@ MyProperty4,MyProperty1,MyProperty5,MyProperty2,MyProperty6,,MyProperty3
                 Assert.Equal("MyProperty102", rows[0].MyProperty5);
                 Assert.Equal("MyProperty6", rows[0].MyProperty6);
             }
-            
+
             {
-                var path = @"..\..\..\..\..\samples\csv\TestIssue142.csv";
+                var path = @"../../../../../samples/csv/TestIssue142.csv";
                 var rows = MiniExcel.Query<Issue142VO>(path).ToList();
                 Assert.Equal("CustomColumnName", rows[0].MyProperty1);
                 Assert.Null(rows[0].MyProperty7);
@@ -334,10 +354,10 @@ MyProperty4,MyProperty1,MyProperty5,MyProperty2,MyProperty6,,MyProperty3
         public class Issue142VoDuplicateColumnName
         {
             [ExcelColumnIndex("A")]
-            public int MyProperty1 { get; set; } 
+            public int MyProperty1 { get; set; }
             [ExcelColumnIndex("A")]
             public int MyProperty2 { get; set; }
-            
+
             public int MyProperty3 { get; set; }
             [ExcelColumnIndex("B")]
             public int MyProperty4 { get; set; }
@@ -399,7 +419,7 @@ MyProperty4,MyProperty1,MyProperty5,MyProperty2,MyProperty6,,MyProperty3
                 }
             }
             {
-                var path = @"..\..\..\..\..\samples\xlsx\TestIssue157.xlsx";
+                var path = @"../../../../../samples/xlsx/TestIssue157.xlsx";
 
                 {
                     var rows = MiniExcel.Query(path, sheetName: "Sheet1").ToList();
@@ -445,7 +465,7 @@ MyProperty4,MyProperty1,MyProperty5,MyProperty2,MyProperty6,,MyProperty3
             }.Select(s => s.ToString()).ToArray();
 
             {
-                var path = @"..\..\..\..\..\samples\xlsx\TestIssue149.xlsx";
+                var path = @"../../../../../samples/xlsx/TestIssue149.xlsx";
                 var rows = MiniExcel.Query(path).Select(s => (string)s.A).ToList();
                 for (int i = 0; i < chars.Length; i++)
                 {
@@ -498,7 +518,7 @@ MyProperty4,MyProperty1,MyProperty5,MyProperty2,MyProperty6,,MyProperty3
         [Fact]
         public void Issue153()
         {
-            var path = @"..\..\..\..\..\samples\xlsx\TestIssue153.xlsx";
+            var path = @"../../../../../samples/xlsx/TestIssue153.xlsx";
             var rows = MiniExcel.Query(path, true).First() as IDictionary<string, object>;
             Assert.Equal(new[] { "序号", "代号", "新代号", "名称", "XXX", "部门名称", "单位", "ERP工时   (小时)A", "工时(秒) A/3600", "标准人工工时(秒)", "生产标准机器工时(秒)", "财务、标准机器工时(秒)", "更新日期", "产品机种", "备注", "最近一次修改前的标准工时(秒)", "最近一次修改前的标准机时(秒)", "备注1" }
                 , rows.Keys);
@@ -510,7 +530,7 @@ MyProperty4,MyProperty1,MyProperty5,MyProperty2,MyProperty6,,MyProperty3
         [Fact]
         public void Issue137()
         {
-            var path = @"..\..\..\..\..\samples\xlsx\TestIssue137.xlsx";
+            var path = @"../../../../../samples/xlsx/TestIssue137.xlsx";
 
             {
                 var rows = MiniExcel.Query(path).ToList();
@@ -597,7 +617,7 @@ MyProperty4,MyProperty1,MyProperty5,MyProperty2,MyProperty6,,MyProperty3
         [Fact]
         public void Issue138()
         {
-            var path = @"..\..\..\..\..\samples\xlsx\TestIssue138.xlsx";
+            var path = @"../../../../../samples/xlsx/TestIssue138.xlsx";
             {
                 var rows = MiniExcel.Query(path, true).ToList();
                 Assert.Equal(6, rows.Count);

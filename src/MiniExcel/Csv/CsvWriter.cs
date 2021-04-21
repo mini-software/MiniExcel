@@ -135,7 +135,7 @@ namespace MiniExcelLibs.Csv
                 var first = true;
                 for (int j = 0; j < dt.Columns.Count; j++)
                 {
-                    var cellValue = CsvHelpers.ConvertToCsvValue(dt.Rows[i][j]?.ToString());
+                    var cellValue = CsvHelpers.ConvertToCsvValue(dt.Rows[i][j]?.ToCsvString());
                     if (!first)
                         writer.Write(seperator);
                     writer.Write(cellValue);
@@ -149,7 +149,7 @@ namespace MiniExcelLibs.Csv
         {
             foreach (var v in value)
             {
-                var values = props.Select(s => CsvHelpers.ConvertToCsvValue(s?.Property.GetValue(v)?.ToString()));
+                var values = props.Select(s => CsvHelpers.ConvertToCsvValue(s?.Property.GetValue(v)?.ToCsvString()));
                 writer.Write(string.Join(seperator, values));
                 writer.Write(newLine);
             }
@@ -159,7 +159,7 @@ namespace MiniExcelLibs.Csv
         {
             foreach (IDictionary v in value)
             {
-                var values = keys.Select(key => CsvHelpers.ConvertToCsvValue(v[key]?.ToString()));
+                var values = keys.Select(key => CsvHelpers.ConvertToCsvValue(v[key]?.ToCsvString()));
                 writer.Write(string.Join(seperator, values));
                 writer.Write(newLine);
             }
@@ -169,10 +169,23 @@ namespace MiniExcelLibs.Csv
         {
             foreach (IDictionary<string, object> v in value)
             {
-                var values = keys.Select(key => CsvHelpers.ConvertToCsvValue(v[key]?.ToString()));
+                var values = keys.Select(key => CsvHelpers.ConvertToCsvValue(v[key]?.ToCsvString()));
                 writer.Write(string.Join(seperator, values));
                 writer.Write(newLine);
             }
+        }
+    }
+
+    public static class CsvValueTostringHelper
+    {
+        public static string ToCsvString(this object obj)
+        {
+            if (obj == null)
+                return "";
+            var type = obj.GetType();
+            if (type == typeof(DateTime) || type ==  typeof(DateTime?))
+                return ((DateTime)obj).ToString("yyyy-MM-dd HH:mm:ss");
+            return obj.ToString();
         }
     }
 }

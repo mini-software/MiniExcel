@@ -17,7 +17,7 @@ namespace MiniExcelTests
         {
             {
                 var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
-                var templatePath = @"..\..\..\..\..\samples\xlsx\TestTemplateComplex.xlsx";
+                var templatePath = @"../../../../../samples/xlsx/TestTemplateComplex.xlsx";
                 var managers = new DataTable();
                 {
                     managers.Columns.Add("name");
@@ -44,7 +44,7 @@ namespace MiniExcelTests
             }
             {
                 var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
-                var templatePath = @"..\..\..\..\..\samples\xlsx\TestTemplateComplex.xlsx";
+                var templatePath = @"../../../../../samples/xlsx/TestTemplateComplex.xlsx";
                 var managers = new DataTable();
                 {
                     managers.Columns.Add("name");
@@ -77,7 +77,7 @@ namespace MiniExcelTests
         public void DatatableTest()
         {
             var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
-            var templatePath = @"..\..\..\..\..\samples\xlsx\TestTemplateComplex.xlsx";
+            var templatePath = @"../../../../../samples/xlsx/TestTemplateComplex.xlsx";
             var managers = new DataTable();
             {
                 managers.Columns.Add("name");
@@ -157,7 +157,7 @@ namespace MiniExcelTests
         public void DapperTemplateTest()
         {
             var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
-            var templatePath = @"..\..\..\..\..\samples\xlsx\TestTemplateComplex.xlsx";
+            var templatePath = @"../../../../../samples/xlsx/TestTemplateComplex.xlsx";
 
             var connection = Db.GetConnection("Data Source=:memory:");
             var value = new Dictionary<string, object>()
@@ -224,7 +224,7 @@ namespace MiniExcelTests
         public void DictionaryTemplateTest()
         {
             var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
-            var templatePath = @"..\..\..\..\..\samples\xlsx\TestTemplateComplex.xlsx";
+            var templatePath = @"../../../../../samples/xlsx/TestTemplateComplex.xlsx";
 
             var value = new Dictionary<string, object>()
             {
@@ -297,7 +297,7 @@ namespace MiniExcelTests
         public void TestGithubProject()
         {
             var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
-            var templatePath = @"..\..\..\..\..\samples\xlsx\TestTemplateGithubProjects.xlsx";
+            var templatePath = @"../../../../../samples/xlsx/TestTemplateGithubProjects.xlsx";
             var projects = new[]
             {
                 new {Name = "MiniExcel",Link="https://github.com/shps951023/MiniExcel",Star=146, CreateTime=new DateTime(2021,03,01)},
@@ -335,7 +335,7 @@ namespace MiniExcelTests
         {
             {
                 var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
-                var templatePath = @"..\..\..\..\..\samples\xlsx\TestIEnumerableType.xlsx";
+                var templatePath = @"../../../../../samples/xlsx/TestIEnumerableType.xlsx";
 
                 //1. By POCO
                 var poco = new TestIEnumerableTypePoco { @string = "string", @int = 123, @decimal = decimal.Parse("123.45"), @double = (double)123.33, @datetime = new DateTime(2021, 4, 1), @bool = true, @Guid = Guid.NewGuid() };
@@ -404,7 +404,7 @@ namespace MiniExcelTests
         {
             {
                 var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
-                var templatePath = @"..\..\..\..\..\samples\xlsx\TestITemplateTypeAutoMapping.xlsx";
+                var templatePath = @"../../../../../samples/xlsx/TestITemplateTypeAutoMapping.xlsx";
 
                 //1. By POCO
                 var value = new TestIEnumerableTypePoco { @string = "string", @int = 123, @decimal = decimal.Parse("123.45"), @double = (double)123.33, @datetime = new DateTime(2021, 4, 1), @bool = true, @Guid = Guid.NewGuid() };
@@ -428,7 +428,7 @@ namespace MiniExcelTests
         public void TemplateCenterEmptyTest()
         {
             var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
-            var templatePath = @"..\..\..\..\..\samples\xlsx\TestTemplateCenterEmpty.xlsx";
+            var templatePath = @"../../../../../samples/xlsx/TestTemplateCenterEmpty.xlsx";
             var value = new
             {
                 Tests = Enumerable.Range(1, 5).Select((s, i) => new { test1 = i, test2 = i })
@@ -441,7 +441,7 @@ namespace MiniExcelTests
         {
             {
                 var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
-                var templatePath = @"..\..\..\..\..\samples\xlsx\TestTemplateEasyFill.xlsx";
+                var templatePath = @"../../../../../samples/xlsx/TestTemplateEasyFill.xlsx";
                 // 1. By POCO
                 var value = new
                 {
@@ -465,7 +465,7 @@ namespace MiniExcelTests
 
             {
                 var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
-                var templatePath = @"..\..\..\..\..\samples\xlsx\TestTemplateEasyFill.xlsx";
+                var templatePath = @"../../../../../samples/xlsx/TestTemplateEasyFill.xlsx";
                 var templateBytes = File.ReadAllBytes(templatePath);
                 // 1. By POCO
                 var value = new
@@ -490,7 +490,7 @@ namespace MiniExcelTests
 
             {
                 var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
-                var templatePath = @"..\..\..\..\..\samples\xlsx\TestTemplateEasyFill.xlsx";
+                var templatePath = @"../../../../../samples/xlsx/TestTemplateEasyFill.xlsx";
                 var templateBytes = File.ReadAllBytes(templatePath);
                 // 1. By POCO
                 var value = new
@@ -518,7 +518,7 @@ namespace MiniExcelTests
 
             {
                 var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
-                var templatePath = @"..\..\..\..\..\samples\xlsx\TestTemplateEasyFill.xlsx";
+                var templatePath = @"../../../../../samples/xlsx/TestTemplateEasyFill.xlsx";
                 // 2. By Dictionary
                 var value = new Dictionary<string, object>()
                 {
@@ -546,7 +546,7 @@ namespace MiniExcelTests
         {
             {
                 var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
-                var templatePath = @"..\..\..\..\..\samples\xlsx\TestTemplateBasicIEmumerableFill.xlsx";
+                var templatePath = @"../../../../../samples/xlsx/TestTemplateBasicIEmumerableFill.xlsx";
 
                 //1. By POCO
                 var value = new
@@ -568,7 +568,7 @@ namespace MiniExcelTests
 
             {
                 var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
-                var templatePath = @"..\..\..\..\..\samples\xlsx\TestTemplateBasicIEmumerableFill.xlsx";
+                var templatePath = @"../../../../../samples/xlsx/TestTemplateBasicIEmumerableFill.xlsx";
 
                 //2. By Dictionary
                 var value = new Dictionary<string, object>()
@@ -590,7 +590,7 @@ namespace MiniExcelTests
 
             {
                 var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
-                var templatePath = @"..\..\..\..\..\samples\xlsx\TestTemplateBasicIEmumerableFill.xlsx";
+                var templatePath = @"../../../../../samples/xlsx/TestTemplateBasicIEmumerableFill.xlsx";
 
                 //3. By DataTable
                 var dt = new DataTable();
@@ -620,7 +620,7 @@ namespace MiniExcelTests
         {
             {
                 var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
-                var templatePath = @"..\..\..\..\..\samples\xlsx\TestTemplateComplex.xlsx";
+                var templatePath = @"../../../../../samples/xlsx/TestTemplateComplex.xlsx";
 
                 // 1. By Class
                 var value = new
@@ -693,7 +693,7 @@ namespace MiniExcelTests
 
             {
                 var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
-                var templatePath = @"..\..\..\..\..\samples\xlsx\TestTemplateComplex.xlsx";
+                var templatePath = @"../../../../../samples/xlsx/TestTemplateComplex.xlsx";
 
                 // 2. By Dictionary
                 var value = new Dictionary<string, object>()

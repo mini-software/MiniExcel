@@ -24,19 +24,19 @@ namespace MiniExcelLibs.Tests
         public void GetColumnsTest()
         {
             {
-                var path = @"..\..\..\..\..\samples\xlsx\TestTypeMapping.xlsx";
+                var path = @"../../../../../samples/xlsx/TestTypeMapping.xlsx";
                 var columns = MiniExcel.GetColumns(path);
                 Assert.Equal(new[] { "A", "B", "C", "D", "E", "F", "G", "H" }, columns);
             }
 
             {
-                var path = @"..\..\..\..\..\samples\xlsx\TestTypeMapping.xlsx";
+                var path = @"../../../../../samples/xlsx/TestTypeMapping.xlsx";
                 var columns = MiniExcel.GetColumns(path);
                 Assert.Equal(8, columns.Count);
             }
 
             {
-                var path = @"..\..\..\..\..\samples\xlsx\TestEmpty.xlsx";
+                var path = @"../../../../../samples/xlsx/TestEmpty.xlsx";
                 var columns = MiniExcel.GetColumns(path);
                 Assert.Null(columns);
             }
@@ -88,14 +88,14 @@ namespace MiniExcelLibs.Tests
         [Fact]
         public void CustomAttributeWihoutVaildPropertiesTest()
         {
-            var path = @"..\..\..\..\..\samples\xlsx\TestCustomExcelColumnAttribute.xlsx";
+            var path = @"../../../../../samples/xlsx/TestCustomExcelColumnAttribute.xlsx";
             Assert.Throws<System.InvalidOperationException>(() => MiniExcel.Query<CustomAttributesWihoutVaildPropertiesTestPoco>(path).ToList());
         }
 
         [Fact]
         public void QueryCustomAttributesTest()
         {
-            var path = @"..\..\..\..\..\samples\xlsx\TestCustomExcelColumnAttribute.xlsx";
+            var path = @"../../../../../samples/xlsx/TestCustomExcelColumnAttribute.xlsx";
             var rows = MiniExcel.Query<ExcelAttributeDemo>(path).ToList();
             Assert.Equal("Column1", rows[0].Test1);
             Assert.Equal("Column2", rows[0].Test2);
@@ -152,7 +152,7 @@ namespace MiniExcelLibs.Tests
         [Fact()]
         public void QueryCastToIDictionary()
         {
-            var path = @"..\..\..\..\..\samples\xlsx\TestCenterEmptyRow\TestCenterEmptyRow.xlsx";
+            var path = @"../../../../../samples/xlsx/TestCenterEmptyRow/TestCenterEmptyRow.xlsx";
             foreach (IDictionary<string, object> row in MiniExcel.Query(path))
             {
 
@@ -161,7 +161,7 @@ namespace MiniExcelLibs.Tests
         [Fact()]
         public void CenterEmptyRowsQueryTest()
         {
-            var path = @"..\..\..\..\..\samples\xlsx\TestCenterEmptyRow\TestCenterEmptyRow.xlsx";
+            var path = @"../../../../../samples/xlsx/TestCenterEmptyRow/TestCenterEmptyRow.xlsx";
             using (var stream = File.OpenRead(path))
             {
                 var rows = stream.Query().ToList();
@@ -232,7 +232,7 @@ namespace MiniExcelLibs.Tests
         [Fact()]
         public void TestDynamicQueryBasic_WithoutHead()
         {
-            var path = @"..\..\..\..\..\samples\xlsx\TestDynamicQueryBasic_WithoutHead.xlsx";
+            var path = @"../../../../../samples/xlsx/TestDynamicQueryBasic_WithoutHead.xlsx";
             using (var stream = File.OpenRead(path))
             {
                 var rows = stream.Query().ToList();
@@ -247,7 +247,7 @@ namespace MiniExcelLibs.Tests
         [Fact()]
         public void TestDynamicQueryBasic_useHeaderRow()
         {
-            var path = @"..\..\..\..\..\samples\xlsx\TestDynamicQueryBasic.xlsx";
+            var path = @"../../../../../samples/xlsx/TestDynamicQueryBasic.xlsx";
             using (var stream = File.OpenRead(path))
             {
                 var rows = stream.Query(useHeaderRow: true).ToList();
@@ -287,7 +287,7 @@ namespace MiniExcelLibs.Tests
         [Fact()]
         public void QueryStrongTypeMapping_Test()
         {
-            var path = @"..\..\..\..\..\samples\xlsx\TestTypeMapping.xlsx";
+            var path = @"../../../../../samples/xlsx/TestTypeMapping.xlsx";
             using (var stream = File.OpenRead(path))
             {
                 var rows = stream.Query<UserAccount>().ToList();
@@ -330,7 +330,7 @@ namespace MiniExcelLibs.Tests
         [Fact()]
         public void AutoCheckTypeTest()
         {
-            var path = @"..\..\..\..\..\samples\xlsx\TestTypeMapping_AutoCheckFormat.xlsx";
+            var path = @"../../../../../samples/xlsx/TestTypeMapping_AutoCheckFormat.xlsx";
             using (var stream = FileHelper.OpenRead(path))
             {
                 var rows = stream.Query<AutoCheckType>().ToList();
@@ -340,7 +340,7 @@ namespace MiniExcelLibs.Tests
         [Fact()]
         public void TestDatetimeSpanFormat_ClosedXml()
         {
-            var path = @"..\..\..\..\..\samples\xlsx\TestDatetimeSpanFormat_ClosedXml.xlsx";
+            var path = @"../../../../../samples/xlsx/TestDatetimeSpanFormat_ClosedXml.xlsx";
             using (var stream = FileHelper.OpenRead(path))
             {
                 var row = stream.Query().First();
@@ -354,7 +354,7 @@ namespace MiniExcelLibs.Tests
         [Fact()]
         public void LargeFileQueryStrongTypeMapping_Test()
         {
-            var path = @"..\..\..\..\..\samples\xlsx\Test1,000,000x10\Test1,000,000x10.xlsx";
+            var path = @"../../../../../samples/xlsx/Test1,000,000x10/Test1,000,000x10.xlsx";
             using (var stream = File.OpenRead(path))
             {
                 var rows = stream.Query<DemoPocoHelloWorld>().Take(2).ToList();
@@ -371,8 +371,8 @@ namespace MiniExcelLibs.Tests
         }
 
         [Theory()]
-        [InlineData(@"..\..\..\..\..\samples\xlsx\ExcelDataReaderCollections\TestChess.xlsx")]
-        [InlineData(@"..\..\..\..\..\samples\xlsx\TestCenterEmptyRow\TestCenterEmptyRow.xlsx")]
+        [InlineData(@"../../../../../samples/xlsx/ExcelDataReaderCollections/TestChess.xlsx")]
+        [InlineData(@"../../../../../samples/xlsx/TestCenterEmptyRow/TestCenterEmptyRow.xlsx")]
         public void QueryExcelDataReaderCheckTest(string path)
         {
 #if NETCOREAPP3_1 || NET5_0
@@ -407,7 +407,7 @@ namespace MiniExcelLibs.Tests
         [Fact()]
         public void QueryCustomStyle()
         {
-            var path = @"..\..\..\..\..\samples\xlsx\TestWihoutRAttribute.xlsx";
+            var path = @"../../../../../samples/xlsx/TestWihoutRAttribute.xlsx";
             using (var stream = File.OpenRead(path))
             {
 
@@ -417,7 +417,7 @@ namespace MiniExcelLibs.Tests
         [Fact()]
         public void QuerySheetWithoutRAttribute()
         {
-            var path = @"..\..\..\..\..\samples\xlsx\TestWihoutRAttribute.xlsx";
+            var path = @"../../../../../samples/xlsx/TestWihoutRAttribute.xlsx";
             using (var stream = File.OpenRead(path))
             {
                 var rows = stream.Query().ToList();
@@ -427,7 +427,7 @@ namespace MiniExcelLibs.Tests
                 Assert.Equal(5, keys.Count());
 
                 Assert.Equal(1, rows[0].A);
-                //Assert.Equal(@""" <> +}{\nHello World]", (string)rows[0].B);
+                //Assert.Equal(@""" <> +}{/nHello World]", (string)rows[0].B);
                 Assert.Equal(null, rows[0].C);
                 Assert.Equal(null, rows[0].D);
                 Assert.Equal(null, rows[0].E);
@@ -443,7 +443,7 @@ namespace MiniExcelLibs.Tests
         public void FixDimensionJustOneColumnParsingError_Test()
         {
             {
-                var path = @"..\..\..\..\..\samples\xlsx\TestDimensionC3.xlsx";
+                var path = @"../../../../../samples/xlsx/TestDimensionC3.xlsx";
                 using (var stream = File.OpenRead(path))
                 {
                     var rows = stream.Query().ToList();
@@ -713,7 +713,7 @@ namespace MiniExcelLibs.Tests
         [Fact()]
         public void QueryByLINQExtensionsAvoidLargeFileOOMTest()
         {
-            var path = @"..\..\..\..\..\samples\xlsx\Test1,000,000x10\Test1,000,000x10.xlsx";
+            var path = @"../../../../../samples/xlsx/Test1,000,000x10/Test1,000,000x10.xlsx";
 
             {
                 var row = MiniExcel.Query(path).First();
@@ -954,7 +954,7 @@ namespace MiniExcelLibs.Tests
         public void SQLiteInsertTest()
         {
             // Avoid SQL Insert Large Size Xlsx OOM
-            var path = @"..\..\..\..\..\samples\xlsx\Test5x2.xlsx";
+            var path = @"../../../../../samples/xlsx/Test5x2.xlsx";
             var tempSqlitePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.db");
             var connectionString = $"Data Source={tempSqlitePath};Version=3;";
 

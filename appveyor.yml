@@ -4,7 +4,7 @@ image: Visual Studio 2019
 configuration: Release
 build_script:
 - ps: |-
-    cd src
+    #cd src
     If ($Env:APPVEYOR_REPO_BRANCH -eq "master") {
       $Env:VERSION_SUFFIX=""
     } Else {

@@ -3,17 +3,17 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30804.86
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MiniExcelLibs", "MiniExcel\MiniExcelLibs.csproj", "{097903C9-1F81-4427-B4C8-530CB59687B8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MiniExcelLibs", "src\MiniExcel\MiniExcelLibs.csproj", "{097903C9-1F81-4427-B4C8-530CB59687B8}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{2AFABF2E-D6C3-4983-B43A-76ADA2BB2876}"
 	ProjectSection(SolutionItems) = preProject
-		..\.gitattributes = ..\.gitattributes
-		..\.gitignore = ..\.gitignore
-		..\appveyor.yml = ..\appveyor.yml
-		..\LICENSE.md = ..\LICENSE.md
-		..\README.md = ..\README.md
-		..\README.zh-CN.md = ..\README.zh-CN.md
-		..\README.zh-Hant.md = ..\README.zh-Hant.md
+		.gitattributes = .gitattributes
+		.gitignore = .gitignore
+		appveyor.yml = appveyor.yml
+		LICENSE.md = LICENSE.md
+		README.md = README.md
+		README.zh-CN.md = README.zh-CN.md
+		README.zh-Hant.md = README.zh-Hant.md
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{CC1E0601-AEC9-42D7-8F6A-3FB3939EED16}"
@@ -22,14 +22,14 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{359A7094
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{3E370222-8E9E-45E8-8DCD-E5F41EE52A39}"
 	ProjectSection(SolutionItems) = preProject
-		..\docs\README.md = ..\docs\README.md
-		..\docs\README.zh-CN.md = ..\docs\README.zh-CN.md
-		..\docs\README.zh-Hant.md = ..\docs\README.zh-Hant.md
+		docs\README.md = docs\README.md
+		docs\README.zh-CN.md = docs\README.zh-CN.md
+		docs\README.zh-Hant.md = docs\README.zh-Hant.md
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MiniExcelTests", "..\tests\MiniExcelTests\MiniExcelTests.csproj", "{77F2C86B-0F17-4370-AB38-A089F9DF4ED5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MiniExcelTests", "tests\MiniExcelTests\MiniExcelTests.csproj", "{77F2C86B-0F17-4370-AB38-A089F9DF4ED5}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MiniExcel.Benchmarks", "..\benchmarks\MiniExcel.Benchmarks\MiniExcel.Benchmarks.csproj", "{1888285A-B130-48D5-A628-DC85B623FAB8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MiniExcel.Benchmarks", "benchmarks\MiniExcel.Benchmarks\MiniExcel.Benchmarks.csproj", "{1888285A-B130-48D5-A628-DC85B623FAB8}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "benchmarks", "benchmarks", "{77A8A169-168B-457F-AB5F-48F30D6BB33C}"
 EndProject

@@ -15,9 +15,9 @@ build_script:
 test_script:
 - ps: |-
     # run tests
-    dotnet test ..\tests\MiniExcelTests\MiniExcelTests.csproj --no-build --logger "trx" -c $Env:CONFIGURATION
+    dotnet test tests\MiniExcelTests\MiniExcelTests.csproj --no-build --logger "trx" -c $Env:CONFIGURATION
     # upload results to AppVeyor
     $wc = New-Object 'System.Net.WebClient'
-    Resolve-Path ..\tests\MiniExcelTests\TestResults\*.trx | % { $wc.UploadFile("https://ci.appveyor.com/api/testresults/mstest/$($env:APPVEYOR_JOB_ID)", "$_") }
-artifacts:
-- path: '**\*.nupkg'
+    Resolve-Path tests\MiniExcelTests\TestResults\*.trx | % { $wc.UploadFile("https://ci.appveyor.com/api/testresults/mstest/$($env:APPVEYOR_JOB_ID)", "$_") }
+#artifacts:
+#- path: '**\*.nupkg'

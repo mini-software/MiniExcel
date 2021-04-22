@@ -9,7 +9,7 @@
 
     public static partial class MiniExcel
     {
-        public static void SaveAs(string path, object value, bool printHeader = true, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, IConfiguration configuration = null)
+        public static void SaveAs(string path, object value, bool printHeader = true, string sheetName = "Sheet1", ExcelType excelType = ExcelType.UNKNOWN, IConfiguration configuration = null)
         {
             using (FileStream stream = new FileStream(path, FileMode.CreateNew))
                 SaveAs(stream, value, printHeader, sheetName, GetExcelType(path, excelType), configuration);
@@ -18,11 +18,13 @@
         /// <summary>
         /// Default SaveAs Xlsx file
         /// </summary>
-        public static void SaveAs(this Stream stream, object value, bool printHeader = true, string sheetName = null, ExcelType excelType = ExcelType.XLSX, IConfiguration configuration = null)
+        public static void SaveAs(this Stream stream, object value, bool printHeader = true, string sheetName = "Sheet1", ExcelType excelType = ExcelType.XLSX, IConfiguration configuration = null)
         {
+            if (string.IsNullOrEmpty(sheetName))
+                throw new InvalidDataException("Sheet name can not be empty or null");
             if (excelType == ExcelType.UNKNOWN)
                 throw new InvalidDataException("Please specify excelType");
-            ExcelWriterFactory.GetProvider(stream, excelType).SaveAs(value, printHeader, configuration);
+            ExcelWriterFactory.GetProvider(stream, excelType).SaveAs(value, sheetName, printHeader, configuration);
         }
 
         public static IEnumerable<T> Query<T>(string path, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, IConfiguration configuration = null) where T : class, new()

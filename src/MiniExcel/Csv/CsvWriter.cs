@@ -19,7 +19,7 @@ namespace MiniExcelLibs.Csv
             this._stream = stream;
         }
 
-        public void SaveAs(object value, bool printHeader, IConfiguration configuration)
+        public void SaveAs(object value, string sheetName, bool printHeader, IConfiguration configuration)
         {
             var cf = configuration == null ? CsvConfiguration.DefaultConfiguration : (CsvConfiguration)configuration;
             var seperator = cf.Seperator.ToString();

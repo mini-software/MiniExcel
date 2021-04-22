@@ -11,6 +11,7 @@
 - [New] 支持 Excel 單純讀取模式，避免同時改模版又運行 MiniExcel 出現錯誤 "The process cannot access the file because it is being used by another process" [#87](https://github.com/shps951023/MiniExcel/issues/87)
 - [Breaking Change] CSV SaveAs datetime 預設格式改為 "yyyy-MM-dd HH:mm:ss"
 - [Bug] 修正模版模式集合渲染遇到合併列會出現異常問題 [#207](https://github.com/shps951023/MiniExcel/issues/207)
+- [Bug] 修正 MiniExcel.SaveAs(path, value,sheetName:"Name"), 實際 sheetName 是 Sheet1
 
 ### 0.13.2
 - [Bug] 超過 255 列無法讀取錯誤 [#208](https://github.com/shps951023/MiniExcel/issues/208)

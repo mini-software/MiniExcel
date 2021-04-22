@@ -24,6 +24,22 @@ namespace MiniExcelLibs.Tests
         }
 
         /// <summary>
+        /// MiniExcel.SaveAs(path, table,sheetName:“Name”) ，the actual sheetName is Sheet1
+        /// https://github.com/shps951023/MiniExcel/issues/212
+        /// </summary>
+        [Fact]
+        public void Issue212()
+        {
+            var sheetName = "Demo";
+            var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
+            MiniExcel.SaveAs(path, new[] { new { x = 1, y = 2 } }, sheetName: sheetName);
+
+            var actualSheetName = MiniExcel.GetSheetNames(path).ToList()[0];
+
+            Assert.Equal(sheetName, actualSheetName);
+        }
+
+        /// <summary>
         /// Version <= v0.13.1 Template merge row list rendering has no merge
         /// https://github.com/shps951023/MiniExcel/issues/207
         /// </summary>

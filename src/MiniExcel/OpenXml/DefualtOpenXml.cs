@@ -51,7 +51,7 @@ namespace MiniExcelLibs.OpenXml
 <x:workbook xmlns:r=""http://schemas.openxmlformats.org/officeDocument/2006/relationships""
     xmlns:x=""http://schemas.openxmlformats.org/spreadsheetml/2006/main"">
     <x:sheets>
-        <x:sheet xmlns:r=""http://schemas.openxmlformats.org/officeDocument/2006/relationships"" name=""Sheet1"" sheetId=""1"" r:id=""R1274d0d920f34a32"" />
+        <x:sheet xmlns:r=""http://schemas.openxmlformats.org/officeDocument/2006/relationships"" name=""{{SheetName}}"" sheetId=""1"" r:id=""R1274d0d920f34a32"" />
     </x:sheets>
 </x:workbook>";
 
@@ -69,14 +69,14 @@ namespace MiniExcelLibs.OpenXml
             ;
 
         //TODO:read from static generated file looks like more better?
-        internal static Dictionary<string, ZipPackageInfo> GenerateDefaultOpenXml(ZipArchive archive)
+        internal static Dictionary<string, ZipPackageInfo> GenerateDefaultOpenXml(ZipArchive archive,string sheetName)
         {
             var defaults = new Dictionary<string, Tuple<string, string>>()
             {
                 { @"_rels/.rels", new Tuple<string,string>(DefualtOpenXml.DefaultRels, "application/vnd.openxmlformats-package.relationships+xml")},
                 { @"xl/_rels/workbook.xml.rels", new Tuple<string,string>(DefualtOpenXml.DefaultWorkbookXmlRels, "application/vnd.openxmlformats-package.relationships+xml")},
                 { @"xl/styles.xml", new Tuple<string,string>(DefualtOpenXml.DefaultStylesXml, "application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml")},
-                { @"xl/workbook.xml", new Tuple<string,string>(DefualtOpenXml.DefaultWorkbookXml, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml")},
+                { @"xl/workbook.xml", new Tuple<string,string>(DefualtOpenXml.DefaultWorkbookXml.Replace("{{SheetName}}",sheetName), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml")},
                 //{ @"xl/worksheets/sheet1.xml",new Tuple<string,string>(DefualtOpenXml.DefaultSheetXml, "application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml")},
             };
 

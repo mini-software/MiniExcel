@@ -22,11 +22,11 @@ namespace MiniExcelLibs.OpenXml
             this._stream = stream;
         }
 
-        public void SaveAs(object value,bool printHeader, IConfiguration configuration)
+        public void SaveAs(object value, string sheetName, bool printHeader, IConfiguration configuration)
         {
             using (var archive = new MiniExcelZipArchive(_stream, ZipArchiveMode.Create, true, _utf8WithBom))
             {
-                var packages = DefualtOpenXml.GenerateDefaultOpenXml(archive);
+                var packages = DefualtOpenXml.GenerateDefaultOpenXml(archive,sheetName);
                 var sheetPath = "xl/worksheets/sheet1.xml";
                 {
                     ZipArchiveEntry entry = archive.CreateEntry(sheetPath);

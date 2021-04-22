@@ -79,6 +79,9 @@ namespace MiniExcelLibs.OpenXml
                     foreach (var sheet in sheets)
                     {
                         this.XRowInfos = new List<XRowInfo>(); //every time need to use new XRowInfos or it'll cause duplicate problem: https://user-images.githubusercontent.com/12729184/115003101-0fcab700-9ed8-11eb-9151-ca4d7b86d59e.png
+                        this.XMergeCellInfos = new Dictionary<string, XMergeCell>();
+                        this.NewXMergeCellInfos = new List<XMergeCell>();
+
                         var sheetStream = sheet.Open();
                         var fullName = sheet.FullName;
 

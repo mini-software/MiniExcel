@@ -24,23 +24,85 @@ namespace MiniExcelLibs.Tests
         }
 
         /// <summary>
+        /// Version <= v0.13.1 Template merge row list rendering has no merge
         /// https://github.com/shps951023/MiniExcel/issues/207
         /// </summary>
         [Fact]
         public void Issue207()
         {
-            //var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
-            //var tempaltePath = @"../../../../../samples/xlsx/TestIssue207_Template_Merge_row_list_rendering_without_merge/template.xlsx";
+            {
+                var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
+                var tempaltePath = @"../../../../../samples/xlsx/TestIssue207_2.xlsx";
 
-            //var value = new
-            //{
-            //    project = new[] {
-            //        new {name = "項目1",content="[]內容1,[]內容2,[]內容3,[]內容4,[]內容5"},
-            //        new {name = "項目2",content="[]內容1,[]內容2,[]內容3,[]內容4,[]內容5"},
-            //    }
-            //};
+                var value = new
+                {
+                    project = new[] {
+                        new {name = "項目1",content="[]內容1,[]內容2,[]內容3,[]內容4,[]內容5"},
+                        new {name = "項目2",content="[]內容1,[]內容2,[]內容3,[]內容4,[]內容5"},
+                        new {name = "項目3",content="[]內容1,[]內容2,[]內容3,[]內容4,[]內容5"},
+                        new {name = "項目4",content="[]內容1,[]內容2,[]內容3,[]內容4,[]內容5"},
+                    }
+                };
 
-            //MiniExcel.SaveAsByTemplate(path, tempaltePath, value);
+                MiniExcel.SaveAsByTemplate(path, tempaltePath, value);
+
+                var rows = MiniExcel.Query(path).ToList();
+
+                Assert.Equal("項目1", rows[0].A);
+                Assert.Equal("[]內容1,[]內容2,[]內容3,[]內容4,[]內容5", rows[0].B);
+                Assert.Equal("項目2", rows[2].A);
+                Assert.Equal("[]內容1,[]內容2,[]內容3,[]內容4,[]內容5", rows[2].B);
+                Assert.Equal("項目3", rows[4].A);
+                Assert.Equal("[]內容1,[]內容2,[]內容3,[]內容4,[]內容5", rows[4].B);
+                Assert.Equal("項目4", rows[6].A);
+                Assert.Equal("[]內容1,[]內容2,[]內容3,[]內容4,[]內容5", rows[6].B);
+
+                Assert.Equal("Test1", rows[8].A);
+                Assert.Equal("Test2", rows[8].B);
+                Assert.Equal("Test3", rows[8].C);
+
+                Assert.Equal("項目1", rows[12].A);
+                Assert.Equal("[]內容1,[]內容2,[]內容3,[]內容4,[]內容5", rows[12].B);
+                Assert.Equal("項目2", rows[13].A);
+                Assert.Equal("[]內容1,[]內容2,[]內容3,[]內容4,[]內容5", rows[13].B);
+                Assert.Equal("項目3", rows[14].A);
+                Assert.Equal("[]內容1,[]內容2,[]內容3,[]內容4,[]內容5", rows[14].B);
+                Assert.Equal("項目4", rows[15].A);
+                Assert.Equal("[]內容1,[]內容2,[]內容3,[]內容4,[]內容5", rows[15].B);
+
+                var demension = Helpers.GetFirstSheetDimensionRefValue(path);
+                Assert.Equal("A1:C16", demension);
+            }
+
+            {
+                var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
+                var tempaltePath = @"../../../../../samples/xlsx/TestIssue207_Template_Merge_row_list_rendering_without_merge/template.xlsx";
+
+                var value = new
+                {
+                    project = new[] {
+                    new {name = "項目1",content="[]內容1,[]內容2,[]內容3,[]內容4,[]內容5"},
+                    new {name = "項目2",content="[]內容1,[]內容2,[]內容3,[]內容4,[]內容5"},
+                    new {name = "項目3",content="[]內容1,[]內容2,[]內容3,[]內容4,[]內容5"},
+                    new {name = "項目4",content="[]內容1,[]內容2,[]內容3,[]內容4,[]內容5"},
+                }
+                };
+
+                MiniExcel.SaveAsByTemplate(path, tempaltePath, value);
+
+                var rows = MiniExcel.Query(path).ToList();
+
+                Assert.Equal("項目1", rows[0].A);
+                Assert.Equal("[]內容1,[]內容2,[]內容3,[]內容4,[]內容5", rows[0].C);
+                Assert.Equal("項目2", rows[3].A);
+                Assert.Equal("[]內容1,[]內容2,[]內容3,[]內容4,[]內容5", rows[3].C);
+                Assert.Equal("項目3", rows[6].A);
+                Assert.Equal("[]內容1,[]內容2,[]內容3,[]內容4,[]內容5", rows[6].C);
+                Assert.Equal("項目4", rows[9].A);
+                Assert.Equal("[]內容1,[]內容2,[]內容3,[]內容4,[]內容5", rows[9].C);
+                var demension = Helpers.GetFirstSheetDimensionRefValue(path);
+                Assert.Equal("A1:E15", demension);
+            }
         }
 
         /// <summary>

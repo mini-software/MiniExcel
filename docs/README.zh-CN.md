@@ -8,11 +8,12 @@
 ---
 
 ### 0.13.3
-- [New] 支持 Excel 单纯读取模式，避免同时改模版又运行 MiniExcel 出现错误 "The process cannot access the file because it is being used by another process" [#87](https://github.com/shps951023/MiniExcel/issues/#87)
+- [New] 支持 Excel 单纯读取模式，避免同时改模版又运行 MiniExcel 出现错误 "The process cannot access the file because it is being used by another process" [#87](https://github.com/shps951023/MiniExcel/issues/87)
 - [Breaking Change] CSV SaveAs datetime 预设格式改为 "yyyy-MM-dd HH:mm:ss"
+- [Bug] 修正模版模式集合渲染遇到合并列会出现异常问题 [#207](https://github.com/shps951023/MiniExcel/issues/207)
 
 ### 0.13.2
-- [Bug] 超过 255 列无法读取错误 [#208](https://github.com/shps951023/MiniExcel/issues/#208)
+- [Bug] 超过 255 列无法读取错误 [#208](https://github.com/shps951023/MiniExcel/issues/208)
 
 ### 0.13.1
 - [New] SaveAsByTemplate 支持读取模板 byte[],方便缓存跟支持多用户同时读取同一个模板 #189

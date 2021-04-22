@@ -7,11 +7,12 @@
 ---
 
 ### 0.13.3
-- [New] Support open with read only mode, avoid error of The process cannot access the file because it is being used by another process [#87](https://github.com/shps951023/MiniExcel/issues/#87)
+- [New] Support open with read only mode, avoid error of The process cannot access the file because it is being used by another process [#87](https://github.com/shps951023/MiniExcel/issues/87)
 - [Breaking Change] Change CSV SaveAs datetime default format : "yyyy-MM-dd HH:mm:ss"
+- [Bug] Fixed SaveAsByTemplate when merge cells will cause collection rendering error [#207](https://github.com/shps951023/MiniExcel/issues/207)
 
 ### 0.13.2
-- [Bug] Fix Column more than 255 rows cannot be read error [#208](https://github.com/shps951023/MiniExcel/issues/#208)
+- [Bug] Fix Column more than 255 rows cannot be read error [#208](https://github.com/shps951023/MiniExcel/issues/208)
 
 ### 0.13.1
 - [New] SaveAsByTemplate by template bytes, convenient to cache and support multiple users to read the same template at the same time #189

@@ -42,7 +42,7 @@ You can install the package [from NuGet](https://www.nuget.org/packages/MiniExce
 
 ### Release Notes
 
-Please Check [Release Notes](https://github.com/shps951023/MiniExcel/tree/master/docs)
+Please Check [Release Notes](docs)
 
 ### TODO 
 
@@ -249,6 +249,8 @@ MiniExcel.SaveAs(path, new[] {
 ```
 
 #### 2. Datatable 
+
+- DataTable use Caption for column name first, then use columname 
 
 ```C#
 var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");

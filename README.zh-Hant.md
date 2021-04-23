@@ -41,7 +41,7 @@ MiniExcel 簡單、高效避免OOM的.NET處理Excel查、寫、填充工具。
 
 ### 更新日誌
 
-請查看 [Release Notes](https://github.com/shps951023/MiniExcel/tree/master/docs)
+請查看 [Release Notes](docs)
 
 ### TODO 
 
@@ -249,6 +249,8 @@ MiniExcel.SaveAs(path, new[] {
 ```
 
 #### 2. Datatable:  
+
+- 優先使用 Caption 當欄位名稱
 
 ```C#
 var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");

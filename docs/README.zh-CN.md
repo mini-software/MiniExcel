@@ -7,6 +7,9 @@
 
 ---
 
+### 0.13.4
+- [Changed] DataTable 以 Caption 优先当栏位名称 #217
+
 ### 0.13.3
 - [New] 支持 Excel 单纯读取模式，避免同时改模版又运行 MiniExcel 出现错误 "The process cannot access the file because it is being used by another process" [#87](https://github.com/shps951023/MiniExcel/issues/87)
 - [Breaking Change] CSV SaveAs datetime 预设格式改为 "yyyy-MM-dd HH:mm:ss"

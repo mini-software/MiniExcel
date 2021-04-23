@@ -6,6 +6,9 @@
 
 ---
 
+### 0.13.4
+- [Changed] DataTable use Caption for column name first, then use columname #217
+
 ### 0.13.3
 - [New] Support open with read only mode, avoid error of The process cannot access the file because it is being used by another process [#87](https://github.com/shps951023/MiniExcel/issues/87)
 - [Breaking Change] Change CSV SaveAs datetime default format : "yyyy-MM-dd HH:mm:ss"

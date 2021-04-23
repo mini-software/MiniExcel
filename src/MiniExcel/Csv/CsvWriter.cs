@@ -127,7 +127,7 @@ namespace MiniExcelLibs.Csv
         {
             if (printHeader)
             {
-                writer.Write(string.Join(seperator, dt.Columns.Cast<DataColumn>().Select(s => s.ColumnName)));
+                writer.Write(string.Join(seperator, dt.Columns.Cast<DataColumn>().Select(s => s.Caption??s.ColumnName)));
                 writer.Write(newLine);
             }
             for (int i = 0; i < dt.Rows.Count; i++)

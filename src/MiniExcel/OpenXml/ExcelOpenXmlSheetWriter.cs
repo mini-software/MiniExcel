@@ -322,9 +322,9 @@ namespace MiniExcelLibs.OpenXml
                     var xIndex = xy.Item1;
                     foreach (DataColumn c in value.Columns)
                     {
-                        var columname = ExcelOpenXmlUtils.ConvertXyToCell(xIndex, yIndex);
-                        writer.Write($"<x:c r=\"{columname}\" t=\"str\">");
-                        writer.Write($"<x:v>{c.ColumnName}");
+                        var r = ExcelOpenXmlUtils.ConvertXyToCell(xIndex, yIndex);
+                        writer.Write($"<x:c r=\"{r}\" t=\"str\">");
+                        writer.Write($"<x:v>{c.Caption??c.ColumnName}");
                         writer.Write($"</x:v>");
                         writer.Write($"</x:c>");
                         xIndex++;

@@ -24,6 +24,47 @@ namespace MiniExcelLibs.Tests
         }
 
         /// <summary>
+        /// DataTable recommended to use Caption for column name first, then use columname
+        /// https://github.com/shps951023/MiniExcel/issues/217
+        /// </summary>
+        [Fact]
+        public void Issue217()
+        {
+            DataTable table = new DataTable();
+            table.Columns.Add("CustomerID");
+            table.Columns.Add("CustomerName").Caption = "Name";
+            table.Columns.Add("CreditLimit").Caption = "Limit";
+            table.Rows.Add(new object[] { 1, "Jonathan", 23.44 });
+            table.Rows.Add(new object[] { 2, "Bill", 56.87 });
+
+            // openxml
+            {
+                var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
+                MiniExcel.SaveAs(path, table);
+
+                var rows = MiniExcel.Query(path).ToList();
+                Assert.Equal("Name", rows[0].B);
+                Assert.Equal("Limit", rows[0].C);
+
+
+                File.Delete(path);
+            }
+
+            // csv
+            {
+                var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.csv");
+                MiniExcel.SaveAs(path, table);
+
+                var rows = MiniExcel.Query(path).ToList();
+                Assert.Equal("Name", rows[0].B);
+                Assert.Equal("Limit", rows[0].C);
+
+
+                File.Delete(path);
+            }
+        }
+
+        /// <summary>
         /// MiniExcel.SaveAs(path, table,sheetName:“Name”) ，the actual sheetName is Sheet1
         /// https://github.com/shps951023/MiniExcel/issues/212
         /// </summary>
@@ -37,6 +78,8 @@ namespace MiniExcelLibs.Tests
             var actualSheetName = MiniExcel.GetSheetNames(path).ToList()[0];
 
             Assert.Equal(sheetName, actualSheetName);
+
+            File.Delete(path);
         }
 
         /// <summary>
@@ -88,6 +131,8 @@ namespace MiniExcelLibs.Tests
 
                 var demension = Helpers.GetFirstSheetDimensionRefValue(path);
                 Assert.Equal("A1:C16", demension);
+
+                File.Delete(path);
             }
 
             {
@@ -118,6 +163,8 @@ namespace MiniExcelLibs.Tests
                 Assert.Equal("[]內容1,[]內容2,[]內容3,[]內容4,[]內容5", rows[9].C);
                 var demension = Helpers.GetFirstSheetDimensionRefValue(path);
                 Assert.Equal("A1:E15", demension);
+
+                File.Delete(path);
             }
         }
 
@@ -138,6 +185,8 @@ namespace MiniExcelLibs.Tests
                 var rows = MiniExcel.Query(templatePath).ToList();
                 MiniExcel.SaveAsByTemplate(path, templatePath, value);
             }
+
+            File.Delete(path);
         }
 
         /// <summary>
@@ -150,6 +199,8 @@ namespace MiniExcelLibs.Tests
             var columns = MiniExcel.GetColumns(path).ToList();
             Assert.Equal(16384, columns.Count);
             Assert.Equal("XFD", columns[16383]);
+
+            File.Delete(path);
         }
 
         /// <summary>
@@ -175,6 +226,8 @@ namespace MiniExcelLibs.Tests
 
                 var demension = Helpers.GetFirstSheetDimensionRefValue(path);
                 Assert.Equal("A1:B2", demension);
+
+                File.Delete(path);
             }
 
             {
@@ -195,6 +248,8 @@ namespace MiniExcelLibs.Tests
 
                 var demension = Helpers.GetFirstSheetDimensionRefValue(path);
                 Assert.Equal("A1:B2", demension);
+
+                File.Delete(path);
             }
         }
 
@@ -257,6 +312,8 @@ namespace MiniExcelLibs.Tests
                     //![image](https://user-images.githubusercontent.com/12729184/114998840-ead44500-9ed3-11eb-8611-58afb98faed9.png)
 
                 }
+
+                File.Delete(path);
             }
 
 
@@ -269,15 +326,15 @@ namespace MiniExcelLibs.Tests
                 {
                     ["title"] = "FooCompany",
                     ["managers"] = new[] {
-                    new {name="Jack",department="HR"},
-                    new {name="Loan",department="IT"}
-                },
+                        new {name="Jack",department="HR"},
+                        new {name="Loan",department="IT"}
+                    },
                     ["employees"] = new[] {
-                    new {name="Wade",department="HR"},
-                    new {name="Felix",department="HR"},
-                    new {name="Eric",department="IT"},
-                    new {name="Keaton",department="IT"}
-                }
+                        new {name="Wade",department="HR"},
+                        new {name="Felix",department="HR"},
+                        new {name="Eric",department="IT"},
+                        new {name="Keaton",department="IT"}
+                    }
                 };
                 MiniExcel.SaveAsByTemplate(path, templatePath, value);
 
@@ -300,6 +357,8 @@ namespace MiniExcelLibs.Tests
 
                 var demension = Helpers.GetFirstSheetDimensionRefValue(path);
                 Assert.Equal("A1:C9", demension);
+
+                File.Delete(path);
             }
 
         }
@@ -344,6 +403,8 @@ namespace MiniExcelLibs.Tests
                     Assert.Equal("MyProperty3", rows[0].MyProperty3);
                 }
 
+                File.Delete(path);
+
             }
 
             {
@@ -366,6 +427,8 @@ MyProperty4,MyProperty1,MyProperty5,MyProperty2,MyProperty6,,MyProperty3
                     Assert.Null(rows[0].MyProperty7);
                     Assert.Equal("MyProperty3", rows[0].MyProperty3);
                 }
+
+                File.Delete(path);
             }
 
             {

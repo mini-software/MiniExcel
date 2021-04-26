@@ -526,10 +526,10 @@ performance:
 
 
 
-#### 2. ASP.NET Core 3.1 or MVC 5 Download Excel Xlsx API Demo [Try it](tests/MiniExcel.Tests.AspNetCore)
+#### 2. ASP.NET Core 3.1 or MVC 5 Download/Upload Excel Xlsx API Demo [Try it](tests/MiniExcel.Tests.AspNetCore)
 
 ```C#
-public class HomeController : Controller
+public class ApiController : Controller
 {
     public IActionResult Index()
     {
@@ -540,7 +540,12 @@ public class HomeController : Controller
             Content = @"<html><body>
 <a href='Home/DownloadExcel'>DownloadExcel</a><br>
 <a href='Home/DownloadExcelFromTemplatePath'>DownloadExcelFromTemplatePath</a><br>
-<a href='Home/DownloadExcelFromTemplateBytes'>DownloadExcelFromTemplateBytes</a>
+<a href='Home/DownloadExcelFromTemplateBytes'>DownloadExcelFromTemplateBytes</a><br>
+<p>Upload Excel</p>
+<form method='post' enctype='multipart/form-data' action='/api/uploadexcel'>
+    <input type='file' name='excel'> <br>
+    <input type='submit' >
+</form>
 </body></html>"
         };
     }
@@ -590,7 +595,7 @@ public class HomeController : Controller
 
     private static Dictionary<string, Byte[]> TemplateBytesCache = new Dictionary<string, byte[]>();
 
-    static HomeController()
+    static ApiController()
     {
         string templatePath = "TestTemplateComplex.xlsx";
         byte[] bytes = System.IO.File.ReadAllBytes(templatePath);
@@ -624,6 +629,20 @@ public class HomeController : Controller
             FileDownloadName = "demo.xlsx"
         };
     }
+
+    [HttpPost("api/uploadexcel")]
+    public IActionResult UploadExcel(IFormFile excel)
+    {
+        var stream = new MemoryStream();
+        excel.CopyTo(stream);
+
+        foreach (var item in stream.Query(true))
+        {
+            // do your logic etc.
+        }
+
+        return Ok("File uploaded successfully");
+    }
 }
 ```
 
@@ -650,7 +669,7 @@ public static IEnumerable<T> Page<T>(IEnumerable<T> en, int pageSize, int page)
 
 ![20210419](https://user-images.githubusercontent.com/12729184/114679083-6ef4c400-9d3e-11eb-9f78-a86daa45fe46.gif)
 
-### FQA
+### FAQ
 
 #### Q: How to convert query results to DataTable
 

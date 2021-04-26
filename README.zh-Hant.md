@@ -602,10 +602,10 @@ using (var connection = new SQLiteConnection(connectionString))
 ![image](https://user-images.githubusercontent.com/12729184/111072579-2dda7b80-8516-11eb-9843-c01a1edc88ec.png)
 
 
-#### 2. ASP.NET Core 3.1 or MVC 5 下載 Excel Xlsx API Demo [Try it](tests/MiniExcel.Tests.AspNetCore)
+#### 2. ASP.NET Core 3.1 or MVC 5 下載/上傳 Excel Xlsx API Demo [Try it](tests/MiniExcel.Tests.AspNetCore)
 
 ```C#
-public class HomeController : Controller
+public class ApiController : Controller
 {
     public IActionResult Index()
     {
@@ -616,7 +616,12 @@ public class HomeController : Controller
             Content = @"<html><body>
 <a href='Home/DownloadExcel'>DownloadExcel</a><br>
 <a href='Home/DownloadExcelFromTemplatePath'>DownloadExcelFromTemplatePath</a><br>
-<a href='Home/DownloadExcelFromTemplateBytes'>DownloadExcelFromTemplateBytes</a>
+<a href='Home/DownloadExcelFromTemplateBytes'>DownloadExcelFromTemplateBytes</a><br>
+<p>Upload Excel</p>
+<form method='post' enctype='multipart/form-data' action='/api/uploadexcel'>
+    <input type='file' name='excel'> <br>
+    <input type='submit' >
+</form>
 </body></html>"
         };
     }
@@ -666,7 +671,7 @@ public class HomeController : Controller
 
     private static Dictionary<string, Byte[]> TemplateBytesCache = new Dictionary<string, byte[]>();
 
-    static HomeController()
+    static ApiController()
     {
         string templatePath = "TestTemplateComplex.xlsx";
         byte[] bytes = System.IO.File.ReadAllBytes(templatePath);
@@ -700,6 +705,20 @@ public class HomeController : Controller
             FileDownloadName = "demo.xlsx"
         };
     }
+
+    [HttpPost("api/uploadexcel")]
+    public IActionResult UploadExcel(IFormFile excel)
+    {
+        var stream = new MemoryStream();
+        excel.CopyTo(stream);
+
+        foreach (var item in stream.Query(true))
+        {
+            // do your logic etc.
+        }
+
+        return Ok("File uploaded successfully");
+    }
 }
 ```
 
@@ -728,7 +747,7 @@ public static IEnumerable<T> Page<T>(IEnumerable<T> en, int pageSize, int page)
 
 
 
-### FQA
+### FAQ 常見問題
 
 #### Q: 如何將查詢結果轉為 DataTable
 

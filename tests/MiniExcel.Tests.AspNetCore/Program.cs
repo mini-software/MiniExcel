@@ -1,9 +1,3 @@
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using MiniExcelLibs;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -24,10 +18,16 @@ public class Startup
     {
         app.UseStaticFiles();
         app.UseRouting();
-        app.UseEndpoints(endpoints => endpoints.MapDefaultControllerRoute());
+        app.UseEndpoints(endpoints =>
+        {
+            endpoints.MapControllerRoute(
+                name: "default",
+                pattern: "{controller=api}/{action=Index}/{id?}");
+        });
     }
 }
-public class HomeController : Controller
+
+public class ApiController : Controller
 {
     public IActionResult Index()
     {
@@ -38,7 +38,12 @@ public class HomeController : Controller
             Content = @"<html><body>
 <a href='Home/DownloadExcel'>DownloadExcel</a><br>
 <a href='Home/DownloadExcelFromTemplatePath'>DownloadExcelFromTemplatePath</a><br>
-<a href='Home/DownloadExcelFromTemplateBytes'>DownloadExcelFromTemplateBytes</a>
+<a href='Home/DownloadExcelFromTemplateBytes'>DownloadExcelFromTemplateBytes</a><br>
+<p>Upload Excel</p>
+<form method='post' enctype='multipart/form-data' action='/api/uploadexcel'>
+    <input type='file' name='excel'> <br>
+    <input type='submit' >
+</form>
 </body></html>"
         };
     }
@@ -88,7 +93,7 @@ public class HomeController : Controller
 
     private static Dictionary<string, Byte[]> TemplateBytesCache = new Dictionary<string, byte[]>();
 
-    static HomeController()
+    static ApiController()
     {
         string templatePath = "TestTemplateComplex.xlsx";
         byte[] bytes = System.IO.File.ReadAllBytes(templatePath);
@@ -121,5 +126,19 @@ public class HomeController : Controller
         {
             FileDownloadName = "demo.xlsx"
         };
+    }
+
+    [HttpPost("api/uploadexcel")]
+    public IActionResult UploadExcel(IFormFile excel)
+    {
+        var stream = new MemoryStream();
+        excel.CopyTo(stream);
+
+        foreach (var item in stream.Query(true))
+        {
+            // do your logic etc.
+        }
+
+        return Ok("File uploaded successfully");
     }
 }

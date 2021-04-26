@@ -1,22 +1,19 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>net45;netstandard2.0;net5.0</TargetFrameworks>
-    <Version>0.13.3</Version>
+    <Version>0.13.4</Version>
   </PropertyGroup>
   <PropertyGroup>
     <AssemblyName>MiniExcel</AssemblyName>
     <Title>MiniExcel</Title>
     <Product>MiniExcel</Product>
     <PackageTags>excel;xlsx;micro-helper;mini;openxml;helper;</PackageTags>
-    <Description>A high performance and easy Excel(xlsx,csv) Micro-Helper that avoids OOM and without third-party dependencies to create or dynamic/type POCO mapping query etc..
-* Support excel template report generation with which you can easily export any data from your .NET classes to Excel.
+    <Description>A high performance and easy Excel(xlsx,csv) Micro-Helper that avoids OOM and without third-party dependencies to create/query/template-fill-data.
 
 Github : https://github.com/shps951023/MiniExcel
 Gitee : https://gitee.com/dotnetchina/MiniExcel
 Issues : https://github.com/shps951023/MiniExcel/issues
 Todo : https://github.com/shps951023/MiniExcel/projects/1?fullscreen=true
-Facebook : https://www.facebook.com/miniexcel
-QQ : 813100564
 </Description>
     <Authors>ITWeiHan</Authors>
     <Copyright>©2021 WeiHan Lin</Copyright>

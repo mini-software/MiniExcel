@@ -100,6 +100,8 @@ namespace MiniExcelLibs.Tests.Utils
 
 		  return refV;
 	   }
+
+        public static string GetTempXlsxPath() => Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
     }
 
 }

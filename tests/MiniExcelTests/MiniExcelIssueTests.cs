@@ -38,8 +38,6 @@ namespace MiniExcelLibs.Tests
 
                 Assert.Equal("test1", rows[0].V);
                 Assert.Equal("test2", rows[1].V);
-
-                Console.WriteLine(rows);
             }
         }
 
@@ -65,6 +63,14 @@ Leave";
                 Assert.Equal(Issue89VO.WorkState.OnDuty, rows[0].State);
                 Assert.Equal(Issue89VO.WorkState.Fired, rows[1].State);
                 Assert.Equal(Issue89VO.WorkState.Leave, rows[2].State);
+
+                var outputPath = Helpers.GetTempXlsxPath();
+                MiniExcel.SaveAs(outputPath, rows);
+                var rows2 = MiniExcel.Query<Issue89VO>(outputPath).ToList();
+
+                Assert.Equal(Issue89VO.WorkState.OnDuty, rows2[0].State);
+                Assert.Equal(Issue89VO.WorkState.Fired, rows2[1].State);
+                Assert.Equal(Issue89VO.WorkState.Leave, rows2[2].State);
             }
 
             //xlsx
@@ -75,8 +81,15 @@ Leave";
                 Assert.Equal(Issue89VO.WorkState.OnDuty, rows[0].State);
                 Assert.Equal(Issue89VO.WorkState.Fired, rows[1].State);
                 Assert.Equal(Issue89VO.WorkState.Leave, rows[2].State);
-            }
 
+                var outputPath = Helpers.GetTempXlsxPath();
+                MiniExcel.SaveAs(outputPath, rows);
+                var rows2 = MiniExcel.Query<Issue89VO>(outputPath).ToList();
+
+                Assert.Equal(Issue89VO.WorkState.OnDuty, rows2[0].State);
+                Assert.Equal(Issue89VO.WorkState.Fired, rows2[1].State);
+                Assert.Equal(Issue89VO.WorkState.Leave, rows2[2].State);
+            }
         }
 
         public class Issue89VO

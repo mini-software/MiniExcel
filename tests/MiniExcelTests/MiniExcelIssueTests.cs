@@ -24,6 +24,54 @@ namespace MiniExcelLibs.Tests
         }
 
         /// <summary>
+        /// Support Enum Mapping
+        /// https://github.com/shps951023/MiniExcel/issues/89
+        /// </summary>
+        [Fact]
+        public void Issue89()
+        {
+            //csv
+            {
+                var text = @"State
+OnDuty
+Fired
+Leave";
+                var stream = new MemoryStream();
+                var writer = new StreamWriter(stream);
+                writer.Write(text);
+                writer.Flush();
+                stream.Position = 0;
+                var rows = MiniExcel.Query<Issue89VO>(stream).ToList();
+                Assert.Equal(Issue89VO.WorkState.OnDuty, rows[0].State);
+                Assert.Equal(Issue89VO.WorkState.Fired, rows[1].State);
+                Assert.Equal(Issue89VO.WorkState.Leave, rows[2].State);
+            }
+
+            //xlsx
+            {
+                var path = @"../../../../../samples/xlsx/TestIssue89.xlsx";
+                var rows = MiniExcel.Query<Issue89VO>(path).ToList();
+
+                Assert.Equal(Issue89VO.WorkState.OnDuty, rows[0].State);
+                Assert.Equal(Issue89VO.WorkState.Fired, rows[1].State);
+                Assert.Equal(Issue89VO.WorkState.Leave, rows[2].State);
+            }
+
+        }
+
+        public class Issue89VO
+        {
+            public WorkState State { get; set; }
+
+            public enum WorkState
+            {
+                OnDuty,
+                Leave,
+                Fired
+            }
+        }
+
+        /// <summary>
         /// DataTable recommended to use Caption for column name first, then use columname
         /// https://github.com/shps951023/MiniExcel/issues/217
         /// </summary>

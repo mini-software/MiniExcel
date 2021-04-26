@@ -363,8 +363,11 @@ namespace MiniExcelLibs.OpenXml
                         }
                         else if (pInfo.Property.PropertyType == typeof(string))
                         {
-                            //var vs = ;
                             newV = XmlEncoder.DecodeString(itemValue?.ToString());
+                        }
+                        else if (pInfo.Property.PropertyType.IsEnum)
+                        {
+                            newV = Enum.Parse(pInfo.Property.PropertyType, itemValue?.ToString(), true);
                         }
                         // solve : https://github.com/shps951023/MiniExcel/issues/138
                         else

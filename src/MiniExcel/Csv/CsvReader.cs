@@ -16,7 +16,7 @@ namespace MiniExcelLibs.Csv
         }
         public IEnumerable<IDictionary<string, object>> Query(bool useHeaderRow, string sheetName, IConfiguration configuration)
         {
-            var cf = configuration==null ? CsvConfiguration.DefaultConfiguration : (CsvConfiguration)configuration;
+            var cf = configuration == null ? CsvConfiguration.DefaultConfiguration : (CsvConfiguration)configuration;
 
             using (var reader = cf.GetStreamReaderFunc(_stream))
             {
@@ -66,7 +66,7 @@ namespace MiniExcelLibs.Csv
             var cf = configuration == null ? CsvConfiguration.DefaultConfiguration : (CsvConfiguration)configuration;
 
             var type = typeof(T);
-            
+
             Dictionary<int, PropertyInfo> idxProps = new Dictionary<int, PropertyInfo>();
             using (var reader = cf.GetStreamReaderFunc(_stream))
             {
@@ -98,7 +98,18 @@ namespace MiniExcelLibs.Csv
                         {
                             var cell = new T();
                             foreach (var p in idxProps)
-                                p.Value.SetValue(cell, read[p.Key]);
+                            {
+                                if (p.Value.PropertyType.IsEnum)
+                                {
+                                    var newV = Enum.Parse(p.Value.PropertyType, read[p.Key], true);
+                                    p.Value.SetValue(cell, newV);
+                                }
+                                else
+                                {
+                                    p.Value.SetValue(cell, read[p.Key]);
+                                }
+                            }
+
                             yield return cell;
                         }
                     }

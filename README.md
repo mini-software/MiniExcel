@@ -683,6 +683,15 @@ public static DataTable QueryAsDataTable(string path)
 ![image](https://user-images.githubusercontent.com/12729184/115068722-3105c480-9f25-11eb-8f5a-994416754134.png)
 
 
+
+#### Q: Excel header title not equal class property name, how to mapping?
+
+A. Please use ExcelColumnName attribute
+
+![image](https://user-images.githubusercontent.com/12729184/116020475-eac50980-a678-11eb-8804-129e87200e5e.png)
+
+
+
 ### Limitations and caveats 
 
 - Not support xls and encrypted file now

@@ -29,7 +29,7 @@ MiniExcel简单、高效避免OOM的.NET处理Excel查、写、填充数据工�
 
 
 
-### Get Started
+### 快速开始
 
 - [读 Excel](#getstart1)
 - [写 Excel](#getstart2)
@@ -762,6 +762,12 @@ public static DataTable QueryAsDataTable(string path)
 ```
 
 ![image](https://user-images.githubusercontent.com/12729184/115068549-fac84500-9f24-11eb-9f12-884b19cf1489.png)
+
+#### Q: Excel 表头标题名称跟 class 属性名称不一致，如何对应?
+
+A. 请使用 ExcelColumnName 作 mapping
+
+![image](https://user-images.githubusercontent.com/12729184/116020475-eac50980-a678-11eb-8804-129e87200e5e.png)
 
 
 

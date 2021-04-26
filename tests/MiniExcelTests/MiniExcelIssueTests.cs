@@ -23,6 +23,26 @@ namespace MiniExcelLibs.Tests
             this.output = output;
         }
 
+
+        /// <summary>
+        /// Optimize stream excel type check 
+        /// https://github.com/shps951023/MiniExcel/issues/215
+        /// </summary>
+        [Fact]
+        public void Issue215()
+        {
+            using (var stream = new MemoryStream())
+            {
+                stream.SaveAs(new[] { new { V = "test1" }, new { V = "test2" } });
+                var rows = stream.Query(true).ToList();
+
+                Assert.Equal("test1", rows[0].V);
+                Assert.Equal("test2", rows[1].V);
+
+                Console.WriteLine(rows);
+            }
+        }
+
         /// <summary>
         /// Support Enum Mapping
         /// https://github.com/shps951023/MiniExcel/issues/89

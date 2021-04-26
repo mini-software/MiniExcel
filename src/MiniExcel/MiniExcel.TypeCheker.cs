@@ -26,21 +26,20 @@
         {
             if (excelType != ExcelType.UNKNOWN)
                 return excelType;
-            var buffer = new byte[512];
-            stream.Read(buffer, 0, buffer.Length);
-            var flag = BitConverter.ToUInt32(buffer, 0);
-            stream.Position = 0;
-            switch (flag)
+
+
+            var probe = new byte[8];
+            stream.Seek(0, SeekOrigin.Begin);
+            stream.Read(probe, 0, probe.Length);
+            stream.Seek(0, SeekOrigin.Begin);
+
+            // New office format (can be any ZIP archive)
+            if (probe[0] == 0x50 && probe[1] == 0x4B)
             {
-                // Old office format (can be any office file)
-                //case 0xE011CFD0:
-                //    return ExcelType.XLS;
-                // New office format (can be any ZIP archive)
-                case 0x04034B50:
-                    return ExcelType.XLSX;
-                default:
-                    return ExcelType.CSV; //TODO:need to optimize
+                return ExcelType.XLSX;
             }
+
+            return ExcelType.CSV;
         }
     }
 }

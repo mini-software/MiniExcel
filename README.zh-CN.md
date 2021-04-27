@@ -24,7 +24,7 @@ MiniExcel简单、高效避免OOM的.NET处理Excel查、写、填充数据工�
 - 支持`即时`操作每行数据
 ![miniexcel_lazy_load](https://user-images.githubusercontent.com/12729184/111034290-e5588a80-844f-11eb-8c84-6fdb6fb8f403.gif)
 - 兼具搭配 LINQ 延迟查询特性，能办到低消耗、快速分页等复杂查询  
-- 轻量，不依赖任何套件，DLL小于100KB
+- 轻量，不需要安装 Microsoft Office、COM+、不依赖任何套件，DLL小于100KB
 - 简便操作的 API 风格
 
 
@@ -35,7 +35,7 @@ MiniExcel简单、高效避免OOM的.NET处理Excel查、写、填充数据工�
 - [写 Excel](#getstart2)
 - [模板填充 Excel](#getstart3)
 - [Excel Column Name/Index/Ignore Attribute](#getstart4)
-- [范例](#getstart5)
+- [例子](#getstart5)
 
 
 
@@ -580,7 +580,7 @@ stream.Query(excelType:ExcelType.XLSX);
 
 
 
-### 范例
+### 例子
 
 #### 1. SQLite & Dapper 读取大数据新增到数据库
 

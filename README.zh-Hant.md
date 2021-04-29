@@ -98,7 +98,7 @@ IterationCount=3  LaunchCount=3  WarmupCount=3
 
 #### 1. Query 查詢 Excel 返回`強型別` IEnumerable 資料 [[Try it]](https://dotnetfiddle.net/w5WD1J)
 
-```C#
+```csharp
 public class UserAccount
 {
     public Guid ID { get; set; }
@@ -128,7 +128,7 @@ using (var stream = File.OpenRead(path))
 | -------- | -------- |
 | Github     | 2     |
 
-```C#
+```csharp
 
 var rows = MiniExcel.Query(path).ToList();
 
@@ -156,7 +156,7 @@ Input Excel :
 | Github     | 2     |
 
 
-```C#
+```csharp
 
 var rows = MiniExcel.Query(useHeaderRow:true).ToList();
 
@@ -177,7 +177,7 @@ using (var stream = File.OpenRead(path))
 
 舉例 : 查詢第一筆資料
 
-```C#
+```csharp
 var row = MiniExcel.Query(path).First();
 Assert.Equal("HelloWorld", row.A);
 
@@ -196,7 +196,7 @@ using (var stream = File.OpenRead(path))
 
 #### 5. 查詢指定 Sheet 名稱
 
-```C#
+```csharp
 MiniExcel.Query(path, sheetName: "SheetName");
 //or
 stream.Query(sheetName: "SheetName");
@@ -204,7 +204,7 @@ stream.Query(sheetName: "SheetName");
 
 #### 6. 查詢所有 Sheet 名稱跟資料
 
-```C#
+```csharp
 var sheetNames = MiniExcel.GetSheetNames(path).ToList();
 foreach (var sheetName in sheetNames)
 {
@@ -214,7 +214,7 @@ foreach (var sheetName in sheetNames)
 
 #### 7. 查詢所有欄(列)
 
-```C#
+```csharp
 var columns = MiniExcel.GetColumns(path); // e.g result : ["A","B"...]
 
 var cnt = columns.Count;  // get column count
@@ -222,7 +222,7 @@ var cnt = columns.Count;  // get column count
 
 #### 8. Dynamic Query 轉成 `IDictionary<string,object>` 資料
 
-```C#
+```csharp
 foreach(IDictionary<string,object> row in MiniExcel.Query(path))
 {
     //..
@@ -242,7 +242,7 @@ foreach(IDictionary<string,object> row in MiniExcel.Query(path))
 
 #### ![image](https://user-images.githubusercontent.com/12729184/112587389-752b0b00-8e38-11eb-8a52-cfb76c57e5eb.png)1. Anonymous or strongly type [[Try it]](https://dotnetfiddle.net/w5WD1J)
 
-```C#
+```csharp
 var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
 MiniExcel.SaveAs(path, new[] {
     new { Column1 = "MiniExcel", Column2 = 1 },
@@ -254,7 +254,7 @@ MiniExcel.SaveAs(path, new[] {
 
 - 優先使用 Caption 當欄位名稱
 
-```C#
+```csharp
 var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
 var table = new DataTable();
 {
@@ -269,7 +269,7 @@ MiniExcel.SaveAs(path, table);
 
 #### 3. Dapper
 
-```C#
+```csharp
 using (var connection = GetConnection(connectionString))
 {
     var rows = connection.Query(@"select 'MiniExcel' as Column1,1 as Column2 union all select 'Github',2");
@@ -279,7 +279,7 @@ using (var connection = GetConnection(connectionString))
 
 #### 4. `IEnumerable<IDictionary<string, object>>`
 
-```C#
+```csharp
 var values = new List<Dictionary<string, object>>()
 {
     new Dictionary<string,object>{{ "Column1", "MiniExcel" }, { "Column2", 1 } },
@@ -297,7 +297,7 @@ output :
 
 #### 5. SaveAs 支援 Stream [[Try it]](https://dotnetfiddle.net/JOen0e)
 
-```C#
+```csharp
 using (var stream = File.Create(path))
 {
     stream.SaveAs(values);
@@ -324,7 +324,7 @@ using (var stream = File.Create(path))
 ![image](https://user-images.githubusercontent.com/12729184/114537490-d8180100-9c84-11eb-8c69-db58692f3a85.png)
 
 代碼:  
-```C#
+```csharp
 // 1. By POCO
 var value = new
 {
@@ -361,7 +361,7 @@ MiniExcel.SaveAsByTemplate(path, templatePath, value);
 
 代碼:
 
-```C#
+```csharp
 //1. By POCO
 var value = new
 {
@@ -407,7 +407,7 @@ MiniExcel.SaveAsByTemplate(path, templatePath, value);
 
 代碼:  
 
-```C#
+```csharp
 // 1. By POCO
 var value = new
 {
@@ -463,7 +463,7 @@ MiniExcel.SaveAsByTemplate(path, templatePath, value);
 
 類別
 
-```C#
+```csharp
 public class Poco
 {
     public string @string { get; set; }
@@ -478,7 +478,7 @@ public class Poco
 
 代碼
 
-```C#
+```csharp
 var poco = new TestIEnumerableTypePoco { @string = "string", @int = 123, @decimal = decimal.Parse("123.45"), @double = (double)123.33, @datetime = new DateTime(2021, 4, 1), @bool = true, @Guid = Guid.NewGuid() };
 var value = new
 {
@@ -506,7 +506,7 @@ MiniExcel.SaveAsByTemplate(path, templatePath, value);
 
 代碼
 
-```C#
+```csharp
 var projects = new[]
 {
     new {Name = "MiniExcel",Link="https://github.com/shps951023/MiniExcel",Star=146, CreateTime=new DateTime(2021,03,01)},
@@ -524,6 +524,24 @@ MiniExcel.SaveAsByTemplate(path, templatePath, value);
 
 
 
+#### 7. DataTable 當參數
+
+```csharp
+var managers = new DataTable();
+{
+    managers.Columns.Add("name");
+    managers.Columns.Add("department");
+    managers.Rows.Add("Jack", "HR");
+    managers.Rows.Add("Loan", "IT");
+}
+var value = new Dictionary<string, object>()
+{
+    ["title"] = "FooCompany",
+    ["managers"] = managers,
+};
+MiniExcel.SaveAsByTemplate(path, templatePath, value);
+```
+
 
 
 ### Excel Column Name/Index/Ignore Attribute <a name="getstart4"></a>
@@ -534,7 +552,7 @@ input excel :
 
 ![image](https://user-images.githubusercontent.com/12729184/114230869-3e163700-99ac-11eb-9a90-2039d4b4b313.png)
 
-```C#
+```csharp
 public class ExcelAttributeDemo
 {
     [ExcelColumnName("Column1")]
@@ -567,7 +585,7 @@ Assert.Equal("Test4", rows[0].Test7);
 
 MiniExcel 預設會根據擴展名或是 Stream 類別判斷是 xlsx 還是 csv，但會有失準時候，請自行指定。
 
-```C#
+```csharp
 stream.SaveAs(excelType:ExcelType.CSV);
 //or
 stream.SaveAs(excelType:ExcelType.XLSX);
@@ -585,7 +603,7 @@ stream.Query(excelType:ExcelType.XLSX);
 
 note : 請不要呼叫 call ToList/ToArray 等方法，這會將所有資料讀到記憶體內
 
-```C#
+```csharp
 using (var connection = new SQLiteConnection(connectionString))
 {
     connection.Open();
@@ -606,7 +624,7 @@ using (var connection = new SQLiteConnection(connectionString))
 
 #### 2. ASP.NET Core 3.1 or MVC 5 下載/上傳 Excel Xlsx API Demo [Try it](tests/MiniExcel.Tests.AspNetCore)
 
-```C#
+```csharp
 public class ApiController : Controller
 {
     public IActionResult Index()
@@ -725,7 +743,7 @@ public class ApiController : Controller
 
 ####  3. 分頁查詢
 
-```C#
+```csharp
 void Main()
 {
 	var rows = MiniExcel.Query(path);
@@ -754,7 +772,7 @@ public static IEnumerable<T> Page<T>(IEnumerable<T> en, int pageSize, int page)
 
 提醒 : 不建議使用，因為DataTable會將數據`全載入記憶體`，失去MiniExcel低記憶體消耗功能。
 
-```C#
+```csharp
 public static DataTable QueryAsDataTable(string path)
 {
 	var rows = MiniExcel.Query(path, true);
@@ -785,6 +803,34 @@ public static DataTable QueryAsDataTable(string path)
 A. 請使用 ExcelColumnName 作 mapping
 
 ![image](https://user-images.githubusercontent.com/12729184/116020475-eac50980-a678-11eb-8804-129e87200e5e.png)
+
+
+
+#### Q. 多工作表(sheet)如何導出/查詢資料?
+
+A. 使用 `GetSheetNames `方法搭配 Query 的 sheetName 參數
+
+
+
+```csharp
+var sheets = MiniExcel.GetSheetNames(path);
+foreach (var sheet in sheets)
+{
+    Console.WriteLine($"sheet name : {sheet} ");
+    var rows = MiniExcel.Query(path,useHeaderRow:true,sheetName:sheet);
+    Console.WriteLine(rows);
+}
+```
+
+![image](https://user-images.githubusercontent.com/12729184/116199841-2a1f5300-a76a-11eb-90a3-6710561cf6db.png)
+
+#### Q. 查詢如何映射枚舉(enum)?
+
+A. 名稱一樣，系統會自動映射(注意:大小寫不敏感)
+
+![image](https://user-images.githubusercontent.com/12729184/116210595-9784b100-a775-11eb-936f-8e7a8b435961.png)
+
+
 
 
 

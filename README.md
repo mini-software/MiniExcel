@@ -97,7 +97,7 @@ IterationCount=3  LaunchCount=3  WarmupCount=3
 
 Recommand to use Stream.Query because of better efficiency.
 
-```C#
+```csharp
 public class UserAccount
 {
     public Guid ID { get; set; }
@@ -126,7 +126,7 @@ using (var stream = File.OpenRead(path))
 | -------- | -------- |
 | Github     | 2     |
 
-```C#
+```csharp
 
 var rows = MiniExcel.Query(path).ToList();
 
@@ -154,7 +154,7 @@ Input Excel :
 | Github     | 2     |
 
 
-```C#
+```csharp
 
 var rows = MiniExcel.Query(useHeaderRow:true).ToList();
 
@@ -174,7 +174,7 @@ using (var stream = File.OpenRead(path))
 #### 4. Query Support LINQ Extension First/Take/Skip ...etc
 
 Query First
-```C#
+```csharp
 var row = MiniExcel.Query(path).First();
 Assert.Equal("HelloWorld", row.A);
 
@@ -192,7 +192,7 @@ Performance between MiniExcel/ExcelDataReader/ClosedXML/EPPlus
 
 #### 5. Query by sheet name
 
-```C#
+```csharp
 MiniExcel.Query(path, sheetName: "SheetName");
 //or
 stream.Query(sheetName: "SheetName");
@@ -200,7 +200,7 @@ stream.Query(sheetName: "SheetName");
 
 #### 6. Query all sheet name and rows
 
-```C#
+```csharp
 var sheetNames = MiniExcel.GetSheetNames(path).ToList();
 foreach (var sheetName in sheetNames)
 {
@@ -210,7 +210,7 @@ foreach (var sheetName in sheetNames)
 
 #### 7. Get Columns 
 
-```C#
+```csharp
 var columns = MiniExcel.GetColumns(path); // e.g result : ["A","B"...]
 
 var cnt = columns.Count;  // get column count
@@ -218,7 +218,7 @@ var cnt = columns.Count;  // get column count
 
 #### 8. Dynamic Query cast row to `IDictionary<string,object>` 
 
-```C#
+```csharp
 foreach(IDictionary<string,object> row in MiniExcel.Query(path))
 {
     //..
@@ -240,7 +240,7 @@ e.g : ToList or not memory usage
 
 #### 1. Anonymous or strongly type [[Try it]](https://dotnetfiddle.net/w5WD1J)
 
-```C#
+```csharp
 var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
 MiniExcel.SaveAs(path, new[] {
     new { Column1 = "MiniExcel", Column2 = 1 },
@@ -252,7 +252,7 @@ MiniExcel.SaveAs(path, new[] {
 
 - DataTable use Caption for column name first, then use columname 
 
-```C#
+```csharp
 var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
 var table = new DataTable();
 {
@@ -267,7 +267,7 @@ MiniExcel.SaveAs(path, table);
 
 #### 3. Dapper 
 
-```C#
+```csharp
 using (var connection = GetConnection(connectionString))
 {
     var rows = connection.Query(@"select 'MiniExcel' as Column1,1 as Column2 union all select 'Github',2");
@@ -277,7 +277,7 @@ using (var connection = GetConnection(connectionString))
 
 #### 4. `IEnumerable<IDictionary<string, object>>`
 
-```C#
+```csharp
 var values = new List<Dictionary<string, object>>()
 {
     new Dictionary<string,object>{{ "Column1", "MiniExcel" }, { "Column2", 1 } },
@@ -295,7 +295,7 @@ Create File Result :
 
 #### 5. SaveAs Stream [[Try it]](https://dotnetfiddle.net/JOen0e)
 
-```C#
+```csharp
 using (var stream = File.Create(path))
 {
     stream.SaveAs(values);
@@ -318,7 +318,7 @@ Result:
 ![image](https://user-images.githubusercontent.com/12729184/114537490-d8180100-9c84-11eb-8c69-db58692f3a85.png)
 
 Code:  
-```C#
+```csharp
 // 1. By POCO
 var value = new
 {
@@ -354,7 +354,7 @@ Result:
 ![image](https://user-images.githubusercontent.com/12729184/114564204-b2015980-9ca2-11eb-900d-e21249f93f7c.png)
 
 Code:  
-```C#
+```csharp
 //1. By POCO
 var value = new
 {
@@ -398,7 +398,7 @@ Result:
 
 ![image](https://user-images.githubusercontent.com/12729184/114565329-bf6b1380-9ca3-11eb-85e3-3969e8bf6378.png)
 
-```C#
+```csharp
 // 1. By POCO
 var value = new
 {
@@ -442,7 +442,97 @@ MiniExcel.SaveAsByTemplate(path, templatePath, value);
 
 
 
+#### 5. Cell value auto mapping type 
 
+Template   
+
+![image](https://user-images.githubusercontent.com/12729184/114802504-64830a80-9dd0-11eb-8d56-8e8c401b3ace.png)
+
+Result
+
+![image](https://user-images.githubusercontent.com/12729184/114802419-43221e80-9dd0-11eb-9ffe-a2ce34fe7076.png)
+
+Class 
+
+```csharp
+public class Poco
+{
+    public string @string { get; set; }
+    public int? @int { get; set; }
+    public decimal? @decimal { get; set; }
+    public double? @double { get; set; }
+    public DateTime? datetime { get; set; }
+    public bool? @bool { get; set; }
+    public Guid? Guid { get; set; }
+}
+```
+
+Code
+
+```csharp
+var poco = new TestIEnumerableTypePoco { @string = "string", @int = 123, @decimal = decimal.Parse("123.45"), @double = (double)123.33, @datetime = new DateTime(2021, 4, 1), @bool = true, @Guid = Guid.NewGuid() };
+var value = new
+{
+    Ts = new[] {
+        poco,
+        new TestIEnumerableTypePoco{},
+        null,
+        poco
+    }
+};
+MiniExcel.SaveAsByTemplate(path, templatePath, value);
+```
+
+
+
+#### 6. Example :  List Github Projects
+
+Template   
+
+![image](https://user-images.githubusercontent.com/12729184/115068623-12073280-9f25-11eb-9124-f4b3efcdb2a7.png)
+
+
+Result    
+
+![image](https://user-images.githubusercontent.com/12729184/115068639-1a5f6d80-9f25-11eb-9f45-27c434d19a78.png)
+
+Code
+
+```csharp
+var projects = new[]
+{
+    new {Name = "MiniExcel",Link="https://github.com/shps951023/MiniExcel",Star=146, CreateTime=new DateTime(2021,03,01)},
+    new {Name = "HtmlTableHelper",Link="https://github.com/shps951023/HtmlTableHelper",Star=16, CreateTime=new DateTime(2020,02,01)},
+    new {Name = "PocoClassGenerator",Link="https://github.com/shps951023/PocoClassGenerator",Star=16, CreateTime=new DateTime(2019,03,17)}
+};
+var value = new
+{
+    User = "ITWeiHan",
+    Projects = projects,
+    TotalStar = projects.Sum(s => s.Star)
+};
+MiniExcel.SaveAsByTemplate(path, templatePath, value);
+```
+
+
+
+#### 7. DataTable as parameter
+
+```csharp
+var managers = new DataTable();
+{
+    managers.Columns.Add("name");
+    managers.Columns.Add("department");
+    managers.Rows.Add("Jack", "HR");
+    managers.Rows.Add("Loan", "IT");
+}
+var value = new Dictionary<string, object>()
+{
+    ["title"] = "FooCompany",
+    ["managers"] = managers,
+};
+MiniExcel.SaveAsByTemplate(path, templatePath, value);
+```
 
 
 
@@ -454,7 +544,7 @@ input excel :
 
 ![image](https://user-images.githubusercontent.com/12729184/114230869-3e163700-99ac-11eb-9a90-2039d4b4b313.png)
 
-```C#
+```csharp
 public class ExcelAttributeDemo
 {
     [ExcelColumnName("Column1")]
@@ -486,7 +576,7 @@ Assert.Equal("Test4", rows[0].Test7);
 ### Excel Type Auto Check <a name="getstart5"></a>
 
 Default system will auto check file path or stream is from xlsx or csv, but if you need to specify type, it can use excelType parameter.
-```C#
+```csharp
 stream.SaveAs(excelType:ExcelType.CSV);
 //or
 stream.SaveAs(excelType:ExcelType.XLSX);
@@ -504,7 +594,7 @@ stream.Query(excelType:ExcelType.XLSX);
 
 note : please don't call ToList/ToArray methods after Query, it'll load all data into memory
 
-```C#
+```csharp
 using (var connection = new SQLiteConnection(connectionString))
 {
     connection.Open();
@@ -528,7 +618,7 @@ performance:
 
 #### 2. ASP.NET Core 3.1 or MVC 5 Download/Upload Excel Xlsx API Demo [Try it](tests/MiniExcel.Tests.AspNetCore)
 
-```C#
+```csharp
 public class ApiController : Controller
 {
     public IActionResult Index()
@@ -647,7 +737,7 @@ public class ApiController : Controller
 
 ####  3. Paging Query
 
-```C#
+```csharp
 void Main()
 {
 	var rows = MiniExcel.Query(path);
@@ -674,7 +764,7 @@ public static IEnumerable<T> Page<T>(IEnumerable<T> en, int pageSize, int page)
 
 Reminder: Not recommended, because DataTable will load all data into memory and lose MiniExcel's low memory consumption function.
 
-```C#
+```csharp
 public static DataTable QueryAsDataTable(string path)
 {
 	var rows = MiniExcel.Query(path, true);
@@ -707,6 +797,33 @@ public static DataTable QueryAsDataTable(string path)
 A. Please use ExcelColumnName attribute
 
 ![image](https://user-images.githubusercontent.com/12729184/116020475-eac50980-a678-11eb-8804-129e87200e5e.png)
+
+#### Q. How to query or export multiple-sheets?
+
+A. `GetSheetNames` method with  Query  sheetName parameter.
+
+
+
+```csharp
+var sheets = MiniExcel.GetSheetNames(path);
+foreach (var sheet in sheets)
+{
+    Console.WriteLine($"sheet name : {sheet} ");
+    var rows = MiniExcel.Query(path,useHeaderRow:true,sheetName:sheet);
+    Console.WriteLine(rows);
+}
+```
+
+![image](https://user-images.githubusercontent.com/12729184/116199841-2a1f5300-a76a-11eb-90a3-6710561cf6db.png)
+
+#### Q. How to mapping enum?
+
+A. Be sure excel & property name same, system will auto mapping (case insensitive)
+
+![image](https://user-images.githubusercontent.com/12729184/116210595-9784b100-a775-11eb-936f-8e7a8b435961.png)
+
+
+### 
 
 
 

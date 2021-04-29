@@ -6,7 +6,7 @@
 
 ----
 
-QQ  : 813100564  (MiniExcel讨论群) / 459050029 (dotnet china)                                                                                                                                                               
+QQ : 813100564  [![.NET MiniExcel 交流群](https://pub.idqqimg.com/wpa/images/group.png ".NET MiniExcel 交流群")](https://qm.qq.com/cgi-bin/qm/qr?k=3OkxuL14sXhJsUimWK8wx_Hf28Wl49QE&jump_from=webapi) / 459050029 (dotnet china) 
 
 ---
 
@@ -617,9 +617,9 @@ public class ApiController : Controller
             ContentType = "text/html",
             StatusCode = (int)HttpStatusCode.OK,
             Content = @"<html><body>
-<a href='Home/DownloadExcel'>DownloadExcel</a><br>
-<a href='Home/DownloadExcelFromTemplatePath'>DownloadExcelFromTemplatePath</a><br>
-<a href='Home/DownloadExcelFromTemplateBytes'>DownloadExcelFromTemplateBytes</a><br>
+<a href='api/DownloadExcel'>DownloadExcel</a><br>
+<a href='api/DownloadExcelFromTemplatePath'>DownloadExcelFromTemplatePath</a><br>
+<a href='api/DownloadExcelFromTemplateBytes'>DownloadExcelFromTemplateBytes</a><br>
 <p>Upload Excel</p>
 <form method='post' enctype='multipart/form-data' action='/api/uploadexcel'>
     <input type='file' name='excel'> <br>
@@ -709,7 +709,6 @@ public class ApiController : Controller
         };
     }
 
-    [HttpPost("api/uploadexcel")]
     public IActionResult UploadExcel(IFormFile excel)
     {
         var stream = new MemoryStream();

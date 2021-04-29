@@ -538,9 +538,9 @@ public class ApiController : Controller
             ContentType = "text/html",
             StatusCode = (int)HttpStatusCode.OK,
             Content = @"<html><body>
-<a href='Home/DownloadExcel'>DownloadExcel</a><br>
-<a href='Home/DownloadExcelFromTemplatePath'>DownloadExcelFromTemplatePath</a><br>
-<a href='Home/DownloadExcelFromTemplateBytes'>DownloadExcelFromTemplateBytes</a><br>
+<a href='api/DownloadExcel'>DownloadExcel</a><br>
+<a href='api/DownloadExcelFromTemplatePath'>DownloadExcelFromTemplatePath</a><br>
+<a href='api/DownloadExcelFromTemplateBytes'>DownloadExcelFromTemplateBytes</a><br>
 <p>Upload Excel</p>
 <form method='post' enctype='multipart/form-data' action='/api/uploadexcel'>
     <input type='file' name='excel'> <br>
@@ -630,7 +630,6 @@ public class ApiController : Controller
         };
     }
 
-    [HttpPost("api/uploadexcel")]
     public IActionResult UploadExcel(IFormFile excel)
     {
         var stream = new MemoryStream();

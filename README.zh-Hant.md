@@ -92,6 +92,8 @@ IterationCount=3  LaunchCount=3  WarmupCount=3
 
 ### 讀 Excel <a name="getstart1"></a>
 
+- 支持任何 stream 类型 : FileStream,MemoryStream
+
 
 
 #### 1. Query 查詢 Excel 返回`強型別` IEnumerable 資料 [[Try it]](https://dotnetfiddle.net/w5WD1J)
@@ -614,9 +616,9 @@ public class ApiController : Controller
             ContentType = "text/html",
             StatusCode = (int)HttpStatusCode.OK,
             Content = @"<html><body>
-<a href='Home/DownloadExcel'>DownloadExcel</a><br>
-<a href='Home/DownloadExcelFromTemplatePath'>DownloadExcelFromTemplatePath</a><br>
-<a href='Home/DownloadExcelFromTemplateBytes'>DownloadExcelFromTemplateBytes</a><br>
+<a href='api/DownloadExcel'>DownloadExcel</a><br>
+<a href='api/DownloadExcelFromTemplatePath'>DownloadExcelFromTemplatePath</a><br>
+<a href='api/DownloadExcelFromTemplateBytes'>DownloadExcelFromTemplateBytes</a><br>
 <p>Upload Excel</p>
 <form method='post' enctype='multipart/form-data' action='/api/uploadexcel'>
     <input type='file' name='excel'> <br>
@@ -706,7 +708,6 @@ public class ApiController : Controller
         };
     }
 
-    [HttpPost("api/uploadexcel")]
     public IActionResult UploadExcel(IFormFile excel)
     {
         var stream = new MemoryStream();

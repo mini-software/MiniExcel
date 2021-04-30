@@ -4,6 +4,7 @@
     using MiniExcelLibs.Utils;
     using MiniExcelLibs.Zip;
     using System.Collections.Generic;
+    using System.Data;
     using System.IO;
     using System.Linq;
 
@@ -93,9 +94,50 @@
             ExcelTemplateFactory.GetProvider(stream).SaveAsByTemplate(templatePath, value);
         }
 
+        /// <summary>
+        /// This method can avoid reading the template file every time
+        /// </summary>
+        /// <param name="stream">output stream</param>
         public static void SaveAsByTemplate(this Stream stream, byte[] templateBytes, object value)
         {
             ExcelTemplateFactory.GetProvider(stream).SaveAsByTemplate(templateBytes, value);
+        }
+
+        /// <summary>
+        /// This method is not recommended, because it'll load all data into memory.
+        /// </summary>
+        public static DataTable QueryAsDataTable(string path, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, IConfiguration configuration = null)
+        {
+            using (var stream = Helpers.OpenSharedRead(path))
+                return QueryAsDataTable(stream, useHeaderRow, sheetName, GetExcelType(path, excelType), configuration);
+        }
+
+        /// <summary>
+        /// This method is not recommended, because it'll load all data into memory.
+        /// </summary>
+        public static DataTable QueryAsDataTable(this Stream stream, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, IConfiguration configuration = null)
+        {
+            var dt = new DataTable();
+            dt.TableName = sheetName;
+            var first = true;
+            var rows = ExcelReaderFactory.GetProvider(stream, GetExcelType(stream, excelType)).Query(useHeaderRow, sheetName, configuration);
+            foreach (IDictionary<string, object> row in rows)
+            {
+                if (first)
+                {
+                    foreach (var key in row.Keys)
+                    {
+                        //TODO:base on cell t xml
+                        //var type = row[key]?.GetType() ?? typeof(object);
+                        var type = typeof(object);
+                        dt.Columns.Add(key, type);
+                    }
+
+                    first = false;
+                }
+                dt.Rows.Add(row.Values.ToArray());
+            }
+            return dt;
         }
     }
 }

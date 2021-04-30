@@ -8,7 +8,9 @@
 ---
 
 ### 0.13.5
+- [New] 新增 QueryAsDataTable 方法 [#216](https://github.com/shps951023/MiniExcel/issues/216)
 - [Bug] 修正數字格式的字串會被強制轉換為decimal類型 [#I3OSKV](https://gitee.com/dotnetchina/MiniExcel/issues/I3OSKV)
+- [Opt] 優化 SaveAs 類別轉換算法，避免效率浪費
 
 ### 0.13.4
 - [Changed] DataTable 以 Caption 優先當欄位名稱 #217

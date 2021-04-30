@@ -24,6 +24,38 @@ namespace MiniExcelLibs.Tests
         }
 
         /// <summary>
+        /// [When reading Excel, can return IDataReader and DataTable to facilitate the import of database. Like ExcelDataReader provide reader.AsDataSet() · Issue #216 · shps951023/MiniExcel](https://github.com/shps951023/MiniExcel/issues/216)
+        /// </summary>
+        [Fact]
+        public void Issue216()
+        {
+            var path = PathHelper.GetNewTemplateFilePath();
+            var value = new[] { new { Test1="1",Test2=2 }, new { Test1 = "3", Test2 = 4 } };
+            MiniExcel.SaveAs(path, value);
+
+            {
+                var dt = MiniExcel.QueryAsDataTable(path, true);
+                var columns = dt.Columns;
+                Assert.Equal("Test1", dt.Columns[0].ColumnName);
+                Assert.Equal("Test2", dt.Columns[1].ColumnName);
+                Assert.Equal("1", dt.Rows[0]["Test1"]);
+                Assert.Equal((double)2, dt.Rows[0]["Test2"]);
+                Assert.Equal("3", dt.Rows[1]["Test1"]);
+                Assert.Equal((double)4, dt.Rows[1]["Test2"]);
+            }
+
+            {
+                var dt = MiniExcel.QueryAsDataTable(path, false);
+                Assert.Equal("Test1", dt.Rows[0]["A"]);
+                Assert.Equal("Test2", dt.Rows[0]["B"]);
+                Assert.Equal("1", dt.Rows[1]["A"]);
+                Assert.Equal((double)2, dt.Rows[1]["B"]);
+                Assert.Equal("3", dt.Rows[2]["A"]);
+                Assert.Equal((double)4, dt.Rows[2]["B"]);
+            }
+        }
+
+        /// <summary>
         /// https://gitee.com/dotnetchina/MiniExcel/issues/I3OSKV
         /// When exporting, the pure numeric string will be forcibly converted to a numeric type, resulting in the loss of the end data
         /// </summary>

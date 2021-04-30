@@ -23,6 +23,28 @@ namespace MiniExcelLibs.Tests
             this.output = output;
         }
 
+        /// <summary>
+        /// [Dynamic Query can't summary numeric cell value default, need to cast · Issue #220 · shps951023/MiniExcel]
+        /// (https://github.com/shps951023/MiniExcel/issues/220)
+        /// </summary>
+        [Fact]
+        public void Issue220()
+        {
+            var path = PathHelper.GetSamplePath("xlsx/TestIssue220.xlsx");
+            var rows = MiniExcel.Query(path, useHeaderRow: true);
+            var result = (from s in rows
+                            group s by s.PRT_ID into g
+                            select new
+                            {
+                                PRT_ID = g.Key,
+                                Apr = g.Sum(_ => (double?)_.Apr),
+                                May = g.Sum(_ => (double?)_.May),
+                                Jun = g.Sum(_ => (double?)_.Jun),
+                            }
+            ).ToList();
+            Assert.Equal(91843.25, result[0].Jun);
+            Assert.Equal(50000.99, result[1].Jun);
+        }
 
         /// <summary>
         /// Optimize stream excel type check 
@@ -64,7 +86,7 @@ Leave";
                 Assert.Equal(Issue89VO.WorkState.Fired, rows[1].State);
                 Assert.Equal(Issue89VO.WorkState.Leave, rows[2].State);
 
-                var outputPath = Helpers.GetTempXlsxPath();
+                var outputPath = PathHelper.GetNewTemplateFilePath("xlsx");
                 MiniExcel.SaveAs(outputPath, rows);
                 var rows2 = MiniExcel.Query<Issue89VO>(outputPath).ToList();
 
@@ -75,14 +97,14 @@ Leave";
 
             //xlsx
             {
-                var path = @"../../../../../samples/xlsx/TestIssue89.xlsx";
+                var path = PathHelper.GetSamplePath("xlsx/TestIssue89.xlsx");
                 var rows = MiniExcel.Query<Issue89VO>(path).ToList();
 
                 Assert.Equal(Issue89VO.WorkState.OnDuty, rows[0].State);
                 Assert.Equal(Issue89VO.WorkState.Fired, rows[1].State);
                 Assert.Equal(Issue89VO.WorkState.Leave, rows[2].State);
 
-                var outputPath = Helpers.GetTempXlsxPath();
+                var outputPath = PathHelper.GetNewTemplateFilePath();
                 MiniExcel.SaveAs(outputPath, rows);
                 var rows2 = MiniExcel.Query<Issue89VO>(outputPath).ToList();
 

@@ -3,18 +3,12 @@
  **/
 namespace MiniExcelLibs.Tests.Utils
 {
-    using MiniExcelLibs.OpenXml;
     using System;
     using System.Collections.Generic;
-    using System.Data.SQLite;
-    using System.Dynamic;
-    using System.Globalization;
     using System.IO;
     using System.IO.Compression;
     using System.Linq;
-    using System.Reflection;
     using System.Text;
-    using System.Text.RegularExpressions;
     using System.Xml;
     using System.Xml.Linq;
     using System.Xml.XPath;
@@ -67,41 +61,40 @@ namespace MiniExcelLibs.Tests.Utils
         }
 
         internal static string IntToLetters(int value)
-	   {
-		  value = value + 1;
-		  string result = string.Empty;
-		  while (--value >= 0)
-		  {
-			 result = (char)('A' + value % 26) + result;
-			 value /= 26;
-		  }
-		  return result;
-	   }
+        {
+            value = value + 1;
+            string result = string.Empty;
+            while (--value >= 0)
+            {
+                result = (char)('A' + value % 26) + result;
+                value /= 26;
+            }
+            return result;
+        }
 
 
-	   internal static string GetFirstSheetDimensionRefValue(string path)
-	   {
-		  var ns = new XmlNamespaceManager(new NameTable());
-		  ns.AddNamespace("x", "http://schemas.openxmlformats.org/spreadsheetml/2006/main");
-		  string refV;
-		  using (var stream = File.OpenRead(path))
-		  using (ZipArchive archive = new ZipArchive(stream, ZipArchiveMode.Read, false, Encoding.UTF8))
-		  {
-			 var sheet = archive.Entries.Single(w => w.FullName.StartsWith("xl/worksheets/sheet1", StringComparison.OrdinalIgnoreCase)
-				|| w.FullName.StartsWith("/xl/worksheets/sheet1", StringComparison.OrdinalIgnoreCase)
-			 );
-			 using (var sheetStream = sheet.Open())
-			 {
-				var doc = XDocument.Load(sheetStream); ;
-				var dimension = doc.XPathSelectElement("/x:worksheet/x:dimension", ns);
-				refV = dimension.Attribute("ref").Value;
-			 }
-		  }
+        internal static string GetFirstSheetDimensionRefValue(string path)
+        {
+            var ns = new XmlNamespaceManager(new NameTable());
+            ns.AddNamespace("x", "http://schemas.openxmlformats.org/spreadsheetml/2006/main");
+            string refV;
+            using (var stream = File.OpenRead(path))
+            using (ZipArchive archive = new ZipArchive(stream, ZipArchiveMode.Read, false, Encoding.UTF8))
+            {
+                var sheet = archive.Entries.Single(w => w.FullName.StartsWith("xl/worksheets/sheet1", StringComparison.OrdinalIgnoreCase)
+                    || w.FullName.StartsWith("/xl/worksheets/sheet1", StringComparison.OrdinalIgnoreCase)
+                );
+                using (var sheetStream = sheet.Open())
+                {
+                    var doc = XDocument.Load(sheetStream); ;
+                    var dimension = doc.XPathSelectElement("/x:worksheet/x:dimension", ns);
+                    refV = dimension.Attribute("ref").Value;
+                }
+            }
 
-		  return refV;
-	   }
+            return refV;
+        }
 
-        public static string GetTempXlsxPath() => Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
     }
 
 }

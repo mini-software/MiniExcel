@@ -26,7 +26,7 @@ namespace MiniExcelLibs.OpenXml
         {
             using (var archive = new MiniExcelZipArchive(_stream, ZipArchiveMode.Create, true, _utf8WithBom))
             {
-                var packages = DefualtOpenXml.GenerateDefaultOpenXml(archive,sheetName);
+                var packages = DefualtOpenXml.GenerateDefaultOpenXml(archive, sheetName);
                 var sheetPath = "xl/worksheets/sheet1.xml";
                 {
                     ZipArchiveEntry entry = archive.CreateEntry(sheetPath);
@@ -193,27 +193,7 @@ namespace MiniExcelLibs.OpenXml
                 foreach (var key in keys)
                 {
                     var cellValue = v[key];
-                    var cellValueStr = ExcelOpenXmlUtils.EncodeXML(cellValue);
-                    var t = "t=\"str\"";
-                    {
-                        if (decimal.TryParse(cellValueStr, out var outV))
-                            t = "t=\"n\"";
-                        if (cellValue is bool)
-                        {
-                            t = "t=\"b\"";
-                            cellValueStr = (bool)cellValue ? "1" : "0";
-                        }
-                        if (cellValue is DateTime || cellValue is DateTime?)
-                        {
-                            t = "s=\"1\"";
-                            cellValueStr = ((DateTime)cellValue).ToOADate().ToString();
-                        }
-                    }
-                    var columname = ExcelOpenXmlUtils.ConvertXyToCell(cellIndex, yIndex);
-                    writer.Write($"<x:c r=\"{columname}\" {t}>");
-                    writer.Write($"<x:v>{cellValueStr}");
-                    writer.Write($"</x:v>");
-                    writer.Write($"</x:c>");
+                    WriteCell(writer, yIndex, cellIndex, cellValue);
                     cellIndex++;
                 }
                 writer.Write($"</x:row>");
@@ -231,27 +211,7 @@ namespace MiniExcelLibs.OpenXml
                 foreach (var key in keys)
                 {
                     var cellValue = v[key];
-                    var cellValueStr = ExcelOpenXmlUtils.EncodeXML(cellValue);
-                    var t = "t=\"str\"";
-                    {
-                        if (decimal.TryParse(cellValueStr, out var outV))
-                            t = "t=\"n\"";
-                        if (cellValue is bool)
-                        {
-                            t = "t=\"b\"";
-                            cellValueStr = (bool)cellValue ? "1" : "0";
-                        }
-                        if (cellValue is DateTime || cellValue is DateTime?)
-                        {
-                            t = "s=\"1\"";
-                            cellValueStr = ((DateTime)cellValue).ToOADate().ToString();
-                        }
-                    }
-                    var columname = ExcelOpenXmlUtils.ConvertXyToCell(cellIndex, yIndex);
-                    writer.Write($"<x:c r=\"{columname}\" {t}>");
-                    writer.Write($"<x:v>{cellValueStr}");
-                    writer.Write($"</x:v>");
-                    writer.Write($"</x:c>");
+                    WriteCell(writer, yIndex, cellIndex, cellValue);
                     cellIndex++;
                 }
                 writer.Write($"</x:row>");
@@ -274,32 +234,57 @@ namespace MiniExcelLibs.OpenXml
                         continue;
                     }
                     var cellValue = p.Property.GetValue(v);
-                    var cellValueStr = ExcelOpenXmlUtils.EncodeXML(cellValue);
-                    var t = "t=\"str\"";
-                    {
-                        if (decimal.TryParse(cellValueStr, out var outV))
-                            t = "t=\"n\"";
-                        else if (cellValue is bool)
-                        {
-                            t = "t=\"b\"";
-                            cellValueStr = (bool)cellValue ? "1" : "0";
-                        }
-                        else if (cellValue is DateTime || cellValue is DateTime?)
-                        {
-                            t = "s=\"1\"";
-                            cellValueStr = ((DateTime)cellValue).ToOADate().ToString();
-                        }
-                    }
-                    var columname = ExcelOpenXmlUtils.ConvertXyToCell(cellIndex, yIndex);
-                    writer.Write($"<x:c r=\"{columname}\" {t}>");
-                    writer.Write($"<x:v>{cellValueStr}");
-                    writer.Write($"</x:v>");
-                    writer.Write($"</x:c>");
+                    WriteCell(writer, yIndex, cellIndex, cellValue);
                     cellIndex++;
                 }
                 writer.Write($"</x:row>");
                 yIndex++;
             }
+        }
+
+        private static void WriteCell(StreamWriter writer, int yIndex, int cellIndex, object value)
+        {
+            var v = string.Empty;
+            var t = string.Empty;
+            if (value == null)
+            {
+                t = "t=\"str\"";
+                v = "";
+            }
+            else if (value is string)
+            {
+                t = "t=\"str\"";
+                v = ExcelOpenXmlUtils.EncodeXML(value.ToString());
+            }
+            else
+            {
+                var type = value.GetType();
+                type = Nullable.GetUnderlyingType(type) ?? type;
+
+                if (Helpers.IsNumericType(type))
+                {
+                    t = "t=\"n\"";
+                    v = value.ToString();
+                }
+                else if (type == typeof(bool))
+                {
+                    t = "t=\"b\"";
+                    v = (bool)value ? "1" : "0";
+                }
+                else if (type == typeof(DateTime))
+                {
+                    t = "s=\"1\"";
+                    v = ((DateTime)value).ToOADate().ToString();
+                }
+                else
+                {
+                    t = "t=\"str\"";
+                    v = ExcelOpenXmlUtils.EncodeXML(value.ToString());
+                }
+            }
+
+            var columname = ExcelOpenXmlUtils.ConvertXyToCell(cellIndex, yIndex);
+            writer.Write($"<x:c r=\"{columname}\" {t}><x:v>{v}</x:v></x:c>");
         }
 
         internal void GenerateSheetByDataTable(StreamWriter writer, MiniExcelZipArchive archive, DataTable value, bool printHeader)
@@ -324,7 +309,7 @@ namespace MiniExcelLibs.OpenXml
                     {
                         var r = ExcelOpenXmlUtils.ConvertXyToCell(xIndex, yIndex);
                         writer.Write($"<x:c r=\"{r}\" t=\"str\">");
-                        writer.Write($"<x:v>{c.Caption??c.ColumnName}");
+                        writer.Write($"<x:v>{c.Caption ?? c.ColumnName}");
                         writer.Write($"</x:v>");
                         writer.Write($"</x:c>");
                         xIndex++;
@@ -341,27 +326,7 @@ namespace MiniExcelLibs.OpenXml
                     for (int j = 0; j < value.Columns.Count; j++)
                     {
                         var cellValue = value.Rows[i][j];
-                        var cellValueStr = ExcelOpenXmlUtils.EncodeXML(cellValue);
-                        var t = "t=\"str\"";
-                        {
-                            if (decimal.TryParse(cellValueStr, out var outV))
-                                t = "t=\"n\"";
-                            if (cellValue is bool)
-                            {
-                                t = "t=\"b\"";
-                                cellValueStr = (bool)cellValue ? "1" : "0";
-                            }
-                            if (cellValue is DateTime || cellValue is DateTime?)
-                            {
-                                t = "s=\"1\"";
-                                cellValueStr = ((DateTime)cellValue).ToOADate().ToString();
-                            }
-                        }
-                        var columname = ExcelOpenXmlUtils.ConvertXyToCell(xIndex, yIndex);
-                        writer.Write($"<x:c r=\"{columname}\" {t}>");
-                        writer.Write($"<x:v>{cellValueStr}");
-                        writer.Write($"</x:v>");
-                        writer.Write($"</x:c>");
+                        WriteCell(writer, yIndex, xIndex, cellValue);
                         xIndex++;
                     }
                     writer.Write($"</x:row>");

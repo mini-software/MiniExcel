@@ -185,7 +185,7 @@ namespace MiniExcelLibs.OpenXml
                                     }
 
 
-                                    var cellValueStr = ExcelOpenXmlUtils.EncodeXML(cellValue);
+                                    var cellValueStr = ExcelOpenXmlUtils.EncodeXML(cellValue?.ToString());
                                     var type = propInfo.Value.UnderlyingTypePropType;
                                     if (type == typeof(bool))
                                     {
@@ -221,7 +221,7 @@ namespace MiniExcelLibs.OpenXml
                                     }
 
 
-                                    var cellValueStr = ExcelOpenXmlUtils.EncodeXML(cellValue);
+                                    var cellValueStr = ExcelOpenXmlUtils.EncodeXML(cellValue?.ToString());
                                     var type = propInfo.Value.UnderlyingTypePropType;
                                     if (type == typeof(bool))
                                     {
@@ -258,7 +258,7 @@ namespace MiniExcelLibs.OpenXml
                                     }
 
 
-                                    var cellValueStr = ExcelOpenXmlUtils.EncodeXML(cellValue);
+                                    var cellValueStr = ExcelOpenXmlUtils.EncodeXML(cellValue?.ToString());
                                     var type = Nullable.GetUnderlyingType(prop.PropertyType) ?? prop.PropertyType;
                                     if (type == typeof(bool))
                                     {
@@ -573,7 +573,7 @@ namespace MiniExcelLibs.OpenXml
                         }
                         else
                         {
-                            var cellValueStr = ExcelOpenXmlUtils.EncodeXML(cellValue);
+                            var cellValueStr = ExcelOpenXmlUtils.EncodeXML(cellValue?.ToString());
                             if (isMultiMatch) // if matchs count over 1 need to set type=str ![image](https://user-images.githubusercontent.com/12729184/114530109-39d46d00-9c7d-11eb-8f6b-52ad8600aca3.png)
                             {
                                 c.SetAttribute("t", "str");

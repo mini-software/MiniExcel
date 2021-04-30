@@ -206,13 +206,14 @@
                  });
         }
 
-        public static bool IsNumericType(Type type)
+        public static bool IsNumericType(Type type, bool isNullableUnderlyingType = false)
         {
-            //type = Nullable.GetUnderlyingType(type);
+            if(isNullableUnderlyingType)
+                type = Nullable.GetUnderlyingType(type) ?? type;
             switch (Type.GetTypeCode(type))
             {
-                case TypeCode.Byte:
-                case TypeCode.SByte:
+                //case TypeCode.Byte:
+                //case TypeCode.SByte:
                 case TypeCode.UInt16:
                 case TypeCode.UInt32:
                 case TypeCode.UInt64:

@@ -24,6 +24,36 @@ namespace MiniExcelLibs.Tests
         }
 
         /// <summary>
+        /// https://gitee.com/dotnetchina/MiniExcel/issues/I3OSKV
+        /// When exporting, the pure numeric string will be forcibly converted to a numeric type, resulting in the loss of the end data
+        /// </summary>
+        [Fact]
+        public void IssueI3OSKV()
+        {
+            {
+                var path = PathHelper.GetNewTemplateFilePath();
+                var value = new[] { new { Test = "12345678901234567890" } };
+                MiniExcel.SaveAs(path, value);
+
+                var A2 = MiniExcel.Query(path, true).First().Test;
+                Assert.Equal("12345678901234567890", A2);
+
+                File.Delete(path);
+            }
+
+            //{
+            //    var path = PathHelper.GetNewTemplateFilePath();
+            //    var value = new[] { new { Test = 12345678901234567890 } };
+            //    MiniExcel.SaveAs(path, value);
+
+            //    var A2 = MiniExcel.Query(path, true).First().Test;
+            //    Assert.Equal(12345678901234567890, A2);
+
+            //    File.Delete(path);
+            //}
+        }
+
+        /// <summary>
         /// [Dynamic Query can't summary numeric cell value default, need to cast · Issue #220 · shps951023/MiniExcel]
         /// (https://github.com/shps951023/MiniExcel/issues/220)
         /// </summary>
@@ -302,8 +332,6 @@ Leave";
             var columns = MiniExcel.GetColumns(path).ToList();
             Assert.Equal(16384, columns.Count);
             Assert.Equal("XFD", columns[16383]);
-
-            File.Delete(path);
         }
 
         /// <summary>

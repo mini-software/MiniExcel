@@ -6,6 +6,9 @@
 
 ---
 
+### 0.13.5
+- [Bug] Fix numeric format string will be cast to numeric type [#I3OSKV](https://gitee.com/dotnetchina/MiniExcel/issues/I3OSKV)
+
 ### 0.13.4
 - [Changed] DataTable use Caption for column name first, then use columname #217
 - [New] Type Query support Enum mapping #89

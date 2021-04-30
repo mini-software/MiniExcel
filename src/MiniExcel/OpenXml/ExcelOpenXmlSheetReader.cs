@@ -8,7 +8,6 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Xml;
-using System.Xml.Linq;
 using static MiniExcelLibs.Utils.Helpers;
 
 namespace MiniExcelLibs.OpenXml
@@ -228,9 +227,8 @@ namespace MiniExcelLibs.OpenXml
                                             {
                                                 int xfIndex = -1;
                                                 if (int.TryParse(aS, NumberStyles.Any, CultureInfo.InvariantCulture, out var styleIndex))
-                                                {
                                                     xfIndex = styleIndex;
-                                                }
+
                                                 // only when have s attribute then load styles xml data
                                                 if (_style == null)
                                                     _style = new ExcelOpenXmlStyles(_archive);
@@ -248,7 +246,6 @@ namespace MiniExcelLibs.OpenXml
                                                         if (headRows.ContainsKey(columnIndex))
                                                         {
                                                             var key = headRows[columnIndex];
-                                                            var v = _style.ConvertValueByStyleFormat(int.Parse(aS), cellValue);
                                                             cell[key] = _style.ConvertValueByStyleFormat(xfIndex, cellValue);
                                                         }
                                                     }
@@ -314,7 +311,7 @@ namespace MiniExcelLibs.OpenXml
 
             var first = true;
             List<ExcelCustomPropertyInfo> props = null;
-            var headers = Query(false, sheetName, configuration).FirstOrDefault()?.Values?.Select(s=>s?.ToString())?.ToArray(); //TODO:need to optimize
+            var headers = Query(false, sheetName, configuration).FirstOrDefault()?.Values?.Select(s => s?.ToString())?.ToArray(); //TODO:need to optimize
             foreach (var item in Query(true, sheetName, configuration))
             {
                 if (first)
@@ -561,7 +558,7 @@ namespace MiniExcelLibs.OpenXml
 
             switch (aT)
             {
-                case "s": //// if string
+                case "s":
                     if (int.TryParse(rawValue, style, invariantCulture, out var sstIndex))
                     {
                         if (sstIndex >= 0 && sstIndex < _sharedStrings.Count)
@@ -573,14 +570,14 @@ namespace MiniExcelLibs.OpenXml
                     }
                     value = null;
                     return;
-                case "inlineStr": //// if string inline
-                case "str": //// if cached formula string
+                case "inlineStr":
+                case "str":
                     value = XmlEncoder.DecodeString(rawValue);
                     return;
-                case "b": //// boolean
+                case "b":
                     value = rawValue == "1";
                     return;
-                case "d": //// ISO 8601 date
+                case "d":
                     if (DateTime.TryParseExact(rawValue, "yyyy-MM-dd", invariantCulture, DateTimeStyles.AllowLeadingWhite | DateTimeStyles.AllowTrailingWhite, out var date))
                     {
                         value = date;
@@ -589,13 +586,13 @@ namespace MiniExcelLibs.OpenXml
 
                     value = rawValue;
                     return;
-                case "e": //// error
+                case "e":
                     value = rawValue;
                     return;
                 default:
-                    if (double.TryParse(rawValue, style, invariantCulture, out double number))
+                    if (double.TryParse(rawValue, style, invariantCulture, out var n))
                     {
-                        value = number;
+                        value = n;
                         return;
                     }
 

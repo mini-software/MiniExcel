@@ -88,20 +88,24 @@
             var sf = this.GetStyleFormat(index);
             if (sf == null)
                 return value;
-            if (sf?.Type == typeof(DateTime?))
+            if (sf.Type == null)
+                return value;
+
+            if (sf.Type == typeof(DateTime?))
             {
                 if (double.TryParse(value?.ToString(), out var s))
                 {
                     return DateTimeHelper.FromOADate(s);
                 }
             }
-            else if (sf?.Type == typeof(TimeSpan?))
+            else if (sf.Type == typeof(TimeSpan?))
             {
                 if (double.TryParse(value?.ToString(), out var number))
                 {
                     return TimeSpan.FromDays(number);
                 }
             }
+
             return value;
         }
 

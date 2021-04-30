@@ -41,17 +41,18 @@ namespace MiniExcelLibs.Tests
                 File.Delete(path);
             }
 
-            //{
-            //    var path = PathHelper.GetNewTemplateFilePath();
-            //    var value = new[] { new { Test = 12345678901234567890 } };
-            //    MiniExcel.SaveAs(path, value);
+            {
+                var path = PathHelper.GetNewTemplateFilePath();
+                var value = new[] { new { Test = 123456.789 } };
+                MiniExcel.SaveAs(path, value);
 
-            //    var A2 = MiniExcel.Query(path, true).First().Test;
-            //    Assert.Equal(12345678901234567890, A2);
+                var A2 = MiniExcel.Query(path,true).First().Test ;
+                Assert.Equal(123456.789, A2);
 
-            //    File.Delete(path);
-            //}
+                File.Delete(path);
+            }
         }
+
 
         /// <summary>
         /// [Dynamic Query can't summary numeric cell value default, need to cast · Issue #220 · shps951023/MiniExcel]

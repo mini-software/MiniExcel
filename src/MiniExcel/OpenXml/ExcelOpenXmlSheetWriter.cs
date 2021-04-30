@@ -110,10 +110,10 @@ namespace MiniExcelLibs.OpenXml
                             }
 
                             writer.Write($@"<?xml version=""1.0"" encoding=""utf-8""?><x:worksheet xmlns:x=""http://schemas.openxmlformats.org/spreadsheetml/2006/main"">");
+                            
                             // dimension 
-
                             var maxRowIndex = rowCount + (printHeader && rowCount > 0 ? 1 : 0);  //TODO:it can optimize
-                            writer.Write($@"<x:dimension ref=""{GetDimension(maxRowIndex, maxColumnIndex)}""/><x:sheetData>");
+                            writer.Write($@"<x:dimension ref=""{GetDimensionRef(maxRowIndex, maxColumnIndex)}""/><x:sheetData>");
 
                             //header
                             var yIndex = 1;
@@ -150,6 +150,7 @@ namespace MiniExcelLibs.OpenXml
                                 yIndex++;
                             }
 
+                            // body
                             if (mode == "IDictionary<string, object>") //Dapper Row
                                 GenerateSheetByDapperRow(writer, archive, value as IEnumerable, rowCount, keys.Cast<string>().ToList(), xIndex, yIndex);
                             else if (mode == "IDictionary") //IDictionary
@@ -168,8 +169,6 @@ namespace MiniExcelLibs.OpenXml
                         {
                             throw new NotImplementedException($"Type {type.Name} & genericType {genericType.Name} not Implemented. please issue for me.");
                         }
-                        //TODO:
-
                     }
                 End:
                     packages.Add(sheetPath, new ZipPackageInfo(entry, "application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"));
@@ -183,9 +182,8 @@ namespace MiniExcelLibs.OpenXml
             writer.Write($@"<?xml version=""1.0"" encoding=""utf-8""?><x:worksheet xmlns:x=""http://schemas.openxmlformats.org/spreadsheetml/2006/main""><x:dimension ref=""A1""/><x:sheetData></x:sheetData></x:worksheet>");
         }
 
-        internal void GenerateSheetByDapperRow(StreamWriter writer, MiniExcelZipArchive archive, IEnumerable value, int rowCount, List<string> keys, int xIndex = 1, int yIndex = 1)
+        private void GenerateSheetByDapperRow(StreamWriter writer, MiniExcelZipArchive archive, IEnumerable value, int rowCount, List<string> keys, int xIndex = 1, int yIndex = 1)
         {
-            //body
             foreach (IDictionary<string, object> v in value)
             {
                 writer.Write($"<x:row r=\"{yIndex.ToString()}\">");
@@ -201,9 +199,8 @@ namespace MiniExcelLibs.OpenXml
             }
         }
 
-        internal void GenerateSheetByIDictionary(StreamWriter writer, MiniExcelZipArchive archive, IEnumerable value, int rowCount, List<object> keys, int xIndex = 1, int yIndex = 1)
+        private void GenerateSheetByIDictionary(StreamWriter writer, MiniExcelZipArchive archive, IEnumerable value, int rowCount, List<object> keys, int xIndex = 1, int yIndex = 1)
         {
-            //body
             foreach (IDictionary v in value)
             {
                 writer.Write($"<x:row r=\"{yIndex.ToString()}\">");
@@ -219,9 +216,8 @@ namespace MiniExcelLibs.OpenXml
             }
         }
 
-        internal void GenerateSheetByProperties(StreamWriter writer, MiniExcelZipArchive archive, IEnumerable value, List<ExcelCustomPropertyInfo> props, int rowCount, int xIndex = 1, int yIndex = 1)
+        private void GenerateSheetByProperties(StreamWriter writer, MiniExcelZipArchive archive, IEnumerable value, List<ExcelCustomPropertyInfo> props, int rowCount, int xIndex = 1, int yIndex = 1)
         {
-            //body
             foreach (var v in value)
             {
                 writer.Write($"<x:row r=\"{yIndex.ToString()}\">");
@@ -287,7 +283,7 @@ namespace MiniExcelLibs.OpenXml
             writer.Write($"<x:c r=\"{columname}\" {t}><x:v>{v}</x:v></x:c>");
         }
 
-        internal void GenerateSheetByDataTable(StreamWriter writer, MiniExcelZipArchive archive, DataTable value, bool printHeader)
+        private void GenerateSheetByDataTable(StreamWriter writer, MiniExcelZipArchive archive, DataTable value, bool printHeader)
         {
             var xy = ExcelOpenXmlUtils.ConvertCellToXY("A1");
 
@@ -299,7 +295,7 @@ namespace MiniExcelLibs.OpenXml
                 // dimension
                 var maxRowIndex = value.Rows.Count + (printHeader && value.Rows.Count > 0 ? 1 : 0);
                 var maxColumnIndex = value.Columns.Count;
-                writer.Write($@"<x:dimension ref=""{GetDimension(maxRowIndex, maxColumnIndex)}""/><x:sheetData>");
+                writer.Write($@"<x:dimension ref=""{GetDimensionRef(maxRowIndex, maxColumnIndex)}""/><x:sheetData>");
 
                 if (printHeader)
                 {
@@ -351,7 +347,7 @@ namespace MiniExcelLibs.OpenXml
                 writer.Write(sb.ToString());
         }
 
-        private string GetDimension(int maxRowIndex, int maxColumnIndex)
+        private string GetDimensionRef(int maxRowIndex, int maxColumnIndex)
         {
             string dimensionRef;
             if (maxRowIndex == 0 && maxColumnIndex == 0)

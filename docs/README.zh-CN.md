@@ -7,6 +7,9 @@
 
 ---
 
+### 0.13.5
+- [Bug] 修正数字格式的字串会被强制转换为decimal类型 [#I3OSKV](https://gitee.com/dotnetchina/MiniExcel/issues/I3OSKV)
+
 ### 0.13.4
 - [Changed] DataTable 以 Caption 优先当栏位名称 #217
 - [New] Query 支持 Enum mapping #89

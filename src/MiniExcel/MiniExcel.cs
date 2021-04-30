@@ -106,7 +106,7 @@
         /// <summary>
         /// This method is not recommended, because it'll load all data into memory.
         /// </summary>
-        public static DataTable QueryAsDataTable(string path, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, IConfiguration configuration = null)
+        public static DataTable QueryAsDataTable(string path, bool useHeaderRow = true, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, IConfiguration configuration = null)
         {
             using (var stream = Helpers.OpenSharedRead(path))
                 return QueryAsDataTable(stream, useHeaderRow, sheetName, GetExcelType(path, excelType), configuration);
@@ -115,7 +115,7 @@
         /// <summary>
         /// This method is not recommended, because it'll load all data into memory.
         /// </summary>
-        public static DataTable QueryAsDataTable(this Stream stream, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, IConfiguration configuration = null)
+        public static DataTable QueryAsDataTable(this Stream stream, bool useHeaderRow = true, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, IConfiguration configuration = null)
         {
             var dt = new DataTable();
             dt.TableName = sheetName;

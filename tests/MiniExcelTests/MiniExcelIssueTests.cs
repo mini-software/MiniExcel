@@ -12,6 +12,8 @@ using Newtonsoft.Json;
 using MiniExcelLibs.Attributes;
 using MiniExcelLibs.Tests.Utils;
 using System.Data;
+using System.Data.SQLite;
+using Dapper;
 
 namespace MiniExcelLibs.Tests
 {
@@ -21,6 +23,32 @@ namespace MiniExcelLibs.Tests
         public MiniExcelIssueTests(ITestOutputHelper output)
         {
             this.output = output;
+        }
+
+
+        /// <summary>
+        /// [Can SaveAs support iDataReader export to avoid the dataTable consuming too much memory · Issue #211 · shps951023/MiniExcel]
+        /// (https://github.com/shps951023/MiniExcel/issues/211)
+        /// </summary>
+        [Fact]
+        public void Issue211()
+        {
+            var path = PathHelper.GetNewTemplateFilePath();
+            var tempSqlitePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.db");
+            var connectionString = $"Data Source={tempSqlitePath};Version=3;";
+
+            using (var connection = new SQLiteConnection(connectionString))
+            {
+                var reader = connection.ExecuteReader(@"select 1 Test1,2 Test2 union all select 3 , 4 union all select 5 ,6");
+
+                MiniExcel.SaveAs(path, reader);
+
+                var rows = MiniExcel.Query(path,true).ToList();
+                Assert.Equal((double)1, rows[0].Test1);
+                Assert.Equal((double)2, rows[0].Test2);
+                Assert.Equal((double)3, rows[1].Test1);
+                Assert.Equal((double)4, rows[1].Test2);
+            }
         }
 
         /// <summary>
@@ -34,14 +62,14 @@ namespace MiniExcelLibs.Tests
             MiniExcel.SaveAs(path, value);
 
             {
-                var dt = MiniExcel.QueryAsDataTable(path, true);
-                var columns = dt.Columns;
-                Assert.Equal("Test1", dt.Columns[0].ColumnName);
-                Assert.Equal("Test2", dt.Columns[1].ColumnName);
-                Assert.Equal("1", dt.Rows[0]["Test1"]);
-                Assert.Equal((double)2, dt.Rows[0]["Test2"]);
-                Assert.Equal("3", dt.Rows[1]["Test1"]);
-                Assert.Equal((double)4, dt.Rows[1]["Test2"]);
+                var table = MiniExcel.QueryAsDataTable(path);
+                var columns = table.Columns;
+                Assert.Equal("Test1", table.Columns[0].ColumnName);
+                Assert.Equal("Test2", table.Columns[1].ColumnName);
+                Assert.Equal("1", table.Rows[0]["Test1"]);
+                Assert.Equal((double)2, table.Rows[0]["Test2"]);
+                Assert.Equal("3", table.Rows[1]["Test1"]);
+                Assert.Equal((double)4, table.Rows[1]["Test2"]);
             }
 
             {

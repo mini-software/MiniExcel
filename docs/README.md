@@ -8,6 +8,7 @@
 
 ### 0.13.5
 - [New] Support QueryAsDataTable method [#216](https://github.com/shps951023/MiniExcel/issues/216)
+- [New] SaveAs support IDataReader value parameter [#211](https://github.com/shps951023/MiniExcel/issues/211)
 - [Bug] Fix numeric format string will be cast to numeric type [#I3OSKV](https://gitee.com/dotnetchina/MiniExcel/issues/I3OSKV)
 - [Opt] Optimize SaveAs convert value type logic to improve performance
 

@@ -231,7 +231,15 @@ foreach(IDictionary<string,object> row in MiniExcel.Query(path))
 }
 ```
 
+#### 9. Query 读 Excel 返回 DataTable
 
+提醒 : 不建议使用，因为DataTable会将数据`全载入内存`，失去MiniExcel低内存消耗功能。
+
+```C#
+var table = MiniExcel.QueryAsDataTable(path, useHeaderRow: true);
+```
+
+![image](https://user-images.githubusercontent.com/12729184/116673475-07917200-a9d6-11eb-947e-a6f68cce58df.png)
 
 
 
@@ -297,13 +305,21 @@ output :
 | MiniExcel     | 1     |
 | Github     | 2     |
 
-#### 5. SaveAs 支援 Stream [[Try it]](https://dotnetfiddle.net/JOen0e)
+#### 5. SaveAs 支持 Stream [[Try it]](https://dotnetfiddle.net/JOen0e)
 
 ```csharp
 using (var stream = File.Create(path))
 {
     stream.SaveAs(values);
 }
+```
+
+
+
+#### 6. 支持 IDataReader 参数
+
+```csharp
+MiniExcel.SaveAs(path, reader);
 ```
 
 
@@ -768,36 +784,6 @@ public static IEnumerable<T> Page<T>(IEnumerable<T> en, int pageSize, int page)
 
 
 ### FAQ 常见问题
-
-#### Q: 如何将查询结果转为 DataTable
-
-提醒 : 不建议使用，因为DataTable会将数据`全载入内存`，失去MiniExcel低内存消耗功能。
-
-```csharp
-public static DataTable QueryAsDataTable(string path)
-{
-	var rows = MiniExcel.Query(path, true);
-	var dt = new DataTable();
-	var first = true;
-	foreach (IDictionary<string, object> row in rows)
-	{
-		if (first)
-		{
-			foreach (var key in row.Keys)
-			{
-				var type = row[key]?.GetType() ?? typeof(string);
-				dt.Columns.Add(key, type);
-			}
-
-			first = false;
-		}
-		dt.Rows.Add(row.Values.ToArray());
-	}
-	return dt;
-}
-```
-
-![image](https://user-images.githubusercontent.com/12729184/115068549-fac84500-9f24-11eb-9f12-884b19cf1489.png)
 
 #### Q: Excel 表头标题名称跟 class 属性名称不一致，如何对应?
 

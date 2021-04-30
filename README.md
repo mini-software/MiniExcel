@@ -227,6 +227,22 @@ foreach(IDictionary<string,object> row in MiniExcel.Query(path))
 
 
 
+#### 9. Query Query Excel return DataTable
+
+Not recommended, because DataTable will load all data into memory and lose MiniExcel's low memory consumption feature.
+
+```C#
+var table = MiniExcel.QueryAsDataTable(path, useHeaderRow: true);
+```
+
+![image](https://user-images.githubusercontent.com/12729184/116673475-07917200-a9d6-11eb-947e-a6f68cce58df.png)
+
+
+
+
+
+
+
 ### Create Excel  <a name="getstart2"></a>
 
 1. Must be a non-abstract type with a public parameterless constructor .
@@ -300,6 +316,12 @@ using (var stream = File.Create(path))
 {
     stream.SaveAs(values);
 }
+```
+
+#### 6. Support IDataReader value parameter
+
+```csharp
+MiniExcel.SaveAs(path, reader);
 ```
 
 
@@ -759,38 +781,6 @@ public static IEnumerable<T> Page<T>(IEnumerable<T> en, int pageSize, int page)
 ![20210419](https://user-images.githubusercontent.com/12729184/114679083-6ef4c400-9d3e-11eb-9f78-a86daa45fe46.gif)
 
 ### FAQ
-
-#### Q: How to convert query results to DataTable
-
-Reminder: Not recommended, because DataTable will load all data into memory and lose MiniExcel's low memory consumption function.
-
-```csharp
-public static DataTable QueryAsDataTable(string path)
-{
-	var rows = MiniExcel.Query(path, true);
-	var dt = new DataTable();
-	var first = true;
-	foreach (IDictionary<string, object> row in rows)
-	{
-		if (first)
-		{
-			foreach (var key in row.Keys)
-			{
-				var type = row[key]?.GetType() ?? typeof(string);
-				dt.Columns.Add(key, type);
-			}
-
-			first = false;
-		}
-		dt.Rows.Add(row.Values.ToArray());
-	}
-	return dt;
-}
-```
-
-![image](https://user-images.githubusercontent.com/12729184/115068722-3105c480-9f25-11eb-8f5a-994416754134.png)
-
-
 
 #### Q: Excel header title not equal class property name, how to mapping?
 

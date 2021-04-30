@@ -165,6 +165,10 @@ namespace MiniExcelLibs.OpenXml
                         {
                             GenerateSheetByDataTable(writer, archive, value as DataTable, printHeader);
                         }
+                        else if (value is IDataReader)
+                        {
+                            GenerateSheetByIDataReader(writer, archive, value as IDataReader, printHeader);
+                        }
                         else
                         {
                             throw new NotImplementedException($"Type {type.Name} & genericType {genericType.Name} not Implemented. please issue for me.");
@@ -322,6 +326,55 @@ namespace MiniExcelLibs.OpenXml
                     for (int j = 0; j < value.Columns.Count; j++)
                     {
                         var cellValue = value.Rows[i][j];
+                        WriteCell(writer, yIndex, xIndex, cellValue);
+                        xIndex++;
+                    }
+                    writer.Write($"</x:row>");
+                    yIndex++;
+                }
+            }
+            writer.Write("</x:sheetData></x:worksheet>");
+        }
+
+        private void GenerateSheetByIDataReader(StreamWriter writer, MiniExcelZipArchive archive, IDataReader value, bool printHeader)
+        {
+            var xy = ExcelOpenXmlUtils.ConvertCellToXY("A1");
+
+            writer.Write($@"<?xml version=""1.0"" encoding=""utf-8""?><x:worksheet xmlns:x=""http://schemas.openxmlformats.org/spreadsheetml/2006/main"">");
+            {
+                var yIndex = xy.Item2;
+
+                // TODO: dimension
+                //var maxRowIndex = value.Rows.Count + (printHeader && value.Rows.Count > 0 ? 1 : 0);
+                //var maxColumnIndex = value.Columns.Count;
+                //writer.Write($@"<x:dimension ref=""{GetDimensionRef(maxRowIndex, maxColumnIndex)}""/>");
+                writer.Write("<x:sheetData>");
+                int fieldCount = value.FieldCount;
+                if (printHeader)
+                {
+                    writer.Write($"<x:row r=\"{yIndex.ToString()}\">");
+                    var xIndex = xy.Item1;
+                    for (int i = 0; i < fieldCount; i++)
+                    {
+                        var r = ExcelOpenXmlUtils.ConvertXyToCell(xIndex, yIndex);
+                        writer.Write($"<x:c r=\"{r}\" t=\"str\">");
+                        writer.Write($"<x:v>{value.GetName(i)}");
+                        writer.Write($"</x:v>");
+                        writer.Write($"</x:c>");
+                        xIndex++;
+                    }
+                    writer.Write($"</x:row>");
+                    yIndex++;
+                }
+
+                while (value.Read())
+                {
+                    writer.Write($"<x:row r=\"{yIndex.ToString()}\">");
+                    var xIndex = xy.Item1;
+
+                    for(int i = 0; i < fieldCount; i++)
+                    {
+                        var cellValue = value.GetValue(i);
                         WriteCell(writer, yIndex, xIndex, cellValue);
                         xIndex++;
                     }

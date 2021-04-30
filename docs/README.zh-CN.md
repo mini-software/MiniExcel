@@ -9,6 +9,7 @@
 
 ### 0.13.5
 - [New] 新增 QueryAsDataTable 方法 [#216](https://github.com/shps951023/MiniExcel/issues/216)
+- [New] SaveAs 支持 IDataReader value 参数 [#211](https://github.com/shps951023/MiniExcel/issues/211)
 - [Bug] 修正数字格式的字串会被强制转换为decimal类型 [#I3OSKV](https://gitee.com/dotnetchina/MiniExcel/issues/I3OSKV)
 - [Opt] 优化 SaveAs 类别转换算法，避免效率浪费
 

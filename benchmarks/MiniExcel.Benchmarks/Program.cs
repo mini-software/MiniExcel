@@ -24,14 +24,10 @@ namespace MiniExcelLibs.Benchmarks
         static void Main(string[] args)
         {
 #if !DEBUG
-            //new BenchmarkSwitcher(typeof(Program).Assembly).Run(args, new Config());
-            //BenchmarkRunner.Run<XlsxBenchmark>();
-            BenchmarkRunner.Run<TemplateXlsxBenchmark>();
+            BenchmarkSwitcher.FromTypes(new[]{typeof(XlsxBenchmark)}).Run(args, new Config());
 #else
-            //BenchmarkSwitcher.FromTypes(new[] { typeof(TemplateXlsxBenchmark) }).Run(args, new DebugInProcessConfig() );
-            //BenchmarkSwitcher.FromAssembly(typeof(TemplateXlsxBenchmark).Assembly).Run(args, new DebugConfig());
-            
-            new TemplateXlsxBenchmark().MiniExcel_Template_Generate_Test();
+            BenchmarkSwitcher.FromTypes(new[] { typeof(XlsxBenchmark) }).Run(args, new DebugInProcessConfig() );
+            //new TemplateXlsxBenchmark().MiniExcel_Template_Generate_Test();
             //new XlsxBenchmark().MiniExcelCreateTest();
 #endif
             Console.Read();
@@ -45,25 +41,44 @@ namespace MiniExcelLibs.Benchmarks
     public abstract class BenchmarkBase
     {
 #if !DEBUG
-        public const string filePath = @"D:\git\MiniExcel\samples\xlsx\Test1,000,000x10\Test1,000,000x10.xlsx";
-        //public const string filePath = @"D:\git\MiniExcel\samples\xlsx\Test10x10.xlsx";
+        public const string filePath = @"Test10,000x10.xlsx";
+        public const int runCount = 1_000_000;
 #else
-        public const string filePath = @"D:\git\MiniExcel\samples\xlsx\Test1,000,000x10\Test1,000,000x10.xlsx";
-        //public const string filePath = @"D:\git\MiniExcel\samples\xlsx\Test10x10.xlsx";
+        public const string filePath = @"Test100x10.xlsx";
+        public const int runCount = 10;
 #endif
+
+        //public const string filePath = @"Test10x10.xlsx";
+        //public const int runCount = 10;
+
+        public static IEnumerable<Demo> GetValues()
+        {
+#if !DEBUG
+            return Enumerable.Range(1, runCount).Select(s => new Demo());
+#else
+            return Enumerable.Range(1, runCount).Select(s => new Demo());
+#endif
+        }
     }
 
-    public class TemplateXlsxBenchmark : BenchmarkBase
+    public class XlsxBenchmark: BenchmarkBase
     {
+        [GlobalSetup]
+        public void SetUp()
+        {
+            ExcelPackage.LicenseContext = OfficeOpenXml.LicenseContext.NonCommercial;
+            System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
+        }
+
         [Benchmark(Description = "MiniExcel Template Generate")]
         public void MiniExcel_Template_Generate_Test()
         {
             {
                 var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
-                var templatePath = @"D:\git\MiniExcel\samples\xlsx\TestTemplateBasicIEmumerableFill.xlsx";
+                const string templatePath = @"TestTemplateBasicIEmumerableFill.xlsx";
                 var value = new
                 {
-                    employees = Enumerable.Range(1, 1000000).Select(s => new { name = "Jack", department = "HR" })
+                    employees = Enumerable.Range(1, runCount).Select(s => new { name = "Jack", department = "HR" })
                 };
                 MiniExcel.SaveAsByTemplate(path, templatePath, value);
             }
@@ -74,27 +89,16 @@ namespace MiniExcelLibs.Benchmarks
         {
             {
                 var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
-                var templatePath = @"D:\git\MiniExcel\samples\xlsx\TestTemplateBasicIEmumerableFill_ClosedXML_Report.xlsx";
+                var templatePath = @"TestTemplateBasicIEmumerableFill_ClosedXML_Report.xlsx";
                 var template = new ClosedXML.Report.XLTemplate(templatePath);
                 var value = new
                 {
-                    employees = Enumerable.Range(1, 1000000).Select(s => new { name = "Jack", department = "HR" })
+                    employees = Enumerable.Range(1, runCount).Select(s => new { name = "Jack", department = "HR" })
                 };
                 template.AddVariable(value);
                 template.Generate();
                 template.SaveAs(path);
             }
-        }
-    }
-
-
-    public class XlsxBenchmark: BenchmarkBase
-    {
-        [GlobalSetup]
-        public void SetUp()
-        {
-            ExcelPackage.LicenseContext = OfficeOpenXml.LicenseContext.NonCommercial;
-            System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
         }
 
         [Benchmark(Description = "MiniExcel QueryFirst")]
@@ -318,28 +322,19 @@ namespace MiniExcelLibs.Benchmarks
             }
             File.Delete(path);
         }
+    }
 
-        private static IEnumerable<Demo> GetValues()
-        {
-#if !DEBUG
-            return Enumerable.Range(1, 1000000).Select(s => new Demo());
-#else
-            return Enumerable.Range(1, 1000000).Select(s => new Demo());
-#endif
-        }
-
-        public class Demo
-        {
-            public string Text1 { get; set; } = "Hello World";
-            public string Text2 { get; set; } = "Hello World";
-            public string Text3 { get; set; } = "Hello World";
-            public string Text4 { get; set; } = "Hello World";
-            public string Text5 { get; set; } = "Hello World";
-            public string Text6 { get; set; } = "Hello World";
-            public string Text7 { get; set; } = "Hello World";
-            public string Text8 { get; set; } = "Hello World";
-            public string Text9 { get; set; } = "Hello World";
-            public string Text10 { get; set; } = "Hello World";
-        }
+    public class Demo
+    {
+        public string Text1 { get; set; } = "Hello World";
+        public string Text2 { get; set; } = "Hello World";
+        public string Text3 { get; set; } = "Hello World";
+        public string Text4 { get; set; } = "Hello World";
+        public string Text5 { get; set; } = "Hello World";
+        public string Text6 { get; set; } = "Hello World";
+        public string Text7 { get; set; } = "Hello World";
+        public string Text8 { get; set; } = "Hello World";
+        public string Text9 { get; set; } = "Hello World";
+        public string Text10 { get; set; } = "Hello World";
     }
 }

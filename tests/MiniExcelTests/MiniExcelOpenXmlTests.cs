@@ -354,7 +354,7 @@ namespace MiniExcelLibs.Tests
         [Fact()]
         public void LargeFileQueryStrongTypeMapping_Test()
         {
-            var path = @"../../../../../samples/xlsx/Test1,000,000x10/Test1,000,000x10.xlsx";
+            var path = @"../../../../../benchmarks/MiniExcel.Benchmarks/Test1,000,000x10.xlsx";
             using (var stream = File.OpenRead(path))
             {
                 var rows = stream.Query<DemoPocoHelloWorld>().Take(2).ToList();
@@ -713,7 +713,7 @@ namespace MiniExcelLibs.Tests
         [Fact()]
         public void QueryByLINQExtensionsAvoidLargeFileOOMTest()
         {
-            var path = @"../../../../../samples/xlsx/Test1,000,000x10/Test1,000,000x10.xlsx";
+            var path = "../../../../../benchmarks/MiniExcel.Benchmarks/Test1,000,000x10.xlsx";
 
             {
                 var row = MiniExcel.Query(path).First();

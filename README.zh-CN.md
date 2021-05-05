@@ -53,9 +53,9 @@ MiniExcel简单、高效避免OOM的.NET处理Excel查、写、填充数据工�
 
 ### 性能测试
 
-以 [**Test1,000,000x10.xlsx**](https://github.com/shps951023/MiniExcel/blob/master/samples/xlsx/Test1%2C000%2C000x10.xlsx) 做基准与主流框架做性能测试，总共 1千万笔 "HelloWorld"，文件大小 23 MB   
+以 [**Test1,000,000x10.xlsx**](benchmarks/MiniExcel.Benchmarks/Test1%2C000%2C000x10.xlsx) 做基准与主流框架做性能测试，总共 1千万笔 "HelloWorld"，文件大小 23 MB   
 
-Benchmarks  逻辑可以在 [MiniExcel.Benchmarks](https://github.com/shps951023/MiniExcel/tree/master/benchmarks/MiniExcel.Benchmarks) 查看或是提交 PR，运行指令
+Benchmarks  逻辑可以在 [MiniExcel.Benchmarks](benchmarks/MiniExcel.Benchmarks/Program.cs) 查看或是提交 PR，运行指令
 
 ```
 dotnet run -p .\benchmarks\MiniExcel.Benchmarks\ -c Release -f netcoreapp3.1 -- -f * --join

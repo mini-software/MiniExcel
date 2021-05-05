@@ -816,6 +816,17 @@ A. 名称一样，系统会自动映射(注意:大小写不敏感)
 ![image](https://user-images.githubusercontent.com/12729184/116210595-9784b100-a775-11eb-936f-8e7a8b435961.png)
 
 
+
+#### Q. 是否使用 Count 会载入全部数据到内存
+
+不会，图片测试一百万行*十列数据，简单测试，内存最大使用 < 60MB，花费13.65秒
+
+![image](https://user-images.githubusercontent.com/12729184/117118518-70586000-adc3-11eb-9ce3-2ba76cf8b5e5.png)
+
+
+
+
+
 ### 局限与警告
 
 - 目前不支援 xls (97-2003) 或是加密文件。

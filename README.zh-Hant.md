@@ -816,7 +816,11 @@ A. 名稱一樣，系統會自動映射(注意:大小寫不敏感)
 
 ![image](https://user-images.githubusercontent.com/12729184/116210595-9784b100-a775-11eb-936f-8e7a8b435961.png)
 
+#### Q. 是否使用 Count 會載入全部數據到記憶體
 
+不會，圖片測試一百萬行*十列資料，簡單測試，內存最大使用 < 60MB，花費13.65秒
+
+![image](https://user-images.githubusercontent.com/12729184/117118518-70586000-adc3-11eb-9ce3-2ba76cf8b5e5.png)
 
 
 

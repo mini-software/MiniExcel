@@ -812,8 +812,11 @@ A. Be sure excel & property name same, system will auto mapping (case insensitiv
 
 ![image](https://user-images.githubusercontent.com/12729184/116210595-9784b100-a775-11eb-936f-8e7a8b435961.png)
 
+#### Q. Whether to use Count will load all data into the memory?
 
-### 
+No, the image test has 1 million rows*10 columns of data, the maximum memory usage is <60MB, and it takes 13.65 seconds
+
+![image](https://user-images.githubusercontent.com/12729184/117118518-70586000-adc3-11eb-9ce3-2ba76cf8b5e5.png)
 
 
 

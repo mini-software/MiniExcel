@@ -7,6 +7,10 @@
 
 ---
 
+### 0.14.0
+- [New] Query、GetColumns 支持 startCell 能指定 cell 开始读取数据 #147
+- [New] GetColumns 支持读取表头
+
 ### 0.13.5
 - [New] 新增 QueryAsDataTable 方法 [#216](https://github.com/shps951023/MiniExcel/issues/216)
 - [New] SaveAs 支持 IDataReader value 参数 [#211](https://github.com/shps951023/MiniExcel/issues/211)

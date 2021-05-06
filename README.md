@@ -239,6 +239,14 @@ var table = MiniExcel.QueryAsDataTable(path, useHeaderRow: true);
 
 
 
+#### 10. Specify the cell to start reading data
+
+```csharp
+MiniExcel.Query(path,useHeaderRow:true,startCell:"B3")
+```
+
+![image](https://user-images.githubusercontent.com/12729184/117260316-8593c400-ae81-11eb-9877-c087b7ac2b01.png)
+
 
 
 

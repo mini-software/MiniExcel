@@ -72,12 +72,12 @@
             return result;
         }
 
-        internal static IDictionary<string, object> GetEmptyExpandoObject(int maxColumnIndex)
+        internal static IDictionary<string, object> GetEmptyExpandoObject(int maxColumnIndex,int startCellIndex)
         {
             // TODO: strong type mapping can ignore this
             // TODO: it can recode better performance 
             var cell = (IDictionary<string, object>)new ExpandoObject();
-            for (int i = 0; i <= maxColumnIndex; i++)
+            for (int i = startCellIndex; i <= maxColumnIndex; i++)
             {
                 var key = GetAlphabetColumnName(i);
                 if (!cell.ContainsKey(key))

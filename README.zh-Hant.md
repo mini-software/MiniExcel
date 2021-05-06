@@ -243,6 +243,16 @@ var table = MiniExcel.QueryAsDataTable(path, useHeaderRow: true);
 
 ![image](https://user-images.githubusercontent.com/12729184/116673475-07917200-a9d6-11eb-947e-a6f68cce58df.png)
 
+#### 10. 指定單元格開始讀取資料
+
+```csharp
+MiniExcel.Query(path,useHeaderRow:true,startCell:"B3")
+```
+
+![image](https://user-images.githubusercontent.com/12729184/117260316-8593c400-ae81-11eb-9877-c087b7ac2b01.png)
+
+
+
 
 
 ### 寫 Excel  <a name="getstart2"></a>

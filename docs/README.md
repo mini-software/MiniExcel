@@ -6,6 +6,10 @@
 
 ---
 
+### 0.14.0
+- [New] Query、GetColumns support startCell #147
+- [New] GetColumns support read headers
+
 ### 0.13.5
 - [New] Support QueryAsDataTable method [#216](https://github.com/shps951023/MiniExcel/issues/216)
 - [New] SaveAs support IDataReader value parameter [#211](https://github.com/shps951023/MiniExcel/issues/211)

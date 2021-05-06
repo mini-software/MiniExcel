@@ -31,8 +31,12 @@ namespace MiniExcelLibs.OpenXml
             _archive = new ExcelOpenXmlZip(stream);
         }
 
-        public IEnumerable<IDictionary<string, object>> Query(bool UseHeaderRow, string sheetName, IConfiguration configuration)
+        public IEnumerable<IDictionary<string, object>> Query(bool useHeaderRow, string sheetName, string startCell, IConfiguration configuration)
         {
+            if (!ReferenceHelper.ParseReference(startCell, out var startColumnIndex, out var startRowIndex))
+                throw new InvalidDataException($"startCell {startCell} is Invalid");
+            startColumnIndex--; startRowIndex--;
+
             //TODO:need to optimize
             SetSharedStrings();
 
@@ -64,9 +68,9 @@ namespace MiniExcelLibs.OpenXml
             var maxRowIndex = -1;
             var maxColumnIndex = -1;
 
-            //TODO: merge one open read
-            using (var firstSheetEntryStream = sheetEntry.Open())
-            using (XmlReader reader = XmlReader.Create(firstSheetEntryStream, _xmlSettings))
+            //Q. why need 3 times openstream merge one open read? A. no, zipstream can't use position = 0
+            using (var sheetStream = sheetEntry.Open())
+            using (XmlReader reader = XmlReader.Create(sheetStream, _xmlSettings))
             {
                 while (reader.Read())
                 {
@@ -111,8 +115,8 @@ namespace MiniExcelLibs.OpenXml
 
             if (withoutCR)
             {
-                using (var firstSheetEntryStream = sheetEntry.Open())
-                using (XmlReader reader = XmlReader.Create(firstSheetEntryStream, _xmlSettings))
+                using (var sheetStream = sheetEntry.Open())
+                using (XmlReader reader = XmlReader.Create(sheetStream, _xmlSettings))
                 {
                     if (!reader.IsStartElement("worksheet", _ns))
                         yield break;
@@ -167,8 +171,10 @@ namespace MiniExcelLibs.OpenXml
             }
 
 
-            using (var firstSheetEntryStream = sheetEntry.Open())
-            using (XmlReader reader = XmlReader.Create(firstSheetEntryStream, _xmlSettings))
+
+
+            using (var sheetStream = sheetEntry.Open())
+            using (XmlReader reader = XmlReader.Create(sheetStream, _xmlSettings))
             {
                 if (!reader.IsStartElement("worksheet", _ns))
                     yield break;
@@ -186,6 +192,7 @@ namespace MiniExcelLibs.OpenXml
                         Dictionary<int, string> headRows = new Dictionary<int, string>();
                         int rowIndex = -1;
                         int nextRowIndex = 0;
+                        bool isFirstRow = true;
                         while (!reader.EOF)
                         {
                             if (reader.IsStartElement("row", _ns))
@@ -195,34 +202,45 @@ namespace MiniExcelLibs.OpenXml
                                     rowIndex = arValue - 1; // The row attribute is 1-based
                                 else
                                     rowIndex++;
+
+                                // row -> c
                                 if (!XmlReaderHelper.ReadFirstContent(reader))
                                     continue;
 
+                                // startcell pass rows
+                                if (rowIndex < startRowIndex )
+                                {
+                                    XmlReaderHelper.SkipToNextSameLevelDom(reader);
+                                    continue;
+                                }
+
+
                                 // fill empty rows
+                                if(!(nextRowIndex < startRowIndex))
                                 {
                                     if (nextRowIndex < rowIndex)
                                     {
                                         for (int i = nextRowIndex; i < rowIndex; i++)
-                                            if (UseHeaderRow)
-                                                yield return Helpers.GetEmptyExpandoObject(headRows);
-                                            else
-                                                yield return Helpers.GetEmptyExpandoObject(maxColumnIndex);
+                                        {
+                                            yield return GetCell(useHeaderRow, maxColumnIndex, headRows,startColumnIndex);
+                                        }
                                     }
                                 }
 
                                 // Set Cells
                                 {
-                                    var cell = UseHeaderRow ? Helpers.GetEmptyExpandoObject(headRows) : Helpers.GetEmptyExpandoObject(maxColumnIndex);
+                                    var cell = GetCell(useHeaderRow, maxColumnIndex, headRows, startColumnIndex);
                                     var columnIndex = withoutCR ? -1 : 0;
                                     while (!reader.EOF)
                                     {
                                         if (reader.IsStartElement("c", _ns))
                                         {
                                             var aS = reader.GetAttribute("s");
-                                            var cellValue = ReadCell(reader, columnIndex, withoutCR, out var _columnIndex);
-                                            columnIndex = _columnIndex;
+                                            var cellValue = ReadCellAndSetColumnIndex(reader, ref columnIndex, withoutCR,startColumnIndex);
 
-                                            // TODO: bad code smell 
+                                            if (columnIndex < startColumnIndex)
+                                                continue;
+
                                             if (!string.IsNullOrEmpty(aS)) // if c with s meaning is custom style need to check type by xl/style.xml
                                             {
                                                 int xfIndex = -1;
@@ -232,59 +250,27 @@ namespace MiniExcelLibs.OpenXml
                                                 // only when have s attribute then load styles xml data
                                                 if (_style == null)
                                                     _style = new ExcelOpenXmlStyles(_archive);
-                                                //if not using First Head then using 1,2,3 as index
-                                                if (UseHeaderRow)
-                                                {
-                                                    if (rowIndex == 0)
-                                                    {
-                                                        var customStyleCellValue = _style.ConvertValueByStyleFormat(xfIndex, cellValue)?.ToString();
-                                                        if (!string.IsNullOrWhiteSpace(customStyleCellValue))
-                                                            headRows.Add(columnIndex, customStyleCellValue);
-                                                    }
-                                                    else
-                                                    {
-                                                        if (headRows.ContainsKey(columnIndex))
-                                                        {
-                                                            var key = headRows[columnIndex];
-                                                            cell[key] = _style.ConvertValueByStyleFormat(xfIndex, cellValue);
-                                                        }
-                                                    }
-                                                }
-                                                else
-                                                {
-                                                    //if not using First Head then using A,B,C as index
-                                                    cell[Helpers.GetAlphabetColumnName(columnIndex)] = _style.ConvertValueByStyleFormat(xfIndex, cellValue);
-                                                }
+
+                                                var customStyleCellValue = _style.ConvertValueByStyleFormat(xfIndex, cellValue)?.ToString();
+                                                cellValue = _style.ConvertValueByStyleFormat(xfIndex, cellValue);
+                                                SetCellsValueAndHeaders(customStyleCellValue, cellValue, useHeaderRow, ref headRows, ref isFirstRow, ref cell, columnIndex);
                                             }
                                             else
                                             {
-                                                if (UseHeaderRow)
-                                                {
-                                                    if (rowIndex == 0)
-                                                    {
-                                                        var valueString = cellValue?.ToString();
-                                                        if (!string.IsNullOrWhiteSpace(valueString))
-                                                            headRows.Add(columnIndex, valueString);
-                                                    }
-                                                    else
-                                                    {
-                                                        if (headRows.ContainsKey(columnIndex))
-                                                            cell[headRows[columnIndex]] = cellValue;
-                                                    }
-                                                }
-                                                else
-                                                {
-                                                    //if not using First Head then using A,B,C as index
-                                                    cell[Helpers.GetAlphabetColumnName(columnIndex)] = cellValue;
-                                                }
+                                                SetCellsValueAndHeaders(cellValue?.ToString(), cellValue, useHeaderRow, ref headRows, ref isFirstRow, ref cell, columnIndex);
                                             }
                                         }
                                         else if (!XmlReaderHelper.SkipContent(reader))
                                             break;
                                     }
 
-                                    if (UseHeaderRow && rowIndex == 0)
-                                        continue;
+                                    if (isFirstRow)
+                                    {
+                                        isFirstRow = false; // for startcell logic
+                                        if (useHeaderRow)
+                                            continue;
+                                    }
+
 
                                     yield return cell;
                                 }
@@ -304,15 +290,44 @@ namespace MiniExcelLibs.OpenXml
             }
         }
 
+        private static IDictionary<string, object> GetCell(bool useHeaderRow, int maxColumnIndex, Dictionary<int, string> headRows, int startColumnIndex)
+        {
+            return useHeaderRow ? Helpers.GetEmptyExpandoObject(headRows) : Helpers.GetEmptyExpandoObject(maxColumnIndex, startColumnIndex);
+        }
 
-        public IEnumerable<T> Query<T>(string sheetName, IConfiguration configuration) where T : class, new()
+        private void SetCellsValueAndHeaders(string cellValueString,object cellValue, bool useHeaderRow, ref Dictionary<int, string> headRows, ref bool isFirstRow, ref IDictionary<string, object> cell, int columnIndex)
+        {
+            if (useHeaderRow)
+            {
+                if (isFirstRow) // for startcell logic
+                {
+                    if (!string.IsNullOrWhiteSpace(cellValueString))
+                        headRows.Add(columnIndex, cellValueString);
+                }
+                else
+                {
+                    if (headRows.ContainsKey(columnIndex))
+                    {
+                        var key = headRows[columnIndex];
+                        cell[key] = cellValue;
+                    }
+                }
+            }
+            else
+            {
+                //if not using First Head then using A,B,C as index
+                cell[Helpers.GetAlphabetColumnName(columnIndex)] = cellValue;
+            }
+        }
+
+        public IEnumerable<T> Query<T>(string sheetName, string startCell, IConfiguration configuration) where T : class, new()
         {
             var type = typeof(T);
 
             var first = true;
             List<ExcelCustomPropertyInfo> props = null;
-            var headers = Query(false, sheetName, configuration).FirstOrDefault()?.Values?.Select(s => s?.ToString())?.ToArray(); //TODO:need to optimize
-            foreach (var item in Query(true, sheetName, configuration))
+            var headers = Query(false, sheetName, startCell, configuration).FirstOrDefault()?.Values?.Select(s => s?.ToString())?.ToArray(); //TODO:need to optimize
+            foreach (var item in Query(true, sheetName, startCell, configuration))
             {
                 if (first)
                 {
@@ -510,19 +525,32 @@ namespace MiniExcelLibs.OpenXml
             return sheetRecords;
         }
 
-        private object ReadCell(XmlReader reader, int nextColumnIndex, bool withoutCR, out int columnIndex)
+        private object ReadCellAndSetColumnIndex(XmlReader reader,ref int columnIndex, bool withoutCR,int startColumnIndex)
         {
+            var newColumnIndex = 0;
             int xfIndex = -1;
             var aT = reader.GetAttribute("t");
             var aR = reader.GetAttribute("r");
 
             if (withoutCR)
-                columnIndex = nextColumnIndex + 1;
+                newColumnIndex = columnIndex + 1;
             //TODO:need to check only need nextColumnIndex or columnIndex
             else if (ReferenceHelper.ParseReference(aR, out int referenceColumn, out _))
-                columnIndex = referenceColumn - 1; // ParseReference is 1-based
+                newColumnIndex = referenceColumn - 1; // ParseReference is 1-based
             else
-                columnIndex = nextColumnIndex;
+                newColumnIndex = columnIndex;
+
+            columnIndex = newColumnIndex;
+
+            if (columnIndex < startColumnIndex)
+            {
+                if (!XmlReaderHelper.ReadFirstContent(reader))
+                    return null;
+                while (!reader.EOF)
+                    if (!XmlReaderHelper.SkipContent(reader))
+                        break;
+                return null;
+            }
 
             if (!XmlReaderHelper.ReadFirstContent(reader))
                 return null;
@@ -548,7 +576,9 @@ namespace MiniExcelLibs.OpenXml
                 }
             }
 
-            return value;
+
+
+             return value;
         }
 
         private void ConvertCellValue(string rawValue, string aT, int xfIndex, out object value)

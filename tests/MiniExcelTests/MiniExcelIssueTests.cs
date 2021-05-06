@@ -25,6 +25,53 @@ namespace MiniExcelLibs.Tests
             this.output = output;
         }
 
+        /// <summary>
+        /// Query Support StartCell #147
+        /// https://github.com/shps951023/MiniExcel/issues/147
+        /// </summary>
+        [Fact]
+        public void Issue147()
+        {
+            {
+                var path = PathHelper.GetSamplePath("xlsx/TestIssue147.xlsx");
+                var rows = MiniExcel.Query(path, useHeaderRow: false, startCell: "C3", sheetName: "Sheet1").ToList();
+
+                Assert.Equal(new[] { "C", "D", "E" }, (rows[0] as IDictionary<string, object>).Keys);
+                Assert.Equal(new[] { "Column1", "Column2", "Column3" }, new[] { rows[0].C as string, rows[0].D as string, rows[0].E as string });
+                Assert.Equal(new[] { "C4", "D4", "E4" }, new[] { rows[1].C as string, rows[1].D as string, rows[1].E as string });
+                Assert.Equal(new[] { "C9", "D9", "E9" }, new[] { rows[6].C as string, rows[6].D as string, rows[6].E as string });
+                Assert.Equal(new[] { "C12", "D12", "E12" }, new[] { rows[9].C as string, rows[9].D as string, rows[9].E as string });
+                Assert.Equal(new[] { "C13", "D13", "E13" }, new[] { rows[10].C as string, rows[10].D as string, rows[10].E as string });
+                foreach (var i in new[] { 4, 5, 7, 8 })
+                    Assert.Equal(new[] { default(string), default(string), default(string) }, new[] { rows[i].C as string, rows[i].D as string, rows[i].E as string });
+
+                Assert.Equal(11, rows.Count);
+
+
+                var columns = MiniExcel.GetColumns(path, startCell: "C3");
+                Assert.Equal(new[] { "C", "D", "E" }, columns);
+            }
+
+            {
+                var path = PathHelper.GetSamplePath("xlsx/TestIssue147.xlsx");
+                var rows = MiniExcel.Query(path, useHeaderRow: true, startCell: "C3", sheetName: "Sheet1").ToList();
+
+                Assert.Equal(new[] { "Column1", "Column2", "Column3" }, (rows[0] as IDictionary<string, object>).Keys);
+                Assert.Equal(new[] { "C4", "D4", "E4" }, new[] { rows[0].Column1 as string, rows[0].Column2 as string, rows[0].Column3 as string });
+                Assert.Equal(new[] { "C9", "D9", "E9" }, new[] { rows[5].Column1 as string, rows[5].Column2 as string, rows[5].Column3 as string });
+                Assert.Equal(new[] { "C12", "D12", "E12" }, new[] { rows[8].Column1 as string, rows[8].Column2 as string, rows[8].Column3 as string });
+                Assert.Equal(new[] { "C13", "D13", "E13" }, new[] { rows[9].Column1 as string, rows[9].Column2 as string, rows[9].Column3 as string });
+                foreach (var i in new[] { 3, 4, 6, 7 })
+                    Assert.Equal(new[] { default(string), default(string), default(string) }, new[] { rows[i].Column1 as string, rows[i].Column2 as string, rows[i].Column3 as string });
+
+                Assert.Equal(10, rows.Count);
+
+
+                var columns = MiniExcel.GetColumns(path, useHeaderRow: true, startCell: "C3");
+                Assert.Equal(new[] { "Column1", "Column2", "Column3" }, columns);
+            }
+        }
+
 
         /// <summary>
         /// [Can SaveAs support iDataReader export to avoid the dataTable consuming too much memory · Issue #211 · shps951023/MiniExcel]

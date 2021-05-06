@@ -14,8 +14,10 @@ namespace MiniExcelLibs.Csv
         {
             this._stream = stream;
         }
-        public IEnumerable<IDictionary<string, object>> Query(bool useHeaderRow, string sheetName, IConfiguration configuration)
+        public IEnumerable<IDictionary<string, object>> Query(bool useHeaderRow, string sheetName, string startCell, IConfiguration configuration)
         {
+            if (startCell != "A1")
+                throw new NotImplementedException("CSV not Implement startCell");
             var cf = configuration == null ? CsvConfiguration.DefaultConfiguration : (CsvConfiguration)configuration;
 
             using (var reader = cf.GetStreamReaderFunc(_stream))
@@ -52,7 +54,7 @@ namespace MiniExcelLibs.Csv
 
                     //body
                     {
-                        var cell = Helpers.GetEmptyExpandoObject(read.Length - 1);
+                        var cell = Helpers.GetEmptyExpandoObject(read.Length - 1,0);
                         for (int i = 0; i <= read.Length - 1; i++)
                             cell[Helpers.GetAlphabetColumnName(i)] = read[i];
                         yield return cell;
@@ -61,7 +63,7 @@ namespace MiniExcelLibs.Csv
             }
         }
 
-        public IEnumerable<T> Query<T>(string sheetName, IConfiguration configuration) where T : class, new()
+        public IEnumerable<T> Query<T>(string sheetName, string startCell, IConfiguration configuration) where T : class, new()
         {
             var cf = configuration == null ? CsvConfiguration.DefaultConfiguration : (CsvConfiguration)configuration;
 

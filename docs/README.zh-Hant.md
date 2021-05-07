@@ -7,6 +7,9 @@
 
 ---
 
+### 0.14.1
+- [Bug] 修正自定義 m/d 格式沒轉成 datetime #222
+
 ### 0.14.0
 - [New] Query、GetColumns 支持 startCell 能指定 cell 開始讀取資料 #147
 - [New] GetColumns 支持讀取表頭

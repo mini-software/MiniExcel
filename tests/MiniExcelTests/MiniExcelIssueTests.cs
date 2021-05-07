@@ -26,6 +26,19 @@ namespace MiniExcelLibs.Tests
         }
 
         /// <summary>
+        /// [Custom yyyy-MM-dd format not convert datetime · Issue #222]
+        /// (https://github.com/shps951023/MiniExcel/issues/222)
+        /// </summary>
+        [Fact]
+        public void Issue222()
+        {
+            var path = PathHelper.GetSamplePath("xlsx/TestIssue222.xlsx");
+            var rows = MiniExcel.Query(path).ToList();
+            Assert.Equal(typeof(DateTime), rows[1].A.GetType());
+            Assert.Equal(new DateTime(2021,4,29), rows[1].A);
+        }
+
+        /// <summary>
         /// Query Support StartCell #147
         /// https://github.com/shps951023/MiniExcel/issues/147
         /// </summary>

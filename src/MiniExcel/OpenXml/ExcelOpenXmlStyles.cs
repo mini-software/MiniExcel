@@ -148,6 +148,9 @@
             { 47, new NumberFormatString("mm:ss.0",typeof(TimeSpan?)) },
             { 48, new NumberFormatString("##0.0E+0",typeof(string)) },
             { 49, new NumberFormatString("@",typeof(string)) },
+
+            // issue 222
+            { 58, new NumberFormatString("m/d",typeof(DateTime?)) },
         };
     }
 

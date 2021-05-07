@@ -6,6 +6,9 @@
 
 ---
 
+### 0.14.1
+- [Bug] Fix custom m/d format not convert datetime #222
+
 ### 0.14.0
 - [New] Query、GetColumns support startCell #147
 - [New] GetColumns support read headers

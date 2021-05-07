@@ -26,6 +26,31 @@ namespace MiniExcelLibs.Tests
         }
 
         /// <summary>
+        /// ASP.NET Webform gridview datasource can't use miniexcel queryasdatatable · Issue #223]
+        /// (https://github.com/shps951023/MiniExcel/issues/223)
+        /// </summary>
+        [Fact]
+        public void Issue223()
+        {
+            var value = new List<Dictionary<string, object>>()
+            {
+                new Dictionary<string, object>(){{"A",null},{"B",null}},
+                new Dictionary<string, object>(){{"A",123},{"B",new DateTime(2021,1,1)}},
+                new Dictionary<string, object>(){{"A",Guid.NewGuid()},{"B","HelloWorld"}},
+            };
+            var path = PathHelper.GetNewTemplateFilePath();
+            MiniExcel.SaveAs(path,value);
+
+            var dt = MiniExcel.QueryAsDataTable(path);
+            var columns = dt.Columns;
+            Assert.Equal(typeof(string), columns[0].DataType);
+            Assert.Equal(typeof(string), columns[1].DataType);
+
+            Assert.Equal("123", dt.Rows[1]["A"]);
+            Assert.Equal("HelloWorld", dt.Rows[2]["B"]);
+        }
+
+        /// <summary>
         /// [Custom yyyy-MM-dd format not convert datetime · Issue #222]
         /// (https://github.com/shps951023/MiniExcel/issues/222)
         /// </summary>
@@ -137,9 +162,9 @@ namespace MiniExcelLibs.Tests
                 Assert.Equal("Test1", dt.Rows[0]["A"]);
                 Assert.Equal("Test2", dt.Rows[0]["B"]);
                 Assert.Equal("1", dt.Rows[1]["A"]);
-                Assert.Equal((double)2, dt.Rows[1]["B"]);
+                Assert.Equal("2", dt.Rows[1]["B"]);
                 Assert.Equal("3", dt.Rows[2]["A"]);
-                Assert.Equal((double)4, dt.Rows[2]["B"]);
+                Assert.Equal("4", dt.Rows[2]["B"]);
             }
         }
 

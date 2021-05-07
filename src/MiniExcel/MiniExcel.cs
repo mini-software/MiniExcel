@@ -74,7 +74,7 @@
 
         public static ICollection<string> GetColumns(this Stream stream, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null)
         {
-            return (Query(stream, useHeaderRow,sheetName,excelType,startCell,configuration).FirstOrDefault() as IDictionary<string, object>)?.Keys;
+            return (Query(stream, useHeaderRow, sheetName, excelType, startCell, configuration).FirstOrDefault() as IDictionary<string, object>)?.Keys;
         }
 
         public static void SaveAsByTemplate(string path, string templatePath, object value)
@@ -114,13 +114,16 @@
 
         /// <summary>
         /// This method is not recommended, because it'll load all data into memory.
+        /// Note: if first row cell is null value, column type will be string
         /// </summary>
         public static DataTable QueryAsDataTable(this Stream stream, bool useHeaderRow = true, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null)
         {
-            var dt = new DataTable();
-            dt.TableName = sheetName;
+            if (sheetName == null)
+                sheetName = stream.GetSheetNames().First();
+
+            var dt = new DataTable(sheetName);
             var first = true;
-            var rows = ExcelReaderFactory.GetProvider(stream, GetExcelType(stream, excelType)).Query(useHeaderRow, sheetName,startCell, configuration);
+            var rows = ExcelReaderFactory.GetProvider(stream, GetExcelType(stream, excelType)).Query(useHeaderRow, sheetName, startCell, configuration);
             foreach (IDictionary<string, object> row in rows)
             {
                 if (first)
@@ -128,14 +131,20 @@
                     foreach (var key in row.Keys)
                     {
                         //TODO:base on cell t xml
-                        //var type = row[key]?.GetType() ?? typeof(object);
-                        var type = typeof(object);
+                        // issue 223 : can't assign typeof object 
+                        var type = row[key]?.GetType() ?? typeof(string);
+                        if (type == null || type == typeof(object))
+                            type = typeof(string);
                         dt.Columns.Add(key, type);
                     }
 
                     first = false;
                 }
-                dt.Rows.Add(row.Values.ToArray());
+
+                var newRow = dt.NewRow();
+                foreach (var key in row.Keys)
+                    newRow[key] = row[key];
+                dt.Rows.Add(newRow);
             }
             return dt;
         }

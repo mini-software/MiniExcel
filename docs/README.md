@@ -6,6 +6,9 @@
 
 ---
 
+### 0.14.2
+- [Bug] Fix asp.net webform gridview datasource can't use QueryAsDataTable #223
+
 ### 0.14.1
 - [Bug] Fix custom m/d format not convert datetime #222
 

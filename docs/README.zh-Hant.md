@@ -7,6 +7,9 @@
 
 ---
 
+### 0.14.2
+- [Bug] 修正 asp.net webform gridview datasource 不能使用 QueryAsDataTable #223
+
 ### 0.14.1
 - [Bug] 修正自定義 m/d 格式沒轉成 datetime #222
 

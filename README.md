@@ -326,6 +326,37 @@ using (var stream = File.Create(path))
 }
 ```
 
+#### 5. SaveAs to MemoryStream  [[Try it]](https://dotnetfiddle.net/JOen0e)
+
+```csharp
+using (var stream = new MemoryStream()) //support FileStream,MemoryStream ect.
+{
+    stream.SaveAs(values);
+}
+```
+
+e.g : api of export excel
+
+```csharp
+public IActionResult DownloadExcel()
+{
+    var values = new[] {
+        new { Column1 = "MiniExcel", Column2 = 1 },
+        new { Column1 = "Github", Column2 = 2}
+    };
+
+    var memoryStream = new MemoryStream();
+    memoryStream.SaveAs(values);
+    memoryStream.Seek(0, SeekOrigin.Begin);
+    return new FileStreamResult(memoryStream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+    {
+        FileDownloadName = "demo.xlsx"
+    };
+}
+```
+
+
+
 #### 6. Support IDataReader value parameter
 
 ```csharp
@@ -787,6 +818,30 @@ public static IEnumerable<T> Page<T>(IEnumerable<T> en, int pageSize, int page)
 ```
 
 ![20210419](https://user-images.githubusercontent.com/12729184/114679083-6ef4c400-9d3e-11eb-9f78-a86daa45fe46.gif)
+
+
+
+#### 4. WebForm export Excel by memorystream
+
+```csharp
+var fileName = "Demo.xlsx";
+var sheetName = "Sheet1";
+HttpResponse response = HttpContext.Current.Response;
+response.Clear();
+response.ContentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+response.AddHeader("Content-Disposition", $"attachment;filename=\"{fileName}\"");
+var values = new[] {
+    new { Column1 = "MiniExcel", Column2 = 1 },
+    new { Column1 = "Github", Column2 = 2}
+};
+var memoryStream = new MemoryStream();
+memoryStream.SaveAs(values, sheetName: sheetName);
+memoryStream.Seek(0, SeekOrigin.Begin);
+memoryStream.CopyTo(Response.OutputStream);
+response.End();
+```
+
+
 
 ### FAQ
 

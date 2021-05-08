@@ -317,12 +317,32 @@ output :
 | MiniExcel     | 1     |
 | Github     | 2     |
 
-#### 5. SaveAs 支援 Stream [[Try it]](https://dotnetfiddle.net/JOen0e)
+#### 5. SaveAs 支持 Stream，生成文件不落地 [[Try it]](https://dotnetfiddle.net/JOen0e)
 
 ```csharp
-using (var stream = File.Create(path))
+using (var stream = new MemoryStream()) //支持 FileStream,MemoryStream..等
 {
     stream.SaveAs(values);
+}
+```
+
+像是 API 導出 Excel
+
+```csharp
+public IActionResult DownloadExcel()
+{
+    var values = new[] {
+        new { Column1 = "MiniExcel", Column2 = 1 },
+        new { Column1 = "Github", Column2 = 2}
+    };
+
+    var memoryStream = new MemoryStream();
+    memoryStream.SaveAs(values);
+    memoryStream.Seek(0, SeekOrigin.Begin);
+    return new FileStreamResult(memoryStream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+    {
+        FileDownloadName = "demo.xlsx"
+    };
 }
 ```
 
@@ -790,7 +810,25 @@ public static IEnumerable<T> Page<T>(IEnumerable<T> en, int pageSize, int page)
 
 ![20210419](https://user-images.githubusercontent.com/12729184/114679083-6ef4c400-9d3e-11eb-9f78-a86daa45fe46.gif)
 
+#### 4. WebForm不落地導出Excel
 
+```csharp
+var fileName = "Demo.xlsx";
+var sheetName = "Sheet1";
+HttpResponse response = HttpContext.Current.Response;
+response.Clear();
+response.ContentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+response.AddHeader("Content-Disposition", $"attachment;filename=\"{fileName}\"");
+var values = new[] {
+    new { Column1 = "MiniExcel", Column2 = 1 },
+    new { Column1 = "Github", Column2 = 2}
+};
+var memoryStream = new MemoryStream();
+memoryStream.SaveAs(values, sheetName: sheetName);
+memoryStream.Seek(0, SeekOrigin.Begin);
+memoryStream.CopyTo(Response.OutputStream);
+response.End();
+```
 
 ### FAQ 常見問題
 

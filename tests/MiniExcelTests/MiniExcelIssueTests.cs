@@ -25,6 +25,20 @@ namespace MiniExcelLibs.Tests
             this.output = output;
         }
 
+
+        /// <summary>
+        /// https://github.com/shps951023/MiniExcel/issues/226
+        /// Fix SaveAsByTemplate single column demension index error #226
+        /// </summary>
+        [Fact]
+        public void Issue226()
+        {
+            var path = PathHelper.GetNewTemplateFilePath();
+            var templatePath = PathHelper.GetSamplePath("xlsx/TestIssue226.xlsx");
+            MiniExcel.SaveAsByTemplate(path, templatePath, new { employees = new[] { new { name = "123" }, new { name = "123" } } });
+            Assert.Equal("A1:A3", Helpers.GetFirstSheetDimensionRefValue(path));
+        }
+
         /// <summary>
         /// ASP.NET Webform gridview datasource can't use miniexcel queryasdatatable · Issue #223]
         /// (https://github.com/shps951023/MiniExcel/issues/223)

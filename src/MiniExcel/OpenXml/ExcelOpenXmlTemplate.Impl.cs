@@ -86,7 +86,7 @@ namespace MiniExcelLibs.OpenXml
 
         private List<XRowInfo> XRowInfos { get; set; }
 
-        private Dictionary<string,XMergeCell> XMergeCellInfos { get; set; }
+        private Dictionary<string, XMergeCell> XMergeCellInfos { get; set; }
         public List<XMergeCell> NewXMergeCellInfos { get; private set; }
 
         private void GenerateSheetXmlImpl(ZipArchiveEntry sheetZipEntry, Stream stream, Stream sheetStream, Dictionary<string, object> inputMaps, List<string> sharedStrings, XmlWriterSettings xmlWriterSettings = null)
@@ -273,7 +273,7 @@ namespace MiniExcelLibs.OpenXml
                                     //TODO: ![image](https://user-images.githubusercontent.com/12729184/114848248-17735880-9e11-11eb-8258-63266bda0a1a.png)
                                     newRow.InnerXml = newRow.InnerXml.Replace(key, cellValueStr);
                                 }
-                            }                            
+                            }
 
                             // note: only first time need add diff ![image](https://user-images.githubusercontent.com/12729184/114494728-6bceda80-9c4f-11eb-9685-8b5ed054eabe.png)
                             if (!first)
@@ -352,7 +352,7 @@ namespace MiniExcelLibs.OpenXml
 
                 writer.Write($"</{prefix}sheetData>");
 
-                if(this.NewXMergeCellInfos.Count != 0)
+                if (this.NewXMergeCellInfos.Count != 0)
                 {
                     writer.Write($"<{prefix}mergeCells count=\"{this.NewXMergeCellInfos.Count}\">");
                     foreach (var cell in this.NewXMergeCellInfos)
@@ -465,7 +465,7 @@ namespace MiniExcelLibs.OpenXml
                             {
                                 var first = true;
                                 //TODO:if CellIEnumerableValues is ICollection or Array then get length or Count
-                                
+
                                 foreach (var element in xRowInfo.CellIEnumerableValues) //TODO: optimize performance?
                                 {
                                     xRowInfo.CellIEnumerableValuesCount++;
@@ -603,12 +603,20 @@ namespace MiniExcelLibs.OpenXml
 
             // e.g <dimension ref=\"A1:B6\" /> only need to update B6 to BMaxRowIndex
             var @refs = dimension.GetAttribute("ref").Split(':');
-            var letter = new String(refs[1].Where(Char.IsLetter).ToArray());
-            var digit = int.Parse(new String(refs[1].Where(Char.IsDigit).ToArray()));
+            if (@refs.Length == 2)
+            {
+                var letter = new String(refs[1].Where(Char.IsLetter).ToArray());
+                var digit = int.Parse(new String(refs[1].Where(Char.IsDigit).ToArray()));
 
-            dimension.SetAttribute("ref", $"{refs[0]}:{letter}{digit + maxRowIndexDiff}");
+                dimension.SetAttribute("ref", $"{refs[0]}:{letter}{digit + maxRowIndexDiff}");
+            }
+            else
+            {
+                var letter = new String(refs[0].Where(Char.IsLetter).ToArray());
+                var digit = int.Parse(new String(refs[0].Where(Char.IsDigit).ToArray()));
+
+                dimension.SetAttribute("ref", $"A1:{letter}{digit + maxRowIndexDiff}");
+            }
         }
-
-
     }
 }

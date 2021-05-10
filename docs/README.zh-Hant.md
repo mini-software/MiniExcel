@@ -7,6 +7,10 @@
 
 ---
 
+### 0.14.3
+- [Opt] 支持 Xlsm 自動判斷 #227
+- [Bug] 修正 SaveAsByTemplate 單列 demension 索引錯誤 #226
+
 ### 0.14.2
 - [Bug] 修正 asp.net webform gridview datasource 不能使用 QueryAsDataTable #223
 

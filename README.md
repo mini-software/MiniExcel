@@ -886,6 +886,7 @@ No, the image test has 1 million rows*10 columns of data, the maximum memory usa
 ### Limitations and caveats 
 
 - Not support xls and encrypted file now
+- xlsm only support Query
 
 ### Reference
 

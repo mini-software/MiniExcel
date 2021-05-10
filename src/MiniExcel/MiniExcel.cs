@@ -3,6 +3,7 @@
     using MiniExcelLibs.OpenXml;
     using MiniExcelLibs.Utils;
     using MiniExcelLibs.Zip;
+    using System;
     using System.Collections.Generic;
     using System.Data;
     using System.IO;
@@ -12,6 +13,8 @@
     {
         public static void SaveAs(string path, object value, bool printHeader = true, string sheetName = "Sheet1", ExcelType excelType = ExcelType.UNKNOWN, IConfiguration configuration = null)
         {
+            if (Path.GetExtension(path).ToLowerInvariant() == ".xlsm")
+                throw new NotSupportedException("MiniExcel SaveAs not support xlsm");
             using (FileStream stream = new FileStream(path, FileMode.CreateNew))
                 SaveAs(stream, value, printHeader, sheetName, GetExcelType(path, excelType), configuration);
         }

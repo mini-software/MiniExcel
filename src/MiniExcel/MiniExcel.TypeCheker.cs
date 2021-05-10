@@ -14,6 +14,7 @@
                 case ".csv":
                     return ExcelType.CSV;
                 case ".xlsx":
+                case ".xlsm":
                     return ExcelType.XLSX;
                 //case ".xls":
                 //    return ExcelType.XLS;

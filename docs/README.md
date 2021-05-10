@@ -6,6 +6,10 @@
 
 ---
 
+### 0.14.3
+- [Opt] Support Xlsm AutoCheck #227
+- [Bug] Fix SaveAsByTemplate single column demension index error #226
+
 ### 0.14.2
 - [Bug] Fix asp.net webform gridview datasource can't use QueryAsDataTable #223
 

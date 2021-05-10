@@ -25,6 +25,53 @@ namespace MiniExcelLibs.Tests
             this.output = output;
         }
 
+        /// <summary>
+        /// [Support Xlsm AutoCheck · Issue #227 · shps951023/MiniExcel]
+        /// (https://github.com/shps951023/MiniExcel/issues/227)
+        /// </summary>
+        [Fact]
+        public void Issue227()
+        {
+            {
+                var path = PathHelper.GetNewTemplateFilePath("xlsm");
+                Assert.Throws<NotSupportedException>(() => MiniExcel.SaveAs(path, new[] { new { V = "A1" }, new { V = "A2" } }));
+            }
+
+            {
+                var path = PathHelper.GetSamplePath("xlsx/TestIssue227.xlsm");
+                {
+                    var rows = MiniExcel.Query<UserAccount>(path).ToList();
+
+                    Assert.Equal(100, rows.Count());
+
+                    Assert.Equal(Guid.Parse("78DE23D2-DCB6-BD3D-EC67-C112BBC322A2"), rows[0].ID);
+                    Assert.Equal("Wade", rows[0].Name);
+                    Assert.Equal(DateTime.ParseExact("27/09/2020", "dd/MM/yyyy", CultureInfo.InvariantCulture), rows[0].BoD);
+                    Assert.Equal(36, rows[0].Age);
+                    Assert.False(rows[0].VIP);
+                    Assert.Equal(decimal.Parse("5019.12"), rows[0].Points);
+                    Assert.Equal(1, rows[0].IgnoredProperty);
+                }
+                {
+                    using (var stream = File.OpenRead(path))
+                    {
+                        var rows = stream.Query<UserAccount>().ToList();
+
+                        Assert.Equal(100, rows.Count());
+
+                        Assert.Equal(Guid.Parse("78DE23D2-DCB6-BD3D-EC67-C112BBC322A2"), rows[0].ID);
+                        Assert.Equal("Wade", rows[0].Name);
+                        Assert.Equal(DateTime.ParseExact("27/09/2020", "dd/MM/yyyy", CultureInfo.InvariantCulture), rows[0].BoD);
+                        Assert.Equal(36, rows[0].Age);
+                        Assert.False(rows[0].VIP);
+                        Assert.Equal(decimal.Parse("5019.12"), rows[0].Points);
+                        Assert.Equal(1, rows[0].IgnoredProperty);
+                    }
+                }
+            }
+
+
+        }
 
         /// <summary>
         /// https://github.com/shps951023/MiniExcel/issues/226
@@ -53,7 +100,7 @@ namespace MiniExcelLibs.Tests
                 new Dictionary<string, object>(){{"A",Guid.NewGuid()},{"B","HelloWorld"}},
             };
             var path = PathHelper.GetNewTemplateFilePath();
-            MiniExcel.SaveAs(path,value);
+            MiniExcel.SaveAs(path, value);
 
             var dt = MiniExcel.QueryAsDataTable(path);
             var columns = dt.Columns;
@@ -74,7 +121,7 @@ namespace MiniExcelLibs.Tests
             var path = PathHelper.GetSamplePath("xlsx/TestIssue222.xlsx");
             var rows = MiniExcel.Query(path).ToList();
             Assert.Equal(typeof(DateTime), rows[1].A.GetType());
-            Assert.Equal(new DateTime(2021,4,29), rows[1].A);
+            Assert.Equal(new DateTime(2021, 4, 29), rows[1].A);
         }
 
         /// <summary>
@@ -142,7 +189,7 @@ namespace MiniExcelLibs.Tests
 
                 MiniExcel.SaveAs(path, reader);
 
-                var rows = MiniExcel.Query(path,true).ToList();
+                var rows = MiniExcel.Query(path, true).ToList();
                 Assert.Equal((double)1, rows[0].Test1);
                 Assert.Equal((double)2, rows[0].Test2);
                 Assert.Equal((double)3, rows[1].Test1);
@@ -157,7 +204,7 @@ namespace MiniExcelLibs.Tests
         public void Issue216()
         {
             var path = PathHelper.GetNewTemplateFilePath();
-            var value = new[] { new { Test1="1",Test2=2 }, new { Test1 = "3", Test2 = 4 } };
+            var value = new[] { new { Test1 = "1", Test2 = 2 }, new { Test1 = "3", Test2 = 4 } };
             MiniExcel.SaveAs(path, value);
 
             {
@@ -205,7 +252,7 @@ namespace MiniExcelLibs.Tests
                 var value = new[] { new { Test = 123456.789 } };
                 MiniExcel.SaveAs(path, value);
 
-                var A2 = MiniExcel.Query(path,true).First().Test ;
+                var A2 = MiniExcel.Query(path, true).First().Test;
                 Assert.Equal(123456.789, A2);
 
                 File.Delete(path);
@@ -223,14 +270,14 @@ namespace MiniExcelLibs.Tests
             var path = PathHelper.GetSamplePath("xlsx/TestIssue220.xlsx");
             var rows = MiniExcel.Query(path, useHeaderRow: true);
             var result = (from s in rows
-                            group s by s.PRT_ID into g
-                            select new
-                            {
-                                PRT_ID = g.Key,
-                                Apr = g.Sum(_ => (double?)_.Apr),
-                                May = g.Sum(_ => (double?)_.May),
-                                Jun = g.Sum(_ => (double?)_.Jun),
-                            }
+                          group s by s.PRT_ID into g
+                          select new
+                          {
+                              PRT_ID = g.Key,
+                              Apr = g.Sum(_ => (double?)_.Apr),
+                              May = g.Sum(_ => (double?)_.May),
+                              Jun = g.Sum(_ => (double?)_.Jun),
+                          }
             ).ToList();
             Assert.Equal(91843.25, result[0].Jun);
             Assert.Equal(50000.99, result[1].Jun);

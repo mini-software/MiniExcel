@@ -1,12 +1,22 @@
-[![NuGet](https://img.shields.io/nuget/v/MiniExcel.svg)](https://www.nuget.org/packages/MiniExcel)  [![](https://img.shields.io/nuget/dt/MiniExcel.svg)](https://www.nuget.org/packages/MiniExcel)  [![Build status](https://ci.appveyor.com/api/projects/status/b2vustrwsuqx45f4/branch/master?svg=true)](https://ci.appveyor.com/project/shps951023/miniexcel/branch/master) [![.NET Framework](https://img.shields.io/badge/.NET%20Framework-%3E%3D%204.5-red.svg)](#)  [![.NET Standard](https://img.shields.io/badge/.NET%20Standard-%3E%3D%202.0-red.svg)](#) [![.NET](https://img.shields.io/badge/.NET%20-%3E%3D%205.0-red.svg)](#) 
+<div align="center">
 
----
+[![NuGet](https://img.shields.io/nuget/v/MiniExcel.svg)](https://www.nuget.org/packages/MiniExcel)  [![](https://img.shields.io/nuget/dt/MiniExcel.svg)](https://www.nuget.org/packages/MiniExcel)  [![Build status](https://ci.appveyor.com/api/projects/status/b2vustrwsuqx45f4/branch/master?svg=true)](https://ci.appveyor.com/project/shps951023/miniexcel/branch/master)
 
-[English](README.md) / [简体中文](README.zh-CN.md) / [繁體中文](README.zh-Hant.md)
+</div>
 
-----
+<div align="center">
 
-QQ : 813100564  [![.NET MiniExcel 交流群](https://pub.idqqimg.com/wpa/images/group.png ".NET MiniExcel 交流群")](https://qm.qq.com/cgi-bin/qm/qr?k=3OkxuL14sXhJsUimWK8wx_Hf28Wl49QE&jump_from=webapi) / 459050029 (dotnet china) 
+**[English](README.md) | [简体中文](README.zh-CN.md) | [繁體中文](README.zh-Hant.md)**
+
+</div>
+
+<div align="center">
+
+🙌 您的 [Github Star](https://github.com/shps951023/MiniExcel) ，能帮助 MiniExcel 让更多人看到 🙌
+
+</div>
+
+
 
 ---
 
@@ -37,11 +47,9 @@ MiniExcel简单、高效避免OOM的.NET处理Excel查、写、填充数据工�
 - [Excel Column Name/Index/Ignore Attribute](#getstart4)
 - [例子](#getstart5)
 
-
-
 ### 安装
 
-请查看 [from NuGet](https://www.nuget.org/packages/MiniExcel)
+请查看 [NuGet](https://www.nuget.org/packages/MiniExcel)
 
 ### 更新日志
 

@@ -1,8 +1,20 @@
-[![NuGet](https://img.shields.io/nuget/v/MiniExcel.svg)](https://www.nuget.org/packages/MiniExcel)  [![](https://img.shields.io/nuget/dt/MiniExcel.svg)](https://www.nuget.org/packages/MiniExcel)  [![Build status](https://ci.appveyor.com/api/projects/status/b2vustrwsuqx45f4/branch/master?svg=true)](https://ci.appveyor.com/project/shps951023/miniexcel/branch/master) [![.NET Framework](https://img.shields.io/badge/.NET%20Framework-%3E%3D%204.5-red.svg)](#)  [![.NET Standard](https://img.shields.io/badge/.NET%20Standard-%3E%3D%202.0-red.svg)](#) [![.NET](https://img.shields.io/badge/.NET%20-%3E%3D%205.0-red.svg)](#) [![](https://img.shields.io/badge/Facebook-1877F2?logo=facebook&logoColor=white)](https://www.facebook.com/MiniExcel)
+<div align="center">
 
----
+[![NuGet](https://img.shields.io/nuget/v/MiniExcel.svg)](https://www.nuget.org/packages/MiniExcel)  [![](https://img.shields.io/nuget/dt/MiniExcel.svg)](https://www.nuget.org/packages/MiniExcel)  [![Build status](https://ci.appveyor.com/api/projects/status/b2vustrwsuqx45f4/branch/master?svg=true)](https://ci.appveyor.com/project/shps951023/miniexcel/branch/master)
 
-[English](README.md) / [繁體中文](README.zh-Hant.md) / [简体中文](README.zh-CN.md)
+</div>
+
+<div align="center">
+
+**[English](README.md) | [繁體中文](README.zh-Hant.md) | [简体中文](README.zh-CN.md)**
+
+</div>
+
+<div align="center">
+
+🙌 您的 [Github Star](https://github.com/shps951023/MiniExcel) ，能幫助 MiniExcel 讓更多人看到 🙌
+
+</div>
 
 ---
 
@@ -37,7 +49,7 @@ MiniExcel 簡單、高效避免OOM的.NET處理Excel查、寫、填充工具。
 
 ### 安裝
 
-請查看 [from NuGet](https://www.nuget.org/packages/MiniExcel)
+請查看 [NuGet](https://www.nuget.org/packages/MiniExcel)
 
 ### 更新日誌
 

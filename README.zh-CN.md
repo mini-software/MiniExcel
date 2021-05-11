@@ -16,6 +16,11 @@
 
 </div>
 
+<div align="center">
+
+[813100564(MiniExcel QQ交流群)](https://qm.qq.com/cgi-bin/qm/qr?k=3OkxuL14sXhJsUimWK8wx_Hf28Wl49QE&jump_from=webapi) 
+
+</div>
 
 
 ---

@@ -9,6 +9,7 @@
 
 ### 0.14.4
 - [New] Query 支持向下填充合併的單元格 [#122](https://github.com/shps951023/MiniExcel/issues/122)
+- [Bug] 修正 QueryAsDataTable 錯誤 "Cannot set Column to be null" #229
 
 ### 0.14.3
 - [Opt] 支持 Xlsm 自動判斷 #227

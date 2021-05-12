@@ -27,6 +27,21 @@ namespace MiniExcelLibs.Tests
         }
 
         /// <summary>
+        /// v0.14.3 QueryAsDataTable error "Cannot set Column to be null" #229
+        /// https://github.com/shps951023/MiniExcel/issues/229
+        /// </summary>
+        [Fact]
+        public void Issue229()
+        {
+            var path = PathHelper.GetSamplePath("xlsx/TestIssue229.xlsx");
+            var dt = MiniExcel.QueryAsDataTable(path);
+            foreach(DataColumn column in dt.Columns)
+            {
+                Assert.Equal(DBNull.Value, dt.Rows[3][column]);
+            }
+        }
+
+        /// <summary>
         /// [Query Merge cells data · Issue #122 · shps951023/MiniExcel]
         /// (https://github.com/shps951023/MiniExcel/issues/122)
         /// </summary>

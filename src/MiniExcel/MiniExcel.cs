@@ -146,7 +146,13 @@
 
                 var newRow = dt.NewRow();
                 foreach (var key in row.Keys)
-                    newRow[key] = row[key];
+                {
+                    if (row[key] == null)
+                        newRow[key] = DBNull.Value;
+                    else
+                        newRow[key] = row[key];
+                }
+                    
                 dt.Rows.Add(newRow);
             }
             return dt;

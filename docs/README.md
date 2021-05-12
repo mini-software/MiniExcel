@@ -8,6 +8,7 @@
 
 ### 0.14.4
 - [New] Query support Fill Merged Cells Down [#122](https://github.com/shps951023/MiniExcel/issues/122)
+- [Bug] Fix QueryAsDataTable error "Cannot set Column to be null" #229
 
 ### 0.14.3
 - [Opt] Support Xlsm AutoCheck #227

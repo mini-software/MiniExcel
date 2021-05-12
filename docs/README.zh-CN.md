@@ -7,19 +7,21 @@
 
 ---
 
+### 0.14.4
+- [New] Query 支持向下填充合并的单元格 [#122](https://github.com/shps951023/MiniExcel/issues/122)
 
 ### 0.14.3
 - [Opt] 支持 Xlsm 自动判断 #227
-- [Bug] 修正 SaveAsByTemplate 单列 demension 索引错误 #226
+- [Bug] 修正 SaveAsByTemplate 单列 demension 索引错误 [#226](https://github.com/shps951023/MiniExcel/issues/226)
 
 ### 0.14.2
-- [Bug] 修正 asp.net webform gridview datasource 不能使用 QueryAsDataTable #223
+- [Bug] 修正 asp.net webform gridview datasource 不能使用 QueryAsDataTable [#223](https://github.com/shps951023/MiniExcel/issues/223)
 
 ### 0.14.1
-- [Bug] 修正自定义 m/d 格式没转成 datetime #222
+- [Bug] 修正自定义 m/d 格式没转成 datetime [#222](https://github.com/shps951023/MiniExcel/issues/222)
 
 ### 0.14.0
-- [New] Query、GetColumns 支持 startCell 能指定 cell 开始读取数据 #147
+- [New] Query、GetColumns 支持 startCell 能指定 cell 开始读取数据 [#147](https://github.com/shps951023/MiniExcel/issues/147)
 - [New] GetColumns 支持读取表头
 
 ### 0.13.5

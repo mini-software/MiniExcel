@@ -1,25 +1,17 @@
 <div align="center">
-
-[![NuGet](https://img.shields.io/nuget/v/MiniExcel.svg)](https://www.nuget.org/packages/MiniExcel)  [![](https://img.shields.io/nuget/dt/MiniExcel.svg)](https://www.nuget.org/packages/MiniExcel)  [![Build status](https://ci.appveyor.com/api/projects/status/b2vustrwsuqx45f4/branch/master?svg=true)](https://ci.appveyor.com/project/shps951023/miniexcel/branch/master)
-
+<p><a href="https://www.nuget.org/packages/MiniExcel"><img src="https://img.shields.io/nuget/v/MiniExcel.svg" alt="NuGet"></a>  <a href="https://www.nuget.org/packages/MiniExcel"><img src="https://img.shields.io/nuget/dt/MiniExcel.svg" alt=""></a>  <a href="https://ci.appveyor.com/project/shps951023/miniexcel/branch/master"><img src="https://ci.appveyor.com/api/projects/status/b2vustrwsuqx45f4/branch/master?svg=true" alt="Build status"></a></p>
 </div>
 
 <div align="center">
-
-**[English](README.md) | [简体中文](README.zh-CN.md) | [繁體中文](README.zh-Hant.md)**
-
+<p><strong><a href="README.md">English</a> | <a href="README.zh-CN.md">简体中文</a> | <a href="README.zh-Hant.md">繁體中文</a></strong></p>
 </div>
 
 <div align="center">
-
-🙌 您的 [Github Star](https://github.com/shps951023/MiniExcel) ，能帮助 MiniExcel 让更多人看到 🙌
-
+<p>🙌 您的 <a href="https://github.com/shps951023/MiniExcel">Github Star</a> ，能帮助 MiniExcel 让更多人看到 🙌</p>
 </div>
 
 <div align="center">
-
-[813100564(MiniExcel QQ交流群)](https://qm.qq.com/cgi-bin/qm/qr?k=3OkxuL14sXhJsUimWK8wx_Hf28Wl49QE&jump_from=webapi) 
-
+<p><a href="https://qm.qq.com/cgi-bin/qm/qr?k=3OkxuL14sXhJsUimWK8wx_Hf28Wl49QE&amp;jump_from=webapi">813100564(MiniExcel QQ交流群)</a> </p>
 </div>
 
 
@@ -262,7 +254,18 @@ MiniExcel.Query(path,useHeaderRow:true,startCell:"B3")
 
 ![image](https://user-images.githubusercontent.com/12729184/117260316-8593c400-ae81-11eb-9877-c087b7ac2b01.png)
 
+#### 11. 向下填充合并的单元格
 
+注意 : 效率相对于`没有使用合并填充`来说差
+底层原因 : OpenXml 标准将 mergeCells 放在文件最下方，导致需要遍历两次 sheetxml
+
+```csharp
+	var config = new OpenXmlConfiguration()
+	{
+		fillDownMergedCells = true
+	};
+	var rows = MiniExcel.Query(path, useHeaderRow: true, configuration: config);
+```
 
 
 

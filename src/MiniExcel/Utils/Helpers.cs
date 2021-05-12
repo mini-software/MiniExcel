@@ -13,6 +13,7 @@
         public static FileStream OpenSharedRead(string path) => File.Open(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
     }
 
+    // For Row/Column Index
     internal static partial class Helpers
     {
         private const int GENERAL_COLUMN_INDEX = 255;
@@ -71,7 +72,10 @@
             }
             return result;
         }
+    }
 
+    internal static partial class Helpers
+    {
         internal static IDictionary<string, object> GetEmptyExpandoObject(int maxColumnIndex,int startCellIndex)
         {
             // TODO: strong type mapping can ignore this

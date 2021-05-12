@@ -1,19 +1,13 @@
 <div align="center">
-
-[![NuGet](https://img.shields.io/nuget/v/MiniExcel.svg)](https://www.nuget.org/packages/MiniExcel)  [![](https://img.shields.io/nuget/dt/MiniExcel.svg)](https://www.nuget.org/packages/MiniExcel)  [![Build status](https://ci.appveyor.com/api/projects/status/b2vustrwsuqx45f4/branch/master?svg=true)](https://ci.appveyor.com/project/shps951023/miniexcel/branch/master)
-
+<a href="https://www.nuget.org/packages/MiniExcel"><img src="https://img.shields.io/nuget/v/MiniExcel.svg" alt="NuGet"></a>  <a href="https://www.nuget.org/packages/MiniExcel"><img src="https://img.shields.io/nuget/dt/MiniExcel.svg" alt=""></a>  <a href="https://ci.appveyor.com/project/shps951023/miniexcel/branch/master"><img src="https://ci.appveyor.com/api/projects/status/b2vustrwsuqx45f4/branch/master?svg=true" alt="Build status"></a>
 </div>
 
 <div align="center">
-
-**[English](README.md) | [繁體中文](README.zh-Hant.md) | [简体中文](README.zh-CN.md)**
-
+<strong><a href="README.md">English</a> | <a href="README.zh-Hant.md">繁體中文</a> | <a href="README.zh-CN.md">简体中文</a></strong>
 </div>
 
 <div align="center">
-
-🙌 您的 [Github Star](https://github.com/shps951023/MiniExcel) ，能幫助 MiniExcel 讓更多人看到 🙌
-
+🙌 您的 <a href="https://github.com/shps951023/MiniExcel">Github Star</a> ，能幫助 MiniExcel 讓更多人看到 🙌
 </div>
 
 ---
@@ -262,6 +256,19 @@ MiniExcel.Query(path,useHeaderRow:true,startCell:"B3")
 ```
 
 ![image](https://user-images.githubusercontent.com/12729184/117260316-8593c400-ae81-11eb-9877-c087b7ac2b01.png)
+
+#### 11. 向下填充合併的單元格
+
+注意 : 效率相對於`沒有使用合併填充`來說差
+底層原因 : OpenXml 標准將 mergeCells 放在文件最下方，導致需要遍歷兩次 sheetxml
+
+```csharp
+	var config = new OpenXmlConfiguration()
+	{
+		fillDownMergedCells = true
+	};
+	var rows = MiniExcel.Query(path, useHeaderRow: true, configuration: config);
+```
 
 
 

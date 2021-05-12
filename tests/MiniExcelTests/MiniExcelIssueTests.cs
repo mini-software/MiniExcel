@@ -14,6 +14,7 @@ using MiniExcelLibs.Tests.Utils;
 using System.Data;
 using System.Data.SQLite;
 using Dapper;
+using MiniExcelLibs.OpenXml;
 
 namespace MiniExcelLibs.Tests
 {
@@ -23,6 +24,29 @@ namespace MiniExcelLibs.Tests
         public MiniExcelIssueTests(ITestOutputHelper output)
         {
             this.output = output;
+        }
+
+        /// <summary>
+        /// [Query Merge cells data · Issue #122 · shps951023/MiniExcel]
+        /// (https://github.com/shps951023/MiniExcel/issues/122)
+        /// </summary>
+        [Fact]
+        public void Issue122()
+        {
+            var config = new OpenXmlConfiguration()
+            {
+                fillDownMergedCells = true
+            };
+            var path = PathHelper.GetSamplePath("xlsx/TestIssue122.xlsx");
+            {
+                var rows = MiniExcel.Query(path,useHeaderRow:true,configuration: config).ToList();
+                Assert.Equal("HR",rows[0].Department);
+                Assert.Equal("HR", rows[1].Department);
+                Assert.Equal("HR", rows[2].Department);
+                Assert.Equal("IT", rows[3].Department);
+                Assert.Equal("IT", rows[4].Department);
+                Assert.Equal("IT", rows[5].Department);
+            }
         }
 
         /// <summary>

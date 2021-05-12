@@ -1,19 +1,13 @@
 <div align="center">
-
-[![NuGet](https://img.shields.io/nuget/v/MiniExcel.svg)](https://www.nuget.org/packages/MiniExcel)  [![](https://img.shields.io/nuget/dt/MiniExcel.svg)](https://www.nuget.org/packages/MiniExcel)  [![Build status](https://ci.appveyor.com/api/projects/status/b2vustrwsuqx45f4/branch/master?svg=true)](https://ci.appveyor.com/project/shps951023/miniexcel/branch/master)
-
+<a href="https://www.nuget.org/packages/MiniExcel"><img src="https://img.shields.io/nuget/v/MiniExcel.svg" alt="NuGet"></a>  <a href="https://www.nuget.org/packages/MiniExcel"><img src="https://img.shields.io/nuget/dt/MiniExcel.svg" alt=""></a>  <a href="https://ci.appveyor.com/project/shps951023/miniexcel/branch/master"><img src="https://ci.appveyor.com/api/projects/status/b2vustrwsuqx45f4/branch/master?svg=true" alt="Build status"></a>
 </div>
 
 <div align="center">
-
-**[English](README.md) | [简体中文](README.zh-CN.md) | [繁體中文](README.zh-Hant.md)**
-
+<strong><a href="README.md">English</a> | <a href="README.zh-CN.md">简体中文</a> | <a href="README.zh-Hant.md">繁體中文</a></strong>
 </div>
 
 <div align="center">
-
-🙌 Your [Star](https://github.com/shps951023/MiniExcel) can make MiniExcel better 🙌
-
+🙌 Your <a href="https://github.com/shps951023/MiniExcel">Star</a> can make MiniExcel better 🙌
 </div>
 
 ---
@@ -260,6 +254,24 @@ MiniExcel.Query(path,useHeaderRow:true,startCell:"B3")
 ![image](https://user-images.githubusercontent.com/12729184/117260316-8593c400-ae81-11eb-9877-c087b7ac2b01.png)
 
 
+
+#### 11. Fill Merged Cells Down
+
+Note: The efficiency is slower compared to `not using merge fill`
+
+Reason: The OpenXml standard puts mergeCells at the bottom of the file, which leads to the need to foreach the sheetxml twice
+
+```csharp
+	var config = new OpenXmlConfiguration()
+	{
+		fillDownMergedCells = true
+	};
+	var rows = MiniExcel.Query(path, useHeaderRow: true, configuration: config);
+```
+
+
+
+![image](https://user-images.githubusercontent.com/12729184/117941845-0e58a700-b33d-11eb-8dbc-a18af0752c4f.png)
 
 
 

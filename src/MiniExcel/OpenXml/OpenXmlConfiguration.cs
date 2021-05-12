@@ -5,5 +5,7 @@ namespace MiniExcelLibs.OpenXml
 {
     public class OpenXmlConfiguration : IConfiguration
     {
+        internal static readonly OpenXmlConfiguration DefaultConfig = new OpenXmlConfiguration();
+        public bool fillDownMergedCells { get; set; }
     }
 }

@@ -6,18 +6,21 @@
 
 ---
 
+### 0.14.4
+- [New] Query support Fill Merged Cells Down [#122](https://github.com/shps951023/MiniExcel/issues/122)
+
 ### 0.14.3
 - [Opt] Support Xlsm AutoCheck #227
-- [Bug] Fix SaveAsByTemplate single column demension index error #226
+- [Bug] Fix SaveAsByTemplate single column demension index error [#226](https://github.com/shps951023/MiniExcel/issues/226)
 
 ### 0.14.2
-- [Bug] Fix asp.net webform gridview datasource can't use QueryAsDataTable #223
+- [Bug] Fix asp.net webform gridview datasource can't use QueryAsDataTable [#223](https://github.com/shps951023/MiniExcel/issues/223)
 
 ### 0.14.1
-- [Bug] Fix custom m/d format not convert datetime #222
+- [Bug] Fix custom m/d format not convert datetime [#222](https://github.com/shps951023/MiniExcel/issues/222)
 
 ### 0.14.0
-- [New] Query、GetColumns support startCell #147
+- [New] Query、GetColumns support startCell [#147](https://github.com/shps951023/MiniExcel/issues/147)
 - [New] GetColumns support read headers
 
 ### 0.13.5

@@ -17,6 +17,7 @@ namespace MiniExcelLibs.OpenXml
         private const string _ns = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
         private List<SheetRecord> _sheetRecords;
         private List<string> _sharedStrings;
+        private MergeCells _mergeCells;
         private ExcelOpenXmlStyles _style;
         private ExcelOpenXmlZip _archive;
         private static readonly XmlReaderSettings _xmlSettings = new XmlReaderSettings
@@ -33,6 +34,7 @@ namespace MiniExcelLibs.OpenXml
 
         public IEnumerable<IDictionary<string, object>> Query(bool useHeaderRow, string sheetName, string startCell, IConfiguration configuration)
         {
+            var config = (OpenXmlConfiguration)configuration ?? OpenXmlConfiguration.DefaultConfig; //TODO:
             if (!ReferenceHelper.ParseReference(startCell, out var startColumnIndex, out var startRowIndex))
                 throw new InvalidDataException($"startCell {startCell} is Invalid");
             startColumnIndex--; startRowIndex--;
@@ -62,9 +64,66 @@ namespace MiniExcelLibs.OpenXml
             else
                 sheetEntry = sheets.Single();
 
+
+            #region MergeCells
+            if (config.fillDownMergedCells)
+            {
+                _mergeCells = new MergeCells();
+                using (var sheetStream = sheetEntry.Open())
+                using (XmlReader reader = XmlReader.Create(sheetStream, _xmlSettings))
+                {
+                    if (!reader.IsStartElement("worksheet", _ns))
+                        yield break;
+                    while (reader.Read())
+                    {
+                        if (reader.IsStartElement("mergeCells", _ns))
+                        {
+                            if (!XmlReaderHelper.ReadFirstContent(reader))
+                                yield break;
+                            while (!reader.EOF)
+                            {
+                                if (reader.IsStartElement("mergeCell", _ns))
+                                {
+                                    var @ref = reader.GetAttribute("ref");
+                                    var refs = @ref.Split(':');
+                                    if (refs.Length == 1)
+                                        continue;
+
+                                    ReferenceHelper.ParseReference(refs[0], out var x1, out var y1);
+                                    ReferenceHelper.ParseReference(refs[1], out var x2, out var y2);
+
+                                    _mergeCells.MergesValues.Add(refs[0], null);
+
+                                    // foreach range
+                                    var isFirst = true;
+                                    for (int x = x1; x <= x2; x++)
+                                    {
+                                        for (int y = y1; y <= y2; y++)
+                                        {
+                                            if (!isFirst)
+                                                _mergeCells.MergesMap.Add(ReferenceHelper.ConvertXyToCell(x, y), refs[0]);
+                                            isFirst = false;
+                                        }
+                                    }
+
+                                    XmlReaderHelper.SkipContent(reader);
+                                }
+                                else if (!XmlReaderHelper.SkipContent(reader))
+                                {
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            #endregion
+
+
+
+
             // TODO: need to optimize performance
             var withoutCR = false;
-
             var maxRowIndex = -1;
             var maxColumnIndex = -1;
 
@@ -208,7 +267,7 @@ namespace MiniExcelLibs.OpenXml
                                     continue;
 
                                 // startcell pass rows
-                                if (rowIndex < startRowIndex )
+                                if (rowIndex < startRowIndex)
                                 {
                                     XmlReaderHelper.SkipToNextSameLevelDom(reader);
                                     continue;
@@ -216,13 +275,13 @@ namespace MiniExcelLibs.OpenXml
 
 
                                 // fill empty rows
-                                if(!(nextRowIndex < startRowIndex))
+                                if (!(nextRowIndex < startRowIndex))
                                 {
                                     if (nextRowIndex < rowIndex)
                                     {
                                         for (int i = nextRowIndex; i < rowIndex; i++)
                                         {
-                                            yield return GetCell(useHeaderRow, maxColumnIndex, headRows,startColumnIndex);
+                                            yield return GetCell(useHeaderRow, maxColumnIndex, headRows, startColumnIndex);
                                         }
                                     }
                                 }
@@ -236,7 +295,25 @@ namespace MiniExcelLibs.OpenXml
                                         if (reader.IsStartElement("c", _ns))
                                         {
                                             var aS = reader.GetAttribute("s");
-                                            var cellValue = ReadCellAndSetColumnIndex(reader, ref columnIndex, withoutCR,startColumnIndex);
+                                            var aR = reader.GetAttribute("r");
+                                            var aT = reader.GetAttribute("t");
+                                            var cellValue = ReadCellAndSetColumnIndex(reader, ref columnIndex, withoutCR, startColumnIndex, aR, aT);
+
+                                            if (config.fillDownMergedCells)
+                                            {
+                                                if (_mergeCells.MergesValues.ContainsKey(aR))
+                                                {
+                                                    _mergeCells.MergesValues[aR] = cellValue;
+                                                }
+                                                else if (_mergeCells.MergesMap.ContainsKey(aR))
+                                                {
+                                                    var mergeKey = _mergeCells.MergesMap[aR];
+                                                    object mergeValue = null;
+                                                    if(_mergeCells.MergesValues.ContainsKey(mergeKey))
+                                                        mergeValue = _mergeCells.MergesValues[mergeKey];
+                                                    cellValue = mergeValue;
+                                                }
+                                            }
 
                                             if (columnIndex < startColumnIndex)
                                                 continue;
@@ -295,7 +372,7 @@ namespace MiniExcelLibs.OpenXml
             return useHeaderRow ? Helpers.GetEmptyExpandoObject(headRows) : Helpers.GetEmptyExpandoObject(maxColumnIndex, startColumnIndex);
         }
 
-        private void SetCellsValueAndHeaders(string cellValueString,object cellValue, bool useHeaderRow, ref Dictionary<int, string> headRows, ref bool isFirstRow, ref IDictionary<string, object> cell, int columnIndex)
+        private void SetCellsValueAndHeaders(string cellValueString, object cellValue, bool useHeaderRow, ref Dictionary<int, string> headRows, ref bool isFirstRow, ref IDictionary<string, object> cell, int columnIndex)
         {
             if (useHeaderRow)
             {
@@ -525,12 +602,10 @@ namespace MiniExcelLibs.OpenXml
             return sheetRecords;
         }
 
-        private object ReadCellAndSetColumnIndex(XmlReader reader,ref int columnIndex, bool withoutCR,int startColumnIndex)
+        private object ReadCellAndSetColumnIndex(XmlReader reader, ref int columnIndex, bool withoutCR, int startColumnIndex, string aR, string aT)
         {
             var newColumnIndex = 0;
             int xfIndex = -1;
-            var aT = reader.GetAttribute("t");
-            var aR = reader.GetAttribute("r");
 
             if (withoutCR)
                 newColumnIndex = columnIndex + 1;
@@ -578,7 +653,7 @@ namespace MiniExcelLibs.OpenXml
 
 
 
-             return value;
+            return value;
         }
 
         private void ConvertCellValue(string rawValue, string aT, int xfIndex, out object value)

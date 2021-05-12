@@ -66,7 +66,7 @@ namespace MiniExcelLibs.OpenXml
 
 
             #region MergeCells
-            if (config.fillDownMergedCells)
+            if (config.FillMergedCells)
             {
                 _mergeCells = new MergeCells();
                 using (var sheetStream = sheetEntry.Open())
@@ -299,7 +299,7 @@ namespace MiniExcelLibs.OpenXml
                                             var aT = reader.GetAttribute("t");
                                             var cellValue = ReadCellAndSetColumnIndex(reader, ref columnIndex, withoutCR, startColumnIndex, aR, aT);
 
-                                            if (config.fillDownMergedCells)
+                                            if (config.FillMergedCells)
                                             {
                                                 if (_mergeCells.MergesValues.ContainsKey(aR))
                                                 {

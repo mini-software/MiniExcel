@@ -255,23 +255,25 @@ MiniExcel.Query(path,useHeaderRow:true,startCell:"B3")
 
 
 
-#### 11. Fill Merged Cells Down
+#### 11. Fill Merged Cells 
 
-Note: The efficiency is slower compared to `not using merge fill`
+Note: The efficiency is slower compared to `not using merge fill`      
 
 Reason: The OpenXml standard puts mergeCells at the bottom of the file, which leads to the need to foreach the sheetxml twice
 
 ```csharp
 	var config = new OpenXmlConfiguration()
 	{
-		fillDownMergedCells = true
+		FillMergedCells = true
 	};
-	var rows = MiniExcel.Query(path, useHeaderRow: true, configuration: config);
+	var rows = MiniExcel.Query(path, configuration: config);
 ```
 
+![image](https://user-images.githubusercontent.com/12729184/117973630-3527d500-b35f-11eb-95c3-bde255f8114e.png)
 
+support variable length and width multi-row and column filling
 
-![image](https://user-images.githubusercontent.com/12729184/117941845-0e58a700-b33d-11eb-8dbc-a18af0752c4f.png)
+![image](https://user-images.githubusercontent.com/12729184/117973820-6d2f1800-b35f-11eb-88d8-555063938108.png)
 
 
 

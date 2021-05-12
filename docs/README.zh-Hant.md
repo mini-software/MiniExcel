@@ -3,9 +3,22 @@
 
 ---
 
-[English](README.md) / [繁體中文](README.zh-Hant.md) / [简体中文](README.zh-CN.md)
+<div align="center">
+<a href="https://www.nuget.org/packages/MiniExcel"><img src="https://img.shields.io/nuget/v/MiniExcel.svg" alt="NuGet"></a>  <a href="https://www.nuget.org/packages/MiniExcel"><img src="https://img.shields.io/nuget/dt/MiniExcel.svg" alt=""></a>  <a href="https://ci.appveyor.com/project/shps951023/miniexcel/branch/master"><img src="https://ci.appveyor.com/api/projects/status/b2vustrwsuqx45f4/branch/master?svg=true" alt="Build status"></a>
+</div>
+
+<div align="center">
+<strong><a href="README.md">English</a> | <a href="README.zh-CN.md">简体中文</a> | <a href="README.zh-Hant.md">繁體中文</a></strong>
+</div>
+
+<div align="center">
+🙌 Your <a href="https://github.com/shps951023/MiniExcel">Star</a> can make MiniExcel better 🙌
+</div>
 
 ---
+
+### 0.14.5
+- [Breaking Change] 更換 OpenXmlConfiguration FillMergedCells 名稱
 
 ### 0.14.4
 - [New] Query 支持向下填充合併的單元格 [#122](https://github.com/shps951023/MiniExcel/issues/122)

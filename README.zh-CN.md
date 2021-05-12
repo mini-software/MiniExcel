@@ -254,20 +254,26 @@ MiniExcel.Query(path,useHeaderRow:true,startCell:"B3")
 
 ![image](https://user-images.githubusercontent.com/12729184/117260316-8593c400-ae81-11eb-9877-c087b7ac2b01.png)
 
-#### 11. 向下填充合并的单元格
+#### 11. 合并的单元格填充
 
-注意 : 效率相对于`没有使用合并填充`来说差
+注意 : 效率相对于`没有使用合并填充`来说差    
 底层原因 : OpenXml 标准将 mergeCells 放在文件最下方，导致需要遍历两次 sheetxml
 
 ```csharp
 	var config = new OpenXmlConfiguration()
 	{
-		fillDownMergedCells = true
+		FillMergedCells = true
 	};
-	var rows = MiniExcel.Query(path, useHeaderRow: true, configuration: config);
+	var rows = MiniExcel.Query(path, configuration: config);
 ```
 
-![image](https://user-images.githubusercontent.com/12729184/117941845-0e58a700-b33d-11eb-8dbc-a18af0752c4f.png)
+![image](https://user-images.githubusercontent.com/12729184/117973630-3527d500-b35f-11eb-95c3-bde255f8114e.png)
+
+
+支持不固定长宽多行列填充
+
+![image](https://user-images.githubusercontent.com/12729184/117973820-6d2f1800-b35f-11eb-88d8-555063938108.png)
+
 
 
 

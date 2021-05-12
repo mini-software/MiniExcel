@@ -270,6 +270,8 @@ MiniExcel.Query(path,useHeaderRow:true,startCell:"B3")
 	var rows = MiniExcel.Query(path, useHeaderRow: true, configuration: config);
 ```
 
+![image](https://user-images.githubusercontent.com/12729184/117941845-0e58a700-b33d-11eb-8dbc-a18af0752c4f.png)
+
 
 
 

@@ -13,6 +13,12 @@ using static MiniExcelLibs.Utils.Helpers;
 
 namespace MiniExcelLibs.OpenXml
 {
+    public class WorkSheet
+    {
+        public string SheetName { get; set; }
+        public object Values { get; set; }
+    }
+
     internal class ExcelOpenXmlSheetWriter : IExcelWriter
     {
         private readonly static UTF8Encoding _utf8WithBom = new System.Text.UTF8Encoding(true);
@@ -26,160 +32,192 @@ namespace MiniExcelLibs.OpenXml
         {
             using (var archive = new MiniExcelZipArchive(_stream, ZipArchiveMode.Create, true, _utf8WithBom))
             {
-                var packages = DefualtOpenXml.GenerateDefaultOpenXml(archive, sheetName);
-                var sheetPath = "xl/worksheets/sheet1.xml";
+                if(value is IDictionary<string, object>)
                 {
-                    ZipArchiveEntry entry = archive.CreateEntry(sheetPath);
-                    using (var zipStream = entry.Open())
-                    using (StreamWriter writer = new StreamWriter(zipStream, _utf8WithBom))
+                    var sheetId = 0;
+                    var sheets = value as IDictionary<string, object>;
+                    var packages = DefualtOpenXml.GenerateDefaultOpenXml(archive, sheets.Keys);
+                    foreach (var sheet in sheets)
                     {
-                        if (value == null)
+                        sheetId++;
+                        var sheetPath = $"xl/worksheets/sheet{sheetId}.xml";
+                        CreateSheetXml(sheet.Value, printHeader, archive, packages, sheetPath);
+                    }
+                    GenerateContentTypesXml(archive, packages);
+                }
+                else
+                {
+                    var packages = DefualtOpenXml.GenerateDefaultOpenXml(archive, new[] { sheetName });
+                    var sheetPath = "xl/worksheets/sheet1.xml";
+                    CreateSheetXml(value, printHeader, archive, packages, sheetPath);
+                    GenerateContentTypesXml(archive, packages);
+                }
+            }
+        }
+
+        //public void AddSheet(object value, string sheetName, bool printHeader, IConfiguration configuration)
+        //{
+        //    //TODO:update 
+        //    using (var archive = new MiniExcelZipArchive(_stream, ZipArchiveMode.Create, true, _utf8WithBom))
+        //    {
+        //        var packages = DefualtOpenXml.GenerateDefaultOpenXml(archive, sheetName);
+        //        var sheetPath = "xl/worksheets/sheet1.xml";
+        //        CreateSheetXml(value, printHeader, archive, packages, sheetPath);
+        //        GenerateContentTypesXml(archive, packages);
+        //    }
+        //}
+
+
+        private void CreateSheetXml(object value, bool printHeader, MiniExcelZipArchive archive, Dictionary<string, ZipPackageInfo> packages, string sheetPath)
+        {
+            ZipArchiveEntry entry = archive.CreateEntry(sheetPath);
+            using (var zipStream = entry.Open())
+            using (StreamWriter writer = new StreamWriter(zipStream, _utf8WithBom))
+            {
+                if (value == null)
+                {
+                    WriteEmptySheet(writer);
+                    goto End;
+                }
+
+                var type = value.GetType();
+
+                Type genericType = null;
+
+                //DapperRow
+
+                if (value is IDataReader)
+                {
+                    GenerateSheetByIDataReader(writer, archive, value as IDataReader, printHeader);
+                }
+                else if (value is IEnumerable)
+                {
+                    var values = value as IEnumerable;
+
+                    var rowCount = 0;
+
+                    var maxColumnIndex = 0;
+                    List<object> keys = new List<object>();
+                    List<ExcelCustomPropertyInfo> props = null;
+                    string mode = null;
+
+                    // reason : https://stackoverflow.com/questions/66797421/how-replace-top-format-mark-after-streamwriter-writing
+                    // check mode & get maxRowCount & maxColumnIndex
+                    {
+                        foreach (var item in values) //TODO: need to optimize
                         {
-                            WriteEmptySheet(writer);
-                            goto End;
-                        }
-
-                        var type = value.GetType();
-
-                        Type genericType = null;
-
-                        //DapperRow
-
-                        if (value is IDataReader)
-                        {
-                            GenerateSheetByIDataReader(writer, archive, value as IDataReader, printHeader);
-                        }
-                        else if (value is IEnumerable)
-                        {
-                            var values = value as IEnumerable;
-
-                            var rowCount = 0;
-
-                            var maxColumnIndex = 0;
-                            List<object> keys = new List<object>();
-                            List<ExcelCustomPropertyInfo> props = null;
-                            string mode = null;
-
-                            // reason : https://stackoverflow.com/questions/66797421/how-replace-top-format-mark-after-streamwriter-writing
-                            // check mode & get maxRowCount & maxColumnIndex
+                            rowCount = checked(rowCount + 1);
+                            if (item != null && mode == null)
                             {
-                                foreach (var item in values) //TODO: need to optimize
+                                if (item is IDictionary<string, object>)
                                 {
-                                    rowCount = checked(rowCount + 1);
-                                    if (item != null && mode == null)
-                                    {
-                                        if (item is IDictionary<string, object>)
-                                        {
-                                            var item2 = item as IDictionary<string, object>;
-                                            mode = "IDictionary<string, object>";
-                                            maxColumnIndex = item2.Keys.Count;
-                                            foreach (var key in item2.Keys)
-                                                keys.Add(key);
-                                        }
-                                        else if (item is IDictionary)
-                                        {
-                                            var item2 = item as IDictionary;
-                                            mode = "IDictionary";
-                                            maxColumnIndex = item2.Keys.Count;
-                                            foreach (var key in item2.Keys)
-                                                keys.Add(key);
-                                        }
-                                        else
-                                        {
-                                            mode = "Properties";
-                                            genericType = item.GetType();
-                                            if (genericType.IsValueType)
-                                                throw new NotImplementedException($"MiniExcel not support only {genericType.Name} value generic type");
-                                            else if (genericType == typeof(string) || genericType == typeof(DateTime) || genericType == typeof(Guid))
-                                                throw new NotImplementedException($"MiniExcel not support only {genericType.Name} generic type");
-                                            props = Helpers.GetSaveAsProperties(genericType);
-                                            maxColumnIndex = props.Count;
-                                        }
-
-                                        // not re-foreach key point
-                                        var collection = value as ICollection;
-                                        if (collection != null)
-                                        {
-                                            rowCount = checked((value as ICollection).Count);
-                                            break;
-                                        }
-                                        continue;
-                                    }
+                                    var item2 = item as IDictionary<string, object>;
+                                    mode = "IDictionary<string, object>";
+                                    maxColumnIndex = item2.Keys.Count;
+                                    foreach (var key in item2.Keys)
+                                        keys.Add(key);
                                 }
-                            }
-
-                            if (rowCount == 0)
-                            {
-                                WriteEmptySheet(writer);
-                                goto End;
-                            }
-
-                            writer.Write($@"<?xml version=""1.0"" encoding=""utf-8""?><x:worksheet xmlns:x=""http://schemas.openxmlformats.org/spreadsheetml/2006/main"">");
-                            
-                            // dimension 
-                            var maxRowIndex = rowCount + (printHeader && rowCount > 0 ? 1 : 0);  //TODO:it can optimize
-                            writer.Write($@"<x:dimension ref=""{GetDimensionRef(maxRowIndex, maxColumnIndex)}""/><x:sheetData>");
-
-                            //header
-                            var yIndex = 1;
-                            var xIndex = 1;
-                            if (printHeader)
-                            {
-                                var cellIndex = xIndex;
-                                writer.Write($"<x:row r=\"{yIndex.ToString()}\">");
-                                if (props != null)
+                                else if (item is IDictionary)
                                 {
-                                    foreach (var p in props)
-                                    {
-                                        if (p == null)
-                                        {
-                                            cellIndex++; //reason : https://github.com/shps951023/MiniExcel/issues/142
-                                            continue;
-                                        }
-
-                                        var columname = ExcelOpenXmlUtils.ConvertXyToCell(cellIndex, yIndex);
-                                        writer.Write($"<x:c r=\"{columname}\" t=\"str\"><x:v>{p.ExcelColumnName}</x:v></x:c>");
-                                        cellIndex++;
-                                    }
+                                    var item2 = item as IDictionary;
+                                    mode = "IDictionary";
+                                    maxColumnIndex = item2.Keys.Count;
+                                    foreach (var key in item2.Keys)
+                                        keys.Add(key);
                                 }
                                 else
                                 {
-                                    foreach (var key in keys)
-                                    {
-                                        var columname = ExcelOpenXmlUtils.ConvertXyToCell(cellIndex, yIndex);
-                                        writer.Write($"<x:c r=\"{columname}\" t=\"str\"><x:v>{key}</x:v></x:c>");
-                                        cellIndex++;
-                                    }
+                                    mode = "Properties";
+                                    genericType = item.GetType();
+                                    if (genericType.IsValueType)
+                                        throw new NotImplementedException($"MiniExcel not support only {genericType.Name} value generic type");
+                                    else if (genericType == typeof(string) || genericType == typeof(DateTime) || genericType == typeof(Guid))
+                                        throw new NotImplementedException($"MiniExcel not support only {genericType.Name} generic type");
+                                    props = Helpers.GetSaveAsProperties(genericType);
+                                    maxColumnIndex = props.Count;
                                 }
-                                writer.Write($"</x:row>");
-                                yIndex++;
-                            }
 
-                            // body
-                            if (mode == "IDictionary<string, object>") //Dapper Row
-                                GenerateSheetByDapperRow(writer, archive, value as IEnumerable, rowCount, keys.Cast<string>().ToList(), xIndex, yIndex);
-                            else if (mode == "IDictionary") //IDictionary
-                                GenerateSheetByIDictionary(writer, archive, value as IEnumerable, rowCount, keys, xIndex, yIndex);
-                            else if (mode == "Properties")
-                                GenerateSheetByProperties(writer, archive, value as IEnumerable, props, rowCount, xIndex, yIndex);
-                            else
-                                throw new NotImplementedException($"Type {type.Name} & genericType {genericType.Name} not Implemented. please issue for me.");
-                            writer.Write("</x:sheetData></x:worksheet>");
+                                // not re-foreach key point
+                                var collection = value as ICollection;
+                                if (collection != null)
+                                {
+                                    rowCount = checked((value as ICollection).Count);
+                                    break;
+                                }
+                                continue;
+                            }
                         }
-                        else if (value is DataTable)
+                    }
+
+                    if (rowCount == 0)
+                    {
+                        WriteEmptySheet(writer);
+                        goto End;
+                    }
+
+                    writer.Write($@"<?xml version=""1.0"" encoding=""utf-8""?><x:worksheet xmlns:x=""http://schemas.openxmlformats.org/spreadsheetml/2006/main"">");
+
+                    // dimension 
+                    var maxRowIndex = rowCount + (printHeader && rowCount > 0 ? 1 : 0);  //TODO:it can optimize
+                    writer.Write($@"<x:dimension ref=""{GetDimensionRef(maxRowIndex, maxColumnIndex)}""/><x:sheetData>");
+
+                    //header
+                    var yIndex = 1;
+                    var xIndex = 1;
+                    if (printHeader)
+                    {
+                        var cellIndex = xIndex;
+                        writer.Write($"<x:row r=\"{yIndex.ToString()}\">");
+                        if (props != null)
                         {
-                            GenerateSheetByDataTable(writer, archive, value as DataTable, printHeader);
+                            foreach (var p in props)
+                            {
+                                if (p == null)
+                                {
+                                    cellIndex++; //reason : https://github.com/shps951023/MiniExcel/issues/142
+                                    continue;
+                                }
+
+                                var columname = ExcelOpenXmlUtils.ConvertXyToCell(cellIndex, yIndex);
+                                writer.Write($"<x:c r=\"{columname}\" t=\"str\"><x:v>{p.ExcelColumnName}</x:v></x:c>");
+                                cellIndex++;
+                            }
                         }
                         else
                         {
-                            throw new NotImplementedException($"Type {type.Name} & genericType {genericType.Name} not Implemented. please issue for me.");
+                            foreach (var key in keys)
+                            {
+                                var columname = ExcelOpenXmlUtils.ConvertXyToCell(cellIndex, yIndex);
+                                writer.Write($"<x:c r=\"{columname}\" t=\"str\"><x:v>{key}</x:v></x:c>");
+                                cellIndex++;
+                            }
                         }
+                        writer.Write($"</x:row>");
+                        yIndex++;
                     }
-                End:
-                    packages.Add(sheetPath, new ZipPackageInfo(entry, "application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"));
+
+                    // body
+                    if (mode == "IDictionary<string, object>") //Dapper Row
+                        GenerateSheetByDapperRow(writer, archive, value as IEnumerable, rowCount, keys.Cast<string>().ToList(), xIndex, yIndex);
+                    else if (mode == "IDictionary") //IDictionary
+                        GenerateSheetByIDictionary(writer, archive, value as IEnumerable, rowCount, keys, xIndex, yIndex);
+                    else if (mode == "Properties")
+                        GenerateSheetByProperties(writer, archive, value as IEnumerable, props, rowCount, xIndex, yIndex);
+                    else
+                        throw new NotImplementedException($"Type {type.Name} & genericType {genericType.Name} not Implemented. please issue for me.");
+                    writer.Write("</x:sheetData></x:worksheet>");
                 }
-                GenerateContentTypesXml(archive, packages);
+                else if (value is DataTable)
+                {
+                    GenerateSheetByDataTable(writer, archive, value as DataTable, printHeader);
+                }
+                else
+                {
+                    throw new NotImplementedException($"Type {type.Name} & genericType {genericType.Name} not Implemented. please issue for me.");
+                }
             }
+        End:
+            packages.Add(sheetPath, new ZipPackageInfo(entry, "application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"));
         }
 
         private void WriteEmptySheet(StreamWriter writer)

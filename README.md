@@ -391,6 +391,23 @@ MiniExcel.SaveAs(path, reader);
 
 
 
+#### 7. Create Multiple Sheets
+
+```csharp
+var users = new[] { new { Name = "Jack", Age = 25 }, new { Name = "Mike", Age = 44 } };
+var department = new[] { new { ID = "01", Name = "HR" }, new { ID = "02", Name = "IT" } };
+var sheets = new Dictionary<string, object>
+{
+    ["users"] = users,
+    ["department"] = department
+};
+MiniExcel.SaveAs(path, sheets);
+```
+
+![image](https://user-images.githubusercontent.com/12729184/118130875-6e7c4580-b430-11eb-9b82-22f02716bd63.png)
+
+
+
 ### Fill Data To Excel Template <a name="getstart3"></a>
 
 - The declaration is similar to Vue template `{{variable name}}`, or the collection rendering `{{collection name.field name}}`

@@ -16,6 +16,10 @@
 
 ---
 
+### 0.14.7
+- [New] SaveAs Support Create Multiple Sheets
+- [Breaking Change] Change GetSheetNames type IEnumerable<string> -> List<string>
+
 ### 0.14.6
 - [Bug] Fix SaveAs by datareader error "Invalid attempt to call FieldCount when reader is closed" #230
 

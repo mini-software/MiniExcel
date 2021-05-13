@@ -28,6 +28,42 @@ namespace MiniExcelLibs.Tests
             this.output = output;
         }
 
+        /// <summary>
+        /// SaveAs support multiple sheets #234
+        /// </summary>
+        [Fact]
+        public void Issue234()
+        {
+            var path = PathHelper.GetNewTemplateFilePath();
+
+            var users = new[] { new { Name = "Jack", Age = 25 }, new { Name = "Mike", Age = 44 } };
+            var department = new[] { new { ID = "01", Name = "HR" }, new { ID = "02", Name = "IT" } };
+            var sheets = new Dictionary<string, object>
+            {
+                ["users"] = users,
+                ["department"] = department
+            };
+            MiniExcel.SaveAs(path, sheets);
+
+            var sheetNames = MiniExcel.GetSheetNames(path);
+            Assert.Equal("users", sheetNames[0]);
+            Assert.Equal("department", sheetNames[1]);
+
+            {
+                var rows = MiniExcel.Query(path, true, sheetName: "users").ToList();
+                Assert.Equal("Jack", rows[0].Name);
+                Assert.Equal(25, rows[0].Age);
+                Assert.Equal("Mike", rows[1].Name);
+                Assert.Equal(44, rows[1].Age);
+            }
+            {
+                var rows = MiniExcel.Query(path, true, sheetName: "department").ToList();
+                Assert.Equal("01", rows[0].ID);
+                Assert.Equal("HR", rows[0].Name);
+                Assert.Equal("02", rows[1].ID);
+                Assert.Equal("IT", rows[1].Name);
+            }
+        }
 
         /// <summary>
         /// SaveAs By Reader Closed error : 'Error! Invalid attempt to call FieldCount when reader is closed' #230
@@ -76,7 +112,7 @@ namespace MiniExcelLibs.Tests
             {
                 var path = PathHelper.GetNewTemplateFilePath();
                 MiniExcel.SaveAs(path, reader, printHeader: true);
-                var rows = MiniExcel.Query(path,true).ToList();
+                var rows = MiniExcel.Query(path, true).ToList();
                 Assert.Equal(1, rows[0].id);
                 Assert.Equal(2, rows[1].id);
             }
@@ -91,7 +127,7 @@ namespace MiniExcelLibs.Tests
         {
             var path = PathHelper.GetSamplePath("xlsx/TestIssue229.xlsx");
             var dt = MiniExcel.QueryAsDataTable(path);
-            foreach(DataColumn column in dt.Columns)
+            foreach (DataColumn column in dt.Columns)
             {
                 Assert.Equal(DBNull.Value, dt.Rows[3][column]);
             }

@@ -17,6 +17,10 @@
 
 ---
 
+### 0.14.7
+- [New] SaveAs 支持建立多工作表
+- [Breaking Change] 更換 GetSheetNames 返回類型 IEnumerable<string> -> List<string>
+
 ### 0.14.6
 - [Bug] 修正 SaveAs by datareader 錯誤 "Invalid attempt to call FieldCount when reader is closed" #230
 

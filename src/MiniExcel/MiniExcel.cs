@@ -55,18 +55,16 @@
             return ExcelReaderFactory.GetProvider(stream, GetExcelType(stream, excelType)).Query(useHeaderRow, sheetName, startCell, configuration);
         }
 
-        public static IEnumerable<string> GetSheetNames(string path)
+        public static List<string> GetSheetNames(string path)
         {
             using (var stream = Helpers.OpenSharedRead(path))
-                foreach (var item in GetSheetNames(stream))
-                    yield return item;
+                return GetSheetNames(stream);
         }
 
-        public static IEnumerable<string> GetSheetNames(this Stream stream)
+        public static List<string> GetSheetNames(this Stream stream)
         {
             var archive = new ExcelOpenXmlZip(stream);
-            foreach (var item in ExcelOpenXmlSheetReader.GetWorkbookRels(archive.Entries))
-                yield return item.Name;
+            return ExcelOpenXmlSheetReader.GetWorkbookRels(archive.Entries).Select(s => s.Name).ToList();
         }
 
         public static ICollection<string> GetColumns(string path, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null)

@@ -1,4 +1,5 @@
 <Query Kind="Program">
+  <NuGetReference>ClosedXML</NuGetReference>
   <NuGetReference>Dapper</NuGetReference>
   <NuGetReference>MiniExcel</NuGetReference>
   <NuGetReference>Newtonsoft.Json</NuGetReference>
@@ -6,6 +7,7 @@
   <Namespace>Dapper</Namespace>
   <Namespace>MiniExcelLibs</Namespace>
   <Namespace>Newtonsoft.Json</Namespace>
+  <Namespace>ClosedXML.Excel</Namespace>
   <RemoveNamespace>System.Data</RemoveNamespace>
   <RemoveNamespace>System.Diagnostics</RemoveNamespace>
   <RemoveNamespace>System.Linq.Expressions</RemoveNamespace>
@@ -21,9 +23,11 @@
 void Main()
 {
 	var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
-	var values = Enumerable.Range(1, 1_000_000).Select(index => Enumerable.Range(1, 10).ToDictionary(s => $"col{s}", s=> $"HelloWorld{index}"));
-	MiniExcel.SaveAs(path,values,false);
 	Console.WriteLine(path);
+	using (var workbook = new XLWorkbook(@"D:\git\MiniExcel\samples\xlsx\TestIssue207_Template_Merge_row_list_rendering_without_merge\template.xlsx"))
+	{
+		workbook.SaveAs(path);
+	}
 }
 
 // You can define other methods, fields, classes and namespaces here

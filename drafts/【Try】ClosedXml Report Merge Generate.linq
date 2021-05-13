@@ -1,4 +1,5 @@
 <Query Kind="Program">
+  <NuGetReference>ClosedXML.Report</NuGetReference>
   <NuGetReference>Dapper</NuGetReference>
   <NuGetReference>MiniExcel</NuGetReference>
   <NuGetReference>Newtonsoft.Json</NuGetReference>
@@ -6,8 +7,8 @@
   <Namespace>Dapper</Namespace>
   <Namespace>MiniExcelLibs</Namespace>
   <Namespace>Newtonsoft.Json</Namespace>
+  <Namespace>ClosedXML.Report</Namespace>
   <RemoveNamespace>System.Data</RemoveNamespace>
-  <RemoveNamespace>System.Diagnostics</RemoveNamespace>
   <RemoveNamespace>System.Linq.Expressions</RemoveNamespace>
   <RemoveNamespace>System.Text</RemoveNamespace>
   <RemoveNamespace>System.Text.RegularExpressions</RemoveNamespace>
@@ -20,10 +21,24 @@
 
 void Main()
 {
-	var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
-	var values = Enumerable.Range(1, 1_000_000).Select(index => Enumerable.Range(1, 10).ToDictionary(s => $"col{s}", s=> $"HelloWorld{index}"));
-	MiniExcel.SaveAs(path,values,false);
-	Console.WriteLine(path);
+	const string outputFile = @".\Output\report.xlsx";
+	var template = new XLTemplate(@"C:\Users\Wei\Downloads\ClosedXmlMergeTemplate.xlsx");
+
+	var value = new
+	{
+		project = new[] {
+			new {name = "項目1",content="[]內容1,[]內容2,[]內容3,[]內容4,[]內容5"},
+			new {name = "項目2",content="[]內容1,[]內容2,[]內容3,[]內容4,[]內容5"},
+			new {name = "項目3",content="[]內容1,[]內容2,[]內容3,[]內容4,[]內容5"},
+			new {name = "項目4",content="[]內容1,[]內容2,[]內容3,[]內容4,[]內容5"},
+		}
+	};
+	template.AddVariable(value);
+	template.Generate();
+	template.SaveAs(outputFile);
+
+	//Show report
+	Process.Start(new ProcessStartInfo(outputFile) { UseShellExecute = true });
 }
 
 // You can define other methods, fields, classes and namespaces here

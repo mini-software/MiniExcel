@@ -33,8 +33,29 @@ void Test1()
 	Console.WriteLine(RemoveAllNamespaces(doc.ToString()));
 }
 
+void 
+
 void Test3()
 {
+	
+	{
+		var docX = XElement.Parse(xml);
+	}
+	{
+		
+	}
+	var docX = XElement.Parse(xml);
+	var sb = $"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>{docX.ToString()}";
+	
+	
+	var prefix = docX.GetPrefixOfNamespace(docX.Name.Namespace);
+	// remove
+	docX.Name = docX.Name.LocalName;
+	foreach (XElement XE in docX.DescendantsAndSelf()) //Avoid prefix problem...
+	{
+		XE.Name = XE.Name.LocalName;
+	}
+	
 	XmlNamespaceManager ns = new XmlNamespaceManager(new NameTable());
 	ns.AddNamespace("x", "http://schemas.openxmlformats.org/spreadsheetml/2006/main");
 	var doc = new XmlDocument();
@@ -163,3 +184,38 @@ const string xml = @"<?xml version=""1.0"" encoding=""utf-8""?>
     <x:headerFooter />
     <x:tableParts count=""0"" />
 </x:worksheet>";
+
+const string withoutPrefixXml = @"<?xml version=""1.0"" encoding=""utf-8""?>
+<worksheet xmlns:r=""http://schemas.openxmlformats.org/officeDocument/2006/relationships"" xmlns:x=""http://schemas.openxmlformats.org/spreadsheetml/2006/main"">
+  <sheetPr>
+    <outlinePr summaryBelow=""1"" summaryRight=""1"" />
+  </sheetPr>
+  <dimension ref=""A1:B2"" />
+  <sheetViews>
+    <sheetView workbookViewId=""0"" />
+  </sheetViews>
+  <sheetFormatPr defaultRowHeight=""15"" />
+  <sheetData>
+    <row r=""1"" spans=""1:2"">
+      <c r=""A1"" s=""0"" t=""s"">
+        <v>0</v>
+      </c>
+      <c r=""B1"" s=""1"">
+        <v>44257.3802667361</v>
+      </c>
+    </row>
+    <row r=""2"" spans=""1:2"">
+      <c r=""A2"" s=""0"">
+        <f>MID(A1, 7, 5)</f>
+      </c>
+      <c r=""B2"" s=""0"" t=""n"">
+        <v>123</v>
+      </c>
+    </row>
+  </sheetData>
+  <printOptions horizontalCentered=""0"" verticalCentered=""0"" headings=""0"" gridLines=""0"" />
+  <pageMargins left=""0.75"" right=""0.75"" top=""0.75"" bottom=""0.5"" header=""0.5"" footer=""0.75"" />
+  <pageSetup paperSize=""1"" scale=""100"" pageOrder=""downThenOver"" orientation=""default"" blackAndWhite=""0"" draft=""0"" cellComments=""none"" errors=""displayed"" />
+  <headerFooter />
+  <tableParts count=""0"" />
+</worksheet>";

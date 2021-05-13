@@ -6,7 +6,7 @@
   <NuGetReference>LinqToExcel</NuGetReference>
   <NuGetReference>LinqToExcel_x64</NuGetReference>
   <NuGetReference>Markdig</NuGetReference>
-  <NuGetReference Version="0.0.6-beta" Prerelease="true">MiniExcel</NuGetReference>
+  <NuGetReference>MiniExcel</NuGetReference>
   <NuGetReference>Newtonsoft.Json</NuGetReference>
   <NuGetReference>NPOI</NuGetReference>
   <NuGetReference>NPOI.Extension</NuGetReference>
@@ -55,7 +55,7 @@ void Main()
 		using (var transaction = connection.BeginTransaction())
 		using (var stream = File.OpenRead(path))
 		{
-			var rows = stream.Query();
+			var rows = stream.Query().Take(300_000);
 			foreach (var row in rows)
 				connection.Execute("insert into T (A,B) values (@A,@B)", new { row.A, row.B }, transaction: transaction);
 			transaction.Commit();
@@ -68,6 +68,10 @@ void Main()
 	{
 		var count = connection.ExecuteScalar<int>("select count(*) from T");
 		Console.WriteLine($"count : {count}");
+		var top10 = connection.Query("select * from T limit 10;");
+		Console.WriteLine($"top10 : ");
+		Console.WriteLine(top10);
 	}
+	File.Delete(tempSqlitePath);
 }
 

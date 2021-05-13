@@ -21,7 +21,7 @@ void Main()
 	Console.WriteLine("start memory usage: " + System.Diagnostics.Process.GetCurrentProcess().WorkingSet64 / (1024 * 1024) + $"MB");
 
 	System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
-	var path = @"D:\git\MiniExcel\samples\xlsx\TestTypeMapping_AutoCheckFormat.xlsx";
+	var path = @"D:\git\MiniExcel\samples\xlsx\TestIssue222.xlsx";
 	using (var stream = File.OpenRead(path))
 	using (var reader = ExcelReaderFactory.CreateReader(stream))
 	{

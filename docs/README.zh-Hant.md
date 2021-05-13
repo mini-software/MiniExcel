@@ -17,6 +17,9 @@
 
 ---
 
+### 0.14.6
+- [Bug] 修正 SaveAs by datareader 錯誤 "Invalid attempt to call FieldCount when reader is closed" #230
+
 ### 0.14.5
 - [Breaking Change] 更換 OpenXmlConfiguration FillMergedCells 名稱
 

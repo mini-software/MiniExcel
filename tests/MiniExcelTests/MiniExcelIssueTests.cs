@@ -15,6 +15,8 @@ using System.Data;
 using System.Data.SQLite;
 using Dapper;
 using MiniExcelLibs.OpenXml;
+using System.Data.SqlClient;
+using System.Data.Common;
 
 namespace MiniExcelLibs.Tests
 {
@@ -24,6 +26,60 @@ namespace MiniExcelLibs.Tests
         public MiniExcelIssueTests(ITestOutputHelper output)
         {
             this.output = output;
+        }
+
+
+        /// <summary>
+        /// SaveAs By Reader Closed error : 'Error! Invalid attempt to call FieldCount when reader is closed' #230
+        /// https://github.com/shps951023/MiniExcel/issues/230
+        /// </summary>
+        [Fact]
+        public void Issue230()
+        {
+            var conn = Db.GetConnection("Data Source=:memory:");
+            conn.Open();
+            var cmd = conn.CreateCommand();
+            cmd.CommandText = "select 1 id union all select 2";
+            using (var reader = cmd.ExecuteReader(CommandBehavior.CloseConnection))
+            {
+                while (reader.Read())
+                {
+                    for (int i = 0; i < reader.FieldCount; i++)
+                    {
+                        var result = $"{reader.GetName(i)} , {reader.GetValue(i)}";
+                        output.WriteLine(result);
+                    }
+                }
+            }
+
+            conn = Db.GetConnection("Data Source=:memory:");
+            conn.Open();
+            cmd = conn.CreateCommand();
+            cmd.CommandText = "select 1 id union all select 2";
+            using (var reader = cmd.ExecuteReader(CommandBehavior.CloseConnection))
+            {
+                while (reader.Read())
+                {
+                    for (int i = 0; i < reader.FieldCount; i++)
+                    {
+                        var result = $"{reader.GetName(i)} , {reader.GetValue(i)}";
+                        output.WriteLine(result);
+                    }
+                }
+            }
+
+            conn = Db.GetConnection("Data Source=:memory:");
+            conn.Open();
+            cmd = conn.CreateCommand();
+            cmd.CommandText = "select 1 id union all select 2";
+            using (var reader = cmd.ExecuteReader(CommandBehavior.CloseConnection))
+            {
+                var path = PathHelper.GetNewTemplateFilePath();
+                MiniExcel.SaveAs(path, reader, printHeader: true);
+                var rows = MiniExcel.Query(path,true).ToList();
+                Assert.Equal(1, rows[0].id);
+                Assert.Equal(2, rows[1].id);
+            }
         }
 
         /// <summary>

@@ -44,7 +44,12 @@ namespace MiniExcelLibs.OpenXml
                         Type genericType = null;
 
                         //DapperRow
-                        if (value is IEnumerable)
+
+                        if (value is IDataReader)
+                        {
+                            GenerateSheetByIDataReader(writer, archive, value as IDataReader, printHeader);
+                        }
+                        else if (value is IEnumerable)
                         {
                             var values = value as IEnumerable;
 
@@ -164,10 +169,6 @@ namespace MiniExcelLibs.OpenXml
                         else if (value is DataTable)
                         {
                             GenerateSheetByDataTable(writer, archive, value as DataTable, printHeader);
-                        }
-                        else if (value is IDataReader)
-                        {
-                            GenerateSheetByIDataReader(writer, archive, value as IDataReader, printHeader);
                         }
                         else
                         {

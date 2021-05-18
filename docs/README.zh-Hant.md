@@ -17,6 +17,10 @@
 
 ---
 
+### 0.14.8 
+- [Bug] 修正 csv Query 內文包含逗號造成異常 #237 #I3R95M
+- [Bug] 修正 QueryAsDataTable 類別檢查異常，如 A2=5.5 , A3=0.55/1.1 系統會顯示 double type check error #233
+
 ### 0.14.7
 - [New] SaveAs 支持建立多工作表
 - [Breaking Change] 更換 GetSheetNames 返回類型 IEnumerable<string> -> List<string>

@@ -129,30 +129,27 @@
             {
                 if (first)
                 {
+                    
                     foreach (var key in row.Keys)
                     {
-                        //TODO:base on cell t xml
-                        // issue 223 : can't assign typeof object 
-                        var type = row[key]?.GetType() ?? typeof(string);
-                        if (type == null || type == typeof(object))
-                            type = typeof(string);
-                        dt.Columns.Add(key, type);
+                        var column = new DataColumn(key, typeof(object)) { Caption = key };
+                        dt.Columns.Add(column);
                     }
 
+                    dt.BeginLoadData();
                     first = false;
                 }
 
                 var newRow = dt.NewRow();
                 foreach (var key in row.Keys)
                 {
-                    if (row[key] == null)
-                        newRow[key] = DBNull.Value;
-                    else
-                        newRow[key] = row[key];
+                    newRow[key] = row[key]; //TODO: optimize not using string key
                 }
                     
                 dt.Rows.Add(newRow);
             }
+
+            dt.EndLoadData();
             return dt;
         }
     }

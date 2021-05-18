@@ -16,6 +16,10 @@
 
 ---
 
+### 0.14.8 
+- [Bug] Fix csv Query split comma not correct #237 #I3R95M
+- [Bug] QueryAsDataTable type check problem, e.g A2=5.5 , A3=0.55/1.1 will case double type check error #233
+
 ### 0.14.7
 - [New] SaveAs Support Create Multiple Sheets
 - [Breaking Change] Change GetSheetNames type IEnumerable<string> -> List<string>

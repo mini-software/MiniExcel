@@ -29,6 +29,20 @@ namespace MiniExcelLibs.Tests
         }
 
         /// <summary>
+        /// QueryAsDataTable A2=5.5 , A3=0.55/1.1 will case double type check error #233
+        /// </summary>
+        [Fact]
+        public void Issue233()
+        {
+            var path = PathHelper.GetSamplePath("xlsx/TestIssue233.xlsx");
+            var dt = MiniExcel.QueryAsDataTable(path);
+            var rows = dt.Rows;
+
+            Assert.Equal(0.55, rows[0]["Size"]);
+            Assert.Equal("0.55/1.1", rows[1]["Size"]);
+        }
+
+        /// <summary>
         /// Csv Query split comma not correct #237
         /// https://github.com/shps951023/MiniExcel/issues/237
         /// </summary>
@@ -150,7 +164,9 @@ namespace MiniExcelLibs.Tests
             var dt = MiniExcel.QueryAsDataTable(path);
             foreach (DataColumn column in dt.Columns)
             {
-                Assert.Equal(DBNull.Value, dt.Rows[3][column]);
+                var v = dt.Rows[3][column];
+                var type = v?.GetType();
+                Assert.Equal(DBNull.Value, v);
             }
         }
 
@@ -271,10 +287,10 @@ namespace MiniExcelLibs.Tests
 
             var dt = MiniExcel.QueryAsDataTable(path);
             var columns = dt.Columns;
-            Assert.Equal(typeof(string), columns[0].DataType);
-            Assert.Equal(typeof(string), columns[1].DataType);
+            Assert.Equal(typeof(object), columns[0].DataType);
+            Assert.Equal(typeof(object), columns[1].DataType);
 
-            Assert.Equal("123", dt.Rows[1]["A"]);
+            Assert.Equal((double)123, dt.Rows[1]["A"]);
             Assert.Equal("HelloWorld", dt.Rows[2]["B"]);
         }
 
@@ -390,9 +406,9 @@ namespace MiniExcelLibs.Tests
                 Assert.Equal("Test1", dt.Rows[0]["A"]);
                 Assert.Equal("Test2", dt.Rows[0]["B"]);
                 Assert.Equal("1", dt.Rows[1]["A"]);
-                Assert.Equal("2", dt.Rows[1]["B"]);
+                Assert.Equal((double)2, dt.Rows[1]["B"]);
                 Assert.Equal("3", dt.Rows[2]["A"]);
-                Assert.Equal("4", dt.Rows[2]["B"]);
+                Assert.Equal((double)4, dt.Rows[2]["B"]);
             }
         }
 

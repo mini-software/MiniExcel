@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 
 namespace MiniExcelLibs.Csv
 {
@@ -22,15 +23,13 @@ namespace MiniExcelLibs.Csv
 
             using (var reader = cf.GetStreamReaderFunc(_stream))
             {
-                char[] seperators = { cf.Seperator };
-
                 var row = string.Empty;
                 string[] read;
                 var firstRow = true;
                 Dictionary<int, string> headRows = new Dictionary<int, string>();
                 while ((row = reader.ReadLine()) != null)
                 {
-                    read = row.Split(seperators, StringSplitOptions.None);
+                    read = Split(cf, row);
 
                     //header
                     if (useHeaderRow)
@@ -72,15 +71,14 @@ namespace MiniExcelLibs.Csv
             Dictionary<int, PropertyInfo> idxProps = new Dictionary<int, PropertyInfo>();
             using (var reader = cf.GetStreamReaderFunc(_stream))
             {
-                char[] seperators = { cf.Seperator };
-
                 var row = string.Empty;
                 string[] read;
 
                 //header
                 {
                     row = reader.ReadLine();
-                    read = row.Split(seperators, StringSplitOptions.None);
+                    read = Split(cf, row);
+
                     var props = Helpers.GetExcelCustomPropertyInfos(type, read);
                     var index = 0;
                     foreach (var v in read)
@@ -94,7 +92,7 @@ namespace MiniExcelLibs.Csv
                 {
                     while ((row = reader.ReadLine()) != null)
                     {
-                        read = row.Split(seperators, StringSplitOptions.None);
+                        read = Split(cf, row);
 
                         //body
                         {
@@ -118,6 +116,13 @@ namespace MiniExcelLibs.Csv
 
                 }
             }
+        }
+
+        private static string[] Split(CsvConfiguration cf, string row)
+        {
+            return Regex.Split(row, $"[\t{cf.Seperator}](?=(?:[^\"]|\"[^\"]*\")*$)")
+                .Select(s => Regex.Replace(s.Replace("\"\"", "\""), "^\"|\"$", "")).ToArray();
+            //this code from S.O : https://stackoverflow.com/a/11365961/9131476
         }
     }
 }

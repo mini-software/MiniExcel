@@ -29,6 +29,27 @@ namespace MiniExcelLibs.Tests
         }
 
         /// <summary>
+        /// Csv Query split comma not correct #237
+        /// https://github.com/shps951023/MiniExcel/issues/237
+        /// </summary>
+        [Fact]
+        public void Issue237()
+        {
+            var value = new[] 
+            {
+                new{ id="\"\"1,2,3\"\""},
+                new{ id="1,2,3"},
+            };
+            var path = PathHelper.GetNewTemplateFilePath("csv");
+            MiniExcel.SaveAs(path, value);
+
+            var rows = MiniExcel.Query(path,true).ToList();
+
+            Assert.Equal("\"\"1,2,3\"\"", rows[0].id);
+            Assert.Equal("1,2,3", rows[1].id);
+        }
+
+        /// <summary>
         /// SaveAs support multiple sheets #234
         /// </summary>
         [Fact]

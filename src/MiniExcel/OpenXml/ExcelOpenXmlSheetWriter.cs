@@ -443,7 +443,7 @@ namespace MiniExcelLibs.OpenXml
 
         private static void WriteC(StreamWriter writer, string r, string columnName)
         {
-            writer.Write($"<x:c r=\"{r}\" t=\"str\" s=\"1\">>");
+            writer.Write($"<x:c r=\"{r}\" t=\"str\" s=\"1\">");
             writer.Write($"<x:v>{columnName}");
             writer.Write($"</x:v>");
             writer.Write($"</x:c>");

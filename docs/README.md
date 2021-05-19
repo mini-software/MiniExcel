@@ -16,6 +16,9 @@
 
 ---
 
+### 0.15.1
+- [Bug] Fix Sheetxml writer error, it contains two ">" #240
+
 ### 0.15.0
 - [New] SaveAs change default style and provide style options enum #132
 - [New] Support SaveAs by DataSet #235

@@ -29,6 +29,45 @@ namespace MiniExcelLibs.Tests
         }
 
         /// <summary>
+        /// Support SaveAs by DataSet #235
+        /// </summary>
+        [Fact]
+        public void Issue235()
+        {
+            var path = PathHelper.GetNewTemplateFilePath();
+
+            DataSet sheets = new DataSet();
+            var users = JsonConvert.DeserializeObject<DataTable>(JsonConvert.SerializeObject(new[] { new { Name = "Jack", Age = 25 }, new { Name = "Mike", Age = 44 } }));
+            users.TableName = "users";
+            var department =JsonConvert.DeserializeObject<DataTable>(JsonConvert.SerializeObject(new[] { new { ID = "01", Name = "HR" }, new { ID = "02", Name = "IT" } }));;
+            department.TableName = "department";
+            sheets.Tables.Add(users);
+            sheets.Tables.Add(department);
+
+            MiniExcel.SaveAs(path, sheets);
+
+
+            var sheetNames = MiniExcel.GetSheetNames(path);
+            Assert.Equal("users", sheetNames[0]);
+            Assert.Equal("department", sheetNames[1]);
+
+            {
+                var rows = MiniExcel.Query(path, true, sheetName: "users").ToList();
+                Assert.Equal("Jack", rows[0].Name);
+                Assert.Equal(25, rows[0].Age);
+                Assert.Equal("Mike", rows[1].Name);
+                Assert.Equal(44, rows[1].Age);
+            }
+            {
+                var rows = MiniExcel.Query(path, true, sheetName: "department").ToList();
+                Assert.Equal("01", rows[0].ID);
+                Assert.Equal("HR", rows[0].Name);
+                Assert.Equal("02", rows[1].ID);
+                Assert.Equal("IT", rows[1].Name);
+            }
+        }
+
+        /// <summary>
         /// QueryAsDataTable A2=5.5 , A3=0.55/1.1 will case double type check error #233
         /// </summary>
         [Fact]
@@ -49,7 +88,7 @@ namespace MiniExcelLibs.Tests
         [Fact]
         public void Issue237()
         {
-            var value = new[] 
+            var value = new[]
             {
                 new{ id="\"\"1,2,3\"\""},
                 new{ id="1,2,3"},
@@ -57,7 +96,7 @@ namespace MiniExcelLibs.Tests
             var path = PathHelper.GetNewTemplateFilePath("csv");
             MiniExcel.SaveAs(path, value);
 
-            var rows = MiniExcel.Query(path,true).ToList();
+            var rows = MiniExcel.Query(path, true).ToList();
 
             Assert.Equal("\"\"1,2,3\"\"", rows[0].id);
             Assert.Equal("1,2,3", rows[1].id);

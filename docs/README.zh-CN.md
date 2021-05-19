@@ -17,6 +17,9 @@
 
 ---
 
+### 0.14.9
+- [New] SaveAs 支持 DataSet #235
+
 ### 0.14.8 
 - [Bug] 修正 csv Query 内文包含逗号造成异常 #237 #I3R95M
 - [Bug] 修正 QueryAsDataTable 类别检查异常，如 A2=5.5 , A3=0.55/1.1 系统会显示 double type check error #233

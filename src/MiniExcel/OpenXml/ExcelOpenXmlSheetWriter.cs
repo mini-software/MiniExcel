@@ -45,6 +45,24 @@ namespace MiniExcelLibs.OpenXml
                     }
                     GenerateContentTypesXml(archive, packages);
                 }
+                else if (value is DataSet)
+                {
+                    var sheetId = 0;
+                    var sheets = value as DataSet;
+                    var keys = new List<string>();
+                    foreach (DataTable dt in sheets.Tables)
+                    {
+                        keys.Add(dt.TableName);
+                    }
+                    var packages = DefualtOpenXml.GenerateDefaultOpenXml(archive, keys);
+                    foreach (DataTable dt in sheets.Tables)
+                    {
+                        sheetId++;
+                        var sheetPath = $"xl/worksheets/sheet{sheetId}.xml";
+                        CreateSheetXml(dt, printHeader, archive, packages, sheetPath);
+                    }
+                    GenerateContentTypesXml(archive, packages);
+                }
                 else
                 {
                     var packages = DefualtOpenXml.GenerateDefaultOpenXml(archive, new[] { sheetName });

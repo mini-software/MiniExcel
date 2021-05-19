@@ -394,6 +394,7 @@ MiniExcel.SaveAs(path, reader);
 #### 7. Create Multiple Sheets
 
 ```csharp
+// 1. Dictionary<string,object>
 var users = new[] { new { Name = "Jack", Age = 25 }, new { Name = "Mike", Age = 44 } };
 var department = new[] { new { ID = "01", Name = "HR" }, new { ID = "02", Name = "IT" } };
 var sheets = new Dictionary<string, object>
@@ -401,6 +402,13 @@ var sheets = new Dictionary<string, object>
     ["users"] = users,
     ["department"] = department
 };
+MiniExcel.SaveAs(path, sheets);
+
+// 2. DataSet
+var sheets = new DataSet();
+sheets.Add(UsersDataTable);
+sheets.Add(DepartmentDataTable);
+//..
 MiniExcel.SaveAs(path, sheets);
 ```
 

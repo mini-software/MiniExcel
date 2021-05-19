@@ -29,6 +29,47 @@ namespace MiniExcelLibs.Tests
         }
 
         /// <summary>
+        /// SaveAs Default Template #132
+        /// </summary>
+        [Fact]
+        public void Issue132()
+        {
+            {
+                var path = PathHelper.GetNewTemplateFilePath();
+                var value = new[] {
+                    new { name ="Jack",Age=25,InDate=new DateTime(2021,01,03)},
+                    new { name ="Henry",Age=36,InDate=new DateTime(2020,05,03)},
+                };
+
+                MiniExcel.SaveAs(path, value);
+            }
+
+            {
+                var path = PathHelper.GetNewTemplateFilePath();
+                var value = new[] {
+                    new { name ="Jack",Age=25,InDate=new DateTime(2021,01,03)},
+                    new { name ="Henry",Age=36,InDate=new DateTime(2020,05,03)},
+                };
+                var config = new OpenXmlConfiguration()
+                {
+                    TableStyles = TableStyles.None
+                };
+                MiniExcel.SaveAs(path, value,configuration:config);
+            }
+
+            {
+                var path = PathHelper.GetNewTemplateFilePath();
+                var value = JsonConvert.DeserializeObject<DataTable>(
+                    JsonConvert.SerializeObject(new[] {
+                        new { name ="Jack",Age=25,InDate=new DateTime(2021,01,03)},
+                        new { name ="Henry",Age=36,InDate=new DateTime(2020,05,03)},
+                    })
+                );
+                MiniExcel.SaveAs(path, value);
+            }
+        }
+
+        /// <summary>
         /// Support SaveAs by DataSet #235
         /// </summary>
         [Fact]

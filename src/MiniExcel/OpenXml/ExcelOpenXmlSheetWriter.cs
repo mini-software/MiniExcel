@@ -7,7 +7,6 @@ using System.Data;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using static MiniExcelLibs.Utils.Helpers;
 
@@ -30,13 +29,14 @@ namespace MiniExcelLibs.OpenXml
 
         public void SaveAs(object value, string sheetName, bool printHeader, IConfiguration configuration)
         {
+            OpenXmlConfiguration config = configuration as OpenXmlConfiguration ?? OpenXmlConfiguration.DefaultConfig;
             using (var archive = new MiniExcelZipArchive(_stream, ZipArchiveMode.Create, true, _utf8WithBom))
             {
-                if(value is IDictionary<string, object>)
+                if (value is IDictionary<string, object>)
                 {
                     var sheetId = 0;
                     var sheets = value as IDictionary<string, object>;
-                    var packages = DefualtOpenXml.GenerateDefaultOpenXml(archive, sheets.Keys);
+                    var packages = DefualtOpenXml.GenerateDefaultOpenXml(archive, sheets.Keys, config);
                     foreach (var sheet in sheets)
                     {
                         sheetId++;
@@ -54,7 +54,7 @@ namespace MiniExcelLibs.OpenXml
                     {
                         keys.Add(dt.TableName);
                     }
-                    var packages = DefualtOpenXml.GenerateDefaultOpenXml(archive, keys);
+                    var packages = DefualtOpenXml.GenerateDefaultOpenXml(archive, keys, config);
                     foreach (DataTable dt in sheets.Tables)
                     {
                         sheetId++;
@@ -65,7 +65,7 @@ namespace MiniExcelLibs.OpenXml
                 }
                 else
                 {
-                    var packages = DefualtOpenXml.GenerateDefaultOpenXml(archive, new[] { sheetName });
+                    var packages = DefualtOpenXml.GenerateDefaultOpenXml(archive, new[] { sheetName }, config);
                     var sheetPath = "xl/worksheets/sheet1.xml";
                     CreateSheetXml(value, printHeader, archive, packages, sheetPath);
                     GenerateContentTypesXml(archive, packages);
@@ -177,9 +177,13 @@ namespace MiniExcelLibs.OpenXml
 
                     // dimension 
                     var maxRowIndex = rowCount + (printHeader && rowCount > 0 ? 1 : 0);  //TODO:it can optimize
-                    writer.Write($@"<x:dimension ref=""{GetDimensionRef(maxRowIndex, maxColumnIndex)}""/><x:sheetData>");
+                    writer.Write($@"<x:dimension ref=""{GetDimensionRef(maxRowIndex, maxColumnIndex)}""/>");
+
+                    //cols
+
 
                     //header
+                    writer.Write($@"<x:sheetData>");
                     var yIndex = 1;
                     var xIndex = 1;
                     if (printHeader)
@@ -196,8 +200,8 @@ namespace MiniExcelLibs.OpenXml
                                     continue;
                                 }
 
-                                var columname = ExcelOpenXmlUtils.ConvertXyToCell(cellIndex, yIndex);
-                                writer.Write($"<x:c r=\"{columname}\" t=\"str\"><x:v>{p.ExcelColumnName}</x:v></x:c>");
+                                var r = ExcelOpenXmlUtils.ConvertXyToCell(cellIndex, yIndex);
+                                WriteC(writer, r, columnName: p.ExcelColumnName);
                                 cellIndex++;
                             }
                         }
@@ -205,8 +209,8 @@ namespace MiniExcelLibs.OpenXml
                         {
                             foreach (var key in keys)
                             {
-                                var columname = ExcelOpenXmlUtils.ConvertXyToCell(cellIndex, yIndex);
-                                writer.Write($"<x:c r=\"{columname}\" t=\"str\"><x:v>{key}</x:v></x:c>");
+                                var r = ExcelOpenXmlUtils.ConvertXyToCell(cellIndex, yIndex);
+                                WriteC(writer, r, columnName: key.ToString());
                                 cellIndex++;
                             }
                         }
@@ -302,15 +306,14 @@ namespace MiniExcelLibs.OpenXml
         private static void WriteCell(StreamWriter writer, int yIndex, int cellIndex, object value)
         {
             var v = string.Empty;
-            var t = string.Empty;
+            var t = "str";
+            var s = "2";
             if (value == null)
             {
-                t = "t=\"str\"";
                 v = "";
             }
             else if (value is string)
             {
-                t = "t=\"str\"";
                 v = ExcelOpenXmlUtils.EncodeXML(value.ToString());
             }
             else
@@ -320,28 +323,29 @@ namespace MiniExcelLibs.OpenXml
 
                 if (Helpers.IsNumericType(type))
                 {
-                    t = "t=\"n\"";
+                    t = "n";
                     v = value.ToString();
                 }
                 else if (type == typeof(bool))
                 {
-                    t = "t=\"b\"";
+                    t = "b";
                     v = (bool)value ? "1" : "0";
                 }
                 else if (type == typeof(DateTime))
                 {
-                    t = "s=\"1\"";
+                    t = null;
+                    s = "3";
                     v = ((DateTime)value).ToOADate().ToString();
                 }
                 else
                 {
-                    t = "t=\"str\"";
                     v = ExcelOpenXmlUtils.EncodeXML(value.ToString());
                 }
             }
 
             var columname = ExcelOpenXmlUtils.ConvertXyToCell(cellIndex, yIndex);
-            writer.Write($"<x:c r=\"{columname}\" {t}><x:v>{v}</x:v></x:c>");
+            //t check avoid format error ![image](https://user-images.githubusercontent.com/12729184/118770190-9eee3480-b8b3-11eb-9f5a-87a439f5e320.png)
+            writer.Write($"<x:c r=\"{columname}\" {(t == null ? "" : $"t =\"{t}\"")} s=\"{s}\"><x:v>{v}</x:v></x:c>");
         }
 
         private void GenerateSheetByDataTable(StreamWriter writer, MiniExcelZipArchive archive, DataTable value, bool printHeader)
@@ -365,10 +369,7 @@ namespace MiniExcelLibs.OpenXml
                     foreach (DataColumn c in value.Columns)
                     {
                         var r = ExcelOpenXmlUtils.ConvertXyToCell(xIndex, yIndex);
-                        writer.Write($"<x:c r=\"{r}\" t=\"str\">");
-                        writer.Write($"<x:v>{c.Caption ?? c.ColumnName}");
-                        writer.Write($"</x:v>");
-                        writer.Write($"</x:c>");
+                        WriteC(writer, r, columnName: c.Caption ?? c.ColumnName);
                         xIndex++;
                     }
                     writer.Write($"</x:row>");
@@ -414,10 +415,8 @@ namespace MiniExcelLibs.OpenXml
                     for (int i = 0; i < fieldCount; i++)
                     {
                         var r = ExcelOpenXmlUtils.ConvertXyToCell(xIndex, yIndex);
-                        writer.Write($"<x:c r=\"{r}\" t=\"str\">");
-                        writer.Write($"<x:v>{value.GetName(i)}");
-                        writer.Write($"</x:v>");
-                        writer.Write($"</x:c>");
+                        var columnName = value.GetName(i);
+                        WriteC(writer, r, columnName);
                         xIndex++;
                     }
                     writer.Write($"</x:row>");
@@ -429,7 +428,7 @@ namespace MiniExcelLibs.OpenXml
                     writer.Write($"<x:row r=\"{yIndex.ToString()}\">");
                     var xIndex = xy.Item1;
 
-                    for(int i = 0; i < fieldCount; i++)
+                    for (int i = 0; i < fieldCount; i++)
                     {
                         var cellValue = value.GetValue(i);
                         WriteCell(writer, yIndex, xIndex, cellValue);
@@ -440,6 +439,14 @@ namespace MiniExcelLibs.OpenXml
                 }
             }
             writer.Write("</x:sheetData></x:worksheet>");
+        }
+
+        private static void WriteC(StreamWriter writer, string r, string columnName)
+        {
+            writer.Write($"<x:c r=\"{r}\" t=\"str\" s=\"1\">>");
+            writer.Write($"<x:v>{columnName}");
+            writer.Write($"</x:v>");
+            writer.Write($"</x:c>");
         }
 
         private void GenerateContentTypesXml(MiniExcelZipArchive archive, Dictionary<string, ZipPackageInfo> packages)

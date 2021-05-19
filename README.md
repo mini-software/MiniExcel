@@ -416,6 +416,26 @@ MiniExcel.SaveAs(path, sheets);
 
 
 
+#### 8. TableStyles Options
+
+From the v0.15.0 version, the default style has been changed to
+
+![image](https://user-images.githubusercontent.com/12729184/118784493-a36e1980-b8c2-11eb-8a3d-a669985aea1a.png)
+
+Without style configuration
+
+```csharp
+var config = new OpenXmlConfiguration()
+{
+     TableStyles = TableStyles.None
+};
+MiniExcel.SaveAs(path, value,configuration:config);
+```
+
+![image](https://user-images.githubusercontent.com/12729184/118784917-f3e57700-b8c2-11eb-8718-8d955b1bc197.png)
+
+
+
 ### Fill Data To Excel Template <a name="getstart3"></a>
 
 - The declaration is similar to Vue template `{{variable name}}`, or the collection rendering `{{collection name.field name}}`

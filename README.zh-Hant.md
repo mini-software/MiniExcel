@@ -404,6 +404,28 @@ MiniExcel.SaveAs(path, sheets);
 
 
 
+#### 8. 表格樣式選擇
+
+從v0.15.0版本開始預設樣式改為
+
+![image](https://user-images.githubusercontent.com/12729184/118784493-a36e1980-b8c2-11eb-8a3d-a669985aea1a.png)
+
+不需要樣式
+
+```csharp
+var config = new OpenXmlConfiguration()
+{
+    TableStyles = TableStyles.None
+};
+MiniExcel.SaveAs(path, value,configuration:config);
+```
+
+![image](https://user-images.githubusercontent.com/12729184/118784917-f3e57700-b8c2-11eb-8718-8d955b1bc197.png)
+
+
+
+
+
 
 ### 模板填充 Excel <a name="getstart3"></a>
 

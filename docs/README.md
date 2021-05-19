@@ -16,7 +16,8 @@
 
 ---
 
-### 0.14.9
+### 0.15.0
+- [New] SaveAs change default style and provide style options enum #132
 - [New] Support SaveAs by DataSet #235
 
 ### 0.14.8 

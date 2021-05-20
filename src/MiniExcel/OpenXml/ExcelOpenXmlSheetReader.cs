@@ -424,52 +424,7 @@ namespace MiniExcelLibs.OpenXml
                         if (itemValue == null)
                             continue;
 
-                        if (pInfo.ExcludeNullableType == typeof(Guid))
-                        {
-                            newV = Guid.Parse(itemValue.ToString());
-                        }
-                        else if (pInfo.ExcludeNullableType == typeof(DateTime))
-                        {
-                            var vs = itemValue.ToString();
-
-                            if (pInfo.ExcelFormat != null)
-                            {
-                                if(DateTime.TryParseExact(vs, pInfo.ExcelFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out var _v))
-                                {
-                                    newV = _v;
-                                }
-                            }
-                            else if (DateTime.TryParse(vs, CultureInfo.InvariantCulture, DateTimeStyles.None, out var _v))
-                                newV = _v;
-                            else if (DateTime.TryParseExact(vs, "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out var _v2))
-                                newV = _v2;
-                            else if (double.TryParse(vs, NumberStyles.None, CultureInfo.InvariantCulture, out var _d))
-                                newV = DateTimeHelper.FromOADate(_d);
-                            else
-                                throw new InvalidCastException($"{vs} can't cast to datetime");
-                        }
-                        else if (pInfo.ExcludeNullableType == typeof(bool))
-                        {
-                            var vs = itemValue.ToString();
-                            if (vs == "1")
-                                newV = true;
-                            else if (vs == "0")
-                                newV = false;
-                            else
-                                newV = bool.Parse(vs);
-                        }
-                        else if (pInfo.Property.PropertyType == typeof(string))
-                        {
-                            newV = XmlEncoder.DecodeString(itemValue?.ToString());
-                        }
-                        else if (pInfo.Property.PropertyType.IsEnum)
-                        {
-                            newV = Enum.Parse(pInfo.Property.PropertyType, itemValue?.ToString(), true);
-                        }
-                        // solve : https://github.com/shps951023/MiniExcel/issues/138
-                        else
-                            newV = Convert.ChangeType(itemValue, pInfo.ExcludeNullableType);
-                        pInfo.Property.SetValue(v, newV);
+                        newV = TypeMapping(v, pInfo, newV, itemValue);
                     }
                 }
                 yield return v;

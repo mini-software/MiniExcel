@@ -3,8 +3,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text.RegularExpressions;
+using static MiniExcelLibs.Utils.Helpers;
 
 namespace MiniExcelLibs.Csv
 {
@@ -53,7 +53,7 @@ namespace MiniExcelLibs.Csv
 
                     //body
                     {
-                        var cell = Helpers.GetEmptyExpandoObject(read.Length - 1,0);
+                        var cell = Helpers.GetEmptyExpandoObject(read.Length - 1, 0);
                         for (int i = 0; i <= read.Length - 1; i++)
                             cell[Helpers.GetAlphabetColumnName(i)] = read[i];
                         yield return cell;
@@ -68,7 +68,7 @@ namespace MiniExcelLibs.Csv
 
             var type = typeof(T);
 
-            Dictionary<int, PropertyInfo> idxProps = new Dictionary<int, PropertyInfo>();
+            Dictionary<int, ExcelCustomPropertyInfo> idxProps = new Dictionary<int, ExcelCustomPropertyInfo>();
             using (var reader = cf.GetStreamReaderFunc(_stream))
             {
                 var row = string.Empty;
@@ -85,7 +85,7 @@ namespace MiniExcelLibs.Csv
                     {
                         var p = props.SingleOrDefault(w => w.ExcelColumnName == v);
                         if (p != null)
-                            idxProps.Add(index, p.Property);
+                            idxProps.Add(index, p);
                         index++;
                     }
                 }
@@ -96,21 +96,24 @@ namespace MiniExcelLibs.Csv
 
                         //body
                         {
-                            var cell = new T();
+                            var v = new T();
                             foreach (var p in idxProps)
                             {
-                                if (p.Value.PropertyType.IsEnum)
+                                var pInfo = p.Value;
+
                                 {
-                                    var newV = Enum.Parse(p.Value.PropertyType, read[p.Key], true);
-                                    p.Value.SetValue(cell, newV);
-                                }
-                                else
-                                {
-                                    p.Value.SetValue(cell, read[p.Key]);
+
+                                    object newV = null;
+                                    object itemValue = read[p.Key];
+
+                                    if (itemValue == null)
+                                        continue;
+
+                                    newV = TypeMapping(v, pInfo, newV, itemValue);
                                 }
                             }
 
-                            yield return cell;
+                            yield return v;
                         }
                     }
 

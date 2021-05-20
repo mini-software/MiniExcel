@@ -4,6 +4,7 @@
     using System;
     using System.Collections.Generic;
     using System.Dynamic;
+    using System.Globalization;
     using System.IO;
     using System.Linq;
     using System.Reflection;
@@ -76,7 +77,7 @@
 
     internal static partial class Helpers
     {
-        internal static IDictionary<string, object> GetEmptyExpandoObject(int maxColumnIndex,int startCellIndex)
+        internal static IDictionary<string, object> GetEmptyExpandoObject(int maxColumnIndex, int startCellIndex)
         {
             // TODO: strong type mapping can ignore this
             // TODO: it can recode better performance 
@@ -117,9 +118,9 @@
                 if (withCustomIndexProps.GroupBy(g => g.ExcelColumnIndex).Any(_ => _.Count() > 1))
                     throw new InvalidOperationException($"Duplicate column name");
 
-                var maxColumnIndex = props.Count -1 ;
+                var maxColumnIndex = props.Count - 1;
                 if (withCustomIndexProps.Any())
-                    maxColumnIndex  = Math.Max((int)withCustomIndexProps.Max(w => w.ExcelColumnIndex), maxColumnIndex);
+                    maxColumnIndex = Math.Max((int)withCustomIndexProps.Max(w => w.ExcelColumnIndex), maxColumnIndex);
 
                 var withoutCustomIndexProps = props.Where(w => w.ExcelColumnIndex == null).ToList();
 
@@ -177,7 +178,7 @@
 
                 foreach (var p in props)
                 {
-                    if(p.ExcelColumnIndex != null)
+                    if (p.ExcelColumnIndex != null)
                     {
                         if (p.ExcelColumnIndex >= headers.Length)
                             throw new ArgumentException($"ExcelColumnIndex {p.ExcelColumnIndex} over haeder max index {headers.Length}");
@@ -214,7 +215,7 @@
 
         public static bool IsNumericType(Type type, bool isNullableUnderlyingType = false)
         {
-            if(isNullableUnderlyingType)
+            if (isNullableUnderlyingType)
                 type = Nullable.GetUnderlyingType(type) ?? type;
             switch (Type.GetTypeCode(type))
             {
@@ -234,6 +235,58 @@
                     return false;
             }
         }
+
+        public static object TypeMapping<T>(T v, ExcelCustomPropertyInfo pInfo, object newV, object itemValue) where T : class, new()
+        {
+            if (pInfo.ExcludeNullableType == typeof(Guid))
+            {
+                newV = Guid.Parse(itemValue.ToString());
+            }
+            else if (pInfo.ExcludeNullableType == typeof(DateTime))
+            {
+                var vs = itemValue.ToString();
+
+                if (pInfo.ExcelFormat != null)
+                {
+                    if (DateTime.TryParseExact(vs, pInfo.ExcelFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out var _v))
+                    {
+                        newV = _v;
+                    }
+                }
+                else if (DateTime.TryParse(vs, CultureInfo.InvariantCulture, DateTimeStyles.None, out var _v))
+                    newV = _v;
+                else if (DateTime.TryParseExact(vs, "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out var _v2))
+                    newV = _v2;
+                else if (double.TryParse(vs, NumberStyles.None, CultureInfo.InvariantCulture, out var _d))
+                    newV = DateTimeHelper.FromOADate(_d);
+                else
+                    throw new InvalidCastException($"{vs} can't cast to datetime");
+            }
+            else if (pInfo.ExcludeNullableType == typeof(bool))
+            {
+                var vs = itemValue.ToString();
+                if (vs == "1")
+                    newV = true;
+                else if (vs == "0")
+                    newV = false;
+                else
+                    newV = bool.Parse(vs);
+            }
+            else if (pInfo.Property.PropertyType == typeof(string))
+            {
+                newV = XmlEncoder.DecodeString(itemValue?.ToString());
+            }
+            else if (pInfo.Property.PropertyType.IsEnum)
+            {
+                newV = Enum.Parse(pInfo.Property.PropertyType, itemValue?.ToString(), true);
+            }
+            // solve : https://github.com/shps951023/MiniExcel/issues/138
+            else
+                newV = Convert.ChangeType(itemValue, pInfo.ExcludeNullableType);
+            pInfo.Property.SetValue(v, newV);
+            return newV;
+        }
+
     }
 
 }

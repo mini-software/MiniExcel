@@ -670,11 +670,15 @@ MiniExcel.SaveAsByTemplate(path, templatePath, value);
 
 ### Excel Column Name/Index/Ignore Attribute <a name="getstart4"></a>
 
-e.g
 
-input excel :  
+
+#### 1. Specify the column name, column index, column ignore
+
+Excel Example
 
 ![image](https://user-images.githubusercontent.com/12729184/114230869-3e163700-99ac-11eb-9a90-2039d4b4b313.png)
+
+Code
 
 ```csharp
 public class ExcelAttributeDemo
@@ -702,6 +706,46 @@ Assert.Null(rows[0].Test5);
 Assert.Null(rows[0].Test6);
 Assert.Equal("Test4", rows[0].Test7);
 ```
+
+
+
+
+
+#### 2. Custom DateTime Format (ExcelFormatAttribute)
+
+Class
+
+```csharp
+public class Dto
+{
+    public string Name { get; set; }
+
+    [ExcelFormat("MMMM dd, yyyy")]
+    public DateTime InDate { get; set; }
+}
+```
+
+Code
+
+```csharp
+var value = new Dto[] {
+    new Issue241Dto{ Name="Jack",InDate=new DateTime(2021,01,04)},
+    new Issue241Dto{ Name="Henry",InDate=new DateTime(2020,04,05)},
+};
+MiniExcel.SaveAs(path, value);
+```
+
+Result
+
+![image](https://user-images.githubusercontent.com/12729184/118910788-ab2bcd80-b957-11eb-8d42-bfce36621b1b.png)
+
+Query supports custom format conversion
+
+![image](https://user-images.githubusercontent.com/12729184/118911286-87b55280-b958-11eb-9a88-c8ff403d240a.png)
+
+
+
+
 
 
 

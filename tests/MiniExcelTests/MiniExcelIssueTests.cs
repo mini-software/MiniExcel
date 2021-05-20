@@ -29,28 +29,81 @@ namespace MiniExcelLibs.Tests
         }
 
         /// <summary>
+        /// Csv type mapping Query error "cannot be converted to xxx type" #243
+        /// </summary>
+        [Fact]
+        public void Issue243()
+        {
+            var path = PathHelper.GetTempPath("csv");
+            var value = new[] {
+                  new { name ="Jack",Age=25,InDate=new DateTime(2021,01,03)},
+                  new { name ="Henry",Age=36,InDate=new DateTime(2020,05,03)},
+             };
+            MiniExcel.SaveAs(path, value);
+
+            var rows = MiniExcel.Query<Issue243Dto>(path).ToList();
+            Assert.Equal("Jack", rows[0].name);
+            Assert.Equal(25, rows[0].Age);
+            Assert.Equal(new DateTime(2021, 01, 03), rows[0].InDate);
+
+            Assert.Equal("Henry", rows[1].name);
+            Assert.Equal(36, rows[1].Age);
+            Assert.Equal(new DateTime(2020, 05, 03), rows[1].InDate);
+        }
+
+        public class Issue243Dto
+        {
+            public string name { get; set; }
+            public int Age { get; set; }
+            public DateTime InDate { get; set; }
+        }
+
+        /// <summary>
         /// Support Custom Datetime format #241
         /// </summary>
         [Fact]
         public void Issue241()
         {
-            var path = PathHelper.GetTempPath();
+            
             var value = new Issue241Dto[] {
                 new Issue241Dto{ Name="Jack",InDate=new DateTime(2021,01,04)},
                 new Issue241Dto{ Name="Henry",InDate=new DateTime(2020,04,05)},
             };
-            MiniExcel.SaveAs(path, value);
 
+            // csv
             {
-                var rows = MiniExcel.Query(path,true).ToList();
-                Assert.Equal(rows[0].InDate, "2021年01月04日");
-                Assert.Equal(rows[1].InDate, "2020年04月05日");
+                var path = PathHelper.GetTempPath("csv");
+                MiniExcel.SaveAs(path, value);
+
+                {
+                    var rows = MiniExcel.Query(path, true).ToList();
+                    Assert.Equal(rows[0].InDate, "January 04, 2021");
+                    Assert.Equal(rows[1].InDate, "April 05, 2020");
+                }
+
+                {
+                    var rows = MiniExcel.Query<Issue241Dto>(path).ToList();
+                    Assert.Equal(rows[0].InDate, new DateTime(2021, 01, 04));
+                    Assert.Equal(rows[1].InDate, new DateTime(2020, 04, 05));
+                }
             }
 
+            // xlsx
             {
-                var rows = MiniExcel.Query<Issue241Dto>(path).ToList();
-                Assert.Equal(rows[0].InDate, new DateTime(2021, 01, 04));
-                Assert.Equal(rows[1].InDate, new DateTime(2020, 04, 05));
+                var path = PathHelper.GetTempPath();
+                MiniExcel.SaveAs(path, value);
+
+                {
+                    var rows = MiniExcel.Query(path, true).ToList();
+                    Assert.Equal(rows[0].InDate, "January 04, 2021");
+                    Assert.Equal(rows[1].InDate, "April 05, 2020");
+                }
+
+                {
+                    var rows = MiniExcel.Query<Issue241Dto>(path).ToList();
+                    Assert.Equal(rows[0].InDate, new DateTime(2021, 01, 04));
+                    Assert.Equal(rows[1].InDate, new DateTime(2020, 04, 05));
+                }
             }
         }
 
@@ -58,7 +111,7 @@ namespace MiniExcelLibs.Tests
         {
             public string Name { get; set; }
 
-            [ExcelFormat("yyyy年MM月dd日")]
+            [ExcelFormat("MMMM dd, yyyy")]
             public DateTime InDate { get; set; }
         }
 

@@ -660,14 +660,18 @@ MiniExcel.SaveAsByTemplate(path, templatePath, value);
 
 
 
-### Excel Column Name/Index/Ignore Attribute <a name="getstart4"></a>
+### Excel 列属性 (Excel Column Attribute) <a name="getstart4"></a>
 
-e.g
 
-input excel :  
+
+#### 1. 指定列名称、指定第几列、是否忽略该列
+
+Excel例子
 
 ![image](https://user-images.githubusercontent.com/12729184/114230869-3e163700-99ac-11eb-9a90-2039d4b4b313.png)
 
+
+代码
 ```csharp
 public class ExcelAttributeDemo
 {
@@ -677,11 +681,11 @@ public class ExcelAttributeDemo
     public string Test2 { get; set; }
     [ExcelIgnore]
     public string Test3 { get; set; }
-    [ExcelColumnIndex("I")] // system will convert "I" to 8 index
+    [ExcelColumnIndex("I")] // 系统会自动转换"I"为第8列
     public string Test4 { get; set; } 
-    public string Test5 { get; } //wihout set will ignore
-    public string Test6 { get; private set; } //un-public set will ignore
-    [ExcelColumnIndex(3)] // start with 0
+    public string Test5 { get; } //系统会忽略此列
+    public string Test6 { get; private set; } //set非公开,系统会忽略
+    [ExcelColumnIndex(3)] // 从0开始索引
     public string Test7 { get; set; }
 }
 
@@ -694,6 +698,40 @@ Assert.Null(rows[0].Test5);
 Assert.Null(rows[0].Test6);
 Assert.Equal("Test4", rows[0].Test7);
 ```
+
+#### 2. 自定义日期格式 (ExcelFormatAttribute)
+
+类别
+
+```csharp
+public class Dto
+{
+    public string Name { get; set; }
+
+    [ExcelFormat("MMMM dd, yyyy")]
+    public DateTime InDate { get; set; }
+}
+```
+
+代码
+
+```csharp
+var value = new Dto[] {
+    new Issue241Dto{ Name="Jack",InDate=new DateTime(2021,01,04)},
+    new Issue241Dto{ Name="Henry",InDate=new DateTime(2020,04,05)},
+};
+MiniExcel.SaveAs(path, value);
+```
+
+效果
+
+![image](https://user-images.githubusercontent.com/12729184/118910788-ab2bcd80-b957-11eb-8d42-bfce36621b1b.png)
+
+Query 支持自定义格式转换
+
+![image](https://user-images.githubusercontent.com/12729184/118911286-87b55280-b958-11eb-9a88-c8ff403d240a.png)
+
+
 
 
 

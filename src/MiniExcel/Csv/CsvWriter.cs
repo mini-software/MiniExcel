@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using static MiniExcelLibs.Utils.Helpers;
 
 namespace MiniExcelLibs.Csv
@@ -70,7 +69,7 @@ namespace MiniExcelLibs.Csv
                                     genericType = item.GetType();
                                     props = Helpers.GetSaveAsProperties(genericType);
                                 }
-                                    
+
                                 break;
                             }
                         }
@@ -79,7 +78,7 @@ namespace MiniExcelLibs.Csv
                     //if(mode == null)
                     //    throw new NotImplementedException($"Type {type?.Name} & genericType {genericType?.Name} not Implemented. please issue for me.");
 
-                    if (keys.Count() == 0 && props==null)
+                    if (keys.Count() == 0 && props == null)
                     {
                         writer.Write(newLine);
                         return;
@@ -92,7 +91,7 @@ namespace MiniExcelLibs.Csv
                             writer.Write(string.Join(seperator, props.Select(s => CsvHelpers.ConvertToCsvValue(s?.ExcelColumnName))));
                             writer.Write(newLine);
                         }
-                        else if (keys.Count>0)
+                        else if (keys.Count > 0)
                         {
                             writer.Write(string.Join(seperator, keys));
                             writer.Write(newLine);
@@ -123,11 +122,11 @@ namespace MiniExcelLibs.Csv
             }
         }
 
-        private void GenerateSheetByDataTable(StreamWriter writer, DataTable dt, bool printHeader,string seperator, string newLine)
+        private void GenerateSheetByDataTable(StreamWriter writer, DataTable dt, bool printHeader, string seperator, string newLine)
         {
             if (printHeader)
             {
-                writer.Write(string.Join(seperator, dt.Columns.Cast<DataColumn>().Select(s => s.Caption??s.ColumnName)));
+                writer.Write(string.Join(seperator, dt.Columns.Cast<DataColumn>().Select(s => s.Caption ?? s.ColumnName)));
                 writer.Write(newLine);
             }
             for (int i = 0; i < dt.Rows.Count; i++)
@@ -135,7 +134,7 @@ namespace MiniExcelLibs.Csv
                 var first = true;
                 for (int j = 0; j < dt.Columns.Count; j++)
                 {
-                    var cellValue = CsvHelpers.ConvertToCsvValue(dt.Rows[i][j]?.ToCsvString());
+                    var cellValue = CsvHelpers.ConvertToCsvValue(dt.Rows[i][j]?.ToCsvString(null));
                     if (!first)
                         writer.Write(seperator);
                     writer.Write(cellValue);
@@ -149,7 +148,7 @@ namespace MiniExcelLibs.Csv
         {
             foreach (var v in value)
             {
-                var values = props.Select(s => CsvHelpers.ConvertToCsvValue(s?.Property.GetValue(v)?.ToCsvString()));
+                var values = props.Select(s => CsvHelpers.ConvertToCsvValue(s?.Property.GetValue(v)?.ToCsvString(s)));
                 writer.Write(string.Join(seperator, values));
                 writer.Write(newLine);
             }
@@ -159,7 +158,7 @@ namespace MiniExcelLibs.Csv
         {
             foreach (IDictionary v in value)
             {
-                var values = keys.Select(key => CsvHelpers.ConvertToCsvValue(v[key]?.ToCsvString()));
+                var values = keys.Select(key => CsvHelpers.ConvertToCsvValue(v[key]?.ToCsvString(null)));
                 writer.Write(string.Join(seperator, values));
                 writer.Write(newLine);
             }
@@ -169,23 +168,44 @@ namespace MiniExcelLibs.Csv
         {
             foreach (IDictionary<string, object> v in value)
             {
-                var values = keys.Select(key => CsvHelpers.ConvertToCsvValue(v[key]?.ToCsvString()));
+                var values = keys.Select(key => CsvHelpers.ConvertToCsvValue(v[key]?.ToCsvString(null)));
                 writer.Write(string.Join(seperator, values));
                 writer.Write(newLine);
             }
         }
     }
 
-    public static class CsvValueTostringHelper
+    internal static class CsvValueTostringHelper
     {
-        public static string ToCsvString(this object obj)
+        public static string ToCsvString(this object value, ExcelCustomPropertyInfo p)
         {
-            if (obj == null)
+            if (value == null)
                 return "";
-            var type = obj.GetType();
-            if (type == typeof(DateTime) || type ==  typeof(DateTime?))
-                return ((DateTime)obj).ToString("yyyy-MM-dd HH:mm:ss");
-            return obj.ToString();
+
+            Type type = null;
+            if (p == null)
+            {
+                type = value.GetType();
+                type = Nullable.GetUnderlyingType(type) ?? type;
+            }
+            else
+            {
+                type = p.ExcludeNullableType; //sometime it doesn't need to re-get type like prop
+            }
+
+            if (type == typeof(DateTime))
+            {
+                if (p == null || p.ExcelFormat == null)
+                {
+                    return ((DateTime)value).ToString("yyyy-MM-dd HH:mm:ss");
+                }
+                else
+                {
+                    return ((DateTime)value).ToString(p.ExcelFormat);
+                }
+            }
+
+            return value.ToString();
         }
     }
 }

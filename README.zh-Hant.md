@@ -949,7 +949,7 @@ response.End();
 
 像例子一樣，建立一個方法處理 i18n 跟權限管理，並搭配 `yield return 返回 IEnumerable<Dictionary<string, object>>`，即可達到動態、低記憶體處理效果
 
-```cs
+```csharp
 void Main()
 {
 	var value = new Order[] {

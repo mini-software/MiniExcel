@@ -945,7 +945,7 @@ response.End();
 
 像例子一样，建立一个方法处理 i18n 跟权限管理，并搭配 `yield return 返回 IEnumerable<Dictionary<string, object>>`，即可达到动态、低内存处理效果
 
-```cs
+```csharp
 void Main()
 {
 	var value = new Order[] {
@@ -1013,6 +1013,7 @@ public class Order
 	public string ProductID { get; set; }
 	public decimal Amt { get; set; }
 }
+```
 
 ![image](https://user-images.githubusercontent.com/12729184/118939964-d24bc480-b982-11eb-88dd-f06655f6121a.png)
 

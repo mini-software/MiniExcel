@@ -19,6 +19,9 @@
 
 ### 0.15.2
 - [New] 支持自定義日期時間格式 #241
+- [Bug] CSV類型映射查詢錯誤 "cannot be converted to xxx type" #243
+- [Bug] Stream 讀取 xls 文件時沒有錯誤異常拋出 #242
+- [Breaking Change] 流無法識別文件類型，請手動指定ExcelType
 
 ### 0.15.1
 - [Bug] 修正 Sheetxml 結尾包含兩個 ">" 導致解析錯誤 #240

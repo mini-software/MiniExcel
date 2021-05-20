@@ -29,6 +29,22 @@ namespace MiniExcelLibs.Tests
         }
 
         /// <summary>
+        /// No error exception throw when reading xls file #242
+        /// </summary>
+        [Fact]
+        public void Issue242()
+        {
+            var path = PathHelper.GetSamplePath("xls/TestIssue242.xls");
+            
+            Assert.Throws<NotSupportedException>(()=> MiniExcel.Query(path).ToList());
+
+            using (var stream = File.OpenRead(path))
+            {
+                Assert.Throws<NotSupportedException>(() => stream.Query().ToList());
+            }
+        }
+
+        /// <summary>
         /// Csv type mapping Query error "cannot be converted to xxx type" #243
         /// </summary>
         [Fact]
@@ -668,7 +684,7 @@ Leave";
                 writer.Write(text);
                 writer.Flush();
                 stream.Position = 0;
-                var rows = MiniExcel.Query<Issue89VO>(stream).ToList();
+                var rows = MiniExcel.Query<Issue89VO>(stream, excelType: ExcelType.CSV).ToList();
                 Assert.Equal(Issue89VO.WorkState.OnDuty, rows[0].State);
                 Assert.Equal(Issue89VO.WorkState.Fired, rows[1].State);
                 Assert.Equal(Issue89VO.WorkState.Leave, rows[2].State);

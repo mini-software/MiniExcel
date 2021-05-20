@@ -207,7 +207,7 @@ namespace MiniExcelLibs.Tests
 
             using (var stream = File.OpenRead(path))
             {
-                var rows = stream.Query(useHeaderRow: true).ToList();
+                var rows = stream.Query(useHeaderRow: true,excelType:ExcelType.CSV).ToList();
                 Assert.Equal("A1", rows[0].c1);
                 Assert.Equal("B1", rows[0].c2);
                 Assert.Equal("A2", rows[1].c1);
@@ -215,7 +215,7 @@ namespace MiniExcelLibs.Tests
             }
 
 		  {
-			 var rows = MiniExcel.Query(path,useHeaderRow: true).ToList();
+			 var rows = MiniExcel.Query(path,useHeaderRow: true, excelType: ExcelType.CSV).ToList();
 			 Assert.Equal("A1", rows[0].c1);
 			 Assert.Equal("B1", rows[0].c2);
 			 Assert.Equal("A2", rows[1].c1);
@@ -236,7 +236,7 @@ namespace MiniExcelLibs.Tests
 
             using (var stream = File.OpenRead(path))
             {
-                var rows = stream.Query<Test>().ToList();
+                var rows = stream.Query<Test>(excelType: ExcelType.CSV).ToList();
                 Assert.Equal("A1", rows[0].c1);
                 Assert.Equal("B1", rows[0].c2);
                 Assert.Equal("A2", rows[1].c1);
@@ -244,7 +244,7 @@ namespace MiniExcelLibs.Tests
             }
 
 		  {
-			 var rows = MiniExcel.Query<Test>(path).ToList();
+			 var rows = MiniExcel.Query<Test>(path, excelType: ExcelType.CSV).ToList();
 			 Assert.Equal("A1", rows[0].c1);
 			 Assert.Equal("B1", rows[0].c2);
 			 Assert.Equal("A2", rows[1].c1);

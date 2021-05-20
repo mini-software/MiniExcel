@@ -28,7 +28,6 @@
             if (excelType != ExcelType.UNKNOWN)
                 return excelType;
 
-
             var probe = new byte[8];
             stream.Seek(0, SeekOrigin.Begin);
             stream.Read(probe, 0, probe.Length);
@@ -40,7 +39,7 @@
                 return ExcelType.XLSX;
             }
 
-            return ExcelType.CSV;
+            throw new NotSupportedException("Stream cannot know the file type, please specify ExcelType manually");
         }
     }
 }

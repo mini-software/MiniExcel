@@ -18,6 +18,9 @@
 
 ### 0.15.2
 - [New] Support Custom Datetime format #241
+- [Bug] Csv type mapping Query error "cannot be converted to xxx type" #243
+- [Bug] No error exception throw when reading xls file #242
+- [Breaking Change] Stream cannot know the file type, please specify ExcelType manually
 
 ### 0.15.1
 - [Bug] Fix Sheetxml writer error, it contains two ">" #240

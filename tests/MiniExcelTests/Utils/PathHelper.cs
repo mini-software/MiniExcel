@@ -13,7 +13,7 @@ namespace MiniExcelLibs.Tests.Utils
             return $@"../../../../../samples/{fileName}";
         }
 
-        public static string GetNewTemplateFilePath(string extension = "xlsx") 
+        public static string GetTempPath(string extension = "xlsx") 
         {
             var method = (new System.Diagnostics.StackTrace()).GetFrame(1).GetMethod();
 

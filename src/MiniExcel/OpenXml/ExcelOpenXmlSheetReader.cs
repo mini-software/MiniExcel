@@ -431,11 +431,19 @@ namespace MiniExcelLibs.OpenXml
                         else if (pInfo.ExcludeNullableType == typeof(DateTime))
                         {
                             var vs = itemValue.ToString();
-                            if (DateTime.TryParse(vs, out var _v))
+
+                            if (pInfo.ExcelFormat != null)
+                            {
+                                if(DateTime.TryParseExact(vs, pInfo.ExcelFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out var _v))
+                                {
+                                    newV = _v;
+                                }
+                            }
+                            else if (DateTime.TryParse(vs, CultureInfo.InvariantCulture, DateTimeStyles.None, out var _v))
                                 newV = _v;
                             else if (DateTime.TryParseExact(vs, "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out var _v2))
                                 newV = _v2;
-                            else if (double.TryParse(vs, out var _d))
+                            else if (double.TryParse(vs, NumberStyles.None, CultureInfo.InvariantCulture, out var _d))
                                 newV = DateTimeHelper.FromOADate(_d);
                             else
                                 throw new InvalidCastException($"{vs} can't cast to datetime");

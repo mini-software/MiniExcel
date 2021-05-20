@@ -29,13 +29,47 @@ namespace MiniExcelLibs.Tests
         }
 
         /// <summary>
+        /// Support Custom Datetime format #241
+        /// </summary>
+        [Fact]
+        public void Issue241()
+        {
+            var path = PathHelper.GetTempPath();
+            var value = new Issue241Dto[] {
+                new Issue241Dto{ Name="Jack",InDate=new DateTime(2021,01,04)},
+                new Issue241Dto{ Name="Henry",InDate=new DateTime(2020,04,05)},
+            };
+            MiniExcel.SaveAs(path, value);
+
+            {
+                var rows = MiniExcel.Query(path,true).ToList();
+                Assert.Equal(rows[0].InDate, "2021年01月04日");
+                Assert.Equal(rows[1].InDate, "2020年04月05日");
+            }
+
+            {
+                var rows = MiniExcel.Query<Issue241Dto>(path).ToList();
+                Assert.Equal(rows[0].InDate, new DateTime(2021, 01, 04));
+                Assert.Equal(rows[1].InDate, new DateTime(2020, 04, 05));
+            }
+        }
+
+        public class Issue241Dto
+        {
+            public string Name { get; set; }
+
+            [ExcelFormat("yyyy年MM月dd日")]
+            public DateTime InDate { get; set; }
+        }
+
+        /// <summary>
         /// SaveAs Default Template #132
         /// </summary>
         [Fact]
         public void Issue132()
         {
             {
-                var path = PathHelper.GetNewTemplateFilePath();
+                var path = PathHelper.GetTempPath();
                 var value = new[] {
                     new { name ="Jack",Age=25,InDate=new DateTime(2021,01,03)},
                     new { name ="Henry",Age=36,InDate=new DateTime(2020,05,03)},
@@ -45,7 +79,7 @@ namespace MiniExcelLibs.Tests
             }
 
             {
-                var path = PathHelper.GetNewTemplateFilePath();
+                var path = PathHelper.GetTempPath();
                 var value = new[] {
                     new { name ="Jack",Age=25,InDate=new DateTime(2021,01,03)},
                     new { name ="Henry",Age=36,InDate=new DateTime(2020,05,03)},
@@ -54,11 +88,11 @@ namespace MiniExcelLibs.Tests
                 {
                     TableStyles = TableStyles.None
                 };
-                MiniExcel.SaveAs(path, value,configuration:config);
+                MiniExcel.SaveAs(path, value, configuration: config);
             }
 
             {
-                var path = PathHelper.GetNewTemplateFilePath();
+                var path = PathHelper.GetTempPath();
                 var value = JsonConvert.DeserializeObject<DataTable>(
                     JsonConvert.SerializeObject(new[] {
                         new { name ="Jack",Age=25,InDate=new DateTime(2021,01,03)},
@@ -75,12 +109,12 @@ namespace MiniExcelLibs.Tests
         [Fact]
         public void Issue235()
         {
-            var path = PathHelper.GetNewTemplateFilePath();
+            var path = PathHelper.GetTempPath();
 
             DataSet sheets = new DataSet();
             var users = JsonConvert.DeserializeObject<DataTable>(JsonConvert.SerializeObject(new[] { new { Name = "Jack", Age = 25 }, new { Name = "Mike", Age = 44 } }));
             users.TableName = "users";
-            var department =JsonConvert.DeserializeObject<DataTable>(JsonConvert.SerializeObject(new[] { new { ID = "01", Name = "HR" }, new { ID = "02", Name = "IT" } }));;
+            var department = JsonConvert.DeserializeObject<DataTable>(JsonConvert.SerializeObject(new[] { new { ID = "01", Name = "HR" }, new { ID = "02", Name = "IT" } })); ;
             department.TableName = "department";
             sheets.Tables.Add(users);
             sheets.Tables.Add(department);
@@ -134,7 +168,7 @@ namespace MiniExcelLibs.Tests
                 new{ id="\"\"1,2,3\"\""},
                 new{ id="1,2,3"},
             };
-            var path = PathHelper.GetNewTemplateFilePath("csv");
+            var path = PathHelper.GetTempPath("csv");
             MiniExcel.SaveAs(path, value);
 
             var rows = MiniExcel.Query(path, true).ToList();
@@ -149,7 +183,7 @@ namespace MiniExcelLibs.Tests
         [Fact]
         public void Issue234()
         {
-            var path = PathHelper.GetNewTemplateFilePath();
+            var path = PathHelper.GetTempPath();
 
             var users = new[] { new { Name = "Jack", Age = 25 }, new { Name = "Mike", Age = 44 } };
             var department = new[] { new { ID = "01", Name = "HR" }, new { ID = "02", Name = "IT" } };
@@ -225,7 +259,7 @@ namespace MiniExcelLibs.Tests
             cmd.CommandText = "select 1 id union all select 2";
             using (var reader = cmd.ExecuteReader(CommandBehavior.CloseConnection))
             {
-                var path = PathHelper.GetNewTemplateFilePath();
+                var path = PathHelper.GetTempPath();
                 MiniExcel.SaveAs(path, reader, printHeader: true);
                 var rows = MiniExcel.Query(path, true).ToList();
                 Assert.Equal(1, rows[0].id);
@@ -296,7 +330,7 @@ namespace MiniExcelLibs.Tests
         public void Issue227()
         {
             {
-                var path = PathHelper.GetNewTemplateFilePath("xlsm");
+                var path = PathHelper.GetTempPath("xlsm");
                 Assert.Throws<NotSupportedException>(() => MiniExcel.SaveAs(path, new[] { new { V = "A1" }, new { V = "A2" } }));
             }
 
@@ -343,7 +377,7 @@ namespace MiniExcelLibs.Tests
         [Fact]
         public void Issue226()
         {
-            var path = PathHelper.GetNewTemplateFilePath();
+            var path = PathHelper.GetTempPath();
             var templatePath = PathHelper.GetSamplePath("xlsx/TestIssue226.xlsx");
             MiniExcel.SaveAsByTemplate(path, templatePath, new { employees = new[] { new { name = "123" }, new { name = "123" } } });
             Assert.Equal("A1:A3", Helpers.GetFirstSheetDimensionRefValue(path));
@@ -362,7 +396,7 @@ namespace MiniExcelLibs.Tests
                 new Dictionary<string, object>(){{"A",123},{"B",new DateTime(2021,1,1)}},
                 new Dictionary<string, object>(){{"A",Guid.NewGuid()},{"B","HelloWorld"}},
             };
-            var path = PathHelper.GetNewTemplateFilePath();
+            var path = PathHelper.GetTempPath();
             MiniExcel.SaveAs(path, value);
 
             var dt = MiniExcel.QueryAsDataTable(path);
@@ -442,7 +476,7 @@ namespace MiniExcelLibs.Tests
         [Fact]
         public void Issue211()
         {
-            var path = PathHelper.GetNewTemplateFilePath();
+            var path = PathHelper.GetTempPath();
             var tempSqlitePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.db");
             var connectionString = $"Data Source={tempSqlitePath};Version=3;";
 
@@ -466,7 +500,7 @@ namespace MiniExcelLibs.Tests
         [Fact]
         public void Issue216()
         {
-            var path = PathHelper.GetNewTemplateFilePath();
+            var path = PathHelper.GetTempPath();
             var value = new[] { new { Test1 = "1", Test2 = 2 }, new { Test1 = "3", Test2 = 4 } };
             MiniExcel.SaveAs(path, value);
 
@@ -500,7 +534,7 @@ namespace MiniExcelLibs.Tests
         public void IssueI3OSKV()
         {
             {
-                var path = PathHelper.GetNewTemplateFilePath();
+                var path = PathHelper.GetTempPath();
                 var value = new[] { new { Test = "12345678901234567890" } };
                 MiniExcel.SaveAs(path, value);
 
@@ -511,7 +545,7 @@ namespace MiniExcelLibs.Tests
             }
 
             {
-                var path = PathHelper.GetNewTemplateFilePath();
+                var path = PathHelper.GetTempPath();
                 var value = new[] { new { Test = 123456.789 } };
                 MiniExcel.SaveAs(path, value);
 
@@ -586,7 +620,7 @@ Leave";
                 Assert.Equal(Issue89VO.WorkState.Fired, rows[1].State);
                 Assert.Equal(Issue89VO.WorkState.Leave, rows[2].State);
 
-                var outputPath = PathHelper.GetNewTemplateFilePath("xlsx");
+                var outputPath = PathHelper.GetTempPath("xlsx");
                 MiniExcel.SaveAs(outputPath, rows);
                 var rows2 = MiniExcel.Query<Issue89VO>(outputPath).ToList();
 
@@ -604,7 +638,7 @@ Leave";
                 Assert.Equal(Issue89VO.WorkState.Fired, rows[1].State);
                 Assert.Equal(Issue89VO.WorkState.Leave, rows[2].State);
 
-                var outputPath = PathHelper.GetNewTemplateFilePath();
+                var outputPath = PathHelper.GetTempPath();
                 MiniExcel.SaveAs(outputPath, rows);
                 var rows2 = MiniExcel.Query<Issue89VO>(outputPath).ToList();
 

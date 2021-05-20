@@ -16,6 +16,9 @@
 
 ---
 
+### 0.15.2
+- [New] Support Custom Datetime format #241
+
 ### 0.15.1
 - [Bug] Fix Sheetxml writer error, it contains two ">" #240
 

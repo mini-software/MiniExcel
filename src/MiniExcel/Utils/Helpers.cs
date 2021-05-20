@@ -158,6 +158,7 @@
             public PropertyInfo Property { get; set; }
             public Type ExcludeNullableType { get; set; }
             public bool Nullable { get; internal set; }
+            public string ExcelFormat { get; internal set; }
         }
 
         internal static List<ExcelCustomPropertyInfo> GetExcelCustomPropertyInfos(Type type, string[] headers)
@@ -205,7 +206,8 @@
                          ExcludeNullableType = gt ?? p.PropertyType,
                          Nullable = gt != null ? true : false,
                          ExcelColumnName = excelNameAttr?.ExcelColumnName ?? p.Name,
-                         ExcelColumnIndex = excelIndexAttr?.ExcelColumnIndex
+                         ExcelColumnIndex = excelIndexAttr?.ExcelColumnIndex,
+                         ExcelFormat = p.GetAttribute<ExcelFormatAttribute>()?.Format,
                      };
                  });
         }

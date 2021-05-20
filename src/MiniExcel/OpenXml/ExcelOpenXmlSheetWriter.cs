@@ -256,7 +256,7 @@ namespace MiniExcelLibs.OpenXml
                 foreach (var key in keys)
                 {
                     var cellValue = v[key];
-                    WriteCell(writer, yIndex, cellIndex, cellValue);
+                    WriteCell(writer, yIndex, cellIndex, cellValue,null);
                     cellIndex++;
                 }
                 writer.Write($"</x:row>");
@@ -273,7 +273,7 @@ namespace MiniExcelLibs.OpenXml
                 foreach (var key in keys)
                 {
                     var cellValue = v[key];
-                    WriteCell(writer, yIndex, cellIndex, cellValue);
+                    WriteCell(writer, yIndex, cellIndex, cellValue,null);
                     cellIndex++;
                 }
                 writer.Write($"</x:row>");
@@ -295,7 +295,7 @@ namespace MiniExcelLibs.OpenXml
                         continue;
                     }
                     var cellValue = p.Property.GetValue(v);
-                    WriteCell(writer, yIndex, cellIndex, cellValue);
+                    WriteCell(writer, yIndex, cellIndex, cellValue,p);
                     cellIndex++;
                 }
                 writer.Write($"</x:row>");
@@ -303,7 +303,7 @@ namespace MiniExcelLibs.OpenXml
             }
         }
 
-        private static void WriteCell(StreamWriter writer, int yIndex, int cellIndex, object value)
+        private static void WriteCell(StreamWriter writer, int yIndex, int cellIndex, object value, ExcelCustomPropertyInfo p)
         {
             var v = string.Empty;
             var t = "str";
@@ -318,8 +318,16 @@ namespace MiniExcelLibs.OpenXml
             }
             else
             {
-                var type = value.GetType();
-                type = Nullable.GetUnderlyingType(type) ?? type;
+                Type type = null;
+                if (p == null)
+                {
+                    type = value.GetType();
+                    type = Nullable.GetUnderlyingType(type) ?? type;
+                }
+                else
+                {
+                    type = p.ExcludeNullableType; //sometime it doesn't need to re-get type like prop
+                }
 
                 if (Helpers.IsNumericType(type))
                 {
@@ -333,9 +341,17 @@ namespace MiniExcelLibs.OpenXml
                 }
                 else if (type == typeof(DateTime))
                 {
-                    t = null;
-                    s = "3";
-                    v = ((DateTime)value).ToOADate().ToString();
+                    if(p==null || p.ExcelFormat == null)
+                    {
+                        t = null;
+                        s = "3";
+                        v = ((DateTime)value).ToOADate().ToString();
+                    }
+                    else
+                    {
+                        t = "str";
+                        v = ((DateTime)value).ToString(p.ExcelFormat);
+                    }
                 }
                 else
                 {
@@ -384,7 +400,7 @@ namespace MiniExcelLibs.OpenXml
                     for (int j = 0; j < value.Columns.Count; j++)
                     {
                         var cellValue = value.Rows[i][j];
-                        WriteCell(writer, yIndex, xIndex, cellValue);
+                        WriteCell(writer, yIndex, xIndex, cellValue,null);
                         xIndex++;
                     }
                     writer.Write($"</x:row>");
@@ -431,7 +447,7 @@ namespace MiniExcelLibs.OpenXml
                     for (int i = 0; i < fieldCount; i++)
                     {
                         var cellValue = value.GetValue(i);
-                        WriteCell(writer, yIndex, xIndex, cellValue);
+                        WriteCell(writer, yIndex, xIndex, cellValue,null);
                         xIndex++;
                     }
                     writer.Write($"</x:row>");

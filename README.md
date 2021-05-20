@@ -751,7 +751,9 @@ Query supports custom format conversion
 
 ### Excel Type Auto Check <a name="getstart5"></a>
 
-Default system will auto check file path or stream is from xlsx or csv, but if you need to specify type, it can use excelType parameter.
+- MiniExcel will check whether it is xlsx or csv based on the `file extension` by default, but there may be inaccuracy, please specify it manually.
+- Stream cannot be know from which excel, please specify it manually.
+
 ```csharp
 stream.SaveAs(excelType:ExcelType.CSV);
 //or
@@ -955,6 +957,86 @@ memoryStream.Seek(0, SeekOrigin.Begin);
 memoryStream.CopyTo(Response.OutputStream);
 response.End();
 ```
+
+
+
+#### 5. i18n multi-language and role authority management
+
+Like the example, create a method to handle i18n and permission management, and use `yield return to return IEnumerable<Dictionary<string, object>>` to achieve dynamic and low-memory processing effects
+
+```cs
+void Main()
+{
+	var value = new Order[] {
+		new Order(){OrderNo = "SO01",CustomerID="C001",ProductID="P001",Qty=100,Amt=500},
+		new Order(){OrderNo = "SO02",CustomerID="C002",ProductID="P002",Qty=300,Amt=400},
+	};
+
+	Console.WriteLine("en-Us and Sales role");
+	{
+		var path = Path.GetTempPath() + Guid.NewGuid() + ".xlsx";
+		var lang = "en-US";
+		var role = "Sales";
+		MiniExcel.SaveAs(path, GetOrders(lang, role, value));
+		MiniExcel.Query(path, true).Dump();
+	}
+
+	Console.WriteLine("zh-CN and PMC role");
+	{
+		var path = Path.GetTempPath() + Guid.NewGuid() + ".xlsx";
+		var lang = "zh-CN";
+		var role = "PMC";
+		MiniExcel.SaveAs(path, GetOrders(lang, role, value));
+		MiniExcel.Query(path, true).Dump();
+	}
+}
+
+private IEnumerable<Dictionary<string, object>> GetOrders(string lang, string role, Order[] orders)
+{
+	foreach (var order in orders)
+	{
+		var newOrder = new Dictionary<string, object>();
+
+		if (lang == "zh-CN")
+		{
+			newOrder.Add("客戶編號", order.CustomerID);
+			newOrder.Add("訂單編號", order.OrderNo);
+			newOrder.Add("產品編號", order.ProductID);
+			newOrder.Add("數量", order.Qty);
+			if (role == "Sales")
+				newOrder.Add("價格", order.Amt);
+			yield return newOrder;
+		}
+		else if (lang == "en-US")
+		{
+			newOrder.Add("Customer ID", order.CustomerID);
+			newOrder.Add("Order No", order.OrderNo);
+			newOrder.Add("Product ID", order.ProductID);
+			newOrder.Add("Quantity", order.Qty);
+			if (role == "Sales")
+				newOrder.Add("Amount", order.Amt);
+			yield return newOrder;
+		}
+		else
+		{
+			throw new InvalidDataException($"lang {lang} wrong");
+		}
+	}
+}
+
+public class Order
+{
+	public string OrderNo { get; set; }
+	public string CustomerID { get; set; }
+	public decimal Qty { get; set; }
+	public string ProductID { get; set; }
+	public decimal Amt { get; set; }
+}
+```
+
+![image](https://user-images.githubusercontent.com/12729184/118939964-d24bc480-b982-11eb-88dd-f06655f6121a.png)
+
+
 
 
 

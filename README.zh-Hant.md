@@ -743,7 +743,8 @@ Query 支持自定義格式轉換
 
 ### Excel 類別自動判斷 <a name="getstart5"></a>
 
-MiniExcel 預設會根據擴展名或是 Stream 類別判斷是 xlsx 還是 csv，但會有失準時候，請自行指定。
+- MiniExcel 預設會根據`文件擴展名`判斷是 xlsx 還是 csv，但會有失準時候，請自行指定。
+- Stream 類別無法判斷來源於哪種 excel 請自行指定
 
 ```csharp
 stream.SaveAs(excelType:ExcelType.CSV);
@@ -943,6 +944,86 @@ memoryStream.Seek(0, SeekOrigin.Begin);
 memoryStream.CopyTo(Response.OutputStream);
 response.End();
 ```
+
+#### 5. i18n 多國語言跟權限管理
+
+像例子一樣，建立一個方法處理 i18n 跟權限管理，並搭配 `yield return 返回 IEnumerable<Dictionary<string, object>>`，即可達到動態、低記憶體處理效果
+
+```cs
+void Main()
+{
+	var value = new Order[] {
+		new Order(){OrderNo = "SO01",CustomerID="C001",ProductID="P001",Qty=100,Amt=500},
+		new Order(){OrderNo = "SO02",CustomerID="C002",ProductID="P002",Qty=300,Amt=400},
+	};
+
+	Console.WriteLine("en-Us and Sales role");
+	{
+		var path = Path.GetTempPath() + Guid.NewGuid() + ".xlsx";
+		var lang = "en-US";
+		var role = "Sales";
+		MiniExcel.SaveAs(path, GetOrders(lang, role, value));
+		MiniExcel.Query(path, true).Dump();
+	}
+
+	Console.WriteLine("zh-CN and PMC role");
+	{
+		var path = Path.GetTempPath() + Guid.NewGuid() + ".xlsx";
+		var lang = "zh-CN";
+		var role = "PMC";
+		MiniExcel.SaveAs(path, GetOrders(lang, role, value));
+		MiniExcel.Query(path, true).Dump();
+	}
+}
+
+private IEnumerable<Dictionary<string, object>> GetOrders(string lang, string role, Order[] orders)
+{
+	foreach (var order in orders)
+	{
+		var newOrder = new Dictionary<string, object>();
+
+		if (lang == "zh-CN")
+		{
+			newOrder.Add("客戶編號", order.CustomerID);
+			newOrder.Add("訂單編號", order.OrderNo);
+			newOrder.Add("產品編號", order.ProductID);
+			newOrder.Add("數量", order.Qty);
+			if (role == "Sales")
+				newOrder.Add("價格", order.Amt);
+			yield return newOrder;
+		}
+		else if (lang == "en-US")
+		{
+			newOrder.Add("Customer ID", order.CustomerID);
+			newOrder.Add("Order No", order.OrderNo);
+			newOrder.Add("Product ID", order.ProductID);
+			newOrder.Add("Quantity", order.Qty);
+			if (role == "Sales")
+				newOrder.Add("Amount", order.Amt);
+			yield return newOrder;
+		}
+		else
+		{
+			throw new InvalidDataException($"lang {lang} wrong");
+		}
+	}
+}
+
+public class Order
+{
+	public string OrderNo { get; set; }
+	public string CustomerID { get; set; }
+	public decimal Qty { get; set; }
+	public string ProductID { get; set; }
+	public decimal Amt { get; set; }
+}
+```
+
+![image](https://user-images.githubusercontent.com/12729184/118939964-d24bc480-b982-11eb-88dd-f06655f6121a.png)
+
+
+
+
 
 ### FAQ 常見問題
 

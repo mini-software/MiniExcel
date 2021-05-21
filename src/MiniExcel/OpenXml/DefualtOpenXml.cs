@@ -12,18 +12,40 @@ namespace MiniExcelLibs.OpenXml
     {
         private readonly static UTF8Encoding Utf8WithBom = new System.Text.UTF8Encoding(true);
 
-        internal static string DefaultRels = @"<?xml version=""1.0"" encoding=""utf-8""?>
+        private static string DefaultRels = @"<?xml version=""1.0"" encoding=""utf-8""?>
 <Relationships xmlns=""http://schemas.openxmlformats.org/package/2006/relationships"">
     <Relationship Type=""http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument"" Target=""/xl/workbook.xml"" Id=""Rfc2254092b6248a9"" />
 </Relationships>";
 
-        internal static string DefaultWorkbookXmlRels = @"<?xml version=""1.0"" encoding=""utf-8""?>
+        private static string DefaultWorkbookXmlRels = @"<?xml version=""1.0"" encoding=""utf-8""?>
 <Relationships xmlns=""http://schemas.openxmlformats.org/package/2006/relationships"">
     {{sheets}}
     <Relationship Type=""http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles"" Target=""/xl/styles.xml"" Id=""R3db9602ace774fdb"" />
 </Relationships>";
 
-        internal static string DefaultStylesXml = @"<?xml version=""1.0"" encoding=""utf-8""?>
+        private static string NoneStylesXml = @"<?xml version=""1.0"" encoding=""utf-8""?>
+<x:styleSheet xmlns:x=""http://schemas.openxmlformats.org/spreadsheetml/2006/main"">
+    <x:fonts>
+        <x:font />
+    </x:fonts>
+    <x:fills>
+        <x:fill />
+    </x:fills>
+    <x:borders>
+        <x:border />
+    </x:borders>
+    <x:cellStyleXfs>
+        <x:xf />
+    </x:cellStyleXfs>
+    <x:cellXfs>
+        <x:xf />
+	   <x:xf />
+	   <x:xf />
+        <x:xf numFmtId=""14"" applyNumberFormat=""1"" />
+    </x:cellXfs>
+</x:styleSheet>";
+
+        private static string DefaultStylesXml = @"<?xml version=""1.0"" encoding=""utf-8""?>
 <x:styleSheet xmlns:x=""http://schemas.openxmlformats.org/spreadsheetml/2006/main"">
     <x:numFmts count=""1"">
         <x:numFmt numFmtId=""0"" formatCode="""" />
@@ -124,14 +146,13 @@ namespace MiniExcelLibs.OpenXml
     </x:cellStyles>
 </x:styleSheet>";
 
-        internal static string DefaultWorkbookXml = @"<?xml version=""1.0"" encoding=""utf-8""?>
+        private static string DefaultWorkbookXml = @"<?xml version=""1.0"" encoding=""utf-8""?>
 <x:workbook xmlns:r=""http://schemas.openxmlformats.org/officeDocument/2006/relationships""
     xmlns:x=""http://schemas.openxmlformats.org/spreadsheetml/2006/main"">
     <x:sheets>
         {{sheets}}
     </x:sheets>
 </x:workbook>";
-
 
         private static Dictionary<string, XmlDocument> Xmls = new Dictionary<string, XmlDocument>();
 
@@ -174,27 +195,7 @@ namespace MiniExcelLibs.OpenXml
 
                 if (configuration.TableStyles == TableStyles.None)
                 {
-                    styleXml = @"<?xml version=""1.0"" encoding=""utf-8""?>
-<x:styleSheet xmlns:x=""http://schemas.openxmlformats.org/spreadsheetml/2006/main"">
-    <x:fonts>
-        <x:font />
-    </x:fonts>
-    <x:fills>
-        <x:fill />
-    </x:fills>
-    <x:borders>
-        <x:border />
-    </x:borders>
-    <x:cellStyleXfs>
-        <x:xf />
-    </x:cellStyleXfs>
-    <x:cellXfs>
-        <x:xf />
-	   <x:xf />
-	   <x:xf />
-        <x:xf numFmtId=""14"" applyNumberFormat=""1"" />
-    </x:cellXfs>
-</x:styleSheet>";
+                    styleXml = NoneStylesXml;
                 }
                 else if (configuration.TableStyles == TableStyles.Default)
                 {

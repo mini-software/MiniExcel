@@ -73,19 +73,6 @@ namespace MiniExcelLibs.OpenXml
             }
         }
 
-        //public void AddSheet(object value, string sheetName, bool printHeader, IConfiguration configuration)
-        //{
-        //    //TODO:update 
-        //    using (var archive = new MiniExcelZipArchive(_stream, ZipArchiveMode.Create, true, _utf8WithBom))
-        //    {
-        //        var packages = DefualtOpenXml.GenerateDefaultOpenXml(archive, sheetName);
-        //        var sheetPath = "xl/worksheets/sheet1.xml";
-        //        CreateSheetXml(value, printHeader, archive, packages, sheetPath);
-        //        GenerateContentTypesXml(archive, packages);
-        //    }
-        //}
-
-
         private void CreateSheetXml(object value, bool printHeader, MiniExcelZipArchive archive, Dictionary<string, ZipPackageInfo> packages, string sheetPath)
         {
             ZipArchiveEntry entry = archive.CreateEntry(sheetPath);

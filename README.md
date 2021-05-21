@@ -999,12 +999,12 @@ private IEnumerable<Dictionary<string, object>> GetOrders(string lang, string ro
 
 		if (lang == "zh-CN")
 		{
-			newOrder.Add("客戶編號", order.CustomerID);
-			newOrder.Add("訂單編號", order.OrderNo);
-			newOrder.Add("產品編號", order.ProductID);
-			newOrder.Add("數量", order.Qty);
+			newOrder.Add("客户编号", order.CustomerID);
+			newOrder.Add("订单编号", order.OrderNo);
+			newOrder.Add("产品编号", order.ProductID);
+			newOrder.Add("数量", order.Qty);
 			if (role == "Sales")
-				newOrder.Add("價格", order.Amt);
+				newOrder.Add("价格", order.Amt);
 			yield return newOrder;
 		}
 		else if (lang == "en-US")

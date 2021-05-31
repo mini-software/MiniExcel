@@ -234,6 +234,9 @@ foreach(IDictionary<string,object> row in MiniExcel.Query(path))
 {
     //..
 }
+
+// or 
+var rows = MiniExcel.Query(path).Cast<IDictionary<string,object>>(); 
 ```
 
 #### 9. Query 读 Excel 返回 DataTable

@@ -229,6 +229,9 @@ foreach(IDictionary<string,object> row in MiniExcel.Query(path))
 {
     //..
 }
+
+// or 
+var rows = MiniExcel.Query(path).Cast<IDictionary<string,object>>(); 
 ```
 
 

@@ -963,7 +963,7 @@ response.End();
 
 
 
-#### 5. i18n multi-language and role authority management
+#### 5. Dynamic i18n multi-language and role authority management
 
 Like the example, create a method to handle i18n and permission management, and use `yield return to return IEnumerable<Dictionary<string, object>>` to achieve dynamic and low-memory processing effects
 
@@ -1081,9 +1081,47 @@ No, the image test has 1 million rows*10 columns of data, the maximum memory usa
 
 ![image](https://user-images.githubusercontent.com/12729184/117118518-70586000-adc3-11eb-9ce3-2ba76cf8b5e5.png)
 
+#### Q. How does Query use integer indexs?
+
+The default index of Query is the string Key: A,B,C.... If you want to change to numeric index, please create the following method to convert 
+
+```csharp
+void Main()
+{
+	var path = @"D:\git\MiniExcel\samples\xlsx\TestTypeMapping.xlsx";
+	var rows = MiniExcel.Query(path,true);
+	foreach (var r in ConvertToIntIndexRows(rows))
+	{
+		Console.Write($"column 0 : {r[0]} ,column 1 : {r[1]}");
+		Console.WriteLine();
+	}
+}
+
+private IEnumerable<Dictionary<int, object>> ConvertToIntIndexRows(IEnumerable<object> rows)
+{
+	ICollection<string> keys = null;
+	var isFirst = true;
+	foreach (IDictionary<string,object> r in rows)
+	{
+		if(isFirst)
+		{
+			keys = r.Keys;
+			isFirst = false;
+		}
+		
+		var dic = new Dictionary<int, object>();
+		var index = 0;
+		foreach (var key in keys)
+			dic[index++] = r[key];
+		yield return dic;
+	}
+}
+```
 
 
-### Limitations and caveats 
+
+
+### Limitations and caveats
 
 - Not support xls and encrypted file now
 - xlsm only support Query

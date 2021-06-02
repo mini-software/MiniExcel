@@ -298,7 +298,7 @@ MiniExcel.SaveAs(path, new[] {
 });
 ```
 
-#### 2. Datatable:  
+#### 2. Datatable    
 
 - 優先使用 Caption 當欄位名稱
 
@@ -946,7 +946,7 @@ memoryStream.CopyTo(Response.OutputStream);
 response.End();
 ```
 
-#### 5. i18n 多國語言跟權限管理
+#### 5. 動態 i18n 多國語言跟權限管理
 
 像例子一樣，建立一個方法處理 i18n 跟權限管理，並搭配 `yield return 返回 IEnumerable<Dictionary<string, object>>`，即可達到動態、低記憶體處理效果
 
@@ -1065,6 +1065,47 @@ A. 名稱一樣，系統會自動映射(注意:大小寫不敏感)
 不會，圖片測試一百萬行*十列資料，簡單測試，內存最大使用 < 60MB，花費13.65秒
 
 ![image](https://user-images.githubusercontent.com/12729184/117118518-70586000-adc3-11eb-9ce3-2ba76cf8b5e5.png)
+
+#### Q. Query如何使用整數索引取值?
+
+Query 預設索引為字串Key : A,B,C....，想要改為數字索引，請建立以下方法自行轉換
+
+```csharp
+void Main()
+{
+	var path = @"D:\git\MiniExcel\samples\xlsx\TestTypeMapping.xlsx";
+	var rows = MiniExcel.Query(path,true);
+	foreach (var r in ConvertToIntIndexRows(rows))
+	{
+		Console.Write($"column 0 : {r[0]} ,column 1 : {r[1]}");
+		Console.WriteLine();
+	}
+}
+
+private IEnumerable<Dictionary<int, object>> ConvertToIntIndexRows(IEnumerable<object> rows)
+{
+	ICollection<string> keys = null;
+	var isFirst = true;
+	foreach (IDictionary<string,object> r in rows)
+	{
+		if(isFirst)
+		{
+			keys = r.Keys;
+			isFirst = false;
+		}
+		
+		var dic = new Dictionary<int, object>();
+		var index = 0;
+		foreach (var key in keys)
+			dic[index++] = r[key];
+		yield return dic;
+	}
+}
+```
+
+
+
+
 
 
 

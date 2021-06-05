@@ -207,7 +207,7 @@ stream.Query(sheetName: "SheetName");
 #### 6. Query all sheet name and rows
 
 ```csharp
-var sheetNames = MiniExcel.GetSheetNames(path).ToList();
+var sheetNames = MiniExcel.GetSheetNames(path);
 foreach (var sheetName in sheetNames)
 {
     var rows = MiniExcel.Query(path, sheetName: sheetName);
@@ -236,7 +236,7 @@ var rows = MiniExcel.Query(path).Cast<IDictionary<string,object>>();
 
 
 
-#### 9. Query Query Excel return DataTable
+#### 9. Query Excel return DataTable
 
 Not recommended, because DataTable will load all data into memory and lose MiniExcel's low memory consumption feature.
 

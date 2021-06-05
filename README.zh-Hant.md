@@ -211,7 +211,7 @@ stream.Query(sheetName: "SheetName");
 #### 6. 查詢所有 Sheet 名稱跟資料
 
 ```csharp
-var sheetNames = MiniExcel.GetSheetNames(path).ToList();
+var sheetNames = MiniExcel.GetSheetNames(path);
 foreach (var sheetName in sheetNames)
 {
     var rows = MiniExcel.Query(path, sheetName: sheetName);

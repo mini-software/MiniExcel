@@ -769,6 +769,61 @@ stream.Query(excelType:ExcelType.XLSX);
 
 
 
+
+
+### CSV
+
+#### Note
+
+- Default return `string` type, and value will not be converted to numbers or datetime, unless the type is defined by strong typing generic.
+
+
+
+#### Custom separator
+
+The default is `,` as the separator, you can modify the `Seperator` property for customization
+
+```csharp
+var config = new MiniExcelLibs.Csv.CsvConfiguration() 
+{
+    Seperator=';'
+};
+MiniExcel.SaveAs(path, values,configuration: config);
+```
+
+
+
+#### Custom line break
+
+The default is `\r\n` as the newline character, you can modify the `NewLine` property for customization
+
+```csharp
+var config = new MiniExcelLibs.Csv.CsvConfiguration() 
+{
+    NewLine='\n'
+};
+MiniExcel.SaveAs(path, values,configuration: config);
+```
+
+
+
+#### Custom coding
+
+- The default encoding is "Detect Encoding From Byte Order Marks"  (detectEncodingFromByteOrderMarks: true)
+- f you have custom encoding requirements, please modify the GetStreamReaderFunc property
+
+```csharp
+var config = new MiniExcelLibs.Csv.CsvConfiguration()
+{
+    GetStreamReaderFunc = (stream) => new StreamReader(stream,encoding:Encoding.UTF8)
+};
+var rows = MiniExcel.Query(path, true,excelType:ExcelType.CSV,configuration: config)
+```
+
+
+
+
+
 ### Examples:
 
 #### 1. SQLite & Dapper `Large Size File` SQL Insert Avoid OOM

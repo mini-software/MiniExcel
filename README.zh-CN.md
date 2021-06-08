@@ -755,6 +755,57 @@ stream.Query(excelType:ExcelType.XLSX);
 
 
 
+### CSV
+
+#### 概念
+
+- 预设全以字串类型返回，预设不会转换为数字或者日期，除非有强型别定义泛型
+
+
+
+#### 自定分隔符
+
+预设以 `,` 作为分隔符，自定义请修改 `Seperator` 属性
+
+```csharp
+var config = new MiniExcelLibs.Csv.CsvConfiguration() 
+{
+    Seperator=';'
+};
+MiniExcel.SaveAs(path, values,configuration: config);
+```
+
+
+
+#### 自定义换行符
+
+预设以 `\r\n` 作为换行符，自定义请修改 `NewLine` 属性
+
+```csharp
+var config = new MiniExcelLibs.Csv.CsvConfiguration() 
+{
+    NewLine='\n'
+};
+MiniExcel.SaveAs(path, values,configuration: config);
+```
+
+
+
+#### 自定义编码
+
+- 预设编码为「从Byte顺序标记检测编码」(detectEncodingFromByteOrderMarks: true)
+- 有自定义编码需求，请修改 GetStreamReaderFunc 属性
+
+```csharp
+var config = new MiniExcelLibs.Csv.CsvConfiguration()
+{
+    GetStreamReaderFunc = (stream) => new StreamReader(stream,encoding:Encoding.UTF8)
+};
+var rows = MiniExcel.Query(path, true,excelType:ExcelType.CSV,configuration: config)
+```
+
+
+
 ### 例子
 
 #### 1. SQLite & Dapper 读取大数据新增到数据库

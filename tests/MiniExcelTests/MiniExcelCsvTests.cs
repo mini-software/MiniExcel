@@ -1,17 +1,31 @@
 ﻿using CsvHelper;
 using CsvHelper.Configuration;
+using MiniExcelLibs.Tests.Utils;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
 using Xunit;
 
 namespace MiniExcelLibs.Tests
 {
     public class MiniExcelCsvTests
     {
+        [Fact]
+        public void gb2312_Encoding_Read_Test()
+        {
+            System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
+            var path = PathHelper.GetSamplePath("csv/gb2312_Encoding_Read_Test.csv");
+            var config = new MiniExcelLibs.Csv.CsvConfiguration()
+            {
+                GetStreamReaderFunc = (stream) => new StreamReader(stream,encoding: Encoding.GetEncoding("gb2312"))
+            };
+            var rows = MiniExcel.Query(path, true,excelType:ExcelType.CSV,configuration: config).ToList();
+            Assert.Equal("世界你好", rows[0].栏位1);
+        }
 
         [Fact]
         public void SeperatorTest()

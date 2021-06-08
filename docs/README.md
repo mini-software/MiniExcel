@@ -19,6 +19,7 @@
 ### 0.15.4
 - [Breaking Change] Set CSV Reader/Writer default encoding : UTF-8 => UTF-8-BOM
 - [Breaking Change] Rename CsvConfiguration GetStreamReaderFunc => StreamReaderFunc
+- [New] Csv SaveAs support custom StreamWriter
 
 ### 0.15.3
 - [New] Csv SaveAs support datareader

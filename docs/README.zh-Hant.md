@@ -20,6 +20,7 @@
 ### 0.15.4
 - [Breaking Change] CSV Reader/Writer 預設編碼改變 : UTF-8 => UTF-8-BOM
 - [Breaking Change] 重新命名 CsvConfiguration GetStreamReaderFunc => StreamReaderFunc
+- [New] Csv SaveAs 支持自定義 StreamWriter
 
 ### 0.15.3
 - [New] Csv SaveAs 支持 datareader

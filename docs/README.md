@@ -16,6 +16,9 @@
 
 ---
 
+### 0.15.3
+- [New] Csv SaveAs support datareader
+
 ### 0.15.2
 - [New] Support Custom Datetime format #241
 - [Bug] Csv type mapping Query error "cannot be converted to xxx type" #243

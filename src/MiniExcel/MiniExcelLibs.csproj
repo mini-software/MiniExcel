@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>net45;netstandard2.0;net5.0</TargetFrameworks>
-    <Version>0.15.2</Version>
+    <Version>0.15.3</Version>
   </PropertyGroup>
   <PropertyGroup>
     <AssemblyName>MiniExcel</AssemblyName>
@@ -10,11 +10,11 @@
     <PackageTags>excel;xlsx;micro-helper;mini;openxml;helper;</PackageTags>
     <Description>A high performance and easy Excel(xlsx,csv) Micro-Helper that avoids OOM and without third-party dependencies to create/query/template-fill-data.
 
-Github : https://github.com/shps951023/MiniExcel
-Gitee : https://gitee.com/dotnetchina/MiniExcel
-Issues : https://github.com/shps951023/MiniExcel/issues
-Todo : https://github.com/shps951023/MiniExcel/projects/1?fullscreen=true
-</Description>
+      Github : https://github.com/shps951023/MiniExcel
+      Gitee : https://gitee.com/dotnetchina/MiniExcel
+      Issues : https://github.com/shps951023/MiniExcel/issues
+      Todo : https://github.com/shps951023/MiniExcel/projects/1?fullscreen=true
+    </Description>
     <Authors>ITWeiHan</Authors>
     <Copyright>©2021 WeiHan Lin</Copyright>
     <license>https://raw.githubusercontent.com/shps951023/MiniExcel/master/LICENSE.md</license>

@@ -17,6 +17,9 @@
 
 ---
 
+### 0.15.3
+- [New] Csv SaveAs 支持 datareader
+
 ### 0.15.2
 - [New] 支持自定義日期時間格式 #241
 - [Bug] CSV類型映射查詢錯誤 "cannot be converted to xxx type" #243

@@ -29,6 +29,26 @@ namespace MiniExcelLibs.Tests
         }
 
         /// <summary>
+        /// [CSV SaveAs support datareader · Issue #251 · shps951023/MiniExcel](https://github.com/shps951023/MiniExcel/issues/251)
+        /// </summary>
+        [Fact]
+        public void Issue251()
+        {
+            using (var cn = Db.GetConnection())
+            {
+                var reader = cn.ExecuteReader(@"select '""<>+-*//}{\\n' a,1234567890 b union all select '<test>Hello World</test>',-1234567890");
+                var path = PathHelper.GetTempPath(extension:"csv");
+                MiniExcel.SaveAs(path, reader);
+                Console.WriteLine(path);
+                var expected = @"a,b
+""""""<>+-*//}{\\n"",1234567890
+""<test>Hello World</test>"",-1234567890
+";
+                Assert.Equal(expected, File.ReadAllText(path));
+            }
+        }
+
+        /// <summary>
         /// No error exception throw when reading xls file #242
         /// </summary>
         [Fact]

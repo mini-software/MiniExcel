@@ -35,8 +35,11 @@ namespace MiniExcelLibs.Csv
                 var type = value.GetType();
                 Type genericType = null;
 
-                //DapperRow
-                if (value is IEnumerable)
+                if(value is IDataReader)
+                {
+                    GenerateSheetByIDataReader(value, printHeader, seperator, newLine, writer);
+                }
+                else if (value is IEnumerable)
                 {
                     var values = value as IEnumerable;
                     List<object> keys = new List<object>();
@@ -119,6 +122,40 @@ namespace MiniExcelLibs.Csv
                 {
                     throw new NotImplementedException($"Type {type?.Name} & genericType {genericType?.Name} not Implemented. please issue for me.");
                 }
+            }
+        }
+
+        private static void GenerateSheetByIDataReader(object value, bool printHeader, string seperator, string newLine, StreamWriter writer)
+        {
+            var reader = (IDataReader)value;
+
+            int fieldCount = reader.FieldCount;
+            if (fieldCount == 0)
+                throw new InvalidDataException("fieldCount is 0");
+
+            if (printHeader)
+            {
+                for (int i = 0; i < fieldCount; i++)
+                {
+                    var columnName = reader.GetName(i);
+
+                    if (i != 0)
+                        writer.Write(seperator);
+                    writer.Write(CsvHelpers.ConvertToCsvValue(columnName?.ToCsvString(null)));
+                }
+                writer.Write(newLine);
+            }
+
+            while (reader.Read())
+            {
+                for (int i = 0; i < fieldCount; i++)
+                {
+                    var cellValue = reader.GetValue(i);
+                    if (i != 0)
+                        writer.Write(seperator);
+                    writer.Write(CsvHelpers.ConvertToCsvValue(cellValue?.ToCsvString(null)));
+                }
+                writer.Write(newLine);
             }
         }
 

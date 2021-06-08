@@ -21,7 +21,7 @@ namespace MiniExcelLibs.Csv
                 throw new NotImplementedException("CSV not Implement startCell");
             var cf = configuration == null ? CsvConfiguration.DefaultConfiguration : (CsvConfiguration)configuration;
 
-            using (var reader = cf.GetStreamReaderFunc(_stream))
+            using (var reader = cf.StreamReaderFunc(_stream))
             {
                 var row = string.Empty;
                 string[] read;
@@ -69,7 +69,7 @@ namespace MiniExcelLibs.Csv
             var type = typeof(T);
 
             Dictionary<int, ExcelCustomPropertyInfo> idxProps = new Dictionary<int, ExcelCustomPropertyInfo>();
-            using (var reader = cf.GetStreamReaderFunc(_stream))
+            using (var reader = cf.StreamReaderFunc(_stream))
             {
                 var row = string.Empty;
                 string[] read;

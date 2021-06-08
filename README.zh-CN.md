@@ -794,14 +794,22 @@ MiniExcel.SaveAs(path, values,configuration: config);
 #### 自定义编码
 
 - 预设编码为「从Byte顺序标记检测编码」(detectEncodingFromByteOrderMarks: true)
-- 有自定义编码需求，请修改 GetStreamReaderFunc 属性
+- 有自定义编码需求，请修改 StreamReaderFunc /  StreamWriterFunc 属性
 
 ```csharp
+// Read
 var config = new MiniExcelLibs.Csv.CsvConfiguration()
 {
-    GetStreamReaderFunc = (stream) => new StreamReader(stream,encoding:Encoding.UTF8)
+    StreamReaderFunc = (stream) => new StreamReader(stream,Encoding.GetEncoding("gb2312"))
 };
-var rows = MiniExcel.Query(path, true,excelType:ExcelType.CSV,configuration: config)
+var rows = MiniExcel.Query(path, true,excelType:ExcelType.CSV,configuration: config);
+
+// Write
+var config = new MiniExcelLibs.Csv.CsvConfiguration()
+{
+    StreamWriterFunc = (stream) => new StreamWriter(stream, Encoding.GetEncoding("gb2312"))
+};
+MiniExcel.SaveAs(path, value,excelType:ExcelType.CSV, configuration: config);
 ```
 
 

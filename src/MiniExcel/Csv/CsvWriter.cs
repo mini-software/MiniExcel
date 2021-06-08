@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
+using System.Text;
 using static MiniExcelLibs.Utils.Helpers;
 
 namespace MiniExcelLibs.Csv
@@ -24,7 +25,7 @@ namespace MiniExcelLibs.Csv
             var seperator = cf.Seperator.ToString();
             var newLine = cf.NewLine;
 
-            using (StreamWriter writer = new StreamWriter(_stream))
+            using (StreamWriter writer = cf.StreamWriterFunc(_stream))
             {
                 if (value == null)
                 {

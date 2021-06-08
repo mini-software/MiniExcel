@@ -810,14 +810,22 @@ MiniExcel.SaveAs(path, values,configuration: config);
 #### Custom coding
 
 - The default encoding is "Detect Encoding From Byte Order Marks"  (detectEncodingFromByteOrderMarks: true)
-- f you have custom encoding requirements, please modify the GetStreamReaderFunc property
+- f you have custom encoding requirements, please modify the StreamReaderFunc / StreamWriterFunc  property
 
 ```csharp
+// Read
 var config = new MiniExcelLibs.Csv.CsvConfiguration()
 {
-    GetStreamReaderFunc = (stream) => new StreamReader(stream,encoding:Encoding.UTF8)
+    StreamReaderFunc = (stream) => new StreamReader(stream,Encoding.GetEncoding("gb2312"))
 };
-var rows = MiniExcel.Query(path, true,excelType:ExcelType.CSV,configuration: config)
+var rows = MiniExcel.Query(path, true,excelType:ExcelType.CSV,configuration: config);
+
+// Write
+var config = new MiniExcelLibs.Csv.CsvConfiguration()
+{
+    StreamWriterFunc = (stream) => new StreamWriter(stream, Encoding.GetEncoding("gb2312"))
+};
+MiniExcel.SaveAs(path, value,excelType:ExcelType.CSV, configuration: config);
 ```
 
 

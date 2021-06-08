@@ -798,14 +798,22 @@ MiniExcel.SaveAs(path, values,configuration: config);
 #### 自定義編碼
 
 - 預設編碼為「從Byte順序標記檢測編碼」(detectEncodingFromByteOrderMarks: true)
-- 有自定義編碼需求，請修改 GetStreamReaderFunc 屬性
+- 有自定義編碼需求，請修改 StreamReaderFunc /  StreamWriterFunc 屬性
 
 ```csharp
+// Read
 var config = new MiniExcelLibs.Csv.CsvConfiguration()
 {
-    GetStreamReaderFunc = (stream) => new StreamReader(stream,encoding:Encoding.UTF8)
+    StreamReaderFunc = (stream) => new StreamReader(stream,Encoding.GetEncoding("gb2312"))
 };
-var rows = MiniExcel.Query(path, true,excelType:ExcelType.CSV,configuration: config)
+var rows = MiniExcel.Query(path, true,excelType:ExcelType.CSV,configuration: config);
+
+// Write
+var config = new MiniExcelLibs.Csv.CsvConfiguration()
+{
+    StreamWriterFunc = (stream) => new StreamWriter(stream, Encoding.GetEncoding("gb2312"))
+};
+MiniExcel.SaveAs(path, value,excelType:ExcelType.CSV, configuration: config);
 ```
 
 

@@ -397,7 +397,7 @@ namespace MiniExcelLibs.OpenXml
             writer.Write("</x:sheetData></x:worksheet>");
         }
 
-        private void GenerateSheetByIDataReader(StreamWriter writer, MiniExcelZipArchive archive, IDataReader value, bool printHeader)
+        private void GenerateSheetByIDataReader(StreamWriter writer, MiniExcelZipArchive archive, IDataReader reader, bool printHeader)
         {
             var xy = ExcelOpenXmlUtils.ConvertCellToXY("A1");
 
@@ -410,7 +410,7 @@ namespace MiniExcelLibs.OpenXml
                 //var maxColumnIndex = value.Columns.Count;
                 //writer.Write($@"<x:dimension ref=""{GetDimensionRef(maxRowIndex, maxColumnIndex)}""/>");
                 writer.Write("<x:sheetData>");
-                int fieldCount = value.FieldCount;
+                int fieldCount = reader.FieldCount;
                 if (printHeader)
                 {
                     writer.Write($"<x:row r=\"{yIndex.ToString()}\">");
@@ -418,7 +418,7 @@ namespace MiniExcelLibs.OpenXml
                     for (int i = 0; i < fieldCount; i++)
                     {
                         var r = ExcelOpenXmlUtils.ConvertXyToCell(xIndex, yIndex);
-                        var columnName = value.GetName(i);
+                        var columnName = reader.GetName(i);
                         WriteC(writer, r, columnName);
                         xIndex++;
                     }
@@ -426,14 +426,14 @@ namespace MiniExcelLibs.OpenXml
                     yIndex++;
                 }
 
-                while (value.Read())
+                while (reader.Read())
                 {
                     writer.Write($"<x:row r=\"{yIndex.ToString()}\">");
                     var xIndex = xy.Item1;
 
                     for (int i = 0; i < fieldCount; i++)
                     {
-                        var cellValue = value.GetValue(i);
+                        var cellValue = reader.GetValue(i);
                         WriteCell(writer, yIndex, xIndex, cellValue,null);
                         xIndex++;
                     }

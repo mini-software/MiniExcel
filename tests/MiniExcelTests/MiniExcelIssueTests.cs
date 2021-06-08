@@ -1,22 +1,20 @@
-﻿using Xunit;
-using System;
-using System.Linq;
-using System.IO;
-using System.Collections.Generic;
-using System.Diagnostics;
-using Xunit.Abstractions;
-using static MiniExcelLibs.Tests.MiniExcelOpenXmlTests;
-using System.Globalization;
-using OfficeOpenXml;
-using Newtonsoft.Json;
+﻿using Dapper;
 using MiniExcelLibs.Attributes;
+using MiniExcelLibs.OpenXml;
 using MiniExcelLibs.Tests.Utils;
+using Newtonsoft.Json;
+using OfficeOpenXml;
+using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.SQLite;
-using Dapper;
-using MiniExcelLibs.OpenXml;
-using System.Data.SqlClient;
-using System.Data.Common;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Text;
+using Xunit;
+using Xunit.Abstractions;
+using static MiniExcelLibs.Tests.MiniExcelOpenXmlTests;
 
 namespace MiniExcelLibs.Tests
 {
@@ -29,6 +27,49 @@ namespace MiniExcelLibs.Tests
         }
 
         /// <summary>
+        /// Csv SaveAs by datareader with encoding default show messy code #253
+        /// </summary>
+        [Fact]
+        public void Issue253()
+        {
+            {
+                var value = new[] { new { col1 = "世界你好" } };
+                var path = PathHelper.GetTempPath(extension: "csv");
+                MiniExcel.SaveAs(path, value);
+                var expected = @"col1
+世界你好
+";
+                Assert.Equal(expected, File.ReadAllText(path));
+            }
+
+            {
+                System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
+                var value = new[] { new { col1 = "世界你好" } };
+                var path = PathHelper.GetTempPath(extension: "csv");
+                var config = new MiniExcelLibs.Csv.CsvConfiguration()
+                {
+                    StreamWriterFunc = (stream) => new StreamWriter(stream, Encoding.GetEncoding("gb2312"))
+                };
+                MiniExcel.SaveAs(path, value, excelType: ExcelType.CSV, configuration: config);
+                var expected = @"col1
+�������
+";
+                Assert.Equal(expected, File.ReadAllText(path));
+            }
+
+            using (var cn = Db.GetConnection())
+            {
+                var value = cn.ExecuteReader(@"select '世界你好' col1");
+                var path = PathHelper.GetTempPath(extension: "csv");
+                MiniExcel.SaveAs(path, value);
+                var expected = @"col1
+世界你好
+";
+                Assert.Equal(expected, File.ReadAllText(path));
+            }
+        }
+
+        /// <summary>
         /// [CSV SaveAs support datareader · Issue #251 · shps951023/MiniExcel](https://github.com/shps951023/MiniExcel/issues/251)
         /// </summary>
         [Fact]
@@ -37,9 +78,8 @@ namespace MiniExcelLibs.Tests
             using (var cn = Db.GetConnection())
             {
                 var reader = cn.ExecuteReader(@"select '""<>+-*//}{\\n' a,1234567890 b union all select '<test>Hello World</test>',-1234567890");
-                var path = PathHelper.GetTempPath(extension:"csv");
+                var path = PathHelper.GetTempPath(extension: "csv");
                 MiniExcel.SaveAs(path, reader);
-                Console.WriteLine(path);
                 var expected = @"a,b
 """"""<>+-*//}{\\n"",1234567890
 ""<test>Hello World</test>"",-1234567890
@@ -55,8 +95,8 @@ namespace MiniExcelLibs.Tests
         public void Issue242()
         {
             var path = PathHelper.GetSamplePath("xls/TestIssue242.xls");
-            
-            Assert.Throws<NotSupportedException>(()=> MiniExcel.Query(path).ToList());
+
+            Assert.Throws<NotSupportedException>(() => MiniExcel.Query(path).ToList());
 
             using (var stream = File.OpenRead(path))
             {
@@ -100,7 +140,7 @@ namespace MiniExcelLibs.Tests
         [Fact]
         public void Issue241()
         {
-            
+
             var value = new Issue241Dto[] {
                 new Issue241Dto{ Name="Jack",InDate=new DateTime(2021,01,04)},
                 new Issue241Dto{ Name="Henry",InDate=new DateTime(2020,04,05)},

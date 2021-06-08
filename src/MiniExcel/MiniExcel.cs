@@ -19,9 +19,6 @@
                 SaveAs(stream, value, printHeader, sheetName, GetExcelType(path, excelType), configuration);
         }
 
-        /// <summary>
-        /// Default SaveAs Xlsx file
-        /// </summary>
         public static void SaveAs(this Stream stream, object value, bool printHeader = true, string sheetName = "Sheet1", ExcelType excelType = ExcelType.XLSX, IConfiguration configuration = null)
         {
             if (string.IsNullOrEmpty(sheetName))
@@ -95,17 +92,13 @@
             ExcelTemplateFactory.GetProvider(stream).SaveAsByTemplate(templatePath, value);
         }
 
-        /// <summary>
-        /// This method can avoid reading the template file every time
-        /// </summary>
-        /// <param name="stream">output stream</param>
         public static void SaveAsByTemplate(this Stream stream, byte[] templateBytes, object value)
         {
             ExcelTemplateFactory.GetProvider(stream).SaveAsByTemplate(templateBytes, value);
         }
 
         /// <summary>
-        /// This method is not recommended, because it'll load all data into memory.
+        /// QueryAsDataTable is not recommended, because it'll load all data into memory.
         /// </summary>
         public static DataTable QueryAsDataTable(string path, bool useHeaderRow = true, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null)
         {
@@ -114,8 +107,7 @@
         }
 
         /// <summary>
-        /// This method is not recommended, because it'll load all data into memory.
-        /// Note: if first row cell is null value, column type will be string
+        /// QueryAsDataTable is not recommended, because it'll load all data into memory.
         /// </summary>
         public static DataTable QueryAsDataTable(this Stream stream, bool useHeaderRow = true, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null)
         {

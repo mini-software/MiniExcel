@@ -21,7 +21,7 @@ namespace MiniExcelLibs.Tests
             var path = PathHelper.GetSamplePath("csv/gb2312_Encoding_Read_Test.csv");
             var config = new MiniExcelLibs.Csv.CsvConfiguration()
             {
-                GetStreamReaderFunc = (stream) => new StreamReader(stream,encoding: Encoding.GetEncoding("gb2312"))
+                StreamReaderFunc = (stream) => new StreamReader(stream,encoding: Encoding.GetEncoding("gb2312"))
             };
             var rows = MiniExcel.Query(path, true,excelType:ExcelType.CSV,configuration: config).ToList();
             Assert.Equal("世界你好", rows[0].栏位1);

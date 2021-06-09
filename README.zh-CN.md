@@ -289,7 +289,7 @@ MiniExcel.Query(path,useHeaderRow:true,startCell:"B3")
 
 图片 : 是否呼叫 ToList 的内存差别  
 
-#### ![image](https://user-images.githubusercontent.com/12729184/112587389-752b0b00-8e38-11eb-8a52-cfb76c57e5eb.png)1. Anonymous or strongly type [[Try it]](https://dotnetfiddle.net/w5WD1J)
+#### ![image](https://user-images.githubusercontent.com/12729184/112587389-752b0b00-8e38-11eb-8a52-cfb76c57e5eb.png)1. 支持集合<匿名类别>或是<强型别> [[Try it]](https://dotnetfiddle.net/w5WD1J)
 
 ```csharp
 var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
@@ -299,8 +299,43 @@ MiniExcel.SaveAs(path, new[] {
 });
 ```
 
-#### 2. Datatable  
 
+
+#### 2. `IEnumerable<IDictionary<string, object>>`
+
+```csharp
+var values = new List<Dictionary<string, object>>()
+{
+    new Dictionary<string,object>{{ "Column1", "MiniExcel" }, { "Column2", 1 } },
+    new Dictionary<string,object>{{ "Column1", "Github" }, { "Column2", 2 } }
+};
+MiniExcel.SaveAs(path, values);
+```
+
+output : 
+
+| Column1   | Column2 |
+| --------- | ------- |
+| MiniExcel | 1       |
+| Github    | 2       |
+
+
+
+#### 3.  IDataReader 参数
+
+- 推荐使用，可以避免载入全部数据到内存
+
+```csharp
+MiniExcel.SaveAs(path, reader);
+```
+
+![image](https://user-images.githubusercontent.com/12729184/121275378-149a5e80-c8bc-11eb-85fe-5453552134f0.png)
+
+
+
+####  4. Datatable
+
+- 不推荐使用，会将数据全载入内存
 - 优先使用 Caption 当栏位名称
 
 ```csharp
@@ -316,7 +351,9 @@ var table = new DataTable();
 MiniExcel.SaveAs(path, table);
 ```
 
-#### 3. Dapper
+####  5. Dapper
+
+- 不推荐使用，会将数据全载入内存
 
 ```csharp
 using (var connection = GetConnection(connectionString))
@@ -326,25 +363,9 @@ using (var connection = GetConnection(connectionString))
 }
 ```
 
-#### 4. `IEnumerable<IDictionary<string, object>>`
 
-```csharp
-var values = new List<Dictionary<string, object>>()
-{
-    new Dictionary<string,object>{{ "Column1", "MiniExcel" }, { "Column2", 1 } },
-    new Dictionary<string,object>{{ "Column1", "Github" }, { "Column2", 2 } }
-};
-MiniExcel.SaveAs(path, values);
-```
 
-output : 
-
-| Column1 | Column2 |
-| -------- | -------- |
-| MiniExcel     | 1     |
-| Github     | 2     |
-
-#### 5. SaveAs 支持 Stream，生成文件不落地 [[Try it]](https://dotnetfiddle.net/JOen0e)
+#### 6. SaveAs 支持 Stream，生成文件不落地 [[Try it]](https://dotnetfiddle.net/JOen0e)
 
 ```csharp
 using (var stream = new MemoryStream()) //支持 FileStream,MemoryStream..等
@@ -371,14 +392,6 @@ public IActionResult DownloadExcel()
         FileDownloadName = "demo.xlsx"
     };
 }
-```
-
-
-
-#### 6. 支持 IDataReader 参数
-
-```csharp
-MiniExcel.SaveAs(path, reader);
 ```
 
 

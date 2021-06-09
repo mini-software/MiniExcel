@@ -288,7 +288,11 @@ MiniExcel.Query(path,useHeaderRow:true,startCell:"B3")
 
 圖片 : 是否呼叫 ToList 的記憶體差別  
 
-#### ![image](https://user-images.githubusercontent.com/12729184/112587389-752b0b00-8e38-11eb-8a52-cfb76c57e5eb.png)1. Anonymous or strongly type [[Try it]](https://dotnetfiddle.net/w5WD1J)
+#### ![image](https://user-images.githubusercontent.com/12729184/112587389-752b0b00-8e38-11eb-8a52-cfb76c57e5eb.png)
+
+
+
+#### 1. 支持集合<匿名類別>或是<強型別> [[Try it]](https://dotnetfiddle.net/w5WD1J)
 
 ```csharp
 var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
@@ -298,8 +302,43 @@ MiniExcel.SaveAs(path, new[] {
 });
 ```
 
-#### 2. Datatable    
 
+
+#### 2. `IEnumerable<IDictionary<string, object>>`
+
+```csharp
+var values = new List<Dictionary<string, object>>()
+{
+    new Dictionary<string,object>{{ "Column1", "MiniExcel" }, { "Column2", 1 } },
+    new Dictionary<string,object>{{ "Column1", "Github" }, { "Column2", 2 } }
+};
+MiniExcel.SaveAs(path, values);
+```
+
+output : 
+
+| Column1   | Column2 |
+| --------- | ------- |
+| MiniExcel | 1       |
+| Github    | 2       |
+
+
+
+#### 3.  IDataReader 參數
+
+- 推薦使用，可以避免載入全部數據到記憶體
+
+```csharp
+MiniExcel.SaveAs(path, reader);
+```
+
+![image](https://user-images.githubusercontent.com/12729184/121275378-149a5e80-c8bc-11eb-85fe-5453552134f0.png)
+
+
+
+####  4. Datatable
+
+- `不推薦使用`，會將數據全載入記憶體
 - 優先使用 Caption 當欄位名稱
 
 ```csharp
@@ -315,7 +354,9 @@ var table = new DataTable();
 MiniExcel.SaveAs(path, table);
 ```
 
-#### 3. Dapper
+####  5. Dapper
+
+- 不推薦使用，會將數據全載入記憶體
 
 ```csharp
 using (var connection = GetConnection(connectionString))
@@ -325,25 +366,9 @@ using (var connection = GetConnection(connectionString))
 }
 ```
 
-#### 4. `IEnumerable<IDictionary<string, object>>`
 
-```csharp
-var values = new List<Dictionary<string, object>>()
-{
-    new Dictionary<string,object>{{ "Column1", "MiniExcel" }, { "Column2", 1 } },
-    new Dictionary<string,object>{{ "Column1", "Github" }, { "Column2", 2 } }
-};
-MiniExcel.SaveAs(path, values);
-```
 
-output : 
-
-| Column1 | Column2 |
-| -------- | -------- |
-| MiniExcel     | 1     |
-| Github     | 2     |
-
-#### 5. SaveAs 支持 Stream，生成文件不落地 [[Try it]](https://dotnetfiddle.net/JOen0e)
+#### 6. SaveAs 支持 Stream，生成文件不落地 [[Try it]](https://dotnetfiddle.net/JOen0e)
 
 ```csharp
 using (var stream = new MemoryStream()) //支持 FileStream,MemoryStream..等
@@ -372,12 +397,6 @@ public IActionResult DownloadExcel()
 }
 ```
 
-#### 6. 支持 IDataReader 參數
-
-```csharp
-MiniExcel.SaveAs(path, reader);
-```
-
 
 
 #### 7. 創建多個工作表(Sheet)
@@ -403,8 +422,6 @@ MiniExcel.SaveAs(path, sheets);
 
 ![image](https://user-images.githubusercontent.com/12729184/118130875-6e7c4580-b430-11eb-9b82-22f02716bd63.png)
 
-
-
 #### 8. 表格樣式選擇
 
 從v0.15.0版本開始預設樣式改為
@@ -422,6 +439,13 @@ MiniExcel.SaveAs(path, value,configuration:config);
 ```
 
 ![image](https://user-images.githubusercontent.com/12729184/118784917-f3e57700-b8c2-11eb-8718-8d955b1bc197.png)
+
+
+
+
+
+
+
 
 
 

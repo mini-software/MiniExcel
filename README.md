@@ -301,34 +301,7 @@ MiniExcel.SaveAs(path, new[] {
 });
 ```
 
-#### 2. Datatable 
-
-- DataTable use Caption for column name first, then use columname 
-
-```csharp
-var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
-var table = new DataTable();
-{
-    table.Columns.Add("Column1", typeof(string));
-    table.Columns.Add("Column2", typeof(decimal));
-    table.Rows.Add("MiniExcel", 1);
-    table.Rows.Add("Github", 2);
-}
-
-MiniExcel.SaveAs(path, table);
-```
-
-#### 3. Dapper 
-
-```csharp
-using (var connection = GetConnection(connectionString))
-{
-    var rows = connection.Query(@"select 'MiniExcel' as Column1,1 as Column2 union all select 'Github',2");
-    MiniExcel.SaveAs(path, rows);
-}
-```
-
-#### 4. `IEnumerable<IDictionary<string, object>>`
+#### 2. `IEnumerable<IDictionary<string, object>>`
 
 ```csharp
 var values = new List<Dictionary<string, object>>()
@@ -346,16 +319,50 @@ Create File Result :
 | MiniExcel     | 1     |
 | Github     | 2     |
 
-#### 5. SaveAs Stream [[Try it]](https://dotnetfiddle.net/JOen0e)
+
+#### 3.  IDataReader 
+- `Recommended`, it can avoid to load all data into memory
+```csharp
+MiniExcel.SaveAs(path, reader);
+```
+
+![image](https://user-images.githubusercontent.com/12729184/121275378-149a5e80-c8bc-11eb-85fe-5453552134f0.png)
+
+
+
+#### 4. Datatable
+
+- `Not recommended`, it will load all data into memory
+
+- DataTable use Caption for column name first, then use columname 
 
 ```csharp
-using (var stream = File.Create(path))
+var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
+var table = new DataTable();
 {
-    stream.SaveAs(values);
+    table.Columns.Add("Column1", typeof(string));
+    table.Columns.Add("Column2", typeof(decimal));
+    table.Rows.Add("MiniExcel", 1);
+    table.Rows.Add("Github", 2);
+}
+
+MiniExcel.SaveAs(path, table);
+```
+
+#### 5. Dapper
+
+- `Not recommended`, it will load all data into memory
+
+```csharp
+using (var connection = GetConnection(connectionString))
+{
+    var rows = connection.Query(@"select 'MiniExcel' as Column1,1 as Column2 union all select 'Github',2");
+    MiniExcel.SaveAs(path, rows);
 }
 ```
 
-#### 5. SaveAs to MemoryStream  [[Try it]](https://dotnetfiddle.net/JOen0e)
+
+#### 6. SaveAs to MemoryStream  [[Try it]](https://dotnetfiddle.net/JOen0e)
 
 ```csharp
 using (var stream = new MemoryStream()) //support FileStream,MemoryStream ect.
@@ -385,15 +392,6 @@ public IActionResult DownloadExcel()
 ```
 
 
-
-#### 6. Support IDataReader value parameter
-
-```csharp
-MiniExcel.SaveAs(path, reader);
-```
-
-
-
 #### 7. Create Multiple Sheets
 
 ```csharp
@@ -416,7 +414,6 @@ MiniExcel.SaveAs(path, sheets);
 ```
 
 ![image](https://user-images.githubusercontent.com/12729184/118130875-6e7c4580-b430-11eb-9b82-22f02716bd63.png)
-
 
 
 #### 8. TableStyles Options

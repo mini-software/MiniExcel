@@ -27,7 +27,7 @@
             }
         }
 
-        //Method from ExcelDataReader : https://github.com/ExcelDataReader/ExcelDataReader
+        //Method from ExcelDataReader @MIT License
         public static bool ReadFirstContent(XmlReader reader)
         {
             if (reader.IsEmptyElement)
@@ -41,7 +41,7 @@
             return true;
         }
 
-        //Method from ExcelDataReader : https://github.com/ExcelDataReader/ExcelDataReader
+        //Method from ExcelDataReader @MIT License
         public static bool SkipContent(XmlReader reader)
         {
             if (reader.NodeType == XmlNodeType.EndElement)

@@ -1,7 +1,4 @@
-﻿/**
- This Class Modified from ExcelDataReader : https://github.com/ExcelDataReader/ExcelDataReader
- **/
-namespace MiniExcelLibs.Tests.Utils
+﻿namespace MiniExcelLibs.Tests.Utils
 {
     using System;
     using System.Collections.Generic;

@@ -1,11 +1,11 @@
-﻿/**
- This Class Modified from ExcelDataReader : https://github.com/ExcelDataReader/ExcelDataReader
- **/
-namespace MiniExcelLibs.Utils
+﻿namespace MiniExcelLibs.Utils
 {
     using System;
     using System.Globalization;
 
+    /**
+	This Class Modified from ExcelDataReader @MIT License
+	**/
     internal static class ReferenceHelper
     {
 	   /// <summary>X=CellLetter,Y=CellNumber,ex:A1=(1,1),B2=(2,2)</summary>

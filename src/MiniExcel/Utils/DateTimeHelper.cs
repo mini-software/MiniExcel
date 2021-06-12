@@ -1,10 +1,10 @@
-﻿/**
- This Class Code from ExcelDataReader : https://github.com/ExcelDataReader/ExcelDataReader
- **/
-namespace MiniExcelLibs.Utils
+﻿namespace MiniExcelLibs.Utils
 {
     using System;
 
+    /**
+     This Class Code from ExcelDataReader @MIT License
+     **/
     internal static class DateTimeHelper
     {
         // All OA dates must be greater than (not >=) OADateMinAsDouble

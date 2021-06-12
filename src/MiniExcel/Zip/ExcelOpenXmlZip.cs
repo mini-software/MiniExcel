@@ -8,7 +8,7 @@ using System.Xml;
 
 namespace MiniExcelLibs.Zip
 {
-    /// Copy & modified by ExcelDataReader ZipWorker
+    /// Copy & modified by ExcelDataReader ZipWorker @MIT License
     internal class ExcelOpenXmlZip : IDisposable
     {
 	   private readonly Dictionary<string, ZipArchiveEntry> _entries;

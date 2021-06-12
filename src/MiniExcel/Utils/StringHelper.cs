@@ -20,7 +20,7 @@
         }
 
         /// <summary>
-        /// Copy&Modify from ExcelDataReader : https://github.com/ExcelDataReader/ExcelDataReader
+        /// Copy&Modify from ExcelDataReader @MIT License
         /// </summary>
         public static string ReadStringItem(XmlReader reader)
         {
@@ -49,7 +49,7 @@
         }
 
         /// <summary>
-        /// Copy&Modify from ExcelDataReader : https://github.com/ExcelDataReader/ExcelDataReader
+        /// Copy&Modify from ExcelDataReader @MIT License
         /// </summary>
         private static string ReadRichTextRun(XmlReader reader)
         {

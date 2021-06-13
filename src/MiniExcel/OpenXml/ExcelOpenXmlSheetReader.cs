@@ -14,7 +14,7 @@ namespace MiniExcelLibs.OpenXml
 {
     internal class ExcelOpenXmlSheetReader : IExcelReader
     {
-        private const string _ns = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
+        private const string _ns = Config.SpreadsheetmlXmlns;
         private List<SheetRecord> _sheetRecords;
         private List<string> _sharedStrings;
         private MergeCells _mergeCells;
@@ -455,7 +455,7 @@ namespace MiniExcelLibs.OpenXml
         {
             using (var reader = XmlReader.Create(stream))
             {
-                if (!reader.IsStartElement("sst", "http://schemas.openxmlformats.org/spreadsheetml/2006/main"))
+                if (!reader.IsStartElement("sst", _ns))
                     yield break;
 
                 if (!XmlReaderHelper.ReadFirstContent(reader))
@@ -463,7 +463,7 @@ namespace MiniExcelLibs.OpenXml
 
                 while (!reader.EOF)
                 {
-                    if (reader.IsStartElement("si", "http://schemas.openxmlformats.org/spreadsheetml/2006/main"))
+                    if (reader.IsStartElement("si", _ns))
                     {
                         var value = StringHelper.ReadStringItem(reader);
                         yield return value;

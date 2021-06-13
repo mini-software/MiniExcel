@@ -165,7 +165,7 @@ namespace MiniExcelLibs.OpenXml
             DefaultWorkbookXmlRels = MinifyXml(DefaultWorkbookXmlRels);
 
             _ns = new XmlNamespaceManager(new NameTable());
-            _ns.AddNamespace("x", "http://schemas.openxmlformats.org/spreadsheetml/2006/main");
+            _ns.AddNamespace("x", Config.SpreadsheetmlXmlns);
 
             Xmls.Add("DefaultStylesXml", GetXmlDocument(DefaultStylesXml));
         }

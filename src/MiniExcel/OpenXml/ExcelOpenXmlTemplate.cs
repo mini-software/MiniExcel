@@ -23,7 +23,7 @@ namespace MiniExcelLibs.OpenXml
         {
             _isExpressionRegex = new Regex("(?<={{).*?(?=}})");
             _ns = new XmlNamespaceManager(new NameTable());
-            _ns.AddNamespace("x", "http://schemas.openxmlformats.org/spreadsheetml/2006/main");
+            _ns.AddNamespace("x", Config.SpreadsheetmlXmlns);
         }
 
         private readonly Stream stream;

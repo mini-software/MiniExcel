@@ -4,10 +4,10 @@
     using MiniExcelLibs.Zip;
     using System;
     using System.Collections.Generic;
+
     internal class ExcelOpenXmlStyles
     {
-        const string NsSpreadsheetMl = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
-
+        private const string _ns = Config.SpreadsheetmlXmlns;
         private Dictionary<int, StyleRecord> _cellXfs = new Dictionary<int, StyleRecord>();
         private Dictionary<int, StyleRecord> _cellStyleXfs = new Dictionary<int, StyleRecord>();
 
@@ -15,13 +15,13 @@
         {
             using (var Reader = zip.GetXmlReader(@"xl/styles.xml"))
             {
-                if (!Reader.IsStartElement("styleSheet", NsSpreadsheetMl))
+                if (!Reader.IsStartElement("styleSheet", _ns))
                     return;
                 if (!XmlReaderHelper.ReadFirstContent(Reader))
                     return;
                 while (!Reader.EOF)
                 {
-                    if (Reader.IsStartElement("cellXfs", NsSpreadsheetMl))
+                    if (Reader.IsStartElement("cellXfs", _ns))
                     {
                         if (!XmlReaderHelper.ReadFirstContent(Reader))
                             return;
@@ -29,7 +29,7 @@
                         var index = 0;
                         while (!Reader.EOF)
                         {
-                            if (Reader.IsStartElement("xf", NsSpreadsheetMl))
+                            if (Reader.IsStartElement("xf", _ns))
                             {
                                 int.TryParse(Reader.GetAttribute("xfId"), out var xfId);
                                 int.TryParse(Reader.GetAttribute("numFmtId"), out var numFmtId);
@@ -41,7 +41,7 @@
                                 break;
                         }
                     }
-                    else if (Reader.IsStartElement("cellStyleXfs", NsSpreadsheetMl))
+                    else if (Reader.IsStartElement("cellStyleXfs", _ns))
                     {
                         if (!XmlReaderHelper.ReadFirstContent(Reader))
                             return;
@@ -49,7 +49,7 @@
                         var index = 0;
                         while (!Reader.EOF)
                         {
-                            if (Reader.IsStartElement("xf", NsSpreadsheetMl))
+                            if (Reader.IsStartElement("xf", _ns))
                             {
                                 int.TryParse(Reader.GetAttribute("xfId"), out var xfId);
                                 int.TryParse(Reader.GetAttribute("numFmtId"), out var numFmtId);
@@ -151,6 +151,8 @@
 
             // issue 222
             { 58, new NumberFormatString("m/d",typeof(DateTime?)) },
+
+            // custom format start with 176
         };
     }
 

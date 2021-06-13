@@ -1,5 +1,6 @@
 ﻿namespace MiniExcelLibs.Utils
 {
+    using MiniExcelLibs.OpenXml;
     using System;
     using System.Linq;
     using System.Text;
@@ -7,7 +8,7 @@
 
     internal static class StringHelper
     {
-
+        private const string _ns = Config.SpreadsheetmlXmlns;
         public static string GetLetter(string content)
         {
             //TODO:need to chekc
@@ -30,12 +31,12 @@
 
             while (!reader.EOF)
             {
-                if (reader.IsStartElement("t", "http://schemas.openxmlformats.org/spreadsheetml/2006/main"))
+                if (reader.IsStartElement("t", _ns))
                 {
                     // There are multiple <t> in a <si>. Concatenate <t> within an <si>.
                     result.Append(reader.ReadElementContentAsString());
                 }
-                else if (reader.IsStartElement("r", "http://schemas.openxmlformats.org/spreadsheetml/2006/main"))
+                else if (reader.IsStartElement("r", _ns))
                 {
                     result.Append(ReadRichTextRun(reader));
                 }
@@ -59,7 +60,7 @@
 
             while (!reader.EOF)
             {
-                if (reader.IsStartElement("t", "http://schemas.openxmlformats.org/spreadsheetml/2006/main"))
+                if (reader.IsStartElement("t", _ns))
                 {
                     result.Append(reader.ReadElementContentAsString());
                 }

@@ -18,7 +18,7 @@
 ---
 
 ### 0.15.5
-- [Bug] Chinese env datetime format InvalidCastException #257
+- [Bug] 特定中文环境日期格式转换InvalidCastException错误 #257
 
 ### 0.15.4
 - [Breaking Change] CSV Reader/Writer 预设编码改变 : UTF-8 => UTF-8-BOM

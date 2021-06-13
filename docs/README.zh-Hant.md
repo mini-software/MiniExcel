@@ -17,6 +17,9 @@
 
 ---
 
+### 0.15.5
+- [Bug] 特定中文环境日期格式转换InvalidCastException错误 #257
+
 ### 0.15.4
 - [Breaking Change] CSV Reader/Writer 預設編碼改變 : UTF-8 => UTF-8-BOM
 - [Breaking Change] 重新命名 CsvConfiguration GetStreamReaderFunc => StreamReaderFunc

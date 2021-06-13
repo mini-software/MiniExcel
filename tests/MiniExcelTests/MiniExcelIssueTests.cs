@@ -153,8 +153,8 @@ namespace MiniExcelLibs.Tests
 
                 {
                     var rows = MiniExcel.Query(path, true).ToList();
-                    Assert.Equal(rows[0].InDate, "January 04, 2021");
-                    Assert.Equal(rows[1].InDate, "April 05, 2020");
+                    Assert.Equal(rows[0].InDate, "01 04, 2021");
+                    Assert.Equal(rows[1].InDate, "04 05, 2020");
                 }
 
                 {
@@ -171,8 +171,8 @@ namespace MiniExcelLibs.Tests
 
                 {
                     var rows = MiniExcel.Query(path, true).ToList();
-                    Assert.Equal(rows[0].InDate, "January 04, 2021");
-                    Assert.Equal(rows[1].InDate, "April 05, 2020");
+                    Assert.Equal(rows[0].InDate, "01 04, 2021");
+                    Assert.Equal(rows[1].InDate, "04 05, 2020");
                 }
 
                 {
@@ -187,7 +187,7 @@ namespace MiniExcelLibs.Tests
         {
             public string Name { get; set; }
 
-            [ExcelFormat("MMMM dd, yyyy")]
+            [ExcelFormat("MM dd, yyyy")]
             public DateTime InDate { get; set; }
         }
 

@@ -244,8 +244,15 @@
             }
             else if (pInfo.ExcludeNullableType == typeof(DateTime))
             {
-                var vs = itemValue.ToString();
+                // fix issue 257 https://github.com/shps951023/MiniExcel/issues/257
+                if (itemValue is DateTime || itemValue is DateTime?)
+                {
+                    newV = itemValue;
+                    pInfo.Property.SetValue(v, newV);
+                    return newV;
+                }
 
+                var vs = itemValue?.ToString();
                 if (pInfo.ExcelFormat != null)
                 {
                     if (DateTime.TryParseExact(vs, pInfo.ExcelFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out var _v))

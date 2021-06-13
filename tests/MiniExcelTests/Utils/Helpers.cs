@@ -74,7 +74,7 @@
         internal static string GetFirstSheetDimensionRefValue(string path)
         {
             var ns = new XmlNamespaceManager(new NameTable());
-            ns.AddNamespace("x", Config.SpreadsheetmlXmlns);
+            ns.AddNamespace("x", "http://schemas.openxmlformats.org/spreadsheetml/2006/main");
             string refV;
             using (var stream = File.OpenRead(path))
             using (ZipArchive archive = new ZipArchive(stream, ZipArchiveMode.Read, false, Encoding.UTF8))

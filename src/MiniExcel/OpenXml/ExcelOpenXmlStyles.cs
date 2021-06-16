@@ -10,7 +10,7 @@
         private const string _ns = Config.SpreadsheetmlXmlns;
         private Dictionary<int, StyleRecord> _cellXfs = new Dictionary<int, StyleRecord>();
         private Dictionary<int, StyleRecord> _cellStyleXfs = new Dictionary<int, StyleRecord>();
-
+        private Dictionary<int, NumberFormatRecord> _numberFormatRecords = new Dictionary<int, NumberFormatRecord>();
         public ExcelOpenXmlStyles(ExcelOpenXmlZip zip)
         {
             using (var Reader = zip.GetXmlReader(@"xl/styles.xml"))
@@ -24,7 +24,7 @@
                     if (Reader.IsStartElement("cellXfs", _ns))
                     {
                         if (!XmlReaderHelper.ReadFirstContent(Reader))
-                            return;
+                            continue;
 
                         var index = 0;
                         while (!Reader.EOF)
@@ -44,7 +44,7 @@
                     else if (Reader.IsStartElement("cellStyleXfs", _ns))
                     {
                         if (!XmlReaderHelper.ReadFirstContent(Reader))
-                            return;
+                            continue;
 
                         var index = 0;
                         while (!Reader.EOF)
@@ -60,6 +60,27 @@
                             }
                             else if (!XmlReaderHelper.SkipContent(Reader))
                                 break;
+                        }
+                    }
+                    else if (Reader.IsStartElement("numFmts", _ns))
+                    {
+                        if (!XmlReaderHelper.ReadFirstContent(Reader))
+                            continue;
+
+                        while (!Reader.EOF)
+                        {
+                            if (Reader.IsStartElement("numFmt", _ns))
+                            {
+                                int.TryParse(Reader.GetAttribute("numFmtId"), out var numFmtId);
+                                var formatCode = Reader.GetAttribute("formatCode");
+
+                                _numberFormatRecords.Add(numFmtId,new NumberFormatRecord(numFmtId, formatCode));
+                                Reader.Skip();
+                            }
+                            else if (!XmlReaderHelper.SkipContent(Reader))
+                            {
+                                break;
+                            }
                         }
                     }
                     else if (!XmlReaderHelper.SkipContent(Reader))
@@ -165,11 +186,25 @@
             FormatString = formatString;
             Type = type;
         }
+        public NumberFormatRecord NumberFormat { get; set; }
     }
 
     internal class StyleRecord
     {
         public int XfId { get; set; }
         public int NumFmtId { get; set; }
+    }
+
+    internal sealed class NumberFormatRecord
+    {
+        public NumberFormatRecord(int formatIndexInFile, string formatString)
+        {
+            FormatIndexInFile = formatIndexInFile;
+            FormatString = formatString;
+        }
+
+        public int FormatIndexInFile { get; }
+
+        public string FormatString { get; }
     }
 }

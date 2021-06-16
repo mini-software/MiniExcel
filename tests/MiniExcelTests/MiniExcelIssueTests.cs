@@ -27,6 +27,19 @@ namespace MiniExcelLibs.Tests
         }
 
         /// <summary>
+        /// [Dynamic Query custom format yyyy.mm.dd can't convert to datetime · Issue #256 · shps951023/MiniExcel]
+        /// (https://github.com/shps951023/MiniExcel/issues/256)
+        /// </summary>
+        [Fact]
+        public void Issue256()
+        {
+            var path = PathHelper.GetSamplePath("xlsx/TestIssue256.xlsx");
+            var rows = MiniExcel.Query(path, true).ToList();
+
+        }
+
+
+        /// <summary>
         /// Csv SaveAs by datareader with encoding default show messy code #253
         /// </summary>
         [Fact]

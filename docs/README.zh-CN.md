@@ -17,6 +17,9 @@
 
 ---
 
+### 0.16.0
+- [Bug] 修正 Query 重复呼叫 convertValueByStyleFormat 方法造成资源浪费 #259
+
 ### 0.15.5
 - [Bug] 特定中文环境日期格式转换InvalidCastException错误 #257
 

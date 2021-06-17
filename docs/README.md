@@ -16,6 +16,9 @@
 
 ---
 
+### 0.16.0
+- [Bug] Fix Query call convertValueByStyleFormat method repeatedly, cause waste of resources #259
+
 ### 0.15.5
 - [Bug] Chinese env datetime format InvalidCastException #257
 

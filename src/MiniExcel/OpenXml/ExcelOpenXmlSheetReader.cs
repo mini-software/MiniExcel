@@ -327,14 +327,13 @@ namespace MiniExcelLibs.OpenXml
                                                 // only when have s attribute then load styles xml data
                                                 if (_style == null)
                                                     _style = new ExcelOpenXmlStyles(_archive);
-
-                                                var customStyleCellValue = _style.ConvertValueByStyleFormat(xfIndex, cellValue)?.ToString();
+      
                                                 cellValue = _style.ConvertValueByStyleFormat(xfIndex, cellValue);
-                                                SetCellsValueAndHeaders(customStyleCellValue, cellValue, useHeaderRow, ref headRows, ref isFirstRow, ref cell, columnIndex);
+                                                SetCellsValueAndHeaders(cellValue, useHeaderRow, ref headRows, ref isFirstRow, ref cell, columnIndex);
                                             }
                                             else
                                             {
-                                                SetCellsValueAndHeaders(cellValue?.ToString(), cellValue, useHeaderRow, ref headRows, ref isFirstRow, ref cell, columnIndex);
+                                                SetCellsValueAndHeaders(cellValue, useHeaderRow, ref headRows, ref isFirstRow, ref cell, columnIndex);
                                             }
                                         }
                                         else if (!XmlReaderHelper.SkipContent(reader))
@@ -372,12 +371,13 @@ namespace MiniExcelLibs.OpenXml
             return useHeaderRow ? Helpers.GetEmptyExpandoObject(headRows) : Helpers.GetEmptyExpandoObject(maxColumnIndex, startColumnIndex);
         }
 
-        private void SetCellsValueAndHeaders(string cellValueString, object cellValue, bool useHeaderRow, ref Dictionary<int, string> headRows, ref bool isFirstRow, ref IDictionary<string, object> cell, int columnIndex)
+        private void SetCellsValueAndHeaders(object cellValue, bool useHeaderRow, ref Dictionary<int, string> headRows, ref bool isFirstRow, ref IDictionary<string, object> cell, int columnIndex)
         {
             if (useHeaderRow)
             {
                 if (isFirstRow) // for startcell logic
                 {
+                    var cellValueString = cellValue?.ToString();
                     if (!string.IsNullOrWhiteSpace(cellValueString))
                         headRows.Add(columnIndex, cellValueString);
                 }

@@ -1,4 +1,5 @@
-﻿using MiniExcelLibs.Utils;
+﻿using MiniExcelLibs.Attributes;
+using MiniExcelLibs.Utils;
 using MiniExcelLibs.Zip;
 using System;
 using System.Collections;
@@ -193,8 +194,7 @@ namespace MiniExcelLibs.OpenXml
                                     }
                                     else if (type == typeof(DateTime))
                                     {
-                                        //c.SetAttribute("t", "d");
-                                        cellValueStr = ((DateTime)cellValue).ToString("yyyy-MM-dd HH:mm:ss");
+                                        cellValueStr = ConvertToDateTimeString(propInfo, cellValue);
                                     }
 
                                     //TODO: ![image](https://user-images.githubusercontent.com/12729184/114848248-17735880-9e11-11eb-8258-63266bda0a1a.png)
@@ -229,8 +229,7 @@ namespace MiniExcelLibs.OpenXml
                                     }
                                     else if (type == typeof(DateTime))
                                     {
-                                        //c.SetAttribute("t", "d");
-                                        cellValueStr = ((DateTime)cellValue).ToString("yyyy-MM-dd HH:mm:ss");
+                                        cellValueStr = ConvertToDateTimeString(propInfo, cellValue);
                                     }
 
                                     //TODO: ![image](https://user-images.githubusercontent.com/12729184/114848248-17735880-9e11-11eb-8258-63266bda0a1a.png)
@@ -266,8 +265,7 @@ namespace MiniExcelLibs.OpenXml
                                     }
                                     else if (type == typeof(DateTime))
                                     {
-                                        //c.SetAttribute("t", "d");
-                                        cellValueStr = ((DateTime)cellValue).ToString("yyyy-MM-dd HH:mm:ss");
+                                        cellValueStr = ConvertToDateTimeString(propInfo, cellValue);
                                     }
 
                                     //TODO: ![image](https://user-images.githubusercontent.com/12729184/114848248-17735880-9e11-11eb-8258-63266bda0a1a.png)
@@ -364,6 +362,18 @@ namespace MiniExcelLibs.OpenXml
 
                 writer.Write(contents[1]);
             }
+        }
+
+        private static string ConvertToDateTimeString(KeyValuePair<string, PropInfo> propInfo, object cellValue)
+        {
+            string cellValueStr;
+            //TODO:c.SetAttribute("t", "d"); and custom format
+            var efa = propInfo.Value.PropertyInfo.GetCustomAttribute(typeof(ExcelFormatAttribute)) as ExcelFormatAttribute;
+            if (efa == null)
+                cellValueStr = (cellValue as DateTime?)?.ToString("yyyy-MM-dd HH:mm:ss");
+            else
+                cellValueStr = (cellValue as DateTime?)?.ToString(efa.Format);
+            return cellValueStr;
         }
 
         private static string CleanXml(string xml, string endPrefix)

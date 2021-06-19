@@ -17,6 +17,9 @@
 
 ---
 
+### 0.16.1
+- [New] SaveAsByTemplate 支持 DateTime 自定义格式 #255, contributor: [网虫 (landde) - Gitee.com](https://gitee.com/landde)
+
 ### 0.16.0
 - [New] Query 支持自定义日期格式转成 datetime 型别 #256
 - [Bug] 修正 Query 重复呼叫 convertValueByStyleFormat 方法造成资源浪费 #259

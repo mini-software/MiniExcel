@@ -27,6 +27,47 @@ namespace MiniExcelLibs.Tests
         }
 
         /// <summary>
+        /// [SaveAsByTemplate support DateTime custom format · Issue #255 · shps951023/MiniExcel]
+        /// (https://github.com/shps951023/MiniExcel/issues/255)
+        /// </summary>
+        [Fact]
+        public void Issue255()
+        {
+            //tempalte
+            {
+                var templatePath = PathHelper.GetSamplePath("xlsx/TestsIssue255_Template.xlsx");
+                var path = PathHelper.GetTempPath();
+                var value = new
+                {
+                    Issue255DTO = new[] {
+                        new Issue255DTO { Time = new DateTime(2021, 01, 01) } ,
+                        null
+                    }
+                };
+                MiniExcel.SaveAsByTemplate(path, templatePath, value);
+                var rows = MiniExcel.Query(path).ToList();
+                Assert.Equal("2021", rows[1].A.ToString());
+            }
+            //saveas
+            {
+                var path = PathHelper.GetTempPath();
+                var value = new[] { 
+                    new Issue255DTO { Time = new DateTime(2021, 01, 01) } ,
+                    null
+                };
+                MiniExcel.SaveAs(path, value);
+                var rows = MiniExcel.Query(path).ToList();
+                Assert.Equal("2021", rows[1].A.ToString());
+            }
+        }
+
+        public class Issue255DTO
+        {
+            [ExcelFormat("yyyy")]
+            public DateTime Time { get; set; }
+        }
+
+        /// <summary>
         /// [Dynamic Query custom format not using mapping format · Issue #256]
         /// (https://github.com/shps951023/MiniExcel/issues/256)
         /// </summary>

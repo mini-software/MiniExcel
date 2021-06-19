@@ -1179,7 +1179,7 @@ private IEnumerable<Dictionary<int, object>> ConvertToIntIndexRows(IEnumerable<o
 
 因为 MiniExcel 使用类似 JSON.NET 动态从值获取类别机制简化 API 操作，没有数据就无法获取类别。可以查看[ issue #133](https://github.com/shps951023/MiniExcel/issues/133) 了解。
 
-![image](https://user-images.githubusercontent.com/12729184/122639359-02c28200-d12c-11eb-9bd4-1d2971def927.png)
+![image](https://user-images.githubusercontent.com/12729184/122639771-546c0c00-d12e-11eb-800c-498db27889ca.png)
 
 
 

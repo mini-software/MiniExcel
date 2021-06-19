@@ -16,6 +16,9 @@
 
 ---
 
+### 0.16.1
+- [New] SaveAsByTemplate support DateTime custom format #255, contributor: [网虫 (landde) - Gitee.com](https://gitee.com/landde)
+
 ### 0.16.0
 - [New] Query support custom datetime format mapping datetime type #256
 - [Bug] Fix Query call convertValueByStyleFormat method repeatedly, cause waste of resources #259

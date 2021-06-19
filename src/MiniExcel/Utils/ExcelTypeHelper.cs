@@ -1,8 +1,8 @@
-﻿namespace MiniExcelLibs
+﻿namespace MiniExcelLibs.Utils
 {
     using System;
     using System.IO;
-    public static partial class MiniExcel
+    public static partial class ExcelTypeHelper
     {
         internal static ExcelType GetExcelType(string filePath, ExcelType excelType)
         {

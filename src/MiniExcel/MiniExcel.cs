@@ -16,7 +16,7 @@
             if (Path.GetExtension(path).ToLowerInvariant() == ".xlsm")
                 throw new NotSupportedException("MiniExcel SaveAs not support xlsm");
             using (FileStream stream = new FileStream(path, FileMode.CreateNew))
-                SaveAs(stream, value, printHeader, sheetName, GetExcelType(path, excelType), configuration);
+                SaveAs(stream, value, printHeader, sheetName, ExcelTypeHelper.GetExcelType(path, excelType), configuration);
         }
 
         public static void SaveAs(this Stream stream, object value, bool printHeader = true, string sheetName = "Sheet1", ExcelType excelType = ExcelType.XLSX, IConfiguration configuration = null)
@@ -31,25 +31,25 @@
         public static IEnumerable<T> Query<T>(string path, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null) where T : class, new()
         {
             using (var stream = Helpers.OpenSharedRead(path))
-                foreach (var item in Query<T>(stream, sheetName, GetExcelType(path, excelType), startCell, configuration))
+                foreach (var item in Query<T>(stream, sheetName, ExcelTypeHelper.GetExcelType(path, excelType), startCell, configuration))
                     yield return item; //Foreach yield return twice reason : https://stackoverflow.com/questions/66791982/ienumerable-extract-code-lazy-loading-show-stream-was-not-readable
         }
 
         public static IEnumerable<T> Query<T>(this Stream stream, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null) where T : class, new()
         {
-            return ExcelReaderFactory.GetProvider(stream, GetExcelType(stream, excelType)).Query<T>(sheetName, startCell, configuration);
+            return ExcelReaderFactory.GetProvider(stream, ExcelTypeHelper.GetExcelType(stream, excelType)).Query<T>(sheetName, startCell, configuration);
         }
 
         public static IEnumerable<dynamic> Query(string path, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null)
         {
             using (var stream = Helpers.OpenSharedRead(path))
-                foreach (var item in Query(stream, useHeaderRow, sheetName, GetExcelType(path, excelType), startCell, configuration))
+                foreach (var item in Query(stream, useHeaderRow, sheetName, ExcelTypeHelper.GetExcelType(path, excelType), startCell, configuration))
                     yield return item;
         }
 
         public static IEnumerable<dynamic> Query(this Stream stream, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null)
         {
-            return ExcelReaderFactory.GetProvider(stream, GetExcelType(stream, excelType)).Query(useHeaderRow, sheetName, startCell, configuration);
+            return ExcelReaderFactory.GetProvider(stream, ExcelTypeHelper.GetExcelType(stream, excelType)).Query(useHeaderRow, sheetName, startCell, configuration);
         }
 
         public static List<string> GetSheetNames(string path)
@@ -103,7 +103,7 @@
         public static DataTable QueryAsDataTable(string path, bool useHeaderRow = true, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null)
         {
             using (var stream = Helpers.OpenSharedRead(path))
-                return QueryAsDataTable(stream, useHeaderRow, sheetName, GetExcelType(path, excelType), startCell, configuration);
+                return QueryAsDataTable(stream, useHeaderRow, sheetName, ExcelTypeHelper.GetExcelType(path, excelType), startCell, configuration);
         }
 
         /// <summary>
@@ -116,7 +116,7 @@
 
             var dt = new DataTable(sheetName);
             var first = true;
-            var rows = ExcelReaderFactory.GetProvider(stream, GetExcelType(stream, excelType)).Query(useHeaderRow, sheetName, startCell, configuration);
+            var rows = ExcelReaderFactory.GetProvider(stream, ExcelTypeHelper.GetExcelType(stream, excelType)).Query(useHeaderRow, sheetName, startCell, configuration);
             foreach (IDictionary<string, object> row in rows)
             {
                 if (first)

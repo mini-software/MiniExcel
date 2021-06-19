@@ -1186,7 +1186,11 @@ private IEnumerable<Dictionary<int, object>> ConvertToIntIndexRows(IEnumerable<o
 }
 ```
 
+#### Q. 導出時數組為空時生成沒有標題空 Excel
 
+因為 MiniExcel 使用類似 JSON.NET 動態從值獲取類別機制簡化 API 操作，沒有數據就無法獲取類別。可以查看[ issue #133](https://github.com/shps951023/MiniExcel/issues/133) 了解。
+
+![image](https://user-images.githubusercontent.com/12729184/122639359-02c28200-d12c-11eb-9bd4-1d2971def927.png)
 
 
 

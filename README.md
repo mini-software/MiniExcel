@@ -1178,6 +1178,14 @@ private IEnumerable<Dictionary<int, object>> ConvertToIntIndexRows(IEnumerable<o
 }
 ```
 
+#### Q. No title empty excel is generated when the value is empty when exporting Excel
+
+Because MiniExcel uses a logic similar to JSON.NET to dynamically get type from values to simplify API operations, type cannot be knew without data. You can check [issue #133](https://github.com/shps951023/MiniExcel/issues/133) for understanding.
+
+![image](https://user-images.githubusercontent.com/12729184/122639359-02c28200-d12c-11eb-9bd4-1d2971def927.png)
+
+
+
 
 
 

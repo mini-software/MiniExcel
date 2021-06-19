@@ -12,12 +12,13 @@
 </div>
 
 <div align="center">
-🙌 Your <a href="https://github.com/shps951023/MiniExcel">Star</a> can make MiniExcel better 🙌
+🙌 <a href="https://github.com/shps951023/MiniExcel">Star</a> ，能幫助 MiniExcel 讓更多人看到 🙌
 </div>
 
 ---
 
 ### 0.16.0
+- [New] Query 支持自定義日期格式轉成 datetime 型別 #256
 - [Bug] 修正 Query 重複呼叫 convertValueByStyleFormat 方法造成資源浪費 #259
 
 ### 0.15.5

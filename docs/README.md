@@ -11,12 +11,13 @@
 </div>
 
 <div align="center">
-🙌 Your <a href="https://github.com/shps951023/MiniExcel">Star</a> can make MiniExcel better 🙌
+🙌 <a href="https://github.com/shps951023/MiniExcel">Star</a> can make MiniExcel better 🙌
 </div>
 
 ---
 
 ### 0.16.0
+- [New] Query support custom datetime format mapping datetime type #256
 - [Bug] Fix Query call convertValueByStyleFormat method repeatedly, cause waste of resources #259
 
 ### 0.15.5

@@ -7,7 +7,7 @@
 </div>
 
 <div align="center">
-<p>🙌 您的 <a href="https://github.com/shps951023/MiniExcel">Github Star</a> ，能帮助 MiniExcel 让更多人看到 🙌</p>
+<p>🙌 <a href="https://github.com/shps951023/MiniExcel">Star</a> ，能帮助 MiniExcel 让更多人看到 🙌</p>
 </div>
 
 <div align="center">

@@ -39,7 +39,7 @@ namespace MiniExcelLibs.Tests
                 var path = PathHelper.GetTempPath();
                 var value = new
                 {
-                    Issue255DTO = new[] {
+                    Issue255DTO = new Issue255DTO[] {
                         new Issue255DTO { Time = new DateTime(2021, 01, 01) } ,
                         null
                     }
@@ -53,7 +53,7 @@ namespace MiniExcelLibs.Tests
                 var path = PathHelper.GetTempPath();
                 var value = new[] { 
                     new Issue255DTO { Time = new DateTime(2021, 01, 01) } ,
-                    null
+                    null 
                 };
                 MiniExcel.SaveAs(path, value);
                 var rows = MiniExcel.Query(path).ToList();

@@ -27,15 +27,16 @@ namespace MiniExcelLibs.Tests
         }
 
         /// <summary>
-        /// [Dynamic Query custom format yyyy.mm.dd can't convert to datetime · Issue #256 · shps951023/MiniExcel]
+        /// [Dynamic Query custom format not using mapping format · Issue #256]
         /// (https://github.com/shps951023/MiniExcel/issues/256)
         /// </summary>
         [Fact]
         public void Issue256()
         {
             var path = PathHelper.GetSamplePath("xlsx/TestIssue256.xlsx");
-            var rows = MiniExcel.Query(path, true).ToList();
-
+            var rows = MiniExcel.Query(path, false).ToList();
+            Assert.Equal(new DateTime(2003, 4, 16), rows[1].A);
+            Assert.Equal(new DateTime(2004, 4, 16), rows[1].B);
         }
 
 

@@ -1,12 +1,25 @@
 ﻿namespace MiniExcelLibs.Utils
 {
     using System;
+    using System.Globalization;
 
-    /**
-     This Class Code from ExcelDataReader @MIT License
-     **/
-    internal static class DateTimeHelper
+    internal static partial class DateTimeHelper
     {
+        private static DateTime basicDate = new DateTime(2021, 01, 01);
+        public static bool isDateTimeFormat(string formatCode)
+        {
+            var isDatetimeFormat = DateTime.TryParseExact(basicDate.ToString(formatCode), formatCode, CultureInfo.InvariantCulture, DateTimeStyles.AllowLeadingWhite | DateTimeStyles.AllowTrailingWhite, out var date);
+            //Console.WriteLine($"format {formatCode} formatDate {date}");
+            if (basicDate != date)
+                isDatetimeFormat = false;
+            return isDatetimeFormat;
+        }
+    }
+
+    internal static partial class DateTimeHelper
+    {
+        /**Below Code from ExcelDataReader @MIT License**/
+
         // All OA dates must be greater than (not >=) OADateMinAsDouble
         public const double OADateMinAsDouble = -657435.0;
 

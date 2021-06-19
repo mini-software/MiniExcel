@@ -10,7 +10,8 @@
         private const string _ns = Config.SpreadsheetmlXmlns;
         private Dictionary<int, StyleRecord> _cellXfs = new Dictionary<int, StyleRecord>();
         private Dictionary<int, StyleRecord> _cellStyleXfs = new Dictionary<int, StyleRecord>();
-        private Dictionary<int, NumberFormatRecord> _numberFormatRecords = new Dictionary<int, NumberFormatRecord>();
+        private Dictionary<int, NumberFormatString> _customFormats = new Dictionary<int, NumberFormatString>();
+
         public ExcelOpenXmlStyles(ExcelOpenXmlZip zip)
         {
             using (var Reader = zip.GetXmlReader(@"xl/styles.xml"))
@@ -74,7 +75,15 @@
                                 int.TryParse(Reader.GetAttribute("numFmtId"), out var numFmtId);
                                 var formatCode = Reader.GetAttribute("formatCode");
 
-                                _numberFormatRecords.Add(numFmtId,new NumberFormatRecord(numFmtId, formatCode));
+
+                                //TODO: determine the type according to the format
+                                var type = typeof(string);
+                                if(DateTimeHelper.isDateTimeFormat(formatCode))
+                                {
+                                    type = typeof(DateTime?);
+                                }
+
+                                _customFormats.Add(numFmtId,new NumberFormatString(formatCode, type));
                                 Reader.Skip();
                             }
                             else if (!XmlReaderHelper.SkipContent(Reader))
@@ -98,6 +107,10 @@
                 if (Formats.TryGetValue(styleRecord.NumFmtId, out var numberFormat))
                 {
                     return numberFormat;
+                }
+                else if (_customFormats.TryGetValue(styleRecord.NumFmtId, out var customNumberFormat))
+                {
+                    return customNumberFormat;
                 }
                 return null;
             }
@@ -179,32 +192,18 @@
 
     internal class NumberFormatString
     {
-        public string FormatString { get; }
+        public string FormatCode { get; }
         public Type Type { get; set; }
-        public NumberFormatString(string formatString, Type type)
+        public NumberFormatString(string formatCode, Type type)
         {
-            FormatString = formatString;
+            FormatCode = formatCode;
             Type = type;
         }
-        public NumberFormatRecord NumberFormat { get; set; }
     }
 
     internal class StyleRecord
     {
         public int XfId { get; set; }
         public int NumFmtId { get; set; }
-    }
-
-    internal sealed class NumberFormatRecord
-    {
-        public NumberFormatRecord(int formatIndexInFile, string formatString)
-        {
-            FormatIndexInFile = formatIndexInFile;
-            FormatString = formatString;
-        }
-
-        public int FormatIndexInFile { get; }
-
-        public string FormatString { get; }
     }
 }

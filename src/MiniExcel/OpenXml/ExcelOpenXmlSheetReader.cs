@@ -3,6 +3,7 @@ using MiniExcelLibs.Zip;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Data;
 using System.Globalization;
 using System.IO;
 using System.IO.Compression;
@@ -564,6 +565,43 @@ namespace MiniExcelLibs.OpenXml
 
             return sheetRecords;
         }
+
+        internal static DataTable QueryAsDataTableImpl(Stream stream, bool useHeaderRow, ref string sheetName, ExcelType excelType, string startCell, IConfiguration configuration)
+        {
+            if (sheetName == null)
+                sheetName = stream.GetSheetNames().First();
+
+            var dt = new DataTable(sheetName);
+            var first = true;
+            var rows = ExcelReaderFactory.GetProvider(stream, ExcelTypeHelper.GetExcelType(stream, excelType)).Query(useHeaderRow, sheetName, startCell, configuration);
+            foreach (IDictionary<string, object> row in rows)
+            {
+                if (first)
+                {
+
+                    foreach (var key in row.Keys)
+                    {
+                        var column = new DataColumn(key, typeof(object)) { Caption = key };
+                        dt.Columns.Add(column);
+                    }
+
+                    dt.BeginLoadData();
+                    first = false;
+                }
+
+                var newRow = dt.NewRow();
+                foreach (var key in row.Keys)
+                {
+                    newRow[key] = row[key]; //TODO: optimize not using string key
+                }
+
+                dt.Rows.Add(newRow);
+            }
+
+            dt.EndLoadData();
+            return dt;
+        }
+
 
         private object ReadCellAndSetColumnIndex(XmlReader reader, ref int columnIndex, bool withoutCR, int startColumnIndex, string aR, string aT)
         {

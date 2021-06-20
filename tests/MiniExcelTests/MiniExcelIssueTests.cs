@@ -32,7 +32,7 @@ namespace MiniExcelLibs.Tests
         [Fact]
         public void TestIssue261()
         {
-            var csvPath = @"D:\git\MiniExcel\samples\csv\TestCsvToXlsx.csv";
+            var csvPath = PathHelper.GetSamplePath("csv/TestCsvToXlsx.csv");
             var xlsxPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString() + ".xlsx");
             CsvToXlsx(csvPath, xlsxPath);
             var rows = MiniExcel.Query(xlsxPath).ToList();

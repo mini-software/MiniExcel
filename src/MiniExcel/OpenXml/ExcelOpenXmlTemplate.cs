@@ -13,9 +13,10 @@ namespace MiniExcelLibs.OpenXml
     using System.Reflection;
     using System.Text;
     using System.Text.RegularExpressions;
+    using System.Threading.Tasks;
     using System.Xml;
 
-    internal partial class ExcelOpenXmlTemplate:IExcelTemplate
+    internal partial class ExcelOpenXmlTemplate:IExcelTemplate,IExcelTemplateAsync
     {
         private static readonly XmlNamespaceManager _ns;
         private static readonly Regex _isExpressionRegex;
@@ -66,7 +67,7 @@ namespace MiniExcelLibs.OpenXml
                 templateStream.CopyTo(stream);
 
                 var reader = new ExcelOpenXmlSheetReader(stream);
-                var _archive = new ExcelOpenXmlZip(stream, mode: ZipArchiveMode.Update, true, Encoding.UTF8);
+                using (var _archive = new ExcelOpenXmlZip(stream, mode: ZipArchiveMode.Update, true, Encoding.UTF8))
                 {
                     //read sharedString
                     var sharedStrings = reader.GetSharedStrings();
@@ -93,9 +94,17 @@ namespace MiniExcelLibs.OpenXml
                         }
                     }
                 }
-
-                _archive.ZipFile.Dispose();
             }
+        }
+
+        public Task SaveAsByTemplateAsync(string templatePath, object value)
+        {
+            return Task.Run(() => SaveAsByTemplate(templatePath, value));
+        }
+
+        public Task SaveAsByTemplateAsync(byte[] templateBtyes, object value)
+        {
+            return Task.Run(() => SaveAsByTemplate(templateBtyes, value));
         }
     }
 }

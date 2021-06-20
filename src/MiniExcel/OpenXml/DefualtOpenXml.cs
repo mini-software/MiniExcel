@@ -10,7 +10,7 @@ namespace MiniExcelLibs.OpenXml
 {
     internal static class DefualtOpenXml
     {
-        private readonly static UTF8Encoding Utf8WithBom = new System.Text.UTF8Encoding(true);
+        private readonly static UTF8Encoding Utf8WithBom = new UTF8Encoding(true);
 
         private static string DefaultRels = @"<?xml version=""1.0"" encoding=""utf-8""?>
 <Relationships xmlns=""http://schemas.openxmlformats.org/package/2006/relationships"">

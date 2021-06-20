@@ -6,11 +6,12 @@ using System.Data;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using static MiniExcelLibs.Utils.Helpers;
 
 namespace MiniExcelLibs.Csv
 {
-    internal class CsvWriter : IExcelWriter
+    internal class CsvWriter : IExcelWriter , IExcelWriterAsync
     {
         private Stream _stream;
 
@@ -82,7 +83,7 @@ namespace MiniExcelLibs.Csv
                     //if(mode == null)
                     //    throw new NotImplementedException($"Type {type?.Name} & genericType {genericType?.Name} not Implemented. please issue for me.");
 
-                    if (keys.Count() == 0 && props == null)
+                    if (keys.Count == 0 && props == null)
                     {
                         writer.Write(newLine);
                         return;
@@ -211,6 +212,12 @@ namespace MiniExcelLibs.Csv
                 writer.Write(newLine);
             }
         }
+
+        public Task SaveAsAsync(object value, string sheetName, bool printHeader, IConfiguration configuration)
+        {
+            return Task.Run(() => SaveAs(value, sheetName, printHeader, configuration));
+        }
+
     }
 
     internal static class CsvValueTostringHelper

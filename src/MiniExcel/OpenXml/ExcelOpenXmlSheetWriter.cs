@@ -8,6 +8,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using static MiniExcelLibs.Utils.Helpers;
 
 namespace MiniExcelLibs.OpenXml
@@ -18,7 +19,7 @@ namespace MiniExcelLibs.OpenXml
         public object Values { get; set; }
     }
 
-    internal class ExcelOpenXmlSheetWriter : IExcelWriter
+    internal class ExcelOpenXmlSheetWriter : IExcelWriter , IExcelWriterAsync
     {
         private readonly static UTF8Encoding _utf8WithBom = new System.Text.UTF8Encoding(true);
         private Stream _stream;
@@ -479,6 +480,11 @@ namespace MiniExcelLibs.OpenXml
             else
                 dimensionRef = $"A1:{Helpers.GetAlphabetColumnName(maxColumnIndex - 1)}{maxRowIndex}";
             return dimensionRef;
+        }
+
+        public Task SaveAsAsync(object value, string sheetName, bool printHeader, IConfiguration configuration)
+        {
+            return Task.Run(() => SaveAs(value, sheetName, printHeader, configuration));
         }
     }
 }

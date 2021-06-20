@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Diagnosers;
@@ -81,6 +82,20 @@ namespace MiniExcelLibs.Benchmarks
                     employees = Enumerable.Range(1, runCount).Select(s => new { name = "Jack", department = "HR" })
                 };
                 MiniExcel.SaveAsByTemplate(path, templatePath, value);
+            }
+        }
+
+        [Benchmark(Description = "MiniExcel Async Template Generate")]
+        public async Task MiniExcel_Template_Generate_Async_Test()
+        {
+            {
+                var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
+                const string templatePath = @"TestTemplateBasicIEmumerableFill.xlsx";
+                var value = new
+                {
+                    employees = Enumerable.Range(1, runCount).Select(s => new { name = "Jack", department = "HR" })
+                };
+                await MiniExcel.SaveAsByTemplateAsync(path, templatePath, value);
             }
         }
 
@@ -236,6 +251,16 @@ namespace MiniExcelLibs.Benchmarks
             File.Delete(path);
         }
 
+        [Benchmark(Description = "MiniExcel Async Create Xlsx")]
+        public async Task MiniExcelCreateAsyncTest()
+        {
+            var values = GetValues();
+            var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
+            using (var stream = File.Create(path))
+                await stream.SaveAsAsync(values);
+            File.Delete(path);
+        }
+
         [Benchmark(Description = "ClosedXml Create Xlsx")]
         public void ClosedXmlCreateTest()
         {
@@ -275,7 +300,7 @@ namespace MiniExcelLibs.Benchmarks
             var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
             // Create a spreadsheet document by supplying the filepath.
             // By default, AutoSave = true, Editable = true, and Type = xlsx.
-            
+
             using (SpreadsheetDocument spreadsheetDocument = SpreadsheetDocument.Create(path, SpreadsheetDocumentType.Workbook))
             {
                 // Add a WorkbookPart to the document.

@@ -11,10 +11,10 @@ using Xunit;
 
 namespace MiniExcelTests
 {
-    public class MiniExcelTemplateTests
+    public class MiniExcelTemplateAsyncTests
     {
         [Fact]
-        public void DatatableTemptyRowTest()
+        public async Task DatatableTemptyRowTest()
         {
             {
                 var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
@@ -35,7 +35,7 @@ namespace MiniExcelTests
                     ["managers"] = managers,
                     ["employees"] = employees
                 };
-                MiniExcel.SaveAsByTemplate(path, templatePath, value);
+                await MiniExcel.SaveAsByTemplateAsync(path, templatePath, value);
                 {
                     var rows = MiniExcel.Query(path).ToList();
 
@@ -64,7 +64,7 @@ namespace MiniExcelTests
                     ["managers"] = managers,
                     ["employees"] = employees
                 };
-                MiniExcel.SaveAsByTemplate(path, templatePath, value);
+                await MiniExcel.SaveAsByTemplateAsync(path, templatePath, value);
                 {
                     var rows = MiniExcel.Query(path).ToList();
 
@@ -75,7 +75,7 @@ namespace MiniExcelTests
         }
 
         [Fact]
-        public void DatatableTest()
+        public async Task DatatableTest()
         {
             var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
             var templatePath = @"../../../../../samples/xlsx/TestTemplateComplex.xlsx";
@@ -101,7 +101,7 @@ namespace MiniExcelTests
                 ["managers"] = managers,
                 ["employees"] = employees
             };
-            MiniExcel.SaveAsByTemplate(path, templatePath, value);
+            await MiniExcel.SaveAsByTemplateAsync(path, templatePath, value);
             {
                 var rows = MiniExcel.Query(path).ToList();
 
@@ -155,7 +155,7 @@ namespace MiniExcelTests
 
 
         [Fact]
-        public void DapperTemplateTest()
+        public async Task DapperTemplateTest()
         {
             var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
             var templatePath = @"../../../../../samples/xlsx/TestTemplateComplex.xlsx";
@@ -167,7 +167,7 @@ namespace MiniExcelTests
                 ["managers"] = connection.Query("select 'Jack' name,'HR' department union all select 'Loan','IT'"),
                 ["employees"] = connection.Query(@"select 'Wade' name,'HR' department union all select 'Felix','HR' union all select 'Eric','IT' union all select 'Keaton','IT'")
             };
-            MiniExcel.SaveAsByTemplate(path, templatePath, value);
+            await MiniExcel.SaveAsByTemplateAsync(path, templatePath, value);
 
             {
                 var rows = MiniExcel.Query(path).ToList();
@@ -222,7 +222,7 @@ namespace MiniExcelTests
 
 
         [Fact]
-        public void DictionaryTemplateTest()
+        public async Task DictionaryTemplateTest()
         {
             var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
             var templatePath = @"../../../../../samples/xlsx/TestTemplateComplex.xlsx";
@@ -241,7 +241,7 @@ namespace MiniExcelTests
                     new Dictionary<string, object>{["name"]="Keaton",["department"]="IT"}
                 }
             };
-            MiniExcel.SaveAsByTemplate(path, templatePath, value);
+            await MiniExcel.SaveAsByTemplateAsync(path, templatePath, value);
 
             {
                 var rows = MiniExcel.Query(path).ToList();
@@ -295,7 +295,7 @@ namespace MiniExcelTests
         }
 
         [Fact]
-        public void TestGithubProject()
+        public async Task TestGithubProject()
         {
             var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
             var templatePath = @"../../../../../samples/xlsx/TestTemplateGithubProjects.xlsx";
@@ -311,7 +311,7 @@ namespace MiniExcelTests
                 Projects = projects,
                 TotalStar = projects.Sum(s => s.Star)
             };
-            MiniExcel.SaveAsByTemplate(path, templatePath, value);
+            await MiniExcel.SaveAsByTemplateAsync(path, templatePath, value);
 
             var rows = MiniExcel.Query(path).ToList();
             Assert.Equal("ITWeiHan Github Projects", rows[0].B);
@@ -332,7 +332,7 @@ namespace MiniExcelTests
             public Guid? Guid { get; set; }
         }
         [Fact]
-        public void TestIEnumerableType()
+        public async Task TestIEnumerableType()
         {
             {
                 var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
@@ -350,7 +350,7 @@ namespace MiniExcelTests
                         poco
                     }
                 };
-                MiniExcel.SaveAsByTemplate(path, templatePath, value);
+                await MiniExcel.SaveAsByTemplateAsync(path, templatePath, value);
 
                 var rows = MiniExcel.Query<TestIEnumerableTypePoco>(path).ToList();
                 Assert.Equal(poco.@string, rows[0].@string);
@@ -401,7 +401,7 @@ namespace MiniExcelTests
         }
 
         [Fact]
-        public void TestTemplateTypeMapping()
+        public async Task TestTemplateTypeMapping()
         {
             {
                 var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
@@ -409,7 +409,7 @@ namespace MiniExcelTests
 
                 //1. By POCO
                 var value = new TestIEnumerableTypePoco { @string = "string", @int = 123, @decimal = decimal.Parse("123.45"), @double = (double)123.33, @datetime = new DateTime(2021, 4, 1), @bool = true, @Guid = Guid.NewGuid() };
-                MiniExcel.SaveAsByTemplate(path, templatePath, value);
+                await MiniExcel.SaveAsByTemplateAsync(path, templatePath, value);
 
                 var rows = MiniExcel.Query<TestIEnumerableTypePoco>(path).ToList();
                 Assert.Equal(value.@string, rows[0].@string);
@@ -426,7 +426,7 @@ namespace MiniExcelTests
         }
 
         [Fact]
-        public void TemplateCenterEmptyTest()
+        public async Task TemplateCenterEmptyTest()
         {
             var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
             var templatePath = @"../../../../../samples/xlsx/TestTemplateCenterEmpty.xlsx";
@@ -434,112 +434,7 @@ namespace MiniExcelTests
             {
                 Tests = Enumerable.Range(1, 5).Select((s, i) => new { test1 = i, test2 = i })
             };
-            MiniExcel.SaveAsByTemplate(path, templatePath, value);
-        }
-
-        [Fact]
-        public void TemplateBasiTest()
-        {
-            {
-                var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
-                var templatePath = @"../../../../../samples/xlsx/TestTemplateEasyFill.xlsx";
-                // 1. By POCO
-                var value = new
-                {
-                    Name = "Jack",
-                    CreateDate = new DateTime(2021, 01, 01),
-                    VIP = true,
-                    Points = 123
-                };
-                MiniExcel.SaveAsByTemplate(path, templatePath, value);
-
-                var rows = MiniExcel.Query(path).ToList();
-                Assert.Equal("Jack", rows[1].A);
-                Assert.Equal("2021-01-01 00:00:00", rows[1].B);
-                Assert.Equal(true, rows[1].C);
-                Assert.Equal(123, rows[1].D);
-                Assert.Equal("Jack has 123 points", rows[1].E);
-
-                var demension = Helpers.GetFirstSheetDimensionRefValue(path);
-                Assert.Equal("A1:E2", demension);
-            }
-
-            {
-                var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
-                var templatePath = @"../../../../../samples/xlsx/TestTemplateEasyFill.xlsx";
-                var templateBytes = File.ReadAllBytes(templatePath);
-                // 1. By POCO
-                var value = new
-                {
-                    Name = "Jack",
-                    CreateDate = new DateTime(2021, 01, 01),
-                    VIP = true,
-                    Points = 123
-                };
-                MiniExcel.SaveAsByTemplate(path, templateBytes, value);
-
-                var rows = MiniExcel.Query(path).ToList();
-                Assert.Equal("Jack", rows[1].A);
-                Assert.Equal("2021-01-01 00:00:00", rows[1].B);
-                Assert.Equal(true, rows[1].C);
-                Assert.Equal(123, rows[1].D);
-                Assert.Equal("Jack has 123 points", rows[1].E);
-
-                var demension = Helpers.GetFirstSheetDimensionRefValue(path);
-                Assert.Equal("A1:E2", demension);
-            }
-
-            {
-                var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
-                var templatePath = @"../../../../../samples/xlsx/TestTemplateEasyFill.xlsx";
-                var templateBytes = File.ReadAllBytes(templatePath);
-                // 1. By POCO
-                var value = new
-                {
-                    Name = "Jack",
-                    CreateDate = new DateTime(2021, 01, 01),
-                    VIP = true,
-                    Points = 123
-                };
-                using (var stream = File.Create(path))
-                {
-                    stream.SaveAsByTemplate(templateBytes, value);
-                }
-
-                var rows = MiniExcel.Query(path).ToList();
-                Assert.Equal("Jack", rows[1].A);
-                Assert.Equal("2021-01-01 00:00:00", rows[1].B);
-                Assert.Equal(true, rows[1].C);
-                Assert.Equal(123, rows[1].D);
-                Assert.Equal("Jack has 123 points", rows[1].E);
-
-                var demension = Helpers.GetFirstSheetDimensionRefValue(path);
-                Assert.Equal("A1:E2", demension);
-            }
-
-            {
-                var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
-                var templatePath = @"../../../../../samples/xlsx/TestTemplateEasyFill.xlsx";
-                // 2. By Dictionary
-                var value = new Dictionary<string, object>()
-                {
-                    ["Name"] = "Jack",
-                    ["CreateDate"] = new DateTime(2021, 01, 01),
-                    ["VIP"] = true,
-                    ["Points"] = 123
-                };
-                MiniExcel.SaveAsByTemplate(path, templatePath, value);
-
-                var rows = MiniExcel.Query(path).ToList();
-                Assert.Equal("Jack", rows[1].A);
-                Assert.Equal("2021-01-01 00:00:00", rows[1].B);
-                Assert.Equal(true, rows[1].C);
-                Assert.Equal(123, rows[1].D);
-                Assert.Equal("Jack has 123 points", rows[1].E);
-
-                var demension = Helpers.GetFirstSheetDimensionRefValue(path);
-                Assert.Equal("A1:E2", demension);
-            }
+            await MiniExcel.SaveAsByTemplateAsync(path, templatePath, value);
         }
 
         [Fact]
@@ -633,7 +528,7 @@ namespace MiniExcelTests
                     ["VIP"] = true,
                     ["Points"] = 123
                 };
-                MiniExcel.SaveAsByTemplate(path, templatePath, value);
+                await MiniExcel.SaveAsByTemplateAsync(path, templatePath, value);
 
                 var rows = MiniExcel.Query(path).ToList();
                 Assert.Equal("Jack", rows[1].A);
@@ -648,7 +543,7 @@ namespace MiniExcelTests
         }
 
         [Fact]
-        public void TestIEnumerable()
+        public async Task TestIEnumerable()
         {
             {
                 var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
@@ -666,7 +561,7 @@ namespace MiniExcelTests
                         new {name="Loan",department="IT"}
                     }
                 };
-                MiniExcel.SaveAsByTemplate(path, templatePath, value);
+                await MiniExcel.SaveAsByTemplateAsync(path, templatePath, value);
 
                 var demension = Helpers.GetFirstSheetDimensionRefValue(path);
                 Assert.Equal("A1:B7", demension);
@@ -688,7 +583,7 @@ namespace MiniExcelTests
                         new {name="Loan",department="IT"}
                     }
                 };
-                MiniExcel.SaveAsByTemplate(path, templatePath, value);
+                await MiniExcel.SaveAsByTemplateAsync(path, templatePath, value);
 
                 var demension = Helpers.GetFirstSheetDimensionRefValue(path);
                 Assert.Equal("A1:B7", demension);
@@ -714,7 +609,7 @@ namespace MiniExcelTests
                 {
                     ["employees"] = dt
                 };
-                MiniExcel.SaveAsByTemplate(path, templatePath, value);
+                await MiniExcel.SaveAsByTemplateAsync(path, templatePath, value);
 
                 var demension = Helpers.GetFirstSheetDimensionRefValue(path);
                 Assert.Equal("A1:B7", demension);
@@ -722,7 +617,7 @@ namespace MiniExcelTests
         }
 
         [Fact]
-        public void TemplateTest()
+        public async Task TemplateTest()
         {
             {
                 var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
@@ -743,7 +638,7 @@ namespace MiniExcelTests
                         new {name="Keaton",department="IT"}
                     }
                 };
-                MiniExcel.SaveAsByTemplate(path, templatePath, value);
+                await MiniExcel.SaveAsByTemplateAsync(path, templatePath, value);
 
                 {
                     var rows = MiniExcel.Query(path).ToList();
@@ -816,7 +711,7 @@ namespace MiniExcelTests
                         new {name="Keaton",department="IT"}
                     }
                 };
-                MiniExcel.SaveAsByTemplate(path, templatePath, value);
+                await MiniExcel.SaveAsByTemplateAsync(path, templatePath, value);
 
                 var rows = MiniExcel.Query(path).ToList();
                 Assert.Equal("FooCompany", rows[0].A);

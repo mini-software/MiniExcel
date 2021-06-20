@@ -1105,7 +1105,17 @@ public class Order
 
 ![image](https://user-images.githubusercontent.com/12729184/118939964-d24bc480-b982-11eb-88dd-f06655f6121a.png)
 
+#### 6. CSV 轉成 Xlsx
 
+```csharp
+public void CsvToXlsx(string csvPath, string xlsxPath)
+{
+	var value = MiniExcel.Query(csvPath, true);
+	MiniExcel.SaveAs(xlsxPath, value);
+}
+```
+
+![image](https://user-images.githubusercontent.com/12729184/122674182-8486de00-d206-11eb-8f96-58b22ebbefc3.png)
 
 
 

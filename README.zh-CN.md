@@ -1094,6 +1094,20 @@ public class Order
 
 
 
+#### 6. CSV 转成 Xlsx
+
+```csharp
+public void CsvToXlsx(string csvPath, string xlsxPath)
+{
+	var value = MiniExcel.Query(csvPath, true);
+	MiniExcel.SaveAs(xlsxPath, value);
+}
+```
+
+![image](https://user-images.githubusercontent.com/12729184/122674182-8486de00-d206-11eb-8f96-58b22ebbefc3.png)
+
+
+
 
 
 ### FAQ 常见问题

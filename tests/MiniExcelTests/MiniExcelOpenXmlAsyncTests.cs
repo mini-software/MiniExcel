@@ -157,28 +157,28 @@ namespace MiniExcelLibs.Tests
                 Assert.Equal("d", rows[0]["D"]);
 
                 Assert.Equal(1d, rows[1]["A"]);
-                Assert.Equal(null, rows[1]["B"]);
+                Assert.Null(rows[1]["B"]);
                 Assert.Equal(3d, rows[1]["C"]);
-                Assert.Equal(null, rows[1]["D"]);
+                Assert.Null(rows[1]["D"]);
 
-                Assert.Equal(null, rows[2]["A"]);
+                Assert.Null(rows[2]["A"]);
                 Assert.Equal(2d, rows[2]["B"]);
-                Assert.Equal(null, rows[2]["C"]);
+                Assert.Null(rows[2]["C"]);
                 Assert.Equal(4d, rows[2]["D"]);
 
-                Assert.Equal(null, rows[3]["A"]);
-                Assert.Equal(null, rows[3]["B"]);
-                Assert.Equal(null, rows[3]["C"]);
-                Assert.Equal(null, rows[3]["D"]);
+                Assert.Null(rows[3]["A"]);
+                Assert.Null(rows[3]["B"]);
+                Assert.Null(rows[3]["C"]);
+                Assert.Null(rows[3]["D"]);
 
                 Assert.Equal(1d, rows[4]["A"]);
-                Assert.Equal(null, rows[4]["B"]);
+                Assert.Null(rows[4]["B"]);
                 Assert.Equal(3d, rows[4]["C"]);
-                Assert.Equal(null, rows[4]["D"]);
+                Assert.Null(rows[4]["D"]);
 
-                Assert.Equal(null, rows[5]["A"]);
+                Assert.Null(rows[5]["A"]);
                 Assert.Equal(2d, rows[5]["B"]);
-                Assert.Equal(null, rows[5]["C"]);
+                Assert.Null(rows[5]["C"]);
                 Assert.Equal(4d, rows[5]["D"]);
 
             }
@@ -188,28 +188,28 @@ namespace MiniExcelLibs.Tests
                 var d = await stream.QueryAsync(useHeaderRow: true);
                 var rows = d.ToList();
                 Assert.Equal(1d, rows[0]["a"]);
-                Assert.Equal(null, rows[0]["b"]);
+                Assert.Null(rows[0]["b"]);
                 Assert.Equal(3d, rows[0]["c"]);
-                Assert.Equal(null, rows[0]["d"]);
+                Assert.Null(rows[0]["d"]);
 
-                Assert.Equal(null, rows[1]["a"]);
+                Assert.Null(rows[1]["a"]);
                 Assert.Equal(2d, rows[1]["b"]);
-                Assert.Equal(null, rows[1]["c"]);
+                Assert.Null(rows[1]["c"]);
                 Assert.Equal(4d, rows[1]["d"]);
 
-                Assert.Equal(null, rows[2]["a"]);
-                Assert.Equal(null, rows[2]["b"]);
-                Assert.Equal(null, rows[2]["c"]);
-                Assert.Equal(null, rows[2]["d"]);
+                Assert.Null(rows[2]["a"]);
+                Assert.Null(rows[2]["b"]);
+                Assert.Null(rows[2]["c"]);
+                Assert.Null(rows[2]["d"]);
 
                 Assert.Equal(1d, rows[3]["a"]);
-                Assert.Equal(null, rows[3]["b"]);
+                Assert.Null(rows[3]["b"]);
                 Assert.Equal(3d, rows[3]["c"]);
-                Assert.Equal(null, rows[3]["d"]);
+                Assert.Null(rows[3]["d"]);
 
-                Assert.Equal(null, rows[4]["a"]);
+                Assert.Null(rows[4]["a"]);
                 Assert.Equal(2d, rows[4]["b"]);
-                Assert.Equal(null, rows[4]["c"]);
+                Assert.Null(rows[4]["c"]);
                 Assert.Equal(4d, rows[4]["d"]);
             }
         }
@@ -408,9 +408,9 @@ namespace MiniExcelLibs.Tests
 
                 Assert.Equal(1d, rows[0]["A"]);
                 //Assert.Equal(@""" <> +}{/nHello World]", (string)rows[0].B);
-                Assert.Equal(null, rows[0]["C"]);
-                Assert.Equal(null, rows[0]["D"]);
-                Assert.Equal(null, rows[0]["E"]);
+                Assert.Null(rows[0]["C"]);
+                Assert.Null(rows[0]["D"]);
+                Assert.Null(rows[0]["E"]);
 
                 Assert.Equal(1d, rows[1]["A"]);
                 Assert.Equal("\"<>+}{\\nHello World", rows[1]["B"]);
@@ -610,8 +610,8 @@ namespace MiniExcelLibs.Tests
                         Assert.Equal(2, rows.Count);
                         Assert.Equal(@"""<>+-*//}{\\n", rows[0]["a"]);
                         Assert.Equal(1234567890d,rows[0]["b"]);
-                        Assert.Equal(null,rows[0]["c"]);
-                        Assert.Equal(null,rows[0]["d"]);
+                        Assert.Null(rows[0]["c"]);
+                        Assert.Null(rows[0]["d"]);
                     }
 
                     using (var stream = File.OpenRead(path))

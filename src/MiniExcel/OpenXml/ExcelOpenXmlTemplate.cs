@@ -67,7 +67,7 @@ namespace MiniExcelLibs.OpenXml
                 templateStream.CopyTo(stream);
 
                 var reader = new ExcelOpenXmlSheetReader(stream);
-                using (var _archive = new ExcelOpenXmlZip(stream, mode: ZipArchiveMode.Update, true, Encoding.UTF8))
+                var _archive = new ExcelOpenXmlZip(stream, mode: ZipArchiveMode.Update, true, Encoding.UTF8);
                 {
                     //read sharedString
                     var sharedStrings = reader.GetSharedStrings();
@@ -94,6 +94,8 @@ namespace MiniExcelLibs.OpenXml
                         }
                     }
                 }
+                
+                _archive.ZipFile.Dispose();
             }
         }
 

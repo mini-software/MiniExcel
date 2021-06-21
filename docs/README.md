@@ -16,6 +16,9 @@
 
 ---
 
+### 0.17.0
+- [New] Support Async/Task #52, contributor: [isdaniel ( SHIH,BING-SIOU)](https://github.com/isdaniel)
+
 ### 0.16.1
 - [New] SaveAsByTemplate support DateTime custom format #255, contributor: [网虫 (landde) - Gitee.com](https://gitee.com/landde)
 

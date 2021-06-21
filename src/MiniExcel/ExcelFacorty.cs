@@ -7,7 +7,7 @@
 
     internal class ExcelWriterFactory
     {
-        internal static IExcelWriter GetProvider(Stream stream,ExcelType excelType)
+        internal static IExcelWriterAsync GetProvider(Stream stream,ExcelType excelType)
         {
             switch (excelType)
             {
@@ -23,7 +23,7 @@
 
     internal class ExcelReaderFactory
     { 
-        internal static IExcelReader GetProvider(Stream stream, ExcelType excelType)
+        internal static IExcelReaderAsync GetProvider(Stream stream, ExcelType excelType)
         {
             switch (excelType)
             {
@@ -39,7 +39,7 @@
 
     internal class ExcelTemplateFactory
     {
-        internal static IExcelTemplate GetProvider(Stream stream, ExcelType excelType= ExcelType.XLSX)
+        internal static IExcelTemplateAsync GetProvider(Stream stream, ExcelType excelType= ExcelType.XLSX)
         {
             switch (excelType)
             {

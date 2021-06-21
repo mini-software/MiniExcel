@@ -8,12 +8,13 @@ using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Xml;
 using static MiniExcelLibs.Utils.Helpers;
 
 namespace MiniExcelLibs.OpenXml
 {
-    internal class ExcelOpenXmlSheetReader : IExcelReader
+    internal class ExcelOpenXmlSheetReader : IExcelReader, IExcelReaderAsync
     {
         private const string _ns = Config.SpreadsheetmlXmlns;
         private List<SheetRecord> _sheetRecords;
@@ -705,6 +706,16 @@ namespace MiniExcelLibs.OpenXml
                     value = rawValue;
                     return;
             }
+        }
+
+        public Task<IEnumerable<IDictionary<string, object>>> QueryAsync(bool UseHeaderRow, string sheetName, string startCell, IConfiguration configuration)
+        {
+            return Task.Run(() => Query(UseHeaderRow, sheetName, startCell, configuration));
+        }
+
+        public Task<IEnumerable<T>> QueryAsync<T>(string sheetName, string startCell, IConfiguration configuration) where T : class, new()
+        {
+            return Task.Run(() => Query<T>(sheetName, startCell, configuration));
         }
     }
 }

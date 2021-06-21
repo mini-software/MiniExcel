@@ -14,7 +14,7 @@
         {
             var method = (new System.Diagnostics.StackTrace()).GetFrame(1).GetMethod();
 
-            var path = Path.Combine(Path.GetTempPath(), $"{method.DeclaringType.Name}_{method.Name}.{extension}");
+            var path = Path.Combine(Path.GetTempPath(), $"{method.DeclaringType.Name}_{method.Name}.{extension}").Replace("<", string.Empty).Replace(">", string.Empty);
             if (File.Exists(path))
                 File.Delete(path);
             return path;

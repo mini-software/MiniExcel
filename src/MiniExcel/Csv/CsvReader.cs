@@ -4,11 +4,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using static MiniExcelLibs.Utils.Helpers;
 
 namespace MiniExcelLibs.Csv
 {
-    internal class CsvReader : IExcelReader
+    internal class CsvReader : IExcelReader , IExcelReaderAsync
     {
         private Stream _stream;
         public CsvReader(Stream stream)
@@ -126,6 +127,16 @@ namespace MiniExcelLibs.Csv
             return Regex.Split(row, $"[\t{cf.Seperator}](?=(?:[^\"]|\"[^\"]*\")*$)")
                 .Select(s => Regex.Replace(s.Replace("\"\"", "\""), "^\"|\"$", "")).ToArray();
             //this code from S.O : https://stackoverflow.com/a/11365961/9131476
+        }
+
+        public Task<IEnumerable<IDictionary<string, object>>> QueryAsync(bool UseHeaderRow, string sheetName, string startCell, IConfiguration configuration)
+        {
+            return Task.Run(() => Query(UseHeaderRow, sheetName, startCell, configuration));
+        }
+
+        public Task<IEnumerable<T>> QueryAsync<T>(string sheetName, string startCell, IConfiguration configuration) where T : class, new()
+        {
+            return Task.Run(() => Query<T>(sheetName, startCell, configuration));
         }
     }
 }

@@ -27,6 +27,34 @@ namespace MiniExcelLibs.Tests
         }
 
         /// <summary>
+        /// [Convert csv to xlsx · Issue #261 · shps951023/MiniExcel](https://github.com/shps951023/MiniExcel/issues/261)
+        /// </summary>
+        [Fact]
+        public void TestIssue261()
+        {
+            var csvPath = PathHelper.GetSamplePath("csv/TestCsvToXlsx.csv");
+            var xlsxPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString() + ".xlsx");
+            CsvToXlsx(csvPath, xlsxPath);
+            var rows = MiniExcel.Query(xlsxPath).ToList();
+            Assert.Equal("Name", rows[0].A);
+            Assert.Equal("Jack", rows[1].A);
+            Assert.Equal("Neo", rows[2].A);
+            Assert.Null(rows[3].A);
+            Assert.Null(rows[4].A);
+            Assert.Equal("Age", rows[0].B);
+            Assert.Equal("34", rows[1].B);
+            Assert.Equal("26", rows[2].B);
+            Assert.Null(rows[3].B);
+            Assert.Null(rows[4].B);
+        }
+
+        public void CsvToXlsx(string csvPath, string xlsxPath)
+        {
+            var value = MiniExcel.Query(csvPath, true);
+            MiniExcel.SaveAs(xlsxPath, value);
+        }
+
+        /// <summary>
         /// [SaveAsByTemplate support DateTime custom format · Issue #255 · shps951023/MiniExcel]
         /// (https://github.com/shps951023/MiniExcel/issues/255)
         /// </summary>

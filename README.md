@@ -829,6 +829,28 @@ MiniExcel.SaveAs(path, value,excelType:ExcelType.CSV, configuration: config);
 
 
 
+###  Async
+
+ v0.17.0 support Async (thanks isdaniel ( SHIH,BING-SIOU)](https://github.com/isdaniel))
+
+```csharp
+public static Task SaveAsAsync(string path, object value, bool printHeader = true, string sheetName = "Sheet1", ExcelType excelType = ExcelType.UNKNOWN, IConfiguration configuration = null)
+public static Task SaveAsAsync(this Stream stream, object value, bool printHeader = true, string sheetName = "Sheet1", ExcelType excelType = ExcelType.XLSX, IConfiguration configuration = null)
+public static Task<IEnumerable<dynamic>> QueryAsync(string path, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null)
+public static Task<IEnumerable<T>> QueryAsync<T>(this Stream stream, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null) where T : class, new()    
+public static Task<IEnumerable<T>> QueryAsync<T>(string path, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null) where T : class, new() 
+public static Task<IEnumerable<IDictionary<string, object>>> QueryAsync(this Stream stream, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null)
+public static Task SaveAsByTemplateAsync(this Stream stream, string templatePath, object value)
+public static Task SaveAsByTemplateAsync(this Stream stream, byte[] templateBytes, object value)    
+public static Task SaveAsByTemplateAsync(string path, string templatePath, object value)
+public static Task SaveAsByTemplateAsync(string path, byte[] templateBytes, object value) 
+public static Task<DataTable> QueryAsDataTableAsync(string path, bool useHeaderRow = true, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null)
+```
+
+
+
+
+
 ### Examples:
 
 #### 1. SQLite & Dapper `Large Size File` SQL Insert Avoid OOM

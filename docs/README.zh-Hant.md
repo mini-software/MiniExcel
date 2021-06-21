@@ -17,6 +17,9 @@
 
 ---
 
+### 0.17.0
+- [New] 支持 Async/Task #52, contributor: [isdaniel ( SHIH,BING-SIOU)](https://github.com/isdaniel)
+
 ### 0.16.1
 - [New] SaveAsByTemplate 支持 DateTime 自定義格式 #255, contributor: [网虫 (landde) - Gitee.com](https://gitee.com/landde)
 

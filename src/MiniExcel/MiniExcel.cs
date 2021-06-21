@@ -20,19 +20,9 @@
                 SaveAs(stream, value, printHeader, sheetName, ExcelTypeHelper.GetExcelType(path, excelType), configuration);
         }
 
-        public static Task SaveAsAsync(string path, object value, bool printHeader = true, string sheetName = "Sheet1", ExcelType excelType = ExcelType.UNKNOWN, IConfiguration configuration = null)
-        {
-            return Task.Run(() => SaveAs(path, value, printHeader, sheetName, excelType , configuration));
-        }
-
         public static void SaveAs(this Stream stream, object value, bool printHeader = true, string sheetName = "Sheet1", ExcelType excelType = ExcelType.XLSX, IConfiguration configuration = null)
         {
             GetWriterProvider(stream, sheetName, excelType).SaveAs(value, sheetName, printHeader, configuration);
-        }
-
-        public static Task SaveAsAsync(this Stream stream, object value, bool printHeader = true, string sheetName = "Sheet1", ExcelType excelType = ExcelType.XLSX, IConfiguration configuration = null)
-        {
-            return GetWriterProvider(stream, sheetName, excelType).SaveAsAsync(value, sheetName, printHeader, configuration);
         }
 
         public static IEnumerable<T> Query<T>(string path, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null) where T : class, new()
@@ -47,21 +37,6 @@
             return ExcelReaderFactory.GetProvider(stream, ExcelTypeHelper.GetExcelType(stream, excelType)).Query<T>(sheetName, startCell, configuration);
         }
 
-        public static Task<IEnumerable<dynamic>> QueryAsync(string path, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null)
-        {
-            return Task.Run(() => Query(path, useHeaderRow, sheetName, excelType, startCell, configuration));
-        }
-
-        public static Task<IEnumerable<T>> QueryAsync<T>(this Stream stream, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null) where T : class, new()
-        {
-            return ExcelReaderFactory.GetProvider(stream, ExcelTypeHelper.GetExcelType(stream, excelType)).QueryAsync<T>(sheetName, startCell, configuration);
-        }
-
-        public static Task<IEnumerable<T>> QueryAsync<T>(string path, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null) where T : class, new()
-        {
-            return Task.Run(() => Query<T>(path, sheetName, excelType, startCell, configuration));
-        }
-
         public static IEnumerable<dynamic> Query(string path, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null)
         {
             using (var stream = Helpers.OpenSharedRead(path))
@@ -72,34 +47,6 @@
         public static IEnumerable<dynamic> Query(this Stream stream, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null)
         {
             return ExcelReaderFactory.GetProvider(stream, ExcelTypeHelper.GetExcelType(stream, excelType)).Query(useHeaderRow, sheetName, startCell, configuration);
-        }
-
-        public static Task<IEnumerable<IDictionary<string, object>>> QueryAsync(this Stream stream, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null)
-        {
-            return GetReaderProvider(stream, excelType).QueryAsync(useHeaderRow, sheetName, startCell, configuration);
-        }
-
-        public static List<string> GetSheetNames(string path)
-        {
-            using (var stream = Helpers.OpenSharedRead(path))
-                return GetSheetNames(stream);
-        }
-
-        public static List<string> GetSheetNames(this Stream stream)
-        {
-            var archive = new ExcelOpenXmlZip(stream);
-            return ExcelOpenXmlSheetReader.GetWorkbookRels(archive.Entries).Select(s => s.Name).ToList();
-        }
-
-        public static ICollection<string> GetColumns(string path, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null)
-        {
-            using (var stream = Helpers.OpenSharedRead(path))
-                return GetColumns(stream, useHeaderRow, sheetName, excelType, startCell, configuration);
-        }
-
-        public static ICollection<string> GetColumns(this Stream stream, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null)
-        {
-            return (Query(stream, useHeaderRow, sheetName, excelType, startCell, configuration).FirstOrDefault() as IDictionary<string, object>)?.Keys;
         }
 
         public static void SaveAsByTemplate(string path, string templatePath, object value)
@@ -124,27 +71,6 @@
             ExcelTemplateFactory.GetProvider(stream).SaveAsByTemplate(templateBytes, value);
         }
 
-        public static Task SaveAsByTemplateAsync(this Stream stream, string templatePath, object value)
-        {
-            return ExcelTemplateFactory.GetProvider(stream).SaveAsByTemplateAsync(templatePath, value);
-        }
-
-        public static Task SaveAsByTemplateAsync(this Stream stream, byte[] templateBytes, object value)
-        {
-            return ExcelTemplateFactory.GetProvider(stream).SaveAsByTemplateAsync(templateBytes, value);
-        }
-
-        public static Task SaveAsByTemplateAsync(string path, string templatePath, object value)
-        {
-            return Task.Run(() => SaveAsByTemplate(path, templatePath, value));
-        }
-
-        public static Task SaveAsByTemplateAsync(string path, byte[] templateBytes, object value)
-        {
-            return Task.Run(() => SaveAsByTemplate(path, templateBytes, value));
-        }
-
-
         /// <summary>
         /// QueryAsDataTable is not recommended, because it'll load all data into memory.
         /// </summary>
@@ -154,10 +80,6 @@
                 return QueryAsDataTable(stream, useHeaderRow, sheetName, ExcelTypeHelper.GetExcelType(path, excelType), startCell, configuration);
         }
 
-        public static Task<DataTable> QueryAsDataTableAsync(string path, bool useHeaderRow = true, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null)
-        {
-            return Task.Run(() => QueryAsDataTable(path, useHeaderRow, sheetName, ExcelTypeHelper.GetExcelType(path, excelType), startCell, configuration));
-        }
         /// <summary>
         /// QueryAsDataTable is not recommended, because it'll load all data into memory.
         /// </summary>
@@ -166,19 +88,27 @@
             return ExcelOpenXmlSheetReader.QueryAsDataTableImpl(stream, useHeaderRow, ref sheetName, excelType, startCell, configuration);
         }
 
-        private static IExcelWriterAsync GetWriterProvider(Stream stream, string sheetName, ExcelType excelType)
+        public static List<string> GetSheetNames(string path)
         {
-            if (string.IsNullOrEmpty(sheetName))
-                throw new InvalidDataException("Sheet name can not be empty or null");
-            if (excelType == ExcelType.UNKNOWN)
-                throw new InvalidDataException("Please specify excelType");
-
-            return ExcelWriterFactory.GetProvider(stream, excelType);
+            using (var stream = Helpers.OpenSharedRead(path))
+                return GetSheetNames(stream);
         }
 
-        private static IExcelReaderAsync GetReaderProvider(Stream stream, ExcelType excelType)
+        public static List<string> GetSheetNames(this Stream stream)
         {
-            return ExcelReaderFactory.GetProvider(stream, ExcelTypeHelper.GetExcelType(stream, excelType));
+            var archive = new ExcelOpenXmlZip(stream);
+            return ExcelOpenXmlSheetReader.GetWorkbookRels(archive.Entries).Select(s => s.Name).ToList();
+        }
+
+        public static ICollection<string> GetColumns(string path, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null)
+        {
+            using (var stream = Helpers.OpenSharedRead(path))
+                return GetColumns(stream, useHeaderRow, sheetName, excelType, startCell, configuration);
+        }
+
+        public static ICollection<string> GetColumns(this Stream stream, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null)
+        {
+            return (Query(stream, useHeaderRow, sheetName, excelType, startCell, configuration).FirstOrDefault() as IDictionary<string, object>)?.Keys;
         }
     }
 }

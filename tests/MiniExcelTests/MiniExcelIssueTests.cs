@@ -48,7 +48,7 @@ namespace MiniExcelLibs.Tests
             Assert.Null(rows[4].B);
         }
 
-        public void CsvToXlsx(string csvPath, string xlsxPath)
+        internal static void CsvToXlsx(string csvPath, string xlsxPath)
         {
             var value = MiniExcel.Query(csvPath, true);
             MiniExcel.SaveAs(xlsxPath, value);

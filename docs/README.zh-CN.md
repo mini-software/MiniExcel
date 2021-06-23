@@ -17,6 +17,10 @@
 
 ---
 
+### 0.17.1
+- [New] 增加 QueryAsDataTableAsync(this Stream stream..)
+- [OPT] 强型别 Query 转型错误信息能知道在哪一行列出错 [#I3X2ZL](https://gitee.com/dotnetchina/MiniExcel/issues/I3X2ZL)
+
 ### 0.17.0
 - [New] 支持 Async/Task #52, contributor: [isdaniel ( SHIH,BING-SIOU)](https://github.com/isdaniel)
 

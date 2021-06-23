@@ -403,9 +403,11 @@ namespace MiniExcelLibs.OpenXml
         {
             var type = typeof(T);
 
-            var first = true;
             List<ExcelCustomPropertyInfo> props = null;
             var headers = Query(false, sheetName, startCell, configuration).FirstOrDefault()?.Values?.Select(s => s?.ToString())?.ToArray(); //TODO:need to optimize
+
+            var first = true;
+            var rowIndex = 0;
             foreach (var item in Query(true, sheetName, startCell, configuration))
             {
                 if (first)
@@ -426,9 +428,10 @@ namespace MiniExcelLibs.OpenXml
                         if (itemValue == null)
                             continue;
 
-                        newV = TypeMapping(v, pInfo, newV, itemValue);
+                        newV = TypeMapping(v, pInfo, newV, itemValue, rowIndex, startCell);
                     }
                 }
+                rowIndex++;
                 yield return v;
             }
         }

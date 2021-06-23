@@ -98,6 +98,8 @@ namespace MiniExcelLibs.Csv
                         //body
                         {
                             var v = new T();
+
+                            var rowIndex = 0; //TODO: rowindex = startcell rowindex
                             foreach (var p in idxProps)
                             {
                                 var pInfo = p.Value;
@@ -110,10 +112,11 @@ namespace MiniExcelLibs.Csv
                                     if (itemValue == null)
                                         continue;
 
-                                    newV = TypeMapping(v, pInfo, newV, itemValue);
+                                    newV = TypeMapping(v, pInfo, newV, itemValue, rowIndex, startCell);
                                 }
                             }
 
+                            rowIndex++;
                             yield return v;
                         }
                     }

@@ -3,43 +3,8 @@
     using System;
     using System.Globalization;
 
-    /**
-	This Class Modified from ExcelDataReader @MIT License
-	**/
-    internal static class ReferenceHelper
+    internal static partial class ReferenceHelper
     {
-	   /// <summary>X=CellLetter,Y=CellNumber,ex:A1=(1,1),B2=(2,2)</summary>
-	   public static string ConvertXyToCell(int x, int y)
-	   {
-		  int dividend = x;
-		  string columnName = String.Empty;
-		  int modulo;
-
-		  while (dividend > 0)
-		  {
-			 modulo = (dividend - 1) % 26;
-			 columnName = Convert.ToChar(65 + modulo).ToString() + columnName;
-			 dividend = (int)((x - modulo) / 26);
-		  }
-		  return $"{columnName}{y}";
-	   }
-
-	   /// <summary>X=CellLetter,Y=CellNumber,ex:A1=(1,1),B2=(2,2)</summary>
-	   public static Tuple<int, int> ConvertCellToXY(string cell)
-	   {
-		  const string keys = " ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-		  const int mode = 26;
-
-		  var x = 0;
-		  var cellLetter = GetCellLetter(cell);
-		  //AA=27,ZZ=702
-		  for (int i = 0; i < cellLetter.Length; i++)
-			 x = x * mode + keys.IndexOf(cellLetter[i]);
-
-		  var cellNumber = GetCellNumber(cell);
-		  return Tuple.Create(x, int.Parse(cellNumber));
-	   }
-
 	   public static string GetCellNumber(string cell)
 	   {
 		  string cellNumber = string.Empty;
@@ -62,6 +27,43 @@
 		  return GetCellLetter;
 	   }
 
+	   /// <summary>X=CellLetter,Y=CellNumber,ex:A1=(1,1),B2=(2,2)</summary>
+	   public static Tuple<int, int> ConvertCellToXY(string cell)
+	   {
+		  const string keys = " ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+		  const int mode = 26;
+
+		  var x = 0;
+		  var cellLetter = GetCellLetter(cell);
+		  //AA=27,ZZ=702
+		  for (int i = 0; i < cellLetter.Length; i++)
+			 x = x * mode + keys.IndexOf(cellLetter[i]);
+
+		  var cellNumber = GetCellNumber(cell);
+		  return Tuple.Create(x, int.Parse(cellNumber));
+	   }
+
+	   /// <summary>X=CellLetter,Y=CellNumber,ex:A1=(1,1),B2=(2,2)</summary>
+	   public static string ConvertXyToCell(int x, int y)
+	   {
+		  int dividend = x;
+		  string columnName = String.Empty;
+		  int modulo;
+
+		  while (dividend > 0)
+		  {
+			 modulo = (dividend - 1) % 26;
+			 columnName = Convert.ToChar(65 + modulo).ToString() + columnName;
+			 dividend = (int)((x - modulo) / 26);
+		  }
+		  return $"{columnName}{y}";
+	   }
+    }
+
+    
+    internal static partial class ReferenceHelper
+    {
+	   /**Below Code Copy&Modified from ExcelDataReader @MIT License**/
 	   /// <summary>
 	   /// Logic for the Excel dimensions. Ex: A15
 	   /// </summary>

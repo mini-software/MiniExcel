@@ -26,6 +26,42 @@ namespace MiniExcelLibs.Tests
             this.output = output;
         }
 
+        [Fact]
+        public void TestIssueI3X2ZL()
+        {
+            try
+            {
+                var path = PathHelper.GetSamplePath("xlsx/TestIssueI3X2ZL_datetime_error.xlsx");
+                var rows = MiniExcel.Query<IssueI3X2ZLDTO>(path,startCell:"B3").ToList();
+            }
+            catch (InvalidCastException ex)
+            {
+                Assert.Equal(
+                    "ColumnName : Col2, CellRow : 6, Value : error, it can't cast to DateTime type.",
+                    ex.Message
+                );
+            }
+
+            try
+            {
+                var path = PathHelper.GetSamplePath("xlsx/TestIssueI3X2ZL_int_error.xlsx");
+                var rows = MiniExcel.Query<IssueI3X2ZLDTO>(path).ToList();
+            }
+            catch (InvalidCastException ex)
+            {
+                Assert.Equal(
+                    "ColumnName : Col1, CellRow : 3, Value : error, it can't cast to Int32 type.",
+                    ex.Message
+                );
+            }
+        }
+
+        public class IssueI3X2ZLDTO
+        {
+            public int Col1 { get; set; }
+            public DateTime Col2 { get; set; }
+        }
+
         /// <summary>
         /// [Convert csv to xlsx · Issue #261 · shps951023/MiniExcel](https://github.com/shps951023/MiniExcel/issues/261)
         /// </summary>

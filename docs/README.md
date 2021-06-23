@@ -16,6 +16,11 @@
 
 ---
 
+### 0.17.1
+- [New] Add QueryAsDataTableAsync(this Stream stream..)
+- [OPT] More clear strong type conversion error message [#I3X2ZL](https://gitee.com/dotnetchina/MiniExcel/issues/I3X2ZL)
+
+
 ### 0.17.0
 - [New] Support Async/Task #52, contributor: [isdaniel ( SHIH,BING-SIOU)](https://github.com/isdaniel)
 

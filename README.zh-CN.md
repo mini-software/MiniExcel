@@ -1,19 +1,20 @@
 <div align="center">
-<p><a href="https://www.nuget.org/packages/MiniExcel"><img src="https://img.shields.io/nuget/v/MiniExcel.svg" alt="NuGet"></a>  <a href="https://www.nuget.org/packages/MiniExcel"><img src="https://img.shields.io/nuget/dt/MiniExcel.svg" alt=""></a>  <a href="https://ci.appveyor.com/project/shps951023/miniexcel/branch/master"><img src="https://ci.appveyor.com/api/projects/status/b2vustrwsuqx45f4/branch/master?svg=true" alt="Build status"></a></p>
+<p><a href="https://www.nuget.org/packages/MiniExcel"><img src="https://img.shields.io/nuget/v/MiniExcel.svg" alt="NuGet"></a>  <a href="https://www.nuget.org/packages/MiniExcel"><img src="https://img.shields.io/nuget/dt/MiniExcel.svg" alt=""></a>  
+<a href="https://ci.appveyor.com/project/shps951023/miniexcel/branch/master"><img src="https://ci.appveyor.com/api/projects/status/b2vustrwsuqx45f4/branch/master?svg=true" alt="Build status"></a>
+<a href="https://gitee.com/dotnetchina/MiniExcel.git"><img src="https://gitee.com/dotnetchina/MiniExcel/badge/star.svg" alt="star"></a> <a href="https://gitee.com/dotnetchina/MiniExcel.git"><img src="https://gitee.com/dotnetchina/MiniExcel/badge/fork.svg" alt="fork"></a> <a href="https://gihub.com/shps951023/MiniExcel.git" rel="nofollow"><img src="https://img.shields.io/github/stars/shps951023/MiniExcel?logo=github" alt="GitHub stars"></a> <a href="https://gihub.com/shps951023/MiniExcel.git" rel="nofollow"><img src="https://img.shields.io/github/forks/shps951023/MiniExcel?logo=github" alt="GitHub forks"></a>
+<a href="https://qm.qq.com/cgi-bin/qm/qr?k=3OkxuL14sXhJsUimWK8wx_Hf28Wl49QE&amp;jump_from=webapi"><img src="https://img.shields.io/badge/QQ群-813100564-red" alt="QQ"></a>
+</p>
 </div>
 
 <div align="center">
 <p><strong><a href="README.md">English</a> | <a href="README.zh-CN.md">简体中文</a> | <a href="README.zh-Hant.md">繁體中文</a></strong></p>
 </div>
 
-<div align="center">
-<p>🙌 <a href="https://github.com/shps951023/MiniExcel">Star</a> ，能帮助 MiniExcel 让更多人看到 🙌</p>
-</div>
+---
 
 <div align="center">
-<p><a href="https://qm.qq.com/cgi-bin/qm/qr?k=3OkxuL14sXhJsUimWK8wx_Hf28Wl49QE&amp;jump_from=webapi">813100564(MiniExcel QQ交流群)</a> </p>
+<p> 您的 <a href="https://github.com/shps951023/MiniExcel">Star</a> 能帮助 MiniExcel 让更多人看到 </p>
 </div>
-
 
 ---
 
@@ -851,7 +852,7 @@ public static Task<DataTable> QueryAsDataTableAsync(string path, bool useHeaderR
 
 #### 1. SQLite & Dapper 读取大数据新增到数据库
 
-note : 请不要呼叫 call ToList/ToArray 等方法，这会将所有数据读到内存内
+Note : 请不要呼叫 call ToList/ToArray 等方法，这会将所有数据读到内存内
 
 ```csharp
 using (var connection = new SQLiteConnection(connectionString))

@@ -6,8 +6,10 @@
 <strong><a href="README.md">English</a> | <a href="README.zh-Hant.md">繁體中文</a> | <a href="README.zh-CN.md">简体中文</a></strong>
 </div>
 
+---
+
 <div align="center">
-🙌 <a href="https://github.com/shps951023/MiniExcel">Star</a> ，能幫助 MiniExcel 讓更多人看到 🙌
+您的 <a href="https://github.com/shps951023/MiniExcel">Star</a> ，能幫助 MiniExcel 讓更多人看到 
 </div>
 
 ---
@@ -868,7 +870,7 @@ public static Task<DataTable> QueryAsDataTableAsync(string path, bool useHeaderR
 
 #### 1. SQLite & Dapper 讀取大數據新增到資料庫
 
-note : 請不要呼叫 call ToList/ToArray 等方法，這會將所有資料讀到記憶體內
+Note : 請不要呼叫 call ToList/ToArray 等方法，這會將所有資料讀到記憶體內
 
 ```csharp
 using (var connection = new SQLiteConnection(connectionString))

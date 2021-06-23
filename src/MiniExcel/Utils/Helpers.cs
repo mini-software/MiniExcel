@@ -236,20 +236,35 @@
             }
         }
 
-        public static object TypeMapping<T>(T v, ExcelCustomPropertyInfo pInfo, object newV, object itemValue) where T : class, new()
+        public static object TypeMapping<T>(T v, ExcelCustomPropertyInfo pInfo, object newValue, object itemValue, int rowIndex, string startCell) where T : class, new()
+        {
+            try
+            {
+                return TypeMappingImpl(v, pInfo, ref newValue, itemValue);
+            }
+            catch (Exception ex) when (ex is InvalidCastException || ex is FormatException)
+            {
+                var columnName = pInfo.ExcelColumnName ?? pInfo.Property.Name;
+                var startRowIndex = ReferenceHelper.ConvertCellToXY(startCell).Item2;
+                var errorRow = startRowIndex + rowIndex + 1;
+                throw new InvalidCastException($"ColumnName : {columnName}, CellRow : {errorRow}, Value : {itemValue}, it can't cast to {pInfo.Property.PropertyType.Name} type.");
+            }
+        }
+
+        private static object TypeMappingImpl<T>(T v, ExcelCustomPropertyInfo pInfo, ref object newValue, object itemValue) where T : class, new()
         {
             if (pInfo.ExcludeNullableType == typeof(Guid))
             {
-                newV = Guid.Parse(itemValue.ToString());
+                newValue = Guid.Parse(itemValue.ToString());
             }
             else if (pInfo.ExcludeNullableType == typeof(DateTime))
             {
                 // fix issue 257 https://github.com/shps951023/MiniExcel/issues/257
                 if (itemValue is DateTime || itemValue is DateTime?)
                 {
-                    newV = itemValue;
-                    pInfo.Property.SetValue(v, newV);
-                    return newV;
+                    newValue = itemValue;
+                    pInfo.Property.SetValue(v, newValue);
+                    return newValue;
                 }
 
                 var vs = itemValue?.ToString();
@@ -257,15 +272,15 @@
                 {
                     if (DateTime.TryParseExact(vs, pInfo.ExcelFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out var _v))
                     {
-                        newV = _v;
+                        newValue = _v;
                     }
                 }
                 else if (DateTime.TryParse(vs, CultureInfo.InvariantCulture, DateTimeStyles.None, out var _v))
-                    newV = _v;
+                    newValue = _v;
                 else if (DateTime.TryParseExact(vs, "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out var _v2))
-                    newV = _v2;
+                    newValue = _v2;
                 else if (double.TryParse(vs, NumberStyles.None, CultureInfo.InvariantCulture, out var _d))
-                    newV = DateTimeHelper.FromOADate(_d);
+                    newValue = DateTimeHelper.FromOADate(_d);
                 else
                     throw new InvalidCastException($"{vs} can't cast to datetime");
             }
@@ -273,27 +288,29 @@
             {
                 var vs = itemValue.ToString();
                 if (vs == "1")
-                    newV = true;
+                    newValue = true;
                 else if (vs == "0")
-                    newV = false;
+                    newValue = false;
                 else
-                    newV = bool.Parse(vs);
+                    newValue = bool.Parse(vs);
             }
             else if (pInfo.Property.PropertyType == typeof(string))
             {
-                newV = XmlEncoder.DecodeString(itemValue?.ToString());
+                newValue = XmlEncoder.DecodeString(itemValue?.ToString());
             }
             else if (pInfo.Property.PropertyType.IsEnum)
             {
-                newV = Enum.Parse(pInfo.Property.PropertyType, itemValue?.ToString(), true);
+                newValue = Enum.Parse(pInfo.Property.PropertyType, itemValue?.ToString(), true);
             }
-            // solve : https://github.com/shps951023/MiniExcel/issues/138
             else
-                newV = Convert.ChangeType(itemValue, pInfo.ExcludeNullableType);
-            pInfo.Property.SetValue(v, newV);
-            return newV;
-        }
+            {
+                // Use pInfo.ExcludeNullableType to resolve : https://github.com/shps951023/MiniExcel/issues/138
+                newValue = Convert.ChangeType(itemValue, pInfo.ExcludeNullableType);
+            }
 
+            pInfo.Property.SetValue(v, newValue);
+            return newValue;
+        }
     }
 
 }

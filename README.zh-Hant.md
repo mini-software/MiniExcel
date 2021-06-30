@@ -29,7 +29,7 @@ MiniExcel 簡單、高效避免OOM的.NET處理Excel查、寫、填充工具。
 - 兼具搭配 LINQ 延遲查詢特性，能辦到低消耗、快速分頁等複雜查詢  
 圖片:與主流框架對比的消耗、效率差  
 ![20210419](https://user-images.githubusercontent.com/12729184/114679083-6ef4c400-9d3e-11eb-9f78-a86daa45fe46.gif)
-- 輕量，不需要安裝 Microsoft Office、COM+、不依賴任何套件，DLL小於100KB
+- 輕量，不需要安裝 Microsoft Office、COM+、不依賴任何套件，DLL小於150KB
 - 簡便操作的 API 風格
 
 

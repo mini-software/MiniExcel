@@ -26,6 +26,53 @@ namespace MiniExcelLibs.Tests
             this.output = output;
         }
 
+        /// <summary>
+        /// v0.16.0-0.17.1 custom format contains specific format (eg:`#,##0.000_);[Red]\(#,##0.000\)`), automatic converter will convert double to datetime #267
+        /// </summary>
+        [Fact]
+        public void TestIssue267()
+        {
+            var path = PathHelper.GetSamplePath("/xlsx/TestIssue267.xlsx");
+            var row = MiniExcel.Query(path).SingleOrDefault();
+            Assert.Equal(10618, row.A);
+            Assert.Equal("2021-02-23", row.B);
+            Assert.Equal(43.199999999999996, row.C);
+            Assert.Equal(1.2, row.D);
+            Assert.Equal(new DateTime(2021, 7, 5), row.E);
+            Assert.Equal(new DateTime(2021, 7, 5,15,2,46), row.F);
+        }
+
+
+        [Fact]
+        public void TestIssue268_DateFormat()
+        {
+            Assert.True(IsDateFormatString("dd/mm/yyyy"));
+            Assert.True(IsDateFormatString("dd-mmm-yy"));
+            Assert.True(IsDateFormatString("dd-mmmm"));
+            Assert.True(IsDateFormatString("mmm-yy"));
+            Assert.True(IsDateFormatString("h:mm AM/PM"));
+            Assert.True(IsDateFormatString("h:mm:ss AM/PM"));
+            Assert.True(IsDateFormatString("hh:mm"));
+            Assert.True(IsDateFormatString("hh:mm:ss"));
+            Assert.True(IsDateFormatString("dd/mm/yyyy hh:mm"));
+            Assert.True(IsDateFormatString("mm:ss"));
+            Assert.True(IsDateFormatString("mm:ss.0"));
+            Assert.True(IsDateFormatString("[$-809]dd mmmm yyyy"));
+            Assert.False(IsDateFormatString("#,##0;[Red]-#,##0"));
+            Assert.False(IsDateFormatString(@"#,##0.000_);[Red]\(#,##0.000\)"));
+            Assert.False(IsDateFormatString("0_);[Red](0)"));
+            Assert.False(IsDateFormatString(@"0\h"));
+            Assert.False(IsDateFormatString("0\"h\""));
+            Assert.False(IsDateFormatString("0%"));
+            Assert.False(IsDateFormatString("General"));
+            Assert.False(IsDateFormatString(@"_-* #,##0\ _P_t_s_-;\-* #,##0\ _P_t_s_-;_-* "" - ""??\ _P_t_s_-;_-@_- "));
+        }
+
+        private bool IsDateFormatString(string formatCode)
+        {
+            return MiniExcelLibs.Utils.DateTimeHelper.IsDateTimeFormat(formatCode);
+        }
+
         [Fact]
         public void TestIssueI3X2ZL()
         {

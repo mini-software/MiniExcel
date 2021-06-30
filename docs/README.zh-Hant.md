@@ -17,6 +17,9 @@
 
 ---
 
+### 0.17.2
+- [Bug] 修復 v0.16.0-0.17.1 自定義格式含有特定格式(e.g:`#,##0.000_);[Red]\(#,##0.000\)`)，自動轉換器會將 double 被轉成 datetime 異常 #267
+
 ### 0.17.1
 - [New] 增加 QueryAsDataTableAsync(this Stream stream..)
 - [OPT] 強型別 Query 轉型錯誤訊息能知道在哪一行列出錯 [#I3X2ZL](https://gitee.com/dotnetchina/MiniExcel/issues/I3X2ZL)

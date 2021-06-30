@@ -78,7 +78,7 @@
 
                                 //TODO: determine the type according to the format
                                 var type = typeof(string);
-                                if(DateTimeHelper.isDateTimeFormat(formatCode))
+                                if(DateTimeHelper.IsDateTimeFormat(formatCode))
                                 {
                                     type = typeof(DateTime?);
                                 }
@@ -129,6 +129,11 @@
             {
                 if (double.TryParse(value?.ToString(), out var s))
                 {
+                    //TODO: if format like yyyy, it need to convert to double, not return datetime value
+
+
+
+
                     return DateTimeHelper.FromOADate(s);
                 }
             }

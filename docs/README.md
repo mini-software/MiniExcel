@@ -16,6 +16,9 @@
 
 ---
 
+### 0.17.2
+-[Bug] Fix v0.16.0-0.17.1 custom format contains specific format (eg:`#,##0.000_);[Red]\(#,##0.000\)`), automatic converter will convert double to datetime #267
+
 ### 0.17.1
 - [New] Add QueryAsDataTableAsync(this Stream stream..)
 - [OPT] More clear strong type conversion error message [#I3X2ZL](https://gitee.com/dotnetchina/MiniExcel/issues/I3X2ZL)

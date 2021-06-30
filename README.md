@@ -27,7 +27,7 @@ At present, most popular frameworks need to load all the data into the memory to
 - Support `real-time` operation of each row of data
   ![miniexcel_lazy_load](https://user-images.githubusercontent.com/12729184/111034290-e5588a80-844f-11eb-8c84-6fdb6fb8f403.gif)
 - Support LINQ deferred execution, it can do low-consumption, fast paging and other complex queries
-- Lightweight, without Microsoft Office installed, no COM+, third-party dependencies, DLL size is less than 100KB
+- Lightweight, without Microsoft Office installed, no COM+, third-party dependencies, DLL size is less than 150KB
 - Easy API style to read/write/fill excel
 
 ### Get Started

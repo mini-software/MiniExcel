@@ -1228,10 +1228,26 @@ Because MiniExcel uses a logic similar to JSON.NET to dynamically get type from 
 - Not support xls and encrypted file now
 - xlsm only support Query
 
+
+
 ### Reference
 
 - [ExcelDataReader](https://github.com/ExcelDataReader/ExcelDataReader)  / [ClosedXML](https://github.com/ClosedXML/ClosedXML)
 - [StackExchange/Dapper](https://github.com/StackExchange/Dapper)    
+
+
+
+### Thanks
+
+####  [Jetbrains](https://www.jetbrains.com/) 
+
+![jetbrains-variant-2](https://user-images.githubusercontent.com/12729184/123997015-8456c180-da02-11eb-829a-aec476fe8e94.png)
+
+Thanks for providing a free All product IDE for this project ([License](https://user-images.githubusercontent.com/12729184/123988233-6ab17c00-d9fa-11eb-8739-2a08c6a4a263.png))
+
+
+
+
 
 ### Contributors  
 

@@ -1241,6 +1241,18 @@ private IEnumerable<Dictionary<int, object>> ConvertToIntIndexRows(IEnumerable<o
 - 讀取邏輯 :  [ExcelDataReader](https://github.com/ExcelDataReader/ExcelDataReader)  / [ClosedXML](https://github.com/ClosedXML/ClosedXML)
 - API 設計方式 :　[StackExchange/Dapper](https://github.com/StackExchange/Dapper)    
 
+
+
+### 感謝名單
+
+####  [Jetbrains](https://www.jetbrains.com/) 
+
+![jetbrains-variant-2](https://user-images.githubusercontent.com/12729184/123997015-8456c180-da02-11eb-829a-aec476fe8e94.png)
+
+感謝提供免費IDE支持此專案 ([License](https://user-images.githubusercontent.com/12729184/123988233-6ab17c00-d9fa-11eb-8739-2a08c6a4a263.png))
+
+
+
 ### Contributors  
 
 ![](https://contrib.rocks/image?repo=shps951023/MiniExcel)

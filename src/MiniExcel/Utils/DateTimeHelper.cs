@@ -6,25 +6,12 @@
 
     internal static partial class DateTimeHelper
     {
-        private static DateTime basicDate = new DateTime(2021, 01, 01);
-
         /// <summary>
         /// NumberFormat from NuGet ExcelNumberFormat MIT@License
         /// </summary>
         public static bool IsDateTimeFormat(string formatCode)
         {
             return new NumberFormat(formatCode).IsDateTimeFormat;
-        }
-
-        public static bool IsSingleDatetimeFormat(string formatCode)
-        {
-            var isDatetimeFormat = DateTime.TryParseExact(basicDate.ToString(formatCode), formatCode, CultureInfo.InvariantCulture, DateTimeStyles.AllowLeadingWhite | DateTimeStyles.AllowTrailingWhite, out var date);
-            if (basicDate != date)
-                isDatetimeFormat = false;
-
-            // TODO: double check
-            // TODO: datetime format like yyyy need to convert to string not datetime
-            return isDatetimeFormat;
         }
     }
 

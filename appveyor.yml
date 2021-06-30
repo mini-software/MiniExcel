@@ -1,7 +1,7 @@
 version: build-{build}
 skip_tags: true
 image: Visual Studio 2019
-configuration: Release
+configuration: Debug
 build_script:
 - ps: |-
     #cd src

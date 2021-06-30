@@ -15,7 +15,7 @@ namespace MiniExcelLibs.Tests
     public class MiniExcelCsvAsycTests
     {
         [Fact]
-        public async Task gb2312_Encoding_Read_Test()
+        public async Task Gb2312_Encoding_Read_Test()
         {
             System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
             var path = PathHelper.GetSamplePath("csv/gb2312_Encoding_Read_Test.csv");
@@ -183,7 +183,7 @@ namespace MiniExcelLibs.Tests
         public async Task CsvExcelTypeTest()
         {
             {
-                var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.csv");
+                var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.csv");
                 var input = new[] { new { A = "Test1", B = "Test2" } };
                 await MiniExcel.SaveAsAsync(path, input);
 
@@ -215,7 +215,7 @@ namespace MiniExcelLibs.Tests
         [Fact()]
         public async Task Create2x2_Test()
         {
-            var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.csv");
+            var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.csv");
             await MiniExcel.SaveAsAsync(path, new[] {
              new { c1 = "A1" ,c2 = "B1"},
              new { c1 = "A2" ,c2 = "B2"},
@@ -244,7 +244,7 @@ namespace MiniExcelLibs.Tests
         [Fact()]
         public async Task CsvTypeMappingTest()
         {
-            var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.csv");
+            var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.csv");
             await MiniExcel.SaveAsAsync(path, new[] {
                 new { c1 = "A1" ,c2 = "B1"},
                 new { c1 = "A2" ,c2 = "B2"},

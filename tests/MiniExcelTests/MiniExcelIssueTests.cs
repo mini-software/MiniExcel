@@ -40,7 +40,7 @@ namespace MiniExcelLibs.Tests
             catch (Exception e)
             {
                 Assert.Equal(typeof(InvalidDataException), e.GetType());
-                Assert.True(e.Message.StartsWith("It's not legal excel zip, please check or issue for me."));
+                Assert.StartsWith("It's not legal excel zip, please check or issue for me.", e.Message);
             }
         }
 

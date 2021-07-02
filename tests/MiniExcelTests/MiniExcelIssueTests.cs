@@ -27,6 +27,24 @@ namespace MiniExcelLibs.Tests
         }
 
         /// <summary>
+        /// Custom excel zip can't read and show Number of entries expected in End Of Central Directory does not correspond to number of entries in Central Directory. #272
+        /// </summary>
+        [Fact]
+        public void Test()
+        {
+            var path = PathHelper.GetSamplePath("/xlsx/TestIssue272.xlsx");
+            try
+            {
+                var rows = MiniExcel.Query(path).ToList();
+            }
+            catch (Exception e)
+            {
+                Assert.Equal(typeof(InvalidDataException), e.GetType());
+                Assert.True(e.Message.StartsWith("It's not legal excel zip, please check or issue for me."));
+            }
+        }
+
+        /// <summary>
         /// v0.16.0-0.17.1 custom format contains specific format (eg:`#,##0.000_);[Red]\(#,##0.000\)`), automatic converter will convert double to datetime #267
         /// </summary>
         [Fact]

@@ -45,13 +45,13 @@ namespace MiniExcelLibs.OpenXml
             SetSharedStrings();
 
             // if sheets count > 1 need to read xl/_rels/workbook.xml.rels  
-            var sheets = _archive.Entries.Where(w => w.FullName.StartsWith("xl/worksheets/sheet", StringComparison.OrdinalIgnoreCase)
+            var sheets = _archive.entries.Where(w => w.FullName.StartsWith("xl/worksheets/sheet", StringComparison.OrdinalIgnoreCase)
                 || w.FullName.StartsWith("/xl/worksheets/sheet", StringComparison.OrdinalIgnoreCase)
             );
             ZipArchiveEntry sheetEntry = null;
             if (sheetName != null)
             {
-                SetWorkbookRels(_archive.Entries);
+                SetWorkbookRels(_archive.entries);
                 var s = _sheetRecords.SingleOrDefault(_ => _.Name == sheetName);
                 if (s == null)
                     throw new InvalidOperationException("Please check sheetName/Index is correct");
@@ -59,7 +59,7 @@ namespace MiniExcelLibs.OpenXml
             }
             else if (sheets.Count() > 1)
             {
-                SetWorkbookRels(_archive.Entries);
+                SetWorkbookRels(_archive.entries);
                 var s = _sheetRecords[0];
                 sheetEntry = sheets.Single(w => w.FullName == $"xl/{s.Path}" || w.FullName == $"/xl/{s.Path}");
             }

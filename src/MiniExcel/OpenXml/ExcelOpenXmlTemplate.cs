@@ -73,7 +73,7 @@ namespace MiniExcelLibs.OpenXml
                     var sharedStrings = reader.GetSharedStrings();
 
                     //read all xlsx sheets
-                    var sheets = _archive.ZipFile.Entries.Where(w => w.FullName.StartsWith("xl/worksheets/sheet", StringComparison.OrdinalIgnoreCase)
+                    var sheets = _archive.zipFile.Entries.Where(w => w.FullName.StartsWith("xl/worksheets/sheet", StringComparison.OrdinalIgnoreCase)
                         || w.FullName.StartsWith("/xl/worksheets/sheet", StringComparison.OrdinalIgnoreCase)
                     ).ToList();
 
@@ -86,7 +86,7 @@ namespace MiniExcelLibs.OpenXml
                         var sheetStream = sheet.Open();
                         var fullName = sheet.FullName;
 
-                        ZipArchiveEntry entry = _archive.ZipFile.CreateEntry(fullName);
+                        ZipArchiveEntry entry = _archive.zipFile.CreateEntry(fullName);
                         using (var zipStream = entry.Open())
                         {
                             GenerateSheetXmlImpl(sheet, zipStream, sheetStream, values, sharedStrings);
@@ -95,7 +95,7 @@ namespace MiniExcelLibs.OpenXml
                     }
                 }
                 
-                _archive.ZipFile.Dispose();
+                _archive.zipFile.Dispose();
             }
         }
 

@@ -16,8 +16,11 @@
 
 ---
 
+### 0.17.3 
+- [OPT] Clearer exception message when file is illegal excel zip format. #272
+
 ### 0.17.2
--[Bug] Fix v0.16.0-0.17.1 custom format contains specific format (eg:`#,##0.000_);[Red]\(#,##0.000\)`), automatic converter will convert double to datetime #267
+- [Bug] Fix v0.16.0-0.17.1 custom format contains specific format (eg:`#,##0.000_);[Red]\(#,##0.000\)`), automatic converter will convert double to datetime #267
 
 ### 0.17.1
 - [New] Add QueryAsDataTableAsync(this Stream stream..)

@@ -199,10 +199,13 @@
     {
         public string FormatCode { get; }
         public Type Type { get; set; }
-        public NumberFormatString(string formatCode, Type type)
+        public bool NeedConvertToString { get; }
+
+        public NumberFormatString(string formatCode, Type type,bool needConvertToString=false)
         {
             FormatCode = formatCode;
             Type = type;
+            NeedConvertToString = needConvertToString;
         }
     }
 

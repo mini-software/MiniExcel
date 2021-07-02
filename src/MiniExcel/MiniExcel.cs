@@ -97,7 +97,7 @@
         public static List<string> GetSheetNames(this Stream stream)
         {
             var archive = new ExcelOpenXmlZip(stream);
-            return ExcelOpenXmlSheetReader.GetWorkbookRels(archive.Entries).Select(s => s.Name).ToList();
+            return ExcelOpenXmlSheetReader.GetWorkbookRels(archive.entries).Select(s => s.Name).ToList();
         }
 
         public static ICollection<string> GetColumns(string path, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null)

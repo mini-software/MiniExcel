@@ -25,18 +25,17 @@ At present, most popular frameworks need to load all the data into the memory to
 ### Features
 - Low memory consumption, avoid OOM (out of memory) and full GC
 - Support `real-time` operation of each row of data
-  ![miniexcel_lazy_load](https://user-images.githubusercontent.com/12729184/111034290-e5588a80-844f-11eb-8c84-6fdb6fb8f403.gif)
 - Support LINQ deferred execution, it can do low-consumption, fast paging and other complex queries
 - Lightweight, without Microsoft Office installed, no COM+, DLL size is less than 150KB
 - Easy API style to read/write/fill excel
 
 ### Get Started
 
-- [Excel Query](#getstart1)
+- [Import/Query Excel](#getstart1)
 
-- [Create Excel](#getstart2)
+- [Export/Create Excel](#getstart2)
 
-- [Fill Data To Excel Template](#getstart3)
+- [Excel Template](#getstart3)
 
 - [Excel Column Name/Index/Ignore Attribute](#getstart4)
 
@@ -58,17 +57,15 @@ Please Check  [TODO](https://github.com/shps951023/MiniExcel/projects/1?fullscre
 
 ### Performance
 
-[**Test1,000,000x10.xlsx**](benchmarks/MiniExcel.Benchmarks/Test1%2C000%2C000x10.xlsx) as performance test basic file,A total of 10,000,000 "HelloWorld" with a file size of 23 MB
+Benchmarks logic can be found in  [MiniExcel.Benchmarks](benchmarks/MiniExcel.Benchmarks/Program.cs) , and test cli
 
-Benchmarks  logic can be found in  [MiniExcel.Benchmarks](benchmarks/MiniExcel.Benchmarks/Program.cs) , and test cli
-
-```
+```bash
 dotnet run -p .\benchmarks\MiniExcel.Benchmarks\ -c Release -f netcoreapp3.1 -- -f * --join
 ```
 
-Output from the latest run is :  
+Output from the latest run is : 
 
-```
+```bash
 BenchmarkDotNet=v0.12.1, OS=Windows 10.0.19042
 Intel Core i7-7700 CPU 3.60GHz (Kaby Lake), 1 CPU, 8 logical and 4 physical cores
   [Host]     : .NET Framework 4.8 (4.8.4341.0), X64 RyuJIT
@@ -76,26 +73,33 @@ Intel Core i7-7700 CPU 3.60GHz (Kaby Lake), 1 CPU, 8 logical and 4 physical core
 IterationCount=3  LaunchCount=3  WarmupCount=3  
 ```
 
-| Method                       | Max Memory Usage |             Mean |        Gen 0 |       Gen 1 |      Gen 2 |
-| ---------------------------- | ---------------: | ---------------: | -----------: | ----------: | ---------: |
-| 'MiniExcel QueryFirst'       |         0.109 MB |         726.4 us |            - |           - |          - |
-| 'ExcelDataReader QueryFirst' |         15.24 MB |  10,664,238.2 us |  566000.0000 |   1000.0000 |          - |
-| 'MiniExcel Query'            |          17.3 MB |  14,179,334.8 us |  367000.0000 |  96000.0000 |  7000.0000 |
-| 'ExcelDataReader Query'      |          17.3 MB |  22,565,088.7 us | 1210000.0000 |   2000.0000 |          - |
-| 'Epplus QueryFirst'          |         1,452 MB |  18,198,015.4 us |  535000.0000 | 132000.0000 |  9000.0000 |
-| 'Epplus Query'               |         1,451 MB |  23,647,471.1 us | 1451000.0000 | 133000.0000 |  9000.0000 |
-| 'OpenXmlSDK Query'           |         1,412 MB |  52,003,270.1 us |  978000.0000 | 353000.0000 | 11000.0000 |
-| 'OpenXmlSDK QueryFirst'      |         1,413 MB |  52,348,659.1 us |  978000.0000 | 353000.0000 | 11000.0000 |
-| 'ClosedXml QueryFirst'       |         2,158 MB |  66,188,979.6 us | 2156000.0000 | 575000.0000 |  9000.0000 |
-| 'ClosedXml Query'            |         2,184 MB | 191,434,126.6 us | 2165000.0000 | 577000.0000 | 10000.0000 |
+#### Import/Query Excel 
+Logic : (benchmarks/MiniExcel.Benchmarks/Test1%2C000%2C000x10.xlsx) as performance test basic file,A total of 10,000,000 "HelloWorld" with a file size of 23 MB
 
 
-| Method                   | Max Memory Usage |             Mean |        Gen 0 |        Gen 1 |      Gen 2 |
-| ------------------------ | ---------------: | ---------------: | -----------: | -----------: | ---------: |
-| 'MiniExcel Create Xlsx'  |            15 MB |  11,531,819.8 us | 1020000.0000 |            - |          - |
-| 'Epplus Create Xlsx'     |         1,204 MB |  22,509,717.7 us | 1370000.0000 |   60000.0000 | 30000.0000 |
-| 'OpenXmlSdk Create Xlsx' |         2,621 MB |  42,473,998.9 us | 1370000.0000 |  460000.0000 | 50000.0000 |
-| 'ClosedXml Create Xlsx'  |         7,141 MB | 140,939,928.6 us | 5520000.0000 | 1500000.0000 | 80000.0000 |
+| Library      | Method                       | Max Memory Usage |         Mean |
+| ---------------------------- | -------------: | ---------------: | ---------------: |
+| MiniExcel | 'MiniExcel QueryFirst'       |       0.109 MB | 0.0007264 sec |
+| ExcelDataReader | 'ExcelDataReader QueryFirst' |       15.24 MB | 10.66421 sec |
+| MiniExcel  | 'MiniExcel Query'            |        17.3 MB | 14.17933 sec |
+| ExcelDataReader | 'ExcelDataReader Query'      |        17.3 MB | 22.56508 sec |
+| Epplus    | 'Epplus QueryFirst'          |       1,452 MB | 18.19801 sec |
+| Epplus        | 'Epplus Query'               |       1,451 MB | 23.64747 sec |
+| OpenXmlSDK | 'OpenXmlSDK Query'           |       1,412 MB | 52.00327 sec |
+| OpenXmlSDK | 'OpenXmlSDK QueryFirst'      |       1,413 MB | 52.34865 sec |
+| ClosedXml | 'ClosedXml QueryFirst'       |       2,158 MB | 66.18897 sec |
+| ClosedXml  | 'ClosedXml Query'            |       2,184 MB | 191.43412 sec |
+
+#### Export/Create Excel 
+
+Logic : create a total of 10,000,000 "HelloWorld" excel
+
+| Library            | Method                   | Max Memory Usage |         Mean |
+| ------------------------ | -------------: | ---------------: | -----------: |
+| MiniExcel | 'MiniExcel Create Xlsx'  |          15 MB | 11.53181 sec |
+| Epplus | 'Epplus Create Xlsx'     |       1,204 MB | 22.50971 sec |
+| OpenXmlSdk | 'OpenXmlSdk Create Xlsx' |       2,621 MB | 42.47399 sec |
+| ClosedXml | 'ClosedXml Create Xlsx'  |       7,141 MB | 140.93992 sec |
 
 
 

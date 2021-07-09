@@ -30,7 +30,6 @@ MiniExcel简单、高效避免OOM的.NET处理Excel查、写、填充数据工�
 ### 特点
 - 低内存耗用，避免OOM(out of memoery)、频繁 Full GC 情况
 - 支持`即时`操作每行数据
-![miniexcel_lazy_load](https://user-images.githubusercontent.com/12729184/111034290-e5588a80-844f-11eb-8c84-6fdb6fb8f403.gif)
 - 兼具搭配 LINQ 延迟查询特性，能办到低消耗、快速分页等复杂查询  
 - 轻量，不需要安装 Microsoft Office、COM+，DLL小于150KB
 - 简便操作的 API 风格
@@ -39,9 +38,9 @@ MiniExcel简单、高效避免OOM的.NET处理Excel查、写、填充数据工�
 
 ### 快速开始
 
-- [读 Excel](#getstart1)
-- [写 Excel](#getstart2)
-- [模板填充 Excel](#getstart3)
+- [导入、读取 Excel](#getstart1)
+- [导出 、创建 Excel](#getstart2)
+- [模板填充、创建 Excel](#getstart3)
 - [Excel Column Name/Index/Ignore Attribute](#getstart4)
 - [例子](#getstart5)
 
@@ -57,19 +56,17 @@ MiniExcel简单、高效避免OOM的.NET处理Excel查、写、填充数据工�
 
 请查看 [TODO](https://github.com/shps951023/MiniExcel/projects/1?fullscreen=true)
 
-### 性能测试
-
-以 [**Test1,000,000x10.xlsx**](benchmarks/MiniExcel.Benchmarks/Test1%2C000%2C000x10.xlsx) 做基准与主流框架做性能测试，总共 1千万笔 "HelloWorld"，文件大小 23 MB   
+### 性能比较、测试
 
 Benchmarks  逻辑可以在 [MiniExcel.Benchmarks](benchmarks/MiniExcel.Benchmarks/Program.cs) 查看或是提交 PR，运行指令
 
-```
+```bash
 dotnet run -p .\benchmarks\MiniExcel.Benchmarks\ -c Release -f netcoreapp3.1 -- -f * --join
 ```
 
-最后一次运行结果 :  
+最后一次运行规格、结果 :  
 
-```
+```bash
 BenchmarkDotNet=v0.12.1, OS=Windows 10.0.19042
 Intel Core i7-7700 CPU 3.60GHz (Kaby Lake), 1 CPU, 8 logical and 4 physical cores
   [Host]     : .NET Framework 4.8 (4.8.4341.0), X64 RyuJIT
@@ -77,26 +74,34 @@ Intel Core i7-7700 CPU 3.60GHz (Kaby Lake), 1 CPU, 8 logical and 4 physical core
 IterationCount=3  LaunchCount=3  WarmupCount=3  
 ```
 
-| Method                       | 最大内存耗用 |         平均时间 |        Gen 0 |       Gen 1 |      Gen 2 |
-| ---------------------------- | -------------: | ---------------: | -----------: | ----------: | ---------: |
-| 'MiniExcel QueryFirst'       |       0.109 MB |         726.4 us |            - |           - |          - |
-| 'ExcelDataReader QueryFirst' |       15.24 MB |  10,664,238.2 us |  566000.0000 |   1000.0000 |          - |
-| 'MiniExcel Query'            |        17.3 MB |  14,179,334.8 us |  367000.0000 |  96000.0000 |  7000.0000 |
-| 'ExcelDataReader Query'      |        17.3 MB |  22,565,088.7 us | 1210000.0000 |   2000.0000 |          - |
-| 'Epplus QueryFirst'          |       1,452 MB |  18,198,015.4 us |  535000.0000 | 132000.0000 |  9000.0000 |
-| 'Epplus Query'               |       1,451 MB |  23,647,471.1 us | 1451000.0000 | 133000.0000 |  9000.0000 |
-| 'OpenXmlSDK Query'           |       1,412 MB |  52,003,270.1 us |  978000.0000 | 353000.0000 | 11000.0000 |
-| 'OpenXmlSDK QueryFirst'      |       1,413 MB |  52,348,659.1 us |  978000.0000 | 353000.0000 | 11000.0000 |
-| 'ClosedXml QueryFirst'       |       2,158 MB |  66,188,979.6 us | 2156000.0000 | 575000.0000 |  9000.0000 |
-| 'ClosedXml Query'            |       2,184 MB | 191,434,126.6 us | 2165000.0000 | 577000.0000 | 10000.0000 |
+#### 导入、查询 Excel 比较
+逻辑 : 以 [**Test1,000,000x10.xlsx**](benchmarks/MiniExcel.Benchmarks/Test1%2C000%2C000x10.xlsx) 做基准与主流框架做性能测试，总共 1千万笔 "HelloWorld"，文件大小 23 MB
 
 
-| Method                   | 最大内存耗用 |         平均时间 |        Gen 0 |        Gen 1 |      Gen 2 |
-| ------------------------ | -------------: | ---------------: | -----------: | -----------: | ---------: |
-| 'MiniExcel Create Xlsx'  |          15 MB |  11,531,819.8 us | 1020000.0000 |            - |          - |
-| 'Epplus Create Xlsx'     |       1,204 MB |  22,509,717.7 us | 1370000.0000 |   60000.0000 | 30000.0000 |
-| 'OpenXmlSdk Create Xlsx' |       2,621 MB |  42,473,998.9 us | 1370000.0000 |  460000.0000 | 50000.0000 |
-| 'ClosedXml Create Xlsx'  |       7,141 MB | 140,939,928.6 us | 5520000.0000 | 1500000.0000 | 80000.0000 |
+| Library      | Method                       | 最大内存耗用 |         平均时间 |
+| ---------------------------- | -------------: | ---------------: | ---------------: |
+| MiniExcel | 'MiniExcel QueryFirst'       |       0.109 MB | 0.0007264 sec |
+| ExcelDataReader | 'ExcelDataReader QueryFirst' |       15.24 MB | 10.66421 sec |
+| MiniExcel  | 'MiniExcel Query'            |        17.3 MB | 14.17933 sec |
+| ExcelDataReader | 'ExcelDataReader Query'      |        17.3 MB | 22.56508 sec |
+| Epplus    | 'Epplus QueryFirst'          |       1,452 MB | 18.19801 sec |
+| Epplus        | 'Epplus Query'               |       1,451 MB | 23.64747 sec |
+| OpenXmlSDK | 'OpenXmlSDK Query'           |       1,412 MB | 52.00327 sec |
+| OpenXmlSDK | 'OpenXmlSDK QueryFirst'      |       1,413 MB | 52.34865 sec |
+| ClosedXml | 'ClosedXml QueryFirst'       |       2,158 MB | 66.18897 sec |
+| ClosedXml  | 'ClosedXml Query'            |       2,184 MB | 191.43412 sec |
+
+#### 导出、创建 Excel 比较
+
+逻辑 : 创建1千万笔 "HelloWorld"
+
+| Library            | Method                   | 最大内存耗用 |         平均时间 |
+| ------------------------ | -------------: | ---------------: | -----------: |
+| MiniExcel | 'MiniExcel Create Xlsx'  |          15 MB | 11.53181 sec |
+| Epplus | 'Epplus Create Xlsx'     |       1,204 MB | 22.50971 sec |
+| OpenXmlSdk | 'OpenXmlSdk Create Xlsx' |       2,621 MB | 42.47399 sec |
+| ClosedXml | 'ClosedXml Create Xlsx'  |       7,141 MB | 140.93992 sec |
+
 
 
 

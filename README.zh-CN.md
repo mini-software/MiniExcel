@@ -75,7 +75,7 @@ IterationCount=3  LaunchCount=3  WarmupCount=3
 ```
 
 #### 导入、查询 Excel 比较
-逻辑 : 以 [**Test1,000,000x10.xlsx**](benchmarks/MiniExcel.Benchmarks/Test1%2C000%2C000x10.xlsx) 做基准与主流框架做性能测试，总共 1千万笔 "HelloWorld"，文件大小 23 MB
+逻辑 : 以 [**Test1,000,000x10.xlsx**](benchmarks/MiniExcel.Benchmarks/Test1%2C000%2C000x10.xlsx) 做基准与主流框架做性能测试，总共 1,000,000 行 * 10 列笔 "HelloWorld"，文件大小 23 MB
 
 
 | Library      | Method                       | 最大内存耗用 |         平均时间 |

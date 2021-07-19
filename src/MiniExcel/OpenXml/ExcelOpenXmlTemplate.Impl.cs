@@ -57,31 +57,31 @@ namespace MiniExcelLibs.OpenXml
 
                 //TODO: width,height
                 var xy1 = refs[0];
-                X1 = Helpers.GetColumnIndex(StringHelper.GetLetter(refs[0]));
+                X1 = ColumnHelper.GetColumnIndex(StringHelper.GetLetter(refs[0]));
                 Y1 = StringHelper.GetNumber(xy1);
 
                 var xy2 = refs[1];
-                X2 = Helpers.GetColumnIndex(StringHelper.GetLetter(refs[1]));
+                X2 = ColumnHelper.GetColumnIndex(StringHelper.GetLetter(refs[1]));
                 Y2 = StringHelper.GetNumber(xy2);
 
                 Width = Math.Abs(X1 - X2) + 1; ;
                 Height = Math.Abs(Y1 - Y2) + 1;
             }
 
-            public string XY1 { get { return $"{Helpers.GetAlphabetColumnName(X1)}{Y1}"; } }
+            public string XY1 { get { return $"{ColumnHelper.GetAlphabetColumnName(X1)}{Y1}"; } }
             public int X1 { get; set; }
             public int Y1 { get; set; }
-            public string XY2 { get { return $"{Helpers.GetAlphabetColumnName(X2)}{Y2}"; } }
+            public string XY2 { get { return $"{ColumnHelper.GetAlphabetColumnName(X2)}{Y2}"; } }
             public int X2 { get; set; }
             public int Y2 { get; set; }
-            public string Ref { get { return $"{Helpers.GetAlphabetColumnName(X1)}{Y1}:{Helpers.GetAlphabetColumnName(X2)}{Y2}"; } }
+            public string Ref { get { return $"{ColumnHelper.GetAlphabetColumnName(X1)}{Y1}:{ColumnHelper.GetAlphabetColumnName(X2)}{Y2}"; } }
             public XmlElement MergeCell { get; set; }
             public int Width { get; internal set; }
             public int Height { get; internal set; }
 
             public string ToXmlString(string prefix)
             {
-                return $"<{prefix}mergeCell ref=\"{Helpers.GetAlphabetColumnName(X1)}{Y1}:{Helpers.GetAlphabetColumnName(X2)}{Y2}\"/>";
+                return $"<{prefix}mergeCell ref=\"{ColumnHelper.GetAlphabetColumnName(X1)}{Y1}:{ColumnHelper.GetAlphabetColumnName(X2)}{Y2}\"/>";
             }
         }
 
@@ -520,7 +520,7 @@ namespace MiniExcelLibs.OpenXml
                             {
                                 c.SetAttribute("t", "str");
                             }
-                            else if (Helpers.IsNumericType(type))
+                            else if (TypeHelper.IsNumericType(type))
                             {
                                 c.SetAttribute("t", "n");
                             }
@@ -568,7 +568,7 @@ namespace MiniExcelLibs.OpenXml
                             {
                                 c.SetAttribute("t", "str");
                             }
-                            else if (Helpers.IsNumericType(type))
+                            else if (TypeHelper.IsNumericType(type))
                             {
                                 c.SetAttribute("t", "n");
                             }

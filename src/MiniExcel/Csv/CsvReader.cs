@@ -5,7 +5,6 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using static MiniExcelLibs.Utils.Helpers;
 
 namespace MiniExcelLibs.Csv
 {
@@ -43,7 +42,7 @@ namespace MiniExcelLibs.Csv
                             continue;
                         }
 
-                        var cell = Helpers.GetEmptyExpandoObject(headRows);
+                        var cell = CustomPropertyHelper.GetEmptyExpandoObject(headRows);
                         for (int i = 0; i <= read.Length - 1; i++)
                             cell[headRows[i]] = read[i];
 
@@ -54,9 +53,9 @@ namespace MiniExcelLibs.Csv
 
                     //body
                     {
-                        var cell = Helpers.GetEmptyExpandoObject(read.Length - 1, 0);
+                        var cell = CustomPropertyHelper.GetEmptyExpandoObject(read.Length - 1, 0);
                         for (int i = 0; i <= read.Length - 1; i++)
-                            cell[Helpers.GetAlphabetColumnName(i)] = read[i];
+                            cell[ColumnHelper.GetAlphabetColumnName(i)] = read[i];
                         yield return cell;
                     }
                 }
@@ -80,7 +79,7 @@ namespace MiniExcelLibs.Csv
                     row = reader.ReadLine();
                     read = Split(cf, row);
 
-                    var props = Helpers.GetExcelCustomPropertyInfos(type, read);
+                    var props = CustomPropertyHelper.GetExcelCustomPropertyInfos(type, read);
                     var index = 0;
                     foreach (var v in read)
                     {
@@ -112,7 +111,7 @@ namespace MiniExcelLibs.Csv
                                     if (itemValue == null)
                                         continue;
 
-                                    newV = TypeMapping(v, pInfo, newV, itemValue, rowIndex, startCell);
+                                    newV = TypeHelper.TypeMapping(v, pInfo, newV, itemValue, rowIndex, startCell);
                                 }
                             }
 

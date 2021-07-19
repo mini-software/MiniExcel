@@ -9,7 +9,6 @@ using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using static MiniExcelLibs.Utils.Helpers;
 
 namespace MiniExcelLibs.OpenXml
 {
@@ -139,7 +138,7 @@ namespace MiniExcelLibs.OpenXml
                                         throw new NotImplementedException($"MiniExcel not support only {genericType.Name} value generic type");
                                     else if (genericType == typeof(string) || genericType == typeof(DateTime) || genericType == typeof(Guid))
                                         throw new NotImplementedException($"MiniExcel not support only {genericType.Name} generic type");
-                                    props = Helpers.GetSaveAsProperties(genericType);
+                                    props = CustomPropertyHelper.GetSaveAsProperties(genericType);
                                     maxColumnIndex = props.Count;
                                 }
 
@@ -317,7 +316,7 @@ namespace MiniExcelLibs.OpenXml
                     type = p.ExcludeNullableType; //sometime it doesn't need to re-get type like prop
                 }
 
-                if (Helpers.IsNumericType(type))
+                if (TypeHelper.IsNumericType(type))
                 {
                     t = "n";
                     v = value.ToString();
@@ -476,9 +475,9 @@ namespace MiniExcelLibs.OpenXml
             else if (maxColumnIndex == 1)
                 dimensionRef = $"A{maxRowIndex}";
             else if (maxRowIndex == 0)
-                dimensionRef = $"A1:{Helpers.GetAlphabetColumnName(maxColumnIndex - 1)}1";
+                dimensionRef = $"A1:{ColumnHelper.GetAlphabetColumnName(maxColumnIndex - 1)}1";
             else
-                dimensionRef = $"A1:{Helpers.GetAlphabetColumnName(maxColumnIndex - 1)}{maxRowIndex}";
+                dimensionRef = $"A1:{ColumnHelper.GetAlphabetColumnName(maxColumnIndex - 1)}{maxRowIndex}";
             return dimensionRef;
         }
 

@@ -10,7 +10,6 @@ using System.IO.Compression;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Xml;
-using static MiniExcelLibs.Utils.Helpers;
 
 namespace MiniExcelLibs.OpenXml
 {
@@ -370,7 +369,7 @@ namespace MiniExcelLibs.OpenXml
 
         private static IDictionary<string, object> GetCell(bool useHeaderRow, int maxColumnIndex, Dictionary<int, string> headRows, int startColumnIndex)
         {
-            return useHeaderRow ? Helpers.GetEmptyExpandoObject(headRows) : Helpers.GetEmptyExpandoObject(maxColumnIndex, startColumnIndex);
+            return useHeaderRow ? CustomPropertyHelper.GetEmptyExpandoObject(headRows) : CustomPropertyHelper.GetEmptyExpandoObject(maxColumnIndex, startColumnIndex);
         }
 
         private void SetCellsValueAndHeaders(object cellValue, bool useHeaderRow, ref Dictionary<int, string> headRows, ref bool isFirstRow, ref IDictionary<string, object> cell, int columnIndex)
@@ -395,7 +394,7 @@ namespace MiniExcelLibs.OpenXml
             else
             {
                 //if not using First Head then using A,B,C as index
-                cell[Helpers.GetAlphabetColumnName(columnIndex)] = cellValue;
+                cell[ColumnHelper.GetAlphabetColumnName(columnIndex)] = cellValue;
             }
         }
 
@@ -413,7 +412,7 @@ namespace MiniExcelLibs.OpenXml
                 if (first)
                 {
                     //TODO: alert don't duplicate column name
-                    props = Helpers.GetExcelCustomPropertyInfos(type, headers);
+                    props = CustomPropertyHelper.GetExcelCustomPropertyInfos(type, headers);
                     first = false;
                 }
                 var v = new T();
@@ -428,7 +427,7 @@ namespace MiniExcelLibs.OpenXml
                         if (itemValue == null)
                             continue;
 
-                        newV = TypeMapping(v, pInfo, newV, itemValue, rowIndex, startCell);
+                        newV = TypeHelper.TypeMapping(v, pInfo, newV, itemValue, rowIndex, startCell);
                     }
                 }
                 rowIndex++;

@@ -7,7 +7,8 @@
     public class ExcelColumnIndexAttribute : Attribute
     {
         public int ExcelColumnIndex { get; set; }
-        public ExcelColumnIndexAttribute(string columnName) => Init(Helpers.GetColumnIndex(columnName));
+        public ExcelColumnIndexAttribute(string columnName) => Init(ColumnHelper
+            .GetColumnIndex(columnName));
         public ExcelColumnIndexAttribute(int columnIndex) => Init(columnIndex);
 
         private void Init(int columnIndex)

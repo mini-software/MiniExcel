@@ -27,7 +27,7 @@
 
         public static IEnumerable<T> Query<T>(string path, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null) where T : class, new()
         {
-            using (var stream = Helpers.OpenSharedRead(path))
+            using (var stream = FileHelper.OpenSharedRead(path))
                 foreach (var item in Query<T>(stream, sheetName, ExcelTypeHelper.GetExcelType(path, excelType), startCell, configuration))
                     yield return item; //Foreach yield return twice reason : https://stackoverflow.com/questions/66791982/ienumerable-extract-code-lazy-loading-show-stream-was-not-readable
         }
@@ -39,7 +39,7 @@
 
         public static IEnumerable<dynamic> Query(string path, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null)
         {
-            using (var stream = Helpers.OpenSharedRead(path))
+            using (var stream = FileHelper.OpenSharedRead(path))
                 foreach (var item in Query(stream, useHeaderRow, sheetName, ExcelTypeHelper.GetExcelType(path, excelType), startCell, configuration))
                     yield return item;
         }
@@ -76,7 +76,7 @@
         /// </summary>
         public static DataTable QueryAsDataTable(string path, bool useHeaderRow = true, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null)
         {
-            using (var stream = Helpers.OpenSharedRead(path))
+            using (var stream = FileHelper.OpenSharedRead(path))
                 return QueryAsDataTable(stream, useHeaderRow, sheetName, ExcelTypeHelper.GetExcelType(path, excelType), startCell, configuration);
         }
 
@@ -90,7 +90,7 @@
 
         public static List<string> GetSheetNames(string path)
         {
-            using (var stream = Helpers.OpenSharedRead(path))
+            using (var stream = FileHelper.OpenSharedRead(path))
                 return GetSheetNames(stream);
         }
 
@@ -102,7 +102,7 @@
 
         public static ICollection<string> GetColumns(string path, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null)
         {
-            using (var stream = Helpers.OpenSharedRead(path))
+            using (var stream = FileHelper.OpenSharedRead(path))
                 return GetColumns(stream, useHeaderRow, sheetName, excelType, startCell, configuration);
         }
 

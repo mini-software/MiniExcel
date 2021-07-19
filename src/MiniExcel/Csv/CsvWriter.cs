@@ -7,7 +7,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using static MiniExcelLibs.Utils.Helpers;
 
 namespace MiniExcelLibs.Csv
 {
@@ -72,7 +71,7 @@ namespace MiniExcelLibs.Csv
                                 {
                                     mode = "Properties";
                                     genericType = item.GetType();
-                                    props = Helpers.GetSaveAsProperties(genericType);
+                                    props = CustomPropertyHelper.GetSaveAsProperties(genericType);
                                 }
 
                                 break;

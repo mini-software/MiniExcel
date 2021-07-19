@@ -7,7 +7,7 @@
 		<AssemblyName>MiniExcel</AssemblyName>
 		<Title>MiniExcel</Title>
 		<Product>MiniExcel</Product>
-		<PackageTags>excel;xlsx;micro-helper;mini;openxml;helper;</PackageTags>
+		<PackageTags>excel;xlsx;csv;micro-helper;mini;openxml;helper;</PackageTags>
 		<Description>
 			A high performance and easy Excel(xlsx,csv) Micro-Helper that avoids OOM and without third-party dependencies to create/query/template-fill-data.
 
@@ -17,9 +17,12 @@
 			Todo : https://github.com/shps951023/MiniExcel/projects/1?fullscreen=true
 		</Description>
 		<Authors>ITWeiHan</Authors>
+		<PackageId>MiniExcel</PackageId>
 		<Copyright>©2021 WeiHan Lin</Copyright>
-		<license>https://raw.githubusercontent.com/shps951023/MiniExcel/master/LICENSE.md</license>
-		<PackageLicenseUrl>https://raw.githubusercontent.com/shps951023/MiniExcel/master/LICENSE.md</PackageLicenseUrl>
+		<PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+		<NeutralLanguage>en</NeutralLanguage>
+		<license>https://raw.githubusercontent.com/shps951023/MiniExcel/master/LICENSE</license>
+		<PackageLicenseUrl>https://raw.githubusercontent.com/shps951023/MiniExcel/master/LICENSE</PackageLicenseUrl>
 		<PackageProjectUrl>https://github.com/shps951023/MiniExcel</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/shps951023/MiniExcel</RepositoryUrl>
 		<PackageIconUrl>https://user-images.githubusercontent.com/12729184/115023335-39440c80-9ef1-11eb-8771-7260d1e50d5a.png</PackageIconUrl>

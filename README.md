@@ -1,6 +1,8 @@
 <div align="center">
 <a href="https://www.nuget.org/packages/MiniExcel"><img src="https://img.shields.io/nuget/v/MiniExcel.svg" alt="NuGet"></a>  <a href="https://www.nuget.org/packages/MiniExcel"><img src="https://img.shields.io/nuget/dt/MiniExcel.svg" alt=""></a>  <a href="https://ci.appveyor.com/project/shps951023/miniexcel/branch/master"><img src="https://ci.appveyor.com/api/projects/status/b2vustrwsuqx45f4/branch/master?svg=true" alt="Build status"></a>
+<a href="https://www.nuget.org/packages/MiniExcel"><img src="https://img.shields.io/badge/.NET-%3E%3D%204.5-red.svg" alt="version"></a>
 </div>
+
 
 <div align="center">
 <strong><a href="README.md">English</a> | <a href="README.zh-CN.md">简体中文</a> | <a href="README.zh-Hant.md">繁體中文</a></strong>
@@ -73,7 +75,12 @@ Intel Core i7-7700 CPU 3.60GHz (Kaby Lake), 1 CPU, 8 logical and 4 physical core
 IterationCount=3  LaunchCount=3  WarmupCount=3  
 ```
 
-#### Import/Query Excel 
+Benchmark History :  [Link](https://github.com/shps951023/MiniExcel/issues/276)
+
+
+
+#### Import/Query Excel
+
 Logic : [**Test1,000,000x10.xlsx**](benchmarks/MiniExcel.Benchmarks/Test1%2C000%2C000x10.xlsx)  as performance test basic file, 1,000,000 rows * 10 columns  "HelloWorld" cells, 23 MB file size  
 
 
@@ -100,8 +107,6 @@ Logic : create a total of 10,000,000 "HelloWorld" excel
 | Epplus | 'Epplus Create Xlsx'     |       1,204 MB | 22.50971 sec |
 | OpenXmlSdk | 'OpenXmlSdk Create Xlsx' |       2,621 MB | 42.47399 sec |
 | ClosedXml | 'ClosedXml Create Xlsx'  |       7,141 MB | 140.93992 sec |
-
-
 
 ### Excel Query  <a name="getstart1"></a>
 

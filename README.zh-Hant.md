@@ -1,5 +1,6 @@
 <div align="center">
 <a href="https://www.nuget.org/packages/MiniExcel"><img src="https://img.shields.io/nuget/v/MiniExcel.svg" alt="NuGet"></a>  <a href="https://www.nuget.org/packages/MiniExcel"><img src="https://img.shields.io/nuget/dt/MiniExcel.svg" alt=""></a>  <a href="https://ci.appveyor.com/project/shps951023/miniexcel/branch/master"><img src="https://ci.appveyor.com/api/projects/status/b2vustrwsuqx45f4/branch/master?svg=true" alt="Build status"></a>
+<a href="https://www.nuget.org/packages/MiniExcel"><img src="https://img.shields.io/badge/.NET-%3E%3D%204.5-red.svg" alt="version"></a>
 </div>
 
 <div align="center">
@@ -69,6 +70,10 @@ Intel Core i7-7700 CPU 3.60GHz (Kaby Lake), 1 CPU, 8 logical and 4 physical core
   Job-ZYYABG : .NET Framework 4.8 (4.8.4341.0), X64 RyuJIT
 IterationCount=3  LaunchCount=3  WarmupCount=3  
 ```
+
+Benchmark History :  [Link](https://github.com/shps951023/MiniExcel/issues/276)
+
+
 
 #### 導入、查詢 Excel 比較
 

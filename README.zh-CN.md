@@ -1239,14 +1239,14 @@ private IEnumerable<Dictionary<int, object>> ConvertToIntIndexRows(IEnumerable<o
 
 
 ### 参考
-- 读取逻辑 :  [ExcelDataReader](https://github.com/ExcelDataReader/ExcelDataReader)  / [ClosedXML](https://github.com/ClosedXML/ClosedXML)
-- API 设计方式 :　[StackExchange/Dapper](https://github.com/StackExchange/Dapper)    
+
+[ExcelDataReader](https://github.com/ExcelDataReader/ExcelDataReader)  / [ClosedXML](https://github.com/ClosedXML/ClosedXML) / [Dapper](https://github.com/DapperLib/Dapper)    
 
 
 
 ### 感谢名单
 
-####  [Jetbrains](https://www.jetbrains.com/) 
+####  [Jetbrains](https://www.jetbrains.com/)
 
 ![jetbrains-variant-2](https://user-images.githubusercontent.com/12729184/123997015-8456c180-da02-11eb-829a-aec476fe8e94.png)
 

@@ -1248,8 +1248,8 @@ private IEnumerable<Dictionary<int, object>> ConvertToIntIndexRows(IEnumerable<o
 
 
 ### 參考
-- 讀取邏輯 :  [ExcelDataReader](https://github.com/ExcelDataReader/ExcelDataReader)  / [ClosedXML](https://github.com/ClosedXML/ClosedXML)
-- API 設計方式 :　[StackExchange/Dapper](https://github.com/StackExchange/Dapper)    
+
+[ExcelDataReader](https://github.com/ExcelDataReader/ExcelDataReader)  / [ClosedXML](https://github.com/ClosedXML/ClosedXML) / [Dapper](https://github.com/DapperLib/Dapper)    
 
 
 

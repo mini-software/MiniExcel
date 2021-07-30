@@ -1647,7 +1647,7 @@ MyProperty4,MyProperty1,MyProperty5,MyProperty2,MyProperty6,,MyProperty3
                 var q = await MiniExcel.QueryAsync<Issue138ExcelRow>(path);
                 var rows = q.ToList();
                 Assert.Equal(6, rows.Count);
-                Assert.Equal(new DateTime(2021, 3, 1), rows[0].date);
+                Assert.Equal(new DateTime(2021, 3, 1), rows[0].Date);
 
                 foreach (var index in new[] { 0, 2, 5 })
                 {
@@ -1673,7 +1673,7 @@ MyProperty4,MyProperty1,MyProperty5,MyProperty2,MyProperty6,,MyProperty3
 
         public class Issue138ExcelRow
         {
-            public DateTime? date { get; set; }
+            public DateTime? Date { get; set; }
             public int? 實單每日損益 { get; set; }
             public int? 程式每日損益 { get; set; }
             public string 商品 { get; set; }

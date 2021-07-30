@@ -30,7 +30,7 @@ namespace MiniExcelLibs.Tests
         /// Custom excel zip can't read and show Number of entries expected in End Of Central Directory does not correspond to number of entries in Central Directory. #272
         /// </summary>
         [Fact]
-        public void Test()
+        public void TestIssue272()
         {
             var path = PathHelper.GetSamplePath("/xlsx/TestIssue272.xlsx");
             try
@@ -86,7 +86,7 @@ namespace MiniExcelLibs.Tests
             Assert.False(IsDateFormatString(@"_-* #,##0\ _P_t_s_-;\-* #,##0\ _P_t_s_-;_-* "" - ""??\ _P_t_s_-;_-@_- "));
         }
 
-        private bool IsDateFormatString(string formatCode)
+        private static bool IsDateFormatString(string formatCode)
         {
             return MiniExcelLibs.Utils.DateTimeHelper.IsDateTimeFormat(formatCode);
         }
@@ -294,24 +294,24 @@ namespace MiniExcelLibs.Tests
         {
             var path = PathHelper.GetTempPath("csv");
             var value = new[] {
-                  new { name ="Jack",Age=25,InDate=new DateTime(2021,01,03)},
-                  new { name ="Henry",Age=36,InDate=new DateTime(2020,05,03)},
+                  new { Name ="Jack",Age=25,InDate=new DateTime(2021,01,03)},
+                  new { Name ="Henry",Age=36,InDate=new DateTime(2020,05,03)},
              };
             MiniExcel.SaveAs(path, value);
 
             var rows = MiniExcel.Query<Issue243Dto>(path).ToList();
-            Assert.Equal("Jack", rows[0].name);
+            Assert.Equal("Jack", rows[0].Name);
             Assert.Equal(25, rows[0].Age);
             Assert.Equal(new DateTime(2021, 01, 03), rows[0].InDate);
 
-            Assert.Equal("Henry", rows[1].name);
+            Assert.Equal("Henry", rows[1].Name);
             Assert.Equal(36, rows[1].Age);
             Assert.Equal(new DateTime(2020, 05, 03), rows[1].InDate);
         }
 
         public class Issue243Dto
         {
-            public string name { get; set; }
+            public string Name { get; set; }
             public int Age { get; set; }
             public DateTime InDate { get; set; }
         }
@@ -422,7 +422,8 @@ namespace MiniExcelLibs.Tests
         {
             var path = PathHelper.GetTempPath();
 
-            DataSet sheets = new DataSet();
+            DataSet dataSet = new();
+            DataSet sheets = dataSet;
             var users = JsonConvert.DeserializeObject<DataTable>(JsonConvert.SerializeObject(new[] { new { Name = "Jack", Age = 25 }, new { Name = "Mike", Age = 44 } }));
             users.TableName = "users";
             var department = JsonConvert.DeserializeObject<DataTable>(JsonConvert.SerializeObject(new[] { new { ID = "01", Name = "HR" }, new { ID = "02", Name = "IT" } })); ;
@@ -590,7 +591,6 @@ namespace MiniExcelLibs.Tests
             foreach (DataColumn column in dt.Columns)
             {
                 var v = dt.Rows[3][column];
-                var type = v?.GetType();
                 Assert.Equal(DBNull.Value, v);
             }
         }
@@ -650,7 +650,7 @@ namespace MiniExcelLibs.Tests
                 {
                     var rows = MiniExcel.Query<UserAccount>(path).ToList();
 
-                    Assert.Equal(100, rows.Count());
+                    Assert.Equal(100, rows.Count);
 
                     Assert.Equal(Guid.Parse("78DE23D2-DCB6-BD3D-EC67-C112BBC322A2"), rows[0].ID);
                     Assert.Equal("Wade", rows[0].Name);
@@ -665,7 +665,7 @@ namespace MiniExcelLibs.Tests
                     {
                         var rows = stream.Query<UserAccount>().ToList();
 
-                        Assert.Equal(100, rows.Count());
+                        Assert.Equal(100, rows.Count);
 
                         Assert.Equal(Guid.Parse("78DE23D2-DCB6-BD3D-EC67-C112BBC322A2"), rows[0].ID);
                         Assert.Equal("Wade", rows[0].Name);
@@ -750,7 +750,7 @@ namespace MiniExcelLibs.Tests
                 Assert.Equal(new[] { "C12", "D12", "E12" }, new[] { rows[9].C as string, rows[9].D as string, rows[9].E as string });
                 Assert.Equal(new[] { "C13", "D13", "E13" }, new[] { rows[10].C as string, rows[10].D as string, rows[10].E as string });
                 foreach (var i in new[] { 4, 5, 7, 8 })
-                    Assert.Equal(new[] { default(string), default(string), default(string) }, new[] { rows[i].C as string, rows[i].D as string, rows[i].E as string });
+                    Assert.Equal(expected: new[] { default, default, default(string) }, new[] { rows[i].C as string, rows[i].D as string, rows[i].E as string });
 
                 Assert.Equal(11, rows.Count);
 
@@ -769,7 +769,7 @@ namespace MiniExcelLibs.Tests
                 Assert.Equal(new[] { "C12", "D12", "E12" }, new[] { rows[8].Column1 as string, rows[8].Column2 as string, rows[8].Column3 as string });
                 Assert.Equal(new[] { "C13", "D13", "E13" }, new[] { rows[9].Column1 as string, rows[9].Column2 as string, rows[9].Column3 as string });
                 foreach (var i in new[] { 3, 4, 6, 7 })
-                    Assert.Equal(new[] { default(string), default(string), default(string) }, new[] { rows[i].Column1 as string, rows[i].Column2 as string, rows[i].Column3 as string });
+                    Assert.Equal(new[] { default, default, default(string) }, new[] { rows[i].Column1 as string, rows[i].Column2 as string, rows[i].Column3 as string });
 
                 Assert.Equal(10, rows.Count);
 
@@ -817,7 +817,6 @@ namespace MiniExcelLibs.Tests
 
             {
                 var table = MiniExcel.QueryAsDataTable(path);
-                var columns = table.Columns;
                 Assert.Equal("Test1", table.Columns[0].ColumnName);
                 Assert.Equal("Test2", table.Columns[1].ColumnName);
                 Assert.Equal("1", table.Rows[0]["Test1"]);
@@ -978,7 +977,7 @@ Leave";
         [Fact]
         public void Issue217()
         {
-            DataTable table = new DataTable();
+            var table = new DataTable();
             table.Columns.Add("CustomerID");
             table.Columns.Add("CustomerName").Caption = "Name";
             table.Columns.Add("CreditLimit").Caption = "Limit";
@@ -1020,7 +1019,7 @@ Leave";
         public void Issue212()
         {
             var sheetName = "Demo";
-            var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
+            var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
             MiniExcel.SaveAs(path, new[] { new { x = 1, y = 2 } }, sheetName: sheetName);
 
             var actualSheetName = MiniExcel.GetSheetNames(path).ToList()[0];
@@ -1038,7 +1037,7 @@ Leave";
         public void Issue207()
         {
             {
-                var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
+                var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
                 var tempaltePath = @"../../../../../samples/xlsx/TestIssue207_2.xlsx";
 
                 var value = new
@@ -1084,7 +1083,7 @@ Leave";
             }
 
             {
-                var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
+                var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
                 var tempaltePath = @"../../../../../samples/xlsx/TestIssue207_Template_Merge_row_list_rendering_without_merge/template.xlsx";
 
                 var value = new
@@ -1122,7 +1121,7 @@ Leave";
         [Fact]
         public void Issue87()
         {
-            var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
+            var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
             var templatePath = @"../../../../../samples/xlsx/TestTemplateCenterEmpty.xlsx";
             var value = new
             {
@@ -1156,7 +1155,7 @@ Leave";
         public void Issue206()
         {
             {
-                var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
+                var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
                 var templatePath = @"../../../../../samples/xlsx/TestTemplateBasicIEmumerableFill.xlsx";
 
                 var dt = new DataTable();
@@ -1177,7 +1176,7 @@ Leave";
             }
 
             {
-                var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
+                var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
                 var templatePath = @"../../../../../samples/xlsx/TestTemplateBasicIEmumerableFill.xlsx";
 
                 var dt = new DataTable();
@@ -1207,7 +1206,7 @@ Leave";
         public void Issue193()
         {
             {
-                var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
+                var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
                 var templatePath = @"../../../../../samples/xlsx/TestTemplateComplexWithNamespacePrefix.xlsx";
 
                 // 1. By Class
@@ -1264,7 +1263,7 @@ Leave";
 
 
             {
-                var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
+                var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
                 var templatePath = @"../../../../../samples/xlsx/TestTemplateComplex.xlsx";
 
                 // 2. By Dictionary
@@ -1313,7 +1312,7 @@ Leave";
         public void Issue142()
         {
             {
-                var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
+                var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
                 MiniExcel.SaveAs(path, new Issue142VO[] { new Issue142VO { MyProperty1 = "MyProperty1", MyProperty2 = "MyProperty2", MyProperty3 = "MyProperty3", MyProperty4 = "MyProperty4", MyProperty5 = "MyProperty5", MyProperty6 = "MyProperty6", MyProperty7 = "MyProperty7" } });
 
                 {
@@ -1354,7 +1353,7 @@ Leave";
             }
 
             {
-                var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.csv");
+                var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.csv");
                 MiniExcel.SaveAs(path, new Issue142VO[] { new Issue142VO { MyProperty1 = "MyProperty1", MyProperty2 = "MyProperty2", MyProperty3 = "MyProperty3", MyProperty4 = "MyProperty4", MyProperty5 = "MyProperty5", MyProperty6 = "MyProperty6", MyProperty7 = "MyProperty7" } });
                 var expected = @"MyProperty4,CustomColumnName,MyProperty5,MyProperty2,MyProperty6,,MyProperty3
 MyProperty4,MyProperty1,MyProperty5,MyProperty2,MyProperty6,,MyProperty3
@@ -1378,7 +1377,7 @@ MyProperty4,MyProperty1,MyProperty5,MyProperty2,MyProperty6,,MyProperty3
             }
 
             {
-                var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.csv");
+                var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.csv");
                 var input = new Issue142VoDuplicateColumnName[] { new Issue142VoDuplicateColumnName { } };
                 Assert.Throws<InvalidOperationException>(() => MiniExcel.SaveAs(path, input));
             }
@@ -1468,7 +1467,7 @@ MyProperty4,MyProperty1,MyProperty5,MyProperty2,MyProperty6,,MyProperty3
         [Fact]
         public void Issue150()
         {
-            var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
+            var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
             //MiniExcel.SaveAs(path, new[] { "1", "2" });
             Assert.Throws<NotImplementedException>(() => MiniExcel.SaveAs(path, new[] { 1, 2 }));
             File.Delete(path);
@@ -1489,28 +1488,26 @@ MyProperty4,MyProperty1,MyProperty5,MyProperty2,MyProperty6,,MyProperty3
         public void Issue157()
         {
             {
-                var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
+                var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
                 Console.WriteLine("==== SaveAs by strongly type ====");
                 var input = JsonConvert.DeserializeObject<IEnumerable<UserAccount>>("[{\"ID\":\"78de23d2-dcb6-bd3d-ec67-c112bbc322a2\",\"Name\":\"Wade\",\"BoD\":\"2020-09-27T00:00:00\",\"Age\":5019,\"VIP\":false,\"Points\":5019.12,\"IgnoredProperty\":null},{\"ID\":\"20d3bfce-27c3-ad3e-4f70-35c81c7e8e45\",\"Name\":\"Felix\",\"BoD\":\"2020-10-25T00:00:00\",\"Age\":7028,\"VIP\":true,\"Points\":7028.46,\"IgnoredProperty\":null},{\"ID\":\"52013bf0-9aeb-48e6-e5f5-e9500afb034f\",\"Name\":\"Phelan\",\"BoD\":\"2021-10-04T00:00:00\",\"Age\":3836,\"VIP\":true,\"Points\":3835.7,\"IgnoredProperty\":null},{\"ID\":\"3b97b87c-7afe-664f-1af5-6914d313ae25\",\"Name\":\"Samuel\",\"BoD\":\"2020-06-21T00:00:00\",\"Age\":9352,\"VIP\":false,\"Points\":9351.71,\"IgnoredProperty\":null},{\"ID\":\"9a989c43-d55f-5306-0d2f-0fbafae135bb\",\"Name\":\"Raymond\",\"BoD\":\"2021-07-12T00:00:00\",\"Age\":8210,\"VIP\":true,\"Points\":8209.76,\"IgnoredProperty\":null}]");
                 MiniExcel.SaveAs(path, input);
 
                 var rows = MiniExcel.Query(path, sheetName: "Sheet1").ToList();
-                Assert.Equal(6, rows.Count());
+                Assert.Equal(6, rows.Count);
                 Assert.Equal("Sheet1", MiniExcel.GetSheetNames(path).First());
 
-                using (var p = new ExcelPackage(new FileInfo(path)))
-                {
-                    var ws = p.Workbook.Worksheets.First();
-                    Assert.Equal("Sheet1", ws.Name);
-                    Assert.Equal("Sheet1", p.Workbook.Worksheets["Sheet1"].Name);
-                }
+                using var p = new ExcelPackage(new FileInfo(path));
+                var ws = p.Workbook.Worksheets.First();
+                Assert.Equal("Sheet1", ws.Name);
+                Assert.Equal("Sheet1", p.Workbook.Worksheets["Sheet1"].Name);
             }
             {
                 var path = @"../../../../../samples/xlsx/TestIssue157.xlsx";
 
                 {
                     var rows = MiniExcel.Query(path, sheetName: "Sheet1").ToList();
-                    Assert.Equal(6, rows.Count());
+                    Assert.Equal(6, rows.Count);
                     Assert.Equal("Sheet1", MiniExcel.GetSheetNames(path).First());
                 }
                 using (var p = new ExcelPackage(new FileInfo(path)))
@@ -1523,7 +1520,7 @@ MyProperty4,MyProperty1,MyProperty5,MyProperty2,MyProperty6,,MyProperty3
                 using (var stream = File.OpenRead(path))
                 {
                     var rows = MiniExcel.Query<UserAccount>(path, sheetName: "Sheet1").ToList();
-                    Assert.Equal(5, rows.Count());
+                    Assert.Equal(5, rows.Count);
 
                     Assert.Equal(Guid.Parse("78DE23D2-DCB6-BD3D-EC67-C112BBC322A2"), rows[0].ID);
                     Assert.Equal("Wade", rows[0].Name);
@@ -1733,7 +1730,7 @@ MyProperty4,MyProperty1,MyProperty5,MyProperty2,MyProperty6,,MyProperty3
 
                 var rows = MiniExcel.Query<Issue138ExcelRow>(path).ToList();
                 Assert.Equal(6, rows.Count);
-                Assert.Equal(new DateTime(2021, 3, 1), rows[0].date);
+                Assert.Equal(new DateTime(2021, 3, 1), rows[0].Date);
 
                 foreach (var index in new[] { 0, 2, 5 })
                 {
@@ -1759,7 +1756,7 @@ MyProperty4,MyProperty1,MyProperty5,MyProperty2,MyProperty6,,MyProperty3
 
         public class Issue138ExcelRow
         {
-            public DateTime? date { get; set; }
+            public DateTime? Date { get; set; }
             public int? 實單每日損益 { get; set; }
             public int? 程式每日損益 { get; set; }
             public string 商品 { get; set; }

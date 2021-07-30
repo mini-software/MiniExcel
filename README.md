@@ -1241,8 +1241,7 @@ Because MiniExcel uses a logic similar to JSON.NET to dynamically get type from 
 
 ### Reference
 
-- [ExcelDataReader](https://github.com/ExcelDataReader/ExcelDataReader)  / [ClosedXML](https://github.com/ClosedXML/ClosedXML)
-- [StackExchange/Dapper](https://github.com/StackExchange/Dapper)    
+[ExcelDataReader](https://github.com/ExcelDataReader/ExcelDataReader)  / [ClosedXML](https://github.com/ClosedXML/ClosedXML) / [Dapper](https://github.com/DapperLib/Dapper)    
 
 
 

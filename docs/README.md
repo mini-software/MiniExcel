@@ -17,6 +17,7 @@
 ---
 
 ### 0.17.4
+- [New] Support set column width #280
 - [Bug] Fix csv not support QueryAsDataTable #279
 
 ### 0.17.3 

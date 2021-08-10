@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFrameworks>net45;netstandard2.0;net5.0</TargetFrameworks>
-		<Version>0.17.2</Version>
+		<Version>0.17.3</Version>
 	</PropertyGroup>
 	<PropertyGroup>
 		<AssemblyName>MiniExcel</AssemblyName>
@@ -16,13 +16,13 @@
 			Issues : https://github.com/shps951023/MiniExcel/issues
 			Todo : https://github.com/shps951023/MiniExcel/projects/1?fullscreen=true
 		</Description>
-		<Authors>ITWeiHan</Authors>
+		<Authors>LIN,WEI-HAN</Authors>
 		<PackageId>MiniExcel</PackageId>
-		<Copyright>©2021 WeiHan Lin</Copyright>
-		<PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+		<Copyright>LIN,WEI-HAN, 2021 onwards</Copyright>
 		<NeutralLanguage>en</NeutralLanguage>
 		<license>https://raw.githubusercontent.com/shps951023/MiniExcel/master/LICENSE</license>
-		<PackageLicenseUrl>https://raw.githubusercontent.com/shps951023/MiniExcel/master/LICENSE</PackageLicenseUrl>
+		<RootNamespace>MiniExcelLibs</RootNamespace>
+		<PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
 		<PackageProjectUrl>https://github.com/shps951023/MiniExcel</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/shps951023/MiniExcel</RepositoryUrl>
 		<PackageIconUrl>https://user-images.githubusercontent.com/12729184/115023335-39440c80-9ef1-11eb-8771-7260d1e50d5a.png</PackageIconUrl>

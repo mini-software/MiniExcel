@@ -18,7 +18,7 @@ namespace MiniExcelLibs.OpenXml
         public object Values { get; set; }
     }
 
-    internal class ExcelOpenXmlSheetWriter : IExcelWriter , IExcelWriterAsync
+    internal class ExcelOpenXmlSheetWriter : IExcelWriter, IExcelWriterAsync
     {
         private readonly static UTF8Encoding _utf8WithBom = new System.Text.UTF8Encoding(true);
         private Stream _stream;
@@ -166,8 +166,16 @@ namespace MiniExcelLibs.OpenXml
                     var maxRowIndex = rowCount + (printHeader && rowCount > 0 ? 1 : 0);  //TODO:it can optimize
                     writer.Write($@"<x:dimension ref=""{GetDimensionRef(maxRowIndex, maxColumnIndex)}""/>");
 
-                    //cols
-
+                    //cols:width
+                    if (props != null)
+                    {
+                        writer.Write($@"<x:cols>");
+                        foreach (var p in props.Where(x => x?.ExcelColumnWidth != null))
+                        {
+                            writer.Write($@"<x:col min=""{p.ExcelColumnIndex+1}"" max=""{p.ExcelColumnIndex + 1}"" width=""{p.ExcelColumnWidth}"" customWidth=""1"" />");
+                        }
+                        writer.Write($@"</x:cols>");
+                    }
 
                     //header
                     writer.Write($@"<x:sheetData>");
@@ -243,7 +251,7 @@ namespace MiniExcelLibs.OpenXml
                 foreach (var key in keys)
                 {
                     var cellValue = v[key];
-                    WriteCell(writer, yIndex, cellIndex, cellValue,null);
+                    WriteCell(writer, yIndex, cellIndex, cellValue, null);
                     cellIndex++;
                 }
                 writer.Write($"</x:row>");
@@ -260,7 +268,7 @@ namespace MiniExcelLibs.OpenXml
                 foreach (var key in keys)
                 {
                     var cellValue = v[key];
-                    WriteCell(writer, yIndex, cellIndex, cellValue,null);
+                    WriteCell(writer, yIndex, cellIndex, cellValue, null);
                     cellIndex++;
                 }
                 writer.Write($"</x:row>");
@@ -282,7 +290,7 @@ namespace MiniExcelLibs.OpenXml
                         continue;
                     }
                     var cellValue = p.Property.GetValue(v);
-                    WriteCell(writer, yIndex, cellIndex, cellValue,p);
+                    WriteCell(writer, yIndex, cellIndex, cellValue, p);
                     cellIndex++;
                 }
                 writer.Write($"</x:row>");
@@ -328,7 +336,7 @@ namespace MiniExcelLibs.OpenXml
                 }
                 else if (type == typeof(DateTime))
                 {
-                    if(p==null || p.ExcelFormat == null)
+                    if (p == null || p.ExcelFormat == null)
                     {
                         t = null;
                         s = "3";
@@ -387,7 +395,7 @@ namespace MiniExcelLibs.OpenXml
                     for (int j = 0; j < value.Columns.Count; j++)
                     {
                         var cellValue = value.Rows[i][j];
-                        WriteCell(writer, yIndex, xIndex, cellValue,null);
+                        WriteCell(writer, yIndex, xIndex, cellValue, null);
                         xIndex++;
                     }
                     writer.Write($"</x:row>");
@@ -434,7 +442,7 @@ namespace MiniExcelLibs.OpenXml
                     for (int i = 0; i < fieldCount; i++)
                     {
                         var cellValue = reader.GetValue(i);
-                        WriteCell(writer, yIndex, xIndex, cellValue,null);
+                        WriteCell(writer, yIndex, xIndex, cellValue, null);
                         xIndex++;
                     }
                     writer.Write($"</x:row>");

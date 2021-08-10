@@ -757,6 +757,18 @@ Query 支持自定义格式转换
 
 ![image](https://user-images.githubusercontent.com/12729184/118911286-87b55280-b958-11eb-9a88-c8ff403d240a.png)
 
+#### 3. 指定列宽(ExcelColumnWidthAttribute)
+
+```csharp
+public class Dto
+{
+    [ExcelColumnWidth(20)]
+    public int ID { get; set; }
+    [ExcelColumnWidth(15.50)]
+    public string Name { get; set; }
+}
+```
+
 
 
 

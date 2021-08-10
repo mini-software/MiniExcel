@@ -27,6 +27,25 @@ namespace MiniExcelLibs.Tests
         }
 
         /// <summary>
+        /// [Support column width attribute · Issue #280 · shps951023/MiniExcel](https://github.com/shps951023/MiniExcel/issues/280)
+        /// </summary>
+        [Fact]
+        public void TestIssue280()
+        {
+            var value = new[] { new TestIssue280Dto { ID=1,Name="Jack"}, new TestIssue280Dto { ID = 2, Name = "Mike" } };
+            var path = PathHelper.GetTempPath();
+            MiniExcel.SaveAs(path, value);
+        }
+
+        public class TestIssue280Dto
+        {
+            [ExcelColumnWidth(20)]
+            public int ID { get; set; }
+            [ExcelColumnWidth(15.50)]
+            public string Name { get; set; }
+        }
+
+        /// <summary>
         /// Csv not support QueryAsDataTable #279 https://github.com/shps951023/MiniExcel/issues/279
         /// </summary>
         [Fact]

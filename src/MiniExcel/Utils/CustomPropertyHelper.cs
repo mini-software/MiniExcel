@@ -15,6 +15,7 @@
         public Type ExcludeNullableType { get; set; }
         public bool Nullable { get; internal set; }
         public string ExcelFormat { get; internal set; }
+        public double? ExcelColumnWidth { get; internal set; }
     }
 
     internal static partial class CustomPropertyHelper
@@ -126,20 +127,21 @@
 
         private static IEnumerable<ExcelCustomPropertyInfo> GetExcelPropertyInfo(Type type, BindingFlags bindingFlags)
         {
+            //TODO:assign column index 
             return type.GetProperties(bindingFlags)
                  // solve : https://github.com/shps951023/MiniExcel/issues/138
                  .Select(p =>
                  {
                      var gt = Nullable.GetUnderlyingType(p.PropertyType);
-                     var excelNameAttr = p.GetAttribute<ExcelColumnNameAttribute>();
-                     var excelIndexAttr = p.GetAttribute<ExcelColumnIndexAttribute>();
                      return new ExcelCustomPropertyInfo
                      {
+                         
                          Property = p,
                          ExcludeNullableType = gt ?? p.PropertyType,
                          Nullable = gt != null ? true : false,
-                         ExcelColumnName = excelNameAttr?.ExcelColumnName ?? p.Name,
-                         ExcelColumnIndex = excelIndexAttr?.ExcelColumnIndex,
+                         ExcelColumnName = p.GetAttribute<ExcelColumnNameAttribute>()?.ExcelColumnName ?? p.Name,
+                         ExcelColumnIndex = p.GetAttribute<ExcelColumnIndexAttribute>()?.ExcelColumnIndex,
+                         ExcelColumnWidth = p.GetAttribute<ExcelColumnWidthAttribute>()?.ExcelColumnWidth,
                          ExcelFormat = p.GetAttribute<ExcelFormatAttribute>()?.Format,
                      };
                  });

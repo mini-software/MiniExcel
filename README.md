@@ -754,6 +754,18 @@ Query supports custom format conversion
 
 ![image](https://user-images.githubusercontent.com/12729184/118911286-87b55280-b958-11eb-9a88-c8ff403d240a.png)
 
+#### 3. Set Column Width(ExcelColumnWidthAttribute)
+
+```csharp
+public class Dto
+{
+    [ExcelColumnWidth(20)]
+    public int ID { get; set; }
+    [ExcelColumnWidth(15.50)]
+    public string Name { get; set; }
+}
+```
+
 
 
 

@@ -16,11 +16,9 @@
 
 ---
 
-### 0.17.4
+### 0.17.3 
 - [New] Support set column width #280
 - [Bug] Fix csv not support QueryAsDataTable #279
-
-### 0.17.3 
 - [OPT] Clearer exception message when file is illegal excel zip format. #272
 
 ### 0.17.2

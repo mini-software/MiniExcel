@@ -571,7 +571,7 @@ namespace MiniExcelLibs.OpenXml
 
         internal static DataTable QueryAsDataTableImpl(Stream stream, bool useHeaderRow, ref string sheetName, ExcelType excelType, string startCell, IConfiguration configuration)
         {
-            if (sheetName == null)
+            if (sheetName == null && excelType != ExcelType.CSV) /*Issue #279*/
                 sheetName = stream.GetSheetNames().First();
 
             var dt = new DataTable(sheetName);

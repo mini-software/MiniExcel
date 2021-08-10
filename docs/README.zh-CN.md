@@ -23,6 +23,9 @@
 
 ---
 
+### 0.17.4
+- [Bug] 修复 csv 不支持 QueryAsDataTable #279
+
 ### 0.17.3
 - [OPT] 更加清楚的错误信息，当文件是错误 excel zip 格式 #272
 

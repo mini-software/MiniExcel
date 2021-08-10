@@ -27,6 +27,20 @@ namespace MiniExcelLibs.Tests
         }
 
         /// <summary>
+        /// Csv not support QueryAsDataTable #279 https://github.com/shps951023/MiniExcel/issues/279
+        /// </summary>
+        [Fact]
+        public void TestIssue279()
+        {
+            var path = PathHelper.GetSamplePath("/csv/TestHeader.csv");
+            var dt = MiniExcel.QueryAsDataTable(path, true, null, ExcelType.CSV);
+            Assert.Equal("A1", dt.Rows[0]["Column1"]);
+            Assert.Equal("A2", dt.Rows[1]["Column1"]);
+            Assert.Equal("B1", dt.Rows[0]["Column2"]);
+            Assert.Equal("B2", dt.Rows[1]["Column2"]);
+        }
+
+        /// <summary>
         /// Custom excel zip can't read and show Number of entries expected in End Of Central Directory does not correspond to number of entries in Central Directory. #272
         /// </summary>
         [Fact]

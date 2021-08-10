@@ -16,6 +16,9 @@
 
 ---
 
+### 0.17.4
+- [Bug] Fix csv not support QueryAsDataTable #279
+
 ### 0.17.3 
 - [OPT] Clearer exception message when file is illegal excel zip format. #272
 

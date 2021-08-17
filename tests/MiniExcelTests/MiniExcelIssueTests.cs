@@ -27,6 +27,18 @@ namespace MiniExcelLibs.Tests
         }
 
         /// <summary>
+        /// 
+        /// </summary>
+        [Fact]
+        public void TestIssueI45TF5()
+        {
+            var path = PathHelper.GetTempPath();
+            MiniExcel.SaveAs(path, new[] { new { C1 = "1&2;3,4", C2 = "1&2;3,4" } });
+            var sheet1Xml = Helpers.GetZipFileContent(path, "xl/worksheets/sheet1.xml");
+            Assert.True(!sheet1Xml.Contains("<x:cols>"));
+        }
+
+        /// <summary>
         /// [Support column width attribute · Issue #280 · shps951023/MiniExcel](https://github.com/shps951023/MiniExcel/issues/280)
         /// </summary>
         [Fact]

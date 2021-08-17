@@ -69,7 +69,21 @@
             }
             return result;
         }
-
+        internal static string GetZipFileContent(string zipPath,string filePath)
+        {
+            var ns = new XmlNamespaceManager(new NameTable());
+            ns.AddNamespace("x", "http://schemas.openxmlformats.org/spreadsheetml/2006/main");
+            using (var stream = File.OpenRead(zipPath))
+            using (ZipArchive archive = new ZipArchive(stream, ZipArchiveMode.Read, false, Encoding.UTF8))
+            {
+                var sheet = archive.Entries.Single(w => w.FullName== filePath);
+                using (var sheetStream = sheet.Open())
+                {
+                    var doc = XDocument.Load(sheetStream);
+                    return doc.ToString();
+                }
+            }
+        }
 
         internal static string GetFirstSheetDimensionRefValue(string path)
         {

@@ -17,6 +17,9 @@
 
 ---
 
+### 0.17.4 
+- [Bug] 修復0.17.3版本更新導致 SaveAs 創建 xlsx 文件錯誤 "XML error : Catastrophic failure"
+
 ### 0.17.3
 - [New] 支持設定列寬 #280
 - [Bug] 修復 csv 不支持 QueryAsDataTable #279

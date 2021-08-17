@@ -167,10 +167,11 @@ namespace MiniExcelLibs.OpenXml
                     writer.Write($@"<x:dimension ref=""{GetDimensionRef(maxRowIndex, maxColumnIndex)}""/>");
 
                     //cols:width
-                    if (props != null)
+                    var ecwProp = props?.Where(x => x?.ExcelColumnWidth != null).ToList();
+                    if (ecwProp != null && ecwProp.Count >0)
                     {
                         writer.Write($@"<x:cols>");
-                        foreach (var p in props.Where(x => x?.ExcelColumnWidth != null))
+                        foreach (var p in ecwProp)
                         {
                             writer.Write($@"<x:col min=""{p.ExcelColumnIndex+1}"" max=""{p.ExcelColumnIndex + 1}"" width=""{p.ExcelColumnWidth}"" customWidth=""1"" />");
                         }

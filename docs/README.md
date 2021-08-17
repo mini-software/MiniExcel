@@ -16,6 +16,9 @@
 
 ---
 
+### 0.17.4 
+- [Bug] Fix v0.17.3 SaveAs xlsx file will cause "XML error : Catastrophic failure"
+
 ### 0.17.3 
 - [New] Support set column width #280
 - [Bug] Fix csv not support QueryAsDataTable #279

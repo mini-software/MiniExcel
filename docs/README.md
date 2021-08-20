@@ -16,6 +16,9 @@
 
 ---
 
+### 0.17.5
+- [Bug] Fix xlsx file column name with `&,<,>,",'`, the file cannot be opened.
+
 ### 0.17.4 
 - [Bug] Fix v0.17.3 SaveAs xlsx file will cause "XML error : Catastrophic failure"
 

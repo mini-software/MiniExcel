@@ -23,6 +23,9 @@
 
 ---
 
+### 0.17.5
+- [Bug] 修復xlsx文件中字段包含`&,<,>,",'`符號，導出數據字段後打不開文件
+
 ### 0.17.4 
 - [Bug] 修复0.17.3版本更新导致 SaveAs 创建 xlsx 文件错误 "XML error : Catastrophic failure"
 

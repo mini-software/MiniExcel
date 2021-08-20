@@ -27,8 +27,30 @@ namespace MiniExcelLibs.Tests
         }
 
         /// <summary>
-        /// 
+        /// Semicolon expected
         /// </summary>
+        [Fact]
+        public void TestIssueI45TF5_2()
+        {
+            {
+                var value = new[] { new Dictionary<string, object>() { { "Col1&Col2", "V1&V2" } } };
+                var path = PathHelper.GetTempPath();
+                MiniExcel.SaveAs(path, value);
+                //System.Xml.XmlException : '<' is an unexpected token. The expected token is ';'.
+                Helpers.GetZipFileContent(path, "xl/worksheets/sheet1.xml"); //check illegal format or not
+            }
+
+            {
+                var dt = new DataTable();
+                dt.Columns.Add("Col1&Col2");
+                dt.Rows.Add("V1&V2");
+                var path = PathHelper.GetTempPath();
+                MiniExcel.SaveAs(path, dt);
+                //System.Xml.XmlException : '<' is an unexpected token. The expected token is ';'.
+                Helpers.GetZipFileContent(path, "xl/worksheets/sheet1.xml"); //check illegal format or not
+            }
+        }
+
         [Fact]
         public void TestIssueI45TF5()
         {

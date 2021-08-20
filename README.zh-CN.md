@@ -1239,6 +1239,12 @@ private IEnumerable<Dictionary<int, object>> ConvertToIntIndexRows(IEnumerable<o
 
 
 
+#### Q. 如何人为空白行中止遍历?
+
+常发生人为不小心在最后几行留下空白行情况，MiniExcel可以搭配 `LINQ TakeWhile`实现空白行中断遍历。
+
+![image](https://user-images.githubusercontent.com/12729184/130209137-162621c2-f337-4479-9996-beeac65bc4d4.png)
+
 
 
 

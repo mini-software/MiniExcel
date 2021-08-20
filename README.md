@@ -1241,6 +1241,12 @@ Because MiniExcel uses a logic similar to JSON.NET to dynamically get type from 
 
 
 
+#### Q. How to stop the foreach when blank row?
+
+MiniExcel can be used with `LINQ TakeWhile` to stop foreach iterator.
+
+![Image](https://user-images.githubusercontent.com/12729184/130209137-162621c2-f337-4479-9996-beeac65bc4d4.png)
+
 
 
 

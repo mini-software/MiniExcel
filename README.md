@@ -1239,7 +1239,7 @@ Because MiniExcel uses a logic similar to JSON.NET to dynamically get type from 
 
 ![image](https://user-images.githubusercontent.com/12729184/122639771-546c0c00-d12e-11eb-800c-498db27889ca.png)
 
-
+> Strong type & DataTable will generate headers, but Dictionary are still empty Excel
 
 #### Q. How to stop the foreach when blank row?
 

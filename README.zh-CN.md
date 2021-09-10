@@ -1237,7 +1237,7 @@ private IEnumerable<Dictionary<int, object>> ConvertToIntIndexRows(IEnumerable<o
 
 ![image](https://user-images.githubusercontent.com/12729184/122639771-546c0c00-d12e-11eb-800c-498db27889ca.png)
 
-
+> 强型别和 DataTable 会生成表头，但 Dicionary 依旧是空 Excel
 
 #### Q. 如何人为空白行中止遍历?
 

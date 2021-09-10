@@ -11,6 +11,18 @@
 
     internal static partial class TypeHelper
     {
+        /// <summary>
+        /// From : https://stackoverflow.com/questions/906499/getting-type-t-from-ienumerablet
+        /// </summary>
+        public static IEnumerable<Type> GetGenericIEnumerables(object o)
+        {
+            return o.GetType()
+                    .GetInterfaces()
+                    .Where(t => t.IsGenericType
+                        && t.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+                    .Select(t => t.GetGenericArguments()[0]);
+        }
+
         public static bool IsNumericType(Type type, bool isNullableUnderlyingType = false)
         {
             if (isNullableUnderlyingType)
@@ -33,7 +45,6 @@
                     return false;
             }
         }
-
 
         public static object TypeMapping<T>(T v, ExcelCustomPropertyInfo pInfo, object newValue, object itemValue, int rowIndex, string startCell) where T : class, new()
         {

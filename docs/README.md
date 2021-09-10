@@ -16,6 +16,9 @@
 
 ---
 
+### 0.18.0
+- [Breaking Change] SaveAs by empty IEnumerable<StrongType> will generate header now empty rows now. #133 
+
 ### 0.17.5
 - [Bug] Fix xlsx file header column name with `&,<,>,",'`, the file cannot be opened.
 

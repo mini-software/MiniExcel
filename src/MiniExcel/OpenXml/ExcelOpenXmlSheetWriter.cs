@@ -12,11 +12,6 @@ using System.Threading.Tasks;
 
 namespace MiniExcelLibs.OpenXml
 {
-    public class WorkSheet
-    {
-        public string SheetName { get; set; }
-        public object Values { get; set; }
-    }
 
     internal class ExcelOpenXmlSheetWriter : IExcelWriter, IExcelWriterAsync
     {
@@ -99,6 +94,9 @@ namespace MiniExcelLibs.OpenXml
                 {
                     var values = value as IEnumerable;
 
+                    // try to get type from reflection
+                    // genericType = null
+
                     var rowCount = 0;
 
                     var maxColumnIndex = 0;
@@ -112,6 +110,8 @@ namespace MiniExcelLibs.OpenXml
                         foreach (var item in values) //TODO: need to optimize
                         {
                             rowCount = checked(rowCount + 1);
+
+                            //TODO: if item is null but it's collection<T>, it can get T type from reflection
                             if (item != null && mode == null)
                             {
                                 if (item is IDictionary<string, object>)
@@ -132,17 +132,13 @@ namespace MiniExcelLibs.OpenXml
                                 }
                                 else
                                 {
-                                    mode = "Properties";
+                                    var _t = item.GetType();
+                                    if (_t != genericType)
+                                        genericType = item.GetType();
                                     genericType = item.GetType();
-                                    if (genericType.IsValueType)
-                                        throw new NotImplementedException($"MiniExcel not support only {genericType.Name} value generic type");
-                                    else if (genericType == typeof(string) || genericType == typeof(DateTime) || genericType == typeof(Guid))
-                                        throw new NotImplementedException($"MiniExcel not support only {genericType.Name} generic type");
-                                    props = CustomPropertyHelper.GetSaveAsProperties(genericType);
-                                    maxColumnIndex = props.Count;
+                                    SetGenericTypePropertiesMode(genericType, ref mode, out maxColumnIndex, out props);
                                 }
 
-                                // not re-foreach key point
                                 var collection = value as ICollection;
                                 if (collection != null)
                                 {
@@ -156,8 +152,17 @@ namespace MiniExcelLibs.OpenXml
 
                     if (rowCount == 0)
                     {
-                        WriteEmptySheet(writer);
-                        goto End;
+                        // only when empty IEnumerable need to check this issue #133  https://github.com/shps951023/MiniExcel/issues/133
+                        genericType = TypeHelper.GetGenericIEnumerables(values).FirstOrDefault();
+                        if (genericType == null)
+                        {
+                            WriteEmptySheet(writer);
+                            goto End;
+                        }
+                        else
+                        {
+                            SetGenericTypePropertiesMode(genericType,ref mode, out maxColumnIndex, out props);
+                        }
                     }
 
                     writer.Write($@"<?xml version=""1.0"" encoding=""utf-8""?><x:worksheet xmlns:x=""http://schemas.openxmlformats.org/spreadsheetml/2006/main"">");
@@ -168,12 +173,12 @@ namespace MiniExcelLibs.OpenXml
 
                     //cols:width
                     var ecwProp = props?.Where(x => x?.ExcelColumnWidth != null).ToList();
-                    if (ecwProp != null && ecwProp.Count >0)
+                    if (ecwProp != null && ecwProp.Count > 0)
                     {
                         writer.Write($@"<x:cols>");
                         foreach (var p in ecwProp)
                         {
-                            writer.Write($@"<x:col min=""{p.ExcelColumnIndex+1}"" max=""{p.ExcelColumnIndex + 1}"" width=""{p.ExcelColumnWidth}"" customWidth=""1"" />");
+                            writer.Write($@"<x:col min=""{p.ExcelColumnIndex + 1}"" max=""{p.ExcelColumnIndex + 1}"" width=""{p.ExcelColumnWidth}"" customWidth=""1"" />");
                         }
                         writer.Write($@"</x:cols>");
                     }
@@ -236,6 +241,17 @@ namespace MiniExcelLibs.OpenXml
             }
         End:
             packages.Add(sheetPath, new ZipPackageInfo(entry, "application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"));
+        }
+
+        private static void SetGenericTypePropertiesMode(Type genericType, ref string mode, out int maxColumnIndex, out List<ExcelCustomPropertyInfo> props)
+        {
+            mode = "Properties";
+            if (genericType.IsValueType)
+                throw new NotImplementedException($"MiniExcel not support only {genericType.Name} value generic type");
+            else if (genericType == typeof(string) || genericType == typeof(DateTime) || genericType == typeof(Guid))
+                throw new NotImplementedException($"MiniExcel not support only {genericType.Name} generic type");
+            props = CustomPropertyHelper.GetSaveAsProperties(genericType);
+            maxColumnIndex = props.Count;
         }
 
         private void WriteEmptySheet(StreamWriter writer)

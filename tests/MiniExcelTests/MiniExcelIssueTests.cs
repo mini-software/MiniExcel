@@ -26,6 +26,40 @@ namespace MiniExcelLibs.Tests
             this.output = output;
         }
 
+        [Fact]
+        public void TestIssues133()
+        {
+            {
+                var path = PathHelper.GetTempPath();
+                var value = new DataTable();
+                value.Columns.Add("Id");
+                value.Columns.Add("Name");
+                MiniExcel.SaveAs(path, value);
+                var rows = MiniExcel.Query(path).ToList();
+                Assert.Equal("Id", rows[0].A);
+                Assert.Equal("Name", rows[0].B);
+                Assert.Single(rows);
+                Assert.Equal("A1:B1", Helpers.GetFirstSheetDimensionRefValue(path));
+            }
+
+            {
+                var path = PathHelper.GetTempPath();
+                var value = new TestIssues133Dto[] { };
+                MiniExcel.SaveAs(path, value);
+                var rows = MiniExcel.Query(path).ToList();
+                Assert.Equal("Id", rows[0].A);
+                Assert.Equal("Name", rows[0].B);
+                Assert.Single(rows);
+                Assert.Equal("A1:B1", Helpers.GetFirstSheetDimensionRefValue(path));
+            }
+        }
+
+        public class TestIssues133Dto
+        {
+            public string Id { get; set; }
+            public string Name { get; set; }
+        }
+
         /// <summary>
         /// Semicolon expected
         /// </summary>
@@ -66,7 +100,7 @@ namespace MiniExcelLibs.Tests
         [Fact]
         public void TestIssue280()
         {
-            var value = new[] { new TestIssue280Dto { ID=1,Name="Jack"}, new TestIssue280Dto { ID = 2, Name = "Mike" } };
+            var value = new[] { new TestIssue280Dto { ID = 1, Name = "Jack" }, new TestIssue280Dto { ID = 2, Name = "Mike" } };
             var path = PathHelper.GetTempPath();
             MiniExcel.SaveAs(path, value);
         }
@@ -124,7 +158,7 @@ namespace MiniExcelLibs.Tests
             Assert.Equal(43.199999999999996, row.C);
             Assert.Equal(1.2, row.D);
             Assert.Equal(new DateTime(2021, 7, 5), row.E);
-            Assert.Equal(new DateTime(2021, 7, 5,15,2,46), row.F);
+            Assert.Equal(new DateTime(2021, 7, 5, 15, 2, 46), row.F);
         }
 
 
@@ -164,7 +198,7 @@ namespace MiniExcelLibs.Tests
             try
             {
                 var path = PathHelper.GetSamplePath("xlsx/TestIssueI3X2ZL_datetime_error.xlsx");
-                var rows = MiniExcel.Query<IssueI3X2ZLDTO>(path,startCell:"B3").ToList();
+                var rows = MiniExcel.Query<IssueI3X2ZLDTO>(path, startCell: "B3").ToList();
             }
             catch (InvalidCastException ex)
             {
@@ -246,7 +280,7 @@ namespace MiniExcelLibs.Tests
             //saveas
             {
                 var path = PathHelper.GetTempPath();
-                var value = new Issue255DTO[] { 
+                var value = new Issue255DTO[] {
                     new Issue255DTO { Time = new DateTime(2021, 01, 01) }
                 };
                 MiniExcel.SaveAs(path, value);

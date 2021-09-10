@@ -786,6 +786,21 @@ public class Dto
 }
 ```
 
+### 4. 多列名對應同一屬性
+
+```csharp
+public class Dto
+{
+    [ExcelColumnName(excelColumnName:"EmployeeNo",aliases:new[] { "EmpNo","No" })]
+    public string Empno { get; set; }
+    public string Name { get; set; }
+}
+```
+
+
+
+
+
 
 
 ### Excel 類別自動判斷 <a name="getstart5"></a>

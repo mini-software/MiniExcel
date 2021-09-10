@@ -6,6 +6,11 @@ namespace MiniExcelLibs.Attributes
     public class ExcelColumnNameAttribute : Attribute
     {
         public string ExcelColumnName { get; set; }
-        public ExcelColumnNameAttribute(string excelColumnName) => ExcelColumnName = excelColumnName;
+        public string[] Aliases { get; set; }
+        public ExcelColumnNameAttribute(string excelColumnName, string[] aliases=null)
+        {
+            ExcelColumnName = excelColumnName;
+            Aliases = aliases;
+        }
     }
 }

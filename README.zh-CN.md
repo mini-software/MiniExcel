@@ -769,7 +769,16 @@ public class Dto
 }
 ```
 
+### 4. 多列名对应同一属性
 
+```csharp
+public class Dto
+{
+    [ExcelColumnName(excelColumnName:"EmployeeNo",aliases:new[] { "EmpNo","No" })]
+    public string Empno { get; set; }
+    public string Name { get; set; }
+}
+```
 
 
 

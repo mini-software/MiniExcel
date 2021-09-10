@@ -24,6 +24,7 @@
 ---
 
 ### 0.18.0
+- [New] Query 强型别支持多列名对应同一属性 [#I40QA5](https://gitee.com/dotnetchina/MiniExcel/issues/I40QA5)
 - [Breaking Change] SaveAs 传空`IEnumerable<强型别>`现在会生成表头. #133
 
 ### 0.17.5

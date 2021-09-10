@@ -766,7 +766,16 @@ public class Dto
 }
 ```
 
+### 4. Multiple column names mapping to the same property.
 
+```csharp
+public class Dto
+{
+    [ExcelColumnName(excelColumnName:"EmployeeNo",aliases:new[] { "EmpNo","No" })]
+    public string Empno { get; set; }
+    public string Name { get; set; }
+}
+```
 
 
 

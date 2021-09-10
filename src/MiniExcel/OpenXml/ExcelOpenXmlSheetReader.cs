@@ -418,7 +418,24 @@ namespace MiniExcelLibs.OpenXml
                 var v = new T();
                 foreach (var pInfo in props)
                 {
-                    //TODO:don't need to check every time?
+                    if (pInfo.ExcelColumnAliases != null)
+                    {
+                        foreach (var alias in pInfo.ExcelColumnAliases)
+                        {
+                            if (item.ContainsKey(alias))
+                            {
+                                object newV = null;
+                                object itemValue = item[alias];
+
+                                if (itemValue == null)
+                                    continue;
+
+                                newV = TypeHelper.TypeMapping(v, pInfo, newV, itemValue, rowIndex, startCell);
+                            }
+                        }
+                    }
+
+                    //Q: Why need to check every time? A: it needs to check everytime, because it's dictionary
                     if (item.ContainsKey(pInfo.ExcelColumnName))
                     {
                         object newV = null;

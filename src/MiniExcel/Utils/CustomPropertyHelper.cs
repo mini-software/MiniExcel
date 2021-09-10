@@ -11,6 +11,7 @@
     {
         public int? ExcelColumnIndex { get; set; }
         public string ExcelColumnName { get; set; }
+        public string[] ExcelColumnAliases { get; set; }
         public PropertyInfo Property { get; set; }
         public Type ExcludeNullableType { get; set; }
         public bool Nullable { get; internal set; }
@@ -133,13 +134,15 @@
                  .Select(p =>
                  {
                      var gt = Nullable.GetUnderlyingType(p.PropertyType);
+                     var excelColumnName = p.GetAttribute<ExcelColumnNameAttribute>();
                      return new ExcelCustomPropertyInfo
                      {
                          
                          Property = p,
                          ExcludeNullableType = gt ?? p.PropertyType,
                          Nullable = gt != null ? true : false,
-                         ExcelColumnName = p.GetAttribute<ExcelColumnNameAttribute>()?.ExcelColumnName ?? p.Name,
+                         ExcelColumnAliases = excelColumnName?.Aliases ,
+                         ExcelColumnName = excelColumnName?.ExcelColumnName ?? p.Name,
                          ExcelColumnIndex = p.GetAttribute<ExcelColumnIndexAttribute>()?.ExcelColumnIndex,
                          ExcelColumnWidth = p.GetAttribute<ExcelColumnWidthAttribute>()?.ExcelColumnWidth,
                          ExcelFormat = p.GetAttribute<ExcelFormatAttribute>()?.Format,

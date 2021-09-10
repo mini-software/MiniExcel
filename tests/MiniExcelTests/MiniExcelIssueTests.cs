@@ -26,6 +26,46 @@ namespace MiniExcelLibs.Tests
             this.output = output;
         }
 
+
+        /// <summary>
+        /// https://gitee.com/dotnetchina/MiniExcel/issues/I40QA5
+        /// </summary>
+        [Fact]
+        public void TestIssueI40QA5()
+        {
+            {
+                var path = PathHelper.GetSamplePath("/xlsx/TestIssueI40QA5_1.xlsx");
+                var rows = MiniExcel.Query<TestIssueI40QA5Dto>(path).ToList();
+                Assert.Equal("E001", rows[0].Empno);
+                Assert.Equal("E002", rows[1].Empno);
+            }
+            {
+                var path = PathHelper.GetSamplePath("/xlsx/TestIssueI40QA5_2.xlsx");
+                var rows = MiniExcel.Query<TestIssueI40QA5Dto>(path).ToList();
+                Assert.Equal("E001", rows[0].Empno);
+                Assert.Equal("E002", rows[1].Empno);
+            }
+            {
+                var path = PathHelper.GetSamplePath("/xlsx/TestIssueI40QA5_3.xlsx");
+                var rows = MiniExcel.Query<TestIssueI40QA5Dto>(path).ToList();
+                Assert.Equal("E001", rows[0].Empno);
+                Assert.Equal("E002", rows[1].Empno);
+            }
+            {
+                var path = PathHelper.GetSamplePath("/xlsx/TestIssueI40QA5_4.xlsx");
+                var rows = MiniExcel.Query<TestIssueI40QA5Dto>(path).ToList();
+                Assert.Null(rows[0].Empno);
+                Assert.Null(rows[1].Empno);
+            }
+        }
+
+        public class TestIssueI40QA5Dto
+        {
+            [ExcelColumnName(excelColumnName:"EmployeeNo",aliases:new[] { "EmpNo","No" })]
+            public string Empno { get; set; }
+            public string Name { get; set; }
+        }
+
         [Fact]
         public void TestIssues133()
         {

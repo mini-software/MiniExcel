@@ -17,6 +17,7 @@
 ---
 
 ### 0.18.0
+- [New] Query strong type support multiple column names mapping to the same property. [#I40QA5](https://gitee.com/dotnetchina/MiniExcel/issues/I40QA5)
 - [Breaking Change] SaveAs by empty IEnumerable<StrongType> will generate header now empty rows now. #133 
 
 ### 0.17.5

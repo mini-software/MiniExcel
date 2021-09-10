@@ -361,9 +361,9 @@ var table = new DataTable();
 MiniExcel.SaveAs(path, table);
 ```
 
-####  5. Dapper
+####  5. Dapper Query
 
-- 不推荐使用，会将数据全载入内存
+- `不推荐使用`，会将数据全载入内存，建议使用`ExecuteReader`
 
 ```csharp
 using (var connection = GetConnection(connectionString))

@@ -360,9 +360,9 @@ var table = new DataTable();
 MiniExcel.SaveAs(path, table);
 ```
 
-#### 5. Dapper
+#### 5. Dapper Query
 
-- `Not recommended`, it will load all data into memory
+- `Not recommended`, it will load all data into memory, please use `ExecuteReader`
 
 ```csharp
 using (var connection = GetConnection(connectionString))

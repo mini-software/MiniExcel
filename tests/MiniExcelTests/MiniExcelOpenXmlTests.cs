@@ -510,7 +510,7 @@ namespace MiniExcelLibs.Tests
                         var rows = stream.Query(useHeaderRow: false).ToList();
                         Assert.Empty(rows);
                     }
-                    Assert.Equal("A1", Helpers.GetFirstSheetDimensionRefValue(path));
+                    Assert.Equal("A1:B1", Helpers.GetFirstSheetDimensionRefValue(path));
                 }
                 File.Delete(path);
 
@@ -520,10 +520,10 @@ namespace MiniExcelLibs.Tests
                     using (var stream = File.OpenRead(path))
                     {
                         var rows = stream.Query(useHeaderRow: false).ToList();
-                        Assert.Empty(rows);
+                        Assert.Single(rows);
                     }
                 }
-                Assert.Equal("A1", Helpers.GetFirstSheetDimensionRefValue(path));
+                Assert.Equal("A1:B1", Helpers.GetFirstSheetDimensionRefValue(path));
                 File.Delete(path);
             }
 
@@ -566,14 +566,7 @@ namespace MiniExcelLibs.Tests
             {
                 var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
                 var values = new List<int>();
-                MiniExcel.SaveAs(path, values);
-                using (var stream = File.OpenRead(path))
-                {
-                    var rows = stream.Query(useHeaderRow: true).ToList();
-                    Assert.Empty(rows);
-                }
-                File.Delete(path);
-                //Assert.Throws<InvalidOperationException>(() => MiniExcel.SaveAs(path, values));
+                Assert.Throws<NotImplementedException>(() => MiniExcel.SaveAs(path, values));
             }
         }
 

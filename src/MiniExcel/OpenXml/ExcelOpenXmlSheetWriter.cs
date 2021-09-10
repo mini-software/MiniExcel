@@ -154,14 +154,16 @@ namespace MiniExcelLibs.OpenXml
                     {
                         // only when empty IEnumerable need to check this issue #133  https://github.com/shps951023/MiniExcel/issues/133
                         genericType = TypeHelper.GetGenericIEnumerables(values).FirstOrDefault();
-                        if (genericType == null)
+                        if (genericType == null || genericType == typeof(object) // sometime generic type will be object, e.g: https://user-images.githubusercontent.com/12729184/132812859-52984314-44d1-4ee8-9487-2d1da159f1f0.png
+                            || typeof(IDictionary<string, object>).IsAssignableFrom(genericType)
+                            || typeof(IDictionary).IsAssignableFrom(genericType))
                         {
                             WriteEmptySheet(writer);
                             goto End;
                         }
                         else
                         {
-                            SetGenericTypePropertiesMode(genericType,ref mode, out maxColumnIndex, out props);
+                            SetGenericTypePropertiesMode(genericType, ref mode, out maxColumnIndex, out props);
                         }
                     }
 

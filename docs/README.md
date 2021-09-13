@@ -17,8 +17,10 @@
 ---
 
 ### 0.18.0
+- [New] SaveAs support enum description #I49RYZ
 - [New] Query strong type support multiple column names mapping to the same property. [#I40QA5](https://gitee.com/dotnetchina/MiniExcel/issues/I40QA5)
 - [Breaking Change] SaveAs by empty IEnumerable<StrongType> will generate header now empty rows now. #133 
+- [Bug] SaveAs sheet enum mapping cell number type #286
 
 ### 0.17.5
 - [Bug] Fix xlsx file header column name with `&,<,>,",'`, the file cannot be opened.

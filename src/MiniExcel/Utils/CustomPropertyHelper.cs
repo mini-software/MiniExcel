@@ -3,6 +3,7 @@
     using MiniExcelLibs.Attributes;
     using System;
     using System.Collections.Generic;
+    using System.ComponentModel;
     using System.Dynamic;
     using System.Linq;
     using System.Reflection;
@@ -126,6 +127,19 @@
             return props;
         }
 
+        internal static string DescriptionAttr(Type type, object source)
+        {
+            FieldInfo fi = type.GetField(source.ToString());
+
+            DescriptionAttribute[] attributes = (DescriptionAttribute[])fi.GetCustomAttributes(
+                typeof(DescriptionAttribute), false);
+
+            if (attributes != null && attributes.Length > 0) 
+                return attributes[0].Description;
+            else 
+                return source.ToString();
+        }
+
         private static IEnumerable<ExcelCustomPropertyInfo> GetExcelPropertyInfo(Type type, BindingFlags bindingFlags)
         {
             //TODO:assign column index 
@@ -137,11 +151,11 @@
                      var excelColumnName = p.GetAttribute<ExcelColumnNameAttribute>();
                      return new ExcelCustomPropertyInfo
                      {
-                         
+
                          Property = p,
                          ExcludeNullableType = gt ?? p.PropertyType,
                          Nullable = gt != null ? true : false,
-                         ExcelColumnAliases = excelColumnName?.Aliases ,
+                         ExcelColumnAliases = excelColumnName?.Aliases,
                          ExcelColumnName = excelColumnName?.ExcelColumnName ?? p.Name,
                          ExcelColumnIndex = p.GetAttribute<ExcelColumnIndexAttribute>()?.ExcelColumnIndex,
                          ExcelColumnWidth = p.GetAttribute<ExcelColumnWidthAttribute>()?.ExcelColumnWidth,

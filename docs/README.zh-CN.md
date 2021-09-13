@@ -24,8 +24,10 @@
 ---
 
 ### 0.18.0
+- [New] SaveAs 支持 enum description #I49RYZ
 - [New] Query 强型别支持多列名对应同一属性 [#I40QA5](https://gitee.com/dotnetchina/MiniExcel/issues/I40QA5)
 - [Breaking Change] SaveAs 传空`IEnumerable<强型别>`现在会生成表头. #133
+- [Bug] SaveAs sheet enum 映射 cell 错误 number 型别 #286
 
 ### 0.17.5
 - [Bug] 修复xlsx文件中标题字段包含`&,<,>,",'`符号，导出后打不开文件

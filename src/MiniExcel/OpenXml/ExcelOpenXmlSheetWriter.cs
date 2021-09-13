@@ -343,7 +343,16 @@ namespace MiniExcelLibs.OpenXml
                     type = p.ExcludeNullableType; //sometime it doesn't need to re-get type like prop
                 }
 
-                if (TypeHelper.IsNumericType(type))
+                if (type.IsEnum)
+                {
+                    t = "str";
+                    var description = CustomPropertyHelper.DescriptionAttr(type,value); //TODO: need to optimze
+                    if (description != null)
+                        v = description;
+                    else
+                        v = value.ToString();
+                }
+                else if (TypeHelper.IsNumericType(type))
                 {
                     t = "n";
                     v = value.ToString();

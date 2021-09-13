@@ -766,7 +766,7 @@ public class Dto
 }
 ```
 
-### 4. Multiple column names mapping to the same property.
+#### 4. Multiple column names mapping to the same property.
 
 ```csharp
 public class Dto
@@ -880,6 +880,38 @@ public static Task<DataTable> QueryAsDataTableAsync(string path, bool useHeaderR
 ```
 
 
+
+
+
+### Others
+
+#### 1. Enum
+
+Be sure excel & property name same, system will auto mapping (case insensitive)
+
+![image](https://user-images.githubusercontent.com/12729184/116210595-9784b100-a775-11eb-936f-8e7a8b435961.png)
+
+Since V0.18.0 support Enum Description
+
+```csharp
+public class Dto
+{
+    public string Name { get; set; }
+    public I49RYZUserType UserType { get; set; }
+}      
+
+public enum Type
+{
+    [Description("General User")]
+    V1,
+    [Description("General Administrator")]
+    V2,
+    [Description("Super Administrator")]
+    V3
+}
+```
+
+![image](https://user-images.githubusercontent.com/12729184/133116630-27cc7161-099a-48b8-9784-cd1e443af3d1.png)
 
 
 
@@ -1193,11 +1225,7 @@ foreach (var sheet in sheets)
 
 ![image](https://user-images.githubusercontent.com/12729184/116199841-2a1f5300-a76a-11eb-90a3-6710561cf6db.png)
 
-#### Q. How to mapping enum?
 
-A. Be sure excel & property name same, system will auto mapping (case insensitive)
-
-![image](https://user-images.githubusercontent.com/12729184/116210595-9784b100-a775-11eb-936f-8e7a8b435961.png)
 
 #### Q. Whether to use Count will load all data into the memory?
 

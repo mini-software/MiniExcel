@@ -6,6 +6,7 @@ using Newtonsoft.Json;
 using OfficeOpenXml;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data;
 using System.Data.SQLite;
 using System.Globalization;
@@ -26,6 +27,92 @@ namespace MiniExcelLibs.Tests
             this.output = output;
         }
 
+        [Fact]
+        public void TestIssueI49RYZ()
+        {
+            {
+                var values = new[]
+                {
+                    new I49RYZDto(){Name="Jack",UserType=I49RYZUserType.V1},
+                    new I49RYZDto(){Name="Leo",UserType=I49RYZUserType.V2},
+                    new I49RYZDto(){Name="Henry",UserType=I49RYZUserType.V3},
+                    new I49RYZDto(){Name="Lisa",UserType=null},
+                };
+                var path = PathHelper.GetTempPath();
+                MiniExcel.SaveAs(path, values);
+                var rows = MiniExcel.Query(path, true).ToList();
+                Assert.Equal("GeneralUser", rows[0].UserType);
+                Assert.Equal("SuperAdministrator", rows[1].UserType);
+                Assert.Equal("GeneralAdministrator", rows[2].UserType);
+                Assert.Null(rows[3].UserType);
+            }
+        }
+
+        [Fact]
+        public void TestIssue286()
+        {
+            {
+                var values = new[]
+                {
+                    new TestIssue286Dto(){E=TestIssue286Enum.VIP1},
+                    new TestIssue286Dto(){E=TestIssue286Enum.VIP2},
+                };
+                var path = PathHelper.GetTempPath();
+                MiniExcel.SaveAs(path, values);
+                var rows = MiniExcel.Query(path, true).ToList();
+                Assert.Equal("VIP1", rows[0].E);
+                Assert.Equal("VIP2", rows[1].E);
+            }
+        }
+
+        public  class TestIssue286Dto
+        {
+            public TestIssue286Enum E { get; set; }
+        }
+
+        public enum TestIssue286Enum
+        {
+            VIP1,
+            VIP2
+        }
+
+        public enum I49RYZUserType
+        {
+            [Description("GeneralUser")]
+            V1 = 0,
+            [Description("SuperAdministrator")]
+            V2 = 1,
+            [Description("GeneralAdministrator")]
+            V3 = 2
+        }
+
+        public class I49RYZDto
+        {
+            public string Name { get; set; }
+            public I49RYZUserType? UserType { get; set; }
+        }
+
+
+
+
+        /// <summary>
+        /// Create Multiple Sheets from IDataReader have Bug #283
+        /// </summary>
+        [Fact]
+        public void TestIssue283()
+        {
+            var path = PathHelper.GetTempPath();
+            using (var cn = Db.GetConnection())
+            {
+                var sheets = new Dictionary<string, object> { };
+                sheets.Add("sheet01", cn.ExecuteReader(@"select 'v1' col1"));
+                sheets.Add("sheet02", cn.ExecuteReader(@"select 'v2' col1"));
+                MiniExcel.SaveAs(path, sheets);
+            }
+
+            var sheetNames = MiniExcel.GetSheetNames(path);
+            Assert.Equal(new[] { "sheet01", "sheet02" }, sheetNames);
+        }
 
         /// <summary>
         /// https://gitee.com/dotnetchina/MiniExcel/issues/I40QA5
@@ -61,7 +148,7 @@ namespace MiniExcelLibs.Tests
 
         public class TestIssueI40QA5Dto
         {
-            [ExcelColumnName(excelColumnName:"EmployeeNo",aliases:new[] { "EmpNo","No" })]
+            [ExcelColumnName(excelColumnName: "EmployeeNo", aliases: new[] { "EmpNo", "No" })]
             public string Empno { get; set; }
             public string Name { get; set; }
         }

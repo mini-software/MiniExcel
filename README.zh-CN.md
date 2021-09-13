@@ -769,7 +769,7 @@ public class Dto
 }
 ```
 
-### 4. 多列名对应同一属性
+#### 4. 多列名对应同一属性
 
 ```csharp
 public class Dto
@@ -779,6 +779,7 @@ public class Dto
     public string Name { get; set; }
 }
 ```
+
 
 
 
@@ -876,6 +877,35 @@ public static Task SaveAsByTemplateAsync(string path, byte[] templateBytes, obje
 public static Task<DataTable> QueryAsDataTableAsync(string path, bool useHeaderRow = true, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null)
 ```
 
+### 其他
+
+#### 1. 映射枚举(enum)
+
+系统会自动映射(注意:大小写不敏感)
+
+![image](https://user-images.githubusercontent.com/12729184/116210595-9784b100-a775-11eb-936f-8e7a8b435961.png)
+
+从V0.18.0版本开始支持Enum Description
+
+```csharp
+public class Dto
+{
+    public string Name { get; set; }
+    public I49RYZUserType UserType { get; set; }
+}      
+
+public enum Type
+{
+    [Description("General User")]
+    V1,
+    [Description("General Administrator")]
+    V2,
+    [Description("Super Administrator")]
+    V3
+}
+```
+
+![image](https://user-images.githubusercontent.com/12729184/133116630-27cc7161-099a-48b8-9784-cd1e443af3d1.png)
 
 
 ### 例子
@@ -1186,12 +1216,6 @@ foreach (var sheet in sheets)
 ```
 
 ![image](https://user-images.githubusercontent.com/12729184/116199841-2a1f5300-a76a-11eb-90a3-6710561cf6db.png)
-
-#### Q. 查询如何映射枚举(enum)?
-
-A. 名称一样，系统会自动映射(注意:大小写不敏感)
-
-![image](https://user-images.githubusercontent.com/12729184/116210595-9784b100-a775-11eb-936f-8e7a8b435961.png)
 
 
 

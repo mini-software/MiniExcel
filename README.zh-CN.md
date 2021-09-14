@@ -108,8 +108,7 @@ Benchmark History :  [Link](https://github.com/shps951023/MiniExcel/issues/276)
 
 
 
-
-### 读 Excel <a name="getstart1"></a>
+### 读/导入 Excel <a name="getstart1"></a>
 
 
 
@@ -291,8 +290,7 @@ MiniExcel.Query(path,useHeaderRow:true,startCell:"B3")
 
 
 
-
-### 写 Excel  <a name="getstart2"></a>
+### 写/导出 Excel  <a name="getstart2"></a>
 
 1. 必须是非abstract 类别有公开无参数构造函数
 2. MiniExcel SaveAs 支援 `IEnumerable参数延迟查询`，除非必要请不要使用 ToList 等方法读取全部数据到内存
@@ -331,7 +329,7 @@ output :
 
 
 
-#### 3.  IDataReader 参数
+#### 3.  IDataReader 
 
 - 推荐使用，可以避免载入全部数据到内存
 
@@ -340,6 +338,19 @@ MiniExcel.SaveAs(path, reader);
 ```
 
 ![image](https://user-images.githubusercontent.com/12729184/121275378-149a5e80-c8bc-11eb-85fe-5453552134f0.png)
+
+推荐 DataReader 多表格导出方式(建议使用 Dapper ExecuteReader )
+
+```csharp
+using (var cnn = Connection)
+{
+    cnn.Open();
+    var sheets = new Dictionary<string,object>();
+    sheets.Add("sheet1", cnn.ExecuteReader("select 1 id"));
+    sheets.Add("sheet2", cnn.ExecuteReader("select 2 id"));
+    MiniExcel.SaveAs("Demo.xlsx", sheets);
+}
+```
 
 
 

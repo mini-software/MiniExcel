@@ -108,7 +108,7 @@ Logic : create a total of 10,000,000 "HelloWorld" excel
 | OpenXmlSdk | 'OpenXmlSdk Create Xlsx' |       2,621 MB | 42.47399 sec |
 | ClosedXml | 'ClosedXml Create Xlsx'  |       7,141 MB | 140.93992 sec |
 
-### Excel Query  <a name="getstart1"></a>
+### Excel Query/Import  <a name="getstart1"></a>
 
 #### 1. Execute a query and map the results to a strongly typed IEnumerable [[Try it]](https://dotnetfiddle.net/w5WD1J)
 
@@ -291,7 +291,7 @@ support variable length and width multi-row and column filling
 
 
 
-### Create Excel  <a name="getstart2"></a>
+### Create/Export Excel  <a name="getstart2"></a>
 
 1. Must be a non-abstract type with a public parameterless constructor .
 
@@ -338,6 +338,19 @@ MiniExcel.SaveAs(path, reader);
 ```
 
 ![image](https://user-images.githubusercontent.com/12729184/121275378-149a5e80-c8bc-11eb-85fe-5453552134f0.png)
+
+DataReader export multiple sheets (recommand by Dapper ExecuteReader)
+
+```csharp
+using (var cnn = Connection)
+{
+    cnn.Open();
+    var sheets = new Dictionary<string,object>();
+    sheets.Add("sheet1", cnn.ExecuteReader("select 1 id"));
+    sheets.Add("sheet2", cnn.ExecuteReader("select 2 id"));
+    MiniExcel.SaveAs("Demo.xlsx", sheets);
+}
+```
 
 
 

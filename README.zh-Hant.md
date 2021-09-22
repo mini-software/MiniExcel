@@ -108,7 +108,7 @@ Benchmark History :  [Link](https://github.com/shps951023/MiniExcel/issues/276)
 
 
 
-### 讀 Excel <a name="getstart1"></a>
+### 讀/導入 Excel <a name="getstart1"></a>
 
 - 支持任何 stream 类型 : FileStream,MemoryStream
 
@@ -293,7 +293,7 @@ MiniExcel.Query(path,useHeaderRow:true,startCell:"B3")
 
 
 
-### 寫 Excel  <a name="getstart2"></a>
+### 寫/導出 Excel  <a name="getstart2"></a>
 
 1. 必須是非abstract 類別有公開無參數構造函數
 2. MiniExcel SaveAs 支援 `IEnumerable參數延遲查詢`，除非必要請不要使用 ToList 等方法讀取全部資料到記憶體
@@ -336,7 +336,7 @@ output :
 
 
 
-#### 3.  IDataReader 參數
+#### 3.  IDataReader 
 
 - 推薦使用，可以避免載入全部數據到記憶體
 
@@ -345,6 +345,19 @@ MiniExcel.SaveAs(path, reader);
 ```
 
 ![image](https://user-images.githubusercontent.com/12729184/121275378-149a5e80-c8bc-11eb-85fe-5453552134f0.png)
+
+推薦 DataReader 多表格導出方式(建議使用 Dapper ExecuteReader )
+
+```csharp
+using (var cnn = Connection)
+{
+    cnn.Open();
+    var sheets = new Dictionary<string,object>();
+    sheets.Add("sheet1", cnn.ExecuteReader("select 1 id"));
+    sheets.Add("sheet2", cnn.ExecuteReader("select 2 id"));
+    MiniExcel.SaveAs("Demo.xlsx", sheets);
+}
+```
 
 
 

@@ -237,6 +237,12 @@ var columns = MiniExcel.GetColumns(path); // e.g result : ["A","B"...]
 var cnt = columns.Count;  // get column count
 ```
 
+```csharp
+var columns = MiniExcel.GetColumns(path, useHeaderRow: true); // e.g result : ["excel表实际的列名称","excel表实际的列名称"...]
+
+var cnt = columns.Count;  // get column count
+```
+
 #### 8. Dynamic Query 转成 `IDictionary<string,object>` 数据
 
 ```csharp

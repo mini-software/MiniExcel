@@ -234,11 +234,10 @@ foreach (var sheetName in sheetNames)
 ```csharp
 var columns = MiniExcel.GetColumns(path); // e.g result : ["A","B"...]
 
-var cnt = columns.Count;  // get column count
-```
+or
 
-```csharp
-var columns = MiniExcel.GetColumns(path, useHeaderRow: true); // e.g result : ["excel表实际的列名称","excel表实际的列名称"...]
+var columns = MiniExcel.GetColumns(path, useHeaderRow: true); 
+// e.g result : ["excel表实际的列名称","excel表实际的列名称"...]
 
 var cnt = columns.Count;  // get column count
 ```

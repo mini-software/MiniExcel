@@ -1313,3 +1313,7 @@ private IEnumerable<Dictionary<int, object>> ConvertToIntIndexRows(IEnumerable<o
 ### Contributors  
 
 ![](https://contrib.rocks/image?repo=shps951023/MiniExcel)
+
+### QQ群
+欢迎交流，QQ群： 813100564(.NET MiniExcel、MiniReport)，请给源码项目点个Star吧！！！
+希望MiniExcel对您有用，您的支持也是MiniExcel开源的动力，MiniExcel有您更精彩！

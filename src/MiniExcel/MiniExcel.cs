@@ -110,5 +110,35 @@
         {
             return (Query(stream, useHeaderRow, sheetName, excelType, startCell, configuration).FirstOrDefault() as IDictionary<string, object>)?.Keys;
         }
+
+        public static void ConvertCsvToXlsx(string csv, string xlsx)
+        {
+            using (var csvStream = FileHelper.OpenSharedRead(csv))
+            using (var xlsxStream = new FileStream(xlsx, FileMode.CreateNew))
+            {
+                ConvertCsvToXlsx(csvStream, xlsxStream);
+            }
+        }
+
+        public static void ConvertCsvToXlsx(Stream csv, Stream xlsx)
+        {
+            var value = MiniExcel.Query(csv, useHeaderRow: false, excelType: ExcelType.CSV); //TODO:Remove ToList
+            MiniExcel.SaveAs(xlsx, value, printHeader: false, excelType: ExcelType.XLSX);
+        }
+
+        public static void ConvertXlsxToCsv(string xlsx, string csv)
+        {
+            using (var xlsxStream = FileHelper.OpenSharedRead(xlsx))
+            using (var csvStream = new FileStream(csv, FileMode.CreateNew))
+            {
+                ConvertXlsxToCsv(xlsxStream, csvStream);
+            }
+        }
+
+        public static void ConvertXlsxToCsv(Stream xlsx, Stream csv)
+        {
+            var value = MiniExcel.Query(xlsx, useHeaderRow: false, excelType: ExcelType.XLSX);
+            MiniExcel.SaveAs(csv, value, printHeader: false, excelType: ExcelType.CSV);
+        }
     }
 }

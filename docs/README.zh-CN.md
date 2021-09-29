@@ -23,6 +23,10 @@
 
 ---
 
+### 0.19.0
+- [New] 新增 ConvertCsvToXlsx、ConvertXlsxToCsv 方法. #292
+- [Bug] 修正 CSV 读取后 SaveAs 会抛出 "Stream was not readable." 错误. #293
+
 ### 0.18.0
 - [New] SaveAs 支持 enum description #I49RYZ
 - [New] Query 强型别支持多列名对应同一属性 [#I40QA5](https://gitee.com/dotnetchina/MiniExcel/issues/I40QA5)

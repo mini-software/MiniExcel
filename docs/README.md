@@ -16,6 +16,10 @@
 
 ---
 
+### 0.19.0
+- [New] Add ConvertCsvToXlsx、ConvertXlsxToCsv method. #292
+- [Bug] Fix after CSV Query then SaveAs system will throw "Stream was not readable." exception. #293
+
 ### 0.18.0
 - [New] SaveAs support enum description #I49RYZ
 - [New] Query strong type support multiple column names mapping to the same property. [#I40QA5](https://gitee.com/dotnetchina/MiniExcel/issues/I40QA5)

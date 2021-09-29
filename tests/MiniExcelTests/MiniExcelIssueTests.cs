@@ -27,6 +27,57 @@ namespace MiniExcelLibs.Tests
             this.output = output;
         }
 
+        /// <summary>
+        /// [According to the XLSX to CSV example, there will be data loss if there is no header. · Issue #292 · shps951023/MiniExcel](https://github.com/shps951023/MiniExcel/issues/292)
+        /// </summary>
+        [Fact]
+        public void TestIssue292()
+        {
+            {
+                var xlsxPath = PathHelper.GetSamplePath("/xlsx/TestIssue292.xlsx");
+                var csvPath = PathHelper.GetTempPath("csv");
+                MiniExcel.ConvertXlsxToCsv(xlsxPath, csvPath);
+
+                var actualCotent = File.ReadAllText(csvPath);
+                Assert.Equal(@"Name,Age,Name,Age
+Jack,22,Mike,25
+Henry,44,Jerry,44
+", actualCotent);
+            }
+
+            {
+                var csvPath = PathHelper.GetSamplePath("/csv/TestIssue292.csv");
+                var xlsxPath = PathHelper.GetTempPath("xlsx");
+                MiniExcel.ConvertCsvToXlsx(csvPath, xlsxPath);
+
+                var rows = MiniExcel.Query(xlsxPath).ToList();
+                Assert.Equal(3, rows.Count);
+                Assert.Equal("Name", rows[0].A);
+                Assert.Equal("Age", rows[0].B);
+                Assert.Equal("Name", rows[0].C);
+                Assert.Equal("Age", rows[0].D);
+                Assert.Equal("Jack", rows[1].A);
+                Assert.Equal("22", rows[1].B);
+                Assert.Equal("Mike", rows[1].C);
+                Assert.Equal("25", rows[1].D);
+            }
+        }
+
+        /// <summary>
+        /// [Csv Query then SaveAs will throw "Stream was not readable." exception · Issue #293 · shps951023/MiniExcel](https://github.com/shps951023/MiniExcel/issues/293)
+        /// </summary>
+        [Fact]
+        public void TestIssue293()
+        {
+            var path = PathHelper.GetSamplePath("/csv/Test5x2.csv");
+            var tempPath = PathHelper.GetTempPath("csv");
+            using (var csv = File.OpenRead(path))
+            {
+                var value = MiniExcel.Query(csv, useHeaderRow: false, excelType: ExcelType.CSV);
+                MiniExcel.SaveAs(tempPath, value, printHeader: false, excelType: ExcelType.XLSX);
+            }
+        }
+
         [Fact]
         public void TestIssueI49RYZ()
         {
@@ -91,8 +142,6 @@ namespace MiniExcelLibs.Tests
             public string Name { get; set; }
             public I49RYZUserType? UserType { get; set; }
         }
-
-
 
 
         /// <summary>

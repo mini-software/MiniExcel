@@ -21,7 +21,9 @@ namespace MiniExcelLibs.Csv
                 throw new NotImplementedException("CSV not Implement startCell");
             var cf = configuration == null ? CsvConfiguration.DefaultConfiguration : (CsvConfiguration)configuration;
 
-            using (var reader = cf.StreamReaderFunc(_stream))
+            if(_stream.CanSeek)
+                _stream.Position = 0;
+            var reader = cf.StreamReaderFunc(_stream);
             {
                 var row = string.Empty;
                 string[] read;

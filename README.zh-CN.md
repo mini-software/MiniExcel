@@ -918,6 +918,17 @@ public enum Type
 
 ![image](https://user-images.githubusercontent.com/12729184/133116630-27cc7161-099a-48b8-9784-cd1e443af3d1.png)
 
+#### 2. CSV 转 XLSX 或是 XLSX 转 CSV
+
+```csharp
+MiniExcel.ConvertXlsxToCsv(xlsxPath, csvPath);
+MiniExcel.ConvertXlsxToCsv(xlsxStream, csvStream);
+MiniExcel.ConvertXlsxToCsv(csvPath, xlsxPath);
+MiniExcel.ConvertXlsxToCsv(csvStream, xlsxStream);
+```
+
+
+
 
 ### 例子
 
@@ -1186,17 +1197,7 @@ public class Order
 
 
 
-#### 6. CSV 转成 Xlsx
 
-```csharp
-public void CsvToXlsx(string csvPath, string xlsxPath)
-{
-	var value = MiniExcel.Query(csvPath, true);
-	MiniExcel.SaveAs(xlsxPath, value);
-}
-```
-
-![image](https://user-images.githubusercontent.com/12729184/122674182-8486de00-d206-11eb-8f96-58b22ebbefc3.png)
 
 
 

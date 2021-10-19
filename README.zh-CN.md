@@ -1297,6 +1297,77 @@ private IEnumerable<Dictionary<int, object>> ConvertToIntIndexRows(IEnumerable<o
 
 
 
+#### Q. 不想要空白行如何去除?
+
+
+
+![image](https://user-images.githubusercontent.com/12729184/137873865-7107d8f5-eb59-42db-903a-44e80589f1b2.png)
+
+
+
+IEnumerable版本
+
+```csharp
+public static IEnumerable<dynamic> QueryWithoutEmptyRow(Stream stream, bool useHeaderRow, string sheetName, ExcelType excelType, string startCell, IConfiguration configuration)
+{
+	var rows = stream.Query(useHeaderRow,sheetName,excelType,startCell,configuration);
+	foreach (IDictionary<string,object> row in rows)
+	{
+		if(row.Keys.Any(key=>row[key]!=null))
+			yield return row;
+	}
+}
+```
+
+
+
+DataTable版本
+
+```csharp
+public static DataTable QueryAsDataTableWithoutEmptyRow(Stream stream, bool useHeaderRow, string sheetName, ExcelType excelType, string startCell, IConfiguration configuration)
+{
+	if (sheetName == null && excelType != ExcelType.CSV) /*Issue #279*/
+		sheetName = stream.GetSheetNames().First();
+
+	var dt = new DataTable(sheetName);
+	var first = true;
+	var rows = stream.Query(useHeaderRow,sheetName,excelType,startCell,configuration);
+	foreach (IDictionary<string, object> row in rows)
+	{
+		if (first)
+		{
+
+			foreach (var key in row.Keys)
+			{
+				var column = new DataColumn(key, typeof(object)) { Caption = key };
+				dt.Columns.Add(column);
+			}
+
+			dt.BeginLoadData();
+			first = false;
+		}
+
+		var newRow = dt.NewRow();
+		var isNull=true;
+		foreach (var key in row.Keys)
+		{
+			var _v = row[key];
+			if(_v!=null)
+				isNull = false;
+			newRow[key] = _v; 
+		}
+		
+		if(!isNull)
+			dt.Rows.Add(newRow);
+	}
+
+	dt.EndLoadData();
+	return dt;
+}
+```
+
+
+
 
 
 ### 局限与警告

@@ -299,6 +299,9 @@ namespace MiniExcelLibs.OpenXml
                                 if (iEnumerableIndex == rowInfo.CellIEnumerableValuesCount)
                                     continue;
 
+                                if (rowInfo.IEnumerableMercell != null)
+                                    continue;
+
                                 // https://github.com/shps951023/MiniExcel/issues/207#issuecomment-824518897
                                 for (int i = 1; i < rowInfo.IEnumerableMercell.Height; i++)
                                 {

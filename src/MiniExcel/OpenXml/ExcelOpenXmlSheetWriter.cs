@@ -36,7 +36,7 @@ namespace MiniExcelLibs.OpenXml
                     {
                         sheetId++;
                         var sheetPath = $"xl/worksheets/sheet{sheetId}.xml";
-                        CreateSheetXml(sheet.Value, printHeader, archive, packages, sheetPath);
+                        CreateSheetXml(sheet.Value, printHeader, archive, packages, sheetPath, config);
                     }
                     GenerateContentTypesXml(archive, packages);
                 }
@@ -54,7 +54,7 @@ namespace MiniExcelLibs.OpenXml
                     {
                         sheetId++;
                         var sheetPath = $"xl/worksheets/sheet{sheetId}.xml";
-                        CreateSheetXml(dt, printHeader, archive, packages, sheetPath);
+                        CreateSheetXml(dt, printHeader, archive, packages, sheetPath, config);
                     }
                     GenerateContentTypesXml(archive, packages);
                 }
@@ -62,13 +62,13 @@ namespace MiniExcelLibs.OpenXml
                 {
                     var packages = DefualtOpenXml.GenerateDefaultOpenXml(archive, new[] { sheetName }, config);
                     var sheetPath = "xl/worksheets/sheet1.xml";
-                    CreateSheetXml(value, printHeader, archive, packages, sheetPath);
+                    CreateSheetXml(value, printHeader, archive, packages, sheetPath, config);
                     GenerateContentTypesXml(archive, packages);
                 }
             }
         }
 
-        private void CreateSheetXml(object value, bool printHeader, MiniExcelZipArchive archive, Dictionary<string, ZipPackageInfo> packages, string sheetPath)
+        private void CreateSheetXml(object value, bool printHeader, MiniExcelZipArchive archive, Dictionary<string, ZipPackageInfo> packages, string sheetPath, OpenXmlConfiguration configuration)
         {
             ZipArchiveEntry entry = archive.CreateEntry(sheetPath);
             using (var zipStream = entry.Open())
@@ -231,7 +231,8 @@ namespace MiniExcelLibs.OpenXml
                     else
                         throw new NotImplementedException($"Type {type.Name} & genericType {genericType.Name} not Implemented. please issue for me.");
                     writer.Write("</x:sheetData>");
-                    writer.Write($"<x:autoFilter ref=\"A1:{ExcelOpenXmlUtils.ConvertXyToCell(maxColumnIndex, maxRowIndex==0?1: maxRowIndex)}\" />");
+                    if(configuration.AutoFilter)
+                        writer.Write($"<x:autoFilter ref=\"A1:{ExcelOpenXmlUtils.ConvertXyToCell(maxColumnIndex, maxRowIndex==0?1: maxRowIndex)}\" />");
                     writer.Write("</x:worksheet>");
                 }
                 else if (value is DataTable)

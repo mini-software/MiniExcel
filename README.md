@@ -459,6 +459,17 @@ MiniExcel.SaveAs(path, value,configuration:config);
 ![image](https://user-images.githubusercontent.com/12729184/118784917-f3e57700-b8c2-11eb-8718-8d955b1bc197.png)
 
 
+#### 9. AutoFilter 
+
+Since v0.19.0  `OpenXmlConfiguration.AutoFilter` can en/unable AutoFilter , default value is `true`, and setting AutoFilter way:  
+
+```csharp
+MiniExcel.SaveAs(path, value, configuration: new OpenXmlConfiguration() { AutoFilter = false });
+```
+
+
+
+
 
 ### Fill Data To Excel Template <a name="getstart3"></a>
 

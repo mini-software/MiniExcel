@@ -19,6 +19,7 @@
 ### 0.19.0
 - [New] SaveAs default style with autoFilter mode. #190
 - [New] Add ConvertCsvToXlsx、ConvertXlsxToCsv method. #292
+- [New] OpenXmlConfiguration add AutoFilter property. 
 - [Bug] Fix after CSV Query then SaveAs system will throw "Stream was not readable." exception. #293
 
 ### 0.18.0

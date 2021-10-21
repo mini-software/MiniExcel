@@ -463,6 +463,14 @@ MiniExcel.SaveAs(path, value,configuration:config);
 
 ![image](https://user-images.githubusercontent.com/12729184/118784917-f3e57700-b8c2-11eb-8718-8d955b1bc197.png)
 
+#### 9. AutoFilter 筛选
+
+从 0.19.0 支持，可藉由 OpenXmlConfiguration.AutoFilter 设定，预设为True。关闭 AutoFilter 方式 :  
+
+```csharp
+MiniExcel.SaveAs(path, value, configuration: new OpenXmlConfiguration() { AutoFilter = false });
+```
+
 
 
 

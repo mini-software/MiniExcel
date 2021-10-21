@@ -36,6 +36,14 @@ namespace MiniExcelLibs.Tests
             {
                 var path = PathHelper.GetTempPath();
                 var value = new TestIssue190Dto[] { };
+                MiniExcel.SaveAs(path, value, configuration: new OpenXmlConfiguration() { AutoFilter = false });
+
+                var sheetXml = Helpers.GetZipFileContent(path, "xl/worksheets/sheet1.xml");
+                Assert.DoesNotContain("<x:autoFilter ref=\"A1:C1\" />", sheetXml);
+            }
+            {
+                var path = PathHelper.GetTempPath();
+                var value = new TestIssue190Dto[] { };
                 MiniExcel.SaveAs(path, value);
 
                 var sheetXml = Helpers.GetZipFileContent(path, "xl/worksheets/sheet1.xml");

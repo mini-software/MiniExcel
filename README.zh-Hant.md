@@ -469,7 +469,13 @@ MiniExcel.SaveAs(path, value,configuration:config);
 
 
 
+#### 9. AutoFilter 篩選
 
+從 0.19.0 支持，可藉由 OpenXmlConfiguration.AutoFilter 設定，預設為True。關閉 AutoFilter 方式 :  
+
+```csharp
+MiniExcel.SaveAs(path, value, configuration: new OpenXmlConfiguration() { AutoFilter = false });
+```
 
 
 

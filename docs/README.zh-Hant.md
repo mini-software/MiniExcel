@@ -20,6 +20,7 @@
 ### 0.19.0
 - [New] SaveAs 預設樣式增加篩選功能. #190
 - [New] 新增 ConvertCsvToXlsx、ConvertXlsxToCsv 方法. #292
+- [New] OpenXmlConfiguration 新增 AutoFilter 屬性.
 - [Bug] 修正 CSV 讀取後 SaveAs 會拋出 "Stream was not readable." 錯誤. #293
 
 ### 0.18.0

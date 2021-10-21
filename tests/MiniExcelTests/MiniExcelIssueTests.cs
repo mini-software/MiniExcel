@@ -28,6 +28,27 @@ namespace MiniExcelLibs.Tests
         }
 
         /// <summary>
+        /// SaveAsByTemplate if there is & in the cell value, it will be &amp;
+        /// https://gitee.com/dotnetchina/MiniExcel/issues/I4DQUN
+        /// </summary>
+        [Fact]
+        public void TestIssueI4DQUN()
+        {
+            var templatePath = PathHelper.GetSamplePath("xlsx/TestIssueI4DQUN.xlsx");
+            var path = PathHelper.GetTempPath();
+            var value = new Dictionary<string, object>()
+            {
+                { "Title","Hello & World" },
+                { "Details",new[]{ new { Value = "Hello & Value" } } },
+            };
+            MiniExcel.SaveAsByTemplate(path, templatePath, value);
+
+            var sheetXml = Helpers.GetZipFileContent(path, "xl/worksheets/sheet1.xml");
+            Assert.Contains("<v>Hello &amp; World</v>", sheetXml);
+            Assert.Contains("<v>Hello &amp; Value</v>", sheetXml);
+        }
+
+        /// <summary>
         /// [SaveAs default theme support filter mode · Issue #190 · shps951023/MiniExcel](https://github.com/shps951023/MiniExcel/issues/190)
         /// </summary>
         [Fact]

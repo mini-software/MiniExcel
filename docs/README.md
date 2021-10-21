@@ -21,6 +21,7 @@
 - [New] Add ConvertCsvToXlsx、ConvertXlsxToCsv method. #292
 - [New] OpenXmlConfiguration add AutoFilter property. 
 - [Bug] Fix after CSV Query then SaveAs system will throw "Stream was not readable." exception. #293
+- [Bug] Fix SaveAsByTemplate & convert to &amp; [I4DQUN](https://gitee.com/dotnetchina/MiniExcel/issues/I4DQUN)
 
 ### 0.18.0
 - [New] SaveAs support enum description #I49RYZ

@@ -586,7 +586,7 @@ namespace MiniExcelLibs.OpenXml
                         }
                         else
                         {
-                            var cellValueStr = ExcelOpenXmlUtils.EncodeXML(cellValue?.ToString());
+                            var cellValueStr = cellValue?.ToString(); /* value did encodexml, so don't duplicate encode value https://gitee.com/dotnetchina/MiniExcel/issues/I4DQUN*/
                             if (isMultiMatch) // if matchs count over 1 need to set type=str ![image](https://user-images.githubusercontent.com/12729184/114530109-39d46d00-9c7d-11eb-8f6b-52ad8600aca3.png)
                             {
                                 c.SetAttribute("t", "str");

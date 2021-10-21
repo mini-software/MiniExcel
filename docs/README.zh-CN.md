@@ -28,6 +28,8 @@
 - [New] 新增 ConvertCsvToXlsx、ConvertXlsxToCsv 方法. #292
 - [New] OpenXmlConfiguration 新增 AutoFilter 属性. 
 - [Bug] 修正 CSV 读取后 SaveAs 会抛出 "Stream was not readable." 错误. #293
+- [Bug] 修正 SaveAsByTemplate & 被转成 &amp; [I4DQUN](https://gitee.com/dotnetchina/MiniExcel/issues/I4DQUN)
+
 
 ### 0.18.0
 - [New] SaveAs 支持 enum description #I49RYZ

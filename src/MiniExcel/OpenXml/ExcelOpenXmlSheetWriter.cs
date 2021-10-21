@@ -230,7 +230,9 @@ namespace MiniExcelLibs.OpenXml
                         GenerateSheetByProperties(writer, archive, value as IEnumerable, props, rowCount, xIndex, yIndex);
                     else
                         throw new NotImplementedException($"Type {type.Name} & genericType {genericType.Name} not Implemented. please issue for me.");
-                    writer.Write("</x:sheetData></x:worksheet>");
+                    writer.Write("</x:sheetData>");
+                    writer.Write($"<x:autoFilter ref=\"A1:{ExcelOpenXmlUtils.ConvertXyToCell(maxColumnIndex, maxRowIndex==0?1: maxRowIndex)}\" />");
+                    writer.Write("</x:worksheet>");
                 }
                 else if (value is DataTable)
                 {
@@ -438,9 +440,9 @@ namespace MiniExcelLibs.OpenXml
             var xy = ExcelOpenXmlUtils.ConvertCellToXY("A1");
 
             writer.Write($@"<?xml version=""1.0"" encoding=""utf-8""?><x:worksheet xmlns:x=""http://schemas.openxmlformats.org/spreadsheetml/2006/main"">");
+            var yIndex = xy.Item2;
+            var xIndex = 0;
             {
-                var yIndex = xy.Item2;
-
                 // TODO: dimension
                 //var maxRowIndex = value.Rows.Count + (printHeader && value.Rows.Count > 0 ? 1 : 0);
                 //var maxColumnIndex = value.Columns.Count;
@@ -450,7 +452,7 @@ namespace MiniExcelLibs.OpenXml
                 if (printHeader)
                 {
                     writer.Write($"<x:row r=\"{yIndex.ToString()}\">");
-                    var xIndex = xy.Item1;
+                    xIndex = xy.Item1;
                     for (int i = 0; i < fieldCount; i++)
                     {
                         var r = ExcelOpenXmlUtils.ConvertXyToCell(xIndex, yIndex);
@@ -465,7 +467,7 @@ namespace MiniExcelLibs.OpenXml
                 while (reader.Read())
                 {
                     writer.Write($"<x:row r=\"{yIndex.ToString()}\">");
-                    var xIndex = xy.Item1;
+                    xIndex = xy.Item1;
 
                     for (int i = 0; i < fieldCount; i++)
                     {
@@ -477,7 +479,9 @@ namespace MiniExcelLibs.OpenXml
                     yIndex++;
                 }
             }
-            writer.Write("</x:sheetData></x:worksheet>");
+            writer.Write("</x:sheetData>");
+            writer.Write($"<x:autoFilter ref=\"A1:{ExcelOpenXmlUtils.ConvertXyToCell(xIndex, yIndex)}\" />");
+            writer.Write("</x:worksheet>");
         }
 
         private static void WriteC(StreamWriter writer, string r, string columnName)

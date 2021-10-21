@@ -24,6 +24,7 @@
 ---
 
 ### 0.19.0
+- [New] SaveAs 预设样式增加筛选功能. #190
 - [New] 新增 ConvertCsvToXlsx、ConvertXlsxToCsv 方法. #292
 - [Bug] 修正 CSV 读取后 SaveAs 会抛出 "Stream was not readable." 错误. #293
 

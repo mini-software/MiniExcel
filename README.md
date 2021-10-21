@@ -442,9 +442,9 @@ MiniExcel.SaveAs(path, sheets);
 
 #### 8. TableStyles Options
 
-From the v0.15.0 version, the default style has been changed to
+Default style 
 
-![image](https://user-images.githubusercontent.com/12729184/118784493-a36e1980-b8c2-11eb-8a3d-a669985aea1a.png)
+![image](https://user-images.githubusercontent.com/12729184/138234373-cfa97109-b71f-4711-b7f5-0eaaa4a0a3a6.png)
 
 Without style configuration
 

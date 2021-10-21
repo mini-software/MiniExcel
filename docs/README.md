@@ -17,6 +17,7 @@
 ---
 
 ### 0.19.0
+- [New] SaveAs default style with autoFilter mode. #190
 - [New] Add ConvertCsvToXlsx、ConvertXlsxToCsv method. #292
 - [Bug] Fix after CSV Query then SaveAs system will throw "Stream was not readable." exception. #293
 

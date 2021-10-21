@@ -28,6 +28,37 @@ namespace MiniExcelLibs.Tests
         }
 
         /// <summary>
+        /// [SaveAs default theme support filter mode · Issue #190 · shps951023/MiniExcel](https://github.com/shps951023/MiniExcel/issues/190)
+        /// </summary>
+        [Fact]
+        public void TestIssue190()
+        {
+            {
+                var path = PathHelper.GetTempPath();
+                var value = new TestIssue190Dto[] { };
+                MiniExcel.SaveAs(path, value);
+
+                var sheetXml = Helpers.GetZipFileContent(path, "xl/worksheets/sheet1.xml");
+                Assert.Contains("<x:autoFilter ref=\"A1:C1\" />", sheetXml);
+            }
+            {
+                var path = PathHelper.GetTempPath();
+                var value = new[] { new TestIssue190Dto { ID = 1, Name = "Jack", Age = 32 }, new TestIssue190Dto { ID = 2, Name = "Lisa", Age = 45 } };
+                MiniExcel.SaveAs(path, value);
+
+                var sheetXml = Helpers.GetZipFileContent(path, "xl/worksheets/sheet1.xml");
+                Assert.Contains("<x:autoFilter ref=\"A1:C3\" />", sheetXml);
+            }
+        }
+
+        public class TestIssue190Dto
+        {
+            public int ID { get; set; }
+            public string Name { get; set; }
+            public int Age { get; set; }
+        }
+
+        /// <summary>
         /// [According to the XLSX to CSV example, there will be data loss if there is no header. · Issue #292 · shps951023/MiniExcel](https://github.com/shps951023/MiniExcel/issues/292)
         /// </summary>
         [Fact]
@@ -116,7 +147,7 @@ Henry,44,Jerry,44
             }
         }
 
-        public  class TestIssue286Dto
+        public class TestIssue286Dto
         {
             public TestIssue286Enum E { get; set; }
         }
@@ -573,7 +604,7 @@ Henry,44,Jerry,44
             var value = new[] {
                   new { Name ="Jack",Age=25,InDate=new DateTime(2021,01,03)},
                   new { Name ="Henry",Age=36,InDate=new DateTime(2020,05,03)},
-             };
+            };
             MiniExcel.SaveAs(path, value);
 
             var rows = MiniExcel.Query<Issue243Dto>(path).ToList();

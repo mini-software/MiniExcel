@@ -447,9 +447,9 @@ MiniExcel.SaveAs(path, sheets);
 
 #### 8. 表格样式选择
 
-从v0.15.0版本开始预设样式改为
+预设样式为
 
-![image](https://user-images.githubusercontent.com/12729184/118784493-a36e1980-b8c2-11eb-8a3d-a669985aea1a.png)
+![image](https://user-images.githubusercontent.com/12729184/138234373-cfa97109-b71f-4711-b7f5-0eaaa4a0a3a6.png)
 
 不需要样式
 

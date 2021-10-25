@@ -16,6 +16,9 @@
 
 ---
 
+### 0.19.1
+- [New] QueryAsDataTable remove empty column keys. #298
+
 ### 0.19.0
 - [New] SaveAs default style with autoFilter mode. #190
 - [New] Add ConvertCsvToXlsx、ConvertXlsxToCsv method. #292

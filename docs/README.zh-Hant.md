@@ -17,6 +17,9 @@
 
 ---
 
+### 0.19.1
+- [New] QueryAsDataTable 刪除空白 Column keys. #298
+
 ### 0.19.0
 - [New] SaveAs 預設樣式增加篩選功能. #190
 - [New] 新增 ConvertCsvToXlsx、ConvertXlsxToCsv 方法. #292

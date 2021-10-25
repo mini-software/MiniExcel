@@ -28,6 +28,18 @@ namespace MiniExcelLibs.Tests
         }
 
         /// <summary>
+        /// Column '' does not belong to table when csv convert to datatable #298
+        /// https://github.com/shps951023/MiniExcel/issues/298
+        /// </summary>
+        [Fact]
+        public void TestIssue298()
+        {
+            var path = PathHelper.GetSamplePath("/csv/TestIssue298.csv");
+            var dt = MiniExcel.QueryAsDataTable(path);
+            Assert.Equal(new[] { "ID", "Name", "Age" }, dt.Columns.Cast<DataColumn>().Select(_ => _.ColumnName));
+        }
+
+        /// <summary>
         /// SaveAsByTemplate if there is & in the cell value, it will be &amp;
         /// https://gitee.com/dotnetchina/MiniExcel/issues/I4DQUN
         /// </summary>
@@ -38,14 +50,14 @@ namespace MiniExcelLibs.Tests
             var path = PathHelper.GetTempPath();
             var value = new Dictionary<string, object>()
             {
-                { "Title","Hello & World" },
-                { "Details",new[]{ new { Value = "Hello & Value" } } },
+                { "Title","Hello & World < , > , \" , '" },
+                { "Details",new[]{ new { Value = "Hello & Value < , > , \" , '" } } },
             };
             MiniExcel.SaveAsByTemplate(path, templatePath, value);
 
             var sheetXml = Helpers.GetZipFileContent(path, "xl/worksheets/sheet1.xml");
-            Assert.Contains("<v>Hello &amp; World</v>", sheetXml);
-            Assert.Contains("<v>Hello &amp; Value</v>", sheetXml);
+            Assert.Contains("<v>Hello &amp; World &lt; , &gt; , \" , '</v>", sheetXml);
+            Assert.Contains("<v>Hello &amp; Value &lt; , &gt; , \" , '</v>", sheetXml);
         }
 
         /// <summary>

@@ -594,15 +594,20 @@ namespace MiniExcelLibs.OpenXml
             var dt = new DataTable(sheetName);
             var first = true;
             var rows = ExcelReaderFactory.GetProvider(stream, ExcelTypeHelper.GetExcelType(stream, excelType)).Query(useHeaderRow, sheetName, startCell, configuration);
+
+            var keys = new List<string>();
             foreach (IDictionary<string, object> row in rows)
-            {
+            {       
                 if (first)
                 {
-
                     foreach (var key in row.Keys)
                     {
-                        var column = new DataColumn(key, typeof(object)) { Caption = key };
-                        dt.Columns.Add(column);
+                        if (!string.IsNullOrEmpty(key)) // avoid #298 : Column '' does not belong to table
+                        {
+                            var column = new DataColumn(key, typeof(object)) { Caption = key };
+                            dt.Columns.Add(column);
+                            keys.Add(key);
+                        }
                     }
 
                     dt.BeginLoadData();
@@ -610,7 +615,7 @@ namespace MiniExcelLibs.OpenXml
                 }
 
                 var newRow = dt.NewRow();
-                foreach (var key in row.Keys)
+                foreach (var key in keys)
                 {
                     newRow[key] = row[key]; //TODO: optimize not using string key
                 }

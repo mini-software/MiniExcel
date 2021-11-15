@@ -231,8 +231,8 @@ namespace MiniExcelLibs.OpenXml
                     else
                         throw new NotImplementedException($"Type {type.Name} & genericType {genericType.Name} not Implemented. please issue for me.");
                     writer.Write("</x:sheetData>");
-                    if(configuration.AutoFilter)
-                        writer.Write($"<x:autoFilter ref=\"A1:{ExcelOpenXmlUtils.ConvertXyToCell(maxColumnIndex, maxRowIndex==0?1: maxRowIndex)}\" />");
+                    if (configuration.AutoFilter)
+                        writer.Write($"<x:autoFilter ref=\"A1:{ExcelOpenXmlUtils.ConvertXyToCell(maxColumnIndex, maxRowIndex == 0 ? 1 : maxRowIndex)}\" />");
                     writer.Write("</x:worksheet>");
                 }
                 else if (value is DataTable)
@@ -349,7 +349,7 @@ namespace MiniExcelLibs.OpenXml
                 if (type.IsEnum)
                 {
                     t = "str";
-                    var description = CustomPropertyHelper.DescriptionAttr(type,value); //TODO: need to optimze
+                    var description = CustomPropertyHelper.DescriptionAttr(type, value); //TODO: need to optimze
                     if (description != null)
                         v = description;
                     else
@@ -386,8 +386,11 @@ namespace MiniExcelLibs.OpenXml
             }
 
             var columname = ExcelOpenXmlUtils.ConvertXyToCell(cellIndex, yIndex);
-            //t check avoid format error ![image](https://user-images.githubusercontent.com/12729184/118770190-9eee3480-b8b3-11eb-9f5a-87a439f5e320.png)
-            writer.Write($"<x:c r=\"{columname}\" {(t == null ? "" : $"t =\"{t}\"")} s=\"{s}\"><x:v>{v}</x:v></x:c>");
+            if (v != null && (v.StartsWith(" ") || v.EndsWith(" "))) /*Prefix and suffix blank space will lost after SaveAs #294*/
+                writer.Write($"<x:c r=\"{columname}\" {(t == null ? "" : $"t =\"{t}\"")} s=\"{s}\" xml:space=\"preserve\"><x:v>{v}</x:v></x:c>");
+            else
+                //t check avoid format error ![image](https://user-images.githubusercontent.com/12729184/118770190-9eee3480-b8b3-11eb-9f5a-87a439f5e320.png)
+                writer.Write($"<x:c r=\"{columname}\" {(t == null ? "" : $"t =\"{t}\"")} s=\"{s}\"><x:v>{v}</x:v></x:c>");
         }
 
         private void GenerateSheetByDataTable(StreamWriter writer, MiniExcelZipArchive archive, DataTable value, bool printHeader)

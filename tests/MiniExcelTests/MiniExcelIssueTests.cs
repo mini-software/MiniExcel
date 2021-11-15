@@ -28,6 +28,36 @@ namespace MiniExcelLibs.Tests
         }
 
         /// <summary>
+        /// [Prefix and suffix blank space will lost after SaveAs · Issue #294 · shps951023/MiniExcel]
+        /// (https://github.com/shps951023/MiniExcel/issues/294)
+        /// </summary>
+        [Fact]
+        public void TestIssue294()
+        {
+            {
+                var path = PathHelper.GetTempPath();
+                var value = new[] { new { Name = "   Jack" } };
+                MiniExcel.SaveAs(path, value);
+                var sheetXml = Helpers.GetZipFileContent(path, "xl/worksheets/sheet1.xml");
+                Assert.Contains("xml:space=\"preserve\"", sheetXml);
+            }
+            {
+                var path = PathHelper.GetTempPath();
+                var value = new[] { new { Name = "Ja ck" } };
+                MiniExcel.SaveAs(path, value);
+                var sheetXml = Helpers.GetZipFileContent(path, "xl/worksheets/sheet1.xml");
+                Assert.DoesNotContain("xml:space=\"preserve\"", sheetXml);
+            }
+            {
+                var path = PathHelper.GetTempPath();
+                var value = new[] { new { Name = "Jack   " } };
+                MiniExcel.SaveAs(path, value);
+                var sheetXml = Helpers.GetZipFileContent(path, "xl/worksheets/sheet1.xml");
+                Assert.Contains("xml:space=\"preserve\"", sheetXml);
+            }
+        }
+
+        /// <summary>
         /// Column '' does not belong to table when csv convert to datatable #298
         /// https://github.com/shps951023/MiniExcel/issues/298
         /// </summary>

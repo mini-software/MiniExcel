@@ -26,6 +26,7 @@
 ### 0.19.1
 - [New] QueryAsDataTable 删除空白 Column keys. #298
 - [Bug] Error NU3037: ExcelNumberFormat 1.1.0 #302
+- [Bug] SaveAs 前缀和后缀空格会丢失 #294
 
 ### 0.19.0
 - [New] SaveAs 预设样式增加筛选功能. #190

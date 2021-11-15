@@ -35,7 +35,7 @@ Todo : https://github.com/shps951023/MiniExcel/projects/1?fullscreen=true
 		<Reference Include="System.IO.Compression" />
 	</ItemGroup>
 	<ItemGroup>
-		<PackageReference Include="ExcelNumberFormat" Version="1.1.0" />
+	  <ProjectReference Include="..\ExcelNumberFormat\ExcelNumberFormat.csproj" />
 	</ItemGroup>
 	
 </Project>

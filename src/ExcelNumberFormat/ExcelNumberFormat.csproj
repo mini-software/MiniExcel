@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net45;netstandard2.0;net5.0</TargetFrameworks>
+    <VersionPrefix>1.1.0</VersionPrefix>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Description>.NET library to parse ECMA-376 number format strings and format values like Excel and other spreadsheet softwares.</Description>
+    <Authors>ExcelNumberFormat developers</Authors>
+    <PackageTags>excel,formatting,numfmt,formatcode</PackageTags>
+    <PackageProjectUrl>https://github.com/andersnm/ExcelNumberFormat</PackageProjectUrl>
+    <PackageIcon>icon.png</PackageIcon>
+    <AssemblyOriginatorKeyFile>ExcelNumberFormat.snk</AssemblyOriginatorKeyFile>
+    <SignAssembly>true</SignAssembly>
+    <PublicSign Condition=" '$(OS)' != 'Windows_NT' ">true</PublicSign>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="icon.png" Pack="true" PackagePath="\"/>
+  </ItemGroup>
+</Project>

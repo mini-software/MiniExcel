@@ -19,6 +19,7 @@
 
 ### 0.19.1
 - [New] QueryAsDataTable 刪除空白 Column keys. #298
+- [Bug] Error NU3037: ExcelNumberFormat 1.1.0 #302
 
 ### 0.19.0
 - [New] SaveAs 預設樣式增加篩選功能. #190

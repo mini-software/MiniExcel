@@ -16,6 +16,7 @@ using System.Text;
 using Xunit;
 using Xunit.Abstractions;
 using static MiniExcelLibs.Tests.MiniExcelOpenXmlTests;
+using System.Collections;
 
 namespace MiniExcelLibs.Tests
 {
@@ -25,6 +26,31 @@ namespace MiniExcelLibs.Tests
         public MiniExcelIssueTests(ITestOutputHelper output)
         {
             this.output = output;
+        }
+
+        /// <summary>
+        /// https://gitee.com/dotnetchina/MiniExcel/issues/I4HL54
+        /// </summary>
+        [Fact]
+        public void TestIssueI4HL54()
+        {
+            {
+                using (var cn = Db.GetConnection())
+                {
+                    var reader = cn.ExecuteReader(@"select 'Hello World1' Text union all select 'Hello World2'");
+                    var templatePath = PathHelper.GetSamplePath("xlsx/TestIssueI4HL54_Template.xlsx");
+                    var path = PathHelper.GetTempPath();
+                    var value = new Dictionary<string, object>()
+                    {
+                        { "Texts",reader}
+                    };
+                    MiniExcel.SaveAsByTemplate(path, templatePath, value);
+
+                    var rows = MiniExcel.Query(path, true).ToList();
+                    Assert.Equal("Hello World1", rows[0].Text);
+                    Assert.Equal("Hello World2", rows[1].Text);
+                }
+            }
         }
 
         /// <summary>

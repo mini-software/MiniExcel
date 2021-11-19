@@ -17,6 +17,9 @@
 
 ---
 
+### 0.20.0
+- [New] SaveAsByTemplate 支持 datareader [#I4HL54](https://gitee.com/dotnetchina/MiniExcel/issues/I4HL54)
+
 ### 0.19.1
 - [New] QueryAsDataTable 刪除空白 Column keys. #298
 - [Bug] Error NU3037: ExcelNumberFormat 1.1.0 #302

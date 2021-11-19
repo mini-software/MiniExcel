@@ -16,7 +16,7 @@ namespace MiniExcelLibs.OpenXml
     using System.Threading.Tasks;
     using System.Xml;
 
-    internal partial class ExcelOpenXmlTemplate:IExcelTemplate,IExcelTemplateAsync
+    internal partial class ExcelOpenXmlTemplate : IExcelTemplate, IExcelTemplateAsync
     {
         private static readonly XmlNamespaceManager _ns;
         private static readonly Regex _isExpressionRegex;
@@ -51,6 +51,14 @@ namespace MiniExcelLibs.OpenXml
             if (value is Dictionary<string, object>)
             {
                 values = value as Dictionary<string, object>;
+                foreach (var key in values.Keys)
+                {
+                    var v = values[key];
+                    if (v is IDataReader)
+                    {
+                        values[key] = TypeHelper.ConvertToEnumerableDictionary(v as IDataReader).ToList();
+                    }
+                }
             }
             else
             {
@@ -94,7 +102,7 @@ namespace MiniExcelLibs.OpenXml
                         }
                     }
                 }
-                
+
                 _archive.zipFile.Dispose();
             }
         }

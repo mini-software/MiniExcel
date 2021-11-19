@@ -3,6 +3,7 @@
     using MiniExcelLibs.Attributes;
     using System;
     using System.Collections.Generic;
+    using System.Data;
     using System.Dynamic;
     using System.Globalization;
     using System.IO;
@@ -11,6 +12,18 @@
 
     internal static partial class TypeHelper
     {
+        public static  IEnumerable<IDictionary<string, object>> ConvertToEnumerableDictionary(IDataReader reader)
+        {
+            while (reader.Read())
+            {
+                yield return Enumerable.Range(0, reader.FieldCount)
+                 .ToDictionary(
+                     i => reader.GetName(i),
+                     i => reader.GetValue(i));
+            }
+        }
+
+
         /// <summary>
         /// From : https://stackoverflow.com/questions/906499/getting-type-t-from-ienumerablet
         /// </summary>

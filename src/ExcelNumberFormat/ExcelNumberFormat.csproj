@@ -10,9 +10,6 @@
     <PackageTags>excel,formatting,numfmt,formatcode</PackageTags>
     <PackageProjectUrl>https://github.com/andersnm/ExcelNumberFormat</PackageProjectUrl>
     <PackageIcon>icon.png</PackageIcon>
-    <AssemblyOriginatorKeyFile>ExcelNumberFormat.snk</AssemblyOriginatorKeyFile>
-    <SignAssembly>true</SignAssembly>
-    <PublicSign Condition=" '$(OS)' != 'Windows_NT' ">true</PublicSign>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
 

@@ -1,13 +1,18 @@
-﻿using System;
+﻿/**
+ * Edit from ExcelNumberFormat https://www.nuget.org/packages/ExcelNumberFormat/
+ * MIT license @andersnm
+ * Because this issue : https://github.com/andersnm/ExcelNumberFormat/issues/34 miniexcel needs to include source code
+ */
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 
-namespace ExcelNumberFormat
+namespace MiniExcelNumberFormat
 {
     /// <summary>
     /// Parse ECMA-376 number format strings and format values like Excel and other spreadsheet softwares.
     /// </summary>
-    public class NumberFormat
+    internal class NumberFormat
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="NumberFormat"/> class.

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 
-namespace ExcelNumberFormat
+namespace MiniExcelNumberFormat
 {
     internal static class Parser
     {

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace ExcelNumberFormat
+namespace MiniExcelNumberFormat
 {
     internal static class Evaluator
     {

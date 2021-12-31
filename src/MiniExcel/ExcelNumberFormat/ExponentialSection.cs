@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace ExcelNumberFormat
+namespace MiniExcelNumberFormat
 {
     internal class ExponentialSection
     {

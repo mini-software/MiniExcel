@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Text;
 
-namespace ExcelNumberFormat
+namespace MiniExcelLibs.ExcelNumberFormat
 {
     internal class FractionSection
     {

@@ -1,4 +1,4 @@
-﻿namespace ExcelNumberFormat
+﻿namespace MiniExcelLibs.ExcelNumberFormat
 {
     internal class Color
     {

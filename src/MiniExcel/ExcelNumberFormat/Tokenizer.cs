@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace ExcelNumberFormat
+namespace MiniExcelLibs.ExcelNumberFormat
 {
     internal class Tokenizer
     {

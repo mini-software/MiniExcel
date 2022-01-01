@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
 
-namespace ExcelNumberFormat
+namespace MiniExcelLibs.ExcelNumberFormat
 {
     static internal class Formatter
     {

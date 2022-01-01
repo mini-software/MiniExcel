@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Globalization;
 
-namespace ExcelNumberFormat
+namespace MiniExcelLibs.ExcelNumberFormat
 {
     /// <summary>
     /// Similar to regular .NET DateTime, but also supports 0/1 1900 and 29/2 1900.

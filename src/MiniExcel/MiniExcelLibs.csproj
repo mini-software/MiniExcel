@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFrameworks>net45;netstandard2.0;net5.0</TargetFrameworks>
 		<Version>0.19.2</Version>
@@ -35,14 +35,11 @@ Todo : https://github.com/shps951023/MiniExcel/projects/1?fullscreen=true
 		<Reference Include="System.IO.Compression" />
 	</ItemGroup>
 	<ItemGroup>
-	  <ProjectReference Include="..\ExcelNumberFormat\ExcelNumberFormat.csproj" />
-	</ItemGroup>
-	<ItemGroup>
 	  <None Update="icon.png">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </None>
 	</ItemGroup>
   <ItemGroup>
-    <None Include="icon.png" Pack="true" PackagePath="\"/>
+    <None Include="icon.png" Pack="true" PackagePath="\" />
   </ItemGroup>	
 </Project>

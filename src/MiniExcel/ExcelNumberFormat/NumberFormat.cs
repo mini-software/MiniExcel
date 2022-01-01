@@ -1,13 +1,16 @@
-﻿using System;
+﻿/**
+ * ExcelNumberFormat from : https://github.com/andersnm/ExcelNumberFormat
+ */
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 
-namespace ExcelNumberFormat
+namespace MiniExcelLibs.ExcelNumberFormat
 {
     /// <summary>
     /// Parse ECMA-376 number format strings and format values like Excel and other spreadsheet softwares.
     /// </summary>
-    public class NumberFormat
+    internal class NumberFormat
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="NumberFormat"/> class.

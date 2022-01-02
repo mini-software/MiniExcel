@@ -13,19 +13,20 @@ namespace MiniExcelLibs.Csv
     internal class CsvWriter : IExcelWriter , IExcelWriterAsync
     {
         private Stream _stream;
+        private readonly CsvConfiguration _configuration;
 
-        public CsvWriter(Stream stream)
+        public CsvWriter(Stream stream, IConfiguration configuration)
         {
             this._stream = stream;
+            this._configuration = configuration == null ? CsvConfiguration.DefaultConfiguration : (CsvConfiguration)configuration;
         }
 
-        public void SaveAs(object value, string sheetName, bool printHeader, IConfiguration configuration)
+        public void SaveAs(object value, string sheetName, bool printHeader)
         {
-            var cf = configuration == null ? CsvConfiguration.DefaultConfiguration : (CsvConfiguration)configuration;
-            var seperator = cf.Seperator.ToString();
-            var newLine = cf.NewLine;
+            var seperator = _configuration.Seperator.ToString();
+            var newLine = _configuration.NewLine;
 
-            using (StreamWriter writer = cf.StreamWriterFunc(_stream))
+            using (StreamWriter writer = _configuration.StreamWriterFunc(_stream))
             {
                 if (value == null)
                 {
@@ -126,6 +127,11 @@ namespace MiniExcelLibs.Csv
             }
         }
 
+        public Task SaveAsAsync(object value, string sheetName, bool printHeader)
+        {
+            return Task.Run(() => SaveAs(value, sheetName, printHeader));
+        }
+
         private static void GenerateSheetByIDataReader(object value, bool printHeader, string seperator, string newLine, StreamWriter writer)
         {
             var reader = (IDataReader)value;
@@ -211,12 +217,6 @@ namespace MiniExcelLibs.Csv
                 writer.Write(newLine);
             }
         }
-
-        public Task SaveAsAsync(object value, string sheetName, bool printHeader, IConfiguration configuration)
-        {
-            return Task.Run(() => SaveAs(value, sheetName, printHeader, configuration));
-        }
-
     }
 
     internal static class CsvValueTostringHelper

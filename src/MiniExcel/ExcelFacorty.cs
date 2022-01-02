@@ -7,14 +7,14 @@
 
     internal class ExcelWriterFactory
     {
-        internal static IExcelWriterAsync GetProvider(Stream stream,ExcelType excelType)
+        internal static IExcelWriterAsync GetProvider(Stream stream,ExcelType excelType, IConfiguration configuration)
         {
             switch (excelType)
             {
                 case ExcelType.CSV:
-                    return new CsvWriter(stream);
+                    return new CsvWriter(stream, configuration);
                 case ExcelType.XLSX:
-                    return new ExcelOpenXmlSheetWriter(stream);
+                    return new ExcelOpenXmlSheetWriter(stream, configuration);
                 default:
                     throw new NotSupportedException($"Please Issue for me");
             }

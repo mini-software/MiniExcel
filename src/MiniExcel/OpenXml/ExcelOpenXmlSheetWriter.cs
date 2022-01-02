@@ -17,27 +17,29 @@ namespace MiniExcelLibs.OpenXml
     {
         private readonly MiniExcelZipArchive _archive;
         private readonly static UTF8Encoding _utf8WithBom = new System.Text.UTF8Encoding(true);
+        private readonly OpenXmlConfiguration _configuration;
         private Stream _stream;
-        public ExcelOpenXmlSheetWriter(Stream stream)
+        public ExcelOpenXmlSheetWriter(Stream stream, IConfiguration configuration)
         {
             this._stream = stream;
             this._archive = new MiniExcelZipArchive(_stream, ZipArchiveMode.Create, true, _utf8WithBom);
+            this._configuration = configuration as OpenXmlConfiguration ?? OpenXmlConfiguration.DefaultConfig;
         }
 
-        public void SaveAs(object value, string sheetName, bool printHeader, IConfiguration configuration)
+        public void SaveAs(object value, string sheetName, bool printHeader)
         {
-            OpenXmlConfiguration config = configuration as OpenXmlConfiguration ?? OpenXmlConfiguration.DefaultConfig;
+            
             {
                 if (value is IDictionary<string, object>)
                 {
                     var sheetId = 0;
                     var sheets = value as IDictionary<string, object>;
-                    var packages = DefualtOpenXml.GenerateDefaultOpenXml(this._archive,sheets.Keys, config);
+                    var packages = DefualtOpenXml.GenerateDefaultOpenXml(this._archive,sheets.Keys, _configuration);
                     foreach (var sheet in sheets)
                     {
                         sheetId++;
                         var sheetPath = $"xl/worksheets/sheet{sheetId}.xml";
-                        CreateSheetXml(sheet.Value, printHeader, packages, sheetPath, config);
+                        CreateSheetXml(sheet.Value, printHeader, packages, sheetPath);
                     }
                     GenerateContentTypesXml(packages);
                 }
@@ -50,27 +52,27 @@ namespace MiniExcelLibs.OpenXml
                     {
                         keys.Add(dt.TableName);
                     }
-                    var packages = DefualtOpenXml.GenerateDefaultOpenXml(this._archive, keys, config);
+                    var packages = DefualtOpenXml.GenerateDefaultOpenXml(this._archive, keys, _configuration);
                     foreach (DataTable dt in sheets.Tables)
                     {
                         sheetId++;
                         var sheetPath = $"xl/worksheets/sheet{sheetId}.xml";
-                        CreateSheetXml(dt, printHeader, packages, sheetPath, config);
+                        CreateSheetXml(dt, printHeader, packages, sheetPath);
                     }
                     GenerateContentTypesXml(packages);
                 }
                 else
                 {
-                    var packages = DefualtOpenXml.GenerateDefaultOpenXml(this._archive, new[] { sheetName }, config);
+                    var packages = DefualtOpenXml.GenerateDefaultOpenXml(this._archive, new[] { sheetName }, _configuration);
                     var sheetPath = "xl/worksheets/sheet1.xml";
-                    CreateSheetXml(value, printHeader, packages, sheetPath, config);
+                    CreateSheetXml(value, printHeader, packages, sheetPath);
                     GenerateContentTypesXml(packages);
                 }
             }
             _archive.Dispose();
         }
 
-        private void CreateSheetXml(object value, bool printHeader, Dictionary<string, ZipPackageInfo> packages, string sheetPath, OpenXmlConfiguration configuration)
+        private void CreateSheetXml(object value, bool printHeader, Dictionary<string, ZipPackageInfo> packages, string sheetPath)
         {
             ZipArchiveEntry entry = _archive.CreateEntry(sheetPath);
             using (var zipStream = entry.Open())
@@ -233,7 +235,7 @@ namespace MiniExcelLibs.OpenXml
                     else
                         throw new NotImplementedException($"Type {type.Name} & genericType {genericType.Name} not Implemented. please issue for me.");
                     writer.Write("</x:sheetData>");
-                    if (configuration.AutoFilter)
+                    if (_configuration.AutoFilter)
                         writer.Write($"<x:autoFilter ref=\"A1:{ExcelOpenXmlUtils.ConvertXyToCell(maxColumnIndex, maxRowIndex == 0 ? 1 : maxRowIndex)}\" />");
                     writer.Write("</x:worksheet>");
                 }
@@ -527,9 +529,9 @@ namespace MiniExcelLibs.OpenXml
             return dimensionRef;
         }
 
-        public Task SaveAsAsync(object value, string sheetName, bool printHeader, IConfiguration configuration)
+        public Task SaveAsAsync(object value, string sheetName, bool printHeader)
         {
-            return Task.Run(() => SaveAs(value, sheetName, printHeader, configuration));
+            return Task.Run(() => SaveAs(value, sheetName, printHeader));
         }
     }
 }

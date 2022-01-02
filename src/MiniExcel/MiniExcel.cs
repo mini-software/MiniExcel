@@ -22,7 +22,7 @@
 
         public static void SaveAs(this Stream stream, object value, bool printHeader = true, string sheetName = "Sheet1", ExcelType excelType = ExcelType.XLSX, IConfiguration configuration = null)
         {
-            GetWriterProvider(stream, sheetName, excelType).SaveAs(value, sheetName, printHeader, configuration);
+            GetWriterProvider(stream, sheetName, excelType, configuration).SaveAs(value, sheetName, printHeader);
         }
 
         public static IEnumerable<T> Query<T>(string path, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null) where T : class, new()

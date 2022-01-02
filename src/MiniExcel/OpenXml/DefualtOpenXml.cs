@@ -165,7 +165,6 @@ namespace MiniExcelLibs.OpenXml
 
         private static string MinifyXml(string xml) => xml.Replace("\r", "").Replace("\n", "").Replace("\t", "");
 
-        //TODO:read from static generated file looks like more better?
         internal static Dictionary<string, ZipPackageInfo> GenerateDefaultOpenXml(ZipArchive archive, IEnumerable<string> sheetNames, OpenXmlConfiguration configuration)
         {
             var defaults = new Dictionary<string, Tuple<string, string>>()
@@ -185,6 +184,7 @@ namespace MiniExcelLibs.OpenXml
                 {
                     styleXml = _defaultStylesXml;
                 }
+
 
                 defaults.Add(@"xl/styles.xml", new Tuple<string, string>(styleXml, "application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"));
             }

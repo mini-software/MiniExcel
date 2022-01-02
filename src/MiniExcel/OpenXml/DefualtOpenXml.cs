@@ -10,20 +10,20 @@ namespace MiniExcelLibs.OpenXml
 {
     internal static class DefualtOpenXml
     {
-        private readonly static UTF8Encoding Utf8WithBom = new UTF8Encoding(true);
+        private static readonly UTF8Encoding _utf8WithBom = new UTF8Encoding(true);
 
-        private static string DefaultRels = @"<?xml version=""1.0"" encoding=""utf-8""?>
+        private static readonly string _defaultRels = @"<?xml version=""1.0"" encoding=""utf-8""?>
 <Relationships xmlns=""http://schemas.openxmlformats.org/package/2006/relationships"">
     <Relationship Type=""http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument"" Target=""/xl/workbook.xml"" Id=""Rfc2254092b6248a9"" />
 </Relationships>";
 
-        private static string DefaultWorkbookXmlRels = @"<?xml version=""1.0"" encoding=""utf-8""?>
+        private static readonly string _defaultWorkbookXmlRels = @"<?xml version=""1.0"" encoding=""utf-8""?>
 <Relationships xmlns=""http://schemas.openxmlformats.org/package/2006/relationships"">
     {{sheets}}
     <Relationship Type=""http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles"" Target=""/xl/styles.xml"" Id=""R3db9602ace774fdb"" />
 </Relationships>";
 
-        private static string NoneStylesXml = @"<?xml version=""1.0"" encoding=""utf-8""?>
+        private static readonly string _noneStylesXml = @"<?xml version=""1.0"" encoding=""utf-8""?>
 <x:styleSheet xmlns:x=""http://schemas.openxmlformats.org/spreadsheetml/2006/main"">
     <x:fonts>
         <x:font />
@@ -45,7 +45,7 @@ namespace MiniExcelLibs.OpenXml
     </x:cellXfs>
 </x:styleSheet>";
 
-        private static string DefaultStylesXml = @"<?xml version=""1.0"" encoding=""utf-8""?>
+        private static readonly string _defaultStylesXml = @"<?xml version=""1.0"" encoding=""utf-8""?>
 <x:styleSheet xmlns:x=""http://schemas.openxmlformats.org/spreadsheetml/2006/main"">
     <x:numFmts count=""1"">
         <x:numFmt numFmtId=""0"" formatCode="""" />
@@ -146,7 +146,7 @@ namespace MiniExcelLibs.OpenXml
     </x:cellStyles>
 </x:styleSheet>";
 
-        private static string DefaultWorkbookXml = @"<?xml version=""1.0"" encoding=""utf-8""?>
+        private static readonly string _defaultWorkbookXml = @"<?xml version=""1.0"" encoding=""utf-8""?>
 <x:workbook xmlns:r=""http://schemas.openxmlformats.org/officeDocument/2006/relationships""
     xmlns:x=""http://schemas.openxmlformats.org/spreadsheetml/2006/main"">
     <x:sheets>
@@ -154,52 +154,36 @@ namespace MiniExcelLibs.OpenXml
     </x:sheets>
 </x:workbook>";
 
-        private static Dictionary<string, XmlDocument> Xmls = new Dictionary<string, XmlDocument>();
 
-        private static readonly XmlNamespaceManager _ns;
         static DefualtOpenXml()
         {
-            DefaultRels = MinifyXml(DefaultRels);
-            DefaultWorkbookXml = MinifyXml(DefaultWorkbookXml);
-            DefaultStylesXml = MinifyXml(DefaultStylesXml);
-            DefaultWorkbookXmlRels = MinifyXml(DefaultWorkbookXmlRels);
-
-            _ns = new XmlNamespaceManager(new NameTable());
-            _ns.AddNamespace("x", Config.SpreadsheetmlXmlns);
-
-            Xmls.Add("DefaultStylesXml", GetXmlDocument(DefaultStylesXml));
+            _defaultRels = MinifyXml(_defaultRels);
+            _defaultWorkbookXml = MinifyXml(_defaultWorkbookXml);
+            _defaultStylesXml = MinifyXml(_defaultStylesXml);
+            _defaultWorkbookXmlRels = MinifyXml(_defaultWorkbookXmlRels);
         }
 
-        private static XmlDocument GetXmlDocument(string xml)
-        {
-            var doc = new XmlDocument();
-            doc.LoadXml(xml);
-            return doc;
-        }
-
-        private static string MinifyXml(string xml) => xml
-        //.Replace("    ", "").Replace("\r", "").Replace("\n", "").Replace("\t", "")
-        ;
+        private static string MinifyXml(string xml) => xml.Replace("\r", "").Replace("\n", "").Replace("\t", "");
 
         //TODO:read from static generated file looks like more better?
         internal static Dictionary<string, ZipPackageInfo> GenerateDefaultOpenXml(ZipArchive archive, IEnumerable<string> sheetNames, OpenXmlConfiguration configuration)
         {
             var defaults = new Dictionary<string, Tuple<string, string>>()
             {
-                { @"_rels/.rels", new Tuple<string,string>(DefualtOpenXml.DefaultRels, "application/vnd.openxmlformats-package.relationships+xml")},
+                { @"_rels/.rels", new Tuple<string,string>(DefualtOpenXml._defaultRels, "application/vnd.openxmlformats-package.relationships+xml")},
             };
 
-            // styles.xml
+            // styles.xml 
             {
                 var styleXml = string.Empty;
 
                 if (configuration.TableStyles == TableStyles.None)
                 {
-                    styleXml = NoneStylesXml;
+                    styleXml = _noneStylesXml;
                 }
                 else if (configuration.TableStyles == TableStyles.Default)
                 {
-                    styleXml = DefaultStylesXml;
+                    styleXml = _defaultStylesXml;
                 }
 
                 defaults.Add(@"xl/styles.xml", new Tuple<string, string>(styleXml, "application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"));
@@ -219,11 +203,11 @@ namespace MiniExcelLibs.OpenXml
                     workbookRelsXml.AppendLine($@"<Relationship Type=""http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet"" Target=""/xl/worksheets/sheet{sheetId}.xml"" Id=""{id}"" />");
                 }
                 defaults.Add(@"xl/workbook.xml", new Tuple<string, string>(
-                    DefualtOpenXml.DefaultWorkbookXml.Replace("{{sheets}}", workbookXml.ToString())
+                    DefualtOpenXml._defaultWorkbookXml.Replace("{{sheets}}", workbookXml.ToString())
                     , "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml")
                 );
                 defaults.Add(@"xl/_rels/workbook.xml.rels", new Tuple<string, string>(
-                    DefualtOpenXml.DefaultWorkbookXmlRels.Replace("{{sheets}}", workbookRelsXml.ToString())
+                    DefualtOpenXml._defaultWorkbookXmlRels.Replace("{{sheets}}", workbookRelsXml.ToString())
                     , "application/vnd.openxmlformats-package.relationships+xml")
                 );
             }
@@ -233,7 +217,7 @@ namespace MiniExcelLibs.OpenXml
             {
                 ZipArchiveEntry entry = archive.CreateEntry(p.Key);
                 using (var zipStream = entry.Open())
-                using (StreamWriter writer = new StreamWriter(zipStream, Utf8WithBom))
+                using (StreamWriter writer = new StreamWriter(zipStream, _utf8WithBom))
                     writer.Write(p.Value.Item1.ToString());
 
                 zps.Add(p.Key, new ZipPackageInfo(entry, p.Value.Item2));

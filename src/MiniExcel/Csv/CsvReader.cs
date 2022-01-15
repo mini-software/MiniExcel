@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace MiniExcelLibs.Csv
 {
-    internal class CsvReader : IExcelReader , IExcelReaderAsync
+    internal class CsvReader : IExcelReader 
     {
         private Stream _stream;
         public CsvReader(Stream stream)

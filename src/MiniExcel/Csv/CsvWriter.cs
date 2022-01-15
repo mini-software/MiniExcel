@@ -10,18 +10,20 @@ using System.Threading.Tasks;
 
 namespace MiniExcelLibs.Csv
 {
-    internal class CsvWriter : IExcelWriter , IExcelWriterAsync
+    internal class CsvWriter : IExcelWriter 
     {
         private Stream _stream;
         private readonly CsvConfiguration _configuration;
+        private bool _printHeader;
 
-        public CsvWriter(Stream stream, IConfiguration configuration)
+        public CsvWriter(Stream stream, IConfiguration configuration, bool printHeader)
         {
             this._stream = stream;
             this._configuration = configuration == null ? CsvConfiguration.DefaultConfiguration : (CsvConfiguration)configuration;
+            this._printHeader = printHeader;
         }
 
-        public void SaveAs(object value, string sheetName, bool printHeader)
+        public void SaveAs(object value, string sheetName)
         {
             var seperator = _configuration.Seperator.ToString();
             var newLine = _configuration.NewLine;
@@ -39,7 +41,7 @@ namespace MiniExcelLibs.Csv
 
                 if(value is IDataReader)
                 {
-                    GenerateSheetByIDataReader(value, printHeader, seperator, newLine, writer);
+                    GenerateSheetByIDataReader(value, seperator, newLine, writer);
                 }
                 else if (value is IEnumerable)
                 {
@@ -89,7 +91,7 @@ namespace MiniExcelLibs.Csv
                         return;
                     }
 
-                    if (printHeader)
+                    if (this._printHeader)
                     {
                         if (props != null)
                         {
@@ -118,7 +120,7 @@ namespace MiniExcelLibs.Csv
                 }
                 else if (value is DataTable)
                 {
-                    GenerateSheetByDataTable(writer, value as DataTable, printHeader, seperator, newLine);
+                    GenerateSheetByDataTable(writer, value as DataTable, seperator, newLine);
                 }
                 else
                 {
@@ -127,12 +129,12 @@ namespace MiniExcelLibs.Csv
             }
         }
 
-        public Task SaveAsAsync(object value, string sheetName, bool printHeader)
+        public Task SaveAsAsync(object value, string sheetName)
         {
-            return Task.Run(() => SaveAs(value, sheetName, printHeader));
+            return Task.Run(() => SaveAs(value, sheetName));
         }
 
-        private static void GenerateSheetByIDataReader(object value, bool printHeader, string seperator, string newLine, StreamWriter writer)
+        private void GenerateSheetByIDataReader(object value, string seperator, string newLine, StreamWriter writer)
         {
             var reader = (IDataReader)value;
 
@@ -140,7 +142,7 @@ namespace MiniExcelLibs.Csv
             if (fieldCount == 0)
                 throw new InvalidDataException("fieldCount is 0");
 
-            if (printHeader)
+            if (this._printHeader)
             {
                 for (int i = 0; i < fieldCount; i++)
                 {
@@ -166,9 +168,9 @@ namespace MiniExcelLibs.Csv
             }
         }
 
-        private void GenerateSheetByDataTable(StreamWriter writer, DataTable dt, bool printHeader, string seperator, string newLine)
+        private void GenerateSheetByDataTable(StreamWriter writer, DataTable dt, string seperator, string newLine)
         {
-            if (printHeader)
+            if (_printHeader)
             {
                 writer.Write(string.Join(seperator, dt.Columns.Cast<DataColumn>().Select(s => s.Caption ?? s.ColumnName)));
                 writer.Write(newLine);

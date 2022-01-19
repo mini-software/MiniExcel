@@ -10,71 +10,74 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+
 namespace MiniExcelLibs.OpenXml
 {
 
-    internal class ExcelOpenXmlSheetWriter : IExcelWriter
+    internal partial class ExcelOpenXmlSheetWriter : IExcelWriter
     {
         private readonly MiniExcelZipArchive _archive;
         private readonly static UTF8Encoding _utf8WithBom = new System.Text.UTF8Encoding(true);
         private readonly OpenXmlConfiguration _configuration;
-        private Stream _stream;
-        private bool _printHeader;
-        public ExcelOpenXmlSheetWriter(Stream stream, IConfiguration configuration, bool printHeader)
+        private readonly Stream _stream;
+        private readonly bool _printHeader;
+        private readonly object _value;
+        private readonly List<string> _sheetNames = new List<string>();
+        public ExcelOpenXmlSheetWriter(Stream stream,object value, string sheetName, IConfiguration configuration, bool printHeader)
         {
             this._stream = stream;
             this._archive = new MiniExcelZipArchive(_stream, ZipArchiveMode.Create, true, _utf8WithBom);
             this._configuration = configuration as OpenXmlConfiguration ?? OpenXmlConfiguration.DefaultConfig;
             this._printHeader = printHeader;
+            this._value = value;
+            _sheetNames.Add(sheetName); //TODO:remove
         }
 
-        public void SaveAs(object value, string sheetName)
+        public void SaveAs()
         {
-            
+            GenerateDefaultOpenXml();
             {
-                if (value is IDictionary<string, object>)
+                if (_value is IDictionary<string, object>)
                 {
                     var sheetId = 0;
-                    var sheets = value as IDictionary<string, object>;
-                    var packages = DefualtOpenXml.GenerateDefaultOpenXml(this._archive,sheets.Keys, _configuration);
+                    var sheets = _value as IDictionary<string, object>;
+                    _sheetNames.RemoveAt(0);//TODO:remove
                     foreach (var sheet in sheets)
                     {
                         sheetId++;
                         var sheetPath = $"xl/worksheets/sheet{sheetId}.xml";
-                        CreateSheetXml(sheet.Value, packages, sheetPath);
+                        CreateSheetXml(sheet.Value, sheetPath);
+                        _sheetNames.Add(sheet.Key);
                     }
-                    GenerateContentTypesXml(packages);
                 }
-                else if (value is DataSet)
+                else if (_value is DataSet)
                 {
                     var sheetId = 0;
-                    var sheets = value as DataSet;
-                    var keys = new List<string>();
+                    var sheets = _value as DataSet;
+                    _sheetNames.RemoveAt(0);//TODO:remove
                     foreach (DataTable dt in sheets.Tables)
                     {
-                        keys.Add(dt.TableName);
+                        _sheetNames.Add(dt.TableName);
                     }
-                    var packages = DefualtOpenXml.GenerateDefaultOpenXml(this._archive, keys, _configuration);
+                    
                     foreach (DataTable dt in sheets.Tables)
                     {
                         sheetId++;
                         var sheetPath = $"xl/worksheets/sheet{sheetId}.xml";
-                        CreateSheetXml(dt, packages, sheetPath);
+                        CreateSheetXml(dt,sheetPath);
                     }
-                    GenerateContentTypesXml(packages);
                 }
                 else
                 {
-                    var packages = DefualtOpenXml.GenerateDefaultOpenXml(this._archive, new[] { sheetName }, _configuration);
                     var sheetPath = "xl/worksheets/sheet1.xml";
-                    CreateSheetXml(value, packages, sheetPath);
-                    GenerateContentTypesXml(packages);
+                    CreateSheetXml(_value,sheetPath);
                 }
             }
+            GenerateEndXml();
             _archive.Dispose();
         }
 
-        private void CreateSheetXml(object value, Dictionary<string, ZipPackageInfo> packages, string sheetPath)
+        private void CreateSheetXml(object value,string sheetPath)
         {
             ZipArchiveEntry entry = _archive.CreateEntry(sheetPath);
             using (var zipStream = entry.Open())
@@ -83,7 +86,7 @@ namespace MiniExcelLibs.OpenXml
                 if (value == null)
                 {
                     WriteEmptySheet(writer);
-                    goto End;
+                    goto End; //for re-using code
                 }
 
                 var type = value.GetType();
@@ -165,7 +168,7 @@ namespace MiniExcelLibs.OpenXml
                             || typeof(IDictionary).IsAssignableFrom(genericType))
                         {
                             WriteEmptySheet(writer);
-                            goto End;
+                            goto End; //for re-using code
                         }
                         else
                         {
@@ -250,8 +253,8 @@ namespace MiniExcelLibs.OpenXml
                     throw new NotImplementedException($"Type {type.Name} & genericType {genericType.Name} not Implemented. please issue for me.");
                 }
             }
-        End:
-            packages.Add(sheetPath, new ZipPackageInfo(entry, "application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"));
+        End: //for re-using code
+            _zipDictionary.Add(sheetPath, new ZipPackageInfo(entry, "application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"));
         }
 
         private static void SetGenericTypePropertiesMode(Type genericType, ref string mode, out int maxColumnIndex, out List<ExcelCustomPropertyInfo> props)
@@ -502,12 +505,46 @@ namespace MiniExcelLibs.OpenXml
             writer.Write($"</x:c>");
         }
 
-        private void GenerateContentTypesXml(Dictionary<string, ZipPackageInfo> packages)
+        private void GenerateEndXml()
         {
-            //[Content_Types].xml 
+            
+            // styles.xml 
+            {
+                var styleXml = string.Empty;
 
+                if (_configuration.TableStyles == TableStyles.None)
+                {
+                    styleXml = _noneStylesXml;
+                }
+                else if (_configuration.TableStyles == TableStyles.Default)
+                {
+                    styleXml = _defaultStylesXml;
+                }
+                CreateZipEntry(@"xl/styles.xml", "application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml", styleXml);
+            }
+
+            // workbook.xml 、 workbookRelsXml
+            {
+                var workbookXml = new StringBuilder();
+                var workbookRelsXml = new StringBuilder();
+
+                var sheetId = 0;
+                foreach (var sheetName in _sheetNames)
+                {
+                    sheetId++;
+                    var id = $"R{Guid.NewGuid().ToString("N")}";
+                    workbookXml.AppendLine($@"<x:sheet xmlns:r=""http://schemas.openxmlformats.org/officeDocument/2006/relationships"" name=""{sheetName}"" sheetId=""{sheetId}"" r:id=""{id}"" />");
+                    workbookRelsXml.AppendLine($@"<Relationship Type=""http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet"" Target=""/xl/worksheets/sheet{sheetId}.xml"" Id=""{id}"" />");
+                }
+                CreateZipEntry(@"xl/workbook.xml", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml",
+                    ExcelOpenXmlSheetWriter._defaultWorkbookXml.Replace("{{sheets}}", workbookXml.ToString()));
+                CreateZipEntry(@"xl/_rels/workbook.xml.rels", "application/vnd.openxmlformats-package.relationships+xml",
+                    ExcelOpenXmlSheetWriter._defaultWorkbookXmlRels.Replace("{{sheets}}", workbookRelsXml.ToString()));
+            }
+
+            //[Content_Types].xml 
             var sb = new StringBuilder(@"<?xml version=""1.0"" encoding=""UTF-8"" standalone=""yes""?><Types xmlns=""http://schemas.openxmlformats.org/package/2006/content-types""><Default ContentType=""application/xml"" Extension=""xml""/><Default ContentType=""application/vnd.openxmlformats-package.relationships+xml"" Extension=""rels""/>");
-            foreach (var p in packages)
+            foreach (var p in _zipDictionary)
                 sb.Append($"<Override ContentType=\"{p.Value.ContentType}\" PartName=\"/{p.Key}\" />");
             sb.Append("</Types>");
 
@@ -531,9 +568,9 @@ namespace MiniExcelLibs.OpenXml
             return dimensionRef;
         }
 
-        public Task SaveAsAsync(object value, string sheetName)
+        public Task SaveAsAsync()
         {
-            return Task.Run(() => SaveAs(value, sheetName));
+            return Task.Run(() => SaveAs());
         }
     }
 }

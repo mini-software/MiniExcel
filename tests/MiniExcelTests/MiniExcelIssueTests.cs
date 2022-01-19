@@ -29,6 +29,18 @@ namespace MiniExcelLibs.Tests
         }
 
         /// <summary>
+        /// SaveAs support Image type · Issue #304  https://github.com/shps951023/MiniExcel/issues/304
+        /// </summary>
+        [Fact]
+        public void TestIssue304()
+        {
+            var image = Convert.FromBase64String("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQAAAAA3bvkkAAAAEElEQVR4nGJgAQAAAP//AwAABgAFV7+r1AAAAABJRU5ErkJggg==");
+            var value = Enumerable.Range(1, 5).Select(s => new { image });
+            var path = PathHelper.GetTempPath();
+            MiniExcel.SaveAs(path, value);
+        }
+
+        /// <summary>
         /// https://gitee.com/dotnetchina/MiniExcel/issues/I4HL54
         /// </summary>
         [Fact]

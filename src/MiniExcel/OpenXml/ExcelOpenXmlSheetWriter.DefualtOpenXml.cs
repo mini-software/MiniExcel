@@ -8,9 +8,17 @@ using System.Xml;
 
 namespace MiniExcelLibs.OpenXml
 {
-    internal static class DefualtOpenXml
+    internal partial class ExcelOpenXmlSheetWriter : IExcelWriter
     {
-        private static readonly UTF8Encoding _utf8WithBom = new UTF8Encoding(true);
+        private Dictionary<string, ZipPackageInfo> _zipDictionary = new Dictionary<string, ZipPackageInfo>();
+
+        static ExcelOpenXmlSheetWriter()
+        {
+            _defaultRels = MinifyXml(_defaultRels);
+            _defaultWorkbookXml = MinifyXml(_defaultWorkbookXml);
+            _defaultStylesXml = MinifyXml(_defaultStylesXml);
+            _defaultWorkbookXmlRels = MinifyXml(_defaultWorkbookXmlRels);
+        }
 
         private static readonly string _defaultRels = @"<?xml version=""1.0"" encoding=""utf-8""?>
 <Relationships xmlns=""http://schemas.openxmlformats.org/package/2006/relationships"">
@@ -154,75 +162,20 @@ namespace MiniExcelLibs.OpenXml
     </x:sheets>
 </x:workbook>";
 
-
-        static DefualtOpenXml()
-        {
-            _defaultRels = MinifyXml(_defaultRels);
-            _defaultWorkbookXml = MinifyXml(_defaultWorkbookXml);
-            _defaultStylesXml = MinifyXml(_defaultStylesXml);
-            _defaultWorkbookXmlRels = MinifyXml(_defaultWorkbookXmlRels);
-        }
-
         private static string MinifyXml(string xml) => xml.Replace("\r", "").Replace("\n", "").Replace("\t", "");
 
-        internal static Dictionary<string, ZipPackageInfo> GenerateDefaultOpenXml(ZipArchive archive, IEnumerable<string> sheetNames, OpenXmlConfiguration configuration)
+        internal void GenerateDefaultOpenXml()
         {
-            var defaults = new Dictionary<string, Tuple<string, string>>()
-            {
-                { @"_rels/.rels", new Tuple<string,string>(DefualtOpenXml._defaultRels, "application/vnd.openxmlformats-package.relationships+xml")},
-            };
+            CreateZipEntry(@"_rels/.rels", "application/vnd.openxmlformats-package.relationships+xml", ExcelOpenXmlSheetWriter._defaultRels);
+        }
 
-            // styles.xml 
-            {
-                var styleXml = string.Empty;
-
-                if (configuration.TableStyles == TableStyles.None)
-                {
-                    styleXml = _noneStylesXml;
-                }
-                else if (configuration.TableStyles == TableStyles.Default)
-                {
-                    styleXml = _defaultStylesXml;
-                }
-
-
-                defaults.Add(@"xl/styles.xml", new Tuple<string, string>(styleXml, "application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"));
-            }
-
-            // workbook.xml 、 workbookRelsXml
-            {
-                var workbookXml = new StringBuilder();
-                var workbookRelsXml = new StringBuilder();
-
-                var sheetId = 0;
-                foreach (var sheetName in sheetNames)
-                {
-                    sheetId++;
-                    var id = $"R{Guid.NewGuid().ToString("N")}";
-                    workbookXml.AppendLine($@"<x:sheet xmlns:r=""http://schemas.openxmlformats.org/officeDocument/2006/relationships"" name=""{sheetName}"" sheetId=""{sheetId}"" r:id=""{id}"" />");
-                    workbookRelsXml.AppendLine($@"<Relationship Type=""http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet"" Target=""/xl/worksheets/sheet{sheetId}.xml"" Id=""{id}"" />");
-                }
-                defaults.Add(@"xl/workbook.xml", new Tuple<string, string>(
-                    DefualtOpenXml._defaultWorkbookXml.Replace("{{sheets}}", workbookXml.ToString())
-                    , "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml")
-                );
-                defaults.Add(@"xl/_rels/workbook.xml.rels", new Tuple<string, string>(
-                    DefualtOpenXml._defaultWorkbookXmlRels.Replace("{{sheets}}", workbookRelsXml.ToString())
-                    , "application/vnd.openxmlformats-package.relationships+xml")
-                );
-            }
-
-            var zps = new Dictionary<string, ZipPackageInfo>();
-            foreach (var p in defaults)
-            {
-                ZipArchiveEntry entry = archive.CreateEntry(p.Key);
-                using (var zipStream = entry.Open())
-                using (StreamWriter writer = new StreamWriter(zipStream, _utf8WithBom))
-                    writer.Write(p.Value.Item1.ToString());
-
-                zps.Add(p.Key, new ZipPackageInfo(entry, p.Value.Item2));
-            }
-            return zps;
+        private void CreateZipEntry(string path,string contentType,string content)
+        {
+            ZipArchiveEntry entry = _archive.CreateEntry(path);
+            using (var zipStream = entry.Open())
+            using (StreamWriter writer = new StreamWriter(zipStream, _utf8WithBom))
+                writer.Write(content);
+            _zipDictionary.Add(path, new ZipPackageInfo(entry, contentType));
         }
     }
 }

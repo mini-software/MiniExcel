@@ -10,42 +10,44 @@ using System.Threading.Tasks;
 
 namespace MiniExcelLibs.Csv
 {
-    internal class CsvWriter : IExcelWriter 
+    internal class CsvWriter : IExcelWriter
     {
         private Stream _stream;
         private readonly CsvConfiguration _configuration;
         private bool _printHeader;
+        private readonly object _value;
 
-        public CsvWriter(Stream stream, IConfiguration configuration, bool printHeader)
+        public CsvWriter(Stream stream, object value, IConfiguration configuration, bool printHeader)
         {
             this._stream = stream;
             this._configuration = configuration == null ? CsvConfiguration.DefaultConfiguration : (CsvConfiguration)configuration;
             this._printHeader = printHeader;
+            this._value = value;
         }
 
-        public void SaveAs(object value, string sheetName)
+        public void SaveAs()
         {
             var seperator = _configuration.Seperator.ToString();
             var newLine = _configuration.NewLine;
 
             using (StreamWriter writer = _configuration.StreamWriterFunc(_stream))
             {
-                if (value == null)
+                if (_value == null)
                 {
                     writer.Write("");
                     return;
                 }
 
-                var type = value.GetType();
+                var type = _value.GetType();
                 Type genericType = null;
 
-                if(value is IDataReader)
+                if (_value is IDataReader)
                 {
-                    GenerateSheetByIDataReader(value, seperator, newLine, writer);
+                    GenerateSheetByIDataReader(_value, seperator, newLine, writer);
                 }
-                else if (value is IEnumerable)
+                else if (_value is IEnumerable)
                 {
-                    var values = value as IEnumerable;
+                    var values = _value as IEnumerable;
                     List<object> keys = new List<object>();
                     List<ExcelCustomPropertyInfo> props = null;
                     string mode = null;
@@ -110,17 +112,17 @@ namespace MiniExcelLibs.Csv
                     }
 
                     if (mode == "IDictionary<string, object>") //Dapper Row
-                        GenerateSheetByDapperRow(writer, value as IEnumerable, keys.Cast<string>().ToList(), seperator, newLine);
+                        GenerateSheetByDapperRow(writer, _value as IEnumerable, keys.Cast<string>().ToList(), seperator, newLine);
                     else if (mode == "IDictionary") //IDictionary
-                        GenerateSheetByIDictionary(writer, value as IEnumerable, keys, seperator, newLine);
+                        GenerateSheetByIDictionary(writer, _value as IEnumerable, keys, seperator, newLine);
                     else if (mode == "Properties")
-                        GenerateSheetByProperties(writer, value as IEnumerable, props, seperator, newLine);
+                        GenerateSheetByProperties(writer, _value as IEnumerable, props, seperator, newLine);
                     else
                         throw new NotImplementedException($"Type {type?.Name} & genericType {genericType?.Name} not Implemented. please issue for me.");
                 }
-                else if (value is DataTable)
+                else if (_value is DataTable)
                 {
-                    GenerateSheetByDataTable(writer, value as DataTable, seperator, newLine);
+                    GenerateSheetByDataTable(writer, _value as DataTable, seperator, newLine);
                 }
                 else
                 {
@@ -129,9 +131,9 @@ namespace MiniExcelLibs.Csv
             }
         }
 
-        public Task SaveAsAsync(object value, string sheetName)
+        public Task SaveAsAsync()
         {
-            return Task.Run(() => SaveAs(value, sheetName));
+            return Task.Run(() => SaveAs());
         }
 
         private void GenerateSheetByIDataReader(object value, string seperator, string newLine, StreamWriter writer)

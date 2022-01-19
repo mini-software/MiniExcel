@@ -1,6 +1,6 @@
 ﻿namespace MiniExcelLibs.Utils
 {
-    using MiniExcelNumberFormat;
+    using ExcelNumberFormat;
     using System;
     using System.Globalization;
 

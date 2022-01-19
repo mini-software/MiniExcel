@@ -19,7 +19,7 @@
 
         public static Task SaveAsAsync(this Stream stream, object value, bool printHeader = true, string sheetName = "Sheet1", ExcelType excelType = ExcelType.XLSX, IConfiguration configuration = null)
         {
-            return GetWriterProvider(stream, sheetName, excelType).SaveAsAsync(value, sheetName, printHeader, configuration);
+            return GetWriterProvider(stream, sheetName, excelType, configuration, printHeader).SaveAsAsync(value, sheetName);
         }
 
         public static Task<IEnumerable<dynamic>> QueryAsync(string path, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null)
@@ -77,17 +77,17 @@
             return Task.Run(() => ExcelOpenXmlSheetReader.QueryAsDataTableImpl(stream, useHeaderRow, ref sheetName, excelType, startCell, configuration));
         }
 
-        private static IExcelWriterAsync GetWriterProvider(Stream stream, string sheetName, ExcelType excelType)
+        private static IExcelWriter GetWriterProvider(Stream stream, string sheetName, ExcelType excelType, IConfiguration configuration,bool printHeader)
         {
             if (string.IsNullOrEmpty(sheetName))
                 throw new InvalidDataException("Sheet name can not be empty or null");
             if (excelType == ExcelType.UNKNOWN)
                 throw new InvalidDataException("Please specify excelType");
 
-            return ExcelWriterFactory.GetProvider(stream, excelType);
+            return ExcelWriterFactory.GetProvider(stream, excelType, configuration, printHeader);
         }
 
-        private static IExcelReaderAsync GetReaderProvider(Stream stream, ExcelType excelType)
+        private static IExcelReader GetReaderProvider(Stream stream, ExcelType excelType)
         {
             return ExcelReaderFactory.GetProvider(stream, ExcelTypeHelper.GetExcelType(stream, excelType));
         }

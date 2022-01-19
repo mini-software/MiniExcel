@@ -13,7 +13,7 @@ using System.Xml;
 
 namespace MiniExcelLibs.OpenXml
 {
-    internal class ExcelOpenXmlSheetReader : IExcelReader, IExcelReaderAsync
+    internal class ExcelOpenXmlSheetReader : IExcelReader
     {
         private const string _ns = Config.SpreadsheetmlXmlns;
         private List<SheetRecord> _sheetRecords;

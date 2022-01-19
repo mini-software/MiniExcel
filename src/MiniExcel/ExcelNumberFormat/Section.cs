@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace MiniExcelNumberFormat
-{
+namespace MiniExcelNumberFormat{
     internal class Section
     {
         public int SectionIndex { get; set; }

@@ -5,11 +5,7 @@ namespace MiniExcelLibs
 {
     internal interface IExcelWriter 
     {
-        void SaveAs(object value,string sheetName, bool printHeader, IConfiguration configuration);
-    }
-
-    internal interface IExcelWriterAsync : IExcelWriter
-    {
-        Task SaveAsAsync(object value, string sheetName, bool printHeader, IConfiguration configuration);
+        void SaveAs(object value,string sheetName);
+        Task SaveAsAsync(object value, string sheetName);
     }
 }

@@ -2,13 +2,11 @@
  * Edit from ExcelNumberFormat https://www.nuget.org/packages/ExcelNumberFormat/
  * MIT license @andersnm
  * Because this issue : https://github.com/andersnm/ExcelNumberFormat/issues/34 miniexcel needs to include source code
- */
-using System;
+ */using System;
 using System.Collections.Generic;
 using System.Globalization;
 
-namespace MiniExcelNumberFormat
-{
+namespace MiniExcelNumberFormat{
     /// <summary>
     /// Parse ECMA-376 number format strings and format values like Excel and other spreadsheet softwares.
     /// </summary>

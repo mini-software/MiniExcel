@@ -1375,6 +1375,16 @@ public static DataTable QueryAsDataTableWithoutEmptyRow(Stream stream, bool useH
 
 
 
+#### Q. How SaveAs(path,value) to replace exists file and without throwing "The file ...xlsx already exists error" 
+
+
+Please use Stream class to custom file creating logic, e.g: 
+
+```C#
+	using (var stream = File.Create("Demo.xlsx"))
+		MiniExcel.SaveAs(stream,value);
+```
+
 
 
 

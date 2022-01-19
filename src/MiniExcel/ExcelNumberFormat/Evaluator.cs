@@ -2,8 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace MiniExcelNumberFormat
-{
+namespace MiniExcelNumberFormat{
     internal static class Evaluator
     {
         public static Section GetSection(List<Section> sections, object value)

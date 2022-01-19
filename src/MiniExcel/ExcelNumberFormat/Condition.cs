@@ -1,5 +1,4 @@
-﻿namespace MiniExcelNumberFormat
-{
+﻿namespace MiniExcelNumberFormat{
     internal class Condition
     {
         public string Operator { get; set; }

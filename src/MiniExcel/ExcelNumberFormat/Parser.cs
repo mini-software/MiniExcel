@@ -2,8 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 
-namespace MiniExcelNumberFormat
-{
+namespace MiniExcelNumberFormat{
     internal static class Parser
     {
         public static List<Section> ParseSections(string formatString, out bool syntaxError)

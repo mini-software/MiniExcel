@@ -1378,6 +1378,19 @@ public static DataTable QueryAsDataTableWithoutEmptyRow(Stream stream, bool useH
 
 
 
+#### Q. 保存如何取代MiniExcel.SaveAs(path, value)，文件存在系統會報已存在錯誤?
+
+請改以Stream自行管控Stream行為，如
+
+```C#
+	using (var stream = File.Create("Demo.xlsx"))
+		MiniExcel.SaveAs(stream,value);
+```
+
+
+
+### 
+
 
 
 ### 侷限與警告

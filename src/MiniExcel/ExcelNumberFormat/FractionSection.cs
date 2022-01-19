@@ -1,8 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Text;
 
-namespace MiniExcelNumberFormat
-{
+namespace MiniExcelNumberFormat{
     internal class FractionSection
     {
         public List<string> IntegerPart { get; set; }

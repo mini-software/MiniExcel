@@ -1,5 +1,4 @@
-﻿namespace MiniExcelNumberFormat
-{
+﻿namespace MiniExcelNumberFormat{
     internal enum SectionType
     {
         General,

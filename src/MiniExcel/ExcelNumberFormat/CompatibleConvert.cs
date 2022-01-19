@@ -1,7 +1,6 @@
 ﻿using System;
 
-namespace MiniExcelNumberFormat
-{
+namespace MiniExcelNumberFormat{
     internal static class CompatibleConvert
     {
         /// <summary>

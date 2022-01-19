@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace MiniExcelNumberFormat
-{
+namespace MiniExcelNumberFormat{
     internal class ExponentialSection
     {
         public List<string> BeforeDecimal { get; set; }

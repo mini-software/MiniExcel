@@ -1,7 +1,6 @@
 ﻿using System;
 
-namespace MiniExcelNumberFormat
-{
+namespace MiniExcelNumberFormat{
     internal class Tokenizer
     {
         private string formatString;

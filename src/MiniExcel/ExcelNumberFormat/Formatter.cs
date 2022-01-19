@@ -3,8 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
 
-namespace MiniExcelNumberFormat
-{
+namespace MiniExcelNumberFormat{
     static internal class Formatter
     {
         static public string Format(object value, string formatString, CultureInfo culture, bool isDate1904)

@@ -256,7 +256,7 @@ namespace MiniExcelLibs.OpenXml
                     writer.Write("</x:sheetData>");
                     if (_configuration.AutoFilter)
                         writer.Write($"<x:autoFilter ref=\"A1:{ExcelOpenXmlUtils.ConvertXyToCell(maxColumnIndex, maxRowIndex == 0 ? 1 : maxRowIndex)}\" />");
-                    writer.Write("<x:drawing xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\" r:id=\"drawing1\" /></x:worksheet>");
+                    writer.Write("<x:drawing  r:id=\"drawing1\" /></x:worksheet>");
                 }
                 else if (value is DataTable)
                 {
@@ -404,7 +404,7 @@ namespace MiniExcelLibs.OpenXml
                             {
                                 ID = id,
                                 Path = $"xl/media/image{id}.{format.ToString()}",
-                                Path2 = $"../media/image{id}.{format.ToString()}",
+                                Path2 = $"xl/media/image{id}.{format.ToString()}",
                                 Byte = bytes,
                             }); 
                         }
@@ -589,10 +589,10 @@ namespace MiniExcelLibs.OpenXml
             <xdr:row>0</xdr:row>
             <xdr:rowOff>0</xdr:rowOff>
         </xdr:from>
-        <xdr:ext cx=""952500"" cy=""952500"" />
+        <xdr:ext cx=""609600"" cy=""190500"" />
         <xdr:pic>
             <xdr:nvPicPr>
-                <xdr:cNvPr id=""{_images.IndexOf(i)}"" descr="""" name=""2a3f9147-58ea-4a79-87da-7d6114c4877b"" />
+                <xdr:cNvPr id=""{_images.IndexOf(i)+2}"" descr="""" name=""2a3f9147-58ea-4a79-87da-7d6114c4877b"" />
                 <xdr:cNvPicPr>
                     <a:picLocks noChangeAspect=""1"" />
                 </xdr:cNvPicPr>
@@ -631,8 +631,8 @@ namespace MiniExcelLibs.OpenXml
                 foreach (var s in _sheets)
                 {
                     sheetId++;
-                    workbookXml.AppendLine($@"<x:sheet xmlns:r=""http://schemas.openxmlformats.org/officeDocument/2006/relationships"" name=""{s.Name}"" sheetId=""{sheetId}"" r:id=""{s.ID}"" />");
-                    workbookRelsXml.AppendLine($@"<Relationship Type=""http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet"" Target=""{s.Path}"" Id=""{s.ID}"" />");
+                    workbookXml.AppendLine($@"<x:sheet name=""{s.Name}"" sheetId=""{sheetId}"" r:id=""{s.ID}"" />");
+                    workbookRelsXml.AppendLine($@"<Relationship Type=""http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet"" Target=""/{s.Path}"" Id=""{s.ID}"" />");
 
                     //TODO: support multiple drawing 
                     //TODO: ../drawings/drawing1.xml or /xl/drawings/drawing1.xml

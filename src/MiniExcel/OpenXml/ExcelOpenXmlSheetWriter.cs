@@ -9,11 +9,28 @@ using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-
+using static MiniExcelLibs.Utils.ImageHelper;
 
 namespace MiniExcelLibs.OpenXml
 {
-
+    internal class ImageDto
+    {
+        public string ID { get; set; }
+        public string Path { get; set; }
+        public string Path2 { get; set; }
+        public Byte[] Byte { get; set; }
+    }
+    internal class SheetDto
+    {
+        public string ID { get; set; } = $"R{Guid.NewGuid().ToString("N")}";
+        public string Name { get; set; }
+        public int SheetIdx { get; set; }
+        public string Path { get { return $"xl/worksheets/sheet{SheetIdx}.xml"; }  }
+    }
+    internal class DrawingDto
+    {
+        public string ID { get; set; } = $"R{Guid.NewGuid().ToString("N")}";
+    }
     internal partial class ExcelOpenXmlSheetWriter : IExcelWriter
     {
         private readonly MiniExcelZipArchive _archive;
@@ -22,15 +39,16 @@ namespace MiniExcelLibs.OpenXml
         private readonly Stream _stream;
         private readonly bool _printHeader;
         private readonly object _value;
-        private readonly List<string> _sheetNames = new List<string>();
-        public ExcelOpenXmlSheetWriter(Stream stream,object value, string sheetName, IConfiguration configuration, bool printHeader)
+        private readonly List<SheetDto> _sheets = new List<SheetDto>();
+        private readonly List<ImageDto> _images = new List<ImageDto>();
+        public ExcelOpenXmlSheetWriter(Stream stream, object value, string sheetName, IConfiguration configuration, bool printHeader)
         {
             this._stream = stream;
             this._archive = new MiniExcelZipArchive(_stream, ZipArchiveMode.Create, true, _utf8WithBom);
             this._configuration = configuration as OpenXmlConfiguration ?? OpenXmlConfiguration.DefaultConfig;
             this._printHeader = printHeader;
             this._value = value;
-            _sheetNames.Add(sheetName); //TODO:remove
+            _sheets.Add(new SheetDto{ Name =sheetName, SheetIdx =1}); //TODO:remove
         }
 
         public void SaveAs()
@@ -41,43 +59,39 @@ namespace MiniExcelLibs.OpenXml
                 {
                     var sheetId = 0;
                     var sheets = _value as IDictionary<string, object>;
-                    _sheetNames.RemoveAt(0);//TODO:remove
+                    _sheets.RemoveAt(0);//TODO:remove
                     foreach (var sheet in sheets)
                     {
                         sheetId++;
-                        var sheetPath = $"xl/worksheets/sheet{sheetId}.xml";
-                        CreateSheetXml(sheet.Value, sheetPath);
-                        _sheetNames.Add(sheet.Key);
+                        var s = new SheetDto { Name = sheet.Key, SheetIdx = sheetId };
+                        _sheets.Add(s); //TODO:remove
+                        CreateSheetXml(sheet.Value, s.Path);
                     }
                 }
                 else if (_value is DataSet)
                 {
                     var sheetId = 0;
                     var sheets = _value as DataSet;
-                    _sheetNames.RemoveAt(0);//TODO:remove
-                    foreach (DataTable dt in sheets.Tables)
-                    {
-                        _sheetNames.Add(dt.TableName);
-                    }
-                    
+                    _sheets.RemoveAt(0);//TODO:remove
                     foreach (DataTable dt in sheets.Tables)
                     {
                         sheetId++;
-                        var sheetPath = $"xl/worksheets/sheet{sheetId}.xml";
-                        CreateSheetXml(dt,sheetPath);
+                        var s = new SheetDto { Name = dt.TableName, SheetIdx = sheetId };
+                        _sheets.Add(s); //TODO:remove
+                        var sheetPath = s.Path;
+                        CreateSheetXml(dt, sheetPath);
                     }
                 }
                 else
                 {
-                    var sheetPath = "xl/worksheets/sheet1.xml";
-                    CreateSheetXml(_value,sheetPath);
+                    CreateSheetXml(_value, _sheets[0].Path);
                 }
             }
             GenerateEndXml();
             _archive.Dispose();
         }
 
-        private void CreateSheetXml(object value,string sheetPath)
+        private void CreateSheetXml(object value, string sheetPath)
         {
             ZipArchiveEntry entry = _archive.CreateEntry(sheetPath);
             using (var zipStream = entry.Open())
@@ -176,7 +190,7 @@ namespace MiniExcelLibs.OpenXml
                         }
                     }
 
-                    writer.Write($@"<?xml version=""1.0"" encoding=""utf-8""?><x:worksheet xmlns:x=""http://schemas.openxmlformats.org/spreadsheetml/2006/main"">");
+                    writer.Write($@"<?xml version=""1.0"" encoding=""utf-8""?><x:worksheet xmlns:r=""http://schemas.openxmlformats.org/officeDocument/2006/relationships"" xmlns:x=""http://schemas.openxmlformats.org/spreadsheetml/2006/main"" >");
 
                     // dimension 
                     var maxRowIndex = rowCount + (_printHeader && rowCount > 0 ? 1 : 0);  //TODO:it can optimize
@@ -242,7 +256,7 @@ namespace MiniExcelLibs.OpenXml
                     writer.Write("</x:sheetData>");
                     if (_configuration.AutoFilter)
                         writer.Write($"<x:autoFilter ref=\"A1:{ExcelOpenXmlUtils.ConvertXyToCell(maxColumnIndex, maxRowIndex == 0 ? 1 : maxRowIndex)}\" />");
-                    writer.Write("</x:worksheet>");
+                    writer.Write("<x:drawing xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\" r:id=\"drawing1\" /></x:worksheet>");
                 }
                 else if (value is DataTable)
                 {
@@ -329,7 +343,7 @@ namespace MiniExcelLibs.OpenXml
             }
         }
 
-        private static void WriteCell(StreamWriter writer, int yIndex, int cellIndex, object value, ExcelCustomPropertyInfo p)
+        private void WriteCell(StreamWriter writer, int yIndex, int cellIndex, object value, ExcelCustomPropertyInfo p)
         {
             var v = string.Empty;
             var t = "str";
@@ -373,6 +387,28 @@ namespace MiniExcelLibs.OpenXml
                 {
                     t = "b";
                     v = (bool)value ? "1" : "0";
+                }
+                else if (type == typeof(byte[]))
+                {
+                    var bytes = (byte[])value;
+                    if (bytes != null)
+                    {
+                        // TODO: Setting configuration because it might have high cost?
+                        var format = ImageHelper.GetImageFormat(bytes);
+                        if (format != ImageFormat.unknown)
+                        {
+                            //it can't insert to zip first to avoid cache image to memory
+                            //because sheet xml is opening.. https://github.com/shps951023/MiniExcel/issues/304#issuecomment-1017031691
+                            var id = Guid.NewGuid().ToString("N");
+                            _images.Add(new ImageDto()
+                            {
+                                ID = id,
+                                Path = $"xl/media/image{id}.{format.ToString()}",
+                                Path2 = $"../media/image{id}.{format.ToString()}",
+                                Byte = bytes,
+                            }); 
+                        }
+                    }
                 }
                 else if (type == typeof(DateTime))
                 {
@@ -507,7 +543,14 @@ namespace MiniExcelLibs.OpenXml
 
         private void GenerateEndXml()
         {
-            
+            //Images
+            {
+                foreach (var item in _images)
+                {
+                    this.CreateZipEntry(item.Path, item.Byte);
+                }
+            }
+
             // styles.xml 
             {
                 var styleXml = string.Empty;
@@ -523,35 +566,97 @@ namespace MiniExcelLibs.OpenXml
                 CreateZipEntry(@"xl/styles.xml", "application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml", styleXml);
             }
 
+            // drawing rel
+            {
+                var drawing = new StringBuilder();
+                foreach (var i in _images)
+                {
+                    drawing.AppendLine($@"<Relationship Type=""http://schemas.openxmlformats.org/officeDocument/2006/relationships/image"" Target=""{i.Path2}"" Id=""{i.ID}"" />");
+                }
+                CreateZipEntry($"xl/drawings/_rels/drawing1.xml.rels", "",
+                    _defaultDrawingXmlRels.Replace("{{format}}", drawing.ToString()));
+
+            }
+            // drawing
+            {
+                var drawing = new StringBuilder();
+                foreach (var i in _images)
+                {
+                    drawing.Append($@"<xdr:oneCellAnchor>
+        <xdr:from>
+            <xdr:col>0</xdr:col>
+            <xdr:colOff>0</xdr:colOff>
+            <xdr:row>0</xdr:row>
+            <xdr:rowOff>0</xdr:rowOff>
+        </xdr:from>
+        <xdr:ext cx=""952500"" cy=""952500"" />
+        <xdr:pic>
+            <xdr:nvPicPr>
+                <xdr:cNvPr id=""{_images.IndexOf(i)}"" descr="""" name=""2a3f9147-58ea-4a79-87da-7d6114c4877b"" />
+                <xdr:cNvPicPr>
+                    <a:picLocks noChangeAspect=""1"" />
+                </xdr:cNvPicPr>
+            </xdr:nvPicPr>
+            <xdr:blipFill>
+                <a:blip xmlns:r=""http://schemas.openxmlformats.org/officeDocument/2006/relationships"" r:embed=""{i.ID}"" cstate=""print"" />
+                <a:stretch>
+                    <a:fillRect />
+                </a:stretch>
+            </xdr:blipFill>
+            <xdr:spPr>
+                <a:xfrm>
+                    <a:off x=""0"" y=""0"" />
+                    <a:ext cx=""0"" cy=""0"" />
+                </a:xfrm>
+                <a:prstGeom prst=""rect"">
+                    <a:avLst />
+                </a:prstGeom>
+            </xdr:spPr>
+        </xdr:pic>
+        <xdr:clientData />
+    </xdr:oneCellAnchor>");
+                }
+                CreateZipEntry($"xl/drawings/drawing1.xml", "application/vnd.openxmlformats-officedocument.drawing+xml",
+                    _defaultDrawing.Replace("{{format}}", drawing.ToString()));
+
+            }
+
             // workbook.xml 、 workbookRelsXml
             {
                 var workbookXml = new StringBuilder();
                 var workbookRelsXml = new StringBuilder();
+                var sheetRelsXml = new StringBuilder();
 
                 var sheetId = 0;
-                foreach (var sheetName in _sheetNames)
+                foreach (var s in _sheets)
                 {
                     sheetId++;
-                    var id = $"R{Guid.NewGuid().ToString("N")}";
-                    workbookXml.AppendLine($@"<x:sheet xmlns:r=""http://schemas.openxmlformats.org/officeDocument/2006/relationships"" name=""{sheetName}"" sheetId=""{sheetId}"" r:id=""{id}"" />");
-                    workbookRelsXml.AppendLine($@"<Relationship Type=""http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet"" Target=""/xl/worksheets/sheet{sheetId}.xml"" Id=""{id}"" />");
+                    workbookXml.AppendLine($@"<x:sheet xmlns:r=""http://schemas.openxmlformats.org/officeDocument/2006/relationships"" name=""{s.Name}"" sheetId=""{sheetId}"" r:id=""{s.ID}"" />");
+                    workbookRelsXml.AppendLine($@"<Relationship Type=""http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet"" Target=""{s.Path}"" Id=""{s.ID}"" />");
+
+                    //TODO: support multiple drawing 
+                    //TODO: ../drawings/drawing1.xml or /xl/drawings/drawing1.xml
+                    sheetRelsXml.Append($@"<Relationship Type=""http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing"" Target=""../drawings/drawing1.xml"" Id=""drawing1"" />");
+                    CreateZipEntry($"xl/worksheets/_rels/sheet{s.SheetIdx}.xml.rels", "",
+                        _defaultSheetRelXml.Replace("{{format}}", sheetRelsXml.ToString()));
                 }
                 CreateZipEntry(@"xl/workbook.xml", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml",
-                    ExcelOpenXmlSheetWriter._defaultWorkbookXml.Replace("{{sheets}}", workbookXml.ToString()));
-                CreateZipEntry(@"xl/_rels/workbook.xml.rels", "application/vnd.openxmlformats-package.relationships+xml",
-                    ExcelOpenXmlSheetWriter._defaultWorkbookXmlRels.Replace("{{sheets}}", workbookRelsXml.ToString()));
+                    _defaultWorkbookXml.Replace("{{sheets}}", workbookXml.ToString()));
+                CreateZipEntry(@"xl/_rels/workbook.xml.rels", "",
+                    _defaultWorkbookXmlRels.Replace("{{sheets}}", workbookRelsXml.ToString()));             
             }
 
             //[Content_Types].xml 
-            var sb = new StringBuilder(@"<?xml version=""1.0"" encoding=""UTF-8"" standalone=""yes""?><Types xmlns=""http://schemas.openxmlformats.org/package/2006/content-types""><Default ContentType=""application/xml"" Extension=""xml""/><Default ContentType=""application/vnd.openxmlformats-package.relationships+xml"" Extension=""rels""/>");
-            foreach (var p in _zipDictionary)
-                sb.Append($"<Override ContentType=\"{p.Value.ContentType}\" PartName=\"/{p.Key}\" />");
-            sb.Append("</Types>");
-
-            ZipArchiveEntry entry = _archive.CreateEntry("[Content_Types].xml");
-            using (var zipStream = entry.Open())
-            using (StreamWriter writer = new StreamWriter(zipStream, _utf8WithBom))
-                writer.Write(sb.ToString());
+            {
+                var sb = new StringBuilder(@"<?xml version=""1.0"" encoding=""UTF-8"" standalone=""yes""?><Types xmlns=""http://schemas.openxmlformats.org/package/2006/content-types""><Default ContentType=""application/xml"" Extension=""xml""/><Default ContentType=""image/jpeg"" Extension=""jpg""/><Default ContentType=""image/png"" Extension=""png""/><Default ContentType=""image/gif"" Extension=""gif""/><Default ContentType=""application/vnd.openxmlformats-package.relationships+xml"" Extension=""rels""/>");
+                foreach (var p in _zipDictionary)
+                    sb.Append($"<Override ContentType=\"{p.Value.ContentType}\" PartName=\"/{p.Key}\" />");
+                sb.Append("</Types>");
+                ZipArchiveEntry entry = _archive.CreateEntry("[Content_Types].xml");
+                using (var zipStream = entry.Open())
+                using (StreamWriter writer = new StreamWriter(zipStream, _utf8WithBom))
+                    writer.Write(sb.ToString());
+            }
         }
 
         private string GetDimensionRef(int maxRowIndex, int maxColumnIndex)

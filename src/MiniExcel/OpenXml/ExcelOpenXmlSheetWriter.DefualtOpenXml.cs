@@ -18,11 +18,13 @@ namespace MiniExcelLibs.OpenXml
             _defaultWorkbookXml = MinifyXml(_defaultWorkbookXml);
             _defaultStylesXml = MinifyXml(_defaultStylesXml);
             _defaultWorkbookXmlRels = MinifyXml(_defaultWorkbookXmlRels);
+            _defaultSheetRelXml = MinifyXml(_defaultSheetRelXml);
+            _defaultDrawing = MinifyXml(_defaultDrawing);
         }
 
         private static readonly string _defaultRels = @"<?xml version=""1.0"" encoding=""utf-8""?>
 <Relationships xmlns=""http://schemas.openxmlformats.org/package/2006/relationships"">
-    <Relationship Type=""http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument"" Target=""/xl/workbook.xml"" Id=""Rfc2254092b6248a9"" />
+    <Relationship Type=""http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument"" Target=""xl/workbook.xml"" Id=""Rfc2254092b6248a9"" />
 </Relationships>";
 
         private static readonly string _defaultWorkbookXmlRels = @"<?xml version=""1.0"" encoding=""utf-8""?>
@@ -162,11 +164,26 @@ namespace MiniExcelLibs.OpenXml
     </x:sheets>
 </x:workbook>";
 
+        private static readonly string _defaultSheetRelXml = @"<?xml version=""1.0"" encoding=""UTF-8"" standalone=""yes""?>
+<Relationships xmlns=""http://schemas.openxmlformats.org/package/2006/relationships"">
+    {{format}}
+</Relationships>";
+        private static readonly string _defaultDrawing = @"<?xml version=""1.0"" encoding=""utf-8"" standalone=""yes""?>
+<xdr:wsDr xmlns:a=""http://schemas.openxmlformats.org/drawingml/2006/main""
+    xmlns:r=""http://schemas.openxmlformats.org/officeDocument/2006/relationships""
+    xmlns:xdr=""http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing"">
+    {{format}}
+</xdr:wsDr>";
+        private static readonly string _defaultDrawingXmlRels = @"<?xml version=""1.0"" encoding=""utf-8"" standalone=""yes""?>
+<Relationships xmlns=""http://schemas.openxmlformats.org/package/2006/relationships"">
+    {{format}}
+</Relationships>";
+
         private static string MinifyXml(string xml) => xml.Replace("\r", "").Replace("\n", "").Replace("\t", "");
 
         internal void GenerateDefaultOpenXml()
         {
-            CreateZipEntry(@"_rels/.rels", "application/vnd.openxmlformats-package.relationships+xml", ExcelOpenXmlSheetWriter._defaultRels);
+            CreateZipEntry("_rels/.rels", "application/vnd.openxmlformats-package.relationships+xml", ExcelOpenXmlSheetWriter._defaultRels);
         }
 
         private void CreateZipEntry(string path,string contentType,string content)
@@ -175,7 +192,16 @@ namespace MiniExcelLibs.OpenXml
             using (var zipStream = entry.Open())
             using (StreamWriter writer = new StreamWriter(zipStream, _utf8WithBom))
                 writer.Write(content);
-            _zipDictionary.Add(path, new ZipPackageInfo(entry, contentType));
+            if(!string.IsNullOrEmpty(contentType))
+                _zipDictionary.Add(path, new ZipPackageInfo(entry, contentType));
+        }
+
+        private void CreateZipEntry(string path, byte[] content)
+        {
+            ZipArchiveEntry entry = _archive.CreateEntry(path);
+            using (var zipStream = entry.Open())
+            using (StreamWriter writer = new StreamWriter(zipStream, _utf8WithBom))
+                writer.Write(content);
         }
     }
 }

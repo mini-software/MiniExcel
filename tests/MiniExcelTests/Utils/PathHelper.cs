@@ -10,7 +10,7 @@
             return $@"../../../../../samples/{fileName}";
         }
 
-        public static string GetTempPath(string extension = "xlsx") 
+        public static string GetTempPath(string extension = "xlsx")
         {
             var method = (new System.Diagnostics.StackTrace()).GetFrame(1).GetMethod();
 
@@ -18,6 +18,11 @@
             if (File.Exists(path))
                 File.Delete(path);
             return path;
-        } 
+        }
+
+        public static string GetRandomPath(string extension = "xlsx")
+        {
+            return Path.GetTempPath() + Guid.NewGuid().ToString() + "." + extension;
+        }
     }
 }

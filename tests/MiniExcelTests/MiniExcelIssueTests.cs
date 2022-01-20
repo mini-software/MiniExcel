@@ -34,7 +34,7 @@ namespace MiniExcelLibs.Tests
         [Fact]
         public void TestIssue304()
         {
-            var image = Convert.FromBase64String("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQAAAAA3bvkkAAAAEElEQVR4nGJgAQAAAP//AwAABgAFV7+r1AAAAABJRU5ErkJggg==");
+            var image = Convert.FromBase64String("iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAVklEQVR4Xn3PgQkAMQhDUXfqTu7kTtkpd5RA8AInfArtQ2iRXFWT2QedAfttj2FsPIOE1eCOlEuoWWjgzYaB/IkeGOrxXhqB+uA9Bfcm0lAZuh+YIeAD+cAqSz4kCMUAAAAASUVORK5CYII=");
             var value = Enumerable.Range(1, 5).Select(s => new { image });
             var path = PathHelper.GetRandomPath();
             MiniExcel.SaveAs(path, value);

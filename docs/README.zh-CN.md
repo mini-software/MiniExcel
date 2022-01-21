@@ -23,6 +23,12 @@
 
 ---
 
+### 0.20.1
+- [New] 支持byte文件导入/导出
+- [New] SaveAs 支持预设转换byte[] 值为 base64 字串
+- [New] Query 支持转换 base64 字串值为 bytep[]
+- [New] OpenXmlConfiguration 增加 `ConvertByteArrayToBase64String` 属性来开关 base64 转换器
+
 ### 0.20.0 
 - [New] SaveAs 支持图片生成 #304
 - [Opt] 提高 SaveAs 执行效率

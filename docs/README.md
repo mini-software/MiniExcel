@@ -16,6 +16,14 @@
 
 ---
 
+
+
+### 0.20.1
+- [New] Support byte file import/export
+- [New] SaveAs support to convert byte[] value to base64 string 
+- [New] Query support to convert base64 value to byte[]
+- [New] OpenXmlConfiguration add `ConvertByteArrayToBase64String` to turn on/off base64 convertor
+
 ### 0.20.0 
 - [New] SaveAs support image #304
 - [Opt] Improve SaveAs efficiency 

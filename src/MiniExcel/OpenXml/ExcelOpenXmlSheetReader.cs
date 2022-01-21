@@ -21,6 +21,8 @@ namespace MiniExcelLibs.OpenXml
         private MergeCells _mergeCells;
         private ExcelOpenXmlStyles _style;
         private ExcelOpenXmlZip _archive;
+        private ExcelOpenXmlZip _zip;
+        private OpenXmlConfiguration _config;
         private static readonly XmlReaderSettings _xmlSettings = new XmlReaderSettings
         {
             IgnoreComments = true,
@@ -35,7 +37,7 @@ namespace MiniExcelLibs.OpenXml
 
         public IEnumerable<IDictionary<string, object>> Query(bool useHeaderRow, string sheetName, string startCell, IConfiguration configuration)
         {
-            var config = (OpenXmlConfiguration)configuration ?? OpenXmlConfiguration.DefaultConfig; //TODO:
+            _config = (OpenXmlConfiguration)configuration ?? OpenXmlConfiguration.DefaultConfig; //TODO:
             if (!ReferenceHelper.ParseReference(startCell, out var startColumnIndex, out var startRowIndex))
                 throw new InvalidDataException($"startCell {startCell} is Invalid");
             startColumnIndex--; startRowIndex--;
@@ -67,7 +69,7 @@ namespace MiniExcelLibs.OpenXml
 
 
             #region MergeCells
-            if (config.FillMergedCells)
+            if (_config.FillMergedCells)
             {
                 _mergeCells = new MergeCells();
                 using (var sheetStream = sheetEntry.Open())
@@ -300,7 +302,7 @@ namespace MiniExcelLibs.OpenXml
                                             var aT = reader.GetAttribute("t");
                                             var cellValue = ReadCellAndSetColumnIndex(reader, ref columnIndex, withoutCR, startColumnIndex, aR, aT);
 
-                                            if (config.FillMergedCells)
+                                            if (_config.FillMergedCells)
                                             {
                                                 if (_mergeCells.MergesValues.ContainsKey(aR))
                                                 {
@@ -703,7 +705,21 @@ namespace MiniExcelLibs.OpenXml
                     return;
                 case "inlineStr":
                 case "str":
-                    value = XmlEncoder.DecodeString(rawValue);
+                    //TODO: it will unbox,box
+                    var v = XmlEncoder.DecodeString(rawValue);
+                    if (_config.ConvertByteArrayToBase64String)
+                    {
+                        //TODO:optimize startswith
+                        //if str start with "data:image/png;base64," then convert to byte[] https://github.com/shps951023/MiniExcel/issues/318
+                        if (v != null && v.StartsWith("data:image/png;base64,"))
+                            value = Convert.FromBase64String(v.Substring(22));
+                        else
+                            value = v;
+                    }
+                    else
+                    {
+                        value = v;
+                    }
                     return;
                 case "b":
                     value = rawValue == "1";

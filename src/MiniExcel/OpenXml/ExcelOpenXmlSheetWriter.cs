@@ -391,7 +391,7 @@ namespace MiniExcelLibs.OpenXml
                     t = "b";
                     v = (bool)value ? "1" : "0";
                 }
-                else if (type == typeof(byte[]))
+                else if (type == typeof(byte[]) && _configuration.ConvertByteArrayToBase64String)
                 {
                     var bytes = (byte[])value;
                     if (bytes != null)

@@ -492,6 +492,14 @@ MiniExcel.SaveAs(path, value);
 
 
 
+### 11. 文件导出
+
+从 0.21.0 开始，当值类型为 `byte[]` 系统预设会转成 base64 字串以便导入时转回 `byte[]`，如不想转换可以将 `OpenXmlConfiguration.ConvertByteArrayToBase64String` 改为 `false`，能提升系统效率。
+
+![image](https://user-images.githubusercontent.com/12729184/150499973-682be39a-8a98-4681-915f-45c8e8e725fb.png)
+
+
+
 
 
 

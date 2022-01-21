@@ -486,7 +486,11 @@ MiniExcel.SaveAs(path, value);
 
 
 
+### 11. File Export
 
+Since 0.21.0, when value type is `byte[]` then system will save base64 string at cell by default, and when import system can be converted to `byte[]`. And if you don't want to use it, you can set  `OpenXmlConfiguration.ConvertByteArrayToBase64String` to `false`, it can improve the system efficiency.
+
+![image](https://user-images.githubusercontent.com/12729184/150499973-682be39a-8a98-4681-915f-45c8e8e725fb.png)
 
 
 
@@ -968,6 +972,12 @@ MiniExcel.ConvertXlsxToCsv(xlsxStream, csvStream);
 MiniExcel.ConvertXlsxToCsv(csvPath, xlsxPath);
 MiniExcel.ConvertXlsxToCsv(csvStream, xlsxStream);
 ```
+
+
+
+
+
+
 
 
 

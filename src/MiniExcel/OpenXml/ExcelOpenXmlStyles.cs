@@ -129,11 +129,6 @@
             {
                 if (double.TryParse(value?.ToString(), out var s))
                 {
-                    //TODO: if format like yyyy, it need to convert to double, not return datetime value
-
-
-
-
                     return DateTimeHelper.FromOADate(s);
                 }
             }

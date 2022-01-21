@@ -34,12 +34,15 @@ namespace MiniExcelLibs.Tests
         [Fact]
         public void TestIssue304()
         {
-            var image = Convert.FromBase64String("iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAVklEQVR4Xn3PgQkAMQhDUXfqTu7kTtkpd5RA8AInfArtQ2iRXFWT2QedAfttj2FsPIOE1eCOlEuoWWjgzYaB/IkeGOrxXhqB+uA9Bfcm0lAZuh+YIeAD+cAqSz4kCMUAAAAASUVORK5CYII=");
+            var imagePath = PathHelper.GetFile("images/github_logo.png");
+            var image = File.ReadAllBytes(imagePath);
             var value = Enumerable.Range(1, 5).Select(s => new { image });
             var path = PathHelper.GetRandomPath();
             MiniExcel.SaveAs(path, value);
 
 
+            //TODO: Read from base 64 not work
+            //var image = Convert.FromBase64String("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQAAAAA3bvkkAAAAEElEQVR4nGJgAQAAAP//AwAABgAFV7+r1AAAAABJRU5ErkJggg==");
         }
 
         /// <summary>
@@ -52,7 +55,7 @@ namespace MiniExcelLibs.Tests
                 using (var cn = Db.GetConnection())
                 {
                     var reader = cn.ExecuteReader(@"select 'Hello World1' Text union all select 'Hello World2'");
-                    var templatePath = PathHelper.GetSamplePath("xlsx/TestIssueI4HL54_Template.xlsx");
+                    var templatePath = PathHelper.GetFile("xlsx/TestIssueI4HL54_Template.xlsx");
                     var path = PathHelper.GetTempPath();
                     var value = new Dictionary<string, object>()
                     {
@@ -104,7 +107,7 @@ namespace MiniExcelLibs.Tests
         [Fact]
         public void TestIssue298()
         {
-            var path = PathHelper.GetSamplePath("/csv/TestIssue298.csv");
+            var path = PathHelper.GetFile("/csv/TestIssue298.csv");
             var dt = MiniExcel.QueryAsDataTable(path);
             Assert.Equal(new[] { "ID", "Name", "Age" }, dt.Columns.Cast<DataColumn>().Select(_ => _.ColumnName));
         }
@@ -116,7 +119,7 @@ namespace MiniExcelLibs.Tests
         [Fact]
         public void TestIssueI4DQUN()
         {
-            var templatePath = PathHelper.GetSamplePath("xlsx/TestIssueI4DQUN.xlsx");
+            var templatePath = PathHelper.GetFile("xlsx/TestIssueI4DQUN.xlsx");
             var path = PathHelper.GetTempPath();
             var value = new Dictionary<string, object>()
             {
@@ -176,7 +179,7 @@ namespace MiniExcelLibs.Tests
         public void TestIssue292()
         {
             {
-                var xlsxPath = PathHelper.GetSamplePath("/xlsx/TestIssue292.xlsx");
+                var xlsxPath = PathHelper.GetFile("/xlsx/TestIssue292.xlsx");
                 var csvPath = PathHelper.GetTempPath("csv");
                 MiniExcel.ConvertXlsxToCsv(xlsxPath, csvPath);
 
@@ -188,7 +191,7 @@ Henry,44,Jerry,44
             }
 
             {
-                var csvPath = PathHelper.GetSamplePath("/csv/TestIssue292.csv");
+                var csvPath = PathHelper.GetFile("/csv/TestIssue292.csv");
                 var xlsxPath = PathHelper.GetTempPath("xlsx");
                 MiniExcel.ConvertCsvToXlsx(csvPath, xlsxPath);
 
@@ -211,7 +214,7 @@ Henry,44,Jerry,44
         [Fact]
         public void TestIssue293()
         {
-            var path = PathHelper.GetSamplePath("/csv/Test5x2.csv");
+            var path = PathHelper.GetFile("/csv/Test5x2.csv");
             var tempPath = PathHelper.GetTempPath("csv");
             using (var csv = File.OpenRead(path))
             {
@@ -312,25 +315,25 @@ Henry,44,Jerry,44
         public void TestIssueI40QA5()
         {
             {
-                var path = PathHelper.GetSamplePath("/xlsx/TestIssueI40QA5_1.xlsx");
+                var path = PathHelper.GetFile("/xlsx/TestIssueI40QA5_1.xlsx");
                 var rows = MiniExcel.Query<TestIssueI40QA5Dto>(path).ToList();
                 Assert.Equal("E001", rows[0].Empno);
                 Assert.Equal("E002", rows[1].Empno);
             }
             {
-                var path = PathHelper.GetSamplePath("/xlsx/TestIssueI40QA5_2.xlsx");
+                var path = PathHelper.GetFile("/xlsx/TestIssueI40QA5_2.xlsx");
                 var rows = MiniExcel.Query<TestIssueI40QA5Dto>(path).ToList();
                 Assert.Equal("E001", rows[0].Empno);
                 Assert.Equal("E002", rows[1].Empno);
             }
             {
-                var path = PathHelper.GetSamplePath("/xlsx/TestIssueI40QA5_3.xlsx");
+                var path = PathHelper.GetFile("/xlsx/TestIssueI40QA5_3.xlsx");
                 var rows = MiniExcel.Query<TestIssueI40QA5Dto>(path).ToList();
                 Assert.Equal("E001", rows[0].Empno);
                 Assert.Equal("E002", rows[1].Empno);
             }
             {
-                var path = PathHelper.GetSamplePath("/xlsx/TestIssueI40QA5_4.xlsx");
+                var path = PathHelper.GetFile("/xlsx/TestIssueI40QA5_4.xlsx");
                 var rows = MiniExcel.Query<TestIssueI40QA5Dto>(path).ToList();
                 Assert.Null(rows[0].Empno);
                 Assert.Null(rows[1].Empno);
@@ -437,7 +440,7 @@ Henry,44,Jerry,44
         [Fact]
         public void TestIssue279()
         {
-            var path = PathHelper.GetSamplePath("/csv/TestHeader.csv");
+            var path = PathHelper.GetFile("/csv/TestHeader.csv");
             var dt = MiniExcel.QueryAsDataTable(path, true, null, ExcelType.CSV);
             Assert.Equal("A1", dt.Rows[0]["Column1"]);
             Assert.Equal("A2", dt.Rows[1]["Column1"]);
@@ -451,7 +454,7 @@ Henry,44,Jerry,44
         [Fact]
         public void TestIssue272()
         {
-            var path = PathHelper.GetSamplePath("/xlsx/TestIssue272.xlsx");
+            var path = PathHelper.GetFile("/xlsx/TestIssue272.xlsx");
             try
             {
                 var rows = MiniExcel.Query(path).ToList();
@@ -469,7 +472,7 @@ Henry,44,Jerry,44
         [Fact]
         public void TestIssue267()
         {
-            var path = PathHelper.GetSamplePath("/xlsx/TestIssue267.xlsx");
+            var path = PathHelper.GetFile("/xlsx/TestIssue267.xlsx");
             var row = MiniExcel.Query(path).SingleOrDefault();
             Assert.Equal(10618, row.A);
             Assert.Equal("2021-02-23", row.B);
@@ -515,7 +518,7 @@ Henry,44,Jerry,44
         {
             try
             {
-                var path = PathHelper.GetSamplePath("xlsx/TestIssueI3X2ZL_datetime_error.xlsx");
+                var path = PathHelper.GetFile("xlsx/TestIssueI3X2ZL_datetime_error.xlsx");
                 var rows = MiniExcel.Query<IssueI3X2ZLDTO>(path, startCell: "B3").ToList();
             }
             catch (InvalidCastException ex)
@@ -528,7 +531,7 @@ Henry,44,Jerry,44
 
             try
             {
-                var path = PathHelper.GetSamplePath("xlsx/TestIssueI3X2ZL_int_error.xlsx");
+                var path = PathHelper.GetFile("xlsx/TestIssueI3X2ZL_int_error.xlsx");
                 var rows = MiniExcel.Query<IssueI3X2ZLDTO>(path).ToList();
             }
             catch (InvalidCastException ex)
@@ -552,7 +555,7 @@ Henry,44,Jerry,44
         [Fact]
         public void TestIssue261()
         {
-            var csvPath = PathHelper.GetSamplePath("csv/TestCsvToXlsx.csv");
+            var csvPath = PathHelper.GetFile("csv/TestCsvToXlsx.csv");
             var xlsxPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString() + ".xlsx");
             CsvToXlsx(csvPath, xlsxPath);
             var rows = MiniExcel.Query(xlsxPath).ToList();
@@ -583,7 +586,7 @@ Henry,44,Jerry,44
         {
             //tempalte
             {
-                var templatePath = PathHelper.GetSamplePath("xlsx/TestsIssue255_Template.xlsx");
+                var templatePath = PathHelper.GetFile("xlsx/TestsIssue255_Template.xlsx");
                 var path = PathHelper.GetTempPath();
                 var value = new
                 {
@@ -620,7 +623,7 @@ Henry,44,Jerry,44
         [Fact]
         public void Issue256()
         {
-            var path = PathHelper.GetSamplePath("xlsx/TestIssue256.xlsx");
+            var path = PathHelper.GetFile("xlsx/TestIssue256.xlsx");
             var rows = MiniExcel.Query(path, false).ToList();
             Assert.Equal(new DateTime(2003, 4, 16), rows[1].A);
             Assert.Equal(new DateTime(2004, 4, 16), rows[1].B);
@@ -695,7 +698,7 @@ Henry,44,Jerry,44
         [Fact]
         public void Issue242()
         {
-            var path = PathHelper.GetSamplePath("xls/TestIssue242.xls");
+            var path = PathHelper.GetFile("xls/TestIssue242.xls");
 
             Assert.Throws<NotSupportedException>(() => MiniExcel.Query(path).ToList());
 
@@ -879,7 +882,7 @@ Henry,44,Jerry,44
         [Fact]
         public void Issue233()
         {
-            var path = PathHelper.GetSamplePath("xlsx/TestIssue233.xlsx");
+            var path = PathHelper.GetFile("xlsx/TestIssue233.xlsx");
             var dt = MiniExcel.QueryAsDataTable(path);
             var rows = dt.Rows;
 
@@ -1005,7 +1008,7 @@ Henry,44,Jerry,44
         [Fact]
         public void Issue229()
         {
-            var path = PathHelper.GetSamplePath("xlsx/TestIssue229.xlsx");
+            var path = PathHelper.GetFile("xlsx/TestIssue229.xlsx");
             var dt = MiniExcel.QueryAsDataTable(path);
             foreach (DataColumn column in dt.Columns)
             {
@@ -1026,7 +1029,7 @@ Henry,44,Jerry,44
                 FillMergedCells = true
             };
             {
-                var path = PathHelper.GetSamplePath("xlsx/TestIssue122.xlsx");
+                var path = PathHelper.GetFile("xlsx/TestIssue122.xlsx");
                 {
                     var rows = MiniExcel.Query(path, useHeaderRow: true, configuration: config).ToList();
                     Assert.Equal("HR", rows[0].Department);
@@ -1039,7 +1042,7 @@ Henry,44,Jerry,44
             }
 
             {
-                var path = PathHelper.GetSamplePath("xlsx/TestIssue122_2.xlsx");
+                var path = PathHelper.GetFile("xlsx/TestIssue122_2.xlsx");
                 {
                     var rows = MiniExcel.Query(path, useHeaderRow: true, configuration: config).ToList();
                     Assert.Equal("V1", rows[2].Test1);
@@ -1065,7 +1068,7 @@ Henry,44,Jerry,44
             }
 
             {
-                var path = PathHelper.GetSamplePath("xlsx/TestIssue227.xlsm");
+                var path = PathHelper.GetFile("xlsx/TestIssue227.xlsm");
                 {
                     var rows = MiniExcel.Query<UserAccount>(path).ToList();
 
@@ -1108,7 +1111,7 @@ Henry,44,Jerry,44
         public void Issue226()
         {
             var path = PathHelper.GetTempPath();
-            var templatePath = PathHelper.GetSamplePath("xlsx/TestIssue226.xlsx");
+            var templatePath = PathHelper.GetFile("xlsx/TestIssue226.xlsx");
             MiniExcel.SaveAsByTemplate(path, templatePath, new { employees = new[] { new { name = "123" }, new { name = "123" } } });
             Assert.Equal("A1:A3", Helpers.GetFirstSheetDimensionRefValue(path));
         }
@@ -1145,7 +1148,7 @@ Henry,44,Jerry,44
         [Fact]
         public void Issue222()
         {
-            var path = PathHelper.GetSamplePath("xlsx/TestIssue222.xlsx");
+            var path = PathHelper.GetFile("xlsx/TestIssue222.xlsx");
             var rows = MiniExcel.Query(path).ToList();
             Assert.Equal(typeof(DateTime), rows[1].A.GetType());
             Assert.Equal(new DateTime(2021, 4, 29), rows[1].A);
@@ -1159,7 +1162,7 @@ Henry,44,Jerry,44
         public void Issue147()
         {
             {
-                var path = PathHelper.GetSamplePath("xlsx/TestIssue147.xlsx");
+                var path = PathHelper.GetFile("xlsx/TestIssue147.xlsx");
                 var rows = MiniExcel.Query(path, useHeaderRow: false, startCell: "C3", sheetName: "Sheet1").ToList();
 
                 Assert.Equal(new[] { "C", "D", "E" }, (rows[0] as IDictionary<string, object>).Keys);
@@ -1179,7 +1182,7 @@ Henry,44,Jerry,44
             }
 
             {
-                var path = PathHelper.GetSamplePath("xlsx/TestIssue147.xlsx");
+                var path = PathHelper.GetFile("xlsx/TestIssue147.xlsx");
                 var rows = MiniExcel.Query(path, useHeaderRow: true, startCell: "C3", sheetName: "Sheet1").ToList();
 
                 Assert.Equal(new[] { "Column1", "Column2", "Column3" }, (rows[0] as IDictionary<string, object>).Keys);
@@ -1293,7 +1296,7 @@ Henry,44,Jerry,44
         [Fact]
         public void Issue220()
         {
-            var path = PathHelper.GetSamplePath("xlsx/TestIssue220.xlsx");
+            var path = PathHelper.GetFile("xlsx/TestIssue220.xlsx");
             var rows = MiniExcel.Query(path, useHeaderRow: true);
             var result = (from s in rows
                           group s by s.PRT_ID into g
@@ -1360,7 +1363,7 @@ Leave";
 
             //xlsx
             {
-                var path = PathHelper.GetSamplePath("xlsx/TestIssue89.xlsx");
+                var path = PathHelper.GetFile("xlsx/TestIssue89.xlsx");
                 var rows = MiniExcel.Query<Issue89VO>(path).ToList();
 
                 Assert.Equal(Issue89VO.WorkState.OnDuty, rows[0].State);

@@ -36,7 +36,7 @@ namespace MiniExcelLibs.Tests
         {
             //tempalte
             {
-                var templatePath = PathHelper.GetSamplePath("xlsx/TestsIssue255_Template.xlsx");
+                var templatePath = PathHelper.GetFile("xlsx/TestsIssue255_Template.xlsx");
                 var path = PathHelper.GetTempPath();
                 var value = new
                 {
@@ -75,7 +75,7 @@ namespace MiniExcelLibs.Tests
         [Fact]
         public async Task Issue256()
         {
-            var path = PathHelper.GetSamplePath("xlsx/TestIssue256.xlsx");
+            var path = PathHelper.GetFile("xlsx/TestIssue256.xlsx");
             var q = await MiniExcel.QueryAsync(path, false);
             var rows = q.ToList();
             Assert.Equal(new DateTime(2003, 4, 16), rows[1].A);
@@ -151,7 +151,7 @@ namespace MiniExcelLibs.Tests
         [Fact]
         public async Task Issue242()
         {
-            var path = PathHelper.GetSamplePath("xls/TestIssue242.xls");
+            var path = PathHelper.GetFile("xls/TestIssue242.xls");
 
             await Assert.ThrowsAsync<NotSupportedException>(async () => {
                 var q = await MiniExcel.QueryAsync(path);
@@ -347,7 +347,7 @@ namespace MiniExcelLibs.Tests
         [Fact]
         public async Task Issue233()
         {
-            var path = PathHelper.GetSamplePath("xlsx/TestIssue233.xlsx");
+            var path = PathHelper.GetFile("xlsx/TestIssue233.xlsx");
             var dt = await MiniExcel.QueryAsDataTableAsync(path);
             var rows = dt.Rows;
 
@@ -476,7 +476,7 @@ namespace MiniExcelLibs.Tests
         [Fact]
         public async Task Issue229()
         {
-            var path = PathHelper.GetSamplePath("xlsx/TestIssue229.xlsx");
+            var path = PathHelper.GetFile("xlsx/TestIssue229.xlsx");
             var dt = await MiniExcel.QueryAsDataTableAsync(path);
             foreach (DataColumn column in dt.Columns)
             {
@@ -498,7 +498,7 @@ namespace MiniExcelLibs.Tests
                 FillMergedCells = true
             };
             {
-                var path = PathHelper.GetSamplePath("xlsx/TestIssue122.xlsx");
+                var path = PathHelper.GetFile("xlsx/TestIssue122.xlsx");
                 {
                     var q = await MiniExcel.QueryAsync(path, useHeaderRow: true, configuration: config);
                     var rows = q.ToList();
@@ -512,7 +512,7 @@ namespace MiniExcelLibs.Tests
             }
 
             {
-                var path = PathHelper.GetSamplePath("xlsx/TestIssue122_2.xlsx");
+                var path = PathHelper.GetFile("xlsx/TestIssue122_2.xlsx");
                 {
                     var q = await MiniExcel.QueryAsync(path, useHeaderRow: true, configuration: config);
                     var rows = q.ToList();
@@ -539,7 +539,7 @@ namespace MiniExcelLibs.Tests
             }
 
             {
-                var path = PathHelper.GetSamplePath("xlsx/TestIssue227.xlsm");
+                var path = PathHelper.GetFile("xlsx/TestIssue227.xlsm");
                 {
                     var q = await MiniExcel.QueryAsync<UserAccount>(path);
                     var rows = q.ToList();
@@ -582,7 +582,7 @@ namespace MiniExcelLibs.Tests
         public async Task Issue226()
         {
             var path = PathHelper.GetTempPath();
-            var templatePath = PathHelper.GetSamplePath("xlsx/TestIssue226.xlsx");
+            var templatePath = PathHelper.GetFile("xlsx/TestIssue226.xlsx");
             await MiniExcel.SaveAsByTemplateAsync(path, templatePath, new { employees = new[] { new { name = "123" }, new { name = "123" } } });
             Assert.Equal("A1:A3", Helpers.GetFirstSheetDimensionRefValue(path));
         }
@@ -619,7 +619,7 @@ namespace MiniExcelLibs.Tests
         [Fact]
         public async Task Issue222()
         {
-            var path = PathHelper.GetSamplePath("xlsx/TestIssue222.xlsx");
+            var path = PathHelper.GetFile("xlsx/TestIssue222.xlsx");
             var q = await MiniExcel.QueryAsync(path);
             var rows = q.ToList();
             Assert.Equal(typeof(DateTime), rows[1].A.GetType());
@@ -634,7 +634,7 @@ namespace MiniExcelLibs.Tests
         public async Task Issue147()
         {
             {
-                var path = PathHelper.GetSamplePath("xlsx/TestIssue147.xlsx");
+                var path = PathHelper.GetFile("xlsx/TestIssue147.xlsx");
                 var q = await MiniExcel.QueryAsync(path, useHeaderRow: false, startCell: "C3", sheetName: "Sheet1");
                 var rows = q.ToList();
                 Assert.Equal(new[] { "C", "D", "E" }, (rows[0] as IDictionary<string, object>).Keys);
@@ -654,7 +654,7 @@ namespace MiniExcelLibs.Tests
             }
 
             {
-                var path = PathHelper.GetSamplePath("xlsx/TestIssue147.xlsx");
+                var path = PathHelper.GetFile("xlsx/TestIssue147.xlsx");
                 var q = await MiniExcel.QueryAsync(path, useHeaderRow: true, startCell: "C3", sheetName: "Sheet1");
                 var rows = q.ToList();
                 Assert.Equal(new[] { "Column1", "Column2", "Column3" }, (rows[0] as IDictionary<string, object>).Keys);
@@ -772,7 +772,7 @@ namespace MiniExcelLibs.Tests
         [Fact]
         public async Task Issue220()
         {
-            var path = PathHelper.GetSamplePath("xlsx/TestIssue220.xlsx");
+            var path = PathHelper.GetFile("xlsx/TestIssue220.xlsx");
             var rows = await MiniExcel.QueryAsync(path, useHeaderRow: true);
             var result = (from s in rows
                           group s by s.PRT_ID into g
@@ -840,7 +840,7 @@ Leave";
 
             //xlsx
             {
-                var path = PathHelper.GetSamplePath("xlsx/TestIssue89.xlsx");
+                var path = PathHelper.GetFile("xlsx/TestIssue89.xlsx");
                 var q = await MiniExcel.QueryAsync<Issue89VO>(path);
                 var rows = q.ToList();
                 Assert.Equal(Issue89VO.WorkState.OnDuty, rows[0].State);

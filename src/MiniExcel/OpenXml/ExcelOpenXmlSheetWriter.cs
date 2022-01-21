@@ -15,9 +15,10 @@ namespace MiniExcelLibs.OpenXml
 {
     internal class ImageDto
     {
-        public string ID { get; set; }
-        public string Path { get; set; }
-        public string Path2 { get; set; }
+        public string ID { get; set; } = $"R{Guid.NewGuid().ToString("N")}".Substring(0,5);
+        public string Extension { get; set; }
+        public string Path { get { return $"xl/media/image{ID}.{Extension}"; }}  
+        public string Path2 { get { return $"/xl/media/image{ID}.{Extension}"; } }
         public Byte[] Byte { get; set; }
     }
     internal class SheetDto
@@ -399,12 +400,9 @@ namespace MiniExcelLibs.OpenXml
                         {
                             //it can't insert to zip first to avoid cache image to memory
                             //because sheet xml is opening.. https://github.com/shps951023/MiniExcel/issues/304#issuecomment-1017031691
-                            var id = Guid.NewGuid().ToString("N");
                             _images.Add(new ImageDto()
                             {
-                                ID = id,
-                                Path = $"xl/media/image{id}.{format.ToString()}",
-                                Path2 = $"xl/media/image{id}.{format.ToString()}",
+                                Extension = format.ToString(),
                                 Byte = bytes,
                             }); 
                         }
@@ -592,13 +590,13 @@ namespace MiniExcelLibs.OpenXml
         <xdr:ext cx=""609600"" cy=""190500"" />
         <xdr:pic>
             <xdr:nvPicPr>
-                <xdr:cNvPr id=""{_images.IndexOf(i)+2}"" descr="""" name=""2a3f9147-58ea-4a79-87da-7d6114c4877b"" />
+                <xdr:cNvPr id=""{_images.IndexOf(i)+1}"" descr="""" name=""2a3f9147-58ea-4a79-87da-7d6114c4877b"" />
                 <xdr:cNvPicPr>
                     <a:picLocks noChangeAspect=""1"" />
                 </xdr:cNvPicPr>
             </xdr:nvPicPr>
             <xdr:blipFill>
-                <a:blip xmlns:r=""http://schemas.openxmlformats.org/officeDocument/2006/relationships"" r:embed=""{i.ID}"" cstate=""print"" />
+                <a:blip r:embed=""{i.ID}"" cstate=""print"" />
                 <a:stretch>
                     <a:fillRect />
                 </a:stretch>

@@ -18,7 +18,7 @@ namespace MiniExcelLibs.Tests
         public void gb2312_Encoding_Read_Test()
         {
             System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
-            var path = PathHelper.GetSamplePath("csv/gb2312_Encoding_Read_Test.csv");
+            var path = PathHelper.GetFile("csv/gb2312_Encoding_Read_Test.csv");
             var config = new MiniExcelLibs.Csv.CsvConfiguration()
             {
                 StreamReaderFunc = (stream) => new StreamReader(stream,encoding: Encoding.GetEncoding("gb2312"))

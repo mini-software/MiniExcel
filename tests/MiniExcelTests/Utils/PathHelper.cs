@@ -5,7 +5,7 @@
 
     internal static class PathHelper
     {
-        public static string GetSamplePath(string fileName)
+        public static string GetFile(string fileName)
         {
             return $@"../../../../../samples/{fileName}";
         }

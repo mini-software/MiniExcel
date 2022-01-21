@@ -19,6 +19,7 @@
 
 ### 0.20.0 
 - [New] SaveAs 支持圖片生成 #304
+- [Opt] 提高 SaveAs 執行效率
 
 ### 0.19.3-beta
 - [Fix]  Excelnumberformat 1.1.0 憑證過期 (Valid from: 2018-04-10 08:00:00 to 2021-04-14 20:00:00) [link](https://github.com/andersnm/ExcelNumberFormat/issues/34)

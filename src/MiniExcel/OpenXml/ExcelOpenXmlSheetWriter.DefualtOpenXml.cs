@@ -136,7 +136,7 @@ namespace MiniExcelLibs.OpenXml
             <x:protection locked=""1"" hidden=""0"" />
         </x:xf>
     </x:cellStyleXfs>
-    <x:cellXfs count=""3"">
+    <x:cellXfs count=""4"">
         <x:xf></x:xf>
         <x:xf numFmtId=""0"" fontId=""1"" fillId=""2"" borderId=""1"" xfId=""0"" applyNumberFormat=""1"" applyFill=""0"" applyBorder=""1"" applyAlignment=""1"" applyProtection=""1"">
             <x:alignment horizontal=""left"" vertical=""bottom"" textRotation=""0"" wrapText=""0"" indent=""0"" relativeIndent=""0"" justifyLastLine=""0"" shrinkToFit=""0"" readingOrder=""0"" />
@@ -149,6 +149,9 @@ namespace MiniExcelLibs.OpenXml
         <x:xf numFmtId=""14"" fontId=""0"" fillId=""0"" borderId=""1"" xfId=""0"" applyNumberFormat=""1"" applyFill=""1"" applyBorder=""1"" applyAlignment=""1"" applyProtection=""1"">
             <x:alignment horizontal=""general"" vertical=""bottom"" textRotation=""0"" wrapText=""0"" indent=""0"" relativeIndent=""0"" justifyLastLine=""0"" shrinkToFit=""0"" readingOrder=""0"" />
             <x:protection locked=""1"" hidden=""0"" />
+        </x:xf>
+        <x:xf numFmtId=""0"" fontId=""0"" fillId=""0"" borderId=""1"" xfId=""0"" applyBorder=""1"" applyAlignment=""1"">
+            <x:alignment horizontal=""fill""/>
         </x:xf>
     </x:cellXfs>
     <x:cellStyles count=""1"">

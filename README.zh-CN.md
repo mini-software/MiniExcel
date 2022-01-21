@@ -475,6 +475,8 @@ MiniExcel.SaveAs(path, value, configuration: new OpenXmlConfiguration() { AutoFi
 
 #### 10. 图片生成
 
+注意 : 目前此功能不支持避免OOM
+
 ```csharp
 var value = new[] {
     new { Name="github",Image=File.ReadAllBytes(PathHelper.GetFile("images/github_logo.png"))},

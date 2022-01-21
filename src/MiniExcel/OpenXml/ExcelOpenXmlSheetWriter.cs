@@ -412,6 +412,10 @@ namespace MiniExcelLibs.OpenXml
                             });
                         }
                     }
+                    //TODO:Convert to base64
+                    var base64 = $"data:image/png;base64,{System.Convert.ToBase64String(bytes)}";
+                    v = ExcelOpenXmlUtils.EncodeXML(base64);
+                    s = "4";
                 }
                 else if (type == typeof(DateTime))
                 {

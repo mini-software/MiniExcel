@@ -16,6 +16,9 @@
 
 ---
 
+### 0.20.0 
+- [New] SaveAs support image #304
+
 ### 0.19.3-beta
 - [Fix]  Excelnumberformat 1.1.0 valid date expired (Valid from: 2018-04-10 08:00:00 to 2021-04-14 20:00:00) [link](https://github.com/andersnm/ExcelNumberFormat/issues/34)
 

@@ -20,7 +20,7 @@
             return path;
         }
 
-        public static string GetRandomPath(string extension = "xlsx")
+        public static string GetTempFilePath(string extension = "xlsx")
         {
             return Path.GetTempPath() + Guid.NewGuid().ToString() + "." + extension;
         }

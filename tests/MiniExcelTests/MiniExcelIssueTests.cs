@@ -34,15 +34,23 @@ namespace MiniExcelLibs.Tests
         [Fact]
         public void TestIssue304()
         {
-            var imagePath = PathHelper.GetFile("images/github_logo.png");
-            var image = File.ReadAllBytes(imagePath);
-            var value = Enumerable.Range(1, 5).Select(s => new { image });
-            var path = PathHelper.GetRandomPath();
+            var path = PathHelper.GetTempFilePath();
+            var value = new[] {
+                new { Name="github",Image=File.ReadAllBytes(PathHelper.GetFile("images/github_logo.png"))},
+                new { Name="google",Image=File.ReadAllBytes(PathHelper.GetFile("images/google_logo.png"))},
+                new { Name="microsoft",Image=File.ReadAllBytes(PathHelper.GetFile("images/microsoft_logo.png"))},
+                new { Name="reddit",Image=File.ReadAllBytes(PathHelper.GetFile("images/reddit_logo.png"))},
+                new { Name="statck_overflow",Image=File.ReadAllBytes(PathHelper.GetFile("images/statck_overflow_logo.png"))},
+            };
             MiniExcel.SaveAs(path, value);
 
-
-            //TODO: Read from base 64 not work
-            //var image = Convert.FromBase64String("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQAAAAA3bvkkAAAAEElEQVR4nGJgAQAAAP//AwAABgAFV7+r1AAAAABJRU5ErkJggg==");
+            {
+                Assert.Contains("/xl/media/image", Helpers.GetZipFileContent(path, "xl/drawings/_rels/drawing1.xml.rels"));
+                Assert.Contains("ext cx=\"609600\" cy=\"190500\"", Helpers.GetZipFileContent(path, "xl/drawings/drawing1.xml"));
+                Assert.Contains("/xl/drawings/drawing1.xml", Helpers.GetZipFileContent(path, "[Content_Types].xml"));
+                Assert.Contains("drawing r:id=", Helpers.GetZipFileContent(path, "xl/worksheets/sheet1.xml"));
+                Assert.Contains("../drawings/drawing1.xml", Helpers.GetZipFileContent(path, "xl/worksheets/_rels/sheet1.xml.rels"));
+            }
         }
 
         /// <summary>

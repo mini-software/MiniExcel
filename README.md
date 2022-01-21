@@ -469,6 +469,27 @@ MiniExcel.SaveAs(path, value, configuration: new OpenXmlConfiguration() { AutoFi
 
 
 
+#### 10. Create Image
+
+```csharp
+var value = new[] {
+    new { Name="github",Image=File.ReadAllBytes(PathHelper.GetFile("images/github_logo.png"))},
+    new { Name="google",Image=File.ReadAllBytes(PathHelper.GetFile("images/google_logo.png"))},
+    new { Name="microsoft",Image=File.ReadAllBytes(PathHelper.GetFile("images/microsoft_logo.png"))},
+    new { Name="reddit",Image=File.ReadAllBytes(PathHelper.GetFile("images/reddit_logo.png"))},
+    new { Name="statck_overflow",Image=File.ReadAllBytes(PathHelper.GetFile("images/statck_overflow_logo.png"))},
+};
+MiniExcel.SaveAs(path, value);
+```
+
+![image](https://user-images.githubusercontent.com/12729184/150462383-ad9931b3-ed8d-4221-a1d6-66f799743433.png)
+
+
+
+
+
+
+
 
 
 ### Fill Data To Excel Template <a name="getstart3"></a>

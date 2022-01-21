@@ -15,18 +15,20 @@ namespace MiniExcelLibs.OpenXml
 {
     internal class ImageDto
     {
-        public string ID { get; set; } = $"R{Guid.NewGuid().ToString("N")}".Substring(0,5);
+        public string ID { get; set; } = $"R{Guid.NewGuid().ToString("N")}";
         public string Extension { get; set; }
-        public string Path { get { return $"xl/media/image{ID}.{Extension}"; }}  
+        public string Path { get { return $"xl/media/image{ID}.{Extension}"; } }
         public string Path2 { get { return $"/xl/media/image{ID}.{Extension}"; } }
         public Byte[] Byte { get; set; }
+        public int RowIndex { get; set; }
+        public int CellIndex { get; set; }
     }
     internal class SheetDto
     {
         public string ID { get; set; } = $"R{Guid.NewGuid().ToString("N")}";
         public string Name { get; set; }
         public int SheetIdx { get; set; }
-        public string Path { get { return $"xl/worksheets/sheet{SheetIdx}.xml"; }  }
+        public string Path { get { return $"xl/worksheets/sheet{SheetIdx}.xml"; } }
     }
     internal class DrawingDto
     {
@@ -49,7 +51,7 @@ namespace MiniExcelLibs.OpenXml
             this._configuration = configuration as OpenXmlConfiguration ?? OpenXmlConfiguration.DefaultConfig;
             this._printHeader = printHeader;
             this._value = value;
-            _sheets.Add(new SheetDto{ Name =sheetName, SheetIdx =1}); //TODO:remove
+            _sheets.Add(new SheetDto { Name = sheetName, SheetIdx = 1 }); //TODO:remove
         }
 
         public void SaveAs()
@@ -344,7 +346,7 @@ namespace MiniExcelLibs.OpenXml
             }
         }
 
-        private void WriteCell(StreamWriter writer, int yIndex, int cellIndex, object value, ExcelCustomPropertyInfo p)
+        private void WriteCell(StreamWriter writer, int rowIndex, int cellIndex, object value, ExcelCustomPropertyInfo p)
         {
             var v = string.Empty;
             var t = "str";
@@ -400,11 +402,14 @@ namespace MiniExcelLibs.OpenXml
                         {
                             //it can't insert to zip first to avoid cache image to memory
                             //because sheet xml is opening.. https://github.com/shps951023/MiniExcel/issues/304#issuecomment-1017031691
+                            //int rowIndex, int cellIndex
                             _images.Add(new ImageDto()
                             {
                                 Extension = format.ToString(),
                                 Byte = bytes,
-                            }); 
+                                RowIndex = rowIndex,
+                                CellIndex = cellIndex
+                            });
                         }
                     }
                 }
@@ -428,7 +433,7 @@ namespace MiniExcelLibs.OpenXml
                 }
             }
 
-            var columname = ExcelOpenXmlUtils.ConvertXyToCell(cellIndex, yIndex);
+            var columname = ExcelOpenXmlUtils.ConvertXyToCell(cellIndex, rowIndex);
             if (v != null && (v.StartsWith(" ") || v.EndsWith(" "))) /*Prefix and suffix blank space will lost after SaveAs #294*/
                 writer.Write($"<x:c r=\"{columname}\" {(t == null ? "" : $"t =\"{t}\"")} s=\"{s}\" xml:space=\"preserve\"><x:v>{v}</x:v></x:c>");
             else
@@ -582,15 +587,15 @@ namespace MiniExcelLibs.OpenXml
                 {
                     drawing.Append($@"<xdr:oneCellAnchor>
         <xdr:from>
-            <xdr:col>0</xdr:col>
+            <xdr:col>{i.CellIndex- 1/* why -1 : https://user-images.githubusercontent.com/12729184/150460189-f08ed939-44d4-44e1-be6e-9c533ece6be8.png*/}</xdr:col>
             <xdr:colOff>0</xdr:colOff>
-            <xdr:row>0</xdr:row>
+            <xdr:row>{i.RowIndex-1}</xdr:row>
             <xdr:rowOff>0</xdr:rowOff>
         </xdr:from>
         <xdr:ext cx=""609600"" cy=""190500"" />
         <xdr:pic>
             <xdr:nvPicPr>
-                <xdr:cNvPr id=""{_images.IndexOf(i)+1}"" descr="""" name=""2a3f9147-58ea-4a79-87da-7d6114c4877b"" />
+                <xdr:cNvPr id=""{_images.IndexOf(i) + 1}"" descr="""" name=""2a3f9147-58ea-4a79-87da-7d6114c4877b"" />
                 <xdr:cNvPicPr>
                     <a:picLocks noChangeAspect=""1"" />
                 </xdr:cNvPicPr>
@@ -641,7 +646,7 @@ namespace MiniExcelLibs.OpenXml
                 CreateZipEntry(@"xl/workbook.xml", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml",
                     _defaultWorkbookXml.Replace("{{sheets}}", workbookXml.ToString()));
                 CreateZipEntry(@"xl/_rels/workbook.xml.rels", "",
-                    _defaultWorkbookXmlRels.Replace("{{sheets}}", workbookRelsXml.ToString()));             
+                    _defaultWorkbookXmlRels.Replace("{{sheets}}", workbookRelsXml.ToString()));
             }
 
             //[Content_Types].xml 

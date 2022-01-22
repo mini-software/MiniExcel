@@ -75,7 +75,7 @@
         /// </summary>
         public static Task<DataTable> QueryAsDataTableAsync(this Stream stream, bool useHeaderRow = true, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null)
         {
-            return Task.Run(() => ExcelOpenXmlSheetReader.QueryAsDataTableImpl(stream, useHeaderRow, ref sheetName, excelType, startCell, configuration));
+            return Task.Run(() => QueryAsDataTable(stream, useHeaderRow, sheetName, excelType, startCell, configuration));
         }
     }
 }

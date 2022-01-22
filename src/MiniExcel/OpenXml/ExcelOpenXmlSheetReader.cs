@@ -368,7 +368,7 @@ namespace MiniExcelLibs.OpenXml
             }
         }
 
-        private static IDictionary<string, object> GetCell(bool useHeaderRow, int maxColumnIndex, Dictionary<int, string> headRows, int startColumnIndex)
+        private IDictionary<string, object> GetCell(bool useHeaderRow, int maxColumnIndex, Dictionary<int, string> headRows, int startColumnIndex)
         {
             return useHeaderRow ? CustomPropertyHelper.GetEmptyExpandoObject(headRows) : CustomPropertyHelper.GetEmptyExpandoObject(maxColumnIndex, startColumnIndex);
         }
@@ -505,7 +505,7 @@ namespace MiniExcelLibs.OpenXml
             _sheetRecords = GetWorkbookRels(entries);
         }
 
-        internal static IEnumerable<SheetRecord> ReadWorkbook(ReadOnlyCollection<ZipArchiveEntry> entries)
+        internal IEnumerable<SheetRecord> ReadWorkbook(ReadOnlyCollection<ZipArchiveEntry> entries)
         {
             using (var stream = entries.Single(w => w.FullName == "xl/workbook.xml").Open())
             using (XmlReader reader = XmlReader.Create(stream, _xmlSettings))
@@ -548,7 +548,7 @@ namespace MiniExcelLibs.OpenXml
             }
         }
 
-        internal static List<SheetRecord> GetWorkbookRels(ReadOnlyCollection<ZipArchiveEntry> entries)
+        internal List<SheetRecord> GetWorkbookRels(ReadOnlyCollection<ZipArchiveEntry> entries)
         {
             var sheetRecords = ReadWorkbook(entries).ToList();
 
@@ -586,48 +586,6 @@ namespace MiniExcelLibs.OpenXml
 
             return sheetRecords;
         }
-
-        internal static DataTable QueryAsDataTableImpl(Stream stream, bool useHeaderRow, ref string sheetName, ExcelType excelType, string startCell, IConfiguration configuration)
-        {
-            if (sheetName == null && excelType != ExcelType.CSV) /*Issue #279*/
-                sheetName = stream.GetSheetNames().First();
-
-            var dt = new DataTable(sheetName);
-            var first = true;
-            var rows = ExcelReaderFactory.GetProvider(stream, ExcelTypeHelper.GetExcelType(stream, excelType)).Query(useHeaderRow, sheetName, startCell, configuration);
-
-            var keys = new List<string>();
-            foreach (IDictionary<string, object> row in rows)
-            {       
-                if (first)
-                {
-                    foreach (var key in row.Keys)
-                    {
-                        if (!string.IsNullOrEmpty(key)) // avoid #298 : Column '' does not belong to table
-                        {
-                            var column = new DataColumn(key, typeof(object)) { Caption = key };
-                            dt.Columns.Add(column);
-                            keys.Add(key);
-                        }
-                    }
-
-                    dt.BeginLoadData();
-                    first = false;
-                }
-
-                var newRow = dt.NewRow();
-                foreach (var key in keys)
-                {
-                    newRow[key] = row[key]; //TODO: optimize not using string key
-                }
-
-                dt.Rows.Add(newRow);
-            }
-
-            dt.EndLoadData();
-            return dt;
-        }
-
 
         private object ReadCellAndSetColumnIndex(XmlReader reader, ref int columnIndex, bool withoutCR, int startColumnIndex, string aR, string aT)
         {

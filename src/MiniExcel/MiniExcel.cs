@@ -77,15 +77,49 @@
         public static DataTable QueryAsDataTable(string path, bool useHeaderRow = true, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null)
         {
             using (var stream = FileHelper.OpenSharedRead(path))
-                return QueryAsDataTable(stream, useHeaderRow, sheetName, ExcelTypeHelper.GetExcelType(path, excelType), startCell, configuration);
+            {
+                return QueryAsDataTable(stream, useHeaderRow, sheetName, excelType:ExcelTypeHelper.GetExcelType(path, excelType), startCell, configuration);
+            }
         }
-
-        /// <summary>
-        /// QueryAsDataTable is not recommended, because it'll load all data into memory.
-        /// </summary>
         public static DataTable QueryAsDataTable(this Stream stream, bool useHeaderRow = true, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null)
         {
-            return ExcelOpenXmlSheetReader.QueryAsDataTableImpl(stream, useHeaderRow, ref sheetName, excelType, startCell, configuration);
+            if (sheetName == null && excelType != ExcelType.CSV) /*Issue #279*/
+                sheetName = stream.GetSheetNames().First();
+
+            var dt = new DataTable(sheetName);
+            var first = true;
+            var rows = ExcelReaderFactory.GetProvider(stream, ExcelTypeHelper.GetExcelType(stream, excelType)).Query(useHeaderRow, sheetName, startCell, configuration);
+
+            var keys = new List<string>();
+            foreach (IDictionary<string, object> row in rows)
+            {
+                if (first)
+                {
+                    foreach (var key in row.Keys)
+                    {
+                        if (!string.IsNullOrEmpty(key)) // avoid #298 : Column '' does not belong to table
+                        {
+                            var column = new DataColumn(key, typeof(object)) { Caption = key };
+                            dt.Columns.Add(column);
+                            keys.Add(key);
+                        }
+                    }
+
+                    dt.BeginLoadData();
+                    first = false;
+                }
+
+                var newRow = dt.NewRow();
+                foreach (var key in keys)
+                {
+                    newRow[key] = row[key]; //TODO: optimize not using string key
+                }
+
+                dt.Rows.Add(newRow);
+            }
+
+            dt.EndLoadData();
+            return dt;
         }
 
         public static List<string> GetSheetNames(string path)
@@ -97,7 +131,7 @@
         public static List<string> GetSheetNames(this Stream stream)
         {
             var archive = new ExcelOpenXmlZip(stream);
-            return ExcelOpenXmlSheetReader.GetWorkbookRels(archive.entries).Select(s => s.Name).ToList();
+            return new ExcelOpenXmlSheetReader(stream).GetWorkbookRels(archive.entries).Select(s => s.Name).ToList();
         }
 
         public static ICollection<string> GetColumns(string path, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null)

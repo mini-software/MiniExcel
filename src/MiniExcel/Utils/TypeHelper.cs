@@ -1,6 +1,7 @@
 ﻿namespace MiniExcelLibs.Utils
 {
     using MiniExcelLibs.Attributes;
+    using MiniExcelLibs.Exceptions;
     using System;
     using System.Collections.Generic;
     using System.Data;
@@ -70,7 +71,7 @@
                 var columnName = pInfo.ExcelColumnName ?? pInfo.Property.Name;
                 var startRowIndex = ReferenceHelper.ConvertCellToXY(startCell).Item2;
                 var errorRow = startRowIndex + rowIndex + 1;
-                throw new InvalidCastException($"ColumnName : {columnName}, CellRow : {errorRow}, Value : {itemValue}, it can't cast to {pInfo.Property.PropertyType.Name} type.");
+                throw new ExcelInvalidCastException(columnName, errorRow, itemValue, pInfo.Property.PropertyType, $"ColumnName : {columnName}, CellRow : {errorRow}, Value : {itemValue}, it can't cast to {pInfo.Property.PropertyType.Name} type.");
             }
         }
 

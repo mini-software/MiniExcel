@@ -17,6 +17,7 @@ using Xunit;
 using Xunit.Abstractions;
 using static MiniExcelLibs.Tests.MiniExcelOpenXmlTests;
 using System.Collections;
+using MiniExcelLibs.Exceptions;
 
 namespace MiniExcelLibs.Tests
 {
@@ -26,6 +27,35 @@ namespace MiniExcelLibs.Tests
         public MiniExcelIssueTests(ITestOutputHelper output)
         {
             this.output = output;
+        }
+
+        /// <summary>
+        /// Query type conversion error
+        /// https://github.com/shps951023/MiniExcel/issues/309
+        /// </summary>
+        [Fact]
+        public void TestIssue209()
+        {
+            try
+            {
+                var path = PathHelper.GetFile("xlsx/TestIssue309.xlsx");
+                var rows = MiniExcel.Query<TestIssue209Dto>(path).ToList();
+            }
+            catch (ExcelInvalidCastException ex)
+            {
+                Assert.Equal("SEQ", ex.ColumnName);
+                Assert.Equal(4, ex.Row);
+                Assert.Equal("Error", ex.Value);
+                Assert.Equal(typeof(int), ex.InvalidCastType);
+                Assert.Equal("ColumnName : SEQ, CellRow : 4, Value : Error, it can't cast to Int32 type.",ex.Message);
+            }          
+        }
+
+        public class TestIssue209Dto
+        {
+            public int ID { get; set; }
+            public string Name { get; set; }
+            public int SEQ { get; set; }
         }
 
         /// <summary>

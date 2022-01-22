@@ -22,6 +22,7 @@
 - [New] SaveAs 支持預設轉換byte[] 值為 base64 字串
 - [New] Query 支持轉換 base64 字串值為 bytep[]
 - [New] OpenXmlConfiguration 增加 `ConvertByteArrayToBase64String` 屬性來開關 base64 轉換器
+- [New] Query 支持 ExcelInvalidCastException 儲存行、列、值數據 #309
 
 ### 0.20.0 
 - [New] SaveAs 支持圖片生成 #304

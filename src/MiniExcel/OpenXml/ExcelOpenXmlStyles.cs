@@ -8,9 +8,9 @@
     internal class ExcelOpenXmlStyles
     {
         private const string _ns = Config.SpreadsheetmlXmlns;
-        private Dictionary<int, StyleRecord> _cellXfs = new Dictionary<int, StyleRecord>();
-        private Dictionary<int, StyleRecord> _cellStyleXfs = new Dictionary<int, StyleRecord>();
-        private Dictionary<int, NumberFormatString> _customFormats = new Dictionary<int, NumberFormatString>();
+        private readonly Dictionary<int, StyleRecord> _cellXfs = new Dictionary<int, StyleRecord>();
+        private readonly Dictionary<int, StyleRecord> _cellStyleXfs = new Dictionary<int, StyleRecord>();
+        private readonly Dictionary<int, NumberFormatString> _customFormats = new Dictionary<int, NumberFormatString>();
 
         public ExcelOpenXmlStyles(ExcelOpenXmlZip zip)
         {

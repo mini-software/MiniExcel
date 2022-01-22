@@ -154,7 +154,7 @@
 
                          Property = p,
                          ExcludeNullableType = gt ?? p.PropertyType,
-                         Nullable = gt != null ? true : false,
+                         Nullable = gt != null,
                          ExcelColumnAliases = excelColumnName?.Aliases,
                          ExcelColumnName = excelColumnName?.ExcelColumnName ?? p.Name,
                          ExcelColumnIndex = p.GetAttribute<ExcelColumnIndexAttribute>()?.ExcelColumnIndex,

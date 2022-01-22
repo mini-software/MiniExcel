@@ -61,11 +61,6 @@ namespace MiniExcelLibs.Tests
         }
 
 
-
-
-
-
-
         /// <summary>
         /// SaveAs support Image type · Issue #304  https://github.com/shps951023/MiniExcel/issues/304
         /// </summary>
@@ -412,7 +407,7 @@ Henry,44,Jerry,44
 
             {
                 var path = PathHelper.GetTempPath();
-                var value = new TestIssues133Dto[] { };
+                var value = Array.Empty<TestIssues133Dto>();
                 MiniExcel.SaveAs(path, value);
                 var rows = MiniExcel.Query(path).ToList();
                 Assert.Equal("Id", rows[0].A);

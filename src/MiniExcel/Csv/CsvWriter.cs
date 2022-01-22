@@ -12,9 +12,9 @@ namespace MiniExcelLibs.Csv
 {
     internal class CsvWriter : IExcelWriter
     {
-        private Stream _stream;
+        private readonly Stream _stream;
         private readonly CsvConfiguration _configuration;
-        private bool _printHeader;
+        private readonly bool _printHeader;
         private readonly object _value;
 
         public CsvWriter(Stream stream, object value, IConfiguration configuration, bool printHeader)

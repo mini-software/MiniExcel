@@ -20,8 +20,7 @@ namespace MiniExcelLibs.OpenXml
         private List<string> _sharedStrings;
         private MergeCells _mergeCells;
         private ExcelOpenXmlStyles _style;
-        private ExcelOpenXmlZip _archive;
-        private ExcelOpenXmlZip _zip;
+        private readonly ExcelOpenXmlZip _archive;
         private OpenXmlConfiguration _config;
         private static readonly XmlReaderSettings _xmlSettings = new XmlReaderSettings
         {
@@ -143,8 +142,8 @@ namespace MiniExcelLibs.OpenXml
                         {
                             if (ReferenceHelper.ParseReference(r, out var column, out var row))
                             {
-                                column = column - 1;
-                                row = row - 1;
+                                column--;
+                                row--;
                                 maxRowIndex = Math.Max(maxRowIndex, row);
                                 maxColumnIndex = Math.Max(maxColumnIndex, column);
                             }

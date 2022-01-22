@@ -10,7 +10,7 @@ namespace MiniExcelLibs.OpenXml
 {
     internal partial class ExcelOpenXmlSheetWriter : IExcelWriter
     {
-        private Dictionary<string, ZipPackageInfo> _zipDictionary = new Dictionary<string, ZipPackageInfo>();
+        private readonly Dictionary<string, ZipPackageInfo> _zipDictionary = new Dictionary<string, ZipPackageInfo>();
 
         static ExcelOpenXmlSheetWriter()
         {

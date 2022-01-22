@@ -43,9 +43,6 @@ Todo : https://github.com/shps951023/MiniExcel/projects/1?fullscreen=true
     <None Include="icon.png" Pack="true" PackagePath="\" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="ExcelNumberFormat\" />
-  </ItemGroup>
-  <ItemGroup>
     <PackageReference Include="ExcelNumberFormat" Version="1.1.0" />
   </ItemGroup>	
 </Project>

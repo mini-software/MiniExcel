@@ -15,7 +15,7 @@ namespace MiniExcelLibs.OpenXml
 {
     internal class ImageDto
     {
-        public string ID { get; set; } = $"R{Guid.NewGuid().ToString("N")}";
+        public string ID { get; set; } = $"R{Guid.NewGuid():N}";
         public string Extension { get; set; }
         public string Path { get { return $"xl/media/image{ID}.{Extension}"; } }
         public string Path2 { get { return $"/xl/media/image{ID}.{Extension}"; } }
@@ -25,14 +25,14 @@ namespace MiniExcelLibs.OpenXml
     }
     internal class SheetDto
     {
-        public string ID { get; set; } = $"R{Guid.NewGuid().ToString("N")}";
+        public string ID { get; set; } = $"R{Guid.NewGuid():N}";
         public string Name { get; set; }
         public int SheetIdx { get; set; }
         public string Path { get { return $"xl/worksheets/sheet{SheetIdx}.xml"; } }
     }
     internal class DrawingDto
     {
-        public string ID { get; set; } = $"R{Guid.NewGuid().ToString("N")}";
+        public string ID { get; set; } = $"R{Guid.NewGuid():N}";
     }
     internal partial class ExcelOpenXmlSheetWriter : IExcelWriter
     {
@@ -218,7 +218,7 @@ namespace MiniExcelLibs.OpenXml
                     if (_printHeader)
                     {
                         var cellIndex = xIndex;
-                        writer.Write($"<x:row r=\"{yIndex.ToString()}\">");
+                        writer.Write($"<x:row r=\"{yIndex}\">");
                         if (props != null)
                         {
                             foreach (var p in props)
@@ -249,11 +249,11 @@ namespace MiniExcelLibs.OpenXml
 
                     // body
                     if (mode == "IDictionary<string, object>") //Dapper Row
-                        GenerateSheetByDapperRow(writer, value as IEnumerable, rowCount, keys.Cast<string>().ToList(), xIndex, yIndex);
+                        GenerateSheetByDapperRow(writer, value as IEnumerable, keys.Cast<string>().ToList(), xIndex, yIndex);
                     else if (mode == "IDictionary") //IDictionary
-                        GenerateSheetByIDictionary(writer, value as IEnumerable, rowCount, keys, xIndex, yIndex);
+                        GenerateSheetByIDictionary(writer, value as IEnumerable, keys, xIndex, yIndex);
                     else if (mode == "Properties")
-                        GenerateSheetByProperties(writer, value as IEnumerable, props, rowCount, xIndex, yIndex);
+                        GenerateSheetByProperties(writer, value as IEnumerable, props, xIndex, yIndex);
                     else
                         throw new NotImplementedException($"Type {type.Name} & genericType {genericType.Name} not Implemented. please issue for me.");
                     writer.Write("</x:sheetData>");
@@ -290,11 +290,11 @@ namespace MiniExcelLibs.OpenXml
             writer.Write($@"<?xml version=""1.0"" encoding=""utf-8""?><x:worksheet xmlns:x=""http://schemas.openxmlformats.org/spreadsheetml/2006/main""><x:dimension ref=""A1""/><x:sheetData></x:sheetData></x:worksheet>");
         }
 
-        private void GenerateSheetByDapperRow(StreamWriter writer, IEnumerable value, int rowCount, List<string> keys, int xIndex = 1, int yIndex = 1)
+        private void GenerateSheetByDapperRow(StreamWriter writer, IEnumerable value, List<string> keys, int xIndex = 1, int yIndex = 1)
         {
             foreach (IDictionary<string, object> v in value)
             {
-                writer.Write($"<x:row r=\"{yIndex.ToString()}\">");
+                writer.Write($"<x:row r=\"{yIndex}\">");
                 var cellIndex = xIndex;
                 foreach (var key in keys)
                 {
@@ -307,11 +307,11 @@ namespace MiniExcelLibs.OpenXml
             }
         }
 
-        private void GenerateSheetByIDictionary(StreamWriter writer, IEnumerable value, int rowCount, List<object> keys, int xIndex = 1, int yIndex = 1)
+        private void GenerateSheetByIDictionary(StreamWriter writer, IEnumerable value, List<object> keys, int xIndex = 1, int yIndex = 1)
         {
             foreach (IDictionary v in value)
             {
-                writer.Write($"<x:row r=\"{yIndex.ToString()}\">");
+                writer.Write($"<x:row r=\"{yIndex}\">");
                 var cellIndex = xIndex;
                 foreach (var key in keys)
                 {
@@ -324,11 +324,11 @@ namespace MiniExcelLibs.OpenXml
             }
         }
 
-        private void GenerateSheetByProperties(StreamWriter writer, IEnumerable value, List<ExcelCustomPropertyInfo> props, int rowCount, int xIndex = 1, int yIndex = 1)
+        private void GenerateSheetByProperties(StreamWriter writer, IEnumerable value, List<ExcelCustomPropertyInfo> props, int xIndex = 1, int yIndex = 1)
         {
             foreach (var v in value)
             {
-                writer.Write($"<x:row r=\"{yIndex.ToString()}\">");
+                writer.Write($"<x:row r=\"{yIndex}\">");
                 var cellIndex = xIndex;
                 foreach (var p in props)
                 {
@@ -461,7 +461,7 @@ namespace MiniExcelLibs.OpenXml
 
                 if (_printHeader)
                 {
-                    writer.Write($"<x:row r=\"{yIndex.ToString()}\">");
+                    writer.Write($"<x:row r=\"{yIndex}\">");
                     var xIndex = xy.Item1;
                     foreach (DataColumn c in value.Columns)
                     {
@@ -475,7 +475,7 @@ namespace MiniExcelLibs.OpenXml
 
                 for (int i = 0; i < value.Rows.Count; i++)
                 {
-                    writer.Write($"<x:row r=\"{yIndex.ToString()}\">");
+                    writer.Write($"<x:row r=\"{yIndex}\">");
                     var xIndex = xy.Item1;
 
                     for (int j = 0; j < value.Columns.Count; j++)
@@ -507,7 +507,7 @@ namespace MiniExcelLibs.OpenXml
                 int fieldCount = reader.FieldCount;
                 if (_printHeader)
                 {
-                    writer.Write($"<x:row r=\"{yIndex.ToString()}\">");
+                    writer.Write($"<x:row r=\"{yIndex}\">");
                     xIndex = xy.Item1;
                     for (int i = 0; i < fieldCount; i++)
                     {
@@ -522,7 +522,7 @@ namespace MiniExcelLibs.OpenXml
 
                 while (reader.Read())
                 {
-                    writer.Write($"<x:row r=\"{yIndex.ToString()}\">");
+                    writer.Write($"<x:row r=\"{yIndex}\">");
                     xIndex = xy.Item1;
 
                     for (int i = 0; i < fieldCount; i++)

@@ -428,8 +428,10 @@ namespace MiniExcelLibs.OpenXml
                 //Type ienumerableGenricType = null;
                 //IDictionary<string, PropertyInfo> props = null;
                 //IEnumerable ienumerable = null;
-                var xRowInfo = new XRowInfo();
-                xRowInfo.Row = row;
+                var xRowInfo = new XRowInfo
+                {
+                    Row = row
+                };
                 XRowInfos.Add(xRowInfo);
                 foreach (XmlElement c in row.SelectNodes($"x:c", _ns))
                 {

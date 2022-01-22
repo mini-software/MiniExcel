@@ -18,7 +18,7 @@
 
 
 
-### 0.20.1
+### 0.21.0
 - [New] ExcelFormat support DateTimeOffset/Decimal/double etc. type format #I49RZH #312 #305
 - [New] Support byte file import/export
 - [New] SaveAs support to convert byte[] value to base64 string 

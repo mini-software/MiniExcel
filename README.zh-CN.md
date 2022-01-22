@@ -14,8 +14,9 @@
 ---
 
 <div align="center">
-<p> 您的 <a href="https://github.com/shps951023/MiniExcel">Star</a> 能帮助 MiniExcel 让更多人看到 </p>
+<p> 您的 <a href="https://github.com/shps951023/miniexcel">Star★</a> 能帮助 MiniExcel 让更多人看到 </p>
 </div>
+
 
 ---
 
@@ -492,7 +493,7 @@ MiniExcel.SaveAs(path, value);
 
 
 
-### 11. 文件导出
+#### 11. 文件导出
 
 从 0.21.0 开始，当值类型为 `byte[]` 系统预设会转成 base64 字串以便导入时转回 `byte[]`，如不想转换可以将 `OpenXmlConfiguration.ConvertByteArrayToBase64String` 改为 `false`，能提升系统效率。
 
@@ -782,7 +783,9 @@ Assert.Null(rows[0].Test6);
 Assert.Equal("Test4", rows[0].Test7);
 ```
 
-#### 2. 自定义日期格式 (ExcelFormatAttribute)
+#### 2. 自定义Format格式 (ExcelFormatAttribute)
+
+從 V0.21.0 開始支持有 `ToString(string content)` 的類別 format
 
 类别
 
@@ -1450,5 +1453,10 @@ public static DataTable QueryAsDataTableWithoutEmptyRow(Stream stream, bool useH
 ![](https://contrib.rocks/image?repo=shps951023/MiniExcel)
 
 ### QQ群
-欢迎交流，QQ群： 813100564(.NET MiniExcel、MiniReport)，请给源码项目点个Star吧！！！
-希望MiniExcel对您有用，您的支持也是MiniExcel开源的动力，MiniExcel有您更精彩！
+欢迎交流，QQ群号： [813100564](https://qm.qq.com/cgi-bin/qm/qr?k=3OkxuL14sXhJsUimWK8wx_Hf28Wl49QE&jump_from=webapi)
+
+
+
+### 闲话家常
+
+开源项目不容易，如果觉得本项目对您的工作还是有帮助的话，请在帮忙在Github [![img](https://img.shields.io/github/stars/shps951023/miniexcel.svg?style=flat-square&label=Stars&logo=github)](https://github.com/shps951023/miniexcel)点个★Star。

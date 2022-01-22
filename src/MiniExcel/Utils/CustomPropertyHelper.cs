@@ -18,6 +18,8 @@
         public bool Nullable { get; internal set; }
         public string ExcelFormat { get; internal set; }
         public double? ExcelColumnWidth { get; internal set; }
+
+        public MethodInfo ExcelFormatToStringMethod { get; internal set; }
     }
 
     internal static partial class CustomPropertyHelper
@@ -149,17 +151,25 @@
                  {
                      var gt = Nullable.GetUnderlyingType(p.PropertyType);
                      var excelColumnName = p.GetAttribute<ExcelColumnNameAttribute>();
+                     var excludeNullableType = gt ?? p.PropertyType;
+                     var excelFormat = p.GetAttribute<ExcelFormatAttribute>()?.Format;
+                     MethodInfo method = null;
+                     if(excelFormat != null && excludeNullableType != null)
+                     {
+                         method = excludeNullableType.GetMethod("ToString", new[] { typeof(string) });
+                     }
                      return new ExcelCustomPropertyInfo
                      {
 
                          Property = p,
-                         ExcludeNullableType = gt ?? p.PropertyType,
+                         ExcludeNullableType = excludeNullableType,
                          Nullable = gt != null,
                          ExcelColumnAliases = excelColumnName?.Aliases,
                          ExcelColumnName = excelColumnName?.ExcelColumnName ?? p.Name,
                          ExcelColumnIndex = p.GetAttribute<ExcelColumnIndexAttribute>()?.ExcelColumnIndex,
                          ExcelColumnWidth = p.GetAttribute<ExcelColumnWidthAttribute>()?.ExcelColumnWidth,
-                         ExcelFormat = p.GetAttribute<ExcelFormatAttribute>()?.Format,
+                         ExcelFormat = excelFormat,
+                         ExcelFormatToStringMethod = method
                      };
                  });
         }

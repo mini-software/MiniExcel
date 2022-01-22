@@ -486,7 +486,7 @@ MiniExcel.SaveAs(path, value);
 
 
 
-### 11. File Export
+#### 11. File Export
 
 Since 0.21.0, when value type is `byte[]` then system will save base64 string at cell by default, and when import system can be converted to `byte[]`. And if you don't want to use it, you can set  `OpenXmlConfiguration.ConvertByteArrayToBase64String` to `false`, it can improve the system efficiency.
 
@@ -771,7 +771,9 @@ Assert.Equal("Test4", rows[0].Test7);
 
 
 
-#### 2. Custom DateTime Format (ExcelFormatAttribute)
+#### 2. Custom Format (ExcelFormatAttribute)
+
+Since V0.21.0 support class which contains `ToString(string content)` method format
 
 Class
 

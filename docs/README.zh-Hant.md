@@ -18,6 +18,7 @@
 ---
 
 ### 0.20.1
+- [New] ExcelFormat 支持 DateTimeOffset/Decimal/double 等類別 format #I49RZH #312 #305
 - [New] 支持byte文件導入/導出
 - [New] SaveAs 支持預設轉換byte[] 值為 base64 字串
 - [New] Query 支持轉換 base64 字串值為 bytep[]

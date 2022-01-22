@@ -30,6 +30,85 @@ namespace MiniExcelLibs.Tests
         }
 
         /// <summary>
+        /// https://gitee.com/dotnetchina/MiniExcel/issues/I49RZH
+        /// https://github.com/shps951023/MiniExcel/issues/305
+        /// </summary>
+        [Fact]
+        public void TestIssueI49RZH()
+        {
+            // xlsx
+            {
+                var path = PathHelper.GetTempFilePath();
+                var value = new TestIssueI49RZHDto[] {
+                    new TestIssueI49RZHDto{ dd = DateTimeOffset.Parse("2022-01-22")},
+                    new TestIssueI49RZHDto{ dd = null}
+                };
+                MiniExcel.SaveAs(path, value);
+
+                var rows = MiniExcel.Query(path).ToList();
+                Assert.Equal("2022-01-22", rows[1].A);
+            }
+
+            //TODO:CSV
+            {
+                var path = PathHelper.GetTempFilePath("csv");
+                var value = new TestIssueI49RZHDto[] {
+                    new TestIssueI49RZHDto{ dd = DateTimeOffset.Parse("2022-01-22")},
+                    new TestIssueI49RZHDto{ dd = null}
+                };
+                MiniExcel.SaveAs(path, value);
+
+                var rows = MiniExcel.Query(path).ToList();
+                Assert.Equal("2022-01-22", rows[1].A);
+            }
+        }
+
+        public class TestIssueI49RZHDto
+        {
+            [ExcelFormat("yyyy-MM-dd")]
+            public DateTimeOffset? dd { get; set; }
+        }
+
+        /// <summary>
+        /// https://github.com/shps951023/MiniExcel/issues/312
+        /// </summary>
+        [Fact]
+        public void TestIssue312()
+        {
+            //xlsx
+            {
+                var path = PathHelper.GetTempFilePath();
+                var value = new TestIssue312Dto[] {
+                    new TestIssue312Dto{ value = 12345.6789},
+                    new TestIssue312Dto{ value = null}
+                };
+                MiniExcel.SaveAs(path, value);
+
+                var rows = MiniExcel.Query(path).ToList();
+                Assert.Equal("12,345.68", rows[1].A);
+            }
+
+            //TODO:CSV
+            {
+                var path = PathHelper.GetTempFilePath("csv");
+                var value = new TestIssue312Dto[] {
+                    new TestIssue312Dto{ value = 12345.6789},
+                    new TestIssue312Dto{ value = null}
+                };
+                MiniExcel.SaveAs(path, value);
+
+                var rows = MiniExcel.Query(path).ToList();
+                Assert.Equal("12,345.68", rows[1].A);
+            }
+        }
+
+        public class TestIssue312Dto
+        {
+            [ExcelFormat("0,0.00")]
+            public double? value { get; set; }
+        }
+
+        /// <summary>
         /// Query type conversion error
         /// https://github.com/shps951023/MiniExcel/issues/309
         /// </summary>
@@ -47,8 +126,8 @@ namespace MiniExcelLibs.Tests
                 Assert.Equal(4, ex.Row);
                 Assert.Equal("Error", ex.Value);
                 Assert.Equal(typeof(int), ex.InvalidCastType);
-                Assert.Equal("ColumnName : SEQ, CellRow : 4, Value : Error, it can't cast to Int32 type.",ex.Message);
-            }          
+                Assert.Equal("ColumnName : SEQ, CellRow : 4, Value : Error, it can't cast to Int32 type.", ex.Message);
+            }
         }
 
         public class TestIssue209Dto
@@ -78,12 +157,12 @@ namespace MiniExcelLibs.Tests
                 var expectedBase64 = "iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAIAAAD9b0jDAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAAEXRFWHRTb2Z0d2FyZQBTbmlwYXN0ZV0Xzt0AAALNSURBVEiJ7ZVLTBNBGMdndrfdIofy0ERbCgcFeYRuCy2JGOPNRA9qeIZS6YEEogQj0YMmGOqDSATxQaLRxKtRID4SgjGelUBpaQvGZ7kpII8aWtjd2dkdDxsJoS1pIh6M/k+z8833m/3+8+0OJISArRa15cT/0D8CZTYPe32+Zy+GxjzjMzOzAACDYafdZquqOG7hzJtkwUQthRC6cavv0eN+QRTBujUQQp1OV1dbffZMq1arTRaqKIok4eZTrSNjHqIo6gIIIQBgbQwpal+Z/f7dPo2GoaiNHtJut3vjPhBe7+kdfvW61Mq1nGyaX1xYjkRzsk2Z6Rm8IOTvzWs73SLwwqjHK4jCgf3lcV6VxGgiECji7AXm0gvtHYQQnue/zy8ghCRJWlxaWuV5Qsilq9cKzLYiiz04ORVLiHP6A4NPRQlhjLWsVpZlnU63Y3umRqNhGCYjPV3HsrIsMwyDsYQQejIwGEuIA/WMT1AAaDSahnoHTdPKL1vXPKVp2umoZVkWAOj1+ZOCzs7NKYTo9XqjYRcAgKIo9ZRUu9VxltGYZTQAAL5+m0kKijEmAPCrqyJCcRuOECKI4lL4ByEEYykpaE62iQIgurLi9wchhLIsry8fYwwh9PomwuEwACDbZEoKauHMgKJSU1PbOy6Hpqdpml5fPsMwn7+EOru6IYQAghKrJSloTVUFURSX02G3lRw+WulqbA4EJ9XQh4+f2s6dr65zhkLTEEIKwtqaylhCnG/fauFO1Nfde/Bw6Hm/0WiYevc+LU2vhlK2pQwNvwQAsCwrYexyOrji4lhCnOaXZRljXONoOHTk2Ju3I/5AcC3EC0JZ+cE9Bea8IqursUkUker4BsWBqpIk6aL7Sm4htzvfvByJqJORaDS3kMsvLuns6kYIJcpNCFU17pvouXlHEET1URDEnt7bo2OezbMS/vp+R3/PdfKPQ38Ccg0E/CDcpY8AAAAASUVORK5CYII=";
                 var actulBase64 = Convert.ToBase64String((byte[])rows[0].Image);
                 Assert.Equal(expectedBase64, actulBase64);
-            }            
-            
+            }
+
             // import to base64 string
             {
                 var config = new OpenXmlConfiguration() { ConvertByteArrayToBase64String = false };
-                var rows = MiniExcel.Query(path, true,configuration: config).ToList();
+                var rows = MiniExcel.Query(path, true, configuration: config).ToList();
                 var expectedBase64 = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAIAAAD9b0jDAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAAEXRFWHRTb2Z0d2FyZQBTbmlwYXN0ZV0Xzt0AAALNSURBVEiJ7ZVLTBNBGMdndrfdIofy0ERbCgcFeYRuCy2JGOPNRA9qeIZS6YEEogQj0YMmGOqDSATxQaLRxKtRID4SgjGelUBpaQvGZ7kpII8aWtjd2dkdDxsJoS1pIh6M/k+z8833m/3+8+0OJISArRa15cT/0D8CZTYPe32+Zy+GxjzjMzOzAACDYafdZquqOG7hzJtkwUQthRC6cavv0eN+QRTBujUQQp1OV1dbffZMq1arTRaqKIok4eZTrSNjHqIo6gIIIQBgbQwpal+Z/f7dPo2GoaiNHtJut3vjPhBe7+kdfvW61Mq1nGyaX1xYjkRzsk2Z6Rm8IOTvzWs73SLwwqjHK4jCgf3lcV6VxGgiECji7AXm0gvtHYQQnue/zy8ghCRJWlxaWuV5Qsilq9cKzLYiiz04ORVLiHP6A4NPRQlhjLWsVpZlnU63Y3umRqNhGCYjPV3HsrIsMwyDsYQQejIwGEuIA/WMT1AAaDSahnoHTdPKL1vXPKVp2umoZVkWAOj1+ZOCzs7NKYTo9XqjYRcAgKIo9ZRUu9VxltGYZTQAAL5+m0kKijEmAPCrqyJCcRuOECKI4lL4ByEEYykpaE62iQIgurLi9wchhLIsry8fYwwh9PomwuEwACDbZEoKauHMgKJSU1PbOy6Hpqdpml5fPsMwn7+EOru6IYQAghKrJSloTVUFURSX02G3lRw+WulqbA4EJ9XQh4+f2s6dr65zhkLTEEIKwtqaylhCnG/fauFO1Nfde/Bw6Hm/0WiYevc+LU2vhlK2pQwNvwQAsCwrYexyOrji4lhCnOaXZRljXONoOHTk2Ju3I/5AcC3EC0JZ+cE9Bea8IqursUkUker4BsWBqpIk6aL7Sm4htzvfvByJqJORaDS3kMsvLuns6kYIJcpNCFU17pvouXlHEET1URDEnt7bo2OezbMS/vp+R3/PdfKPQ38Ccg0E/CDcpY8AAAAASUVORK5CYII=";
                 var actulBase64 = (string)rows[0].Image;
                 Assert.Equal(expectedBase64, actulBase64);

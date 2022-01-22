@@ -496,7 +496,7 @@ MiniExcel.SaveAs(path, value);
 
 
 
-### 11. 文件導出
+#### 11. 文件導出
 
 從 0.21.0 開始，當值類型為 `byte[]` 系統預設會轉成 base64 字串以便導入時轉回 `byte[]`，如不想轉換可以將 `OpenXmlConfiguration.ConvertByteArrayToBase64String` 改為 `false`，能提升系統效率。
 
@@ -784,7 +784,9 @@ Assert.Null(rows[0].Test6);
 Assert.Equal("Test4", rows[0].Test7);
 ```
 
-#### 2. 自定義日期格式 (ExcelFormatAttribute)
+#### 2. 自定義Format格式 (ExcelFormatAttribute)
+
+從 V0.21.0 開始支持有 `ToString(string content)` 的類別 format
 
 類別
 

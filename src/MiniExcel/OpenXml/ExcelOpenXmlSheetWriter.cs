@@ -359,6 +359,11 @@ namespace MiniExcelLibs.OpenXml
             {
                 v = ExcelOpenXmlUtils.EncodeXML(value.ToString());
             }
+            else if(p?.ExcelFormat != null && p?.ExcelFormatToStringMethod != null)
+            {
+                var formatedStr = p.ExcelFormatToStringMethod.Invoke(value, new[] { p.ExcelFormat })?.ToString();
+                v = ExcelOpenXmlUtils.EncodeXML(formatedStr);
+            }
             else
             {
                 Type type = null;
@@ -433,7 +438,7 @@ namespace MiniExcelLibs.OpenXml
                 }
                 else
                 {
-                    v = ExcelOpenXmlUtils.EncodeXML(value.ToString());
+                    v = ExcelOpenXmlUtils.EncodeXML(value.ToString());       
                 }
             }
 

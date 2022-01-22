@@ -1,4 +1,5 @@
-﻿using MiniExcelLibs.Utils;
+﻿using MiniExcelLibs.OpenXml;
+using MiniExcelLibs.Utils;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -241,7 +242,11 @@ namespace MiniExcelLibs.Csv
                 type = p.ExcludeNullableType; //sometime it doesn't need to re-get type like prop
             }
 
-            if (type == typeof(DateTime))
+            if (p?.ExcelFormat != null && p?.ExcelFormatToStringMethod != null)
+            {
+                return p.ExcelFormatToStringMethod.Invoke(value, new[] { p.ExcelFormat })?.ToString();
+            }
+            else if (type == typeof(DateTime))
             {
                 if (p == null || p.ExcelFormat == null)
                 {

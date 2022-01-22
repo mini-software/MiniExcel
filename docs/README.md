@@ -19,11 +19,13 @@
 
 
 ### 0.20.1
+- [New] ExcelFormat support DateTimeOffset/Decimal/double etc. type format #I49RZH #312 #305
 - [New] Support byte file import/export
 - [New] SaveAs support to convert byte[] value to base64 string 
 - [New] Query support to convert base64 value to byte[]
 - [New] OpenXmlConfiguration add `ConvertByteArrayToBase64String` to turn on/off base64 convertor
-- [New] Query support ExcelInvalidCastException to store column, row index #309
+- [New] Query support ExcelInvalidCastException to store column, row, value data #309
+
 
 ### 0.20.0 
 - [New] SaveAs support image #304

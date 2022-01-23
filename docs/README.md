@@ -16,7 +16,8 @@
 
 ---
 
-
+### 0.21.1
+- [New] Check License Code
 
 ### 0.21.0
 - [New] ExcelFormat support DateTimeOffset/Decimal/double etc. type format #I49RZH #312 #305

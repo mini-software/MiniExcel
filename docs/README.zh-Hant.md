@@ -17,6 +17,9 @@
 
 ---
 
+### 0.21.1
+- [New] Check License Code
+
 ### 0.21.0
 - [New] ExcelFormat 支持 DateTimeOffset/Decimal/double 等類別 format #I49RZH #312 #305
 - [New] 支持byte文件導入/導出

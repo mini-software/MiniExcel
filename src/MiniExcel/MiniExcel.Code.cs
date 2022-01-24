@@ -8,6 +8,9 @@
         public static string LISENCE_CODE = null;
         private static bool _HAS_LICENSE = false;
         private static bool _FirstTime = true;
+        /// <summary>
+        /// Please feel free to take license code from here ^___^
+        /// </summary>
         private static string[] LISENCES = new string[10] {
             "096b9eff-c0e7-4813-8352-211811063214",
             "e5db2221-aef1-4f84-8121-82182c179863",

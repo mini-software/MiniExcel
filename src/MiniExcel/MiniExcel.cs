@@ -22,6 +22,7 @@
 
         public static void SaveAs(this Stream stream, object value, bool printHeader = true, string sheetName = "Sheet1", ExcelType excelType = ExcelType.XLSX, IConfiguration configuration = null)
         {
+            CheckLicense();
             GetWriterProvider(stream, value, sheetName, excelType, configuration, printHeader).SaveAs();
         }
 
@@ -34,6 +35,7 @@
 
         public static IEnumerable<T> Query<T>(this Stream stream, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null) where T : class, new()
         {
+            CheckLicense();
             return ExcelReaderFactory.GetProvider(stream, ExcelTypeHelper.GetExcelType(stream, excelType)).Query<T>(sheetName, startCell, configuration);
         }
 
@@ -46,6 +48,7 @@
 
         public static IEnumerable<dynamic> Query(this Stream stream, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null)
         {
+            CheckLicense();
             return ExcelReaderFactory.GetProvider(stream, ExcelTypeHelper.GetExcelType(stream, excelType)).Query(useHeaderRow, sheetName, startCell, configuration);
         }
 
@@ -63,11 +66,13 @@
 
         public static void SaveAsByTemplate(this Stream stream, string templatePath, object value)
         {
+            CheckLicense();
             ExcelTemplateFactory.GetProvider(stream).SaveAsByTemplate(templatePath, value);
         }
 
         public static void SaveAsByTemplate(this Stream stream, byte[] templateBytes, object value)
         {
+            CheckLicense();
             ExcelTemplateFactory.GetProvider(stream).SaveAsByTemplate(templateBytes, value);
         }
 
@@ -83,6 +88,7 @@
         }
         public static DataTable QueryAsDataTable(this Stream stream, bool useHeaderRow = true, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null)
         {
+            CheckLicense();
             if (sheetName == null && excelType != ExcelType.CSV) /*Issue #279*/
                 sheetName = stream.GetSheetNames().First();
 

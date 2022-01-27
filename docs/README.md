@@ -16,6 +16,9 @@
 
 ---
 
+### 0.21.4
+- [New] Remove LISENCE_CODE check
+
 ### 0.21.1
 - [New] Check License Code
 

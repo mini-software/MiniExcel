@@ -38,7 +38,19 @@
             }
             try
             {
-                Console.WriteLine(@"Dear user, you can donate/get code to hide this console output, web link : https://shps951023.github.io/MiniExcel and set MiniExcel.LISENCE_CODE = ""YourCode""");
+                var cultureName = System.Globalization.CultureInfo.CurrentCulture?.Name?.ToUpper();
+                if (cultureName == "ZH-TW" || cultureName == "ZH-HK")
+                {
+                    Console.WriteLine(@"您好, 用户能無視此提示並正常商業使用，或是在 https://miniexcel.github.io 獲取 Code 關閉此提示。");
+                }
+                else if (cultureName.Contains("ZH-"))
+                {
+                    Console.WriteLine(@"您好, 用户能无视此提示并正常商业使用，或是在 https://miniexcel.github.io 获取 Code 关闭此提示。");
+                }
+                else
+                {
+                    Console.WriteLine(@"Dear user, you can ignore this message and build system commercially and free, or you can access https://miniexcel.github.io to get code to hide this message.");
+                }
             }
             catch (Exception) { }
         }

@@ -1,14 +1,14 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFrameworks>net45;netstandard2.0;net5.0</TargetFrameworks>
-		<Version>0.21.2</Version>
+		<Version>0.21.3</Version>
 	</PropertyGroup>
 	<PropertyGroup>
 		<AssemblyName>MiniExcel</AssemblyName>
 		<Title>MiniExcel</Title>
 		<Product>MiniExcel</Product>
 		<PackageTags>excel;xlsx;csv;micro-helper;mini;openxml;helper;</PackageTags>
-		<Description>A high performance and easy Excel(xlsx,csv) Micro-Helper that avoids OOM and without third-party dependencies to create/query/template-fill-data.
+		<Description>Fast, Low-Memory, Easy Excel .NET helper to import/export/template spreadsheet
 
 Github : https://github.com/shps951023/MiniExcel
 Gitee : https://gitee.com/dotnetchina/MiniExcel

@@ -14,8 +14,9 @@
 ---
 
 <div align="center">
-<p> 您的 <a href="https://github.com/shps951023/miniexcel">Star★</a> 能帮助 MiniExcel 让更多人看到 </p>
+<p> 您的 <a href="https://github.com/shps951023/miniexcel">Star</a>和<a href="https://miniexcel.github.io">赞助</a>能帮助 MiniExcel 成长 </p>
 </div>
+
 
 
 ---

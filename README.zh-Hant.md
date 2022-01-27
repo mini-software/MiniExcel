@@ -10,8 +10,9 @@
 ---
 
 <div align="center">
-您的 <a href="https://github.com/shps951023/MiniExcel">Star</a> ，能幫助 MiniExcel 讓更多人看到 
+您的 <a href="https://github.com/shps951023/miniexcel">Star</a>和<a href="https://miniexcel.github.io">贊助</a>能幫助 MiniExcel 成長
 </div>
+
 
 ---
 

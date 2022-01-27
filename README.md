@@ -11,8 +11,9 @@
 ---
 
 <div align="center">
- Your <a href="https://github.com/shps951023/MiniExcel">Star</a> can make MiniExcel better 
+ Your <a href="https://github.com/shps951023/MiniExcel">Star</a> and <a href="https://miniexcel.github.io">Donate</a> can make MiniExcel better 
 </div>
+
 
 ---
 

@@ -18,6 +18,7 @@ using Xunit.Abstractions;
 using static MiniExcelLibs.Tests.MiniExcelOpenXmlTests;
 using System.Collections;
 using MiniExcelLibs.Exceptions;
+using System.Text.RegularExpressions;
 
 namespace MiniExcelLibs.Tests
 {
@@ -27,6 +28,24 @@ namespace MiniExcelLibs.Tests
         public MiniExcelIssueTests(ITestOutputHelper output)
         {
             this.output = output;
+        }
+
+        /// <summary>
+        /// https://github.com/shps951023/MiniExcel/issues/325
+        /// </summary>
+        [Fact]
+        public void TestIssue325()
+        {
+            var path = PathHelper.GetTempFilePath();
+            var value = new Dictionary<string, object>()
+            {
+                { "sheet1",new[]{ new { id = 1, date = DateTime.Parse("2022-01-01") } }},
+                { "sheet2",new[]{ new { id = 2, date = DateTime.Parse("2022-01-01") } }},
+            };
+            MiniExcel.SaveAs(path, value);
+            var xml = Helpers.GetZipFileContent(path, "xl/worksheets/_rels/sheet2.xml.rels");
+            var cnt = Regex.Matches(xml, "Id=\"drawing1\"").Count;
+            Assert.True(cnt == 1);
         }
 
         /// <summary>

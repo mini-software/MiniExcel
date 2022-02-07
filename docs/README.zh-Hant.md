@@ -17,6 +17,9 @@
 
 ---
 
+### 0.21.5
+- [Bug] 修正 SaveAs multiple sheet value error "Excel completed file level validation and repair. Some parts of this workbook may have been repaired or discarded."  #325
+
 ### 0.21.4
 - [New] Remove LISENCE_CODE check
 

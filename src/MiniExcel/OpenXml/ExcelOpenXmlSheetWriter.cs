@@ -637,7 +637,6 @@ namespace MiniExcelLibs.OpenXml
             {
                 var workbookXml = new StringBuilder();
                 var workbookRelsXml = new StringBuilder();
-                var sheetRelsXml = new StringBuilder();
 
                 var sheetId = 0;
                 foreach (var s in _sheets)
@@ -648,9 +647,9 @@ namespace MiniExcelLibs.OpenXml
 
                     //TODO: support multiple drawing 
                     //TODO: ../drawings/drawing1.xml or /xl/drawings/drawing1.xml
-                    sheetRelsXml.Append($@"<Relationship Type=""http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing"" Target=""../drawings/drawing1.xml"" Id=""drawing1"" />");
+                    var sheetRelsXml = $@"<Relationship Type=""http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing"" Target=""../drawings/drawing1.xml"" Id=""drawing1"" />";
                     CreateZipEntry($"xl/worksheets/_rels/sheet{s.SheetIdx}.xml.rels", "",
-                        _defaultSheetRelXml.Replace("{{format}}", sheetRelsXml.ToString()));
+                        _defaultSheetRelXml.Replace("{{format}}", sheetRelsXml));
                 }
                 CreateZipEntry(@"xl/workbook.xml", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml",
                     _defaultWorkbookXml.Replace("{{sheets}}", workbookXml.ToString()));

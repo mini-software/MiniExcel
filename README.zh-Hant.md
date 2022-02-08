@@ -10,9 +10,8 @@
 ---
 
 <div align="center">
-您的 <a href="https://github.com/shps951023/miniexcel">Star</a>和<a href="https://miniexcel.github.io">贊助</a>能幫助 MiniExcel 成長
+您的 <a href="https://github.com/shps951023/miniexcel">Star</a> 和 <a href="https://miniexcel.github.io">贊助</a> 能幫助 MiniExcel 成長
 </div>
-
 
 ---
 
@@ -502,6 +501,20 @@ MiniExcel.SaveAs(path, value);
 從 0.21.0 開始，當值類型為 `byte[]` 系統預設會轉成 base64 字串以便導入時轉回 `byte[]`，如不想轉換可以將 `OpenXmlConfiguration.ConvertByteArrayToBase64String` 改為 `false`，能提升系統效率。
 
 ![image](https://user-images.githubusercontent.com/12729184/150499973-682be39a-8a98-4681-915f-45c8e8e725fb.png)
+
+
+
+#### 12. 自定義 CultureInfo
+
+從 1.22.0 版本開始，可以使用以下代碼自定義文化資訊
+
+```csharp
+var config = new CsvConfiguration()
+{
+	Culture = new CultureInfo("fr-FR"),
+};
+MiniExcel.SaveAs(path, value, configuration: config);
+```
 
 
 

@@ -23,6 +23,9 @@
 
 ---
 
+### 1.22.0
+- [New] SaveAs CSV 支持自定义 CultureInfo
+
 ### 0.21.5
 - [Bug] 修正 SaveAs multiple sheet value error "Excel completed file level validation and repair. Some parts of this workbook may have been repaired or discarded."  #325
 

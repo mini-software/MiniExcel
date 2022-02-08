@@ -14,9 +14,8 @@
 ---
 
 <div align="center">
-<p> 您的 <a href="https://github.com/shps951023/miniexcel">Star</a>和<a href="https://miniexcel.github.io">赞助</a>能帮助 MiniExcel 成长 </p>
+<p> 您的 <a href="https://github.com/shps951023/miniexcel">Star</a> 和 <a href="https://miniexcel.github.io">赞助</a> 能帮助 MiniExcel 成长 </p>
 </div>
-
 
 
 ---
@@ -502,12 +501,17 @@ MiniExcel.SaveAs(path, value);
 
 
 
+#### 12. 自定义 CultureInfo
 
+从 1.22.0 版本开始，可以使用以下代码自定义文化信息
 
-
-
-
-
+```csharp
+var config = new CsvConfiguration()
+{
+	Culture = new CultureInfo("fr-FR"),
+};
+MiniExcel.SaveAs(path, value, configuration: config);
+```
 
 
 ### 模板填充 Excel <a name="getstart3"></a>

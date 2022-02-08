@@ -4,6 +4,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -153,7 +154,7 @@ namespace MiniExcelLibs.Csv
 
                     if (i != 0)
                         writer.Write(seperator);
-                    writer.Write(CsvHelpers.ConvertToCsvValue(columnName?.ToCsvString(null)));
+                    writer.Write(CsvHelpers.ConvertToCsvValue(ToCsvString(columnName,null)));
                 }
                 writer.Write(newLine);
             }
@@ -165,7 +166,7 @@ namespace MiniExcelLibs.Csv
                     var cellValue = reader.GetValue(i);
                     if (i != 0)
                         writer.Write(seperator);
-                    writer.Write(CsvHelpers.ConvertToCsvValue(cellValue?.ToCsvString(null)));
+                    writer.Write(CsvHelpers.ConvertToCsvValue(ToCsvString(cellValue,null)));
                 }
                 writer.Write(newLine);
             }
@@ -183,7 +184,7 @@ namespace MiniExcelLibs.Csv
                 var first = true;
                 for (int j = 0; j < dt.Columns.Count; j++)
                 {
-                    var cellValue = CsvHelpers.ConvertToCsvValue(dt.Rows[i][j]?.ToCsvString(null));
+                    var cellValue = CsvHelpers.ConvertToCsvValue(ToCsvString(dt.Rows[i][j],null));
                     if (!first)
                         writer.Write(seperator);
                     writer.Write(cellValue);
@@ -197,7 +198,7 @@ namespace MiniExcelLibs.Csv
         {
             foreach (var v in value)
             {
-                var values = props.Select(s => CsvHelpers.ConvertToCsvValue(s?.Property.GetValue(v)?.ToCsvString(s)));
+                var values = props.Select(s => CsvHelpers.ConvertToCsvValue(ToCsvString(s?.Property.GetValue(v),s)));
                 writer.Write(string.Join(seperator, values));
                 writer.Write(newLine);
             }
@@ -207,7 +208,7 @@ namespace MiniExcelLibs.Csv
         {
             foreach (IDictionary v in value)
             {
-                var values = keys.Select(key => CsvHelpers.ConvertToCsvValue(v[key]?.ToCsvString(null)));
+                var values = keys.Select(key => CsvHelpers.ConvertToCsvValue(ToCsvString(v[key],null)));
                 writer.Write(string.Join(seperator, values));
                 writer.Write(newLine);
             }
@@ -217,16 +218,13 @@ namespace MiniExcelLibs.Csv
         {
             foreach (IDictionary<string, object> v in value)
             {
-                var values = keys.Select(key => CsvHelpers.ConvertToCsvValue(v[key]?.ToCsvString(null)));
+                var values = keys.Select(key => CsvHelpers.ConvertToCsvValue(ToCsvString(v[key],null)));
                 writer.Write(string.Join(seperator, values));
                 writer.Write(newLine);
             }
         }
-    }
 
-    internal static class CsvValueTostringHelper
-    {
-        public static string ToCsvString(this object value, ExcelCustomPropertyInfo p)
+        public string ToCsvString(object value, ExcelCustomPropertyInfo p)
         {
             if (value == null)
                 return "";
@@ -242,13 +240,22 @@ namespace MiniExcelLibs.Csv
                 type = p.ExcludeNullableType; //sometime it doesn't need to re-get type like prop
             }
 
+            
             if (p?.ExcelFormat != null && p?.ExcelFormatToStringMethod != null)
             {
                 return p.ExcelFormatToStringMethod.Invoke(value, new[] { p.ExcelFormat })?.ToString();
             }
+            else if (p?.ExcelcultureToStringMethod != null && _configuration.Culture != CultureInfo.InvariantCulture)
+            {
+                return p.ExcelcultureToStringMethod.Invoke(value, new[] { _configuration.Culture })?.ToString();
+            }
             else if (type == typeof(DateTime))
             {
-                if (p == null || p.ExcelFormat == null)
+                if (_configuration.Culture != CultureInfo.InvariantCulture)
+                {
+                    return ((DateTime)value).ToString(_configuration.Culture);
+                }
+                else if (p == null || p.ExcelFormat == null)
                 {
                     return ((DateTime)value).ToString("yyyy-MM-dd HH:mm:ss");
                 }
@@ -260,5 +267,7 @@ namespace MiniExcelLibs.Csv
 
             return value.ToString();
         }
+
     }
+
 }

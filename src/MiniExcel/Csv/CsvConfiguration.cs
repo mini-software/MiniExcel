@@ -4,7 +4,7 @@ using System.Text;
 
 namespace MiniExcelLibs.Csv
 {
-    public class CsvConfiguration : IConfiguration
+    public class CsvConfiguration : Configuration
     {
         private static Encoding _defaultEncoding = new UTF8Encoding(true);
 

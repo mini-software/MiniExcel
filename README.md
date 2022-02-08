@@ -495,6 +495,18 @@ Since 0.21.0, when value type is `byte[]` then system will save base64 string at
 
 
 
+#### 12. Custom CultureInfo
+
+Since 1.22.0, you can custom CultureInfo like below
+
+```csharp
+var config = new CsvConfiguration()
+{
+	Culture = new CultureInfo("fr-FR"),
+};
+MiniExcel.SaveAs(path, value, configuration: config);
+```
+
 
 
 ### Fill Data To Excel Template <a name="getstart3"></a>

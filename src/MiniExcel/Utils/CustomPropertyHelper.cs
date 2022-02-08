@@ -5,6 +5,7 @@
     using System.Collections.Generic;
     using System.ComponentModel;
     using System.Dynamic;
+    using System.Globalization;
     using System.Linq;
     using System.Reflection;
 
@@ -20,6 +21,7 @@
         public double? ExcelColumnWidth { get; internal set; }
 
         public MethodInfo ExcelFormatToStringMethod { get; internal set; }
+        public MethodInfo ExcelcultureToStringMethod { get; internal set; }
     }
 
     internal static partial class CustomPropertyHelper
@@ -153,11 +155,12 @@
                      var excelColumnName = p.GetAttribute<ExcelColumnNameAttribute>();
                      var excludeNullableType = gt ?? p.PropertyType;
                      var excelFormat = p.GetAttribute<ExcelFormatAttribute>()?.Format;
-                     MethodInfo method = null;
+                     MethodInfo formatToStringMethod = null;
                      if(excelFormat != null && excludeNullableType != null)
                      {
-                         method = excludeNullableType.GetMethod("ToString", new[] { typeof(string) });
+                         formatToStringMethod = excludeNullableType.GetMethod("ToString", new[] { typeof(string) });
                      }
+                     MethodInfo cultureToStringMethod = excludeNullableType.GetMethod("ToString", new[] { typeof(CultureInfo) });
                      return new ExcelCustomPropertyInfo
                      {
 
@@ -169,7 +172,8 @@
                          ExcelColumnIndex = p.GetAttribute<ExcelColumnIndexAttribute>()?.ExcelColumnIndex,
                          ExcelColumnWidth = p.GetAttribute<ExcelColumnWidthAttribute>()?.ExcelColumnWidth,
                          ExcelFormat = excelFormat,
-                         ExcelFormatToStringMethod = method
+                         ExcelFormatToStringMethod = formatToStringMethod,
+                         ExcelcultureToStringMethod = cultureToStringMethod
                      };
                  });
         }

@@ -3,7 +3,7 @@ using System.ComponentModel;
 
 namespace MiniExcelLibs.OpenXml
 {
-    public class OpenXmlConfiguration : IConfiguration
+    public class OpenXmlConfiguration : Configuration
     {
         internal static readonly OpenXmlConfiguration DefaultConfig = new OpenXmlConfiguration();
         public bool FillMergedCells { get; set; }

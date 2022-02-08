@@ -19,6 +19,7 @@ using static MiniExcelLibs.Tests.MiniExcelOpenXmlTests;
 using System.Collections;
 using MiniExcelLibs.Exceptions;
 using System.Text.RegularExpressions;
+using MiniExcelLibs.Csv;
 
 namespace MiniExcelLibs.Tests
 {
@@ -28,6 +29,28 @@ namespace MiniExcelLibs.Tests
         public MiniExcelIssueTests(ITestOutputHelper output)
         {
             this.output = output;
+        }
+
+        [Fact]
+        public void TestIssue316()
+        {
+            // CSV
+            {
+                var value = new[] {
+                    new{ amount=123_456.789M,createtime=DateTime.Parse("2022-01-01",CultureInfo.InvariantCulture)}
+                };
+                var path = PathHelper.GetTempFilePath("csv");
+
+                var config = new CsvConfiguration()
+                {
+                    Culture = new CultureInfo("fr-FR"),
+                };
+                MiniExcel.SaveAs(path, value, configuration: config);
+
+                var rows = MiniExcel.Query(path,true).ToList();
+                Assert.Equal("123456,789",rows[0].amount);
+                Assert.Equal("01/01/2022 00:00:00", rows[0].createtime);
+            }
         }
 
         /// <summary>

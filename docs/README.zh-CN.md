@@ -18,13 +18,15 @@
 ---
 
 <div align="center">
-<p> 您的 <a href="https://github.com/shps951023/MiniExcel">Star</a> 能帮助 MiniExcel 让更多人看到 </p>
+<p> 您的 <a href="https://github.com/shps951023/miniexcel">Star</a> 和 <a href="https://miniexcel.github.io">赞助</a> 能帮助 MiniExcel 成长 </p>
 </div>
+
 
 ---
 
 ### 1.22.0
 - [New] SaveAs CSV 支持自定义 CultureInfo
+- [New] Query 支持自定义 CultureInfo
 
 ### 0.21.5
 - [Bug] 修正 SaveAs multiple sheet value error "Excel completed file level validation and repair. Some parts of this workbook may have been repaired or discarded."  #325

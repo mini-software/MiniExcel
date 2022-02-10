@@ -34,7 +34,7 @@
 
         public static IEnumerable<T> Query<T>(this Stream stream, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null) where T : class, new()
         {
-            return ExcelReaderFactory.GetProvider(stream, ExcelTypeHelper.GetExcelType(stream, excelType)).Query<T>(sheetName, startCell, configuration);
+            return ExcelReaderFactory.GetProvider(stream, ExcelTypeHelper.GetExcelType(stream, excelType), configuration).Query<T>(sheetName, startCell);
         }
 
         public static IEnumerable<dynamic> Query(string path, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null)
@@ -46,7 +46,7 @@
 
         public static IEnumerable<dynamic> Query(this Stream stream, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null)
         {
-            return ExcelReaderFactory.GetProvider(stream, ExcelTypeHelper.GetExcelType(stream, excelType)).Query(useHeaderRow, sheetName, startCell, configuration);
+            return ExcelReaderFactory.GetProvider(stream, ExcelTypeHelper.GetExcelType(stream, excelType),configuration).Query(useHeaderRow, sheetName, startCell);
         }
 
         public static void SaveAsByTemplate(string path, string templatePath, object value)
@@ -88,7 +88,7 @@
 
             var dt = new DataTable(sheetName);
             var first = true;
-            var rows = ExcelReaderFactory.GetProvider(stream, ExcelTypeHelper.GetExcelType(stream, excelType)).Query(useHeaderRow, sheetName, startCell, configuration);
+            var rows = ExcelReaderFactory.GetProvider(stream, ExcelTypeHelper.GetExcelType(stream, excelType),configuration).Query(useHeaderRow, sheetName, startCell);
 
             var keys = new List<string>();
             foreach (IDictionary<string, object> row in rows)
@@ -131,7 +131,7 @@
         public static List<string> GetSheetNames(this Stream stream)
         {
             var archive = new ExcelOpenXmlZip(stream);
-            return new ExcelOpenXmlSheetReader(stream).GetWorkbookRels(archive.entries).Select(s => s.Name).ToList();
+            return new ExcelOpenXmlSheetReader(stream,null).GetWorkbookRels(archive.entries).Select(s => s.Name).ToList();
         }
 
         public static ICollection<string> GetColumns(string path, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null)

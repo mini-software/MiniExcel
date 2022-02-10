@@ -33,7 +33,7 @@
 
         private static IExcelReader GetReaderProvider(Stream stream, ExcelType excelType)
         {
-            return ExcelReaderFactory.GetProvider(stream, ExcelTypeHelper.GetExcelType(stream, excelType));
+            return ExcelReaderFactory.GetProvider(stream, ExcelTypeHelper.GetExcelType(stream, excelType),null);
         }
     }
 }

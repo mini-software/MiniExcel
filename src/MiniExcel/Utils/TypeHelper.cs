@@ -60,11 +60,11 @@
             }
         }
 
-        public static object TypeMapping<T>(T v, ExcelCustomPropertyInfo pInfo, object newValue, object itemValue, int rowIndex, string startCell) where T : class, new()
+        public static object TypeMapping<T>(T v, ExcelCustomPropertyInfo pInfo, object newValue, object itemValue, int rowIndex, string startCell, Configuration _config) where T : class, new()
         {
             try
             {
-                return TypeMappingImpl(v, pInfo, ref newValue, itemValue);
+                return TypeMappingImpl(v, pInfo, ref newValue, itemValue, _config);
             }
             catch (Exception ex) when (ex is InvalidCastException || ex is FormatException)
             {
@@ -75,7 +75,7 @@
             }
         }
 
-        private static object TypeMappingImpl<T>(T v, ExcelCustomPropertyInfo pInfo, ref object newValue, object itemValue) where T : class, new()
+        private static object TypeMappingImpl<T>(T v, ExcelCustomPropertyInfo pInfo, ref object newValue, object itemValue, Configuration _config) where T : class, new()
         {
             if (pInfo.ExcludeNullableType == typeof(Guid))
             {
@@ -99,7 +99,7 @@
                         newValue = _v;
                     }
                 }
-                else if (DateTime.TryParse(vs, CultureInfo.InvariantCulture, DateTimeStyles.None, out var _v))
+                else if (DateTime.TryParse(vs, _config.Culture, DateTimeStyles.None, out var _v))
                     newValue = _v;
                 else if (DateTime.TryParseExact(vs, "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out var _v2))
                     newValue = _v2;
@@ -129,7 +129,7 @@
             else
             {
                 // Use pInfo.ExcludeNullableType to resolve : https://github.com/shps951023/MiniExcel/issues/138
-                newValue = Convert.ChangeType(itemValue, pInfo.ExcludeNullableType);
+                newValue = Convert.ChangeType(itemValue, pInfo.ExcludeNullableType, _config.Culture);
             }
 
             pInfo.Property.SetValue(v, newValue);

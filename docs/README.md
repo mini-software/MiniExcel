@@ -9,15 +9,16 @@
 <div align="center">
 <strong><a href="README.md">English</a> | <a href="README.zh-CN.md">简体中文</a> | <a href="README.zh-Hant.md">繁體中文</a></strong>
 </div>
-
 <div align="center">
-🙌 <a href="https://github.com/shps951023/MiniExcel">Star</a> can make MiniExcel better 🙌
+ Your <a href="https://github.com/shps951023/MiniExcel">Star</a> and <a href="https://miniexcel.github.io">Donate</a> can make MiniExcel better 
 </div>
+
 
 ---
 
 ### 1.22.0
 - [New] SaveAs CSV support to custom CultureInfo
+- [New] Query support to custom CultureInfo
 
 ### 0.21.5
 - [Bug] Fix SaveAs multiple sheet value error "Excel completed file level validation and repair. Some parts of this workbook may have been repaired or discarded."  #325

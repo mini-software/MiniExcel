@@ -74,7 +74,7 @@ namespace MiniExcelLibs.OpenXml
             {
                 templateStream.CopyTo(stream);
 
-                var reader = new ExcelOpenXmlSheetReader(stream);
+                var reader = new ExcelOpenXmlSheetReader(stream,null);
                 var _archive = new ExcelOpenXmlZip(stream, mode: ZipArchiveMode.Update, true, Encoding.UTF8);
                 {
                     //read sharedString

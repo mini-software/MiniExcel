@@ -12,19 +12,19 @@ namespace MiniExcelLibs.Csv
     internal class CsvReader : IExcelReader 
     {
         private Stream _stream;
-        public CsvReader(Stream stream)
+        private CsvConfiguration _config;
+        public CsvReader(Stream stream, IConfiguration configuration)
         {
             this._stream = stream;
+            this._config = configuration == null ? CsvConfiguration.DefaultConfiguration : (CsvConfiguration)configuration;
         }
-        public IEnumerable<IDictionary<string, object>> Query(bool useHeaderRow, string sheetName, string startCell, IConfiguration configuration)
+        public IEnumerable<IDictionary<string, object>> Query(bool useHeaderRow, string sheetName, string startCell)
         {
             if (startCell != "A1")
                 throw new NotImplementedException("CSV not Implement startCell");
-            var cf = configuration == null ? CsvConfiguration.DefaultConfiguration : (CsvConfiguration)configuration;
-
             if(_stream.CanSeek)
                 _stream.Position = 0;
-            var reader = cf.StreamReaderFunc(_stream);
+            var reader = _config.StreamReaderFunc(_stream);
             {
                 var row = string.Empty;
                 string[] read;
@@ -32,7 +32,7 @@ namespace MiniExcelLibs.Csv
                 Dictionary<int, string> headRows = new Dictionary<int, string>();
                 while ((row = reader.ReadLine()) != null)
                 {
-                    read = Split(cf, row);
+                    read = Split(row);
 
                     //header
                     if (useHeaderRow)
@@ -65,14 +65,12 @@ namespace MiniExcelLibs.Csv
             }
         }
 
-        public IEnumerable<T> Query<T>(string sheetName, string startCell, IConfiguration configuration) where T : class, new()
+        public IEnumerable<T> Query<T>(string sheetName, string startCell) where T : class, new()
         {
-            var cf = configuration == null ? CsvConfiguration.DefaultConfiguration : (CsvConfiguration)configuration;
-
             var type = typeof(T);
 
             Dictionary<int, ExcelCustomPropertyInfo> idxProps = new Dictionary<int, ExcelCustomPropertyInfo>();
-            using (var reader = cf.StreamReaderFunc(_stream))
+            using (var reader = _config.StreamReaderFunc(_stream))
             {
                 var row = string.Empty;
                 string[] read;
@@ -80,7 +78,7 @@ namespace MiniExcelLibs.Csv
                 //header
                 {
                     row = reader.ReadLine();
-                    read = Split(cf, row);
+                    read = Split(row);
 
                     var props = CustomPropertyHelper.GetExcelCustomPropertyInfos(type, read);
                     var index = 0;
@@ -95,7 +93,7 @@ namespace MiniExcelLibs.Csv
                 {
                     while ((row = reader.ReadLine()) != null)
                     {
-                        read = Split(cf, row);
+                        read = Split(row);
 
                         //body
                         {
@@ -114,7 +112,7 @@ namespace MiniExcelLibs.Csv
                                     if (itemValue == null)
                                         continue;
 
-                                    newV = TypeHelper.TypeMapping(v, pInfo, newV, itemValue, rowIndex, startCell);
+                                    newV = TypeHelper.TypeMapping(v, pInfo, newV, itemValue, rowIndex, startCell,_config);
                                 }
                             }
 
@@ -127,21 +125,21 @@ namespace MiniExcelLibs.Csv
             }
         }
 
-        private static string[] Split(CsvConfiguration cf, string row)
+        private string[] Split(string row)
         {
-            return Regex.Split(row, $"[\t{cf.Seperator}](?=(?:[^\"]|\"[^\"]*\")*$)")
+            return Regex.Split(row, $"[\t{_config.Seperator}](?=(?:[^\"]|\"[^\"]*\")*$)")
                 .Select(s => Regex.Replace(s.Replace("\"\"", "\""), "^\"|\"$", "")).ToArray();
             //this code from S.O : https://stackoverflow.com/a/11365961/9131476
         }
 
-        public Task<IEnumerable<IDictionary<string, object>>> QueryAsync(bool UseHeaderRow, string sheetName, string startCell, IConfiguration configuration)
+        public Task<IEnumerable<IDictionary<string, object>>> QueryAsync(bool UseHeaderRow, string sheetName, string startCell)
         {
-            return Task.Run(() => Query(UseHeaderRow, sheetName, startCell, configuration));
+            return Task.Run(() => Query(UseHeaderRow, sheetName, startCell));
         }
 
-        public Task<IEnumerable<T>> QueryAsync<T>(string sheetName, string startCell, IConfiguration configuration) where T : class, new()
+        public Task<IEnumerable<T>> QueryAsync<T>(string sheetName, string startCell) where T : class, new()
         {
-            return Task.Run(() => Query<T>(sheetName, startCell, configuration));
+            return Task.Run(() => Query<T>(sheetName, startCell));
         }
     }
 }

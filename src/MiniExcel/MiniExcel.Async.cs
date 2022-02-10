@@ -30,7 +30,7 @@
 
         public static Task<IEnumerable<T>> QueryAsync<T>(this Stream stream, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null) where T : class, new()
         {
-            return ExcelReaderFactory.GetProvider(stream, ExcelTypeHelper.GetExcelType(stream, excelType)).QueryAsync<T>(sheetName, startCell, configuration);
+            return ExcelReaderFactory.GetProvider(stream, ExcelTypeHelper.GetExcelType(stream, excelType),configuration).QueryAsync<T>(sheetName, startCell);
         }
 
         public static Task<IEnumerable<T>> QueryAsync<T>(string path, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null) where T : class, new()
@@ -40,7 +40,7 @@
 
         public static Task<IEnumerable<IDictionary<string, object>>> QueryAsync(this Stream stream, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null)
         {
-            return GetReaderProvider(stream, excelType).QueryAsync(useHeaderRow, sheetName, startCell, configuration);
+            return GetReaderProvider(stream, excelType).QueryAsync(useHeaderRow, sheetName, startCell);
         }
         public static Task SaveAsByTemplateAsync(this Stream stream, string templatePath, object value)
         {

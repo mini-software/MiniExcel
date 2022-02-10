@@ -504,20 +504,6 @@ MiniExcel.SaveAs(path, value);
 
 
 
-#### 12. 自定義 CultureInfo
-
-從 1.22.0 版本開始，可以使用以下代碼自定義文化資訊
-
-```csharp
-var config = new CsvConfiguration()
-{
-	Culture = new CultureInfo("fr-FR"),
-};
-MiniExcel.SaveAs(path, value, configuration: config);
-```
-
-
-
 
 
 ### 模板填充 Excel <a name="getstart3"></a>
@@ -994,6 +980,23 @@ MiniExcel.ConvertXlsxToCsv(xlsxPath, csvPath);
 MiniExcel.ConvertXlsxToCsv(xlsxStream, csvStream);
 MiniExcel.ConvertXlsxToCsv(csvPath, xlsxPath);
 MiniExcel.ConvertXlsxToCsv(csvStream, xlsxStream);
+```
+
+
+
+#### 3. 自定義 CultureInfo
+
+從 1.22.0 版本開始，可以使用以下代碼自定義文化資訊
+
+```csharp
+var config = new CsvConfiguration()
+{
+	Culture = new CultureInfo("fr-FR"),
+};
+MiniExcel.SaveAs(path, value, configuration: config);
+
+// or
+MiniExcel.Query(path,configuration: config);
 ```
 
 

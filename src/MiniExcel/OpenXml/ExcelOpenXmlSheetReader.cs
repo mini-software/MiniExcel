@@ -29,14 +29,14 @@ namespace MiniExcelLibs.OpenXml
             XmlResolver = null,
         };
 
-        public ExcelOpenXmlSheetReader(Stream stream)
+        public ExcelOpenXmlSheetReader(Stream stream,IConfiguration configuration)
         {
             _archive = new ExcelOpenXmlZip(stream);
+            _config = (OpenXmlConfiguration)configuration ?? OpenXmlConfiguration.DefaultConfig;
         }
 
-        public IEnumerable<IDictionary<string, object>> Query(bool useHeaderRow, string sheetName, string startCell, IConfiguration configuration)
+        public IEnumerable<IDictionary<string, object>> Query(bool useHeaderRow, string sheetName, string startCell)
         {
-            _config = (OpenXmlConfiguration)configuration ?? OpenXmlConfiguration.DefaultConfig; //TODO:
             if (!ReferenceHelper.ParseReference(startCell, out var startColumnIndex, out var startRowIndex))
                 throw new InvalidDataException($"startCell {startCell} is Invalid");
             startColumnIndex--; startRowIndex--;
@@ -399,16 +399,16 @@ namespace MiniExcelLibs.OpenXml
             }
         }
 
-        public IEnumerable<T> Query<T>(string sheetName, string startCell, IConfiguration configuration) where T : class, new()
+        public IEnumerable<T> Query<T>(string sheetName, string startCell) where T : class, new()
         {
             var type = typeof(T);
 
             List<ExcelCustomPropertyInfo> props = null;
-            var headers = Query(false, sheetName, startCell, configuration).FirstOrDefault()?.Values?.Select(s => s?.ToString())?.ToArray(); //TODO:need to optimize
+            var headers = Query(false, sheetName, startCell).FirstOrDefault()?.Values?.Select(s => s?.ToString())?.ToArray(); //TODO:need to optimize
 
             var first = true;
             var rowIndex = 0;
-            foreach (var item in Query(true, sheetName, startCell, configuration))
+            foreach (var item in Query(true, sheetName, startCell))
             {
                 if (first)
                 {
@@ -431,7 +431,7 @@ namespace MiniExcelLibs.OpenXml
                                 if (itemValue == null)
                                     continue;
 
-                                newV = TypeHelper.TypeMapping(v, pInfo, newV, itemValue, rowIndex, startCell);
+                                newV = TypeHelper.TypeMapping(v, pInfo, newV, itemValue, rowIndex, startCell, _config);
                             }
                         }
                     }
@@ -445,7 +445,7 @@ namespace MiniExcelLibs.OpenXml
                         if (itemValue == null)
                             continue;
 
-                        newV = TypeHelper.TypeMapping(v, pInfo, newV, itemValue, rowIndex, startCell);
+                        newV = TypeHelper.TypeMapping(v, pInfo, newV, itemValue, rowIndex, startCell, _config);
                     }
                 }
                 rowIndex++;
@@ -705,14 +705,14 @@ namespace MiniExcelLibs.OpenXml
             }
         }
 
-        public Task<IEnumerable<IDictionary<string, object>>> QueryAsync(bool UseHeaderRow, string sheetName, string startCell, IConfiguration configuration)
+        public Task<IEnumerable<IDictionary<string, object>>> QueryAsync(bool UseHeaderRow, string sheetName, string startCell)
         {
-            return Task.Run(() => Query(UseHeaderRow, sheetName, startCell, configuration));
+            return Task.Run(() => Query(UseHeaderRow, sheetName, startCell));
         }
 
-        public Task<IEnumerable<T>> QueryAsync<T>(string sheetName, string startCell, IConfiguration configuration) where T : class, new()
+        public Task<IEnumerable<T>> QueryAsync<T>(string sheetName, string startCell) where T : class, new()
         {
-            return Task.Run(() => Query<T>(sheetName, startCell, configuration));
+            return Task.Run(() => Query<T>(sheetName, startCell));
         }
     }
 }

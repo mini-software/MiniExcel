@@ -20,6 +20,7 @@
 ### 1.22.0
 - [New] SaveAs 支持自定義 CultureInfo #316
 - [New] Query 支持自定義 CultureInfo #316
+- [New] 新 byte array 轉換器 #327
 - [Breaking Change] 移除 Byte Array 與 base64 轉換器
 - [Breaking Change] `EnableConvertByteArray` 取代 `ConvertByteArrayToBase64String` 
 

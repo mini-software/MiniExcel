@@ -19,6 +19,7 @@
 ### 1.22.0
 - [New] SaveAs support to custom CultureInfo #316
 - [New] Query support to custom CultureInfo #316
+- [New] New efficiency byte array Converter #327
 - [Breaking Change] Remove Byte Array to base64 Converter
 - [Breaking Change] Replace `ConvertByteArrayToBase64String` by `EnableConvertByteArray`
 

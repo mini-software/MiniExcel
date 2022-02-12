@@ -668,10 +668,22 @@ namespace MiniExcelLibs.OpenXml
                     {
                         //TODO:optimize startswith
                         //if str start with "data:image/png;base64," then convert to byte[] https://github.com/shps951023/MiniExcel/issues/318
-                        if (v != null && v.StartsWith("data:image/png;base64,"))
-                            value = Convert.FromBase64String(v.Substring(22));
+                        if (v != null && v.StartsWith("@@@fileid@@@,"))
+                        {
+                            var path = v.Substring(13);
+                            var stream = _archive.GetEntry(path).Open();
+                            byte[] bytes;
+                            using (var ms = new MemoryStream())
+                            {
+                                stream.CopyTo(ms);
+                                bytes = ms.ToArray();
+                            }
+                            value = bytes;
+                        }
                         else
+                        {
                             value = v;
+                        } 
                     }
                     else
                     {

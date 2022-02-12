@@ -14,15 +14,16 @@ using static MiniExcelLibs.Utils.ImageHelper;
 
 namespace MiniExcelLibs.OpenXml
 {
-    internal class ImageDto
+    internal class FileDto
     {
         public string ID { get; set; } = $"R{Guid.NewGuid():N}";
         public string Extension { get; set; }
-        public string Path { get { return $"xl/media/image{ID}.{Extension}"; } }
-        public string Path2 { get { return $"/xl/media/image{ID}.{Extension}"; } }
+        public string Path { get { return $"xl/media/{ID}.{Extension}"; } }
+        public string Path2 { get { return $"/xl/media/{ID}.{Extension}"; } }
         public Byte[] Byte { get; set; }
         public int RowIndex { get; set; }
         public int CellIndex { get; set; }
+        public bool IsImage { get; set; } = false;
     }
     internal class SheetDto
     {
@@ -44,7 +45,7 @@ namespace MiniExcelLibs.OpenXml
         private readonly bool _printHeader;
         private readonly object _value;
         private readonly List<SheetDto> _sheets = new List<SheetDto>();
-        private readonly List<ImageDto> _images = new List<ImageDto>();
+        private readonly List<FileDto> _files = new List<FileDto>();
         public ExcelOpenXmlSheetWriter(Stream stream, object value, string sheetName, IConfiguration configuration, bool printHeader)
         {
             this._stream = stream;
@@ -412,24 +413,31 @@ namespace MiniExcelLibs.OpenXml
                     {
                         // TODO: Setting configuration because it might have high cost?
                         var format = ImageHelper.GetImageFormat(bytes);
+                        //it can't insert to zip first to avoid cache image to memory
+                        //because sheet xml is opening.. https://github.com/shps951023/MiniExcel/issues/304#issuecomment-1017031691
+                        //int rowIndex, int cellIndex
+                        var file = new FileDto()
+                        {
+                            Byte = bytes,
+                            RowIndex = rowIndex,
+                            CellIndex = cellIndex
+                        };
                         if (format != ImageFormat.unknown)
                         {
-                            //it can't insert to zip first to avoid cache image to memory
-                            //because sheet xml is opening.. https://github.com/shps951023/MiniExcel/issues/304#issuecomment-1017031691
-                            //int rowIndex, int cellIndex
-                            _images.Add(new ImageDto()
-                            {
-                                Extension = format.ToString(),
-                                Byte = bytes,
-                                RowIndex = rowIndex,
-                                CellIndex = cellIndex
-                            });
+                            file.Extension = format.ToString();
+                            file.IsImage = true;
                         }
+                        else
+                        {
+                            file.Extension = ".bin";
+                        }
+                        _files.Add(file);
+
+                        //TODO:Convert to base64
+                        var base64 = $"@@@fileid@@@,{file.Path}";
+                        v = ExcelOpenXmlUtils.EncodeXML(base64);
+                        s = "4";
                     }
-                    //TODO:Convert to base64
-                    var base64 = $"data:image/png;base64,{System.Convert.ToBase64String(bytes)}";
-                    v = ExcelOpenXmlUtils.EncodeXML(base64);
-                    s = "4";
                 }
                 else if (type == typeof(DateTime))
                 {
@@ -570,9 +578,9 @@ namespace MiniExcelLibs.OpenXml
 
         private void GenerateEndXml()
         {
-            //Images
+            //Files
             {
-                foreach (var item in _images)
+                foreach (var item in _files)
                 {
                     this.CreateZipEntry(item.Path, item.Byte);
                 }
@@ -596,7 +604,7 @@ namespace MiniExcelLibs.OpenXml
             // drawing rel
             {
                 var drawing = new StringBuilder();
-                foreach (var i in _images)
+                foreach (var i in _files.Where(w=>w.IsImage))
                 {
                     drawing.AppendLine($@"<Relationship Type=""http://schemas.openxmlformats.org/officeDocument/2006/relationships/image"" Target=""{i.Path2}"" Id=""{i.ID}"" />");
                 }
@@ -607,7 +615,7 @@ namespace MiniExcelLibs.OpenXml
             // drawing
             {
                 var drawing = new StringBuilder();
-                foreach (var i in _images)
+                foreach (var i in _files.Where(w => w.IsImage))
                 {
                     drawing.Append($@"<xdr:oneCellAnchor>
         <xdr:from>
@@ -619,7 +627,7 @@ namespace MiniExcelLibs.OpenXml
         <xdr:ext cx=""609600"" cy=""190500"" />
         <xdr:pic>
             <xdr:nvPicPr>
-                <xdr:cNvPr id=""{_images.IndexOf(i) + 1}"" descr="""" name=""2a3f9147-58ea-4a79-87da-7d6114c4877b"" />
+                <xdr:cNvPr id=""{_files.IndexOf(i) + 1}"" descr="""" name=""2a3f9147-58ea-4a79-87da-7d6114c4877b"" />
                 <xdr:cNvPicPr>
                     <a:picLocks noChangeAspect=""1"" />
                 </xdr:cNvPicPr>
@@ -645,7 +653,6 @@ namespace MiniExcelLibs.OpenXml
                 }
                 CreateZipEntry($"xl/drawings/drawing1.xml", "application/vnd.openxmlformats-officedocument.drawing+xml",
                     _defaultDrawing.Replace("{{format}}", drawing.ToString()));
-
             }
 
             // workbook.xml 、 workbookRelsXml
@@ -674,7 +681,7 @@ namespace MiniExcelLibs.OpenXml
 
             //[Content_Types].xml 
             {
-                var sb = new StringBuilder(@"<?xml version=""1.0"" encoding=""UTF-8"" standalone=""yes""?><Types xmlns=""http://schemas.openxmlformats.org/package/2006/content-types""><Default ContentType=""application/xml"" Extension=""xml""/><Default ContentType=""image/jpeg"" Extension=""jpg""/><Default ContentType=""image/png"" Extension=""png""/><Default ContentType=""image/gif"" Extension=""gif""/><Default ContentType=""application/vnd.openxmlformats-package.relationships+xml"" Extension=""rels""/>");
+                var sb = new StringBuilder(@"<?xml version=""1.0"" encoding=""UTF-8"" standalone=""yes""?><Types xmlns=""http://schemas.openxmlformats.org/package/2006/content-types""><Default ContentType=""application/vnd.openxmlformats-officedocument.spreadsheetml.printerSettings"" Extension=""bin""/><Default ContentType=""application/xml"" Extension=""xml""/><Default ContentType=""image/jpeg"" Extension=""jpg""/><Default ContentType=""image/png"" Extension=""png""/><Default ContentType=""image/gif"" Extension=""gif""/><Default ContentType=""application/vnd.openxmlformats-package.relationships+xml"" Extension=""rels""/>");
                 foreach (var p in _zipDictionary)
                     sb.Append($"<Override ContentType=\"{p.Value.ContentType}\" PartName=\"/{p.Key}\" />");
                 sb.Append("</Types>");

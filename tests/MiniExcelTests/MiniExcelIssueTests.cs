@@ -359,7 +359,7 @@ namespace MiniExcelLibs.Tests
 
             // import to base64 string
             {
-                var config = new OpenXmlConfiguration() { ConvertByteArrayToBase64String = false };
+                var config = new OpenXmlConfiguration() { EnableConvertByteArray = false };
                 var rows = MiniExcel.Query(path, true, configuration: config).ToList();
                 var image = (string)rows[0].Image;
                 Assert.StartsWith("@@@fileid@@@,xl/media/", image);

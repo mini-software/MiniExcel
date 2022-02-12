@@ -27,6 +27,8 @@
 ### 1.22.0
 - [New] SaveAs 支持自定义 CultureInfo #316
 - [New] Query 支持自定义 CultureInfo #316
+- [Breaking Change] 移除 Byte Array 与 base64 转换器
+- [Breaking Change] `EnableConvertByteArray` 取代 `ConvertByteArrayToBase64String` 
 
 ### 0.21.5
 - [Bug] 修正 SaveAs multiple sheet value error "Excel completed file level validation and repair. Some parts of this workbook may have been repaired or discarded."  #325

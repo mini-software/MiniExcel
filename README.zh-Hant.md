@@ -498,7 +498,7 @@ MiniExcel.SaveAs(path, value);
 
 #### 11. Byte Array 文件導出
 
-從 1.22.0 開始，當值類型為 `byte[]` 系統預設會轉成保存文件路徑以便導入時轉回 `byte[]`，如不想轉換可以將 `OpenXmlConfiguration.ConvertByteArrayToBase64String` 改為 `false`，能提升系統效率。
+從 1.22.0 開始，當值類型為 `byte[]` 系統預設會轉成保存文件路徑以便導入時轉回 `byte[]`，如不想轉換可以將 `OpenXmlConfiguration.EnableConvertByteArray` 改為 `false`，能提升系統效率。
 
 ![image](https://user-images.githubusercontent.com/12729184/153702334-c3b834f4-6ae4-4ddf-bd4e-e5005d5d8c6a.png)
 

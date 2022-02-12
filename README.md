@@ -489,7 +489,7 @@ MiniExcel.SaveAs(path, value);
 
 #### 11. Byte Array File Export
 
-Since 1.22.0, when value type is `byte[]` then system will save file path at cell by default, and when import system can be converted to `byte[]`. And if you don't want to use it, you can set  `OpenXmlConfiguration.ConvertByteArrayToBase64String` to `false`, it can improve the system efficiency.
+Since 1.22.0, when value type is `byte[]` then system will save file path at cell by default, and when import system can be converted to `byte[]`. And if you don't want to use it, you can set  `OpenXmlConfiguration.EnableConvertByteArray` to `false`, it can improve the system efficiency.
 
 ![image](https://user-images.githubusercontent.com/12729184/153702334-c3b834f4-6ae4-4ddf-bd4e-e5005d5d8c6a.png)
 

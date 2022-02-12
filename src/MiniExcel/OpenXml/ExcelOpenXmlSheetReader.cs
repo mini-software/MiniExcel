@@ -664,7 +664,7 @@ namespace MiniExcelLibs.OpenXml
                 case "str":
                     //TODO: it will unbox,box
                     var v = XmlEncoder.DecodeString(rawValue);
-                    if (_config.ConvertByteArrayToBase64String)
+                    if (_config.EnableConvertByteArray)
                     {
                         //TODO:optimize startswith
                         //if str start with "data:image/png;base64," then convert to byte[] https://github.com/shps951023/MiniExcel/issues/318

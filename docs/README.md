@@ -19,6 +19,8 @@
 ### 1.22.0
 - [New] SaveAs support to custom CultureInfo #316
 - [New] Query support to custom CultureInfo #316
+- [Breaking Change] Remove Byte Array to base64 Converter
+- [Breaking Change] Replace `ConvertByteArrayToBase64String` by `EnableConvertByteArray`
 
 ### 0.21.5
 - [Bug] Fix SaveAs multiple sheet value error "Excel completed file level validation and repair. Some parts of this workbook may have been repaired or discarded."  #325

@@ -406,7 +406,7 @@ namespace MiniExcelLibs.OpenXml
                     t = "b";
                     v = (bool)value ? "1" : "0";
                 }
-                else if (type == typeof(byte[]) && _configuration.ConvertByteArrayToBase64String)
+                else if (type == typeof(byte[]) && _configuration.EnableConvertByteArray)
                 {
                     var bytes = (byte[])value;
                     if (bytes != null)
@@ -429,7 +429,7 @@ namespace MiniExcelLibs.OpenXml
                         }
                         else
                         {
-                            file.Extension = ".bin";
+                            file.Extension = "bin";
                         }
                         _files.Add(file);
 

@@ -34,6 +34,81 @@ namespace MiniExcelLibs.Tests
         [Fact]
         public void TestIssue316()
         {
+            // XLSX
+            {
+                {
+                    var path = PathHelper.GetTempFilePath("xlsx");
+                    var value = new[] {
+                        new{ amount=123_456.789M,createtime=DateTime.Parse("2018-01-31",CultureInfo.InvariantCulture)}
+                    };
+                    var config = new OpenXmlConfiguration()
+                    {
+                        Culture = new CultureInfo("fr-FR"),
+                    };
+                    MiniExcel.SaveAs(path, value, configuration: config);
+
+                    //Datetime error
+                    {
+                        Assert.Throws<MiniExcelLibs.Exceptions.ExcelInvalidCastException>(() =>
+                        {
+                            var config = new OpenXmlConfiguration()
+                            {
+                                Culture = new CultureInfo("en-US"),
+                            };
+                            var rows = MiniExcel.Query<TestIssue316Dto>(path, configuration: config).ToList();
+                        });
+                    }
+
+                    // dynamic
+                    {
+                        var rows = MiniExcel.Query(path, true).ToList();
+                        Assert.Equal("123456,789", rows[0].amount);
+                        Assert.Equal("31/01/2018 00:00:00", rows[0].createtime);
+                    }
+                }
+
+                // type
+                {
+                    var path = PathHelper.GetTempFilePath("xlsx");
+                    var value = new[] {
+                        new{ amount=123_456.789M,createtime=DateTime.Parse("2018-05-12",CultureInfo.InvariantCulture)}
+                    };
+                    {
+                        var config = new OpenXmlConfiguration()
+                        {
+                            Culture = new CultureInfo("fr-FR"),
+                        };
+                        MiniExcel.SaveAs(path, value, configuration: config);
+                    }
+
+                    {
+                        var rows = MiniExcel.Query(path, true).ToList();
+                        Assert.Equal("123456,789", rows[0].amount);
+                        Assert.Equal("12/05/2018 00:00:00", rows[0].createtime);
+                    }
+
+                    {
+                        var config = new OpenXmlConfiguration()
+                        {
+                            Culture = new CultureInfo("en-US"),
+                        };
+                        var rows = MiniExcel.Query<TestIssue316Dto>(path, configuration: config).ToList();
+                        Assert.Equal("2018-12-05 00:00:00", rows[0].createtime.ToString("yyyy-MM-dd HH:mm:ss"));
+                        Assert.Equal("123456789", rows[0].amount.ToString());
+                    }
+
+                    {
+                        var config = new OpenXmlConfiguration()
+                        {
+                            Culture = new CultureInfo("fr-FR"),
+                        };
+                        var rows = MiniExcel.Query<TestIssue316Dto>(path, configuration: config).ToList();
+                        Assert.Equal("2018-05-12 00:00:00", rows[0].createtime.ToString("yyyy-MM-dd HH:mm:ss"));
+                        Assert.Equal("123456.789", rows[0].amount.ToString());
+                    }
+                }
+            }
+
             // CSV
             {
                 {

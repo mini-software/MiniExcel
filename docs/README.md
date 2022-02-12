@@ -17,8 +17,8 @@
 ---
 
 ### 1.22.0
-- [New] SaveAs CSV support to custom CultureInfo
-- [New] Query support to custom CultureInfo
+- [New] SaveAs support to custom CultureInfo #316
+- [New] Query support to custom CultureInfo #316
 
 ### 0.21.5
 - [Bug] Fix SaveAs multiple sheet value error "Excel completed file level validation and repair. Some parts of this workbook may have been repaired or discarded."  #325

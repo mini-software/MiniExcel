@@ -978,7 +978,7 @@ MiniExcel.ConvertXlsxToCsv(csvStream, xlsxStream);
 
 #### 3. Custom CultureInfo
 
-Since 1.22.0, you can custom CultureInfo like below
+Since 1.22.0, you can custom CultureInfo like below, system default `CultureInfo.InvariantCulture`.
 
 ```csharp
 var config = new CsvConfiguration()

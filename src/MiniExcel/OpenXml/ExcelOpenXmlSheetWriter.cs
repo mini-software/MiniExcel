@@ -4,6 +4,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
+using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -388,8 +389,16 @@ namespace MiniExcelLibs.OpenXml
                 }
                 else if (TypeHelper.IsNumericType(type))
                 {
-                    t = "n";
-                    v = value.ToString();
+                    if (_configuration.Culture != CultureInfo.InvariantCulture)
+                    {
+                        t = "str";
+                        v = ((decimal)value).ToString(_configuration.Culture);
+                    }
+                    else
+                    {
+                        t = "n";
+                        v = value.ToString();
+                    }
                 }
                 else if (type == typeof(bool))
                 {
@@ -424,7 +433,12 @@ namespace MiniExcelLibs.OpenXml
                 }
                 else if (type == typeof(DateTime))
                 {
-                    if (p == null || p.ExcelFormat == null)
+                    if(_configuration.Culture != CultureInfo.InvariantCulture)
+                    {
+                        t = "str";
+                        v = ((DateTime)value).ToString(_configuration.Culture);
+                    }
+                    else if (p == null || p.ExcelFormat == null)
                     {
                         t = null;
                         s = "3";
@@ -432,6 +446,7 @@ namespace MiniExcelLibs.OpenXml
                     }
                     else
                     {
+                        // TODO: now it'll lose date type information
                         t = "str";
                         v = ((DateTime)value).ToString(p.ExcelFormat);
                     }

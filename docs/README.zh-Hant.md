@@ -18,8 +18,8 @@
 ---
 
 ### 1.22.0
-- [New] SaveAs CSV 支持自定義 CultureInfo
-- [New] Query 支持自定義 CultureInfo
+- [New] SaveAs 支持自定義 CultureInfo #316
+- [New] Query 支持自定義 CultureInfo #316
 
 ### 0.21.5
 - [Bug] 修正 SaveAs multiple sheet value error "Excel completed file level validation and repair. Some parts of this workbook may have been repaired or discarded."  #325

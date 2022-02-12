@@ -986,7 +986,7 @@ MiniExcel.ConvertXlsxToCsv(csvStream, xlsxStream);
 
 #### 3. 自定義 CultureInfo
 
-從 1.22.0 版本開始，可以使用以下代碼自定義文化資訊
+從 1.22.0 版本開始，可以使用以下代碼自定義文化資訊，系統預設 `CultureInfo.InvariantCulture`。
 
 ```csharp
 var config = new CsvConfiguration()

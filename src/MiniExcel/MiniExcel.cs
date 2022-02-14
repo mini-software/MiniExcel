@@ -18,7 +18,7 @@
             return new MiniExcelDataReader(stream, useHeaderRow, sheetName, excelType, startCell, configuration);
         }
 
-        public static MiniExcelDataReader GetDataReader(this Stream stream, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null)
+        public static MiniExcelDataReader GetReader(this Stream stream, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null)
         {
             return new MiniExcelDataReader(stream, useHeaderRow, sheetName, excelType, startCell, configuration);
         }

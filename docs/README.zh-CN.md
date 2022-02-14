@@ -24,6 +24,9 @@
 
 ---
 
+### 1.23.0
+- [New] 新增 `GetReader` 方法 #328 #290  (感谢 [杨福来 Yang](https://github.com/yfl8910) )
+
 ### 1.22.0
 - [New] SaveAs 支持自定义 CultureInfo #316
 - [New] Query 支持自定义 CultureInfo #316

@@ -32,6 +32,45 @@ namespace MiniExcelLibs.Tests
         }
 
         [Fact]
+        public void TestIssue328()
+        {
+            var path = PathHelper.GetTempFilePath();
+            var value = new[] {
+                new { id=1,name="Jack",indate=new DateTime(2022,5,13), file = File.ReadAllBytes(PathHelper.GetFile("images/TestIssue327.png")) },
+                new { id=2,name="Henry",indate=new DateTime(2022,4,10), file = File.ReadAllBytes(PathHelper.GetFile("other/TestIssue327.txt")) },
+            };
+            MiniExcel.SaveAs(path, value);
+
+            var rowIndx = 0;
+            using (var reader = MiniExcel.GetReader(path,true))
+            {
+                Assert.Equal("id", reader.GetName(0));
+                Assert.Equal("name", reader.GetName(1));
+                Assert.Equal("indate", reader.GetName(2));
+                Assert.Equal("file", reader.GetName(3));
+
+                while (reader.Read())
+                {
+                    for (int i = 0; i < reader.FieldCount; i++)
+                    {
+                        var v = reader.GetValue(i);
+                        if (rowIndx==0 && i==0) Assert.Equal((double)1,v);
+                        if (rowIndx == 0 && i == 1) Assert.Equal("Jack", v);
+                        if (rowIndx == 0 && i == 2) Assert.Equal(new DateTime(2022, 5, 13), v);
+                        if (rowIndx == 0 && i == 3) Assert.Equal(File.ReadAllBytes(PathHelper.GetFile("images/TestIssue327.png")), v);
+                        if (rowIndx == 1 && i == 0) Assert.Equal((double)2, v);
+                        if (rowIndx == 1 && i == 1) Assert.Equal("Henry", v);
+                        if (rowIndx == 1 && i == 2) Assert.Equal(new DateTime(2022, 4, 10), v);
+                        if (rowIndx == 1 && i == 3) Assert.Equal(File.ReadAllBytes(PathHelper.GetFile("other/TestIssue327.txt")), v);
+                    }
+                    rowIndx++;
+                }
+            }
+
+            //TODO:How to resolve empty body sheet?
+        }
+
+        [Fact]
         public void TestIssue327()
         {
             var path = PathHelper.GetTempFilePath();

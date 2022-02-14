@@ -17,7 +17,13 @@
 
 ---
 
+
+
+### 1.23.0
+- [New] 新增 `GetReader` 方法 #328 #290 (感謝 [楊福來 Yang](https://github.com/yfl8910) )
+
 ### 1.22.0
+
 - [New] SaveAs 支持自定義 CultureInfo #316
 - [New] Query 支持自定義 CultureInfo #316
 - [New] 新 byte array 轉換器 #327

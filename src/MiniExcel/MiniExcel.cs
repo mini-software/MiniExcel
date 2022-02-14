@@ -12,6 +12,17 @@
 
     public static partial class MiniExcel
     {
+        public static MiniExcelDataReader GetReader(string path, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null)
+        {
+            var stream = FileHelper.OpenSharedRead(path);
+            return new MiniExcelDataReader(stream, useHeaderRow, sheetName, excelType, startCell, configuration);
+        }
+
+        public static MiniExcelDataReader GetDataReader(this Stream stream, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null)
+        {
+            return new MiniExcelDataReader(stream, useHeaderRow, sheetName, excelType, startCell, configuration);
+        }
+
         public static void SaveAs(string path, object value, bool printHeader = true, string sheetName = "Sheet1", ExcelType excelType = ExcelType.UNKNOWN, IConfiguration configuration = null)
         {
             if (Path.GetExtension(path).ToLowerInvariant() == ".xlsm")

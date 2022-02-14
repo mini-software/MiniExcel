@@ -16,7 +16,13 @@
 
 ---
 
+
+### 1.23.0
+- [New] Support `GetReader` method #328 #290 (Thanks [杨福来 Yang](https://github.com/yfl8910) )
+
+
 ### 1.22.0
+
 - [New] SaveAs support to custom CultureInfo #316
 - [New] Query support to custom CultureInfo #316
 - [New] New efficiency byte array Converter #327

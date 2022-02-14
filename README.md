@@ -910,6 +910,25 @@ MiniExcel.SaveAs(path, value,excelType:ExcelType.CSV, configuration: config);
 
 
 
+### DataReader
+
+#### 1. GetReader
+Since 1.23.0, you can GetDataReader 
+
+```csharp
+    using (var reader = MiniExcel.GetReader(path,true))
+    {
+        while (reader.Read())
+        {
+            for (int i = 0; i < reader.FieldCount; i++)
+            {
+                var value = reader.GetValue(i);
+            }
+        }
+    }
+```
+
+
 
 ###  Async
 
@@ -990,6 +1009,8 @@ MiniExcel.SaveAs(path, value, configuration: config);
 // or
 MiniExcel.Query(path, configuration: config);
 ```
+
+
 
 
 

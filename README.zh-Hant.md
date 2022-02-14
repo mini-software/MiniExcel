@@ -922,6 +922,26 @@ MiniExcel.SaveAs(path, value,excelType:ExcelType.CSV, configuration: config);
 ```
 
 
+### DataReader
+
+#### 1. GetReader
+
+从 1.23.0 版本开始能获取 DataReader
+
+```csharp
+    using (var reader = MiniExcel.GetReader(path,true))
+    {
+        while (reader.Read())
+        {
+            for (int i = 0; i < reader.FieldCount; i++)
+            {
+                var value = reader.GetValue(i);
+            }
+        }
+    }
+```
+
+
 
 ### 異步 Async
 

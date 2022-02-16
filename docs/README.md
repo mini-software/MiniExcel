@@ -16,6 +16,8 @@
 
 ---
 
+### 1.24.0
+- [New] Support System.ComponentModel.DisplayName's `[DisplayName]` as title [#I4TXGT](https://gitee.com/dotnetchina/MiniExcel/issues/I4TXGT)
 
 ### 1.23.0
 - [New] Support `GetReader` method #328 #290 (Thanks [杨福来 Yang](https://github.com/yfl8910) )

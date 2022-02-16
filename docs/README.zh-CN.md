@@ -24,7 +24,13 @@
 
 ---
 
+
+
+### 1.24.0
+- [New] 支持 System.ComponentModel.DisplayName 的 `[DisplayName]` 作为excel标题 [#I4TXGT](https://gitee.com/dotnetchina/MiniExcel/issues/I4TXGT)
+
 ### 1.23.0
+
 - [New] 新增 `GetReader` 方法 #328 #290  (感谢 [杨福来 Yang](https://github.com/yfl8910) )
 
 ### 1.22.0

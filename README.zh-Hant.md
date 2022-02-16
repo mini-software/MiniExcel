@@ -843,6 +843,22 @@ public class Dto
 
 
 
+#### 5. System.ComponentModel.DisplayNameAttribute = ExcelColumnName.excelColumnNameAttribute
+
+從 1.24.0 開始支持 System.ComponentModel.DisplayNameAttribute 等同於 ExcelColumnName.excelColumnNameAttribute 效果
+
+```C#
+public class TestIssueI4TXGTDto
+{
+    public int ID { get; set; }
+    public string Name { get; set; }
+    [DisplayName("Specification")]
+    public string Spc { get; set; }
+    [DisplayName("Unit Price")]
+    public decimal Up { get; set; }
+}
+```
+
 
 
 

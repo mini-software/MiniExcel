@@ -32,6 +32,38 @@ namespace MiniExcelLibs.Tests
         }
 
         [Fact]
+        public void TestIssueI4TXGT()
+        {
+            var path = PathHelper.GetTempFilePath();
+            var value = new[] { new TestIssueI4TXGTDto { ID = 1, Name = "Apple", Spc = "X", Up = 6999 } };
+            MiniExcel.SaveAs(path, value);
+            {
+                var rows = MiniExcel.Query(path).ToList();
+                Assert.Equal("ID", rows[0].A);
+                Assert.Equal("Name", rows[0].B);
+                Assert.Equal("Specification", rows[0].C);
+                Assert.Equal("Unit Price", rows[0].D);
+            }
+            {
+                var rows = MiniExcel.Query<TestIssueI4TXGTDto>(path).ToList();
+                Assert.Equal(1, rows[0].ID);
+                Assert.Equal("Apple", rows[0].Name);
+                Assert.Equal("X", rows[0].Spc);
+                Assert.Equal(6999, rows[0].Up);
+            }
+        }
+
+        public class TestIssueI4TXGTDto
+        {
+            public int ID { get; set; }
+            public string Name { get; set; }
+            [DisplayName("Specification")]
+            public string Spc { get; set; }
+            [DisplayName("Unit Price")]
+            public decimal Up { get; set; }
+        }
+
+        [Fact]
         public void TestIssue328()
         {
             var path = PathHelper.GetTempFilePath();

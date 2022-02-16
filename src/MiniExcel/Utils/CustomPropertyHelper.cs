@@ -152,7 +152,7 @@
                  .Select(p =>
                  {
                      var gt = Nullable.GetUnderlyingType(p.PropertyType);
-                     var excelColumnName = p.GetAttribute<ExcelColumnNameAttribute>();
+                     var excelColumnName = p.GetAttribute<ExcelColumnNameAttribute>() ;
                      var excludeNullableType = gt ?? p.PropertyType;
                      var excelFormat = p.GetAttribute<ExcelFormatAttribute>()?.Format;
                      MethodInfo formatToStringMethod = null;
@@ -168,7 +168,7 @@
                          ExcludeNullableType = excludeNullableType,
                          Nullable = gt != null,
                          ExcelColumnAliases = excelColumnName?.Aliases,
-                         ExcelColumnName = excelColumnName?.ExcelColumnName ?? p.Name,
+                         ExcelColumnName = excelColumnName?.ExcelColumnName ?? p.GetAttribute<System.ComponentModel.DisplayNameAttribute>()?.DisplayName ?? p.Name ,
                          ExcelColumnIndex = p.GetAttribute<ExcelColumnIndexAttribute>()?.ExcelColumnIndex,
                          ExcelColumnWidth = p.GetAttribute<ExcelColumnWidthAttribute>()?.ExcelColumnWidth,
                          ExcelFormat = excelFormat,

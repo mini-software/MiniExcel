@@ -829,6 +829,24 @@ public class Dto
 
 
 
+#### 5. System.ComponentModel.DisplayNameAttribute = ExcelColumnName.excelColumnNameAttribute
+
+Since 1.24.0, system supports System.ComponentModel.DisplayNameAttribute = ExcelColumnName.excelColumnNameAttribute 
+
+```C#
+public class TestIssueI4TXGTDto
+{
+    public int ID { get; set; }
+    public string Name { get; set; }
+    [DisplayName("Specification")]
+    public string Spc { get; set; }
+    [DisplayName("Unit Price")]
+    public decimal Up { get; set; }
+}
+```
+
+
+
 
 
 ### Excel Type Auto Check <a name="getstart5"></a>

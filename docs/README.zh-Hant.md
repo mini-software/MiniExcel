@@ -18,8 +18,9 @@
 ---
 
 
-### 1.24.0
+### 1.23.2
 - [New] 支持 System.ComponentModel.DisplayName 的 `[DisplayName]` 作為excel標題 [#I4TXGT](https://gitee.com/dotnetchina/MiniExcel/issues/I4TXGT)
+- [Bug] 修正  `Czech` 等國家CultureInfo會生成錯誤 decimal 數字提示 #331
 
 ### 1.23.0
 - [New] 新增 `GetReader` 方法 #328 #290 (感謝 [楊福來 Yang](https://github.com/yfl8910) )

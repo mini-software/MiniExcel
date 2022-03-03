@@ -391,15 +391,32 @@ namespace MiniExcelLibs.OpenXml
                 else if (TypeHelper.IsNumericType(type))
                 {
                     if (_configuration.Culture != CultureInfo.InvariantCulture)
-                    {
-                        t = "str";
-                        v = ((decimal)value).ToString(_configuration.Culture);
-                    }
+                        t = "str"; //TODO: add style format
                     else
-                    {
                         t = "n";
-                        v = value.ToString();
-                    }
+
+                    if (type.IsAssignableFrom(typeof(decimal)))
+                        v = ((decimal)value).ToString(_configuration.Culture);
+                    else if (type.IsAssignableFrom(typeof(Int32)))
+                        v = ((Int32)value).ToString(_configuration.Culture);
+                    else if (type.IsAssignableFrom(typeof(Double)))
+                        v = ((Double)value).ToString(_configuration.Culture);
+                    else if (type.IsAssignableFrom(typeof(Int64)))
+                        v = ((Int64)value).ToString(_configuration.Culture);
+                    else if (type.IsAssignableFrom(typeof(UInt32)))
+                        v = ((UInt32)value).ToString(_configuration.Culture);
+                    else if (type.IsAssignableFrom(typeof(UInt16)))
+                        v = ((UInt16)value).ToString(_configuration.Culture);
+                    else if (type.IsAssignableFrom(typeof(UInt64)))
+                        v = ((UInt64)value).ToString(_configuration.Culture);
+                    else if (type.IsAssignableFrom(typeof(Int16)))
+                        v = ((Int16)value).ToString(_configuration.Culture);
+                    else if (type.IsAssignableFrom(typeof(Single)))
+                        v = ((Single)value).ToString(_configuration.Culture);
+                    else if (type.IsAssignableFrom(typeof(Single)))
+                        v = ((Single)value).ToString(_configuration.Culture);
+                    else
+                        v = (decimal.Parse(value.ToString())).ToString(_configuration.Culture);
                 }
                 else if (type == typeof(bool))
                 {

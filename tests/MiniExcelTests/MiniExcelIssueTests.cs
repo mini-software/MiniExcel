@@ -32,6 +32,66 @@ namespace MiniExcelLibs.Tests
         }
 
         [Fact]
+        public void TestIssue331_2()
+        {
+            var cln = CultureInfo.CurrentCulture.Name;
+            CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("cs-CZ");
+
+            var config = new OpenXmlConfiguration()
+            {
+                Culture = CultureInfo.GetCultureInfo("cs-CZ")
+            };
+
+            var rnd = new Random();
+            var data = Enumerable.Range(1, 100).Select(x => new TestIssue331Dto
+            {
+                Number = x,
+                Text = $"Number {x}",
+                DecimalNumber = (decimal)rnd.NextDouble(),
+                DoubleNumber = rnd.NextDouble()
+            });
+
+            var path = Path.GetTempPath() + Guid.NewGuid() + ".xlsx";
+            MiniExcelLibs.MiniExcel.SaveAs(path, data, configuration: config);
+            Console.WriteLine(path);
+
+            CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo(cln);
+        }
+
+        [Fact]
+        public void TestIssue331()
+        {
+            var cln = CultureInfo.CurrentCulture.Name;
+            CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("cs-CZ");
+
+            var data = Enumerable.Range(1, 10).Select(x => new TestIssue331Dto
+            {
+                Number = x,
+                Text = $"Number {x}",
+                DecimalNumber = (decimal)x / (decimal)2,
+                DoubleNumber = (double)x / (double)2
+            });
+
+            var path = Path.GetTempPath() + Guid.NewGuid() + ".xlsx";
+            MiniExcelLibs.MiniExcel.SaveAs(path, data);
+            Console.WriteLine(path);
+
+            var rows = MiniExcel.Query(path,startCell:"A2").ToArray();
+            Assert.Equal(1.5, rows[2].B);
+            Assert.Equal(1.5, rows[2].C);
+
+            CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo(cln);
+        }
+
+        public class TestIssue331Dto
+        {
+            public int Number { get; set; }
+            public decimal DecimalNumber { get; set; }
+            public double DoubleNumber { get; set; }
+            public string Text { get; set; }
+        }
+
+        [Fact]
         public void TestIssueI4TXGT()
         {
             var path = PathHelper.GetTempFilePath();

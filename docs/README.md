@@ -16,7 +16,13 @@
 
 ---
 
+
+
+### 1.23.3
+- [Bug] SaveAs CSV when value is DataTable, if Key contains `"` then column name will not show `"`。 #I4WDA9
+
 ### 1.23.2
+
 - [New] Support System.ComponentModel.DisplayName's `[DisplayName]` as title [#I4TXGT](https://gitee.com/dotnetchina/MiniExcel/issues/I4TXGT)
 - [Bug] Fix when CultureInfo like `Czech` will get invalid output with decimal numbers #331
 

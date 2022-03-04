@@ -18,6 +18,9 @@
 ---
 
 
+### 1.23.3
+- [Bug] SaveAs CSV 當 value 為 DataTable 時，Key包含雙引號Column Name不會顯示`"`。 #I4WDA9
+
 ### 1.23.2
 - [New] 支持 System.ComponentModel.DisplayName 的 `[DisplayName]` 作為excel標題 [#I4TXGT](https://gitee.com/dotnetchina/MiniExcel/issues/I4TXGT)
 - [Bug] 修正  `Czech` 等國家CultureInfo會生成錯誤 decimal 數字提示 #331

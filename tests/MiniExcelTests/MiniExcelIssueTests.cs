@@ -32,6 +32,22 @@ namespace MiniExcelLibs.Tests
         }
 
         [Fact]
+        public void TestIssueI4WDA9()
+        {
+            var path = Path.GetTempPath() + Guid.NewGuid() + ".csv";
+            var value = new DataTable();
+            {
+                value.Columns.Add("\"name\"");
+                value.Rows.Add("\"Jack\"");
+            }
+            MiniExcel.SaveAs(path, value);
+            Console.WriteLine(path);
+            var content = File.ReadAllText(path);
+            var expected = "\"\"\"name\"\"\"\r\n\"\"\"Jack\"\"\"\r\n";
+            Assert.Equal(expected, content);
+        }
+
+        [Fact]
         public void TestIssue331_2()
         {
             var cln = CultureInfo.CurrentCulture.Name;

@@ -1,4 +1,6 @@
-﻿namespace MiniExcelLibs.Utils
+﻿using System.Linq;
+
+namespace MiniExcelLibs.Utils
 {
     using System.Xml;
 
@@ -52,6 +54,25 @@
 
             reader.Skip();
             return true;
+        }
+
+        public static bool IsStartElement(XmlReader reader, string name, params string[] nss)
+        {
+            return nss.Any(s => reader.IsStartElement(name, s));
+        }
+
+        public static string GetAttribute(XmlReader reader, string name, params string[] nss)
+        {
+            foreach (var ns in nss)
+            {
+                var attribute = reader.GetAttribute(name, ns);
+                if (attribute != null)
+                {
+                    return attribute;
+                }
+            }
+
+            return null;
         }
     }
 

@@ -7,7 +7,7 @@
 
     internal class ExcelOpenXmlStyles
     {
-        private const string _ns = Config.SpreadsheetmlXmlns;
+        private static readonly string[] _ns = { Config.SpreadsheetmlXmlns, Config.SpreadsheetmlXmlStrictns };
         private readonly Dictionary<int, StyleRecord> _cellXfs = new Dictionary<int, StyleRecord>();
         private readonly Dictionary<int, StyleRecord> _cellStyleXfs = new Dictionary<int, StyleRecord>();
         private readonly Dictionary<int, NumberFormatString> _customFormats = new Dictionary<int, NumberFormatString>();
@@ -16,13 +16,13 @@
         {
             using (var Reader = zip.GetXmlReader(@"xl/styles.xml"))
             {
-                if (!Reader.IsStartElement("styleSheet", _ns))
+                if (!XmlReaderHelper.IsStartElement(Reader, "styleSheet", _ns))
                     return;
                 if (!XmlReaderHelper.ReadFirstContent(Reader))
                     return;
                 while (!Reader.EOF)
                 {
-                    if (Reader.IsStartElement("cellXfs", _ns))
+                    if (XmlReaderHelper.IsStartElement(Reader,"cellXfs", _ns))
                     {
                         if (!XmlReaderHelper.ReadFirstContent(Reader))
                             continue;
@@ -30,7 +30,7 @@
                         var index = 0;
                         while (!Reader.EOF)
                         {
-                            if (Reader.IsStartElement("xf", _ns))
+                            if (XmlReaderHelper.IsStartElement(Reader,"xf", _ns))
                             {
                                 int.TryParse(Reader.GetAttribute("xfId"), out var xfId);
                                 int.TryParse(Reader.GetAttribute("numFmtId"), out var numFmtId);
@@ -42,7 +42,7 @@
                                 break;
                         }
                     }
-                    else if (Reader.IsStartElement("cellStyleXfs", _ns))
+                    else if (XmlReaderHelper.IsStartElement(Reader,"cellStyleXfs", _ns))
                     {
                         if (!XmlReaderHelper.ReadFirstContent(Reader))
                             continue;
@@ -50,7 +50,7 @@
                         var index = 0;
                         while (!Reader.EOF)
                         {
-                            if (Reader.IsStartElement("xf", _ns))
+                            if (XmlReaderHelper.IsStartElement(Reader,"xf", _ns))
                             {
                                 int.TryParse(Reader.GetAttribute("xfId"), out var xfId);
                                 int.TryParse(Reader.GetAttribute("numFmtId"), out var numFmtId);
@@ -63,14 +63,14 @@
                                 break;
                         }
                     }
-                    else if (Reader.IsStartElement("numFmts", _ns))
+                    else if (XmlReaderHelper.IsStartElement(Reader,"numFmts", _ns))
                     {
                         if (!XmlReaderHelper.ReadFirstContent(Reader))
                             continue;
 
                         while (!Reader.EOF)
                         {
-                            if (Reader.IsStartElement("numFmt", _ns))
+                            if (XmlReaderHelper.IsStartElement(Reader,"numFmt", _ns))
                             {
                                 int.TryParse(Reader.GetAttribute("numFmtId"), out var numFmtId);
                                 var formatCode = Reader.GetAttribute("formatCode");

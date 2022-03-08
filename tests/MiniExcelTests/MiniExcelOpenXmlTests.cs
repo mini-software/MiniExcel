@@ -1145,5 +1145,13 @@ namespace MiniExcelLibs.Tests
             }
             File.Delete(path);
         }
+
+        [Fact()]
+        public void TestStirctOpenXml()
+        {
+            var path = @"../../../../../samples/xlsx/TestStrictOpenXml.xlsx";
+            var columns = MiniExcel.GetColumns(path);
+            Assert.Equal(new[] { "A", "B", "C" }, columns);
+        }
     }
 }

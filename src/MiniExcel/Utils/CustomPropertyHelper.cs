@@ -5,7 +5,6 @@
     using System.Collections.Generic;
     using System.ComponentModel;
     using System.Dynamic;
-    using System.Globalization;
     using System.Linq;
     using System.Reflection;
 
@@ -19,9 +18,6 @@
         public bool Nullable { get; internal set; }
         public string ExcelFormat { get; internal set; }
         public double? ExcelColumnWidth { get; internal set; }
-
-        public MethodInfo ExcelFormatToStringMethod { get; internal set; }
-        public MethodInfo ExcelcultureToStringMethod { get; internal set; }
     }
 
     internal static partial class CustomPropertyHelper
@@ -155,15 +151,8 @@
                      var excelColumnName = p.GetAttribute<ExcelColumnNameAttribute>() ;
                      var excludeNullableType = gt ?? p.PropertyType;
                      var excelFormat = p.GetAttribute<ExcelFormatAttribute>()?.Format;
-                     MethodInfo formatToStringMethod = null;
-                     if(excelFormat != null && excludeNullableType != null)
-                     {
-                         formatToStringMethod = excludeNullableType.GetMethod("ToString", new[] { typeof(string) });
-                     }
-                     MethodInfo cultureToStringMethod = excludeNullableType.GetMethod("ToString", new[] { typeof(CultureInfo) });
                      return new ExcelCustomPropertyInfo
                      {
-
                          Property = p,
                          ExcludeNullableType = excludeNullableType,
                          Nullable = gt != null,
@@ -172,8 +161,6 @@
                          ExcelColumnIndex = p.GetAttribute<ExcelColumnIndexAttribute>()?.ExcelColumnIndex,
                          ExcelColumnWidth = p.GetAttribute<ExcelColumnWidthAttribute>()?.ExcelColumnWidth,
                          ExcelFormat = excelFormat,
-                         ExcelFormatToStringMethod = formatToStringMethod,
-                         ExcelcultureToStringMethod = cultureToStringMethod
                      };
                  });
         }

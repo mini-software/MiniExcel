@@ -357,14 +357,14 @@ namespace MiniExcelLibs.OpenXml
             {
                 v = "";
             }
-            else if (value is string)
+            else if (value is string str)
             {
-                v = ExcelOpenXmlUtils.EncodeXML(value.ToString());
+                v = ExcelOpenXmlUtils.EncodeXML(str);
             }
-            else if(p?.ExcelFormat != null && p?.ExcelFormatToStringMethod != null)
+            else if(p?.ExcelFormat != null && value is IFormattable formattableValue)
             {
-                var formatedStr = p.ExcelFormatToStringMethod.Invoke(value, new[] { p.ExcelFormat })?.ToString();
-                v = ExcelOpenXmlUtils.EncodeXML(formatedStr);
+                var formattedStr = formattableValue.ToString(p.ExcelFormat, _configuration.Culture);
+                v = ExcelOpenXmlUtils.EncodeXML(formattedStr);
             }
             else
             {

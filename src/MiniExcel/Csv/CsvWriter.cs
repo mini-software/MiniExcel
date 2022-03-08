@@ -229,43 +229,20 @@ namespace MiniExcelLibs.Csv
             if (value == null)
                 return "";
 
-            Type type = null;
-            if (p == null)
+            if (value is DateTime dateTime)
             {
-                type = value.GetType();
-                type = Nullable.GetUnderlyingType(type) ?? type;
+                if (p?.ExcelFormat != null)
+                {
+                    return dateTime.ToString(p.ExcelFormat, _configuration.Culture);
+                }
+                return _configuration.Culture.Equals(CultureInfo.InvariantCulture) ? dateTime.ToString("yyyy-MM-dd HH:mm:ss", _configuration.Culture) : dateTime.ToString(_configuration.Culture);
             }
-            else
+            if (p?.ExcelFormat != null && value is IFormattable formattableValue)
             {
-                type = p.ExcludeNullableType; //sometime it doesn't need to re-get type like prop
+                return formattableValue.ToString(p.ExcelFormat, _configuration.Culture);
             }
 
-            
-            if (p?.ExcelFormat != null && p?.ExcelFormatToStringMethod != null)
-            {
-                return p.ExcelFormatToStringMethod.Invoke(value, new[] { p.ExcelFormat })?.ToString();
-            }
-            else if (p?.ExcelcultureToStringMethod != null && _configuration.Culture != CultureInfo.InvariantCulture)
-            {
-                return p.ExcelcultureToStringMethod.Invoke(value, new[] { _configuration.Culture })?.ToString();
-            }
-            else if (type == typeof(DateTime))
-            {
-                if (_configuration.Culture != CultureInfo.InvariantCulture)
-                {
-                    return ((DateTime)value).ToString(_configuration.Culture);
-                }
-                else if (p == null || p.ExcelFormat == null)
-                {
-                    return ((DateTime)value).ToString("yyyy-MM-dd HH:mm:ss");
-                }
-                else
-                {
-                    return ((DateTime)value).ToString(p.ExcelFormat);
-                }
-            }
-
-            return value.ToString();
+            return Convert.ToString(value, _configuration.Culture);
         }
 
     }

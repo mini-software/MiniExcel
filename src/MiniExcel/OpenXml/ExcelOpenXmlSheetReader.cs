@@ -15,6 +15,7 @@ namespace MiniExcelLibs.OpenXml
     internal class ExcelOpenXmlSheetReader : IExcelReader
     {
         private static readonly string[] _ns = { Config.SpreadsheetmlXmlns, Config.SpreadsheetmlXmlStrictns };
+        private static readonly string[] _relationshiopNs = { Config.SpreadsheetmlXmlRelationshipns, Config.SpreadsheetmlXmlStrictRelationshipns };
         private List<SheetRecord> _sheetRecords;
         private List<string> _sharedStrings;
         private MergeCells _mergeCells;
@@ -529,7 +530,7 @@ namespace MiniExcelLibs.OpenXml
                                 yield return new SheetRecord(
                                     reader.GetAttribute("name"),
                                     uint.Parse(reader.GetAttribute("sheetId")),
-                                    reader.GetAttribute("id", "http://schemas.openxmlformats.org/officeDocument/2006/relationships")
+                                    GetAttribute(reader, "id", _relationshiopNs)
                                 );
                                 reader.Skip();
                             }
@@ -729,6 +730,20 @@ namespace MiniExcelLibs.OpenXml
         private bool IsStartElement(XmlReader reader, string name, params string[] nss)
         {
             return nss.Any(s => reader.IsStartElement(name, s));
+        }
+
+        private string GetAttribute(XmlReader reader, string name, params string[] nss)
+        {
+            foreach (var ns in nss)
+            {
+                var attribute = reader.GetAttribute(name, ns);
+                if (attribute != null)
+                {
+                    return attribute;
+                }
+            }
+
+            return null;
         }
     }
 }

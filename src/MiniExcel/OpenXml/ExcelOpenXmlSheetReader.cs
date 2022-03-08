@@ -14,7 +14,7 @@ namespace MiniExcelLibs.OpenXml
 {
     internal class ExcelOpenXmlSheetReader : IExcelReader
     {
-        private static readonly string[] _ns = { Config.SpreadsheetmlXmlns };
+        private static readonly string[] _ns = { Config.SpreadsheetmlXmlns, Config.SpreadsheetmlXmlStrictns };
         private List<SheetRecord> _sheetRecords;
         private List<string> _sharedStrings;
         private MergeCells _mergeCells;

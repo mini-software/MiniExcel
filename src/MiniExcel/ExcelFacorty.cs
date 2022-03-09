@@ -24,12 +24,12 @@
 
     internal class ExcelTemplateFactory
     {
-        internal static IExcelTemplateAsync GetProvider(Stream stream, ExcelType excelType= ExcelType.XLSX)
+        internal static IExcelTemplateAsync GetProvider(Stream stream, IConfiguration configuration, ExcelType excelType= ExcelType.XLSX)
         {
             switch (excelType)
             {
                 case ExcelType.XLSX:
-                    return new ExcelOpenXmlTemplate(stream);
+                    return new ExcelOpenXmlTemplate(stream, configuration);
                 default:
                     throw new NotSupportedException($"Please Issue for me");
             }

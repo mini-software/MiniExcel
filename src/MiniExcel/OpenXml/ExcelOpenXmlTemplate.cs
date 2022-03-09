@@ -27,10 +27,13 @@ namespace MiniExcelLibs.OpenXml
             _ns.AddNamespace("x", Config.SpreadsheetmlXmlns);
         }
 
-        private readonly Stream stream;
-        public ExcelOpenXmlTemplate(Stream _strem)
+        private readonly Stream _stream;
+        private readonly OpenXmlConfiguration _configuration;
+
+        public ExcelOpenXmlTemplate(Stream strem, IConfiguration configuration)
         {
-            stream = _strem;
+            _stream = strem;
+            _configuration = (OpenXmlConfiguration)configuration?? OpenXmlConfiguration.DefaultConfig;
         }
 
         public void SaveAsByTemplate(string templatePath, object value)
@@ -72,10 +75,10 @@ namespace MiniExcelLibs.OpenXml
             }
 
             {
-                templateStream.CopyTo(stream);
+                templateStream.CopyTo(_stream);
 
-                var reader = new ExcelOpenXmlSheetReader(stream,null);
-                var _archive = new ExcelOpenXmlZip(stream, mode: ZipArchiveMode.Update, true, Encoding.UTF8);
+                var reader = new ExcelOpenXmlSheetReader(_stream,null);
+                var _archive = new ExcelOpenXmlZip(_stream, mode: ZipArchiveMode.Update, true, Encoding.UTF8);
                 {
                     //read sharedString
                     var sharedStrings = reader.GetSharedStrings();

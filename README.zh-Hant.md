@@ -740,7 +740,21 @@ var value = new Dictionary<string, object>()
 MiniExcel.SaveAsByTemplate(path, templatePath, value);
 ```
 
+#### 8. 其他
 
+##### 1. 檢查模版參數
+
+從 V1.24.0 版本開始，預設忽略模版不存在的參數Key，IgnoreTemplateParameterMissing 可以決定是否拋出錯誤
+
+```csharp
+var config = new OpenXmlConfiguration()
+{
+    IgnoreTemplateParameterMissing = false,
+};
+MiniExcel.SaveAsByTemplate(path, templatePath, value, config)
+```
+
+![image](https://user-images.githubusercontent.com/12729184/157464332-e316f829-54aa-4c84-a5aa-9aef337b668d.png)
 
 
 

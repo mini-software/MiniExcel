@@ -32,6 +32,40 @@ namespace MiniExcelLibs.Tests
         }
 
         [Fact]
+        public void TestIssueI4WXFB()
+        {
+            {
+                var path = PathHelper.GetTempFilePath();
+                var templatePath = PathHelper.GetFile("xlsx/TestIssueI4WXFB.xlsx");
+                var value = new Dictionary<string, object>()
+                {
+                    ["Name"] = "Jack",
+                    ["Amount"] = 1000,
+                    ["Department"] = "HR"
+                };
+                MiniExcel.SaveAsByTemplate(path, templatePath, value);
+            }
+
+            {
+                var config = new OpenXmlConfiguration()
+                {
+                    IgnoreTemplateParameterMissing = false,
+                };
+                var path = PathHelper.GetTempFilePath();
+                var templatePath = PathHelper.GetFile("xlsx/TestIssueI4WXFB.xlsx");
+                var value = new Dictionary<string, object>()
+                {
+                    ["Name"] = "Jack",
+                    ["Amount"] = 1000,
+                    ["Department"] = "HR"
+                };
+                Assert.Throws<KeyNotFoundException>(() =>
+                   MiniExcel.SaveAsByTemplate(path, templatePath, value, config)
+                );
+            }
+        }
+
+        [Fact]
         public void TestIssueI4WDA9()
         {
             var path = Path.GetTempPath() + Guid.NewGuid() + ".csv";
@@ -92,7 +126,7 @@ namespace MiniExcelLibs.Tests
             MiniExcelLibs.MiniExcel.SaveAs(path, data);
             Console.WriteLine(path);
 
-            var rows = MiniExcel.Query(path,startCell:"A2").ToArray();
+            var rows = MiniExcel.Query(path, startCell: "A2").ToArray();
             Assert.Equal(1.5, rows[2].B);
             Assert.Equal(1.5, rows[2].C);
 
@@ -150,7 +184,7 @@ namespace MiniExcelLibs.Tests
             MiniExcel.SaveAs(path, value);
 
             var rowIndx = 0;
-            using (var reader = MiniExcel.GetReader(path,true))
+            using (var reader = MiniExcel.GetReader(path, true))
             {
                 Assert.Equal("id", reader.GetName(0));
                 Assert.Equal("name", reader.GetName(1));
@@ -162,7 +196,7 @@ namespace MiniExcelLibs.Tests
                     for (int i = 0; i < reader.FieldCount; i++)
                     {
                         var v = reader.GetValue(i);
-                        if (rowIndx==0 && i==0) Assert.Equal((double)1,v);
+                        if (rowIndx == 0 && i == 0) Assert.Equal((double)1, v);
                         if (rowIndx == 0 && i == 1) Assert.Equal("Jack", v);
                         if (rowIndx == 0 && i == 2) Assert.Equal(new DateTime(2022, 5, 13), v);
                         if (rowIndx == 0 && i == 3) Assert.Equal(File.ReadAllBytes(PathHelper.GetFile("images/TestIssue327.png")), v);
@@ -182,13 +216,13 @@ namespace MiniExcelLibs.Tests
         public void TestIssue327()
         {
             var path = PathHelper.GetTempFilePath();
-            var value = new[] { 
+            var value = new[] {
                 new { id = 1, file = File.ReadAllBytes(PathHelper.GetFile("images/TestIssue327.png")) },
                 new { id = 2, file = File.ReadAllBytes(PathHelper.GetFile("other/TestIssue327.txt")) },
                 new { id = 3, file = File.ReadAllBytes(PathHelper.GetFile("other/TestIssue327.html")) },
             };
             MiniExcel.SaveAs(path, value);
-            var rows = MiniExcel.Query(path,true).ToList();
+            var rows = MiniExcel.Query(path, true).ToList();
             Assert.Equal(value[0].file, rows[0].file);
             Assert.Equal(value[1].file, rows[1].file);
             Assert.Equal(value[2].file, rows[2].file);

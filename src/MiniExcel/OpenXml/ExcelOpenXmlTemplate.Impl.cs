@@ -460,8 +460,20 @@ namespace MiniExcelLibs.OpenXml
                         var propNames = formatText.Split('.');
                         if (propNames[0].StartsWith("$")) //e.g:"$rowindex" it doesn't need to check cell value type
                             continue;
+
+                        // TODO: default if not contain property key, clean the template string
                         if (!inputMaps.ContainsKey(propNames[0]))
-                            throw new System.Collections.Generic.KeyNotFoundException($"Please check {propNames[0]} parameter, it's not exist.");
+                        {
+                            if (_configuration.IgnoreTemplateParameterMissing)
+                            {
+                                v.InnerText = v.InnerText.Replace($"{{{{{propNames[0]}}}}}", "");
+                                break;
+                            }
+                            else
+                            {
+                                throw new System.Collections.Generic.KeyNotFoundException($"Please check {propNames[0]} parameter, it's not exist.");
+                            }
+                        }
 
                         var cellValue = inputMaps[propNames[0]]; // 1. From left to right, only the first set is used as the basis for the list
                         if (cellValue is IEnumerable && !(cellValue is string))

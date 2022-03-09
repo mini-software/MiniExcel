@@ -24,7 +24,8 @@
 
 ---
 
-
+### 1.24.0
+- [New] SaveAsByTemplate 预设忽略 template 缺少参数 key 错误, OpenXmlConfiguration.IgnoreTemplateParameterMissing 可以开关此卡控. #I4WXFB
 
 ### 1.23.3
 - [Bug] SaveAs CSV 当 value 为 DataTable 时，Key包含双引号Column Name不会显示`"`。 #I4WDA9

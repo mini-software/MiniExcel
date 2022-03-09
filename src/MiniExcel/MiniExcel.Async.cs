@@ -42,24 +42,24 @@
         {
             return GetReaderProvider(stream, excelType).QueryAsync(useHeaderRow, sheetName, startCell);
         }
-        public static Task SaveAsByTemplateAsync(this Stream stream, string templatePath, object value)
+        public static Task SaveAsByTemplateAsync(this Stream stream, string templatePath, object value, IConfiguration configuration = null)
         {
-            return ExcelTemplateFactory.GetProvider(stream).SaveAsByTemplateAsync(templatePath, value);
+            return ExcelTemplateFactory.GetProvider(stream, configuration).SaveAsByTemplateAsync(templatePath, value);
         }
 
-        public static Task SaveAsByTemplateAsync(this Stream stream, byte[] templateBytes, object value)
+        public static Task SaveAsByTemplateAsync(this Stream stream, byte[] templateBytes, object value, IConfiguration configuration = null)
         {
-            return ExcelTemplateFactory.GetProvider(stream).SaveAsByTemplateAsync(templateBytes, value);
+            return ExcelTemplateFactory.GetProvider(stream, configuration).SaveAsByTemplateAsync(templateBytes, value);
         }
 
-        public static Task SaveAsByTemplateAsync(string path, string templatePath, object value)
+        public static Task SaveAsByTemplateAsync(string path, string templatePath, object value, IConfiguration configuration = null)
         {
-            return Task.Run(() => SaveAsByTemplate(path, templatePath, value));
+            return Task.Run(() => SaveAsByTemplate(path, templatePath, value, configuration));
         }
 
-        public static Task SaveAsByTemplateAsync(string path, byte[] templateBytes, object value)
+        public static Task SaveAsByTemplateAsync(string path, byte[] templateBytes, object value, IConfiguration configuration = null)
         {
-            return Task.Run(() => SaveAsByTemplate(path, templateBytes, value));
+            return Task.Run(() => SaveAsByTemplate(path, templateBytes, value, configuration));
         }
 
         /// <summary>

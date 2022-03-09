@@ -60,26 +60,26 @@
             return ExcelReaderFactory.GetProvider(stream, ExcelTypeHelper.GetExcelType(stream, excelType),configuration).Query(useHeaderRow, sheetName, startCell);
         }
 
-        public static void SaveAsByTemplate(string path, string templatePath, object value)
+        public static void SaveAsByTemplate(string path, string templatePath, object value, IConfiguration configuration = null)
         {
             using (var stream = File.Create(path))
-                SaveAsByTemplate(stream, templatePath, value);
+                SaveAsByTemplate(stream, templatePath, value,configuration);
         }
 
-        public static void SaveAsByTemplate(string path, byte[] templateBytes, object value)
+        public static void SaveAsByTemplate(string path, byte[] templateBytes, object value, IConfiguration configuration = null)
         {
             using (var stream = File.Create(path))
-                SaveAsByTemplate(stream, templateBytes, value);
+                SaveAsByTemplate(stream, templateBytes, value, configuration);
         }
 
-        public static void SaveAsByTemplate(this Stream stream, string templatePath, object value)
+        public static void SaveAsByTemplate(this Stream stream, string templatePath, object value, IConfiguration configuration = null)
         {
-            ExcelTemplateFactory.GetProvider(stream).SaveAsByTemplate(templatePath, value);
+            ExcelTemplateFactory.GetProvider(stream, configuration).SaveAsByTemplate(templatePath, value);
         }
 
-        public static void SaveAsByTemplate(this Stream stream, byte[] templateBytes, object value)
+        public static void SaveAsByTemplate(this Stream stream, byte[] templateBytes, object value, IConfiguration configuration = null)
         {
-            ExcelTemplateFactory.GetProvider(stream).SaveAsByTemplate(templateBytes, value);
+            ExcelTemplateFactory.GetProvider(stream, configuration).SaveAsByTemplate(templateBytes, value);
         }
 
         /// <summary>

@@ -16,7 +16,8 @@
 
 ---
 
-
+### 1.24.0
+- [New] SaveAsByTemplate default ignore template missing parameter key exception, OpenXmlConfiguration.IgnoreTemplateParameterMissing can control it. #I4WXFB
 
 ### 1.23.3
 - [Bug] SaveAs CSV when value is DataTable, if Key contains `"` then column name will not show `"`。 #I4WDA9

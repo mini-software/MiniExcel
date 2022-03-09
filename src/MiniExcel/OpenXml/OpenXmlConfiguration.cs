@@ -10,5 +10,6 @@ namespace MiniExcelLibs.OpenXml
         public TableStyles TableStyles { get; set; } = TableStyles.Default;
         public bool AutoFilter { get; set; } = true;
         public bool EnableConvertByteArray { get; set; } = true;
+        public bool IgnoreTemplateParameterMissing { get; set; } = true;
     }
 }

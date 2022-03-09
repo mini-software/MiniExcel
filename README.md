@@ -727,6 +727,24 @@ MiniExcel.SaveAsByTemplate(path, templatePath, value);
 
 
 
+#### 8. Other
+
+##### 1. Checking template parameter key
+
+Since V1.24.0 , default ignore template missing parameter key and replace it with empty string, `IgnoreTemplateParameterMissing` can control throwing exception or not.
+
+```csharp
+var config = new OpenXmlConfiguration()
+{
+    IgnoreTemplateParameterMissing = false,
+};
+MiniExcel.SaveAsByTemplate(path, templatePath, value, config)
+```
+
+![image](https://user-images.githubusercontent.com/12729184/157464332-e316f829-54aa-4c84-a5aa-9aef337b668d.png)
+
+
+
 ### Excel Column Name/Index/Ignore Attribute <a name="getstart4"></a>
 
 

@@ -18,8 +18,10 @@
 ---
 
 ### 1.24.0
+- [New] Query 支持 strict open xml, 感謝 [Weilence (Lowell)](https://github.com/Weilence)  #335 
+- [New] SaveAs 以自訂的 CultureInfo 轉換 Format cell 值, 感謝[0xced (Cédric Luthi)](https://github.com/0xced) #333
 - [New] SaveAsByTemplate 預設忽略 template 缺少參數 key 錯誤, OpenXmlConfiguration.IgnoreTemplateParameterMissing 可以開關此卡控. #I4WXFB
-
+- [New] SaveAsByTemplate 當參數集合為空時會清空模版字串. #I4WM67
 
 ### 1.23.3
 - [Bug] SaveAs CSV 當 value 為 DataTable 時，Key包含雙引號Column Name不會顯示`"`。 #I4WDA9

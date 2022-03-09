@@ -526,6 +526,12 @@ namespace MiniExcelLibs.OpenXml
                             //TODO: check if not contain 1 index
                             //only check first one match IEnumerable, so only render one collection at same row
 
+                            // Empty collection parameter will get exception  https://gitee.com/dotnetchina/MiniExcel/issues/I4WM67
+                            if (xRowInfo.PropsMap == null)
+                            {
+                                v.InnerText = v.InnerText.Replace($"{{{{{propNames[0]}}}}}", propNames[1]);
+                                break;
+                            }
                             // auto check type https://github.com/shps951023/MiniExcel/issues/177
                             var prop = xRowInfo.PropsMap[propNames[1]];
                             var type = prop.UnderlyingTypePropType; //avoid nullable 

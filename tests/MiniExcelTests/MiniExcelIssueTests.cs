@@ -32,6 +32,26 @@ namespace MiniExcelLibs.Tests
         }
 
         [Fact]
+        public void TestIssueI4WM67()
+        {
+            var path = PathHelper.GetTempFilePath();
+            var templatePath = PathHelper.GetFile("xlsx/TestIssueI4WM67.xlsx");
+            var value = new Dictionary<string, object>()
+            {
+                ["users"] = new TestIssueI4WM67Dto[]{ }
+            };
+            MiniExcel.SaveAsByTemplate(path, templatePath, value);
+            var rows = MiniExcel.Query(path).ToList();
+            Assert.Single(rows);
+        }
+
+        public class TestIssueI4WM67Dto
+        {
+            public int ID { get; set; }
+            public string Name { get; set; }
+        }
+
+        [Fact]
         public void TestIssueI4WXFB()
         {
             {

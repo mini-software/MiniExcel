@@ -17,7 +17,11 @@
 ---
 
 ### 1.24.0
+- [New] Query support strict open xml, thanks [Weilence (Lowell)](https://github.com/Weilence)  #335 
+- [New] SaveAs use the configured CultureInfo to write format cell value, thanks [0xced (Cédric Luthi)](https://github.com/0xced) #333
 - [New] SaveAsByTemplate default ignore template missing parameter key exception, OpenXmlConfiguration.IgnoreTemplateParameterMissing can control it. #I4WXFB
+- [New] SaveAsByTemplate will clean template string when parameter is IEnumerable and empty collection. #I4WM67
+
 
 ### 1.23.3
 - [Bug] SaveAs CSV when value is DataTable, if Key contains `"` then column name will not show `"`。 #I4WDA9

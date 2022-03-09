@@ -1145,5 +1145,21 @@ namespace MiniExcelLibs.Tests
             }
             File.Delete(path);
         }
+
+        [Fact()]
+        public void TestStirctOpenXml()
+        {
+            var path = @"../../../../../samples/xlsx/TestStrictOpenXml.xlsx";
+            var columns = MiniExcel.GetColumns(path);
+            Assert.Equal(new[] { "A", "B", "C" }, columns);
+
+            var rows = MiniExcel.Query(path).ToList();
+            Assert.Equal(rows[0].A , "title1");
+            Assert.Equal(rows[0].B , "title2");
+            Assert.Equal(rows[0].C , "title3");
+            Assert.Equal(rows[1].A , "value1");
+            Assert.Equal(rows[1].B , "value2");
+            Assert.Equal(rows[1].C , "value3");
+        }
     }
 }

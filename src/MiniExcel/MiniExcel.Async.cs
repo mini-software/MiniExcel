@@ -20,7 +20,7 @@
 
         public static Task SaveAsAsync(this Stream stream, object value, bool printHeader = true, string sheetName = "Sheet1", ExcelType excelType = ExcelType.XLSX, IConfiguration configuration = null)
         {
-            return GetWriterProvider(stream,value, sheetName, excelType, configuration, printHeader).SaveAsAsync();
+            return ExcelWriterFactory.GetProvider(stream,value, sheetName, excelType, configuration, printHeader).SaveAsAsync();
         }
 
         public static Task<IEnumerable<dynamic>> QueryAsync(string path, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null)
@@ -38,9 +38,9 @@
             return Task.Run(() => Query<T>(path, sheetName, excelType, startCell, configuration));
         }
 
-        public static Task<IEnumerable<IDictionary<string, object>>> QueryAsync(this Stream stream, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null)
+        public static async Task<IEnumerable<dynamic>> QueryAsync(this Stream stream, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null)
         {
-            return GetReaderProvider(stream, excelType).QueryAsync(useHeaderRow, sheetName, startCell);
+            return await ExcelReaderFactory.GetProvider(stream, ExcelTypeHelper.GetExcelType(stream, excelType), configuration).QueryAsync(useHeaderRow, sheetName, startCell);
         }
         public static Task SaveAsByTemplateAsync(this Stream stream, string templatePath, object value, IConfiguration configuration = null)
         {

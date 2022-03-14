@@ -20,6 +20,7 @@ using System.Collections;
 using MiniExcelLibs.Exceptions;
 using System.Text.RegularExpressions;
 using MiniExcelLibs.Csv;
+using System.Threading.Tasks;
 
 namespace MiniExcelLibs.Tests
 {
@@ -32,7 +33,7 @@ namespace MiniExcelLibs.Tests
         }
 
         [Fact]
-        public void TestIssue338()
+        public async Task TestIssue338()
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
             {
@@ -48,7 +49,19 @@ namespace MiniExcelLibs.Tests
                 };
                 var row = MiniExcel.Query(path,configuration:config).FirstOrDefault();
                 Assert.Equal("中文测试内容", row.A);
-            } 
+            }
+            {
+                var path = PathHelper.GetFile("csv/TestIssue338.csv");
+                var config = new CsvConfiguration()
+                {
+                    StreamReaderFunc = (stream) => new StreamReader(stream, Encoding.GetEncoding("gb2312"))
+                };
+                using (var stream = new FileStream(path,FileMode.Open,FileAccess.Read))
+                {
+                    var row =( await stream.QueryAsync(configuration: config,excelType:ExcelType.CSV)).FirstOrDefault();
+                    Assert.Equal("中文测试内容", row.A);
+                }
+            }
         }
 
         [Fact]

@@ -32,6 +32,26 @@ namespace MiniExcelLibs.Tests
         }
 
         [Fact]
+        public void TestIssue338()
+        {
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+            {
+                var path = PathHelper.GetFile("csv/TestIssue338.csv");
+                var row = MiniExcel.Query(path).FirstOrDefault();
+                Assert.Equal("���Ĳ�������", row.A);
+            }
+            {
+                var path = PathHelper.GetFile("csv/TestIssue338.csv");
+                var config = new CsvConfiguration()
+                {
+                    StreamReaderFunc = (stream) => new StreamReader(stream, Encoding.GetEncoding("gb2312"))
+                };
+                var row = MiniExcel.Query(path,configuration:config).FirstOrDefault();
+                Assert.Equal("中文测试内容", row.A);
+            } 
+        }
+
+        [Fact]
         public void TestIssueI4WM67()
         {
             var path = PathHelper.GetTempFilePath();

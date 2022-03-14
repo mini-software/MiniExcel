@@ -24,6 +24,10 @@
 
 ---
 
+### 1.24.1
+- [Bug] 修正 QueryAsync configulation 没有效果问题 #338 
+- [Bug] 修正 QueryAsync 无法使用 dynamic 类别
+
 ### 1.24.0
 - [New] Query 支持 strict open xml, 感谢 [Weilence (Lowell)](https://github.com/Weilence)  #335 
 - [New] SaveAs 以自订的 CultureInfo 转换 Format cell 值, 感谢[0xced (Cédric Luthi)](https://github.com/0xced) #333

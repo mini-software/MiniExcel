@@ -149,7 +149,7 @@ namespace MiniExcelLibs.Tests
             var path = @"../../../../../samples/xlsx/TestCenterEmptyRow/TestCenterEmptyRow.xlsx";
             using (var stream = File.OpenRead(path))
             {
-                var d = await stream.QueryAsync();
+                var d = (await stream.QueryAsync()).Cast<IDictionary<string,object>>();
                 var rows = d.ToList();
                 Assert.Equal("a", rows[0]["A"]);
                 Assert.Equal("b", rows[0]["B"]);
@@ -185,7 +185,7 @@ namespace MiniExcelLibs.Tests
 
             using (var stream = File.OpenRead(path))
             {
-                var d = await stream.QueryAsync(useHeaderRow: true);
+                var d = (await stream.QueryAsync(useHeaderRow: true)).Cast<IDictionary<string, object>>();
                 var rows = d.ToList();
                 Assert.Equal(1d, rows[0]["a"]);
                 Assert.Null(rows[0]["b"]);
@@ -220,7 +220,7 @@ namespace MiniExcelLibs.Tests
             var path = @"../../../../../samples/xlsx/TestDynamicQueryBasic_WithoutHead.xlsx";
             using (var stream = File.OpenRead(path))
             {
-                var d= await stream.QueryAsync();
+                var d= (await stream.QueryAsync()).Cast<IDictionary<string, object>>();
                 var rows = d.ToList();
                 Assert.Equal("MiniExcel", rows[0]["A"]);
                 Assert.Equal(1d, rows[0]["B"]);
@@ -235,7 +235,7 @@ namespace MiniExcelLibs.Tests
             var path = @"../../../../../samples/xlsx/TestDynamicQueryBasic.xlsx";
             using (var stream = File.OpenRead(path))
             {
-                var d = await stream.QueryAsync(useHeaderRow: true);
+                var d = (await stream.QueryAsync(useHeaderRow: true)).Cast<IDictionary<string, object>>();
                 var rows = d.ToList();
                 Assert.Equal("MiniExcel", rows[0]["Column1"]);
                 Assert.Equal(1d, rows[0]["Column2"]);
@@ -329,7 +329,7 @@ namespace MiniExcelLibs.Tests
             var path = @"../../../../../samples/xlsx/TestDatetimeSpanFormat_ClosedXml.xlsx";
             using (var stream = FileHelper.OpenRead(path))
             {
-                var d = await stream.QueryAsync();
+                var d = (await stream.QueryAsync()).Cast<IDictionary<string, object>>();
                 var row = d.First();
                 var a = row["A"];
                 var b = row["B"];
@@ -399,7 +399,7 @@ namespace MiniExcelLibs.Tests
             var path = @"../../../../../samples/xlsx/TestWihoutRAttribute.xlsx";
             using (var stream = File.OpenRead(path))
             {
-                var d = await stream.QueryAsync();
+                var d = (await stream.QueryAsync()).Cast<IDictionary<string, object>>();
                 var rows = d.ToList();
                 var keys = (rows.First() as IDictionary<string, object>).Keys;
 
@@ -455,7 +455,7 @@ namespace MiniExcelLibs.Tests
                 {
                     using (var stream = File.OpenRead(path))
                     {
-                        var d = await stream.QueryAsync(useHeaderRow: false);
+                        var d = (await stream.QueryAsync(useHeaderRow: false)).Cast<IDictionary<string, object>>();
                         var rows = d.ToList();
                         Assert.Equal(3, rows.Count);
                         Assert.Equal("A", rows[0]["A"]);
@@ -464,7 +464,7 @@ namespace MiniExcelLibs.Tests
                     }
                     using (var stream = File.OpenRead(path))
                     {
-                        var d = await stream.QueryAsync(useHeaderRow: true);
+                        var d = (await stream.QueryAsync(useHeaderRow: true)).Cast<IDictionary<string, object>>();
                         var rows = d.ToList();
                         Assert.Equal(2, rows.Count);
                         Assert.Equal("A", rows[0]["A"]);
@@ -524,7 +524,7 @@ namespace MiniExcelLibs.Tests
                 {
                     using (var stream = File.OpenRead(path))
                     {
-                        var d = await stream.QueryAsync(useHeaderRow: false);
+                        var d = (await stream.QueryAsync(useHeaderRow: false)).Cast<IDictionary<string, object>>();
                         var rows = d.ToList();
                         Assert.Equal(3, rows.Count);
                         Assert.Equal("A", rows[0]["A"]);
@@ -533,7 +533,7 @@ namespace MiniExcelLibs.Tests
                     }
                     using (var stream = File.OpenRead(path))
                     {
-                        var d = await stream.QueryAsync(useHeaderRow: true);
+                        var d = (await stream.QueryAsync(useHeaderRow: true)).Cast<IDictionary<string, object>>();
                         var rows = d.ToList();
                         Assert.Equal(2, rows.Count);
                         Assert.Equal("A", rows[0]["A"]);
@@ -598,7 +598,7 @@ namespace MiniExcelLibs.Tests
                 {
                     using (var stream = File.OpenRead(path))
                     {
-                        var d = await stream.QueryAsync(useHeaderRow: true);
+                        var d = (await stream.QueryAsync(useHeaderRow: true)).Cast<IDictionary<string, object>>();
                         var rows = d.ToList();
                         Assert.Equal(2, rows.Count);
                         Assert.Equal(@"""<>+-*//}{\\n", rows[0]["a"]);
@@ -609,7 +609,7 @@ namespace MiniExcelLibs.Tests
 
                     using (var stream = File.OpenRead(path))
                     {
-                        var  d= await stream.QueryAsync();
+                        var  d= (await stream.QueryAsync()).Cast<IDictionary<string, object>>();
                         var rows = d.ToList();
                         Assert.Equal(3, rows.Count);
                         Assert.Equal("a", rows[0]["A"]);
@@ -706,13 +706,13 @@ namespace MiniExcelLibs.Tests
 
             using (var stream = File.OpenRead(path))
             {
-                var d = await stream.QueryAsync();
+                var d = (await stream.QueryAsync()).Cast<IDictionary<string, object>>();
                 var row = d.First();
                 Assert.Equal("HelloWorld1", row["A"]);
             }
 
             {
-                var d = await MiniExcel.QueryAsync(path);
+                var d = (await MiniExcel.QueryAsync(path)).Cast<IDictionary<string, object>>();
                 var rows = d.Take(10);
                 Assert.Equal(10, rows.Count());
             }
@@ -752,7 +752,7 @@ namespace MiniExcelLibs.Tests
 
                 using (var stream = File.OpenRead(path))
                 {
-                    var d = await stream.QueryAsync(useHeaderRow: false);
+                    var d = (await stream.QueryAsync(useHeaderRow: false)).Cast<IDictionary<string, object>>();
                     var rows = d.ToList();
                     Assert.Equal("Column1", rows[0]["A"]);
                     Assert.Equal("Column2", rows[0]["B"]);
@@ -764,7 +764,7 @@ namespace MiniExcelLibs.Tests
 
                 using (var stream = File.OpenRead(path))
                 {
-                    var d = await stream.QueryAsync(useHeaderRow: true);
+                    var d = (await stream.QueryAsync(useHeaderRow: true)).Cast<IDictionary<string, object>>();
                     var rows = d.ToList();
                     Assert.Equal(2, rows.Count);
                     Assert.Equal("MiniExcel", rows[0]["Column1"]);
@@ -814,7 +814,7 @@ namespace MiniExcelLibs.Tests
 
             using (var stream = File.OpenRead(path))
             {
-                var d = await stream.QueryAsync(useHeaderRow: true);
+                var d = (await stream.QueryAsync(useHeaderRow: true)).Cast<IDictionary<string, object>>();
                 var rows = d.ToList();
                 Assert.Equal("MiniExcel", rows[0]["Column1"]);
                 Assert.Equal(1d, rows[0]["Column2"]);
@@ -860,7 +860,7 @@ namespace MiniExcelLibs.Tests
 
             using (var stream = File.OpenRead(path))
             {
-                var d = await stream.QueryAsync(useHeaderRow: false);
+                var d = (await stream.QueryAsync(useHeaderRow: false)).Cast<IDictionary<string, object>>();
                 var rows = d.ToList();
                 Assert.Equal("Column1", rows[0]["A"]);
                 Assert.Equal("Column2", rows[0]["B"]);
@@ -872,7 +872,7 @@ namespace MiniExcelLibs.Tests
 
             using (var stream = File.OpenRead(path))
             {
-                var d = await stream.QueryAsync(useHeaderRow: true);
+                var d = (await stream.QueryAsync(useHeaderRow: true)).Cast<IDictionary<string, object>>();
                 var rows = d.ToList();
                 Assert.Equal("MiniExcel", rows[0]["Column1"]);
                 Assert.Equal(1d, rows[0]["Column2"]);
@@ -903,7 +903,7 @@ namespace MiniExcelLibs.Tests
 
             using (var stream = File.OpenRead(path))
             {
-                var d = await stream.QueryAsync(useHeaderRow: true);
+                var d = (await stream.QueryAsync(useHeaderRow: true)).Cast<IDictionary<string, object>>();
                 var rows = d.ToList();
                 Assert.Equal("MiniExcel", rows[0]["Column1"]);
                 Assert.Equal(1d, rows[0]["Column2"]);
@@ -929,7 +929,7 @@ namespace MiniExcelLibs.Tests
 
             using (var stream = File.OpenRead(path))
             {
-                var d = await stream.QueryAsync(useHeaderRow: true);
+                var d = (await stream.QueryAsync(useHeaderRow: true)).Cast<IDictionary<string, object>>();
                 var rows = d.ToList();
                 Assert.Equal("MiniExcel", rows[0]["Column1"]);
                 Assert.Equal(1d, rows[0]["Column2"]);
@@ -959,7 +959,7 @@ namespace MiniExcelLibs.Tests
                 using (var transaction = connection.BeginTransaction())
                 using (var stream = File.OpenRead(path))
                 {
-                    var rows = await stream.QueryAsync();
+                    var rows = (await stream.QueryAsync()).Cast<IDictionary<string, object>>();
                     foreach (var row in rows)
                         connection.Execute("insert into T (A,B) values (@A,@B)", new { A = row["A"],B = row["B"] }, transaction: transaction);
                     transaction.Commit();
@@ -986,7 +986,7 @@ namespace MiniExcelLibs.Tests
 
             using (var stream = File.OpenRead(path))
             {
-                var d = await stream.QueryAsync(useHeaderRow: true);
+                var d = (await stream.QueryAsync(useHeaderRow: true)).Cast<IDictionary<string, object>>();
                 var rows = d.ToList();
                 Assert.Equal("MiniExcel", rows[0]["Column1"]);
                 Assert.Equal(1d, rows[0]["Column2"]);
@@ -1015,7 +1015,7 @@ namespace MiniExcelLibs.Tests
 
                 using (var stream = File.OpenRead(path))
                 {
-                    var d = await stream.QueryAsync(useHeaderRow: true);
+                    var d = (await stream.QueryAsync(useHeaderRow: true)).Cast<IDictionary<string, object>>();
                     var rows = d.ToList();
                     Assert.Equal("MiniExcel", rows[0]["Column1"]);
                     Assert.Equal(1d, rows[0]["Column2"]);
@@ -1041,7 +1041,7 @@ namespace MiniExcelLibs.Tests
 
                 using (var stream = File.OpenRead(path))
                 {
-                    var d = await stream.QueryAsync(useHeaderRow: true);
+                    var d = (await stream.QueryAsync(useHeaderRow: true)).Cast<IDictionary<string, object>>();
                     var rows = d.ToList();
                     Assert.Equal("MiniExcel", rows[0]["Column1"]);
                     Assert.Equal(1d, rows[0]["Column2"]);

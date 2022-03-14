@@ -798,7 +798,7 @@ namespace MiniExcelLibs.Tests
             using (var stream = new MemoryStream())
             {
                 stream.SaveAs(new[] { new { V = "test1" }, new { V = "test2" } });
-                var q = await stream.QueryAsync(true);
+                var q = (await stream.QueryAsync(true)).Cast<IDictionary<string,object>>();
                 var rows = q.ToList();
                 Assert.Equal("test1", rows[0]["V"]);
                 Assert.Equal("test2", rows[1]["V"]);

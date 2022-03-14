@@ -17,7 +17,13 @@
 
 ---
 
+
+### 1.24.1
+- [Bug] 修正 QueryAsync configulation 沒有效果問題 #338 
+- [Bug] 修正 QueryAsync 無法使用 dynamic 類別
+
 ### 1.24.0
+
 - [New] Query 支持 strict open xml, 感謝 [Weilence (Lowell)](https://github.com/Weilence)  #335 
 - [New] SaveAs 以自訂的 CultureInfo 轉換 Format cell 值, 感謝[0xced (Cédric Luthi)](https://github.com/0xced) #333
 - [New] SaveAsByTemplate 預設忽略 template 缺少參數 key 錯誤, OpenXmlConfiguration.IgnoreTemplateParameterMissing 可以開關此卡控. #I4WXFB

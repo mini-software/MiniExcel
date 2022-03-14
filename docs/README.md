@@ -16,6 +16,10 @@
 
 ---
 
+### 1.24.1
+- [Bug] Fiexd QueryAsync configulation not working #338 
+- [Bug] Fixed QueryAsync not return dynamic type
+
 ### 1.24.0
 - [New] Query support strict open xml, thanks [Weilence (Lowell)](https://github.com/Weilence)  #335 
 - [New] SaveAs use the configured CultureInfo to write format cell value, thanks [0xced (Cédric Luthi)](https://github.com/0xced) #333

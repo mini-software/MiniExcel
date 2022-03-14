@@ -3,6 +3,7 @@ using System.Linq;
 using System;
 using System.IO;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace MiniExcelLibs.Tests
 {
@@ -43,28 +44,28 @@ namespace MiniExcelLibs.Tests
             using (var stream = File.OpenRead(path))
             {
                 {
-                    var q = await stream.QueryAsync(sheetName: "Sheet3");
+                    var q = (await stream.QueryAsync(sheetName: "Sheet3")).Cast<IDictionary<string, object>>();
                     var rows = q.ToList();
                     Assert.Equal(5, rows.Count);
                     Assert.Equal(3d, rows[0]["A"]);
                     Assert.Equal(3d, rows[0]["B"]);
                 }
                 {
-                    var q = await stream.QueryAsync(sheetName: "Sheet2");
+                    var q = (await stream.QueryAsync(sheetName: "Sheet2")).Cast<IDictionary<string, object>>();
                     var rows = q.ToList();
                     Assert.Equal(12, rows.Count);
                     Assert.Equal(1d, rows[0]["A"]);
                     Assert.Equal(1d, rows[0]["B"]);
                 }
                 {
-                    var q = await stream.QueryAsync(sheetName: "Sheet1");
+                    var q = (await stream.QueryAsync(sheetName: "Sheet1")).Cast<IDictionary<string, object>>();
                     var rows = q.ToList();
                     Assert.Equal(12, rows.Count);
                     Assert.Equal(2d, rows[0]["A"]);
                     Assert.Equal(2d, rows[0]["B"]);
                 }
                 {
-                    var q = await stream.QueryAsync(sheetName: "Sheet1");
+                    var q = (await stream.QueryAsync(sheetName: "Sheet1")).Cast<IDictionary<string, object>>();
                     var rows = q.ToList();
                     Assert.Equal(12, rows.Count);
                     Assert.Equal(2d, rows[0]["A"]);

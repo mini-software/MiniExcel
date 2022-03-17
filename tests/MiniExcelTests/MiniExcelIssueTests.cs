@@ -33,6 +33,52 @@ namespace MiniExcelLibs.Tests
         }
 
         [Fact]
+        public void TestIssueI4YCLQ_2()
+        {
+            var c = ExcelOpenXmlUtils.ConvertColumnName(1);
+            var c2 = ExcelOpenXmlUtils.ConvertColumnName(3);
+            var path = PathHelper.GetFile("xlsx/TestIssueI4YCLQ_2.xlsx");
+            var rows = MiniExcel.Query<TestIssueI4YCLQ_2Dto>(path, startCell: "B2")
+                .ToList();
+            Assert.Null(rows[0].站点编码);
+            Assert.Equal("N1", rows[0].站址名称);
+            Assert.Equal("a", rows[0].值1);
+            Assert.Equal("b", rows[0].值2);
+            Assert.Equal("c", rows[0].值3);
+            Assert.Equal("A1", rows[0].资源ID);
+            Assert.Equal("A", rows[0].值4);
+            Assert.Equal("B", rows[0].值5);
+            Assert.Equal("C", rows[0].值6);
+            Assert.Null(rows[0].值7);
+            Assert.Null(rows[0].值8);
+        }
+
+        public class TestIssueI4YCLQ_2Dto
+        {
+            [ExcelColumnIndex("A")]
+            public string 站点编码 { get; set; }
+            [ExcelColumnIndex("B")]
+            public string 站址名称 { get; set; }
+            [ExcelColumnIndex("C")]
+            public string 值1 { get; set; }
+            [ExcelColumnIndex("D")]
+            public string 值2 { get; set; }
+            [ExcelColumnIndex("E")]
+            public string 值3 { get; set; }
+            [ExcelColumnIndex("F")]
+            public string 资源ID { get; set; }
+            [ExcelColumnIndex("G")]
+            public string 值4 { get; set; }
+            [ExcelColumnIndex("H")]
+            public string 值5 { get; set; }
+            [ExcelColumnIndex("I")]
+            public string 值6 { get; set; }
+            public string 值7 { get; set; }
+            [ExcelColumnName("NotExist")]
+            public string 值8 { get; set; }
+        }
+
+        [Fact]
         public async Task TestIssue338()
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
@@ -2393,7 +2439,8 @@ MyProperty4,MyProperty1,MyProperty5,MyProperty2,MyProperty6,,MyProperty3
         {
             {
                 var path = @"../../../../../samples/xlsx/TestIssue142.xlsx";
-                Assert.Throws<InvalidOperationException>(() => MiniExcel.Query<Issue142VoExcelColumnNameNotFound>(path).ToList());
+                var rows = MiniExcel.Query<Issue142VoExcelColumnNameNotFound>(path).ToList();
+                Assert.Equal(0, rows[0].MyProperty1);
             }
 
             {
@@ -2531,7 +2578,7 @@ MyProperty4,MyProperty1,MyProperty5,MyProperty2,MyProperty6,,MyProperty3
                     Assert.Equal("Wade", rows[0].Name);
                     Assert.Equal(DateTime.ParseExact("27/09/2020", "dd/MM/yyyy", CultureInfo.InvariantCulture), rows[0].BoD);
                     Assert.False(rows[0].VIP);
-                    Assert.Equal(decimal.Parse("5019.12"), rows[0].Points);
+                    Assert.Equal(decimal.Parse("5019"), rows[0].Points);
                     Assert.Equal(1, rows[0].IgnoredProperty);
                 }
             }

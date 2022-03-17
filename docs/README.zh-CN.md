@@ -32,6 +32,10 @@
 
 ---
 
+### 1.24.2
+- [Bug] Query 有多个相同标题会导致StartCell无法正确取得该栏位 #I4YCLQ 
+- [OPT] 优化 Query<T> 的算法
+
 ### 1.24.1
 - [Bug] 修正 QueryAsync configulation 没有效果问题 #338 
 - [Bug] 修正 QueryAsync 无法使用 dynamic 类别

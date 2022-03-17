@@ -18,6 +18,7 @@
         public bool Nullable { get; internal set; }
         public string ExcelFormat { get; internal set; }
         public double? ExcelColumnWidth { get; internal set; }
+        public string ExcelXName { get; internal set; }
     }
 
     internal static partial class CustomPropertyHelper
@@ -97,7 +98,7 @@
             }
         }
 
-        internal static List<ExcelCustomPropertyInfo> GetExcelCustomPropertyInfos(Type type, string[] headers)
+        internal static List<ExcelCustomPropertyInfo> GetExcelCustomPropertyInfos(Type type, string[] keys)
         {
             List<ExcelCustomPropertyInfo> props = GetExcelPropertyInfo(type, BindingFlags.SetProperty | BindingFlags.Public | BindingFlags.Instance)
                 .Where(prop => prop.Property.GetSetMethod() != null && !prop.Property.GetAttributeValue((ExcelIgnoreAttribute x) => x.ExcelIgnore))
@@ -110,14 +111,14 @@
                 var withCustomIndexProps = props.Where(w => w.ExcelColumnIndex != null && w.ExcelColumnIndex > -1);
                 if (withCustomIndexProps.GroupBy(g => g.ExcelColumnIndex).Any(_ => _.Count() > 1))
                     throw new InvalidOperationException($"Duplicate column name");
-
+                var maxkey = keys.Last();
+                var maxIndex = ColumnHelper.GetColumnIndex(maxkey);
                 foreach (var p in props)
                 {
                     if (p.ExcelColumnIndex != null)
                     {
-                        if (p.ExcelColumnIndex >= headers.Length)
-                            throw new ArgumentException($"ExcelColumnIndex {p.ExcelColumnIndex} over haeder max index {headers.Length}");
-                        p.ExcelColumnName = headers[(int)p.ExcelColumnIndex];
+                        if (p.ExcelColumnIndex > maxIndex)
+                            throw new ArgumentException($"ExcelColumnIndex {p.ExcelColumnIndex} over haeder max index {maxkey}");
                         if (p.ExcelColumnName == null)
                             throw new InvalidOperationException($"{p.Property.DeclaringType.Name} {p.Property.Name}'s ExcelColumnIndex {p.ExcelColumnIndex} can't find excel column name");
                     }
@@ -159,6 +160,7 @@
                          ExcelColumnAliases = excelColumnName?.Aliases,
                          ExcelColumnName = excelColumnName?.ExcelColumnName ?? p.GetAttribute<System.ComponentModel.DisplayNameAttribute>()?.DisplayName ?? p.Name ,
                          ExcelColumnIndex = p.GetAttribute<ExcelColumnIndexAttribute>()?.ExcelColumnIndex,
+                         ExcelXName = p.GetAttribute<ExcelColumnIndexAttribute>()?.ExcelXName,
                          ExcelColumnWidth = p.GetAttribute<ExcelColumnWidthAttribute>()?.ExcelColumnWidth,
                          ExcelFormat = excelFormat,
                      };

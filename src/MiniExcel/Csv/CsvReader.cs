@@ -1,4 +1,5 @@
-﻿using MiniExcelLibs.Utils;
+﻿using MiniExcelLibs.OpenXml;
+using MiniExcelLibs.Utils;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -64,65 +65,9 @@ namespace MiniExcelLibs.Csv
                 }
             }
         }
-
         public IEnumerable<T> Query<T>(string sheetName, string startCell) where T : class, new()
         {
-            var type = typeof(T);
-
-            Dictionary<int, ExcelCustomPropertyInfo> idxProps = new Dictionary<int, ExcelCustomPropertyInfo>();
-            using (var reader = _config.StreamReaderFunc(_stream))
-            {
-                var row = string.Empty;
-                string[] read;
-
-                //header
-                {
-                    row = reader.ReadLine();
-                    read = Split(row);
-
-                    var props = CustomPropertyHelper.GetExcelCustomPropertyInfos(type, read);
-                    var index = 0;
-                    foreach (var v in read)
-                    {
-                        var p = props.SingleOrDefault(w => w.ExcelColumnName == v);
-                        if (p != null)
-                            idxProps.Add(index, p);
-                        index++;
-                    }
-                }
-                {
-                    while ((row = reader.ReadLine()) != null)
-                    {
-                        read = Split(row);
-
-                        //body
-                        {
-                            var v = new T();
-
-                            var rowIndex = 0; //TODO: rowindex = startcell rowindex
-                            foreach (var p in idxProps)
-                            {
-                                var pInfo = p.Value;
-
-                                {
-
-                                    object newV = null;
-                                    object itemValue = read[p.Key];
-
-                                    if (itemValue == null)
-                                        continue;
-
-                                    newV = TypeHelper.TypeMapping(v, pInfo, newV, itemValue, rowIndex, startCell,_config);
-                                }
-                            }
-
-                            rowIndex++;
-                            yield return v;
-                        }
-                    }
-
-                }
-            }
+            return ExcelOpenXmlSheetReader.QueryImpl<T>(Query(false, sheetName, startCell), startCell, this._config);
         }
 
         private string[] Split(string row)

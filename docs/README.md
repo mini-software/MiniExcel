@@ -22,6 +22,10 @@
 
 ---
 
+### 1.24.2
+- [Bug] Fiexd Query multiple same title will cause startcell to get wrong column index #I4YCLQ 
+- [OPT] Optimize Query<T> algorithm
+
 ### 1.24.1
 - [Bug] Fiexd QueryAsync configulation not working #338 
 - [Bug] Fixed QueryAsync not return dynamic type

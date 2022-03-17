@@ -401,20 +401,44 @@ namespace MiniExcelLibs.OpenXml
 
         public IEnumerable<T> Query<T>(string sheetName, string startCell) where T : class, new()
         {
+            return ExcelOpenXmlSheetReader.QueryImpl<T>(Query(false, sheetName, startCell), startCell, this._config);
+        }
+
+        public static IEnumerable<T> QueryImpl<T>(IEnumerable<IDictionary<string, object>> values, string startCell, Configuration configuration) where T : class, new()
+        {
             var type = typeof(T);
 
             List<ExcelCustomPropertyInfo> props = null;
-            var headers = Query(false, sheetName, startCell).FirstOrDefault()?.Values?.Select(s => s?.ToString())?.ToArray(); //TODO:need to optimize
+            //TODO:need to optimize
 
+            string[] headers = null;
+
+            Dictionary<string, int> headersDic = null;
+            string[] keys = null;
             var first = true;
             var rowIndex = 0;
-            foreach (var item in Query(true, sheetName, startCell))
+            foreach (var item in values)
             {
+
                 if (first)
                 {
+                    keys = item.Keys.ToArray();//.Select((s, i) => new { s,i}).ToDictionary(_=>_.s,_=>_.i);
+                    headers = item?.Values?.Select(s => s?.ToString())?.ToArray(); //TODO:remove
+                    headersDic = headers.Select((o, i) => new { o=(o == null ? "" : o), i } )
+                        .OrderBy(x => x.i)
+                        .GroupBy(x => x.o)
+                        .Select(group => new { Group = group, Count = group.Count() })
+                        .SelectMany(groupWithCount =>
+                           groupWithCount.Group.Select(b => b)
+                           .Zip(
+                               Enumerable.Range(1, groupWithCount.Count),
+                               (j, i) => new { key = (i == 1 ? j.o : $"{j.o}_____{i}"), idx = j.i, RowNumber = i }
+                           )
+                        ).ToDictionary(_ => _.key, _ => _.idx);
                     //TODO: alert don't duplicate column name
-                    props = CustomPropertyHelper.GetExcelCustomPropertyInfos(type, headers);
+                    props = CustomPropertyHelper.GetExcelCustomPropertyInfos(type, keys);
                     first = false;
+                    continue;
                 }
                 var v = new T();
                 foreach (var pInfo in props)
@@ -423,29 +447,33 @@ namespace MiniExcelLibs.OpenXml
                     {
                         foreach (var alias in pInfo.ExcelColumnAliases)
                         {
-                            if (item.ContainsKey(alias))
+                            if (headersDic.ContainsKey(alias))
                             {
                                 object newV = null;
-                                object itemValue = item[alias];
+                                object itemValue = item[keys[headersDic[alias]]];
 
                                 if (itemValue == null)
                                     continue;
 
-                                newV = TypeHelper.TypeMapping(v, pInfo, newV, itemValue, rowIndex, startCell, _config);
+                                newV = TypeHelper.TypeMapping(v, pInfo, newV, itemValue, rowIndex, startCell, configuration);
                             }
                         }
                     }
 
+
                     //Q: Why need to check every time? A: it needs to check everytime, because it's dictionary
-                    if (item.ContainsKey(pInfo.ExcelColumnName))
                     {
                         object newV = null;
-                        object itemValue = item[pInfo.ExcelColumnName];
+                        object itemValue = null;
+                        if (pInfo.ExcelXName != null && keys.Contains(pInfo.ExcelXName))
+                            itemValue = item[pInfo.ExcelXName];
+                        else if (headersDic.ContainsKey(pInfo.ExcelColumnName))
+                            itemValue = item[keys[headersDic[pInfo.ExcelColumnName]]];
 
                         if (itemValue == null)
                             continue;
 
-                        newV = TypeHelper.TypeMapping(v, pInfo, newV, itemValue, rowIndex, startCell, _config);
+                        newV = TypeHelper.TypeMapping(v, pInfo, newV, itemValue, rowIndex, startCell, configuration);
                     }
                 }
                 rowIndex++;

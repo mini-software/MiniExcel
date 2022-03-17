@@ -1279,20 +1279,16 @@ MyProperty4,MyProperty1,MyProperty5,MyProperty2,MyProperty6,,MyProperty3
         {
             {
                 var path = @"../../../../../samples/xlsx/TestIssue142.xlsx";
-                await Assert.ThrowsAsync<InvalidOperationException>(async () =>
-                {
-                    var q = await MiniExcel.QueryAsync<Issue142VoExcelColumnNameNotFound>(path);
-                    q.ToList();
-                });
+                var rows = (await MiniExcel.QueryAsync<Issue142VoExcelColumnNameNotFound>(path)).ToList();
+                Assert.Equal(0, rows[0].MyProperty1);
             }
 
             {
                 var path = @"../../../../../samples/xlsx/TestIssue142.xlsx";
-                 await Assert.ThrowsAsync<ArgumentException>(async () =>
-                 {
-                     var q = await MiniExcel.QueryAsync<Issue142VoOverIndex>(path);
-                     q.ToList();
-                 });
+                await Assert.ThrowsAsync<ArgumentException>(async () =>
+                {
+                    var q = (await MiniExcel.QueryAsync<Issue142VoOverIndex>(path)).ToList(); 
+                });
             }
 
             {
@@ -1432,7 +1428,7 @@ MyProperty4,MyProperty1,MyProperty5,MyProperty2,MyProperty6,,MyProperty3
                     Assert.Equal("Wade", rows[0].Name);
                     Assert.Equal(DateTime.ParseExact("27/09/2020", "dd/MM/yyyy", CultureInfo.InvariantCulture), rows[0].BoD);
                     Assert.False(rows[0].VIP);
-                    Assert.Equal(decimal.Parse("5019.12"), rows[0].Points);
+                    Assert.Equal(decimal.Parse("5019"), rows[0].Points);
                     Assert.Equal(1, rows[0].IgnoredProperty);
                 }
             }

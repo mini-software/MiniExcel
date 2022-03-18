@@ -34,6 +34,20 @@ namespace MiniExcelLibs.Tests
             this.output = output;
         }
 
+        [Fact]
+        public void TestIssue310()
+        {
+            var path = PathHelper.GetTempFilePath();
+            var value = new[] { new TestIssue310Dto { V1=null },new TestIssue310Dto { V1=2} };
+            MiniExcel.SaveAs(path, value);
+            var rows = MiniExcel.Query<TestIssue310Dto>(path).ToList();
+        }
+
+        public class TestIssue310Dto
+        {
+            public int? V1 { get; set; }
+        }
+
         /// <summary>
         /// Excel was unable to open the file https://github.com/shps951023/MiniExcel/issues/343
         /// </summary>

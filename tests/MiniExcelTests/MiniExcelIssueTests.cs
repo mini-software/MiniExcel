@@ -21,15 +21,43 @@ using MiniExcelLibs.Exceptions;
 using System.Text.RegularExpressions;
 using MiniExcelLibs.Csv;
 using System.Threading.Tasks;
+using System.Data.SqlClient;
 
 namespace MiniExcelLibs.Tests
 {
+
     public partial class MiniExcelIssueTests
     {
         private readonly ITestOutputHelper output;
         public MiniExcelIssueTests(ITestOutputHelper output)
         {
             this.output = output;
+        }
+
+        /// <summary>
+        /// Excel was unable to open the file https://github.com/shps951023/MiniExcel/issues/343
+        /// </summary>
+        [Fact]
+        public void TestIssue343()
+        {
+            {
+                var date = DateTime.Parse("2022-03-17 09:32:06.111", CultureInfo.InvariantCulture);
+                var path = PathHelper.GetTempFilePath();
+                CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("ff-Latn");
+                DataTable table = new DataTable();
+                {
+                    table.Columns.Add("time1", typeof(DateTime));
+                    table.Columns.Add("time2", typeof(DateTime));
+                    table.Rows.Add(date, date);
+                    table.Rows.Add(date, date);
+                }
+                DataTableReader reader = table.CreateDataReader();
+                MiniExcel.SaveAs(path, reader);
+
+                var rows = MiniExcel.Query(path,true).ToArray();
+                Assert.Equal(date, rows[0].time1);
+                Assert.Equal(date, rows[0].time2);
+            }
         }
 
         [Fact]

@@ -24,6 +24,7 @@
 
 ### 1.24.3
 - [Bug] Fixed multiple threads Async error 'The given key N was not present in the dictionary' #344
+- [Bug] Fixed when CultureInfo likes`ff-Latn` , datareader field type is datetime that will get error OA Date format #343
 
 ### 1.24.2
 - [Bug] Fiexd Query multiple same title will cause startcell to get wrong column index #I4YCLQ 

@@ -26,6 +26,7 @@
 
 ### 1.24.3
 - [Bug] 修正多 threads Async 可能錯誤 'The given key N was not present in the dictionary' #344
+- [Bug] 修正當 CultureInfo 像是`ff-Latn` , datareader field 類型是 datetime 系統會生成錯誤 OA Date 格式 #343
 
 ### 1.24.2
 - [Bug] Query<T> 有多個相同標題會導致StartCell無法正確取得該欄位 #I4YCLQ 

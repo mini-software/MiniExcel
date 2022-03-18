@@ -467,17 +467,18 @@ namespace MiniExcelLibs.OpenXml
                     {
                         t = null;
                         s = "3";
-                        v = ((DateTime)value).ToOADate().ToString();
+                        v = ((DateTime)value).ToOADate().ToString(CultureInfo.InvariantCulture);
                     }
                     else
                     {
                         // TODO: now it'll lose date type information
                         t = "str";
-                        v = ((DateTime)value).ToString(p.ExcelFormat);
+                        v = ((DateTime)value).ToString(p.ExcelFormat,_configuration.Culture);
                     }
                 }
                 else
                 {
+                    //TODO: _configuration.Culture
                     v = ExcelOpenXmlUtils.EncodeXML(value.ToString());       
                 }
             }

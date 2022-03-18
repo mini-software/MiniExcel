@@ -79,8 +79,7 @@ namespace MiniExcelLibs.Tests
         public async Task QueryCustomAttributesTest()
         {
             var path = @"../../../../../samples/xlsx/TestCustomExcelColumnAttribute.xlsx";
-            var q = await MiniExcel.QueryAsync<ExcelAttributeDemo>(path);
-            var rows = q.ToList();
+            var rows = (await MiniExcel.QueryAsync<ExcelAttributeDemo>(path)).ToList();
             Assert.Equal("Column1", rows[0].Test1);
             Assert.Equal("Column2", rows[0].Test2);
             Assert.Null(rows[0].Test3);

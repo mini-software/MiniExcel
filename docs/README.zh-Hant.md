@@ -24,6 +24,9 @@
 
 ---
 
+### 1.24.3
+- [Bug] 修正多 threads Async 可能錯誤 'The given key N was not present in the dictionary' #344
+
 ### 1.24.2
 - [Bug] Query<T> 有多個相同標題會導致StartCell無法正確取得該欄位 #I4YCLQ 
 -  [OPT] 優化 Query<T> 的算法

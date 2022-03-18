@@ -22,6 +22,9 @@
 
 ---
 
+### 1.24.3
+- [Bug] Fixed multiple threads Async error 'The given key N was not present in the dictionary' #344
+
 ### 1.24.2
 - [Bug] Fiexd Query multiple same title will cause startcell to get wrong column index #I4YCLQ 
 - [OPT] Optimize Query<T> algorithm

@@ -1,5 +1,6 @@
 ﻿namespace MiniExcelLibs.Utils
 {
+    using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.IO;
 
@@ -8,32 +9,25 @@
     {
         private const int GENERAL_COLUMN_INDEX = 255;
         private const int MAX_COLUMN_INDEX = 16383;
-        private static Dictionary<int, string> _IntMappingAlphabet;
-        private static Dictionary<string, int> _AlphabetMappingInt;
+        private static readonly ConcurrentDictionary<int, string> _IntMappingAlphabet = new ConcurrentDictionary<int, string>();
+        private static readonly ConcurrentDictionary<string, int> _AlphabetMappingInt = new ConcurrentDictionary<string, int>();
         static ColumnHelper()
         {
-            if (_IntMappingAlphabet == null && _AlphabetMappingInt == null)
-            {
-                _IntMappingAlphabet = new Dictionary<int, string>();
-                _AlphabetMappingInt = new Dictionary<string, int>();
-                for (int i = 0; i <= GENERAL_COLUMN_INDEX; i++)
-                {
-                    _IntMappingAlphabet.Add(i, IntToLetters(i));
-                    _AlphabetMappingInt.Add(IntToLetters(i), i);
-                }
-            }
+            CheckAndSetMaxColumnIndex(GENERAL_COLUMN_INDEX);
         }
 
         public static string GetAlphabetColumnName(int columnIndex)
         {
             CheckAndSetMaxColumnIndex(columnIndex);
-            return _IntMappingAlphabet[columnIndex];
+            if (_IntMappingAlphabet.TryGetValue(columnIndex, out var value))
+                return value;
+            throw new KeyNotFoundException();
         }
 
         public static int GetColumnIndex(string columnName)
         {
-            var columnIndex = _AlphabetMappingInt[columnName];
-            CheckAndSetMaxColumnIndex(columnIndex);
+            if (_AlphabetMappingInt.TryGetValue(columnName,out var columnIndex)) 
+                CheckAndSetMaxColumnIndex(columnIndex);
             return columnIndex;
         }
 
@@ -45,8 +39,8 @@
                     throw new InvalidDataException($"ColumnIndex {columnIndex} over excel vaild max index.");
                 for (int i = _IntMappingAlphabet.Count; i <= columnIndex; i++)
                 {
-                    _IntMappingAlphabet.Add(i, IntToLetters(i));
-                    _AlphabetMappingInt.Add(IntToLetters(i), i);
+                    _IntMappingAlphabet.AddOrUpdate(i, IntToLetters(i), (a, b) => IntToLetters(i));
+                    _AlphabetMappingInt.AddOrUpdate(IntToLetters(i), i, (a, b) => i);
                 }
             }
         }

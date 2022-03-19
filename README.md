@@ -1490,6 +1490,14 @@ Please use Stream class to custom file creating logic, e.g:
 
 
 
+or, since V1.25.0, SaveAs support overwriteFile parameter for enable/unable overwriting exist file
+
+```csharp
+	MiniExcel.SaveAs(path, value, overwriteFile: true);
+```
+
+
+
 
 ### Limitations and caveats
 

@@ -22,6 +22,9 @@
 
 ---
 
+### 1.25.0
+- [New] SaveAs support overwriteFile parameter for enable/unable overwriting exist file #307
+
 ### 1.24.3
 - [Bug] Fixed multiple threads Async error 'The given key N was not present in the dictionary' #344
 - [Bug] Fixed when CultureInfo likes`ff-Latn` , datareader field type is datetime that will get error OA Date format #343

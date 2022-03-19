@@ -35,10 +35,22 @@ namespace MiniExcelLibs.Tests
         }
 
         [Fact]
+        public async Task TestIssue307()
+        {
+            var path = PathHelper.GetTempFilePath();
+            var value = new[] { new { id = 1, name = "Jack" } };
+            MiniExcel.SaveAs(path, value);
+            Assert.Throws<IOException>(() => MiniExcel.SaveAs(path, value));
+            MiniExcel.SaveAs(path, value, overwriteFile: true);
+            await Assert.ThrowsAsync<IOException>(async () => await MiniExcel.SaveAsAsync(path, value));
+            await MiniExcel.SaveAsAsync(path, value, overwriteFile: true);
+        }
+
+        [Fact]
         public void TestIssue310()
         {
             var path = PathHelper.GetTempFilePath();
-            var value = new[] { new TestIssue310Dto { V1=null },new TestIssue310Dto { V1=2} };
+            var value = new[] { new TestIssue310Dto { V1 = null }, new TestIssue310Dto { V1 = 2 } };
             MiniExcel.SaveAs(path, value);
             var rows = MiniExcel.Query<TestIssue310Dto>(path).ToList();
         }
@@ -68,7 +80,7 @@ namespace MiniExcelLibs.Tests
                 DataTableReader reader = table.CreateDataReader();
                 MiniExcel.SaveAs(path, reader);
 
-                var rows = MiniExcel.Query(path,true).ToArray();
+                var rows = MiniExcel.Query(path, true).ToArray();
                 Assert.Equal(date, rows[0].time1);
                 Assert.Equal(date, rows[0].time2);
             }
@@ -135,7 +147,7 @@ namespace MiniExcelLibs.Tests
                 {
                     StreamReaderFunc = (stream) => new StreamReader(stream, Encoding.GetEncoding("gb2312"))
                 };
-                var row = MiniExcel.Query(path,configuration:config).FirstOrDefault();
+                var row = MiniExcel.Query(path, configuration: config).FirstOrDefault();
                 Assert.Equal("中文测试内容", row.A);
             }
             {
@@ -144,9 +156,9 @@ namespace MiniExcelLibs.Tests
                 {
                     StreamReaderFunc = (stream) => new StreamReader(stream, Encoding.GetEncoding("gb2312"))
                 };
-                using (var stream = new FileStream(path,FileMode.Open,FileAccess.Read))
+                using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read))
                 {
-                    var row =( await stream.QueryAsync(configuration: config,excelType:ExcelType.CSV)).FirstOrDefault();
+                    var row = (await stream.QueryAsync(configuration: config, excelType: ExcelType.CSV)).FirstOrDefault();
                     Assert.Equal("中文测试内容", row.A);
                 }
             }
@@ -159,7 +171,7 @@ namespace MiniExcelLibs.Tests
             var templatePath = PathHelper.GetFile("xlsx/TestIssueI4WM67.xlsx");
             var value = new Dictionary<string, object>()
             {
-                ["users"] = new TestIssueI4WM67Dto[]{ }
+                ["users"] = new TestIssueI4WM67Dto[] { }
             };
             MiniExcel.SaveAsByTemplate(path, templatePath, value);
             var rows = MiniExcel.Query(path).ToList();

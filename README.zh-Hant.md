@@ -1486,7 +1486,11 @@ public static DataTable QueryAsDataTableWithoutEmptyRow(Stream stream, bool useH
 
 
 
-### 
+從V1.25.0版本開始，支持 overwriteFile 參數，方便調整是否要覆蓋已存在文件
+
+```csharp
+	MiniExcel.SaveAs(path, value, overwriteFile: true);
+```
 
 
 

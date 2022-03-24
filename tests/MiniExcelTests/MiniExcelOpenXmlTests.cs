@@ -1176,7 +1176,7 @@ namespace MiniExcelLibs.Tests
             var path = "../../../../../benchmarks/MiniExcel.Benchmarks/Test1,000,000x10_SharingStrings.xlsx";
             var stopWatch = new Stopwatch();
             stopWatch.Start();
-            MiniExcel.Query(path).First();
+            MiniExcel.Query(path, configuration: new OpenXmlConfiguration() { EnableSharedStringCache = true }).First();
             Process currentProcess = Process.GetCurrentProcess();
             long totalBytesOfMemoryUsed = currentProcess.WorkingSet64;
             output.WriteLine("totalBytesOfMemoryUsed: " + totalBytesOfMemoryUsed);
@@ -1190,8 +1190,7 @@ namespace MiniExcelLibs.Tests
             var path = "../../../../../benchmarks/MiniExcel.Benchmarks/Test1,000,000x10_SharingStrings.xlsx";
             var stopWatch = new Stopwatch();
             stopWatch.Start();
-            MiniExcel.Query(path,
-                configuration: new OpenXmlConfiguration() { SharedStringCacheSize = int.MaxValue }).First();
+            MiniExcel.Query(path).First();
             Process currentProcess = Process.GetCurrentProcess();
             long totalBytesOfMemoryUsed = currentProcess.WorkingSet64;
             output.WriteLine("totalBytesOfMemoryUsed: " + totalBytesOfMemoryUsed);

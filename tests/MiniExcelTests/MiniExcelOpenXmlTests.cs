@@ -9,17 +9,25 @@ using System.Data;
 using ExcelDataReader;
 using System.Collections.Generic;
 using System.Data.SQLite;
+using System.Diagnostics;
 using Dapper;
 using System.Globalization;
 using static MiniExcelLibs.Tests.Utils.MiniExcelOpenXml;
 using MiniExcelLibs.Tests.Utils;
 using MiniExcelLibs.Attributes;
+using MiniExcelLibs.OpenXml;
+using Xunit.Abstractions;
 
 namespace MiniExcelLibs.Tests
 {
     public partial class MiniExcelOpenXmlTests
     {
-
+        private readonly ITestOutputHelper output;
+        public MiniExcelOpenXmlTests(ITestOutputHelper output)
+        {
+            this.output = output;
+        }
+        
         [Fact]
         public void GetColumnsTest()
         {
@@ -1160,6 +1168,35 @@ namespace MiniExcelLibs.Tests
             Assert.Equal(rows[1].A , "value1");
             Assert.Equal(rows[1].B , "value2");
             Assert.Equal(rows[1].C , "value3");
+        }
+
+        [Fact]
+        public void SharedStringCacheTest()
+        {
+            var path = "../../../../../benchmarks/MiniExcel.Benchmarks/Test1,000,000x10_SharingStrings.xlsx";
+            var stopWatch = new Stopwatch();
+            stopWatch.Start();
+            MiniExcel.Query(path).First();
+            Process currentProcess = Process.GetCurrentProcess();
+            long totalBytesOfMemoryUsed = currentProcess.WorkingSet64;
+            output.WriteLine("totalBytesOfMemoryUsed: " + totalBytesOfMemoryUsed);
+            output.WriteLine("elapsedMilliseconds: " + stopWatch.ElapsedMilliseconds);
+            stopWatch.Stop();
+        }
+
+        [Fact]
+        public void SharedStringNoCacheTest()
+        {
+            var path = "../../../../../benchmarks/MiniExcel.Benchmarks/Test1,000,000x10_SharingStrings.xlsx";
+            var stopWatch = new Stopwatch();
+            stopWatch.Start();
+            MiniExcel.Query(path,
+                configuration: new OpenXmlConfiguration() { SharedStringCacheSize = int.MaxValue }).First();
+            Process currentProcess = Process.GetCurrentProcess();
+            long totalBytesOfMemoryUsed = currentProcess.WorkingSet64;
+            output.WriteLine("totalBytesOfMemoryUsed: " + totalBytesOfMemoryUsed);
+            output.WriteLine("elapsedMilliseconds: " + stopWatch.ElapsedMilliseconds);
+            stopWatch.Stop();
         }
     }
 }

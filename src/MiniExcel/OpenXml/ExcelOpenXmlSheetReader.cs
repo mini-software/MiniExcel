@@ -17,7 +17,7 @@ namespace MiniExcelLibs.OpenXml
         private static readonly string[] _ns = { Config.SpreadsheetmlXmlns, Config.SpreadsheetmlXmlStrictns };
         private static readonly string[] _relationshiopNs = { Config.SpreadsheetmlXmlRelationshipns, Config.SpreadsheetmlXmlStrictRelationshipns };
         private List<SheetRecord> _sheetRecords;
-        private List<string> _sharedStrings;
+        private IList<string> _sharedStrings;
         private MergeCells _mergeCells;
         private ExcelOpenXmlStyles _style;
         private readonly ExcelOpenXmlZip _archive;
@@ -490,40 +490,42 @@ namespace MiniExcelLibs.OpenXml
                 return;
             using (var stream = sharedStringsEntry.Open())
             {
-                _sharedStrings = GetSharedStrings(stream).ToList();
-            }
+                if (_config.EnableSharedStringCache && sharedStringsEntry.Length >= _config.SharedStringCacheSize)
+                {
+                    // use sqlite
+                    var dbList = new DbList(Guid.NewGuid().ToString());
+
+                    var list = new List<string>();
+                    foreach (var sharedString in XmlReaderHelper.GetSharedStrings(stream, _ns))
+                    {
+                        list.Add(sharedString);
+                        if (list.Count >= 10000)
+                        {
+                            dbList.AddRange(list);
+                            list.Clear();
+                        }
+                    }
+
+                    if (list.Count > 0)
+                    {
+                        dbList.AddRange(list);
+                        list.Clear();
+                    }
+                    
+                    _sharedStrings = dbList;
+                }
+                else
+                {
+                    _sharedStrings = XmlReaderHelper.GetSharedStrings(stream, _ns).ToList();
+                }
+            }  
         }
 
-        internal List<string> GetSharedStrings()
+        internal IList<string> GetSharedStrings()
         {
             if (_sharedStrings == null)
                 SetSharedStrings();
             return _sharedStrings;
-        }
-
-        private IEnumerable<string> GetSharedStrings(Stream stream)
-        {
-            using (var reader = XmlReader.Create(stream))
-            {
-                if (!XmlReaderHelper.IsStartElement(reader, "sst", _ns))
-                    yield break;
-
-                if (!XmlReaderHelper.ReadFirstContent(reader))
-                    yield break;
-
-                while (!reader.EOF)
-                {
-                    if (XmlReaderHelper.IsStartElement(reader, "si", _ns))
-                    {
-                        var value = StringHelper.ReadStringItem(reader);
-                        yield return value;
-                    }
-                    else if (!XmlReaderHelper.SkipContent(reader))
-                    {
-                        break;
-                    }
-                }
-            }
         }
 
         private void SetWorkbookRels(ReadOnlyCollection<ZipArchiveEntry> entries)

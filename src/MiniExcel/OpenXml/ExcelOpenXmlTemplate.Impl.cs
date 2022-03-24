@@ -90,7 +90,7 @@ namespace MiniExcelLibs.OpenXml
         private Dictionary<string, XMergeCell> XMergeCellInfos { get; set; }
         public List<XMergeCell> NewXMergeCellInfos { get; private set; }
 
-        private void GenerateSheetXmlImpl(ZipArchiveEntry sheetZipEntry, Stream stream, Stream sheetStream, Dictionary<string, object> inputMaps, List<string> sharedStrings, XmlWriterSettings xmlWriterSettings = null)
+        private void GenerateSheetXmlImpl(ZipArchiveEntry sheetZipEntry, Stream stream, Stream sheetStream, Dictionary<string, object> inputMaps, IList<string> sharedStrings, XmlWriterSettings xmlWriterSettings = null)
         {
             var doc = new XmlDocument();
             doc.Load(sheetStream);
@@ -387,7 +387,7 @@ namespace MiniExcelLibs.OpenXml
                 .Replace($"xmlns{endPrefix}=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"", "");
         }
 
-        private void ReplaceSharedStringsToStr(List<string> sharedStrings, ref XmlNodeList rows)
+        private void ReplaceSharedStringsToStr(IList<string> sharedStrings, ref XmlNodeList rows)
         {
             foreach (XmlElement row in rows)
             {

@@ -1,4 +1,6 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 
 namespace MiniExcelLibs.Utils
 {
@@ -73,6 +75,31 @@ namespace MiniExcelLibs.Utils
             }
 
             return null;
+        }
+        
+        public static IEnumerable<string> GetSharedStrings(Stream stream, params string[] nss)
+        {
+            using (var reader = XmlReader.Create(stream))
+            {
+                if (!XmlReaderHelper.IsStartElement(reader, "sst", nss))
+                    yield break;
+
+                if (!XmlReaderHelper.ReadFirstContent(reader))
+                    yield break;
+
+                while (!reader.EOF)
+                {
+                    if (XmlReaderHelper.IsStartElement(reader, "si", nss))
+                    {
+                        var value = StringHelper.ReadStringItem(reader);
+                        yield return value;
+                    }
+                    else if (!XmlReaderHelper.SkipContent(reader))
+                    {
+                        break;
+                    }
+                }
+            }
         }
     }
 

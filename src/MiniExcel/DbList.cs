@@ -72,7 +72,7 @@ ON sharedStrings (
 
         public void Clear()
         {
-            _cmd.CommandText = $"DROP TABLE IF EXISTS {_tableName}";
+            _cmd.CommandText = $"DELETE FROM {_tableName}";
             _cmd.ExecuteNonQuery();
             Count = 0;
         }

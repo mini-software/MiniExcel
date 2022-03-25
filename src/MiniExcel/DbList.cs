@@ -30,7 +30,7 @@ namespace MiniExcelLibs
             _cmd.CommandText = $@"
 CREATE TABLE {_tableName} (name TEXT, `index` INTEGER);
 
-CREATE UNIQUE INDEX idx_index
+CREATE INDEX idx_index
 ON sharedStrings (
   `index`
 );
@@ -57,6 +57,7 @@ ON sharedStrings (
             var maxIndex = GetMaxIndex();
             _cmd.CommandText = $"INSERT INTO {_tableName}(name, `index`) VALUES ('{item}', {maxIndex + 1})";
             _cmd.ExecuteNonQuery();
+            Count += 1;
         }
 
         private long GetMaxIndex()
@@ -73,6 +74,7 @@ ON sharedStrings (
         {
             _cmd.CommandText = $"DROP TABLE IF EXISTS {_tableName}";
             _cmd.ExecuteNonQuery();
+            Count = 0;
         }
 
         public bool Contains(string item)
@@ -102,43 +104,42 @@ ON sharedStrings (
 
             _cmd.CommandText = cmdTxt.ToString();
             _cmd.ExecuteNonQuery();
+            Count += array.Count;
         }
 
         public bool Remove(string item)
         {
-            _cmd.CommandText = $"DELETE FROM {_tableName} WHERE name = '{item}'";
-            return _cmd.ExecuteNonQuery() > 0;
+            var index = IndexOf(item);
+            RemoveAt(index);
+            return true;
         }
 
-        public int Count
-        {
-            get
-            {
-                _cmd.CommandText = "SELECT COUNT(*) FROM " + _tableName;
-                return Convert.ToInt32(_cmd.ExecuteScalar());
-            }
-        }
+        public int Count { get; private set; }
 
         public bool IsReadOnly { get; }
 
         public int IndexOf(string item)
         {
             _cmd.CommandText = $"SELECT `index` FROM {_tableName} WHERE name = '{item}'";
-            return (int)_cmd.ExecuteScalar();
+            return Convert.ToInt32(_cmd.ExecuteScalar());
         }
 
         public void Insert(int index, string item)
         {
-            _cmd.CommandText = $"UPDATE {_tableName} SET `index` = `index` + 1 WHERE index >= {index}";
+            _cmd.CommandText = $"UPDATE {_tableName} SET `index` = `index` + 1 WHERE `index` >= {index}";
             _cmd.ExecuteNonQuery();
             _cmd.CommandText = $"INSERT INTO {_tableName}(name, `index`) VALUES ('{item}', {index})";
             _cmd.ExecuteNonQuery();
+            Count += 1;
         }
 
         public void RemoveAt(int index)
         {
             _cmd.CommandText = $"DELETE FROM {_tableName} WHERE `index` = {index}";
             _cmd.ExecuteNonQuery();
+            _cmd.CommandText = $"UPDATE {_tableName} SET `index` = `index` - 1 WHERE `index` > {index}";
+            _cmd.ExecuteNonQuery();
+            Count -= 1;
         }
 
         public string this[int index]

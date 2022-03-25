@@ -26,8 +26,8 @@ namespace MiniExcelLibs
 
         private void CreateTable()
         {
-            Clear();
             _cmd.CommandText = $@"
+DROP TABLE IF EXISTS {_tableName};
 CREATE TABLE {_tableName} (name TEXT, `index` INTEGER);
 
 CREATE INDEX idx_index

@@ -1159,5 +1159,28 @@ namespace MiniExcelLibs.Tests
                 }
             });
         }
+
+        [Fact()]
+        public async Task ReadBigExcel_Prcoessing_TakeCancel_Throws_TaskCanceledException()
+        {
+            await Assert.ThrowsAsync<OperationCanceledException>(async () => {
+                CancellationTokenSource cts = new CancellationTokenSource();
+                var path = @"../../../../../samples/xlsx/bigExcel.xlsx";
+
+                var cancelTask = Task.Run(async () =>
+                {
+                    await Task.Delay(2000);
+                    cts.Cancel();
+                    cts.Token.ThrowIfCancellationRequested();
+                });
+
+                using (var stream = FileHelper.OpenRead(path))
+                {
+                    var d = await stream.QueryAsync(cancellationToken: cts.Token);
+                    await cancelTask;
+                    d.ToList();
+                }
+            });
+        }
     }
 }

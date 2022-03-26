@@ -8,6 +8,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace MiniExcelLibs.Csv
@@ -133,9 +134,9 @@ namespace MiniExcelLibs.Csv
             }
         }
 
-        public Task SaveAsAsync()
+        public async Task SaveAsAsync(CancellationToken cancellationToken = default(CancellationToken))
         {
-            return Task.Run(() => SaveAs());
+            await Task.Run(() => SaveAs(),cancellationToken).ConfigureAwait(false);
         }
 
         private void GenerateSheetByIDataReader(object value, string seperator, string newLine, StreamWriter writer)

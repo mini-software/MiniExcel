@@ -15,6 +15,7 @@ using static MiniExcelLibs.Tests.Utils.MiniExcelOpenXml;
 using MiniExcelLibs.Tests.Utils;
 using MiniExcelLibs.Attributes;
 using System.Threading.Tasks;
+using System.Threading;
 
 namespace MiniExcelLibs.Tests
 {
@@ -1140,6 +1141,23 @@ namespace MiniExcelLibs.Tests
                 Assert.True(allParts[@"/_rels/.rels"].ContentType == "application/vnd.openxmlformats-package.relationships+xml");
             }
             File.Delete(path);
+        }
+
+        [Fact()]
+        public async Task ReadBigExcel_TakeCancel_Throws_TaskCanceledException()
+        {
+            await Assert.ThrowsAsync<TaskCanceledException>(async () => {
+                CancellationTokenSource cts = new CancellationTokenSource();
+                var path = @"../../../../../samples/xlsx/bigExcel.xlsx";
+
+                cts.Cancel();
+
+                using (var stream = FileHelper.OpenRead(path))
+                {
+                    var d = await stream.QueryAsync(cancellationToken: cts.Token);
+                    d.ToList();
+                }
+            });
         }
     }
 }

@@ -9,6 +9,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using static MiniExcelLibs.Utils.ImageHelper;
 
@@ -724,9 +725,9 @@ namespace MiniExcelLibs.OpenXml
             return dimensionRef;
         }
 
-        public Task SaveAsAsync()
+        public async Task SaveAsAsync(CancellationToken cancellationToken = default(CancellationToken))
         {
-            return Task.Run(() => SaveAs());
+            await Task.Run(() => SaveAs(),cancellationToken).ConfigureAwait(false);
         }
     }
 }

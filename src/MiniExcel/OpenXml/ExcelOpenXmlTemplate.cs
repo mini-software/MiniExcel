@@ -13,6 +13,7 @@ namespace MiniExcelLibs.OpenXml
     using System.Reflection;
     using System.Text;
     using System.Text.RegularExpressions;
+    using System.Threading;
     using System.Threading.Tasks;
     using System.Xml;
 
@@ -110,14 +111,14 @@ namespace MiniExcelLibs.OpenXml
             }
         }
 
-        public Task SaveAsByTemplateAsync(string templatePath, object value)
+        public Task SaveAsByTemplateAsync(string templatePath, object value,CancellationToken cancellationToken = default(CancellationToken))
         {
-            return Task.Run(() => SaveAsByTemplate(templatePath, value));
+            return Task.Run(() => SaveAsByTemplate(templatePath, value),cancellationToken);
         }
 
-        public Task SaveAsByTemplateAsync(byte[] templateBtyes, object value)
+        public Task SaveAsByTemplateAsync(byte[] templateBtyes, object value,CancellationToken cancellationToken = default(CancellationToken))
         {
-            return Task.Run(() => SaveAsByTemplate(templateBtyes, value));
+            return Task.Run(() => SaveAsByTemplate(templateBtyes, value),cancellationToken);
         }
     }
 }

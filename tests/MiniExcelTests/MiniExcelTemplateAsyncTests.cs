@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -734,6 +735,28 @@ namespace MiniExcelTests
                 Assert.Equal("A1:C9", demension);
             }
 
+        }
+
+        [Fact()]
+        public async Task SaveAsByTemplateAsync_TakeCancel_Throws_TaskCanceledException()
+        {
+            await Assert.ThrowsAsync<TaskCanceledException>(async () => {
+                CancellationTokenSource cts = new CancellationTokenSource();
+
+                cts.Cancel();
+
+                var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
+                var templatePath = @"../../../../../samples/xlsx/TestTemplateEasyFill.xlsx";
+
+                var value = new Dictionary<string, object>()
+                {
+                    ["Name"] = "Jack",
+                    ["CreateDate"] = new DateTime(2021, 01, 01),
+                    ["VIP"] = true,
+                    ["Points"] = 123
+                };
+                await MiniExcel.SaveAsByTemplateAsync(path, templatePath, value, cancellationToken: cts.Token);
+            });
         }
     }
 }

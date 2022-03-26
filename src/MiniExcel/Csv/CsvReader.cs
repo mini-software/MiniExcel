@@ -6,6 +6,7 @@ using System.Data;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace MiniExcelLibs.Csv
@@ -77,14 +78,14 @@ namespace MiniExcelLibs.Csv
             //this code from S.O : https://stackoverflow.com/a/11365961/9131476
         }
 
-        public Task<IEnumerable<IDictionary<string, object>>> QueryAsync(bool UseHeaderRow, string sheetName, string startCell)
+        public Task<IEnumerable<IDictionary<string, object>>> QueryAsync(bool UseHeaderRow, string sheetName, string startCell,CancellationToken cancellationToken = default(CancellationToken))
         {
-            return Task.Run(() => Query(UseHeaderRow, sheetName, startCell));
+            return Task.Run(() => Query(UseHeaderRow, sheetName, startCell),cancellationToken);
         }
 
-        public Task<IEnumerable<T>> QueryAsync<T>(string sheetName, string startCell) where T : class, new()
+        public Task<IEnumerable<T>> QueryAsync<T>(string sheetName, string startCell,CancellationToken cancellationToken = default(CancellationToken)) where T : class, new()
         {
-            return Task.Run(() => Query<T>(sheetName, startCell));
+            return Task.Run(() => Query<T>(sheetName, startCell),cancellationToken);
         }
     }
 }

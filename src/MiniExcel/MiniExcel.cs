@@ -93,6 +93,7 @@
         /// <summary>
         /// QueryAsDataTable is not recommended, because it'll load all data into memory.
         /// </summary>
+        [Obsolete("QueryAsDataTable is not recommended, because it'll load all data into memory.")]
         public static DataTable QueryAsDataTable(string path, bool useHeaderRow = true, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null)
         {
             using (var stream = FileHelper.OpenSharedRead(path))

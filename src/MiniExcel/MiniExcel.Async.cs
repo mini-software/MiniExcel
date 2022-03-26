@@ -65,6 +65,7 @@
         /// <summary>
         /// QueryAsDataTable is not recommended, because it'll load all data into memory.
         /// </summary>
+        [Obsolete("QueryAsDataTable is not recommended, because it'll load all data into memory.")] 
         public static Task<DataTable> QueryAsDataTableAsync(string path, bool useHeaderRow = true, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null)
         {
             return Task.Run(() => QueryAsDataTable(path, useHeaderRow, sheetName, ExcelTypeHelper.GetExcelType(path, excelType), startCell, configuration));
@@ -73,6 +74,7 @@
         /// <summary>
         /// QueryAsDataTable is not recommended, because it'll load all data into memory.
         /// </summary>
+        [Obsolete("QueryAsDataTable is not recommended, because it'll load all data into memory.")]
         public static Task<DataTable> QueryAsDataTableAsync(this Stream stream, bool useHeaderRow = true, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null)
         {
             return Task.Run(() => QueryAsDataTable(stream, useHeaderRow, sheetName, excelType, startCell, configuration));

@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Threading;
+using System.Threading.Tasks;
 
 namespace MiniExcelLibs
 {
@@ -10,7 +11,7 @@ namespace MiniExcelLibs
 
     internal interface IExcelTemplateAsync : IExcelTemplate
     {
-        Task SaveAsByTemplateAsync(string templatePath, object value);
-        Task SaveAsByTemplateAsync(byte[] templateBtyes, object value);
+        Task SaveAsByTemplateAsync(string templatePath, object value,CancellationToken cancellationToken = default(CancellationToken));
+        Task SaveAsByTemplateAsync(byte[] templateBtyes, object value,CancellationToken cancellationToken = default(CancellationToken));
     }
 }

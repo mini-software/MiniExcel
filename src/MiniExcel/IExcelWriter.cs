@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace MiniExcelLibs
@@ -6,6 +7,6 @@ namespace MiniExcelLibs
     internal interface IExcelWriter 
     {
         void SaveAs();
-        Task SaveAsAsync();
+        Task SaveAsAsync(CancellationToken cancellationToken = default(CancellationToken));
     }
 }

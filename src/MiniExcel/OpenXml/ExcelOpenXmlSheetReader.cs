@@ -7,6 +7,7 @@ using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 
@@ -747,14 +748,14 @@ namespace MiniExcelLibs.OpenXml
             }
         }
 
-        public Task<IEnumerable<IDictionary<string, object>>> QueryAsync(bool UseHeaderRow, string sheetName, string startCell)
+        public async Task<IEnumerable<IDictionary<string, object>>> QueryAsync(bool UseHeaderRow, string sheetName, string startCell,CancellationToken cancellationToken = default(CancellationToken))
         {
-            return Task.Run(() => Query(UseHeaderRow, sheetName, startCell));
+            return await Task.Run(() => Query(UseHeaderRow, sheetName, startCell),cancellationToken).ConfigureAwait(false);
         }
 
-        public Task<IEnumerable<T>> QueryAsync<T>(string sheetName, string startCell) where T : class, new()
+        public async Task<IEnumerable<T>> QueryAsync<T>(string sheetName, string startCell,CancellationToken cancellationToken = default(CancellationToken)) where T : class, new()
         {
-            return Task.Run(() => Query<T>(sheetName, startCell));
+            return await Task.Run(() => Query<T>(sheetName, startCell),cancellationToken).ConfigureAwait(false);
         }
     }
 }

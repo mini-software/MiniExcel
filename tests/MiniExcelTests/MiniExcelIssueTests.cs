@@ -35,6 +35,51 @@ namespace MiniExcelLibs.Tests
         }
 
         [Fact]
+        public void TestIssue352()
+        {
+            {
+                DataTable table = new DataTable();
+                {
+                    table.Columns.Add("id", typeof(int));
+                    table.Columns.Add("name", typeof(string));
+                    table.Rows.Add(1, "Jack");
+                    table.Rows.Add(2, "Mike");
+                }
+                var path = Path.GetTempPath() + Guid.NewGuid() + ".xlsx";
+                DataTableReader reader = table.CreateDataReader();
+                MiniExcel.SaveAs(path, reader);
+                var xml = Helpers.GetZipFileContent(path, "xl/worksheets/sheet1.xml");
+                var cnt = Regex.Matches(xml, "<x:autoFilter ref=\"A1:B3\" />").Count;
+            }
+            {
+                DataTable table = new DataTable();
+                {
+                    table.Columns.Add("id", typeof(int));
+                    table.Columns.Add("name", typeof(string));
+                    table.Rows.Add(1, "Jack");
+                    table.Rows.Add(2, "Mike");
+                }
+                var path = Path.GetTempPath() + Guid.NewGuid() + ".xlsx";
+                DataTableReader reader = table.CreateDataReader();
+                MiniExcel.SaveAs(path, reader,false);
+                var xml = Helpers.GetZipFileContent(path, "xl/worksheets/sheet1.xml");
+                var cnt = Regex.Matches(xml, "<x:autoFilter ref=\"A1:B2\" />").Count;
+            }
+            {
+                DataTable table = new DataTable();
+                {
+                    table.Columns.Add("id", typeof(int));
+                    table.Columns.Add("name", typeof(string));
+                }
+                var path = Path.GetTempPath() + Guid.NewGuid() + ".xlsx";
+                DataTableReader reader = table.CreateDataReader();
+                MiniExcel.SaveAs(path, reader);
+                var xml = Helpers.GetZipFileContent(path, "xl/worksheets/sheet1.xml");
+                var cnt = Regex.Matches(xml, "<x:autoFilter ref=\"A1:B1\" />").Count;
+            }
+        }
+
+        [Fact]
         public async Task TestIssue307()
         {
             var path = PathHelper.GetTempFilePath();

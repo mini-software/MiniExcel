@@ -24,6 +24,7 @@
 
 ### 1.25.0
 - [New] SaveAs support overwriteFile parameter for enable/unable overwriting exist file #307
+- [Bug] SaveAs by datareader, sometime it will add one more autoFilter column #352
 
 ### 1.24.3
 - [Bug] Fixed multiple threads Async error 'The given key N was not present in the dictionary' #344

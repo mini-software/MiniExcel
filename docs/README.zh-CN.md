@@ -34,6 +34,7 @@
 
 ### 1.25.0
 - [New] SaveAs 支持 overwriteFile 参数，方便调整是否要覆盖已存在文件。 #307
+- [Bug] SaveAs by datareader， 有时会多一个 autoFilter column #352
 
 ### 1.24.3
 - [Bug] 修正多 threads Async 可能错误 'The given key N was not present in the dictionary' #344

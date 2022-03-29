@@ -540,7 +540,7 @@ namespace MiniExcelLibs.OpenXml
 
         private void GenerateSheetByIDataReader(StreamWriter writer, IDataReader reader)
         {
-            var xy = ExcelOpenXmlUtils.ConvertCellToXY("A1");
+            var xy = ExcelOpenXmlUtils.ConvertCellToXY("A1"); /*TODO:code smell*/
 
             writer.Write($@"<?xml version=""1.0"" encoding=""utf-8""?><x:worksheet xmlns:x=""http://schemas.openxmlformats.org/spreadsheetml/2006/main"">");
             var yIndex = xy.Item2;
@@ -583,7 +583,7 @@ namespace MiniExcelLibs.OpenXml
                 }
             }
             writer.Write("</x:sheetData>");
-            writer.Write($"<x:autoFilter ref=\"A1:{ExcelOpenXmlUtils.ConvertXyToCell(xIndex, yIndex)}\" />");
+            writer.Write($"<x:autoFilter ref=\"A1:{ExcelOpenXmlUtils.ConvertXyToCell((xIndex-1)/*TODO:code smell*/, yIndex-1)}\" />");
             writer.Write("</x:worksheet>");
         }
 

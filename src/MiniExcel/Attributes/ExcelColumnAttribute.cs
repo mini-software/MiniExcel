@@ -33,7 +33,7 @@ namespace MiniExcelLibs.Attributes
 
         private void Init(int index, string columnName = null)
         {
-            if (index == null || index < 0)
+            if (index < 0)
             {
                 throw new ArgumentOutOfRangeException(nameof(index), index,
                     $"Column index {index} must be greater or equal to zero.");

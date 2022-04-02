@@ -27,16 +27,9 @@
         {
             if (Path.GetExtension(path).ToLowerInvariant() == ".xlsm")
                 throw new NotSupportedException("MiniExcel SaveAs not support xlsm");
-            if (overwriteFile)
-            {
-                using (var stream = File.Create(path))
-                    SaveAs(stream, value, printHeader, sheetName, ExcelTypeHelper.GetExcelType(path, excelType), configuration);
-            }
-            else
-            {
-                using (var stream = new FileStream(path, FileMode.CreateNew))
-                    SaveAs(stream, value, printHeader, sheetName, ExcelTypeHelper.GetExcelType(path, excelType), configuration);
-            }
+
+            using (var stream = overwriteFile ? File.Create(path) : new FileStream(path, FileMode.CreateNew))
+                SaveAs(stream, value, printHeader, sheetName, ExcelTypeHelper.GetExcelType(path, excelType), configuration);
         }
 
         public static void SaveAs(this Stream stream, object value, bool printHeader = true, string sheetName = "Sheet1", ExcelType excelType = ExcelType.XLSX, IConfiguration configuration = null)

@@ -46,7 +46,11 @@
 
         public static IEnumerable<T> Query<T>(this Stream stream, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null) where T : class, new()
         {
-            return ExcelReaderFactory.GetProvider(stream, ExcelTypeHelper.GetExcelType(stream, excelType), configuration).Query<T>(sheetName, startCell);
+            using (var excelReader = ExcelReaderFactory.GetProvider(stream, ExcelTypeHelper.GetExcelType(stream, excelType), configuration))
+                foreach (var item in excelReader.Query<T>(sheetName, startCell))
+                {
+                    yield return item;
+                }
         }
 
         public static IEnumerable<dynamic> Query(string path, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null)
@@ -58,7 +62,9 @@
 
         public static IEnumerable<dynamic> Query(this Stream stream, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null)
         {
-            return ExcelReaderFactory.GetProvider(stream, ExcelTypeHelper.GetExcelType(stream, excelType),configuration).Query(useHeaderRow, sheetName, startCell);
+            using (var excelReader = ExcelReaderFactory.GetProvider(stream, ExcelTypeHelper.GetExcelType(stream, excelType), configuration))
+                foreach (var item in excelReader.Query(useHeaderRow, sheetName, startCell))
+                    yield return item;
         }
 
         public static void SaveAsByTemplate(string path, string templatePath, object value, IConfiguration configuration = null)

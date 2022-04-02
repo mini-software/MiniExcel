@@ -1,4 +1,5 @@
-﻿using MiniExcelLibs.Utils;
+﻿using System;
+using MiniExcelLibs.Utils;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
@@ -8,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace MiniExcelLibs
 {
-    internal interface IExcelReader
+    internal interface IExcelReader: IDisposable
     {
         IEnumerable<IDictionary<string, object>> Query(bool UseHeaderRow, string sheetName,string startCell);
         IEnumerable<T> Query<T>(string sheetName, string startCell) where T : class, new();

@@ -757,5 +757,13 @@ namespace MiniExcelLibs.OpenXml
         {
             return await Task.Run(() => Query<T>(sheetName, startCell),cancellationToken).ConfigureAwait(false);
         }
+
+        public void Dispose()
+        {
+            if (_sharedStrings is DbList dbList)
+            {
+                dbList.Dispose();
+            }
+        }
     }
 }

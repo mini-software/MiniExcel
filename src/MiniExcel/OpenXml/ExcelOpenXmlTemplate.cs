@@ -82,7 +82,7 @@ namespace MiniExcelLibs.OpenXml
                 var _archive = new ExcelOpenXmlZip(_stream, mode: ZipArchiveMode.Update, true, Encoding.UTF8);
                 {
                     //read sharedString
-                    var sharedStrings = reader.GetSharedStrings();
+                    var sharedStrings = reader._sharedStrings;
 
                     //read all xlsx sheets
                     var sheets = _archive.zipFile.Entries.Where(w => w.FullName.StartsWith("xl/worksheets/sheet", StringComparison.OrdinalIgnoreCase)

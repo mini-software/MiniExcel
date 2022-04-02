@@ -7,6 +7,7 @@ using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
@@ -18,7 +19,7 @@ namespace MiniExcelLibs.OpenXml
         private static readonly string[] _ns = { Config.SpreadsheetmlXmlns, Config.SpreadsheetmlXmlStrictns };
         private static readonly string[] _relationshiopNs = { Config.SpreadsheetmlXmlRelationshipns, Config.SpreadsheetmlXmlStrictRelationshipns };
         private List<SheetRecord> _sheetRecords;
-        private IList<string> _sharedStrings;
+        internal IDictionary<int, string> _sharedStrings;
         private MergeCells _mergeCells;
         private ExcelOpenXmlStyles _style;
         private readonly ExcelOpenXmlZip _archive;
@@ -30,10 +31,11 @@ namespace MiniExcelLibs.OpenXml
             XmlResolver = null,
         };
 
-        public ExcelOpenXmlSheetReader(Stream stream,IConfiguration configuration)
+        public ExcelOpenXmlSheetReader(Stream stream, IConfiguration configuration)
         {
             _archive = new ExcelOpenXmlZip(stream);
             _config = (OpenXmlConfiguration)configuration ?? OpenXmlConfiguration.DefaultConfig;
+            SetSharedStrings();
         }
 
         public IEnumerable<IDictionary<string, object>> Query(bool useHeaderRow, string sheetName, string startCell)
@@ -41,9 +43,6 @@ namespace MiniExcelLibs.OpenXml
             if (!ReferenceHelper.ParseReference(startCell, out var startColumnIndex, out var startRowIndex))
                 throw new InvalidDataException($"startCell {startCell} is Invalid");
             startColumnIndex--; startRowIndex--;
-
-            //TODO:need to optimize
-            SetSharedStrings();
 
             // if sheets count > 1 need to read xl/_rels/workbook.xml.rels  
             var sheets = _archive.entries.Where(w => w.FullName.StartsWith("xl/worksheets/sheet", StringComparison.OrdinalIgnoreCase)
@@ -312,7 +311,7 @@ namespace MiniExcelLibs.OpenXml
                                                 {
                                                     var mergeKey = _mergeCells.MergesMap[aR];
                                                     object mergeValue = null;
-                                                    if(_mergeCells.MergesValues.ContainsKey(mergeKey))
+                                                    if (_mergeCells.MergesValues.ContainsKey(mergeKey))
                                                         mergeValue = _mergeCells.MergesValues[mergeKey];
                                                     cellValue = mergeValue;
                                                 }
@@ -330,7 +329,7 @@ namespace MiniExcelLibs.OpenXml
                                                 // only when have s attribute then load styles xml data
                                                 if (_style == null)
                                                     _style = new ExcelOpenXmlStyles(_archive);
-      
+
                                                 cellValue = _style.ConvertValueByStyleFormat(xfIndex, cellValue);
                                                 SetCellsValueAndHeaders(cellValue, useHeaderRow, ref headRows, ref isFirstRow, ref cell, columnIndex);
                                             }
@@ -425,7 +424,7 @@ namespace MiniExcelLibs.OpenXml
                 {
                     keys = item.Keys.ToArray();//.Select((s, i) => new { s,i}).ToDictionary(_=>_.s,_=>_.i);
                     headers = item?.Values?.Select(s => s?.ToString())?.ToArray(); //TODO:remove
-                    headersDic = headers.Select((o, i) => new { o=(o == null ? "" : o), i } )
+                    headersDic = headers.Select((o, i) => new { o = (o == null ? "" : o), i })
                         .OrderBy(x => x.i)
                         .GroupBy(x => x.o)
                         .Select(group => new { Group = group, Count = group.Count() })
@@ -491,42 +490,19 @@ namespace MiniExcelLibs.OpenXml
                 return;
             using (var stream = sharedStringsEntry.Open())
             {
+                var idx = 0;
                 if (_config.EnableSharedStringCache && sharedStringsEntry.Length >= _config.SharedStringCacheSize)
                 {
-                    // use sqlite
-                    var dbList = new DbList(Guid.NewGuid().ToString());
-
-                    var list = new List<string>();
+                    _sharedStrings = new SharedStringsDiskCache();
                     foreach (var sharedString in XmlReaderHelper.GetSharedStrings(stream, _ns))
-                    {
-                        list.Add(sharedString);
-                        if (list.Count >= 10000)
-                        {
-                            dbList.AddRange(list);
-                            list.Clear();
-                        }
-                    }
-
-                    if (list.Count > 0)
-                    {
-                        dbList.AddRange(list);
-                        list.Clear();
-                    }
-                    
-                    _sharedStrings = dbList;
+                        _sharedStrings[idx++] = sharedString;
                 }
                 else
                 {
-                    _sharedStrings = XmlReaderHelper.GetSharedStrings(stream, _ns).ToList();
+                    if (_sharedStrings == null)
+                        _sharedStrings = XmlReaderHelper.GetSharedStrings(stream, _ns).ToDictionary((x) => idx++, x => x);
                 }
-            }  
-        }
-
-        internal IList<string> GetSharedStrings()
-        {
-            if (_sharedStrings == null)
-                SetSharedStrings();
-            return _sharedStrings;
+            }
         }
 
         private void SetWorkbookRels(ReadOnlyCollection<ZipArchiveEntry> entries)
@@ -714,7 +690,7 @@ namespace MiniExcelLibs.OpenXml
                         else
                         {
                             value = v;
-                        } 
+                        }
                     }
                     else
                     {
@@ -748,21 +724,21 @@ namespace MiniExcelLibs.OpenXml
             }
         }
 
-        public async Task<IEnumerable<IDictionary<string, object>>> QueryAsync(bool UseHeaderRow, string sheetName, string startCell,CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<IEnumerable<IDictionary<string, object>>> QueryAsync(bool UseHeaderRow, string sheetName, string startCell, CancellationToken cancellationToken = default(CancellationToken))
         {
-            return await Task.Run(() => Query(UseHeaderRow, sheetName, startCell),cancellationToken).ConfigureAwait(false);
+            return await Task.Run(() => Query(UseHeaderRow, sheetName, startCell), cancellationToken).ConfigureAwait(false);
         }
 
-        public async Task<IEnumerable<T>> QueryAsync<T>(string sheetName, string startCell,CancellationToken cancellationToken = default(CancellationToken)) where T : class, new()
+        public async Task<IEnumerable<T>> QueryAsync<T>(string sheetName, string startCell, CancellationToken cancellationToken = default(CancellationToken)) where T : class, new()
         {
-            return await Task.Run(() => Query<T>(sheetName, startCell),cancellationToken).ConfigureAwait(false);
+            return await Task.Run(() => Query<T>(sheetName, startCell), cancellationToken).ConfigureAwait(false);
         }
 
         public void Dispose()
         {
-            if (_sharedStrings is DbList dbList)
+            if (_sharedStrings is SharedStringsDiskCache cache)
             {
-                dbList.Dispose();
+                cache.Dispose();
             }
         }
     }

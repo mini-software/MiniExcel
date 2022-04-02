@@ -35,6 +35,22 @@ namespace MiniExcelLibs.Tests
         }
 
         [Fact]
+        public void TestIssue117()
+        {
+            {
+                var cache = new SharedStringsDiskCache();
+                for (int i = 0; i < 1000000; i++)
+                {
+                    cache[i]= i.ToString();
+                }
+                for (int i = 0; i < 1000000; i++)
+                {
+                    Assert.Equal(i.ToString(), cache[i]);
+                }
+            }
+        }
+
+        [Fact]
         public void TestIssue352()
         {
             {

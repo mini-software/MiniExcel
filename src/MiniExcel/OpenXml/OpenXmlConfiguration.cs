@@ -11,9 +11,7 @@ namespace MiniExcelLibs.OpenXml
         public bool AutoFilter { get; set; } = true;
         public bool EnableConvertByteArray { get; set; } = true;
         public bool IgnoreTemplateParameterMissing { get; set; } = true;
-
-        // currently, this is a preview functional
-        public bool EnableSharedStringCache { get; set; } = false;
+        public bool EnableSharedStringCache { get; set; } = true;
         public int SharedStringCacheSize { get; set; } = 5 * 1024 * 1024;
     }
 }

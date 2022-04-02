@@ -87,5 +87,9 @@ namespace MiniExcelLibs.Csv
         {
             return Task.Run(() => Query<T>(sheetName, startCell),cancellationToken);
         }
+
+        public void Dispose()
+        {
+        }
     }
 }

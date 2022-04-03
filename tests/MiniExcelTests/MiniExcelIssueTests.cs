@@ -1352,12 +1352,13 @@ Henry,44,Jerry,44
                 var value = new
                 {
                     Issue255DTO = new Issue255DTO[] {
-                        new Issue255DTO { Time = new DateTime(2021, 01, 01) }
+                        new Issue255DTO { Time = new DateTime(2021, 01, 01), Time2 = new DateTime(2021, 01, 01) }
                     }
                 };
                 MiniExcel.SaveAsByTemplate(path, templatePath, value);
                 var rows = MiniExcel.Query(path).ToList();
                 Assert.Equal("2021", rows[1].A.ToString());
+                Assert.Equal("2021", rows[1].B.ToString());
             }
             //saveas
             {
@@ -1375,6 +1376,9 @@ Henry,44,Jerry,44
         {
             [ExcelFormat("yyyy")]
             public DateTime Time { get; set; }
+            
+            [ExcelColumn(Format = "yyyy")]
+            public DateTime Time2 { get; set; }
         }
 
         /// <summary>

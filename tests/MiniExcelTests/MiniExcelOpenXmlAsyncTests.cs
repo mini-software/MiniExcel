@@ -64,6 +64,22 @@ namespace MiniExcelLibs.Tests
             [ExcelColumnIndex(3)] // start with 0
             public string Test7 { get; set; }
         }
+        
+        public class ExcelAttributeDemo2
+        {
+            [ExcelColumn(Name = "Column1")]
+            public string Test1 { get; set; }
+            [ExcelColumn(Name = "Column2")]
+            public string Test2 { get; set; }
+            [ExcelColumn(Ignore = true)]
+            public string Test3 { get; set; }
+            [ExcelColumn(XName = "I")] // system will convert "I" to 8 index
+            public string Test4 { get; set; }
+            public string Test5 { get; } //wihout set will ignore
+            public string Test6 { get; private set; } //un-public set will ignore
+            [ExcelColumn(Index = 3)] // start with 0
+            public string Test7 { get; set; }
+        }
 
         [Fact]
         public async Task CustomAttributeWihoutVaildPropertiesTest()
@@ -89,6 +105,20 @@ namespace MiniExcelLibs.Tests
             Assert.Null(rows[0].Test6);
             Assert.Equal("Test4", rows[0].Test7);
         }
+        
+        [Fact]
+        public async Task QueryCustomAttributes2Test()
+        {
+            var path = @"../../../../../samples/xlsx/TestCustomExcelColumnAttribute.xlsx";
+            var rows = (await MiniExcel.QueryAsync<ExcelAttributeDemo2>(path)).ToList();
+            Assert.Equal("Column1", rows[0].Test1);
+            Assert.Equal("Column2", rows[0].Test2);
+            Assert.Null(rows[0].Test3);
+            Assert.Equal("Test7", rows[0].Test4);
+            Assert.Null(rows[0].Test5);
+            Assert.Null(rows[0].Test6);
+            Assert.Equal("Test4", rows[0].Test7);
+        }
 
         [Fact]
         public async Task SaveAsCustomAttributesTest()
@@ -96,6 +126,35 @@ namespace MiniExcelLibs.Tests
             string path = GetTempXlsxPath();
             var input = Enumerable.Range(1, 3).Select(
                 s => new ExcelAttributeDemo
+                {
+                    Test1 = "Test1",
+                    Test2 = "Test2",
+                    Test3 = "Test3",
+                    Test4 = "Test4",
+                }
+            );
+            await MiniExcel.SaveAsAsync(path, input);
+            {
+                var d = await MiniExcel.QueryAsync(path, true);
+                var rows = d.ToList();
+                var first = rows[0] as IDictionary<string, object>;
+                Assert.Equal(new[] { "Column1", "Column2", "Test5", "Test7", "Test6", "Test4" }, first.Keys);
+                Assert.Equal("Test1", rows[0].Column1);
+                Assert.Equal("Test2", rows[0].Column2);
+                Assert.Equal("Test4", rows[0].Test4);
+                Assert.Null(rows[0].Test5);
+                Assert.Null(rows[0].Test6);
+
+                Assert.Equal(3, rows.Count);
+            }
+        }
+        
+        [Fact]
+        public async Task SaveAsCustomAttributes2Test()
+        {
+            string path = GetTempXlsxPath();
+            var input = Enumerable.Range(1, 3).Select(
+                s => new ExcelAttributeDemo2
                 {
                     Test1 = "Test1",
                     Test2 = "Test2",

@@ -999,7 +999,7 @@ MiniExcel.SaveAs(path, value,excelType:ExcelType.CSV, configuration: config);
 
 ### 異步 Async
 
-從 v0.17.0 版本開始支持異步 (感謝[isdaniel ( SHIH,BING-SIOU)](https://github.com/isdaniel))
+- 從 v0.17.0 版本開始支持異步 (感謝[isdaniel ( SHIH,BING-SIOU)](https://github.com/isdaniel))
 
 ```csharp
 public static Task SaveAsAsync(string path, object value, bool printHeader = true, string sheetName = "Sheet1", ExcelType excelType = ExcelType.UNKNOWN, IConfiguration configuration = null)
@@ -1014,6 +1014,8 @@ public static Task SaveAsByTemplateAsync(string path, string templatePath, objec
 public static Task SaveAsByTemplateAsync(string path, byte[] templateBytes, object value) 
 public static Task<DataTable> QueryAsDataTableAsync(string path, bool useHeaderRow = true, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null)
 ```
+
+- 從 v1.25.0 開始支持 `cancellationToken`。
 
 
 

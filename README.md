@@ -997,7 +997,7 @@ Since 1.23.0, you can GetDataReader
 
 ###  Async
 
- v0.17.0 support Async (thanks isdaniel ( SHIH,BING-SIOU)](https://github.com/isdaniel))
+- v0.17.0 support Async (thanks isdaniel ( SHIH,BING-SIOU)](https://github.com/isdaniel))
 
 ```csharp
 public static Task SaveAsAsync(string path, object value, bool printHeader = true, string sheetName = "Sheet1", ExcelType excelType = ExcelType.UNKNOWN, IConfiguration configuration = null)
@@ -1013,7 +1013,7 @@ public static Task SaveAsByTemplateAsync(string path, byte[] templateBytes, obje
 public static Task<DataTable> QueryAsDataTableAsync(string path, bool useHeaderRow = true, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null)
 ```
 
-
+-  v1.25.0 support `cancellationToken`。
 
 
 

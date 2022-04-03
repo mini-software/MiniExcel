@@ -26,7 +26,8 @@
 - [Bug] Fixed QueryAsDataTable read big file will throw NotImplementedException #360
 
 ### 1.25.0
-- [New] Support SharingStrings disk cache (when this file size >= 5 MB), it can reduce reading 2GB SharingStrings only needs 1~13 MB memory #117
+- [New] Support SharingStrings disk cache (when this file size >= 5 MB), it can reduce reading 2GB SharingStrings only needs 1~13 MB memory #117(#346 via @Weilence) (via @shps951023)
+- [New] Async support cancellationToken (#350 via @isdaniel)
 - [New] SaveAs support overwriteFile parameter for enable/unable overwriting exist file #307
 - [Bug] SaveAs by datareader, sometime it will add one more autoFilter column #352
 

@@ -293,6 +293,32 @@ support variable length and width multi-row and column filling
 
 ![image](https://user-images.githubusercontent.com/12729184/117973820-6d2f1800-b35f-11eb-88d8-555063938108.png)
 
+#### 12. Reading big file by disk-base cache (Disk-Base Cache - SharedString)
+
+If the SharedStrings size exceeds 5 MB, MiniExcel default will use local disk cache, e.g, [10x100000.xlsx](https://github.com/MiniExcel/MiniExcel/files/8403819/NotDuplicateSharedStrings_10x100000.xlsx)(one million rows data), when disable disk cache the maximum memory usage is 195MB, but able disk cache only needs 65MB. Note, this optimization needs some efficiency cost, so this case will increase reading time from 7.4 seconds to 27.2 seconds, If you don't need it that you can disable disk cache with the following code:  
+
+```csharp
+var config = new OpenXmlConfiguration { EnableSharedStringCache = false };
+MiniExcel.Query(path,configuration: config)
+```
+
+You can use `SharedStringCacheSize ` to change the sharedString file size beyond the specified size for disk caching
+```csharp
+var config = new OpenXmlConfiguration { SharedStringCacheSize=500*1024*1024 };
+MiniExcel.Query(path, configuration: config);
+```
+
+
+![image](https://user-images.githubusercontent.com/12729184/161411851-1c3f72a7-33b3-4944-84dc-ffc1d16747dd.png)
+
+![image](https://user-images.githubusercontent.com/12729184/161411825-17f53ec7-bef4-4b16-b234-e24799ea41b0.png)
+
+
+
+
+
+
+
 
 
 ### Create/Export Excel  <a name="getstart2"></a>

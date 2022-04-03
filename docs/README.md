@@ -22,6 +22,9 @@
 
 ---
 
+### 1.25.1
+- [Bug] Fixed QueryAsDataTable read big file will throw NotImplementedException #360
+
 ### 1.25.0
 - [New] Support SharingStrings disk cache (when this file size >= 5 MB), it can reduce reading 2GB SharingStrings only needs 1~13 MB memory #117
 - [New] SaveAs support overwriteFile parameter for enable/unable overwriting exist file #307

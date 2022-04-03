@@ -12,6 +12,6 @@ namespace MiniExcelLibs.OpenXml
         public bool EnableConvertByteArray { get; set; } = true;
         public bool IgnoreTemplateParameterMissing { get; set; } = true;
         public bool EnableSharedStringCache { get; set; } = true;
-        public int SharedStringCacheSize { get; set; } = 5 * 1024 * 1024;
+        public long SharedStringCacheSize { get; set; } = 5 * 1024 * 1024;
     }
 }

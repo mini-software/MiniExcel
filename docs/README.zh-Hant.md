@@ -24,6 +24,9 @@
 
 ---
 
+### 1.25.1
+- [Bug] 修正 QueryAsDataTable 讀取大文件會拋出 NotImplementedException #360
+
 ### 1.25.0
 - [New] 支持 SharingStrings disk cache (當該文件大小 >= 5 MB)，現在讀取 2GB SharingStrings 只需要使用 1~13MB 記憶體 #117
 - [New] SaveAs 支持 overwriteFile 參數，方便調整是否要覆蓋已存在文件。 #307

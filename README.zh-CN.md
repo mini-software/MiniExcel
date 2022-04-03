@@ -296,6 +296,30 @@ MiniExcel.Query(path,useHeaderRow:true,startCell:"B3")
 
 
 
+#### 12. 读取大文件硬盘缓存 (Disk-Base Cache - SharedString)
+
+概念 : MiniExcel 当判断文件 SharedString 大小超过 5MB，预设会使用本地缓存，如 [10x100000.xlsx](https://github.com/MiniExcel/MiniExcel/files/8403819/NotDuplicateSharedStrings_10x100000.xlsx)(一百万笔数据)，读取不开启本地缓存需要最高内存使用约195MB，开启后降为65MB。但要特别注意，此优化是以`时间换取内存减少`，所以读取效率会变慢，此例子读取时间从 7.4 秒提高到 27.2 秒，假如不需要能用以下代码关闭硬盘缓存
+
+```csharp
+var config = new OpenXmlConfiguration { EnableSharedStringCache = false };
+MiniExcel.Query(path,configuration: config)
+```
+
+也能使用 SharedStringCacheSize 调整 sharedString 文件大小超过指定大小才做硬盘缓存
+```csharp
+var config = new OpenXmlConfiguration { SharedStringCacheSize=500*1024*1024 };
+MiniExcel.Query(path, configuration: config);
+```
+
+
+![image](https://user-images.githubusercontent.com/12729184/161411851-1c3f72a7-33b3-4944-84dc-ffc1d16747dd.png)
+
+![image](https://user-images.githubusercontent.com/12729184/161411825-17f53ec7-bef4-4b16-b234-e24799ea41b0.png)
+
+
+
+
+
 ### 写/导出 Excel  <a name="getstart2"></a>
 
 1. 必须是非abstract 类别有公开无参数构造函数

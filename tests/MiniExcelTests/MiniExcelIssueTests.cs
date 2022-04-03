@@ -35,18 +35,35 @@ namespace MiniExcelLibs.Tests
         }
 
         [Fact]
+        public void TestIssue360()
+        {
+            var path = PathHelper.GetFile("xlsx/NotDuplicateSharedStrings_10x100.xlsx");
+            var config = new OpenXmlConfiguration { SharedStringCacheSize = 1 };
+            var sheets = MiniExcel.GetSheetNames(path);
+            foreach (var sheetName in sheets)
+            {
+                var dt = MiniExcel.QueryAsDataTable(path, useHeaderRow: true, sheetName: sheetName, configuration: config);
+            }
+        }
+
+        [Fact]
         public void TestIssue117()
         {
             {
                 var cache = new SharedStringsDiskCache();
-                for (int i = 0; i < 1000000; i++)
+                for (int i = 0; i < 100; i++)
                 {
-                    cache[i]= i.ToString();
+                    cache[i] = i.ToString();
                 }
-                for (int i = 0; i < 1000000; i++)
+                for (int i = 0; i < 100; i++)
                 {
                     Assert.Equal(i.ToString(), cache[i]);
                 }
+                Assert.Equal(100, cache.Count);
+            }
+            {
+                var cache = new SharedStringsDiskCache();
+                Assert.Empty(cache);
             }
         }
 
@@ -77,7 +94,7 @@ namespace MiniExcelLibs.Tests
                 }
                 var path = Path.GetTempPath() + Guid.NewGuid() + ".xlsx";
                 DataTableReader reader = table.CreateDataReader();
-                MiniExcel.SaveAs(path, reader,false);
+                MiniExcel.SaveAs(path, reader, false);
                 var xml = Helpers.GetZipFileContent(path, "xl/worksheets/sheet1.xml");
                 var cnt = Regex.Matches(xml, "<x:autoFilter ref=\"A1:B2\" />").Count;
             }

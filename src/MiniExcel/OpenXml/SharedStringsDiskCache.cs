@@ -17,12 +17,12 @@ namespace MiniExcelLibs.OpenXml
 
         public ICollection<string> Values => throw new NotImplementedException();
 
-        public int Count => throw new NotImplementedException();
+        public int Count => (int)(_maxIndx+1); 
 
         public bool IsReadOnly => throw new NotImplementedException();
 
         public string this[int key] { get => GetValue(key); set => Add(key,value); }
-        private long _maxIndx = 0;
+        private long _maxIndx = -1;
         public bool ContainsKey(int key)
         {
             return key <= _maxIndx;
@@ -134,12 +134,14 @@ namespace MiniExcelLibs.OpenXml
 
         public IEnumerator<KeyValuePair<int, string>> GetEnumerator()
         {
-            throw new NotImplementedException();
+            for (int i = 0; i < _maxIndx; i++)
+                yield return new KeyValuePair<int, string>(i, this[i]);
         }
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            throw new NotImplementedException();
+            for (int i = 0; i < _maxIndx; i++)
+                yield return this[i];
         }
 
         void IDictionary<int, string>.Add(int key, string value)

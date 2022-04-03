@@ -51,7 +51,10 @@
         internal static List<ExcelCustomPropertyInfo> GetSaveAsProperties(this Type type)
         {
             List<ExcelCustomPropertyInfo> props = GetExcelPropertyInfo(type, BindingFlags.Public | BindingFlags.Instance)
-                .Where(prop => prop.Property.GetGetMethod() != null && !prop.Property.GetAttributeValue((ExcelIgnoreAttribute x) => x.ExcelIgnore))
+                .Where(prop => prop.Property.GetGetMethod() != null
+                               && !prop.Property.GetAttributeValue((ExcelIgnoreAttribute x) => x.ExcelIgnore)
+                               && !prop.Property.GetAttributeValue((ExcelColumnAttribute x) => x.Ignore)
+                )
                 .ToList() /*ignore without set*/;
 
             if (props.Count == 0)
@@ -101,7 +104,9 @@
         internal static List<ExcelCustomPropertyInfo> GetExcelCustomPropertyInfos(Type type, string[] keys)
         {
             List<ExcelCustomPropertyInfo> props = GetExcelPropertyInfo(type, BindingFlags.SetProperty | BindingFlags.Public | BindingFlags.Instance)
-                .Where(prop => prop.Property.GetSetMethod() != null && !prop.Property.GetAttributeValue((ExcelIgnoreAttribute x) => x.ExcelIgnore))
+                .Where(prop => prop.Property.GetSetMethod() != null
+                               && !prop.Property.GetAttributeValue((ExcelIgnoreAttribute x) => x.ExcelIgnore)
+                               && !prop.Property.GetAttributeValue((ExcelColumnAttribute x) => x.Ignore))
                 .ToList() /*ignore without set*/;
 
             if (props.Count == 0)
@@ -152,17 +157,19 @@
                      var excelColumnName = p.GetAttribute<ExcelColumnNameAttribute>() ;
                      var excludeNullableType = gt ?? p.PropertyType;
                      var excelFormat = p.GetAttribute<ExcelFormatAttribute>()?.Format;
+                     var excelColumn = p.GetAttribute<ExcelColumnAttribute>();
+                     var excelColumnIndex = excelColumn?.Index > -1 ? excelColumn.Index : (int?)null;
                      return new ExcelCustomPropertyInfo
                      {
                          Property = p,
                          ExcludeNullableType = excludeNullableType,
                          Nullable = gt != null,
-                         ExcelColumnAliases = excelColumnName?.Aliases,
-                         ExcelColumnName = excelColumnName?.ExcelColumnName ?? p.GetAttribute<System.ComponentModel.DisplayNameAttribute>()?.DisplayName ?? p.Name ,
-                         ExcelColumnIndex = p.GetAttribute<ExcelColumnIndexAttribute>()?.ExcelColumnIndex,
-                         ExcelXName = p.GetAttribute<ExcelColumnIndexAttribute>()?.ExcelXName,
-                         ExcelColumnWidth = p.GetAttribute<ExcelColumnWidthAttribute>()?.ExcelColumnWidth,
-                         ExcelFormat = excelFormat,
+                         ExcelColumnAliases = excelColumnName?.Aliases ?? excelColumn?.Aliases,
+                         ExcelColumnName = excelColumnName?.ExcelColumnName ?? p.GetAttribute<System.ComponentModel.DisplayNameAttribute>()?.DisplayName ?? excelColumn?.Name ?? p.Name,
+                         ExcelColumnIndex = p.GetAttribute<ExcelColumnIndexAttribute>()?.ExcelColumnIndex ?? excelColumnIndex, 
+                         ExcelXName = p.GetAttribute<ExcelColumnIndexAttribute>()?.ExcelXName ?? excelColumn?.XName,
+                         ExcelColumnWidth = p.GetAttribute<ExcelColumnWidthAttribute>()?.ExcelColumnWidth ?? excelColumn?.Width,
+                         ExcelFormat = excelFormat ?? excelColumn?.Format,
                      };
                  });
         }

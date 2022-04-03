@@ -371,11 +371,11 @@ namespace MiniExcelLibs.OpenXml
         {
             string cellValueStr;
             //TODO:c.SetAttribute("t", "d"); and custom format
-            var efa = propInfo.Value.PropertyInfo.GetCustomAttribute(typeof(ExcelFormatAttribute)) as ExcelFormatAttribute;
-            if (efa == null)
-                cellValueStr = (cellValue as DateTime?)?.ToString("yyyy-MM-dd HH:mm:ss");
-            else
-                cellValueStr = (cellValue as DateTime?)?.ToString(efa.Format);
+            var format = propInfo.Value.PropertyInfo.GetAttributeValue((ExcelFormatAttribute x) => x.Format)
+                         ?? propInfo.Value.PropertyInfo.GetAttributeValue((ExcelColumnAttribute x) => x.Format)
+                         ?? "yyyy-MM-dd HH:mm:ss";
+
+            cellValueStr = (cellValue as DateTime?)?.ToString(format);
             return cellValueStr;
         }
 

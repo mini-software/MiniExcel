@@ -22,6 +22,9 @@
 
 ---
 
+### 1.25.2
+- [New] Remove overdue ExcelNumberFormat Dependency #271
+
 ### 1.25.1
 - [Bug] Fixed QueryAsDataTable read big file will throw NotImplementedException #360
 

@@ -1,6 +1,6 @@
 ﻿namespace MiniExcelLibs.Utils
 {
-    using ExcelNumberFormat;
+    using MiniExcelLibs.Utils;
     using System;
     using System.Globalization;
 
@@ -11,7 +11,7 @@
         /// </summary>
         public static bool IsDateTimeFormat(string formatCode)
         {
-            return new NumberFormat(formatCode).IsDateTimeFormat;
+            return new ExcelNumberFormat(formatCode).IsDateTimeFormat;
         }
     }
 

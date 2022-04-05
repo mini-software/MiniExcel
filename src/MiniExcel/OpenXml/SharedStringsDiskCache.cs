@@ -13,14 +13,7 @@ namespace MiniExcelLibs.OpenXml
         private readonly FileStream _valueFs;
         private bool _disposedValue;
         private readonly static Encoding _encoding = new System.Text.UTF8Encoding(true);
-        public ICollection<int> Keys => throw new NotImplementedException();
-
-        public ICollection<string> Values => throw new NotImplementedException();
-
-        public int Count => (int)(_maxIndx+1); 
-
-        public bool IsReadOnly => throw new NotImplementedException();
-
+        public int Count => (int)(_maxIndx+1);
         public string this[int key] { get => GetValue(key); set => Add(key,value); }
         private long _maxIndx = -1;
         public bool ContainsKey(int key)
@@ -96,7 +89,9 @@ namespace MiniExcelLibs.OpenXml
             Dispose(disposing: true);
             GC.SuppressFinalize(this);
         }
-
+        public ICollection<int> Keys => throw new NotImplementedException();
+        public ICollection<string> Values => throw new NotImplementedException();
+        public bool IsReadOnly => throw new NotImplementedException();
         public bool Remove(int key)
         {
             throw new NotImplementedException();

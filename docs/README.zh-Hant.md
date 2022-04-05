@@ -24,6 +24,9 @@
 
 ---
 
+### 1.25.2
+- [New] 移除過期的 ExcelNumberFormat Dependency #271
+
 ### 1.25.1
 - [Bug] 修正 QueryAsDataTable 讀取大文件會拋出 NotImplementedException #360
 

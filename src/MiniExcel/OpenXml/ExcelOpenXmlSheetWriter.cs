@@ -277,7 +277,7 @@ namespace MiniExcelLibs.OpenXml
             _zipDictionary.Add(sheetPath, new ZipPackageInfo(entry, "application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"));
         }
 
-        private static void SetGenericTypePropertiesMode(Type genericType, ref string mode, out int maxColumnIndex, out List<ExcelCustomPropertyInfo> props)
+        private void SetGenericTypePropertiesMode(Type genericType, ref string mode, out int maxColumnIndex, out List<ExcelCustomPropertyInfo> props)
         {
             mode = "Properties";
             if (genericType.IsValueType)
@@ -285,6 +285,12 @@ namespace MiniExcelLibs.OpenXml
             else if (genericType == typeof(string) || genericType == typeof(DateTime) || genericType == typeof(Guid))
                 throw new NotImplementedException($"MiniExcel not support only {genericType.Name} generic type");
             props = CustomPropertyHelper.GetSaveAsProperties(genericType);
+
+            if (_configuration.CustomPropertyAction != null)
+            {
+                _configuration.CustomPropertyAction(props);
+            }
+
             maxColumnIndex = props.Count;
         }
 

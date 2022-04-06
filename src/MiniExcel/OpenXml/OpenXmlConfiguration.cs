@@ -1,4 +1,8 @@
 ﻿
+using MiniExcelLibs.Utils;
+
+using System.Collections.Generic;
+using System;
 using System.ComponentModel;
 
 namespace MiniExcelLibs.OpenXml
@@ -13,5 +17,7 @@ namespace MiniExcelLibs.OpenXml
         public bool IgnoreTemplateParameterMissing { get; set; } = true;
         public bool EnableSharedStringCache { get; set; } = true;
         public long SharedStringCacheSize { get; set; } = 5 * 1024 * 1024;
+
+        public Action<List<ExcelCustomPropertyInfo>> CustomPropertyAction { get; set; }
     }
 }

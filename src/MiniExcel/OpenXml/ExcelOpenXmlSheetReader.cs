@@ -673,9 +673,8 @@ namespace MiniExcelLibs.OpenXml
                     var v = XmlEncoder.DecodeString(rawValue);
                     if (_config.EnableConvertByteArray)
                     {
-                        //TODO:optimize startswith
                         //if str start with "data:image/png;base64," then convert to byte[] https://github.com/shps951023/MiniExcel/issues/318
-                        if (v != null && v.StartsWith("@@@fileid@@@,"))
+                        if (v != null && v.StartsWith("@@@fileid@@@,",StringComparison.Ordinal))
                         {
                             var path = v.Substring(13);
                             var stream = _archive.GetEntry(path).Open();

@@ -658,10 +658,10 @@ namespace MiniExcelLibs.Utils
         public static bool IsLiteral(string token)
         {
             return
-                token.StartsWith("_") ||
-                token.StartsWith("\\") ||
-                token.StartsWith("\"") ||
-                token.StartsWith("*") ||
+                token.StartsWith("_",StringComparison.Ordinal) ||
+                token.StartsWith("\\",StringComparison.Ordinal) ||
+                token.StartsWith("\"",StringComparison.Ordinal) ||
+                token.StartsWith("*",StringComparison.Ordinal) ||
                 token == "," ||
                 token == "!" ||
                 token == "&" ||

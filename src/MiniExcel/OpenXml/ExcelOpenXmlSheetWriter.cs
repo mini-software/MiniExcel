@@ -25,6 +25,7 @@ namespace MiniExcelLibs.OpenXml
         public int RowIndex { get; set; }
         public int CellIndex { get; set; }
         public bool IsImage { get; set; } = false;
+        public int SheetId { get; set; }
     }
     internal class SheetDto
     {
@@ -47,6 +48,8 @@ namespace MiniExcelLibs.OpenXml
         private readonly object _value;
         private readonly List<SheetDto> _sheets = new List<SheetDto>();
         private readonly List<FileDto> _files = new List<FileDto>();
+        private int currentSheetIndex = 0;
+
         public ExcelOpenXmlSheetWriter(Stream stream, object value, string sheetName, IConfiguration configuration, bool printHeader)
         {
             this._stream = stream;
@@ -71,6 +74,9 @@ namespace MiniExcelLibs.OpenXml
                         sheetId++;
                         var s = new SheetDto { Name = sheet.Key, SheetIdx = sheetId };
                         _sheets.Add(s); //TODO:remove
+
+                        currentSheetIndex = sheetId;
+
                         CreateSheetXml(sheet.Value, s.Path);
                     }
                 }
@@ -85,11 +91,17 @@ namespace MiniExcelLibs.OpenXml
                         var s = new SheetDto { Name = dt.TableName, SheetIdx = sheetId };
                         _sheets.Add(s); //TODO:remove
                         var sheetPath = s.Path;
+
+                        currentSheetIndex = sheetId;
+
                         CreateSheetXml(dt, sheetPath);
                     }
                 }
                 else
                 {
+                    //Single sheet export.
+                    currentSheetIndex++;
+
                     CreateSheetXml(_value, _sheets[0].Path);
                 }
             }
@@ -262,7 +274,7 @@ namespace MiniExcelLibs.OpenXml
                     writer.Write("</x:sheetData>");
                     if (_configuration.AutoFilter)
                         writer.Write($"<x:autoFilter ref=\"A1:{ExcelOpenXmlUtils.ConvertXyToCell(maxColumnIndex, maxRowIndex == 0 ? 1 : maxRowIndex)}\" />");
-                    writer.Write("<x:drawing  r:id=\"drawing1\" /></x:worksheet>");
+                    writer.Write("<x:drawing  r:id=\"drawing" + currentSheetIndex + "\" /></x:worksheet>");
                 }
                 else if (value is DataTable)
                 {
@@ -444,7 +456,8 @@ namespace MiniExcelLibs.OpenXml
                         {
                             Byte = bytes,
                             RowIndex = rowIndex,
-                            CellIndex = cellIndex
+                            CellIndex = cellIndex,
+                            SheetId = currentSheetIndex
                         };
                         if (format != ImageFormat.unknown)
                         {
@@ -628,25 +641,30 @@ namespace MiniExcelLibs.OpenXml
 
             // drawing rel
             {
-                var drawing = new StringBuilder();
-                foreach (var i in _files.Where(w=>w.IsImage))
+                for (int j = 0; j < _sheets.Count; j++)
                 {
-                    drawing.AppendLine($@"<Relationship Type=""http://schemas.openxmlformats.org/officeDocument/2006/relationships/image"" Target=""{i.Path2}"" Id=""{i.ID}"" />");
+                    var drawing = new StringBuilder();
+                    foreach (var i in _files.Where(w => w.IsImage && w.SheetId == j + 1))
+                    {
+                        drawing.AppendLine($@"<Relationship Type=""http://schemas.openxmlformats.org/officeDocument/2006/relationships/image"" Target=""{i.Path2}"" Id=""{i.ID}"" />");
+                    }
+                    CreateZipEntry($"xl/drawings/_rels/drawing{j + 1}.xml.rels", "",
+                        _defaultDrawingXmlRels.Replace("{{format}}", drawing.ToString()));
                 }
-                CreateZipEntry($"xl/drawings/_rels/drawing1.xml.rels", "",
-                    _defaultDrawingXmlRels.Replace("{{format}}", drawing.ToString()));
 
             }
             // drawing
             {
-                var drawing = new StringBuilder();
-                foreach (var i in _files.Where(w => w.IsImage))
+                for (int j = 0; j < _sheets.Count; j++)
                 {
-                    drawing.Append($@"<xdr:oneCellAnchor>
+                    var drawing = new StringBuilder();
+                    foreach (var i in _files.Where(w => w.IsImage && w.SheetId == j + 1))
+                    {
+                        drawing.Append($@"<xdr:oneCellAnchor>
         <xdr:from>
-            <xdr:col>{i.CellIndex- 1/* why -1 : https://user-images.githubusercontent.com/12729184/150460189-f08ed939-44d4-44e1-be6e-9c533ece6be8.png*/}</xdr:col>
+            <xdr:col>{i.CellIndex - 1/* why -1 : https://user-images.githubusercontent.com/12729184/150460189-f08ed939-44d4-44e1-be6e-9c533ece6be8.png*/}</xdr:col>
             <xdr:colOff>0</xdr:colOff>
-            <xdr:row>{i.RowIndex-1}</xdr:row>
+            <xdr:row>{i.RowIndex - 1}</xdr:row>
             <xdr:rowOff>0</xdr:rowOff>
         </xdr:from>
         <xdr:ext cx=""609600"" cy=""190500"" />
@@ -675,9 +693,10 @@ namespace MiniExcelLibs.OpenXml
         </xdr:pic>
         <xdr:clientData />
     </xdr:oneCellAnchor>");
+                    }
+                    CreateZipEntry($"xl/drawings/drawing{j + 1}.xml", "application/vnd.openxmlformats-officedocument.drawing+xml",
+                        _defaultDrawing.Replace("{{format}}", drawing.ToString()));
                 }
-                CreateZipEntry($"xl/drawings/drawing1.xml", "application/vnd.openxmlformats-officedocument.drawing+xml",
-                    _defaultDrawing.Replace("{{format}}", drawing.ToString()));
             }
 
             // workbook.xml 、 workbookRelsXml
@@ -694,7 +713,7 @@ namespace MiniExcelLibs.OpenXml
 
                     //TODO: support multiple drawing 
                     //TODO: ../drawings/drawing1.xml or /xl/drawings/drawing1.xml
-                    var sheetRelsXml = $@"<Relationship Type=""http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing"" Target=""../drawings/drawing1.xml"" Id=""drawing1"" />";
+                    var sheetRelsXml = $@"<Relationship Type=""http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing"" Target=""../drawings/drawing{sheetId}.xml"" Id=""drawing{sheetId}"" />";
                     CreateZipEntry($"xl/worksheets/_rels/sheet{s.SheetIdx}.xml.rels", "",
                         _defaultSheetRelXml.Replace("{{format}}", sheetRelsXml));
                 }

@@ -635,7 +635,7 @@ namespace MiniExcelLibs.Tests
             };
             MiniExcel.SaveAs(path, value);
             var xml = Helpers.GetZipFileContent(path, "xl/worksheets/_rels/sheet2.xml.rels");
-            var cnt = Regex.Matches(xml, "Id=\"drawing1\"").Count;
+            var cnt = Regex.Matches(xml, "Id=\"drawing2\"").Count;
             Assert.True(cnt == 1);
         }
 
@@ -2951,6 +2951,51 @@ MyProperty4,MyProperty1,MyProperty5,MyProperty2,MyProperty6,,MyProperty3
             public double? 滿倉口數 { get; set; }
             public double? 波段 { get; set; }
             public double? 當沖 { get; set; }
+        }
+
+        /// <summary>
+        /// https://gitee.com/dotnetchina/MiniExcel/issues/I50VD5
+        /// </summary>
+        [Fact]
+        public void IssueI50VD5()
+        {
+            var path = PathHelper.GetTempFilePath();
+
+            var list1 = new List<dynamic>()
+            {
+                new { Name="github",Image=File.ReadAllBytes(PathHelper.GetFile("images/github_logo.png"))},
+                new { Name="google",Image=File.ReadAllBytes(PathHelper.GetFile("images/google_logo.png"))},
+                new { Name="microsoft",Image=File.ReadAllBytes(PathHelper.GetFile("images/microsoft_logo.png"))},
+                new { Name="reddit",Image=File.ReadAllBytes(PathHelper.GetFile("images/reddit_logo.png"))},
+                new { Name="statck_overflow",Image=File.ReadAllBytes(PathHelper.GetFile("images/statck_overflow_logo.png"))},
+            };
+
+            var list2 = new List<dynamic>()
+            {
+                new { Id = 1, Name="github",Image=File.ReadAllBytes(PathHelper.GetFile("images/github_logo.png"))},
+                new { Id = 2, Name="google",Image=File.ReadAllBytes(PathHelper.GetFile("images/google_logo.png"))},
+            };
+
+            var sheets = new Dictionary<string, object>
+            {
+                ["A"] = list1,
+                ["B"] = list2,
+            };
+            MiniExcel.SaveAs(path, sheets);
+
+            {
+                Assert.Contains("/xl/media/", Helpers.GetZipFileContent(path, "xl/drawings/_rels/drawing1.xml.rels"));
+                Assert.Contains("ext cx=\"609600\" cy=\"190500\"", Helpers.GetZipFileContent(path, "xl/drawings/drawing1.xml"));
+                Assert.Contains("/xl/drawings/drawing1.xml", Helpers.GetZipFileContent(path, "[Content_Types].xml"));
+                Assert.Contains("drawing r:id=\"drawing1\"", Helpers.GetZipFileContent(path, "xl/worksheets/sheet1.xml"));
+                Assert.Contains("../drawings/drawing1.xml", Helpers.GetZipFileContent(path, "xl/worksheets/_rels/sheet1.xml.rels"));
+
+                Assert.Contains("/xl/media/", Helpers.GetZipFileContent(path, "xl/drawings/_rels/drawing2.xml.rels"));
+                Assert.Contains("ext cx=\"609600\" cy=\"190500\"", Helpers.GetZipFileContent(path, "xl/drawings/drawing2.xml"));
+                Assert.Contains("/xl/drawings/drawing1.xml", Helpers.GetZipFileContent(path, "[Content_Types].xml"));
+                Assert.Contains("drawing r:id=\"drawing2\"", Helpers.GetZipFileContent(path, "xl/worksheets/sheet2.xml"));
+                Assert.Contains("../drawings/drawing2.xml", Helpers.GetZipFileContent(path, "xl/worksheets/_rels/sheet2.xml.rels"));
+            }
         }
     }
 }

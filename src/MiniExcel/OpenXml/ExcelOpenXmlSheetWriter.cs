@@ -491,7 +491,7 @@ namespace MiniExcelLibs.OpenXml
             }
 
             var columname = ExcelOpenXmlUtils.ConvertXyToCell(cellIndex, rowIndex);
-            if (v != null && (v.StartsWith(" ") || v.EndsWith(" "))) /*Prefix and suffix blank space will lost after SaveAs #294*/
+            if (v != null && (v.StartsWith(" ",StringComparison.Ordinal) || v.EndsWith(" ",StringComparison.Ordinal))) /*Prefix and suffix blank space will lost after SaveAs #294*/
                 writer.Write($"<x:c r=\"{columname}\" {(t == null ? "" : $"t =\"{t}\"")} s=\"{s}\" xml:space=\"preserve\"><x:v>{v}</x:v></x:c>");
             else
                 //t check avoid format error ![image](https://user-images.githubusercontent.com/12729184/118770190-9eee3480-b8b3-11eb-9f5a-87a439f5e320.png)

@@ -6,6 +6,7 @@
     using System;
     using System.Collections.Generic;
     using System.Data;
+    using System.Dynamic;
     using System.IO;
     using System.Linq;
     using System.Threading.Tasks;
@@ -64,7 +65,8 @@
         {
             using (var excelReader = ExcelReaderFactory.GetProvider(stream, ExcelTypeHelper.GetExcelType(stream, excelType), configuration))
                 foreach (var item in excelReader.Query(useHeaderRow, sheetName, startCell))
-                    yield return item;
+                    yield return item.Aggregate(new ExpandoObject() as IDictionary<string, object>,
+                            (dict, p) => { dict.Add(p); return dict; });
         }
 
         public static void SaveAsByTemplate(string path, string templatePath, object value, IConfiguration configuration = null)

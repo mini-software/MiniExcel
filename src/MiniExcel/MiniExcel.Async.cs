@@ -7,6 +7,7 @@
     using System;
     using System.Collections.Generic;
     using System.Data;
+    using System.Dynamic;
     using System.IO;
     using System.Linq;
     using System.Threading;
@@ -41,11 +42,29 @@
 
         public static async Task<IEnumerable<dynamic>> QueryAsync(this Stream stream, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null,CancellationToken cancellationToken = default(CancellationToken))
         {
-            return await ExcelReaderFactory.GetProvider(stream, ExcelTypeHelper.GetExcelType(stream, excelType), configuration).QueryAsync(useHeaderRow, sheetName, startCell,cancellationToken);
+            TaskCompletionSource<IEnumerable<dynamic>> tcs = new TaskCompletionSource<IEnumerable<dynamic>>();
+            cancellationToken.Register(() => {
+                tcs.TrySetCanceled();
+            });
+
+            await Task.Run(() =>
+            {
+                try
+                {
+                    tcs.TrySetResult(Query(stream, useHeaderRow, sheetName, excelType, startCell, configuration));
+                }
+                catch (Exception ex)
+                {
+                    tcs.TrySetException(ex);
+                }
+            }, cancellationToken);
+
+            return await tcs.Task;
+            
         }
         public static async Task SaveAsByTemplateAsync(this Stream stream, string templatePath, object value, IConfiguration configuration = null,CancellationToken cancellationToken = default(CancellationToken))
         {
-            await ExcelTemplateFactory.GetProvider(stream, configuration).SaveAsByTemplateAsync(templatePath, value,cancellationToken);
+            await ExcelTemplateFactory.GetProvider(stream, configuration).SaveAsByTemplateAsync(templatePath, value,cancellationToken).ConfigureAwait(false);
         }
 
         public static async Task SaveAsByTemplateAsync(this Stream stream, byte[] templateBytes, object value, IConfiguration configuration = null,CancellationToken cancellationToken = default(CancellationToken))

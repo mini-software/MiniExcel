@@ -25,9 +25,7 @@
     {
         internal static IDictionary<string, object> GetEmptyExpandoObject(int maxColumnIndex, int startCellIndex)
         {
-            // TODO: strong type mapping can ignore this
-            // TODO: it can recode better performance 
-            var cell = (IDictionary<string, object>)new ExpandoObject();
+            var cell = new Dictionary<string, object>();
             for (int i = startCellIndex; i <= maxColumnIndex; i++)
             {
                 var key = ColumnHelper.GetAlphabetColumnName(i);
@@ -39,9 +37,7 @@
 
         internal static IDictionary<string, object> GetEmptyExpandoObject(Dictionary<int, string> hearrows)
         {
-            // TODO: strong type mapping can ignore this
-            // TODO: it can recode better performance 
-            var cell = (IDictionary<string, object>)new ExpandoObject();
+            var cell = new Dictionary<string, object>();
             foreach (var hr in hearrows)
                 if (!cell.ContainsKey(hr.Value))
                     cell.Add(hr.Value, null);

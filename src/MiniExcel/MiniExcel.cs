@@ -6,6 +6,7 @@
     using System;
     using System.Collections.Generic;
     using System.Data;
+    using System.Dynamic;
     using System.IO;
     using System.Linq;
     using System.Threading.Tasks;
@@ -64,7 +65,8 @@
         {
             using (var excelReader = ExcelReaderFactory.GetProvider(stream, ExcelTypeHelper.GetExcelType(stream, excelType), configuration))
                 foreach (var item in excelReader.Query(useHeaderRow, sheetName, startCell))
-                    yield return item;
+                    yield return item.Aggregate(new ExpandoObject() as IDictionary<string, object>,
+                            (dict, p) => { dict.Add(p); return dict; });
         }
 
         public static void SaveAsByTemplate(string path, string templatePath, object value, IConfiguration configuration = null)
@@ -175,8 +177,8 @@
 
         public static void ConvertCsvToXlsx(Stream csv, Stream xlsx)
         {
-            var value = MiniExcel.Query(csv, useHeaderRow: false, excelType: ExcelType.CSV); //TODO:Remove ToList
-            MiniExcel.SaveAs(xlsx, value, printHeader: false, excelType: ExcelType.XLSX);
+            var value = Query(csv, useHeaderRow: false, excelType: ExcelType.CSV);
+            SaveAs(xlsx, value, printHeader: false, excelType: ExcelType.XLSX);
         }
 
         public static void ConvertXlsxToCsv(string xlsx, string csv)
@@ -188,8 +190,8 @@
 
         public static void ConvertXlsxToCsv(Stream xlsx, Stream csv)
         {
-            var value = MiniExcel.Query(xlsx, useHeaderRow: false, excelType: ExcelType.XLSX);
-            MiniExcel.SaveAs(csv, value, printHeader: false, excelType: ExcelType.CSV);
+            var value = Query(xlsx, useHeaderRow: false, excelType: ExcelType.XLSX);
+            SaveAs(csv, value, printHeader: false, excelType: ExcelType.CSV);
         }
     }
 }

@@ -175,8 +175,8 @@
 
         public static void ConvertCsvToXlsx(Stream csv, Stream xlsx)
         {
-            var value = MiniExcel.Query(csv, useHeaderRow: false, excelType: ExcelType.CSV); //TODO:Remove ToList
-            MiniExcel.SaveAs(xlsx, value, printHeader: false, excelType: ExcelType.XLSX);
+            var value = Query(csv, useHeaderRow: false, excelType: ExcelType.CSV);
+            SaveAs(xlsx, value, printHeader: false, excelType: ExcelType.XLSX);
         }
 
         public static void ConvertXlsxToCsv(string xlsx, string csv)
@@ -188,8 +188,8 @@
 
         public static void ConvertXlsxToCsv(Stream xlsx, Stream csv)
         {
-            var value = MiniExcel.Query(xlsx, useHeaderRow: false, excelType: ExcelType.XLSX);
-            MiniExcel.SaveAs(csv, value, printHeader: false, excelType: ExcelType.CSV);
+            var value = Query(xlsx, useHeaderRow: false, excelType: ExcelType.XLSX);
+            SaveAs(csv, value, printHeader: false, excelType: ExcelType.CSV);
         }
     }
 }

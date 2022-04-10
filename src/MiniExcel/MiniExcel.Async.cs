@@ -45,7 +45,7 @@
         }
         public static async Task SaveAsByTemplateAsync(this Stream stream, string templatePath, object value, IConfiguration configuration = null,CancellationToken cancellationToken = default(CancellationToken))
         {
-            await ExcelTemplateFactory.GetProvider(stream, configuration).SaveAsByTemplateAsync(templatePath, value,cancellationToken);
+            await ExcelTemplateFactory.GetProvider(stream, configuration).SaveAsByTemplateAsync(templatePath, value,cancellationToken).ConfigureAwait(false);
         }
 
         public static async Task SaveAsByTemplateAsync(this Stream stream, byte[] templateBytes, object value, IConfiguration configuration = null,CancellationToken cancellationToken = default(CancellationToken))

@@ -16,6 +16,7 @@ namespace MiniExcelLibs.OpenXml
 {
     internal class ExcelOpenXmlSheetReader : IExcelReader
     {
+        private bool _disposed = false;
         private static readonly string[] _ns = { Config.SpreadsheetmlXmlns, Config.SpreadsheetmlXmlStrictns };
         private static readonly string[] _relationshiopNs = { Config.SpreadsheetmlXmlRelationshipns, Config.SpreadsheetmlXmlStrictRelationshipns };
         private List<SheetRecord> _sheetRecords;
@@ -733,11 +734,31 @@ namespace MiniExcelLibs.OpenXml
             return await Task.Run(() => Query<T>(sheetName, startCell), cancellationToken).ConfigureAwait(false);
         }
 
+         ~ExcelOpenXmlSheetReader()
+        {
+            Dispose(false);
+        }
+
         public void Dispose()
         {
-            if (_sharedStrings is SharedStringsDiskCache cache)
+            Dispose(true);
+
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!_disposed)
             {
-                cache.Dispose();
+                if (disposing)
+                {
+                    if (_sharedStrings is SharedStringsDiskCache cache)
+                    {
+                        cache.Dispose();
+                    }
+                }
+
+                _disposed = true;
             }
         }
     }

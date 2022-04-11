@@ -35,6 +35,30 @@ namespace MiniExcelLibs.Tests
         }
 
         [Fact]
+        public void TestIssueI4ZYUU()
+        {
+            var path = PathHelper.GetTempPath();
+            var value = new TestIssueI4ZYUUDto[] { new TestIssueI4ZYUUDto { MyProperty = "1", MyProperty2 = new DateTime(2022, 10, 15) } };
+            MiniExcel.SaveAs(path, value);
+            var rows = MiniExcel.Query(path).ToList();
+            Assert.Equal("2022-10", rows[1].B);
+            using (var workbook = new ClosedXML.Excel.XLWorkbook(path))
+            {
+                var ws = workbook.Worksheet(1);
+                Assert.True(ws.Column("A").Width > 0);
+                Assert.True(ws.Column("B").Width > 0);
+            }
+        }
+
+        public class TestIssueI4ZYUUDto
+        {
+            [ExcelColumn(Name = "ID",Index =0)]
+            public string MyProperty { get; set; }
+            [ExcelColumn(Name = "CreateDate", Index = 1,Format ="yyyy-MM",Width =100)]
+            public DateTime MyProperty2 { get; set; }
+        }
+
+        [Fact]
         public void TestIssue360()
         {
             var path = PathHelper.GetFile("xlsx/NotDuplicateSharedStrings_10x100.xlsx");

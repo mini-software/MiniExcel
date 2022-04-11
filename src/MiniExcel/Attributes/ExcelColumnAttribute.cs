@@ -25,7 +25,7 @@ namespace MiniExcelLibs.Attributes
             set => Init(value);
         }
 
-        public string XName
+        public string IndexName
         {
             get => _xName;
             set => Init(ColumnHelper.GetColumnIndex(value), value);

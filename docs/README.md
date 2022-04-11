@@ -22,7 +22,13 @@
 
 ---
 
+
+
+### 1.25.3
+- [New] Support ExcelColumnAttribute to merge attributes (#357 via @Weilence)
+
 ### 1.25.2
+
 - [New] Remove overdue ExcelNumberFormat Dependency #271
 
 ### 1.25.1

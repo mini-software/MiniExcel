@@ -73,7 +73,7 @@ namespace MiniExcelLibs.Tests
             public string Test2 { get; set; }
             [ExcelColumn(Ignore = true)]
             public string Test3 { get; set; }
-            [ExcelColumn(XName = "I")] // system will convert "I" to 8 index
+            [ExcelColumn(IndexName = "I")] // system will convert "I" to 8 index
             public string Test4 { get; set; }
             public string Test5 { get; } //wihout set will ignore
             public string Test6 { get; private set; } //un-public set will ignore

@@ -24,6 +24,9 @@
 
 ---
 
+### 1.25.3
+- [New] 支持 ExcelColumnAttribute 合併現有 attributes (#357 via @Weilence)
+
 ### 1.25.2
 - [New] 移除過期的 ExcelNumberFormat Dependency #271
 

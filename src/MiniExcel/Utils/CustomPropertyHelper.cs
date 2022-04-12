@@ -8,7 +8,7 @@
     using System.Linq;
     using System.Reflection;
 
-    public class ExcelCustomPropertyInfo
+    internal class ExcelCustomPropertyInfo
     {
         public int? ExcelColumnIndex { get; set; }
         public string ExcelColumnName { get; set; }

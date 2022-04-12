@@ -46,5 +46,15 @@ namespace MiniExcelLibs.Attributes
                     _xName = ColumnHelper.GetAlphabetColumnName(index);
             _index = index;
         }
+    }    
+    
+    
+    public class DynamicExcelColumnAttribute : ExcelColumnAttribute
+    {
+        public string Key { get; set; }
+        public DynamicExcelColumnAttribute(string key)
+        {
+            Key = key;
+        }
     }
 }

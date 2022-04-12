@@ -894,6 +894,19 @@ public class TestIssueI4TXGTDto
 
 
 
+#### 6. ExcelColumnAttribute 
+
+Since V1.26.0, multiple attributes can be simplified like :  
+```csharp
+        public class TestIssueI4ZYUUDto
+        {
+            [ExcelColumn(Name = "ID",Index =0)]
+            public string MyProperty { get; set; }
+            [ExcelColumn(Name = "CreateDate", Index = 1,Format ="yyyy-MM",Width =100)]
+            public DateTime MyProperty2 { get; set; }
+        }
+```
+
 
 
 ### Excel Type Auto Check <a name="getstart5"></a>

@@ -24,8 +24,10 @@
 
 ---
 
-### 1.25.3
+### 1.26.0
 - [New] 支持 ExcelColumnAttribute 合併現有 attributes (#357 via @Weilence)
+- [OPT] ExpandoObject 效能增強，在需要時再轉換 Type. (#366 via @isdaniel)
+- [OPT] 優化 startswith & endwith 效能 (#365 via @isdaniel)
 
 ### 1.25.2
 - [New] 移除過期的 ExcelNumberFormat Dependency #271

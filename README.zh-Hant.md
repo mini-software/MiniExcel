@@ -897,6 +897,21 @@ public class TestIssueI4TXGTDto
 }
 ```
 
+#### 6. ExcelColumnAttribute 
+
+從 1.26.0 版本開始，可以簡化多Attribute寫法
+```csharp
+        public class TestIssueI4ZYUUDto
+        {
+            [ExcelColumn(Name = "ID",Index =0)]
+            public string MyProperty { get; set; }
+            [ExcelColumn(Name = "CreateDate", Index = 1,Format ="yyyy-MM",Width =100)]
+            public DateTime MyProperty2 { get; set; }
+        }
+```
+
+
+
 
 
 

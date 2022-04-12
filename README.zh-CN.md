@@ -20,6 +20,10 @@
 
 ---
 
+### QQ群 : [813100564](https://qm.qq.com/cgi-bin/qm/qr?k=3OkxuL14sXhJsUimWK8wx_Hf28Wl49QE&jump_from=webapi)
+
+----
+
 ### 简介
 
 MiniExcel简单、高效避免OOM的.NET处理Excel查、写、填充数据工具。
@@ -893,6 +897,21 @@ public class TestIssueI4TXGTDto
 }
 ```
 
+#### 6. ExcelColumnAttribute 
+
+从 1.26.0 版本开始，可以简化多Attribute写法
+```csharp
+        public class TestIssueI4ZYUUDto
+        {
+            [ExcelColumn(Name = "ID",Index =0)]
+            public string MyProperty { get; set; }
+            [ExcelColumn(Name = "CreateDate", Index = 1,Format ="yyyy-MM",Width =100)]
+            public DateTime MyProperty2 { get; set; }
+        }
+```
+
+
+
 
 
 
@@ -1557,11 +1576,3 @@ public static DataTable QueryAsDataTableWithoutEmptyRow(Stream stream, bool useH
 
 ![](https://contrib.rocks/image?repo=shps951023/MiniExcel)
 
-### QQ群
-欢迎交流，QQ群号： [813100564](https://qm.qq.com/cgi-bin/qm/qr?k=3OkxuL14sXhJsUimWK8wx_Hf28Wl49QE&jump_from=webapi)
-
-
-
-### 闲话家常
-
-开源项目不容易，如果觉得本项目对您的工作还是有帮助的话，请在帮忙在Github [![img](https://img.shields.io/github/stars/shps951023/miniexcel.svg?style=flat-square&label=Stars&logo=github)](https://github.com/shps951023/miniexcel)点个★Star。

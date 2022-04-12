@@ -24,8 +24,10 @@
 
 
 
-### 1.25.3
+### 1.26.0
 - [New] Support ExcelColumnAttribute to merge attributes (#357 via @Weilence)
+- [OPT]  Only when necessary system will converts ExpandoObject type  (#366 via @isdaniel)
+- [OPT] Optimize startsWith & EndWith performance (#365 via @isdaniel)
 
 ### 1.25.2
 

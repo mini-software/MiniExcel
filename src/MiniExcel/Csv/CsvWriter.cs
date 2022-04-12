@@ -79,7 +79,7 @@ namespace MiniExcelLibs.Csv
                                 {
                                     mode = "Properties";
                                     genericType = item.GetType();
-                                    props = CustomPropertyHelper.GetSaveAsProperties(genericType);
+                                    props = CustomPropertyHelper.GetSaveAsProperties(genericType,_configuration);
                                 }
 
                                 break;

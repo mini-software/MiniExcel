@@ -909,6 +909,27 @@ Since V1.26.0, multiple attributes can be simplified like :
 
 
 
+#### 7. DynamicColumnAttribute 
+
+Since V1.26.0, we can set the attributes of Column dynamically
+```csharp
+            var config = new OpenXmlConfiguration
+            {
+                DynamicColumns = new DynamicExcelColumn[] { 
+                    new DynamicExcelColumn("id"){Ignore=true},
+                    new DynamicExcelColumn("name"){Index=1,Width=10},
+                    new DynamicExcelColumn("createdate"){Index=0,Format="yyyy-MM-dd",Width=15},
+                    new DynamicExcelColumn("point"){Index=2,Name="Account Point"},
+                }
+            };
+            var path = PathHelper.GetTempPath();
+            var value = new[] { new { id = 1, name = "Jack", createdate = new DateTime(2022, 04, 12) ,point = 123.456} };
+            MiniExcel.SaveAs(path, value, configuration: config);
+```
+![image](https://user-images.githubusercontent.com/12729184/162996731-4681e319-2925-4b59-95d0-1526b57de333.png)
+
+
+
 ### Excel Type Auto Check <a name="getstart5"></a>
 
 - MiniExcel will check whether it is xlsx or csv based on the `file extension` by default, but there may be inaccuracy, please specify it manually.

@@ -49,10 +49,10 @@ namespace MiniExcelLibs.Attributes
     }    
     
     
-    public class DynamicExcelColumnAttribute : ExcelColumnAttribute
+    public class DynamicExcelColumn : ExcelColumnAttribute
     {
         public string Key { get; set; }
-        public DynamicExcelColumnAttribute(string key)
+        public DynamicExcelColumn(string key)
         {
             Key = key;
         }

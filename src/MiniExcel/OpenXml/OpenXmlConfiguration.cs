@@ -4,6 +4,7 @@ using MiniExcelLibs.Utils;
 using System.Collections.Generic;
 using System;
 using System.ComponentModel;
+using MiniExcelLibs.Attributes;
 
 namespace MiniExcelLibs.OpenXml
 {

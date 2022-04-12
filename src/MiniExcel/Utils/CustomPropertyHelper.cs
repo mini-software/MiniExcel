@@ -44,9 +44,9 @@
             return cell;
         }
 
-        internal static List<ExcelCustomPropertyInfo> GetSaveAsProperties(this Type type)
+        internal static List<ExcelCustomPropertyInfo> GetSaveAsProperties(this Type type, Configuration configuration)
         {
-            List<ExcelCustomPropertyInfo> props = GetExcelPropertyInfo(type, BindingFlags.Public | BindingFlags.Instance)
+            List<ExcelCustomPropertyInfo> props = GetExcelPropertyInfo(type, BindingFlags.Public | BindingFlags.Instance, configuration)
                 .Where(prop => prop.Property.GetGetMethod() != null
                                && !prop.Property.GetAttributeValue((ExcelIgnoreAttribute x) => x.ExcelIgnore)
                                && !prop.Property.GetAttributeValue((ExcelColumnAttribute x) => x.Ignore)
@@ -97,9 +97,9 @@
             }
         }
 
-        internal static List<ExcelCustomPropertyInfo> GetExcelCustomPropertyInfos(Type type, string[] keys)
+        internal static List<ExcelCustomPropertyInfo> GetExcelCustomPropertyInfos(Type type, string[] keys, Configuration configuration)
         {
-            List<ExcelCustomPropertyInfo> props = GetExcelPropertyInfo(type, BindingFlags.SetProperty | BindingFlags.Public | BindingFlags.Instance)
+            List<ExcelCustomPropertyInfo> props = GetExcelPropertyInfo(type, BindingFlags.SetProperty | BindingFlags.Public | BindingFlags.Instance, configuration)
                 .Where(prop => prop.Property.GetSetMethod() != null
                                && !prop.Property.GetAttributeValue((ExcelIgnoreAttribute x) => x.ExcelIgnore)
                                && !prop.Property.GetAttributeValue((ExcelColumnAttribute x) => x.Ignore))
@@ -142,7 +142,7 @@
                 return source.ToString();
         }
 
-        private static IEnumerable<ExcelCustomPropertyInfo> GetExcelPropertyInfo(Type type, BindingFlags bindingFlags)
+        private static IEnumerable<ExcelCustomPropertyInfo> GetExcelPropertyInfo(Type type, BindingFlags bindingFlags, Configuration configuration)
         {
             //TODO:assign column index 
             return type.GetProperties(bindingFlags)
@@ -154,6 +154,14 @@
                      var excludeNullableType = gt ?? p.PropertyType;
                      var excelFormat = p.GetAttribute<ExcelFormatAttribute>()?.Format;
                      var excelColumn = p.GetAttribute<ExcelColumnAttribute>();
+                     if(configuration.DynamicColumns != null && configuration.DynamicColumns.Length > 0)
+                     {
+                         var dynamicColumn = configuration.DynamicColumns.SingleOrDefault(_ => _.Key == p.Name);
+                         if (dynamicColumn != null)
+                             excelColumn = dynamicColumn;
+                     }
+                     
+                     //TODO:or configulation Dynamic 
                      var excelColumnIndex = excelColumn?.Index > -1 ? excelColumn.Index : (int?)null;
                      return new ExcelCustomPropertyInfo
                      {

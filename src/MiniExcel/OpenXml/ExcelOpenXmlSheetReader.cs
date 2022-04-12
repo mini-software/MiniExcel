@@ -437,7 +437,7 @@ namespace MiniExcelLibs.OpenXml
                            )
                         ).ToDictionary(_ => _.key, _ => _.idx);
                     //TODO: alert don't duplicate column name
-                    props = CustomPropertyHelper.GetExcelCustomPropertyInfos(type, keys);
+                    props = CustomPropertyHelper.GetExcelCustomPropertyInfos(type, keys,configuration);
                     first = false;
                     continue;
                 }

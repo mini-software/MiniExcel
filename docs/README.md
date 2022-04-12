@@ -25,6 +25,7 @@
 
 
 ### 1.26.0
+- [New] Support DynamicColumnAttribute (via @y976362357, @shps951023)
 - [New] Support ExcelColumnAttribute to merge attributes (#357 via @Weilence)
 - [OPT]  Only when necessary system will converts ExpandoObject type  (#366 via @isdaniel)
 - [OPT] Optimize startsWith & EndWith performance (#365 via @isdaniel)

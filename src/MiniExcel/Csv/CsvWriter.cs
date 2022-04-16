@@ -52,7 +52,7 @@ namespace MiniExcelLibs.Csv
                 {
                     var values = _value as IEnumerable;
                     List<object> keys = new List<object>();
-                    List<ExcelCustomPropertyInfo> props = null;
+                    List<ExcelColumnInfo> props = null;
                     string mode = null;
 
                     // check mode
@@ -195,7 +195,7 @@ namespace MiniExcelLibs.Csv
             }
         }
 
-        private void GenerateSheetByProperties(StreamWriter writer, IEnumerable value, List<ExcelCustomPropertyInfo> props, string seperator, string newLine)
+        private void GenerateSheetByProperties(StreamWriter writer, IEnumerable value, List<ExcelColumnInfo> props, string seperator, string newLine)
         {
             foreach (var v in value)
             {
@@ -225,7 +225,7 @@ namespace MiniExcelLibs.Csv
             }
         }
 
-        public string ToCsvString(object value, ExcelCustomPropertyInfo p)
+        public string ToCsvString(object value, ExcelColumnInfo p)
         {
             if (value == null)
                 return "";

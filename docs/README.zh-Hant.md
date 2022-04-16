@@ -24,6 +24,9 @@
 
 ---
 
+### 1.26.1
+- [New] DynamicColumnAttribute 支持 Dictionary #370
+
 ### 1.26.0
 - [New] 支持 DynamicColumnAttribute (via @y976362357, @shps951023)
 - [New] 支持 ExcelColumnAttribute 合併現有 attributes (#357 via @Weilence)

@@ -13,7 +13,7 @@ namespace MiniExcelLibs.OpenXml
         private readonly FileStream _valueFs;
         private bool _disposedValue;
         private readonly static Encoding _encoding = new System.Text.UTF8Encoding(true);
-        public int Count => (int)(_maxIndx+1);
+        public int Count => checked((int)(_maxIndx+1));
         public string this[int key] { get => GetValue(key); set => Add(key,value); }
         private long _maxIndx = -1;
         public bool ContainsKey(int key)

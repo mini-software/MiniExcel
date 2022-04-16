@@ -60,7 +60,7 @@
             }
         }
 
-        public static object TypeMapping<T>(T v, ExcelCustomPropertyInfo pInfo, object newValue, object itemValue, int rowIndex, string startCell, Configuration _config) where T : class, new()
+        public static object TypeMapping<T>(T v, ExcelColumnInfo pInfo, object newValue, object itemValue, int rowIndex, string startCell, Configuration _config) where T : class, new()
         {
             try
             {
@@ -75,7 +75,7 @@
             }
         }
 
-        private static object TypeMappingImpl<T>(T v, ExcelCustomPropertyInfo pInfo, ref object newValue, object itemValue, Configuration _config) where T : class, new()
+        private static object TypeMappingImpl<T>(T v, ExcelColumnInfo pInfo, ref object newValue, object itemValue, Configuration _config) where T : class, new()
         {
             if (pInfo.ExcludeNullableType == typeof(Guid))
             {

@@ -35,6 +35,32 @@ namespace MiniExcelLibs.Tests
         }
 
         [Fact]
+        public void TestIssue370()
+        {
+            var config = new OpenXmlConfiguration
+            {
+                DynamicColumns = new DynamicExcelColumn[] {
+                    new DynamicExcelColumn("id"){Ignore=true},
+                    new DynamicExcelColumn("name"){Index=1,Width=10},
+                    new DynamicExcelColumn("createdate"){Index=0,Format="yyyy-MM-dd",Width=15},
+                    new DynamicExcelColumn("point"){Index=2,Name="Account Point"},
+                }
+            };
+            var path = PathHelper.GetTempPath();
+            var json = JsonConvert.SerializeObject(new[] { new { id = 1, name = "Jack", createdate = new DateTime(2022, 04, 12), point = 123.456 } }, Formatting.Indented);
+            var value = JsonConvert.DeserializeObject<List<Dictionary<string,object>>>(json);
+            MiniExcel.SaveAs(path, value, configuration: config);
+
+            var rows = MiniExcel.Query(path, false).ToList();
+            Assert.Equal("name", rows[0].A);
+            Assert.Equal("Jack", rows[1].A);
+            Assert.Equal("createdate", rows[0].B);
+            Assert.Equal("2022-04-12", rows[1].B);
+            Assert.Equal("point", rows[0].C);
+            Assert.Equal(123.456, rows[1].C);
+        }
+
+        [Fact]
         public void TestIssue369()
         {
             var config = new OpenXmlConfiguration

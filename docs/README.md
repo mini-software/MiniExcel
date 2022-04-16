@@ -23,6 +23,8 @@
 ---
 
 
+### 1.26.1
+- [New] DynamicColumnAttribute support Dictionary #370
 
 ### 1.26.0
 - [New] Support DynamicColumnAttribute (via @y976362357, @shps951023)

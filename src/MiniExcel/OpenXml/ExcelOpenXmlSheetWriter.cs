@@ -8,6 +8,7 @@ using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -141,8 +142,8 @@ namespace MiniExcelLibs.OpenXml
                     var rowCount = 0;
 
                     var maxColumnIndex = 0;
-                    List<object> keys = new List<object>();
-                    List<ExcelCustomPropertyInfo> props = null;
+                    //List<object> keys = new List<object>();
+                    List<ExcelColumnInfo> props = null;
                     string mode = null;
 
                     // reason : https://stackoverflow.com/questions/66797421/how-replace-top-format-mark-after-streamwriter-writing
@@ -157,19 +158,18 @@ namespace MiniExcelLibs.OpenXml
                             {
                                 if (item is IDictionary<string, object>)
                                 {
-                                    var item2 = item as IDictionary<string, object>;
                                     mode = "IDictionary<string, object>";
-                                    maxColumnIndex = item2.Keys.Count;
-                                    foreach (var key in item2.Keys)
-                                        keys.Add(key);
+                                    var dic = item as IDictionary<string, object>;
+                                    props = GetDictionaryColumnInfo(dic,null);
+                                    maxColumnIndex = props.Count;
                                 }
                                 else if (item is IDictionary)
                                 {
-                                    var item2 = item as IDictionary;
+                                    var dic = item as IDictionary;
                                     mode = "IDictionary";
-                                    maxColumnIndex = item2.Keys.Count;
-                                    foreach (var key in item2.Keys)
-                                        keys.Add(key);
+                                    props = GetDictionaryColumnInfo(null,dic);
+                                    //maxColumnIndex = dic.Keys.Count; 
+                                    maxColumnIndex = props.Count; // why not using keys, because ignore attribute ![image](https://user-images.githubusercontent.com/12729184/163686902-286abb70-877b-4e84-bd3b-001ad339a84a.png)
                                 }
                                 else
                                 {
@@ -234,41 +234,31 @@ namespace MiniExcelLibs.OpenXml
                     {
                         var cellIndex = xIndex;
                         writer.Write($"<x:row r=\"{yIndex}\">");
-                        if (props != null)
-                        {
-                            foreach (var p in props)
-                            {
-                                if (p == null)
-                                {
-                                    cellIndex++; //reason : https://github.com/shps951023/MiniExcel/issues/142
-                                    continue;
-                                }
 
-                                var r = ExcelOpenXmlUtils.ConvertXyToCell(cellIndex, yIndex);
-                                WriteC(writer, r, columnName: p.ExcelColumnName);
-                                cellIndex++;
-                            }
-                        }
-                        else
+                        foreach (var p in props)
                         {
-                            foreach (var key in keys)
+                            if (p == null)
                             {
-                                var r = ExcelOpenXmlUtils.ConvertXyToCell(cellIndex, yIndex);
-                                WriteC(writer, r, columnName: key.ToString());
-                                cellIndex++;
+                                cellIndex++; //reason : https://github.com/shps951023/MiniExcel/issues/142
+                                continue;
                             }
+
+                            var r = ExcelOpenXmlUtils.ConvertXyToCell(cellIndex, yIndex);
+                            WriteC(writer, r, columnName: p.ExcelColumnName);
+                            cellIndex++;
                         }
+                        
                         writer.Write($"</x:row>");
                         yIndex++;
                     }
 
                     // body
                     if (mode == "IDictionary<string, object>") //Dapper Row
-                        GenerateSheetByDapperRow(writer, value as IEnumerable, keys.Cast<string>().ToList(), xIndex, yIndex);
+                        GenerateSheetByColumnInfo<IDictionary<string, object>>(writer, value as IEnumerable, props, xIndex, yIndex);
                     else if (mode == "IDictionary") //IDictionary
-                        GenerateSheetByIDictionary(writer, value as IEnumerable, keys, xIndex, yIndex);
+                        GenerateSheetByColumnInfo<IDictionary>(writer, value as IEnumerable, props, xIndex, yIndex);
                     else if (mode == "Properties")
-                        GenerateSheetByProperties(writer, value as IEnumerable, props, xIndex, yIndex);
+                        GenerateSheetByColumnInfo<object>(writer, value as IEnumerable, props, xIndex, yIndex);
                     else
                         throw new NotImplementedException($"Type {type.Name} & genericType {genericType.Name} not Implemented. please issue for me.");
                     writer.Write("</x:sheetData>");
@@ -289,7 +279,53 @@ namespace MiniExcelLibs.OpenXml
             _zipDictionary.Add(sheetPath, new ZipPackageInfo(entry, "application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"));
         }
 
-        private void SetGenericTypePropertiesMode(Type genericType, ref string mode, out int maxColumnIndex, out List<ExcelCustomPropertyInfo> props)
+        private List<ExcelColumnInfo> GetDictionaryColumnInfo(IDictionary<string, object> dicString, IDictionary dic)
+        {
+            List<ExcelColumnInfo> props;
+            var _props = new List<ExcelColumnInfo>();
+            if (dicString != null)
+                foreach (var key in dicString.Keys)
+                    SetDictionaryColumnInfo(_props, key);
+            else if (dic != null)
+                foreach (var key in dic.Keys)
+                    SetDictionaryColumnInfo(_props, key);
+            else
+                throw new NotSupportedException("SetDictionaryColumnInfo Error");
+            props = CustomPropertyHelper.SortCustomProps(_props);
+            return props;
+        }
+
+        private void SetDictionaryColumnInfo(List<ExcelColumnInfo> _props, object key)
+        {
+            var p = new ExcelColumnInfo();
+            p.ExcelColumnName = key?.ToString();
+            p.Key = key;
+            // TODO:Dictionary value type is not fiexed
+            //var _t = 
+            //var gt = Nullable.GetUnderlyingType(p.PropertyType);
+            var isIgnore = false;
+            if (_configuration.DynamicColumns != null && _configuration.DynamicColumns.Length > 0)
+            {
+                var dynamicColumn = _configuration.DynamicColumns.SingleOrDefault(_ => _.Key == key.ToString());
+                if (dynamicColumn != null)
+                {
+                    p.Nullable = true;
+                    //p.ExcludeNullableType = item2[key]?.GetType();
+                    if (dynamicColumn.Format != null)
+                        p.ExcelFormat = dynamicColumn.Format;
+                    if (dynamicColumn.Aliases != null)
+                        p.ExcelColumnAliases = dynamicColumn.Aliases;
+                    if (dynamicColumn.IndexName != null)
+                        p.ExcelIndexName = dynamicColumn.IndexName;
+                    isIgnore = dynamicColumn.Ignore;
+                    p.ExcelColumnWidth = dynamicColumn.Width;
+                }
+            }
+            if (!isIgnore)
+                _props.Add(p);
+        }
+
+        private void SetGenericTypePropertiesMode(Type genericType, ref string mode, out int maxColumnIndex, out List<ExcelColumnInfo> props)
         {
             mode = "Properties";
             if (genericType.IsValueType)
@@ -305,44 +341,11 @@ namespace MiniExcelLibs.OpenXml
         {
             writer.Write($@"<?xml version=""1.0"" encoding=""utf-8""?><x:worksheet xmlns:x=""http://schemas.openxmlformats.org/spreadsheetml/2006/main""><x:dimension ref=""A1""/><x:sheetData></x:sheetData></x:worksheet>");
         }
-
-        private void GenerateSheetByDapperRow(StreamWriter writer, IEnumerable value, List<string> keys, int xIndex = 1, int yIndex = 1)
+        private void GenerateSheetByColumnInfo<T>(StreamWriter writer, IEnumerable value, List<ExcelColumnInfo> props, int xIndex = 1, int yIndex = 1)
         {
-            foreach (IDictionary<string, object> v in value)
-            {
-                writer.Write($"<x:row r=\"{yIndex}\">");
-                var cellIndex = xIndex;
-                foreach (var key in keys)
-                {
-                    var cellValue = v[key];
-                    WriteCell(writer, yIndex, cellIndex, cellValue, null);
-                    cellIndex++;
-                }
-                writer.Write($"</x:row>");
-                yIndex++;
-            }
-        }
-
-        private void GenerateSheetByIDictionary(StreamWriter writer, IEnumerable value, List<object> keys, int xIndex = 1, int yIndex = 1)
-        {
-            foreach (IDictionary v in value)
-            {
-                writer.Write($"<x:row r=\"{yIndex}\">");
-                var cellIndex = xIndex;
-                foreach (var key in keys)
-                {
-                    var cellValue = v[key];
-                    WriteCell(writer, yIndex, cellIndex, cellValue, null);
-                    cellIndex++;
-                }
-                writer.Write($"</x:row>");
-                yIndex++;
-            }
-        }
-
-        private void GenerateSheetByProperties(StreamWriter writer, IEnumerable value, List<ExcelCustomPropertyInfo> props, int xIndex = 1, int yIndex = 1)
-        {
-            foreach (var v in value)
+            var isDic = typeof(T) == typeof(IDictionary);
+            var isDapperRow = typeof(T) == typeof(IDictionary<string,object>);
+            foreach (T v in value)
             {
                 writer.Write($"<x:row r=\"{yIndex}\">");
                 var cellIndex = xIndex;
@@ -353,8 +356,24 @@ namespace MiniExcelLibs.OpenXml
                         cellIndex++;
                         continue;
                     }
-                    var cellValue = p.Property.GetValue(v);
+                    object cellValue = null;
+                    if (isDic)
+                    {
+                        cellValue = ((IDictionary)v)[p.Key];
+                        //WriteCell(writer, yIndex, cellIndex, cellValue, null); // why null because dictionary that needs to check type every time
+                        //TODO: user can specefic type to optimize efficiency
+                    }
+                    else if (isDapperRow)
+                    {
+                        cellValue = ((IDictionary<string, object>)v)[p.Key.ToString()];
+                    } 
+                    else
+                    {
+                        cellValue = p.Property.GetValue(v);
+                    }
                     WriteCell(writer, yIndex, cellIndex, cellValue, p);
+                        
+                    
                     cellIndex++;
                 }
                 writer.Write($"</x:row>");
@@ -362,7 +381,7 @@ namespace MiniExcelLibs.OpenXml
             }
         }
 
-        private void WriteCell(StreamWriter writer, int rowIndex, int cellIndex, object value, ExcelCustomPropertyInfo p)
+        private void WriteCell(StreamWriter writer, int rowIndex, int cellIndex, object value, ExcelColumnInfo p)
         {
             var v = string.Empty;
             var t = "str";
@@ -383,8 +402,10 @@ namespace MiniExcelLibs.OpenXml
             else
             {
                 Type type = null;
-                if (p == null)
+                if (p==null || p.Key != null)
                 {
+                    // TODO: need to optimize 
+                    // Dictionary need to check type every time, so it's slow..
                     type = value.GetType();
                     type = Nullable.GetUnderlyingType(type) ?? type;
                 }

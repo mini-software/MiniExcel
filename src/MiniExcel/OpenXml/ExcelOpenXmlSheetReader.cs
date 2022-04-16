@@ -409,7 +409,7 @@ namespace MiniExcelLibs.OpenXml
         {
             var type = typeof(T);
 
-            List<ExcelCustomPropertyInfo> props = null;
+            List<ExcelColumnInfo> props = null;
             //TODO:need to optimize
 
             string[] headers = null;
@@ -466,8 +466,8 @@ namespace MiniExcelLibs.OpenXml
                     {
                         object newV = null;
                         object itemValue = null;
-                        if (pInfo.ExcelXName != null && keys.Contains(pInfo.ExcelXName))
-                            itemValue = item[pInfo.ExcelXName];
+                        if (pInfo.ExcelIndexName != null && keys.Contains(pInfo.ExcelIndexName))
+                            itemValue = item[pInfo.ExcelIndexName];
                         else if (headersDic.ContainsKey(pInfo.ExcelColumnName))
                             itemValue = item[keys[headersDic[pInfo.ExcelColumnName]]];
 

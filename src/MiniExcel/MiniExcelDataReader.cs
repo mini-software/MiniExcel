@@ -65,7 +65,7 @@
 
         public void Close()
         {
-            throw new NotImplementedException();
+              return;
         }
 
         public int Depth => throw new NotImplementedException();

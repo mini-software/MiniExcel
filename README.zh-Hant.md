@@ -20,6 +20,10 @@
 
 ---
 
+Youtube 教學系列影片 : [MiniExcel](https://www.youtube.com/watch?v=ruT6vxW_y2Q&list=PLfuOrsm-o60L4XAcoX7-IjAhl5JFf-ahN)
+
+---
+
 ### 簡介
 
 MiniExcel 簡單、高效避免OOM的.NET處理Excel查、寫、填充工具。

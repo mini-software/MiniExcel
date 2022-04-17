@@ -22,6 +22,8 @@
 
 ### QQ群 : [813100564](https://qm.qq.com/cgi-bin/qm/qr?k=3OkxuL14sXhJsUimWK8wx_Hf28Wl49QE&jump_from=webapi)
 
+### Bilibili 系列视频链接 : [MiniExcel](https://www.bilibili.com/medialist/play/389344584?from=space&business=space_series&business_id=2170472&desc=1&spm_id_from=333.999.0.0)
+
 ----
 
 ### 简介

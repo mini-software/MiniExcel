@@ -20,6 +20,10 @@
 
 ---
 
+Youtube Tutorial Video : [MiniExcel](https://www.youtube.com/watch?v=ruT6vxW_y2Q&list=PLfuOrsm-o60L4XAcoX7-IjAhl5JFf-ahN)
+
+---
+
 ### Introduction
 
 MiniExcel is simple and efficient to avoid OOM's .NET processing Excel tool.

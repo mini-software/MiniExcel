@@ -20,7 +20,7 @@
 
 ---
 
-Youtube Tutorial Video : [MiniExcel](https://www.youtube.com/watch?v=ruT6vxW_y2Q&list=PLfuOrsm-o60L4XAcoX7-IjAhl5JFf-ahN)
+### Tutorial Video : [MiniExcel](https://www.youtube.com/watch?v=vG39slq1URI&list=PLhoAB_ZESf6uKRLFITYCmkfaiSXXIDQi6&index=2)
 
 ---
 

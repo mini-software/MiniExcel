@@ -929,7 +929,8 @@ public class TestIssueI4TXGTDto
             var value = new[] { new { id = 1, name = "Jack", createdate = new DateTime(2022, 04, 12) ,point = 123.456} };
             MiniExcel.SaveAs(path, value, configuration: config);
 ```
-![image](https://user-images.githubusercontent.com/12729184/162996731-4681e319-2925-4b59-95d0-1526b57de333.png)
+![image](https://user-images.githubusercontent.com/12729184/164510353-5aecbc4e-c3ce-41e8-b6cf-afd55eb23b68.png)
+
 
 
 

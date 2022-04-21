@@ -163,7 +163,7 @@
                         excelColumn = dynamicColumn;
                 }
 
-                var ignore = p.GetAttributeValue((ExcelIgnoreAttribute x) => x.ExcelIgnore) || p.GetAttributeValue((ExcelColumnAttribute x) => x.Ignore) || excelColumn.Ignore;
+                var ignore = p.GetAttributeValue((ExcelIgnoreAttribute x) => x.ExcelIgnore) || p.GetAttributeValue((ExcelColumnAttribute x) => x.Ignore) || (excelColumn != null && excelColumn.Ignore);
                 if (ignore)
                 {
                     return null;

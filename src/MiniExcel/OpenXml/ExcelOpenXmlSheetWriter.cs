@@ -318,6 +318,8 @@ namespace MiniExcelLibs.OpenXml
                     if (dynamicColumn.IndexName != null)
                         p.ExcelIndexName = dynamicColumn.IndexName;
                     p.ExcelColumnIndex = dynamicColumn.Index;
+                    if (dynamicColumn.Name != null)
+                        p.ExcelColumnName = dynamicColumn.Name;
                     isIgnore = dynamicColumn.Ignore;
                     p.ExcelColumnWidth = dynamicColumn.Width;
                 }

@@ -56,7 +56,7 @@ namespace MiniExcelLibs.Tests
             Assert.Equal("2022-04-12", rows[1].A);
             Assert.Equal("name", rows[0].B);
             Assert.Equal("Jack", rows[1].B);
-            Assert.Equal("point", rows[0].C);
+            Assert.Equal("Account Point", rows[0].C);
             Assert.Equal(123.456, rows[1].C);
         }
 
@@ -81,7 +81,7 @@ namespace MiniExcelLibs.Tests
             Assert.Equal("2022-04-12", rows[1].A);
             Assert.Equal("name", rows[0].B);
             Assert.Equal("Jack", rows[1].B);
-            Assert.Equal("point", rows[0].C);
+            Assert.Equal("Account Point", rows[0].C);
             Assert.Equal(123.456, rows[1].C);
         }
 

@@ -49,10 +49,7 @@
         internal static List<ExcelColumnInfo> GetSaveAsProperties(this Type type, Configuration configuration)
         {
             List<ExcelColumnInfo> props = GetExcelPropertyInfo(type, BindingFlags.Public | BindingFlags.Instance, configuration)
-                .Where(prop => prop.Property.GetGetMethod() != null
-                               && !prop.Property.GetAttributeValue((ExcelIgnoreAttribute x) => x.ExcelIgnore)
-                               && !prop.Property.GetAttributeValue((ExcelColumnAttribute x) => x.Ignore)
-                )
+                .Where(prop => prop.Property.GetGetMethod() != null)
                 .ToList() /*ignore without set*/;
 
             if (props.Count == 0)
@@ -166,6 +163,11 @@
                         excelColumn = dynamicColumn;
                 }
 
+                var ignore = p.GetAttributeValue((ExcelIgnoreAttribute x) => x.ExcelIgnore) || p.GetAttributeValue((ExcelColumnAttribute x) => x.Ignore) || excelColumn.Ignore;
+                if (ignore)
+                {
+                    return null;
+                }
                 //TODO:or configulation Dynamic 
                 var excelColumnIndex = excelColumn?.Index > -1 ? excelColumn.Index : (int?)null;
                 return new ExcelColumnInfo
@@ -180,7 +182,7 @@
                     ExcelColumnWidth = p.GetAttribute<ExcelColumnWidthAttribute>()?.ExcelColumnWidth ?? excelColumn?.Width,
                     ExcelFormat = excelFormat ?? excelColumn?.Format,
                 };
-            });
+            }).Where(_=>_!=null);
         }
 
         private static IEnumerable<ExcelColumnInfo> GetExcelPropertyInfo(Type type, BindingFlags bindingFlags, Configuration configuration)

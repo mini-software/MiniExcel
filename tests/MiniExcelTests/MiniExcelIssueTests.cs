@@ -52,10 +52,10 @@ namespace MiniExcelLibs.Tests
             MiniExcel.SaveAs(path, value, configuration: config);
 
             var rows = MiniExcel.Query(path, false).ToList();
-            Assert.Equal("name", rows[0].A);
-            Assert.Equal("Jack", rows[1].A);
-            Assert.Equal("createdate", rows[0].B);
-            Assert.Equal("2022-04-12", rows[1].B);
+            Assert.Equal("createdate", rows[0].A);
+            Assert.Equal("2022-04-12", rows[1].A);
+            Assert.Equal("name", rows[0].B);
+            Assert.Equal("Jack", rows[1].B);
             Assert.Equal("point", rows[0].C);
             Assert.Equal(123.456, rows[1].C);
         }
@@ -75,6 +75,14 @@ namespace MiniExcelLibs.Tests
             var path = PathHelper.GetTempPath();
             var value = new[] { new { id = 1, name = "Jack", createdate = new DateTime(2022, 04, 12) ,point = 123.456} };
             MiniExcel.SaveAs(path, value, configuration: config);
+
+            var rows = MiniExcel.Query(path, false).ToList();
+            Assert.Equal("createdate", rows[0].A);
+            Assert.Equal("2022-04-12", rows[1].A);
+            Assert.Equal("name", rows[0].B);
+            Assert.Equal("Jack", rows[1].B);
+            Assert.Equal("point", rows[0].C);
+            Assert.Equal(123.456, rows[1].C);
         }
 
         [Fact]

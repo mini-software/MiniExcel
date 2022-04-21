@@ -23,6 +23,9 @@
 ---
 
 
+### 1.26.2
+- [Bug] Fixed DynamicColumnAttribute Ignore, Index error #377
+
 ### 1.26.1
 - [New] DynamicColumnAttribute support Dictionary #370
 - [Bug] Fixed MiniExcelDataReader SqlBulkCopy error (via @yfl8910)

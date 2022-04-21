@@ -13,7 +13,7 @@
 ---
 
 <div align="center">
-<p><strong><a href="README.md">English</a> | <a href="README.zh-CN.md">简体中文</a> | <a href="README.zh-Hant.md">繁體中文</a></strong></p>
+<p><strong><a href="README.md">English</a> | <a href="README.zh-CN.md">簡體中文</a> | <a href="README.zh-Hant.md">繁體中文</a></strong></p>
 </div>
 
 ---
@@ -23,6 +23,9 @@
 </div>
 
 ---
+
+### 1.26.2
+- [Bug] 修正 DynamicColumnAttribute Ignore, Index 問題 #377
 
 ### 1.26.1
 - [New] DynamicColumnAttribute 支持 Dictionary #370
@@ -150,7 +153,7 @@
 - [New] 支持 Async/Task #52, contributor: [isdaniel ( SHIH,BING-SIOU)](https://github.com/isdaniel)
 
 ### 0.16.1
-- [New] SaveAsByTemplate 支持 DateTime 自定義格式 #255, contributor: [网虫 (landde) - Gitee.com](https://gitee.com/landde)
+- [New] SaveAsByTemplate 支持 DateTime 自定義格式 #255, contributor: [網蟲 (landde) - Gitee.com](https://gitee.com/landde)
 
 ### 0.16.0
 - [New] Query 支持自定義日期格式轉成 datetime 型別 #256

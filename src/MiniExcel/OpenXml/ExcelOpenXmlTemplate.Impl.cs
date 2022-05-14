@@ -267,6 +267,11 @@ namespace MiniExcelLibs.OpenXml
                                     {
                                         cellValueStr = ConvertToDateTimeString(propInfo, cellValue);
                                     }
+                                    else if (TypeHelper.IsNumericType(type))
+                                    {
+                                        if (decimal.TryParse(cellValueStr, out var decimalValue))
+                                            cellValueStr = decimalValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                                    }
 
                                     //TODO: ![image](https://user-images.githubusercontent.com/12729184/114848248-17735880-9e11-11eb-8258-63266bda0a1a.png)
                                     newRow.InnerXml = newRow.InnerXml.Replace(key, cellValueStr);
@@ -614,6 +619,7 @@ namespace MiniExcelLibs.OpenXml
                             else if (decimal.TryParse(cellValueStr, out var outV))
                             {
                                 c.SetAttribute("t", "n");
+                                cellValueStr = outV.ToString(System.Globalization.CultureInfo.InvariantCulture);
                             }
                             else if (cellValue is bool)
                             {
@@ -626,7 +632,7 @@ namespace MiniExcelLibs.OpenXml
                                 cellValueStr = ((DateTime)cellValue).ToString("yyyy-MM-dd HH:mm:ss");
                             }
 
-                            v.InnerText = v.InnerText.Replace($"{{{{{propNames[0]}}}}}", cellValueStr); //TODO: auto check type and set value
+                                v.InnerText = v.InnerText.Replace($"{{{{{propNames[0]}}}}}", cellValueStr); //TODO: auto check type and set value
                         }
                     }
                     //if (xRowInfo.CellIEnumerableValues != null) //2. From left to right, only the first set is used as the basis for the list

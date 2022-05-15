@@ -33,7 +33,7 @@ MiniExcel 簡單、高效避免OOM的.NET處理Excel查、寫、填充工具。
 ![image](https://user-images.githubusercontent.com/12729184/113084691-1804d000-9211-11eb-9b08-cbb89d9ecdc2.png)
 
 ### 特點
-- 低記憶體耗用，避免OOM(out of memoery)、頻繁 Full GC 情況
+- 低記憶體耗用，避免OOM、頻繁 Full GC 情況
 - 支持`即時`操作每行資料
 - 兼具搭配 LINQ 延遲查詢特性，能辦到低消耗、快速分頁等複雜查詢
 - 輕量，不需要安裝 Microsoft Office、COM+，DLL小於150KB

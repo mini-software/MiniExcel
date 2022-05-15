@@ -632,7 +632,7 @@ namespace MiniExcelLibs.OpenXml
                                 cellValueStr = ((DateTime)cellValue).ToString("yyyy-MM-dd HH:mm:ss");
                             }
 
-                                v.InnerText = v.InnerText.Replace($"{{{{{propNames[0]}}}}}", cellValueStr); //TODO: auto check type and set value
+                            v.InnerText = v.InnerText.Replace($"{{{{{propNames[0]}}}}}", cellValueStr); //TODO: auto check type and set value
                         }
                     }
                     //if (xRowInfo.CellIEnumerableValues != null) //2. From left to right, only the first set is used as the basis for the list

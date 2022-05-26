@@ -114,7 +114,7 @@ namespace MiniExcelLibs.OpenXml
         {
             ZipArchiveEntry entry = _archive.CreateEntry(sheetPath);
             using (var zipStream = entry.Open())
-            using (StreamWriter writer = new StreamWriter(zipStream, _utf8WithBom))
+            using (MiniExcelStreamWriter writer = new MiniExcelStreamWriter(zipStream, _utf8WithBom))
             {
                 if (value == null)
                 {
@@ -146,7 +146,7 @@ namespace MiniExcelLibs.OpenXml
                     List<ExcelColumnInfo> props = null;
                     string mode = null;
 
-                    // reason : https://stackoverflow.com/questions/66797421/how-replace-top-format-mark-after-streamwriter-writing
+                    // reason : https://stackoverflow.com/questions/66797421/how-replace-top-format-mark-after-MiniExcelStreamWriter-writing
                     // check mode & get maxRowCount & maxColumnIndex
                     {
                         foreach (var item in values) //TODO: need to optimize
@@ -340,11 +340,11 @@ namespace MiniExcelLibs.OpenXml
             maxColumnIndex = props.Count;
         }
 
-        private void WriteEmptySheet(StreamWriter writer)
+        private void WriteEmptySheet(MiniExcelStreamWriter writer)
         {
             writer.Write($@"<?xml version=""1.0"" encoding=""utf-8""?><x:worksheet xmlns:x=""http://schemas.openxmlformats.org/spreadsheetml/2006/main""><x:dimension ref=""A1""/><x:sheetData></x:sheetData></x:worksheet>");
         }
-        private void GenerateSheetByColumnInfo<T>(StreamWriter writer, IEnumerable value, List<ExcelColumnInfo> props, int xIndex = 1, int yIndex = 1)
+        private void GenerateSheetByColumnInfo<T>(MiniExcelStreamWriter writer, IEnumerable value, List<ExcelColumnInfo> props, int xIndex = 1, int yIndex = 1)
         {
             var isDic = typeof(T) == typeof(IDictionary);
             var isDapperRow = typeof(T) == typeof(IDictionary<string,object>);
@@ -384,7 +384,7 @@ namespace MiniExcelLibs.OpenXml
             }
         }
 
-        private void WriteCell(StreamWriter writer, int rowIndex, int cellIndex, object value, ExcelColumnInfo p)
+        private void WriteCell(MiniExcelStreamWriter writer, int rowIndex, int cellIndex, object value, ExcelColumnInfo p)
         {
             var v = string.Empty;
             var t = "str";
@@ -530,7 +530,7 @@ namespace MiniExcelLibs.OpenXml
                 writer.Write($"<x:c r=\"{columname}\" {(t == null ? "" : $"t =\"{t}\"")} s=\"{s}\"><x:v>{v}</x:v></x:c>");
         }
 
-        private void GenerateSheetByDataTable(StreamWriter writer, DataTable value)
+        private void GenerateSheetByDataTable(MiniExcelStreamWriter writer, DataTable value)
         {
             var xy = ExcelOpenXmlUtils.ConvertCellToXY("A1");
 
@@ -576,7 +576,7 @@ namespace MiniExcelLibs.OpenXml
             writer.Write("</x:sheetData></x:worksheet>");
         }
 
-        private void GenerateSheetByIDataReader(StreamWriter writer, IDataReader reader)
+        private void GenerateSheetByIDataReader(MiniExcelStreamWriter writer, IDataReader reader)
         {
             var xy = ExcelOpenXmlUtils.ConvertCellToXY("A1"); /*TODO:code smell*/
 
@@ -625,7 +625,7 @@ namespace MiniExcelLibs.OpenXml
             writer.Write("</x:worksheet>");
         }
 
-        private static void WriteC(StreamWriter writer, string r, string columnName)
+        private static void WriteC(MiniExcelStreamWriter writer, string r, string columnName)
         {
             writer.Write($"<x:c r=\"{r}\" t=\"str\" s=\"1\">");
             writer.Write($"<x:v>{ExcelOpenXmlUtils.EncodeXML(columnName)}"); //issue I45TF5
@@ -750,7 +750,7 @@ namespace MiniExcelLibs.OpenXml
                 sb.Append("</Types>");
                 ZipArchiveEntry entry = _archive.CreateEntry("[Content_Types].xml");
                 using (var zipStream = entry.Open())
-                using (StreamWriter writer = new StreamWriter(zipStream, _utf8WithBom))
+                using (MiniExcelStreamWriter writer = new MiniExcelStreamWriter(zipStream, _utf8WithBom))
                     writer.Write(sb.ToString());
             }
         }

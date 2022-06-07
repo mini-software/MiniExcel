@@ -8,17 +8,28 @@ namespace MiniExcelLibs.OpenXml
     {
         private readonly Stream _stream;
         private readonly Encoding _encoding;
+        private readonly StreamWriter _streamWriter;
         private bool disposedValue;
+        //private byte[] _cacheValueBytes;
 
-        public MiniExcelStreamWriter(Stream stream,Encoding encoding)
+        public MiniExcelStreamWriter(Stream stream,Encoding encoding, int bufferSize)
         {
             this._stream = stream;
             this._encoding = encoding;
+            this._streamWriter = new StreamWriter(stream, this._encoding, bufferSize);
         }
-        public void Write(string content)
+        public void Write(string content,bool flushImmediately=false)
         {
-            var bytes = this._encoding.GetBytes(content);
-            this._stream.Write(bytes, 0, bytes.Length);
+            if (string.IsNullOrEmpty(content))
+                return;
+            //if (flushImmediately)
+            //else
+                //_cacheValueBytes.CopyTo
+            //TODO:
+            //var bytes = this._encoding.GetBytes(content);
+            //this._stream.Write(bytes, 0, bytes.Length);
+
+            this._streamWriter.Write(content);
         }
 
         protected virtual void Dispose(bool disposing)
@@ -31,7 +42,7 @@ namespace MiniExcelLibs.OpenXml
                 }
 
                 // free unmanaged resources (unmanaged objects) and override finalizer
-                this._stream?.Dispose();
+                this._streamWriter?.Dispose();
                 // TODO: set large fields to null
                 disposedValue = true;
             }

@@ -193,7 +193,7 @@ namespace MiniExcelLibs.OpenXml
         {
             ZipArchiveEntry entry = _archive.CreateEntry(path);
             using (var zipStream = entry.Open())
-            using (MiniExcelStreamWriter writer = new MiniExcelStreamWriter(zipStream, _utf8WithBom))
+            using (MiniExcelStreamWriter writer = new MiniExcelStreamWriter(zipStream, _utf8WithBom,_configuration.BufferSize))
                 writer.Write(content);
             if(!string.IsNullOrEmpty(contentType))
                 _zipDictionary.Add(path, new ZipPackageInfo(entry, contentType));

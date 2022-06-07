@@ -24,6 +24,11 @@
 
 ---
 
+### 1.26.3
+- [OPT] Export 預設 buffersize 從 1024 bytes -> 1024 * 512 bytes
+- [New] Export 支持自定義 buffersize 
+- [New] SaveAsByTemplate number 改為 InvariantCulture (via @psxbox)
+
 ### 1.26.2
 - [Bug] 修正 DynamicColumnAttribute Ignore, Index 問題 #377
 

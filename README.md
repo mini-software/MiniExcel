@@ -1114,6 +1114,14 @@ MiniExcel.Query(path, configuration: config);
 ```
 
 
+#### 4. Custom Buffer Size
+```csharp
+    public abstract class Configuration : IConfiguration
+    {
+        public int BufferSize { get; set; } = 1024 * 512;
+    }
+```
+
 
 
 

@@ -114,7 +114,7 @@ namespace MiniExcelLibs.OpenXml
         {
             ZipArchiveEntry entry = _archive.CreateEntry(sheetPath);
             using (var zipStream = entry.Open())
-            using (MiniExcelStreamWriter writer = new MiniExcelStreamWriter(zipStream, _utf8WithBom))
+            using (MiniExcelStreamWriter writer = new MiniExcelStreamWriter(zipStream, _utf8WithBom,_configuration.BufferSize))
             {
                 if (value == null)
                 {
@@ -750,7 +750,7 @@ namespace MiniExcelLibs.OpenXml
                 sb.Append("</Types>");
                 ZipArchiveEntry entry = _archive.CreateEntry("[Content_Types].xml");
                 using (var zipStream = entry.Open())
-                using (MiniExcelStreamWriter writer = new MiniExcelStreamWriter(zipStream, _utf8WithBom))
+                using (MiniExcelStreamWriter writer = new MiniExcelStreamWriter(zipStream, _utf8WithBom, _configuration.BufferSize))
                     writer.Write(sb.ToString());
             }
         }

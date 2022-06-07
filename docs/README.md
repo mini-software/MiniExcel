@@ -22,8 +22,13 @@
 
 ---
 
+### 1.26.3
+- [OPT] Export default buffersize from 1024 bytes -> 1024 * 512 bytes
+- [New] Export support custom buffersize 
+- [New] SaveAsByTemplate number use InvariantCulture (via @psxbox)
 
 ### 1.26.2
+
 - [Bug] Fixed DynamicColumnAttribute Ignore, Index error #377
 
 ### 1.26.1

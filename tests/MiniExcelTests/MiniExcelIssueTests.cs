@@ -35,6 +35,23 @@ namespace MiniExcelLibs.Tests
         }
 
         [Fact]
+        public void TestIssue()
+        {
+            {
+                DataTable table = new DataTable();
+                {
+                    table.Columns.Add("id", typeof(int));
+                    table.Columns.Add("name", typeof(string));
+                    table.Rows.Add(1, "Jack");
+                    table.Rows.Add(2, "Mike");
+                }
+                var path = Path.GetTempPath() + Guid.NewGuid() + ".xlsx";
+                DataTableReader reader = table.CreateDataReader();
+                MiniExcel.SaveAs(path, reader);
+            }
+        }
+
+        [Fact]
         public void TestIssue370()
         {
             var config = new OpenXmlConfiguration

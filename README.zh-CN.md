@@ -1112,6 +1112,13 @@ MiniExcel.SaveAs(path, value, configuration: config);
 MiniExcel.Query(path, configuration: config);
 ```
 
+#### 4. 导出自定义 Buffer Size
+```csharp
+    public abstract class Configuration : IConfiguration
+    {
+        public int BufferSize { get; set; } = 1024 * 512;
+    }
+```
 
 
 

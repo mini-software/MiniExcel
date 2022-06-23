@@ -9,10 +9,12 @@
     {
         private const int GENERAL_COLUMN_INDEX = 255;
         private const int MAX_COLUMN_INDEX = 16383;
+        private static int _IntMappingAlphabetCount = 0;
         private static readonly ConcurrentDictionary<int, string> _IntMappingAlphabet = new ConcurrentDictionary<int, string>();
         private static readonly ConcurrentDictionary<string, int> _AlphabetMappingInt = new ConcurrentDictionary<string, int>();
         static ColumnHelper()
         {
+            _IntMappingAlphabetCount = _IntMappingAlphabet.Count;
             CheckAndSetMaxColumnIndex(GENERAL_COLUMN_INDEX);
         }
 
@@ -26,14 +28,14 @@
 
         public static int GetColumnIndex(string columnName)
         {
-            if (_AlphabetMappingInt.TryGetValue(columnName,out var columnIndex)) 
+            if (_AlphabetMappingInt.TryGetValue(columnName, out var columnIndex))
                 CheckAndSetMaxColumnIndex(columnIndex);
             return columnIndex;
         }
 
         private static void CheckAndSetMaxColumnIndex(int columnIndex)
         {
-            if (columnIndex >= _IntMappingAlphabet.Count)
+            if (columnIndex >= _IntMappingAlphabetCount)
             {
                 if (columnIndex > MAX_COLUMN_INDEX)
                     throw new InvalidDataException($"ColumnIndex {columnIndex} over excel vaild max index.");
@@ -42,6 +44,7 @@
                     _IntMappingAlphabet.AddOrUpdate(i, IntToLetters(i), (a, b) => IntToLetters(i));
                     _AlphabetMappingInt.AddOrUpdate(IntToLetters(i), i, (a, b) => i);
                 }
+                _IntMappingAlphabetCount = _IntMappingAlphabet.Count;
             }
         }
 

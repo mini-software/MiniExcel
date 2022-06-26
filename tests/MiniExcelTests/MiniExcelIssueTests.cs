@@ -34,21 +34,28 @@ namespace MiniExcelLibs.Tests
             this.output = output;
         }
 
+
+        /// <summary>
+        /// Using stream.SaveAs will close the Stream automatically when Specifying excelType
+        /// https://gitee.com/dotnetchina/MiniExcel/issues/I57WMM
+        /// </summary>
         [Fact]
-        public void TestIssue()
+        public void TestIssueI57WMM()
         {
-            {
-                DataTable table = new DataTable();
-                {
-                    table.Columns.Add("id", typeof(int));
-                    table.Columns.Add("name", typeof(string));
-                    table.Rows.Add(1, "Jack");
-                    table.Rows.Add(2, "Mike");
+            var sheets = new[] {
+                new Dictionary<string,object>(){
+                    {"ID","0001"},{"Name","Jack"}
                 }
-                var path = Path.GetTempPath() + Guid.NewGuid() + ".xlsx";
-                DataTableReader reader = table.CreateDataReader();
-                MiniExcel.SaveAs(path, reader);
-            }
+            };
+            var stream = new MemoryStream();
+            stream.SaveAs(sheets, excelType: ExcelType.CSV);
+            stream.Position = 0;
+
+            // convert stream to string
+            StreamReader reader = new StreamReader(stream);
+            string text = reader.ReadToEnd();
+            var expected = "ID,Name\r\n0001,Jack\r\n";
+            Assert.Equal(expected, text);
         }
 
         [Fact]

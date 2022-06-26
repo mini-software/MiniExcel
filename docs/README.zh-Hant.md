@@ -24,6 +24,9 @@
 
 ---
 
+### 1.26.4
+- [Bug] 使用Stream.SaveAs時指定excelType會自動關閉Stream #I57WMM
+
 ### 1.26.3
 - [OPT] Export 預設 buffersize 從 1024 bytes -> 1024 * 512 bytes
 - [New] Export 支持自定義 buffersize 

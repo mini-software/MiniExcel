@@ -13,12 +13,14 @@ using System.Threading.Tasks;
 
 namespace MiniExcelLibs.Csv
 {
-    internal class CsvWriter : IExcelWriter
+    internal class CsvWriter : IExcelWriter, IDisposable
     {
         private readonly Stream _stream;
         private readonly CsvConfiguration _configuration;
         private readonly bool _printHeader;
         private readonly object _value;
+        private readonly StreamWriter _writer;
+        private bool disposedValue;
 
         public CsvWriter(Stream stream, object value, IConfiguration configuration, bool printHeader)
         {
@@ -26,18 +28,17 @@ namespace MiniExcelLibs.Csv
             this._configuration = configuration == null ? CsvConfiguration.DefaultConfiguration : (CsvConfiguration)configuration;
             this._printHeader = printHeader;
             this._value = value;
+            this._writer = _configuration.StreamWriterFunc(_stream);
         }
 
         public void SaveAs()
         {
             var seperator = _configuration.Seperator.ToString();
             var newLine = _configuration.NewLine;
-
-            using (StreamWriter writer = _configuration.StreamWriterFunc(_stream))
             {
                 if (_value == null)
                 {
-                    writer.Write("");
+                    _writer.Write("");
                     return;
                 }
 
@@ -46,7 +47,7 @@ namespace MiniExcelLibs.Csv
 
                 if (_value is IDataReader)
                 {
-                    GenerateSheetByIDataReader(_value, seperator, newLine, writer);
+                    GenerateSheetByIDataReader(_value, seperator, newLine, _writer);
                 }
                 else if (_value is IEnumerable)
                 {
@@ -92,7 +93,7 @@ namespace MiniExcelLibs.Csv
 
                     if (keys.Count == 0 && props == null)
                     {
-                        writer.Write(newLine);
+                        _writer.Write(newLine);
                         return;
                     }
 
@@ -100,13 +101,13 @@ namespace MiniExcelLibs.Csv
                     {
                         if (props != null)
                         {
-                            writer.Write(string.Join(seperator, props.Select(s => CsvHelpers.ConvertToCsvValue(s?.ExcelColumnName))));
-                            writer.Write(newLine);
+                            _writer.Write(string.Join(seperator, props.Select(s => CsvHelpers.ConvertToCsvValue(s?.ExcelColumnName))));
+                            _writer.Write(newLine);
                         }
                         else if (keys.Count > 0)
                         {
-                            writer.Write(string.Join(seperator, keys));
-                            writer.Write(newLine);
+                            _writer.Write(string.Join(seperator, keys));
+                            _writer.Write(newLine);
                         }
                         else
                         {
@@ -115,22 +116,23 @@ namespace MiniExcelLibs.Csv
                     }
 
                     if (mode == "IDictionary<string, object>") //Dapper Row
-                        GenerateSheetByDapperRow(writer, _value as IEnumerable, keys.Cast<string>().ToList(), seperator, newLine);
+                        GenerateSheetByDapperRow(_writer, _value as IEnumerable, keys.Cast<string>().ToList(), seperator, newLine);
                     else if (mode == "IDictionary") //IDictionary
-                        GenerateSheetByIDictionary(writer, _value as IEnumerable, keys, seperator, newLine);
+                        GenerateSheetByIDictionary(_writer, _value as IEnumerable, keys, seperator, newLine);
                     else if (mode == "Properties")
-                        GenerateSheetByProperties(writer, _value as IEnumerable, props, seperator, newLine);
+                        GenerateSheetByProperties(_writer, _value as IEnumerable, props, seperator, newLine);
                     else
                         throw new NotImplementedException($"Type {type?.Name} & genericType {genericType?.Name} not Implemented. please issue for me.");
                 }
                 else if (_value is DataTable)
                 {
-                    GenerateSheetByDataTable(writer, _value as DataTable, seperator, newLine);
+                    GenerateSheetByDataTable(_writer, _value as DataTable, seperator, newLine);
                 }
                 else
                 {
                     throw new NotImplementedException($"Type {type?.Name} & genericType {genericType?.Name} not Implemented. please issue for me.");
                 }
+                this._writer.Flush();
             }
         }
 
@@ -246,6 +248,35 @@ namespace MiniExcelLibs.Csv
             return Convert.ToString(value, _configuration.Culture);
         }
 
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    this._writer.Dispose();
+                    // TODO: dispose managed state (managed objects)
+                }
+
+                // TODO: free unmanaged resources (unmanaged objects) and override finalizer
+                // TODO: set large fields to null
+                disposedValue = true;
+            }
+        }
+
+        // // TODO: override finalizer only if 'Dispose(bool disposing)' has code to free unmanaged resources
+        ~CsvWriter()
+        {
+            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+            Dispose(disposing: false);
+        }
+
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
+        }
     }
 
 }

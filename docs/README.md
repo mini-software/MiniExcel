@@ -24,6 +24,7 @@
 
 ### 1.26.4
 - [Bug] Using stream.SaveAs will close the Stream automatically when Specifying excelType
+- [OPT] Optimize Query big file  _IntMappingAlphabet.Count hot loading count (#400 via @CollapseNav)
 
 ### 1.26.3
 - [OPT] Export default buffersize from 1024 bytes -> 1024 * 512 bytes

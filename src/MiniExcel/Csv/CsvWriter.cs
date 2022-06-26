@@ -39,6 +39,7 @@ namespace MiniExcelLibs.Csv
                 if (_value == null)
                 {
                     _writer.Write("");
+                    this._writer.Flush();
                     return;
                 }
 
@@ -94,6 +95,7 @@ namespace MiniExcelLibs.Csv
                     if (keys.Count == 0 && props == null)
                     {
                         _writer.Write(newLine);
+                        this._writer.Flush();
                         return;
                     }
 

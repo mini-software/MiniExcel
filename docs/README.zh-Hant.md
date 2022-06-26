@@ -26,6 +26,7 @@
 
 ### 1.26.4
 - [Bug] 使用Stream.SaveAs時指定excelType會自動關閉Stream #I57WMM
+- [OPT] 減少在讀取大文件時 _IntMappingAlphabet.Count 的調用 (#400 via @CollapseNav)
 
 ### 1.26.3
 - [OPT] Export 預設 buffersize 從 1024 bytes -> 1024 * 512 bytes

@@ -621,7 +621,8 @@ namespace MiniExcelLibs.OpenXml
                 }
             }
             writer.Write("</x:sheetData>");
-            writer.Write($"<x:autoFilter ref=\"A1:{ExcelOpenXmlUtils.ConvertXyToCell((xIndex-1)/*TODO:code smell*/, yIndex-1)}\" />");
+            if (_configuration.AutoFilter)
+                writer.Write($"<x:autoFilter ref=\"A1:{ExcelOpenXmlUtils.ConvertXyToCell((xIndex-1)/*TODO:code smell*/, yIndex-1)}\" />");
             writer.Write("</x:worksheet>");
         }
 

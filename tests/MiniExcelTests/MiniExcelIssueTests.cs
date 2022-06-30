@@ -211,6 +211,120 @@ namespace MiniExcelLibs.Tests
             }
         }
 
+        [Theory]
+        [InlineData(true, 1)]
+        [InlineData(false, 0)]
+        public void TestIssue401(bool autoFilter, int count)
+        {
+            // Test for DataTable
+            {
+                DataTable table = new DataTable();
+                {
+                    table.Columns.Add("id", typeof(int));
+                    table.Columns.Add("name", typeof(string));
+                    table.Rows.Add(1, "Jack");
+                    table.Rows.Add(2, "Mike");
+                }
+                DataTableReader reader = table.CreateDataReader();
+                var path = Path.GetTempPath() + Guid.NewGuid() + ".xlsx";
+                var config = new OpenXmlConfiguration { AutoFilter = autoFilter };
+                MiniExcel.SaveAs(path, reader, configuration: config);
+                var xml = Helpers.GetZipFileContent(path, "xl/worksheets/sheet1.xml");
+                var cnt = Regex.Matches(xml, "<x:autoFilter ref=\"A1:B3\" />").Count;
+                Assert.Equal(count, cnt);
+                File.Delete(path);
+            }
+            {
+                DataTable table = new DataTable();
+                {
+                    table.Columns.Add("id", typeof(int));
+                    table.Columns.Add("name", typeof(string));
+                    table.Rows.Add(1, "Jack");
+                    table.Rows.Add(2, "Mike");
+                }
+                DataTableReader reader = table.CreateDataReader();
+                var path = Path.GetTempPath() + Guid.NewGuid() + ".xlsx";
+                var config = new OpenXmlConfiguration { AutoFilter = autoFilter };
+                MiniExcel.SaveAs(path, reader, false, configuration: config);
+                var xml = Helpers.GetZipFileContent(path, "xl/worksheets/sheet1.xml");
+                var cnt = Regex.Matches(xml, "<x:autoFilter ref=\"A1:B2\" />").Count;
+                Assert.Equal(count, cnt);
+                File.Delete(path);
+            }
+            {
+                DataTable table = new DataTable();
+                {
+                    table.Columns.Add("id", typeof(int));
+                    table.Columns.Add("name", typeof(string));
+                }
+                DataTableReader reader = table.CreateDataReader();
+                var path = Path.GetTempPath() + Guid.NewGuid() + ".xlsx";
+                var config = new OpenXmlConfiguration { AutoFilter = autoFilter };
+                MiniExcel.SaveAs(path, reader, configuration: config);
+                var xml = Helpers.GetZipFileContent(path, "xl/worksheets/sheet1.xml");
+                var cnt = Regex.Matches(xml, "<x:autoFilter ref=\"A1:B1\" />").Count;
+                Assert.Equal(count, cnt);
+                File.Delete(path);
+            }
+
+            // Test for DataReader
+            {
+                var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
+                var config = new OpenXmlConfiguration { AutoFilter = autoFilter };
+                using (var connection = Db.GetConnection("Data Source=:memory:"))
+                {
+                    using var command = new SQLiteCommand(@"select 'MiniExcel' as Column1,1 as Column2 union all select 'Github',2", connection);
+                    connection.Open();
+                    using var reader = command.ExecuteReader();
+                    MiniExcel.SaveAs(path, reader, configuration: config);
+                }
+                var xml = Helpers.GetZipFileContent(path, "xl/worksheets/sheet1.xml");
+                var cnt = Regex.Matches(xml, "autoFilter").Count;
+                Assert.Equal(count, cnt);
+                File.Delete(path);
+            }
+            
+            {
+                var xlsxPath = @"../../../../../samples/xlsx/Test5x2.xlsx";
+                var tempSqlitePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.db");
+                var connectionString = $"Data Source={tempSqlitePath};Version=3;";
+
+                using (var connection = new SQLiteConnection(connectionString))
+                {
+                    connection.Execute(@"create table T (A varchar(20),B varchar(20));");
+                }
+
+                using (var connection = new SQLiteConnection(connectionString))
+                {
+                    connection.Open();
+                    using (var transaction = connection.BeginTransaction())
+                    using (var stream = File.OpenRead(xlsxPath))
+                    {
+                        var rows = stream.Query();
+                        foreach (var row in rows)
+                            connection.Execute("insert into T (A,B) values (@A,@B)", new { row.A, row.B }, transaction: transaction);
+                        transaction.Commit();
+                    }
+                }
+
+                var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
+                var config = new OpenXmlConfiguration { AutoFilter = autoFilter };
+                using (var connection = new SQLiteConnection(connectionString))
+                {
+                    using var command = new SQLiteCommand("select * from T", connection);
+                    connection.Open();
+                    using var reader = command.ExecuteReader();
+                    MiniExcel.SaveAs(path, reader, configuration: config);
+                }
+
+                var xml = Helpers.GetZipFileContent(path, "xl/worksheets/sheet1.xml");
+                var cnt = Regex.Matches(xml, "autoFilter").Count;
+                Assert.Equal(count, cnt);
+                File.Delete(path);
+                File.Delete(tempSqlitePath);
+            }
+        }
+
         [Fact]
         public async Task TestIssue307()
         {

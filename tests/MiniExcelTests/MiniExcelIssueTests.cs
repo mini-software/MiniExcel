@@ -34,6 +34,20 @@ namespace MiniExcelLibs.Tests
             this.output = output;
         }
 
+        /// <summary>
+        /// [SaveAs Support empty sharedstring · Issue #405 · MiniExcel/MiniExcel]
+        /// (https://github.com/MiniExcel/MiniExcel/issues/405)
+        /// </summary>
+        [Fact]
+        public void TestIssue405()
+        {
+            var path = PathHelper.GetTempFilePath();
+            var value = new[] { new { id = 1, name = "test" } };
+            MiniExcel.SaveAs(path, value);
+
+            var xml = Helpers.GetZipFileContent(path, "xl/sharedStrings.xml");
+            Assert.StartsWith("<sst xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"", xml);
+        }
 
         /// <summary>
         /// Using stream.SaveAs will close the Stream automatically when Specifying excelType

@@ -22,6 +22,10 @@
 
 ---
 
+### 1.26.5
+- [New] Added DataReader AutoFilter toggle #402 #401 (via @Rollerss)
+- [New] SaveAs support empty sharedstring #405
+
 ### 1.26.4
 - [Bug] Using stream.SaveAs will close the Stream automatically when Specifying excelType
 - [OPT] Optimize Query big file  _IntMappingAlphabet.Count hot loading count (#400 via @CollapseNav)

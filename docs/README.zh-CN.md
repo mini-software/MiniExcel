@@ -25,6 +25,10 @@
 
 ---
 
+### 1.26.5
+- [New] Added DataReader AutoFilter toggle #402 #401 (via @Rollerss)
+- [New] SaveAs 支持空白 sharedstring #405
+
 
 ### 1.26.4
 - [Bug] 使用Stream.SaveAs时指定excelType会自动关闭Stream #I57WMM

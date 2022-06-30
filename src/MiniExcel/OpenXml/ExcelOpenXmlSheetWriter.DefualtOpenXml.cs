@@ -182,11 +182,13 @@ namespace MiniExcelLibs.OpenXml
     {{format}}
 </Relationships>";
 
+        private static readonly string _defaultSharedString = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\" ?><sst xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" count=\"0\" uniqueCount=\"0\"></sst>";
         private static string MinifyXml(string xml) => xml.Replace("\r", "").Replace("\n", "").Replace("\t", "");
 
         internal void GenerateDefaultOpenXml()
         {
             CreateZipEntry("_rels/.rels", "application/vnd.openxmlformats-package.relationships+xml", ExcelOpenXmlSheetWriter._defaultRels);
+            CreateZipEntry("xl/sharedStrings.xml", "application/vnd.openxmlformats-package.relationships+xml", ExcelOpenXmlSheetWriter._defaultSharedString);
         }
 
         private void CreateZipEntry(string path,string contentType,string content)

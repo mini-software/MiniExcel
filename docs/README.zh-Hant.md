@@ -24,6 +24,10 @@
 
 ---
 
+### 1.26.5
+- [New] Added DataReader AutoFilter toggle #402 #401 (via @Rollerss)
+- [New] SaveAs 支持空白 sharedstring #405
+
 ### 1.26.4
 - [Bug] 使用Stream.SaveAs時指定excelType會自動關閉Stream #I57WMM
 - [OPT] 減少在讀取大文件時 _IntMappingAlphabet.Count 的調用 (#400 via @CollapseNav)

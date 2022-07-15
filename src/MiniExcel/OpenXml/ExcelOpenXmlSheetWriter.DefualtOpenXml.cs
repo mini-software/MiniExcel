@@ -193,7 +193,7 @@ namespace MiniExcelLibs.OpenXml
 
         private void CreateZipEntry(string path,string contentType,string content)
         {
-            ZipArchiveEntry entry = _archive.CreateEntry(path);
+            ZipArchiveEntry entry = _archive.CreateEntry(path, CompressionLevel.Fastest);
             using (var zipStream = entry.Open())
             using (MiniExcelStreamWriter writer = new MiniExcelStreamWriter(zipStream, _utf8WithBom,_configuration.BufferSize))
                 writer.Write(content);
@@ -203,7 +203,7 @@ namespace MiniExcelLibs.OpenXml
 
         private void CreateZipEntry(string path, byte[] content)
         {
-            ZipArchiveEntry entry = _archive.CreateEntry(path);
+            ZipArchiveEntry entry = _archive.CreateEntry(path, CompressionLevel.Fastest);
             using (var zipStream = entry.Open())
                 zipStream.Write(content,0, content.Length);
         }

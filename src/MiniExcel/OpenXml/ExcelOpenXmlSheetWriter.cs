@@ -112,7 +112,7 @@ namespace MiniExcelLibs.OpenXml
 
         private void CreateSheetXml(object value, string sheetPath)
         {
-            ZipArchiveEntry entry = _archive.CreateEntry(sheetPath);
+            ZipArchiveEntry entry = _archive.CreateEntry(sheetPath, CompressionLevel.Fastest);
             using (var zipStream = entry.Open())
             using (MiniExcelStreamWriter writer = new MiniExcelStreamWriter(zipStream, _utf8WithBom,_configuration.BufferSize))
             {
@@ -749,7 +749,7 @@ namespace MiniExcelLibs.OpenXml
                 foreach (var p in _zipDictionary)
                     sb.Append($"<Override ContentType=\"{p.Value.ContentType}\" PartName=\"/{p.Key}\" />");
                 sb.Append("</Types>");
-                ZipArchiveEntry entry = _archive.CreateEntry("[Content_Types].xml");
+                ZipArchiveEntry entry = _archive.CreateEntry("[Content_Types].xml", CompressionLevel.Fastest);
                 using (var zipStream = entry.Open())
                 using (MiniExcelStreamWriter writer = new MiniExcelStreamWriter(zipStream, _utf8WithBom, _configuration.BufferSize))
                     writer.Write(sb.ToString());

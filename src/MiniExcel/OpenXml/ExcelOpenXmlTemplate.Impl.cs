@@ -135,7 +135,7 @@ namespace MiniExcelLibs.OpenXml
             sheetData.InnerText = "{{{{{{split}}}}}}"; //TODO: bad code smell
             var prefix = string.IsNullOrEmpty(sheetData.Prefix) ? "" : $"{sheetData.Prefix}:";
             var endPrefix = string.IsNullOrEmpty(sheetData.Prefix) ? "" : $":{sheetData.Prefix}"; //![image](https://user-images.githubusercontent.com/12729184/115000066-fd02b300-9ed4-11eb-8e65-bf0014015134.png)
-            var contents = doc.InnerXml.Split(new string[] { $"<{prefix}sheetData>{{{{{{{{{{{{split}}}}}}}}}}}}</{prefix}sheetData>" }, StringSplitOptions.None); ;
+            var contents = doc.InnerXml.Split(new string[] { $"<{prefix}sheetData>{{{{{{{{{{{{split}}}}}}}}}}}}</{prefix}sheetData>" }, StringSplitOptions.None);
             using (var writer = new StreamWriter(stream, Encoding.UTF8))
             {
                 writer.Write(contents[0]);
@@ -164,7 +164,9 @@ namespace MiniExcelLibs.OpenXml
 
                             var newRow = row.Clone() as XmlElement;
                             newRow.SetAttribute("r", newRowIndex.ToString());
-                            newRow.InnerXml = row.InnerXml.Replace($"{{{{$rowindex}}}}", newRowIndex.ToString());
+                            StringBuilder rowXml = new StringBuilder(newRow.InnerXml);
+                            // newRow.InnerXml = row.InnerXml.Replace($"{{{{$rowindex}}}}", newRowIndex.ToString());
+                            rowXml.Replace($"{{{{$rowindex}}}}", newRowIndex.ToString());
 
                             if (rowInfo.IsDictionary)
                             {
@@ -174,14 +176,16 @@ namespace MiniExcelLibs.OpenXml
                                     var key = $"{{{{{rowInfo.IEnumerablePropName}.{propInfo.Key}}}}}";
                                     if (item == null) //![image](https://user-images.githubusercontent.com/12729184/114728510-bc3e5900-9d71-11eb-9721-8a414dca21a0.png)
                                     {
-                                        newRow.InnerXml = newRow.InnerXml.Replace(key, "");
+                                        // newRow.InnerXml = newRow.InnerXml.Replace(key, "");
+                                        rowXml.Replace(key, "");
                                         continue;
                                     }
 
                                     var cellValue = dic[propInfo.Key];
                                     if (cellValue == null)
                                     {
-                                        newRow.InnerXml = newRow.InnerXml.Replace(key, "");
+                                        // newRow.InnerXml = newRow.InnerXml.Replace(key, "");
+                                        rowXml.Replace(key, "");
                                         continue;
                                     }
 
@@ -198,7 +202,8 @@ namespace MiniExcelLibs.OpenXml
                                     }
 
                                     //TODO: ![image](https://user-images.githubusercontent.com/12729184/114848248-17735880-9e11-11eb-8258-63266bda0a1a.png)
-                                    newRow.InnerXml = newRow.InnerXml.Replace(key, cellValueStr);
+                                    //newRow.InnerXml = newRow.InnerXml.Replace(key, cellValueStr);
+                                    rowXml.Replace(key, cellValueStr);
                                 }
                             }
                             else if (rowInfo.IsDataTable)
@@ -209,14 +214,16 @@ namespace MiniExcelLibs.OpenXml
                                     var key = $"{{{{{rowInfo.IEnumerablePropName}.{propInfo.Key}}}}}";
                                     if (item == null) //![image](https://user-images.githubusercontent.com/12729184/114728510-bc3e5900-9d71-11eb-9721-8a414dca21a0.png)
                                     {
-                                        newRow.InnerXml = newRow.InnerXml.Replace(key, "");
+                                        // newRow.InnerXml = newRow.InnerXml.Replace(key, "");
+                                        rowXml.Replace(key, "");
                                         continue;
                                     }
 
                                     var cellValue = datarow[propInfo.Key];
                                     if (cellValue == null)
                                     {
-                                        newRow.InnerXml = newRow.InnerXml.Replace(key, "");
+                                        // newRow.InnerXml = newRow.InnerXml.Replace(key, "");
+                                        rowXml.Replace(key, "");
                                         continue;
                                     }
 
@@ -233,7 +240,8 @@ namespace MiniExcelLibs.OpenXml
                                     }
 
                                     //TODO: ![image](https://user-images.githubusercontent.com/12729184/114848248-17735880-9e11-11eb-8258-63266bda0a1a.png)
-                                    newRow.InnerXml = newRow.InnerXml.Replace(key, cellValueStr);
+                                    //newRow.InnerXml = newRow.InnerXml.Replace(key, cellValueStr);
+                                    rowXml.Replace(key, cellValueStr);
                                 }
                             }
                             else
@@ -245,14 +253,16 @@ namespace MiniExcelLibs.OpenXml
                                     var key = $"{{{{{rowInfo.IEnumerablePropName}.{prop.Name}}}}}";
                                     if (item == null) //![image](https://user-images.githubusercontent.com/12729184/114728510-bc3e5900-9d71-11eb-9721-8a414dca21a0.png)
                                     {
-                                        newRow.InnerXml = newRow.InnerXml.Replace(key, "");
+                                        //newRow.InnerXml = newRow.InnerXml.Replace(key, "");
+                                        rowXml.Replace(key, "");
                                         continue;
                                     }
 
                                     var cellValue = prop.GetValue(item);
                                     if (cellValue == null)
                                     {
-                                        newRow.InnerXml = newRow.InnerXml.Replace(key, "");
+                                        //newRow.InnerXml = newRow.InnerXml.Replace(key, "");
+                                        rowXml.Replace(key, "");
                                         continue;
                                     }
 
@@ -274,9 +284,13 @@ namespace MiniExcelLibs.OpenXml
                                     }
 
                                     //TODO: ![image](https://user-images.githubusercontent.com/12729184/114848248-17735880-9e11-11eb-8258-63266bda0a1a.png)
-                                    newRow.InnerXml = newRow.InnerXml.Replace(key, cellValueStr);
+                                    // newRow.InnerXml = newRow.InnerXml.Replace(key, cellValueStr);
+                                    rowXml.Replace(key, cellValueStr);
+                                    StringBuilder stringBuilder = new StringBuilder();
                                 }
                             }
+
+                            newRow.InnerXml = rowXml.ToString();
 
                             // note: only first time need add diff ![image](https://user-images.githubusercontent.com/12729184/114494728-6bceda80-9c4f-11eb-9685-8b5ed054eabe.png)
                             if (!first)
@@ -326,7 +340,7 @@ namespace MiniExcelLibs.OpenXml
                                         }
                                     }
 
-                                    _newRow.InnerXml = _newRow.InnerXml.Replace($"{{{{$rowindex}}}}", mergeBaseRowIndex.ToString());
+                                    _newRow.InnerXml = new StringBuilder(_newRow.InnerXml).Replace($"{{{{$rowindex}}}}", mergeBaseRowIndex.ToString()).ToString();
                                     writer.Write(CleanXml(_newRow.OuterXml, endPrefix));
                                 }
                             }
@@ -335,7 +349,7 @@ namespace MiniExcelLibs.OpenXml
                     else
                     {
                         row.SetAttribute("r", newRowIndex.ToString());
-                        row.InnerXml = row.InnerXml.Replace($"{{{{$rowindex}}}}", newRowIndex.ToString());
+                        row.InnerXml = new StringBuilder(row.InnerXml).Replace($"{{{{$rowindex}}}}", newRowIndex.ToString()).ToString();
                         writer.Write(CleanXml(row.OuterXml, endPrefix));
 
                         //mergecells

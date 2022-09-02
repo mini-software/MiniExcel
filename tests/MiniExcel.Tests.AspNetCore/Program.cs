@@ -9,6 +9,8 @@ using System.IO;
 using System.Net;
 using MiniExcelLibs;
 using Microsoft.AspNetCore.Http;
+using System.Text.Json.Serialization;
+using Newtonsoft.Json;
 
 public class Program
 {
@@ -139,11 +141,12 @@ public class ApiController : Controller
         var stream = new MemoryStream();
         excel.CopyTo(stream);
 
+        var result = new List<dynamic>();
         foreach (var item in stream.Query(true))
         {
             // do your logic etc.
+            result.Add(item);
         }
-
-        return Ok("File uploaded successfully");
+        return Ok("File uploaded successfully\ndata:"+ JsonConvert.SerializeObject(result));
     }
 }

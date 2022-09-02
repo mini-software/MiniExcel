@@ -25,6 +25,9 @@
 
 ---
 
+### 1.26.6
+- [OPT] Template save performance #425 (via @Rollerss)
+
 ### 1.26.5
 - [New] Added DataReader AutoFilter toggle #402 #401 (via @Rollerss)
 - [New] SaveAs 支持空白 sharedstring #405

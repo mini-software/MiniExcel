@@ -25,7 +25,7 @@
 ---
 
 ### 1.26.6
-- [OPT] Template save performance #425 (via @Rollerss)
+- [OPT] Template save performance #425 (via @lileyzhao)
 
 ### 1.26.5
 - [New] Added DataReader AutoFilter toggle #402 #401 (via @Rollerss)

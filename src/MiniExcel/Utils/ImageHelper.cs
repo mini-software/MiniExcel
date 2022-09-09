@@ -1,5 +1,6 @@
 ﻿namespace MiniExcelLibs.Utils
 {
+    using System;
     using System.Linq;
     using System.Text;
 
@@ -15,36 +16,35 @@
             unknown
         }
 
-        public static ImageFormat GetImageFormat(byte[] bytes)
+        public static ImageFormat GetImageFormat(ReadOnlySpan<byte> bytes)
         {
-            // see http://www.mikekunz.com/image_file_header.html  
-            var bmp = Encoding.ASCII.GetBytes("BM");     // BMP
-            var gif = Encoding.ASCII.GetBytes("GIF");    // GIF
-            var png = new byte[] { 137, 80, 78, 71 };    // PNG
-            var tiff = new byte[] { 73, 73, 42 };         // TIFF
-            var tiff2 = new byte[] { 77, 77, 42 };         // TIFF
-            var jpeg = new byte[] { 255, 216, 255, 224 }; // jpeg
-            var jpeg2 = new byte[] { 255, 216, 255, 225 }; // jpeg canon
+            ReadOnlySpan<byte> bmp = stackalloc byte[] { (byte)'B', (byte)'M' };            // BMP
+            ReadOnlySpan<byte> gif = stackalloc byte[] { (byte)'G', (byte)'I', (byte)'F' }; // GIF
+            ReadOnlySpan<byte> png = stackalloc byte[] { 137, 80, 78, 71 };                 // PNG
+            ReadOnlySpan<byte> tiff = stackalloc byte[] { 73, 73, 42 };                     // TIFF
+            ReadOnlySpan<byte> tiff2 = stackalloc byte[] { 77, 77, 42 };                    // TIFF
+            ReadOnlySpan<byte> jpeg = stackalloc byte[] { 255, 216, 255, 224 };             // jpeg
+            ReadOnlySpan<byte> jpeg2 = stackalloc byte[] { 255, 216, 255, 225 };            // jpeg canon
 
-            if (bmp.SequenceEqual(bytes.Take(bmp.Length)))
+            if (bytes.StartsWith(bmp))
                 return ImageFormat.bmp;
 
-            if (gif.SequenceEqual(bytes.Take(gif.Length)))
+            if (bytes.StartsWith(gif))
                 return ImageFormat.gif;
 
-            if (png.SequenceEqual(bytes.Take(png.Length)))
+            if (bytes.StartsWith(png))
                 return ImageFormat.png;
 
-            if (tiff.SequenceEqual(bytes.Take(tiff.Length)))
+            if (bytes.StartsWith(tiff))
                 return ImageFormat.tiff;
 
-            if (tiff2.SequenceEqual(bytes.Take(tiff2.Length)))
+            if (bytes.StartsWith(tiff2))
                 return ImageFormat.tiff;
 
-            if (jpeg.SequenceEqual(bytes.Take(jpeg.Length)))
+            if (bytes.StartsWith(jpeg))
                 return ImageFormat.jpg;
 
-            if (jpeg2.SequenceEqual(bytes.Take(jpeg2.Length)))
+            if (bytes.StartsWith(jpeg2))
                 return ImageFormat.jpg;
 
             return ImageFormat.unknown;

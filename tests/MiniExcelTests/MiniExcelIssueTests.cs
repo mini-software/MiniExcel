@@ -35,6 +35,27 @@ namespace MiniExcelLibs.Tests
         }
 
         /// <summary>
+        /// [ · Issue #413 · MiniExcel/MiniExcel]
+        /// (https://github.com/MiniExcel/MiniExcel/issues/413)
+        /// </summary>
+        [Fact]
+        public void TestIssue413()
+        {
+            var path = PathHelper.GetTempFilePath();
+            var value = new { 
+                list = new List<Dictionary<string,object>>{ 
+                    new Dictionary<string, object>{ { "id","001"},{ "time",new DateTime(2022,12,25)} },
+                    new Dictionary<string, object>{ { "id","002"},{ "time",new DateTime(2022,9,23)} },
+                } 
+            };
+            var templatePath = PathHelper.GetFile("xlsx/TestIssue413.xlsx");
+            MiniExcel.SaveAsByTemplate(path,templatePath, value);
+            var rows = MiniExcel.Query(path).ToList();
+            Assert.Equal("2022-12-25 00:00:00", rows[1].B);
+            Assert.Equal("2022-09-23 00:00:00", rows[2].B);
+        }
+
+        /// <summary>
         /// [SaveAs Support empty sharedstring · Issue #405 · MiniExcel/MiniExcel]
         /// (https://github.com/MiniExcel/MiniExcel/issues/405)
         /// </summary>

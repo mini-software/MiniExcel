@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFrameworks>net45;netstandard2.0;net5.0</TargetFrameworks>
-		<Version>1.26.6</Version>
+		<Version>1.26.7</Version>
 	</PropertyGroup>
 	<PropertyGroup>
 		<AssemblyName>MiniExcel</AssemblyName>

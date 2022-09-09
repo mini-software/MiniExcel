@@ -22,6 +22,12 @@
 
 ---
 
+### 1.26.7
+- [OPT] Reduce memory allocation when using MemoryStream #427 (via @cupsos)
+- [OPT] Add System.Memory pacakge #427 (via @cupsos)
+- [OPT] Reduce memory allocation in GetImageFormat() #427 (via @cupsos)
+- [Bug] Fixed MiniExcel.SaveAsByTemplate error when value is List<Dictionary<string, object>> #413 (via @shps951023)
+
 ### 1.26.6
 - [OPT] Template save performance #425 (via @lileyzhao)
 

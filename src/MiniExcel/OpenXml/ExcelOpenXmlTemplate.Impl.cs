@@ -389,10 +389,20 @@ namespace MiniExcelLibs.OpenXml
         private static string ConvertToDateTimeString(KeyValuePair<string, PropInfo> propInfo, object cellValue)
         {
             string cellValueStr;
+
+
             //TODO:c.SetAttribute("t", "d"); and custom format
-            var format = propInfo.Value.PropertyInfo.GetAttributeValue((ExcelFormatAttribute x) => x.Format)
-                         ?? propInfo.Value.PropertyInfo.GetAttributeValue((ExcelColumnAttribute x) => x.Format)
-                         ?? "yyyy-MM-dd HH:mm:ss";
+            var format = string.Empty;
+            if (propInfo.Value.PropertyInfo == null)
+            {
+                format = "yyyy-MM-dd HH:mm:ss";
+            }
+            else
+            {
+                format = propInfo.Value.PropertyInfo.GetAttributeValue((ExcelFormatAttribute x) => x.Format)
+                             ?? propInfo.Value.PropertyInfo.GetAttributeValue((ExcelColumnAttribute x) => x.Format)
+                             ?? "yyyy-MM-dd HH:mm:ss";
+            }
 
             cellValueStr = (cellValue as DateTime?)?.ToString(format);
             return cellValueStr;

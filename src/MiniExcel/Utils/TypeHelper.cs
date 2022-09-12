@@ -98,6 +98,10 @@
                     {
                         newValue = _v;
                     }
+                    else if(DateTimeOffset.TryParseExact(vs, pInfo.ExcelFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out var _v))
+                    {
+                        newValue = _v;
+                    }
                 }
                 else if (DateTime.TryParse(vs, _config.Culture, DateTimeStyles.None, out var _v))
                     newValue = _v;

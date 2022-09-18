@@ -34,6 +34,28 @@ namespace MiniExcelLibs.Tests
             this.output = output;
         }
 
+
+        /// <summary>
+        /// Exception : MiniExcelLibs.Exceptions.ExcelInvalidCastException: 'ColumnName : Date, CellRow : 2, Value : 2021-01-31 10:03:00 +08:00, it can't cast to DateTimeOffset type.'
+        /// </summary>
+        [Fact]
+        public void TestIssue430()
+        {
+            var outputPath = PathHelper.GetTempFilePath();
+            var value = new[] {
+                new TestIssue430Dto{ Date=DateTimeOffset.Parse("2021-01-31 10:03:00 +05:00")}
+            };
+            MiniExcel.SaveAs(outputPath, value);
+            var rows = MiniExcel.Query<TestIssue430Dto>(outputPath).ToArray();
+            Assert.Equal("2021-01-31 10:03:00 +05:00", rows[0].Date.ToString("yyyy-MM-dd HH:mm:ss zzz"));
+        }
+
+        public class TestIssue430Dto
+        {
+            [ExcelFormat("yyyy-MM-dd HH:mm:ss zzz")]
+            public DateTimeOffset Date { get; set; }
+        }
+
         [Fact]
         public void TestIssue_DataReaderSupportDimension()
         {

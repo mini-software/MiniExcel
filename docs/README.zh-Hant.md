@@ -28,6 +28,8 @@
 
 ### 1.27.0
 
+- [New] 支持 DateTimeOffset and ExcelFormat #430 (via @Lightczx , @shps951023 )
+
 - [Optimization] SaveAs by datareader 支持 dimension #231 (via @shps951023)
 
 ### 1.26.7

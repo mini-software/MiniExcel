@@ -26,6 +26,8 @@
 
 ### 1.27.0
 
+- [New] Support DateTimeOffset and ExcelFormat #430 (via @Lightczx , @shps951023 )
+
 - [Optimization] SaveAs by datareader support dimension #231 (via @shps951023)
 
 ### 1.26.7

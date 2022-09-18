@@ -81,6 +81,21 @@
             {
                 newValue = Guid.Parse(itemValue.ToString());
             }
+            else if (pInfo.ExcludeNullableType == typeof(DateTimeOffset))
+            {
+                var vs = itemValue?.ToString();
+                if (pInfo.ExcelFormat != null)
+                {
+                    if (DateTimeOffset.TryParseExact(vs, pInfo.ExcelFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out var _v))
+                    {
+                        newValue = _v;
+                    }
+                }
+                else if (DateTimeOffset.TryParse(vs, _config.Culture, DateTimeStyles.None, out var _v))
+                    newValue = _v;
+                else
+                    throw new InvalidCastException($"{vs} can't cast to datetime");
+            }
             else if (pInfo.ExcludeNullableType == typeof(DateTime))
             {
                 // fix issue 257 https://github.com/shps951023/MiniExcel/issues/257
@@ -94,11 +109,11 @@
                 var vs = itemValue?.ToString();
                 if (pInfo.ExcelFormat != null)
                 {
-                    if (DateTime.TryParseExact(vs, pInfo.ExcelFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out var _v))
+                    if( pInfo.Property.PropertyType == typeof(DateTimeOffset) && DateTimeOffset.TryParseExact(vs, pInfo.ExcelFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out var _v2))
                     {
-                        newValue = _v;
+                        newValue = _v2;
                     }
-                    else if(DateTimeOffset.TryParseExact(vs, pInfo.ExcelFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out var _v))
+                    else if (DateTime.TryParseExact(vs, pInfo.ExcelFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out var _v))
                     {
                         newValue = _v;
                     }

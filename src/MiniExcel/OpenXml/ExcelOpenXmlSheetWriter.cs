@@ -54,7 +54,9 @@ namespace MiniExcelLibs.OpenXml
         public ExcelOpenXmlSheetWriter(Stream stream, object value, string sheetName, IConfiguration configuration, bool printHeader)
         {
             this._stream = stream;
-            this._archive = new MiniExcelZipArchive(_stream, ZipArchiveMode.Create, true, _utf8WithBom);
+            // Why ZipArchiveMode.Update not ZipArchiveMode.Create?
+            // R : Mode create - ZipArchiveEntry does not support seeking.'
+            this._archive = new MiniExcelZipArchive(_stream, ZipArchiveMode.Update, true, _utf8WithBom);
             this._configuration = configuration as OpenXmlConfiguration ?? OpenXmlConfiguration.DefaultConfig;
             this._printHeader = printHeader;
             this._value = value;
@@ -579,15 +581,13 @@ namespace MiniExcelLibs.OpenXml
         private void GenerateSheetByIDataReader(MiniExcelStreamWriter writer, IDataReader reader)
         {
             var xy = ExcelOpenXmlUtils.ConvertCellToXY("A1"); /*TODO:code smell*/
-
+            long dimensionWritePosition = 0;
             writer.Write($@"<?xml version=""1.0"" encoding=""utf-8""?><x:worksheet xmlns:x=""http://schemas.openxmlformats.org/spreadsheetml/2006/main"">");
             var yIndex = xy.Item2;
             var xIndex = 0;
             {
-                // TODO: dimension
-                //var maxRowIndex = value.Rows.Count + (printHeader && value.Rows.Count > 0 ? 1 : 0);
-                //var maxColumnIndex = value.Columns.Count;
-                //writer.Write($@"<x:dimension ref=""{GetDimensionRef(maxRowIndex, maxColumnIndex)}""/>");
+                dimensionWritePosition = writer.WriteAndFlush($@"<x:dimension ref=""");
+                writer.Write($@"                              />"); // end of code will be replaced
                 writer.Write("<x:sheetData>");
                 int fieldCount = reader.FieldCount;
                 if (_printHeader)
@@ -623,7 +623,10 @@ namespace MiniExcelLibs.OpenXml
             writer.Write("</x:sheetData>");
             if (_configuration.AutoFilter)
                 writer.Write($"<x:autoFilter ref=\"A1:{ExcelOpenXmlUtils.ConvertXyToCell((xIndex-1)/*TODO:code smell*/, yIndex-1)}\" />");
-            writer.Write("</x:worksheet>");
+            writer.WriteAndFlush("</x:worksheet>");
+
+            writer.SetPosition(dimensionWritePosition); 
+            writer.WriteAndFlush($@"A1:{ExcelOpenXmlUtils.ConvertXyToCell((xIndex - 1)/*TODO:code smell*/, yIndex - 1)}""");
         }
 
         private static void WriteC(MiniExcelStreamWriter writer, string r, string columnName)

@@ -34,6 +34,26 @@ namespace MiniExcelLibs.Tests
             this.output = output;
         }
 
+        [Fact]
+        public void TestIssue_DataReaderSupportDimension()
+        {
+            {
+                DataTable table = new DataTable();
+                {
+                    table.Columns.Add("id", typeof(int));
+                    table.Columns.Add("name", typeof(string));
+                    table.Rows.Add(1, "Jack");
+                    table.Rows.Add(2, "Mike");
+                }
+                var path = Path.GetTempPath() + Guid.NewGuid() + ".xlsx";
+                DataTableReader reader = table.CreateDataReader();
+                MiniExcel.SaveAs(path, reader);
+                var xml = Helpers.GetZipFileContent(path, "xl/worksheets/sheet1.xml");
+                Assert.Contains("<x:autoFilter ref=\"A1:B3\" />", xml);
+                Assert.Contains("<x:dimension ref=\"A1:B3\" />", xml);
+            }
+        }
+
         /// <summary>
         /// [ · Issue #413 · MiniExcel/MiniExcel]
         /// (https://github.com/MiniExcel/MiniExcel/issues/413)

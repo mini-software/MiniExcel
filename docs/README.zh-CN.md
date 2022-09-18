@@ -25,7 +25,14 @@
 
 ---
 
+
+
+### 1.27.0
+
+- [Optimization] SaveAs by datareader 支持 dimension #231 (via @shps951023)
+
 ### 1.26.7
+
 - [OPT] 减少 memory allocation 使用 MemoryStream #427 (via @cupsos)
 - [OPT] 添加 System.Memory pacakge #427 (via @cupsos)
 - [OPT] 减少 memory allocation in GetImageFormat() #427 (via @cupsos)

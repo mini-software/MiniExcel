@@ -1,31 +1,32 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFrameworks>net45;netstandard2.0;net5.0</TargetFrameworks>
-		<Version>1.26.7</Version>
+		<Version>1.27.0</Version>
 	</PropertyGroup>
 	<PropertyGroup>
 		<AssemblyName>MiniExcel</AssemblyName>
 		<Title>MiniExcel</Title>
 		<Product>MiniExcel</Product>
 		<PackageTags>excel;xlsx;csv;micro-helper;mini;openxml;helper;</PackageTags>
-		<Description>Fast, Low-Memory, Easy Excel .NET helper to import/export/template spreadsheet
+		<Description>
+			Fast, Low-Memory, Easy Excel .NET helper to import/export/template spreadsheet
 
-Github : https://github.com/shps951023/MiniExcel
-Gitee : https://gitee.com/dotnetchina/MiniExcel
-Issues : https://github.com/shps951023/MiniExcel/issues
-Todo : https://github.com/shps951023/MiniExcel/projects/1?fullscreen=true
-</Description>
+			Github : https://github.com/MiniExcel/MiniExcel
+			Gitee : https://gitee.com/dotnetchina/MiniExcel
+			Issues : https://github.com/MiniExcel/MiniExcel/issues
+			Todo : https://github.com/MiniExcel/MiniExcel/projects/1?fullscreen=true
+		</Description>
 		<Authors>LIN,WEI-HAN</Authors>
 		<PackageId>MiniExcel</PackageId>
 		<Copyright>LIN,WEI-HAN, 2021 onwards</Copyright>
 		<NeutralLanguage>en</NeutralLanguage>
-		<license>https://raw.githubusercontent.com/shps951023/MiniExcel/master/LICENSE</license>
+		<license>https://raw.githubusercontent.com/MiniExcel/MiniExcel/master/LICENSE</license>
 		<RootNamespace>MiniExcelLibs</RootNamespace>
 		<PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-		<PackageProjectUrl>https://github.com/shps951023/MiniExcel</PackageProjectUrl>
-		<RepositoryUrl>https://github.com/shps951023/MiniExcel</RepositoryUrl>
+		<PackageProjectUrl>https://github.com/MiniExcel/MiniExcel</PackageProjectUrl>
+		<RepositoryUrl>https://github.com/MiniExcel/MiniExcel</RepositoryUrl>
 		<PackageIcon>icon.png</PackageIcon>
-		<PackageReleaseNotes>Please Check [Release Notes](https://github.com/shps951023/MiniExcel/tree/master/docs)</PackageReleaseNotes>
+		<PackageReleaseNotes>Please Check [Release Notes](https://github.com/MiniExcel/MiniExcel/tree/master/docs)</PackageReleaseNotes>
 		<RepositoryType>Github</RepositoryType>
 	</PropertyGroup>
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net461'">
@@ -35,14 +36,14 @@ Todo : https://github.com/shps951023/MiniExcel/projects/1?fullscreen=true
 		<Reference Include="System.IO.Compression" />
 	</ItemGroup>
 	<ItemGroup>
-	  <None Update="icon.png">
-	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </None>
+		<None Update="icon.png">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
 	</ItemGroup>
-  <ItemGroup>
-    <None Include="icon.png" Pack="true" PackagePath="\" />
-  </ItemGroup>
-  <ItemGroup Condition="'$(TargetFramework)' == 'net45' Or '$(TargetFramework)' == 'netstandard2.0'">
-    <PackageReference Include="System.Memory" Version="4.5.5" />
-  </ItemGroup>
+	<ItemGroup>
+		<None Include="icon.png" Pack="true" PackagePath="\" />
+	</ItemGroup>
+	<ItemGroup Condition="'$(TargetFramework)' == 'net45' Or '$(TargetFramework)' == 'netstandard2.0'">
+		<PackageReference Include="System.Memory" Version="4.5.5" />
+	</ItemGroup>
 </Project>

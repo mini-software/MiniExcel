@@ -22,7 +22,14 @@
 
 ---
 
+
+
+### 1.27.0
+
+- [Optimization] SaveAs by datareader support dimension #231 (via @shps951023)
+
 ### 1.26.7
+
 - [OPT] Reduce memory allocation when using MemoryStream #427 (via @cupsos)
 - [OPT] Add System.Memory pacakge #427 (via @cupsos)
 - [OPT] Reduce memory allocation in GetImageFormat() #427 (via @cupsos)

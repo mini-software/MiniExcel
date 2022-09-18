@@ -5,7 +5,7 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MiniExcelLibs", "src\MiniExcel\MiniExcelLibs.csproj", "{097903C9-1F81-4427-B4C8-530CB59687B8}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{2AFABF2E-D6C3-4983-B43A-76ADA2BB2876}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Docs and setting", "Docs and setting", "{2AFABF2E-D6C3-4983-B43A-76ADA2BB2876}"
 	ProjectSection(SolutionItems) = preProject
 		.gitattributes = .gitattributes
 		.gitignore = .gitignore
@@ -21,7 +21,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{CC1E0601-AEC
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{359A7094-3353-48F2-B3E1-FE9E59698318}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{3E370222-8E9E-45E8-8DCD-E5F41EE52A39}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Releases", "Releases", "{3E370222-8E9E-45E8-8DCD-E5F41EE52A39}"
 	ProjectSection(SolutionItems) = preProject
 		docs\README.md = docs\README.md
 		docs\README.zh-CN.md = docs\README.zh-CN.md

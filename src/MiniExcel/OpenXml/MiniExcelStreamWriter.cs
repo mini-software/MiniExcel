@@ -8,52 +8,41 @@ namespace MiniExcelLibs.OpenXml
     {
         private readonly Stream _stream;
         private readonly Encoding _encoding;
-        private readonly StreamWriter _streamWriter;
+        internal readonly StreamWriter _streamWriter;
         private bool disposedValue;
-        //private byte[] _cacheValueBytes;
-
         public MiniExcelStreamWriter(Stream stream,Encoding encoding, int bufferSize)
         {
             this._stream = stream;
             this._encoding = encoding;
             this._streamWriter = new StreamWriter(stream, this._encoding, bufferSize);
         }
-        public void Write(string content,bool flushImmediately=false)
+        public void Write(string content)
         {
             if (string.IsNullOrEmpty(content))
                 return;
-            //if (flushImmediately)
-            //else
-                //_cacheValueBytes.CopyTo
-            //TODO:
-            //var bytes = this._encoding.GetBytes(content);
-            //this._stream.Write(bytes, 0, bytes.Length);
-
             this._streamWriter.Write(content);
+        }
+
+        public long WriteAndFlush(string content)
+        {
+            this.Write(content);
+            this._streamWriter.Flush();
+            return this._streamWriter.BaseStream.Position;
+        }
+
+        public void SetPosition(long position)
+        {
+            this._streamWriter.BaseStream.Position = position;
         }
 
         protected virtual void Dispose(bool disposing)
         {
             if (!disposedValue)
             {
-                if (disposing)
-                {
-                    // TODO: dispose managed state (managed objects)
-                }
-
-                // free unmanaged resources (unmanaged objects) and override finalizer
-                this._streamWriter?.Dispose();
-                // TODO: set large fields to null
+               this._streamWriter?.Dispose();
                 disposedValue = true;
             }
         }
-
-        // // TODO: override finalizer only if 'Dispose(bool disposing)' has code to free unmanaged resources
-        // ~MiniExcelStreamWriter()
-        // {
-        //     // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-        //     Dispose(disposing: false);
-        // }
 
         public void Dispose()
         {

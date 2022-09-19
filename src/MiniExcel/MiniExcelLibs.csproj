@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFrameworks>net45;netstandard2.0;net5.0</TargetFrameworks>
-		<Version>1.27.0</Version>
+		<Version>1.28.0</Version>
 	</PropertyGroup>
 	<PropertyGroup>
 		<AssemblyName>MiniExcel</AssemblyName>
@@ -11,22 +11,22 @@
 		<Description>
 			Fast, Low-Memory, Easy Excel .NET helper to import/export/template spreadsheet
 
-			Github : https://github.com/MiniExcel/MiniExcel
+			Github : https://github.com/mini-software/MiniExcel
 			Gitee : https://gitee.com/dotnetchina/MiniExcel
-			Issues : https://github.com/MiniExcel/MiniExcel/issues
-			Todo : https://github.com/MiniExcel/MiniExcel/projects/1?fullscreen=true
+			Issues : https://github.com/mini-software/MiniExcel/issues
+			Todo : https://github.com/mini-software/MiniExcel/projects/1?fullscreen=true
 		</Description>
 		<Authors>LIN,WEI-HAN</Authors>
 		<PackageId>MiniExcel</PackageId>
 		<Copyright>LIN,WEI-HAN, 2021 onwards</Copyright>
 		<NeutralLanguage>en</NeutralLanguage>
-		<license>https://raw.githubusercontent.com/MiniExcel/MiniExcel/master/LICENSE</license>
+		<license>https://raw.githubusercontent.com/mini-software/MiniExcel/master/LICENSE</license>
 		<RootNamespace>MiniExcelLibs</RootNamespace>
 		<PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-		<PackageProjectUrl>https://github.com/MiniExcel/MiniExcel</PackageProjectUrl>
-		<RepositoryUrl>https://github.com/MiniExcel/MiniExcel</RepositoryUrl>
+		<PackageProjectUrl>https://github.com/mini-software/MiniExcel</PackageProjectUrl>
+		<RepositoryUrl>https://github.com/mini-software/MiniExcel</RepositoryUrl>
 		<PackageIcon>icon.png</PackageIcon>
-		<PackageReleaseNotes>Please Check [Release Notes](https://github.com/MiniExcel/MiniExcel/tree/master/docs)</PackageReleaseNotes>
+		<PackageReleaseNotes>Please Check [Release Notes](https://github.com/mini-software/MiniExcel/tree/master/docs)</PackageReleaseNotes>
 		<RepositoryType>Github</RepositoryType>
 	</PropertyGroup>
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net461'">

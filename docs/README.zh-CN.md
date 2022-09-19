@@ -27,6 +27,12 @@
 
 
 
+
+
+## 1.28.0
+
+- [New] 支持 CSV Insert 方法 #I4X92G (via @shps951023)
+
 ### 1.27.0
 
 - [New] 支持 DateTimeOffset and ExcelFormat #430 (via @Lightczx , @shps951023 )

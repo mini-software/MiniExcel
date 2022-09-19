@@ -4,6 +4,7 @@
     using MiniExcelLibs.Utils;
     using MiniExcelLibs.Zip;
     using System;
+    using System.Collections;
     using System.Collections.Generic;
     using System.Data;
     using System.Dynamic;
@@ -22,6 +23,28 @@
         public static MiniExcelDataReader GetReader(this Stream stream, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null)
         {
             return new MiniExcelDataReader(stream, useHeaderRow, sheetName, excelType, startCell, configuration);
+        }
+
+        public static void Insert(string path, object value, string sheetName = "Sheet1", ExcelType excelType = ExcelType.UNKNOWN, IConfiguration configuration = null)
+        {
+            if (Path.GetExtension(path).ToLowerInvariant() != ".csv")
+                throw new NotSupportedException("MiniExcel SaveAs only support csv insert now");
+
+            using (var stream = new FileStream(path, FileMode.Append, FileAccess.Write, FileShare.Read, 4096, FileOptions.SequentialScan))
+                Insert(stream, value, sheetName, ExcelTypeHelper.GetExcelType(path, excelType), configuration);
+        }
+
+        public static void Insert(this Stream stream, object value, string sheetName = "Sheet1", ExcelType excelType = ExcelType.XLSX, IConfiguration configuration = null)
+        {
+            // reuse code
+            object v = null;
+            {
+                if (!(value is IEnumerable) && !(value is IDataReader) && !(value is IDictionary<string, object>) && !(value is IDictionary))
+                    v = Enumerable.Range(0, 1).Select(s => value);
+                else
+                    v = value;
+            }
+            ExcelWriterFactory.GetProvider(stream, v, sheetName, excelType, configuration, false).Insert();
         }
 
         public static void SaveAs(string path, object value, bool printHeader = true, string sheetName = "Sheet1", ExcelType excelType = ExcelType.UNKNOWN, IConfiguration configuration = null,bool overwriteFile = false)

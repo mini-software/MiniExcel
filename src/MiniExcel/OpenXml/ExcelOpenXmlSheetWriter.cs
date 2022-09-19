@@ -63,6 +63,10 @@ namespace MiniExcelLibs.OpenXml
             _sheets.Add(new SheetDto { Name = sheetName, SheetIdx = 1 }); //TODO:remove
         }
 
+        public ExcelOpenXmlSheetWriter()
+        {
+        }
+
         public void SaveAs()
         {
             GenerateDefaultOpenXml();
@@ -776,6 +780,11 @@ namespace MiniExcelLibs.OpenXml
         public async Task SaveAsAsync(CancellationToken cancellationToken = default(CancellationToken))
         {
             await Task.Run(() => SaveAs(),cancellationToken).ConfigureAwait(false);
+        }
+
+        public void Insert()
+        {
+            throw new NotImplementedException();
         }
     }
 }

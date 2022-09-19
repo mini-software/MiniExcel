@@ -24,6 +24,10 @@
 
 
 
+## 1.28.0
+
+- [New] Support CSV Insert #I4X92G (via @shps951023)
+
 ### 1.27.0
 
 - [New] Support DateTimeOffset and ExcelFormat #430 (via @Lightczx , @shps951023 )

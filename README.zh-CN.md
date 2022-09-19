@@ -534,6 +534,8 @@ MiniExcel.SaveAs(path, value);
 
 
 
+
+
 ### 模板填充 Excel <a name="getstart3"></a>
 
 - 宣告方式类似 Vue 模板 `{{变量名称}}`, 或是集合渲染 `{{集合名称.栏位名称}}`
@@ -933,7 +935,43 @@ public class TestIssueI4TXGTDto
 
 
 
+### 新增、删除、修改
 
+#### 新增
+
+v1.28.0 开始支持 CSV 插入新增，在最后一行新增N笔数据
+
+```csharp
+// 原始数据
+{
+    var value = new[] {
+          new { ID=1,Name ="Jack",InDate=new DateTime(2021,01,03)},
+          new { ID=2,Name ="Henry",InDate=new DateTime(2020,05,03)},
+    };
+    MiniExcel.SaveAs(path, value);
+}
+// 最后一行新增一行数据
+{ 
+    var value = new { ID=3,Name = "Mike", InDate = new DateTime(2021, 04, 23) };
+    MiniExcel.Insert(path, value);
+}
+// 最后一行新增N行数据
+{
+    var value = new[] {
+          new { ID=4,Name ="Frank",InDate=new DateTime(2021,06,07)},
+          new { ID=5,Name ="Gloria",InDate=new DateTime(2022,05,03)},
+    };
+    MiniExcel.Insert(path, value);
+}
+```
+
+![image](https://user-images.githubusercontent.com/12729184/191023733-1e2fa732-db5c-4a3a-9722-b891fe5aa069.png)
+
+
+
+#### 删除(未完成)
+
+#### 修改(未完成)
 
 ### Excel 类别自动判断 <a name="getstart5"></a>
 

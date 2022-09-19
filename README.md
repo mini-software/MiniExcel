@@ -934,6 +934,46 @@ Since V1.26.0, we can set the attributes of Column dynamically
 
 
 
+### Add, Delete, Update
+
+#### Add
+
+v1.28.0 support CSV insert N rows data after last row
+
+```csharp
+// Origin
+{
+    var value = new[] {
+          new { ID=1,Name ="Jack",InDate=new DateTime(2021,01,03)},
+          new { ID=2,Name ="Henry",InDate=new DateTime(2020,05,03)},
+    };
+    MiniExcel.SaveAs(path, value);
+}
+// Insert 1 rows after last
+{ 
+    var value = new { ID=3,Name = "Mike", InDate = new DateTime(2021, 04, 23) };
+    MiniExcel.Insert(path, value);
+}
+// Insert N rows after last
+{
+    var value = new[] {
+          new { ID=4,Name ="Frank",InDate=new DateTime(2021,06,07)},
+          new { ID=5,Name ="Gloria",InDate=new DateTime(2022,05,03)},
+    };
+    MiniExcel.Insert(path, value);
+}
+```
+
+![image](https://user-images.githubusercontent.com/12729184/191023733-1e2fa732-db5c-4a3a-9722-b891fe5aa069.png)
+
+
+
+#### Delete(waiting)
+
+#### Update(waiting)
+
+
+
 ### Excel Type Auto Check <a name="getstart5"></a>
 
 - MiniExcel will check whether it is xlsx or csv based on the `file extension` by default, but there may be inaccuracy, please specify it manually.

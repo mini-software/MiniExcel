@@ -937,6 +937,46 @@ public class TestIssueI4TXGTDto
 
 
 
+### 新增、刪除、修改
+
+#### 新增
+
+v1.28.0 開始支持 CSV 插入新增，在最後一行新增N筆數據
+
+```csharp
+// 原始數據
+{
+    var value = new[] {
+          new { ID=1,Name ="Jack",InDate=new DateTime(2021,01,03)},
+          new { ID=2,Name ="Henry",InDate=new DateTime(2020,05,03)},
+    };
+    MiniExcel.SaveAs(path, value);
+}
+// 最後一行新增一行數據
+{ 
+    var value = new { ID=3,Name = "Mike", InDate = new DateTime(2021, 04, 23) };
+    MiniExcel.Insert(path, value);
+}
+// 最後一行新增N行數據
+{
+    var value = new[] {
+          new { ID=4,Name ="Frank",InDate=new DateTime(2021,06,07)},
+          new { ID=5,Name ="Gloria",InDate=new DateTime(2022,05,03)},
+    };
+    MiniExcel.Insert(path, value);
+}
+```
+
+![image](https://user-images.githubusercontent.com/12729184/191023733-1e2fa732-db5c-4a3a-9722-b891fe5aa069.png)
+
+
+
+#### 刪除(未完成)
+
+#### 修改(未完成)
+
+
+
 ### Excel 類別自動判斷 <a name="getstart5"></a>
 
 - MiniExcel 預設會根據`文件擴展名`判斷是 xlsx 還是 csv，但會有失準時候，請自行指定。

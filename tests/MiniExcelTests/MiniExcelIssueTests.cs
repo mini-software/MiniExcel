@@ -34,6 +34,52 @@ namespace MiniExcelLibs.Tests
             this.output = output;
         }
 
+        /// <summary>
+        /// https://gitee.com/dotnetchina/MiniExcel/issues/I4X92G
+        /// </summary>
+        [Fact]
+        public void TestIssueI4X92G()
+        {
+            var path = PathHelper.GetTempFilePath("csv");
+            {
+                var value = new[] {
+                      new { ID=1,Name ="Jack",InDate=new DateTime(2021,01,03)},
+                      new { ID=2,Name ="Henry",InDate=new DateTime(2020,05,03)},
+                };
+                MiniExcel.SaveAs(path, value);
+                var content = File.ReadAllText(path);
+                Assert.Contains(@"ID,Name,InDate
+1,Jack,""2021-01-03 00:00:00""
+2,Henry,""2020-05-03 00:00:00""
+", content);
+            }
+            {
+                var value = new { ID=3,Name = "Mike", InDate = new DateTime(2021, 04, 23) };
+                MiniExcel.Insert(path, value);
+                var content = File.ReadAllText(path);
+                Assert.Equal(@"ID,Name,InDate
+1,Jack,""2021-01-03 00:00:00""
+2,Henry,""2020-05-03 00:00:00""
+3,Mike,""2021-04-23 00:00:00""
+", content);
+            }
+            {
+                var value = new[] {
+                      new { ID=4,Name ="Frank",InDate=new DateTime(2021,06,07)},
+                      new { ID=5,Name ="Gloria",InDate=new DateTime(2022,05,03)},
+                };
+                MiniExcel.Insert(path, value);
+                var content = File.ReadAllText(path);
+                Assert.Equal(@"ID,Name,InDate
+1,Jack,""2021-01-03 00:00:00""
+2,Henry,""2020-05-03 00:00:00""
+3,Mike,""2021-04-23 00:00:00""
+4,Frank,""2021-06-07 00:00:00""
+5,Gloria,""2022-05-03 00:00:00""
+", content);
+            }
+        }
+
 
         /// <summary>
         /// Exception : MiniExcelLibs.Exceptions.ExcelInvalidCastException: 'ColumnName : Date, CellRow : 2, Value : 2021-01-31 10:03:00 +08:00, it can't cast to DateTimeOffset type.'
@@ -84,14 +130,15 @@ namespace MiniExcelLibs.Tests
         public void TestIssue413()
         {
             var path = PathHelper.GetTempFilePath();
-            var value = new { 
-                list = new List<Dictionary<string,object>>{ 
+            var value = new
+            {
+                list = new List<Dictionary<string, object>>{
                     new Dictionary<string, object>{ { "id","001"},{ "time",new DateTime(2022,12,25)} },
                     new Dictionary<string, object>{ { "id","002"},{ "time",new DateTime(2022,9,23)} },
-                } 
+                }
             };
             var templatePath = PathHelper.GetFile("xlsx/TestIssue413.xlsx");
-            MiniExcel.SaveAsByTemplate(path,templatePath, value);
+            MiniExcel.SaveAsByTemplate(path, templatePath, value);
             var rows = MiniExcel.Query(path).ToList();
             Assert.Equal("2022-12-25 00:00:00", rows[1].B);
             Assert.Equal("2022-09-23 00:00:00", rows[2].B);
@@ -149,7 +196,7 @@ namespace MiniExcelLibs.Tests
             };
             var path = PathHelper.GetTempPath();
             var json = JsonConvert.SerializeObject(new[] { new { id = 1, name = "Jack", createdate = new DateTime(2022, 04, 12), point = 123.456 } }, Formatting.Indented);
-            var value = JsonConvert.DeserializeObject<List<Dictionary<string,object>>>(json);
+            var value = JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(json);
             MiniExcel.SaveAs(path, value, configuration: config);
 
             var rows = MiniExcel.Query(path, false).ToList();
@@ -166,7 +213,7 @@ namespace MiniExcelLibs.Tests
         {
             var config = new OpenXmlConfiguration
             {
-                DynamicColumns = new DynamicExcelColumn[] { 
+                DynamicColumns = new DynamicExcelColumn[] {
                     new DynamicExcelColumn("id"){Ignore=true},
                     new DynamicExcelColumn("name"){Index=1,Width=10},
                     new DynamicExcelColumn("createdate"){Index=0,Format="yyyy-MM-dd",Width=15},
@@ -174,7 +221,7 @@ namespace MiniExcelLibs.Tests
                 }
             };
             var path = PathHelper.GetTempPath();
-            var value = new[] { new { id = 1, name = "Jack", createdate = new DateTime(2022, 04, 12) ,point = 123.456} };
+            var value = new[] { new { id = 1, name = "Jack", createdate = new DateTime(2022, 04, 12), point = 123.456 } };
             MiniExcel.SaveAs(path, value, configuration: config);
 
             var rows = MiniExcel.Query(path, false).ToList();
@@ -204,9 +251,9 @@ namespace MiniExcelLibs.Tests
 
         public class TestIssueI4ZYUUDto
         {
-            [ExcelColumn(Name = "ID",Index =0)]
+            [ExcelColumn(Name = "ID", Index = 0)]
             public string MyProperty { get; set; }
-            [ExcelColumn(Name = "CreateDate", Index = 1,Format ="yyyy-MM",Width =100)]
+            [ExcelColumn(Name = "CreateDate", Index = 1, Format = "yyyy-MM", Width = 100)]
             public DateTime MyProperty2 { get; set; }
         }
 
@@ -360,7 +407,7 @@ namespace MiniExcelLibs.Tests
                 Assert.Equal(count, cnt);
                 File.Delete(path);
             }
-            
+
             {
                 var xlsxPath = @"../../../../../samples/xlsx/Test5x2.xlsx";
                 var tempSqlitePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.db");
@@ -1666,7 +1713,7 @@ Henry,44,Jerry,44
         {
             [ExcelFormat("yyyy")]
             public DateTime Time { get; set; }
-            
+
             [ExcelColumn(Format = "yyyy")]
             public DateTime Time2 { get; set; }
         }

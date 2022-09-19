@@ -18,9 +18,10 @@ namespace MiniExcelLibs.Csv
         private readonly Stream _stream;
         private readonly CsvConfiguration _configuration;
         private readonly bool _printHeader;
-        private readonly object _value;
+        private object _value;
         private readonly StreamWriter _writer;
         private bool disposedValue;
+        private object _insertValue;
 
         public CsvWriter(Stream stream, object value, IConfiguration configuration, bool printHeader)
         {
@@ -81,7 +82,7 @@ namespace MiniExcelLibs.Csv
                                 {
                                     mode = "Properties";
                                     genericType = item.GetType();
-                                    props = CustomPropertyHelper.GetSaveAsProperties(genericType,_configuration);
+                                    props = CustomPropertyHelper.GetSaveAsProperties(genericType, _configuration);
                                 }
 
                                 break;
@@ -136,6 +137,11 @@ namespace MiniExcelLibs.Csv
                 }
                 this._writer.Flush();
             }
+        }
+
+        public void Insert()
+        {
+            SaveAs();
         }
 
         public async Task SaveAsAsync(CancellationToken cancellationToken = default(CancellationToken))

@@ -9,7 +9,13 @@
         /// </summary>
         internal static string EncodeXML(string value) => value == null
                   ? string.Empty
-                  : XmlEncoder.EncodeString(value).Replace("&", "&amp;").Replace("<", "&lt;").Replace(">", "&gt;").Replace("\"", "&quot;").Replace("'", "&apos;");
+                  : XmlEncoder.EncodeString(value)
+                              .Replace("&", "&amp;")
+                              .Replace("<", "&lt;")
+                              .Replace(">", "&gt;")
+                              .Replace("\"", "&quot;")
+                              .Replace("'", "&apos;")
+                              .ToString();
 
         /// <summary>X=CellLetter,Y=CellNumber,ex:A1=(1,1),B2=(2,2)</summary>
         internal static string ConvertXyToCell(Tuple<int, int> xy)

@@ -11,7 +11,7 @@
         private static readonly Regex xHHHHRegex = new Regex("_(x[\\dA-Fa-f]{4})_", RegexOptions.Compiled);
         private static readonly Regex Uppercase_X_HHHHRegex = new Regex("_(X[\\dA-Fa-f]{4})_", RegexOptions.Compiled);
 
-        public static string EncodeString(string encodeStr)
+        public static StringBuilder EncodeString(string encodeStr)
         {
             if (encodeStr == null) return null;
 
@@ -27,7 +27,7 @@
                     sb.Append(XmlConvert.EncodeName(ch.ToString()));
             }
 
-            return sb.ToString();
+            return sb;
         }
 
         public static string DecodeString(string decodeStr)

@@ -72,7 +72,9 @@
 	   /// <param name="row">The row, 1-based.</param>
 	   public static bool ParseReference(string value, out int column, out int row)
         {
-            column = 0;
+			//2022-09-22 参数统一转换为大写，避免传入小写的参数时出错
+			value = value.ToUpper();
+			column = 0;
             var position = 0;
             const int offset = 'A' - 1;
 

@@ -27,9 +27,12 @@
 
 
 
+### 1.28.1
 
+- [Optimization] 减少 template save string memory allocation #439 (via @cupsos)
+- [Optimization] 移除 System.Memory 依赖 #441 (via @ping9719)
 
-## 1.28.0
+### 1.28.0
 
 - [New] 支持 CSV Insert 方法 #I4X92G (via @shps951023)
 

@@ -92,7 +92,6 @@ namespace MiniExcelLibs.Csv
         {
         }
 
-        //2022-09-24 excelReaderRange
         #region Range
         public IEnumerable<IDictionary<string, object>> QueryRange(bool useHeaderRow, string sheetName, string startCell, string endCell)
         {

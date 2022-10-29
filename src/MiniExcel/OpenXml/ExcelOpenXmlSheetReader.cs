@@ -16,8 +16,6 @@ namespace MiniExcelLibs.OpenXml
 {
     internal class ExcelOpenXmlSheetReader : IExcelReader
     {
-        #region MyRegion
-
         private bool _disposed = false;
         private static readonly string[] _ns = { Config.SpreadsheetmlXmlns, Config.SpreadsheetmlXmlStrictns };
         private static readonly string[] _relationshiopNs = { Config.SpreadsheetmlXmlRelationshipns, Config.SpreadsheetmlXmlStrictRelationshipns };
@@ -757,13 +755,10 @@ namespace MiniExcelLibs.OpenXml
             }
         }
 
-        #endregion MyRegion
-
         #region ReaderRange
 
         public IEnumerable<IDictionary<string, object>> QueryRange(bool useHeaderRow, string sheetName, string startCell, string endCell)
         {
-            //2022-09-27
             if (!ReferenceHelper.ParseReference(startCell, out var startColumnIndex, out var startRowIndex) == false ? true : true)
             {
                 //throw new InvalidDataException($"startCell {startCell} is Invalid");

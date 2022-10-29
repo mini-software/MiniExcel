@@ -6,15 +6,20 @@ using System.Text;
 
 namespace MiniExcelLibs.OpenXml
 {
-    internal class SharedStringsDiskCache : IDictionary<int, string>,IDisposable
+#if DEBUG
+    public
+#else
+    internal 
+#endif
+    class SharedStringsDiskCache : IDictionary<int, string>, IDisposable
     {
         private readonly FileStream _positionFs;
         private readonly FileStream _lengthFs;
         private readonly FileStream _valueFs;
         private bool _disposedValue;
         private readonly static Encoding _encoding = new System.Text.UTF8Encoding(true);
-        public int Count => checked((int)(_maxIndx+1));
-        public string this[int key] { get => GetValue(key); set => Add(key,value); }
+        public int Count => checked((int)(_maxIndx + 1));
+        public string this[int key] { get => GetValue(key); set => Add(key, value); }
         private long _maxIndx = -1;
         public bool ContainsKey(int key)
         {
@@ -47,7 +52,7 @@ namespace MiniExcelLibs.OpenXml
             _positionFs.Position = index * 4;
             var bytes = new byte[4];
             _positionFs.Read(bytes, 0, 4);
-            var position = BitConverter.ToInt32(bytes,0);
+            var position = BitConverter.ToInt32(bytes, 0);
             _lengthFs.Position = index * 4;
             _lengthFs.Read(bytes, 0, 4);
             var length = BitConverter.ToInt32(bytes, 0);

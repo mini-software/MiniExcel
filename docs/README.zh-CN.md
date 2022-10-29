@@ -27,6 +27,11 @@
 
 
 
+### 1.28.2
+
+- [New] 支持 Assembly Strong Name Signature #450
+- [New] 支持 QueryRange (via @1ras1)
+
 ### 1.28.1
 
 - [Optimization] 减少 template save string memory allocation #439 (via @cupsos)

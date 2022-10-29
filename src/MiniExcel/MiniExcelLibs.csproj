@@ -8,14 +8,11 @@
 		<Title>MiniExcel</Title>
 		<Product>MiniExcel</Product>
 		<PackageTags>excel;xlsx;csv;micro-helper;mini;openxml;helper;</PackageTags>
-		<Description>
-			Fast, Low-Memory, Easy Excel .NET helper to import/export/template spreadsheet
-
-			Github : https://github.com/mini-software/MiniExcel
-			Gitee : https://gitee.com/dotnetchina/MiniExcel
-			Issues : https://github.com/mini-software/MiniExcel/issues
-			Todo : https://github.com/mini-software/MiniExcel/projects/1?fullscreen=true
-		</Description>
+		<Description>Fast, Low-Memory, Easy Excel .NET helper to import/export/template spreadsheet
+Github : https://github.com/mini-software/MiniExcel
+Gitee : https://gitee.com/dotnetchina/MiniExcel
+Issues : https://github.com/mini-software/MiniExcel/issues
+Todo : https://github.com/mini-software/MiniExcel/projects/1?fullscreen=true</Description>
 		<Authors>LIN,WEI-HAN</Authors>
 		<PackageId>MiniExcel</PackageId>
 		<Copyright>LIN,WEI-HAN, 2021 onwards</Copyright>
@@ -28,6 +25,7 @@
 		<PackageIcon>icon.png</PackageIcon>
 		<PackageReleaseNotes>Please Check [Release Notes](https://github.com/mini-software/MiniExcel/tree/master/docs)</PackageReleaseNotes>
 		<RepositoryType>Github</RepositoryType>
+		<AssemblyOriginatorKeyFile>miniexcel.snk</AssemblyOriginatorKeyFile>
 	</PropertyGroup>
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net461'">
 		<Reference Include="System.IO.Compression" />

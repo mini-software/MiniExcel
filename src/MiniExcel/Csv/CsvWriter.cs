@@ -21,7 +21,6 @@ namespace MiniExcelLibs.Csv
         private object _value;
         private readonly StreamWriter _writer;
         private bool disposedValue;
-        private object _insertValue;
 
         public CsvWriter(Stream stream, object value, IConfiguration configuration, bool printHeader)
         {

@@ -2,12 +2,17 @@
 {
     using MiniExcelLibs.Utils;
     using System;
-    internal static class ExcelOpenXmlUtils
+#if DEBUG
+    public 
+#else
+    internal 
+#endif
+    static class ExcelOpenXmlUtils
     {
         /// <summary>
         /// Encode to XML (special characteres: &apos; &quot; &gt; &lt; &amp;)
         /// </summary>
-        internal static string EncodeXML(string value) => value == null
+        public static string EncodeXML(string value) => value == null
                   ? string.Empty
                   : XmlEncoder.EncodeString(value)
                               .Replace("&", "&amp;")
@@ -18,13 +23,13 @@
                               .ToString();
 
         /// <summary>X=CellLetter,Y=CellNumber,ex:A1=(1,1),B2=(2,2)</summary>
-        internal static string ConvertXyToCell(Tuple<int, int> xy)
+        public static string ConvertXyToCell(Tuple<int, int> xy)
         {
             return ConvertXyToCell(xy.Item1, xy.Item2);
         }
 
         /// <summary>X=CellLetter,Y=CellNumber,ex:A1=(1,1),B2=(2,2)</summary>
-        internal static string ConvertXyToCell(int x, int y)
+        public static string ConvertXyToCell(int x, int y)
         {
             int dividend = x;
             string columnName = String.Empty;
@@ -40,12 +45,12 @@
         }
 
         /// <summary>X=CellLetter,Y=CellNumber,ex:A1=(1,1),B2=(2,2)</summary>
-        internal static Tuple<int, int> ConvertCellToXY(string cell)
+        public static Tuple<int, int> ConvertCellToXY(string cell)
         {
             return Tuple.Create(GetCellColumnIndex(cell), GetCellRowNumber(cell));
         }
 
-        internal static int GetColumnNumber(string name)
+        public static int GetColumnNumber(string name)
         {
             int number = -1;
             int pow = 1;
@@ -58,7 +63,7 @@
             return number;
         }
 
-        internal static int GetCellColumnIndex(string cell)
+        public static int GetCellColumnIndex(string cell)
         {
             const string keys = " ABCDEFGHIJKLMNOPQRSTUVWXYZ";
             const int mode = 26;
@@ -72,7 +77,7 @@
             return x;
         }
 
-        internal static int GetCellRowNumber(string cell)
+        public static int GetCellRowNumber(string cell)
         {
             if (string.IsNullOrEmpty(cell))
                 throw new Exception("cell is null or empty");
@@ -85,7 +90,7 @@
             return int.Parse(cellNumber);
         }
 
-        internal static string GetCellColumnLetter(string cell)
+        public static string GetCellColumnLetter(string cell)
         {
             string GetCellLetter = string.Empty;
             for (int i = 0; i < cell.Length; i++)
@@ -96,7 +101,7 @@
             return GetCellLetter;
         }
 
-        internal static string ConvertColumnName(int x)
+        public static string ConvertColumnName(int x)
         {
             int dividend = x;
             string columnName = String.Empty;

@@ -4,7 +4,12 @@
     using System;
     using System.Globalization;
 
-    internal static partial class DateTimeHelper
+#if DEBUG
+    public
+#else
+    internal 
+#endif
+    static partial class DateTimeHelper
     {
         /// <summary>
         /// NumberFormat from NuGet ExcelNumberFormat MIT@License
@@ -13,12 +18,8 @@
         {
             return new ExcelNumberFormat(formatCode).IsDateTimeFormat;
         }
-    }
 
-    internal static partial class DateTimeHelper
-    {
         /**Below Code from ExcelDataReader @MIT License**/
-
         // All OA dates must be greater than (not >=) OADateMinAsDouble
         public const double OADateMinAsDouble = -657435.0;
 

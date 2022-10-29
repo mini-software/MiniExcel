@@ -24,6 +24,11 @@
 
 
 
+### 1.28.2
+
+- [New] Support Assembly Strong Name Signature #450
+- [New] Support QueryRange (via @1ras1)
+
 ### 1.28.1
 
 - [Optimization] Reduce string memory allocation when template save #439 (via @cupsos)

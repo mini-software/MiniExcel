@@ -1,10 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFrameworks>net45;netstandard2.0;net5.0</TargetFrameworks>
-		<Version>1.28.2</Version>
+		<Version>1.28.5</Version>
 	</PropertyGroup>
 	<PropertyGroup>
 		<AssemblyName>MiniExcel</AssemblyName>
+		<Company>Mini-Software</Company>
 		<Title>MiniExcel</Title>
 		<Product>MiniExcel</Product>
 		<PackageTags>excel;xlsx;csv;micro-helper;mini;openxml;helper;</PackageTags>
@@ -13,7 +14,7 @@ Github : https://github.com/mini-software/MiniExcel
 Gitee : https://gitee.com/dotnetchina/MiniExcel
 Issues : https://github.com/mini-software/MiniExcel/issues
 Todo : https://github.com/mini-software/MiniExcel/projects/1?fullscreen=true</Description>
-		<Authors>LIN,WEI-HAN</Authors>
+		<Authors>LIN,WEI-HAN, Mini-Software team</Authors>
 		<PackageId>MiniExcel</PackageId>
 		<Copyright>LIN,WEI-HAN, 2021 onwards</Copyright>
 		<NeutralLanguage>en</NeutralLanguage>
@@ -22,10 +23,16 @@ Todo : https://github.com/mini-software/MiniExcel/projects/1?fullscreen=true</De
 		<PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
 		<PackageProjectUrl>https://github.com/mini-software/MiniExcel</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/mini-software/MiniExcel</RepositoryUrl>
+		<PublishRepositoryUrl>true</PublishRepositoryUrl>
 		<PackageIcon>icon.png</PackageIcon>
 		<PackageReleaseNotes>Please Check [Release Notes](https://github.com/mini-software/MiniExcel/tree/master/docs)</PackageReleaseNotes>
 		<RepositoryType>Github</RepositoryType>
 		<AssemblyOriginatorKeyFile>miniexcel.snk</AssemblyOriginatorKeyFile>
+		<SignAssembly>True</SignAssembly>
+		<ProjectGuid>{70FA8638-157A-4380-A4F6-8E2C3EE92CAE}</ProjectGuid>
+		<PublishRepositoryUrl>true</PublishRepositoryUrl>
+		<IncludeSymbols>true</IncludeSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
 	</PropertyGroup>
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net461'">
 		<Reference Include="System.IO.Compression" />
@@ -36,6 +43,9 @@ Todo : https://github.com/mini-software/MiniExcel/projects/1?fullscreen=true</De
 	<ItemGroup>
 		<None Update="icon.png">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="miniexcel.snk">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 	</ItemGroup>
 	<ItemGroup>

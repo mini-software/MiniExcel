@@ -34,6 +34,14 @@ namespace MiniExcelLibs.Tests
             this.output = output;
         }
 
+        //[Fact]
+        public void TestIssue()
+        {
+            var path = PathHelper.GetTempFilePath();
+            var value = Enumerable.Range(1, 10000000).Select(s => new { s, id = Guid.NewGuid() });
+            MiniExcel.SaveAs(path, value);
+        }
+
         /// <summary>
         /// https://gitee.com/dotnetchina/MiniExcel/issues/I4X92G
         /// </summary>
@@ -115,7 +123,8 @@ namespace MiniExcelLibs.Tests
                 }
                 var path = Path.GetTempPath() + Guid.NewGuid() + ".xlsx";
                 DataTableReader reader = table.CreateDataReader();
-                MiniExcel.SaveAs(path, reader);
+                var config = new OpenXmlConfiguration() { FastMode = true };
+                MiniExcel.SaveAs(path, reader,configuration:config);
                 var xml = Helpers.GetZipFileContent(path, "xl/worksheets/sheet1.xml");
                 Assert.Contains("<x:autoFilter ref=\"A1:B3\" />", xml);
                 Assert.Contains("<x:dimension ref=\"A1:B3\" />", xml);

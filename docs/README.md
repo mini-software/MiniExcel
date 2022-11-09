@@ -24,6 +24,11 @@
 
 
 
+### 1.29.0
+
+- [New] SaveAs support FastMode
+- [Bug] Fixed SaveAs OOM problem
+
 ### 1.28.2
 
 - [New] Support Assembly Strong Name Signature #450

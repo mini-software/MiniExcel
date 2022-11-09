@@ -26,7 +26,10 @@
 
 
 
+### 1.29.0
 
+- [New] SaveAs 支持 FastMode
+- [Bug] 修正 SaveAs OOM 
 
 ### 1.28.2
 

@@ -27,6 +27,11 @@
 
 
 
+### 1.29.0
+
+- [New] SaveAs 支持 FastMode
+- [Bug] 修正 SaveAs OOM 
+
 ### 1.28.2
 
 - [New] 支持 Assembly Strong Name Signature #450

@@ -1159,6 +1159,15 @@ MiniExcel.Query(path, configuration: config);
     }
 ```
 
+#### 5. FastMode
+
+系统不会限制内存，达到更快的效率
+
+```csharp
+var config = new OpenXmlConfiguration() { FastMode = true };
+MiniExcel.SaveAs(path, reader,configuration:config);
+```
+
 
 
 ### 例子

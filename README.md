@@ -1162,6 +1162,17 @@ MiniExcel.Query(path, configuration: config);
     }
 ```
 
+#### 5. FastMode
+
+System will not control memory, but you can get faster save speed.
+
+```csharp
+var config = new OpenXmlConfiguration() { FastMode = true };
+MiniExcel.SaveAs(path, reader,configuration:config);
+```
+
+
+
 
 
 

@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFrameworks>net45;netstandard2.0;net5.0</TargetFrameworks>
-		<Version>1.28.5</Version>
+		<Version>1.29.0</Version>
 	</PropertyGroup>
 	<PropertyGroup>
 		<AssemblyName>MiniExcel</AssemblyName>
@@ -29,7 +29,7 @@ Todo : https://github.com/mini-software/MiniExcel/projects/1?fullscreen=true</De
 		<RepositoryType>Github</RepositoryType>
 		<AssemblyOriginatorKeyFile>miniexcel.snk</AssemblyOriginatorKeyFile>
 		<SignAssembly>True</SignAssembly>
-		<ProjectGuid>{70FA8638-157A-4380-A4F6-8E2C3EE92CAE}</ProjectGuid>
+		<ProjectGuid>{097903C9-1F81-4427-B4C8-530CB59687B8}</ProjectGuid>
 		<PublishRepositoryUrl>true</PublishRepositoryUrl>
 		<IncludeSymbols>true</IncludeSymbols>
 		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
@@ -50,5 +50,8 @@ Todo : https://github.com/mini-software/MiniExcel/projects/1?fullscreen=true</De
 	</ItemGroup>
 	<ItemGroup>
 		<None Include="icon.png" Pack="true" PackagePath="\" />
+	</ItemGroup>
+	<ItemGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
+		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
 	</ItemGroup>
 </Project>

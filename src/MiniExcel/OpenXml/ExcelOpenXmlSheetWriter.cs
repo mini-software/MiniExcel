@@ -56,8 +56,11 @@ namespace MiniExcelLibs.OpenXml
             this._stream = stream;
             // Why ZipArchiveMode.Update not ZipArchiveMode.Create?
             // R : Mode create - ZipArchiveEntry does not support seeking.'
-            this._archive = new MiniExcelZipArchive(_stream, ZipArchiveMode.Update, true, _utf8WithBom);
             this._configuration = configuration as OpenXmlConfiguration ?? OpenXmlConfiguration.DefaultConfig;
+            if (_configuration.FastMode)
+                this._archive = new MiniExcelZipArchive(_stream, ZipArchiveMode.Update, true, _utf8WithBom);
+            else
+                this._archive = new MiniExcelZipArchive(_stream, ZipArchiveMode.Create, true, _utf8WithBom);
             this._printHeader = printHeader;
             this._value = value;
             _sheets.Add(new SheetDto { Name = sheetName, SheetIdx = 1 }); //TODO:remove
@@ -120,7 +123,7 @@ namespace MiniExcelLibs.OpenXml
         {
             ZipArchiveEntry entry = _archive.CreateEntry(sheetPath, CompressionLevel.Fastest);
             using (var zipStream = entry.Open())
-            using (MiniExcelStreamWriter writer = new MiniExcelStreamWriter(zipStream, _utf8WithBom,_configuration.BufferSize))
+            using (MiniExcelStreamWriter writer = new MiniExcelStreamWriter(zipStream, _utf8WithBom, _configuration.BufferSize))
             {
                 if (value == null)
                 {
@@ -166,14 +169,14 @@ namespace MiniExcelLibs.OpenXml
                                 {
                                     mode = "IDictionary<string, object>";
                                     var dic = item as IDictionary<string, object>;
-                                    props = GetDictionaryColumnInfo(dic,null);
+                                    props = GetDictionaryColumnInfo(dic, null);
                                     maxColumnIndex = props.Count;
                                 }
                                 else if (item is IDictionary)
                                 {
                                     var dic = item as IDictionary;
                                     mode = "IDictionary";
-                                    props = GetDictionaryColumnInfo(null,dic);
+                                    props = GetDictionaryColumnInfo(null, dic);
                                     //maxColumnIndex = dic.Keys.Count; 
                                     maxColumnIndex = props.Count; // why not using keys, because ignore attribute ![image](https://user-images.githubusercontent.com/12729184/163686902-286abb70-877b-4e84-bd3b-001ad339a84a.png)
                                 }
@@ -253,7 +256,7 @@ namespace MiniExcelLibs.OpenXml
                             WriteC(writer, r, columnName: p.ExcelColumnName);
                             cellIndex++;
                         }
-                        
+
                         writer.Write($"</x:row>");
                         yIndex++;
                     }
@@ -353,7 +356,7 @@ namespace MiniExcelLibs.OpenXml
         private void GenerateSheetByColumnInfo<T>(MiniExcelStreamWriter writer, IEnumerable value, List<ExcelColumnInfo> props, int xIndex = 1, int yIndex = 1)
         {
             var isDic = typeof(T) == typeof(IDictionary);
-            var isDapperRow = typeof(T) == typeof(IDictionary<string,object>);
+            var isDapperRow = typeof(T) == typeof(IDictionary<string, object>);
             foreach (T v in value)
             {
                 writer.Write($"<x:row r=\"{yIndex}\">");
@@ -375,14 +378,14 @@ namespace MiniExcelLibs.OpenXml
                     else if (isDapperRow)
                     {
                         cellValue = ((IDictionary<string, object>)v)[p.Key.ToString()];
-                    } 
+                    }
                     else
                     {
                         cellValue = p.Property.GetValue(v);
                     }
                     WriteCell(writer, yIndex, cellIndex, cellValue, p);
-                        
-                    
+
+
                     cellIndex++;
                 }
                 writer.Write($"</x:row>");
@@ -403,7 +406,7 @@ namespace MiniExcelLibs.OpenXml
             {
                 v = ExcelOpenXmlUtils.EncodeXML(str);
             }
-            else if(p?.ExcelFormat != null && value is IFormattable formattableValue)
+            else if (p?.ExcelFormat != null && value is IFormattable formattableValue)
             {
                 var formattedStr = formattableValue.ToString(p.ExcelFormat, _configuration.Culture);
                 v = ExcelOpenXmlUtils.EncodeXML(formattedStr);
@@ -411,7 +414,7 @@ namespace MiniExcelLibs.OpenXml
             else
             {
                 Type type = null;
-                if (p==null || p.Key != null)
+                if (p == null || p.Key != null)
                 {
                     // TODO: need to optimize 
                     // Dictionary need to check type every time, so it's slow..
@@ -503,7 +506,7 @@ namespace MiniExcelLibs.OpenXml
                 }
                 else if (type == typeof(DateTime))
                 {
-                    if(_configuration.Culture != CultureInfo.InvariantCulture)
+                    if (_configuration.Culture != CultureInfo.InvariantCulture)
                     {
                         t = "str";
                         v = ((DateTime)value).ToString(_configuration.Culture);
@@ -518,18 +521,18 @@ namespace MiniExcelLibs.OpenXml
                     {
                         // TODO: now it'll lose date type information
                         t = "str";
-                        v = ((DateTime)value).ToString(p.ExcelFormat,_configuration.Culture);
+                        v = ((DateTime)value).ToString(p.ExcelFormat, _configuration.Culture);
                     }
                 }
                 else
                 {
                     //TODO: _configuration.Culture
-                    v = ExcelOpenXmlUtils.EncodeXML(value.ToString());       
+                    v = ExcelOpenXmlUtils.EncodeXML(value.ToString());
                 }
             }
 
             var columname = ExcelOpenXmlUtils.ConvertXyToCell(cellIndex, rowIndex);
-            if (v != null && (v.StartsWith(" ",StringComparison.Ordinal) || v.EndsWith(" ",StringComparison.Ordinal))) /*Prefix and suffix blank space will lost after SaveAs #294*/
+            if (v != null && (v.StartsWith(" ", StringComparison.Ordinal) || v.EndsWith(" ", StringComparison.Ordinal))) /*Prefix and suffix blank space will lost after SaveAs #294*/
                 writer.Write($"<x:c r=\"{columname}\" {(t == null ? "" : $"t =\"{t}\"")} s=\"{s}\" xml:space=\"preserve\"><x:v>{v}</x:v></x:c>");
             else
                 //t check avoid format error ![image](https://user-images.githubusercontent.com/12729184/118770190-9eee3480-b8b3-11eb-9f5a-87a439f5e320.png)
@@ -590,8 +593,13 @@ namespace MiniExcelLibs.OpenXml
             var yIndex = xy.Item2;
             var xIndex = 0;
             {
-                dimensionWritePosition = writer.WriteAndFlush($@"<x:dimension ref=""");
-                writer.Write($@"                              />"); // end of code will be replaced
+
+                if (_configuration.FastMode)
+                {
+                    dimensionWritePosition = writer.WriteAndFlush($@"<x:dimension ref=""");
+                    writer.Write("                              />"); // end of code will be replaced
+                }
+
                 writer.Write("<x:sheetData>");
                 int fieldCount = reader.FieldCount;
                 if (_printHeader)
@@ -626,11 +634,14 @@ namespace MiniExcelLibs.OpenXml
             }
             writer.Write("</x:sheetData>");
             if (_configuration.AutoFilter)
-                writer.Write($"<x:autoFilter ref=\"A1:{ExcelOpenXmlUtils.ConvertXyToCell((xIndex-1)/*TODO:code smell*/, yIndex-1)}\" />");
+                writer.Write($"<x:autoFilter ref=\"A1:{ExcelOpenXmlUtils.ConvertXyToCell((xIndex - 1)/*TODO:code smell*/, yIndex - 1)}\" />");
             writer.WriteAndFlush("</x:worksheet>");
 
-            writer.SetPosition(dimensionWritePosition); 
-            writer.WriteAndFlush($@"A1:{ExcelOpenXmlUtils.ConvertXyToCell((xIndex - 1)/*TODO:code smell*/, yIndex - 1)}""");
+            if (_configuration.FastMode)
+            {
+                writer.SetPosition(dimensionWritePosition);
+                writer.WriteAndFlush($@"A1:{ExcelOpenXmlUtils.ConvertXyToCell((xIndex - 1)/*TODO:code smell*/, yIndex - 1)}""");
+            }
         }
 
         private static void WriteC(MiniExcelStreamWriter writer, string r, string columnName)
@@ -779,7 +790,7 @@ namespace MiniExcelLibs.OpenXml
 
         public async Task SaveAsAsync(CancellationToken cancellationToken = default(CancellationToken))
         {
-            await Task.Run(() => SaveAs(),cancellationToken).ConfigureAwait(false);
+            await Task.Run(() => SaveAs(), cancellationToken).ConfigureAwait(false);
         }
 
         public void Insert()

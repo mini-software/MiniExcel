@@ -23,7 +23,7 @@
 ### QQ群(1群) : [813100564](https://qm.qq.com/cgi-bin/qm/qr?k=3OkxuL14sXhJsUimWK8wx_Hf28Wl49QE&jump_from=webapi) / QQ群(2群) : [579033769](https://jq.qq.com/?_wv=1027&k=UxTdB8pR)
 
 
-### 教学视频链接 : [MiniExcel](https://space.bilibili.com/389344584)
+### 淘宝接案店铺 : [链接](https://minisoftware.taobao.com/)
 
 ----
 

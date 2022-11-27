@@ -20,7 +20,7 @@
 
 ---
 
-### 教學影片 : [MiniExcel](https://www.youtube.com/watch?v=bS6KEBtkQcQ&list=PLfuOrsm-o60L4XAcoX7-IjAhl5JFf-ahN&index=2)
+### 淘寶接案店鋪 : [鏈接](https://minisoftware.taobao.com/)
 
 ---
 

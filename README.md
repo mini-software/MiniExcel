@@ -20,7 +20,7 @@
 
 ---
 
-### Tutorial Video : [MiniExcel](https://www.youtube.com/watch?v=vG39slq1URI&list=PLhoAB_ZESf6uKRLFITYCmkfaiSXXIDQi6&index=2)
+### Taobao Store : [Link](https://minisoftware.taobao.com/)
 
 ---
 

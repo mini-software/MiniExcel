@@ -4,16 +4,15 @@
     using MiniExcelLibs.Exceptions;
     using System;
     using System.Collections.Generic;
+    using System.ComponentModel;
     using System.Data;
-    using System.Dynamic;
     using System.Globalization;
-    using System.IO;
     using System.Linq;
     using System.Reflection;
 
     internal static partial class TypeHelper
     {
-        public static  IEnumerable<IDictionary<string, object>> ConvertToEnumerableDictionary(IDataReader reader)
+        public static IEnumerable<IDictionary<string, object>> ConvertToEnumerableDictionary(IDataReader reader)
         {
             while (reader.Read())
             {
@@ -109,7 +108,7 @@
                 var vs = itemValue?.ToString();
                 if (pInfo.ExcelFormat != null)
                 {
-                    if( pInfo.Property.PropertyType == typeof(DateTimeOffset) && DateTimeOffset.TryParseExact(vs, pInfo.ExcelFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out var _v2))
+                    if (pInfo.Property.PropertyType == typeof(DateTimeOffset) && DateTimeOffset.TryParseExact(vs, pInfo.ExcelFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out var _v2))
                     {
                         newValue = _v2;
                     }
@@ -143,7 +142,14 @@
             }
             else if (pInfo.Property.PropertyType.IsEnum)
             {
-                newValue = Enum.Parse(pInfo.Property.PropertyType, itemValue?.ToString(), true);
+                var enumFromDesc = pInfo.Property.GetAttribute<QueryFromDescriptionAttribute>();
+                if (enumFromDesc != null)
+                {
+                    var fieldInfo = pInfo.Property.PropertyType.GetFields().FirstOrDefault(e => e.GetCustomAttribute<DescriptionAttribute>(false)?.Description == itemValue?.ToString());
+                    if (fieldInfo != null) newValue = Enum.Parse(pInfo.Property.PropertyType, fieldInfo.Name, true);
+                    else Enum.Parse(pInfo.Property.PropertyType, itemValue?.ToString(), true);
+                }
+                else newValue = Enum.Parse(pInfo.Property.PropertyType, itemValue?.ToString(), true);
             }
             else
             {

@@ -20,7 +20,7 @@
 
 ---
 
-### 淘寶接案店鋪 : [鏈接](https://minisoftware.taobao.com/)
+### [影片教學👈👈👈](https://www.udemy.com/course/miniexcel-tutorial/?referralCode=732E11323F1E8064F96C)
 
 ---
 

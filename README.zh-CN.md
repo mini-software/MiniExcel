@@ -20,10 +20,11 @@
 
 ---
 
+### [视频教学👈👈👈](https://www.udemy.com/course/miniexcel-tutorial/?referralCode=732E11323F1E8064F96C)
+
+---
+
 ### QQ群(1群) : [813100564](https://qm.qq.com/cgi-bin/qm/qr?k=3OkxuL14sXhJsUimWK8wx_Hf28Wl49QE&jump_from=webapi) / QQ群(2群) : [579033769](https://jq.qq.com/?_wv=1027&k=UxTdB8pR)
-
-
-### 淘宝接案店铺 : [链接](https://minisoftware.taobao.com/)
 
 ----
 

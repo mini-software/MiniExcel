@@ -20,7 +20,7 @@
 
 ---
 
-### Taobao Store : [Link](https://minisoftware.taobao.com/)
+### [Video tutorial👈👈👈](https://www.udemy.com/course/miniexcel-tutorial/?referralCode=732E11323F1E8064F96C)
 
 ---
 

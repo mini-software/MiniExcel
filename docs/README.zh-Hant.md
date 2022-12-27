@@ -28,7 +28,7 @@
 
 ### 1.30.0
 - [New] 移除不支持的 .NET 5.0 支持
-- [New] 可從Enum的 `[Description]` 特性讀取對應的值 [#9](https://gitee.com/dotnetchina/MiniExcel/pulls/9) (via @KaneLeung)
+- [New] 支持 excel enum description string to enum #289 (via @KaneLeung)
 
 ### 1.29.0
 

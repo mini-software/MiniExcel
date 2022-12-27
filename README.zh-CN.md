@@ -1110,7 +1110,7 @@ public static Task<DataTable> QueryAsDataTableAsync(string path, bool useHeaderR
 public class Dto
 {
     public string Name { get; set; }
-    public I49RYZUserType UserType { get; set; }
+    public Type UserType { get; set; }
 }      
 
 public enum Type

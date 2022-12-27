@@ -1121,7 +1121,7 @@ public enum Type
 
 ![image](https://user-images.githubusercontent.com/12729184/133116630-27cc7161-099a-48b8-9784-cd1e443af3d1.png)
 
-
+Since 1.30.0 version support excel Description to Enum , thanks @KaneLeung
 
 #### 2. Convert CSV to XLSX or Convert XLSX to CSV
 

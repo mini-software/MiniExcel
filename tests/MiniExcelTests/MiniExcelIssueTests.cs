@@ -34,12 +34,38 @@ namespace MiniExcelLibs.Tests
             this.output = output;
         }
 
-        //[Fact]
-        public void TestIssue()
+        [Fact]
+        public void TestIssue289()
         {
             var path = PathHelper.GetTempFilePath();
-            var value = Enumerable.Range(1, 10000000).Select(s => new { s, id = Guid.NewGuid() });
+            var value = new[] {
+                new Issue289Dto { Name="0001", UserType=Issue289Type.V1 },
+                new Issue289Dto { Name="0002", UserType=Issue289Type.V2 },
+                new Issue289Dto { Name="0003", UserType=Issue289Type.V3 },
+            };
             MiniExcel.SaveAs(path, value);
+
+            var rows = MiniExcel.Query<Issue289Dto>(path).ToList();
+
+            Assert.Equal(Issue289Type.V1, rows[0].UserType);
+            Assert.Equal(Issue289Type.V2, rows[1].UserType);
+            Assert.Equal(Issue289Type.V3, rows[2].UserType);
+        }
+
+        public class Issue289Dto
+        {
+            public string Name { get; set; }
+            public Issue289Type UserType { get; set; }
+        }
+
+        public enum Issue289Type
+        {
+            [Description("General User")]
+            V1,
+            [Description("General Administrator")]
+            V2,
+            [Description("Super Administrator")]
+            V3
         }
 
         /// <summary>

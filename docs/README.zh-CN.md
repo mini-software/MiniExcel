@@ -26,6 +26,9 @@
 ---
 
 
+### 1.30.0
+- [New] 移除不支持的 .NET 5.0 支持
+- [New] 可从Enum的 `[Description]` 特性读取对应的值 [#9](https://gitee.com/dotnetchina/MiniExcel/pulls/9) (via @KaneLeung)
 
 ### 1.29.0
 

@@ -1126,6 +1126,10 @@ public enum Type
 
 ![image](https://user-images.githubusercontent.com/12729184/133116630-27cc7161-099a-48b8-9784-cd1e443af3d1.png)
 
+从 1.30.0 版本开始支持由 Description 转回 Enum 功能，感谢 @KaneLeung
+
+
+
 #### 2. CSV 转 XLSX 或是 XLSX 转 CSV
 
 ```csharp

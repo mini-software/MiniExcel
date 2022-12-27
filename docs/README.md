@@ -24,6 +24,11 @@
 
 
 
+### 1.30.0
+- [New] Remove .NET 5.0 support
+- [New] Aable to get Enum  `[Description]` mapping value [#9](https://gitee.com/dotnetchina/MiniExcel/pulls/9) (via @KaneLeung)
+
+
 ### 1.29.0
 
 - [New] SaveAs support FastMode

@@ -142,14 +142,11 @@
             }
             else if (pInfo.Property.PropertyType.IsEnum)
             {
-                var enumFromDesc = pInfo.Property.GetAttribute<QueryFromDescriptionAttribute>();
-                if (enumFromDesc != null)
-                {
-                    var fieldInfo = pInfo.Property.PropertyType.GetFields().FirstOrDefault(e => e.GetCustomAttribute<DescriptionAttribute>(false)?.Description == itemValue?.ToString());
-                    if (fieldInfo != null) newValue = Enum.Parse(pInfo.Property.PropertyType, fieldInfo.Name, true);
-                    else Enum.Parse(pInfo.Property.PropertyType, itemValue?.ToString(), true);
-                }
-                else newValue = Enum.Parse(pInfo.Property.PropertyType, itemValue?.ToString(), true);
+                var fieldInfo = pInfo.Property.PropertyType.GetFields().FirstOrDefault(e => e.GetCustomAttribute<DescriptionAttribute>(false)?.Description == itemValue?.ToString());
+                if (fieldInfo != null)
+                    newValue = Enum.Parse(pInfo.Property.PropertyType, fieldInfo.Name, true);
+                else
+                    newValue = Enum.Parse(pInfo.Property.PropertyType, itemValue?.ToString(), true);
             }
             else
             {

@@ -19,7 +19,13 @@ jobs:
         dotnet-version: 5.0.x
     - name: Restore dependencies
       run: dotnet restore
+      env:
+          VSTEST_CONNECTION_TIMEOUT: 9000
     - name: Build
       run: dotnet build --no-restore
+      env:
+          VSTEST_CONNECTION_TIMEOUT: 9000
     - name: Test
       run: dotnet test --no-build --verbosity normal
+      env:
+          VSTEST_CONNECTION_TIMEOUT: 9000

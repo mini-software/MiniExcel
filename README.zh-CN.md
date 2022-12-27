@@ -15,12 +15,12 @@
 ---
 
 <div align="center">
-<p> 您的 <a href="https://github.com/shps951023/miniexcel">Star</a> 和 <a href="https://miniexcel.github.io">赞助</a> 能帮助 MiniExcel 成长 </p>
+<p> 您的 <a href="https://github.com/shps951023/miniexcel">Star</a> 和 <a href="https://edu.51cto.com/course/32914.html">购买视频</a> 能帮助 MiniExcel 成长 </p>
 </div>
 
 ---
 
-### [视频教学👈👈👈](https://www.udemy.com/course/miniexcel-tutorial/?referralCode=732E11323F1E8064F96C)
+### [🎥视频教学](https://edu.51cto.com/course/32914.html) 
 
 ---
 

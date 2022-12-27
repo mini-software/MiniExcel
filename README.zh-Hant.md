@@ -20,7 +20,7 @@
 
 ---
 
-### [影片教學👈👈👈](https://www.udemy.com/course/miniexcel-tutorial/?referralCode=732E11323F1E8064F96C)
+### [🎥影片教學](https://www.udemy.com/course/miniexcel-tutorial/?referralCode=732E11323F1E8064F96C)
 
 ---
 

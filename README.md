@@ -17,11 +17,6 @@
 <div align="center">
  Your <a href="https://github.com/shps951023/MiniExcel">Star</a> and <a href="https://miniexcel.github.io">Donate</a> can make MiniExcel better 
 </div>
-
----
-
-### [Video tutorial👈👈👈](https://www.udemy.com/course/miniexcel-tutorial/?referralCode=732E11323F1E8064F96C)
-
 ---
 
 ### Introduction

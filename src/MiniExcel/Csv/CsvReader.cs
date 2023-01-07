@@ -1,4 +1,4 @@
-﻿using MiniExcelLibs.OpenXml;
+using MiniExcelLibs.OpenXml;
 using MiniExcelLibs.Utils;
 using System;
 using System.Collections.Generic;
@@ -73,9 +73,16 @@ namespace MiniExcelLibs.Csv
 
         private string[] Split(string row)
         {
-            return Regex.Split(row, $"[\t{_config.Seperator}](?=(?:[^\"]|\"[^\"]*\")*$)")
-                .Select(s => Regex.Replace(s.Replace("\"\"", "\""), "^\"|\"$", "")).ToArray();
-            //this code from S.O : https://stackoverflow.com/a/11365961/9131476
+            if (_config.SplitFn != null)
+            {
+                return _config.SplitFn(row);
+            }
+            else
+            {
+                return Regex.Split(row, $"[\t{_config.Seperator}](?=(?:[^\"]|\"[^\"]*\")*$)")
+                    .Select(s => Regex.Replace(s.Replace("\"\"", "\""), "^\"|\"$", "")).ToArray();
+                //this code from S.O : https://stackoverflow.com/a/11365961/9131476
+            }
         }
 
         public Task<IEnumerable<IDictionary<string, object>>> QueryAsync(bool UseHeaderRow, string sheetName, string startCell,CancellationToken cancellationToken = default(CancellationToken))

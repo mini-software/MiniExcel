@@ -33,6 +33,17 @@ namespace MiniExcelLibs.Tests
         {
             this.output = output;
         }
+        [Fact]
+        public void TestPR10()
+        {
+            var path = PathHelper.GetFile("csv/TestIssue142.csv");
+            var config = new CsvConfiguration()
+            {
+                SplitFn = (row) => Regex.Split(row, $"[\t,](?=(?:[^\"]|\"[^\"]*\")*$)")
+                    .Select(s => Regex.Replace(s.Replace("\"\"", "\""), "^\"|\"$", "")).ToArray()
+            };
+            var rows = MiniExcel.Query(path, configuration: config).ToList();
+        }
 
         [Fact]
         public void TestIssue289()

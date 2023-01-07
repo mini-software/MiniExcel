@@ -1028,7 +1028,16 @@ var config = new MiniExcelLibs.Csv.CsvConfiguration()
 MiniExcel.SaveAs(path, values,configuration: config);
 ```
 
+在 V1.30.1 版本開始支持動態更換換行符 (thanks @hyzx86)
 
+```csharp
+var config = new CsvConfiguration()
+{
+    SplitFn = (row) => Regex.Split(row, $"[\t,](?=(?:[^\"]|\"[^\"]*\")*$)")
+        .Select(s => Regex.Replace(s.Replace("\"\"", "\""), "^\"|\"$", "")).ToArray()
+};
+var rows = MiniExcel.Query(path, configuration: config).ToList();
+```
 
 #### 自定義編碼
 

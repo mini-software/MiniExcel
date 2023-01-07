@@ -1009,6 +1009,17 @@ var config = new MiniExcelLibs.Csv.CsvConfiguration()
 MiniExcel.SaveAs(path, values,configuration: config);
 ```
 
+Since V1.30.1 support function to custom separator (thanks @hyzx86)
+
+```csharp
+var config = new CsvConfiguration()
+{
+    SplitFn = (row) => Regex.Split(row, $"[\t,](?=(?:[^\"]|\"[^\"]*\")*$)")
+        .Select(s => Regex.Replace(s.Replace("\"\"", "\""), "^\"|\"$", "")).ToArray()
+};
+var rows = MiniExcel.Query(path, configuration: config).ToList();
+```
+
 
 
 #### Custom line break

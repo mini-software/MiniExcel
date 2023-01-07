@@ -15,8 +15,9 @@
 ---
 
 <div align="center">
-<p> 您的 <a href="https://github.com/shps951023/miniexcel">Star</a> 和 <a href="https://edu.51cto.com/course/32914.html">购买视频</a> 能帮助 MiniExcel 成长 </p>
+<p> 您的 <a href="https://github.com/shps951023/miniexcel">Star</a>、<a href="https://miniexcel.github.io">赞助</a> 和 <a href="https://edu.51cto.com/course/32914.html">购买视频</a> 能帮助 MiniExcel 成长 </p>
 </div>
+
 
 ---
 
@@ -25,6 +26,8 @@
 ---
 
 ### QQ群(1群) : [813100564](https://qm.qq.com/cgi-bin/qm/qr?k=3OkxuL14sXhJsUimWK8wx_Hf28Wl49QE&jump_from=webapi) / QQ群(2群) : [579033769](https://jq.qq.com/?_wv=1027&k=UxTdB8pR)
+
+### 淘宝接案店铺 : [链接](https://minisoftware.taobao.com/)
 
 ----
 
@@ -1025,6 +1028,19 @@ var config = new MiniExcelLibs.Csv.CsvConfiguration()
 };
 MiniExcel.SaveAs(path, values,configuration: config);
 ```
+
+在 V1.30.1 版本开始支持动态更换换行符 (thanks @hyzx86)
+
+```csharp
+var config = new CsvConfiguration()
+{
+    SplitFn = (row) => Regex.Split(row, $"[\t,](?=(?:[^\"]|\"[^\"]*\")*$)")
+        .Select(s => Regex.Replace(s.Replace("\"\"", "\""), "^\"|\"$", "")).ToArray()
+};
+var rows = MiniExcel.Query(path, configuration: config).ToList();
+```
+
+
 
 
 

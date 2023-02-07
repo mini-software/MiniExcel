@@ -24,6 +24,10 @@
 
 
 
+### 1.30.1
+- [New] support function to custom separator (via @hyzx86)
+- [New] support config for get sheet names (via @H4ad)
+
 ### 1.30.0
 - [New] Remove .NET 5.0 support
 - [New] support excel enum description string to enum #289 (via @KaneLeung)

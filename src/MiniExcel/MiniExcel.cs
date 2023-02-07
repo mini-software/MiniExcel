@@ -146,7 +146,7 @@
         public static DataTable QueryAsDataTable(this Stream stream, bool useHeaderRow = true, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null)
         {
             if (sheetName == null && excelType != ExcelType.CSV) /*Issue #279*/
-                sheetName = stream.GetSheetNames().First();
+                sheetName = stream.GetSheetNames(configuration as OpenXmlConfiguration).First();
 
             var dt = new DataTable(sheetName);
             var first = true;
@@ -184,16 +184,18 @@
             return dt;
         }
 
-        public static List<string> GetSheetNames(string path)
+        public static List<string> GetSheetNames(string path, OpenXmlConfiguration config = null)
         {
             using (var stream = FileHelper.OpenSharedRead(path))
-                return GetSheetNames(stream);
+                return GetSheetNames(stream, config);
         }
 
-        public static List<string> GetSheetNames(this Stream stream)
+        public static List<string> GetSheetNames(this Stream stream, OpenXmlConfiguration config = null)
         {
+            config = config ?? OpenXmlConfiguration.DefaultConfig;
+
             var archive = new ExcelOpenXmlZip(stream);
-            return new ExcelOpenXmlSheetReader(stream, null).GetWorkbookRels(archive.entries).Select(s => s.Name).ToList();
+            return new ExcelOpenXmlSheetReader(stream, config).GetWorkbookRels(archive.entries).Select(s => s.Name).ToList();
         }
 
         public static ICollection<string> GetColumns(string path, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null)

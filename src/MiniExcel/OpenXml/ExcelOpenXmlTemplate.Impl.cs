@@ -1,6 +1,5 @@
 ﻿using MiniExcelLibs.Attributes;
 using MiniExcelLibs.Utils;
-using MiniExcelLibs.Zip;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -149,6 +148,7 @@ namespace MiniExcelLibs.OpenXml
                 
                 // for grouped cells
                 bool groupingStarted = false;
+                bool hasEverGroupStarted = false;
                 int groupStartRowIndex = 0;
                 IList<object> cellIEnumerableValues = null;
                 bool isCellIEnumerableValuesSet = false;
@@ -172,6 +172,7 @@ namespace MiniExcelLibs.OpenXml
                     if (row.InnerText.Contains("@group"))
                     {
                         groupingStarted = true;
+                        hasEverGroupStarted = true;
                         groupStartRowIndex = rowNo;
                         isFirstRound = true;
                         prevHeader = "";
@@ -185,7 +186,6 @@ namespace MiniExcelLibs.OpenXml
                             groupStartRowIndex = 0;
                             cellIEnumerableValues = null;
                             isCellIEnumerableValuesSet = false;
-                            cellIEnumerableValuesIndex = 0;
                             continue;
                         }
                         rowNo = groupStartRowIndex;
@@ -205,7 +205,7 @@ namespace MiniExcelLibs.OpenXml
                     }
 
                     var groupingMultiplier =
-                        (groupingStarted ? (-1 + cellIEnumerableValuesIndex * groupRowCount - headerDiff) : 0);
+                        (hasEverGroupStarted ? (-1 + cellIEnumerableValuesIndex * groupRowCount - headerDiff) : 0);
                     
                     if (groupingStarted)
                     {
@@ -219,12 +219,6 @@ namespace MiniExcelLibs.OpenXml
                             rowInfo.CellIEnumerableValuesCount = 1;
                             rowInfo.CellIEnumerableValues =
                                 cellIEnumerableValues.Skip(cellIEnumerableValuesIndex).Take(1).ToList();
-                            rowInfo.RowMercells = rowInfo.RowMercells?.Select(s =>
-                            {
-                                s.Y1 = rowNo + 1 + groupingMultiplier;
-                                s.Y2 = rowNo + 1 + groupingMultiplier;
-                                return s;
-                            }).ToList();
                         }
                     }
 
@@ -420,8 +414,8 @@ namespace MiniExcelLibs.OpenXml
                                 foreach (var mergeCell in rowInfo.RowMercells)
                                 {
                                     var newMergeCell = new XMergeCell(mergeCell);
-                                    newMergeCell.Y1 = newMergeCell.Y1 + rowIndexDiff;
-                                    newMergeCell.Y2 = newMergeCell.Y2 + rowIndexDiff;
+                                    newMergeCell.Y1 = newMergeCell.Y1 + rowIndexDiff + groupingMultiplier;
+                                    newMergeCell.Y2 = newMergeCell.Y2 + rowIndexDiff + groupingMultiplier;
                                     this.NewXMergeCellInfos.Add(newMergeCell);
                                 }
 
@@ -473,8 +467,8 @@ namespace MiniExcelLibs.OpenXml
                             foreach (var mergeCell in rowInfo.RowMercells)
                             {
                                 var newMergeCell = new XMergeCell(mergeCell);
-                                newMergeCell.Y1 = newMergeCell.Y1 + rowIndexDiff;
-                                newMergeCell.Y2 = newMergeCell.Y2 + rowIndexDiff;
+                                newMergeCell.Y1 = newMergeCell.Y1 + rowIndexDiff + groupingMultiplier;
+                                newMergeCell.Y2 = newMergeCell.Y2 + rowIndexDiff + groupingMultiplier;
                                 this.NewXMergeCellInfos.Add(newMergeCell);
                             }
                         }

@@ -549,7 +549,7 @@ namespace MiniExcelTests
             {
                 var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
                 var templatePath = @"../../../../../samples/xlsx/TestTemplateBasicIEmumerableFill.xlsx";
-
+            
                 //1. By POCO
                 var value = new
                 {
@@ -563,7 +563,7 @@ namespace MiniExcelTests
                     }
                 };
                 await MiniExcel.SaveAsByTemplateAsync(path, templatePath, value);
-
+            
                 var demension = Helpers.GetFirstSheetDimensionRefValue(path);
                 Assert.Equal("A1:B7", demension);
             }
@@ -614,6 +614,80 @@ namespace MiniExcelTests
 
                 var demension = Helpers.GetFirstSheetDimensionRefValue(path);
                 Assert.Equal("A1:B7", demension);
+            }
+        }
+
+        [Fact]
+        public async Task TestIEnumerableGrouped()
+        {
+            {
+                var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
+                var templatePath = @"../../../../../samples/xlsx/TestTemplateBasicIEmumerableFillGroup.xlsx";
+            
+                //1. By POCO
+                var value = new
+                {
+                    employees = new[] {
+                        new {name="Jack",department="HR"},
+                        new {name="Lisa",department="HR"},
+                        new {name="John",department="HR"},
+                        new {name="Mike",department="IT"},
+                        new {name="Neo",department="IT"},
+                        new {name="Loan",department="IT"}
+                    }
+                };
+                await MiniExcel.SaveAsByTemplateAsync(path, templatePath, value);
+            
+                var demension = Helpers.GetFirstSheetDimensionRefValue(path);
+                Assert.Equal("A1:B15", demension);
+            }
+
+            {
+                var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
+                var templatePath = @"../../../../../samples/xlsx/TestTemplateBasicIEmumerableFillGroup.xlsx";
+
+                //2. By Dictionary
+                var value = new Dictionary<string, object>()
+                {
+                    ["employees"] = new[] {
+                        new {name="Jack",department="HR"},
+                        new {name="Jack",department="HR"},
+                        new {name="John",department="HR"},
+                        new {name="John",department="IT"},
+                        new {name="Neo",department="IT"},
+                        new {name="Loan",department="IT"}
+                    }
+                };
+                await MiniExcel.SaveAsByTemplateAsync(path, templatePath, value);
+
+                var demension = Helpers.GetFirstSheetDimensionRefValue(path);
+                Assert.Equal("A1:B15", demension);
+            }
+
+            {
+                var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
+                var templatePath = @"../../../../../samples/xlsx/TestTemplateBasicIEmumerableFillGroup.xlsx";
+
+                //3. By DataTable
+                var dt = new DataTable();
+                {
+                    dt.Columns.Add("name");
+                    dt.Columns.Add("department");
+                    dt.Rows.Add("Jack", "HR");
+                    dt.Rows.Add("Lisa", "HR");
+                    dt.Rows.Add("John", "HR");
+                    dt.Rows.Add("Mike", "IT");
+                    dt.Rows.Add("Neo", "IT");
+                    dt.Rows.Add("Loan", "IT");
+                }
+                var value = new Dictionary<string, object>()
+                {
+                    ["employees"] = dt
+                };
+                await MiniExcel.SaveAsByTemplateAsync(path, templatePath, value);
+
+                var demension = Helpers.GetFirstSheetDimensionRefValue(path);
+                Assert.Equal("A1:B15", demension);
             }
         }
 

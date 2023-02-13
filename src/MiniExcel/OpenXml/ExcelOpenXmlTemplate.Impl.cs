@@ -27,6 +27,7 @@ namespace MiniExcelLibs.OpenXml
             public bool IsDictionary { get; set; }
             public bool IsDataTable { get; set; }
             public int CellIEnumerableValuesCount { get; set; }
+            public IList<object> CellIlListValues { get; set; }
             public IEnumerable CellIEnumerableValues { get; set; }
             public XMergeCell IEnumerableMercell { get; set; }
             public List<XMergeCell> RowMercells { get; set; }
@@ -145,13 +146,91 @@ namespace MiniExcelLibs.OpenXml
                 int originRowIndex;
                 int rowIndexDiff = 0;
                 var rowXml = new StringBuilder();
-                foreach (var rowInfo in XRowInfos)
+                
+                // for grouped cells
+                bool groupingStarted = false;
+                int groupStartRowIndex = 0;
+                IList<object> cellIEnumerableValues = null;
+                bool isCellIEnumerableValuesSet = false;
+                int cellIEnumerableValuesIndex = 0;
+                int groupRowCount = 0;
+                int headerDiff = 0;
+                bool isFirstRound = true;
+                string currentHeader = "";
+                string prevHeader = "";
+                bool isHeaderRow = false;
+                string headerText = "";
+
+                for (int rowNo = 0; rowNo < XRowInfos.Count; rowNo++)
                 {
+                    isHeaderRow = false;
+                    currentHeader = "";
+                    
+                    var rowInfo = XRowInfos[rowNo];
                     var row = rowInfo.Row;
+
+                    if (row.InnerText.Contains("@group"))
+                    {
+                        groupingStarted = true;
+                        groupStartRowIndex = rowNo;
+                        isFirstRound = true;
+                        prevHeader = "";
+                        continue;
+                    }
+                    else if (row.InnerText.Contains("@endgroup"))
+                    {
+                        if(cellIEnumerableValuesIndex >= cellIEnumerableValues.Count - 1)
+                        {
+                            groupingStarted = false;
+                            groupStartRowIndex = 0;
+                            cellIEnumerableValues = null;
+                            isCellIEnumerableValuesSet = false;
+                            cellIEnumerableValuesIndex = 0;
+                            continue;
+                        }
+                        rowNo = groupStartRowIndex;
+                        cellIEnumerableValuesIndex++;
+                        isFirstRound = false;
+                        continue;
+                    }
+                    else if (row.InnerText.Contains("@header"))
+                    {
+                        isHeaderRow = true;
+                    }
+
+                    if (groupingStarted && !isCellIEnumerableValuesSet && rowInfo.CellIlListValues != null)
+                    {
+                        cellIEnumerableValues = rowInfo.CellIlListValues;
+                        isCellIEnumerableValuesSet = true;
+                    }
+
+                    var groupingMultiplier =
+                        (groupingStarted ? (-1 + cellIEnumerableValuesIndex * groupRowCount - headerDiff) : 0);
+                    
+                    if (groupingStarted)
+                    {
+                        if (isFirstRound)
+                        {
+                            groupRowCount++;
+                        }
+
+                        if(cellIEnumerableValues != null)
+                        {
+                            rowInfo.CellIEnumerableValuesCount = 1;
+                            rowInfo.CellIEnumerableValues =
+                                cellIEnumerableValues.Skip(cellIEnumerableValuesIndex).Take(1).ToList();
+                            rowInfo.RowMercells = rowInfo.RowMercells?.Select(s =>
+                            {
+                                s.Y1 = rowNo + 1 + groupingMultiplier;
+                                s.Y2 = rowNo + 1 + groupingMultiplier;
+                                return s;
+                            }).ToList();
+                        }
+                    }
 
                     //TODO: some xlsx without r
                     originRowIndex = int.Parse(row.GetAttribute("r"));
-                    var newRowIndex = originRowIndex + rowIndexDiff;
+                    var newRowIndex = originRowIndex + rowIndexDiff + groupingMultiplier;
 
                     string innerXml = row.InnerXml;
                     rowXml.Clear()
@@ -212,7 +291,14 @@ namespace MiniExcelLibs.OpenXml
                                     }
 
                                     //TODO: ![image](https://user-images.githubusercontent.com/12729184/114848248-17735880-9e11-11eb-8258-63266bda0a1a.png)
+                                    
+                                    rowXml.Replace("@header" + key, cellValueStr);
                                     rowXml.Replace(key, cellValueStr);
+                                    
+                                    if(isHeaderRow && row.InnerText.Contains(key))
+                                    {
+                                        currentHeader += cellValueStr;
+                                    }
                                 }
                             }
                             else if (rowInfo.IsDataTable)
@@ -247,7 +333,14 @@ namespace MiniExcelLibs.OpenXml
                                     }
 
                                     //TODO: ![image](https://user-images.githubusercontent.com/12729184/114848248-17735880-9e11-11eb-8258-63266bda0a1a.png)
+                                    
+                                    rowXml.Replace("@header" + key, cellValueStr);
                                     rowXml.Replace(key, cellValueStr);
+                                    
+                                    if(isHeaderRow && row.InnerText.Contains(key))
+                                    {
+                                        currentHeader += cellValueStr;
+                                    }
                                 }
                             }
                             else
@@ -269,8 +362,7 @@ namespace MiniExcelLibs.OpenXml
                                         rowXml.Replace(key, "");
                                         continue;
                                     }
-
-
+                                    
                                     var cellValueStr = ExcelOpenXmlUtils.EncodeXML(cellValue?.ToString());
                                     var type = Nullable.GetUnderlyingType(prop.PropertyType) ?? prop.PropertyType;
                                     if (type == typeof(bool))
@@ -288,7 +380,27 @@ namespace MiniExcelLibs.OpenXml
                                     }
 
                                     //TODO: ![image](https://user-images.githubusercontent.com/12729184/114848248-17735880-9e11-11eb-8258-63266bda0a1a.png)
+                                    
+                                    rowXml.Replace("@header" + key, cellValueStr);
                                     rowXml.Replace(key, cellValueStr);
+                                    
+                                    if(isHeaderRow && row.InnerText.Contains(key))
+                                    {
+                                        currentHeader += cellValueStr;
+                                    }
+                                }
+                            }
+
+                            if (isHeaderRow)
+                            {
+                                if(currentHeader == prevHeader)
+                                {
+                                    headerDiff++;
+                                    continue;
+                                }
+                                else
+                                {
+                                    prevHeader = currentHeader;
                                 }
                             }
 
@@ -514,7 +626,7 @@ namespace MiniExcelLibs.OpenXml
                         }
 
                         var cellValue = inputMaps[propNames[0]]; // 1. From left to right, only the first set is used as the basis for the list
-                        if (cellValue is IEnumerable && !(cellValue is string))
+                        if ((cellValue is IEnumerable || cellValue is IList<object>) && !(cellValue is string))
                         {
                             if (this.XMergeCellInfos.ContainsKey(r))
                             {
@@ -523,8 +635,10 @@ namespace MiniExcelLibs.OpenXml
                                     xRowInfo.IEnumerableMercell = this.XMergeCellInfos[r];
                                 }
                             }
-
+                            
                             xRowInfo.CellIEnumerableValues = cellValue as IEnumerable;
+                            xRowInfo.CellIlListValues = cellValue as IList<object>;
+                            
                             // get ienumerable runtime type
                             if (xRowInfo.IEnumerableGenricType == null) //avoid duplicate to add rowindexdiff ![image](https://user-images.githubusercontent.com/12729184/114851348-522ac000-9e14-11eb-8244-4730754d6885.png)
                             {
@@ -604,7 +718,8 @@ namespace MiniExcelLibs.OpenXml
                                 xRowInfo.IEnumerablePropName = propNames[0];
                                 xRowInfo.IEnumerableGenricType = typeof(DataRow);
                                 xRowInfo.IsDataTable = true;
-                                xRowInfo.CellIEnumerableValues = dt.Rows.Cast<DataRow>(); //TODO: need to optimize performance
+                                xRowInfo.CellIEnumerableValues = dt.Rows.Cast<object>().ToList(); //TODO: need to optimize performance
+                                xRowInfo.CellIlListValues = dt.Rows.Cast<object>().ToList();
                                 var first = true;
                                 foreach (var element in xRowInfo.CellIEnumerableValues)
                                 {

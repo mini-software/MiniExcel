@@ -186,6 +186,7 @@ namespace MiniExcelLibs.OpenXml
                             groupStartRowIndex = 0;
                             cellIEnumerableValues = null;
                             isCellIEnumerableValuesSet = false;
+                            headerDiff++;
                             continue;
                         }
                         rowNo = groupStartRowIndex;
@@ -204,7 +205,7 @@ namespace MiniExcelLibs.OpenXml
                         isCellIEnumerableValuesSet = true;
                     }
 
-                    var groupingMultiplier =
+                    var groupingRowDiff =
                         (hasEverGroupStarted ? (-1 + cellIEnumerableValuesIndex * groupRowCount - headerDiff) : 0);
                     
                     if (groupingStarted)
@@ -224,7 +225,7 @@ namespace MiniExcelLibs.OpenXml
 
                     //TODO: some xlsx without r
                     originRowIndex = int.Parse(row.GetAttribute("r"));
-                    var newRowIndex = originRowIndex + rowIndexDiff + groupingMultiplier;
+                    var newRowIndex = originRowIndex + rowIndexDiff + groupingRowDiff;
 
                     string innerXml = row.InnerXml;
                     rowXml.Clear()
@@ -414,8 +415,8 @@ namespace MiniExcelLibs.OpenXml
                                 foreach (var mergeCell in rowInfo.RowMercells)
                                 {
                                     var newMergeCell = new XMergeCell(mergeCell);
-                                    newMergeCell.Y1 = newMergeCell.Y1 + rowIndexDiff + groupingMultiplier;
-                                    newMergeCell.Y2 = newMergeCell.Y2 + rowIndexDiff + groupingMultiplier;
+                                    newMergeCell.Y1 = newMergeCell.Y1 + rowIndexDiff + groupingRowDiff;
+                                    newMergeCell.Y2 = newMergeCell.Y2 + rowIndexDiff + groupingRowDiff;
                                     this.NewXMergeCellInfos.Add(newMergeCell);
                                 }
 
@@ -467,8 +468,8 @@ namespace MiniExcelLibs.OpenXml
                             foreach (var mergeCell in rowInfo.RowMercells)
                             {
                                 var newMergeCell = new XMergeCell(mergeCell);
-                                newMergeCell.Y1 = newMergeCell.Y1 + rowIndexDiff + groupingMultiplier;
-                                newMergeCell.Y2 = newMergeCell.Y2 + rowIndexDiff + groupingMultiplier;
+                                newMergeCell.Y1 = newMergeCell.Y1 + rowIndexDiff + groupingRowDiff;
+                                newMergeCell.Y2 = newMergeCell.Y2 + rowIndexDiff + groupingRowDiff;
                                 this.NewXMergeCellInfos.Add(newMergeCell);
                             }
                         }

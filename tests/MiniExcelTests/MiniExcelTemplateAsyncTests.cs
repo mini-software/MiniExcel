@@ -639,7 +639,7 @@ namespace MiniExcelTests
                 await MiniExcel.SaveAsByTemplateAsync(path, templatePath, value);
             
                 var demension = Helpers.GetFirstSheetDimensionRefValue(path);
-                Assert.Equal("A1:B15", demension);
+                Assert.Equal("A1:B18", demension);
             }
 
             {
@@ -661,7 +661,7 @@ namespace MiniExcelTests
                 await MiniExcel.SaveAsByTemplateAsync(path, templatePath, value);
 
                 var demension = Helpers.GetFirstSheetDimensionRefValue(path);
-                Assert.Equal("A1:B15", demension);
+                Assert.Equal("A1:B18", demension);
             }
 
             {
@@ -687,7 +687,7 @@ namespace MiniExcelTests
                 await MiniExcel.SaveAsByTemplateAsync(path, templatePath, value);
 
                 var demension = Helpers.GetFirstSheetDimensionRefValue(path);
-                Assert.Equal("A1:B15", demension);
+                Assert.Equal("A1:B18", demension);
             }
         }
 

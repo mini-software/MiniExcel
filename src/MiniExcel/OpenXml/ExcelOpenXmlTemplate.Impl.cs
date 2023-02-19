@@ -159,7 +159,6 @@ namespace MiniExcelLibs.OpenXml
                 string currentHeader = "";
                 string prevHeader = "";
                 bool isHeaderRow = false;
-                string headerText = "";
 
                 for (int rowNo = 0; rowNo < XRowInfos.Count; rowNo++)
                 {

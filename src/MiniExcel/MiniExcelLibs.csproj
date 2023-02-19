@@ -1,7 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFrameworks>net45;netstandard2.0</TargetFrameworks>
-		<Version>1.31.0</Version>
 		<Version>1.30.2</Version>
 	</PropertyGroup>
 	<PropertyGroup>

@@ -734,9 +734,54 @@ var value = new
 MiniExcel.SaveAsByTemplate(path, templatePath, value);
 ```
 
+#### 7. Grouped Data Fill
+
+```csharp
+var value = new Dictionary<string, object>()
+{
+    ["employees"] = new[] {
+        new {name="Jack",department="HR"},
+        new {name="Jack",department="HR"},
+        new {name="John",department="HR"},
+        new {name="John",department="IT"},
+        new {name="Neo",department="IT"},
+        new {name="Loan",department="IT"}
+    }
+};
+await MiniExcel.SaveAsByTemplateAsync(path, templatePath, value);
+```
+##### 1. With `@group` tag and with `@header` tag
+
+Before
+
+![before_with_header](https://user-images.githubusercontent.com/38832863/218646717-21b9d57a-2be2-4e9a-801b-ae212231d2b4.PNG)
+
+After
+
+![after_with_header](https://user-images.githubusercontent.com/38832863/218646721-58a7a340-7004-4bc2-af24-cffcb2c20737.PNG)
+
+##### 2. With @group tag and without @header tag
+
+Before
+
+![before_without_header](https://user-images.githubusercontent.com/38832863/218646873-b12417fa-801b-4890-8e96-669ed3b43902.PNG)
+
+After
+
+![after_without_header](https://user-images.githubusercontent.com/38832863/218646872-622461ba-342e-49ee-834f-b91ad9c2dac3.PNG)
+
+##### 3. Without @group tag
+
+Before
+
+![without_group](https://user-images.githubusercontent.com/38832863/218646975-f52a68eb-e031-43b5-abaa-03b67c052d1a.PNG)
+
+After
+
+![without_group_after](https://user-images.githubusercontent.com/38832863/218646974-4a3c0e07-7c66-4088-ad07-b4ad3695b7e1.PNG)
 
 
-#### 7. DataTable as parameter
+#### 8. DataTable as parameter
 
 ```csharp
 var managers = new DataTable();
@@ -755,8 +800,7 @@ MiniExcel.SaveAsByTemplate(path, templatePath, value);
 ```
 
 
-
-#### 8. Other
+#### 9. Other
 
 ##### 1. Checking template parameter key
 

@@ -25,6 +25,7 @@
 
 ### 1.30.2
 - [New] support grouped rows (via @eynarhaji)
+- [New] support automatic merge for same vertical cells (via @eynarhaji)
 
 ### 1.30.1
 - [New] support function to custom separator (via @hyzx86)

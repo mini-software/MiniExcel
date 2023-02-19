@@ -1,8 +1,8 @@
 ﻿namespace MiniExcelLibs
 {
-    using MiniExcelLibs.OpenXml;
-    using MiniExcelLibs.Utils;
-    using MiniExcelLibs.Zip;
+    using OpenXml;
+    using Utils;
+    using Zip;
     using System;
     using System.Collections;
     using System.Collections.Generic;
@@ -10,7 +10,6 @@
     using System.Dynamic;
     using System.IO;
     using System.Linq;
-    using System.Threading.Tasks;
 
     public static partial class MiniExcel
     {
@@ -130,6 +129,21 @@
         {
             ExcelTemplateFactory.GetProvider(stream, configuration).SaveAsByTemplate(templateBytes, value);
         }
+
+        #region MergeCells
+
+        public static void MergeSameCells(string mergedFilePath, string path, ExcelType excelType = ExcelType.XLSX, IConfiguration configuration = null)
+        {
+            using (var stream = File.Create(mergedFilePath))
+                MergeSameCells(stream, path, excelType, configuration);
+        }
+
+        public static void MergeSameCells(this Stream stream, string path, ExcelType excelType = ExcelType.XLSX, IConfiguration configuration = null)
+        {
+            ExcelTemplateFactory.GetProvider(stream, configuration, excelType).MergeSameCells(path);
+        }
+        
+        #endregion
 
         /// <summary>
         /// QueryAsDataTable is not recommended, because it'll load all data into memory.

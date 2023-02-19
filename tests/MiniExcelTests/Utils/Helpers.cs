@@ -107,6 +107,36 @@
             return refV;
         }
 
+        internal static Dictionary<int, string> GetFirstSheetMergedCells(string path)
+        {
+            var ns = new XmlNamespaceManager(new NameTable());
+            ns.AddNamespace("x", "http://schemas.openxmlformats.org/spreadsheetml/2006/main");
+            Dictionary<int, string> mergeCellsDict = new Dictionary<int, string>();
+            using (var stream = File.OpenRead(path))
+            using (ZipArchive archive = new ZipArchive(stream, ZipArchiveMode.Read, false, Encoding.UTF8))
+            {
+                var sheet = archive.Entries.Single(w => w.FullName.StartsWith("xl/worksheets/sheet1", StringComparison.OrdinalIgnoreCase)
+                                                        || w.FullName.StartsWith("/xl/worksheets/sheet1", StringComparison.OrdinalIgnoreCase)
+                );
+                using (var sheetStream = sheet.Open())
+                {
+                    var doc = new XmlDocument();
+                    doc.Load(sheetStream);
+                    var mergeCells = doc.SelectSingleNode($"/x:worksheet/x:mergeCells", ns)?.Cast<XmlElement>().ToList();
+                    
+                    if(mergeCells is { Count: > 0 })
+                    {
+                        for (int i = 0; i < mergeCells.Count; i++)
+                        {
+                            mergeCellsDict.Add(i, mergeCells[i].GetAttribute("ref"));
+                        }
+                    }
+                }
+            }
+
+            return mergeCellsDict;
+        }
+
     }
 
 }

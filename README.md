@@ -522,6 +522,34 @@ Since 1.22.0, when value type is `byte[]` then system will save file path at cel
 
 ![image](https://user-images.githubusercontent.com/12729184/153702334-c3b834f4-6ae4-4ddf-bd4e-e5005d5d8c6a.png)
 
+Since 1.22.0, when value type is `byte[]` then system will save file path at cell by default, and when import system can be converted to `byte[]`. And if you don't want to use it, you can set  `OpenXmlConfiguration.EnableConvertByteArray` to `false`, it can improve the system efficiency.
+
+![image](https://user-images.githubusercontent.com/12729184/153702334-c3b834f4-6ae4-4ddf-bd4e-e5005d5d8c6a.png)
+
+#### 12. Merge same cells vertically
+
+This functionality is only supported in `xlsx` format and merges cells vertically.
+
+```csharp
+var mergedFilePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
+            
+var path = @"../../../../../samples/xlsx/TestMergeSameCells.xlsx";
+
+MiniExcel.MergeSameCells(mergedFilePath, path);
+```
+
+```csharp
+var memoryStream = new MemoryStream();
+            
+var path = @"../../../../../samples/xlsx/TestMergeSameCells.xlsx";
+
+memoryStream.MergeSameCells(path);
+```
+
+File content before and after merge:
+
+![before_merge_cells](https://user-images.githubusercontent.com/38832863/219970175-913b3d04-d714-4279-a7a4-6cefb7aa6ce8.PNG)
+![after_merge_cells](https://user-images.githubusercontent.com/38832863/219970176-e78c491a-2f90-45a7-a4a2-425c5708d38c.PNG)
 
 
 ### Fill Data To Excel Template <a name="getstart3"></a>

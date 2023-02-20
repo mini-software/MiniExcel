@@ -522,6 +522,34 @@ Since 1.22.0, when value type is `byte[]` then system will save file path at cel
 
 ![image](https://user-images.githubusercontent.com/12729184/153702334-c3b834f4-6ae4-4ddf-bd4e-e5005d5d8c6a.png)
 
+Since 1.22.0, when value type is `byte[]` then system will save file path at cell by default, and when import system can be converted to `byte[]`. And if you don't want to use it, you can set  `OpenXmlConfiguration.EnableConvertByteArray` to `false`, it can improve the system efficiency.
+
+![image](https://user-images.githubusercontent.com/12729184/153702334-c3b834f4-6ae4-4ddf-bd4e-e5005d5d8c6a.png)
+
+#### 12. Merge same cells vertically
+
+This functionality is only supported in `xlsx` format and merges cells vertically.
+
+```csharp
+var mergedFilePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
+            
+var path = @"../../../../../samples/xlsx/TestMergeSameCells.xlsx";
+
+MiniExcel.MergeSameCells(mergedFilePath, path);
+```
+
+```csharp
+var memoryStream = new MemoryStream();
+            
+var path = @"../../../../../samples/xlsx/TestMergeSameCells.xlsx";
+
+memoryStream.MergeSameCells(path);
+```
+
+File content before and after merge:
+
+![before_merge_cells](https://user-images.githubusercontent.com/38832863/219970175-913b3d04-d714-4279-a7a4-6cefb7aa6ce8.PNG)
+![after_merge_cells](https://user-images.githubusercontent.com/38832863/219970176-e78c491a-2f90-45a7-a4a2-425c5708d38c.PNG)
 
 
 ### Fill Data To Excel Template <a name="getstart3"></a>
@@ -734,9 +762,54 @@ var value = new
 MiniExcel.SaveAsByTemplate(path, templatePath, value);
 ```
 
+#### 7. Grouped Data Fill
+
+```csharp
+var value = new Dictionary<string, object>()
+{
+    ["employees"] = new[] {
+        new {name="Jack",department="HR"},
+        new {name="Jack",department="HR"},
+        new {name="John",department="HR"},
+        new {name="John",department="IT"},
+        new {name="Neo",department="IT"},
+        new {name="Loan",department="IT"}
+    }
+};
+await MiniExcel.SaveAsByTemplateAsync(path, templatePath, value);
+```
+##### 1. With `@group` tag and with `@header` tag
+
+Before
+
+![before_with_header](https://user-images.githubusercontent.com/38832863/218646717-21b9d57a-2be2-4e9a-801b-ae212231d2b4.PNG)
+
+After
+
+![after_with_header](https://user-images.githubusercontent.com/38832863/218646721-58a7a340-7004-4bc2-af24-cffcb2c20737.PNG)
+
+##### 2. With @group tag and without @header tag
+
+Before
+
+![before_without_header](https://user-images.githubusercontent.com/38832863/218646873-b12417fa-801b-4890-8e96-669ed3b43902.PNG)
+
+After
+
+![after_without_header](https://user-images.githubusercontent.com/38832863/218646872-622461ba-342e-49ee-834f-b91ad9c2dac3.PNG)
+
+##### 3. Without @group tag
+
+Before
+
+![without_group](https://user-images.githubusercontent.com/38832863/218646975-f52a68eb-e031-43b5-abaa-03b67c052d1a.PNG)
+
+After
+
+![without_group_after](https://user-images.githubusercontent.com/38832863/218646974-4a3c0e07-7c66-4088-ad07-b4ad3695b7e1.PNG)
 
 
-#### 7. DataTable as parameter
+#### 8. DataTable as parameter
 
 ```csharp
 var managers = new DataTable();
@@ -755,8 +828,7 @@ MiniExcel.SaveAsByTemplate(path, templatePath, value);
 ```
 
 
-
-#### 8. Other
+#### 9. Other
 
 ##### 1. Checking template parameter key
 

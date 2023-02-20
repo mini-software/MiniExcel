@@ -1,15 +1,10 @@
 ﻿namespace MiniExcelLibs
 {
-    using MiniExcelLibs.Csv;
-    using MiniExcelLibs.OpenXml;
-    using MiniExcelLibs.Utils;
-    using MiniExcelLibs.Zip;
+    using Utils;
     using System;
     using System.Collections.Generic;
     using System.Data;
-    using System.Dynamic;
     using System.IO;
-    using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
 
@@ -23,6 +18,16 @@
         public static async Task SaveAsAsync(this Stream stream, object value, bool printHeader = true, string sheetName = "Sheet1", ExcelType excelType = ExcelType.XLSX, IConfiguration configuration = null,CancellationToken cancellationToken = default(CancellationToken))
         {
             await ExcelWriterFactory.GetProvider(stream, value, sheetName, excelType, configuration, printHeader).SaveAsAsync(cancellationToken);
+        }
+        
+        public static async Task MergeSameCellsAsync(string mergedFilePath, string path, ExcelType excelType = ExcelType.UNKNOWN, IConfiguration configuration = null,CancellationToken cancellationToken = default(CancellationToken))
+        {
+            await Task.Run(() => MergeSameCells(mergedFilePath, path, excelType, configuration) ,cancellationToken).ConfigureAwait(false);
+        }
+
+        public static async Task MergeSameCellsAsync(this Stream stream, string path, ExcelType excelType = ExcelType.XLSX, IConfiguration configuration = null, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            await ExcelTemplateFactory.GetProvider(stream, configuration, excelType).MergeSameCellsAsync(path, cancellationToken);
         }
 
         public static async Task<IEnumerable<dynamic>> QueryAsync(string path, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null,CancellationToken cancellationToken = default(CancellationToken))

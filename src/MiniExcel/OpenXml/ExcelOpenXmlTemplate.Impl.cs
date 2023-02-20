@@ -1,4 +1,4 @@
-﻿using MiniExcelLibs.Attributes;
+using MiniExcelLibs.Attributes;
 using MiniExcelLibs.Utils;
 using System;
 using System.Collections;
@@ -67,6 +67,17 @@ namespace MiniExcelLibs.OpenXml
                 Width = Math.Abs(X1 - X2) + 1; ;
                 Height = Math.Abs(Y1 - Y2) + 1;
             }
+            public XMergeCell(string xy1, string xy2)
+            {
+                X1 = ColumnHelper.GetColumnIndex(StringHelper.GetLetter(xy1));
+                Y1 = StringHelper.GetNumber(xy1);
+
+                X2 = ColumnHelper.GetColumnIndex(StringHelper.GetLetter(xy2));
+                Y2 = StringHelper.GetNumber(xy2);
+
+                Width = Math.Abs(X1 - X2) + 1;
+                Height = Math.Abs(Y1 - Y2) + 1;
+            }
 
             public string XY1 { get { return $"{ColumnHelper.GetAlphabetColumnName(X1)}{Y1}"; } }
             public int X1 { get; set; }
@@ -90,7 +101,9 @@ namespace MiniExcelLibs.OpenXml
         private Dictionary<string, XMergeCell> XMergeCellInfos { get; set; }
         public List<XMergeCell> NewXMergeCellInfos { get; private set; }
 
-        private void GenerateSheetXmlImpl(ZipArchiveEntry sheetZipEntry, Stream stream, Stream sheetStream, Dictionary<string, object> inputMaps, IDictionary<int, string> sharedStrings, XmlWriterSettings xmlWriterSettings = null)
+        private void GenerateSheetXmlImpl(ZipArchiveEntry sheetZipEntry, Stream stream, Stream sheetStream,
+            Dictionary<string, object> inputMaps, IDictionary<int, string> sharedStrings,
+            XmlWriterSettings xmlWriterSettings = null, bool mergeCells = false)
         {
             var doc = new XmlDocument();
             doc.Load(sheetStream);
@@ -105,8 +118,8 @@ namespace MiniExcelLibs.OpenXml
 
             ReplaceSharedStringsToStr(sharedStrings, ref rows);
             GetMercells(doc, worksheet);
-            UpdateDimensionAndGetRowsInfo(inputMaps, ref doc, ref rows);
-            WriteSheetXml(stream, doc, sheetData);
+            UpdateDimensionAndGetRowsInfo(inputMaps, ref doc, ref rows, !mergeCells);
+            WriteSheetXml(stream, doc, sheetData, mergeCells);
         }
 
         private void GetMercells(XmlDocument doc, XmlNode worksheet)
@@ -127,7 +140,19 @@ namespace MiniExcelLibs.OpenXml
             }
         }
 
-        private void WriteSheetXml(Stream stream, XmlDocument doc, XmlNode sheetData)
+        private class MergeCellIndex
+        {
+            public int RowStart { get; set; }
+            public int RowEnd { get; set; }
+
+            public MergeCellIndex(int rowStart, int rowEnd)
+            {
+                RowStart = rowStart;
+                RowEnd = rowEnd;
+            }
+        }
+
+        private void WriteSheetXml(Stream stream, XmlDocument doc, XmlNode sheetData, bool mergeCells = false)
         {
             //Q.Why so complex?
             //A.Because try to use string stream avoid OOM when rendering rows
@@ -140,6 +165,53 @@ namespace MiniExcelLibs.OpenXml
             {
                 writer.Write(contents[0]);
                 writer.Write($"<{prefix}sheetData>"); // prefix problem
+
+                #region MergeCells
+                
+                if(mergeCells)
+                {
+                    var rows = XRowInfos.SelectMany(s => s.Row.Cast<XmlElement>()).ToList();
+                    Dictionary<int, MergeCellIndex> lastMergeCellIndexes = new Dictionary<int, MergeCellIndex>();
+
+                    for (int rowNo = 0; rowNo < XRowInfos.Count; rowNo++)
+                    {
+                        var rowInfo = XRowInfos[rowNo];
+                        var row = rowInfo.Row;
+                        var childNodes = row.ChildNodes.Cast<XmlNode>().ToList();
+
+                        foreach (var mergeCell in from cNode in childNodes
+                                 select rows.Where(j =>
+                                     j.ChildNodes.Cast<XmlNode>().Any(m => m.InnerText == cNode.InnerText)).ToList()
+                                 into xmlNodes
+                                 where xmlNodes.Count > 1
+                                 let firstRow = xmlNodes.FirstOrDefault()
+                                 let lastRow = xmlNodes.LastOrDefault()
+                                 where firstRow != null && lastRow != null
+                                 let firstRowRAtt = firstRow.GetAttribute("r")
+                                 let lastRowRAtt = lastRow.GetAttribute("r")
+                                 select new XMergeCell(firstRowRAtt, lastRowRAtt))
+                        {
+                            var mergeIndexResult = lastMergeCellIndexes.TryGetValue(mergeCell.X1, out var mergeIndex);
+
+                            if (mergeIndexResult && mergeCell.Y1 >= mergeIndex.RowStart &&
+                                mergeCell.Y2 <= mergeIndex.RowEnd)
+                            {
+                                continue;
+                            }
+
+                            lastMergeCellIndexes[mergeCell.X1] = new MergeCellIndex(mergeCell.Y1, mergeCell.Y2);
+
+                            if (rowInfo.RowMercells == null)
+                            {
+                                rowInfo.RowMercells = new List<XMergeCell>();
+                            }
+
+                            rowInfo.RowMercells.Add(mergeCell);
+                        }
+                    }
+                }
+                
+                #endregion
 
                 #region Generate rows and cells
                 int originRowIndex;
@@ -159,7 +231,6 @@ namespace MiniExcelLibs.OpenXml
                 string currentHeader = "";
                 string prevHeader = "";
                 bool isHeaderRow = false;
-                string headerText = "";
 
                 for (int rowNo = 0; rowNo < XRowInfos.Count; rowNo++)
                 {
@@ -559,7 +630,7 @@ namespace MiniExcelLibs.OpenXml
             }
         }
 
-        private void UpdateDimensionAndGetRowsInfo(Dictionary<string, object> inputMaps, ref XmlDocument doc, ref XmlNodeList rows)
+        private void UpdateDimensionAndGetRowsInfo(Dictionary<string, object> inputMaps, ref XmlDocument doc, ref XmlNodeList rows, bool changeRowIndex = true)
         {
             // note : dimension need to put on the top ![image](https://user-images.githubusercontent.com/12729184/114507911-5dd88400-9c66-11eb-94c6-82ed7bdb5aab.png)
 
@@ -590,7 +661,10 @@ namespace MiniExcelLibs.OpenXml
                         xRowInfo.RowMercells.Add(this.XMergeCellInfos[r]);
                     }
 
-                    c.SetAttribute("r", $"{StringHelper.GetLetter(r)}{{{{$rowindex}}}}"); //TODO:
+                    if(changeRowIndex)
+                    {
+                        c.SetAttribute("r", $"{StringHelper.GetLetter(r)}{{{{$rowindex}}}}"); //TODO:
+                    }
 
                     var v = c.SelectSingleNode("x:v", _ns);
                     if (v?.InnerText == null)

@@ -840,5 +840,23 @@ namespace MiniExcelTests
             }
 
         }
+        
+        [Fact]
+        public void MergeSameCellsTest()
+        {
+            var mergedFilePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
+            
+            var path = @"../../../../../samples/xlsx/TestMergeSameCells.xlsx";
+            
+            MiniExcel.MergeSameCells(mergedFilePath, path);
+            {
+                var mergedCells = Helpers.GetFirstSheetMergedCells(mergedFilePath);
+                
+                Assert.Equal("A2:A4", mergedCells[0]);
+                Assert.Equal("B3:B4", mergedCells[1]);
+                Assert.Equal("A5:A7", mergedCells[2]);
+                Assert.Equal("B5:B6", mergedCells[3]);
+            }
+        }
     }
 }

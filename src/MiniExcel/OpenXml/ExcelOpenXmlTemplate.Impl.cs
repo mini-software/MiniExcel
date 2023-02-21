@@ -177,16 +177,17 @@ namespace MiniExcelLibs.OpenXml
                 
                 if(mergeCells)
                 {
-                    var columns = XRowInfos.SelectMany(s => s.Row.Cast<XmlElement>()).Select(s=>
-                    {
-                        var att = s.GetAttribute("r");
-                        return new XChildNode()
+                    var columns = XRowInfos.SelectMany(s => s.Row.Cast<XmlElement>())
+                        .Where(s => !string.IsNullOrEmpty(s.InnerText)).Select(s =>
                         {
-                            InnerText = s.InnerText,
-                            ColIndex = StringHelper.GetLetter(att),
-                            RowIndex = StringHelper.GetNumber(att)
-                        };
-                    }).ToList();
+                            var att = s.GetAttribute("r");
+                            return new XChildNode()
+                            {
+                                InnerText = s.InnerText,
+                                ColIndex = StringHelper.GetLetter(att),
+                                RowIndex = StringHelper.GetNumber(att)
+                            };
+                        }).ToList();
                     
                     Dictionary<int, MergeCellIndex> lastMergeCellIndexes = new Dictionary<int, MergeCellIndex>();
 
@@ -194,7 +195,8 @@ namespace MiniExcelLibs.OpenXml
                     {
                         var rowInfo = XRowInfos[rowNo];
                         var row = rowInfo.Row;
-                        var childNodes = row.ChildNodes.Cast<XmlElement>().ToList();
+                        var childNodes = row.ChildNodes.Cast<XmlElement>()
+                            .Where(s => !string.IsNullOrEmpty(s.InnerText)).ToList();
 
                         foreach (var childNode in childNodes)
                         {

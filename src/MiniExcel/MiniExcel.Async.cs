@@ -30,6 +30,11 @@
             await ExcelTemplateFactory.GetProvider(stream, configuration, excelType).MergeSameCellsAsync(path, cancellationToken);
         }
 
+        public static async Task MergeSameCellsAsync(this Stream stream, byte[] fileBytes, ExcelType excelType = ExcelType.XLSX, IConfiguration configuration = null, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            await ExcelTemplateFactory.GetProvider(stream, configuration, excelType).MergeSameCellsAsync(fileBytes, cancellationToken);
+        }
+
         public static async Task<IEnumerable<dynamic>> QueryAsync(string path, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null,CancellationToken cancellationToken = default(CancellationToken))
         {
             return await Task.Run(() => Query(path, useHeaderRow, sheetName, excelType, startCell, configuration),cancellationToken);

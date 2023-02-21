@@ -24,8 +24,12 @@
 
 ---
 
-### 1.30.1
 
+### 1.30.2
+- [New] 支持 grouped rows (via @eynarhaji)
+- [New] 支持 automatic merge vertical cells (via @eynarhaji)
+
+### 1.30.1
 - [New] 支持 function 自定義 separator (via @hyzx86)
 - [New] 支持 config for get sheet names (via @H4ad)
 

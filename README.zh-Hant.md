@@ -530,7 +530,30 @@ MiniExcel.SaveAs(path, value);
 
 ![image](https://user-images.githubusercontent.com/12729184/153702334-c3b834f4-6ae4-4ddf-bd4e-e5005d5d8c6a.png)
 
+#### 12. 垂直合併相同的單元格
 
+只支持 `xlsx` 格式合併單元格
+
+```csharp
+var mergedFilePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
+            
+var path = @"../../../../../samples/xlsx/TestMergeSameCells.xlsx";
+
+MiniExcel.MergeSameCells(mergedFilePath, path);
+```
+
+```csharp
+var memoryStream = new MemoryStream();
+            
+var path = @"../../../../../samples/xlsx/TestMergeSameCells.xlsx";
+
+memoryStream.MergeSameCells(path);
+```
+
+合併前後對比
+
+![before_merge_cells](https://user-images.githubusercontent.com/38832863/219970175-913b3d04-d714-4279-a7a4-6cefb7aa6ce8.PNG)
+![after_merge_cells](https://user-images.githubusercontent.com/38832863/219970176-e78c491a-2f90-45a7-a4a2-425c5708d38c.PNG)
 
 
 
@@ -748,9 +771,53 @@ var value = new
 MiniExcel.SaveAsByTemplate(path, templatePath, value);
 ```
 
+#### 7. 分組數據填充
 
+```csharp
+var value = new Dictionary<string, object>()
+{
+    ["employees"] = new[] {
+        new {name="Jack",department="HR"},
+        new {name="Jack",department="HR"},
+        new {name="John",department="HR"},
+        new {name="John",department="IT"},
+        new {name="Neo",department="IT"},
+        new {name="Loan",department="IT"}
+    }
+};
+MiniExcel.SaveAsByTemplate(path, templatePath, value);
+```
+##### 1. 使用`@group` tag 和 @header` tag
 
-#### 7. DataTable 當參數
+Before
+
+![before_with_header](https://user-images.githubusercontent.com/38832863/218646717-21b9d57a-2be2-4e9a-801b-ae212231d2b4.PNG)
+
+After
+
+![after_with_header](https://user-images.githubusercontent.com/38832863/218646721-58a7a340-7004-4bc2-af24-cffcb2c20737.PNG)
+
+##### 2. 使用 @group tag 沒有 @header tag
+
+Before
+
+![before_without_header](https://user-images.githubusercontent.com/38832863/218646873-b12417fa-801b-4890-8e96-669ed3b43902.PNG)
+
+After
+
+![after_without_header](https://user-images.githubusercontent.com/38832863/218646872-622461ba-342e-49ee-834f-b91ad9c2dac3.PNG)
+
+##### 3. 沒有 @group tag
+
+Before
+
+![without_group](https://user-images.githubusercontent.com/38832863/218646975-f52a68eb-e031-43b5-abaa-03b67c052d1a.PNG)
+
+After
+
+![without_group_after](https://user-images.githubusercontent.com/38832863/218646974-4a3c0e07-7c66-4088-ad07-b4ad3695b7e1.PNG)
+
+#### 8. DataTable 當參數
 
 ```csharp
 var managers = new DataTable();
@@ -768,7 +835,7 @@ var value = new Dictionary<string, object>()
 MiniExcel.SaveAsByTemplate(path, templatePath, value);
 ```
 
-#### 8. 其他
+#### 9. 其他
 
 ##### 1. 檢查模版參數
 

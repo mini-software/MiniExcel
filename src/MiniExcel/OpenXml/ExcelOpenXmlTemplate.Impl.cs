@@ -64,16 +64,16 @@ namespace MiniExcelLibs.OpenXml
                 X2 = ColumnHelper.GetColumnIndex(StringHelper.GetLetter(refs[1]));
                 Y2 = StringHelper.GetNumber(xy2);
 
-                Width = Math.Abs(X1 - X2) + 1; ;
+                Width = Math.Abs(X1 - X2) + 1;
                 Height = Math.Abs(Y1 - Y2) + 1;
             }
-            public XMergeCell(string xy1, string xy2)
+            public XMergeCell(string x1, int y1, string x2, int y2)
             {
-                X1 = ColumnHelper.GetColumnIndex(StringHelper.GetLetter(xy1));
-                Y1 = StringHelper.GetNumber(xy1);
+                X1 = ColumnHelper.GetColumnIndex(x1);
+                Y1 = y1;
 
-                X2 = ColumnHelper.GetColumnIndex(StringHelper.GetLetter(xy2));
-                Y2 = StringHelper.GetNumber(xy2);
+                X2 = ColumnHelper.GetColumnIndex(x2);
+                Y2 = y2;
 
                 Width = Math.Abs(X1 - X2) + 1;
                 Height = Math.Abs(Y1 - Y2) + 1;
@@ -151,6 +151,13 @@ namespace MiniExcelLibs.OpenXml
                 RowEnd = rowEnd;
             }
         }
+        
+        private class XChildNode
+        {
+            public string InnerText { get; set; }
+            public string ColIndex { get; set; }
+            public int RowIndex { get; set; }
+        }
 
         private void WriteSheetXml(Stream stream, XmlDocument doc, XmlNode sheetData, bool mergeCells = false)
         {
@@ -170,43 +177,60 @@ namespace MiniExcelLibs.OpenXml
                 
                 if(mergeCells)
                 {
-                    var rows = XRowInfos.SelectMany(s => s.Row.Cast<XmlElement>()).ToList();
+                    var columns = XRowInfos.SelectMany(s => s.Row.Cast<XmlElement>()).Select(s=>
+                    {
+                        var att = s.GetAttribute("r");
+                        return new XChildNode()
+                        {
+                            InnerText = s.InnerText,
+                            ColIndex = StringHelper.GetLetter(att),
+                            RowIndex = StringHelper.GetNumber(att)
+                        };
+                    }).ToList();
+                    
                     Dictionary<int, MergeCellIndex> lastMergeCellIndexes = new Dictionary<int, MergeCellIndex>();
 
                     for (int rowNo = 0; rowNo < XRowInfos.Count; rowNo++)
                     {
                         var rowInfo = XRowInfos[rowNo];
                         var row = rowInfo.Row;
-                        var childNodes = row.ChildNodes.Cast<XmlNode>().ToList();
+                        var childNodes = row.ChildNodes.Cast<XmlElement>().ToList();
 
-                        foreach (var mergeCell in from cNode in childNodes
-                                 select rows.Where(j =>
-                                     j.ChildNodes.Cast<XmlNode>().Any(m => m.InnerText == cNode.InnerText)).ToList()
-                                 into xmlNodes
-                                 where xmlNodes.Count > 1
-                                 let firstRow = xmlNodes.FirstOrDefault()
-                                 let lastRow = xmlNodes.LastOrDefault()
-                                 where firstRow != null && lastRow != null
-                                 let firstRowRAtt = firstRow.GetAttribute("r")
-                                 let lastRowRAtt = lastRow.GetAttribute("r")
-                                 select new XMergeCell(firstRowRAtt, lastRowRAtt))
+                        foreach (var childNode in childNodes)
                         {
-                            var mergeIndexResult = lastMergeCellIndexes.TryGetValue(mergeCell.X1, out var mergeIndex);
+                            var childNodeAtt = StringHelper.GetLetter(childNode.GetAttribute("r"));
 
-                            if (mergeIndexResult && mergeCell.Y1 >= mergeIndex.RowStart &&
-                                mergeCell.Y2 <= mergeIndex.RowEnd)
+                            var xmlNodes = columns
+                                .Where(j => j.InnerText == childNode.InnerText && j.ColIndex == childNodeAtt)
+                                .OrderBy(s => s.RowIndex).ToList();
+
+                            if (xmlNodes.Count > 1)
                             {
-                                continue;
+                                var firstRow = xmlNodes.FirstOrDefault();
+                                var lastRow = xmlNodes.LastOrDefault(s => s.RowIndex <= firstRow?.RowIndex + xmlNodes.Count && s.RowIndex != firstRow?.RowIndex);
+                                
+                                if (firstRow != null && lastRow != null)
+                                {
+                                    var mergeCell = new XMergeCell(firstRow.ColIndex, firstRow.RowIndex, lastRow.ColIndex, lastRow.RowIndex);
+                                    
+                                    var mergeIndexResult = lastMergeCellIndexes.TryGetValue(mergeCell.X1, out var mergeIndex);
+
+                                    if (mergeIndexResult && mergeCell.Y1 >= mergeIndex.RowStart &&
+                                        mergeCell.Y2 <= mergeIndex.RowEnd)
+                                    {
+                                        continue;
+                                    }
+
+                                    lastMergeCellIndexes[mergeCell.X1] = new MergeCellIndex(mergeCell.Y1, mergeCell.Y2);
+
+                                    if (rowInfo.RowMercells == null)
+                                    {
+                                        rowInfo.RowMercells = new List<XMergeCell>();
+                                    }
+                                    
+                                    rowInfo.RowMercells.Add(mergeCell);
+                                }
                             }
-
-                            lastMergeCellIndexes[mergeCell.X1] = new MergeCellIndex(mergeCell.Y1, mergeCell.Y2);
-
-                            if (rowInfo.RowMercells == null)
-                            {
-                                rowInfo.RowMercells = new List<XMergeCell>();
-                            }
-
-                            rowInfo.RowMercells.Add(mergeCell);
                         }
                     }
                 }

@@ -142,6 +142,11 @@
         {
             ExcelTemplateFactory.GetProvider(stream, configuration, excelType).MergeSameCells(path);
         }
+
+        public static void MergeSameCells(this Stream stream, byte[] filePath, ExcelType excelType = ExcelType.XLSX, IConfiguration configuration = null)
+        {
+            ExcelTemplateFactory.GetProvider(stream, configuration, excelType).MergeSameCells(filePath);
+        }
         
         #endregion
 

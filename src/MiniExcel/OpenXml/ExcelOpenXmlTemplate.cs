@@ -31,9 +31,9 @@ namespace MiniExcelLibs.OpenXml
         private readonly Stream _stream;
         private readonly OpenXmlConfiguration _configuration;
 
-        public ExcelOpenXmlTemplate(Stream strem, IConfiguration configuration)
+        public ExcelOpenXmlTemplate(Stream stream, IConfiguration configuration)
         {
-            _stream = strem;
+            _stream = stream;
             _configuration = (OpenXmlConfiguration)configuration?? OpenXmlConfiguration.DefaultConfig;
         }
 

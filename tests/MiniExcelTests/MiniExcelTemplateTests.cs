@@ -853,9 +853,12 @@ namespace MiniExcelTests
                 var mergedCells = Helpers.GetFirstSheetMergedCells(mergedFilePath);
                 
                 Assert.Equal("A2:A4", mergedCells[0]);
-                Assert.Equal("B3:B4", mergedCells[1]);
-                Assert.Equal("A5:A7", mergedCells[2]);
+                Assert.Equal("D2:D3", mergedCells[1]);
+                Assert.Equal("C3:C4", mergedCells[2]);
                 Assert.Equal("B5:B6", mergedCells[3]);
+                Assert.Equal("C5:C6", mergedCells[4]);
+                Assert.Equal("D5:D7", mergedCells[5]);
+                Assert.Equal("A6:A7", mergedCells[6]);
             }
         }
     }

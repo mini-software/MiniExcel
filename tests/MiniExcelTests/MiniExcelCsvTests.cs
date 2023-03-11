@@ -45,6 +45,23 @@ namespace MiniExcelLibs.Tests
         }
 
         [Fact]
+        public void AlwaysQuoteTest()
+        {
+            var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.csv");
+            var values = new List<Dictionary<string, object>>()
+                {
+                    new Dictionary<string,object>{{ "a", @"""<>+-*//}{\\n" }, { "b", 1234567890 },{ "c", true },{ "d", new DateTime(2021, 1, 1) } },
+                    new Dictionary<string,object>{{ "a", @"<test>Hello World</test>" }, { "b", -1234567890 },{ "c", false },{ "d", new DateTime(2021, 1, 2) } },
+                };
+            MiniExcel.SaveAs(path, values,configuration: new MiniExcelLibs.Csv.CsvConfiguration() {AlwaysQuote = true});
+            var expected = @"""a"",""b"",""c"",""d""
+""""""<>+-*//}{\\n"",""1234567890"",""True"",""2021-01-01 00:00:00""
+""<test>Hello World</test>"",""-1234567890"",""False"",""2021-01-02 00:00:00""
+";
+            Assert.Equal(expected, File.ReadAllText(path));
+        }
+
+        [Fact]
         public void SaveAsByDictionary()
         {
             {

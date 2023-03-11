@@ -62,6 +62,19 @@ namespace MiniExcelLibs.Tests
         }
 
         [Fact]
+        public void QuoteSpecialCharacters()
+        {
+            var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.csv");
+            var values = new List<Dictionary<string, object>>()
+                {
+                    new Dictionary<string,object>{{ "a", @"potato,banana" }, { "b", "text\ntest" },{ "c", "text\rpotato" },{ "d", new DateTime(2021, 1, 1) } },
+                };
+            MiniExcel.SaveAs(path, values,configuration: new MiniExcelLibs.Csv.CsvConfiguration());
+            var expected = "a,b,c,d\r\n\"potato,banana\",\"text\ntest\",\"text\rpotato\",\"2021-01-01 00:00:00\"\r\n";
+            Assert.Equal(expected, File.ReadAllText(path));
+        }
+
+        [Fact]
         public void SaveAsByDictionary()
         {
             {

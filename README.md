@@ -808,8 +808,35 @@ After
 
 ![without_group_after](https://user-images.githubusercontent.com/38832863/218646974-4a3c0e07-7c66-4088-ad07-b4ad3695b7e1.PNG)
 
+#### 8. If/ElseIf/Else Statements inside cell
 
-#### 8. DataTable as parameter
+Rules:
+1. Supports DateTime, Double, Int with ==, !=, >, >=, <, <= operators.
+2. Supports String with ==, != operators.
+3. Each statement should be new line.
+4. Single space should be added before and after operators.
+5. There shouldn't be new line inside of statements.
+6. Cell should be in exact format as below.
+
+```csharp
+@if(name == Jack)
+{{employees.name}}
+@elseif(name == Neo)
+Test {{employees.name}}
+@else
+{{employees.department}}
+@endif
+```
+
+Before
+
+![if_before](https://user-images.githubusercontent.com/38832863/235360606-ca654769-ff55-4f5b-98d2-d2ec0edb8173.PNG)
+
+After
+
+![if_after](https://user-images.githubusercontent.com/38832863/235360609-869bb960-d63d-45ae-8d64-9e8b0d0ab658.PNG)
+
+#### 9. DataTable as parameter
 
 ```csharp
 var managers = new DataTable();
@@ -828,7 +855,7 @@ MiniExcel.SaveAsByTemplate(path, templatePath, value);
 ```
 
 
-#### 9. Other
+#### 10. Other
 
 ##### 1. Checking template parameter key
 

@@ -351,9 +351,51 @@ namespace MiniExcelLibs.OpenXml
                                   .Replace($"{{{{$rowindex}}}}", newRowIndex.ToString())
                                   .AppendFormat(@"</{0}>", row.Name);
 
+                            var rowXmlString = rowXml.ToString();
+                            var extract = "";
+                            var newCellValue = "";
+
+                            var ifIndex = rowXmlString.IndexOf("@if", StringComparison.Ordinal);
+                            var endifIndex = rowXmlString.IndexOf("@endif", StringComparison.Ordinal);
+
+                            if (ifIndex != -1 && endifIndex != -1)
+                            {
+                                extract = rowXmlString.Substring(ifIndex, endifIndex - ifIndex + 6);
+                            }
+
+                            var lines = extract.Split('\n');
+
                             if (rowInfo.IsDictionary)
                             {
                                 var dic = item as IDictionary<string, object>;
+                                
+                                for(var i = 0; i < lines.Length; i++)
+                                {
+                                    if(lines[i].Contains("@if") || lines[i].Contains("@elseif"))
+                                    {
+                                        var newLines = lines[i].Replace("@elseif(", "").Replace("@if(", "").Replace(")", "").Split(' ');
+
+                                        var value = dic[newLines[0]];
+                                        var evaluation = EvaluateStatement(value, newLines[1], newLines[2]);
+                                
+                                        if (evaluation)
+                                        {
+                                            newCellValue += lines[i + 1];
+                                            break;
+                                        }
+                                    }
+                                    else if(lines[i].Contains("@else"))
+                                    {
+                                        newCellValue += lines[i + 1];
+                                        break;
+                                    }
+                                }
+                                
+                                if (!string.IsNullOrEmpty(newCellValue))
+                                {
+                                    rowXml.Replace(extract, newCellValue);
+                                }
+                                
                                 foreach (var propInfo in rowInfo.PropsMap)
                                 {
                                     var key = $"{{{{{rowInfo.IEnumerablePropName}.{propInfo.Key}}}}}";
@@ -396,6 +438,34 @@ namespace MiniExcelLibs.OpenXml
                             else if (rowInfo.IsDataTable)
                             {
                                 var datarow = item as DataRow;
+                                
+                                for(var i = 0; i < lines.Length; i++)
+                                {
+                                    if(lines[i].Contains("@if") || lines[i].Contains("@elseif"))
+                                    {
+                                        var newLines = lines[i].Replace("@elseif(", "").Replace("@if(", "").Replace(")", "").Split(' ');
+
+                                        var value = datarow[newLines[0]];
+                                        var evaluation = EvaluateStatement(value, newLines[1], newLines[2]);
+                                
+                                        if (evaluation)
+                                        {
+                                            newCellValue += lines[i + 1];
+                                            break;
+                                        }
+                                    }
+                                    else if(lines[i].Contains("@else"))
+                                    {
+                                        newCellValue += lines[i + 1];
+                                        break;
+                                    }
+                                }
+                                
+                                if (!string.IsNullOrEmpty(newCellValue))
+                                {
+                                    rowXml.Replace(extract, newCellValue);
+                                }
+                                
                                 foreach (var propInfo in rowInfo.PropsMap)
                                 {
                                     var key = $"{{{{{rowInfo.IEnumerablePropName}.{propInfo.Key}}}}}";
@@ -437,6 +507,33 @@ namespace MiniExcelLibs.OpenXml
                             }
                             else
                             {
+                                for(var i = 0; i < lines.Length; i++)
+                                {
+                                    if(lines[i].Contains("@if") || lines[i].Contains("@elseif"))
+                                    {
+                                        var newLines = lines[i].Replace("@elseif(", "").Replace("@if(", "").Replace(")", "").Split(' ');
+
+                                        var value = rowInfo.PropsMap[newLines[0]].PropertyInfo.GetValue(item);
+                                        var evaluation = EvaluateStatement(value, newLines[1], newLines[2]);
+                                
+                                        if (evaluation)
+                                        {
+                                            newCellValue += lines[i + 1];
+                                            break;
+                                        }
+                                    }
+                                    else if(lines[i].Contains("@else"))
+                                    {
+                                        newCellValue += lines[i + 1];
+                                        break;
+                                    }
+                                }
+                                
+                                if (!string.IsNullOrEmpty(newCellValue))
+                                {
+                                    rowXml.Replace(extract, newCellValue);
+                                }
+                                
                                 foreach (var propInfo in rowInfo.PropsMap)
                                 {
                                     var prop = propInfo.Value.PropertyInfo;
@@ -899,6 +996,101 @@ namespace MiniExcelLibs.OpenXml
 
                 dimension.SetAttribute("ref", $"A1:{letter}{digit + maxRowIndexDiff}");
             }
+        }
+        
+        private static bool EvaluateStatement(object tagValue, string comparisonOperator, string value)
+        {
+            var checkStatement = false;
+            
+            switch (tagValue)
+                {
+                    case double dtg when double.TryParse(value, out var doubleNumber):
+                        switch (comparisonOperator)
+                        {
+                            case "==":
+                                checkStatement = dtg.Equals(doubleNumber);
+                                break;
+                            case "!=":
+                                checkStatement = !dtg.Equals(doubleNumber);
+                                break;
+                            case ">":
+                                checkStatement = dtg > doubleNumber;
+                                break;
+                            case "<":
+                                checkStatement = dtg < doubleNumber;
+                                break;
+                            case ">=":
+                                checkStatement = dtg >= doubleNumber;
+                                break;
+                            case "<=":
+                                checkStatement = dtg <= doubleNumber;
+                                break;
+                        }
+
+                        break;
+                    case int itg when int.TryParse(value, out var intNumber):
+                        switch (comparisonOperator)
+                        {
+                            case "==":
+                                checkStatement = itg.Equals(intNumber);
+                                break;
+                            case "!=":
+                                checkStatement = !itg.Equals(intNumber);
+                                break;
+                            case ">":
+                                checkStatement = itg > intNumber;
+                                break;
+                            case "<":
+                                checkStatement = itg < intNumber;
+                                break;
+                            case ">=":
+                                checkStatement = itg >= intNumber;
+                                break;
+                            case "<=":
+                                checkStatement = itg <= intNumber;
+                                break;
+                        }
+
+                        break;
+                    case DateTime dttg when DateTime.TryParse(value, out var date):
+                        switch (comparisonOperator)
+                        {
+                            case "==":
+                                checkStatement = dttg.Equals(date);
+                                break;
+                            case "!=":
+                                checkStatement = !dttg.Equals(date);
+                                break;
+                            case ">":
+                                checkStatement = dttg > date;
+                                break;
+                            case "<":
+                                checkStatement = dttg < date;
+                                break;
+                            case ">=":
+                                checkStatement = dttg >= date;
+                                break;
+                            case "<=":
+                                checkStatement = dttg <= date;
+                                break;
+                        }
+
+                        break;
+                    case string stg:
+                        switch (comparisonOperator)
+                        {
+                            case "==":
+                                checkStatement = stg == value;
+                                break;
+                            case "!=":
+                                checkStatement = stg != value;
+                                break;
+                        }
+
+                        break;
+                }
+
+            return checkStatement;
         }
     }
 }

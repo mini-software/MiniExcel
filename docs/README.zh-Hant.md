@@ -24,6 +24,8 @@
 
 ---
 
+### 1.30.3
+- [New] 模版支持 if/else 單元格語句 (via @eynarhaji)
 
 ### 1.30.2
 - [New] 支持 grouped rows (via @eynarhaji)

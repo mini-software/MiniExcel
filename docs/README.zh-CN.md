@@ -25,6 +25,11 @@
 
 ---
 
+
+
+### 1.30.3
+- [New] 模版支持 if/else 单元格语句 (via @eynarhaji)
+
 ### 1.30.2
 - [New] 支持 grouped rows (via @eynarhaji)
 - [New] 支持 automatic merge vertical cells (via @eynarhaji)

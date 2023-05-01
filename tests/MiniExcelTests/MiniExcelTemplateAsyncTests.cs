@@ -694,6 +694,80 @@ namespace MiniExcelTests
         }
 
         [Fact]
+        public async Task TestIEnumerableConditional()
+        {
+            {
+                var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
+                var templatePath = @"../../../../../samples/xlsx/TestTemplateBasicIEmumerableFillConditional.xlsx";
+            
+                //1. By POCO
+                var value = new
+                {
+                    employees = new[] {
+                        new {name="Jack",department="HR"},
+                        new {name="Lisa",department="HR"},
+                        new {name="John",department="HR"},
+                        new {name="Mike",department="IT"},
+                        new {name="Neo",department="IT"},
+                        new {name="Loan",department="IT"}
+                    }
+                };
+                await MiniExcel.SaveAsByTemplateAsync(path, templatePath, value);
+            
+                var demension = Helpers.GetFirstSheetDimensionRefValue(path);
+                Assert.Equal("A1:B18", demension);
+            }
+            
+            {
+                var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
+                var templatePath = @"../../../../../samples/xlsx/TestTemplateBasicIEmumerableFillConditional.xlsx";
+            
+                //2. By Dictionary
+                var value = new Dictionary<string, object>()
+                {
+                    ["employees"] = new[] {
+                        new {name="Jack",department="HR"},
+                        new {name="Jack",department="HR"},
+                        new {name="John",department="HR"},
+                        new {name="John",department="IT"},
+                        new {name="Neo",department="IT"},
+                        new {name="Loan",department="IT"}
+                    }
+                };
+                await MiniExcel.SaveAsByTemplateAsync(path, templatePath, value);
+            
+                var demension = Helpers.GetFirstSheetDimensionRefValue(path);
+                Assert.Equal("A1:B18", demension);
+            }
+            
+            {
+                var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
+                var templatePath = @"../../../../../samples/xlsx/TestTemplateBasicIEmumerableFillConditional.xlsx";
+            
+                //3. By DataTable
+                var dt = new DataTable();
+                {
+                    dt.Columns.Add("name");
+                    dt.Columns.Add("department");
+                    dt.Rows.Add("Jack", "HR");
+                    dt.Rows.Add("Lisa", "HR");
+                    dt.Rows.Add("John", "HR");
+                    dt.Rows.Add("Mike", "IT");
+                    dt.Rows.Add("Neo", "IT");
+                    dt.Rows.Add("Loan", "IT");
+                }
+                var value = new Dictionary<string, object>()
+                {
+                    ["employees"] = dt
+                };
+                await MiniExcel.SaveAsByTemplateAsync(path, templatePath, value);
+            
+                var demension = Helpers.GetFirstSheetDimensionRefValue(path);
+                Assert.Equal("A1:B18", demension);
+            }
+        }
+
+        [Fact]
         public async Task TemplateTest()
         {
             {

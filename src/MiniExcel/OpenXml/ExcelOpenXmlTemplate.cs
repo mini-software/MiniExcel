@@ -11,6 +11,7 @@ namespace MiniExcelLibs.OpenXml
     using System.IO.Compression;
     using System.Linq;
     using System.Reflection;
+    using System.Runtime.InteropServices.ComTypes;
     using System.Text;
     using System.Text.RegularExpressions;
     using System.Threading;
@@ -104,9 +105,18 @@ namespace MiniExcelLibs.OpenXml
                         ZipArchiveEntry entry = _archive.zipFile.CreateEntry(fullName);
                         using (var zipStream = entry.Open())
                         {
-                            sheetIdx++;
-                            GenerateSheetXmlImpl(sheet, zipStream, sheetStream, values, sharedStrings, false, sheetIdx);
+                            GenerateSheetXmlImpl(sheet, zipStream, sheetStream, values, sharedStrings, false);
                             //doc.Save(zipStream); //don't do it because : ![image](https://user-images.githubusercontent.com/12729184/114361127-61a5d100-9ba8-11eb-9bb9-34f076ee28a2.png)
+                        }
+
+                        // disposing writer disposes streams as well. reopen the entry to read and parse calc functions
+                        using (var filledStream = entry.Open())
+                        {
+                            sheetIdx++; 
+                            var filledDoc = new XmlDocument();
+                            filledDoc.Load(filledStream);
+                            var filledSheetData = filledDoc.SelectSingleNode("/x:worksheet/x:sheetData", _ns);
+                            _calcChainContent.Append(CalcChainHelper.GetCalcChainContentFromSheet(filledSheetData, _ns, sheetIdx));
                         }
                     }
 

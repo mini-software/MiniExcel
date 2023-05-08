@@ -103,7 +103,7 @@ namespace MiniExcelLibs.OpenXml
 
         private void GenerateSheetXmlImpl(ZipArchiveEntry sheetZipEntry, Stream stream, Stream sheetStream,
             Dictionary<string, object> inputMaps, IDictionary<int, string> sharedStrings,
-            bool mergeCells = false, int sheetIndex = 1)
+            bool mergeCells = false)
         {
             var doc = new XmlDocument();
             doc.Load(sheetStream);
@@ -119,10 +119,9 @@ namespace MiniExcelLibs.OpenXml
             ReplaceSharedStringsToStr(sharedStrings, ref rows);
             GetMercells(doc, worksheet);
             UpdateDimensionAndGetRowsInfo(inputMaps, ref doc, ref rows, !mergeCells);
-
-            _calcChainContent.Append(CalcChainHelper.GetCalcChainContentFromSheet(sheetData, _ns, sheetIndex));
-
+             
             WriteSheetXml(stream, doc, sheetData, mergeCells);
+
         }
          
         private void GetMercells(XmlDocument doc, XmlNode worksheet)

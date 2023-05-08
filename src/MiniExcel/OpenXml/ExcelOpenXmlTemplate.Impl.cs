@@ -523,7 +523,7 @@ namespace MiniExcelLibs.OpenXml
                                         var newLines = lines[i].Replace("@elseif(", "").Replace("@if(", "").Replace(")", "").Split(' ');
 
                                         var prop = rowInfo.PropsMap[newLines[0]];
-                                        object value = null;
+                                        object value = string.Empty;
                                         if (prop.PropertyInfoOrFieldInfo == PropertyInfoOrFieldInfo.PropertyInfo)
                                         {
                                             value = rowInfo.PropsMap[newLines[0]].PropertyInfo.GetValue(item);
@@ -531,10 +531,6 @@ namespace MiniExcelLibs.OpenXml
                                         else if (prop.PropertyInfoOrFieldInfo == PropertyInfoOrFieldInfo.FieldInfo)
                                         {
                                             value = rowInfo.PropsMap[newLines[0]].FieldInfo.GetValue(item);
-                                        }
-                                        else //  None - rowInfo.IsDictionary
-                                        {
-                                            value = string.Empty;
                                         }
 
                                         var evaluation = EvaluateStatement(value, newLines[1], newLines[2]);

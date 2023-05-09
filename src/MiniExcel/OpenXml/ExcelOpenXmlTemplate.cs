@@ -11,6 +11,7 @@ namespace MiniExcelLibs.OpenXml
     using System.IO.Compression;
     using System.Linq;
     using System.Reflection;
+    using System.Runtime.InteropServices.ComTypes;
     using System.Text;
     using System.Text.RegularExpressions;
     using System.Threading;
@@ -30,6 +31,7 @@ namespace MiniExcelLibs.OpenXml
 
         private readonly Stream _stream;
         private readonly OpenXmlConfiguration _configuration;
+        private readonly StringBuilder _calcChainContent = new StringBuilder();
 
         public ExcelOpenXmlTemplate(Stream stream, IConfiguration configuration)
         {
@@ -90,12 +92,14 @@ namespace MiniExcelLibs.OpenXml
                 {
                     //read sharedString
                     var sharedStrings = reader._sharedStrings;
+                    StringBuilder calcSheetContent = new StringBuilder();
 
                     //read all xlsx sheets
                     var sheets = _archive.zipFile.Entries.Where(w => w.FullName.StartsWith("xl/worksheets/sheet", StringComparison.OrdinalIgnoreCase)
                         || w.FullName.StartsWith("/xl/worksheets/sheet", StringComparison.OrdinalIgnoreCase)
                     ).ToList();
 
+                    int sheetIdx = 0;
                     foreach (var sheet in sheets)
                     {
                         this.XRowInfos = new List<XRowInfo>(); //every time need to use new XRowInfos or it'll cause duplicate problem: https://user-images.githubusercontent.com/12729184/115003101-0fcab700-9ed8-11eb-9151-ca4d7b86d59e.png
@@ -108,10 +112,33 @@ namespace MiniExcelLibs.OpenXml
                         ZipArchiveEntry entry = _archive.zipFile.CreateEntry(fullName);
                         using (var zipStream = entry.Open())
                         {
-                            GenerateSheetXmlImpl(sheet, zipStream, sheetStream, values, sharedStrings);
-                            //doc.Save(zipStream); //don't do it beacause : ![image](https://user-images.githubusercontent.com/12729184/114361127-61a5d100-9ba8-11eb-9bb9-34f076ee28a2.png)
+                            GenerateSheetXmlImpl(sheet, zipStream, sheetStream, values, sharedStrings, false);
+                            //doc.Save(zipStream); //don't do it because : ![image](https://user-images.githubusercontent.com/12729184/114361127-61a5d100-9ba8-11eb-9bb9-34f076ee28a2.png)
+                        }
+
+                        // disposing writer disposes streams as well. reopen the entry to read and parse calc functions
+                        using (var filledStream = entry.Open())
+                        {
+                            sheetIdx++; 
+                            var filledDoc = new XmlDocument();
+                            filledDoc.Load(filledStream);
+                            var filledSheetData = filledDoc.SelectSingleNode("/x:worksheet/x:sheetData", _ns);
+                            _calcChainContent.Append(CalcChainHelper.GetCalcChainContentFromSheet(filledSheetData, _ns, sheetIdx));
                         }
                     }
+
+                    var calcChain = _archive.zipFile.Entries.FirstOrDefault( e => e.FullName.Contains("xl/calcChain.xml"));
+                    if (calcChain != null)
+                    {
+                        string calcChainPathname = calcChain.FullName;
+                        calcChain.Delete();
+                        var calcChainEntry =  _archive.zipFile.CreateEntry(calcChainPathname);
+                        using (var calcChainStream = calcChainEntry.Open())
+                        {
+                            CalcChainHelper.GenerateCalcChainSheet(calcChainStream, _calcChainContent.ToString());
+                        }
+                    }
+                    
                 }
 
                 _archive.zipFile.Dispose();

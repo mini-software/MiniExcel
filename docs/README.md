@@ -23,7 +23,7 @@
 ---
 
 ### 1.30.3
-- [New] support if/else if/else statements inside cell (via @eynarhaji)
+- [New] support if/else statements inside cell (via @eynarhaji)
 
 ### 1.30.2
 - [New] support grouped rows (via @eynarhaji)

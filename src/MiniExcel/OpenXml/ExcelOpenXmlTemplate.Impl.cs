@@ -34,8 +34,17 @@ namespace MiniExcelLibs.OpenXml
 
         public class PropInfo
         {
-            public PropertyInfo PropertyInfo { get; set; }
+            public PropertyInfo PropertyInfo { get; set; } 
+            public FieldInfo FieldInfo { get; set; }
             public Type UnderlyingTypePropType { get; set; }
+            public PropertyInfoOrFieldInfo PropertyInfoOrFieldInfo { get; set; } = PropertyInfoOrFieldInfo.None;
+        }
+
+        public enum PropertyInfoOrFieldInfo
+        {
+            None = 0,
+            PropertyInfo = 1,
+            FieldInfo = 2
         }
 
         public class XMergeCell
@@ -515,7 +524,17 @@ namespace MiniExcelLibs.OpenXml
                                     {
                                         var newLines = lines[i].Replace("@elseif(", "").Replace("@if(", "").Replace(")", "").Split(' ');
 
-                                        var value = rowInfo.PropsMap[newLines[0]].PropertyInfo.GetValue(item);
+                                        var prop = rowInfo.PropsMap[newLines[0]];
+                                        object value = string.Empty;
+                                        if (prop.PropertyInfoOrFieldInfo == PropertyInfoOrFieldInfo.PropertyInfo)
+                                        {
+                                            value = rowInfo.PropsMap[newLines[0]].PropertyInfo.GetValue(item);
+                                        }
+                                        else if (prop.PropertyInfoOrFieldInfo == PropertyInfoOrFieldInfo.FieldInfo)
+                                        {
+                                            value = rowInfo.PropsMap[newLines[0]].FieldInfo.GetValue(item);
+                                        }
+
                                         var evaluation = EvaluateStatement(value, newLines[1], newLines[2]);
 
                                         if (evaluation)
@@ -536,7 +555,7 @@ namespace MiniExcelLibs.OpenXml
                                     rowXml.Replace(extract, newCellValue);
                                 }
 
-                                foreach (var propInfo in rowInfo.PropsMap)
+                                foreach (var propInfo in rowInfo.PropsMap )
                                 {
                                     var prop = propInfo.Value.PropertyInfo;
 
@@ -858,11 +877,34 @@ namespace MiniExcelLibs.OpenXml
                                             }
                                             else
                                             {
-                                                xRowInfo.PropsMap = xRowInfo.IEnumerableGenricType.GetProperties()
-                                                    .ToDictionary(s => s.Name, s => new PropInfo { PropertyInfo = s, UnderlyingTypePropType = Nullable.GetUnderlyingType(s.PropertyType) ?? s.PropertyType });
+                                            
+                                                var values = new Dictionary<string, PropInfo>();
+
+                                                var props = xRowInfo.IEnumerableGenricType.GetProperties();
+
+                                                foreach (var p in props)
+                                                {
+                                                    values.Add(p.Name, new PropInfo { PropertyInfo = p,
+                                                                                      PropertyInfoOrFieldInfo = PropertyInfoOrFieldInfo.PropertyInfo,
+                                                                                      UnderlyingTypePropType = Nullable.GetUnderlyingType(p.PropertyType) ?? p.PropertyType });
+                                                }
+
+                                                var fields = xRowInfo.IEnumerableGenricType.GetFields();
+                                                foreach (var f in fields)
+                                                {
+                                                    if (!values.ContainsKey(f.Name))
+                                                    {
+
+                                                        values.Add(f.Name, new PropInfo { FieldInfo = f,
+                                                                                          PropertyInfoOrFieldInfo = PropertyInfoOrFieldInfo.FieldInfo,
+                                                                                          UnderlyingTypePropType = Nullable.GetUnderlyingType(f.FieldType) ?? f.FieldType });
+                                                    }
+                                                }
+
+                                                xRowInfo.PropsMap = values;
                                             }
                                         }
-                                    // ==== get demension max rowindex ====
+                                    // ==== get dimension max rowindex ====
                                     if (!first) //avoid duplicate add first one, this row not add status  ![image](https://user-images.githubusercontent.com/12729184/114851829-d2512580-9e14-11eb-8e7d-520c89a7ebee.png)
                                         maxRowIndexDiff = maxRowIndexDiff + (xRowInfo.IEnumerableMercell == null ? 1 : xRowInfo.IEnumerableMercell.Height);
                                     first = false;

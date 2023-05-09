@@ -34,7 +34,7 @@ namespace MiniExcelLibs.OpenXml
         public ExcelOpenXmlTemplate(Stream stream, IConfiguration configuration)
         {
             _stream = stream;
-            _configuration = (OpenXmlConfiguration)configuration?? OpenXmlConfiguration.DefaultConfig;
+            _configuration = (OpenXmlConfiguration)configuration ?? OpenXmlConfiguration.DefaultConfig;
         }
 
         public void SaveAsByTemplate(string templatePath, object value)
@@ -73,12 +73,19 @@ namespace MiniExcelLibs.OpenXml
                 {
                     values.Add(p.Name, p.GetValue(value));
                 }
+
+                var fields = type.GetFields(BindingFlags.Public | BindingFlags.Instance);
+                foreach (var f in fields)
+                {
+                    if (!values.ContainsKey(f.Name))
+                    { values.Add(f.Name, f.GetValue(value)); }
+                }
             }
 
             {
                 templateStream.CopyTo(_stream);
 
-                var reader = new ExcelOpenXmlSheetReader(_stream,null);
+                var reader = new ExcelOpenXmlSheetReader(_stream, null);
                 var _archive = new ExcelOpenXmlZip(_stream, mode: ZipArchiveMode.Update, true, Encoding.UTF8);
                 {
                     //read sharedString
@@ -111,14 +118,14 @@ namespace MiniExcelLibs.OpenXml
             }
         }
 
-        public Task SaveAsByTemplateAsync(string templatePath, object value,CancellationToken cancellationToken = default(CancellationToken))
+        public Task SaveAsByTemplateAsync(string templatePath, object value, CancellationToken cancellationToken = default(CancellationToken))
         {
-            return Task.Run(() => SaveAsByTemplate(templatePath, value),cancellationToken);
+            return Task.Run(() => SaveAsByTemplate(templatePath, value), cancellationToken);
         }
 
-        public Task SaveAsByTemplateAsync(byte[] templateBtyes, object value,CancellationToken cancellationToken = default(CancellationToken))
+        public Task SaveAsByTemplateAsync(byte[] templateBtyes, object value, CancellationToken cancellationToken = default(CancellationToken))
         {
-            return Task.Run(() => SaveAsByTemplate(templateBtyes, value),cancellationToken);
+            return Task.Run(() => SaveAsByTemplate(templateBtyes, value), cancellationToken);
         }
     }
 }

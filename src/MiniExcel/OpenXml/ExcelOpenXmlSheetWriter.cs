@@ -395,14 +395,19 @@ namespace MiniExcelLibs.OpenXml
 
         private void WriteCell(MiniExcelStreamWriter writer, int rowIndex, int cellIndex, object value, ExcelColumnInfo p)
         {
+            var columname = ExcelOpenXmlUtils.ConvertXyToCell(cellIndex, rowIndex);
+            var s = "2";
+
+            if (!_configuration.WriteNullCells && (value is null || value is DBNull))
+            {
+                writer.Write($"<x:c r=\"{columname}\" s=\"{s}\"></x:c>");
+                return;
+            }
+
             var v = string.Empty;
             var t = "str";
-            var s = "2";
-            if (value == null)
-            {
-                v = "";
-            }
-            else if (value is string str)
+
+            if (value is string str)
             {
                 v = ExcelOpenXmlUtils.EncodeXML(str);
             }
@@ -531,7 +536,6 @@ namespace MiniExcelLibs.OpenXml
                 }
             }
 
-            var columname = ExcelOpenXmlUtils.ConvertXyToCell(cellIndex, rowIndex);
             if (v != null && (v.StartsWith(" ", StringComparison.Ordinal) || v.EndsWith(" ", StringComparison.Ordinal))) /*Prefix and suffix blank space will lost after SaveAs #294*/
                 writer.Write($"<x:c r=\"{columname}\" {(t == null ? "" : $"t =\"{t}\"")} s=\"{s}\" xml:space=\"preserve\"><x:v>{v}</x:v></x:c>");
             else

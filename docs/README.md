@@ -22,6 +22,9 @@
 
 ---
 
+### 1.30.4
+- [New] Support skipping null values when writing to Excel (via @0MG-DEN)
+
 ### 1.30.3
 - [New] support if/else statements inside cell (via @eynarhaji)
 

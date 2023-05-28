@@ -398,7 +398,7 @@ namespace MiniExcelLibs.OpenXml
             var columname = ExcelOpenXmlUtils.ConvertXyToCell(cellIndex, rowIndex);
             var s = "2";
 
-            if (!_configuration.WriteNullValues && (value is null || value is DBNull))
+            if (_configuration.EnableWriteNullValueCell && (value is null || value is DBNull))
             {
                 writer.Write($"<x:c r=\"{columname}\" s=\"{s}\"></x:c>");
                 return;

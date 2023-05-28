@@ -397,8 +397,9 @@ namespace MiniExcelLibs.OpenXml
         {
             var columname = ExcelOpenXmlUtils.ConvertXyToCell(cellIndex, rowIndex);
             var s = "2";
+            var valueIsNull = value is null || value is DBNull;
 
-            if (_configuration.EnableWriteNullValueCell && (value is null || value is DBNull))
+            if (_configuration.EnableWriteNullValueCell && valueIsNull)
             {
                 writer.Write($"<x:c r=\"{columname}\" s=\"{s}\"></x:c>");
                 return;
@@ -407,134 +408,135 @@ namespace MiniExcelLibs.OpenXml
             var v = string.Empty;
             var t = "str";
 
-            if (value is string str)
-            {
-                v = ExcelOpenXmlUtils.EncodeXML(str);
-            }
-            else if (p?.ExcelFormat != null && value is IFormattable formattableValue)
-            {
-                var formattedStr = formattableValue.ToString(p.ExcelFormat, _configuration.Culture);
-                v = ExcelOpenXmlUtils.EncodeXML(formattedStr);
-            }
-            else
-            {
-                Type type = null;
-                if (p == null || p.Key != null)
+            if (!valueIsNull)
+                if (value is string str)
                 {
-                    // TODO: need to optimize 
-                    // Dictionary need to check type every time, so it's slow..
-                    type = value.GetType();
-                    type = Nullable.GetUnderlyingType(type) ?? type;
+                    v = ExcelOpenXmlUtils.EncodeXML(str);
+                }
+                else if (p?.ExcelFormat != null && value is IFormattable formattableValue)
+                {
+                    var formattedStr = formattableValue.ToString(p.ExcelFormat, _configuration.Culture);
+                    v = ExcelOpenXmlUtils.EncodeXML(formattedStr);
                 }
                 else
                 {
-                    type = p.ExcludeNullableType; //sometime it doesn't need to re-get type like prop
-                }
-
-                if (type.IsEnum)
-                {
-                    t = "str";
-                    var description = CustomPropertyHelper.DescriptionAttr(type, value); //TODO: need to optimze
-                    if (description != null)
-                        v = description;
-                    else
-                        v = value.ToString();
-                }
-                else if (TypeHelper.IsNumericType(type))
-                {
-                    if (_configuration.Culture != CultureInfo.InvariantCulture)
-                        t = "str"; //TODO: add style format
-                    else
-                        t = "n";
-
-                    if (type.IsAssignableFrom(typeof(decimal)))
-                        v = ((decimal)value).ToString(_configuration.Culture);
-                    else if (type.IsAssignableFrom(typeof(Int32)))
-                        v = ((Int32)value).ToString(_configuration.Culture);
-                    else if (type.IsAssignableFrom(typeof(Double)))
-                        v = ((Double)value).ToString(_configuration.Culture);
-                    else if (type.IsAssignableFrom(typeof(Int64)))
-                        v = ((Int64)value).ToString(_configuration.Culture);
-                    else if (type.IsAssignableFrom(typeof(UInt32)))
-                        v = ((UInt32)value).ToString(_configuration.Culture);
-                    else if (type.IsAssignableFrom(typeof(UInt16)))
-                        v = ((UInt16)value).ToString(_configuration.Culture);
-                    else if (type.IsAssignableFrom(typeof(UInt64)))
-                        v = ((UInt64)value).ToString(_configuration.Culture);
-                    else if (type.IsAssignableFrom(typeof(Int16)))
-                        v = ((Int16)value).ToString(_configuration.Culture);
-                    else if (type.IsAssignableFrom(typeof(Single)))
-                        v = ((Single)value).ToString(_configuration.Culture);
-                    else if (type.IsAssignableFrom(typeof(Single)))
-                        v = ((Single)value).ToString(_configuration.Culture);
-                    else
-                        v = (decimal.Parse(value.ToString())).ToString(_configuration.Culture);
-                }
-                else if (type == typeof(bool))
-                {
-                    t = "b";
-                    v = (bool)value ? "1" : "0";
-                }
-                else if (type == typeof(byte[]) && _configuration.EnableConvertByteArray)
-                {
-                    var bytes = (byte[])value;
-                    if (bytes != null)
+                    Type type = null;
+                    if (p == null || p.Key != null)
                     {
-                        // TODO: Setting configuration because it might have high cost?
-                        var format = ImageHelper.GetImageFormat(bytes);
-                        //it can't insert to zip first to avoid cache image to memory
-                        //because sheet xml is opening.. https://github.com/shps951023/MiniExcel/issues/304#issuecomment-1017031691
-                        //int rowIndex, int cellIndex
-                        var file = new FileDto()
+                        // TODO: need to optimize 
+                        // Dictionary need to check type every time, so it's slow..
+                        type = value.GetType();
+                        type = Nullable.GetUnderlyingType(type) ?? type;
+                    }
+                    else
+                    {
+                        type = p.ExcludeNullableType; //sometime it doesn't need to re-get type like prop
+                    }
+
+                    if (type.IsEnum)
+                    {
+                        t = "str";
+                        var description = CustomPropertyHelper.DescriptionAttr(type, value); //TODO: need to optimze
+                        if (description != null)
+                            v = description;
+                        else
+                            v = value.ToString();
+                    }
+                    else if (TypeHelper.IsNumericType(type))
+                    {
+                        if (_configuration.Culture != CultureInfo.InvariantCulture)
+                            t = "str"; //TODO: add style format
+                        else
+                            t = "n";
+
+                        if (type.IsAssignableFrom(typeof(decimal)))
+                            v = ((decimal)value).ToString(_configuration.Culture);
+                        else if (type.IsAssignableFrom(typeof(Int32)))
+                            v = ((Int32)value).ToString(_configuration.Culture);
+                        else if (type.IsAssignableFrom(typeof(Double)))
+                            v = ((Double)value).ToString(_configuration.Culture);
+                        else if (type.IsAssignableFrom(typeof(Int64)))
+                            v = ((Int64)value).ToString(_configuration.Culture);
+                        else if (type.IsAssignableFrom(typeof(UInt32)))
+                            v = ((UInt32)value).ToString(_configuration.Culture);
+                        else if (type.IsAssignableFrom(typeof(UInt16)))
+                            v = ((UInt16)value).ToString(_configuration.Culture);
+                        else if (type.IsAssignableFrom(typeof(UInt64)))
+                            v = ((UInt64)value).ToString(_configuration.Culture);
+                        else if (type.IsAssignableFrom(typeof(Int16)))
+                            v = ((Int16)value).ToString(_configuration.Culture);
+                        else if (type.IsAssignableFrom(typeof(Single)))
+                            v = ((Single)value).ToString(_configuration.Culture);
+                        else if (type.IsAssignableFrom(typeof(Single)))
+                            v = ((Single)value).ToString(_configuration.Culture);
+                        else
+                            v = (decimal.Parse(value.ToString())).ToString(_configuration.Culture);
+                    }
+                    else if (type == typeof(bool))
+                    {
+                        t = "b";
+                        v = (bool)value ? "1" : "0";
+                    }
+                    else if (type == typeof(byte[]) && _configuration.EnableConvertByteArray)
+                    {
+                        var bytes = (byte[])value;
+                        if (bytes != null)
                         {
-                            Byte = bytes,
-                            RowIndex = rowIndex,
-                            CellIndex = cellIndex,
-                            SheetId = currentSheetIndex
-                        };
-                        if (format != ImageFormat.unknown)
+                            // TODO: Setting configuration because it might have high cost?
+                            var format = ImageHelper.GetImageFormat(bytes);
+                            //it can't insert to zip first to avoid cache image to memory
+                            //because sheet xml is opening.. https://github.com/shps951023/MiniExcel/issues/304#issuecomment-1017031691
+                            //int rowIndex, int cellIndex
+                            var file = new FileDto()
+                            {
+                                Byte = bytes,
+                                RowIndex = rowIndex,
+                                CellIndex = cellIndex,
+                                SheetId = currentSheetIndex
+                            };
+                            if (format != ImageFormat.unknown)
+                            {
+                                file.Extension = format.ToString();
+                                file.IsImage = true;
+                            }
+                            else
+                            {
+                                file.Extension = "bin";
+                            }
+                            _files.Add(file);
+
+                            //TODO:Convert to base64
+                            var base64 = $"@@@fileid@@@,{file.Path}";
+                            v = ExcelOpenXmlUtils.EncodeXML(base64);
+                            s = "4";
+                        }
+                    }
+                    else if (type == typeof(DateTime))
+                    {
+                        if (_configuration.Culture != CultureInfo.InvariantCulture)
                         {
-                            file.Extension = format.ToString();
-                            file.IsImage = true;
+                            t = "str";
+                            v = ((DateTime)value).ToString(_configuration.Culture);
+                        }
+                        else if (p == null || p.ExcelFormat == null)
+                        {
+                            t = null;
+                            s = "3";
+                            v = ((DateTime)value).ToOADate().ToString(CultureInfo.InvariantCulture);
                         }
                         else
                         {
-                            file.Extension = "bin";
+                            // TODO: now it'll lose date type information
+                            t = "str";
+                            v = ((DateTime)value).ToString(p.ExcelFormat, _configuration.Culture);
                         }
-                        _files.Add(file);
-
-                        //TODO:Convert to base64
-                        var base64 = $"@@@fileid@@@,{file.Path}";
-                        v = ExcelOpenXmlUtils.EncodeXML(base64);
-                        s = "4";
-                    }
-                }
-                else if (type == typeof(DateTime))
-                {
-                    if (_configuration.Culture != CultureInfo.InvariantCulture)
-                    {
-                        t = "str";
-                        v = ((DateTime)value).ToString(_configuration.Culture);
-                    }
-                    else if (p == null || p.ExcelFormat == null)
-                    {
-                        t = null;
-                        s = "3";
-                        v = ((DateTime)value).ToOADate().ToString(CultureInfo.InvariantCulture);
                     }
                     else
                     {
-                        // TODO: now it'll lose date type information
-                        t = "str";
-                        v = ((DateTime)value).ToString(p.ExcelFormat, _configuration.Culture);
+                        //TODO: _configuration.Culture
+                        v = ExcelOpenXmlUtils.EncodeXML(value.ToString());
                     }
                 }
-                else
-                {
-                    //TODO: _configuration.Culture
-                    v = ExcelOpenXmlUtils.EncodeXML(value.ToString());
-                }
-            }
 
             if (v != null && (v.StartsWith(" ", StringComparison.Ordinal) || v.EndsWith(" ", StringComparison.Ordinal))) /*Prefix and suffix blank space will lost after SaveAs #294*/
                 writer.Write($"<x:c r=\"{columname}\" {(t == null ? "" : $"t =\"{t}\"")} s=\"{s}\" xml:space=\"preserve\"><x:v>{v}</x:v></x:c>");

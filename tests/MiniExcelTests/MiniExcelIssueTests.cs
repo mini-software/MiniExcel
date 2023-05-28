@@ -516,6 +516,15 @@ namespace MiniExcelLibs.Tests
             var rows = MiniExcel.Query<TestIssue310Dto>(path).ToList();
         }
 
+        [Fact]
+        public void TestIssue310Fix497()
+        {
+            var path = PathHelper.GetTempFilePath();
+            var value = new[] { new TestIssue310Dto { V1 = null }, new TestIssue310Dto { V1 = 2 } };
+            MiniExcel.SaveAs(path, value, configuration: new OpenXmlConfiguration() { EnableWriteNullValueCell = false });
+            var rows = MiniExcel.Query<TestIssue310Dto>(path).ToList();
+        }
+
         public class TestIssue310Dto
         {
             public int? V1 { get; set; }

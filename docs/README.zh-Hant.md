@@ -24,6 +24,12 @@
 
 ---
 
+### 1.31.0
+- [New] 支持 Fields #490 (via @jsgervais)
+- [New] 支持是否寫入 null values cell #497 (via @0MG-DEN)
+- [Bug] 修復calc chain.xml 問題  #491(via @ArgoZhang)
+- [Bug] 修復特定文件 `/xl` 定位錯誤  #494 (via @ArgoZhang)
+
 ### 1.30.3
 - [New] 模版支持 if/else 單元格語句 (via @eynarhaji)
 

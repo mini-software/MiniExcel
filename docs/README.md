@@ -22,8 +22,11 @@
 
 ---
 
-### 1.30.4
-- [New] Support skipping null values when writing to Excel (via @0MG-DEN)
+### 1.31.0
+- [New] Support Fields #490 (via @jsgervais)
+- [New] Support skipping null values when writing to Excel #497 (via @0MG-DEN)
+- [Bug] Fix calc chain.xml  #491(via @ArgoZhang)
+- [Bug] Support some sheet `/xl` location error  #494 (via @ArgoZhang)
 
 ### 1.30.3
 - [New] support if/else statements inside cell (via @eynarhaji)

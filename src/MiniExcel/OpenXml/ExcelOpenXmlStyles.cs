@@ -22,7 +22,7 @@
                     return;
                 while (!Reader.EOF)
                 {
-                    if (XmlReaderHelper.IsStartElement(Reader,"cellXfs", _ns))
+                    if (XmlReaderHelper.IsStartElement(Reader, "cellXfs", _ns))
                     {
                         if (!XmlReaderHelper.ReadFirstContent(Reader))
                             continue;
@@ -30,7 +30,7 @@
                         var index = 0;
                         while (!Reader.EOF)
                         {
-                            if (XmlReaderHelper.IsStartElement(Reader,"xf", _ns))
+                            if (XmlReaderHelper.IsStartElement(Reader, "xf", _ns))
                             {
                                 int.TryParse(Reader.GetAttribute("xfId"), out var xfId);
                                 int.TryParse(Reader.GetAttribute("numFmtId"), out var numFmtId);
@@ -42,7 +42,7 @@
                                 break;
                         }
                     }
-                    else if (XmlReaderHelper.IsStartElement(Reader,"cellStyleXfs", _ns))
+                    else if (XmlReaderHelper.IsStartElement(Reader, "cellStyleXfs", _ns))
                     {
                         if (!XmlReaderHelper.ReadFirstContent(Reader))
                             continue;
@@ -50,7 +50,7 @@
                         var index = 0;
                         while (!Reader.EOF)
                         {
-                            if (XmlReaderHelper.IsStartElement(Reader,"xf", _ns))
+                            if (XmlReaderHelper.IsStartElement(Reader, "xf", _ns))
                             {
                                 int.TryParse(Reader.GetAttribute("xfId"), out var xfId);
                                 int.TryParse(Reader.GetAttribute("numFmtId"), out var numFmtId);
@@ -63,14 +63,14 @@
                                 break;
                         }
                     }
-                    else if (XmlReaderHelper.IsStartElement(Reader,"numFmts", _ns))
+                    else if (XmlReaderHelper.IsStartElement(Reader, "numFmts", _ns))
                     {
                         if (!XmlReaderHelper.ReadFirstContent(Reader))
                             continue;
 
                         while (!Reader.EOF)
                         {
-                            if (XmlReaderHelper.IsStartElement(Reader,"numFmt", _ns))
+                            if (XmlReaderHelper.IsStartElement(Reader, "numFmt", _ns))
                             {
                                 int.TryParse(Reader.GetAttribute("numFmtId"), out var numFmtId);
                                 var formatCode = Reader.GetAttribute("formatCode");
@@ -78,12 +78,12 @@
 
                                 //TODO: determine the type according to the format
                                 var type = typeof(string);
-                                if(DateTimeHelper.IsDateTimeFormat(formatCode))
+                                if (DateTimeHelper.IsDateTimeFormat(formatCode))
                                 {
                                     type = typeof(DateTime?);
                                 }
 
-                                _customFormats.Add(numFmtId,new NumberFormatString(formatCode, type));
+                                _customFormats.Add(numFmtId, new NumberFormatString(formatCode, type));
                                 Reader.Skip();
                             }
                             else if (!XmlReaderHelper.SkipContent(Reader))
@@ -129,6 +129,10 @@
             {
                 if (double.TryParse(value?.ToString(), out var s))
                 {
+                    if (s >= DateTimeHelper.OADateMaxAsDouble || s <= DateTimeHelper.OADateMinAsDouble)
+                    {
+                        return value;
+                    }
                     return DateTimeHelper.FromOADate(s);
                 }
             }
@@ -196,7 +200,7 @@
         public Type Type { get; set; }
         public bool NeedConvertToString { get; }
 
-        public NumberFormatString(string formatCode, Type type,bool needConvertToString=false)
+        public NumberFormatString(string formatCode, Type type, bool needConvertToString = false)
         {
             FormatCode = formatCode;
             Type = type;

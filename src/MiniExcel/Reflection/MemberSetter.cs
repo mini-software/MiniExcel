@@ -4,21 +4,10 @@ using System.Reflection;
 
 namespace MiniExcelLibs
 {
-    /// <summary>
-    /// 表示属性的设置器
-    /// </summary>
     public class MemberSetter
     {
-        /// <summary>
-        /// set方法委托
-        /// </summary>
         private readonly Action<object, object> setFunc;
 
-        /// <summary>
-        /// 表示属性的Getter
-        /// </summary>
-        /// <param name="property">属性</param>
-        /// <exception cref="ArgumentNullException"></exception>
         public MemberSetter(PropertyInfo property)
         {
             if (property == null)
@@ -28,12 +17,6 @@ namespace MiniExcelLibs
             setFunc = CreateSetterDelegate(property);
         }
 
-        /// <summary>
-        /// 设置属性的值
-        /// </summary>
-        /// <param name="instance">实例</param>
-        /// <param name="value">值</param>
-        /// <returns></returns>
         public void Invoke(object instance, object value)
         {
             setFunc.Invoke(instance, value);

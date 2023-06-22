@@ -103,7 +103,7 @@
         internal static List<ExcelColumnInfo> GetExcelCustomPropertyInfos(Type type, string[] keys, Configuration configuration)
         {
             List<ExcelColumnInfo> props = GetExcelPropertyInfo(type, BindingFlags.SetProperty | BindingFlags.Public | BindingFlags.Instance, configuration)
-                .Where(prop => prop.Property.CanWrite
+                .Where(prop => prop.Property.Info.GetSetMethod() != null // why not .Property.CanWrite? because it will use private setter
                                && !prop.Property.Info.GetAttributeValue((ExcelIgnoreAttribute x) => x.ExcelIgnore)
                                && !prop.Property.Info.GetAttributeValue((ExcelColumnAttribute x) => x.Ignore))
                 .ToList() /*ignore without set*/;

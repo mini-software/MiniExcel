@@ -25,7 +25,8 @@
 
 ---
 
-
+### 1.31.1
+- [OPT] 支持 property cache #23 (via @RRQM_Home)
 
 ### 1.31.0
 

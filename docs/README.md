@@ -22,6 +22,9 @@
 
 ---
 
+### 1.31.1
+- [OPT] Support property cache #23 (via @RRQM_Home)
+
 ### 1.31.0
 - [New] Support Fields #490 (via @jsgervais)
 - [New] Support skipping null values when writing to Excel #497 (via @0MG-DEN)

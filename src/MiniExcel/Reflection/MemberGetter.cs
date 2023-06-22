@@ -4,40 +4,20 @@ using System.Reflection;
 
 namespace MiniExcelLibs
 {
-    /// <summary>
-    /// 表示属性的Getter
-    /// </summary>
     public class MemberGetter
     {
-        /// <summary>
-        /// get方法委托
-        /// </summary>
         private readonly Func<object, object> m_getFunc;
 
-        /// <summary>
-        /// 表示属性的Getter
-        /// </summary>
-        /// <param name="property">属性</param>
-        /// <exception cref="ArgumentNullException"></exception>
         public MemberGetter(PropertyInfo property)
         {
             m_getFunc = CreateGetterDelegate(property);
         }
 
-        /// <summary>
-        /// 表示类型字段或属性的Getter
-        /// </summary>
-        /// <exception cref="ArgumentNullException"></exception>
         public MemberGetter(FieldInfo fieldInfo)
         {
             m_getFunc = CreateGetterDelegate(fieldInfo);
         }
 
-        /// <summary>
-        /// 获取属性的值
-        /// </summary>
-        /// <param name="instance">实例</param>
-        /// <returns></returns>
         public object Invoke(object instance)
         {
             return m_getFunc.Invoke(instance);

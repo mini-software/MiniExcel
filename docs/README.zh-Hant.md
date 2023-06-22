@@ -24,6 +24,9 @@
 
 ---
 
+### 1.31.1
+- [OPT] 支持 property cache #23 (via @RRQM_Home)
+
 ### 1.31.0
 - [New] 支持 Fields #490 (via @jsgervais)
 - [New] 支持是否寫入 null values cell #497 (via @0MG-DEN)

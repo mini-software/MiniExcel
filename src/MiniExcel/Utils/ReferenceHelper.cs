@@ -54,7 +54,7 @@
             {
                 modulo = (dividend - 1) % 26;
                 columnName = Convert.ToChar(65 + modulo).ToString() + columnName;
-                dividend = (int)((x - modulo) / 26);
+                dividend = (int)((dividend - modulo) / 26);
             }
             return $"{columnName}{y}";
         }

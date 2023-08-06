@@ -188,6 +188,7 @@ namespace MiniExcelLibs.OpenXml
 
                 if (mergeCells)
                 {
+                    var mergeTaggedColumns = new Dictionary<XChildNode, XChildNode>();
                     var columns = XRowInfos.SelectMany(s => s.Row.Cast<XmlElement>())
                         .Where(s => !string.IsNullOrEmpty(s.InnerText)).Select(s =>
                         {
@@ -199,6 +200,33 @@ namespace MiniExcelLibs.OpenXml
                                 RowIndex = StringHelper.GetNumber(att)
                             };
                         }).ToList();
+                    
+                    var mergeColumns = columns.Where(s => s.InnerText.Contains("@merge")).OrderBy(s => s.RowIndex).ToList();
+                    var endMergeColumns = columns.Where(s => s.InnerText.Contains("@endmerge")).OrderBy(s => s.RowIndex).ToList();
+                    
+                    foreach (var mergeColumn in mergeColumns)
+                    {
+                        var endMergeColumn = endMergeColumns.FirstOrDefault(s => s.ColIndex == mergeColumn.ColIndex && s.RowIndex > mergeColumn.RowIndex);
+                        
+                        if (endMergeColumn != null)
+                        {
+                            mergeTaggedColumns[mergeColumn] = endMergeColumn;
+                        }
+                    }
+
+                    var calculatedColumns = new List<XChildNode>();
+
+                    if (mergeTaggedColumns.Count > 0)
+                    {
+                        foreach (var taggedColumn in mergeTaggedColumns)
+                        {
+                            calculatedColumns.AddRange(columns.Where(x=>x.ColIndex == taggedColumn.Key.ColIndex && x.RowIndex > taggedColumn.Key.RowIndex && x.RowIndex < taggedColumn.Value.RowIndex));
+                        }
+                    }
+                    else
+                    {
+                        calculatedColumns = columns;
+                    }
 
                     Dictionary<int, MergeCellIndex> lastMergeCellIndexes = new Dictionary<int, MergeCellIndex>();
 
@@ -213,7 +241,7 @@ namespace MiniExcelLibs.OpenXml
                         {
                             var childNodeAtt = StringHelper.GetLetter(childNode.GetAttribute("r"));
 
-                            var xmlNodes = columns
+                            var xmlNodes = calculatedColumns
                                 .Where(j => j.InnerText == childNode.InnerText && j.ColIndex == childNodeAtt)
                                 .OrderBy(s => s.RowIndex).ToList();
 
@@ -268,6 +296,7 @@ namespace MiniExcelLibs.OpenXml
                 string currentHeader = "";
                 string prevHeader = "";
                 bool isHeaderRow = false;
+                int mergeRowCount = 0;
 
                 for (int rowNo = 0; rowNo < XRowInfos.Count; rowNo++)
                 {
@@ -306,6 +335,16 @@ namespace MiniExcelLibs.OpenXml
                     {
                         isHeaderRow = true;
                     }
+                    else if(row.InnerText.Contains("@merge"))
+                    {
+                        mergeRowCount++;
+                        continue;
+                    }
+                    else if (row.InnerText.Contains("@endmerge"))
+                    {
+                        mergeRowCount++;
+                        continue;
+                    }
 
                     if (groupingStarted && !isCellIEnumerableValuesSet && rowInfo.CellIlListValues != null)
                     {
@@ -333,7 +372,7 @@ namespace MiniExcelLibs.OpenXml
 
                     //TODO: some xlsx without r
                     originRowIndex = int.Parse(row.GetAttribute("r"));
-                    var newRowIndex = originRowIndex + rowIndexDiff + groupingRowDiff;
+                    var newRowIndex = originRowIndex + rowIndexDiff + groupingRowDiff - mergeRowCount;
 
                     string innerXml = row.InnerXml;
                     rowXml.Clear()
@@ -630,8 +669,8 @@ namespace MiniExcelLibs.OpenXml
                                 foreach (var mergeCell in rowInfo.RowMercells)
                                 {
                                     var newMergeCell = new XMergeCell(mergeCell);
-                                    newMergeCell.Y1 = newMergeCell.Y1 + rowIndexDiff + groupingRowDiff;
-                                    newMergeCell.Y2 = newMergeCell.Y2 + rowIndexDiff + groupingRowDiff;
+                                    newMergeCell.Y1 = newMergeCell.Y1 + rowIndexDiff + groupingRowDiff - mergeRowCount;
+                                    newMergeCell.Y2 = newMergeCell.Y2 + rowIndexDiff + groupingRowDiff - mergeRowCount;
                                     this.NewXMergeCellInfos.Add(newMergeCell);
                                 }
 
@@ -683,8 +722,8 @@ namespace MiniExcelLibs.OpenXml
                             foreach (var mergeCell in rowInfo.RowMercells)
                             {
                                 var newMergeCell = new XMergeCell(mergeCell);
-                                newMergeCell.Y1 = newMergeCell.Y1 + rowIndexDiff + groupingRowDiff;
-                                newMergeCell.Y2 = newMergeCell.Y2 + rowIndexDiff + groupingRowDiff;
+                                newMergeCell.Y1 = newMergeCell.Y1 + rowIndexDiff + groupingRowDiff - mergeRowCount;
+                                newMergeCell.Y2 = newMergeCell.Y2 + rowIndexDiff + groupingRowDiff - mergeRowCount;
                                 this.NewXMergeCellInfos.Add(newMergeCell);
                             }
                         }

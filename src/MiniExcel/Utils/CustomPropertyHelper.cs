@@ -14,7 +14,7 @@
         public int? ExcelColumnIndex { get; set; }
         public string ExcelColumnName { get; set; }
         public string[] ExcelColumnAliases { get; set; }
-        public PropertyInfo Property { get; set; }
+        public Property Property { get; set; }
         public Type ExcludeNullableType { get; set; }
         public bool Nullable { get; internal set; }
         public string ExcelFormat { get; internal set; }
@@ -49,7 +49,7 @@
         internal static List<ExcelColumnInfo> GetSaveAsProperties(this Type type, Configuration configuration)
         {
             List<ExcelColumnInfo> props = GetExcelPropertyInfo(type, BindingFlags.Public | BindingFlags.Instance, configuration)
-                .Where(prop => prop.Property.GetGetMethod() != null)
+                .Where(prop => prop.Property.CanRead)
                 .ToList() /*ignore without set*/;
 
             if (props.Count == 0)
@@ -103,9 +103,9 @@
         internal static List<ExcelColumnInfo> GetExcelCustomPropertyInfos(Type type, string[] keys, Configuration configuration)
         {
             List<ExcelColumnInfo> props = GetExcelPropertyInfo(type, BindingFlags.SetProperty | BindingFlags.Public | BindingFlags.Instance, configuration)
-                .Where(prop => prop.Property.GetSetMethod() != null
-                               && !prop.Property.GetAttributeValue((ExcelIgnoreAttribute x) => x.ExcelIgnore)
-                               && !prop.Property.GetAttributeValue((ExcelColumnAttribute x) => x.Ignore))
+                .Where(prop => prop.Property.Info.GetSetMethod() != null // why not .Property.CanWrite? because it will use private setter
+                               && !prop.Property.Info.GetAttributeValue((ExcelIgnoreAttribute x) => x.ExcelIgnore)
+                               && !prop.Property.Info.GetAttributeValue((ExcelColumnAttribute x) => x.Ignore))
                 .ToList() /*ignore without set*/;
 
             if (props.Count == 0)
@@ -124,7 +124,7 @@
                         if (p.ExcelColumnIndex > maxIndex)
                             throw new ArgumentException($"ExcelColumnIndex {p.ExcelColumnIndex} over haeder max index {maxkey}");
                         if (p.ExcelColumnName == null)
-                            throw new InvalidOperationException($"{p.Property.DeclaringType.Name} {p.Property.Name}'s ExcelColumnIndex {p.ExcelColumnIndex} can't find excel column name");
+                            throw new InvalidOperationException($"{p.Property.Info.DeclaringType.Name} {p.Property.Name}'s ExcelColumnIndex {p.ExcelColumnIndex} can't find excel column name");
                     }
                 }
             }
@@ -172,7 +172,7 @@
                 var excelColumnIndex = excelColumn?.Index > -1 ? excelColumn.Index : (int?)null;
                 return new ExcelColumnInfo
                 {
-                    Property = p,
+                    Property = new Property(p),
                     ExcludeNullableType = excludeNullableType,
                     Nullable = gt != null,
                     ExcelColumnAliases = excelColumnName?.Aliases ?? excelColumn?.Aliases,

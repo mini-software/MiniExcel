@@ -70,7 +70,7 @@
                 var columnName = pInfo.ExcelColumnName ?? pInfo.Property.Name;
                 var startRowIndex = ReferenceHelper.ConvertCellToXY(startCell).Item2;
                 var errorRow = startRowIndex + rowIndex + 1;
-                throw new ExcelInvalidCastException(columnName, errorRow, itemValue, pInfo.Property.PropertyType, $"ColumnName : {columnName}, CellRow : {errorRow}, Value : {itemValue}, it can't cast to {pInfo.Property.PropertyType.Name} type.");
+                throw new ExcelInvalidCastException(columnName, errorRow, itemValue, pInfo.Property.Info.PropertyType, $"ColumnName : {columnName}, CellRow : {errorRow}, Value : {itemValue}, it can't cast to {pInfo.Property.Info.PropertyType.Name} type.");
             }
         }
 
@@ -108,7 +108,7 @@
                 var vs = itemValue?.ToString();
                 if (pInfo.ExcelFormat != null)
                 {
-                    if (pInfo.Property.PropertyType == typeof(DateTimeOffset) && DateTimeOffset.TryParseExact(vs, pInfo.ExcelFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out var _v2))
+                    if (pInfo.Property.Info.PropertyType == typeof(DateTimeOffset) && DateTimeOffset.TryParseExact(vs, pInfo.ExcelFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out var _v2))
                     {
                         newValue = _v2;
                     }
@@ -136,17 +136,17 @@
                 else
                     newValue = bool.Parse(vs);
             }
-            else if (pInfo.Property.PropertyType == typeof(string))
+            else if (pInfo.Property.Info.PropertyType == typeof(string))
             {
                 newValue = XmlEncoder.DecodeString(itemValue?.ToString());
             }
-            else if (pInfo.Property.PropertyType.IsEnum)
+            else if (pInfo.Property.Info.PropertyType.IsEnum)
             {
-                var fieldInfo = pInfo.Property.PropertyType.GetFields().FirstOrDefault(e => e.GetCustomAttribute<DescriptionAttribute>(false)?.Description == itemValue?.ToString());
+                var fieldInfo = pInfo.Property.Info.PropertyType.GetFields().FirstOrDefault(e => e.GetCustomAttribute<DescriptionAttribute>(false)?.Description == itemValue?.ToString());
                 if (fieldInfo != null)
-                    newValue = Enum.Parse(pInfo.Property.PropertyType, fieldInfo.Name, true);
+                    newValue = Enum.Parse(pInfo.Property.Info.PropertyType, fieldInfo.Name, true);
                 else
-                    newValue = Enum.Parse(pInfo.Property.PropertyType, itemValue?.ToString(), true);
+                    newValue = Enum.Parse(pInfo.Property.Info.PropertyType, itemValue?.ToString(), true);
             }
             else
             {

@@ -557,6 +557,70 @@ memoryStream.MergeSameCells(path);
 
 
 
+#### 13. 是否寫入 null values cell
+
+預設:
+
+```csharp
+DataTable dt = new DataTable();
+
+/* ... */
+
+DataRow dr = dt.NewRow();
+
+dr["Name1"] = "Somebody once";
+dr["Name2"] = null;
+dr["Name3"] = "told me.";
+
+dt.Rows.Add(dr);
+
+MiniExcel.SaveAs(@"C:\temp\Book1.xlsx", dt);
+```
+
+![image](https://user-images.githubusercontent.com/31481586/241419441-c4f27e8f-3f87-46db-a10f-08665864c874.png)
+
+```xml
+<x:row r="2">
+    <x:c r="A2" t ="str" s="2">
+        <x:v>Somebody once</x:v>
+    </x:c>
+    <x:c r="B2" t ="str" s="2">
+        <x:v></x:v>
+    </x:c>
+    <x:c r="C2" t ="str" s="2">
+        <x:v>told me.</x:v>
+    </x:c>
+</x:row>
+```
+
+設定不寫入:
+
+```csharp
+OpenXmlConfiguration configuration = new OpenXmlConfiguration()
+{
+     EnableWriteNullValueCell = false // Default value is true.
+};
+
+MiniExcel.SaveAs(@"C:\temp\Book1.xlsx", dt, configuration: configuration);
+```
+
+![image](https://user-images.githubusercontent.com/31481586/241419455-3c0aec8a-4e5f-4d83-b7ec-6572124c165d.png)
+
+
+```xml
+<x:row r="2">
+    <x:c r="A2" t ="str" s="2">
+        <x:v>Somebody once</x:v>
+    </x:c>
+    <x:c r="B2" s="2"></x:c>
+    <x:c r="C2" t ="str" s="2">
+        <x:v>told me.</x:v>
+    </x:c>
+</x:row>
+```
+
+
+
 ### 模板填充 Excel <a name="getstart3"></a>
 
 - 宣告方式類似 Vue 模板 `{{變量名稱}}`, 或是集合渲染 `{{集合名稱.欄位名稱}}`

@@ -395,12 +395,22 @@ namespace MiniExcelLibs.OpenXml
 
         private void WriteCell(MiniExcelStreamWriter writer, int rowIndex, int cellIndex, object value, ExcelColumnInfo p)
         {
+            var columname = ExcelOpenXmlUtils.ConvertXyToCell(cellIndex, rowIndex);
+            var s = "2";
+            var valueIsNull = value is null || value is DBNull;
+
+            if (_configuration.EnableWriteNullValueCell && valueIsNull)
+            {
+                writer.Write($"<x:c r=\"{columname}\" s=\"{s}\"></x:c>");
+                return;
+            }
+
             var v = string.Empty;
             var t = "str";
-            var s = "2";
-            if (value == null)
+
+            if (valueIsNull)
             {
-                v = "";
+
             }
             else if (value is string str)
             {
@@ -531,7 +541,6 @@ namespace MiniExcelLibs.OpenXml
                 }
             }
 
-            var columname = ExcelOpenXmlUtils.ConvertXyToCell(cellIndex, rowIndex);
             if (v != null && (v.StartsWith(" ", StringComparison.Ordinal) || v.EndsWith(" ", StringComparison.Ordinal))) /*Prefix and suffix blank space will lost after SaveAs #294*/
                 writer.Write($"<x:c r=\"{columname}\" {(t == null ? "" : $"t =\"{t}\"")} s=\"{s}\" xml:space=\"preserve\"><x:v>{v}</x:v></x:c>");
             else
@@ -600,17 +609,26 @@ namespace MiniExcelLibs.OpenXml
                     writer.Write("                              />"); // end of code will be replaced
                 }
 
+                var props = new List<ExcelColumnInfo>();
+                for (var i = 0; i < reader.FieldCount; i++)
+                {
+                    var columnName = reader.GetName(i);
+                    var prop = GetColumnInfosForIDataReader(columnName);
+                    props.Add(prop);
+                }
+
+                WriteColumnsWidths(writer, props);
+                
                 writer.Write("<x:sheetData>");
                 int fieldCount = reader.FieldCount;
                 if (_printHeader)
                 {
                     writer.Write($"<x:row r=\"{yIndex}\">");
                     xIndex = xy.Item1;
-                    for (int i = 0; i < fieldCount; i++)
+                    foreach (var p in props)
                     {
                         var r = ExcelOpenXmlUtils.ConvertXyToCell(xIndex, yIndex);
-                        var columnName = reader.GetName(i);
-                        WriteC(writer, r, columnName);
+                        WriteC(writer, r, columnName: p.ExcelColumnName);
                         xIndex++;
                     }
                     writer.Write($"</x:row>");
@@ -644,6 +662,54 @@ namespace MiniExcelLibs.OpenXml
             }
         }
 
+        private ExcelColumnInfo GetColumnInfosForIDataReader(string columnName)
+        {
+            var prop = new ExcelColumnInfo
+            {
+                ExcelColumnName = columnName,
+                Key = columnName
+            };
+
+            if (_configuration.DynamicColumns == null || _configuration.DynamicColumns.Length <= 0) 
+                return prop;
+            
+            var dynamicColumn = _configuration.DynamicColumns.SingleOrDefault(_ => _.Key == columnName);
+            if (dynamicColumn == null || dynamicColumn.Ignore)
+            {
+                return prop;
+            }
+
+            prop.Nullable = true;
+            //prop.ExcludeNullableType = item2[key]?.GetType();
+            if (dynamicColumn.Format != null)
+                prop.ExcelFormat = dynamicColumn.Format;
+            if (dynamicColumn.Aliases != null)
+                prop.ExcelColumnAliases = dynamicColumn.Aliases;
+            if (dynamicColumn.IndexName != null)
+                prop.ExcelIndexName = dynamicColumn.IndexName;
+            prop.ExcelColumnIndex = dynamicColumn.Index;
+            if (dynamicColumn.Name != null)
+                prop.ExcelColumnName = dynamicColumn.Name;
+            prop.ExcelColumnWidth = dynamicColumn.Width;
+
+            return prop;
+        }
+
+        private static void WriteColumnsWidths(MiniExcelStreamWriter writer, IEnumerable<ExcelColumnInfo> props)
+        {
+            var ecwProps = props.Where(x => x?.ExcelColumnWidth != null).ToList();
+            if (ecwProps.Count <= 0)
+                return;
+            writer.Write($@"<x:cols>");
+            foreach (var p in ecwProps)
+            {
+                writer.Write(
+                    $@"<x:col min=""{p.ExcelColumnIndex + 1}"" max=""{p.ExcelColumnIndex + 1}"" width=""{p.ExcelColumnWidth}"" customWidth=""1"" />");
+            }
+
+            writer.Write($@"</x:cols>");
+        }
+        
         private static void WriteC(MiniExcelStreamWriter writer, string r, string columnName)
         {
             writer.Write($"<x:c r=\"{r}\" t=\"str\" s=\"1\">");

@@ -25,6 +25,19 @@
 
 ---
 
+### 1.31.1
+- [OPT] 支持 property cache #23 (via @RRQM_Home)
+
+### 1.31.0
+
+- [New] 支持 Fields #490 (via @jsgervais)
+- [New] 支持是否写入 null values cell #497 (via @0MG-DEN)
+- [Bug] 修复calc chain.xml 问题  #491(via @ArgoZhang)
+- [Bug] 修复特定文件 `/xl` 定位错误  #494 (via @ArgoZhang)
+
+### 1.30.3
+- [New] 模版支持 if/else 单元格语句 (via @eynarhaji)
+
 ### 1.30.2
 - [New] 支持 grouped rows (via @eynarhaji)
 - [New] 支持 automatic merge vertical cells (via @eynarhaji)

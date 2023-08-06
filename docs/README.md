@@ -22,8 +22,17 @@
 
 ---
 
+### 1.31.1
+- [OPT] Support property cache #23 (via @RRQM_Home)
+
+### 1.31.0
+- [New] Support Fields #490 (via @jsgervais)
+- [New] Support skipping null values when writing to Excel #497 (via @0MG-DEN)
+- [Bug] Fix calc chain.xml  #491(via @ArgoZhang)
+- [Bug] Support some sheet `/xl` location error  #494 (via @ArgoZhang)
+
 ### 1.30.3
-- [New] support if/else if/else statements inside cell (via @eynarhaji)
+- [New] support if/else statements inside cell (via @eynarhaji)
 
 ### 1.30.2
 - [New] support grouped rows (via @eynarhaji)

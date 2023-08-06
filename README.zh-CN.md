@@ -25,7 +25,7 @@
 
 ---
 
-### QQ群(1群) : [813100564](https://qm.qq.com/cgi-bin/qm/qr?k=3OkxuL14sXhJsUimWK8wx_Hf28Wl49QE&jump_from=webapi) / QQ群(2群) : [579033769](https://jq.qq.com/?_wv=1027&k=UxTdB8pR)
+### QQ群(1群) : [813100564](https://qm.qq.com/cgi-bin/qm/qr?k=3OkxuL14sXhJsUimWK8wx_Hf28Wl49QE&jump_from=webapi) / QQ群(2群) : [579033769](https://jq.qq.com/?_wv=1027&k=UxTdB8pR) / QQ群(3群) : [625362917](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=ZFudsVhvZSNkHyt0ljbfTqZfMFO9AoFH&authKey=G5zGjiUNHjZ3efr7GzR43lESp3e3mYL2fczPALvEsUduZD2zWk9y%2BGXBJ0egt0%2FE&noverify=0&group_code=625362917)
 
 ### 淘宝接案店铺 : [链接](https://minisoftware.taobao.com/)
 
@@ -560,6 +560,68 @@ memoryStream.MergeSameCells(path);
 
 ![before_merge_cells](https://user-images.githubusercontent.com/38832863/219970175-913b3d04-d714-4279-a7a4-6cefb7aa6ce8.PNG)
 ![after_merge_cells](https://user-images.githubusercontent.com/38832863/219970176-e78c491a-2f90-45a7-a4a2-425c5708d38c.PNG)
+
+#### 13. 是否写入 null values cell
+
+预设:
+
+```csharp
+DataTable dt = new DataTable();
+
+/* ... */
+
+DataRow dr = dt.NewRow();
+
+dr["Name1"] = "Somebody once";
+dr["Name2"] = null;
+dr["Name3"] = "told me.";
+
+dt.Rows.Add(dr);
+
+MiniExcel.SaveAs(@"C:\temp\Book1.xlsx", dt);
+```
+
+![image](https://user-images.githubusercontent.com/31481586/241419441-c4f27e8f-3f87-46db-a10f-08665864c874.png)
+
+```xml
+<x:row r="2">
+    <x:c r="A2" t ="str" s="2">
+        <x:v>Somebody once</x:v>
+    </x:c>
+    <x:c r="B2" t ="str" s="2">
+        <x:v></x:v>
+    </x:c>
+    <x:c r="C2" t ="str" s="2">
+        <x:v>told me.</x:v>
+    </x:c>
+</x:row>
+```
+
+设定不写入:
+
+```csharp
+OpenXmlConfiguration configuration = new OpenXmlConfiguration()
+{
+     EnableWriteNullValueCell = false // Default value is true.
+};
+
+MiniExcel.SaveAs(@"C:\temp\Book1.xlsx", dt, configuration: configuration);
+```
+
+![image](https://user-images.githubusercontent.com/31481586/241419455-3c0aec8a-4e5f-4d83-b7ec-6572124c165d.png)
+
+
+```xml
+<x:row r="2">
+    <x:c r="A2" t ="str" s="2">
+        <x:v>Somebody once</x:v>
+    </x:c>
+    <x:c r="B2" s="2"></x:c>
+    <x:c r="C2" t ="str" s="2">
+        <x:v>told me.</x:v>
+    </x:c>
+</x:row>
+```
 
 
 

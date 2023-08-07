@@ -200,14 +200,17 @@ namespace MiniExcelLibs.OpenXml
                                 RowIndex = StringHelper.GetNumber(att)
                             };
                         }).ToList();
-                    
-                    var mergeColumns = columns.Where(s => s.InnerText.Contains("@merge")).OrderBy(s => s.RowIndex).ToList();
-                    var endMergeColumns = columns.Where(s => s.InnerText.Contains("@endmerge")).OrderBy(s => s.RowIndex).ToList();
-                    
+
+                    var mergeColumns = columns.Where(s => s.InnerText.Contains("@merge")).OrderBy(s => s.RowIndex)
+                        .ToList();
+                    var endMergeColumns = columns.Where(s => s.InnerText.Contains("@endmerge")).OrderBy(s => s.RowIndex)
+                        .ToList();
+
                     foreach (var mergeColumn in mergeColumns)
                     {
-                        var endMergeColumn = endMergeColumns.FirstOrDefault(s => s.ColIndex == mergeColumn.ColIndex && s.RowIndex > mergeColumn.RowIndex);
-                        
+                        var endMergeColumn = endMergeColumns.FirstOrDefault(s =>
+                            s.ColIndex == mergeColumn.ColIndex && s.RowIndex > mergeColumn.RowIndex);
+
                         if (endMergeColumn != null)
                         {
                             mergeTaggedColumns[mergeColumn] = endMergeColumn;
@@ -220,57 +223,64 @@ namespace MiniExcelLibs.OpenXml
                     {
                         foreach (var taggedColumn in mergeTaggedColumns)
                         {
-                            calculatedColumns.AddRange(columns.Where(x=>x.ColIndex == taggedColumn.Key.ColIndex && x.RowIndex > taggedColumn.Key.RowIndex && x.RowIndex < taggedColumn.Value.RowIndex));
+                            calculatedColumns.AddRange(columns.Where(x =>
+                                x.ColIndex == taggedColumn.Key.ColIndex && x.RowIndex > taggedColumn.Key.RowIndex &&
+                                x.RowIndex < taggedColumn.Value.RowIndex));
                         }
-                    }
-                    else
-                    {
-                        calculatedColumns = columns;
-                    }
 
-                    Dictionary<int, MergeCellIndex> lastMergeCellIndexes = new Dictionary<int, MergeCellIndex>();
 
-                    for (int rowNo = 0; rowNo < XRowInfos.Count; rowNo++)
-                    {
-                        var rowInfo = XRowInfos[rowNo];
-                        var row = rowInfo.Row;
-                        var childNodes = row.ChildNodes.Cast<XmlElement>()
-                            .Where(s => !string.IsNullOrEmpty(s.InnerText)).ToList();
+                        Dictionary<int, MergeCellIndex>
+                            lastMergeCellIndexes = new Dictionary<int, MergeCellIndex>();
 
-                        foreach (var childNode in childNodes)
+                        for (int rowNo = 0; rowNo < XRowInfos.Count; rowNo++)
                         {
-                            var childNodeAtt = StringHelper.GetLetter(childNode.GetAttribute("r"));
+                            var rowInfo = XRowInfos[rowNo];
+                            var row = rowInfo.Row;
+                            var childNodes = row.ChildNodes.Cast<XmlElement>().ToList();
 
-                            var xmlNodes = calculatedColumns
-                                .Where(j => j.InnerText == childNode.InnerText && j.ColIndex == childNodeAtt)
-                                .OrderBy(s => s.RowIndex).ToList();
-
-                            if (xmlNodes.Count > 1)
+                            foreach (var childNode in childNodes)
                             {
-                                var firstRow = xmlNodes.FirstOrDefault();
-                                var lastRow = xmlNodes.LastOrDefault(s => s.RowIndex <= firstRow?.RowIndex + xmlNodes.Count && s.RowIndex != firstRow?.RowIndex);
+                                var childNodeAtt = StringHelper.GetLetter(childNode.GetAttribute("r"));
 
-                                if (firstRow != null && lastRow != null)
+                                if(!string.IsNullOrEmpty(childNode.InnerText))
                                 {
-                                    var mergeCell = new XMergeCell(firstRow.ColIndex, firstRow.RowIndex, lastRow.ColIndex, lastRow.RowIndex);
+                                    var xmlNodes = calculatedColumns
+                                        .Where(j => j.InnerText == childNode.InnerText && j.ColIndex == childNodeAtt)
+                                        .OrderBy(s => s.RowIndex).ToList();
 
-                                    var mergeIndexResult = lastMergeCellIndexes.TryGetValue(mergeCell.X1, out var mergeIndex);
-
-                                    if (mergeIndexResult && mergeCell.Y1 >= mergeIndex.RowStart &&
-                                        mergeCell.Y2 <= mergeIndex.RowEnd)
+                                    if (xmlNodes.Count > 1)
                                     {
-                                        continue;
+                                        var firstRow = xmlNodes.FirstOrDefault();
+                                        var lastRow = xmlNodes.LastOrDefault(s =>
+                                            s.RowIndex <= firstRow?.RowIndex + xmlNodes.Count &&
+                                            s.RowIndex != firstRow?.RowIndex);
+
+                                        if (firstRow != null && lastRow != null)
+                                        {
+                                            var mergeCell = new XMergeCell(firstRow.ColIndex, firstRow.RowIndex,
+                                                lastRow.ColIndex, lastRow.RowIndex);
+
+                                            var mergeIndexResult =
+                                                lastMergeCellIndexes.TryGetValue(mergeCell.X1, out var mergeIndex);
+
+                                            if (!mergeIndexResult || mergeCell.Y1 < mergeIndex.RowStart ||
+                                                mergeCell.Y2 > mergeIndex.RowEnd)
+                                            {
+                                                lastMergeCellIndexes[mergeCell.X1] =
+                                                    new MergeCellIndex(mergeCell.Y1, mergeCell.Y2);
+
+                                                if (rowInfo.RowMercells == null)
+                                                {
+                                                    rowInfo.RowMercells = new List<XMergeCell>();
+                                                }
+
+                                                rowInfo.RowMercells.Add(mergeCell);
+                                            }
+                                        }
                                     }
-
-                                    lastMergeCellIndexes[mergeCell.X1] = new MergeCellIndex(mergeCell.Y1, mergeCell.Y2);
-
-                                    if (rowInfo.RowMercells == null)
-                                    {
-                                        rowInfo.RowMercells = new List<XMergeCell>();
-                                    }
-
-                                    rowInfo.RowMercells.Add(mergeCell);
                                 }
+
+                                childNode.SetAttribute("r", $"{childNodeAtt}{{{{$rowindex}}}}"); //TODO:
                             }
                         }
                     }
@@ -656,11 +666,11 @@ namespace MiniExcelLibs.OpenXml
                             // note: only first time need add diff ![image](https://user-images.githubusercontent.com/12729184/114494728-6bceda80-9c4f-11eb-9685-8b5ed054eabe.png)
                             if (!first)
                                 //rowIndexDiff++;
-                                rowIndexDiff = rowIndexDiff + (rowInfo.IEnumerableMercell == null ? 1 : rowInfo.IEnumerableMercell.Height); //TODO:base on the merge size
+                                rowIndexDiff += (rowInfo.IEnumerableMercell?.Height ?? 1); //TODO:base on the merge size
                             first = false;
 
                             var mergeBaseRowIndex = newRowIndex;
-                            newRowIndex = newRowIndex + (rowInfo.IEnumerableMercell == null ? 1 : rowInfo.IEnumerableMercell.Height);
+                            newRowIndex += rowInfo.IEnumerableMercell?.Height ?? 1;
                             writer.Write(CleanXml(rowXml, endPrefix)); // pass StringBuilder for netcoreapp3.0 or above
 
                             //mergecells

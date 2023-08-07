@@ -345,12 +345,12 @@ namespace MiniExcelLibs.OpenXml
                     {
                         isHeaderRow = true;
                     }
-                    else if(row.InnerText.Contains("@merge"))
+                    else if(row.InnerText.Contains("@merge") && mergeCells)
                     {
                         mergeRowCount++;
                         continue;
                     }
-                    else if (row.InnerText.Contains("@endmerge"))
+                    else if (row.InnerText.Contains("@endmerge") && mergeCells)
                     {
                         mergeRowCount++;
                         continue;

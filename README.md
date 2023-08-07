@@ -528,12 +528,12 @@ Since 1.22.0, when value type is `byte[]` then system will save file path at cel
 
 #### 12. Merge same cells vertically
 
-This functionality is only supported in `xlsx` format and merges cells vertically.
+This functionality is only supported in `xlsx` format and merges cells vertically between @merge and @endmerge tags.
 
 ```csharp
 var mergedFilePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
             
-var path = @"../../../../../samples/xlsx/TestMergeSameCells.xlsx";
+var path = @"../../../../../samples/xlsx/TestMergeWithTag.xlsx";
 
 MiniExcel.MergeSameCells(mergedFilePath, path);
 ```
@@ -541,15 +541,16 @@ MiniExcel.MergeSameCells(mergedFilePath, path);
 ```csharp
 var memoryStream = new MemoryStream();
             
-var path = @"../../../../../samples/xlsx/TestMergeSameCells.xlsx";
+var path = @"../../../../../samples/xlsx/TestMergeWithTag.xlsx";
 
 memoryStream.MergeSameCells(path);
 ```
 
 File content before and after merge:
 
-![before_merge_cells](https://user-images.githubusercontent.com/38832863/219970175-913b3d04-d714-4279-a7a4-6cefb7aa6ce8.PNG)
-![after_merge_cells](https://user-images.githubusercontent.com/38832863/219970176-e78c491a-2f90-45a7-a4a2-425c5708d38c.PNG)
+<img width="318" alt="Screenshot 2023-08-07 at 11 59 24" src="https://github.com/mini-software/MiniExcel/assets/38832863/49cc96b9-6c35-4bf3-8d43-a9752a15b22e">
+
+<img width="318" alt="Screenshot 2023-08-07 at 11 59 57" src="https://github.com/mini-software/MiniExcel/assets/38832863/3fbd529b-3ae6-4bbe-b4d8-2793a5a58010">
 
 #### 13. Skip null values
 

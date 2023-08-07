@@ -23,6 +23,9 @@
 ---
 
 ### 1.31.1
+- [New] support automatic merge for same vertical cells between @merge and @endmerge tags (via @eynarhaji)
+
+### 1.31.1
 - [OPT] Support property cache #23 (via @RRQM_Home)
 
 ### 1.31.0

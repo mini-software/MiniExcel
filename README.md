@@ -529,6 +529,7 @@ Since 1.22.0, when value type is `byte[]` then system will save file path at cel
 #### 12. Merge same cells vertically
 
 This functionality is only supported in `xlsx` format and merges cells vertically between @merge and @endmerge tags.
+You can use @mergelimit to limit boundaries of merging cells vertically.
 
 ```csharp
 var mergedFilePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
@@ -548,9 +549,17 @@ memoryStream.MergeSameCells(path);
 
 File content before and after merge:
 
+Without merge limit:
+
 <img width="318" alt="Screenshot 2023-08-07 at 11 59 24" src="https://github.com/mini-software/MiniExcel/assets/38832863/49cc96b9-6c35-4bf3-8d43-a9752a15b22e">
 
 <img width="318" alt="Screenshot 2023-08-07 at 11 59 57" src="https://github.com/mini-software/MiniExcel/assets/38832863/3fbd529b-3ae6-4bbe-b4d8-2793a5a58010">
+
+With merge limit:
+
+<img width="346" alt="Screenshot 2023-08-08 at 18 21 00" src="https://github.com/mini-software/MiniExcel/assets/38832863/04049d28-84d5-4c2a-bcff-5847547df5e1">
+
+<img width="346" alt="Screenshot 2023-08-08 at 18 21 40" src="https://github.com/mini-software/MiniExcel/assets/38832863/f5cf8957-b0b0-4831-b8fc-8556299235c2">
 
 #### 13. Skip null values
 

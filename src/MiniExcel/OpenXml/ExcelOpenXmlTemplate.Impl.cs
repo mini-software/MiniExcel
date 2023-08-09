@@ -199,12 +199,11 @@ namespace MiniExcelLibs.OpenXml
                                 ColIndex = StringHelper.GetLetter(att),
                                 RowIndex = StringHelper.GetNumber(att)
                             };
-                        }).ToList();
+                        }).OrderBy(x=>x.RowIndex).ToList();
 
-                    var mergeColumns = columns.Where(s => s.InnerText.Contains("@merge")).OrderBy(s => s.RowIndex)
-                        .ToList();
-                    var endMergeColumns = columns.Where(s => s.InnerText.Contains("@endmerge")).OrderBy(s => s.RowIndex)
-                        .ToList();
+                    var mergeColumns = columns.Where(s => s.InnerText.Contains("@merge")).ToList();
+                    var endMergeColumns = columns.Where(s => s.InnerText.Contains("@endmerge")).ToList();
+                    var mergeLimitColumn = mergeColumns.FirstOrDefault(x=>x.InnerText.Contains("@mergelimit"));
 
                     foreach (var mergeColumn in mergeColumns)
                     {
@@ -227,8 +226,7 @@ namespace MiniExcelLibs.OpenXml
                                 x.ColIndex == taggedColumn.Key.ColIndex && x.RowIndex > taggedColumn.Key.RowIndex &&
                                 x.RowIndex < taggedColumn.Value.RowIndex));
                         }
-
-
+                        
                         Dictionary<int, MergeCellIndex>
                             lastMergeCellIndexes = new Dictionary<int, MergeCellIndex>();
 
@@ -240,16 +238,29 @@ namespace MiniExcelLibs.OpenXml
 
                             foreach (var childNode in childNodes)
                             {
-                                var childNodeAtt = StringHelper.GetLetter(childNode.GetAttribute("r"));
+                                var att = childNode.GetAttribute("r");
+                                var childNodeLetter = StringHelper.GetLetter(att);
+                                var childNodeNumber = StringHelper.GetNumber(att);
 
                                 if(!string.IsNullOrEmpty(childNode.InnerText))
                                 {
                                     var xmlNodes = calculatedColumns
-                                        .Where(j => j.InnerText == childNode.InnerText && j.ColIndex == childNodeAtt)
+                                        .Where(j => j.InnerText == childNode.InnerText && j.ColIndex == childNodeLetter)
                                         .OrderBy(s => s.RowIndex).ToList();
 
                                     if (xmlNodes.Count > 1)
                                     {
+                                        if (mergeLimitColumn != null)
+                                        {
+                                            var limitedNode = calculatedColumns.First(j =>
+                                                j.ColIndex == mergeLimitColumn.ColIndex && j.RowIndex == childNodeNumber);
+
+                                            var limitedMaxNode = calculatedColumns.Last(j =>
+                                                j.ColIndex == mergeLimitColumn.ColIndex && j.InnerText == limitedNode.InnerText);
+
+                                            xmlNodes = xmlNodes.Where(j => j.RowIndex >= limitedNode.RowIndex && j.RowIndex <= limitedMaxNode.RowIndex).ToList();
+                                        }
+                                        
                                         var firstRow = xmlNodes.FirstOrDefault();
                                         var lastRow = xmlNodes.LastOrDefault(s =>
                                             s.RowIndex <= firstRow?.RowIndex + xmlNodes.Count &&
@@ -280,7 +291,7 @@ namespace MiniExcelLibs.OpenXml
                                     }
                                 }
 
-                                childNode.SetAttribute("r", $"{childNodeAtt}{{{{$rowindex}}}}"); //TODO:
+                                childNode.SetAttribute("r", $"{childNodeLetter}{{{{$rowindex}}}}"); //TODO:
                             }
                         }
                     }

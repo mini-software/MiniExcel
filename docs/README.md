@@ -25,6 +25,8 @@
 ### 1.31.2
 - [New] Support automatic merge for same vertical cells between @merge and @endmerge tags (via @eynarhaji)
 - [New] Limit merge tagged columns with @mergelimit column. First merge limited column and then merge other columns accordingly. (via @eynarhaji)
+- [New] Support dynamic columns when generating sheet by IDataReader to change columns names & widths #514 (via @Laxynium)
+- [Bug] Fix R1C1 reference to A1 reference bug (via @ivan132)
 
 ### 1.31.1
 - [OPT] Support property cache #23 (via @RRQM_Home)

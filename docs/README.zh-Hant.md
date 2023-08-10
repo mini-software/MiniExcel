@@ -24,7 +24,18 @@
 
 ---
 
+
+
+### 1.31.2
+
+- [New] 支持automatic merge for same vertical cells between @merge and @endmerge tags (via @eynarhaji)
+- [New] 限制 merge tagged columns with @mergelimit column. First merge limited column and then merge other columns accordingly. (via @eynarhaji)
+- [New] 支持 dynamic columns when generating sheet by IDataReader to change columns names & widths #514 (via @Laxynium)
+- [Bug] Fix R1C1 reference to A1 reference bug (via @ivan132)
+
+
 ### 1.31.1
+
 - [OPT] 支持 property cache #23 (via @RRQM_Home)
 
 ### 1.31.0

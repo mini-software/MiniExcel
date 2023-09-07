@@ -135,6 +135,9 @@
         internal static string DescriptionAttr(Type type, object source)
         {
             FieldInfo fi = type.GetField(source.ToString());
+            //For some database dirty data, there may be no way to change to the correct enumeration, will return NULL
+            if (fi == null)
+                return source.ToString();
 
             DescriptionAttribute[] attributes = (DescriptionAttribute[])fi.GetCustomAttributes(
                 typeof(DescriptionAttribute), false);

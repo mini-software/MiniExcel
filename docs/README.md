@@ -22,6 +22,9 @@
 
 ---
 
+### 1.31.3
+- [Bug] Fix DescriptionAttr null check(via @wulaoh)
+
 ### 1.31.2
 - [New] Support automatic merge for same vertical cells between @merge and @endmerge tags (via @eynarhaji)
 - [New] Limit merge tagged columns with @mergelimit column. First merge limited column and then merge other columns accordingly. (via @eynarhaji)

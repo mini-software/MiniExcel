@@ -27,7 +27,8 @@
 
 
 
-
+### 1.31.3
+- [Bug] 增加 DescriptionAttr null check(via @wulaoh)
 
 ### 1.31.2
 

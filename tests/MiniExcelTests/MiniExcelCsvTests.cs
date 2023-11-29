@@ -1,5 +1,6 @@
 ﻿using CsvHelper;
-using CsvHelper.Configuration;
+using MiniExcelLibs.Attributes;
+using MiniExcelLibs.Exceptions;
 using MiniExcelLibs.Tests.Utils;
 using System;
 using System.Collections.Generic;
@@ -207,6 +208,13 @@ namespace MiniExcelLibs.Tests
             public string c1 { get; set; }
 		  public string c2 { get; set; }
 	   }
+        public class TestWithAlias
+        {
+            [ExcelColumnName(excelColumnName: "c1", aliases: new[] { "column1", "col1" })]
+            public string c1 { get; set; }
+            [ExcelColumnName(excelColumnName: "c2", aliases: new[] { "column2", "col2" })]
+            public string c2 { get; set; }
+        }
 
         [Fact]
         public void CsvExcelTypeTest()
@@ -294,6 +302,63 @@ namespace MiniExcelLibs.Tests
 			 Assert.Equal("A2", rows[1].c1);
 			 Assert.Equal("B2", rows[1].c2);
 		  }
+        }
+
+        [Fact()]
+        public void CsvColumnNotFoundTest()
+        {
+            var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.csv");
+            File.WriteAllLines(path, new[] { "c1,c2", "v1" });
+
+            using (var stream = File.OpenRead(path))
+            {
+                var exception = Assert.Throws<ExcelColumnNotFoundException>(() => stream.Query<Test>(excelType: ExcelType.CSV).ToList());
+
+                Assert.Equal("c2", exception.ColumnName);
+                Assert.Equal(2, exception.RowIndex);
+                Assert.Null(exception.ColumnIndex);
+                Assert.True(exception.RowValues is IDictionary<string, object>);
+                Assert.Equal(1, ((IDictionary<string, object>)exception.RowValues).Count);
+            }
+
+            {
+                var exception = Assert.Throws<ExcelColumnNotFoundException>(() => MiniExcel.Query<Test>(path, excelType: ExcelType.CSV).ToList());
+
+                Assert.Equal("c2", exception.ColumnName);
+                Assert.Equal(2, exception.RowIndex);
+                Assert.Null(exception.ColumnIndex);
+                Assert.True(exception.RowValues is IDictionary<string, object>);
+                Assert.Equal(1, ((IDictionary<string, object>)exception.RowValues).Count);
+            }
+
+            File.Delete(path);
+        }
+
+        [Fact()]
+        public void CsvColumnNotFoundWithAliasTest()
+        {
+            var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.csv");
+            File.WriteAllLines(path, new[] { "col1,col2", "v1" });
+            using (var stream = File.OpenRead(path))
+            {
+                var exception = Assert.Throws<ExcelColumnNotFoundException>(() => stream.Query<TestWithAlias>(excelType: ExcelType.CSV).ToList());
+
+                Assert.Equal("c2", exception.ColumnName);
+                Assert.Equal(2, exception.RowIndex);
+                Assert.Null(exception.ColumnIndex);
+                Assert.True(exception.RowValues is IDictionary<string, object>);
+                Assert.Equal(1, ((IDictionary<string, object>)exception.RowValues).Count);
+            }
+
+            {
+                var exception = Assert.Throws<ExcelColumnNotFoundException>(() => MiniExcel.Query<TestWithAlias>(path, excelType: ExcelType.CSV).ToList());
+
+                Assert.Equal("c2", exception.ColumnName);
+                Assert.Equal(2, exception.RowIndex);
+                Assert.Null(exception.ColumnIndex);
+                Assert.True(exception.RowValues is IDictionary<string, object>);
+                Assert.Equal(1, ((IDictionary<string, object>)exception.RowValues).Count);
+            }
 
             File.Delete(path);
         }

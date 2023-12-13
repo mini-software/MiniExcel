@@ -1,4 +1,5 @@
-﻿using MiniExcelLibs.Utils;
+﻿using MiniExcelLibs.Exceptions;
+using MiniExcelLibs.Utils;
 using MiniExcelLibs.Zip;
 using System;
 using System.Collections.Generic;
@@ -449,7 +450,11 @@ namespace MiniExcelLibs.OpenXml
                             if (headersDic.ContainsKey(alias))
                             {
                                 object newV = null;
-                                object itemValue = item[keys[headersDic[alias]]];
+                                var columnId = headersDic[alias];
+                                var columnName = keys[columnId];
+                                if (!item.ContainsKey(columnName))
+                                    ThrowExcelColumnNotFoundException(pInfo, rowIndex, startCell, headersDic, item);
+                                object itemValue = item[columnName];
 
                                 if (itemValue == null)
                                     continue;
@@ -464,9 +469,19 @@ namespace MiniExcelLibs.OpenXml
                         object newV = null;
                         object itemValue = null;
                         if (pInfo.ExcelIndexName != null && keys.Contains(pInfo.ExcelIndexName))
+                        {
+                            if (!item.ContainsKey(pInfo.ExcelIndexName))
+                                ThrowExcelColumnNotFoundException(pInfo, rowIndex, startCell, headersDic, item);
                             itemValue = item[pInfo.ExcelIndexName];
+                        }
                         else if (headersDic.ContainsKey(pInfo.ExcelColumnName))
-                            itemValue = item[keys[headersDic[pInfo.ExcelColumnName]]];
+                        {
+                            var columnId = headersDic[pInfo.ExcelColumnName];
+                            var columnName = keys[columnId];
+                            if (!item.ContainsKey(columnName))
+                                ThrowExcelColumnNotFoundException(pInfo, rowIndex, startCell, headersDic, item);
+                            itemValue = item[columnName];
+                        }
 
                         if (itemValue == null)
                             continue;
@@ -477,6 +492,19 @@ namespace MiniExcelLibs.OpenXml
                 rowIndex++;
                 yield return v;
             }
+        }
+
+        private static void ThrowExcelColumnNotFoundException(ExcelColumnInfo pInfo, int rowIndex, string startCell, IDictionary<string, int> headers, IDictionary<string, object> row)
+        {
+            var columnName = pInfo.ExcelColumnName ?? pInfo.Property.Name;
+            var errorRow = ReferenceHelper.ConvertCellToXY(startCell).Item2 + rowIndex + 1;
+            throw new ExcelColumnNotFoundException(pInfo.ExcelIndexName,
+               pInfo.ExcelColumnName ?? pInfo.Property.Name,
+               pInfo.ExcelColumnAliases,
+               ReferenceHelper.ConvertCellToXY(startCell).Item2 + rowIndex + 1,
+               headers,
+               row,
+               $"ColumnName : {columnName}, CellRow : {errorRow}, value of {pInfo.Property.Info.PropertyType.Name} type not found.");
         }
 
         private void SetSharedStrings()

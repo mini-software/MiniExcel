@@ -409,7 +409,21 @@ MiniExcel.SaveAs(path, table);
 
 ####  5. Dapper Query
 
-- `不推薦使用`，會將數據全載入Memory，建議使用`ExecuteReader`
+感謝 @shaofing #552 更正，低內存請使用 `CommandDefinition + CommandFlags.NoCache`，如下
+
+```csharp
+using (var connection = GetConnection(connectionString))
+{
+    var rows = connection.Query(
+        new CommandDefinition(
+            @"select 'MiniExcel' as Column1,1 as Column2 union all select 'Github',2"
+            , CommandFlags.NoCache)
+        )
+    MiniExcel.SaveAs(path, rows);
+}
+```
+
+以下寫法會將數據全載入內存
 
 ```csharp
 using (var connection = GetConnection(connectionString))

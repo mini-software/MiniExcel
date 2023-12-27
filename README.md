@@ -415,6 +415,32 @@ using (var connection = GetConnection(connectionString))
 }
 ```
 
+####  5. Dapper Query
+
+Thanks @shaofing #552 , please use `CommandDefinition + CommandFlags.NoCache`
+
+```csharp
+using (var connection = GetConnection(connectionString))
+{
+    var rows = connection.Query(
+        new CommandDefinition(
+            @"select 'MiniExcel' as Column1,1 as Column2 union all select 'Github',2"
+            , CommandFlags.NoCache)
+        )
+    MiniExcel.SaveAs(path, rows);
+}
+```
+
+Below code will load all data into memory 
+
+```csharp
+using (var connection = GetConnection(connectionString))
+{
+    var rows = connection.Query(@"select 'MiniExcel' as Column1,1 as Column2 union all select 'Github',2");
+    MiniExcel.SaveAs(path, rows);
+}
+```
+
 
 #### 6. SaveAs to MemoryStream  [[Try it]](https://dotnetfiddle.net/JOen0e)
 

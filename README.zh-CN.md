@@ -423,11 +423,12 @@ using (var connection = GetConnection(connectionString))
     var rows = connection.Query(
         new CommandDefinition(
             @"select 'MiniExcel' as Column1,1 as Column2 union all select 'Github',2"
-            , CommandFlags.NoCache)
+            , flags: CommandFlags.NoCache)
         )
     MiniExcel.SaveAs(path, rows);
 }
 ```
+上面的方法已知的问题：不能使用异步QueryAsync的方法，会报连接已经关闭的异常
 
 以下写法会将数据全载入内存
 

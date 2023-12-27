@@ -33,6 +33,19 @@ namespace MiniExcelLibs.Tests
         {
             this.output = output;
         }
+
+
+        [Fact]
+        public void TestIssue553()
+        {
+            var path = PathHelper.GetTempFilePath();
+            var templatePath = PathHelper.GetFile("xlsx/TestIssue553.xlsx");
+            var data = new { B = new[] {
+                new{ ITM=1 },new{ ITM=2 }, new{ ITM=3 },
+            } };
+            MiniExcel.SaveAsByTemplate(path, templatePath, data);
+        }
+
         [Fact]
         public void TestPR10()
         {

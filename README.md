@@ -403,18 +403,6 @@ var table = new DataTable();
 MiniExcel.SaveAs(path, table);
 ```
 
-#### 5. Dapper Query
-
-- `Not recommended`, it will load all data into memory, please use `ExecuteReader`
-
-```csharp
-using (var connection = GetConnection(connectionString))
-{
-    var rows = connection.Query(@"select 'MiniExcel' as Column1,1 as Column2 union all select 'Github',2");
-    MiniExcel.SaveAs(path, rows);
-}
-```
-
 ####  5. Dapper Query
 
 Thanks @shaofing #552 , please use `CommandDefinition + CommandFlags.NoCache`

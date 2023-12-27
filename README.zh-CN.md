@@ -424,7 +424,7 @@ using (var connection = GetConnection(connectionString))
         new CommandDefinition(
             @"select 'MiniExcel' as Column1,1 as Column2 union all select 'Github',2"
             , flags: CommandFlags.NoCache)
-        )
+        );
     MiniExcel.SaveAs(path, rows);
 }
 ```

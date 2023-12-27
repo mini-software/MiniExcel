@@ -413,8 +413,9 @@ using (var connection = GetConnection(connectionString))
     var rows = connection.Query(
         new CommandDefinition(
             @"select 'MiniExcel' as Column1,1 as Column2 union all select 'Github',2"
-            , CommandFlags.NoCache)
-        )
+            , flags: CommandFlags.NoCache)
+        );
+    // Note: QueryAsync will throw close connection exception
     MiniExcel.SaveAs(path, rows);
 }
 ```

@@ -702,28 +702,33 @@ namespace MiniExcelLibs.OpenXml
                                 if (rowInfo.IEnumerableMercell != null)
                                     continue;
 
-                                // https://github.com/shps951023/MiniExcel/issues/207#issuecomment-824518897
-                                for (int i = 1; i < rowInfo.IEnumerableMercell.Height; i++)
+                                // https://github.com/mini-software/MiniExcel/assets/12729184/1a699497-57e8-4602-b01e-9ffcfef1478d
+                                if (rowInfo?.IEnumerableMercell?.Height != null)
                                 {
-                                    mergeBaseRowIndex++;
-                                    var _newRow = row.Clone() as XmlElement;
-                                    _newRow.SetAttribute("r", mergeBaseRowIndex.ToString());
-
-                                    var cs = _newRow.SelectNodes($"x:c", _ns);
-                                    // all v replace by empty
-                                    // TODO: remove c/v
-                                    foreach (XmlElement _c in cs)
+                                    // https://github.com/shps951023/MiniExcel/issues/207#issuecomment-824518897
+                                    for (int i = 1; i < rowInfo.IEnumerableMercell.Height; i++)
                                     {
-                                        _c.RemoveAttribute("t");
-                                        foreach (XmlNode ch in _c.ChildNodes)
-                                        {
-                                            _c.RemoveChild(ch);
-                                        }
-                                    }
+                                        mergeBaseRowIndex++;
+                                        var _newRow = row.Clone() as XmlElement;
+                                        _newRow.SetAttribute("r", mergeBaseRowIndex.ToString());
 
-                                    _newRow.InnerXml = new StringBuilder(_newRow.InnerXml).Replace($"{{{{$rowindex}}}}", mergeBaseRowIndex.ToString()).ToString();
-                                    writer.Write(CleanXml(_newRow.OuterXml, endPrefix));
+                                        var cs = _newRow.SelectNodes($"x:c", _ns);
+                                        // all v replace by empty
+                                        // TODO: remove c/v
+                                        foreach (XmlElement _c in cs)
+                                        {
+                                            _c.RemoveAttribute("t");
+                                            foreach (XmlNode ch in _c.ChildNodes)
+                                            {
+                                                _c.RemoveChild(ch);
+                                            }
+                                        }
+
+                                        _newRow.InnerXml = new StringBuilder(_newRow.InnerXml).Replace($"{{{{$rowindex}}}}", mergeBaseRowIndex.ToString()).ToString();
+                                        writer.Write(CleanXml(_newRow.OuterXml, endPrefix));
+                                    }
                                 }
+     
                             }
                         }
                     }

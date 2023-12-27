@@ -23,7 +23,9 @@
 ---
 
 ### 1.31.3
-- [Bug] Fix DescriptionAttr null check(via @wulaoh)
+- [Bug] DescriptionAttr null check(via @wulaoh)
+- [Bug] Throw custom exception when CSV column not found #543 (via @pszybiak)
+- [Bug] SaveAsByTemplate rowInfo.IEnumerableMercell.Height null exception #553 (via @shps951023)
 
 ### 1.31.2
 - [New] Support automatic merge for same vertical cells between @merge and @endmerge tags (via @eynarhaji)

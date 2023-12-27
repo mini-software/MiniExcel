@@ -28,7 +28,9 @@
 
 
 ### 1.31.3
-- [Bug] 增加 DescriptionAttr null check(via @wulaoh)
+- [Bug] DescriptionAttr null check(via @wulaoh)
+- [Bug] Throw custom exception when CSV column not found #543 (via @pszybiak)
+- [Bug] SaveAsByTemplate rowInfo.IEnumerableMercell.Height null exception #553 (via @shps951023)
 
 ### 1.31.2
 

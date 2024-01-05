@@ -1250,7 +1250,16 @@ var config = new MiniExcelLibs.Csv.CsvConfiguration()
 MiniExcel.SaveAs(path, value,excelType:ExcelType.CSV, configuration: config);
 ```
 
+#### Read empty string as null
 
+By default, empty values are mapped to string.Empty. You can modify this behavior
+
+```csharp
+var config = new MiniExcelLibs.Csv.CsvConfiguration()
+{
+   ReadEmptyStringAsNull = true
+};
+```
 
 
 ### DataReader

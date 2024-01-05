@@ -269,5 +269,55 @@ namespace MiniExcelLibs.Tests
 
             File.Delete(path);
         }
+
+        [Fact()]
+        public async Task CsvReadEmptyStringAsNullTest()
+        {
+            var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.csv");
+            await MiniExcel.SaveAsAsync(path, new[] {
+                new { c1 = "A1" ,c2 = (string)null},
+                new { c1 = (string)null ,c2 = (string)null},
+            });
+
+            using (var stream = File.OpenRead(path))
+            {
+                var rows = stream.Query<Test>(excelType: ExcelType.CSV).ToList();
+                Assert.Equal("A1", rows[0].c1);
+                Assert.Equal(string.Empty, rows[0].c2);
+                Assert.Equal(string.Empty, rows[1].c1);
+                Assert.Equal(string.Empty, rows[1].c2);
+            }
+
+            {
+                var rows = MiniExcel.Query<Test>(path, excelType: ExcelType.CSV).ToList();
+                Assert.Equal("A1", rows[0].c1);
+                Assert.Equal(string.Empty, rows[0].c2);
+                Assert.Equal(string.Empty, rows[1].c1);
+                Assert.Equal(string.Empty, rows[1].c2);
+            }
+
+            var config = new MiniExcelLibs.Csv.CsvConfiguration()
+            {
+                ReadEmptyStringAsNull = true
+            };
+            using (var stream = File.OpenRead(path))
+            {
+                var rows = stream.Query<Test>(excelType: ExcelType.CSV, configuration: config).ToList();
+                Assert.Equal("A1", rows[0].c1);
+                Assert.Null(rows[0].c2);
+                Assert.Null(rows[1].c1);
+                Assert.Null(rows[1].c2);
+            }
+
+            {
+                var rows = MiniExcel.Query<Test>(path, excelType: ExcelType.CSV, configuration: config).ToList();
+                Assert.Equal("A1", rows[0].c1);
+                Assert.Null(rows[0].c2);
+                Assert.Null(rows[1].c1);
+                Assert.Null(rows[1].c2);
+            }
+
+            File.Delete(path);
+        }
     }
 }

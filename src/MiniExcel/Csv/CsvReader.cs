@@ -59,8 +59,17 @@ namespace MiniExcelLibs.Csv
                     //body
                     {
                         var cell = CustomPropertyHelper.GetEmptyExpandoObject(read.Length - 1, 0);
-                        for (int i = 0; i <= read.Length - 1; i++)
-                            cell[ColumnHelper.GetAlphabetColumnName(i)] = read[i];
+                        if (_config.ReadEmptyStringAsNull)
+                        {
+                            for (int i = 0; i <= read.Length - 1; i++)
+                                cell[ColumnHelper.GetAlphabetColumnName(i)] = read[i]?.Length == 0 ? null : read[i];
+                        }
+                        else
+                        {
+                            for (int i = 0; i <= read.Length - 1; i++)
+                                cell[ColumnHelper.GetAlphabetColumnName(i)] = read[i];
+                        }
+
                         yield return cell;
                     }
                 }

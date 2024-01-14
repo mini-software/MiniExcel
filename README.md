@@ -20,11 +20,6 @@
 
 ---
 
-
-## 01/13 希望能更換掉民進黨
-
----
-
 ### Introduction
 
 MiniExcel is simple and efficient to avoid OOM's .NET processing Excel tool.
@@ -1859,7 +1854,8 @@ Thanks for providing a free All product IDE for this project ([License](https://
 
 
 
-
+### Benefit 
+Link https://github.com/mini-software/MiniExcel/issues/560#issue-2080619180
 
 ### Contributors  
 

@@ -1810,6 +1810,10 @@ public static DataTable QueryAsDataTableWithoutEmptyRow(Stream stream, bool useH
 
 
 
+### 收益流水
+目前收益 https://github.com/mini-software/MiniExcel/issues/560#issue-2080619180
+
+
 ### Contributors  
 
 ![](https://contrib.rocks/image?repo=shps951023/MiniExcel)

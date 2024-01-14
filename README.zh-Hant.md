@@ -1788,6 +1788,9 @@ public static DataTable QueryAsDataTableWithoutEmptyRow(Stream stream, bool useH
 
 感謝提供免費IDE支持此專案 ([License](https://user-images.githubusercontent.com/12729184/123988233-6ab17c00-d9fa-11eb-8739-2a08c6a4a263.png))
 
+### 收益流水
+目前收益 https://github.com/mini-software/MiniExcel/issues/560#issue-2080619180
+
 
 
 ### Contributors  

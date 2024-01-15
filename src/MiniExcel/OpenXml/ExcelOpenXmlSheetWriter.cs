@@ -33,6 +33,8 @@ namespace MiniExcelLibs.OpenXml
         public string Name { get; set; }
         public int SheetIdx { get; set; }
         public string Path { get { return $"xl/worksheets/sheet{SheetIdx}.xml"; } }
+
+        public string State { get; set; }
     }
     internal class DrawingDto
     {
@@ -62,7 +64,8 @@ namespace MiniExcelLibs.OpenXml
                 this._archive = new MiniExcelZipArchive(_stream, ZipArchiveMode.Create, true, _utf8WithBom);
             this._printHeader = printHeader;
             this._value = value;
-            _sheets.Add(new SheetDto { Name = sheetName, SheetIdx = 1 }); //TODO:remove
+            var defaultSheetInfo = GetSheetInfos(sheetName);
+            _sheets.Add(defaultSheetInfo.ToDto(1)); //TODO:remove
         }
 
         public ExcelOpenXmlSheetWriter()
@@ -81,12 +84,13 @@ namespace MiniExcelLibs.OpenXml
                     foreach (var sheet in sheets)
                     {
                         sheetId++;
-                        var s = new SheetDto { Name = sheet.Key, SheetIdx = sheetId };
-                        _sheets.Add(s); //TODO:remove
+                        var sheetInfos = GetSheetInfos(sheet.Key);
+                        var sheetDto = sheetInfos.ToDto(sheetId);
+                        _sheets.Add(sheetDto); //TODO:remove
 
                         currentSheetIndex = sheetId;
 
-                        CreateSheetXml(sheet.Value, s.Path);
+                        CreateSheetXml(sheet.Value, sheetDto.Path);
                     }
                 }
                 else if (_value is DataSet)
@@ -97,13 +101,13 @@ namespace MiniExcelLibs.OpenXml
                     foreach (DataTable dt in sheets.Tables)
                     {
                         sheetId++;
-                        var s = new SheetDto { Name = dt.TableName, SheetIdx = sheetId };
-                        _sheets.Add(s); //TODO:remove
-                        var sheetPath = s.Path;
+                        var sheetInfos = GetSheetInfos(dt.TableName);
+                        var sheetDto = sheetInfos.ToDto(sheetId);
+                        _sheets.Add(sheetDto); //TODO:remove
 
                         currentSheetIndex = sheetId;
 
-                        CreateSheetXml(dt, sheetPath);
+                        CreateSheetXml(dt, sheetDto.Path);
                     }
                 }
                 else
@@ -722,6 +726,31 @@ namespace MiniExcelLibs.OpenXml
             return prop;
         }
 
+        private ExcellSheetInfo GetSheetInfos(string sheetName)
+        {
+            var info = new ExcellSheetInfo
+            {
+                ExcelSheetName = sheetName,
+                Key = sheetName,
+                ExcelSheetState = SheetState.Visible
+            };
+
+            if (_configuration.DynamicSheets == null || _configuration.DynamicSheets.Length <= 0)
+                return info;
+
+            var dynamicSheet = _configuration.DynamicSheets.SingleOrDefault(_ => _.Key == sheetName);
+            if (dynamicSheet == null)
+            {
+                return info;
+            }
+
+            if (dynamicSheet.Name != null)
+                info.ExcelSheetName = dynamicSheet.Name;
+            info.ExcelSheetState = dynamicSheet.State;
+
+            return info;
+        }
+
         private static void WriteColumnsWidths(MiniExcelStreamWriter writer, IEnumerable<ExcelColumnInfo> props)
         {
             var ecwProps = props.Where(x => x?.ExcelColumnWidth != null).ToList();
@@ -839,7 +868,14 @@ namespace MiniExcelLibs.OpenXml
                 foreach (var s in _sheets)
                 {
                     sheetId++;
-                    workbookXml.AppendLine($@"<x:sheet name=""{s.Name}"" sheetId=""{sheetId}"" r:id=""{s.ID}"" />");
+                    if (string.IsNullOrEmpty(s.State))
+                    {
+                        workbookXml.AppendLine($@"<x:sheet name=""{s.Name}"" sheetId=""{sheetId}"" r:id=""{s.ID}"" />");
+                    }
+                    else
+                    {
+                        workbookXml.AppendLine($@"<x:sheet name=""{s.Name}"" sheetId=""{sheetId}"" state=""{s.State}"" r:id=""{s.ID}"" />");
+                    }
                     workbookRelsXml.AppendLine($@"<Relationship Type=""http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet"" Target=""/{s.Path}"" Id=""{s.ID}"" />");
 
                     //TODO: support multiple drawing 

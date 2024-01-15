@@ -1,10 +1,10 @@
 ﻿namespace MiniExcelLibs.Utils
 {
     using MiniExcelLibs.Attributes;
+    using MiniExcelLibs.OpenXml;
     using System;
     using System.Collections.Generic;
     using System.ComponentModel;
-    using System.Dynamic;
     using System.Linq;
     using System.Reflection;
 
@@ -21,6 +21,26 @@
         public double? ExcelColumnWidth { get; internal set; }
         public string ExcelIndexName { get; internal set; }
         public bool ExcelIgnore { get; internal set; }
+    }
+
+    internal class ExcellSheetInfo
+    {
+        public object Key { get; set; }
+        public string ExcelSheetName { get; set; }
+        public SheetState ExcelSheetState { get; set; }
+
+        private string ExcelSheetStateAsString
+        {
+            get
+            {
+                return ExcelSheetState.ToString().ToLower();
+            }
+        }
+
+        public SheetDto ToDto(int sheetIndex)
+        {
+            return new SheetDto { Name = ExcelSheetName, SheetIdx = sheetIndex, State = ExcelSheetStateAsString };
+        }
     }
 
     internal static partial class CustomPropertyHelper
@@ -194,6 +214,38 @@
             return ConvertToExcelCustomPropertyInfo(type.GetProperties(bindingFlags), configuration);
         }
 
-    }
 
+        internal static ExcellSheetInfo GetExcellSheetInfo(Type type, Configuration configuration)
+        {
+            // default options
+            var sheetInfo = new ExcellSheetInfo()
+            {
+                Key = type.Name,
+                ExcelSheetName = type.Name,
+                ExcelSheetState = SheetState.Visible
+            };
+
+            // options from ExcelSheetAttribute
+            ExcelSheetAttribute excelSheetAttribute = type.GetCustomAttribute(typeof(ExcelSheetAttribute)) as ExcelSheetAttribute;
+            if (excelSheetAttribute != null)
+            {
+                sheetInfo.ExcelSheetName = excelSheetAttribute.Name;
+                sheetInfo.ExcelSheetState = excelSheetAttribute.State;
+            }
+
+            // options from DynamicSheets configuration
+            OpenXmlConfiguration openXmlCOnfiguration = configuration as OpenXmlConfiguration;
+            if (openXmlCOnfiguration != null && openXmlCOnfiguration.DynamicSheets != null && openXmlCOnfiguration.DynamicSheets.Length > 0)
+            {
+                var dynamicSheet = openXmlCOnfiguration.DynamicSheets.SingleOrDefault(_ => _.Key == type.Name);
+                if (dynamicSheet != null)
+                {
+                    sheetInfo.ExcelSheetName = dynamicSheet.Name;
+                    sheetInfo.ExcelSheetState = dynamicSheet.State;
+                }
+            }
+
+            return sheetInfo;
+        }
+    }
 }

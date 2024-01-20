@@ -8,7 +8,6 @@ using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -560,18 +559,30 @@ namespace MiniExcelLibs.OpenXml
                 // dimension
                 var maxRowIndex = value.Rows.Count + (_printHeader && value.Rows.Count > 0 ? 1 : 0);
                 var maxColumnIndex = value.Columns.Count;
-                writer.Write($@"<x:dimension ref=""{GetDimensionRef(maxRowIndex, maxColumnIndex)}""/><x:sheetData>");
+                writer.Write($@"<x:dimension ref=""{GetDimensionRef(maxRowIndex, maxColumnIndex)}""/>");
 
+                var props = new List<ExcelColumnInfo>();
+                for (var i = 0; i < value.Columns.Count; i++)
+                {
+                    var columnName = value.Columns[i].Caption ?? value.Columns[i].ColumnName;
+                    var prop = GetColumnInfosFromDynamicConfiguration(columnName);
+                    props.Add(prop);
+                }
+
+                WriteColumnsWidths(writer, props);
+
+                writer.Write("<x:sheetData>");
                 if (_printHeader)
                 {
                     writer.Write($"<x:row r=\"{yIndex}\">");
                     var xIndex = xy.Item1;
-                    foreach (DataColumn c in value.Columns)
+                    foreach (var p in props)
                     {
                         var r = ExcelOpenXmlUtils.ConvertXyToCell(xIndex, yIndex);
-                        WriteC(writer, r, columnName: c.Caption ?? c.ColumnName);
+                        WriteC(writer, r, columnName: p.ExcelColumnName);
                         xIndex++;
                     }
+
                     writer.Write($"</x:row>");
                     yIndex++;
                 }
@@ -613,7 +624,7 @@ namespace MiniExcelLibs.OpenXml
                 for (var i = 0; i < reader.FieldCount; i++)
                 {
                     var columnName = reader.GetName(i);
-                    var prop = GetColumnInfosForIDataReader(columnName);
+                    var prop = GetColumnInfosFromDynamicConfiguration(columnName);
                     props.Add(prop);
                 }
 
@@ -662,7 +673,7 @@ namespace MiniExcelLibs.OpenXml
             }
         }
 
-        private ExcelColumnInfo GetColumnInfosForIDataReader(string columnName)
+        private ExcelColumnInfo GetColumnInfosFromDynamicConfiguration(string columnName)
         {
             var prop = new ExcelColumnInfo
             {

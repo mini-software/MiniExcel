@@ -8,7 +8,7 @@ namespace MiniExcelLibs.OpenXml
     {
         private readonly Stream _stream;
         private readonly Encoding _encoding;
-        internal readonly StreamWriter _streamWriter;
+        private readonly StreamWriter _streamWriter;
         private bool disposedValue;
         public MiniExcelStreamWriter(Stream stream,Encoding encoding, int bufferSize)
         {
@@ -26,6 +26,12 @@ namespace MiniExcelLibs.OpenXml
         public long WriteAndFlush(string content)
         {
             this.Write(content);
+            this._streamWriter.Flush();
+            return this._streamWriter.BaseStream.Position;
+        }
+
+        public long Flush()
+        {
             this._streamWriter.Flush();
             return this._streamWriter.BaseStream.Position;
         }

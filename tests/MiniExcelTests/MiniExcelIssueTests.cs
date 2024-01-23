@@ -3402,5 +3402,42 @@ MyProperty4,MyProperty1,MyProperty5,MyProperty2,MyProperty6,,MyProperty3
                 Assert.Contains("../drawings/drawing2.xml", Helpers.GetZipFileContent(path, "xl/worksheets/_rels/sheet2.xml.rels"));
             }
         }
+
+        public class Issue422Enumerable : IEnumerable
+        {
+            public int GetEnumeratorCount { get; private set; }
+
+            private readonly IEnumerable _inner;
+            public Issue422Enumerable(IEnumerable inner)
+            {
+                _inner = inner;
+            }
+
+            public IEnumerator GetEnumerator()
+            {
+                GetEnumeratorCount++;
+                return _inner.GetEnumerator();
+            }
+        }
+
+        /// <summary>
+        /// https://github.com/mini-software/MiniExcel/issues/422
+        /// </summary>
+        [Fact]
+        public void Issue422()
+        {
+            var items = new[]
+            {
+                new { Row1 = "1", Row2 = "2" },
+                new { Row1 = "3", Row2 = "4" }
+            };
+
+            var enumerableWithCount = new Issue422Enumerable(items);
+            var path = PathHelper.GetTempFilePath();
+
+            MiniExcel.SaveAs(path, enumerableWithCount);
+
+            Assert.Equal(1, enumerableWithCount.GetEnumeratorCount);
+        }
     }
 }

@@ -623,11 +623,12 @@ namespace MiniExcelLibs.OpenXml
 
         private void GenerateSheetByIDataReader(MiniExcelStreamWriter writer, IDataReader reader)
         {
-            var xy = ExcelOpenXmlUtils.ConvertCellToXY("A1"); /*TODO:code smell*/
             long dimensionWritePosition = 0;
             writer.Write($@"<?xml version=""1.0"" encoding=""utf-8""?><x:worksheet xmlns:x=""http://schemas.openxmlformats.org/spreadsheetml/2006/main"">");
-            var yIndex = xy.Item2;
-            var xIndex = 0;
+            var xIndex = 1;
+            var yIndex = 1;
+            var maxColumnCount = 0;
+            var maxRowCount = 0;
             {
 
                 if (_configuration.FastMode)
@@ -643,6 +644,7 @@ namespace MiniExcelLibs.OpenXml
                     var prop = GetColumnInfosForIDataReader(columnName);
                     props.Add(prop);
                 }
+                maxColumnCount = props.Count;
 
                 WriteColumnsWidths(writer, props);
                 
@@ -650,23 +652,14 @@ namespace MiniExcelLibs.OpenXml
                 int fieldCount = reader.FieldCount;
                 if (_printHeader)
                 {
-                    writer.Write($"<x:row r=\"{yIndex}\">");
-                    xIndex = xy.Item1;
-                    foreach (var p in props)
-                    {
-                        var r = ExcelOpenXmlUtils.ConvertXyToCell(xIndex, yIndex);
-                        WriteC(writer, r, columnName: p.ExcelColumnName);
-                        xIndex++;
-                    }
-                    writer.Write($"</x:row>");
+                    PrintHeader(writer, props);
                     yIndex++;
                 }
 
                 while (reader.Read())
                 {
                     writer.Write($"<x:row r=\"{yIndex}\">");
-                    xIndex = xy.Item1;
-
+                    xIndex = 1;
                     for (int i = 0; i < fieldCount; i++)
                     {
                         var cellValue = reader.GetValue(i);
@@ -676,16 +669,19 @@ namespace MiniExcelLibs.OpenXml
                     writer.Write($"</x:row>");
                     yIndex++;
                 }
+
+                // Subtract 1 because cell indexing starts with 1
+                maxRowCount = yIndex - 1;
             }
             writer.Write("</x:sheetData>");
             if (_configuration.AutoFilter)
-                writer.Write($"<x:autoFilter ref=\"A1:{ExcelOpenXmlUtils.ConvertXyToCell((xIndex - 1)/*TODO:code smell*/, yIndex - 1)}\" />");
+                writer.Write($"<x:autoFilter ref=\"{GetDimensionRef(maxRowCount, maxColumnCount)}\" />");
             writer.WriteAndFlush("</x:worksheet>");
 
             if (_configuration.FastMode)
             {
                 writer.SetPosition(dimensionWritePosition);
-                writer.WriteAndFlush($@"A1:{ExcelOpenXmlUtils.ConvertXyToCell((xIndex - 1)/*TODO:code smell*/, yIndex - 1)}""");
+                writer.WriteAndFlush($@"{GetDimensionRef(maxRowCount, maxColumnCount)}""");
             }
         }
 

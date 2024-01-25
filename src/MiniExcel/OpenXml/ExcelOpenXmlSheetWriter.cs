@@ -120,10 +120,8 @@ namespace MiniExcelLibs.OpenXml
         }
 
 
-        private void GenerateSheetByEnumerable(MiniExcelStreamWriter writer, IEnumerable values, out Type genericType)
+        private void GenerateSheetByEnumerable(MiniExcelStreamWriter writer, IEnumerable values)
         {
-            genericType = null;
-
             var maxColumnIndex = 0;
             var maxRowIndex = 0;
             List<ExcelColumnInfo> props = null;
@@ -137,7 +135,7 @@ namespace MiniExcelLibs.OpenXml
             }
             else if (!_configuration.FastMode)
             {
-                // The value is only required up front when not in fastmode
+                // The row count is only required up front when not in fastmode
                 collection = new List<object>(values.Cast<object>());
                 rowCount = collection.Count;
             }
@@ -151,7 +149,7 @@ namespace MiniExcelLibs.OpenXml
             if (empty)
             {
                 // only when empty IEnumerable need to check this issue #133  https://github.com/shps951023/MiniExcel/issues/133
-                genericType = TypeHelper.GetGenericIEnumerables(values).FirstOrDefault();
+                var genericType = TypeHelper.GetGenericIEnumerables(values).FirstOrDefault();
                 if (genericType == null || genericType == typeof(object) // sometime generic type will be object, e.g: https://user-images.githubusercontent.com/12729184/132812859-52984314-44d1-4ee8-9487-2d1da159f1f0.png
                     || typeof(IDictionary<string, object>).IsAssignableFrom(genericType)
                     || typeof(IDictionary).IsAssignableFrom(genericType))
@@ -182,8 +180,7 @@ namespace MiniExcelLibs.OpenXml
                 }
                 else
                 {
-                    genericType = firstItem.GetType();
-                    SetGenericTypePropertiesMode(genericType, ref mode, out maxColumnIndex, out props);
+                    SetGenericTypePropertiesMode(firstItem.GetType(), ref mode, out maxColumnIndex, out props);
                 }
             }
 
@@ -227,7 +224,7 @@ namespace MiniExcelLibs.OpenXml
                 else if (mode == "Properties")
                     maxRowIndex = GenerateSheetByColumnInfo<object>(writer, enumerator, props, xIndex, yIndex);
                 else
-                    throw new NotImplementedException($"Type {values.GetType().Name} & genericType {genericType.Name} not Implemented. please issue for me.");
+                    throw new NotImplementedException($"Type {values.GetType().FullName} is not implemented. Please open an issue.");
             }
 
             writer.Write("</x:sheetData>");
@@ -283,10 +280,6 @@ namespace MiniExcelLibs.OpenXml
                     goto End; //for re-using code
                 }
 
-                var type = value.GetType();
-
-                Type genericType = null;
-
                 //DapperRow
 
                 if (value is IDataReader)
@@ -295,7 +288,7 @@ namespace MiniExcelLibs.OpenXml
                 }
                 else if (value is IEnumerable)
                 {
-                    GenerateSheetByEnumerable(writer, value as IEnumerable, out genericType);
+                    GenerateSheetByEnumerable(writer, value as IEnumerable);
                 }
                 else if (value is DataTable)
                 {
@@ -303,7 +296,7 @@ namespace MiniExcelLibs.OpenXml
                 }
                 else
                 {
-                    throw new NotImplementedException($"Type {type.Name} & genericType {genericType.Name} not Implemented. please issue for me.");
+                    throw new NotImplementedException($"Type {value.GetType().FullName} is not implemented. Please open an issue.");
                 }
             }
         End: //for re-using code

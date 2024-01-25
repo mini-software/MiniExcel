@@ -620,8 +620,8 @@ namespace MiniExcelLibs.OpenXml
             writer.Write($@"<?xml version=""1.0"" encoding=""utf-8""?><x:worksheet xmlns:x=""http://schemas.openxmlformats.org/spreadsheetml/2006/main"">");
             var xIndex = 1;
             var yIndex = 1;
-            var maxColumnCount = 0;
-            var maxRowCount = 0;
+            var maxColumnIndex = 0;
+            var maxRowIndex = 0;
             {
 
                 if (_configuration.FastMode)
@@ -637,7 +637,7 @@ namespace MiniExcelLibs.OpenXml
                     var prop = GetColumnInfosForIDataReader(columnName);
                     props.Add(prop);
                 }
-                maxColumnCount = props.Count;
+                maxColumnIndex = props.Count;
 
                 WriteColumnsWidths(writer, props);
                 
@@ -664,17 +664,17 @@ namespace MiniExcelLibs.OpenXml
                 }
 
                 // Subtract 1 because cell indexing starts with 1
-                maxRowCount = yIndex - 1;
+                maxRowIndex = yIndex - 1;
             }
             writer.Write("</x:sheetData>");
             if (_configuration.AutoFilter)
-                writer.Write($"<x:autoFilter ref=\"{GetDimensionRef(maxRowCount, maxColumnCount)}\" />");
+                writer.Write($"<x:autoFilter ref=\"{GetDimensionRef(maxRowIndex, maxColumnIndex)}\" />");
             writer.WriteAndFlush("</x:worksheet>");
 
             if (_configuration.FastMode)
             {
                 writer.SetPosition(dimensionWritePosition);
-                writer.WriteAndFlush($@"{GetDimensionRef(maxRowCount, maxColumnCount)}""");
+                writer.WriteAndFlush($@"{GetDimensionRef(maxRowIndex, maxColumnIndex)}""");
             }
         }
 

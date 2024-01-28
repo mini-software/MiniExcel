@@ -162,9 +162,9 @@
             DescriptionAttribute[] attributes = (DescriptionAttribute[])fi.GetCustomAttributes(
                 typeof(DescriptionAttribute), false);
 
-            if (attributes != null && attributes.Length > 0) 
+            if (attributes != null && attributes.Length > 0)
                 return attributes[0].Description;
-            else 
+            else
                 return source.ToString();
         }
 
@@ -205,7 +205,7 @@
                     ExcelColumnWidth = p.GetAttribute<ExcelColumnWidthAttribute>()?.ExcelColumnWidth ?? excelColumn?.Width,
                     ExcelFormat = excelFormat ?? excelColumn?.Format,
                 };
-            }).Where(_=>_!=null);
+            }).Where(_ => _ != null);
         }
 
         private static IEnumerable<ExcelColumnInfo> GetExcelPropertyInfo(Type type, BindingFlags bindingFlags, Configuration configuration)
@@ -221,7 +221,7 @@
             var sheetInfo = new ExcellSheetInfo()
             {
                 Key = type.Name,
-                ExcelSheetName = type.Name,
+                ExcelSheetName = null, // will be generated automatically as Sheet<Index>
                 ExcelSheetState = SheetState.Visible
             };
 
@@ -229,7 +229,7 @@
             ExcelSheetAttribute excelSheetAttribute = type.GetCustomAttribute(typeof(ExcelSheetAttribute)) as ExcelSheetAttribute;
             if (excelSheetAttribute != null)
             {
-                sheetInfo.ExcelSheetName = excelSheetAttribute.Name;
+                sheetInfo.ExcelSheetName = excelSheetAttribute.Name ?? type.Name;
                 sheetInfo.ExcelSheetState = excelSheetAttribute.State;
             }
 

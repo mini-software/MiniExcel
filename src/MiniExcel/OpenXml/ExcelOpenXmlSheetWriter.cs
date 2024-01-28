@@ -118,6 +118,155 @@ namespace MiniExcelLibs.OpenXml
             _archive.Dispose();
         }
 
+
+        private void GenerateSheetByEnumerable(MiniExcelStreamWriter writer, IEnumerable values)
+        {
+            var maxColumnIndex = 0;
+            var maxRowIndex = 0;
+            List<ExcelColumnInfo> props = null;
+            string mode = null;
+
+            int? rowCount = null;
+            var collection = values as ICollection;
+            if (collection != null)
+            {
+                rowCount = collection.Count;
+            }
+            else if (!_configuration.FastMode)
+            {
+                // The row count is only required up front when not in fastmode
+                collection = new List<object>(values.Cast<object>());
+                rowCount = collection.Count;
+            }
+
+            // Get the enumerator once to ensure deferred linq execution
+            var enumerator = (collection ?? values).GetEnumerator();
+
+            // Move to the first item in order to inspect the value type and determine whether it is empty
+            var empty = !enumerator.MoveNext();
+
+            if (empty)
+            {
+                // only when empty IEnumerable need to check this issue #133  https://github.com/shps951023/MiniExcel/issues/133
+                var genericType = TypeHelper.GetGenericIEnumerables(values).FirstOrDefault();
+                if (genericType == null || genericType == typeof(object) // sometime generic type will be object, e.g: https://user-images.githubusercontent.com/12729184/132812859-52984314-44d1-4ee8-9487-2d1da159f1f0.png
+                    || typeof(IDictionary<string, object>).IsAssignableFrom(genericType)
+                    || typeof(IDictionary).IsAssignableFrom(genericType))
+                {
+                    WriteEmptySheet(writer);
+                    return;
+                }
+                else
+                {
+                    SetGenericTypePropertiesMode(genericType, ref mode, out maxColumnIndex, out props);
+                }
+            }
+            else
+            {
+                var firstItem = enumerator.Current;
+                if (firstItem is IDictionary<string, object> genericDic)
+                {
+                    mode = "IDictionary<string, object>";
+                    props = GetDictionaryColumnInfo(genericDic, null);
+                    maxColumnIndex = props.Count;
+                }
+                else if (firstItem is IDictionary dic)
+                {
+                    mode = "IDictionary";
+                    props = GetDictionaryColumnInfo(null, dic);
+                    //maxColumnIndex = dic.Keys.Count; 
+                    maxColumnIndex = props.Count; // why not using keys, because ignore attribute ![image](https://user-images.githubusercontent.com/12729184/163686902-286abb70-877b-4e84-bd3b-001ad339a84a.png)
+                }
+                else
+                {
+                    SetGenericTypePropertiesMode(firstItem.GetType(), ref mode, out maxColumnIndex, out props);
+                }
+            }
+
+            writer.Write($@"<?xml version=""1.0"" encoding=""utf-8""?><x:worksheet xmlns:r=""http://schemas.openxmlformats.org/officeDocument/2006/relationships"" xmlns:x=""http://schemas.openxmlformats.org/spreadsheetml/2006/main"" >");
+
+            long dimensionWritePosition = 0;
+            
+            // We can write the dimensions directly if the row count is known
+            if (_configuration.FastMode && rowCount == null)
+            {
+                // Write a placeholder for the table dimensions and save thee position for later
+                dimensionWritePosition = writer.WriteAndFlush("<x:dimension ref=\"");
+                writer.Write("                              />");
+            }
+            else
+            {
+                maxRowIndex = rowCount.Value + (_printHeader && rowCount > 0 ? 1 : 0);
+                writer.Write($@"<x:dimension ref=""{GetDimensionRef(maxRowIndex, maxColumnIndex)}""/>");
+            }
+
+            //cols:width
+            WriteColumnsWidths(writer, props);
+
+            //header
+            writer.Write($@"<x:sheetData>");
+            var yIndex = 1;
+            var xIndex = 1;
+            if (_printHeader)
+            {
+                PrintHeader(writer, props);
+                yIndex++;
+            }
+
+            if (!empty)
+            {
+                // body
+                if (mode == "IDictionary<string, object>") //Dapper Row
+                    maxRowIndex = GenerateSheetByColumnInfo<IDictionary<string, object>>(writer, enumerator, props, xIndex, yIndex);
+                else if (mode == "IDictionary") //IDictionary
+                    maxRowIndex = GenerateSheetByColumnInfo<IDictionary>(writer, enumerator, props, xIndex, yIndex);
+                else if (mode == "Properties")
+                    maxRowIndex = GenerateSheetByColumnInfo<object>(writer, enumerator, props, xIndex, yIndex);
+                else
+                    throw new NotImplementedException($"Type {values.GetType().FullName} is not implemented. Please open an issue.");
+            }
+
+            writer.Write("</x:sheetData>");
+            if (_configuration.AutoFilter)
+                writer.Write($"<x:autoFilter ref=\"{GetDimensionRef(maxRowIndex, maxColumnIndex)}\" />");
+
+            // The dimension has already been written if row count is defined
+            if (_configuration.FastMode && rowCount == null)
+            {
+                // Flush and save position so that we can get back again.
+                var pos = writer.Flush();
+
+                // Seek back and write the dimensions of the table
+                writer.SetPosition(dimensionWritePosition);
+                writer.WriteAndFlush($@"{GetDimensionRef(maxRowIndex, maxColumnIndex)}""");
+                writer.SetPosition(pos);
+            }
+
+            writer.Write("<x:drawing  r:id=\"drawing" + currentSheetIndex + "\" /></x:worksheet>");
+        }
+
+        private static void PrintHeader(MiniExcelStreamWriter writer, List<ExcelColumnInfo> props)
+        {
+            var xIndex = 1;
+            var yIndex = 1;
+            writer.Write($"<x:row r=\"{yIndex}\">");
+
+            foreach (var p in props)
+            {
+                if (p == null)
+                {
+                    xIndex++; //reason : https://github.com/shps951023/MiniExcel/issues/142
+                    continue;
+                }
+
+                var r = ExcelOpenXmlUtils.ConvertXyToCell(xIndex, yIndex);
+                WriteC(writer, r, columnName: p.ExcelColumnName);
+                xIndex++;
+            }
+
+            writer.Write("</x:row>");
+        }
+
         private void CreateSheetXml(object value, string sheetPath)
         {
             ZipArchiveEntry entry = _archive.CreateEntry(sheetPath, CompressionLevel.Fastest);
@@ -130,10 +279,6 @@ namespace MiniExcelLibs.OpenXml
                     goto End; //for re-using code
                 }
 
-                var type = value.GetType();
-
-                Type genericType = null;
-
                 //DapperRow
 
                 if (value is IDataReader)
@@ -142,137 +287,7 @@ namespace MiniExcelLibs.OpenXml
                 }
                 else if (value is IEnumerable)
                 {
-                    var values = value as IEnumerable;
-
-                    // try to get type from reflection
-                    // genericType = null
-
-                    var rowCount = 0;
-
-                    var maxColumnIndex = 0;
-                    //List<object> keys = new List<object>();
-                    List<ExcelColumnInfo> props = null;
-                    string mode = null;
-
-                    // reason : https://stackoverflow.com/questions/66797421/how-replace-top-format-mark-after-MiniExcelStreamWriter-writing
-                    // check mode & get maxRowCount & maxColumnIndex
-                    {
-                        foreach (var item in values) //TODO: need to optimize
-                        {
-                            rowCount = checked(rowCount + 1);
-
-                            //TODO: if item is null but it's collection<T>, it can get T type from reflection
-                            if (item != null && mode == null)
-                            {
-                                if (item is IDictionary<string, object>)
-                                {
-                                    mode = "IDictionary<string, object>";
-                                    var dic = item as IDictionary<string, object>;
-                                    props = GetDictionaryColumnInfo(dic, null);
-                                    maxColumnIndex = props.Count;
-                                }
-                                else if (item is IDictionary)
-                                {
-                                    var dic = item as IDictionary;
-                                    mode = "IDictionary";
-                                    props = GetDictionaryColumnInfo(null, dic);
-                                    //maxColumnIndex = dic.Keys.Count; 
-                                    maxColumnIndex = props.Count; // why not using keys, because ignore attribute ![image](https://user-images.githubusercontent.com/12729184/163686902-286abb70-877b-4e84-bd3b-001ad339a84a.png)
-                                }
-                                else
-                                {
-                                    var _t = item.GetType();
-                                    if (_t != genericType)
-                                        genericType = item.GetType();
-                                    genericType = item.GetType();
-                                    SetGenericTypePropertiesMode(genericType, ref mode, out maxColumnIndex, out props);
-                                }
-
-                                var collection = value as ICollection;
-                                if (collection != null)
-                                {
-                                    rowCount = checked((value as ICollection).Count);
-                                    break;
-                                }
-                                continue;
-                            }
-                        }
-                    }
-
-                    if (rowCount == 0)
-                    {
-                        // only when empty IEnumerable need to check this issue #133  https://github.com/shps951023/MiniExcel/issues/133
-                        genericType = TypeHelper.GetGenericIEnumerables(values).FirstOrDefault();
-                        if (genericType == null || genericType == typeof(object) // sometime generic type will be object, e.g: https://user-images.githubusercontent.com/12729184/132812859-52984314-44d1-4ee8-9487-2d1da159f1f0.png
-                            || typeof(IDictionary<string, object>).IsAssignableFrom(genericType)
-                            || typeof(IDictionary).IsAssignableFrom(genericType))
-                        {
-                            WriteEmptySheet(writer);
-                            goto End; //for re-using code
-                        }
-                        else
-                        {
-                            SetGenericTypePropertiesMode(genericType, ref mode, out maxColumnIndex, out props);
-                        }
-                    }
-
-                    writer.Write($@"<?xml version=""1.0"" encoding=""utf-8""?><x:worksheet xmlns:r=""http://schemas.openxmlformats.org/officeDocument/2006/relationships"" xmlns:x=""http://schemas.openxmlformats.org/spreadsheetml/2006/main"" >");
-
-                    // dimension 
-                    var maxRowIndex = rowCount + (_printHeader && rowCount > 0 ? 1 : 0);  //TODO:it can optimize
-                    writer.Write($@"<x:dimension ref=""{GetDimensionRef(maxRowIndex, maxColumnIndex)}""/>");
-
-                    //cols:width
-                    var ecwProp = props?.Where(x => x?.ExcelColumnWidth != null).ToList();
-                    if (ecwProp != null && ecwProp.Count > 0)
-                    {
-                        writer.Write($@"<x:cols>");
-                        foreach (var p in ecwProp)
-                        {
-                            writer.Write($@"<x:col min=""{p.ExcelColumnIndex + 1}"" max=""{p.ExcelColumnIndex + 1}"" width=""{p.ExcelColumnWidth}"" customWidth=""1"" />");
-                        }
-                        writer.Write($@"</x:cols>");
-                    }
-
-                    //header
-                    writer.Write($@"<x:sheetData>");
-                    var yIndex = 1;
-                    var xIndex = 1;
-                    if (_printHeader)
-                    {
-                        var cellIndex = xIndex;
-                        writer.Write($"<x:row r=\"{yIndex}\">");
-
-                        foreach (var p in props)
-                        {
-                            if (p == null)
-                            {
-                                cellIndex++; //reason : https://github.com/shps951023/MiniExcel/issues/142
-                                continue;
-                            }
-
-                            var r = ExcelOpenXmlUtils.ConvertXyToCell(cellIndex, yIndex);
-                            WriteC(writer, r, columnName: p.ExcelColumnName);
-                            cellIndex++;
-                        }
-
-                        writer.Write($"</x:row>");
-                        yIndex++;
-                    }
-
-                    // body
-                    if (mode == "IDictionary<string, object>") //Dapper Row
-                        GenerateSheetByColumnInfo<IDictionary<string, object>>(writer, value as IEnumerable, props, xIndex, yIndex);
-                    else if (mode == "IDictionary") //IDictionary
-                        GenerateSheetByColumnInfo<IDictionary>(writer, value as IEnumerable, props, xIndex, yIndex);
-                    else if (mode == "Properties")
-                        GenerateSheetByColumnInfo<object>(writer, value as IEnumerable, props, xIndex, yIndex);
-                    else
-                        throw new NotImplementedException($"Type {type.Name} & genericType {genericType.Name} not Implemented. please issue for me.");
-                    writer.Write("</x:sheetData>");
-                    if (_configuration.AutoFilter)
-                        writer.Write($"<x:autoFilter ref=\"A1:{ExcelOpenXmlUtils.ConvertXyToCell(maxColumnIndex, maxRowIndex == 0 ? 1 : maxRowIndex)}\" />");
-                    writer.Write("<x:drawing  r:id=\"drawing" + currentSheetIndex + "\" /></x:worksheet>");
+                    GenerateSheetByEnumerable(writer, value as IEnumerable);
                 }
                 else if (value is DataTable)
                 {
@@ -280,7 +295,7 @@ namespace MiniExcelLibs.OpenXml
                 }
                 else
                 {
-                    throw new NotImplementedException($"Type {type.Name} & genericType {genericType.Name} not Implemented. please issue for me.");
+                    throw new NotImplementedException($"Type {value.GetType().FullName} is not implemented. Please open an issue.");
                 }
             }
         End: //for re-using code
@@ -352,12 +367,15 @@ namespace MiniExcelLibs.OpenXml
         {
             writer.Write($@"<?xml version=""1.0"" encoding=""utf-8""?><x:worksheet xmlns:x=""http://schemas.openxmlformats.org/spreadsheetml/2006/main""><x:dimension ref=""A1""/><x:sheetData></x:sheetData></x:worksheet>");
         }
-        private void GenerateSheetByColumnInfo<T>(MiniExcelStreamWriter writer, IEnumerable value, List<ExcelColumnInfo> props, int xIndex = 1, int yIndex = 1)
+        private int GenerateSheetByColumnInfo<T>(MiniExcelStreamWriter writer, IEnumerator value, List<ExcelColumnInfo> props, int xIndex = 1, int yIndex = 1)
         {
             var isDic = typeof(T) == typeof(IDictionary);
             var isDapperRow = typeof(T) == typeof(IDictionary<string, object>);
-            foreach (T v in value)
+            do
             {
+                // The enumerator has already moved to the first item
+                T v = (T)value.Current;
+
                 writer.Write($"<x:row r=\"{yIndex}\">");
                 var cellIndex = xIndex;
                 foreach (var p in props)
@@ -389,7 +407,9 @@ namespace MiniExcelLibs.OpenXml
                 }
                 writer.Write($"</x:row>");
                 yIndex++;
-            }
+            } while (value.MoveNext());
+
+            return yIndex - 1;
         }
 
         private void WriteCell(MiniExcelStreamWriter writer, int rowIndex, int cellIndex, object value, ExcelColumnInfo p)
@@ -607,11 +627,12 @@ namespace MiniExcelLibs.OpenXml
 
         private void GenerateSheetByIDataReader(MiniExcelStreamWriter writer, IDataReader reader)
         {
-            var xy = ExcelOpenXmlUtils.ConvertCellToXY("A1"); /*TODO:code smell*/
             long dimensionWritePosition = 0;
             writer.Write($@"<?xml version=""1.0"" encoding=""utf-8""?><x:worksheet xmlns:x=""http://schemas.openxmlformats.org/spreadsheetml/2006/main"">");
-            var yIndex = xy.Item2;
-            var xIndex = 0;
+            var xIndex = 1;
+            var yIndex = 1;
+            var maxColumnIndex = 0;
+            var maxRowIndex = 0;
             {
 
                 if (_configuration.FastMode)
@@ -627,6 +648,7 @@ namespace MiniExcelLibs.OpenXml
                     var prop = GetColumnInfosFromDynamicConfiguration(columnName);
                     props.Add(prop);
                 }
+                maxColumnIndex = props.Count;
 
                 WriteColumnsWidths(writer, props);
                 
@@ -634,23 +656,14 @@ namespace MiniExcelLibs.OpenXml
                 int fieldCount = reader.FieldCount;
                 if (_printHeader)
                 {
-                    writer.Write($"<x:row r=\"{yIndex}\">");
-                    xIndex = xy.Item1;
-                    foreach (var p in props)
-                    {
-                        var r = ExcelOpenXmlUtils.ConvertXyToCell(xIndex, yIndex);
-                        WriteC(writer, r, columnName: p.ExcelColumnName);
-                        xIndex++;
-                    }
-                    writer.Write($"</x:row>");
+                    PrintHeader(writer, props);
                     yIndex++;
                 }
 
                 while (reader.Read())
                 {
                     writer.Write($"<x:row r=\"{yIndex}\">");
-                    xIndex = xy.Item1;
-
+                    xIndex = 1;
                     for (int i = 0; i < fieldCount; i++)
                     {
                         var cellValue = reader.GetValue(i);
@@ -660,16 +673,19 @@ namespace MiniExcelLibs.OpenXml
                     writer.Write($"</x:row>");
                     yIndex++;
                 }
+
+                // Subtract 1 because cell indexing starts with 1
+                maxRowIndex = yIndex - 1;
             }
             writer.Write("</x:sheetData>");
             if (_configuration.AutoFilter)
-                writer.Write($"<x:autoFilter ref=\"A1:{ExcelOpenXmlUtils.ConvertXyToCell((xIndex - 1)/*TODO:code smell*/, yIndex - 1)}\" />");
+                writer.Write($"<x:autoFilter ref=\"{GetDimensionRef(maxRowIndex, maxColumnIndex)}\" />");
             writer.WriteAndFlush("</x:worksheet>");
 
             if (_configuration.FastMode)
             {
                 writer.SetPosition(dimensionWritePosition);
-                writer.WriteAndFlush($@"A1:{ExcelOpenXmlUtils.ConvertXyToCell((xIndex - 1)/*TODO:code smell*/, yIndex - 1)}""");
+                writer.WriteAndFlush($@"{GetDimensionRef(maxRowIndex, maxColumnIndex)}""");
             }
         }
 

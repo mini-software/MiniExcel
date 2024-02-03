@@ -1,8 +1,6 @@
 ﻿namespace MiniExcelLibs
 {
     using OpenXml;
-    using Utils;
-    using Zip;
     using System;
     using System.Collections;
     using System.Collections.Generic;
@@ -10,6 +8,8 @@
     using System.Dynamic;
     using System.IO;
     using System.Linq;
+    using Utils;
+    using Zip;
 
     public static partial class MiniExcel
     {
@@ -147,7 +147,7 @@
         {
             ExcelTemplateFactory.GetProvider(stream, configuration, excelType).MergeSameCells(filePath);
         }
-        
+
         #endregion
 
         /// <summary>
@@ -215,6 +215,20 @@
 
             var archive = new ExcelOpenXmlZip(stream);
             return new ExcelOpenXmlSheetReader(stream, config).GetWorkbookRels(archive.entries).Select(s => s.Name).ToList();
+        }
+
+        public static List<SheetInfo> GetSheetInformations(string path, OpenXmlConfiguration config = null)
+        {
+            using (var stream = FileHelper.OpenSharedRead(path))
+                return GetSheetInformations(stream, config);
+        }
+
+        public static List<SheetInfo> GetSheetInformations(this Stream stream, OpenXmlConfiguration config = null)
+        {
+            config = config ?? OpenXmlConfiguration.DefaultConfig;
+
+            var archive = new ExcelOpenXmlZip(stream);
+            return new ExcelOpenXmlSheetReader(stream, config).GetWorkbookRels(archive.entries).Select((s, i) => s.ToSheetInfo((uint)i)).ToList();
         }
 
         public static ICollection<string> GetColumns(string path, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null)

@@ -1,10 +1,4 @@
-﻿
-using MiniExcelLibs.Utils;
-
-using System.Collections.Generic;
-using System;
-using System.ComponentModel;
-using MiniExcelLibs.Attributes;
+﻿using MiniExcelLibs.Attributes;
 
 namespace MiniExcelLibs.OpenXml
 {
@@ -19,5 +13,6 @@ namespace MiniExcelLibs.OpenXml
         public bool EnableWriteNullValueCell { get; set; } = true;
         public bool EnableSharedStringCache { get; set; } = true;
         public long SharedStringCacheSize { get; set; } = 5 * 1024 * 1024;
+        public DynamicExcelSheet[] DynamicSheets { get; set; }
     }
 }

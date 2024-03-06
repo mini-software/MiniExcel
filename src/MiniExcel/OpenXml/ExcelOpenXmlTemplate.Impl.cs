@@ -475,7 +475,8 @@ namespace MiniExcelLibs.OpenXml
                                         rowXml.Replace(key, "");
                                         continue;
                                     }
-
+                                    if (!dic.ContainsKey(propInfo.Key))
+                                        continue;
                                     var cellValue = dic[propInfo.Key];
                                     if (cellValue == null)
                                     {
@@ -985,12 +986,15 @@ namespace MiniExcelLibs.OpenXml
                                 v.InnerText = v.InnerText.Replace($"{{{{{propNames[0]}}}}}", propNames[1]);
                                 break;
                             }
+                            if (!xRowInfo.PropsMap.ContainsKey(propNames[1]))
+                            {
+                                v.InnerText = v.InnerText.Replace($"{{{{{propNames[0]}.{propNames[1]}}}}}", "");
+                                continue;
+                                throw new InvalidDataException($"{propNames[0]} doesn't have {propNames[1]} property");
+                            }
                             // auto check type https://github.com/shps951023/MiniExcel/issues/177
                             var prop = xRowInfo.PropsMap[propNames[1]];
                             var type = prop.UnderlyingTypePropType; //avoid nullable 
-                                                                    // 
-                            if (!xRowInfo.PropsMap.ContainsKey(propNames[1]))
-                                throw new InvalidDataException($"{propNames[0]} doesn't have {propNames[1]} property");
 
                             if (isMultiMatch)
                             {

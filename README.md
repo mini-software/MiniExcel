@@ -20,11 +20,6 @@
 
 ---
 
-
-## 01/13 希望能更換掉民進黨
-
----
-
 ### Introduction
 
 MiniExcel is simple and efficient to avoid OOM's .NET processing Excel tool.
@@ -1126,7 +1121,42 @@ Since V1.26.0, we can set the attributes of Column dynamically
 ```
 ![image](https://user-images.githubusercontent.com/12729184/164510353-5aecbc4e-c3ce-41e8-b6cf-afd55eb23b68.png)
 
+#### 8. DynamicSheetAttribute
 
+Since V1.31.4 we can set the attributes of Sheet dynamically. We can set sheet name and state (visibility).
+```csharp
+            var configuration = new OpenXmlConfiguration
+            {
+                DynamicSheets = new DynamicExcelSheet[] {
+                    new DynamicExcelSheet("usersSheet") { Name = "Users", State = SheetState.Visible },
+                    new DynamicExcelSheet("departmentSheet") { Name = "Departments", State = SheetState.Hidden }
+                }
+            };
+
+            var users = new[] { new { Name = "Jack", Age = 25 }, new { Name = "Mike", Age = 44 } };
+            var department = new[] { new { ID = "01", Name = "HR" }, new { ID = "02", Name = "IT" } };
+            var sheets = new Dictionary<string, object>
+            {
+                ["usersSheet"] = users,
+                ["departmentSheet"] = department
+            };
+
+            var path = PathHelper.GetTempPath();
+            MiniExcel.SaveAs(path, sheets, configuration: configuration);
+```
+
+We can also use new attribute ExcelSheetAttribute:
+
+```C#
+   [ExcelSheet(Name = "Departments", State = SheetState.Hidden)]
+   private class DepartmentDto
+   {
+      [ExcelColumn(Name = "ID",Index = 0)]
+      public string ID { get; set; }
+      [ExcelColumn(Name = "Name",Index = 1)]
+      public string Name { get; set; }
+   }
+```
 
 ### Add, Delete, Update
 
@@ -1688,6 +1718,21 @@ foreach (var sheet in sheets)
 
 ![image](https://user-images.githubusercontent.com/12729184/116199841-2a1f5300-a76a-11eb-90a3-6710561cf6db.png)
 
+#### Q. How to query or export information about sheet visibility?
+
+A. `GetSheetInformations` method.
+
+
+
+```csharp
+var sheets = MiniExcel.GetSheetInformations(path);
+foreach (var sheetInfo in sheets)
+{
+    Console.WriteLine($"sheet index : {sheetInfo.Index} "); // next sheet index - numbered from 0
+    Console.WriteLine($"sheet name : {sheetInfo.Name} ");   // sheet name
+    Console.WriteLine($"sheet state : {sheetInfo.State} "); // sheet visibility state - visible / hidden
+}
+```
 
 
 #### Q. Whether to use Count will load all data into the memory?
@@ -1859,7 +1904,8 @@ Thanks for providing a free All product IDE for this project ([License](https://
 
 
 
-
+### Benefit 
+Link https://github.com/mini-software/MiniExcel/issues/560#issue-2080619180
 
 ### Contributors  
 

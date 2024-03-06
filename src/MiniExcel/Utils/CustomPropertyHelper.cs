@@ -1,10 +1,10 @@
 ﻿namespace MiniExcelLibs.Utils
 {
     using MiniExcelLibs.Attributes;
+    using MiniExcelLibs.OpenXml;
     using System;
     using System.Collections.Generic;
     using System.ComponentModel;
-    using System.Dynamic;
     using System.Linq;
     using System.Reflection;
 
@@ -21,6 +21,26 @@
         public double? ExcelColumnWidth { get; internal set; }
         public string ExcelIndexName { get; internal set; }
         public bool ExcelIgnore { get; internal set; }
+    }
+
+    internal class ExcellSheetInfo
+    {
+        public object Key { get; set; }
+        public string ExcelSheetName { get; set; }
+        public SheetState ExcelSheetState { get; set; }
+
+        private string ExcelSheetStateAsString
+        {
+            get
+            {
+                return ExcelSheetState.ToString().ToLower();
+            }
+        }
+
+        public SheetDto ToDto(int sheetIndex)
+        {
+            return new SheetDto { Name = ExcelSheetName, SheetIdx = sheetIndex, State = ExcelSheetStateAsString };
+        }
     }
 
     internal static partial class CustomPropertyHelper
@@ -142,9 +162,9 @@
             DescriptionAttribute[] attributes = (DescriptionAttribute[])fi.GetCustomAttributes(
                 typeof(DescriptionAttribute), false);
 
-            if (attributes != null && attributes.Length > 0) 
+            if (attributes != null && attributes.Length > 0)
                 return attributes[0].Description;
-            else 
+            else
                 return source.ToString();
         }
 
@@ -185,7 +205,7 @@
                     ExcelColumnWidth = p.GetAttribute<ExcelColumnWidthAttribute>()?.ExcelColumnWidth ?? excelColumn?.Width,
                     ExcelFormat = excelFormat ?? excelColumn?.Format,
                 };
-            }).Where(_=>_!=null);
+            }).Where(_ => _ != null);
         }
 
         private static IEnumerable<ExcelColumnInfo> GetExcelPropertyInfo(Type type, BindingFlags bindingFlags, Configuration configuration)
@@ -194,6 +214,38 @@
             return ConvertToExcelCustomPropertyInfo(type.GetProperties(bindingFlags), configuration);
         }
 
-    }
 
+        internal static ExcellSheetInfo GetExcellSheetInfo(Type type, Configuration configuration)
+        {
+            // default options
+            var sheetInfo = new ExcellSheetInfo()
+            {
+                Key = type.Name,
+                ExcelSheetName = null, // will be generated automatically as Sheet<Index>
+                ExcelSheetState = SheetState.Visible
+            };
+
+            // options from ExcelSheetAttribute
+            ExcelSheetAttribute excelSheetAttribute = type.GetCustomAttribute(typeof(ExcelSheetAttribute)) as ExcelSheetAttribute;
+            if (excelSheetAttribute != null)
+            {
+                sheetInfo.ExcelSheetName = excelSheetAttribute.Name ?? type.Name;
+                sheetInfo.ExcelSheetState = excelSheetAttribute.State;
+            }
+
+            // options from DynamicSheets configuration
+            OpenXmlConfiguration openXmlCOnfiguration = configuration as OpenXmlConfiguration;
+            if (openXmlCOnfiguration != null && openXmlCOnfiguration.DynamicSheets != null && openXmlCOnfiguration.DynamicSheets.Length > 0)
+            {
+                var dynamicSheet = openXmlCOnfiguration.DynamicSheets.SingleOrDefault(_ => _.Key == type.Name);
+                if (dynamicSheet != null)
+                {
+                    sheetInfo.ExcelSheetName = dynamicSheet.Name;
+                    sheetInfo.ExcelSheetState = dynamicSheet.State;
+                }
+            }
+
+            return sheetInfo;
+        }
+    }
 }

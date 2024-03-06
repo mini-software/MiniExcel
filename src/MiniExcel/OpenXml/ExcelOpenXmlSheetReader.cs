@@ -8,7 +8,6 @@ using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
@@ -25,7 +24,7 @@ namespace MiniExcelLibs.OpenXml
         private MergeCells _mergeCells;
         private ExcelOpenXmlStyles _style;
         private readonly ExcelOpenXmlZip _archive;
-        private OpenXmlConfiguration _config;
+        private readonly OpenXmlConfiguration _config;
 
         private static readonly XmlReaderSettings _xmlSettings = new XmlReaderSettings
         {
@@ -56,10 +55,19 @@ namespace MiniExcelLibs.OpenXml
             if (sheetName != null)
             {
                 SetWorkbookRels(_archive.entries);
-                var s = _sheetRecords.SingleOrDefault(_ => _.Name == sheetName);
-                if (s == null)
+                var sheetRecord = _sheetRecords.SingleOrDefault(_ => _.Name == sheetName);
+                if (sheetRecord == null && _config.DynamicSheets != null)
+                {
+                    var sheetConfig = _config.DynamicSheets.FirstOrDefault(ds => ds.Key == sheetName);
+                    if (sheetConfig != null)
+                    {
+                        sheetRecord = _sheetRecords.SingleOrDefault(_ => _.Name == sheetConfig.Name);
+                    }
+                }
+                if (sheetRecord == null)
                     throw new InvalidOperationException("Please check sheetName/Index is correct");
-                sheetEntry = sheets.Single(w => w.FullName == $"xl/{s.Path}" || w.FullName == $"/xl/{s.Path}" || w.FullName == s.Path || s.Path == $"/{w.FullName}");
+
+                sheetEntry = sheets.Single(w => w.FullName == $"xl/{sheetRecord.Path}" || w.FullName == $"/xl/{sheetRecord.Path}" || w.FullName == sheetRecord.Path || sheetRecord.Path == $"/{w.FullName}");
             }
             else if (sheets.Count() > 1)
             {
@@ -402,6 +410,14 @@ namespace MiniExcelLibs.OpenXml
 
         public IEnumerable<T> Query<T>(string sheetName, string startCell) where T : class, new()
         {
+            if (sheetName == null)
+            {
+                var sheetInfo = CustomPropertyHelper.GetExcellSheetInfo(typeof(T), this._config);
+                if (sheetInfo != null)
+                {
+                    sheetName = sheetInfo.ExcelSheetName;
+                }
+            }
             return ExcelOpenXmlSheetReader.QueryImpl<T>(Query(false, sheetName, startCell), startCell, this._config);
         }
 
@@ -562,6 +578,7 @@ namespace MiniExcelLibs.OpenXml
                             {
                                 yield return new SheetRecord(
                                     reader.GetAttribute("name"),
+                                    reader.GetAttribute("state"),
                                     uint.Parse(reader.GetAttribute("sheetId")),
                                     XmlReaderHelper.GetAttribute(reader, "id", _relationshiopNs)
                                 );

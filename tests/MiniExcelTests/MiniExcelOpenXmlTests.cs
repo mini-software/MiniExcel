@@ -1242,7 +1242,60 @@ namespace MiniExcelLibs.Tests
                 Assert.Contains("Its value", rows[0]);
                 Assert.Contains("Name of something", rows[1]);
                 Assert.Contains("Its value", rows[1]);
-                
+
+                Assert.Equal("MiniExcel", rows[0]["Name of something"]);
+                Assert.Equal(1D, rows[0]["Its value"]);
+                Assert.Equal("Github", rows[1]["Name of something"]);
+                Assert.Equal(2D, rows[1]["Its value"]);
+            }
+        }
+
+        [Fact]
+        public void DynamicColumnsConfigurationIsUsedWhenCreatingExcelUsingDataTable()
+        {
+            var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
+            var table = new DataTable();
+            {
+                table.Columns.Add("Column1", typeof(string));
+                table.Columns.Add("Column2", typeof(int));
+                table.Rows.Add("MiniExcel", 1);
+                table.Rows.Add("Github", 2);
+            }
+
+            var configuration = new OpenXmlConfiguration
+            {
+                DynamicColumns = new[]
+                {
+                    new DynamicExcelColumn("Column1")
+                    {
+                        Name = "Name of something",
+                        Index = 0,
+                        Width = 150
+                    },
+                    new DynamicExcelColumn("Column2")
+                    {
+                        Name = "Its value",
+                        Index = 1,
+                        Width = 150
+                    }
+                }
+            };
+
+            MiniExcel.SaveAs(path, table, configuration: configuration);
+
+            using (var stream = File.OpenRead(path))
+            {
+                var rows = stream.Query(useHeaderRow: true)
+                    .Select(x => (IDictionary<string, object>)x)
+                    .Select(x => (IDictionary<string, object>)x)
+                    .ToList();
+
+                Assert.Contains("Name of something", rows[0]);
+                Assert.Contains("Its value", rows[0]);
+                Assert.Contains("Name of something", rows[1]);
+                Assert.Contains("Its value", rows[1]);
+
+
                 Assert.Equal("MiniExcel", rows[0]["Name of something"]);
                 Assert.Equal(1D, rows[0]["Its value"]);
                 Assert.Equal("Github", rows[1]["Name of something"]);

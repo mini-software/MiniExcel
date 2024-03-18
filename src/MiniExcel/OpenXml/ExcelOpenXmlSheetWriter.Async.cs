@@ -4,14 +4,11 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
-using System.Globalization;
-using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using static MiniExcelLibs.Utils.ImageHelper;
 
 namespace MiniExcelLibs.OpenXml
 {
@@ -19,7 +16,7 @@ namespace MiniExcelLibs.OpenXml
     {
         public async Task SaveAsAsync(CancellationToken cancellationToken = default(CancellationToken))
         {
-            GenerateDefaultOpenXml();
+            await GenerateDefaultOpenXmlAsync(cancellationToken);
 
             switch (_value)
             {
@@ -69,8 +66,31 @@ namespace MiniExcelLibs.OpenXml
                     break;
             }
 
-            GenerateEndXml();
+            await GenerateEndXmlAsync(cancellationToken);
             _archive.Dispose();
+        }
+
+        internal async Task GenerateDefaultOpenXmlAsync(CancellationToken cancellationToken)
+        {
+            await CreateZipEntryAsync("_rels/.rels", "application/vnd.openxmlformats-package.relationships+xml", ExcelOpenXmlSheetWriter._defaultRels, cancellationToken);
+            await CreateZipEntryAsync("xl/sharedStrings.xml", "application/vnd.openxmlformats-package.relationships+xml", ExcelOpenXmlSheetWriter._defaultSharedString, cancellationToken);
+        }
+
+        private async Task CreateZipEntryAsync(string path, string contentType, string content, CancellationToken cancellationToken)
+        {
+            ZipArchiveEntry entry = _archive.CreateEntry(path, CompressionLevel.Fastest);
+            using (var zipStream = entry.Open())
+            using (MiniExcelAsyncStreamWriter writer = new MiniExcelAsyncStreamWriter(zipStream, _utf8WithBom, _configuration.BufferSize, cancellationToken))
+                await writer.WriteAsync(content);
+            if (!string.IsNullOrEmpty(contentType))
+                _zipDictionary.Add(path, new ZipPackageInfo(entry, contentType));
+        }
+
+        private async Task CreateZipEntryAsync(string path, byte[] content, CancellationToken cancellationToken)
+        {
+            ZipArchiveEntry entry = _archive.CreateEntry(path, CompressionLevel.Fastest);
+            using (var zipStream = entry.Open())
+                await zipStream.WriteAsync(content, 0, content.Length, cancellationToken);
         }
 
         private async Task CreateSheetXmlAsync(object value, string sheetPath, CancellationToken cancellationToken)
@@ -479,6 +499,136 @@ namespace MiniExcelLibs.OpenXml
             } while (value.MoveNext());
 
             return yIndex - 1;
+        }
+
+        private async Task GenerateEndXmlAsync(CancellationToken cancellationToken)
+        {
+            //Files
+            {
+                foreach (var item in _files)
+                {
+                    await this.CreateZipEntryAsync(item.Path, item.Byte, cancellationToken);
+                }
+            }
+
+            // styles.xml 
+            {
+                var styleXml = string.Empty;
+
+                if (_configuration.TableStyles == TableStyles.None)
+                {
+                    styleXml = _noneStylesXml;
+                }
+                else if (_configuration.TableStyles == TableStyles.Default)
+                {
+                    styleXml = _defaultStylesXml;
+                }
+                
+                await CreateZipEntryAsync(@"xl/styles.xml", "application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml", styleXml, cancellationToken);
+            }
+
+            // drawing rel
+            {
+                for (int j = 0; j < _sheets.Count; j++)
+                {
+                    var drawing = new StringBuilder();
+                    foreach (var i in _files.Where(w => w.IsImage && w.SheetId == j + 1))
+                    {
+                        drawing.AppendLine($@"<Relationship Type=""http://schemas.openxmlformats.org/officeDocument/2006/relationships/image"" Target=""{i.Path2}"" Id=""{i.ID}"" />");
+                    }
+                    await CreateZipEntryAsync($"xl/drawings/_rels/drawing{j + 1}.xml.rels", "",
+                        _defaultDrawingXmlRels.Replace("{{format}}", drawing.ToString()), cancellationToken);
+                }
+
+            }
+            // drawing
+            {
+                for (int j = 0; j < _sheets.Count; j++)
+                {
+                    var drawing = new StringBuilder();
+                    foreach (var i in _files.Where(w => w.IsImage && w.SheetId == j + 1))
+                    {
+                        drawing.Append($@"<xdr:oneCellAnchor>
+        <xdr:from>
+            <xdr:col>{i.CellIndex - 1/* why -1 : https://user-images.githubusercontent.com/12729184/150460189-f08ed939-44d4-44e1-be6e-9c533ece6be8.png*/}</xdr:col>
+            <xdr:colOff>0</xdr:colOff>
+            <xdr:row>{i.RowIndex - 1}</xdr:row>
+            <xdr:rowOff>0</xdr:rowOff>
+        </xdr:from>
+        <xdr:ext cx=""609600"" cy=""190500"" />
+        <xdr:pic>
+            <xdr:nvPicPr>
+                <xdr:cNvPr id=""{_files.IndexOf(i) + 1}"" descr="""" name=""2a3f9147-58ea-4a79-87da-7d6114c4877b"" />
+                <xdr:cNvPicPr>
+                    <a:picLocks noChangeAspect=""1"" />
+                </xdr:cNvPicPr>
+            </xdr:nvPicPr>
+            <xdr:blipFill>
+                <a:blip r:embed=""{i.ID}"" cstate=""print"" />
+                <a:stretch>
+                    <a:fillRect />
+                </a:stretch>
+            </xdr:blipFill>
+            <xdr:spPr>
+                <a:xfrm>
+                    <a:off x=""0"" y=""0"" />
+                    <a:ext cx=""0"" cy=""0"" />
+                </a:xfrm>
+                <a:prstGeom prst=""rect"">
+                    <a:avLst />
+                </a:prstGeom>
+            </xdr:spPr>
+        </xdr:pic>
+        <xdr:clientData />
+    </xdr:oneCellAnchor>");
+                    }
+                    await CreateZipEntryAsync($"xl/drawings/drawing{j + 1}.xml", "application/vnd.openxmlformats-officedocument.drawing+xml",
+                        _defaultDrawing.Replace("{{format}}", drawing.ToString()), cancellationToken);
+                }
+            }
+
+            // workbook.xml 、 workbookRelsXml
+            {
+                var workbookXml = new StringBuilder();
+                var workbookRelsXml = new StringBuilder();
+
+                var sheetId = 0;
+                foreach (var s in _sheets)
+                {
+                    sheetId++;
+                    if (string.IsNullOrEmpty(s.State))
+                    {
+                        workbookXml.AppendLine($@"<x:sheet name=""{s.Name}"" sheetId=""{sheetId}"" r:id=""{s.ID}"" />");
+                    }
+                    else
+                    {
+                        workbookXml.AppendLine($@"<x:sheet name=""{s.Name}"" sheetId=""{sheetId}"" state=""{s.State}"" r:id=""{s.ID}"" />");
+                    }
+                    workbookRelsXml.AppendLine($@"<Relationship Type=""http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet"" Target=""/{s.Path}"" Id=""{s.ID}"" />");
+
+                    //TODO: support multiple drawing 
+                    //TODO: ../drawings/drawing1.xml or /xl/drawings/drawing1.xml
+                    var sheetRelsXml = $@"<Relationship Type=""http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing"" Target=""../drawings/drawing{sheetId}.xml"" Id=""drawing{sheetId}"" />";
+                    await CreateZipEntryAsync($"xl/worksheets/_rels/sheet{s.SheetIdx}.xml.rels", "",
+                        _defaultSheetRelXml.Replace("{{format}}", sheetRelsXml), cancellationToken);
+                }
+                await CreateZipEntryAsync(@"xl/workbook.xml", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml",
+                    _defaultWorkbookXml.Replace("{{sheets}}", workbookXml.ToString()), cancellationToken);
+                await CreateZipEntryAsync(@"xl/_rels/workbook.xml.rels", "",
+                    _defaultWorkbookXmlRels.Replace("{{sheets}}", workbookRelsXml.ToString()), cancellationToken);
+            }
+
+            //[Content_Types].xml 
+            {
+                var sb = new StringBuilder(@"<?xml version=""1.0"" encoding=""UTF-8"" standalone=""yes""?><Types xmlns=""http://schemas.openxmlformats.org/package/2006/content-types""><Default ContentType=""application/vnd.openxmlformats-officedocument.spreadsheetml.printerSettings"" Extension=""bin""/><Default ContentType=""application/xml"" Extension=""xml""/><Default ContentType=""image/jpeg"" Extension=""jpg""/><Default ContentType=""image/png"" Extension=""png""/><Default ContentType=""image/gif"" Extension=""gif""/><Default ContentType=""application/vnd.openxmlformats-package.relationships+xml"" Extension=""rels""/>");
+                foreach (var p in _zipDictionary)
+                    sb.Append($"<Override ContentType=\"{p.Value.ContentType}\" PartName=\"/{p.Key}\" />");
+                sb.Append("</Types>");
+                ZipArchiveEntry entry = _archive.CreateEntry("[Content_Types].xml", CompressionLevel.Fastest);
+                using (var zipStream = entry.Open())
+                using (MiniExcelStreamWriter writer = new MiniExcelStreamWriter(zipStream, _utf8WithBom, _configuration.BufferSize))
+                    writer.Write(sb.ToString());
+            }
         }
     }
 }

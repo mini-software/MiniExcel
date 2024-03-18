@@ -122,7 +122,6 @@ namespace MiniExcelLibs.OpenXml
             _archive.Dispose();
         }
 
-
         private void GenerateSheetByEnumerable(MiniExcelStreamWriter writer, IEnumerable values)
         {
             var maxColumnIndex = 0;
@@ -371,6 +370,7 @@ namespace MiniExcelLibs.OpenXml
         {
             writer.Write($@"<?xml version=""1.0"" encoding=""utf-8""?><x:worksheet xmlns:x=""http://schemas.openxmlformats.org/spreadsheetml/2006/main""><x:dimension ref=""A1""/><x:sheetData></x:sheetData></x:worksheet>");
         }
+
         private int GenerateSheetByColumnInfo<T>(MiniExcelStreamWriter writer, IEnumerator value, List<ExcelColumnInfo> props, int xIndex = 1, int yIndex = 1)
         {
             var isDic = typeof(T) == typeof(IDictionary);
@@ -428,6 +428,22 @@ namespace MiniExcelLibs.OpenXml
                 return;
             }
 
+            var tuple = GetCellValue(rowIndex, cellIndex, value, p, valueIsNull);
+
+            s = tuple.Item1;
+            var t = tuple.Item2;
+            var v = tuple.Item3;
+
+            if (v != null && (v.StartsWith(" ", StringComparison.Ordinal) || v.EndsWith(" ", StringComparison.Ordinal))) /*Prefix and suffix blank space will lost after SaveAs #294*/
+                writer.Write($"<x:c r=\"{columname}\" {(t == null ? "" : $"t =\"{t}\"")} s=\"{s}\" xml:space=\"preserve\"><x:v>{v}</x:v></x:c>");
+            else
+                //t check avoid format error ![image](https://user-images.githubusercontent.com/12729184/118770190-9eee3480-b8b3-11eb-9f5a-87a439f5e320.png)
+                writer.Write($"<x:c r=\"{columname}\" {(t == null ? "" : $"t =\"{t}\"")} s=\"{s}\"><x:v>{v}</x:v></x:c>");
+        }
+
+        private Tuple<string, string, string> GetCellValue(int rowIndex, int cellIndex, object value, ExcelColumnInfo p, bool valueIsNull)
+        {
+            var s = "2";
             var v = string.Empty;
             var t = "str";
 
@@ -564,11 +580,7 @@ namespace MiniExcelLibs.OpenXml
                 }
             }
 
-            if (v != null && (v.StartsWith(" ", StringComparison.Ordinal) || v.EndsWith(" ", StringComparison.Ordinal))) /*Prefix and suffix blank space will lost after SaveAs #294*/
-                writer.Write($"<x:c r=\"{columname}\" {(t == null ? "" : $"t =\"{t}\"")} s=\"{s}\" xml:space=\"preserve\"><x:v>{v}</x:v></x:c>");
-            else
-                //t check avoid format error ![image](https://user-images.githubusercontent.com/12729184/118770190-9eee3480-b8b3-11eb-9f5a-87a439f5e320.png)
-                writer.Write($"<x:c r=\"{columname}\" {(t == null ? "" : $"t =\"{t}\"")} s=\"{s}\"><x:v>{v}</x:v></x:c>");
+            return Tuple.Create(s, t, v);
         }
 
         private void GenerateSheetByDataTable(MiniExcelStreamWriter writer, DataTable value)
@@ -915,11 +927,6 @@ namespace MiniExcelLibs.OpenXml
             else
                 dimensionRef = $"A1:{ColumnHelper.GetAlphabetColumnName(maxColumnIndex - 1)}{maxRowIndex}";
             return dimensionRef;
-        }
-
-        public async Task SaveAsAsync(CancellationToken cancellationToken = default(CancellationToken))
-        {
-            await Task.Run(() => SaveAs(), cancellationToken).ConfigureAwait(false);
         }
 
         public void Insert()

@@ -870,11 +870,11 @@ namespace MiniExcelLibs.OpenXml
                     sheetId++;
                     if (string.IsNullOrEmpty(s.State))
                     {
-                        workbookXml.AppendLine($@"<x:sheet name=""{s.Name}"" sheetId=""{sheetId}"" r:id=""{s.ID}"" />");
+                        workbookXml.AppendLine($@"<x:sheet name=""{ExcelOpenXmlUtils.EncodeXML(s.Name)}"" sheetId=""{sheetId}"" r:id=""{s.ID}"" />");
                     }
                     else
                     {
-                        workbookXml.AppendLine($@"<x:sheet name=""{s.Name}"" sheetId=""{sheetId}"" state=""{s.State}"" r:id=""{s.ID}"" />");
+                        workbookXml.AppendLine($@"<x:sheet name=""{ExcelOpenXmlUtils.EncodeXML(s.Name)}"" sheetId=""{sheetId}"" state=""{s.State}"" r:id=""{s.ID}"" />");
                     }
                     workbookRelsXml.AppendLine($@"<Relationship Type=""http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet"" Target=""/{s.Path}"" Id=""{s.ID}"" />");
 

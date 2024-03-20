@@ -678,7 +678,7 @@ namespace MiniExcelLibs.Tests
                     table.Rows.Add(@"<test>Hello World</test>", -1234567890, false, now.Date);
                 }
 
-                MiniExcel.SaveAs(path, table);
+                MiniExcel.SaveAs(path, table, sheetName: "R&D");
 
                 using (var p = new ExcelPackage(new FileInfo(path)))
                 {
@@ -693,6 +693,8 @@ namespace MiniExcelLibs.Tests
                     Assert.True(ws.Cells["B2"].Value.ToString() == @"1234567890");
                     Assert.True(ws.Cells["C2"].Value.ToString() == true.ToString());
                     Assert.True(ws.Cells["D2"].Value.ToString() == now.ToString());
+
+                    Assert.True(ws.Name == "R&D");
                 }
 
                 File.Delete(path);
@@ -708,6 +710,8 @@ namespace MiniExcelLibs.Tests
                 }
 
                 MiniExcel.SaveAs(path, table);
+
+                File.Delete(path);
             }
         }
 
@@ -760,10 +764,15 @@ namespace MiniExcelLibs.Tests
             {
                 var values = new List<Dictionary<string, object>>()
                 {
-                    new Dictionary<string, object>(){ { "Column1","MiniExcel"},{ "Column2", 1} },
-                     new Dictionary<string, object>(){ { "Column1", "Github" },{ "Column2", 2} },
+                    new() { { "Column1", "MiniExcel" }, { "Column2", 1 } },
+                    new() { { "Column1", "Github" }, { "Column2", 2 } },
                 };
-                MiniExcel.SaveAs(path, values);
+                var sheets = new Dictionary<string, object>
+                {
+                    ["R&D"] = values,
+                    ["success!"] = values
+                };
+                MiniExcel.SaveAs(path, sheets);
 
                 using (var stream = File.OpenRead(path))
                 {
@@ -774,6 +783,8 @@ namespace MiniExcelLibs.Tests
                     Assert.Equal(1, rows[1].B);
                     Assert.Equal("Github", rows[2].A);
                     Assert.Equal(2, rows[2].B);
+
+                    Assert.Equal("R&D", stream.GetSheetNames()[0]);
                 }
 
                 using (var stream = File.OpenRead(path))
@@ -785,6 +796,8 @@ namespace MiniExcelLibs.Tests
                     Assert.Equal(1, rows[0].Column2);
                     Assert.Equal("Github", rows[1].Column1);
                     Assert.Equal(2, rows[1].Column2);
+
+                    Assert.Equal("success!", stream.GetSheetNames()[1]);
                 }
 
                 Assert.Equal("A1:B3", Helpers.GetFirstSheetDimensionRefValue(path));
@@ -794,8 +807,8 @@ namespace MiniExcelLibs.Tests
             {
                 var values = new List<Dictionary<int, object>>()
                 {
-                    new Dictionary<int, object>(){ { 1,"MiniExcel"},{ 2, 1} },
-                     new Dictionary<int, object>(){ { 1, "Github" },{ 2, 2} },
+                    new() { { 1, "MiniExcel"}, { 2, 1 } },
+                    new() { { 1, "Github" }, { 2, 2 } },
                 };
                 MiniExcel.SaveAs(path, values);
 
@@ -1113,7 +1126,7 @@ namespace MiniExcelLibs.Tests
             MiniExcel.SaveAs(path, new[] {
                   new { a = @"""<>+-*//}{\\n", b = 1234567890,c = true,d= now},
                   new { a = "<test>Hello World</test>", b = -1234567890,c=false,d=now.Date}
-             });
+             }, sheetName: "R&D");
             using (var workbook = new XLWorkbook(path))
             {
                 var ws = workbook.Worksheets.First();
@@ -1127,6 +1140,8 @@ namespace MiniExcelLibs.Tests
                 Assert.True(ws.Cell("B2").Value.ToString() == @"1234567890");
                 Assert.True(ws.Cell("C2").Value.ToString() == true.ToString());
                 Assert.True(ws.Cell("D2").Value.ToString() == now.ToString());
+
+                Assert.True(ws.Name == "R&D");
             }
             File.Delete(path);
         }

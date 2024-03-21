@@ -178,7 +178,7 @@ namespace MiniExcelLibs.OpenXml
                 {
                     mode = "IDictionary";
                     props = GetDictionaryColumnInfo(null, dic);
-                    //maxColumnIndex = dic.Keys.Count; 
+                    //maxColumnIndex = dic.Keys.Count;
                     maxColumnIndex = props.Count; // why not using keys, because ignore attribute ![image](https://user-images.githubusercontent.com/12729184/163686902-286abb70-877b-4e84-bd3b-001ad339a84a.png)
                 }
                 else
@@ -190,7 +190,7 @@ namespace MiniExcelLibs.OpenXml
             writer.Write($@"<?xml version=""1.0"" encoding=""utf-8""?><x:worksheet xmlns:r=""http://schemas.openxmlformats.org/officeDocument/2006/relationships"" xmlns:x=""http://schemas.openxmlformats.org/spreadsheetml/2006/main"" >");
 
             long dimensionWritePosition = 0;
-            
+
             // We can write the dimensions directly if the row count is known
             if (_configuration.FastMode && rowCount == null)
             {
@@ -328,7 +328,7 @@ namespace MiniExcelLibs.OpenXml
             p.ExcelColumnName = key?.ToString();
             p.Key = key;
             // TODO:Dictionary value type is not fiexed
-            //var _t = 
+            //var _t =
             //var gt = Nullable.GetUnderlyingType(p.PropertyType);
             var isIgnore = false;
             if (_configuration.DynamicColumns != null && _configuration.DynamicColumns.Length > 0)
@@ -449,7 +449,7 @@ namespace MiniExcelLibs.OpenXml
                 Type type = null;
                 if (p == null || p.Key != null)
                 {
-                    // TODO: need to optimize 
+                    // TODO: need to optimize
                     // Dictionary need to check type every time, so it's slow..
                     type = value.GetType();
                     type = Nullable.GetUnderlyingType(type) ?? type;
@@ -655,7 +655,7 @@ namespace MiniExcelLibs.OpenXml
                 maxColumnIndex = props.Count;
 
                 WriteColumnsWidths(writer, props);
-                
+
                 writer.Write("<x:sheetData>");
                 int fieldCount = reader.FieldCount;
                 if (_printHeader)
@@ -701,9 +701,9 @@ namespace MiniExcelLibs.OpenXml
                 Key = columnName
             };
 
-            if (_configuration.DynamicColumns == null || _configuration.DynamicColumns.Length <= 0) 
+            if (_configuration.DynamicColumns == null || _configuration.DynamicColumns.Length <= 0)
                 return prop;
-            
+
             var dynamicColumn = _configuration.DynamicColumns.SingleOrDefault(_ => _.Key == columnName);
             if (dynamicColumn == null || dynamicColumn.Ignore)
             {
@@ -760,12 +760,12 @@ namespace MiniExcelLibs.OpenXml
             foreach (var p in ecwProps)
             {
                 writer.Write(
-                    $@"<x:col min=""{p.ExcelColumnIndex + 1}"" max=""{p.ExcelColumnIndex + 1}"" width=""{p.ExcelColumnWidth}"" customWidth=""1"" />");
+                    $@"<x:col min=""{p.ExcelColumnIndex + 1}"" max=""{p.ExcelColumnIndex + 1}"" width=""{p.ExcelColumnWidth?.ToString(CultureInfo.InvariantCulture)}"" customWidth=""1"" />");
             }
 
             writer.Write($@"</x:cols>");
         }
-        
+
         private static void WriteC(MiniExcelStreamWriter writer, string r, string columnName)
         {
             writer.Write($"<x:c r=\"{r}\" t=\"str\" s=\"1\">");
@@ -784,7 +784,7 @@ namespace MiniExcelLibs.OpenXml
                 }
             }
 
-            // styles.xml 
+            // styles.xml
             {
                 var styleXml = string.Empty;
 
@@ -878,7 +878,7 @@ namespace MiniExcelLibs.OpenXml
                     }
                     workbookRelsXml.AppendLine($@"<Relationship Type=""http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet"" Target=""/{s.Path}"" Id=""{s.ID}"" />");
 
-                    //TODO: support multiple drawing 
+                    //TODO: support multiple drawing
                     //TODO: ../drawings/drawing1.xml or /xl/drawings/drawing1.xml
                     var sheetRelsXml = $@"<Relationship Type=""http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing"" Target=""../drawings/drawing{sheetId}.xml"" Id=""drawing{sheetId}"" />";
                     CreateZipEntry($"xl/worksheets/_rels/sheet{s.SheetIdx}.xml.rels", "",
@@ -890,7 +890,7 @@ namespace MiniExcelLibs.OpenXml
                     _defaultWorkbookXmlRels.Replace("{{sheets}}", workbookRelsXml.ToString()));
             }
 
-            //[Content_Types].xml 
+            //[Content_Types].xml
             {
                 var sb = new StringBuilder(@"<?xml version=""1.0"" encoding=""UTF-8"" standalone=""yes""?><Types xmlns=""http://schemas.openxmlformats.org/package/2006/content-types""><Default ContentType=""application/vnd.openxmlformats-officedocument.spreadsheetml.printerSettings"" Extension=""bin""/><Default ContentType=""application/xml"" Extension=""xml""/><Default ContentType=""image/jpeg"" Extension=""jpg""/><Default ContentType=""image/png"" Extension=""png""/><Default ContentType=""image/gif"" Extension=""gif""/><Default ContentType=""application/vnd.openxmlformats-package.relationships+xml"" Extension=""rels""/>");
                 foreach (var p in _zipDictionary)

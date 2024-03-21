@@ -316,7 +316,7 @@ namespace MiniExcelLibs.Tests
         public void TestIssueI4ZYUU()
         {
             var path = PathHelper.GetTempPath();
-            var value = new TestIssueI4ZYUUDto[] { new TestIssueI4ZYUUDto { MyProperty = "1", MyProperty2 = new DateTime(2022, 10, 15) } };
+            var value = new TestIssueI4ZYUUDto[] { new() { MyProperty = "1", MyProperty2 = new DateTime(2022, 10, 15) } };
             MiniExcel.SaveAs(path, value);
             var rows = MiniExcel.Query(path).ToList();
             Assert.Equal("2022-10", rows[1].B);

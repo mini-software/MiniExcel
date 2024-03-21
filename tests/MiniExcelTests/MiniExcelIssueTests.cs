@@ -852,11 +852,11 @@ namespace MiniExcelLibs.Tests
                     for (int i = 0; i < reader.FieldCount; i++)
                     {
                         var v = reader.GetValue(i);
-                        if (rowIndx == 0 && i == 0) Assert.Equal((double)1, v);
+                        if (rowIndx == 0 && i == 0) Assert.Equal(1.0, v);
                         if (rowIndx == 0 && i == 1) Assert.Equal("Jack", v);
                         if (rowIndx == 0 && i == 2) Assert.Equal(new DateTime(2022, 5, 13), v);
                         if (rowIndx == 0 && i == 3) Assert.Equal(File.ReadAllBytes(PathHelper.GetFile("images/TestIssue327.png")), v);
-                        if (rowIndx == 1 && i == 0) Assert.Equal((double)2, v);
+                        if (rowIndx == 1 && i == 0) Assert.Equal(2.0, v);
                         if (rowIndx == 1 && i == 1) Assert.Equal("Henry", v);
                         if (rowIndx == 1 && i == 2) Assert.Equal(new DateTime(2022, 4, 10), v);
                         if (rowIndx == 1 && i == 3) Assert.Equal(File.ReadAllBytes(PathHelper.GetFile("other/TestIssue327.txt")), v);
@@ -910,7 +910,7 @@ namespace MiniExcelLibs.Tests
                             {
                                 Culture = new CultureInfo("en-US"),
                             };
-                            var rows = MiniExcel.Query<TestIssue316Dto>(path, configuration: config).ToList();
+                            MiniExcel.Query<TestIssue316Dto>(path, configuration: config).ToList();
                         });
                     }
 
@@ -949,7 +949,7 @@ namespace MiniExcelLibs.Tests
                         };
                         var rows = MiniExcel.Query<TestIssue316Dto>(path, configuration: config).ToList();
                         Assert.Equal("2018-12-05 00:00:00", rows[0].createtime.ToString("yyyy-MM-dd HH:mm:ss"));
-                        Assert.Equal("123456789", rows[0].amount.ToString());
+                        Assert.Equal(123456789m, rows[0].amount);
                     }
 
                     {
@@ -959,7 +959,7 @@ namespace MiniExcelLibs.Tests
                         };
                         var rows = MiniExcel.Query<TestIssue316Dto>(path, configuration: config).ToList();
                         Assert.Equal("2018-05-12 00:00:00", rows[0].createtime.ToString("yyyy-MM-dd HH:mm:ss"));
-                        Assert.Equal("123456.789", rows[0].amount.ToString());
+                        Assert.Equal(123456.789m, rows[0].amount);
                     }
                 }
             }
@@ -985,7 +985,7 @@ namespace MiniExcelLibs.Tests
                             {
                                 Culture = new CultureInfo("en-US"),
                             };
-                            var rows = MiniExcel.Query<TestIssue316Dto>(path, configuration: config).ToList();
+                            MiniExcel.Query<TestIssue316Dto>(path, configuration: config).ToList();
                         });
                     }
 
@@ -1024,7 +1024,7 @@ namespace MiniExcelLibs.Tests
                         };
                         var rows = MiniExcel.Query<TestIssue316Dto>(path, configuration: config).ToList();
                         Assert.Equal("2018-12-05 00:00:00", rows[0].createtime.ToString("yyyy-MM-dd HH:mm:ss"));
-                        Assert.Equal("123456789", rows[0].amount.ToString());
+                        Assert.Equal(123456789m, rows[0].amount);
                     }
 
                     {
@@ -1034,7 +1034,7 @@ namespace MiniExcelLibs.Tests
                         };
                         var rows = MiniExcel.Query<TestIssue316Dto>(path, configuration: config).ToList();
                         Assert.Equal("2018-05-12 00:00:00", rows[0].createtime.ToString("yyyy-MM-dd HH:mm:ss"));
-                        Assert.Equal("123456.789", rows[0].amount.ToString());
+                        Assert.Equal(123456.789m, rows[0].amount);
                     }
                 }
             }
@@ -2269,7 +2269,7 @@ Henry,44,Jerry,44
                     Assert.Equal(DateTime.ParseExact("27/09/2020", "dd/MM/yyyy", CultureInfo.InvariantCulture), rows[0].BoD);
                     Assert.Equal(36, rows[0].Age);
                     Assert.False(rows[0].VIP);
-                    Assert.Equal(decimal.Parse("5019.12"), rows[0].Points);
+                    Assert.Equal(5019.12m, rows[0].Points);
                     Assert.Equal(1, rows[0].IgnoredProperty);
                 }
                 {
@@ -2284,7 +2284,7 @@ Henry,44,Jerry,44
                         Assert.Equal(DateTime.ParseExact("27/09/2020", "dd/MM/yyyy", CultureInfo.InvariantCulture), rows[0].BoD);
                         Assert.Equal(36, rows[0].Age);
                         Assert.False(rows[0].VIP);
-                        Assert.Equal(decimal.Parse("5019.12"), rows[0].Points);
+                        Assert.Equal(5019.12m, rows[0].Points);
                         Assert.Equal(1, rows[0].IgnoredProperty);
                     }
                 }
@@ -2327,7 +2327,7 @@ Henry,44,Jerry,44
             Assert.Equal(typeof(object), columns[0].DataType);
             Assert.Equal(typeof(object), columns[1].DataType);
 
-            Assert.Equal((double)123, dt.Rows[1]["A"]);
+            Assert.Equal(123.0, dt.Rows[1]["A"]);
             Assert.Equal("HelloWorld", dt.Rows[2]["B"]);
         }
 
@@ -2410,10 +2410,10 @@ Henry,44,Jerry,44
                 MiniExcel.SaveAs(path, reader);
 
                 var rows = MiniExcel.Query(path, true).ToList();
-                Assert.Equal((double)1, rows[0].Test1);
-                Assert.Equal((double)2, rows[0].Test2);
-                Assert.Equal((double)3, rows[1].Test1);
-                Assert.Equal((double)4, rows[1].Test2);
+                Assert.Equal(1.0, rows[0].Test1);
+                Assert.Equal(2.0, rows[0].Test2);
+                Assert.Equal(3.0, rows[1].Test1);
+                Assert.Equal(4.0, rows[1].Test2);
             }
         }
 
@@ -2432,9 +2432,9 @@ Henry,44,Jerry,44
                 Assert.Equal("Test1", table.Columns[0].ColumnName);
                 Assert.Equal("Test2", table.Columns[1].ColumnName);
                 Assert.Equal("1", table.Rows[0]["Test1"]);
-                Assert.Equal((double)2, table.Rows[0]["Test2"]);
+                Assert.Equal(2.0, table.Rows[0]["Test2"]);
                 Assert.Equal("3", table.Rows[1]["Test1"]);
-                Assert.Equal((double)4, table.Rows[1]["Test2"]);
+                Assert.Equal(4.0, table.Rows[1]["Test2"]);
             }
 
             {
@@ -2442,9 +2442,9 @@ Henry,44,Jerry,44
                 Assert.Equal("Test1", dt.Rows[0]["A"]);
                 Assert.Equal("Test2", dt.Rows[0]["B"]);
                 Assert.Equal("1", dt.Rows[1]["A"]);
-                Assert.Equal((double)2, dt.Rows[1]["B"]);
+                Assert.Equal(2.0, dt.Rows[1]["B"]);
                 Assert.Equal("3", dt.Rows[2]["A"]);
-                Assert.Equal((double)4, dt.Rows[2]["B"]);
+                Assert.Equal(4.0, dt.Rows[2]["B"]);
             }
         }
 
@@ -2503,7 +2503,7 @@ Henry,44,Jerry,44
         }
 
         /// <summary>
-        /// Optimize stream excel type check 
+        /// Optimize stream excel type check
         /// https://github.com/shps951023/MiniExcel/issues/215
         /// </summary>
         [Fact]
@@ -3139,7 +3139,7 @@ MyProperty4,MyProperty1,MyProperty5,MyProperty2,MyProperty6,,MyProperty3
                     Assert.Equal("Wade", rows[0].Name);
                     Assert.Equal(DateTime.ParseExact("27/09/2020", "dd/MM/yyyy", CultureInfo.InvariantCulture), rows[0].BoD);
                     Assert.False(rows[0].VIP);
-                    Assert.Equal(decimal.Parse("5019"), rows[0].Points);
+                    Assert.Equal(5019m, rows[0].Points);
                     Assert.Equal(1, rows[0].IgnoredProperty);
                 }
             }
@@ -3242,14 +3242,14 @@ MyProperty4,MyProperty1,MyProperty5,MyProperty2,MyProperty6,,MyProperty3
                     Assert.Equal(" ", row["D"]);
                     Assert.Equal(" ", row["E"]);
                     Assert.Equal(" ", row["F"]);
-                    Assert.Equal(Double.Parse("0"), row["G"]);
+                    Assert.Equal(0.0, row["G"]);
                     Assert.Equal("1為港幣 0為台幣", row["H"]);
                 }
                 {
                     var row = rows[1] as IDictionary<string, object>;
-                    Assert.Equal(double.Parse("1"), row["A"]);
+                    Assert.Equal(1.0, row["A"]);
                     Assert.Equal("MTX", row["B"]);
-                    Assert.Equal(double.Parse("10"), row["C"]);
+                    Assert.Equal(10.0, row["C"]);
                     Assert.Null(row["D"]);
                     Assert.Null(row["E"]);
                     Assert.Null(row["F"]);
@@ -3258,7 +3258,7 @@ MyProperty4,MyProperty1,MyProperty5,MyProperty2,MyProperty6,,MyProperty3
                 }
                 {
                     var row = rows[2] as IDictionary<string, object>;
-                    Assert.Equal(double.Parse("0.95"), row["A"]);
+                    Assert.Equal(0.95, row["A"]);
                 }
             }
 
@@ -3270,16 +3270,16 @@ MyProperty4,MyProperty1,MyProperty5,MyProperty2,MyProperty6,,MyProperty3
                 Assert.Equal(10, rows.Count);
                 {
                     var row = rows[0] as IDictionary<string, object>;
-                    Assert.Equal(double.Parse("1"), row["比例"]);
+                    Assert.Equal(1.0, row["比例"]);
                     Assert.Equal("MTX", row["商品"]);
-                    Assert.Equal(double.Parse("10"), row["滿倉口數"]);
+                    Assert.Equal(10.0, row["滿倉口數"]);
                     Assert.Null(row["0"]);
                     Assert.Null(row["1為港幣 0為台幣"]);
                 }
 
                 {
                     var row = rows[1] as IDictionary<string, object>;
-                    Assert.Equal(double.Parse("0.95"), row["比例"]);
+                    Assert.Equal(0.95, row["比例"]);
                 }
             }
 

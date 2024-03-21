@@ -27,7 +27,7 @@ namespace MiniExcelLibs.Tests
         {
             this.output = output;
         }
-        
+
         [Fact]
         public void GetColumnsTest()
         {
@@ -300,28 +300,28 @@ namespace MiniExcelLibs.Tests
             {
                 var rows = stream.Query<UserAccount>().ToList();
 
-                Assert.Equal(100, rows.Count());
+                Assert.Equal(100, rows.Count);
 
                 Assert.Equal(Guid.Parse("78DE23D2-DCB6-BD3D-EC67-C112BBC322A2"), rows[0].ID);
                 Assert.Equal("Wade", rows[0].Name);
                 Assert.Equal(DateTime.ParseExact("27/09/2020", "dd/MM/yyyy", CultureInfo.InvariantCulture), rows[0].BoD);
                 Assert.Equal(36, rows[0].Age);
                 Assert.False(rows[0].VIP);
-                Assert.Equal(decimal.Parse("5019.12"), rows[0].Points);
+                Assert.Equal(5019.12m, rows[0].Points);
                 Assert.Equal(1, rows[0].IgnoredProperty);
             }
 
             {
                 var rows = MiniExcel.Query<UserAccount>(path).ToList();
 
-                Assert.Equal(100, rows.Count());
+                Assert.Equal(100, rows.Count);
 
                 Assert.Equal(Guid.Parse("78DE23D2-DCB6-BD3D-EC67-C112BBC322A2"), rows[0].ID);
                 Assert.Equal("Wade", rows[0].Name);
                 Assert.Equal(DateTime.ParseExact("27/09/2020", "dd/MM/yyyy", CultureInfo.InvariantCulture), rows[0].BoD);
                 Assert.Equal(36, rows[0].Age);
                 Assert.False(rows[0].VIP);
-                Assert.Equal(decimal.Parse("5019.12"), rows[0].Points);
+                Assert.Equal(5019.12m, rows[0].Points);
                 Assert.Equal(1, rows[0].IgnoredProperty);
             }
         }
@@ -431,8 +431,8 @@ namespace MiniExcelLibs.Tests
                 var rows = stream.Query().ToList();
                 var keys = (rows.First() as IDictionary<string, object>).Keys;
 
-                Assert.Equal(2, rows.Count());
-                Assert.Equal(5, keys.Count());
+                Assert.Equal(2, rows.Count);
+                Assert.Equal(5, keys.Count);
 
                 Assert.Equal(1, rows[0].A);
                 //Assert.Equal(@""" <> +}{/nHello World]", (string)rows[0].B);
@@ -1244,9 +1244,9 @@ namespace MiniExcelLibs.Tests
                 }
             };
             var reader = table.CreateDataReader();
-            
+
             MiniExcel.SaveAs(path, reader, configuration: configuration);
-            
+
             using (var stream = File.OpenRead(path))
             {
                 var rows = stream.Query(useHeaderRow: true)

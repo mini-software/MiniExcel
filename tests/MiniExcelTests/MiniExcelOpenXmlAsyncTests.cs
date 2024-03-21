@@ -64,7 +64,7 @@ namespace MiniExcelLibs.Tests
             [ExcelColumnIndex(3)] // start with 0
             public string Test7 { get; set; }
         }
-        
+
         public class ExcelAttributeDemo2
         {
             [ExcelColumn(Name = "Column1")]
@@ -89,7 +89,7 @@ namespace MiniExcelLibs.Tests
             {
                 var q = await MiniExcel.QueryAsync<CustomAttributesWihoutVaildPropertiesTestPoco>(path);
                 q.ToList();
-            }); 
+            });
         }
 
         [Fact]
@@ -105,7 +105,7 @@ namespace MiniExcelLibs.Tests
             Assert.Null(rows[0].Test6);
             Assert.Equal("Test4", rows[0].Test7);
         }
-        
+
         [Fact]
         public async Task QueryCustomAttributes2Test()
         {
@@ -148,7 +148,7 @@ namespace MiniExcelLibs.Tests
                 Assert.Equal(3, rows.Count);
             }
         }
-        
+
         [Fact]
         public async Task SaveAsCustomAttributes2Test()
         {
@@ -336,28 +336,28 @@ namespace MiniExcelLibs.Tests
             {
                 var d = await stream.QueryAsync<UserAccount>();
                 var rows = d.ToList();
-                Assert.Equal(100, rows.Count());
+                Assert.Equal(100, rows.Count);
 
                 Assert.Equal(Guid.Parse("78DE23D2-DCB6-BD3D-EC67-C112BBC322A2"), rows[0].ID);
                 Assert.Equal("Wade", rows[0].Name);
                 Assert.Equal(DateTime.ParseExact("27/09/2020", "dd/MM/yyyy", CultureInfo.InvariantCulture), rows[0].BoD);
                 Assert.Equal(36, rows[0].Age);
                 Assert.False(rows[0].VIP);
-                Assert.Equal(decimal.Parse("5019.12"), rows[0].Points);
+                Assert.Equal(5019.12m, rows[0].Points);
                 Assert.Equal(1, rows[0].IgnoredProperty);
             }
 
             {
                 var rows = MiniExcel.Query<UserAccount>(path).ToList();
 
-                Assert.Equal(100, rows.Count());
+                Assert.Equal(100, rows.Count);
 
                 Assert.Equal(Guid.Parse("78DE23D2-DCB6-BD3D-EC67-C112BBC322A2"), rows[0].ID);
                 Assert.Equal("Wade", rows[0].Name);
                 Assert.Equal(DateTime.ParseExact("27/09/2020", "dd/MM/yyyy", CultureInfo.InvariantCulture), rows[0].BoD);
                 Assert.Equal(36, rows[0].Age);
                 Assert.False(rows[0].VIP);
-                Assert.Equal(decimal.Parse("5019.12"), rows[0].Points);
+                Assert.Equal(5019.12m, rows[0].Points);
                 Assert.Equal(1, rows[0].IgnoredProperty);
             }
         }

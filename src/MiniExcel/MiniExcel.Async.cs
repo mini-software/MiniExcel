@@ -12,7 +12,11 @@
     {
         public static async Task SaveAsAsync(string path, object value, bool printHeader = true, string sheetName = "Sheet1", ExcelType excelType = ExcelType.UNKNOWN, IConfiguration configuration = null, bool overwriteFile = false,CancellationToken cancellationToken = default(CancellationToken))
         {
-            await Task.Run(() => SaveAs(path, value, printHeader, sheetName, excelType, configuration, overwriteFile),cancellationToken).ConfigureAwait(false);
+            if (Path.GetExtension(path).ToLowerInvariant() == ".xlsm")
+                throw new NotSupportedException("MiniExcel SaveAs not support xlsm");
+
+            using (var stream = overwriteFile ? File.Create(path) : new FileStream(path, FileMode.CreateNew))
+                await SaveAsAsync(stream, value, printHeader, sheetName, ExcelTypeHelper.GetExcelType(path, excelType), configuration);
         }
 
         public static async Task SaveAsAsync(this Stream stream, object value, bool printHeader = true, string sheetName = "Sheet1", ExcelType excelType = ExcelType.XLSX, IConfiguration configuration = null,CancellationToken cancellationToken = default(CancellationToken))

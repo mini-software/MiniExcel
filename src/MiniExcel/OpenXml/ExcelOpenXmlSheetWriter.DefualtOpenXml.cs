@@ -1,10 +1,6 @@
 ﻿using MiniExcelLibs.Zip;
-using System;
 using System.Collections.Generic;
-using System.IO;
 using System.IO.Compression;
-using System.Text;
-using System.Xml;
 
 namespace MiniExcelLibs.OpenXml
 {
@@ -191,13 +187,13 @@ namespace MiniExcelLibs.OpenXml
             CreateZipEntry("xl/sharedStrings.xml", "application/vnd.openxmlformats-package.relationships+xml", ExcelOpenXmlSheetWriter._defaultSharedString);
         }
 
-        private void CreateZipEntry(string path,string contentType,string content)
+        private void CreateZipEntry(string path, string contentType, string content)
         {
             ZipArchiveEntry entry = _archive.CreateEntry(path, CompressionLevel.Fastest);
             using (var zipStream = entry.Open())
-            using (MiniExcelStreamWriter writer = new MiniExcelStreamWriter(zipStream, _utf8WithBom,_configuration.BufferSize))
+            using (MiniExcelStreamWriter writer = new MiniExcelStreamWriter(zipStream, _utf8WithBom, _configuration.BufferSize))
                 writer.Write(content);
-            if(!string.IsNullOrEmpty(contentType))
+            if (!string.IsNullOrEmpty(contentType))
                 _zipDictionary.Add(path, new ZipPackageInfo(entry, contentType));
         }
 
@@ -205,7 +201,7 @@ namespace MiniExcelLibs.OpenXml
         {
             ZipArchiveEntry entry = _archive.CreateEntry(path, CompressionLevel.Fastest);
             using (var zipStream = entry.Open())
-                zipStream.Write(content,0, content.Length);
+                zipStream.Write(content, 0, content.Length);
         }
     }
 }

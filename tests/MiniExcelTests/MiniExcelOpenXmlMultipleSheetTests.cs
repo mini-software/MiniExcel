@@ -164,12 +164,12 @@ namespace MiniExcelLibs.Tests
                 Assert.Equal(2, users.Count());
                 Assert.Equal("Jack", users[0].Name);
 
-                // take second sheet by sheet name 
+                // take second sheet by sheet name
                 var departments = stream.Query(sheetName: "Departments", configuration: configuration, useHeaderRow: true).ToList();
                 Assert.Equal(2, departments.Count());
                 Assert.Equal("HR", departments[0].Name);
 
-                // take second sheet by sheet key 
+                // take second sheet by sheet key
                 departments = stream.Query(sheetName: "departmentSheet", configuration: configuration, useHeaderRow: true).ToList();
                 Assert.Equal(2, departments.Count());
                 Assert.Equal("HR", departments[0].Name);
@@ -181,12 +181,12 @@ namespace MiniExcelLibs.Tests
                 Assert.Equal(2, users.Count());
                 Assert.Equal("Jack", users[0].Name);
 
-                // take second sheet by sheet name 
+                // take second sheet by sheet name
                 var departments = MiniExcel.Query(path, sheetName: "Departments", configuration: configuration, useHeaderRow: true).ToList();
                 Assert.Equal(2, departments.Count());
                 Assert.Equal("HR", departments[0].Name);
 
-                // take second sheet by sheet key 
+                // take second sheet by sheet key
                 departments = MiniExcel.Query(path, sheetName: "departmentSheet", configuration: configuration, useHeaderRow: true).ToList();
                 Assert.Equal(2, departments.Count());
                 Assert.Equal("HR", departments[0].Name);

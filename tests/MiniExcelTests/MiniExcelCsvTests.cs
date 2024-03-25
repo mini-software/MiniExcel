@@ -22,9 +22,9 @@ namespace MiniExcelLibs.Tests
             var path = PathHelper.GetFile("csv/gb2312_Encoding_Read_Test.csv");
             var config = new MiniExcelLibs.Csv.CsvConfiguration()
             {
-                StreamReaderFunc = (stream) => new StreamReader(stream,encoding: Encoding.GetEncoding("gb2312"))
+                StreamReaderFunc = (stream) => new StreamReader(stream, encoding: Encoding.GetEncoding("gb2312"))
             };
-            var rows = MiniExcel.Query(path, true,excelType:ExcelType.CSV,configuration: config).ToList();
+            var rows = MiniExcel.Query(path, true, excelType: ExcelType.CSV, configuration: config).ToList();
             Assert.Equal("世界你好", rows[0].栏位1);
         }
 
@@ -37,7 +37,7 @@ namespace MiniExcelLibs.Tests
                     new Dictionary<string,object>{{ "a", @"""<>+-*//}{\\n" }, { "b", 1234567890 },{ "c", true },{ "d", new DateTime(2021, 1, 1) } },
                     new Dictionary<string,object>{{ "a", @"<test>Hello World</test>" }, { "b", -1234567890 },{ "c", false },{ "d", new DateTime(2021, 1, 2) } },
                 };
-            MiniExcel.SaveAs(path, values,configuration: new MiniExcelLibs.Csv.CsvConfiguration() {Seperator=';'});
+            MiniExcel.SaveAs(path, values, configuration: new MiniExcelLibs.Csv.CsvConfiguration() { Seperator = ';' });
             var expected = @"a;b;c;d
 """"""<>+-*//}{\\n"";1234567890;True;""2021-01-01 00:00:00""
 ""<test>Hello World</test>"";-1234567890;False;""2021-01-02 00:00:00""
@@ -54,7 +54,7 @@ namespace MiniExcelLibs.Tests
                     new Dictionary<string,object>{{ "a", @"""<>+-*//}{\\n" }, { "b", 1234567890 },{ "c", true },{ "d", new DateTime(2021, 1, 1) } },
                     new Dictionary<string,object>{{ "a", @"<test>Hello World</test>" }, { "b", -1234567890 },{ "c", false },{ "d", new DateTime(2021, 1, 2) } },
                 };
-            MiniExcel.SaveAs(path, values,configuration: new MiniExcelLibs.Csv.CsvConfiguration() {AlwaysQuote = true});
+            MiniExcel.SaveAs(path, values, configuration: new MiniExcelLibs.Csv.CsvConfiguration() { AlwaysQuote = true });
             var expected = @"""a"",""b"",""c"",""d""
 """"""<>+-*//}{\\n"",""1234567890"",""True"",""2021-01-01 00:00:00""
 ""<test>Hello World</test>"",""-1234567890"",""False"",""2021-01-02 00:00:00""
@@ -70,7 +70,7 @@ namespace MiniExcelLibs.Tests
                 {
                     new Dictionary<string,object>{{ "a", @"potato,banana" }, { "b", "text\ntest" },{ "c", "text\rpotato" },{ "d", new DateTime(2021, 1, 1) } },
                 };
-            MiniExcel.SaveAs(path, values,configuration: new MiniExcelLibs.Csv.CsvConfiguration());
+            MiniExcel.SaveAs(path, values, configuration: new MiniExcelLibs.Csv.CsvConfiguration());
             var expected = "a,b,c,d\r\n\"potato,banana\",\"text\ntest\",\"text\rpotato\",\"2021-01-01 00:00:00\"\r\n";
             Assert.Equal(expected, File.ReadAllText(path));
         }
@@ -206,8 +206,8 @@ namespace MiniExcelLibs.Tests
         public class Test
         {
             public string c1 { get; set; }
-		  public string c2 { get; set; }
-	   }
+            public string c2 { get; set; }
+        }
         public class TestWithAlias
         {
             [ExcelColumnName(excelColumnName: "c1", aliases: new[] { "column1", "col1" })]
@@ -249,30 +249,30 @@ namespace MiniExcelLibs.Tests
         }
 
         [Fact()]
-	   public void Create2x2_Test()
+        public void Create2x2_Test()
         {
-		  var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.csv");
-		  MiniExcel.SaveAs(path, new[] {
-			 new { c1 = "A1" ,c2 = "B1"},
-			 new { c1 = "A2" ,c2 = "B2"},
-		  });
+            var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.csv");
+            MiniExcel.SaveAs(path, new[] {
+             new { c1 = "A1" ,c2 = "B1"},
+             new { c1 = "A2" ,c2 = "B2"},
+          });
 
             using (var stream = File.OpenRead(path))
             {
-                var rows = stream.Query(useHeaderRow: true,excelType:ExcelType.CSV).ToList();
+                var rows = stream.Query(useHeaderRow: true, excelType: ExcelType.CSV).ToList();
                 Assert.Equal("A1", rows[0].c1);
                 Assert.Equal("B1", rows[0].c2);
                 Assert.Equal("A2", rows[1].c1);
                 Assert.Equal("B2", rows[1].c2);
             }
 
-		  {
-			 var rows = MiniExcel.Query(path,useHeaderRow: true, excelType: ExcelType.CSV).ToList();
-			 Assert.Equal("A1", rows[0].c1);
-			 Assert.Equal("B1", rows[0].c2);
-			 Assert.Equal("A2", rows[1].c1);
-			 Assert.Equal("B2", rows[1].c2);
-		  }
+            {
+                var rows = MiniExcel.Query(path, useHeaderRow: true, excelType: ExcelType.CSV).ToList();
+                Assert.Equal("A1", rows[0].c1);
+                Assert.Equal("B1", rows[0].c2);
+                Assert.Equal("A2", rows[1].c1);
+                Assert.Equal("B2", rows[1].c2);
+            }
 
             File.Delete(path);
         }
@@ -295,13 +295,13 @@ namespace MiniExcelLibs.Tests
                 Assert.Equal("B2", rows[1].c2);
             }
 
-		  {
-			 var rows = MiniExcel.Query<Test>(path, excelType: ExcelType.CSV).ToList();
-			 Assert.Equal("A1", rows[0].c1);
-			 Assert.Equal("B1", rows[0].c2);
-			 Assert.Equal("A2", rows[1].c1);
-			 Assert.Equal("B2", rows[1].c2);
-		  }
+            {
+                var rows = MiniExcel.Query<Test>(path, excelType: ExcelType.CSV).ToList();
+                Assert.Equal("A1", rows[0].c1);
+                Assert.Equal("B1", rows[0].c2);
+                Assert.Equal("A2", rows[1].c1);
+                Assert.Equal("B2", rows[1].c2);
+            }
         }
 
         [Fact()]
@@ -364,46 +364,46 @@ namespace MiniExcelLibs.Tests
         }
 
         [Fact()]
-	   public void Delimiters_Test()
+        public void Delimiters_Test()
         {
-		  //TODO:Datetime have default format like yyyy-MM-dd HH:mm:ss ?
-		  {
-			 Assert.Equal(Generate("\"\"\""), MiniExcelGenerateCsv("\"\"\""));
-			 Assert.Equal(Generate(","), MiniExcelGenerateCsv(","));
-			 Assert.Equal(Generate(" "), MiniExcelGenerateCsv(" "));
-			 Assert.Equal(Generate(";"), MiniExcelGenerateCsv(";"));
-			 Assert.Equal(Generate("\t"), MiniExcelGenerateCsv("\t"));
-		  }
-	   }
+            //TODO:Datetime have default format like yyyy-MM-dd HH:mm:ss ?
+            {
+                Assert.Equal(Generate("\"\"\""), MiniExcelGenerateCsv("\"\"\""));
+                Assert.Equal(Generate(","), MiniExcelGenerateCsv(","));
+                Assert.Equal(Generate(" "), MiniExcelGenerateCsv(" "));
+                Assert.Equal(Generate(";"), MiniExcelGenerateCsv(";"));
+                Assert.Equal(Generate("\t"), MiniExcelGenerateCsv("\t"));
+            }
+        }
 
-	   string Generate(string value)
-	   {
-		  var records = Enumerable.Range(1, 1).Select((s, idx) => new { v1 = value, v2 = value });
-		  var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.csv");
-		  using (var writer = new StreamWriter(path))
-		  using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
-		  {
-			 csv.WriteRecords(records);
-		  }
+        string Generate(string value)
+        {
+            var records = Enumerable.Range(1, 1).Select((s, idx) => new { v1 = value, v2 = value });
+            var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.csv");
+            using (var writer = new StreamWriter(path))
+            using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
+            {
+                csv.WriteRecords(records);
+            }
 
-		  var content = File.ReadAllText(path);
-		  File.Delete(path);
-		  return content;
-	   }
+            var content = File.ReadAllText(path);
+            File.Delete(path);
+            return content;
+        }
 
-	   string MiniExcelGenerateCsv(string value)
-	   {
-		  var records = Enumerable.Range(1, 1).Select((s, idx) => new { v1 = value, v2 = value });
-		  var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.csv");
+        string MiniExcelGenerateCsv(string value)
+        {
+            var records = Enumerable.Range(1, 1).Select((s, idx) => new { v1 = value, v2 = value });
+            var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.csv");
 
             using (var stream = File.Create(path))
             {
-                stream.SaveAs(records,excelType:ExcelType.CSV);
+                stream.SaveAs(records, excelType: ExcelType.CSV);
             }
 
-		  var content = File.ReadAllText(path);
-		  File.Delete(path);
-		  return content;
-	   }
+            var content = File.ReadAllText(path);
+            File.Delete(path);
+            return content;
+        }
     }
 }

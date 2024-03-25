@@ -8,8 +8,6 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Xml;
-using MiniExcelLibs.OpenXml;
 using Xunit;
 
 namespace MiniExcelTests
@@ -551,7 +549,7 @@ namespace MiniExcelTests
             {
                 var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
                 var templatePath = @"../../../../../samples/xlsx/TestTemplateBasicIEmumerableFill.xlsx";
-            
+
                 //1. By POCO
                 var value = new
                 {
@@ -565,7 +563,7 @@ namespace MiniExcelTests
                     }
                 };
                 await MiniExcel.SaveAsByTemplateAsync(path, templatePath, value);
-            
+
                 var demension = Helpers.GetFirstSheetDimensionRefValue(path);
                 Assert.Equal("A1:B7", demension);
             }
@@ -625,7 +623,7 @@ namespace MiniExcelTests
             {
                 var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
                 var templatePath = @"../../../../../samples/xlsx/TestTemplateBasicIEmumerableFillGroup.xlsx";
-            
+
                 //1. By POCO
                 var value = new
                 {
@@ -639,7 +637,7 @@ namespace MiniExcelTests
                     }
                 };
                 await MiniExcel.SaveAsByTemplateAsync(path, templatePath, value);
-            
+
                 var demension = Helpers.GetFirstSheetDimensionRefValue(path);
                 Assert.Equal("A1:B18", demension);
             }
@@ -699,7 +697,7 @@ namespace MiniExcelTests
             {
                 var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
                 var templatePath = @"../../../../../samples/xlsx/TestTemplateBasicIEmumerableFillConditional.xlsx";
-            
+
                 //1. By POCO
                 var value = new
                 {
@@ -713,15 +711,15 @@ namespace MiniExcelTests
                     }
                 };
                 await MiniExcel.SaveAsByTemplateAsync(path, templatePath, value);
-            
+
                 var demension = Helpers.GetFirstSheetDimensionRefValue(path);
                 Assert.Equal("A1:B18", demension);
             }
-            
+
             {
                 var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
                 var templatePath = @"../../../../../samples/xlsx/TestTemplateBasicIEmumerableFillConditional.xlsx";
-            
+
                 //2. By Dictionary
                 var value = new Dictionary<string, object>()
                 {
@@ -735,15 +733,15 @@ namespace MiniExcelTests
                     }
                 };
                 await MiniExcel.SaveAsByTemplateAsync(path, templatePath, value);
-            
+
                 var demension = Helpers.GetFirstSheetDimensionRefValue(path);
                 Assert.Equal("A1:B18", demension);
             }
-            
+
             {
                 var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
                 var templatePath = @"../../../../../samples/xlsx/TestTemplateBasicIEmumerableFillConditional.xlsx";
-            
+
                 //3. By DataTable
                 var dt = new DataTable();
                 {
@@ -761,7 +759,7 @@ namespace MiniExcelTests
                     ["employees"] = dt
                 };
                 await MiniExcel.SaveAsByTemplateAsync(path, templatePath, value);
-            
+
                 var demension = Helpers.GetFirstSheetDimensionRefValue(path);
                 Assert.Equal("A1:B18", demension);
             }
@@ -890,7 +888,8 @@ namespace MiniExcelTests
         [Fact()]
         public async Task SaveAsByTemplateAsync_TakeCancel_Throws_TaskCanceledException()
         {
-            await Assert.ThrowsAsync<TaskCanceledException>(async () => {
+            await Assert.ThrowsAsync<TaskCanceledException>(async () =>
+            {
                 CancellationTokenSource cts = new CancellationTokenSource();
 
                 cts.Cancel();

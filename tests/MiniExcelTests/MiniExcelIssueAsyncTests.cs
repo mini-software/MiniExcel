@@ -158,15 +158,17 @@ namespace MiniExcelLibs.Tests
         {
             var path = PathHelper.GetFile("xls/TestIssue242.xls");
 
-            await Assert.ThrowsAsync<NotSupportedException>(async () => {
+            await Assert.ThrowsAsync<NotSupportedException>(async () =>
+            {
                 var q = await MiniExcel.QueryAsync(path);
                 q.ToList();
             });
 
             using (var stream = File.OpenRead(path))
             {
-                await Assert.ThrowsAsync<NotSupportedException>(async () => {
-                    var q = await  stream.QueryAsync();
+                await Assert.ThrowsAsync<NotSupportedException>(async () =>
+                {
+                    var q = await stream.QueryAsync();
                     q.ToList();
                 });
             }
@@ -801,7 +803,7 @@ namespace MiniExcelLibs.Tests
             using (var stream = new MemoryStream())
             {
                 stream.SaveAs(new[] { new { V = "test1" }, new { V = "test2" } });
-                var q = (await stream.QueryAsync(true)).Cast<IDictionary<string,object>>();
+                var q = (await stream.QueryAsync(true)).Cast<IDictionary<string, object>>();
                 var rows = q.ToList();
                 Assert.Equal("test1", rows[0]["V"]);
                 Assert.Equal("test2", rows[1]["V"]);
@@ -852,7 +854,7 @@ Leave";
 
                 var outputPath = PathHelper.GetTempPath();
                 MiniExcel.SaveAs(outputPath, rows);
-                var q1 = await  MiniExcel.QueryAsync<Issue89VO>(outputPath);
+                var q1 = await MiniExcel.QueryAsync<Issue89VO>(outputPath);
                 var rows2 = q1.ToList();
                 Assert.Equal(Issue89VO.WorkState.OnDuty, rows2[0].State);
                 Assert.Equal(Issue89VO.WorkState.Fired, rows2[1].State);
@@ -1369,7 +1371,7 @@ MyProperty4,MyProperty1,MyProperty5,MyProperty2,MyProperty6,,MyProperty3
         {
             var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
             //MiniExcel.SaveAs(path, new[] { "1", "2" });
-            await Assert.ThrowsAnyAsync<NotImplementedException>(async() => await MiniExcel.SaveAsAsync(path, new[] { 1, 2 }));
+            await Assert.ThrowsAnyAsync<NotImplementedException>(async () => await MiniExcel.SaveAsAsync(path, new[] { 1, 2 }));
             File.Delete(path);
             await Assert.ThrowsAnyAsync<NotImplementedException>(async () => await MiniExcel.SaveAsAsync(path, new[] { "1", "2" }));
             File.Delete(path);

@@ -1,5 +1,5 @@
-﻿using System;
-using MiniExcelLibs.Utils;
+﻿using MiniExcelLibs.Utils;
+using System;
 
 namespace MiniExcelLibs.Attributes
 {
@@ -46,9 +46,9 @@ namespace MiniExcelLibs.Attributes
                     _xName = ColumnHelper.GetAlphabetColumnName(index);
             _index = index;
         }
-    }    
-    
-    
+    }
+
+
     public class DynamicExcelColumn : ExcelColumnAttribute
     {
         public string Key { get; set; }

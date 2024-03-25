@@ -1,9 +1,5 @@
 ﻿namespace MiniExcelLibs.Utils
 {
-    using System;
-    using System.Linq;
-    using System.Text;
-
     internal class ImageHelper
     {
         public enum ImageFormat

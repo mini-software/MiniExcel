@@ -1,11 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Net;
-using System.Runtime.InteropServices.ComTypes;
+﻿using System.IO;
 using System.Text;
-using System.Threading.Tasks;
 using System.Xml;
 
 namespace MiniExcelLibs.Utils
@@ -24,7 +18,7 @@ namespace MiniExcelLibs.Utils
 
             StringBuilder calcChainContent = new StringBuilder();
 
-            // each c having f nodes 
+            // each c having f nodes
             var cs = sheetData.SelectNodes($"x:row/x:c[./x:f]", ns);
             foreach (XmlElement c in cs)
             {

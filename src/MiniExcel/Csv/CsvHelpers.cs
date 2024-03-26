@@ -21,7 +21,7 @@
 
             if (alwaysQuote)
                 return $"\"{value}\"";
- 
+
             return value;
         }
     }

@@ -76,7 +76,7 @@ namespace MiniExcelLibs.Utils
 
             return null;
         }
-        
+
         public static IEnumerable<string> GetSharedStrings(Stream stream, params string[] nss)
         {
             using (var reader = XmlReader.Create(stream))

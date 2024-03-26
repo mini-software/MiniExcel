@@ -143,7 +143,7 @@ namespace MiniExcelLibs.Csv
 
         public async Task SaveAsAsync(CancellationToken cancellationToken = default(CancellationToken))
         {
-            await Task.Run(() => SaveAs(),cancellationToken).ConfigureAwait(false);
+            await Task.Run(() => SaveAs(), cancellationToken).ConfigureAwait(false);
         }
 
         private void GenerateSheetByIDataReader(object value, string seperator, string newLine, StreamWriter writer)
@@ -162,7 +162,7 @@ namespace MiniExcelLibs.Csv
 
                     if (i != 0)
                         writer.Write(seperator);
-                    writer.Write(CsvHelpers.ConvertToCsvValue(ToCsvString(columnName,null), _configuration.AlwaysQuote, _configuration.Seperator));
+                    writer.Write(CsvHelpers.ConvertToCsvValue(ToCsvString(columnName, null), _configuration.AlwaysQuote, _configuration.Seperator));
                 }
                 writer.Write(newLine);
             }
@@ -174,7 +174,7 @@ namespace MiniExcelLibs.Csv
                     var cellValue = reader.GetValue(i);
                     if (i != 0)
                         writer.Write(seperator);
-                    writer.Write(CsvHelpers.ConvertToCsvValue(ToCsvString(cellValue,null), _configuration.AlwaysQuote, _configuration.Seperator));
+                    writer.Write(CsvHelpers.ConvertToCsvValue(ToCsvString(cellValue, null), _configuration.AlwaysQuote, _configuration.Seperator));
                 }
                 writer.Write(newLine);
             }
@@ -192,7 +192,7 @@ namespace MiniExcelLibs.Csv
                 var first = true;
                 for (int j = 0; j < dt.Columns.Count; j++)
                 {
-                    var cellValue = CsvHelpers.ConvertToCsvValue(ToCsvString(dt.Rows[i][j],null), _configuration.AlwaysQuote, _configuration.Seperator);
+                    var cellValue = CsvHelpers.ConvertToCsvValue(ToCsvString(dt.Rows[i][j], null), _configuration.AlwaysQuote, _configuration.Seperator);
                     if (!first)
                         writer.Write(seperator);
                     writer.Write(cellValue);
@@ -206,7 +206,7 @@ namespace MiniExcelLibs.Csv
         {
             foreach (var v in value)
             {
-                var values = props.Select(s => CsvHelpers.ConvertToCsvValue(ToCsvString(s?.Property.GetValue(v),s), _configuration.AlwaysQuote, _configuration.Seperator));
+                var values = props.Select(s => CsvHelpers.ConvertToCsvValue(ToCsvString(s?.Property.GetValue(v), s), _configuration.AlwaysQuote, _configuration.Seperator));
                 writer.Write(string.Join(seperator, values));
                 writer.Write(newLine);
             }
@@ -216,7 +216,7 @@ namespace MiniExcelLibs.Csv
         {
             foreach (IDictionary v in value)
             {
-                var values = keys.Select(key => CsvHelpers.ConvertToCsvValue(ToCsvString(v[key],null), _configuration.AlwaysQuote, _configuration.Seperator));
+                var values = keys.Select(key => CsvHelpers.ConvertToCsvValue(ToCsvString(v[key], null), _configuration.AlwaysQuote, _configuration.Seperator));
                 writer.Write(string.Join(seperator, values));
                 writer.Write(newLine);
             }
@@ -226,7 +226,7 @@ namespace MiniExcelLibs.Csv
         {
             foreach (IDictionary<string, object> v in value)
             {
-                var values = keys.Select(key => CsvHelpers.ConvertToCsvValue(ToCsvString(v[key],null), _configuration.AlwaysQuote, _configuration.Seperator));
+                var values = keys.Select(key => CsvHelpers.ConvertToCsvValue(ToCsvString(v[key], null), _configuration.AlwaysQuote, _configuration.Seperator));
                 writer.Write(string.Join(seperator, values));
                 writer.Write(newLine);
             }

@@ -1,14 +1,13 @@
 ﻿namespace MiniExcelLibs
 {
+    using MiniExcelLibs.Csv;
     using MiniExcelLibs.OpenXml;
     using System;
-    using MiniExcelLibs.Csv;
     using System.IO;
-    using System.Globalization;
 
     internal class ExcelReaderFactory
-    { 
-        internal static IExcelReader GetProvider(Stream stream, ExcelType excelType,IConfiguration configuration)
+    {
+        internal static IExcelReader GetProvider(Stream stream, ExcelType excelType, IConfiguration configuration)
         {
             switch (excelType)
             {
@@ -45,7 +44,7 @@
 
     internal class ExcelTemplateFactory
     {
-        internal static IExcelTemplateAsync GetProvider(Stream stream, IConfiguration configuration, ExcelType excelType= ExcelType.XLSX)
+        internal static IExcelTemplateAsync GetProvider(Stream stream, IConfiguration configuration, ExcelType excelType = ExcelType.XLSX)
         {
             switch (excelType)
             {

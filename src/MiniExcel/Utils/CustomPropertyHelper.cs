@@ -191,7 +191,7 @@
                 {
                     return null;
                 }
-                //TODO:or configulation Dynamic 
+                //TODO:or configulation Dynamic
                 var excelColumnIndex = excelColumn?.Index > -1 ? excelColumn.Index : (int?)null;
                 return new ExcelColumnInfo
                 {
@@ -210,7 +210,7 @@
 
         private static IEnumerable<ExcelColumnInfo> GetExcelPropertyInfo(Type type, BindingFlags bindingFlags, Configuration configuration)
         {
-            //TODO:assign column index 
+            //TODO:assign column index
             return ConvertToExcelCustomPropertyInfo(type.GetProperties(bindingFlags), configuration);
         }
 

@@ -10,7 +10,7 @@ namespace MiniExcelLibs.OpenXml
         private readonly Encoding _encoding;
         private readonly StreamWriter _streamWriter;
         private bool disposedValue;
-        public MiniExcelStreamWriter(Stream stream,Encoding encoding, int bufferSize)
+        public MiniExcelStreamWriter(Stream stream, Encoding encoding, int bufferSize)
         {
             this._stream = stream;
             this._encoding = encoding;
@@ -45,7 +45,7 @@ namespace MiniExcelLibs.OpenXml
         {
             if (!disposedValue)
             {
-               this._streamWriter?.Dispose();
+                this._streamWriter?.Dispose();
                 disposedValue = true;
             }
         }

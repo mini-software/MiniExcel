@@ -1,6 +1,5 @@
 ﻿namespace MiniExcelLibs
 {
-    using MiniExcelLibs.Utils;
     using System;
     using System.Collections.Generic;
     using System.Data;
@@ -65,7 +64,7 @@
 
         public void Close()
         {
-              return;
+            return;
         }
 
         public int Depth => throw new NotImplementedException();

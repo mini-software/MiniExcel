@@ -31,12 +31,12 @@
 
             while (!reader.EOF)
             {
-                if (XmlReaderHelper.IsStartElement(reader,"t", _ns))
+                if (XmlReaderHelper.IsStartElement(reader, "t", _ns))
                 {
                     // There are multiple <t> in a <si>. Concatenate <t> within an <si>.
                     result.Append(reader.ReadElementContentAsString());
                 }
-                else if (XmlReaderHelper.IsStartElement(reader,"r", _ns))
+                else if (XmlReaderHelper.IsStartElement(reader, "r", _ns))
                 {
                     result.Append(ReadRichTextRun(reader));
                 }
@@ -60,7 +60,7 @@
 
             while (!reader.EOF)
             {
-                if (XmlReaderHelper.IsStartElement(reader,"t", _ns))
+                if (XmlReaderHelper.IsStartElement(reader, "t", _ns))
                 {
                     result.Append(reader.ReadElementContentAsString());
                 }

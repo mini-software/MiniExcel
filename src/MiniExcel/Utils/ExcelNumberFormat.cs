@@ -131,7 +131,7 @@ namespace MiniExcelLibs.Utils
     internal class ExcelDateTime
     {
         /// <summary>
-        /// The closest .NET DateTime to the specified excel date. 
+        /// The closest .NET DateTime to the specified excel date.
         /// </summary>
         public DateTime AdjustedDateTime { get; }
 
@@ -658,10 +658,10 @@ namespace MiniExcelLibs.Utils
         public static bool IsLiteral(string token)
         {
             return
-                token.StartsWith("_",StringComparison.Ordinal) ||
-                token.StartsWith("\\",StringComparison.Ordinal) ||
-                token.StartsWith("\"",StringComparison.Ordinal) ||
-                token.StartsWith("*",StringComparison.Ordinal) ||
+                token.StartsWith("_", StringComparison.Ordinal) ||
+                token.StartsWith("\\", StringComparison.Ordinal) ||
+                token.StartsWith("\"", StringComparison.Ordinal) ||
+                token.StartsWith("*", StringComparison.Ordinal) ||
                 token == "," ||
                 token == "!" ||
                 token == "&" ||

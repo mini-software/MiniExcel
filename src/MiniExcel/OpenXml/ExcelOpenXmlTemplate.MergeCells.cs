@@ -1,4 +1,6 @@
-﻿using System;
+﻿using MiniExcelLibs.Utils;
+using MiniExcelLibs.Zip;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
@@ -6,8 +8,6 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using MiniExcelLibs.Utils;
-using MiniExcelLibs.Zip;
 
 namespace MiniExcelLibs.OpenXml
 {
@@ -28,7 +28,7 @@ namespace MiniExcelLibs.OpenXml
         private void MergeSameCellsImpl(Stream stream)
         {
             stream.CopyTo(_stream);
-                
+
             var reader = new ExcelOpenXmlSheetReader(_stream, null);
             var _archive = new ExcelOpenXmlZip(_stream, mode: ZipArchiveMode.Update, true, Encoding.UTF8);
             {
@@ -66,12 +66,12 @@ namespace MiniExcelLibs.OpenXml
 
         public Task MergeSameCellsAsync(string path, CancellationToken cancellationToken = default(CancellationToken))
         {
-            return Task.Run(() => MergeSameCells(path),cancellationToken);
+            return Task.Run(() => MergeSameCells(path), cancellationToken);
         }
 
         public Task MergeSameCellsAsync(byte[] fileInBytes, CancellationToken cancellationToken = default(CancellationToken))
         {
-            return Task.Run(() => MergeSameCells(fileInBytes),cancellationToken);
+            return Task.Run(() => MergeSameCells(fileInBytes), cancellationToken);
         }
     }
 }

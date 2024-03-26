@@ -9,8 +9,6 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using static MiniExcelLibs.Utils.ImageHelper;
 
 namespace MiniExcelLibs.OpenXml
@@ -382,9 +380,9 @@ namespace MiniExcelLibs.OpenXml
 
                 writer.Write($"<x:row r=\"{yIndex}\">");
                 var cellIndex = xIndex;
-                foreach (var p in props)
+                foreach (var columnInfo in props)
                 {
-                    if (p == null) //reason:https://github.com/shps951023/MiniExcel/issues/142
+                    if (columnInfo == null) //reason:https://github.com/shps951023/MiniExcel/issues/142
                     {
                         cellIndex++;
                         continue;
@@ -392,20 +390,20 @@ namespace MiniExcelLibs.OpenXml
                     object cellValue = null;
                     if (isDic)
                     {
-                        cellValue = ((IDictionary)v)[p.Key];
+                        cellValue = ((IDictionary)v)[columnInfo.Key];
                         //WriteCell(writer, yIndex, cellIndex, cellValue, null); // why null because dictionary that needs to check type every time
                         //TODO: user can specefic type to optimize efficiency
                     }
                     else if (isDapperRow)
                     {
-                        cellValue = ((IDictionary<string, object>)v)[p.Key.ToString()];
+                        cellValue = ((IDictionary<string, object>)v)[columnInfo.Key.ToString()];
                     }
                     else
                     {
-                        cellValue = p.Property.GetValue(v);
+                        cellValue = columnInfo.Property.GetValue(v);
                     }
-                    WriteCell(writer, yIndex, cellIndex, cellValue, p);
 
+                    WriteCell(writer, yIndex, cellIndex, cellValue, columnInfo);
 
                     cellIndex++;
                 }
@@ -416,54 +414,57 @@ namespace MiniExcelLibs.OpenXml
             return yIndex - 1;
         }
 
-        private void WriteCell(MiniExcelStreamWriter writer, int rowIndex, int cellIndex, object value, ExcelColumnInfo p)
+        private void WriteCell(MiniExcelStreamWriter writer, int rowIndex, int cellIndex, object value, ExcelColumnInfo columnInfo)
         {
             var columname = ExcelOpenXmlUtils.ConvertXyToCell(cellIndex, rowIndex);
-            var s = "2";
             var valueIsNull = value is null || value is DBNull;
 
             if (_configuration.EnableWriteNullValueCell && valueIsNull)
             {
-                writer.Write($"<x:c r=\"{columname}\" s=\"{s}\"></x:c>");
+                writer.Write($"<x:c r=\"{columname}\" s=\"2\"></x:c>"); // s: style index
                 return;
             }
 
-            var tuple = GetCellValue(rowIndex, cellIndex, value, p, valueIsNull);
+            var tuple = GetCellValue(rowIndex, cellIndex, value, columnInfo, valueIsNull);
 
-            s = tuple.Item1;
-            var t = tuple.Item2;
-            var v = tuple.Item3;
+            var styleIndex = tuple.Item1; // https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.spreadsheet.cell?view=openxml-3.0.1
+            var dataType = tuple.Item2; // https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.spreadsheet.cellvalues?view=openxml-3.0.1
+            var cellValue = tuple.Item3;
 
-            if (v != null && (v.StartsWith(" ", StringComparison.Ordinal) || v.EndsWith(" ", StringComparison.Ordinal))) /*Prefix and suffix blank space will lost after SaveAs #294*/
-                writer.Write($"<x:c r=\"{columname}\" {(t == null ? "" : $"t =\"{t}\"")} s=\"{s}\" xml:space=\"preserve\"><x:v>{v}</x:v></x:c>");
+            if (cellValue != null && (cellValue.StartsWith(" ", StringComparison.Ordinal) || cellValue.EndsWith(" ", StringComparison.Ordinal))) /*Prefix and suffix blank space will lost after SaveAs #294*/
+            {
+                writer.Write($"<x:c r=\"{columname}\" {(dataType == null ? "" : $"t =\"{dataType}\"")} s=\"{styleIndex}\" xml:space=\"preserve\"><x:v>{cellValue}</x:v></x:c>");
+            }
             else
+            {
                 //t check avoid format error ![image](https://user-images.githubusercontent.com/12729184/118770190-9eee3480-b8b3-11eb-9f5a-87a439f5e320.png)
-                writer.Write($"<x:c r=\"{columname}\" {(t == null ? "" : $"t =\"{t}\"")} s=\"{s}\"><x:v>{v}</x:v></x:c>");
+                writer.Write($"<x:c r=\"{columname}\" {(dataType == null ? "" : $"t =\"{dataType}\"")} s=\"{styleIndex}\"><x:v>{cellValue}</x:v></x:c>");
+            }
         }
 
-        private Tuple<string, string, string> GetCellValue(int rowIndex, int cellIndex, object value, ExcelColumnInfo p, bool valueIsNull)
+        private Tuple<string, string, string> GetCellValue(int rowIndex, int cellIndex, object value, ExcelColumnInfo columnInfo, bool valueIsNull)
         {
-            var s = "2";
-            var v = string.Empty;
-            var t = "str";
+            var styleIndex = "2"; // format code: 0.00
+            var cellValue = string.Empty;
+            var dataType = "str";
 
             if (valueIsNull)
             {
-
+                // use defaults
             }
             else if (value is string str)
             {
-                v = ExcelOpenXmlUtils.EncodeXML(str);
+                cellValue = ExcelOpenXmlUtils.EncodeXML(str);
             }
-            else if (p?.ExcelFormat != null && value is IFormattable formattableValue)
+            else if (columnInfo?.ExcelFormat != null && value is IFormattable formattableValue)
             {
-                var formattedStr = formattableValue.ToString(p.ExcelFormat, _configuration.Culture);
-                v = ExcelOpenXmlUtils.EncodeXML(formattedStr);
+                var formattedStr = formattableValue.ToString(columnInfo.ExcelFormat, _configuration.Culture);
+                cellValue = ExcelOpenXmlUtils.EncodeXML(formattedStr);
             }
             else
             {
-                Type type = null;
-                if (p == null || p.Key != null)
+                Type type;
+                if (columnInfo == null || columnInfo.Key != null)
                 {
                     // TODO: need to optimize
                     // Dictionary need to check type every time, so it's slow..
@@ -472,52 +473,52 @@ namespace MiniExcelLibs.OpenXml
                 }
                 else
                 {
-                    type = p.ExcludeNullableType; //sometime it doesn't need to re-get type like prop
+                    type = columnInfo.ExcludeNullableType; //sometime it doesn't need to re-get type like prop
                 }
 
                 if (type.IsEnum)
                 {
-                    t = "str";
+                    dataType = "str";
                     var description = CustomPropertyHelper.DescriptionAttr(type, value); //TODO: need to optimze
                     if (description != null)
-                        v = description;
+                        cellValue = description;
                     else
-                        v = value.ToString();
+                        cellValue = value.ToString();
                 }
                 else if (TypeHelper.IsNumericType(type))
                 {
                     if (_configuration.Culture != CultureInfo.InvariantCulture)
-                        t = "str"; //TODO: add style format
+                        dataType = "str"; //TODO: add style format
                     else
-                        t = "n";
+                        dataType = "n";
 
                     if (type.IsAssignableFrom(typeof(decimal)))
-                        v = ((decimal)value).ToString(_configuration.Culture);
+                        cellValue = ((decimal)value).ToString(_configuration.Culture);
                     else if (type.IsAssignableFrom(typeof(Int32)))
-                        v = ((Int32)value).ToString(_configuration.Culture);
+                        cellValue = ((Int32)value).ToString(_configuration.Culture);
                     else if (type.IsAssignableFrom(typeof(Double)))
-                        v = ((Double)value).ToString(_configuration.Culture);
+                        cellValue = ((Double)value).ToString(_configuration.Culture);
                     else if (type.IsAssignableFrom(typeof(Int64)))
-                        v = ((Int64)value).ToString(_configuration.Culture);
+                        cellValue = ((Int64)value).ToString(_configuration.Culture);
                     else if (type.IsAssignableFrom(typeof(UInt32)))
-                        v = ((UInt32)value).ToString(_configuration.Culture);
+                        cellValue = ((UInt32)value).ToString(_configuration.Culture);
                     else if (type.IsAssignableFrom(typeof(UInt16)))
-                        v = ((UInt16)value).ToString(_configuration.Culture);
+                        cellValue = ((UInt16)value).ToString(_configuration.Culture);
                     else if (type.IsAssignableFrom(typeof(UInt64)))
-                        v = ((UInt64)value).ToString(_configuration.Culture);
+                        cellValue = ((UInt64)value).ToString(_configuration.Culture);
                     else if (type.IsAssignableFrom(typeof(Int16)))
-                        v = ((Int16)value).ToString(_configuration.Culture);
+                        cellValue = ((Int16)value).ToString(_configuration.Culture);
                     else if (type.IsAssignableFrom(typeof(Single)))
-                        v = ((Single)value).ToString(_configuration.Culture);
+                        cellValue = ((Single)value).ToString(_configuration.Culture);
                     else if (type.IsAssignableFrom(typeof(Single)))
-                        v = ((Single)value).ToString(_configuration.Culture);
+                        cellValue = ((Single)value).ToString(_configuration.Culture);
                     else
-                        v = (decimal.Parse(value.ToString())).ToString(_configuration.Culture);
+                        cellValue = (decimal.Parse(value.ToString())).ToString(_configuration.Culture);
                 }
                 else if (type == typeof(bool))
                 {
-                    t = "b";
-                    v = (bool)value ? "1" : "0";
+                    dataType = "b";
+                    cellValue = (bool)value ? "1" : "0";
                 }
                 else if (type == typeof(byte[]) && _configuration.EnableConvertByteArray)
                 {
@@ -549,38 +550,61 @@ namespace MiniExcelLibs.OpenXml
 
                         //TODO:Convert to base64
                         var base64 = $"@@@fileid@@@,{file.Path}";
-                        v = ExcelOpenXmlUtils.EncodeXML(base64);
-                        s = "4";
+                        cellValue = ExcelOpenXmlUtils.EncodeXML(base64);
+                        styleIndex = "4";
                     }
                 }
                 else if (type == typeof(DateTime))
                 {
                     if (_configuration.Culture != CultureInfo.InvariantCulture)
                     {
-                        t = "str";
-                        v = ((DateTime)value).ToString(_configuration.Culture);
+                        dataType = "str";
+                        cellValue = ((DateTime)value).ToString(_configuration.Culture);
                     }
-                    else if (p == null || p.ExcelFormat == null)
+                    else if (columnInfo == null || columnInfo.ExcelFormat == null)
                     {
-                        t = null;
-                        s = "3";
-                        v = ((DateTime)value).ToOADate().ToString(CultureInfo.InvariantCulture);
+                        dataType = null;
+                        styleIndex = "3";
+                        cellValue = ((DateTime)value).ToOADate().ToString(CultureInfo.InvariantCulture);
                     }
                     else
                     {
                         // TODO: now it'll lose date type information
-                        t = "str";
-                        v = ((DateTime)value).ToString(p.ExcelFormat, _configuration.Culture);
+                        dataType = "str";
+                        cellValue = ((DateTime)value).ToString(columnInfo.ExcelFormat, _configuration.Culture);
                     }
                 }
+#if NETSTANDARD2_0_OR_GREATER
+                else if (type == typeof(DateOnly))
+                {
+                    if (_configuration.Culture != CultureInfo.InvariantCulture)
+                    {
+                        dataType = "str";
+                        cellValue = ((DateOnly)value).ToString(_configuration.Culture);
+                    }
+                    else if (columnInfo == null || columnInfo.ExcelFormat == null)
+                    {
+                        var day = (DateOnly)value;
+                        dataType = "n";
+                        styleIndex = "3";
+                        cellValue = day.ToDateTime(TimeOnly.MinValue).ToOADate().ToString(CultureInfo.InvariantCulture);
+                    }
+                    else
+                    {
+                        // TODO: now it'll lose date type information
+                        dataType = "str";
+                        cellValue = ((DateOnly)value).ToString(columnInfo.ExcelFormat, _configuration.Culture);
+                    }
+                }
+#endif
                 else
                 {
                     //TODO: _configuration.Culture
-                    v = ExcelOpenXmlUtils.EncodeXML(value.ToString());
+                    cellValue = ExcelOpenXmlUtils.EncodeXML(value.ToString());
                 }
             }
 
-            return Tuple.Create(s, t, v);
+            return Tuple.Create(styleIndex, dataType, cellValue);
         }
 
         private void GenerateSheetByDataTable(MiniExcelStreamWriter writer, DataTable value)
@@ -631,7 +655,7 @@ namespace MiniExcelLibs.OpenXml
                     for (int j = 0; j < value.Columns.Count; j++)
                     {
                         var cellValue = value.Rows[i][j];
-                        WriteCell(writer, yIndex, xIndex, cellValue, null);
+                        WriteCell(writer, yIndex, xIndex, cellValue, columnInfo: null);
                         xIndex++;
                     }
                     writer.Write($"</x:row>");
@@ -683,7 +707,7 @@ namespace MiniExcelLibs.OpenXml
                     for (int i = 0; i < fieldCount; i++)
                     {
                         var cellValue = reader.GetValue(i);
-                        WriteCell(writer, yIndex, xIndex, cellValue, null);
+                        WriteCell(writer, yIndex, xIndex, cellValue, columnInfo: null);
                         xIndex++;
                     }
                     writer.Write($"</x:row>");

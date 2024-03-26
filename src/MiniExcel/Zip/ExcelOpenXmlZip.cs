@@ -16,12 +16,12 @@ namespace MiniExcelLibs.Zip
         internal MiniExcelZipArchive zipFile;
         public ReadOnlyCollection<ZipArchiveEntry> entries;
 
-       private static readonly XmlReaderSettings XmlSettings = new XmlReaderSettings
-       {
-           IgnoreComments = true,
-           IgnoreWhitespace = true,
-           XmlResolver = null,
-       };
+        private static readonly XmlReaderSettings XmlSettings = new XmlReaderSettings
+        {
+            IgnoreComments = true,
+            IgnoreWhitespace = true,
+            XmlResolver = null,
+        };
         public ExcelOpenXmlZip(Stream fileStream, ZipArchiveMode mode = ZipArchiveMode.Read, bool leaveOpen = false, Encoding entryNameEncoding = null)
         {
             zipFile = new MiniExcelZipArchive(fileStream, mode, leaveOpen, entryNameEncoding);

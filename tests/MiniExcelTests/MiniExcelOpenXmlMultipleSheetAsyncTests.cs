@@ -1,9 +1,9 @@
-﻿using Xunit;
-using System.Linq;
-using System;
-using System.IO;
-using System.Threading.Tasks;
+﻿using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
+using Xunit;
 
 namespace MiniExcelLibs.Tests
 {
@@ -35,8 +35,9 @@ namespace MiniExcelLibs.Tests
                 Assert.Equal(2, rows[0].B);
             }
             {
-                await Assert.ThrowsAsync<InvalidOperationException>(async() => {
-                    var q= await MiniExcel.QueryAsync(path, sheetName: "xxxx");
+                await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+                {
+                    var q = await MiniExcel.QueryAsync(path, sheetName: "xxxx");
                     q.ToList();
                 });
             }

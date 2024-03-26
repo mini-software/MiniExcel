@@ -574,6 +574,29 @@ namespace MiniExcelLibs.OpenXml
                         cellValue = ((DateTime)value).ToString(columnInfo.ExcelFormat, _configuration.Culture);
                     }
                 }
+#if NETSTANDARD2_0_OR_GREATER
+                else if (type == typeof(DateOnly))
+                {
+                    if (_configuration.Culture != CultureInfo.InvariantCulture)
+                    {
+                        dataType = "str";
+                        cellValue = ((DateOnly)value).ToString(_configuration.Culture);
+                    }
+                    else if (columnInfo == null || columnInfo.ExcelFormat == null)
+                    {
+                        var day = (DateOnly)value;
+                        dataType = "n";
+                        styleIndex = "3";
+                        cellValue = day.ToDateTime(TimeOnly.MinValue).ToOADate().ToString(CultureInfo.InvariantCulture);
+                    }
+                    else
+                    {
+                        // TODO: now it'll lose date type information
+                        dataType = "str";
+                        cellValue = ((DateOnly)value).ToString(columnInfo.ExcelFormat, _configuration.Culture);
+                    }
+                }
+#endif
                 else
                 {
                     //TODO: _configuration.Culture

@@ -1,6 +1,5 @@
 ﻿namespace MiniExcelLibs.Tests.Utils
 {
-    using MiniExcelLibs.OpenXml;
     using System;
     using System.Collections.Generic;
     using System.IO;
@@ -69,14 +68,14 @@
             }
             return result;
         }
-        internal static string GetZipFileContent(string zipPath,string filePath)
+        internal static string GetZipFileContent(string zipPath, string filePath)
         {
             var ns = new XmlNamespaceManager(new NameTable());
             ns.AddNamespace("x", "http://schemas.openxmlformats.org/spreadsheetml/2006/main");
             using (var stream = File.OpenRead(zipPath))
             using (ZipArchive archive = new ZipArchive(stream, ZipArchiveMode.Read, false, Encoding.UTF8))
             {
-                var sheet = archive.Entries.Single(w => w.FullName== filePath);
+                var sheet = archive.Entries.Single(w => w.FullName == filePath);
                 using (var sheetStream = sheet.Open())
                 {
                     var doc = XDocument.Load(sheetStream);
@@ -123,8 +122,8 @@
                     var doc = new XmlDocument();
                     doc.Load(sheetStream);
                     var mergeCells = doc.SelectSingleNode($"/x:worksheet/x:mergeCells", ns)?.Cast<XmlElement>().ToList();
-                    
-                    if(mergeCells is { Count: > 0 })
+
+                    if (mergeCells is { Count: > 0 })
                     {
                         for (int i = 0; i < mergeCells.Count; i++)
                         {

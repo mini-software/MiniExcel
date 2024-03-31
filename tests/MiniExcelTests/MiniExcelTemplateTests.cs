@@ -840,35 +840,35 @@ namespace MiniExcelTests
             }
 
         }
-        
+
         [Fact]
         public void MergeSameCellsWithTagTest()
         {
             var mergedFilePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
-            
+
             var path = @"../../../../../samples/xlsx/TestMergeWithTag.xlsx";
-            
+
             MiniExcel.MergeSameCells(mergedFilePath, path);
             {
                 var mergedCells = Helpers.GetFirstSheetMergedCells(mergedFilePath);
-                
+
                 Assert.Equal("A2:A4", mergedCells[0]);
                 Assert.Equal("C3:C4", mergedCells[1]);
                 Assert.Equal("A7:A8", mergedCells[2]);
             }
         }
-        
+
         [Fact]
         public void MergeSameCellsWithLimitTagTest()
         {
             var mergedFilePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
-            
+
             var path = @"../../../../../samples/xlsx/TestMergeWithLimitTag.xlsx";
-            
+
             MiniExcel.MergeSameCells(mergedFilePath, path);
             {
                 var mergedCells = Helpers.GetFirstSheetMergedCells(mergedFilePath);
-                
+
                 Assert.Equal("A3:A4", mergedCells[0]);
                 Assert.Equal("C3:C6", mergedCells[1]);
                 Assert.Equal("A5:A6", mergedCells[2]);

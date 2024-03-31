@@ -1,21 +1,21 @@
-﻿using Xunit;
-using System;
-using System.Linq;
-using System.IO;
-using OfficeOpenXml;
-using ClosedXML.Excel;
-using System.IO.Packaging;
-using System.Data;
-using ExcelDataReader;
-using System.Collections.Generic;
-using System.Data.SQLite;
+﻿using ClosedXML.Excel;
 using Dapper;
-using System.Globalization;
-using static MiniExcelLibs.Tests.Utils.MiniExcelOpenXml;
-using MiniExcelLibs.Tests.Utils;
+using ExcelDataReader;
 using MiniExcelLibs.Attributes;
-using System.Threading.Tasks;
+using MiniExcelLibs.Tests.Utils;
+using OfficeOpenXml;
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Data.SQLite;
+using System.Globalization;
+using System.IO;
+using System.IO.Packaging;
+using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
+using Xunit;
+using static MiniExcelLibs.Tests.Utils.MiniExcelOpenXml;
 
 namespace MiniExcelLibs.Tests
 {
@@ -208,7 +208,7 @@ namespace MiniExcelLibs.Tests
             var path = @"../../../../../samples/xlsx/TestCenterEmptyRow/TestCenterEmptyRow.xlsx";
             using (var stream = File.OpenRead(path))
             {
-                var d = (await stream.QueryAsync()).Cast<IDictionary<string,object>>();
+                var d = (await stream.QueryAsync()).Cast<IDictionary<string, object>>();
                 var rows = d.ToList();
                 Assert.Equal("a", rows[0]["A"]);
                 Assert.Equal("b", rows[0]["B"]);
@@ -279,7 +279,7 @@ namespace MiniExcelLibs.Tests
             var path = @"../../../../../samples/xlsx/TestDynamicQueryBasic_WithoutHead.xlsx";
             using (var stream = File.OpenRead(path))
             {
-                var d= (await stream.QueryAsync()).Cast<IDictionary<string, object>>();
+                var d = (await stream.QueryAsync()).Cast<IDictionary<string, object>>();
                 var rows = d.ToList();
                 Assert.Equal("MiniExcel", rows[0]["A"]);
                 Assert.Equal(1d, rows[0]["B"]);
@@ -377,7 +377,7 @@ namespace MiniExcelLibs.Tests
             var path = @"../../../../../samples/xlsx/TestTypeMapping_AutoCheckFormat.xlsx";
             using (var stream = FileHelper.OpenRead(path))
             {
-                var d= await stream.QueryAsync<AutoCheckType>();
+                var d = await stream.QueryAsync<AutoCheckType>();
                 d.ToList();
             }
         }
@@ -661,14 +661,14 @@ namespace MiniExcelLibs.Tests
                         var rows = d.ToList();
                         Assert.Equal(2, rows.Count);
                         Assert.Equal(@"""<>+-*//}{\\n", rows[0]["a"]);
-                        Assert.Equal(1234567890d,rows[0]["b"]);
+                        Assert.Equal(1234567890d, rows[0]["b"]);
                         Assert.Null(rows[0]["c"]);
                         Assert.Null(rows[0]["d"]);
                     }
 
                     using (var stream = File.OpenRead(path))
                     {
-                        var  d= (await stream.QueryAsync()).Cast<IDictionary<string, object>>();
+                        var d = (await stream.QueryAsync()).Cast<IDictionary<string, object>>();
                         var rows = d.ToList();
                         Assert.Equal(3, rows.Count);
                         Assert.Equal("a", rows[0]["A"]);
@@ -1020,7 +1020,7 @@ namespace MiniExcelLibs.Tests
                 {
                     var rows = (await stream.QueryAsync()).Cast<IDictionary<string, object>>();
                     foreach (var row in rows)
-                        connection.Execute("insert into T (A,B) values (@A,@B)", new { A = row["A"],B = row["B"] }, transaction: transaction);
+                        connection.Execute("insert into T (A,B) values (@A,@B)", new { A = row["A"], B = row["B"] }, transaction: transaction);
                     transaction.Commit();
                 }
             }
@@ -1205,7 +1205,8 @@ namespace MiniExcelLibs.Tests
         [Fact()]
         public async Task ReadBigExcel_TakeCancel_Throws_TaskCanceledException()
         {
-            await Assert.ThrowsAsync<TaskCanceledException>(async () => {
+            await Assert.ThrowsAsync<TaskCanceledException>(async () =>
+            {
                 CancellationTokenSource cts = new CancellationTokenSource();
                 var path = @"../../../../../samples/xlsx/bigExcel.xlsx";
 
@@ -1222,7 +1223,8 @@ namespace MiniExcelLibs.Tests
         [Fact()]
         public async Task ReadBigExcel_Prcoessing_TakeCancel_Throws_TaskCanceledException()
         {
-            await Assert.ThrowsAsync<OperationCanceledException>(async () => {
+            await Assert.ThrowsAsync<OperationCanceledException>(async () =>
+            {
                 CancellationTokenSource cts = new CancellationTokenSource();
                 var path = @"../../../../../samples/xlsx/bigExcel.xlsx";
 

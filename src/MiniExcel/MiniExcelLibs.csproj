@@ -54,4 +54,9 @@ Todo : https://github.com/mini-software/MiniExcel/projects/1?fullscreen=true</De
 	<ItemGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
 		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
 	</ItemGroup>
+	<ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+	  <PackageReference Include="Portable.System.DateTimeOnly">
+	    <Version>8.0.0</Version>
+	  </PackageReference>
+	</ItemGroup>
 </Project>

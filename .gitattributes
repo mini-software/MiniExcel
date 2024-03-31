@@ -15,7 +15,7 @@
 *.png binary
 *.gif binary
 
-*.cs -text diff=csharp 
+*.cs -text diff=csharp
 *.vb -text
 *.c -text
 *.cpp -text
@@ -44,8 +44,8 @@
 *.fsx -text
 *.hs -text
 
-*.csproj -text merge=union 
-*.vbproj -text merge=union 
-*.fsproj -text merge=union 
-*.dbproj -text merge=union 
-*.sln -text merge=union 
+*.csproj -text merge=union
+*.vbproj -text merge=union
+*.fsproj -text merge=union
+*.dbproj -text merge=union
+*.sln -text merge=union

@@ -1,10 +1,13 @@
 ﻿using Dapper;
 using MiniExcelLibs.Attributes;
+using MiniExcelLibs.Csv;
+using MiniExcelLibs.Exceptions;
 using MiniExcelLibs.OpenXml;
 using MiniExcelLibs.Tests.Utils;
 using Newtonsoft.Json;
 using OfficeOpenXml;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -13,27 +16,22 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using Xunit;
 using Xunit.Abstractions;
 using static MiniExcelLibs.Tests.MiniExcelOpenXmlTests;
-using System.Collections;
-using MiniExcelLibs.Exceptions;
-using System.Text.RegularExpressions;
-using MiniExcelLibs.Csv;
-using System.Threading.Tasks;
-using System.Data.SqlClient;
 
 namespace MiniExcelLibs.Tests
 {
-
     public partial class MiniExcelIssueTests
     {
         private readonly ITestOutputHelper output;
+
         public MiniExcelIssueTests(ITestOutputHelper output)
         {
             this.output = output;
         }
-
 
         [Fact]
         public void TestIssue24020201()
@@ -43,7 +41,7 @@ namespace MiniExcelLibs.Tests
                 var templatePath = PathHelper.GetFile("xlsx/TestIssue24020201.xlsx");
                 var data = new Dictionary<string, object>()
                 {
-                    ["title"]="This's title",
+                    ["title"] = "This's title",
                     ["B"] = new List<Dictionary<string, object>>()
                     {
                         new Dictionary<string, object>(){ { "specialMark", 1 } },
@@ -60,9 +58,12 @@ namespace MiniExcelLibs.Tests
         {
             var path = PathHelper.GetTempFilePath();
             var templatePath = PathHelper.GetFile("xlsx/TestIssue553.xlsx");
-            var data = new { B = new[] {
+            var data = new
+            {
+                B = new[] {
                 new{ ITM=1 },new{ ITM=2 }, new{ ITM=3 },
-            } };
+            }
+            };
             MiniExcel.SaveAsByTemplate(path, templatePath, data);
         }
 
@@ -132,7 +133,7 @@ namespace MiniExcelLibs.Tests
 ", content);
             }
             {
-                var value = new { ID=3,Name = "Mike", InDate = new DateTime(2021, 04, 23) };
+                var value = new { ID = 3, Name = "Mike", InDate = new DateTime(2021, 04, 23) };
                 MiniExcel.Insert(path, value);
                 var content = File.ReadAllText(path);
                 Assert.Equal(@"ID,Name,InDate
@@ -194,7 +195,7 @@ namespace MiniExcelLibs.Tests
                 var path = Path.GetTempPath() + Guid.NewGuid() + ".xlsx";
                 DataTableReader reader = table.CreateDataReader();
                 var config = new OpenXmlConfiguration() { FastMode = true };
-                MiniExcel.SaveAs(path, reader,configuration:config);
+                MiniExcel.SaveAs(path, reader, configuration: config);
                 var xml = Helpers.GetZipFileContent(path, "xl/worksheets/sheet1.xml");
                 Assert.Contains("<x:autoFilter ref=\"A1:B3\" />", xml);
                 Assert.Contains("<x:dimension ref=\"A1:B3\" />", xml);

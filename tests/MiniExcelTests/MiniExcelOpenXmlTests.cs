@@ -1,22 +1,22 @@
-﻿using Xunit;
-using System;
-using System.Linq;
-using System.IO;
-using OfficeOpenXml;
-using ClosedXML.Excel;
-using System.IO.Packaging;
-using System.Data;
-using ExcelDataReader;
-using System.Collections.Generic;
-using System.Data.SQLite;
-using System.Diagnostics;
+﻿using ClosedXML.Excel;
 using Dapper;
-using System.Globalization;
-using static MiniExcelLibs.Tests.Utils.MiniExcelOpenXml;
-using MiniExcelLibs.Tests.Utils;
+using ExcelDataReader;
 using MiniExcelLibs.Attributes;
 using MiniExcelLibs.OpenXml;
+using MiniExcelLibs.Tests.Utils;
+using OfficeOpenXml;
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Data.SQLite;
+using System.Diagnostics;
+using System.Globalization;
+using System.IO;
+using System.IO.Packaging;
+using System.Linq;
+using Xunit;
 using Xunit.Abstractions;
+using static MiniExcelLibs.Tests.Utils.MiniExcelOpenXml;
 
 namespace MiniExcelLibs.Tests
 {
@@ -1177,12 +1177,12 @@ namespace MiniExcelLibs.Tests
             Assert.Equal(new[] { "A", "B", "C" }, columns);
 
             var rows = MiniExcel.Query(path).ToList();
-            Assert.Equal(rows[0].A , "title1");
-            Assert.Equal(rows[0].B , "title2");
-            Assert.Equal(rows[0].C , "title3");
-            Assert.Equal(rows[1].A , "value1");
-            Assert.Equal(rows[1].B , "value2");
-            Assert.Equal(rows[1].C , "value3");
+            Assert.Equal(rows[0].A, "title1");
+            Assert.Equal(rows[0].B, "title2");
+            Assert.Equal(rows[0].C, "title3");
+            Assert.Equal(rows[1].A, "value1");
+            Assert.Equal(rows[1].B, "value2");
+            Assert.Equal(rows[1].C, "value3");
         }
 
         [Fact]
@@ -1250,7 +1250,7 @@ namespace MiniExcelLibs.Tests
             using (var stream = File.OpenRead(path))
             {
                 var rows = stream.Query(useHeaderRow: true)
-                    .Select(x => (IDictionary<string,object>)x)
+                    .Select(x => (IDictionary<string, object>)x)
                     .ToList();
 
                 Assert.Contains("Name of something", rows[0]);

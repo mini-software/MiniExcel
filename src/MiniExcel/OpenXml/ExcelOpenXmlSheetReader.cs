@@ -288,11 +288,12 @@ namespace MiniExcelLibs.OpenXml
                                 }
 
                                 // fill empty rows
-                                if (!(nextRowIndex < startRowIndex))
+                                var expectedRowIndex = isFirstRow ? startRowIndex : nextRowIndex;
+                                if (!(expectedRowIndex < startRowIndex))
                                 {
-                                    if (nextRowIndex < rowIndex)
+                                    if (expectedRowIndex < rowIndex)
                                     {
-                                        for (int i = nextRowIndex; i < rowIndex; i++)
+                                        for (int i = expectedRowIndex; i < rowIndex; i++)
                                         {
                                             yield return GetCell(useHeaderRow, maxColumnIndex, headRows, startColumnIndex);
                                         }

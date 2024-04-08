@@ -2,6 +2,7 @@
 using Dapper;
 using ExcelDataReader;
 using MiniExcelLibs.Attributes;
+using MiniExcelLibs.OpenXml;
 using MiniExcelLibs.Tests.Utils;
 using OfficeOpenXml;
 using System;
@@ -19,9 +20,6 @@ using static MiniExcelLibs.Tests.Utils.MiniExcelOpenXml;
 
 namespace MiniExcelLibs.Tests
 {
-    using System.Dynamic;
-    using OpenXml;
-
     public partial class MiniExcelOpenXmlAsyncTests
     {
 

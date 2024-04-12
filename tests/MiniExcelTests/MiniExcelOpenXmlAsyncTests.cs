@@ -2,6 +2,7 @@
 using Dapper;
 using ExcelDataReader;
 using MiniExcelLibs.Attributes;
+using MiniExcelLibs.OpenXml;
 using MiniExcelLibs.Tests.Utils;
 using OfficeOpenXml;
 using System;
@@ -854,6 +855,43 @@ namespace MiniExcelLibs.Tests
                 Assert.Equal("A1:B3", Helpers.GetFirstSheetDimensionRefValue(path));
                 File.Delete(path);
             }
+        }
+
+        [Fact]
+        public async Task SaveAsByIEnumerableIDictionaryWithDynamicConfiguration()
+        {
+            var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
+            var dynamicColumns = new[]
+            {
+                new DynamicExcelColumn("Column1") { Name = "Name Column" },
+                new DynamicExcelColumn("Column2") { Name = "Value Column" }
+            };
+            var config = new OpenXmlConfiguration
+            {
+                DynamicColumns = dynamicColumns
+            };
+            var values = new List<Dictionary<string, object>>()
+            {
+                new Dictionary<string, object>() { { "Column1", "MiniExcel" }, { "Column2", 1 } },
+                new Dictionary<string, object>() { { "Column1", "Github" }, { "Column2", 2 } },
+            };
+            await MiniExcel.SaveAsAsync(path, values, configuration: config);
+
+            using (var stream = File.OpenRead(path))
+            {
+                var d = (await stream.QueryAsync(useHeaderRow: true)).Cast<IDictionary<string, object>>();
+                var rows = d.ToList();
+                Assert.Equal(2, rows.Count);
+                Assert.Equal("Name Column", rows[0].Keys.ElementAt(0));
+                Assert.Equal("Value Column", rows[0].Keys.ElementAt(1));
+                Assert.Equal("MiniExcel", rows[0].Values.ElementAt(0));
+                Assert.Equal(1d, rows[0].Values.ElementAt(1));
+                Assert.Equal("Github", rows[1].Values.ElementAt(0));
+                Assert.Equal(2d, rows[1].Values.ElementAt(1));
+            }
+
+            Assert.Equal("A1:B3", Helpers.GetFirstSheetDimensionRefValue(path));
+            File.Delete(path);
         }
 
         [Fact()]

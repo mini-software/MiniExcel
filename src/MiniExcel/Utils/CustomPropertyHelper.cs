@@ -91,7 +91,7 @@
             if (withCustomIndexProps.Any())
                 maxColumnIndex = Math.Max((int)withCustomIndexProps.Max(w => w.ExcelColumnIndex), maxColumnIndex);
 
-            var withoutCustomIndexProps = props.Where(w => w.ExcelColumnIndex == null).ToList();
+            var withoutCustomIndexProps = props.Where(w => w.ExcelColumnIndex == null || w.ExcelColumnIndex == -1).ToList();
 
             List<ExcelColumnInfo> newProps = new List<ExcelColumnInfo>();
             var index = 0;

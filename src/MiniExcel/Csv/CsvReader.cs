@@ -27,13 +27,23 @@ namespace MiniExcelLibs.Csv
                 _stream.Position = 0;
             var reader = _config.StreamReaderFunc(_stream);
             {
-                var row = string.Empty;
                 string[] read;
                 var firstRow = true;
                 Dictionary<int, string> headRows = new Dictionary<int, string>();
-                while ((row = reader.ReadLine()) != null)
+                string row;
+                for (var rowIndex = 1; (row = reader.ReadLine()) != null; rowIndex++)
                 {
                     read = Split(row);
+
+                    // invalid row check
+                    if (read.Length < headRows.Count)
+                    {
+                        var colIndex = read.Length;
+                        var headers = headRows.ToDictionary(x => x.Value, x => x.Key);
+                        var rowValues = read.Select((x, i) => new { Key = headRows[i], Value = x }).ToDictionary(x => x.Key, x => (object)x.Value);
+                        throw new Exceptions.ExcelColumnNotFoundException(null,
+                            headRows[colIndex], null, rowIndex, headers, rowValues, $"Csv read error, Column: {colIndex} not found in Row: {rowIndex}");
+                    }
 
                     //header
                     if (useHeaderRow)
@@ -57,6 +67,14 @@ namespace MiniExcelLibs.Csv
 
                     //body
                     {
+                        // record first row as reference
+                        if (firstRow)
+                        {
+                            firstRow = false;
+                            for (int i = 0; i <= read.Length - 1; i++)
+                                headRows.Add(i, $"c{i + 1}");
+                        }
+
                         var cell = CustomPropertyHelper.GetEmptyExpandoObject(read.Length - 1, 0);
                         if (_config.ReadEmptyStringAsNull)
                         {

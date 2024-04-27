@@ -1518,7 +1518,68 @@ memoryStream.Seek(0, SeekOrigin.Begin);
 memoryStream.CopyTo(Response.OutputStream);
 response.End();
 ```
+#### 4.1 NET Core不落地导出Excel
 
+```csharp
+using Microsoft.AspNetCore.Mvc;
+using MiniExcelLibs;
+
+namespace WebApplication1.Controllers
+{
+    [ApiController]
+    [Route("[controller]")]
+    public class WeatherForecastController : ControllerBase
+    {
+        private static readonly string[] Summaries = new[]
+        {
+            "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
+        };
+
+        [NonAction]
+        public IEnumerable<WeatherForecast> Get(int count)
+        {
+            for (int i = 1; i <= count; i++)
+            {
+                yield return new WeatherForecast
+                {
+                    Id = i,
+                    Date = DateOnly.FromDateTime(DateTime.Now.AddDays(1)),
+                    TemperatureC = Random.Shared.Next(-20, 55),
+                    Summary = Summaries[Random.Shared.Next(Summaries.Length)]
+                };
+            }
+        }
+
+        /// <summary>
+        /// <a href="http://localhost:5000/StreamDownloadExcel" download="example.xlsx">
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        [HttpGet(Name = "StreamDownloadExcel")]
+        public async Task StreamDownloadExcel(CancellationToken cancellationToken)
+        {
+            Response.ContentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+            Response.Headers["Content-Disposition"] = "attachment; filename=example.xlsx";
+
+            var values = Get(1000000);
+            await Response.BodyWriter.AsStream().SaveAsAsync(values, cancellationToken: cancellationToken);
+        }
+
+        public class WeatherForecast
+        {
+            public int Id { get; set; }
+            public DateOnly Date { get; set; }
+
+            public int TemperatureC { get; set; }
+
+            public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
+
+            public string? Summary { get; set; }
+        }
+    }
+}
+
+```
 
 
 #### 5. 动态 i18n 多国语言跟权限管理

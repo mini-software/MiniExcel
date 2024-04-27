@@ -1528,7 +1528,7 @@ namespace WebApplication1.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class WeatherForecastController : ControllerBase
+    public class StreamDownloadExcelController : ControllerBase
     {
         private static readonly string[] Summaries = new[]
         {

@@ -416,7 +416,7 @@ namespace MiniExcelLibs.OpenXml
                 }
 
                 var r = ExcelOpenXmlUtils.ConvertXyToCell(xIndex, yIndex);
-                WriteCAsync(writer, r, columnName: p.ExcelColumnName);
+                await WriteCAsync(writer, r, columnName: p.ExcelColumnName);
                 xIndex++;
             }
 

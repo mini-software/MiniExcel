@@ -16,11 +16,13 @@ namespace MiniExcelLibs.OpenXml
             this._encoding = encoding;
             this._streamWriter = new StreamWriter(stream, this._encoding, bufferSize);
         }
+        private int writeTimes = 0;
         public void Write(string content)
         {
             if (string.IsNullOrEmpty(content))
                 return;
             this._streamWriter.Write(content);
+            if (++writeTimes % 1000 == 0) this.Flush();
         }
 
         public long WriteAndFlush(string content)
@@ -34,11 +36,6 @@ namespace MiniExcelLibs.OpenXml
         {
             this._streamWriter.Flush();
             return this._streamWriter.BaseStream.Position;
-        }
-
-        public void SetPosition(long position)
-        {
-            this._streamWriter.BaseStream.Position = position;
         }
 
         protected virtual void Dispose(bool disposing)

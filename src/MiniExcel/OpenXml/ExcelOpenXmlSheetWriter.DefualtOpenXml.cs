@@ -4,7 +4,7 @@ using System.IO.Compression;
 
 namespace MiniExcelLibs.OpenXml
 {
-    internal partial class ExcelOpenXmlSheetWriter : IExcelWriter
+    partial class ExcelOpenXmlSheetWriter : IExcelWriter
     {
         private readonly Dictionary<string, ZipPackageInfo> _zipDictionary = new Dictionary<string, ZipPackageInfo>();
 

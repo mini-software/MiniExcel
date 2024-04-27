@@ -3460,5 +3460,43 @@ MyProperty4,MyProperty1,MyProperty5,MyProperty2,MyProperty6,,MyProperty3
 
             Assert.Equal(1, enumerableWithCount.GetEnumeratorCount);
         }
+
+        public class Issue585VO1
+        {
+            public string Col1 { get; set; }
+            public string Col2 { get; set; }
+            public string Col3 { get; set; }
+        }
+
+        public class Issue585VO2
+        {
+            public string Col1 { get; set; }
+            [ExcelColumnName("Col2")]
+            public string Prop2 { get; set; }
+            public string Col3 { get; set; }
+        }
+
+        public class Issue585VO3
+        {
+            public string Col1 { get; set; }
+            [ExcelColumnIndex("B")]
+            public string Prop2 { get; set; }
+            public string Col3 { get; set; }
+        }
+
+        [Fact]
+        public void Issue585()
+        {
+            var path = @"../../../../../samples/xlsx/TestIssue585.xlsx";
+
+            var items1 = MiniExcel.Query<Issue585VO1>(path);
+            Assert.Equal(2, items1.Count());
+
+            var items2 = MiniExcel.Query<Issue585VO2>(path);
+            Assert.Equal(2, items2.Count());
+
+            var items3 = MiniExcel.Query<Issue585VO3>(path);
+            Assert.Equal(2, items3.Count());
+        }
     }
 }

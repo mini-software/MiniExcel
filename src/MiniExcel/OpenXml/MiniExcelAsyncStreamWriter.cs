@@ -24,6 +24,8 @@ namespace MiniExcelLibs.OpenXml
             this._cancellationToken = cancellationToken;
             this._streamWriter = new StreamWriter(stream, this._encoding, bufferSize);
         }
+
+        private int writeTimes = 0;
         public async Task WriteAsync(string content)
         {
             this._cancellationToken.ThrowIfCancellationRequested();
@@ -31,6 +33,7 @@ namespace MiniExcelLibs.OpenXml
             if (string.IsNullOrEmpty(content))
                 return;
             await this._streamWriter.WriteAsync(content);
+            if (++writeTimes % 1000 == 0) await this.FlushAsync();
         }
 
         public async Task<long> WriteAndFlushAsync(string content)
@@ -45,11 +48,6 @@ namespace MiniExcelLibs.OpenXml
 
             await this._streamWriter.FlushAsync();
             return this._streamWriter.BaseStream.Position;
-        }
-
-        public void SetPosition(long position)
-        {
-            this._streamWriter.BaseStream.Position = position;
         }
 
         protected virtual void Dispose(bool disposing)

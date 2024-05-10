@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace MiniExcelLibs.OpenXml
 {
-    partial class ExcelOpenXmlSheetWriter : IExcelWriter
+    internal partial class ExcelOpenXmlSheetWriter : IExcelWriter
     {
         public async Task SaveAsAsync(CancellationToken cancellationToken = default(CancellationToken))
         {
@@ -133,12 +133,20 @@ namespace MiniExcelLibs.OpenXml
 
         private async Task GenerateSheetByIDataReaderAsync(MiniExcelAsyncStreamWriter writer, IDataReader reader)
         {
+            long dimensionWritePosition = 0;
             await writer.WriteAsync($@"<?xml version=""1.0"" encoding=""utf-8""?><x:worksheet xmlns:x=""http://schemas.openxmlformats.org/spreadsheetml/2006/main"">");
             var xIndex = 1;
             var yIndex = 1;
             var maxColumnIndex = 0;
             var maxRowIndex = 0;
             {
+
+                if (_configuration.FastMode)
+                {
+                    dimensionWritePosition = await writer.WriteAndFlushAsync($@"<x:dimension ref=""");
+                    await writer.WriteAsync("                              />"); // end of code will be replaced
+                }
+
                 var props = new List<ExcelColumnInfo>();
                 for (var i = 0; i < reader.FieldCount; i++)
                 {
@@ -180,6 +188,12 @@ namespace MiniExcelLibs.OpenXml
             if (_configuration.AutoFilter)
                 await writer.WriteAsync($"<x:autoFilter ref=\"{GetDimensionRef(maxRowIndex, maxColumnIndex)}\" />");
             await writer.WriteAndFlushAsync("</x:worksheet>");
+
+            if (_configuration.FastMode)
+            {
+                writer.SetPosition(dimensionWritePosition);
+                await writer.WriteAndFlushAsync($@"{GetDimensionRef(maxRowIndex, maxColumnIndex)}""");
+            }
         }
 
         private async Task GenerateSheetByEnumerableAsync(MiniExcelAsyncStreamWriter writer, IEnumerable values)
@@ -189,8 +203,21 @@ namespace MiniExcelLibs.OpenXml
             List<ExcelColumnInfo> props = null;
             string mode = null;
 
+            int? rowCount = null;
+            var collection = values as ICollection;
+            if (collection != null)
+            {
+                rowCount = collection.Count;
+            }
+            else if (!_configuration.FastMode)
+            {
+                // The row count is only required up front when not in fastmode
+                collection = new List<object>(values.Cast<object>());
+                rowCount = collection.Count;
+            }
+
             // Get the enumerator once to ensure deferred linq execution
-            var enumerator = values.GetEnumerator();
+            var enumerator = (collection ?? values).GetEnumerator();
 
             // Move to the first item in order to inspect the value type and determine whether it is empty
             var empty = !enumerator.MoveNext();
@@ -235,10 +262,18 @@ namespace MiniExcelLibs.OpenXml
 
             await writer.WriteAsync($@"<?xml version=""1.0"" encoding=""utf-8""?><x:worksheet xmlns:r=""http://schemas.openxmlformats.org/officeDocument/2006/relationships"" xmlns:x=""http://schemas.openxmlformats.org/spreadsheetml/2006/main"" >");
 
-            if(values is ICollection collection)
+            long dimensionWritePosition = 0;
+
+            // We can write the dimensions directly if the row count is known
+            if (_configuration.FastMode && rowCount == null)
             {
-                var rowCount= collection.Count;
-                maxRowIndex = rowCount + (_printHeader && rowCount > 0 ? 1 : 0);
+                // Write a placeholder for the table dimensions and save thee position for later
+                dimensionWritePosition = await writer.WriteAndFlushAsync("<x:dimension ref=\"");
+                await writer.WriteAsync("                              />");
+            }
+            else
+            {
+                maxRowIndex = rowCount.Value + (_printHeader && rowCount > 0 ? 1 : 0);
                 await writer.WriteAsync($@"<x:dimension ref=""{GetDimensionRef(maxRowIndex, maxColumnIndex)}""/>");
             }
 
@@ -277,6 +312,18 @@ namespace MiniExcelLibs.OpenXml
             await writer.WriteAsync("</x:sheetData>");
             if (_configuration.AutoFilter)
                 await writer.WriteAsync($"<x:autoFilter ref=\"{GetDimensionRef(maxRowIndex, maxColumnIndex)}\" />");
+
+            // The dimension has already been written if row count is defined
+            if (_configuration.FastMode && rowCount == null)
+            {
+                // Flush and save position so that we can get back again.
+                var pos = await writer.FlushAsync();
+
+                // Seek back and write the dimensions of the table
+                writer.SetPosition(dimensionWritePosition);
+                await writer.WriteAndFlushAsync($@"{GetDimensionRef(maxRowIndex, maxColumnIndex)}""");
+                writer.SetPosition(pos);
+            }
 
             await writer.WriteAsync("<x:drawing  r:id=\"drawing" + currentSheetIndex + "\" /></x:worksheet>");
         }
@@ -369,7 +416,7 @@ namespace MiniExcelLibs.OpenXml
                 }
 
                 var r = ExcelOpenXmlUtils.ConvertXyToCell(xIndex, yIndex);
-                await WriteCAsync(writer, r, columnName: p.ExcelColumnName);
+                WriteCAsync(writer, r, columnName: p.ExcelColumnName);
                 xIndex++;
             }
 

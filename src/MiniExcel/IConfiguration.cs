@@ -1,5 +1,4 @@
 ﻿using MiniExcelLibs.Attributes;
-using System;
 using System.Globalization;
 
 namespace MiniExcelLibs
@@ -10,7 +9,6 @@ namespace MiniExcelLibs
         public CultureInfo Culture { get; set; } = CultureInfo.InvariantCulture;
         public DynamicExcelColumn[] DynamicColumns { get; set; }
         public int BufferSize { get; set; } = 1024 * 512;
-        [Obsolete]
         public bool FastMode { get; set; } = false;
     }
 }

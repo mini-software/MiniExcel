@@ -38,7 +38,7 @@ namespace MiniExcelLibs.OpenXml
     {
         public string ID { get; set; } = $"R{Guid.NewGuid():N}";
     }
-    public partial class ExcelOpenXmlSheetWriter : IExcelWriter
+    internal partial class ExcelOpenXmlSheetWriter : IExcelWriter
     {
         private readonly MiniExcelZipArchive _archive;
         private readonly static UTF8Encoding _utf8WithBom = new System.Text.UTF8Encoding(true);
@@ -56,7 +56,10 @@ namespace MiniExcelLibs.OpenXml
             // Why ZipArchiveMode.Update not ZipArchiveMode.Create?
             // R : Mode create - ZipArchiveEntry does not support seeking.'
             this._configuration = configuration as OpenXmlConfiguration ?? OpenXmlConfiguration.DefaultConfig;
-            this._archive = new MiniExcelZipArchive(_stream, ZipArchiveMode.Create, true, _utf8WithBom);
+            if (_configuration.FastMode)
+                this._archive = new MiniExcelZipArchive(_stream, ZipArchiveMode.Update, true, _utf8WithBom);
+            else
+                this._archive = new MiniExcelZipArchive(_stream, ZipArchiveMode.Create, true, _utf8WithBom);
             this._printHeader = printHeader;
             this._value = value;
             var defaultSheetInfo = GetSheetInfos(sheetName);
@@ -124,8 +127,21 @@ namespace MiniExcelLibs.OpenXml
             List<ExcelColumnInfo> props = null;
             string mode = null;
 
+            int? rowCount = null;
+            var collection = values as ICollection;
+            if (collection != null)
+            {
+                rowCount = collection.Count;
+            }
+            else if (!_configuration.FastMode)
+            {
+                // The row count is only required up front when not in fastmode
+                collection = new List<object>(values.Cast<object>());
+                rowCount = collection.Count;
+            }
+
             // Get the enumerator once to ensure deferred linq execution
-            var enumerator = values.GetEnumerator();
+            var enumerator = (collection ?? values).GetEnumerator();
 
             // Move to the first item in order to inspect the value type and determine whether it is empty
             var empty = !enumerator.MoveNext();
@@ -170,10 +186,18 @@ namespace MiniExcelLibs.OpenXml
 
             writer.Write($@"<?xml version=""1.0"" encoding=""utf-8""?><x:worksheet xmlns:r=""http://schemas.openxmlformats.org/officeDocument/2006/relationships"" xmlns:x=""http://schemas.openxmlformats.org/spreadsheetml/2006/main"" >");
 
-            if(values is ICollection collection)
+            long dimensionWritePosition = 0;
+
+            // We can write the dimensions directly if the row count is known
+            if (_configuration.FastMode && rowCount == null)
             {
-                var rowCount = collection.Count;
-                maxRowIndex = rowCount + (_printHeader && rowCount > 0 ? 1 : 0);
+                // Write a placeholder for the table dimensions and save thee position for later
+                dimensionWritePosition = writer.WriteAndFlush("<x:dimension ref=\"");
+                writer.Write("                              />");
+            }
+            else
+            {
+                maxRowIndex = rowCount.Value + (_printHeader && rowCount > 0 ? 1 : 0);
                 writer.Write($@"<x:dimension ref=""{GetDimensionRef(maxRowIndex, maxColumnIndex)}""/>");
             }
 
@@ -206,6 +230,18 @@ namespace MiniExcelLibs.OpenXml
             writer.Write("</x:sheetData>");
             if (_configuration.AutoFilter)
                 writer.Write($"<x:autoFilter ref=\"{GetDimensionRef(maxRowIndex, maxColumnIndex)}\" />");
+
+            // The dimension has already been written if row count is defined
+            if (_configuration.FastMode && rowCount == null)
+            {
+                // Flush and save position so that we can get back again.
+                var pos = writer.Flush();
+
+                // Seek back and write the dimensions of the table
+                writer.SetPosition(dimensionWritePosition);
+                writer.WriteAndFlush($@"{GetDimensionRef(maxRowIndex, maxColumnIndex)}""");
+                writer.SetPosition(pos);
+            }
 
             writer.Write("<x:drawing  r:id=\"drawing" + currentSheetIndex + "\" /></x:worksheet>");
         }
@@ -631,12 +667,20 @@ namespace MiniExcelLibs.OpenXml
 
         private void GenerateSheetByIDataReader(MiniExcelStreamWriter writer, IDataReader reader)
         {
+            long dimensionWritePosition = 0;
             writer.Write($@"<?xml version=""1.0"" encoding=""utf-8""?><x:worksheet xmlns:x=""http://schemas.openxmlformats.org/spreadsheetml/2006/main"">");
             var xIndex = 1;
             var yIndex = 1;
             var maxColumnIndex = 0;
             var maxRowIndex = 0;
             {
+
+                if (_configuration.FastMode)
+                {
+                    dimensionWritePosition = writer.WriteAndFlush($@"<x:dimension ref=""");
+                    writer.Write("                              />"); // end of code will be replaced
+                }
+
                 var props = new List<ExcelColumnInfo>();
                 for (var i = 0; i < reader.FieldCount; i++)
                 {
@@ -677,6 +721,12 @@ namespace MiniExcelLibs.OpenXml
             if (_configuration.AutoFilter)
                 writer.Write($"<x:autoFilter ref=\"{GetDimensionRef(maxRowIndex, maxColumnIndex)}\" />");
             writer.WriteAndFlush("</x:worksheet>");
+
+            if (_configuration.FastMode)
+            {
+                writer.SetPosition(dimensionWritePosition);
+                writer.WriteAndFlush($@"{GetDimensionRef(maxRowIndex, maxColumnIndex)}""");
+            }
         }
 
         private ExcelColumnInfo GetColumnInfosFromDynamicConfiguration(string columnName)

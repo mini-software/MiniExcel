@@ -26,6 +26,18 @@
 
 
 
+### 1.32.0
+- [New] Using DynamicConfiguration when writing data using DataTable (via @pszybiak)
+- [New] Allow ampersand in sheet names (via @ofthelit)
+- [OPT] Use true async processing for excel writer (#573) (via @duszekmestre)
+- [Bug] Fix nullable enumeration conversion failure #567) (via @PurplestViper)
+- [Bug] IEnumerable traversed twice #422 (via @Discolai)
+- [Bug] Fix Read empty string as null (via @pszybiak)
+- [Bug] Fix CSV Reader Query faild on specific xlsx file, throws ExcelColumnNotFoundException (via @AZhrZho)
+- [Bug] Fix DynamicExcelColumn configuration while saving IDictionary values (via @johannes-barta)
+- [Bug] Fix propInfo.Key missing (via @shps951023)
+- [Bug] Fix sharedStrings ref #549 (via @shps951023)
+
 ### 1.31.3
 - [Bug] DescriptionAttr null check(via @wulaoh)
 - [Bug] Throw custom exception when CSV column not found #543 (via @pszybiak)

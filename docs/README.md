@@ -25,6 +25,7 @@
 
 ### 1.32.0
 - [New] Using DynamicConfiguration when writing data using DataTable (via @pszybiak)
+- [New] Make System.DateOnly available as date in Excel (#576) (via @ofthelit)
 - [New] Allow ampersand in sheet names (via @ofthelit)
 - [OPT] Use true async processing for excel writer (#573) (via @duszekmestre)
 - [Bug] Fix nullable enumeration conversion failure #567) (via @PurplestViper)

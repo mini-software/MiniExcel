@@ -5,6 +5,8 @@ using MiniExcelLibs.Exceptions;
 using MiniExcelLibs.OpenXml;
 using MiniExcelLibs.Tests.Utils;
 using Newtonsoft.Json;
+using NPOI.SS.UserModel;
+using NPOI.XSSF.UserModel;
 using OfficeOpenXml;
 using System;
 using System.Collections;
@@ -12,6 +14,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Data.SQLite;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -31,6 +34,32 @@ namespace MiniExcelLibs.Tests
         public MiniExcelIssueTests(ITestOutputHelper output)
         {
             this.output = output;
+        }
+
+        /// <summary>
+        /// https://github.com/mini-software/MiniExcel/issues/549
+        /// </summary>
+        [Fact]
+        public void TestIssue549()
+        {
+            var data = new[] {
+                new{id=1,name="jack"},
+                new{id=2,name="mike"},
+            };
+            var path = Path.GetTempPath() + Guid.NewGuid() + ".xlsx";
+            MiniExcel.SaveAs(path, data);
+            var rows = MiniExcel.Query(path,true).ToList();
+            {
+                using (FileStream stream = new FileStream(path, FileMode.Open, FileAccess.Read))
+                {
+                    XSSFWorkbook workbook = new XSSFWorkbook(stream);
+                    ISheet sheet = workbook.GetSheetAt(0);
+                    var a2 = sheet.GetRow(1).GetCell(0);
+                    var b2 = sheet.GetRow(1).GetCell(1);
+                    Assert.Equal((string)rows[0].id.ToString(), a2.NumericCellValue.ToString());
+                    Assert.Equal((string)rows[0].name.ToString(), b2.StringCellValue);
+                }
+            }
         }
 
         [Fact]

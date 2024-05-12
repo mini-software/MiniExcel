@@ -73,7 +73,7 @@ namespace MiniExcelLibs.OpenXml
         internal async Task GenerateDefaultOpenXmlAsync(CancellationToken cancellationToken)
         {
             await CreateZipEntryAsync("_rels/.rels", "application/vnd.openxmlformats-package.relationships+xml", ExcelOpenXmlSheetWriter._defaultRels, cancellationToken);
-            await CreateZipEntryAsync("xl/sharedStrings.xml", "application/vnd.openxmlformats-package.relationships+xml", ExcelOpenXmlSheetWriter._defaultSharedString, cancellationToken);
+            await CreateZipEntryAsync("xl/sharedStrings.xml", "application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml", ExcelOpenXmlSheetWriter._defaultSharedString, cancellationToken);
         }
 
         private async Task CreateZipEntryAsync(string path, string contentType, string content, CancellationToken cancellationToken)

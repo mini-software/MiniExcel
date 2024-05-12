@@ -27,6 +27,7 @@ namespace MiniExcelLibs.OpenXml
 <Relationships xmlns=""http://schemas.openxmlformats.org/package/2006/relationships"">
     {{sheets}}
     <Relationship Type=""http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles"" Target=""/xl/styles.xml"" Id=""R3db9602ace774fdb"" />
+    <Relationship Type=""http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings"" Target=""/xl/sharedStrings.xml"" Id=""R3db9602ace778fdb"" />
 </Relationships>";
 
         private static readonly string _noneStylesXml = @"<?xml version=""1.0"" encoding=""utf-8""?>
@@ -184,7 +185,7 @@ namespace MiniExcelLibs.OpenXml
         internal void GenerateDefaultOpenXml()
         {
             CreateZipEntry("_rels/.rels", "application/vnd.openxmlformats-package.relationships+xml", ExcelOpenXmlSheetWriter._defaultRels);
-            CreateZipEntry("xl/sharedStrings.xml", "application/vnd.openxmlformats-package.relationships+xml", ExcelOpenXmlSheetWriter._defaultSharedString);
+            CreateZipEntry("xl/sharedStrings.xml", "application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml", ExcelOpenXmlSheetWriter._defaultSharedString);
         }
 
         private void CreateZipEntry(string path, string contentType, string content)

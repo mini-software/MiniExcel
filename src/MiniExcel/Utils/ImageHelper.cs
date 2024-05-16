@@ -1,5 +1,6 @@
 ﻿namespace MiniExcelLibs.Utils
 {
+    using System;
     internal class ImageHelper
     {
         public enum ImageFormat
@@ -47,8 +48,7 @@
             return ImageFormat.unknown;
         }
 #endif
-
-#if  NET5_0
+#if NET5_0_OR_GREATER
         public static ImageFormat GetImageFormat(ReadOnlySpan<byte> bytes)
         {
             ReadOnlySpan<byte> bmp = stackalloc byte[] { (byte)'B', (byte)'M' };            // BMP

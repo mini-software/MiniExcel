@@ -22,6 +22,8 @@
 
 ---
 
+### 1.32.1
+- [New] .NET5^ support image `ReadOnlySpan<byte>`
 
 ### 1.32.0
 - [New] Using DynamicConfiguration when writing data using DataTable (via @pszybiak)

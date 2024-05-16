@@ -1,13 +1,11 @@
 ﻿namespace MiniExcelLibs.Utils
 {
-    using MiniExcelLibs.Utils;
     using System;
-    using System.Globalization;
 
 #if DEBUG
     public
 #else
-    internal 
+    internal
 #endif
     static partial class DateTimeHelper
     {

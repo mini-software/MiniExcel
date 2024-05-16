@@ -3,9 +3,9 @@
     using MiniExcelLibs.Utils;
     using System;
 #if DEBUG
-    public 
+    public
 #else
-    internal 
+    internal
 #endif
     static class ExcelOpenXmlUtils
     {

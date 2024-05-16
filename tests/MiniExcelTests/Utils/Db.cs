@@ -4,10 +4,9 @@
 
     internal static class Db
     {
-	   internal static SQLiteConnection GetConnection(string connectionString= "Data Source=:memory:")
-	   {
-		  return new SQLiteConnection(connectionString);
-	   }
+        internal static SQLiteConnection GetConnection(string connectionString = "Data Source=:memory:")
+        {
+            return new SQLiteConnection(connectionString);
+        }
     }
-
 }

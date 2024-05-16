@@ -21,42 +21,42 @@ namespace MiniExcelLibs.OpenXml
             switch (_value)
             {
                 case IDictionary<string, object> sheets:
-                {
-                    var sheetId = 0;
-                    _sheets.RemoveAt(0);//TODO:remove
-                    foreach (var sheet in sheets)
                     {
-                        sheetId++;
-                        var sheetInfos = GetSheetInfos(sheet.Key);
-                        var sheetDto = sheetInfos.ToDto(sheetId);
-                        _sheets.Add(sheetDto); //TODO:remove
+                        var sheetId = 0;
+                        _sheets.RemoveAt(0);//TODO:remove
+                        foreach (var sheet in sheets)
+                        {
+                            sheetId++;
+                            var sheetInfos = GetSheetInfos(sheet.Key);
+                            var sheetDto = sheetInfos.ToDto(sheetId);
+                            _sheets.Add(sheetDto); //TODO:remove
 
-                        currentSheetIndex = sheetId;
+                            currentSheetIndex = sheetId;
 
-                        await CreateSheetXmlAsync(sheet.Value, sheetDto.Path, cancellationToken);
+                            await CreateSheetXmlAsync(sheet.Value, sheetDto.Path, cancellationToken);
+                        }
+
+                        break;
                     }
-
-                    break;
-                }
 
                 case DataSet sheets:
-                {
-                    var sheetId = 0;
-                    _sheets.RemoveAt(0);//TODO:remove
-                    foreach (DataTable dt in sheets.Tables)
                     {
-                        sheetId++;
-                        var sheetInfos = GetSheetInfos(dt.TableName);
-                        var sheetDto = sheetInfos.ToDto(sheetId);
-                        _sheets.Add(sheetDto); //TODO:remove
+                        var sheetId = 0;
+                        _sheets.RemoveAt(0);//TODO:remove
+                        foreach (DataTable dt in sheets.Tables)
+                        {
+                            sheetId++;
+                            var sheetInfos = GetSheetInfos(dt.TableName);
+                            var sheetDto = sheetInfos.ToDto(sheetId);
+                            _sheets.Add(sheetDto); //TODO:remove
 
-                        currentSheetIndex = sheetId;
+                            currentSheetIndex = sheetId;
 
-                        await CreateSheetXmlAsync(dt, sheetDto.Path, cancellationToken);
+                            await CreateSheetXmlAsync(dt, sheetDto.Path, cancellationToken);
+                        }
+
+                        break;
                     }
-
-                    break;
-                }
 
                 default:
                     //Single sheet export.
@@ -73,7 +73,7 @@ namespace MiniExcelLibs.OpenXml
         internal async Task GenerateDefaultOpenXmlAsync(CancellationToken cancellationToken)
         {
             await CreateZipEntryAsync("_rels/.rels", "application/vnd.openxmlformats-package.relationships+xml", ExcelOpenXmlSheetWriter._defaultRels, cancellationToken);
-            await CreateZipEntryAsync("xl/sharedStrings.xml", "application/vnd.openxmlformats-package.relationships+xml", ExcelOpenXmlSheetWriter._defaultSharedString, cancellationToken);
+            await CreateZipEntryAsync("xl/sharedStrings.xml", "application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml", ExcelOpenXmlSheetWriter._defaultSharedString, cancellationToken);
         }
 
         private async Task CreateZipEntryAsync(string path, string contentType, string content, CancellationToken cancellationToken)
@@ -251,7 +251,7 @@ namespace MiniExcelLibs.OpenXml
                 {
                     mode = "IDictionary";
                     props = GetDictionaryColumnInfo(null, dic);
-                    //maxColumnIndex = dic.Keys.Count; 
+                    //maxColumnIndex = dic.Keys.Count;
                     maxColumnIndex = props.Count; // why not using keys, because ignore attribute ![image](https://user-images.githubusercontent.com/12729184/163686902-286abb70-877b-4e84-bd3b-001ad339a84a.png)
                 }
                 else
@@ -511,7 +511,7 @@ namespace MiniExcelLibs.OpenXml
                 }
             }
 
-            // styles.xml 
+            // styles.xml
             {
                 var styleXml = string.Empty;
 
@@ -523,7 +523,7 @@ namespace MiniExcelLibs.OpenXml
                 {
                     styleXml = _defaultStylesXml;
                 }
-                
+
                 await CreateZipEntryAsync(@"xl/styles.xml", "application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml", styleXml, cancellationToken);
             }
 
@@ -606,7 +606,7 @@ namespace MiniExcelLibs.OpenXml
                     }
                     workbookRelsXml.AppendLine($@"<Relationship Type=""http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet"" Target=""/{s.Path}"" Id=""{s.ID}"" />");
 
-                    //TODO: support multiple drawing 
+                    //TODO: support multiple drawing
                     //TODO: ../drawings/drawing1.xml or /xl/drawings/drawing1.xml
                     var sheetRelsXml = $@"<Relationship Type=""http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing"" Target=""../drawings/drawing{sheetId}.xml"" Id=""drawing{sheetId}"" />";
                     await CreateZipEntryAsync($"xl/worksheets/_rels/sheet{s.SheetIdx}.xml.rels", "",
@@ -618,7 +618,7 @@ namespace MiniExcelLibs.OpenXml
                     _defaultWorkbookXmlRels.Replace("{{sheets}}", workbookRelsXml.ToString()), cancellationToken);
             }
 
-            //[Content_Types].xml 
+            //[Content_Types].xml
             {
                 var sb = new StringBuilder(@"<?xml version=""1.0"" encoding=""UTF-8"" standalone=""yes""?><Types xmlns=""http://schemas.openxmlformats.org/package/2006/content-types""><Default ContentType=""application/vnd.openxmlformats-officedocument.spreadsheetml.printerSettings"" Extension=""bin""/><Default ContentType=""application/xml"" Extension=""xml""/><Default ContentType=""image/jpeg"" Extension=""jpg""/><Default ContentType=""image/png"" Extension=""png""/><Default ContentType=""image/gif"" Extension=""gif""/><Default ContentType=""application/vnd.openxmlformats-package.relationships+xml"" Extension=""rels""/>");
                 foreach (var p in _zipDictionary)

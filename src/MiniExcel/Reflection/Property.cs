@@ -10,7 +10,7 @@ namespace MiniExcelLibs
     {
     }
 
-    public class Property: Member
+    public class Property : Member
     {
         private static readonly ConcurrentDictionary<Type, Property[]> m_cached = new ConcurrentDictionary<Type, Property[]>();
 

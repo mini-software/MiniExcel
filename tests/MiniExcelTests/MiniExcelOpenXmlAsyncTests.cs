@@ -1,21 +1,22 @@
-﻿using Xunit;
-using System;
-using System.Linq;
-using System.IO;
-using OfficeOpenXml;
-using ClosedXML.Excel;
-using System.IO.Packaging;
-using System.Data;
-using ExcelDataReader;
-using System.Collections.Generic;
-using System.Data.SQLite;
+﻿using ClosedXML.Excel;
 using Dapper;
-using System.Globalization;
-using static MiniExcelLibs.Tests.Utils.MiniExcelOpenXml;
-using MiniExcelLibs.Tests.Utils;
+using ExcelDataReader;
 using MiniExcelLibs.Attributes;
-using System.Threading.Tasks;
+using MiniExcelLibs.OpenXml;
+using MiniExcelLibs.Tests.Utils;
+using OfficeOpenXml;
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Data.SQLite;
+using System.Globalization;
+using System.IO;
+using System.IO.Packaging;
+using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
+using Xunit;
+using static MiniExcelLibs.Tests.Utils.MiniExcelOpenXml;
 
 namespace MiniExcelLibs.Tests
 {
@@ -64,7 +65,7 @@ namespace MiniExcelLibs.Tests
             [ExcelColumnIndex(3)] // start with 0
             public string Test7 { get; set; }
         }
-        
+
         public class ExcelAttributeDemo2
         {
             [ExcelColumn(Name = "Column1")]
@@ -89,7 +90,7 @@ namespace MiniExcelLibs.Tests
             {
                 var q = await MiniExcel.QueryAsync<CustomAttributesWihoutVaildPropertiesTestPoco>(path);
                 q.ToList();
-            }); 
+            });
         }
 
         [Fact]
@@ -105,7 +106,7 @@ namespace MiniExcelLibs.Tests
             Assert.Null(rows[0].Test6);
             Assert.Equal("Test4", rows[0].Test7);
         }
-        
+
         [Fact]
         public async Task QueryCustomAttributes2Test()
         {
@@ -148,7 +149,7 @@ namespace MiniExcelLibs.Tests
                 Assert.Equal(3, rows.Count);
             }
         }
-        
+
         [Fact]
         public async Task SaveAsCustomAttributes2Test()
         {
@@ -208,7 +209,7 @@ namespace MiniExcelLibs.Tests
             var path = @"../../../../../samples/xlsx/TestCenterEmptyRow/TestCenterEmptyRow.xlsx";
             using (var stream = File.OpenRead(path))
             {
-                var d = (await stream.QueryAsync()).Cast<IDictionary<string,object>>();
+                var d = (await stream.QueryAsync()).Cast<IDictionary<string, object>>();
                 var rows = d.ToList();
                 Assert.Equal("a", rows[0]["A"]);
                 Assert.Equal("b", rows[0]["B"]);
@@ -279,7 +280,7 @@ namespace MiniExcelLibs.Tests
             var path = @"../../../../../samples/xlsx/TestDynamicQueryBasic_WithoutHead.xlsx";
             using (var stream = File.OpenRead(path))
             {
-                var d= (await stream.QueryAsync()).Cast<IDictionary<string, object>>();
+                var d = (await stream.QueryAsync()).Cast<IDictionary<string, object>>();
                 var rows = d.ToList();
                 Assert.Equal("MiniExcel", rows[0]["A"]);
                 Assert.Equal(1d, rows[0]["B"]);
@@ -336,28 +337,28 @@ namespace MiniExcelLibs.Tests
             {
                 var d = await stream.QueryAsync<UserAccount>();
                 var rows = d.ToList();
-                Assert.Equal(100, rows.Count());
+                Assert.Equal(100, rows.Count);
 
                 Assert.Equal(Guid.Parse("78DE23D2-DCB6-BD3D-EC67-C112BBC322A2"), rows[0].ID);
                 Assert.Equal("Wade", rows[0].Name);
                 Assert.Equal(DateTime.ParseExact("27/09/2020", "dd/MM/yyyy", CultureInfo.InvariantCulture), rows[0].BoD);
                 Assert.Equal(36, rows[0].Age);
                 Assert.False(rows[0].VIP);
-                Assert.Equal(decimal.Parse("5019.12"), rows[0].Points);
+                Assert.Equal(5019.12m, rows[0].Points);
                 Assert.Equal(1, rows[0].IgnoredProperty);
             }
 
             {
                 var rows = MiniExcel.Query<UserAccount>(path).ToList();
 
-                Assert.Equal(100, rows.Count());
+                Assert.Equal(100, rows.Count);
 
                 Assert.Equal(Guid.Parse("78DE23D2-DCB6-BD3D-EC67-C112BBC322A2"), rows[0].ID);
                 Assert.Equal("Wade", rows[0].Name);
                 Assert.Equal(DateTime.ParseExact("27/09/2020", "dd/MM/yyyy", CultureInfo.InvariantCulture), rows[0].BoD);
                 Assert.Equal(36, rows[0].Age);
                 Assert.False(rows[0].VIP);
-                Assert.Equal(decimal.Parse("5019.12"), rows[0].Points);
+                Assert.Equal(5019.12m, rows[0].Points);
                 Assert.Equal(1, rows[0].IgnoredProperty);
             }
         }
@@ -377,7 +378,7 @@ namespace MiniExcelLibs.Tests
             var path = @"../../../../../samples/xlsx/TestTypeMapping_AutoCheckFormat.xlsx";
             using (var stream = FileHelper.OpenRead(path))
             {
-                var d= await stream.QueryAsync<AutoCheckType>();
+                var d = await stream.QueryAsync<AutoCheckType>();
                 d.ToList();
             }
         }
@@ -661,14 +662,14 @@ namespace MiniExcelLibs.Tests
                         var rows = d.ToList();
                         Assert.Equal(2, rows.Count);
                         Assert.Equal(@"""<>+-*//}{\\n", rows[0]["a"]);
-                        Assert.Equal(1234567890d,rows[0]["b"]);
+                        Assert.Equal(1234567890d, rows[0]["b"]);
                         Assert.Null(rows[0]["c"]);
                         Assert.Null(rows[0]["d"]);
                     }
 
                     using (var stream = File.OpenRead(path))
                     {
-                        var  d= (await stream.QueryAsync()).Cast<IDictionary<string, object>>();
+                        var d = (await stream.QueryAsync()).Cast<IDictionary<string, object>>();
                         var rows = d.ToList();
                         Assert.Equal(3, rows.Count);
                         Assert.Equal("a", rows[0]["A"]);
@@ -856,6 +857,43 @@ namespace MiniExcelLibs.Tests
             }
         }
 
+        [Fact]
+        public async Task SaveAsByIEnumerableIDictionaryWithDynamicConfiguration()
+        {
+            var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
+            var dynamicColumns = new[]
+            {
+                new DynamicExcelColumn("Column1") { Name = "Name Column" },
+                new DynamicExcelColumn("Column2") { Name = "Value Column" }
+            };
+            var config = new OpenXmlConfiguration
+            {
+                DynamicColumns = dynamicColumns
+            };
+            var values = new List<Dictionary<string, object>>()
+            {
+                new Dictionary<string, object>() { { "Column1", "MiniExcel" }, { "Column2", 1 } },
+                new Dictionary<string, object>() { { "Column1", "Github" }, { "Column2", 2 } },
+            };
+            await MiniExcel.SaveAsAsync(path, values, configuration: config);
+
+            using (var stream = File.OpenRead(path))
+            {
+                var d = (await stream.QueryAsync(useHeaderRow: true)).Cast<IDictionary<string, object>>();
+                var rows = d.ToList();
+                Assert.Equal(2, rows.Count);
+                Assert.Equal("Name Column", rows[0].Keys.ElementAt(0));
+                Assert.Equal("Value Column", rows[0].Keys.ElementAt(1));
+                Assert.Equal("MiniExcel", rows[0].Values.ElementAt(0));
+                Assert.Equal(1d, rows[0].Values.ElementAt(1));
+                Assert.Equal("Github", rows[1].Values.ElementAt(0));
+                Assert.Equal(2d, rows[1].Values.ElementAt(1));
+            }
+
+            Assert.Equal("A1:B3", Helpers.GetFirstSheetDimensionRefValue(path));
+            File.Delete(path);
+        }
+
         [Fact()]
         public async Task SaveAsByDapperRows()
         {
@@ -1020,7 +1058,7 @@ namespace MiniExcelLibs.Tests
                 {
                     var rows = (await stream.QueryAsync()).Cast<IDictionary<string, object>>();
                     foreach (var row in rows)
-                        connection.Execute("insert into T (A,B) values (@A,@B)", new { A = row["A"],B = row["B"] }, transaction: transaction);
+                        connection.Execute("insert into T (A,B) values (@A,@B)", new { A = row["A"], B = row["B"] }, transaction: transaction);
                     transaction.Commit();
                 }
             }
@@ -1205,7 +1243,8 @@ namespace MiniExcelLibs.Tests
         [Fact()]
         public async Task ReadBigExcel_TakeCancel_Throws_TaskCanceledException()
         {
-            await Assert.ThrowsAsync<TaskCanceledException>(async () => {
+            await Assert.ThrowsAsync<TaskCanceledException>(async () =>
+            {
                 CancellationTokenSource cts = new CancellationTokenSource();
                 var path = @"../../../../../samples/xlsx/bigExcel.xlsx";
 
@@ -1222,7 +1261,8 @@ namespace MiniExcelLibs.Tests
         [Fact()]
         public async Task ReadBigExcel_Prcoessing_TakeCancel_Throws_TaskCanceledException()
         {
-            await Assert.ThrowsAsync<OperationCanceledException>(async () => {
+            await Assert.ThrowsAsync<OperationCanceledException>(async () =>
+            {
                 CancellationTokenSource cts = new CancellationTokenSource();
                 var path = @"../../../../../samples/xlsx/bigExcel.xlsx";
 

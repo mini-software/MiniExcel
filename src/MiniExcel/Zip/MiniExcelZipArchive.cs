@@ -7,15 +7,15 @@ namespace MiniExcelLibs.Zip
 {
     public class MiniExcelZipArchive : ZipArchive
     {
-	   public MiniExcelZipArchive(Stream stream, ZipArchiveMode mode, bool leaveOpen, Encoding entryNameEncoding)
-		  : base(stream, mode, leaveOpen, entryNameEncoding)
-	   {
-	   }
+        public MiniExcelZipArchive(Stream stream, ZipArchiveMode mode, bool leaveOpen, Encoding entryNameEncoding)
+           : base(stream, mode, leaveOpen, entryNameEncoding)
+        {
+        }
 
-	   public new void Dispose()
-	   {
-		  Dispose(disposing: true);
-		  GC.SuppressFinalize(this);
-	   }
+        public new void Dispose()
+        {
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
+        }
     }
 }

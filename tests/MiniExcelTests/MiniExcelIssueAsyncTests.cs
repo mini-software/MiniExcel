@@ -68,7 +68,7 @@ namespace MiniExcelLibs.Tests
         {
             [ExcelFormat("yyyy")]
             public DateTime Time { get; set; }
-            
+
             [ExcelColumn(Format = "yyyy")]
             public DateTime Time2 { get; set; }
         }
@@ -158,15 +158,17 @@ namespace MiniExcelLibs.Tests
         {
             var path = PathHelper.GetFile("xls/TestIssue242.xls");
 
-            await Assert.ThrowsAsync<NotSupportedException>(async () => {
+            await Assert.ThrowsAsync<NotSupportedException>(async () =>
+            {
                 var q = await MiniExcel.QueryAsync(path);
                 q.ToList();
             });
 
             using (var stream = File.OpenRead(path))
             {
-                await Assert.ThrowsAsync<NotSupportedException>(async () => {
-                    var q = await  stream.QueryAsync();
+                await Assert.ThrowsAsync<NotSupportedException>(async () =>
+                {
+                    var q = await stream.QueryAsync();
                     q.ToList();
                 });
             }
@@ -229,7 +231,7 @@ namespace MiniExcelLibs.Tests
 
                 {
                     var q = await MiniExcel.QueryAsync<Issue241Dto>(path);
-                    var rows = q.ToList(); 
+                    var rows = q.ToList();
                     Assert.Equal(rows[0].InDate, new DateTime(2021, 01, 04));
                     Assert.Equal(rows[1].InDate, new DateTime(2020, 04, 05));
                 }
@@ -548,14 +550,14 @@ namespace MiniExcelLibs.Tests
                 {
                     var q = await MiniExcel.QueryAsync<UserAccount>(path);
                     var rows = q.ToList();
-                    Assert.Equal(100, rows.Count());
+                    Assert.Equal(100, rows.Count);
 
                     Assert.Equal(Guid.Parse("78DE23D2-DCB6-BD3D-EC67-C112BBC322A2"), rows[0].ID);
                     Assert.Equal("Wade", rows[0].Name);
                     Assert.Equal(DateTime.ParseExact("27/09/2020", "dd/MM/yyyy", CultureInfo.InvariantCulture), rows[0].BoD);
                     Assert.Equal(36, rows[0].Age);
                     Assert.False(rows[0].VIP);
-                    Assert.Equal(decimal.Parse("5019.12"), rows[0].Points);
+                    Assert.Equal(5019.12m, rows[0].Points);
                     Assert.Equal(1, rows[0].IgnoredProperty);
                 }
                 {
@@ -563,20 +565,18 @@ namespace MiniExcelLibs.Tests
                     {
                         var q = await stream.QueryAsync<UserAccount>();
                         var rows = q.ToList();
-                        Assert.Equal(100, rows.Count());
+                        Assert.Equal(100, rows.Count);
 
                         Assert.Equal(Guid.Parse("78DE23D2-DCB6-BD3D-EC67-C112BBC322A2"), rows[0].ID);
                         Assert.Equal("Wade", rows[0].Name);
                         Assert.Equal(DateTime.ParseExact("27/09/2020", "dd/MM/yyyy", CultureInfo.InvariantCulture), rows[0].BoD);
                         Assert.Equal(36, rows[0].Age);
                         Assert.False(rows[0].VIP);
-                        Assert.Equal(decimal.Parse("5019.12"), rows[0].Points);
+                        Assert.Equal(5019.12m, rows[0].Points);
                         Assert.Equal(1, rows[0].IgnoredProperty);
                     }
                 }
             }
-
-
         }
 
         /// <summary>
@@ -613,7 +613,7 @@ namespace MiniExcelLibs.Tests
             Assert.Equal(typeof(object), columns[0].DataType);
             Assert.Equal(typeof(object), columns[1].DataType);
 
-            Assert.Equal((double)123, dt.Rows[1]["A"]);
+            Assert.Equal(123.0, dt.Rows[1]["A"]);
             Assert.Equal("HelloWorld", dt.Rows[2]["B"]);
         }
 
@@ -698,10 +698,10 @@ namespace MiniExcelLibs.Tests
 
                 var q = await MiniExcel.QueryAsync(path, true);
                 var rows = q.ToList();
-                Assert.Equal((double)1, rows[0].Test1);
-                Assert.Equal((double)2, rows[0].Test2);
-                Assert.Equal((double)3, rows[1].Test1);
-                Assert.Equal((double)4, rows[1].Test2);
+                Assert.Equal(1.0, rows[0].Test1);
+                Assert.Equal(2.0, rows[0].Test2);
+                Assert.Equal(3.0, rows[1].Test1);
+                Assert.Equal(4.0, rows[1].Test2);
             }
         }
 
@@ -721,9 +721,9 @@ namespace MiniExcelLibs.Tests
                 Assert.Equal("Test1", table.Columns[0].ColumnName);
                 Assert.Equal("Test2", table.Columns[1].ColumnName);
                 Assert.Equal("1", table.Rows[0]["Test1"]);
-                Assert.Equal((double)2, table.Rows[0]["Test2"]);
+                Assert.Equal(2.0, table.Rows[0]["Test2"]);
                 Assert.Equal("3", table.Rows[1]["Test1"]);
-                Assert.Equal((double)4, table.Rows[1]["Test2"]);
+                Assert.Equal(4.0, table.Rows[1]["Test2"]);
             }
 
             {
@@ -731,9 +731,9 @@ namespace MiniExcelLibs.Tests
                 Assert.Equal("Test1", dt.Rows[0]["A"]);
                 Assert.Equal("Test2", dt.Rows[0]["B"]);
                 Assert.Equal("1", dt.Rows[1]["A"]);
-                Assert.Equal((double)2, dt.Rows[1]["B"]);
+                Assert.Equal(2.0, dt.Rows[1]["B"]);
                 Assert.Equal("3", dt.Rows[2]["A"]);
-                Assert.Equal((double)4, dt.Rows[2]["B"]);
+                Assert.Equal(4.0, dt.Rows[2]["B"]);
             }
         }
 
@@ -794,7 +794,7 @@ namespace MiniExcelLibs.Tests
         }
 
         /// <summary>
-        /// Optimize stream excel type check 
+        /// Optimize stream excel type check
         /// https://github.com/shps951023/MiniExcel/issues/215
         /// </summary>
         [Fact]
@@ -803,7 +803,7 @@ namespace MiniExcelLibs.Tests
             using (var stream = new MemoryStream())
             {
                 stream.SaveAs(new[] { new { V = "test1" }, new { V = "test2" } });
-                var q = (await stream.QueryAsync(true)).Cast<IDictionary<string,object>>();
+                var q = (await stream.QueryAsync(true)).Cast<IDictionary<string, object>>();
                 var rows = q.ToList();
                 Assert.Equal("test1", rows[0]["V"]);
                 Assert.Equal("test2", rows[1]["V"]);
@@ -854,7 +854,7 @@ Leave";
 
                 var outputPath = PathHelper.GetTempPath();
                 MiniExcel.SaveAs(outputPath, rows);
-                var q1 = await  MiniExcel.QueryAsync<Issue89VO>(outputPath);
+                var q1 = await MiniExcel.QueryAsync<Issue89VO>(outputPath);
                 var rows2 = q1.ToList();
                 Assert.Equal(Issue89VO.WorkState.OnDuty, rows2[0].State);
                 Assert.Equal(Issue89VO.WorkState.Fired, rows2[1].State);
@@ -1292,7 +1292,7 @@ MyProperty4,MyProperty1,MyProperty5,MyProperty2,MyProperty6,,MyProperty3
                 var path = @"../../../../../samples/xlsx/TestIssue142.xlsx";
                 await Assert.ThrowsAsync<ArgumentException>(async () =>
                 {
-                    var q = (await MiniExcel.QueryAsync<Issue142VoOverIndex>(path)).ToList(); 
+                    var q = (await MiniExcel.QueryAsync<Issue142VoOverIndex>(path)).ToList();
                 });
             }
 
@@ -1371,7 +1371,7 @@ MyProperty4,MyProperty1,MyProperty5,MyProperty2,MyProperty6,,MyProperty3
         {
             var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
             //MiniExcel.SaveAs(path, new[] { "1", "2" });
-            await Assert.ThrowsAnyAsync<NotImplementedException>(async() => await MiniExcel.SaveAsAsync(path, new[] { 1, 2 }));
+            await Assert.ThrowsAnyAsync<NotImplementedException>(async () => await MiniExcel.SaveAsAsync(path, new[] { 1, 2 }));
             File.Delete(path);
             await Assert.ThrowsAnyAsync<NotImplementedException>(async () => await MiniExcel.SaveAsAsync(path, new[] { "1", "2" }));
             File.Delete(path);
@@ -1413,7 +1413,7 @@ MyProperty4,MyProperty1,MyProperty5,MyProperty2,MyProperty6,,MyProperty3
                 {
                     var q = await MiniExcel.QueryAsync(path, sheetName: "Sheet1");
                     var rows = q.ToList();
-                    Assert.Equal(6, rows.Count());
+                    Assert.Equal(6, rows.Count);
                     Assert.Equal("Sheet1", MiniExcel.GetSheetNames(path).First());
                 }
                 using (var p = new ExcelPackage(new FileInfo(path)))
@@ -1427,13 +1427,13 @@ MyProperty4,MyProperty1,MyProperty5,MyProperty2,MyProperty6,,MyProperty3
                 {
                     var q = await MiniExcel.QueryAsync<UserAccount>(path, sheetName: "Sheet1");
                     var rows = q.ToList();
-                    Assert.Equal(5, rows.Count());
+                    Assert.Equal(5, rows.Count);
 
                     Assert.Equal(Guid.Parse("78DE23D2-DCB6-BD3D-EC67-C112BBC322A2"), rows[0].ID);
                     Assert.Equal("Wade", rows[0].Name);
                     Assert.Equal(DateTime.ParseExact("27/09/2020", "dd/MM/yyyy", CultureInfo.InvariantCulture), rows[0].BoD);
                     Assert.False(rows[0].VIP);
-                    Assert.Equal(decimal.Parse("5019"), rows[0].Points);
+                    Assert.Equal(5019m, rows[0].Points);
                     Assert.Equal(1, rows[0].IgnoredProperty);
                 }
             }
@@ -1491,7 +1491,7 @@ MyProperty4,MyProperty1,MyProperty5,MyProperty2,MyProperty6,,MyProperty3
                 await MiniExcel.SaveAsAsync(path, input);
 
                 var q = await MiniExcel.QueryAsync<Issue149VO>(path);
-                var rows = q.Select(s => (string)s.Test).ToList();
+                var rows = q.Select(s => s.Test).ToList();
                 for (int i = 0; i < chars.Length; i++)
                 {
                     output.WriteLine($"{i} , {chars[i]} , {rows[i]}");
@@ -1516,7 +1516,7 @@ MyProperty4,MyProperty1,MyProperty5,MyProperty2,MyProperty6,,MyProperty3
             var path = @"../../../../../samples/xlsx/TestIssue153.xlsx";
             var q = await MiniExcel.QueryAsync(path, true);
             var rows = q.First() as IDictionary<string, object>;
-    
+
             Assert.Equal(new[] { "序号", "代号", "新代号", "名称", "XXX", "部门名称", "单位", "ERP工时   (小时)A", "工时(秒) A/3600", "标准人工工时(秒)", "生产标准机器工时(秒)", "财务、标准机器工时(秒)", "更新日期", "产品机种", "备注", "最近一次修改前的标准工时(秒)", "最近一次修改前的标准机时(秒)", "备注1" }
                 , rows.Keys);
         }
@@ -1543,14 +1543,14 @@ MyProperty4,MyProperty1,MyProperty5,MyProperty2,MyProperty6,,MyProperty3
                     Assert.Equal(" ", row["D"]);
                     Assert.Equal(" ", row["E"]);
                     Assert.Equal(" ", row["F"]);
-                    Assert.Equal(Double.Parse("0"), row["G"]);
+                    Assert.Equal(0.0, row["G"]);
                     Assert.Equal("1為港幣 0為台幣", row["H"]);
                 }
                 {
                     var row = rows[1] as IDictionary<string, object>;
-                    Assert.Equal(double.Parse("1"), row["A"]);
+                    Assert.Equal(1.0, row["A"]);
                     Assert.Equal("MTX", row["B"]);
-                    Assert.Equal(double.Parse("10"), row["C"]);
+                    Assert.Equal(10.0, row["C"]);
                     Assert.Null(row["D"]);
                     Assert.Null(row["E"]);
                     Assert.Null(row["F"]);
@@ -1559,7 +1559,7 @@ MyProperty4,MyProperty1,MyProperty5,MyProperty2,MyProperty6,,MyProperty3
                 }
                 {
                     var row = rows[2] as IDictionary<string, object>;
-                    Assert.Equal(double.Parse("0.95"), row["A"]);
+                    Assert.Equal(0.95, row["A"]);
                 }
             }
 
@@ -1572,16 +1572,16 @@ MyProperty4,MyProperty1,MyProperty5,MyProperty2,MyProperty6,,MyProperty3
                 Assert.Equal(10, rows.Count);
                 {
                     var row = rows[0] as IDictionary<string, object>;
-                    Assert.Equal(double.Parse("1"), row["比例"]);
+                    Assert.Equal(1.0, row["比例"]);
                     Assert.Equal("MTX", row["商品"]);
-                    Assert.Equal(double.Parse("10"), row["滿倉口數"]);
+                    Assert.Equal(10.0, row["滿倉口數"]);
                     Assert.Null(row["0"]);
                     Assert.Null(row["1為港幣 0為台幣"]);
                 }
 
                 {
                     var row = rows[1] as IDictionary<string, object>;
-                    Assert.Equal(double.Parse("0.95"), row["比例"]);
+                    Assert.Equal(0.95, row["比例"]);
                 }
             }
 

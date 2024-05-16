@@ -91,7 +91,7 @@
             if (withCustomIndexProps.Any())
                 maxColumnIndex = Math.Max((int)withCustomIndexProps.Max(w => w.ExcelColumnIndex), maxColumnIndex);
 
-            var withoutCustomIndexProps = props.Where(w => w.ExcelColumnIndex == null).ToList();
+            var withoutCustomIndexProps = props.Where(w => w.ExcelColumnIndex == null || w.ExcelColumnIndex == -1).ToList();
 
             List<ExcelColumnInfo> newProps = new List<ExcelColumnInfo>();
             var index = 0;
@@ -191,7 +191,7 @@
                 {
                     return null;
                 }
-                //TODO:or configulation Dynamic 
+                //TODO:or configulation Dynamic
                 var excelColumnIndex = excelColumn?.Index > -1 ? excelColumn.Index : (int?)null;
                 return new ExcelColumnInfo
                 {
@@ -210,7 +210,7 @@
 
         private static IEnumerable<ExcelColumnInfo> GetExcelPropertyInfo(Type type, BindingFlags bindingFlags, Configuration configuration)
         {
-            //TODO:assign column index 
+            //TODO:assign column index
             return ConvertToExcelCustomPropertyInfo(type.GetProperties(bindingFlags), configuration);
         }
 

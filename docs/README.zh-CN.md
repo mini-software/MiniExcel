@@ -25,7 +25,22 @@
 
 ---
 
+### 1.32.1
+- [New] .NET5^ support image `ReadOnlySpan<byte>`
+- [Bug] Remove bug with Portable.System.DateTimeOnly and only support DateOnly .NET6^ #594
 
+### 1.32.0
+- [New] Using DynamicConfiguration when writing data using DataTable (via @pszybiak)
+- [New] Make System.DateOnly available as date in Excel (#576) (via @ofthelit)
+- [New] Allow ampersand in sheet names (via @ofthelit)
+- [OPT] Use true async processing for excel writer (#573) (via @duszekmestre)
+- [Bug] Fix nullable enumeration conversion failure #567) (via @PurplestViper)
+- [Bug] IEnumerable traversed twice #422 (via @Discolai)
+- [Bug] Fix Read empty string as null (via @pszybiak)
+- [Bug] Fix CSV Reader Query faild on specific xlsx file, throws ExcelColumnNotFoundException (via @AZhrZho)
+- [Bug] Fix DynamicExcelColumn configuration while saving IDictionary values (via @johannes-barta)
+- [Bug] Fix propInfo.Key missing (via @shps951023)
+- [Bug] Fix sharedStrings ref #549 (via @shps951023)
 
 ### 1.31.3
 - [Bug] DescriptionAttr null check(via @wulaoh)

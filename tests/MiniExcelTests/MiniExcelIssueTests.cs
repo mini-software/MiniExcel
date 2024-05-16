@@ -1,39 +1,66 @@
 ﻿using Dapper;
 using MiniExcelLibs.Attributes;
+using MiniExcelLibs.Csv;
+using MiniExcelLibs.Exceptions;
 using MiniExcelLibs.OpenXml;
 using MiniExcelLibs.Tests.Utils;
 using Newtonsoft.Json;
+using NPOI.SS.UserModel;
+using NPOI.XSSF.UserModel;
 using OfficeOpenXml;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Data.SQLite;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using Xunit;
 using Xunit.Abstractions;
 using static MiniExcelLibs.Tests.MiniExcelOpenXmlTests;
-using System.Collections;
-using MiniExcelLibs.Exceptions;
-using System.Text.RegularExpressions;
-using MiniExcelLibs.Csv;
-using System.Threading.Tasks;
-using System.Data.SqlClient;
 
 namespace MiniExcelLibs.Tests
 {
-
     public partial class MiniExcelIssueTests
     {
         private readonly ITestOutputHelper output;
+
         public MiniExcelIssueTests(ITestOutputHelper output)
         {
             this.output = output;
         }
 
+        /// <summary>
+        /// https://github.com/mini-software/MiniExcel/issues/549
+        /// </summary>
+        [Fact]
+        public void TestIssue549()
+        {
+            var data = new[] {
+                new{id=1,name="jack"},
+                new{id=2,name="mike"},
+            };
+            var path = Path.GetTempPath() + Guid.NewGuid() + ".xlsx";
+            MiniExcel.SaveAs(path, data);
+            var rows = MiniExcel.Query(path,true).ToList();
+            {
+                using (FileStream stream = new FileStream(path, FileMode.Open, FileAccess.Read))
+                {
+                    XSSFWorkbook workbook = new XSSFWorkbook(stream);
+                    ISheet sheet = workbook.GetSheetAt(0);
+                    var a2 = sheet.GetRow(1).GetCell(0);
+                    var b2 = sheet.GetRow(1).GetCell(1);
+                    Assert.Equal((string)rows[0].id.ToString(), a2.NumericCellValue.ToString());
+                    Assert.Equal((string)rows[0].name.ToString(), b2.StringCellValue);
+                }
+            }
+        }
 
         [Fact]
         public void TestIssue24020201()
@@ -43,7 +70,7 @@ namespace MiniExcelLibs.Tests
                 var templatePath = PathHelper.GetFile("xlsx/TestIssue24020201.xlsx");
                 var data = new Dictionary<string, object>()
                 {
-                    ["title"]="This's title",
+                    ["title"] = "This's title",
                     ["B"] = new List<Dictionary<string, object>>()
                     {
                         new Dictionary<string, object>(){ { "specialMark", 1 } },
@@ -60,9 +87,12 @@ namespace MiniExcelLibs.Tests
         {
             var path = PathHelper.GetTempFilePath();
             var templatePath = PathHelper.GetFile("xlsx/TestIssue553.xlsx");
-            var data = new { B = new[] {
+            var data = new
+            {
+                B = new[] {
                 new{ ITM=1 },new{ ITM=2 }, new{ ITM=3 },
-            } };
+            }
+            };
             MiniExcel.SaveAsByTemplate(path, templatePath, data);
         }
 
@@ -132,7 +162,7 @@ namespace MiniExcelLibs.Tests
 ", content);
             }
             {
-                var value = new { ID=3,Name = "Mike", InDate = new DateTime(2021, 04, 23) };
+                var value = new { ID = 3, Name = "Mike", InDate = new DateTime(2021, 04, 23) };
                 MiniExcel.Insert(path, value);
                 var content = File.ReadAllText(path);
                 Assert.Equal(@"ID,Name,InDate
@@ -194,7 +224,7 @@ namespace MiniExcelLibs.Tests
                 var path = Path.GetTempPath() + Guid.NewGuid() + ".xlsx";
                 DataTableReader reader = table.CreateDataReader();
                 var config = new OpenXmlConfiguration() { FastMode = true };
-                MiniExcel.SaveAs(path, reader,configuration:config);
+                MiniExcel.SaveAs(path, reader, configuration: config);
                 var xml = Helpers.GetZipFileContent(path, "xl/worksheets/sheet1.xml");
                 Assert.Contains("<x:autoFilter ref=\"A1:B3\" />", xml);
                 Assert.Contains("<x:dimension ref=\"A1:B3\" />", xml);
@@ -316,7 +346,7 @@ namespace MiniExcelLibs.Tests
         public void TestIssueI4ZYUU()
         {
             var path = PathHelper.GetTempPath();
-            var value = new TestIssueI4ZYUUDto[] { new TestIssueI4ZYUUDto { MyProperty = "1", MyProperty2 = new DateTime(2022, 10, 15) } };
+            var value = new TestIssueI4ZYUUDto[] { new() { MyProperty = "1", MyProperty2 = new DateTime(2022, 10, 15) } };
             MiniExcel.SaveAs(path, value);
             var rows = MiniExcel.Query(path).ToList();
             Assert.Equal("2022-10", rows[1].B);
@@ -852,11 +882,11 @@ namespace MiniExcelLibs.Tests
                     for (int i = 0; i < reader.FieldCount; i++)
                     {
                         var v = reader.GetValue(i);
-                        if (rowIndx == 0 && i == 0) Assert.Equal((double)1, v);
+                        if (rowIndx == 0 && i == 0) Assert.Equal(1.0, v);
                         if (rowIndx == 0 && i == 1) Assert.Equal("Jack", v);
                         if (rowIndx == 0 && i == 2) Assert.Equal(new DateTime(2022, 5, 13), v);
                         if (rowIndx == 0 && i == 3) Assert.Equal(File.ReadAllBytes(PathHelper.GetFile("images/TestIssue327.png")), v);
-                        if (rowIndx == 1 && i == 0) Assert.Equal((double)2, v);
+                        if (rowIndx == 1 && i == 0) Assert.Equal(2.0, v);
                         if (rowIndx == 1 && i == 1) Assert.Equal("Henry", v);
                         if (rowIndx == 1 && i == 2) Assert.Equal(new DateTime(2022, 4, 10), v);
                         if (rowIndx == 1 && i == 3) Assert.Equal(File.ReadAllBytes(PathHelper.GetFile("other/TestIssue327.txt")), v);
@@ -910,7 +940,7 @@ namespace MiniExcelLibs.Tests
                             {
                                 Culture = new CultureInfo("en-US"),
                             };
-                            var rows = MiniExcel.Query<TestIssue316Dto>(path, configuration: config).ToList();
+                            MiniExcel.Query<TestIssue316Dto>(path, configuration: config).ToList();
                         });
                     }
 
@@ -949,7 +979,7 @@ namespace MiniExcelLibs.Tests
                         };
                         var rows = MiniExcel.Query<TestIssue316Dto>(path, configuration: config).ToList();
                         Assert.Equal("2018-12-05 00:00:00", rows[0].createtime.ToString("yyyy-MM-dd HH:mm:ss"));
-                        Assert.Equal("123456789", rows[0].amount.ToString());
+                        Assert.Equal(123456789m, rows[0].amount);
                     }
 
                     {
@@ -959,7 +989,7 @@ namespace MiniExcelLibs.Tests
                         };
                         var rows = MiniExcel.Query<TestIssue316Dto>(path, configuration: config).ToList();
                         Assert.Equal("2018-05-12 00:00:00", rows[0].createtime.ToString("yyyy-MM-dd HH:mm:ss"));
-                        Assert.Equal("123456.789", rows[0].amount.ToString());
+                        Assert.Equal(123456.789m, rows[0].amount);
                     }
                 }
             }
@@ -985,7 +1015,7 @@ namespace MiniExcelLibs.Tests
                             {
                                 Culture = new CultureInfo("en-US"),
                             };
-                            var rows = MiniExcel.Query<TestIssue316Dto>(path, configuration: config).ToList();
+                            MiniExcel.Query<TestIssue316Dto>(path, configuration: config).ToList();
                         });
                     }
 
@@ -1024,7 +1054,7 @@ namespace MiniExcelLibs.Tests
                         };
                         var rows = MiniExcel.Query<TestIssue316Dto>(path, configuration: config).ToList();
                         Assert.Equal("2018-12-05 00:00:00", rows[0].createtime.ToString("yyyy-MM-dd HH:mm:ss"));
-                        Assert.Equal("123456789", rows[0].amount.ToString());
+                        Assert.Equal(123456789m, rows[0].amount);
                     }
 
                     {
@@ -1034,7 +1064,7 @@ namespace MiniExcelLibs.Tests
                         };
                         var rows = MiniExcel.Query<TestIssue316Dto>(path, configuration: config).ToList();
                         Assert.Equal("2018-05-12 00:00:00", rows[0].createtime.ToString("yyyy-MM-dd HH:mm:ss"));
-                        Assert.Equal("123456.789", rows[0].amount.ToString());
+                        Assert.Equal(123456.789m, rows[0].amount);
                     }
                 }
             }
@@ -2269,7 +2299,7 @@ Henry,44,Jerry,44
                     Assert.Equal(DateTime.ParseExact("27/09/2020", "dd/MM/yyyy", CultureInfo.InvariantCulture), rows[0].BoD);
                     Assert.Equal(36, rows[0].Age);
                     Assert.False(rows[0].VIP);
-                    Assert.Equal(decimal.Parse("5019.12"), rows[0].Points);
+                    Assert.Equal(5019.12m, rows[0].Points);
                     Assert.Equal(1, rows[0].IgnoredProperty);
                 }
                 {
@@ -2284,7 +2314,7 @@ Henry,44,Jerry,44
                         Assert.Equal(DateTime.ParseExact("27/09/2020", "dd/MM/yyyy", CultureInfo.InvariantCulture), rows[0].BoD);
                         Assert.Equal(36, rows[0].Age);
                         Assert.False(rows[0].VIP);
-                        Assert.Equal(decimal.Parse("5019.12"), rows[0].Points);
+                        Assert.Equal(5019.12m, rows[0].Points);
                         Assert.Equal(1, rows[0].IgnoredProperty);
                     }
                 }
@@ -2327,7 +2357,7 @@ Henry,44,Jerry,44
             Assert.Equal(typeof(object), columns[0].DataType);
             Assert.Equal(typeof(object), columns[1].DataType);
 
-            Assert.Equal((double)123, dt.Rows[1]["A"]);
+            Assert.Equal(123.0, dt.Rows[1]["A"]);
             Assert.Equal("HelloWorld", dt.Rows[2]["B"]);
         }
 
@@ -2410,10 +2440,10 @@ Henry,44,Jerry,44
                 MiniExcel.SaveAs(path, reader);
 
                 var rows = MiniExcel.Query(path, true).ToList();
-                Assert.Equal((double)1, rows[0].Test1);
-                Assert.Equal((double)2, rows[0].Test2);
-                Assert.Equal((double)3, rows[1].Test1);
-                Assert.Equal((double)4, rows[1].Test2);
+                Assert.Equal(1.0, rows[0].Test1);
+                Assert.Equal(2.0, rows[0].Test2);
+                Assert.Equal(3.0, rows[1].Test1);
+                Assert.Equal(4.0, rows[1].Test2);
             }
         }
 
@@ -2432,9 +2462,9 @@ Henry,44,Jerry,44
                 Assert.Equal("Test1", table.Columns[0].ColumnName);
                 Assert.Equal("Test2", table.Columns[1].ColumnName);
                 Assert.Equal("1", table.Rows[0]["Test1"]);
-                Assert.Equal((double)2, table.Rows[0]["Test2"]);
+                Assert.Equal(2.0, table.Rows[0]["Test2"]);
                 Assert.Equal("3", table.Rows[1]["Test1"]);
-                Assert.Equal((double)4, table.Rows[1]["Test2"]);
+                Assert.Equal(4.0, table.Rows[1]["Test2"]);
             }
 
             {
@@ -2442,9 +2472,9 @@ Henry,44,Jerry,44
                 Assert.Equal("Test1", dt.Rows[0]["A"]);
                 Assert.Equal("Test2", dt.Rows[0]["B"]);
                 Assert.Equal("1", dt.Rows[1]["A"]);
-                Assert.Equal((double)2, dt.Rows[1]["B"]);
+                Assert.Equal(2.0, dt.Rows[1]["B"]);
                 Assert.Equal("3", dt.Rows[2]["A"]);
-                Assert.Equal((double)4, dt.Rows[2]["B"]);
+                Assert.Equal(4.0, dt.Rows[2]["B"]);
             }
         }
 
@@ -2503,7 +2533,7 @@ Henry,44,Jerry,44
         }
 
         /// <summary>
-        /// Optimize stream excel type check 
+        /// Optimize stream excel type check
         /// https://github.com/shps951023/MiniExcel/issues/215
         /// </summary>
         [Fact]
@@ -3139,7 +3169,7 @@ MyProperty4,MyProperty1,MyProperty5,MyProperty2,MyProperty6,,MyProperty3
                     Assert.Equal("Wade", rows[0].Name);
                     Assert.Equal(DateTime.ParseExact("27/09/2020", "dd/MM/yyyy", CultureInfo.InvariantCulture), rows[0].BoD);
                     Assert.False(rows[0].VIP);
-                    Assert.Equal(decimal.Parse("5019"), rows[0].Points);
+                    Assert.Equal(5019m, rows[0].Points);
                     Assert.Equal(1, rows[0].IgnoredProperty);
                 }
             }
@@ -3242,14 +3272,14 @@ MyProperty4,MyProperty1,MyProperty5,MyProperty2,MyProperty6,,MyProperty3
                     Assert.Equal(" ", row["D"]);
                     Assert.Equal(" ", row["E"]);
                     Assert.Equal(" ", row["F"]);
-                    Assert.Equal(Double.Parse("0"), row["G"]);
+                    Assert.Equal(0.0, row["G"]);
                     Assert.Equal("1為港幣 0為台幣", row["H"]);
                 }
                 {
                     var row = rows[1] as IDictionary<string, object>;
-                    Assert.Equal(double.Parse("1"), row["A"]);
+                    Assert.Equal(1.0, row["A"]);
                     Assert.Equal("MTX", row["B"]);
-                    Assert.Equal(double.Parse("10"), row["C"]);
+                    Assert.Equal(10.0, row["C"]);
                     Assert.Null(row["D"]);
                     Assert.Null(row["E"]);
                     Assert.Null(row["F"]);
@@ -3258,7 +3288,7 @@ MyProperty4,MyProperty1,MyProperty5,MyProperty2,MyProperty6,,MyProperty3
                 }
                 {
                     var row = rows[2] as IDictionary<string, object>;
-                    Assert.Equal(double.Parse("0.95"), row["A"]);
+                    Assert.Equal(0.95, row["A"]);
                 }
             }
 
@@ -3270,16 +3300,16 @@ MyProperty4,MyProperty1,MyProperty5,MyProperty2,MyProperty6,,MyProperty3
                 Assert.Equal(10, rows.Count);
                 {
                     var row = rows[0] as IDictionary<string, object>;
-                    Assert.Equal(double.Parse("1"), row["比例"]);
+                    Assert.Equal(1.0, row["比例"]);
                     Assert.Equal("MTX", row["商品"]);
-                    Assert.Equal(double.Parse("10"), row["滿倉口數"]);
+                    Assert.Equal(10.0, row["滿倉口數"]);
                     Assert.Null(row["0"]);
                     Assert.Null(row["1為港幣 0為台幣"]);
                 }
 
                 {
                     var row = rows[1] as IDictionary<string, object>;
-                    Assert.Equal(double.Parse("0.95"), row["比例"]);
+                    Assert.Equal(0.95, row["比例"]);
                 }
             }
 
@@ -3458,6 +3488,44 @@ MyProperty4,MyProperty1,MyProperty5,MyProperty2,MyProperty6,,MyProperty3
             MiniExcel.SaveAs(path, enumerableWithCount);
 
             Assert.Equal(1, enumerableWithCount.GetEnumeratorCount);
+        }
+
+        public class Issue585VO1
+        {
+            public string Col1 { get; set; }
+            public string Col2 { get; set; }
+            public string Col3 { get; set; }
+        }
+
+        public class Issue585VO2
+        {
+            public string Col1 { get; set; }
+            [ExcelColumnName("Col2")]
+            public string Prop2 { get; set; }
+            public string Col3 { get; set; }
+        }
+
+        public class Issue585VO3
+        {
+            public string Col1 { get; set; }
+            [ExcelColumnIndex("B")]
+            public string Prop2 { get; set; }
+            public string Col3 { get; set; }
+        }
+
+        [Fact]
+        public void Issue585()
+        {
+            var path = @"../../../../../samples/xlsx/TestIssue585.xlsx";
+
+            var items1 = MiniExcel.Query<Issue585VO1>(path);
+            Assert.Equal(2, items1.Count());
+
+            var items2 = MiniExcel.Query<Issue585VO2>(path);
+            Assert.Equal(2, items2.Count());
+
+            var items3 = MiniExcel.Query<Issue585VO3>(path);
+            Assert.Equal(2, items3.Count());
         }
     }
 }

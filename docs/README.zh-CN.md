@@ -27,6 +27,7 @@
 
 ### 1.32.1
 - [New] .NET5^ support image `ReadOnlySpan<byte>`
+- [Bug] Remove bug with Portable.System.DateTimeOnly and only support DateOnly .NET6^ #594
 
 ### 1.32.0
 - [New] Using DynamicConfiguration when writing data using DataTable (via @pszybiak)

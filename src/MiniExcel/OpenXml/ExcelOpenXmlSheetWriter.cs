@@ -563,9 +563,20 @@ namespace MiniExcelLibs.OpenXml
                     }
                     else if (columnInfo == null || columnInfo.ExcelFormat == null)
                     {
+                        var oaDate = ((DateTime)value).ToOADate();
+
+                        // Excel says 1900 was a leap year  :( Replicate an incorrect behavior thanks
+                        // to Lotus 1-2-3 decision from 1983...
+                        // https://github.com/ClosedXML/ClosedXML/blob/develop/ClosedXML/Extensions/DateTimeExtensions.cs#L45
+                        const int nonExistent1900Feb29SerialDate = 60;
+                        if (oaDate <= nonExistent1900Feb29SerialDate)
+                        {
+                            oaDate -= 1;
+                        }
+
                         dataType = null;
                         styleIndex = "3";
-                        cellValue = ((DateTime)value).ToOADate().ToString(CultureInfo.InvariantCulture);
+                        cellValue = oaDate.ToString(CultureInfo.InvariantCulture);
                     }
                     else
                     {
@@ -585,9 +596,20 @@ namespace MiniExcelLibs.OpenXml
                     else if (columnInfo == null || columnInfo.ExcelFormat == null)
                     {
                         var day = (DateOnly)value;
-                        dataType = "n";
+                        var oaDate = day.ToDateTime(TimeOnly.MinValue).ToOADate();
+
+                        // Excel says 1900 was a leap year  :( Replicate an incorrect behavior thanks
+                        // to Lotus 1-2-3 decision from 1983...
+                        // https://github.com/ClosedXML/ClosedXML/blob/develop/ClosedXML/Extensions/DateTimeExtensions.cs#L45
+                        const int nonExistent1900Feb29SerialDate = 60;
+                        if (oaDate <= nonExistent1900Feb29SerialDate)
+                        {
+                            oaDate -= 1;
+                        }
+
+                        dataType = null;
                         styleIndex = "3";
-                        cellValue = day.ToDateTime(TimeOnly.MinValue).ToOADate().ToString(CultureInfo.InvariantCulture);
+                        cellValue = oaDate.ToString(CultureInfo.InvariantCulture);
                     }
                     else
                     {

@@ -547,15 +547,6 @@ namespace MiniExcelLibs.OpenXml
                         var day = (DateOnly)value;
                         var oaDate = CorrectDateTimeValue(day.ToDateTime(TimeOnly.MinValue));
 
-                        // Excel says 1900 was a leap year  :( Replicate an incorrect behavior thanks
-                        // to Lotus 1-2-3 decision from 1983...
-                        // https://github.com/ClosedXML/ClosedXML/blob/develop/ClosedXML/Extensions/DateTimeExtensions.cs#L45
-                        const int nonExistent1900Feb29SerialDate = 60;
-                        if (oaDate <= nonExistent1900Feb29SerialDate)
-                        {
-                            oaDate -= 1;
-                        }
-
                         dataType = null;
                         styleIndex = "3";
                         cellValue = oaDate.ToString(CultureInfo.InvariantCulture);

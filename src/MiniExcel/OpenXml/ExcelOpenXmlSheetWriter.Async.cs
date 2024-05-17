@@ -173,7 +173,7 @@ namespace MiniExcelLibs.OpenXml
                     for (int i = 0; i < fieldCount; i++)
                     {
                         var cellValue = reader.GetValue(i);
-                        await WriteCellAsync(writer, yIndex, xIndex, cellValue, null);
+                        await WriteCellAsync(writer, yIndex, xIndex, cellValue, props[i]);
                         xIndex++;
                     }
                     await writer.WriteAsync($"</x:row>");
@@ -376,7 +376,7 @@ namespace MiniExcelLibs.OpenXml
                     for (int j = 0; j < value.Columns.Count; j++)
                     {
                         var cellValue = value.Rows[i][j];
-                        await WriteCellAsync(writer, yIndex, xIndex, cellValue, null);
+                        await WriteCellAsync(writer, yIndex, xIndex, cellValue, props[j]);
                         xIndex++;
                     }
                     await writer.WriteAsync($"</x:row>");

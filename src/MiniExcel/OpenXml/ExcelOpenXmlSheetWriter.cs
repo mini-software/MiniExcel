@@ -521,16 +521,7 @@ namespace MiniExcelLibs.OpenXml
                     }
                     else if (columnInfo == null || columnInfo.ExcelFormat == null)
                     {
-                        var oaDate = ((DateTime)value).ToOADate();
-
-                        // Excel says 1900 was a leap year  :( Replicate an incorrect behavior thanks
-                        // to Lotus 1-2-3 decision from 1983...
-                        // https://github.com/ClosedXML/ClosedXML/blob/develop/ClosedXML/Extensions/DateTimeExtensions.cs#L45
-                        const int nonExistent1900Feb29SerialDate = 60;
-                        if (oaDate <= nonExistent1900Feb29SerialDate)
-                        {
-                            oaDate -= 1;
-                        }
+                        var oaDate = CorrectDateTimeValue((DateTime)value);
 
                         dataType = null;
                         styleIndex = "3";
@@ -554,7 +545,7 @@ namespace MiniExcelLibs.OpenXml
                     else if (columnInfo == null || columnInfo.ExcelFormat == null)
                     {
                         var day = (DateOnly)value;
-                        var oaDate = day.ToDateTime(TimeOnly.MinValue).ToOADate();
+                        var oaDate = CorrectDateTimeValue(day.ToDateTime(TimeOnly.MinValue));
 
                         // Excel says 1900 was a leap year  :( Replicate an incorrect behavior thanks
                         // to Lotus 1-2-3 decision from 1983...
@@ -585,6 +576,22 @@ namespace MiniExcelLibs.OpenXml
             }
 
             return Tuple.Create(styleIndex, dataType, cellValue);
+        }
+
+        private static double CorrectDateTimeValue(DateTime value)
+        {
+            var oaDate = value.ToOADate();
+
+            // Excel says 1900 was a leap year  :( Replicate an incorrect behavior thanks
+            // to Lotus 1-2-3 decision from 1983...
+            // https://github.com/ClosedXML/ClosedXML/blob/develop/ClosedXML/Extensions/DateTimeExtensions.cs#L45
+            const int nonExistent1900Feb29SerialDate = 60;
+            if (oaDate <= nonExistent1900Feb29SerialDate)
+            {
+                oaDate -= 1;
+            }
+
+            return oaDate;
         }
 
         private void GenerateSheetByDataTable(MiniExcelStreamWriter writer, DataTable value)

@@ -42,97 +42,91 @@ namespace MiniExcelLibs.Csv
                 }
 
                 var type = _value.GetType();
-                Type genericType = null;
 
-                if (_value is IDataReader)
+                if (_value is IDataReader dataReader)
                 {
-                    GenerateSheetByIDataReader(_value, seperator, newLine, _writer);
+                    GenerateSheetByIDataReader(dataReader, seperator, newLine, _writer);
                 }
-                else if (_value is IEnumerable)
+                else if (_value is IEnumerable enumerable)
                 {
-                    var values = _value as IEnumerable;
-                    List<object> keys = new List<object>();
-                    List<ExcelColumnInfo> props = null;
-                    string mode = null;
-
-                    // check mode
-                    {
-                        foreach (var item in values) //TODO: need to optimize
-                        {
-                            if (item != null && mode == null)
-                            {
-                                if (item is IDictionary<string, object>)
-                                {
-                                    var item2 = item as IDictionary<string, object>;
-                                    mode = "IDictionary<string, object>";
-                                    foreach (var key in item2.Keys)
-                                        keys.Add(key);
-                                }
-                                else if (item is IDictionary)
-                                {
-                                    var item2 = item as IDictionary;
-                                    mode = "IDictionary";
-                                    foreach (var key in item2.Keys)
-                                        keys.Add(key);
-                                }
-                                else
-                                {
-                                    mode = "Properties";
-                                    genericType = item.GetType();
-                                    props = CustomPropertyHelper.GetSaveAsProperties(genericType, _configuration);
-                                }
-
-                                break;
-                            }
-                        }
-                    }
-
-                    //if(mode == null)
-                    //    throw new NotImplementedException($"Type {type?.Name} & genericType {genericType?.Name} not Implemented. please issue for me.");
-
-                    if (keys.Count == 0 && props == null)
-                    {
-                        _writer.Write(newLine);
-                        this._writer.Flush();
-                        return;
-                    }
-
-                    if (this._printHeader)
-                    {
-                        if (props != null)
-                        {
-                            _writer.Write(string.Join(seperator, props.Select(s => CsvHelpers.ConvertToCsvValue(s?.ExcelColumnName, _configuration.AlwaysQuote, _configuration.Seperator))));
-                            _writer.Write(newLine);
-                        }
-                        else if (keys.Count > 0)
-                        {
-                            _writer.Write(string.Join(seperator, keys.Select(s => CsvHelpers.ConvertToCsvValue(s.ToString(), _configuration.AlwaysQuote, _configuration.Seperator))));
-                            _writer.Write(newLine);
-                        }
-                        else
-                        {
-                            throw new InvalidOperationException("Please issue for me.");
-                        }
-                    }
-
-                    if (mode == "IDictionary<string, object>") //Dapper Row
-                        GenerateSheetByDapperRow(_writer, _value as IEnumerable, keys.Cast<string>().ToList(), seperator, newLine);
-                    else if (mode == "IDictionary") //IDictionary
-                        GenerateSheetByIDictionary(_writer, _value as IEnumerable, keys, seperator, newLine);
-                    else if (mode == "Properties")
-                        GenerateSheetByProperties(_writer, _value as IEnumerable, props, seperator, newLine);
-                    else
-                        throw new NotImplementedException($"Type {type?.Name} & genericType {genericType?.Name} not Implemented. please issue for me.");
+                    GenerateSheetByIEnumerable(enumerable, seperator, newLine, _writer);
                 }
-                else if (_value is DataTable)
+                else if (_value is DataTable dataTable)
                 {
-                    GenerateSheetByDataTable(_writer, _value as DataTable, seperator, newLine);
+                    GenerateSheetByDataTable(_writer, dataTable, seperator, newLine);
                 }
                 else
                 {
-                    throw new NotImplementedException($"Type {type?.Name} & genericType {genericType?.Name} not Implemented. please issue for me.");
+                    throw new NotImplementedException($"Type {type?.Name} not Implemented. please issue for me.");
                 }
+
                 this._writer.Flush();
+            }
+        }
+
+        private void GenerateSheetByIEnumerable(IEnumerable values, string seperator, string newLine, StreamWriter writer)
+        {
+            Type genericType = null;
+            List<ExcelColumnInfo> props = null;
+            string mode = null;
+
+            var enumerator = values.GetEnumerator();
+            var empty = !enumerator.MoveNext();
+            if (empty)
+            {
+                // only when empty IEnumerable need to check this issue #133  https://github.com/shps951023/MiniExcel/issues/133
+                genericType = TypeHelper.GetGenericIEnumerables(values).FirstOrDefault();
+                if (genericType == null || genericType == typeof(object) // sometime generic type will be object, e.g: https://user-images.githubusercontent.com/12729184/132812859-52984314-44d1-4ee8-9487-2d1da159f1f0.png
+                    || typeof(IDictionary<string, object>).IsAssignableFrom(genericType)
+                    || typeof(IDictionary).IsAssignableFrom(genericType)
+                    || typeof(KeyValuePair<string, object>).IsAssignableFrom(genericType))
+                {
+                    _writer.Write(newLine);
+                    this._writer.Flush();
+                    return;
+                }
+
+                mode = "Properties";
+                props = CustomPropertyHelper.GetSaveAsProperties(genericType, _configuration);
+            }
+            else
+            {
+                var firstItem = enumerator.Current;
+                if (firstItem is IDictionary<string, object> genericDic)
+                {
+                    mode = "IDictionary<string, object>";
+                    props = CustomPropertyHelper.GetDictionaryColumnInfo(genericDic, null, _configuration);
+                }
+                else if (firstItem is IDictionary dic)
+                {
+                    mode = "IDictionary";
+                    props = CustomPropertyHelper.GetDictionaryColumnInfo(null, dic, _configuration);
+                    mode = "IDictionary";
+                }
+                else
+                {
+                    mode = "Properties";
+                    genericType = firstItem.GetType();
+                    props = CustomPropertyHelper.GetSaveAsProperties(genericType, _configuration);
+                }
+            }
+
+            if (this._printHeader)
+            {
+                _writer.Write(string.Join(seperator, props.Select(s => CsvHelpers.ConvertToCsvValue(s?.ExcelColumnName, _configuration.AlwaysQuote, _configuration.Seperator))));
+                _writer.Write(newLine);
+            }
+
+            if (!empty)
+            {
+                if (mode == "IDictionary<string, object>") //Dapper Row
+                    GenerateSheetByDapperRow(_writer, enumerator, props.Select(x => x.Key.ToString()).ToList(), seperator, newLine);
+                else if (mode == "IDictionary") //IDictionary
+                    GenerateSheetByIDictionary(_writer, enumerator, props.Select(x => x.Key).ToList(), seperator, newLine);
+                else if (mode == "Properties")
+                    GenerateSheetByProperties(_writer, enumerator, props, seperator, newLine);
+                else
+                    throw new NotImplementedException($"Mode for genericType {genericType?.Name} not Implemented. please issue for me.");
             }
         }
 
@@ -202,34 +196,37 @@ namespace MiniExcelLibs.Csv
             }
         }
 
-        private void GenerateSheetByProperties(StreamWriter writer, IEnumerable value, List<ExcelColumnInfo> props, string seperator, string newLine)
+        private void GenerateSheetByProperties(StreamWriter writer, IEnumerator value, List<ExcelColumnInfo> props, string seperator, string newLine)
         {
-            foreach (var v in value)
+            do
             {
+                var v = value.Current;
                 var values = props.Select(s => CsvHelpers.ConvertToCsvValue(ToCsvString(s?.Property.GetValue(v), s), _configuration.AlwaysQuote, _configuration.Seperator));
                 writer.Write(string.Join(seperator, values));
                 writer.Write(newLine);
-            }
+            } while (value.MoveNext());
         }
 
-        private void GenerateSheetByIDictionary(StreamWriter writer, IEnumerable value, List<object> keys, string seperator, string newLine)
+        private void GenerateSheetByIDictionary(StreamWriter writer, IEnumerator value, List<object> keys, string seperator, string newLine)
         {
-            foreach (IDictionary v in value)
+            do
             {
+                var v = (IDictionary)value.Current;
                 var values = keys.Select(key => CsvHelpers.ConvertToCsvValue(ToCsvString(v[key], null), _configuration.AlwaysQuote, _configuration.Seperator));
                 writer.Write(string.Join(seperator, values));
                 writer.Write(newLine);
-            }
+            } while (value.MoveNext());
         }
 
-        private void GenerateSheetByDapperRow(StreamWriter writer, IEnumerable value, List<string> keys, string seperator, string newLine)
+        private void GenerateSheetByDapperRow(StreamWriter writer, IEnumerator value, List<string> keys, string seperator, string newLine)
         {
-            foreach (IDictionary<string, object> v in value)
+            do
             {
+                var v = (IDictionary<string, object>)value.Current;
                 var values = keys.Select(key => CsvHelpers.ConvertToCsvValue(ToCsvString(v[key], null), _configuration.AlwaysQuote, _configuration.Seperator));
                 writer.Write(string.Join(seperator, values));
                 writer.Write(newLine);
-            }
+            } while (value.MoveNext());
         }
 
         public string ToCsvString(object value, ExcelColumnInfo p)
@@ -283,5 +280,4 @@ namespace MiniExcelLibs.Csv
             GC.SuppressFinalize(this);
         }
     }
-
 }

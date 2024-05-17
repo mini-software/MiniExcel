@@ -1,0 +1,16 @@
+[*.{cs,vb}]
+
+# IDE0009: Member access should be qualified.
+dotnet_style_qualification_for_event = false
+
+# IDE0009: Member access should be qualified.
+dotnet_style_qualification_for_field = false
+
+# IDE0009: Member access should be qualified.
+dotnet_style_qualification_for_property = false
+
+# IDE0009: Member access should be qualified.
+dotnet_style_qualification_for_method = false
+
+# IDE0065: Misplaced using directive
+csharp_using_directive_placement = outside_namespace

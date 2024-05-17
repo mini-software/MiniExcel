@@ -168,13 +168,13 @@ namespace MiniExcelLibs.OpenXml
                 if (firstItem is IDictionary<string, object> genericDic)
                 {
                     mode = "IDictionary<string, object>";
-                    props = GetDictionaryColumnInfo(genericDic, null);
+                    props = CustomPropertyHelper.GetDictionaryColumnInfo(genericDic, null, _configuration);
                     maxColumnIndex = props.Count;
                 }
                 else if (firstItem is IDictionary dic)
                 {
                     mode = "IDictionary";
-                    props = GetDictionaryColumnInfo(null, dic);
+                    props = CustomPropertyHelper.GetDictionaryColumnInfo(null, dic, _configuration);
                     //maxColumnIndex = dic.Keys.Count;
                     maxColumnIndex = props.Count; // why not using keys, because ignore attribute ![image](https://user-images.githubusercontent.com/12729184/163686902-286abb70-877b-4e84-bd3b-001ad339a84a.png)
                 }
@@ -301,55 +301,6 @@ namespace MiniExcelLibs.OpenXml
             }
         End: //for re-using code
             _zipDictionary.Add(sheetPath, new ZipPackageInfo(entry, "application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"));
-        }
-
-        private List<ExcelColumnInfo> GetDictionaryColumnInfo(IDictionary<string, object> dicString, IDictionary dic)
-        {
-            List<ExcelColumnInfo> props;
-            var _props = new List<ExcelColumnInfo>();
-            if (dicString != null)
-                foreach (var key in dicString.Keys)
-                    SetDictionaryColumnInfo(_props, key);
-            else if (dic != null)
-                foreach (var key in dic.Keys)
-                    SetDictionaryColumnInfo(_props, key);
-            else
-                throw new NotSupportedException("SetDictionaryColumnInfo Error");
-            props = CustomPropertyHelper.SortCustomProps(_props);
-            return props;
-        }
-
-        private void SetDictionaryColumnInfo(List<ExcelColumnInfo> _props, object key)
-        {
-            var p = new ExcelColumnInfo();
-            p.ExcelColumnName = key?.ToString();
-            p.Key = key;
-            // TODO:Dictionary value type is not fiexed
-            //var _t =
-            //var gt = Nullable.GetUnderlyingType(p.PropertyType);
-            var isIgnore = false;
-            if (_configuration.DynamicColumns != null && _configuration.DynamicColumns.Length > 0)
-            {
-                var dynamicColumn = _configuration.DynamicColumns.SingleOrDefault(_ => _.Key == key.ToString());
-                if (dynamicColumn != null)
-                {
-                    p.Nullable = true;
-                    //p.ExcludeNullableType = item2[key]?.GetType();
-                    if (dynamicColumn.Format != null)
-                        p.ExcelFormat = dynamicColumn.Format;
-                    if (dynamicColumn.Aliases != null)
-                        p.ExcelColumnAliases = dynamicColumn.Aliases;
-                    if (dynamicColumn.IndexName != null)
-                        p.ExcelIndexName = dynamicColumn.IndexName;
-                    p.ExcelColumnIndex = dynamicColumn.Index;
-                    if (dynamicColumn.Name != null)
-                        p.ExcelColumnName = dynamicColumn.Name;
-                    isIgnore = dynamicColumn.Ignore;
-                    p.ExcelColumnWidth = dynamicColumn.Width;
-                }
-            }
-            if (!isIgnore)
-                _props.Add(p);
         }
 
         private void SetGenericTypePropertiesMode(Type genericType, ref string mode, out int maxColumnIndex, out List<ExcelColumnInfo> props)

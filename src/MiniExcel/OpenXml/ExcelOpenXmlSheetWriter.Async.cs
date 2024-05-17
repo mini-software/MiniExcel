@@ -21,42 +21,42 @@ namespace MiniExcelLibs.OpenXml
             switch (_value)
             {
                 case IDictionary<string, object> sheets:
+                {
+                    var sheetId = 0;
+                    _sheets.RemoveAt(0);//TODO:remove
+                    foreach (var sheet in sheets)
                     {
-                        var sheetId = 0;
-                        _sheets.RemoveAt(0);//TODO:remove
-                        foreach (var sheet in sheets)
-                        {
-                            sheetId++;
-                            var sheetInfos = GetSheetInfos(sheet.Key);
-                            var sheetDto = sheetInfos.ToDto(sheetId);
-                            _sheets.Add(sheetDto); //TODO:remove
+                        sheetId++;
+                        var sheetInfos = GetSheetInfos(sheet.Key);
+                        var sheetDto = sheetInfos.ToDto(sheetId);
+                        _sheets.Add(sheetDto); //TODO:remove
 
-                            currentSheetIndex = sheetId;
+                        currentSheetIndex = sheetId;
 
-                            await CreateSheetXmlAsync(sheet.Value, sheetDto.Path, cancellationToken);
-                        }
-
-                        break;
+                        await CreateSheetXmlAsync(sheet.Value, sheetDto.Path, cancellationToken);
                     }
+
+                    break;
+                }
 
                 case DataSet sheets:
+                {
+                    var sheetId = 0;
+                    _sheets.RemoveAt(0);//TODO:remove
+                    foreach (DataTable dt in sheets.Tables)
                     {
-                        var sheetId = 0;
-                        _sheets.RemoveAt(0);//TODO:remove
-                        foreach (DataTable dt in sheets.Tables)
-                        {
-                            sheetId++;
-                            var sheetInfos = GetSheetInfos(dt.TableName);
-                            var sheetDto = sheetInfos.ToDto(sheetId);
-                            _sheets.Add(sheetDto); //TODO:remove
+                        sheetId++;
+                        var sheetInfos = GetSheetInfos(dt.TableName);
+                        var sheetDto = sheetInfos.ToDto(sheetId);
+                        _sheets.Add(sheetDto); //TODO:remove
 
-                            currentSheetIndex = sheetId;
+                        currentSheetIndex = sheetId;
 
-                            await CreateSheetXmlAsync(dt, sheetDto.Path, cancellationToken);
-                        }
-
-                        break;
+                        await CreateSheetXmlAsync(dt, sheetDto.Path, cancellationToken);
                     }
+
+                    break;
+                }
 
                 default:
                     //Single sheet export.
@@ -244,13 +244,13 @@ namespace MiniExcelLibs.OpenXml
                 if (firstItem is IDictionary<string, object> genericDic)
                 {
                     mode = "IDictionary<string, object>";
-                    props = GetDictionaryColumnInfo(genericDic, null);
+                    props = CustomPropertyHelper.GetDictionaryColumnInfo(genericDic, null, _configuration);
                     maxColumnIndex = props.Count;
                 }
                 else if (firstItem is IDictionary dic)
                 {
                     mode = "IDictionary";
-                    props = GetDictionaryColumnInfo(null, dic);
+                    props = CustomPropertyHelper.GetDictionaryColumnInfo(null, dic, _configuration);
                     //maxColumnIndex = dic.Keys.Count;
                     maxColumnIndex = props.Count; // why not using keys, because ignore attribute ![image](https://user-images.githubusercontent.com/12729184/163686902-286abb70-877b-4e84-bd3b-001ad339a84a.png)
                 }

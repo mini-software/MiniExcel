@@ -169,7 +169,6 @@
                 return source.ToString();
         }
 
-
         private static IEnumerable<ExcelColumnInfo> ConvertToExcelCustomPropertyInfo(PropertyInfo[] props, Configuration configuration)
         {
             // solve : https://github.com/shps951023/MiniExcel/issues/138
@@ -214,7 +213,6 @@
             //TODO:assign column index
             return ConvertToExcelCustomPropertyInfo(type.GetProperties(bindingFlags), configuration);
         }
-
 
         internal static ExcellSheetInfo GetExcellSheetInfo(Type type, Configuration configuration)
         {

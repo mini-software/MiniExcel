@@ -585,7 +585,7 @@ namespace MiniExcelLibs.OpenXml
                         cellValue = ((DateTime)value).ToString(columnInfo.ExcelFormat, _configuration.Culture);
                     }
                 }
-#if NETSTANDARD2_0_OR_GREATER
+#if NET6_0_OR_GREATER
                 else if (type == typeof(DateOnly))
                 {
                     if (_configuration.Culture != CultureInfo.InvariantCulture)

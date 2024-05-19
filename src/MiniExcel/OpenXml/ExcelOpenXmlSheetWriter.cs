@@ -9,6 +9,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using static MiniExcelLibs.Utils.ImageHelper;
 
 namespace MiniExcelLibs.OpenXml
@@ -120,6 +121,12 @@ namespace MiniExcelLibs.OpenXml
             _archive.Dispose();
         }
 
+        internal void GenerateDefaultOpenXml()
+        {
+            CreateZipEntry("_rels/.rels", "application/vnd.openxmlformats-package.relationships+xml", _defaultRels);
+            CreateZipEntry("xl/sharedStrings.xml", "application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml", _defaultSharedString);
+        }
+
         private void GenerateSheetByEnumerable(MiniExcelStreamWriter writer, IEnumerable values)
         {
             var maxColumnIndex = 0;
@@ -168,13 +175,13 @@ namespace MiniExcelLibs.OpenXml
                 if (firstItem is IDictionary<string, object> genericDic)
                 {
                     mode = "IDictionary<string, object>";
-                    props = GetDictionaryColumnInfo(genericDic, null);
+                    props = CustomPropertyHelper.GetDictionaryColumnInfo(genericDic, null, _configuration);
                     maxColumnIndex = props.Count;
                 }
                 else if (firstItem is IDictionary dic)
                 {
                     mode = "IDictionary";
-                    props = GetDictionaryColumnInfo(null, dic);
+                    props = CustomPropertyHelper.GetDictionaryColumnInfo(null, dic, _configuration);
                     //maxColumnIndex = dic.Keys.Count;
                     maxColumnIndex = props.Count; // why not using keys, because ignore attribute ![image](https://user-images.githubusercontent.com/12729184/163686902-286abb70-877b-4e84-bd3b-001ad339a84a.png)
                 }
@@ -301,55 +308,6 @@ namespace MiniExcelLibs.OpenXml
             }
         End: //for re-using code
             _zipDictionary.Add(sheetPath, new ZipPackageInfo(entry, "application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"));
-        }
-
-        private List<ExcelColumnInfo> GetDictionaryColumnInfo(IDictionary<string, object> dicString, IDictionary dic)
-        {
-            List<ExcelColumnInfo> props;
-            var _props = new List<ExcelColumnInfo>();
-            if (dicString != null)
-                foreach (var key in dicString.Keys)
-                    SetDictionaryColumnInfo(_props, key);
-            else if (dic != null)
-                foreach (var key in dic.Keys)
-                    SetDictionaryColumnInfo(_props, key);
-            else
-                throw new NotSupportedException("SetDictionaryColumnInfo Error");
-            props = CustomPropertyHelper.SortCustomProps(_props);
-            return props;
-        }
-
-        private void SetDictionaryColumnInfo(List<ExcelColumnInfo> _props, object key)
-        {
-            var p = new ExcelColumnInfo();
-            p.ExcelColumnName = key?.ToString();
-            p.Key = key;
-            // TODO:Dictionary value type is not fiexed
-            //var _t =
-            //var gt = Nullable.GetUnderlyingType(p.PropertyType);
-            var isIgnore = false;
-            if (_configuration.DynamicColumns != null && _configuration.DynamicColumns.Length > 0)
-            {
-                var dynamicColumn = _configuration.DynamicColumns.SingleOrDefault(_ => _.Key == key.ToString());
-                if (dynamicColumn != null)
-                {
-                    p.Nullable = true;
-                    //p.ExcludeNullableType = item2[key]?.GetType();
-                    if (dynamicColumn.Format != null)
-                        p.ExcelFormat = dynamicColumn.Format;
-                    if (dynamicColumn.Aliases != null)
-                        p.ExcelColumnAliases = dynamicColumn.Aliases;
-                    if (dynamicColumn.IndexName != null)
-                        p.ExcelIndexName = dynamicColumn.IndexName;
-                    p.ExcelColumnIndex = dynamicColumn.Index;
-                    if (dynamicColumn.Name != null)
-                        p.ExcelColumnName = dynamicColumn.Name;
-                    isIgnore = dynamicColumn.Ignore;
-                    p.ExcelColumnWidth = dynamicColumn.Width;
-                }
-            }
-            if (!isIgnore)
-                _props.Add(p);
         }
 
         private void SetGenericTypePropertiesMode(Type genericType, ref string mode, out int maxColumnIndex, out List<ExcelColumnInfo> props)
@@ -563,16 +521,7 @@ namespace MiniExcelLibs.OpenXml
                     }
                     else if (columnInfo == null || columnInfo.ExcelFormat == null)
                     {
-                        var oaDate = ((DateTime)value).ToOADate();
-
-                        // Excel says 1900 was a leap year  :( Replicate an incorrect behavior thanks
-                        // to Lotus 1-2-3 decision from 1983...
-                        // https://github.com/ClosedXML/ClosedXML/blob/develop/ClosedXML/Extensions/DateTimeExtensions.cs#L45
-                        const int nonExistent1900Feb29SerialDate = 60;
-                        if (oaDate <= nonExistent1900Feb29SerialDate)
-                        {
-                            oaDate -= 1;
-                        }
+                        var oaDate = CorrectDateTimeValue((DateTime)value);
 
                         dataType = null;
                         styleIndex = "3";
@@ -596,16 +545,7 @@ namespace MiniExcelLibs.OpenXml
                     else if (columnInfo == null || columnInfo.ExcelFormat == null)
                     {
                         var day = (DateOnly)value;
-                        var oaDate = day.ToDateTime(TimeOnly.MinValue).ToOADate();
-
-                        // Excel says 1900 was a leap year  :( Replicate an incorrect behavior thanks
-                        // to Lotus 1-2-3 decision from 1983...
-                        // https://github.com/ClosedXML/ClosedXML/blob/develop/ClosedXML/Extensions/DateTimeExtensions.cs#L45
-                        const int nonExistent1900Feb29SerialDate = 60;
-                        if (oaDate <= nonExistent1900Feb29SerialDate)
-                        {
-                            oaDate -= 1;
-                        }
+                        var oaDate = CorrectDateTimeValue(day.ToDateTime(TimeOnly.MinValue));
 
                         dataType = null;
                         styleIndex = "3";
@@ -627,6 +567,22 @@ namespace MiniExcelLibs.OpenXml
             }
 
             return Tuple.Create(styleIndex, dataType, cellValue);
+        }
+
+        private static double CorrectDateTimeValue(DateTime value)
+        {
+            var oaDate = value.ToOADate();
+
+            // Excel says 1900 was a leap year  :( Replicate an incorrect behavior thanks
+            // to Lotus 1-2-3 decision from 1983...
+            // https://github.com/ClosedXML/ClosedXML/blob/develop/ClosedXML/Extensions/DateTimeExtensions.cs#L45
+            const int nonExistent1900Feb29SerialDate = 60;
+            if (oaDate <= nonExistent1900Feb29SerialDate)
+            {
+                oaDate -= 1;
+            }
+
+            return oaDate;
         }
 
         private void GenerateSheetByDataTable(MiniExcelStreamWriter writer, DataTable value)
@@ -834,131 +790,98 @@ namespace MiniExcelLibs.OpenXml
 
         private void GenerateEndXml()
         {
-            //Files
+            AddFilesToZip();
+
+            GenerateStylesXml();
+
+            GenerateDrawinRelXml();
+
+            GenerateDrawingXml();
+
+            GenerateWorkbookXml();
+
+            GenerateContentTypesXml();
+        }
+
+        private void AddFilesToZip()
+        {
+            foreach (var item in _files)
             {
-                foreach (var item in _files)
-                {
-                    this.CreateZipEntry(item.Path, item.Byte);
-                }
+                this.CreateZipEntry(item.Path, item.Byte);
+            }
+        }
+
+        /// <summary>
+        /// styles.xml
+        /// </summary>
+        private void GenerateStylesXml()
+        {
+            var styleXml = GetStylesXml();
+            CreateZipEntry(@"xl/styles.xml", "application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml", styleXml);
+        }
+
+        private void GenerateDrawinRelXml()
+        {
+            for (int sheetIndex = 0; sheetIndex < _sheets.Count; sheetIndex++)
+            {
+                var drawing = GetDrawingRelationshipXml(sheetIndex);
+                CreateZipEntry(
+                    $"xl/drawings/_rels/drawing{sheetIndex + 1}.xml.rels",
+                    null,
+                    _defaultDrawingXmlRels.Replace("{{format}}", drawing));
+            }
+        }
+
+        private void GenerateDrawingXml()
+        {
+            for (int sheetIndex = 0; sheetIndex < _sheets.Count; sheetIndex++)
+            {
+                var drawing = GetDrawingXml(sheetIndex);
+
+                CreateZipEntry(
+                    $"xl/drawings/drawing{sheetIndex + 1}.xml",
+                    "application/vnd.openxmlformats-officedocument.drawing+xml",
+                    _defaultDrawing.Replace("{{format}}", drawing));
+            }
+        }
+
+        /// <summary>
+        /// workbook.xml 、 workbookRelsXml
+        /// </summary>
+        private void GenerateWorkbookXml()
+        {
+            GenerateWorkBookXmls(
+                out StringBuilder workbookXml,
+                out StringBuilder workbookRelsXml,
+                out Dictionary<int, string> sheetsRelsXml);
+
+            foreach (var sheetRelsXml in sheetsRelsXml)
+            {
+                CreateZipEntry(
+                    $"xl/worksheets/_rels/sheet{sheetRelsXml.Key}.xml.rels",
+                    null,
+                    _defaultSheetRelXml.Replace("{{format}}", sheetRelsXml.Value));
             }
 
-            // styles.xml
-            {
-                var styleXml = string.Empty;
+            CreateZipEntry(
+                @"xl/workbook.xml",
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml",
+                _defaultWorkbookXml.Replace("{{sheets}}", workbookXml.ToString()));
 
-                if (_configuration.TableStyles == TableStyles.None)
-                {
-                    styleXml = _noneStylesXml;
-                }
-                else if (_configuration.TableStyles == TableStyles.Default)
-                {
-                    styleXml = _defaultStylesXml;
-                }
-                CreateZipEntry(@"xl/styles.xml", "application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml", styleXml);
-            }
+            CreateZipEntry(
+                @"xl/_rels/workbook.xml.rels",
+                null,
+                _defaultWorkbookXmlRels.Replace("{{sheets}}", workbookRelsXml.ToString()));
+        }
 
-            // drawing rel
-            {
-                for (int j = 0; j < _sheets.Count; j++)
-                {
-                    var drawing = new StringBuilder();
-                    foreach (var i in _files.Where(w => w.IsImage && w.SheetId == j + 1))
-                    {
-                        drawing.AppendLine($@"<Relationship Type=""http://schemas.openxmlformats.org/officeDocument/2006/relationships/image"" Target=""{i.Path2}"" Id=""{i.ID}"" />");
-                    }
-                    CreateZipEntry($"xl/drawings/_rels/drawing{j + 1}.xml.rels", "",
-                        _defaultDrawingXmlRels.Replace("{{format}}", drawing.ToString()));
-                }
+        /// <summary>
+        /// [Content_Types].xml
+        /// </summary>
+        private void GenerateContentTypesXml()
+        {
+            var contentTypes = GetContentTypesXml();
 
-            }
-            // drawing
-            {
-                for (int j = 0; j < _sheets.Count; j++)
-                {
-                    var drawing = new StringBuilder();
-                    foreach (var i in _files.Where(w => w.IsImage && w.SheetId == j + 1))
-                    {
-                        drawing.Append($@"<xdr:oneCellAnchor>
-        <xdr:from>
-            <xdr:col>{i.CellIndex - 1/* why -1 : https://user-images.githubusercontent.com/12729184/150460189-f08ed939-44d4-44e1-be6e-9c533ece6be8.png*/}</xdr:col>
-            <xdr:colOff>0</xdr:colOff>
-            <xdr:row>{i.RowIndex - 1}</xdr:row>
-            <xdr:rowOff>0</xdr:rowOff>
-        </xdr:from>
-        <xdr:ext cx=""609600"" cy=""190500"" />
-        <xdr:pic>
-            <xdr:nvPicPr>
-                <xdr:cNvPr id=""{_files.IndexOf(i) + 1}"" descr="""" name=""2a3f9147-58ea-4a79-87da-7d6114c4877b"" />
-                <xdr:cNvPicPr>
-                    <a:picLocks noChangeAspect=""1"" />
-                </xdr:cNvPicPr>
-            </xdr:nvPicPr>
-            <xdr:blipFill>
-                <a:blip r:embed=""{i.ID}"" cstate=""print"" />
-                <a:stretch>
-                    <a:fillRect />
-                </a:stretch>
-            </xdr:blipFill>
-            <xdr:spPr>
-                <a:xfrm>
-                    <a:off x=""0"" y=""0"" />
-                    <a:ext cx=""0"" cy=""0"" />
-                </a:xfrm>
-                <a:prstGeom prst=""rect"">
-                    <a:avLst />
-                </a:prstGeom>
-            </xdr:spPr>
-        </xdr:pic>
-        <xdr:clientData />
-    </xdr:oneCellAnchor>");
-                    }
-                    CreateZipEntry($"xl/drawings/drawing{j + 1}.xml", "application/vnd.openxmlformats-officedocument.drawing+xml",
-                        _defaultDrawing.Replace("{{format}}", drawing.ToString()));
-                }
-            }
-
-            // workbook.xml 、 workbookRelsXml
-            {
-                var workbookXml = new StringBuilder();
-                var workbookRelsXml = new StringBuilder();
-
-                var sheetId = 0;
-                foreach (var s in _sheets)
-                {
-                    sheetId++;
-                    if (string.IsNullOrEmpty(s.State))
-                    {
-                        workbookXml.AppendLine($@"<x:sheet name=""{ExcelOpenXmlUtils.EncodeXML(s.Name)}"" sheetId=""{sheetId}"" r:id=""{s.ID}"" />");
-                    }
-                    else
-                    {
-                        workbookXml.AppendLine($@"<x:sheet name=""{ExcelOpenXmlUtils.EncodeXML(s.Name)}"" sheetId=""{sheetId}"" state=""{s.State}"" r:id=""{s.ID}"" />");
-                    }
-                    workbookRelsXml.AppendLine($@"<Relationship Type=""http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet"" Target=""/{s.Path}"" Id=""{s.ID}"" />");
-
-                    //TODO: support multiple drawing
-                    //TODO: ../drawings/drawing1.xml or /xl/drawings/drawing1.xml
-                    var sheetRelsXml = $@"<Relationship Type=""http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing"" Target=""../drawings/drawing{sheetId}.xml"" Id=""drawing{sheetId}"" />";
-                    CreateZipEntry($"xl/worksheets/_rels/sheet{s.SheetIdx}.xml.rels", "",
-                        _defaultSheetRelXml.Replace("{{format}}", sheetRelsXml));
-                }
-                CreateZipEntry(@"xl/workbook.xml", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml",
-                    _defaultWorkbookXml.Replace("{{sheets}}", workbookXml.ToString()));
-                CreateZipEntry(@"xl/_rels/workbook.xml.rels", "",
-                    _defaultWorkbookXmlRels.Replace("{{sheets}}", workbookRelsXml.ToString()));
-            }
-
-            //[Content_Types].xml
-            {
-                var sb = new StringBuilder(@"<?xml version=""1.0"" encoding=""UTF-8"" standalone=""yes""?><Types xmlns=""http://schemas.openxmlformats.org/package/2006/content-types""><Default ContentType=""application/vnd.openxmlformats-officedocument.spreadsheetml.printerSettings"" Extension=""bin""/><Default ContentType=""application/xml"" Extension=""xml""/><Default ContentType=""image/jpeg"" Extension=""jpg""/><Default ContentType=""image/png"" Extension=""png""/><Default ContentType=""image/gif"" Extension=""gif""/><Default ContentType=""application/vnd.openxmlformats-package.relationships+xml"" Extension=""rels""/>");
-                foreach (var p in _zipDictionary)
-                    sb.Append($"<Override ContentType=\"{p.Value.ContentType}\" PartName=\"/{p.Key}\" />");
-                sb.Append("</Types>");
-                ZipArchiveEntry entry = _archive.CreateEntry("[Content_Types].xml", CompressionLevel.Fastest);
-                using (var zipStream = entry.Open())
-                using (MiniExcelStreamWriter writer = new MiniExcelStreamWriter(zipStream, _utf8WithBom, _configuration.BufferSize))
-                    writer.Write(sb.ToString());
-            }
+            CreateZipEntry(@"[Content_Types].xml", null, contentTypes);
         }
 
         private string GetDimensionRef(int maxRowIndex, int maxColumnIndex)
@@ -973,6 +896,23 @@ namespace MiniExcelLibs.OpenXml
             else
                 dimensionRef = $"A1:{ColumnHelper.GetAlphabetColumnName(maxColumnIndex - 1)}{maxRowIndex}";
             return dimensionRef;
+        }
+
+        private void CreateZipEntry(string path, string contentType, string content)
+        {
+            ZipArchiveEntry entry = _archive.CreateEntry(path, CompressionLevel.Fastest);
+            using (var zipStream = entry.Open())
+            using (MiniExcelStreamWriter writer = new MiniExcelStreamWriter(zipStream, _utf8WithBom, _configuration.BufferSize))
+                writer.Write(content);
+            if (!string.IsNullOrEmpty(contentType))
+                _zipDictionary.Add(path, new ZipPackageInfo(entry, contentType));
+        }
+
+        private void CreateZipEntry(string path, byte[] content)
+        {
+            ZipArchiveEntry entry = _archive.CreateEntry(path, CompressionLevel.Fastest);
+            using (var zipStream = entry.Open())
+                zipStream.Write(content, 0, content.Length);
         }
 
         public void Insert()

@@ -1,6 +1,7 @@
 ﻿using MiniExcelLibs.Zip;
 using System.Collections.Generic;
-using System.IO.Compression;
+using System.Linq;
+using System.Text;
 
 namespace MiniExcelLibs.OpenXml
 {
@@ -46,8 +47,8 @@ namespace MiniExcelLibs.OpenXml
     </x:cellStyleXfs>
     <x:cellXfs>
         <x:xf />
-	   <x:xf />
-	   <x:xf />
+       <x:xf />
+       <x:xf />
         <x:xf numFmtId=""14"" applyNumberFormat=""1"" />
     </x:cellXfs>
 </x:styleSheet>";
@@ -182,27 +183,113 @@ namespace MiniExcelLibs.OpenXml
         private static readonly string _defaultSharedString = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\" ?><sst xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" count=\"0\" uniqueCount=\"0\"></sst>";
         private static string MinifyXml(string xml) => xml.Replace("\r", "").Replace("\n", "").Replace("\t", "");
 
-        internal void GenerateDefaultOpenXml()
+        private string GetStylesXml()
         {
-            CreateZipEntry("_rels/.rels", "application/vnd.openxmlformats-package.relationships+xml", ExcelOpenXmlSheetWriter._defaultRels);
-            CreateZipEntry("xl/sharedStrings.xml", "application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml", ExcelOpenXmlSheetWriter._defaultSharedString);
+            var styleXml = string.Empty;
+
+            if (_configuration.TableStyles == TableStyles.None)
+            {
+                styleXml = _noneStylesXml;
+            }
+            else if (_configuration.TableStyles == TableStyles.Default)
+            {
+                styleXml = _defaultStylesXml;
+            }
+
+            return styleXml;
         }
 
-        private void CreateZipEntry(string path, string contentType, string content)
+        private string GetDrawingRelationshipXml(int sheetIndex)
         {
-            ZipArchiveEntry entry = _archive.CreateEntry(path, CompressionLevel.Fastest);
-            using (var zipStream = entry.Open())
-            using (MiniExcelStreamWriter writer = new MiniExcelStreamWriter(zipStream, _utf8WithBom, _configuration.BufferSize))
-                writer.Write(content);
-            if (!string.IsNullOrEmpty(contentType))
-                _zipDictionary.Add(path, new ZipPackageInfo(entry, contentType));
+            var drawing = new StringBuilder();
+            foreach (var i in _files.Where(w => w.IsImage && w.SheetId == sheetIndex + 1))
+            {
+                drawing.AppendLine($@"<Relationship Type=""http://schemas.openxmlformats.org/officeDocument/2006/relationships/image"" Target=""{i.Path2}"" Id=""{i.ID}"" />");
+            }
+
+            return drawing.ToString();
         }
 
-        private void CreateZipEntry(string path, byte[] content)
+        private string GetDrawingXml(int sheetIndex)
         {
-            ZipArchiveEntry entry = _archive.CreateEntry(path, CompressionLevel.Fastest);
-            using (var zipStream = entry.Open())
-                zipStream.Write(content, 0, content.Length);
+            var drawing = new StringBuilder();
+            foreach (var file in _files.Where(w => w.IsImage && w.SheetId == sheetIndex + 1))
+            {
+                drawing.Append($@"<xdr:oneCellAnchor>
+        <xdr:from>
+            <xdr:col>{file.CellIndex - 1/* why -1 : https://user-images.githubusercontent.com/12729184/150460189-f08ed939-44d4-44e1-be6e-9c533ece6be8.png*/}</xdr:col>
+            <xdr:colOff>0</xdr:colOff>
+            <xdr:row>{file.RowIndex - 1}</xdr:row>
+            <xdr:rowOff>0</xdr:rowOff>
+        </xdr:from>
+        <xdr:ext cx=""609600"" cy=""190500"" />
+        <xdr:pic>
+            <xdr:nvPicPr>
+                <xdr:cNvPr id=""{_files.IndexOf(file) + 1}"" descr="""" name=""2a3f9147-58ea-4a79-87da-7d6114c4877b"" />
+                <xdr:cNvPicPr>
+                    <a:picLocks noChangeAspect=""1"" />
+                </xdr:cNvPicPr>
+            </xdr:nvPicPr>
+            <xdr:blipFill>
+                <a:blip r:embed=""{file.ID}"" cstate=""print"" />
+                <a:stretch>
+                    <a:fillRect />
+                </a:stretch>
+            </xdr:blipFill>
+            <xdr:spPr>
+                <a:xfrm>
+                    <a:off x=""0"" y=""0"" />
+                    <a:ext cx=""0"" cy=""0"" />
+                </a:xfrm>
+                <a:prstGeom prst=""rect"">
+                    <a:avLst />
+                </a:prstGeom>
+            </xdr:spPr>
+        </xdr:pic>
+        <xdr:clientData />
+    </xdr:oneCellAnchor>");
+            }
+
+            return drawing.ToString();
+        }
+
+        private void GenerateWorkBookXmls(
+            out StringBuilder workbookXml,
+            out StringBuilder workbookRelsXml,
+            out Dictionary<int, string> sheetsRelsXml)
+        {
+            workbookXml = new StringBuilder();
+            workbookRelsXml = new StringBuilder();
+            sheetsRelsXml = new Dictionary<int, string>();
+            var sheetId = 0;
+            foreach (var s in _sheets)
+            {
+                sheetId++;
+                if (string.IsNullOrEmpty(s.State))
+                {
+                    workbookXml.AppendLine($@"<x:sheet name=""{ExcelOpenXmlUtils.EncodeXML(s.Name)}"" sheetId=""{sheetId}"" r:id=""{s.ID}"" />");
+                }
+                else
+                {
+                    workbookXml.AppendLine($@"<x:sheet name=""{ExcelOpenXmlUtils.EncodeXML(s.Name)}"" sheetId=""{sheetId}"" state=""{s.State}"" r:id=""{s.ID}"" />");
+                }
+
+                workbookRelsXml.AppendLine($@"<Relationship Type=""http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet"" Target=""/{s.Path}"" Id=""{s.ID}"" />");
+
+                //TODO: support multiple drawing
+                //TODO: ../drawings/drawing1.xml or /xl/drawings/drawing1.xml
+                var sheetRelsXml = $@"<Relationship Type=""http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing"" Target=""../drawings/drawing{sheetId}.xml"" Id=""drawing{sheetId}"" />";
+                sheetsRelsXml.Add(s.SheetIdx, sheetRelsXml);
+            }
+        }
+
+        private string GetContentTypesXml()
+        {
+            var sb = new StringBuilder(@"<?xml version=""1.0"" encoding=""UTF-8"" standalone=""yes""?><Types xmlns=""http://schemas.openxmlformats.org/package/2006/content-types""><Default ContentType=""application/vnd.openxmlformats-officedocument.spreadsheetml.printerSettings"" Extension=""bin""/><Default ContentType=""application/xml"" Extension=""xml""/><Default ContentType=""image/jpeg"" Extension=""jpg""/><Default ContentType=""image/png"" Extension=""png""/><Default ContentType=""image/gif"" Extension=""gif""/><Default ContentType=""application/vnd.openxmlformats-package.relationships+xml"" Extension=""rels""/>");
+            foreach (var p in _zipDictionary)
+                sb.Append($"<Override ContentType=\"{p.Value.ContentType}\" PartName=\"/{p.Key}\" />");
+            sb.Append("</Types>");
+            return sb.ToString();
         }
     }
 }

@@ -19,7 +19,7 @@ namespace MiniExcelLibs.Tests
         {
             System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
             var path = PathHelper.GetFile("csv/gb2312_Encoding_Read_Test.csv");
-            var config = new MiniExcelLibs.Csv.CsvConfiguration()
+            var config = new Csv.CsvConfiguration()
             {
                 StreamReaderFunc = (stream) => new StreamReader(stream, encoding: Encoding.GetEncoding("gb2312"))
             };
@@ -37,7 +37,7 @@ namespace MiniExcelLibs.Tests
                     new Dictionary<string,object>{{ "a", @"""<>+-*//}{\\n" }, { "b", 1234567890 },{ "c", true },{ "d", new DateTime(2021, 1, 1) } },
                     new Dictionary<string,object>{{ "a", @"<test>Hello World</test>" }, { "b", -1234567890 },{ "c", false },{ "d", new DateTime(2021, 1, 2) } },
                 };
-            await MiniExcel.SaveAsAsync(path, values, configuration: new MiniExcelLibs.Csv.CsvConfiguration() { Seperator = ';' });
+            await MiniExcel.SaveAsAsync(path, values, configuration: new Csv.CsvConfiguration() { Seperator = ';' });
             var expected = @"a;b;c;d
 """"""<>+-*//}{\\n"";1234567890;True;""2021-01-01 00:00:00""
 ""<test>Hello World</test>"";-1234567890;False;""2021-01-02 00:00:00""
@@ -296,7 +296,7 @@ namespace MiniExcelLibs.Tests
                 Assert.Equal(string.Empty, rows[1].c2);
             }
 
-            var config = new MiniExcelLibs.Csv.CsvConfiguration()
+            var config = new Csv.CsvConfiguration()
             {
                 ReadEmptyStringAsNull = true
             };

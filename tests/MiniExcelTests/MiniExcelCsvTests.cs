@@ -20,7 +20,7 @@ namespace MiniExcelLibs.Tests
         {
             System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
             var path = PathHelper.GetFile("csv/gb2312_Encoding_Read_Test.csv");
-            var config = new MiniExcelLibs.Csv.CsvConfiguration()
+            var config = new Csv.CsvConfiguration()
             {
                 StreamReaderFunc = (stream) => new StreamReader(stream, encoding: Encoding.GetEncoding("gb2312"))
             };
@@ -37,7 +37,7 @@ namespace MiniExcelLibs.Tests
                     new Dictionary<string,object>{{ "a", @"""<>+-*//}{\\n" }, { "b", 1234567890 },{ "c", true },{ "d", new DateTime(2021, 1, 1) } },
                     new Dictionary<string,object>{{ "a", @"<test>Hello World</test>" }, { "b", -1234567890 },{ "c", false },{ "d", new DateTime(2021, 1, 2) } },
                 };
-            MiniExcel.SaveAs(path, values, configuration: new MiniExcelLibs.Csv.CsvConfiguration() { Seperator = ';' });
+            MiniExcel.SaveAs(path, values, configuration: new Csv.CsvConfiguration() { Seperator = ';' });
             var expected = @"a;b;c;d
 """"""<>+-*//}{\\n"";1234567890;True;""2021-01-01 00:00:00""
 ""<test>Hello World</test>"";-1234567890;False;""2021-01-02 00:00:00""
@@ -54,7 +54,7 @@ namespace MiniExcelLibs.Tests
                     new Dictionary<string,object>{{ "a", @"""<>+-*//}{\\n" }, { "b", 1234567890 },{ "c", true },{ "d", new DateTime(2021, 1, 1) } },
                     new Dictionary<string,object>{{ "a", @"<test>Hello World</test>" }, { "b", -1234567890 },{ "c", false },{ "d", new DateTime(2021, 1, 2) } },
                 };
-            MiniExcel.SaveAs(path, values, configuration: new MiniExcelLibs.Csv.CsvConfiguration() { AlwaysQuote = true });
+            MiniExcel.SaveAs(path, values, configuration: new Csv.CsvConfiguration() { AlwaysQuote = true });
             var expected = @"""a"",""b"",""c"",""d""
 """"""<>+-*//}{\\n"",""1234567890"",""True"",""2021-01-01 00:00:00""
 ""<test>Hello World</test>"",""-1234567890"",""False"",""2021-01-02 00:00:00""
@@ -70,7 +70,7 @@ namespace MiniExcelLibs.Tests
                 {
                     new Dictionary<string,object>{{ "a", @"potato,banana" }, { "b", "text\ntest" },{ "c", "text\rpotato" },{ "d", new DateTime(2021, 1, 1) } },
                 };
-            MiniExcel.SaveAs(path, values, configuration: new MiniExcelLibs.Csv.CsvConfiguration());
+            MiniExcel.SaveAs(path, values, configuration: new Csv.CsvConfiguration());
             var expected = "a,b,c,d\r\n\"potato,banana\",\"text\ntest\",\"text\rpotato\",\"2021-01-01 00:00:00\"\r\n";
             Assert.Equal(expected, File.ReadAllText(path));
         }

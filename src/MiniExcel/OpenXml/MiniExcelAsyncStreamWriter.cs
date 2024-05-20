@@ -17,7 +17,7 @@ namespace MiniExcelLibs.OpenXml
         private readonly CancellationToken _cancellationToken;
         private readonly StreamWriter _streamWriter;
         private bool disposedValue;
-        public MiniExcelAsyncStreamWriter(Stream stream, Encoding encoding, int bufferSize, System.Threading.CancellationToken cancellationToken)
+        public MiniExcelAsyncStreamWriter(Stream stream, Encoding encoding, int bufferSize, CancellationToken cancellationToken)
         {
             this._stream = stream;
             this._encoding = encoding;

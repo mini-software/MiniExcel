@@ -97,7 +97,7 @@ namespace MiniExcelLibs.Tests
         public void CustomAttributeWihoutVaildPropertiesTest()
         {
             var path = @"../../../../../samples/xlsx/TestCustomExcelColumnAttribute.xlsx";
-            Assert.Throws<System.InvalidOperationException>(() => MiniExcel.Query<CustomAttributesWihoutVaildPropertiesTestPoco>(path).ToList());
+            Assert.Throws<InvalidOperationException>(() => MiniExcel.Query<CustomAttributesWihoutVaildPropertiesTestPoco>(path).ToList());
         }
 
         [Fact]

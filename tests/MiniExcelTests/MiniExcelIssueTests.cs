@@ -14,7 +14,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Data.SQLite;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -934,7 +933,7 @@ namespace MiniExcelLibs.Tests
 
                     //Datetime error
                     {
-                        Assert.Throws<MiniExcelLibs.Exceptions.ExcelInvalidCastException>(() =>
+                        Assert.Throws<ExcelInvalidCastException>(() =>
                         {
                             var config = new OpenXmlConfiguration()
                             {
@@ -1009,7 +1008,7 @@ namespace MiniExcelLibs.Tests
 
                     //Datetime error
                     {
-                        Assert.Throws<MiniExcelLibs.Exceptions.ExcelInvalidCastException>(() =>
+                        Assert.Throws<ExcelInvalidCastException>(() =>
                         {
                             var config = new CsvConfiguration()
                             {
@@ -1870,7 +1869,7 @@ Henry,44,Jerry,44
                 System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
                 var value = new[] { new { col1 = "世界你好" } };
                 var path = PathHelper.GetTempPath(extension: "csv");
-                var config = new MiniExcelLibs.Csv.CsvConfiguration()
+                var config = new CsvConfiguration()
                 {
                     StreamWriterFunc = (stream) => new StreamWriter(stream, Encoding.GetEncoding("gb2312"))
                 };

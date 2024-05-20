@@ -1,37 +1,36 @@
-﻿using MiniExcelLibs.Zip;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using MiniExcelLibs.OpenXml.Models;
 
-namespace MiniExcelLibs.OpenXml
+namespace MiniExcelLibs.OpenXml.Constants
 {
-    internal partial class ExcelOpenXmlSheetWriter : IExcelWriter
+    internal static class ExcelXml
     {
-        private readonly Dictionary<string, ZipPackageInfo> _zipDictionary = new Dictionary<string, ZipPackageInfo>();
-
-        static ExcelOpenXmlSheetWriter()
+        static ExcelXml()
         {
-            _defaultRels = MinifyXml(_defaultRels);
-            _defaultWorkbookXml = MinifyXml(_defaultWorkbookXml);
-            _defaultStylesXml = MinifyXml(_defaultStylesXml);
-            _defaultWorkbookXmlRels = MinifyXml(_defaultWorkbookXmlRels);
-            _defaultSheetRelXml = MinifyXml(_defaultSheetRelXml);
-            _defaultDrawing = MinifyXml(_defaultDrawing);
+            DefaultRels = MinifyXml(DefaultRels);
+            DefaultWorkbookXml = MinifyXml(DefaultWorkbookXml);
+            DefaultStylesXml = MinifyXml(DefaultStylesXml);
+            DefaultWorkbookXmlRels = MinifyXml(DefaultWorkbookXmlRels);
+            DefaultSheetRelXml = MinifyXml(DefaultSheetRelXml);
+            DefaultDrawing = MinifyXml(DefaultDrawing);
         }
 
-        private static readonly string _defaultRels = @"<?xml version=""1.0"" encoding=""utf-8""?>
+        private static string MinifyXml(string xml) => xml.Replace("\r", "").Replace("\n", "").Replace("\t", "");
+
+        internal static readonly string EmptySheetXml = $@"<?xml version=""1.0"" encoding=""utf-8""?><x:worksheet xmlns:x=""http://schemas.openxmlformats.org/spreadsheetml/2006/main""><x:dimension ref=""A1""/><x:sheetData></x:sheetData></x:worksheet>";
+
+        internal static readonly string DefaultRels = @"<?xml version=""1.0"" encoding=""utf-8""?>
 <Relationships xmlns=""http://schemas.openxmlformats.org/package/2006/relationships"">
     <Relationship Type=""http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument"" Target=""xl/workbook.xml"" Id=""Rfc2254092b6248a9"" />
 </Relationships>";
 
-        private static readonly string _defaultWorkbookXmlRels = @"<?xml version=""1.0"" encoding=""utf-8""?>
+        internal static readonly string DefaultWorkbookXmlRels = @"<?xml version=""1.0"" encoding=""utf-8""?>
 <Relationships xmlns=""http://schemas.openxmlformats.org/package/2006/relationships"">
     {{sheets}}
     <Relationship Type=""http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles"" Target=""/xl/styles.xml"" Id=""R3db9602ace774fdb"" />
     <Relationship Type=""http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings"" Target=""/xl/sharedStrings.xml"" Id=""R3db9602ace778fdb"" />
 </Relationships>";
 
-        private static readonly string _noneStylesXml = @"<?xml version=""1.0"" encoding=""utf-8""?>
+        internal static readonly string NoneStylesXml = @"<?xml version=""1.0"" encoding=""utf-8""?>
 <x:styleSheet xmlns:x=""http://schemas.openxmlformats.org/spreadsheetml/2006/main"">
     <x:fonts>
         <x:font />
@@ -53,7 +52,7 @@ namespace MiniExcelLibs.OpenXml
     </x:cellXfs>
 </x:styleSheet>";
 
-        private static readonly string _defaultStylesXml = @"<?xml version=""1.0"" encoding=""utf-8""?>
+        internal static readonly string DefaultStylesXml = @"<?xml version=""1.0"" encoding=""utf-8""?>
 <x:styleSheet xmlns:x=""http://schemas.openxmlformats.org/spreadsheetml/2006/main"">
     <x:numFmts count=""1"">
         <x:numFmt numFmtId=""0"" formatCode="""" />
@@ -157,7 +156,7 @@ namespace MiniExcelLibs.OpenXml
     </x:cellStyles>
 </x:styleSheet>";
 
-        private static readonly string _defaultWorkbookXml = @"<?xml version=""1.0"" encoding=""utf-8""?>
+        internal static readonly string DefaultWorkbookXml = @"<?xml version=""1.0"" encoding=""utf-8""?>
 <x:workbook xmlns:r=""http://schemas.openxmlformats.org/officeDocument/2006/relationships""
     xmlns:x=""http://schemas.openxmlformats.org/spreadsheetml/2006/main"">
     <x:sheets>
@@ -165,57 +164,38 @@ namespace MiniExcelLibs.OpenXml
     </x:sheets>
 </x:workbook>";
 
-        private static readonly string _defaultSheetRelXml = @"<?xml version=""1.0"" encoding=""UTF-8"" standalone=""yes""?>
+        internal static readonly string DefaultSheetRelXml = @"<?xml version=""1.0"" encoding=""UTF-8"" standalone=""yes""?>
 <Relationships xmlns=""http://schemas.openxmlformats.org/package/2006/relationships"">
     {{format}}
 </Relationships>";
-        private static readonly string _defaultDrawing = @"<?xml version=""1.0"" encoding=""utf-8"" standalone=""yes""?>
+        internal static readonly string DefaultDrawing = @"<?xml version=""1.0"" encoding=""utf-8"" standalone=""yes""?>
 <xdr:wsDr xmlns:a=""http://schemas.openxmlformats.org/drawingml/2006/main""
     xmlns:r=""http://schemas.openxmlformats.org/officeDocument/2006/relationships""
     xmlns:xdr=""http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing"">
     {{format}}
 </xdr:wsDr>";
-        private static readonly string _defaultDrawingXmlRels = @"<?xml version=""1.0"" encoding=""utf-8"" standalone=""yes""?>
+        internal static readonly string DefaultDrawingXmlRels = @"<?xml version=""1.0"" encoding=""utf-8"" standalone=""yes""?>
 <Relationships xmlns=""http://schemas.openxmlformats.org/package/2006/relationships"">
     {{format}}
 </Relationships>";
 
-        private static readonly string _defaultSharedString = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\" ?><sst xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" count=\"0\" uniqueCount=\"0\"></sst>";
-        private static string MinifyXml(string xml) => xml.Replace("\r", "").Replace("\n", "").Replace("\t", "");
+        internal static readonly string DefaultSharedString = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\" ?><sst xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" count=\"0\" uniqueCount=\"0\"></sst>";
 
-        private string GetStylesXml()
-        {
-            var styleXml = string.Empty;
+        internal static readonly string StartTypes = @"<?xml version=""1.0"" encoding=""UTF-8"" standalone=""yes""?><Types xmlns=""http://schemas.openxmlformats.org/package/2006/content-types""><Default ContentType=""application/vnd.openxmlformats-officedocument.spreadsheetml.printerSettings"" Extension=""bin""/><Default ContentType=""application/xml"" Extension=""xml""/><Default ContentType=""image/jpeg"" Extension=""jpg""/><Default ContentType=""image/png"" Extension=""png""/><Default ContentType=""image/gif"" Extension=""gif""/><Default ContentType=""application/vnd.openxmlformats-package.relationships+xml"" Extension=""rels""/>";
+        internal static string ContentType(string contentType, string partName) => $"<Override ContentType=\"{contentType}\" PartName=\"/{partName}\" />";
+        internal static readonly string EndTypes = "</Types>";
 
-            if (_configuration.TableStyles == TableStyles.None)
-            {
-                styleXml = _noneStylesXml;
-            }
-            else if (_configuration.TableStyles == TableStyles.Default)
-            {
-                styleXml = _defaultStylesXml;
-            }
+        internal static string WorksheetRelationship(SheetDto sheetDto)
+            => $@"<Relationship Type=""http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet"" Target=""/{sheetDto.Path}"" Id=""{sheetDto.ID}"" />";
 
-            return styleXml;
-        }
+        internal static string ImageRelationship(FileDto image)
+            => $@"<Relationship Type=""http://schemas.openxmlformats.org/officeDocument/2006/relationships/image"" Target=""{image.Path2}"" Id=""{image.ID}"" />";
 
-        private string GetDrawingRelationshipXml(int sheetIndex)
-        {
-            var drawing = new StringBuilder();
-            foreach (var i in _files.Where(w => w.IsImage && w.SheetId == sheetIndex + 1))
-            {
-                drawing.AppendLine($@"<Relationship Type=""http://schemas.openxmlformats.org/officeDocument/2006/relationships/image"" Target=""{i.Path2}"" Id=""{i.ID}"" />");
-            }
+        internal static string DrawingRelationship(int sheetId)
+            => $@"<Relationship Type=""http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing"" Target=""../drawings/drawing{sheetId}.xml"" Id=""drawing{sheetId}"" />";
 
-            return drawing.ToString();
-        }
-
-        private string GetDrawingXml(int sheetIndex)
-        {
-            var drawing = new StringBuilder();
-            foreach (var file in _files.Where(w => w.IsImage && w.SheetId == sheetIndex + 1))
-            {
-                drawing.Append($@"<xdr:oneCellAnchor>
+        internal static string DrawingXml(FileDto file, int fileIndex)
+            => $@"<xdr:oneCellAnchor>
         <xdr:from>
             <xdr:col>{file.CellIndex - 1/* why -1 : https://user-images.githubusercontent.com/12729184/150460189-f08ed939-44d4-44e1-be6e-9c533ece6be8.png*/}</xdr:col>
             <xdr:colOff>0</xdr:colOff>
@@ -225,7 +205,7 @@ namespace MiniExcelLibs.OpenXml
         <xdr:ext cx=""609600"" cy=""190500"" />
         <xdr:pic>
             <xdr:nvPicPr>
-                <xdr:cNvPr id=""{_files.IndexOf(file) + 1}"" descr="""" name=""2a3f9147-58ea-4a79-87da-7d6114c4877b"" />
+                <xdr:cNvPr id=""{fileIndex + 1}"" descr="""" name=""2a3f9147-58ea-4a79-87da-7d6114c4877b"" />
                 <xdr:cNvPicPr>
                     <a:picLocks noChangeAspect=""1"" />
                 </xdr:cNvPicPr>
@@ -247,49 +227,9 @@ namespace MiniExcelLibs.OpenXml
             </xdr:spPr>
         </xdr:pic>
         <xdr:clientData />
-    </xdr:oneCellAnchor>");
-            }
+    </xdr:oneCellAnchor>";
 
-            return drawing.ToString();
-        }
-
-        private void GenerateWorkBookXmls(
-            out StringBuilder workbookXml,
-            out StringBuilder workbookRelsXml,
-            out Dictionary<int, string> sheetsRelsXml)
-        {
-            workbookXml = new StringBuilder();
-            workbookRelsXml = new StringBuilder();
-            sheetsRelsXml = new Dictionary<int, string>();
-            var sheetId = 0;
-            foreach (var s in _sheets)
-            {
-                sheetId++;
-                if (string.IsNullOrEmpty(s.State))
-                {
-                    workbookXml.AppendLine($@"<x:sheet name=""{ExcelOpenXmlUtils.EncodeXML(s.Name)}"" sheetId=""{sheetId}"" r:id=""{s.ID}"" />");
-                }
-                else
-                {
-                    workbookXml.AppendLine($@"<x:sheet name=""{ExcelOpenXmlUtils.EncodeXML(s.Name)}"" sheetId=""{sheetId}"" state=""{s.State}"" r:id=""{s.ID}"" />");
-                }
-
-                workbookRelsXml.AppendLine($@"<Relationship Type=""http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet"" Target=""/{s.Path}"" Id=""{s.ID}"" />");
-
-                //TODO: support multiple drawing
-                //TODO: ../drawings/drawing1.xml or /xl/drawings/drawing1.xml
-                var sheetRelsXml = $@"<Relationship Type=""http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing"" Target=""../drawings/drawing{sheetId}.xml"" Id=""drawing{sheetId}"" />";
-                sheetsRelsXml.Add(s.SheetIdx, sheetRelsXml);
-            }
-        }
-
-        private string GetContentTypesXml()
-        {
-            var sb = new StringBuilder(@"<?xml version=""1.0"" encoding=""UTF-8"" standalone=""yes""?><Types xmlns=""http://schemas.openxmlformats.org/package/2006/content-types""><Default ContentType=""application/vnd.openxmlformats-officedocument.spreadsheetml.printerSettings"" Extension=""bin""/><Default ContentType=""application/xml"" Extension=""xml""/><Default ContentType=""image/jpeg"" Extension=""jpg""/><Default ContentType=""image/png"" Extension=""png""/><Default ContentType=""image/gif"" Extension=""gif""/><Default ContentType=""application/vnd.openxmlformats-package.relationships+xml"" Extension=""rels""/>");
-            foreach (var p in _zipDictionary)
-                sb.Append($"<Override ContentType=\"{p.Value.ContentType}\" PartName=\"/{p.Key}\" />");
-            sb.Append("</Types>");
-            return sb.ToString();
-        }
+        internal static string Sheet(SheetDto sheetDto, int sheetId)
+            => $@"<x:sheet name=""{ExcelOpenXmlUtils.EncodeXML(sheetDto.Name)}"" sheetId=""{sheetId}""{(string.IsNullOrWhiteSpace(sheetDto.State) ? string.Empty : $" state=\"{sheetDto.State}\"")} r:id=""{sheetDto.ID}"" />";
     }
 }

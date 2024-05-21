@@ -4,11 +4,11 @@ namespace MiniExcelLibs.OpenXml.Models
 {
     internal class SheetDto
     {
-        public string ID { get; set; } = $"R{Guid.NewGuid():N}";
-        public string Name { get; set; }
-        public int SheetIdx { get; set; }
-        public string Path { get { return $"xl/worksheets/sheet{SheetIdx}.xml"; } }
+        internal string ID { get; set; } = $"R{Guid.NewGuid():N}";
+        internal string Name { get; set; }
+        internal int SheetIdx { get; set; }
+        internal string Path { get { return $"xl/worksheets/sheet{SheetIdx}.xml"; } }
 
-        public string State { get; set; }
+        internal string State { get; set; }
     }
 }

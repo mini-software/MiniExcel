@@ -2,6 +2,7 @@
 {
     using MiniExcelLibs.Attributes;
     using MiniExcelLibs.OpenXml;
+    using MiniExcelLibs.OpenXml.Models;
     using System;
     using System.Collections;
     using System.Collections.Generic;
@@ -199,7 +200,7 @@
                     ExcludeNullableType = excludeNullableType,
                     Nullable = gt != null,
                     ExcelColumnAliases = excelColumnName?.Aliases ?? excelColumn?.Aliases,
-                    ExcelColumnName = excelColumnName?.ExcelColumnName ?? p.GetAttribute<System.ComponentModel.DisplayNameAttribute>()?.DisplayName ?? excelColumn?.Name ?? p.Name,
+                    ExcelColumnName = excelColumnName?.ExcelColumnName ?? p.GetAttribute<DisplayNameAttribute>()?.DisplayName ?? excelColumn?.Name ?? p.Name,
                     ExcelColumnIndex = p.GetAttribute<ExcelColumnIndexAttribute>()?.ExcelColumnIndex ?? excelColumnIndex,
                     ExcelIndexName = p.GetAttribute<ExcelColumnIndexAttribute>()?.ExcelXName ?? excelColumn?.IndexName,
                     ExcelColumnWidth = p.GetAttribute<ExcelColumnWidthAttribute>()?.ExcelColumnWidth ?? excelColumn?.Width,

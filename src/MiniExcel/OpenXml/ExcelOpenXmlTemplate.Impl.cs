@@ -900,7 +900,7 @@ namespace MiniExcelLibs.OpenXml
                             }
                             else
                             {
-                                throw new System.Collections.Generic.KeyNotFoundException($"Please check {propNames[0]} parameter, it's not exist.");
+                                throw new KeyNotFoundException($"Please check {propNames[0]} parameter, it's not exist.");
                             }
                         }
 

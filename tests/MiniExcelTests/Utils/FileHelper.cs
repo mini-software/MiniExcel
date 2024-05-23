@@ -13,7 +13,7 @@ namespace MiniExcelLibs.Tests.Utils
                 {
                     return File.OpenRead(path);
                 }
-                catch (System.IO.IOException)
+                catch (IOException)
                 {
                     var newPath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
                     File.Copy(path, newPath);

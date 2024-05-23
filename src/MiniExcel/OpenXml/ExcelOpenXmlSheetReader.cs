@@ -1,5 +1,4 @@
-﻿using MiniExcelLibs.Exceptions;
-using MiniExcelLibs.Utils;
+﻿using MiniExcelLibs.Utils;
 using MiniExcelLibs.Zip;
 using System;
 using System.Collections.Generic;

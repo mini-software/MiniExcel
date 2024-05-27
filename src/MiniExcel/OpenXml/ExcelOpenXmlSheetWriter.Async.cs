@@ -327,6 +327,11 @@ namespace MiniExcelLibs.OpenXml
                 yIndex++;
             }
 
+            if (_configuration.AutoFilter)
+            {
+                await writer.WriteAsync(WorksheetXml.Autofilter(GetDimensionRef(maxRowIndex, maxColumnIndex)));
+            }
+
             await writer.WriteAsync(WorksheetXml.EndSheetData);
             await writer.WriteAsync(WorksheetXml.EndWorksheet);
         }

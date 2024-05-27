@@ -364,6 +364,12 @@ namespace MiniExcelLibs.OpenXml
             }
 
             writer.Write(WorksheetXml.EndSheetData);
+
+            if (_configuration.AutoFilter)
+            {
+                writer.Write(WorksheetXml.Autofilter(GetDimensionRef(maxRowIndex, maxColumnIndex)));
+            }
+
             writer.Write(WorksheetXml.EndWorksheet);
         }
 

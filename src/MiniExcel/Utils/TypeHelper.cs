@@ -149,8 +149,15 @@
             }
             else
             {
-                // Use pInfo.ExcludeNullableType to resolve : https://github.com/shps951023/MiniExcel/issues/138
-                newValue = Convert.ChangeType(itemValue, pInfo.ExcludeNullableType, _config.Culture);
+                if (pInfo.Nullable && string.IsNullOrWhiteSpace(itemValue?.ToString()))
+                {
+                    newValue = null;
+                }
+                else
+                {
+                    // Use pInfo.ExcludeNullableType to resolve : https://github.com/shps951023/MiniExcel/issues/138
+                    newValue = Convert.ChangeType(itemValue, pInfo.ExcludeNullableType, _config.Culture);
+                }
             }
 
             pInfo.Property.SetValue(v, newValue);

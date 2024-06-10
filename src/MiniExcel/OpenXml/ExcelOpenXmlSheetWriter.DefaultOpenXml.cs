@@ -109,6 +109,7 @@ namespace MiniExcelLibs.OpenXml
             if (dynamicColumn.Format != null)
             {
                 prop.ExcelFormat = dynamicColumn.Format;
+                prop.ExcelFormatId = dynamicColumn.FormatId;
             }
 
             if (dynamicColumn.Aliases != null)
@@ -159,14 +160,40 @@ namespace MiniExcelLibs.OpenXml
                 return Tuple.Create("2", "str", ExcelOpenXmlUtils.EncodeXML(str));
             }
 
-            if (columnInfo?.ExcelFormat != null && value is IFormattable formattableValue)
+            var type = GetValueType(value, columnInfo);
+
+            if (type != typeof(DateTime) && columnInfo?.ExcelFormat != null && value is IFormattable formattableValue)
             {
                 var formattedStr = formattableValue.ToString(columnInfo.ExcelFormat, _configuration.Culture);
                 return Tuple.Create("2", "str", ExcelOpenXmlUtils.EncodeXML(formattedStr));
             }
 
-            var type = GetValueType(value, columnInfo);
+            if (type == typeof(DateTime))
+            {
+                return GetDateTimeValue(value, columnInfo);
+            }
 
+#if NET6_0_OR_GREATER
+            if (type == typeof(DateOnly))
+            {
+                if (_configuration.Culture != CultureInfo.InvariantCulture)
+                {
+                    var cellValue = ((DateOnly)value).ToString(_configuration.Culture);
+                    return Tuple.Create("2", "str", cellValue);
+                }
+
+                if (columnInfo == null || columnInfo.ExcelFormat == null)
+                {
+                    var oaDate = CorrectDateTimeValue((DateTime)value);
+                    var cellValue = oaDate.ToString(CultureInfo.InvariantCulture);
+                    return Tuple.Create<string, string, string>("3", null, cellValue);
+                }
+
+                // TODO: now it'll lose date type information
+                var formattedCellValue = ((DateOnly)value).ToString(columnInfo.ExcelFormat, _configuration.Culture);
+                return Tuple.Create("2", "str", formattedCellValue);
+            }
+#endif
             if (type.IsEnum)
             {
                 var description = CustomPropertyHelper.DescriptionAttr(type, value);
@@ -341,9 +368,7 @@ namespace MiniExcelLibs.OpenXml
                 return Tuple.Create<string, string, string>("3", null, cellValue);
             }
 
-            // TODO: now it'll lose date type information
-            var formattedCellValue = ((DateTime)value).ToString(columnInfo.ExcelFormat, _configuration.Culture);
-            return Tuple.Create("2", "str", formattedCellValue);
+            return Tuple.Create(columnInfo.ExcelFormatId.ToString(), (string)null, ((DateTime)value).ToOADate().ToString());
         }
 
         private static double CorrectDateTimeValue(DateTime value)

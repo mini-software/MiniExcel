@@ -23,6 +23,7 @@
         public double? ExcelColumnWidth { get; internal set; }
         public string ExcelIndexName { get; internal set; }
         public bool ExcelIgnore { get; internal set; }
+        public int ExcelFormatId { get; internal set; }
     }
 
     internal class ExcellSheetInfo
@@ -178,7 +179,6 @@
                 var gt = Nullable.GetUnderlyingType(p.PropertyType);
                 var excelColumnName = p.GetAttribute<ExcelColumnNameAttribute>();
                 var excludeNullableType = gt ?? p.PropertyType;
-                var excelFormat = p.GetAttribute<ExcelFormatAttribute>()?.Format;
                 var excelColumn = p.GetAttribute<ExcelColumnAttribute>();
                 if (configuration.DynamicColumns != null && configuration.DynamicColumns.Length > 0)
                 {
@@ -204,7 +204,8 @@
                     ExcelColumnIndex = p.GetAttribute<ExcelColumnIndexAttribute>()?.ExcelColumnIndex ?? excelColumnIndex,
                     ExcelIndexName = p.GetAttribute<ExcelColumnIndexAttribute>()?.ExcelXName ?? excelColumn?.IndexName,
                     ExcelColumnWidth = p.GetAttribute<ExcelColumnWidthAttribute>()?.ExcelColumnWidth ?? excelColumn?.Width,
-                    ExcelFormat = excelFormat ?? excelColumn?.Format,
+                    ExcelFormat = excelColumn?.Format,
+                    ExcelFormatId = excelColumn?.Format == null ? excelColumn.FormatId : 0
                 };
             }).Where(_ => _ != null);
         }
@@ -292,7 +293,10 @@
                     p.Nullable = true;
                     //p.ExcludeNullableType = item2[key]?.GetType();
                     if (dynamicColumn.Format != null)
+                    {
                         p.ExcelFormat = dynamicColumn.Format;
+                        p.ExcelFormatId = dynamicColumn.FormatId;
+                    }
                     if (dynamicColumn.Aliases != null)
                         p.ExcelColumnAliases = dynamicColumn.Aliases;
                     if (dynamicColumn.IndexName != null)

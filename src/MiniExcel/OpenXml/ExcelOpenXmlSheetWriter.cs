@@ -79,29 +79,29 @@ namespace MiniExcelLibs.OpenXml
                 if (value == null)
                 {
                     WriteEmptySheet(writer);
-                    goto End; //for re-using code
-                }
-
-                //DapperRow
-
-                if (value is IDataReader)
-                {
-                    GenerateSheetByIDataReader(writer, value as IDataReader);
-                }
-                else if (value is IEnumerable)
-                {
-                    GenerateSheetByEnumerable(writer, value as IEnumerable);
-                }
-                else if (value is DataTable)
-                {
-                    GenerateSheetByDataTable(writer, value as DataTable);
                 }
                 else
                 {
-                    throw new NotImplementedException($"Type {value.GetType().FullName} is not implemented. Please open an issue.");
+                    //DapperRow
+
+                    if (value is IDataReader)
+                    {
+                        GenerateSheetByIDataReader(writer, value as IDataReader);
+                    }
+                    else if (value is IEnumerable)
+                    {
+                        GenerateSheetByEnumerable(writer, value as IEnumerable);
+                    }
+                    else if (value is DataTable)
+                    {
+                        GenerateSheetByDataTable(writer, value as DataTable);
+                    }
+                    else
+                    {
+                        throw new NotImplementedException($"Type {value.GetType().FullName} is not implemented. Please open an issue.");
+                    }
                 }
             }
-        End: //for re-using code
             _zipDictionary.Add(sheetPath, new ZipPackageInfo(entry, ExcelContentTypes.Worksheet));
         }
 
@@ -454,7 +454,7 @@ namespace MiniExcelLibs.OpenXml
 
             return yIndex - 1;
         }
-        
+
         private void WriteCell(MiniExcelStreamWriter writer, int rowIndex, int cellIndex, object value, ExcelColumnInfo columnInfo)
         {
             var columnReference = ExcelOpenXmlUtils.ConvertXyToCell(cellIndex, rowIndex);

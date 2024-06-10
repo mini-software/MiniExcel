@@ -47,27 +47,27 @@ namespace MiniExcelLibs.OpenXml
                 if (value == null)
                 {
                     await WriteEmptySheetAsync(writer);
-                    goto End; //for re-using code
                 }
-
-                //DapperRow
-
-                switch (value)
+                else
                 {
-                    case IDataReader dataReader:
-                        await GenerateSheetByIDataReaderAsync(writer, dataReader);
-                        break;
-                    case IEnumerable enumerable:
-                        await GenerateSheetByEnumerableAsync(writer, enumerable);
-                        break;
-                    case DataTable dataTable:
-                        await GenerateSheetByDataTableAsync(writer, dataTable);
-                        break;
-                    default:
-                        throw new NotImplementedException($"Type {value.GetType().FullName} is not implemented. Please open an issue.");
+                    //DapperRow
+
+                    switch (value)
+                    {
+                        case IDataReader dataReader:
+                            await GenerateSheetByIDataReaderAsync(writer, dataReader);
+                            break;
+                        case IEnumerable enumerable:
+                            await GenerateSheetByEnumerableAsync(writer, enumerable);
+                            break;
+                        case DataTable dataTable:
+                            await GenerateSheetByDataTableAsync(writer, dataTable);
+                            break;
+                        default:
+                            throw new NotImplementedException($"Type {value.GetType().FullName} is not implemented. Please open an issue.");
+                    }
                 }
             }
-        End: //for re-using code
             _zipDictionary.Add(sheetPath, new ZipPackageInfo(entry, ExcelContentTypes.Worksheet));
         }
 

@@ -1,4 +1,5 @@
-﻿using MiniExcelLibs.OpenXml.Constants;
+﻿using MiniExcelLibs.Attributes;
+using MiniExcelLibs.OpenXml.Constants;
 using MiniExcelLibs.OpenXml.Models;
 using MiniExcelLibs.Utils;
 using MiniExcelLibs.Zip;
@@ -375,14 +376,14 @@ namespace MiniExcelLibs.OpenXml
             return dimensionRef;
         }
 
-        private string GetStylesXml()
+        private string GetStylesXml(ICollection<ExcelColumnAttribute> columns)
         {
             switch (_configuration.TableStyles)
             {
                 case TableStyles.None:
-                    return ExcelXml.NoneStylesXml;
+                    return ExcelXml.SetupStyleXml(ExcelXml.NoneStylesXml, columns);
                 case TableStyles.Default:
-                    return  ExcelXml.DefaultStylesXml;
+                    return ExcelXml.SetupStyleXml(ExcelXml.DefaultStylesXml, columns);
                 default:
                     return string.Empty;
             }

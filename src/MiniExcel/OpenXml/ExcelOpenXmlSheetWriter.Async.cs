@@ -479,7 +479,7 @@ namespace MiniExcelLibs.OpenXml
         /// </summary>
         private async Task GenerateStylesXmlAsync(CancellationToken cancellationToken)
         {
-            var styleXml = GetStylesXml();
+            var styleXml = GetStylesXml(_configuration.DynamicColumns);
 
             await CreateZipEntryAsync(
                 ExcelFileNames.Styles,

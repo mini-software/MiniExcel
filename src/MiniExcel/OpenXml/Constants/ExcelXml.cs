@@ -1,4 +1,8 @@
-﻿using MiniExcelLibs.OpenXml.Models;
+﻿using MiniExcelLibs.Attributes;
+using MiniExcelLibs.OpenXml.Models;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 
 namespace MiniExcelLibs.OpenXml.Constants
 {
@@ -52,10 +56,12 @@ namespace MiniExcelLibs.OpenXml.Constants
     </x:cellXfs>
 </x:styleSheet>";
 
-        internal static readonly string DefaultStylesXml = @"<?xml version=""1.0"" encoding=""utf-8""?>
+        internal const string NumFmtsToken = "{{numFmts}}";
+        internal static readonly string DefaultStylesXml = $@"<?xml version=""1.0"" encoding=""utf-8""?>
 <x:styleSheet xmlns:x=""http://schemas.openxmlformats.org/spreadsheetml/2006/main"">
     <x:numFmts count=""1"">
         <x:numFmt numFmtId=""0"" formatCode="""" />
+        {NumFmtsToken}
     </x:numFmts>
     <x:fonts count=""2"">
         <x:font>
@@ -231,5 +237,17 @@ namespace MiniExcelLibs.OpenXml.Constants
 
         internal static string Sheet(SheetDto sheetDto, int sheetId)
             => $@"<x:sheet name=""{ExcelOpenXmlUtils.EncodeXML(sheetDto.Name)}"" sheetId=""{sheetId}""{(string.IsNullOrWhiteSpace(sheetDto.State) ? string.Empty : $" state=\"{sheetDto.State}\"")} r:id=""{sheetDto.ID}"" />";
+
+        internal static string SetupStyleXml(string styleXml, ICollection<ExcelColumnAttribute> dynamicColumns = null)
+        {
+            var sb = new StringBuilder(styleXml);
+            sb.Replace(NumFmtsToken, string.Join(string.Empty, dynamicColumns.Select(toNumFmt)));
+            return sb.ToString();
+
+            string toNumFmt(ExcelColumnAttribute col, int index)
+            {
+                return $@"<x:numFmt numFmtId=""{col.FormatId}"" formatCode=""{col.Format}"" />";
+            }
+        }
     }
 }

@@ -1,4 +1,5 @@
-﻿using MiniExcelLibs.OpenXml.Constants;
+﻿using MiniExcelLibs.Attributes;
+using MiniExcelLibs.OpenXml.Constants;
 using MiniExcelLibs.OpenXml.Models;
 using MiniExcelLibs.Utils;
 using MiniExcelLibs.Zip;
@@ -51,6 +52,8 @@ namespace MiniExcelLibs.OpenXml
         {
             GenerateDefaultOpenXml();
 
+            GenerateStyleIds(_configuration.DynamicColumns);
+
             var sheets = GetSheets();
 
             foreach (var sheet in sheets)
@@ -62,6 +65,19 @@ namespace MiniExcelLibs.OpenXml
 
             GenerateEndXml();
             _archive.Dispose();
+        }
+
+        private void GenerateStyleIds(DynamicExcelColumn[] dynamicColumns)
+        {
+            const int startIndex = 1000;
+            int index = 0;
+            foreach(var g in dynamicColumns.GroupBy(x => x.Format))
+            {
+                foreach (var col in g)
+                    col.FormatId = startIndex + index;
+
+                index++;
+            }
         }
 
         internal void GenerateDefaultOpenXml()
@@ -508,7 +524,7 @@ namespace MiniExcelLibs.OpenXml
         /// </summary>
         private void GenerateStylesXml()
         {
-            var styleXml = GetStylesXml();
+            var styleXml = GetStylesXml(_configuration.DynamicColumns);
             CreateZipEntry(ExcelFileNames.Styles, ExcelContentTypes.Styles, styleXml);
         }
 

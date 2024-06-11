@@ -179,6 +179,7 @@
                 var gt = Nullable.GetUnderlyingType(p.PropertyType);
                 var excelColumnName = p.GetAttribute<ExcelColumnNameAttribute>();
                 var excludeNullableType = gt ?? p.PropertyType;
+                var excelFormat = p.GetAttribute<ExcelFormatAttribute>()?.Format;
                 var excelColumn = p.GetAttribute<ExcelColumnAttribute>();
                 if (configuration.DynamicColumns != null && configuration.DynamicColumns.Length > 0)
                 {
@@ -204,8 +205,8 @@
                     ExcelColumnIndex = p.GetAttribute<ExcelColumnIndexAttribute>()?.ExcelColumnIndex ?? excelColumnIndex,
                     ExcelIndexName = p.GetAttribute<ExcelColumnIndexAttribute>()?.ExcelXName ?? excelColumn?.IndexName,
                     ExcelColumnWidth = p.GetAttribute<ExcelColumnWidthAttribute>()?.ExcelColumnWidth ?? excelColumn?.Width,
-                    ExcelFormat = excelColumn?.Format,
-                    ExcelFormatId = excelColumn?.Format == null ? excelColumn.FormatId : 0
+                    ExcelFormat = excelFormat ?? excelColumn?.Format,
+                    ExcelFormatId = excelColumn?.FormatId ?? -1
                 };
             }).Where(_ => _ != null);
         }

@@ -162,7 +162,9 @@ namespace MiniExcelLibs.OpenXml
 
             var type = GetValueType(value, columnInfo);
 
-            if (type != typeof(DateTime) && columnInfo?.ExcelFormat != null && value is IFormattable formattableValue)
+            
+
+            if (columnInfo?.ExcelFormat != null && columnInfo?.ExcelFormatId == -1 && value is IFormattable formattableValue)
             {
                 var formattedStr = formattableValue.ToString(columnInfo.ExcelFormat, _configuration.Culture);
                 return Tuple.Create("2", "str", ExcelOpenXmlUtils.EncodeXML(formattedStr));

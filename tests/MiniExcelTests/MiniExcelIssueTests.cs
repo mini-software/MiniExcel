@@ -309,7 +309,7 @@ namespace MiniExcelLibs.Tests
 
             var rows = MiniExcel.Query(path, false).ToList();
             Assert.Equal("createdate", rows[0].A);
-            Assert.Equal("2022-04-12", rows[1].A);
+            Assert.Equal(new DateTime(2022, 04, 12), rows[1].A);
             Assert.Equal("name", rows[0].B);
             Assert.Equal("Jack", rows[1].B);
             Assert.Equal("Account Point", rows[0].C);
@@ -334,7 +334,7 @@ namespace MiniExcelLibs.Tests
 
             var rows = MiniExcel.Query(path, false).ToList();
             Assert.Equal("createdate", rows[0].A);
-            Assert.Equal("2022-04-12", rows[1].A);
+            Assert.Equal(new DateTime(2022, 04, 12), rows[1].A);
             Assert.Equal("name", rows[0].B);
             Assert.Equal("Jack", rows[1].B);
             Assert.Equal("Account Point", rows[0].C);

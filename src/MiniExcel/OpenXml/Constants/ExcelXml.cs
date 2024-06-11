@@ -283,8 +283,11 @@ $@"<x:xf numFmtId=""{numFmtIndex + i}"" fontId=""0"" fillId=""0"" borderId=""1""
 
         private static IEnumerable<ExcelColumnAttribute> GenerateStyleIds(ICollection<ExcelColumnAttribute> dynamicColumns)
         {
+            if (dynamicColumns == null)
+                yield break;
+
             int index = 0;
-            foreach (var g in dynamicColumns.Where(x => !string.IsNullOrWhiteSpace(x.Format) && new ExcelNumberFormat(x.Format).IsValid).GroupBy(x => x.Format))
+            foreach (var g in dynamicColumns?.Where(x => !string.IsNullOrWhiteSpace(x.Format) && new ExcelNumberFormat(x.Format).IsValid).GroupBy(x => x.Format))
             {
                 foreach (var col in g)
                     col.FormatId = startUpCellXfs + index;

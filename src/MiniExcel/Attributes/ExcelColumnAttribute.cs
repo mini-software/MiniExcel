@@ -9,7 +9,7 @@ namespace MiniExcelLibs.Attributes
         private int _index = -1;
         private string _xName;
 
-        internal int FormatId { get; set; }
+        internal int FormatId { get; set; } = -1;
 
         public string Name { get; set; }
 

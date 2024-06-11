@@ -69,9 +69,9 @@ namespace MiniExcelLibs.OpenXml
 
         private void GenerateStyleIds(DynamicExcelColumn[] dynamicColumns)
         {
-            const int startIndex = 1000;
+            const int startIndex = 5;
             int index = 0;
-            foreach(var g in dynamicColumns.GroupBy(x => x.Format))
+            foreach(var g in dynamicColumns.Where(x => !string.IsNullOrWhiteSpace(x.Format) && new ExcelNumberFormat(x.Format).IsValid).GroupBy(x => x.Format))
             {
                 foreach (var col in g)
                     col.FormatId = startIndex + index;
@@ -372,7 +372,7 @@ namespace MiniExcelLibs.OpenXml
                 for (int j = 0; j < value.Columns.Count; j++)
                 {
                     var cellValue = value.Rows[i][j];
-                    WriteCell(writer, yIndex, xIndex, cellValue, columnInfo: null);
+                    WriteCell(writer, yIndex, xIndex, cellValue, columnInfo: props?.FirstOrDefault(x => x?.ExcelColumnIndex == xIndex - 1));
                     xIndex++;
                 }
                 writer.Write(WorksheetXml.EndRow);

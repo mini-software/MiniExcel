@@ -1,5 +1,6 @@
 ﻿using MiniExcelLibs.Attributes;
 using MiniExcelLibs.OpenXml.Models;
+using MiniExcelLibs.Utils;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -57,9 +58,12 @@ namespace MiniExcelLibs.OpenXml.Constants
 </x:styleSheet>";
 
         internal const string NumFmtsToken = "{{numFmts}}";
+        internal const string NumFmtsCountToken = "{{numFmtCount}}";
+        internal const string cellXfsToken = "{{cellXfs}}";
+        internal const string cellXfsCountToken = "{{cellXfsCount}}";
         internal static readonly string DefaultStylesXml = $@"<?xml version=""1.0"" encoding=""utf-8""?>
 <x:styleSheet xmlns:x=""http://schemas.openxmlformats.org/spreadsheetml/2006/main"">
-    <x:numFmts count=""1"">
+    <x:numFmts count=""{NumFmtsCountToken}"">
         <x:numFmt numFmtId=""0"" formatCode="""" />
         {NumFmtsToken}
     </x:numFmts>
@@ -139,7 +143,7 @@ namespace MiniExcelLibs.OpenXml.Constants
             <x:protection locked=""1"" hidden=""0"" />
         </x:xf>
     </x:cellStyleXfs>
-    <x:cellXfs count=""4"">
+    <x:cellXfs count=""{cellXfsCountToken}"">
         <x:xf></x:xf>
         <x:xf numFmtId=""0"" fontId=""1"" fillId=""2"" borderId=""1"" xfId=""0"" applyNumberFormat=""1"" applyFill=""0"" applyBorder=""1"" applyAlignment=""1"" applyProtection=""1"">
             <x:alignment horizontal=""left"" vertical=""bottom"" textRotation=""0"" wrapText=""0"" indent=""0"" relativeIndent=""0"" justifyLastLine=""0"" shrinkToFit=""0"" readingOrder=""0"" />
@@ -156,6 +160,7 @@ namespace MiniExcelLibs.OpenXml.Constants
         <x:xf numFmtId=""0"" fontId=""0"" fillId=""0"" borderId=""1"" xfId=""0"" applyBorder=""1"" applyAlignment=""1"">
             <x:alignment horizontal=""fill""/>
         </x:xf>
+        {cellXfsToken}
     </x:cellXfs>
     <x:cellStyles count=""1"">
         <x:cellStyle name=""Normal"" xfId=""0"" builtinId=""0"" />
@@ -238,16 +243,33 @@ namespace MiniExcelLibs.OpenXml.Constants
         internal static string Sheet(SheetDto sheetDto, int sheetId)
             => $@"<x:sheet name=""{ExcelOpenXmlUtils.EncodeXML(sheetDto.Name)}"" sheetId=""{sheetId}""{(string.IsNullOrWhiteSpace(sheetDto.State) ? string.Empty : $" state=\"{sheetDto.State}\"")} r:id=""{sheetDto.ID}"" />";
 
-        internal static string SetupStyleXml(string styleXml, ICollection<ExcelColumnAttribute> dynamicColumns = null)
+        internal static string SetupStyleXml(string styleXml, ICollection<ExcelColumnAttribute> columns)
         {
             var sb = new StringBuilder(styleXml);
-            sb.Replace(NumFmtsToken, string.Join(string.Empty, dynamicColumns.Select(toNumFmt)));
-            return sb.ToString();
+            var columnsToApply = columns
+                .Where(x => !string.IsNullOrWhiteSpace(x.Format))
+                .Select(x => new { exf = new ExcelNumberFormat(x.Format), f = x })
+                .Where(x => x.exf.IsValid)
+                .GroupBy(x => x.f.FormatId)
+                .Select(x => x.First()).ToArray();
 
-            string toNumFmt(ExcelColumnAttribute col, int index)
+
+            var numFmtXmls = columnsToApply.Select((x,i) => $@"<x:numFmt numFmtId=""{166 + i}"" formatCode=""{x.exf.FormatString}"" />").ToArray();
+            sb.Replace(NumFmtsToken, string.Join(string.Empty, numFmtXmls));
+            sb.Replace(NumFmtsCountToken, (1 + numFmtXmls.Length).ToString());
+
+            var cellXfsXmls = columnsToApply.Select((x, i) =>
             {
-                return $@"<x:numFmt numFmtId=""{col.FormatId}"" formatCode=""{col.Format}"" />";
+                return 
+$@"<x:xf numFmtId=""{166 + i}"" fontId=""0"" fillId=""0"" borderId=""1"" xfId=""0"" applyNumberFormat=""1"" applyFill=""1"" applyBorder=""1"" applyAlignment=""1"" applyProtection=""1"">
+    <x:alignment horizontal=""general"" vertical=""bottom"" textRotation=""0"" wrapText=""0"" indent=""0"" relativeIndent=""0"" justifyLastLine=""0"" shrinkToFit=""0"" readingOrder=""0"" />
+    <x:protection locked=""1"" hidden=""0"" />
+</x:xf>";
             }
+            ).ToArray();
+            sb.Replace(cellXfsToken, string.Join(string.Empty, cellXfsXmls));
+            sb.Replace(cellXfsCountToken, (5 + cellXfsXmls.Length).ToString());
+            return sb.ToString();
         }
     }
 }

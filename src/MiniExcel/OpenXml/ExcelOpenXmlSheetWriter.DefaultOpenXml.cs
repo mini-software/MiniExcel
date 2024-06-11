@@ -367,8 +367,11 @@ namespace MiniExcelLibs.OpenXml
                 var cellValue = oaDate.ToString(CultureInfo.InvariantCulture);
                 return Tuple.Create<string, string, string>("3", null, cellValue);
             }
-
-            return Tuple.Create(columnInfo.ExcelFormatId.ToString(), (string)null, ((DateTime)value).ToOADate().ToString());
+            {
+                var oaDate = CorrectDateTimeValue((DateTime)value);
+                var cellValue = oaDate.ToString(CultureInfo.InvariantCulture);
+                return Tuple.Create(columnInfo.ExcelFormatId.ToString(), (string)null, cellValue);
+            }
         }
 
         private static double CorrectDateTimeValue(DateTime value)

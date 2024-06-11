@@ -1217,12 +1217,15 @@ namespace MiniExcelLibs.Tests
         public void DynamicColumnsConfigurationIsUsedWhenCreatingExcelUsingIDataReader()
         {
             var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
+            var date = DateTime.Now;
             var table = new DataTable();
             {
                 table.Columns.Add("Column1", typeof(string));
                 table.Columns.Add("Column2", typeof(int));
-                table.Rows.Add("MiniExcel", 1);
-                table.Rows.Add("Github", 2);
+                table.Columns.Add("Column3", typeof(DateTime));
+                table.Columns.Add("Column4", typeof(DateTime));
+                table.Rows.Add("MiniExcel", 1, date, date);
+                table.Rows.Add("Github", 2, date, date);
             }
 
             var configuration = new OpenXmlConfiguration
@@ -1240,7 +1243,15 @@ namespace MiniExcelLibs.Tests
                         Name = "Its value",
                         Index = 1,
                         Width = 150
+                    },
+                    new DynamicExcelColumn("Column3")
+                    {
+                        Name = "Its Date",
+                        Index = 2,
+                        Width = 150,
+                        Format = "dd.mm.yyyy hh:mm:ss",
                     }
+
                 }
             };
             var reader = table.CreateDataReader();
@@ -1255,13 +1266,21 @@ namespace MiniExcelLibs.Tests
 
                 Assert.Contains("Name of something", rows[0]);
                 Assert.Contains("Its value", rows[0]);
+                Assert.Contains("Its Date", rows[0]);
+                Assert.Contains("Column4", rows[0]);
                 Assert.Contains("Name of something", rows[1]);
                 Assert.Contains("Its value", rows[1]);
+                Assert.Contains("Its Date", rows[1]);
+                Assert.Contains("Column4", rows[1]);
 
                 Assert.Equal("MiniExcel", rows[0]["Name of something"]);
                 Assert.Equal(1D, rows[0]["Its value"]);
+                Assert.Equal(date, (DateTime)rows[0]["Its Date"], TimeSpan.FromMilliseconds(10d));
+                Assert.Equal(date, (DateTime)rows[0]["Column4"], TimeSpan.FromMilliseconds(10d));
                 Assert.Equal("Github", rows[1]["Name of something"]);
                 Assert.Equal(2D, rows[1]["Its value"]);
+                Assert.Equal(date, (DateTime)rows[1]["Its Date"], TimeSpan.FromMilliseconds(10d));
+                Assert.Equal(date, (DateTime)rows[1]["Column4"], TimeSpan.FromMilliseconds(10d));
             }
         }
 
@@ -1274,9 +1293,10 @@ namespace MiniExcelLibs.Tests
             {
                 table.Columns.Add("Column1", typeof(string));
                 table.Columns.Add("Column2", typeof(int));
-                table.Columns.Add("Column3", typeof(DateTime));
-                table.Rows.Add("MiniExcel", 1, date);
-                table.Rows.Add("Github", 2, date);
+                table.Columns.Add("Column3", typeof(DateTime)); 
+                table.Columns.Add("Column4", typeof(DateTime));
+                table.Rows.Add("MiniExcel", 1, date, date);
+                table.Rows.Add("Github", 2, date, date);
             }
 
             var configuration = new OpenXmlConfiguration
@@ -1302,7 +1322,6 @@ namespace MiniExcelLibs.Tests
                         Width = 150,
                         Format = "dd.mm.yyyy hh:mm:ss"
                     }
-
                 }
             };
 
@@ -1318,17 +1337,21 @@ namespace MiniExcelLibs.Tests
                 Assert.Contains("Name of something", rows[0]);
                 Assert.Contains("Its value", rows[0]);
                 Assert.Contains("Its Date", rows[0]);
+                Assert.Contains("Column4", rows[0]);
                 Assert.Contains("Name of something", rows[1]);
                 Assert.Contains("Its value", rows[1]);
                 Assert.Contains("Its Date", rows[1]);
+                Assert.Contains("Column4", rows[1]);
 
 
                 Assert.Equal("MiniExcel", rows[0]["Name of something"]);
                 Assert.Equal(1D, rows[0]["Its value"]);
                 Assert.Equal(date, (DateTime)rows[0]["Its Date"], TimeSpan.FromMilliseconds(10d));
+                Assert.Equal(date, (DateTime)rows[0]["Column4"], TimeSpan.FromMilliseconds(10d));
                 Assert.Equal("Github", rows[1]["Name of something"]);
                 Assert.Equal(2D, rows[1]["Its value"]);
                 Assert.Equal(date, (DateTime)rows[1]["Its Date"], TimeSpan.FromMilliseconds(10d));
+                Assert.Equal(date, (DateTime)rows[1]["Column4"], TimeSpan.FromMilliseconds(10d));
             }
         }
     }

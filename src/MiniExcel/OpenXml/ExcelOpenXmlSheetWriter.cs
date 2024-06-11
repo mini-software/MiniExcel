@@ -52,8 +52,6 @@ namespace MiniExcelLibs.OpenXml
         {
             GenerateDefaultOpenXml();
 
-            GenerateStyleIds(_configuration.DynamicColumns);
-
             var sheets = GetSheets();
 
             foreach (var sheet in sheets)
@@ -67,23 +65,11 @@ namespace MiniExcelLibs.OpenXml
             _archive.Dispose();
         }
 
-        private void GenerateStyleIds(DynamicExcelColumn[] dynamicColumns)
-        {
-            const int startIndex = 5;
-            int index = 0;
-            foreach(var g in dynamicColumns.Where(x => !string.IsNullOrWhiteSpace(x.Format) && new ExcelNumberFormat(x.Format).IsValid).GroupBy(x => x.Format))
-            {
-                foreach (var col in g)
-                    col.FormatId = startIndex + index;
-
-                index++;
-            }
-        }
-
         internal void GenerateDefaultOpenXml()
         {
             CreateZipEntry(ExcelFileNames.Rels, ExcelContentTypes.Relationships, ExcelXml.DefaultRels);
             CreateZipEntry(ExcelFileNames.SharedStrings, ExcelContentTypes.SharedStrings, ExcelXml.DefaultSharedString);
+            GenerateStylesXml();
         }
 
         private void CreateSheetXml(object value, string sheetPath)
@@ -499,8 +485,6 @@ namespace MiniExcelLibs.OpenXml
         private void GenerateEndXml()
         {
             AddFilesToZip();
-
-            GenerateStylesXml();
 
             GenerateDrawinRelXml();
 

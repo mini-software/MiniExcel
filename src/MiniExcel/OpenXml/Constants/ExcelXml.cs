@@ -57,10 +57,16 @@ namespace MiniExcelLibs.OpenXml.Constants
     </x:cellXfs>
 </x:styleSheet>";
 
-        internal const string NumFmtsToken = "{{numFmts}}";
-        internal const string NumFmtsCountToken = "{{numFmtCount}}";
-        internal const string cellXfsToken = "{{cellXfs}}";
-        internal const string cellXfsCountToken = "{{cellXfsCount}}";
+        #region StyleSheet
+
+        private const int startUpNumFmts = 1;
+        private const string NumFmtsToken = "{{numFmts}}";
+        private const string NumFmtsCountToken = "{{numFmtCount}}";
+
+        private const int startUpCellXfs = 5;
+        private const string cellXfsToken = "{{cellXfs}}";
+        private const string cellXfsCountToken = "{{cellXfsCount}}";
+        
         internal static readonly string DefaultStylesXml = $@"<?xml version=""1.0"" encoding=""utf-8""?>
 <x:styleSheet xmlns:x=""http://schemas.openxmlformats.org/spreadsheetml/2006/main"">
     <x:numFmts count=""{NumFmtsCountToken}"">
@@ -167,6 +173,8 @@ namespace MiniExcelLibs.OpenXml.Constants
     </x:cellStyles>
 </x:styleSheet>";
 
+        #endregion
+
         internal static readonly string DefaultWorkbookXml = @"<?xml version=""1.0"" encoding=""utf-8""?>
 <x:workbook xmlns:r=""http://schemas.openxmlformats.org/officeDocument/2006/relationships""
     xmlns:x=""http://schemas.openxmlformats.org/spreadsheetml/2006/main"">
@@ -245,31 +253,46 @@ namespace MiniExcelLibs.OpenXml.Constants
 
         internal static string SetupStyleXml(string styleXml, ICollection<ExcelColumnAttribute> columns)
         {
+            const int numFmtIndex = 166;
+
             var sb = new StringBuilder(styleXml);
-            var columnsToApply = columns
-                .Where(x => !string.IsNullOrWhiteSpace(x.Format))
-                .Select(x => new { exf = new ExcelNumberFormat(x.Format), f = x })
-                .Where(x => x.exf.IsValid)
-                .GroupBy(x => x.f.FormatId)
-                .Select(x => x.First()).ToArray();
+            var columnsToApply = GenerateStyleIds(columns);
 
-
-            var numFmtXmls = columnsToApply.Select((x,i) => $@"<x:numFmt numFmtId=""{166 + i}"" formatCode=""{x.exf.FormatString}"" />").ToArray();
-            sb.Replace(NumFmtsToken, string.Join(string.Empty, numFmtXmls));
-            sb.Replace(NumFmtsCountToken, (1 + numFmtXmls.Length).ToString());
-
-            var cellXfsXmls = columnsToApply.Select((x, i) =>
+            var numFmts = columnsToApply.Select((x, i) =>
             {
-                return 
-$@"<x:xf numFmtId=""{166 + i}"" fontId=""0"" fillId=""0"" borderId=""1"" xfId=""0"" applyNumberFormat=""1"" applyFill=""1"" applyBorder=""1"" applyAlignment=""1"" applyProtection=""1"">
+                return new
+                {
+                    numFmt = 
+$@"<x:numFmt numFmtId=""{numFmtIndex + i}"" formatCode=""{x.Format}"" />",
+
+                    cellXfs = 
+$@"<x:xf numFmtId=""{numFmtIndex + i}"" fontId=""0"" fillId=""0"" borderId=""1"" xfId=""0"" applyNumberFormat=""1"" applyFill=""1"" applyBorder=""1"" applyAlignment=""1"" applyProtection=""1"">
     <x:alignment horizontal=""general"" vertical=""bottom"" textRotation=""0"" wrapText=""0"" indent=""0"" relativeIndent=""0"" justifyLastLine=""0"" shrinkToFit=""0"" readingOrder=""0"" />
     <x:protection locked=""1"" hidden=""0"" />
-</x:xf>";
-            }
-            ).ToArray();
-            sb.Replace(cellXfsToken, string.Join(string.Empty, cellXfsXmls));
-            sb.Replace(cellXfsCountToken, (5 + cellXfsXmls.Length).ToString());
+</x:xf>"
+                }; 
+            }).ToArray();
+
+            sb.Replace(NumFmtsToken, string.Join(string.Empty, numFmts.Select(x => x.numFmt)));
+            sb.Replace(NumFmtsCountToken, (startUpNumFmts + numFmts.Length).ToString());
+            
+            sb.Replace(cellXfsToken, string.Join(string.Empty, numFmts.Select(x => x.cellXfs)));
+            sb.Replace(cellXfsCountToken, (5 + numFmts.Length).ToString());
             return sb.ToString();
         }
+
+        private static IEnumerable<ExcelColumnAttribute> GenerateStyleIds(ICollection<ExcelColumnAttribute> dynamicColumns)
+        {
+            int index = 0;
+            foreach (var g in dynamicColumns.Where(x => !string.IsNullOrWhiteSpace(x.Format) && new ExcelNumberFormat(x.Format).IsValid).GroupBy(x => x.Format))
+            {
+                foreach (var col in g)
+                    col.FormatId = startUpCellXfs + index;
+
+                yield return g.First();
+                index++;
+            }
+        }
+
     }
 }

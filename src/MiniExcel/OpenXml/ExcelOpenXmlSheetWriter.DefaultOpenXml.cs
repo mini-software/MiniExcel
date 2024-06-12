@@ -223,33 +223,6 @@ namespace MiniExcelLibs.OpenXml
                 return Tuple.Create("4", "str", ExcelOpenXmlUtils.EncodeXML(base64));
             }
 
-            if (type == typeof(DateTime))
-            {
-                return GetDateTimeValue(value, columnInfo);
-            }
-
-#if NET6_0_OR_GREATER
-            if (type == typeof(DateOnly))
-            {
-                if (_configuration.Culture != CultureInfo.InvariantCulture)
-                {
-                    var cellValue = ((DateOnly)value).ToString(_configuration.Culture);
-                    return Tuple.Create("2", "str", cellValue);
-                }
-
-                if (columnInfo == null || columnInfo.ExcelFormat == null)
-                {
-                    var oaDate = CorrectDateTimeValue((DateTime)value);
-                    var cellValue = oaDate.ToString(CultureInfo.InvariantCulture);
-                    return Tuple.Create<string, string, string>("3", null, cellValue);
-                }
-
-                // TODO: now it'll lose date type information
-                var formattedCellValue = ((DateOnly)value).ToString(columnInfo.ExcelFormat, _configuration.Culture);
-                return Tuple.Create("2", "str", formattedCellValue);
-            }
-#endif
-
             return Tuple.Create("2", "str", ExcelOpenXmlUtils.EncodeXML(value.ToString()));
         }
 

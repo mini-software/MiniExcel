@@ -153,7 +153,7 @@ namespace MiniExcelLibs.OpenXml
                     for (int i = 0; i < fieldCount; i++)
                     {
                         var cellValue = reader.GetValue(i);
-                        WriteCell(writer, yIndex, xIndex, cellValue, columnInfo: null);
+                        WriteCell(writer, yIndex, xIndex, cellValue, columnInfo: props?.FirstOrDefault(x => x?.ExcelColumnIndex == xIndex - 1));
                         xIndex++;
                     }
                     writer.Write(WorksheetXml.EndRow);

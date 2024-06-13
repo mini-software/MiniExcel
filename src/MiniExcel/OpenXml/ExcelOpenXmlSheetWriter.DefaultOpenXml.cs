@@ -1,4 +1,5 @@
-﻿using MiniExcelLibs.OpenXml.Constants;
+﻿using MiniExcelLibs.Attributes;
+using MiniExcelLibs.OpenXml.Constants;
 using MiniExcelLibs.OpenXml.Models;
 using MiniExcelLibs.Utils;
 using MiniExcelLibs.Zip;
@@ -108,6 +109,7 @@ namespace MiniExcelLibs.OpenXml
             if (dynamicColumn.Format != null)
             {
                 prop.ExcelFormat = dynamicColumn.Format;
+                prop.ExcelFormatId = dynamicColumn.FormatId;
             }
 
             if (dynamicColumn.Aliases != null)
@@ -158,14 +160,26 @@ namespace MiniExcelLibs.OpenXml
                 return Tuple.Create("2", "str", ExcelOpenXmlUtils.EncodeXML(str));
             }
 
-            if (columnInfo?.ExcelFormat != null && value is IFormattable formattableValue)
+            var type = GetValueType(value, columnInfo);
+            
+
+            if (columnInfo?.ExcelFormat != null && columnInfo?.ExcelFormatId == -1 && value is IFormattable formattableValue)
             {
                 var formattedStr = formattableValue.ToString(columnInfo.ExcelFormat, _configuration.Culture);
                 return Tuple.Create("2", "str", ExcelOpenXmlUtils.EncodeXML(formattedStr));
             }
 
-            var type = GetValueType(value, columnInfo);
+            if (type == typeof(DateTime))
+            {
+                return GetDateTimeValue((DateTime)value, columnInfo);
+            }
 
+#if NET6_0_OR_GREATER
+            if (type == typeof(DateOnly))
+            {
+                return GetDateTimeValue(((DateOnly)value).ToDateTime(new TimeOnly()), columnInfo);
+            }
+#endif
             if (type.IsEnum)
             {
                 var description = CustomPropertyHelper.DescriptionAttr(type, value);
@@ -192,33 +206,6 @@ namespace MiniExcelLibs.OpenXml
                 var base64 = GetFileValue(rowIndex, cellIndex, value);
                 return Tuple.Create("4", "str", ExcelOpenXmlUtils.EncodeXML(base64));
             }
-
-            if (type == typeof(DateTime))
-            {
-                return GetDateTimeValue(value, columnInfo);
-            }
-
-#if NET6_0_OR_GREATER
-            if (type == typeof(DateOnly))
-            {
-                if (_configuration.Culture != CultureInfo.InvariantCulture)
-                {
-                    var cellValue = ((DateOnly)value).ToString(_configuration.Culture);
-                    return Tuple.Create("2", "str", cellValue);
-                }
-
-                if (columnInfo == null || columnInfo.ExcelFormat == null)
-                {
-                    var oaDate = CorrectDateTimeValue((DateTime)value);
-                    var cellValue = oaDate.ToString(CultureInfo.InvariantCulture);
-                    return Tuple.Create<string, string, string>("3", null, cellValue);
-                }
-
-                // TODO: now it'll lose date type information
-                var formattedCellValue = ((DateOnly)value).ToString(columnInfo.ExcelFormat, _configuration.Culture);
-                return Tuple.Create("2", "str", formattedCellValue);
-            }
-#endif
 
             return Tuple.Create("2", "str", ExcelOpenXmlUtils.EncodeXML(value.ToString()));
         }
@@ -325,24 +312,21 @@ namespace MiniExcelLibs.OpenXml
             return base64;
         }
 
-        private Tuple<string, string, string> GetDateTimeValue(object value, ExcelColumnInfo columnInfo)
+        private Tuple<string, string, string> GetDateTimeValue(DateTime value, ExcelColumnInfo columnInfo)
         {
+            string cellValue = null;
             if (_configuration.Culture != CultureInfo.InvariantCulture)
             {
-                var cellValue = ((DateTime)value).ToString(_configuration.Culture);
+                cellValue = (value).ToString(_configuration.Culture);
                 return Tuple.Create("2", "str", cellValue);
             }
 
+            var oaDate = CorrectDateTimeValue(value);
+            cellValue = oaDate.ToString(CultureInfo.InvariantCulture);
             if (columnInfo == null || columnInfo.ExcelFormat == null)
-            {
-                var oaDate = CorrectDateTimeValue((DateTime)value);
-                var cellValue = oaDate.ToString(CultureInfo.InvariantCulture);
                 return Tuple.Create<string, string, string>("3", null, cellValue);
-            }
-
-            // TODO: now it'll lose date type information
-            var formattedCellValue = ((DateTime)value).ToString(columnInfo.ExcelFormat, _configuration.Culture);
-            return Tuple.Create("2", "str", formattedCellValue);
+            else
+                return Tuple.Create(columnInfo.ExcelFormatId.ToString(), (string)null, cellValue);
         }
 
         private static double CorrectDateTimeValue(DateTime value)
@@ -375,14 +359,14 @@ namespace MiniExcelLibs.OpenXml
             return dimensionRef;
         }
 
-        private string GetStylesXml()
+        private string GetStylesXml(ICollection<ExcelColumnAttribute> columns)
         {
             switch (_configuration.TableStyles)
             {
                 case TableStyles.None:
-                    return ExcelXml.NoneStylesXml;
+                    return ExcelXml.SetupStyleXml(ExcelXml.NoneStylesXml, columns);
                 case TableStyles.Default:
-                    return  ExcelXml.DefaultStylesXml;
+                    return ExcelXml.SetupStyleXml(ExcelXml.DefaultStylesXml, columns);
                 default:
                     return string.Empty;
             }

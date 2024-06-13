@@ -1,4 +1,5 @@
-﻿using MiniExcelLibs.OpenXml.Constants;
+﻿using MiniExcelLibs.Attributes;
+using MiniExcelLibs.OpenXml.Constants;
 using MiniExcelLibs.OpenXml.Models;
 using MiniExcelLibs.Utils;
 using MiniExcelLibs.Zip;
@@ -68,6 +69,7 @@ namespace MiniExcelLibs.OpenXml
         {
             CreateZipEntry(ExcelFileNames.Rels, ExcelContentTypes.Relationships, ExcelXml.DefaultRels);
             CreateZipEntry(ExcelFileNames.SharedStrings, ExcelContentTypes.SharedStrings, ExcelXml.DefaultSharedString);
+            GenerateStylesXml();
         }
 
         private void CreateSheetXml(object value, string sheetPath)
@@ -79,29 +81,29 @@ namespace MiniExcelLibs.OpenXml
                 if (value == null)
                 {
                     WriteEmptySheet(writer);
-                    goto End; //for re-using code
-                }
-
-                //DapperRow
-
-                if (value is IDataReader)
-                {
-                    GenerateSheetByIDataReader(writer, value as IDataReader);
-                }
-                else if (value is IEnumerable)
-                {
-                    GenerateSheetByEnumerable(writer, value as IEnumerable);
-                }
-                else if (value is DataTable)
-                {
-                    GenerateSheetByDataTable(writer, value as DataTable);
                 }
                 else
                 {
-                    throw new NotImplementedException($"Type {value.GetType().FullName} is not implemented. Please open an issue.");
+                    //DapperRow
+
+                    if (value is IDataReader)
+                    {
+                        GenerateSheetByIDataReader(writer, value as IDataReader);
+                    }
+                    else if (value is IEnumerable)
+                    {
+                        GenerateSheetByEnumerable(writer, value as IEnumerable);
+                    }
+                    else if (value is DataTable)
+                    {
+                        GenerateSheetByDataTable(writer, value as DataTable);
+                    }
+                    else
+                    {
+                        throw new NotImplementedException($"Type {value.GetType().FullName} is not implemented. Please open an issue.");
+                    }
                 }
             }
-        End: //for re-using code
             _zipDictionary.Add(sheetPath, new ZipPackageInfo(entry, ExcelContentTypes.Worksheet));
         }
 
@@ -151,7 +153,7 @@ namespace MiniExcelLibs.OpenXml
                     for (int i = 0; i < fieldCount; i++)
                     {
                         var cellValue = reader.GetValue(i);
-                        WriteCell(writer, yIndex, xIndex, cellValue, columnInfo: null);
+                        WriteCell(writer, yIndex, xIndex, cellValue, columnInfo: props?.FirstOrDefault(x => x?.ExcelColumnIndex == xIndex - 1));
                         xIndex++;
                     }
                     writer.Write(WorksheetXml.EndRow);
@@ -356,7 +358,7 @@ namespace MiniExcelLibs.OpenXml
                 for (int j = 0; j < value.Columns.Count; j++)
                 {
                     var cellValue = value.Rows[i][j];
-                    WriteCell(writer, yIndex, xIndex, cellValue, columnInfo: null);
+                    WriteCell(writer, yIndex, xIndex, cellValue, columnInfo: props?.FirstOrDefault(x => x?.ExcelColumnIndex == xIndex - 1));
                     xIndex++;
                 }
                 writer.Write(WorksheetXml.EndRow);
@@ -454,7 +456,7 @@ namespace MiniExcelLibs.OpenXml
 
             return yIndex - 1;
         }
-        
+
         private void WriteCell(MiniExcelStreamWriter writer, int rowIndex, int cellIndex, object value, ExcelColumnInfo columnInfo)
         {
             var columnReference = ExcelOpenXmlUtils.ConvertXyToCell(cellIndex, rowIndex);
@@ -484,8 +486,6 @@ namespace MiniExcelLibs.OpenXml
         {
             AddFilesToZip();
 
-            GenerateStylesXml();
-
             GenerateDrawinRelXml();
 
             GenerateDrawingXml();
@@ -508,7 +508,7 @@ namespace MiniExcelLibs.OpenXml
         /// </summary>
         private void GenerateStylesXml()
         {
-            var styleXml = GetStylesXml();
+            var styleXml = GetStylesXml(_configuration.DynamicColumns);
             CreateZipEntry(ExcelFileNames.Styles, ExcelContentTypes.Styles, styleXml);
         }
 

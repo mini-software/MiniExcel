@@ -36,6 +36,7 @@ namespace MiniExcelLibs.OpenXml
         {
             await CreateZipEntryAsync(ExcelFileNames.Rels, ExcelContentTypes.Relationships, ExcelXml.DefaultRels, cancellationToken);
             await CreateZipEntryAsync(ExcelFileNames.SharedStrings, ExcelContentTypes.SharedStrings, ExcelXml.DefaultSharedString, cancellationToken);
+            await GenerateStylesXmlAsync(cancellationToken);
         }
 
         private async Task CreateSheetXmlAsync(object value, string sheetPath, CancellationToken cancellationToken)
@@ -454,8 +455,6 @@ namespace MiniExcelLibs.OpenXml
         private async Task GenerateEndXmlAsync(CancellationToken cancellationToken)
         {
             await AddFilesToZipAsync(cancellationToken);
-
-            await GenerateStylesXmlAsync(cancellationToken);
 
             await GenerateDrawinRelXmlAsync(cancellationToken);
 

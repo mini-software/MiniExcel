@@ -47,7 +47,7 @@ At present, most popular frameworks need to load all the data into the memory to
 
 - [Examples](#getstart5)
 
-  
+
 
 ### Installation
 
@@ -280,11 +280,11 @@ Note: The efficiency is slower compared to `not using merge fill`
 Reason: The OpenXml standard puts mergeCells at the bottom of the file, which leads to the need to foreach the sheetxml twice
 
 ```csharp
-	var config = new OpenXmlConfiguration()
-	{
-		FillMergedCells = true
-	};
-	var rows = MiniExcel.Query(path, configuration: config);
+    var config = new OpenXmlConfiguration()
+    {
+        FillMergedCells = true
+    };
+    var rows = MiniExcel.Query(path, configuration: config);
 ```
 
 ![image](https://user-images.githubusercontent.com/12729184/117973630-3527d500-b35f-11eb-95c3-bde255f8114e.png)
@@ -1394,7 +1394,7 @@ Since 1.22.0, you can custom CultureInfo like below, system default `CultureInfo
 ```csharp
 var config = new CsvConfiguration()
 {
-	Culture = new CultureInfo("fr-FR"),
+    Culture = new CultureInfo("fr-FR"),
 };
 MiniExcel.SaveAs(path, value, configuration: config);
 
@@ -1438,10 +1438,10 @@ using (var connection = new SQLiteConnection(connectionString))
     using (var transaction = connection.BeginTransaction())
     using (var stream = File.OpenRead(path))
     {
-	   var rows = stream.Query();
-	   foreach (var row in rows)
-			 connection.Execute("insert into T (A,B) values (@A,@B)", new { row.A, row.B }, transaction: transaction);
-	   transaction.Commit();
+       var rows = stream.Query();
+       foreach (var row in rows)
+             connection.Execute("insert into T (A,B) values (@A,@B)", new { row.A, row.B }, transaction: transaction);
+       transaction.Commit();
     }
 }
 ```
@@ -1577,19 +1577,19 @@ public class ApiController : Controller
 ```csharp
 void Main()
 {
-	var rows = MiniExcel.Query(path);
-	
-	Console.WriteLine("==== No.1 Page ====");
-	Console.WriteLine(Page(rows,pageSize:3,page:1));
-	Console.WriteLine("==== No.50 Page ====");
-	Console.WriteLine(Page(rows,pageSize:3,page:50));
-	Console.WriteLine("==== No.5000 Page ====");
-	Console.WriteLine(Page(rows,pageSize:3,page:5000));
+    var rows = MiniExcel.Query(path);
+    
+    Console.WriteLine("==== No.1 Page ====");
+    Console.WriteLine(Page(rows,pageSize:3,page:1));
+    Console.WriteLine("==== No.50 Page ====");
+    Console.WriteLine(Page(rows,pageSize:3,page:50));
+    Console.WriteLine("==== No.5000 Page ====");
+    Console.WriteLine(Page(rows,pageSize:3,page:5000));
 }
 
 public static IEnumerable<T> Page<T>(IEnumerable<T> en, int pageSize, int page)
 {
-	return en.Skip(page * pageSize).Take(pageSize);
+    return en.Skip(page * pageSize).Take(pageSize);
 }
 ```
 
@@ -1626,70 +1626,70 @@ Like the example, create a method to handle i18n and permission management, and 
 ```csharp
 void Main()
 {
-	var value = new Order[] {
-		new Order(){OrderNo = "SO01",CustomerID="C001",ProductID="P001",Qty=100,Amt=500},
-		new Order(){OrderNo = "SO02",CustomerID="C002",ProductID="P002",Qty=300,Amt=400},
-	};
+    var value = new Order[] {
+        new Order(){OrderNo = "SO01",CustomerID="C001",ProductID="P001",Qty=100,Amt=500},
+        new Order(){OrderNo = "SO02",CustomerID="C002",ProductID="P002",Qty=300,Amt=400},
+    };
 
-	Console.WriteLine("en-Us and Sales role");
-	{
-		var path = Path.GetTempPath() + Guid.NewGuid() + ".xlsx";
-		var lang = "en-US";
-		var role = "Sales";
-		MiniExcel.SaveAs(path, GetOrders(lang, role, value));
-		MiniExcel.Query(path, true).Dump();
-	}
+    Console.WriteLine("en-Us and Sales role");
+    {
+        var path = Path.GetTempPath() + Guid.NewGuid() + ".xlsx";
+        var lang = "en-US";
+        var role = "Sales";
+        MiniExcel.SaveAs(path, GetOrders(lang, role, value));
+        MiniExcel.Query(path, true).Dump();
+    }
 
-	Console.WriteLine("zh-CN and PMC role");
-	{
-		var path = Path.GetTempPath() + Guid.NewGuid() + ".xlsx";
-		var lang = "zh-CN";
-		var role = "PMC";
-		MiniExcel.SaveAs(path, GetOrders(lang, role, value));
-		MiniExcel.Query(path, true).Dump();
-	}
+    Console.WriteLine("zh-CN and PMC role");
+    {
+        var path = Path.GetTempPath() + Guid.NewGuid() + ".xlsx";
+        var lang = "zh-CN";
+        var role = "PMC";
+        MiniExcel.SaveAs(path, GetOrders(lang, role, value));
+        MiniExcel.Query(path, true).Dump();
+    }
 }
 
 private IEnumerable<Dictionary<string, object>> GetOrders(string lang, string role, Order[] orders)
 {
-	foreach (var order in orders)
-	{
-		var newOrder = new Dictionary<string, object>();
+    foreach (var order in orders)
+    {
+        var newOrder = new Dictionary<string, object>();
 
-		if (lang == "zh-CN")
-		{
-			newOrder.Add("客户编号", order.CustomerID);
-			newOrder.Add("订单编号", order.OrderNo);
-			newOrder.Add("产品编号", order.ProductID);
-			newOrder.Add("数量", order.Qty);
-			if (role == "Sales")
-				newOrder.Add("价格", order.Amt);
-			yield return newOrder;
-		}
-		else if (lang == "en-US")
-		{
-			newOrder.Add("Customer ID", order.CustomerID);
-			newOrder.Add("Order No", order.OrderNo);
-			newOrder.Add("Product ID", order.ProductID);
-			newOrder.Add("Quantity", order.Qty);
-			if (role == "Sales")
-				newOrder.Add("Amount", order.Amt);
-			yield return newOrder;
-		}
-		else
-		{
-			throw new InvalidDataException($"lang {lang} wrong");
-		}
-	}
+        if (lang == "zh-CN")
+        {
+            newOrder.Add("客户编号", order.CustomerID);
+            newOrder.Add("订单编号", order.OrderNo);
+            newOrder.Add("产品编号", order.ProductID);
+            newOrder.Add("数量", order.Qty);
+            if (role == "Sales")
+                newOrder.Add("价格", order.Amt);
+            yield return newOrder;
+        }
+        else if (lang == "en-US")
+        {
+            newOrder.Add("Customer ID", order.CustomerID);
+            newOrder.Add("Order No", order.OrderNo);
+            newOrder.Add("Product ID", order.ProductID);
+            newOrder.Add("Quantity", order.Qty);
+            if (role == "Sales")
+                newOrder.Add("Amount", order.Amt);
+            yield return newOrder;
+        }
+        else
+        {
+            throw new InvalidDataException($"lang {lang} wrong");
+        }
+    }
 }
 
 public class Order
 {
-	public string OrderNo { get; set; }
-	public string CustomerID { get; set; }
-	public decimal Qty { get; set; }
-	public string ProductID { get; set; }
-	public decimal Amt { get; set; }
+    public string OrderNo { get; set; }
+    public string CustomerID { get; set; }
+    public decimal Qty { get; set; }
+    public string ProductID { get; set; }
+    public decimal Amt { get; set; }
 }
 ```
 
@@ -1753,33 +1753,33 @@ The default index of Query is the string Key: A,B,C.... If you want to change to
 ```csharp
 void Main()
 {
-	var path = @"D:\git\MiniExcel\samples\xlsx\TestTypeMapping.xlsx";
-	var rows = MiniExcel.Query(path,true);
-	foreach (var r in ConvertToIntIndexRows(rows))
-	{
-		Console.Write($"column 0 : {r[0]} ,column 1 : {r[1]}");
-		Console.WriteLine();
-	}
+    var path = @"D:\git\MiniExcel\samples\xlsx\TestTypeMapping.xlsx";
+    var rows = MiniExcel.Query(path,true);
+    foreach (var r in ConvertToIntIndexRows(rows))
+    {
+        Console.Write($"column 0 : {r[0]} ,column 1 : {r[1]}");
+        Console.WriteLine();
+    }
 }
 
 private IEnumerable<Dictionary<int, object>> ConvertToIntIndexRows(IEnumerable<object> rows)
 {
-	ICollection<string> keys = null;
-	var isFirst = true;
-	foreach (IDictionary<string,object> r in rows)
-	{
-		if(isFirst)
-		{
-			keys = r.Keys;
-			isFirst = false;
-		}
-		
-		var dic = new Dictionary<int, object>();
-		var index = 0;
-		foreach (var key in keys)
-			dic[index++] = r[key];
-		yield return dic;
-	}
+    ICollection<string> keys = null;
+    var isFirst = true;
+    foreach (IDictionary<string,object> r in rows)
+    {
+        if(isFirst)
+        {
+            keys = r.Keys;
+            isFirst = false;
+        }
+        
+        var dic = new Dictionary<int, object>();
+        var index = 0;
+        foreach (var key in keys)
+            dic[index++] = r[key];
+        yield return dic;
+    }
 }
 ```
 
@@ -1807,12 +1807,12 @@ IEnumerable :
 ```csharp
 public static IEnumerable<dynamic> QueryWithoutEmptyRow(Stream stream, bool useHeaderRow, string sheetName, ExcelType excelType, string startCell, IConfiguration configuration)
 {
-	var rows = stream.Query(useHeaderRow,sheetName,excelType,startCell,configuration);
-	foreach (IDictionary<string,object> row in rows)
-	{
-		if(row.Keys.Any(key=>row[key]!=null))
-			yield return row;
-	}
+    var rows = stream.Query(useHeaderRow,sheetName,excelType,startCell,configuration);
+    foreach (IDictionary<string,object> row in rows)
+    {
+        if(row.Keys.Any(key=>row[key]!=null))
+            yield return row;
+    }
 }
 ```
 
@@ -1823,43 +1823,43 @@ DataTable :
 ```csharp
 public static DataTable QueryAsDataTableWithoutEmptyRow(Stream stream, bool useHeaderRow, string sheetName, ExcelType excelType, string startCell, IConfiguration configuration)
 {
-	if (sheetName == null && excelType != ExcelType.CSV) /*Issue #279*/
-		sheetName = stream.GetSheetNames().First();
+    if (sheetName == null && excelType != ExcelType.CSV) /*Issue #279*/
+        sheetName = stream.GetSheetNames().First();
 
-	var dt = new DataTable(sheetName);
-	var first = true;
-	var rows = stream.Query(useHeaderRow,sheetName,excelType,startCell,configuration);
-	foreach (IDictionary<string, object> row in rows)
-	{
-		if (first)
-		{
+    var dt = new DataTable(sheetName);
+    var first = true;
+    var rows = stream.Query(useHeaderRow,sheetName,excelType,startCell,configuration);
+    foreach (IDictionary<string, object> row in rows)
+    {
+        if (first)
+        {
 
-			foreach (var key in row.Keys)
-			{
-				var column = new DataColumn(key, typeof(object)) { Caption = key };
-				dt.Columns.Add(column);
-			}
+            foreach (var key in row.Keys)
+            {
+                var column = new DataColumn(key, typeof(object)) { Caption = key };
+                dt.Columns.Add(column);
+            }
 
-			dt.BeginLoadData();
-			first = false;
-		}
+            dt.BeginLoadData();
+            first = false;
+        }
 
-		var newRow = dt.NewRow();
-		var isNull=true;
-		foreach (var key in row.Keys)
-		{
-			var _v = row[key];
-			if(_v!=null)
-				isNull = false;
-			newRow[key] = _v; 
-		}
-		
-		if(!isNull)
-			dt.Rows.Add(newRow);
-	}
+        var newRow = dt.NewRow();
+        var isNull=true;
+        foreach (var key in row.Keys)
+        {
+            var _v = row[key];
+            if(_v!=null)
+                isNull = false;
+            newRow[key] = _v; 
+        }
+        
+        if(!isNull)
+            dt.Rows.Add(newRow);
+    }
 
-	dt.EndLoadData();
-	return dt;
+    dt.EndLoadData();
+    return dt;
 }
 ```
 
@@ -1871,8 +1871,8 @@ public static DataTable QueryAsDataTableWithoutEmptyRow(Stream stream, bool useH
 Please use Stream class to custom file creating logic, e.g: 
 
 ```C#
-	using (var stream = File.Create("Demo.xlsx"))
-		MiniExcel.SaveAs(stream,value);
+    using (var stream = File.Create("Demo.xlsx"))
+        MiniExcel.SaveAs(stream,value);
 ```
 
 
@@ -1880,7 +1880,7 @@ Please use Stream class to custom file creating logic, e.g:
 or, since V1.25.0, SaveAs support overwriteFile parameter for enable/unable overwriting exist file
 
 ```csharp
-	MiniExcel.SaveAs(path, value, overwriteFile: true);
+    MiniExcel.SaveAs(path, value, overwriteFile: true);
 ```
 
 

@@ -1289,11 +1289,16 @@ public enum Type
 ```csharp
 MiniExcel.ConvertXlsxToCsv(xlsxPath, csvPath);
 MiniExcel.ConvertXlsxToCsv(xlsxStream, csvStream);
-MiniExcel.ConvertXlsxToCsv(csvPath, xlsxPath);
-MiniExcel.ConvertXlsxToCsv(csvStream, xlsxStream);
+MiniExcel.ConvertCsvToXlsx(csvPath, xlsxPath);
+MiniExcel.ConvertCsvToXlsx(csvStream, xlsxStream);
 ```
-
-
+```csharp
+using (var excelStream = new FileStream(path: filePath, FileMode.Open, FileAccess.Read))
+using (var csvStream = new MemoryStream())
+{
+   MiniExcel.ConvertXlsxToCsv(excelStream, csvStream);
+}
+```
 
 #### 3. 自定義 CultureInfo
 

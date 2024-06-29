@@ -14,6 +14,14 @@
 
 ---
 
+[<img align="right" src="https://github.com/dotnet-foundation/swag/blob/main/logo/dotnetfoundation_v4.png?raw=true" width="100" />](https://www.dotnetfoundation.org/)
+
+<div align="center">
+<p>該專案是 <a href="https://www.dotnetfoundation.org/">.NET 基金會</a> 的一部分，並根據其<a href="https://www.dotnetfoundation.org/code-of-conduct">行為準則</a> 運作。</p>
+</div>
+
+---
+
 <div align="center">
 <p> 您的 <a href="https://github.com/shps951023/miniexcel">Star</a> 和 <a href="https://miniexcel.github.io">贊助</a> 能幫助 MiniExcel 成長 </p>
 </div>

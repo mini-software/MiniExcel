@@ -8,6 +8,14 @@
 
 ---
 
+[<img align="right" src="https://github.com/dotnet-foundation/swag/blob/main/logo/dotnetfoundation_v4.png?raw=true" width="100" />](https://www.dotnetfoundation.org/)
+
+<div align="center">
+<p>This project is part of the <a href="https://www.dotnetfoundation.org/">.NET Foundation</a> and operates under their <a href="https://www.dotnetfoundation.org/code-of-conduct">code of conduct</a>. </p>
+</div>
+
+---
+
 <div align="center">
 <p><strong><a href="README.md">English</a> | <a href="README.zh-CN.md">简体中文</a> | <a href="README.zh-Hant.md">繁體中文</a></strong></p>
 </div>
@@ -28,7 +36,11 @@ At present, most popular frameworks need to load all the data into the memory to
 
 ![image](https://user-images.githubusercontent.com/12729184/113086657-ab8bd000-9214-11eb-9563-c970ac1ee35e.png)
 
+
+
+
 ### Features
+
 - Low memory consumption, avoid OOM (out of memory) and full GC
 - Support `real-time` operation of each row of data
 - Support LINQ deferred execution, it can do low-consumption, fast paging and other complex queries

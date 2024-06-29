@@ -17,7 +17,7 @@
 [<img align="right" src="https://github.com/dotnet-foundation/swag/blob/main/logo/dotnetfoundation_v4.png?raw=true" width="100" />](https://www.dotnetfoundation.org/)
 
 <div align="center">
-<p>該專案是 <a href="https://www.dotnetfoundation.org/">.NET 基金會</a> 的一部分，並根據其<a href="https://www.dotnetfoundation.org/code-of-conduct">行為準則</a> 運作。</p>
+<p>该项目属于 <a href="https://www.dotnetfoundation.org/">.NET 基金会</a> ，并根据其<a href="https://www.dotnetfoundation.org/code-of-conduct">行为准则</a> 运作。</p>
 </div>
 
 ---

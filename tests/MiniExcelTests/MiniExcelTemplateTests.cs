@@ -722,6 +722,34 @@ namespace MiniExcelTests
         }
 
         [Fact]
+        public void TestIEnumerableWithFormulas()
+        {
+            {
+                var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
+                var templatePath = @"../../../../../samples/xlsx/TestTemplateBasicIEnumerableFillWithFormulas.xlsx";
+
+                //1. By POCO
+                var value = new
+                {
+                    employees = new[]
+                    {
+                        new {name="Jack",department="HR", salary= 90000},
+                        new {name="Lisa",department="HR", salary=150000},
+                        new {name="John",department="HR", salary= 64000},
+                        new {name="Mike",department="IT", salary= 87000},
+                        new {name="Neo", department="IT", salary= 98000},
+                        new {name="Joan",department="IT", salary=120000}
+                    }
+                };
+                MiniExcel.SaveAsByTemplate(path, templatePath, value);
+
+                var dimension = Helpers.GetFirstSheetDimensionRefValue(path);
+                Assert.Equal("A1:C13", dimension);
+
+            }
+        }
+
+        [Fact]
         public void TemplateTest()
         {
             {

@@ -304,6 +304,10 @@ namespace MiniExcelLibs.OpenXml
                 int rowIndexDiff = 0;
                 var rowXml = new StringBuilder();
 
+                // for formula cells
+                int enumrowstart = -1;
+                int enumrowend = -1;
+
                 // for grouped cells
                 bool groupingStarted = false;
                 bool hasEverGroupStarted = false;
@@ -410,6 +414,7 @@ namespace MiniExcelLibs.OpenXml
                     {
                         var first = true;
                         var iEnumerableIndex = 0;
+                        enumrowstart = newRowIndex;
 
                         foreach (var item in rowInfo.CellIEnumerableValues)
                         {
@@ -732,14 +737,43 @@ namespace MiniExcelLibs.OpenXml
 
                             }
                         }
+
+                        enumrowend = newRowIndex-1;
                     }
                     else
                     {
+
+                        // convert cells starting with '$=' into formulas
+                        var cs = row.SelectNodes($"x:c", _ns);
+                        foreach (XmlElement c in cs)
+                        {
+                            /* Target:
+                             <c r="C8" s="3">
+                                <f>SUM(C2:C7)</f>
+                            </c>
+                             */
+                            var vs = c.SelectNodes($"x:v", _ns);
+                            foreach (XmlElement v in vs)
+                            {
+                                if (!v.InnerText.StartsWith("$="))
+                                {
+                                    continue;
+                                }
+                                var fNode = c.OwnerDocument.CreateElement("f", Config.SpreadsheetmlXmlns);
+                                fNode.InnerText = v.InnerText.Substring(2);
+                                c.InsertBefore(fNode, v);
+                                c.RemoveChild(v);
+                            }
+                        }
+                        innerXml = row.InnerXml;
+
                         rowXml.Clear()
                               .Append(outerXmlOpen)
                               .AppendFormat(@" r=""{0}"">", newRowIndex)
                               .Append(innerXml)
                               .Replace($"{{{{$rowindex}}}}", newRowIndex.ToString())
+                              .Replace($"{{{{$enumrowstart}}}}", enumrowstart.ToString())
+                              .Replace($"{{{{$enumrowend}}}}", enumrowend.ToString())
                               .AppendFormat("</{0}>", row.Name);
                         writer.Write(CleanXml(rowXml, endPrefix)); // pass StringBuilder for netcoreapp3.0 or above
 

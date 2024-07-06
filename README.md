@@ -963,9 +963,11 @@ MiniExcel.SaveAsByTemplate(path, templatePath, value);
 
 ##### 1. Example
 Prefix your formula with `$` and use `$enumrowstart` and `$enumrowend` to mark references to the enumerable start and end rows:
+
 ![image](docs/images/template-formulas-1.png)
 
 When the template is rendered, the `$` prefix will be removed and `$enumrowstart` and `$enumrowend` will be replaced with the start and end row numbers of the enumerable:
+
 ![image](docs/images/template-formulas-2.png)
 
 ##### 2. Other Example Formulas:

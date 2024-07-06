@@ -959,9 +959,25 @@ var value = new Dictionary<string, object>()
 };
 MiniExcel.SaveAsByTemplate(path, templatePath, value);
 ```
+#### 10. Formulas 
+
+##### 1. Example
+Prefix your formula with `$` and use `$enumrowstart` and `$enumrowend` to mark references to the enumerable start and end rows:
+![image](docs/images/template-formulas-1.png)
+
+When the template is rendered, the `$` prefix will be removed and `$enumrowstart` and `$enumrowend` will be replaced with the start and end row numbers of the enumerable:
+![image](docs/images/template-formulas-2.png)
+
+##### 2. Other Example Formulas:
+
+|            |                                                                                         |
+|------------|-----------------------------------------------------------------------------------------|
+|Sum         |`$=SUM(C{{$enumrowstart}}:C{{$enumrowend}})`                                             |
+|Alt. Average|`$=SUM(C{{$enumrowstart}}:C{{$enumrowend}}) / COUNT(C{{$enumrowstart}}:C{{$enumrowend}})`|
+|Range       |`$=MAX(C{{$enumrowstart}}:C{{$enumrowend}}) - MIN(C{{$enumrowstart}}:C{{$enumrowend}})`  |
 
 
-#### 10. Other
+#### 11. Other
 
 ##### 1. Checking template parameter key
 

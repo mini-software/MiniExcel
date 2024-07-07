@@ -22,9 +22,15 @@
 
 ---
 
+### 1.33.0
+- [New] Support Template formulas (#622) (via @meld-cp)
+- [New] Update DynamicConfiguration format (#595) (via @wangboshun)
+- [OPT] CSV enumeration and code reusage (#600) (via @duszekmestre)
+- [OPT] 1900 year DateTime correction #599 (via @duszekmestre)
+
 ### 1.32.1
-- [New] .NET5^ support image `ReadOnlySpan<byte>`
-- [Bug] Remove bug with Portable.System.DateTimeOnly and only support DateOnly .NET6^ #594
+- [New] .NET5^ support image `ReadOnlySpan<byte>`  (via @shps951023)
+- [Bug] Remove bug with Portable.System.DateTimeOnly and only support DateOnly .NET6^ #594 (via @shps951023)
 
 ### 1.32.0
 - [New] Using DynamicConfiguration when writing data using DataTable (via @pszybiak)

@@ -122,6 +122,8 @@
                     newValue = _v2;
                 else if (double.TryParse(vs, NumberStyles.None, CultureInfo.InvariantCulture, out var _d))
                     newValue = DateTimeHelper.FromOADate(_d);
+                else if (pInfo.Nullable && string.IsNullOrWhiteSpace(vs))
+                    newValue = null;
                 else
                     throw new InvalidCastException($"{vs} can't cast to datetime");
             }

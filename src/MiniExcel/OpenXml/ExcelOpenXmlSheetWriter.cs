@@ -133,6 +133,9 @@ namespace MiniExcelLibs.OpenXml
                 }
                 maxColumnIndex = props.Count;
 
+                //sheet view
+                WriteSheetViews(writer);
+
                 WriteColumnsWidths(writer, props);
 
                 writer.Write(WorksheetXml.StartSheetData);
@@ -331,6 +334,9 @@ namespace MiniExcelLibs.OpenXml
                 var prop = GetColumnInfosFromDynamicConfiguration(columnName);
                 props.Add(prop);
             }
+            
+            //sheet view
+            WriteSheetViews(writer);
 
             WriteColumnsWidths(writer, props);
 

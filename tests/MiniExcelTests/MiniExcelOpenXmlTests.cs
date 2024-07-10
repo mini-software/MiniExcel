@@ -1053,7 +1053,7 @@ namespace MiniExcelLibs.Tests
 
             Assert.Equal("A1:B3", Helpers.GetFirstSheetDimensionRefValue(path));
 
-            //File.Delete(path);
+            File.Delete(path);
         }
 
         [Fact()]

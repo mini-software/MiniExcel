@@ -263,6 +263,9 @@ namespace MiniExcelLibs.OpenXml
             //cols:width
             WriteColumnsWidths(writer, props);
 
+            //sheet view
+            WriteSheetViews(writer);
+
             //header
             writer.Write(WorksheetXml.StartSheetData);
             var yIndex = 1;
@@ -387,6 +390,23 @@ namespace MiniExcelLibs.OpenXml
             }
 
             writer.Write(WorksheetXml.EndCols);
+        }
+
+        private static void WriteSheetViews(MiniExcelStreamWriter writer) {
+            /*
+            <sheetViews>
+		        <sheetView tabSelected="1" workbookViewId="0">
+			        <pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/>
+			        <selection pane="bottomLeft"/>
+		        </sheetView>
+	        </sheetViews> 
+            */
+            writer.Write("<x:sheetViews>" /*TODO:WorksheetXml.StartSheetViews*/);
+            writer.Write("\t<x:sheetView tabSelected=\"1\" workbookViewId=\"0\">"); //TODO: do we need tabSelected and workbookViewId?
+            writer.Write("\t\t<x:pane ySplit=\"1\" topLeftCell=\"A2\" activePane=\"bottomLeft\" state=\"frozen\"/>");
+            writer.Write("\t\t<x:selection pane=\"bottomLeft\"/>");
+            writer.Write("\t</x:sheetView>");
+            writer.Write("</x:sheetViews>" /*TODO:WorksheetXml.EndSheetViews*/);
         }
 
         private static void PrintHeader(MiniExcelStreamWriter writer, List<ExcelColumnInfo> props)

@@ -13,8 +13,33 @@ namespace MiniExcelLibs.OpenXml.Constants
         internal static string Dimension(string dimensionRef)
             => $"{StartDimension}{dimensionRef}\"/>";
 
+        internal const string StartSheetViews = "<x:sheetViews>";
+        internal const string EndSheetViews = "</x:sheetViews>";
+
+        internal static string StartSheetView( int tabSelected=1, int workbookViewId=0 )
+            => $"<x:sheetView tabSelected=\"{tabSelected}\" workbookViewId=\"{workbookViewId}\">";
+        internal const string EndSheetView = "</x:sheetView>";
+
         internal const string StartSheetData = "<x:sheetData>";
         internal const string EndSheetData = "</x:sheetData>";
+
+        internal static string StartPane( int? xSplit, int? ySplit, string topLeftCell, string activePane, string state )
+            => string.Concat(
+                "<x:pane",
+                xSplit.HasValue ? $" xSplit=\"{xSplit.Value}\"" : string.Empty,
+                ySplit.HasValue ? $" ySplit=\"{ySplit.Value}\"" : string.Empty,
+                $" topLeftCell=\"{topLeftCell}\"",
+                $" activePane=\"{activePane}\"",
+                $" state=\"{state}\"",
+                "/>");
+
+        internal static string PaneSelection( string pane, string activeCell, string sqref)
+            => string.Concat(
+                $"<x:selection",
+                $" pane=\"{pane}\"",
+                string.IsNullOrWhiteSpace(activeCell) ? string.Empty : $" activeCell=\"{activeCell}\"",
+                string.IsNullOrWhiteSpace(sqref) ? string.Empty : $" sqref=\"{sqref}\"",
+                "/>");
 
         internal static string StartRow(int rowIndex)
             => $"<x:row r=\"{rowIndex}\">";

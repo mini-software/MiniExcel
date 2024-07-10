@@ -12,6 +12,8 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Text;
+using System.Xml;
+
 using static MiniExcelLibs.Utils.ImageHelper;
 
 namespace MiniExcelLibs.OpenXml
@@ -400,47 +402,18 @@ namespace MiniExcelLibs.OpenXml
             }
 
             // start sheetViews
-            writer.Write("<x:sheetViews>" /*TODO:WorksheetXml.StartSheetViews*/);
-            writer.Write("\t<x:sheetView tabSelected=\"1\" workbookViewId=\"0\">"); //TODO: do we need tabSelected and workbookViewId?
+            writer.Write(WorksheetXml.StartSheetViews);
+            writer.Write(WorksheetXml.StartSheetView());
 
             // Write panes
             WritePanes(writer);
 
             // end sheetViews
-            writer.Write("\t</x:sheetView>");
-            writer.Write("</x:sheetViews>" /*TODO:WorksheetXml.EndSheetViews*/);
+            writer.Write(WorksheetXml.EndSheetView);
+            writer.Write(WorksheetXml.EndSheetViews);
         }
 
         private void WritePanes(MiniExcelStreamWriter writer) {
-            /*
-            freeze row
-                <pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/>
-                <selection pane="bottomLeft"/>
-
-            freeze row and column
-                <pane xSplit="1" ySplit="2" topLeftCell="B3" activePane="bottomRight" state="frozen"/>
-                <selection pane="topRight" activeCell="B1" sqref="B1"/>
-                <selection pane="bottomLeft" activeCell="A3" sqref="A3"/>
-                <selection pane="bottomRight" activeCell="B3" sqref="B3"/>
-
-            Freeze column
-                <pane xSplit="1" topLeftCell="B1" activePane="topRight" state="frozen"/>
-                <selection pane="topRight" activeCell="A1" sqref="A1"/>
-            */
-            writer.Write($"\t\t<x:pane");
-            if (_configuration.FreezeColumnCount > 0)
-            {
-                writer.Write($" xSplit=\"{_configuration.FreezeColumnCount}\"");
-            }
-            if (_configuration.FreezeRowCount > 0)
-            {
-                writer.Write($" ySplit=\"{_configuration.FreezeRowCount}\"");
-            }
-            var topLeftCellRef = ExcelOpenXmlUtils.ConvertXyToCell(
-                _configuration.FreezeColumnCount + 1,
-                _configuration.FreezeRowCount + 1
-            );
-            writer.Write($" topLeftCell=\"{topLeftCellRef}\"");
 
             string activePane;
             if (_configuration.FreezeColumnCount > 0 && _configuration.FreezeRowCount > 0)
@@ -455,7 +428,16 @@ namespace MiniExcelLibs.OpenXml
             {
                 activePane = "bottomLeft";
             }
-            writer.Write($" activePane=\"{activePane}\" state=\"frozen\"/>");
+            writer.Write( WorksheetXml.StartPane(
+                xSplit: _configuration.FreezeColumnCount > 0 ? _configuration.FreezeColumnCount : (int?)null,
+                ySplit: _configuration.FreezeRowCount > 0 ? _configuration.FreezeRowCount : (int?)null,
+                topLeftCell: ExcelOpenXmlUtils.ConvertXyToCell(
+                    _configuration.FreezeColumnCount + 1,
+                    _configuration.FreezeRowCount + 1
+                ),
+                activePane: activePane,
+                state: "frozen"
+            ) );
 
             // write pane selections
             if (_configuration.FreezeColumnCount > 0 && _configuration.FreezeRowCount > 0)
@@ -467,13 +449,13 @@ namespace MiniExcelLibs.OpenXml
                  <selection pane="bottomRight" activeCell="B3" sqref="B3"/>
                  */
                 var cellTR = ExcelOpenXmlUtils.ConvertXyToCell(_configuration.FreezeColumnCount+1, 1);
-                writer.Write($"<x:selection pane=\"topRight\" activeCell=\"{cellTR}\" sqref=\"{cellTR}\"/>");
+                writer.Write(WorksheetXml.PaneSelection("topRight", cellTR, cellTR));
 
                 var cellBL = ExcelOpenXmlUtils.ConvertXyToCell(1, _configuration.FreezeRowCount+1);
-                writer.Write($"<x:selection pane=\"bottomLeft\" activeCell=\"{cellBL}\" sqref=\"{cellBL}\"/>");
+                writer.Write(WorksheetXml.PaneSelection("bottomLeft", cellBL, cellBL));
 
                 var cellBR = ExcelOpenXmlUtils.ConvertXyToCell(_configuration.FreezeColumnCount+1, _configuration.FreezeRowCount+1);
-                writer.Write($"<x:selection pane=\"bottomRight\" activeCell=\"{cellBR}\" sqref=\"{cellBR}\"/>");
+                writer.Write(WorksheetXml.PaneSelection("bottomRight", cellBR, cellBR));
             }
             else if ( _configuration.FreezeColumnCount > 0 )
             {
@@ -482,7 +464,8 @@ namespace MiniExcelLibs.OpenXml
                    <selection pane="topRight" activeCell="A1" sqref="A1"/>
                 */
                 var cellTR = ExcelOpenXmlUtils.ConvertXyToCell(_configuration.FreezeColumnCount, 1);
-                writer.Write($"<x:selection pane=\"topRight\" activeCell=\"{cellTR}\" sqref=\"{cellTR}\"/>");
+                writer.Write(WorksheetXml.PaneSelection("topRight", cellTR, cellTR));
+
             }
             else
             {
@@ -490,9 +473,10 @@ namespace MiniExcelLibs.OpenXml
                 /*
                     <selection pane="bottomLeft"/>
                 */
-                writer.Write("<x:selection pane=\"bottomLeft\"/>");
+                writer.Write(WorksheetXml.PaneSelection("bottomLeft", null, null));
+
             }
-            
+
         }
 
         private static void PrintHeader(MiniExcelStreamWriter writer, List<ExcelColumnInfo> props)

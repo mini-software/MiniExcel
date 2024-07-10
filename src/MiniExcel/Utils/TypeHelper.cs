@@ -75,7 +75,11 @@
 
         private static object TypeMappingImpl<T>(T v, ExcelColumnInfo pInfo, ref object newValue, object itemValue, Configuration _config) where T : class, new()
         {
-            if (pInfo.ExcludeNullableType == typeof(Guid))
+            if (pInfo.Nullable && string.IsNullOrWhiteSpace(itemValue?.ToString()))
+            {
+                newValue = null;
+            }
+            else if (pInfo.ExcludeNullableType == typeof(Guid))
             {
                 newValue = Guid.Parse(itemValue.ToString());
             }
@@ -149,15 +153,8 @@
             }
             else
             {
-                if (pInfo.Nullable && string.IsNullOrWhiteSpace(itemValue?.ToString()))
-                {
-                    newValue = null;
-                }
-                else
-                {
-                    // Use pInfo.ExcludeNullableType to resolve : https://github.com/shps951023/MiniExcel/issues/138
-                    newValue = Convert.ChangeType(itemValue, pInfo.ExcludeNullableType, _config.Culture);
-                }
+                // Use pInfo.ExcludeNullableType to resolve : https://github.com/shps951023/MiniExcel/issues/138
+                newValue = Convert.ChangeType(itemValue, pInfo.ExcludeNullableType, _config.Culture);
             }
 
             pInfo.Property.SetValue(v, newValue);

@@ -56,10 +56,10 @@ namespace MiniExcelLibs.Tests
             string path = GetTempXlsxPath();
             char[] chars = new char[] {'\u0000','\u0001','\u0002','\u0003','\u0004','\u0005','\u0006','\u0007','\u0008',
                 '\u0009', //<HT>
-	            '\u000A', //<LF>
-	            '\u000B','\u000C',
+                '\u000A', //<LF>
+                '\u000B','\u000C',
                  '\u000D', //<CR>
-	            '\u000E','\u000F','\u0010','\u0011','\u0012','\u0013','\u0014','\u0015','\u0016',
+                '\u000E','\u000F','\u0010','\u0011','\u0012','\u0013','\u0014','\u0015','\u0016',
                  '\u0017','\u0018','\u0019','\u001A','\u001B','\u001C','\u001D','\u001E','\u001F','\u007F'
             };
             var input = chars.Select(s => new { Test = s.ToString() });
@@ -821,6 +821,67 @@ namespace MiniExcelLibs.Tests
                 Assert.Equal("A1:B3", Helpers.GetFirstSheetDimensionRefValue(path));
                 File.Delete(path);
             }
+        }
+
+        [Fact()]
+        public void SaveAsFrozenRowsAndColumnsTest() {
+
+            var config = new OpenXmlConfiguration
+            {
+                FreezeRowCount = 1,
+                FreezeColumnCount = 2
+            };
+
+            {
+                // Test enumerable
+                var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
+                MiniExcel.SaveAs(
+                    path,
+                    new[] {
+                        new { Column1 = "MiniExcel", Column2 = 1 },
+                        new { Column1 = "Github", Column2 = 2}
+                    },
+                    configuration: config
+                );
+
+                using (var stream = File.OpenRead(path)) {
+                    var rows = stream.Query(useHeaderRow: true).ToList();
+
+                    Assert.Equal("MiniExcel", rows[0].Column1);
+                    Assert.Equal(1, rows[0].Column2);
+                    Assert.Equal("Github", rows[1].Column1);
+                    Assert.Equal(2, rows[1].Column2);
+                }
+
+                Assert.Equal("A1:B3", Helpers.GetFirstSheetDimensionRefValue(path));
+                //File.Delete(path);
+            }
+            
+            {
+                // test table
+                var table = new DataTable();
+                {
+                    table.Columns.Add("a", typeof(string));
+                    table.Columns.Add("b", typeof(decimal));
+                    table.Columns.Add("c", typeof(bool));
+                    table.Columns.Add("d", typeof(DateTime));
+                    table.Rows.Add("some text", 1234567890, true, DateTime.Now);
+                    table.Rows.Add(@"<test>Hello World</test>", -1234567890, false, DateTime.Now.Date);
+                }
+                var pathTable = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
+                MiniExcel.SaveAs(pathTable, table, configuration: config );
+
+                Assert.Equal("A1:D3", Helpers.GetFirstSheetDimensionRefValue(pathTable));
+
+
+                // data reader
+                var reader = table.CreateDataReader();
+                var pathReader = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
+
+                MiniExcel.SaveAs(pathReader, reader, configuration: config);
+                Assert.Equal("A1:D3", Helpers.GetFirstSheetDimensionRefValue(pathTable));
+            }
+
         }
 
         [Fact()]

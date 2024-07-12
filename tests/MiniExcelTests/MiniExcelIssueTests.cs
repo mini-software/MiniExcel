@@ -3553,7 +3553,7 @@ MyProperty4,MyProperty1,MyProperty5,MyProperty2,MyProperty6,,MyProperty3
 
             var config = new CsvConfiguration() {
                 //AlwaysQuote = true,
-                MergeLineBreaksWithinQuotes = true,
+                ReadLineBreaksWithinQuotes = true,
             };
 
             // create

@@ -3556,7 +3556,8 @@ MyProperty4,MyProperty1,MyProperty5,MyProperty2,MyProperty6,,MyProperty3
                 new() { A = "Microsoft\"\" \r\nTest\n3", B = DateTime.Parse("2021-02-01"), C = "a\"\"\nb\n\nc", D = 123 },
             };
 
-            var config = new CsvConfiguration() {
+            var config = new CsvConfiguration()
+            {
                 //AlwaysQuote = true,
                 ReadLineBreaksWithinQuotes = true,
             };
@@ -3599,13 +3600,15 @@ MyProperty4,MyProperty1,MyProperty5,MyProperty2,MyProperty6,,MyProperty3
                 new() { B = DateTime.Parse("2021-02-01"), D = 123 },
             };
 
-            var config = new CsvConfiguration() {
+            var config = new CsvConfiguration()
+            {
                 //AlwaysQuote = true,
                 ReadLineBreaksWithinQuotes = true,
             };
 
             // create
-            using (var stream = File.Create(path)) {
+            using (var stream = File.Create(path))
+            {
                 stream.SaveAs(values, excelType: ExcelType.CSV, configuration: config);
             }
 
@@ -3613,6 +3616,29 @@ MyProperty4,MyProperty1,MyProperty5,MyProperty2,MyProperty6,,MyProperty3
             var getRowsInfo = MiniExcel.Query<Issue507V02>(path, excelType: ExcelType.CSV, configuration: config).ToArray();
 
             Assert.Equal(values.Length, getRowsInfo.Count());
+
+        }
+
+        [Fact]
+        public void Issue507_3_MismatchedQuoteCsv() {
+            //Problem with multi-line when using Query func
+            //https://github.com/mini-software/MiniExcel/issues/507
+
+            var config = new CsvConfiguration()
+            {
+                //AlwaysQuote = true,
+                ReadLineBreaksWithinQuotes = true,
+            };
+
+            var badCsv = "A,B,C\n\"r1a: no end quote,r1b,r1c";
+
+            // create
+            using var stream = new MemoryStream( Encoding.UTF8.GetBytes( badCsv ) );
+
+            // read
+            var getRowsInfo = MiniExcel.Query( stream, excelType: ExcelType.CSV, configuration: config ).ToArray();
+
+            Assert.Equal(2, getRowsInfo.Length );
 
         }
     }

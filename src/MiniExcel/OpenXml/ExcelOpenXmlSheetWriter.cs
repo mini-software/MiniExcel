@@ -143,7 +143,10 @@ namespace MiniExcelLibs.OpenXml
                 if (_printHeader)
                 {
                     PrintHeader(writer, props);
-                    yIndex++;
+                    if (props.Count > 0)
+                    {
+                        yIndex++;
+                    }
                 }
 
                 while (reader.Read())

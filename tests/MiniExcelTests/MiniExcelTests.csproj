@@ -24,6 +24,11 @@
 		<PackageReference Include="ExcelDataReader.DataSet" Version="3.6.0" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
 		<PackageReference Include="NPOI" Version="2.7.0" />
+		<PackageReference Include="NSubstitute" Version="5.1.0" />
+		<PackageReference Include="NSubstitute.Analyzers.CSharp" Version="1.0.17">
+		  <PrivateAssets>all</PrivateAssets>
+		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
 		<PackageReference Include="System.Data.SQLite.Core" Version="1.0.115.5" />
 		<PackageReference Include="System.Text.Encoding.CodePages" Version="5.0.0" />
 

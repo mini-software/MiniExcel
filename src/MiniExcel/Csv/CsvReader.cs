@@ -33,7 +33,16 @@ namespace MiniExcelLibs.Csv
                 string row;
                 for (var rowIndex = 1; (row = reader.ReadLine()) != null; rowIndex++)
                 {
-                    read = Split(row);
+
+                    string finalRow = row;
+                    if (_config.ReadLineBreaksWithinQuotes)
+                    {
+                        while (finalRow.Count(c => c == '"') % 2 != 0)
+                        {
+                            finalRow += string.Concat( _config.NewLine, reader.ReadLine());
+                        }
+                    }
+                    read = Split(finalRow);
 
                     // invalid row check
                     if (read.Length < headRows.Count)

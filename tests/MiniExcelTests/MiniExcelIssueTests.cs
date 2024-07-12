@@ -3183,10 +3183,10 @@ MyProperty4,MyProperty1,MyProperty5,MyProperty2,MyProperty6,,MyProperty3
         {
             var chars = new char[] {'\u0000','\u0001','\u0002','\u0003','\u0004','\u0005','\u0006','\u0007','\u0008',
                 '\u0009', //<HT>
-	           '\u000A', //<LF>
-	           '\u000B','\u000C',
+               '\u000A', //<LF>
+               '\u000B','\u000C',
                 '\u000D', //<CR>
-	           '\u000E','\u000F','\u0010','\u0011','\u0012','\u0013','\u0014','\u0015','\u0016',
+               '\u000E','\u000F','\u0010','\u0011','\u0012','\u0013','\u0014','\u0015','\u0016',
                 '\u0017','\u0018','\u0019','\u001A','\u001B','\u001C','\u001D','\u001E','\u001F','\u007F'
             }.Select(s => s.ToString()).ToArray();
 
@@ -3525,6 +3525,95 @@ MyProperty4,MyProperty1,MyProperty5,MyProperty2,MyProperty6,,MyProperty3
 
             var items3 = MiniExcel.Query<Issue585VO3>(path);
             Assert.Equal(2, items3.Count());
+        }
+
+
+        class Issue507V01
+        {
+            public string A { get; set; }
+            public DateTime B { get; set; }
+            public string C { get; set; }
+            public int D { get; set; }
+        }
+
+        class Issue507V02 {
+            public DateTime B { get; set; }
+            public int D { get; set; }
+        }
+
+        [Fact]
+        public void Issue507_1()
+        {
+            //Problem with multi-line when using Query func
+            //https://github.com/mini-software/MiniExcel/issues/507
+
+            var path = Path.Combine(Path.GetTempPath(), string.Concat( nameof(MiniExcelIssueTests),"_", nameof(Issue507_1), ".csv" ));
+            var values = new Issue507V01[]
+            {
+                new() { A = "Github", B = DateTime.Parse("2021-01-01"), C = "abcd", D = 123 },
+                new() { A = "Microsoft \nTest 1", B = DateTime.Parse("2021-02-01"), C = "efgh", D = 123 },
+                new() { A = "Microsoft \rTest 2", B = DateTime.Parse("2021-02-01"), C = "ab\nc\nd", D = 123 },
+                new() { A = "Microsoft\"\" \r\nTest\n3", B = DateTime.Parse("2021-02-01"), C = "a\"\"\nb\n\nc", D = 123 },
+            };
+
+            var config = new CsvConfiguration() {
+                //AlwaysQuote = true,
+                ReadLineBreaksWithinQuotes = true,
+            };
+
+            // create
+            using (var stream = File.Create(path))
+            {
+                stream.SaveAs(values, excelType: ExcelType.CSV, configuration: config);
+            }
+
+            // read
+            var getRowsInfo = MiniExcel.Query<Issue507V01>(path, excelType: ExcelType.CSV, configuration: config).ToArray();
+            
+            Assert.Equal(values.Length, getRowsInfo.Count());
+            
+            Assert.Equal("Github", getRowsInfo[0].A);
+            Assert.Equal("abcd", getRowsInfo[0].C);
+
+            Assert.Equal(@$"Microsoft {config.NewLine}Test 1", getRowsInfo[1].A);
+            Assert.Equal("efgh", getRowsInfo[1].C);
+
+            Assert.Equal(@$"Microsoft {config.NewLine}Test 2", getRowsInfo[2].A);
+            Assert.Equal($"ab{config.NewLine}c{config.NewLine}d", getRowsInfo[2].C);
+
+            Assert.Equal(@$"Microsoft"""" {config.NewLine}Test{config.NewLine}3", getRowsInfo[3].A);
+            Assert.Equal(@$"a""""{config.NewLine}b{config.NewLine}{config.NewLine}c", getRowsInfo[3].C);
+        }
+
+        [Fact]
+        public void Issue507_2() {
+            //Problem with multi-line when using Query func
+            //https://github.com/mini-software/MiniExcel/issues/507
+
+            var path = Path.Combine(Path.GetTempPath(), string.Concat(nameof(MiniExcelIssueTests), "_", nameof(Issue507_2), ".csv"));
+            var values = new Issue507V02[]
+            {
+                new() { B = DateTime.Parse("2021-01-01"), D = 123 },
+                new() { B = DateTime.Parse("2021-02-01"), D = 123 },
+                new() { B = DateTime.Parse("2021-02-01"), D = 123 },
+                new() { B = DateTime.Parse("2021-02-01"), D = 123 },
+            };
+
+            var config = new CsvConfiguration() {
+                //AlwaysQuote = true,
+                ReadLineBreaksWithinQuotes = true,
+            };
+
+            // create
+            using (var stream = File.Create(path)) {
+                stream.SaveAs(values, excelType: ExcelType.CSV, configuration: config);
+            }
+
+            // read
+            var getRowsInfo = MiniExcel.Query<Issue507V02>(path, excelType: ExcelType.CSV, configuration: config).ToArray();
+
+            Assert.Equal(values.Length, getRowsInfo.Count());
+
         }
     }
 }

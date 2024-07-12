@@ -10,6 +10,7 @@ namespace MiniExcelLibs.Csv
 
         public char Seperator { get; set; } = ',';
         public string NewLine { get; set; } = "\r\n";
+        public bool ReadLineBreaksWithinQuotes { get; set; } = true;
         public bool ReadEmptyStringAsNull { get; set; } = false;
         public bool AlwaysQuote { get; set; } = false;
         public Func<string, string[]> SplitFn { get; set; }

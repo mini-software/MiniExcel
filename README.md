@@ -658,6 +658,22 @@ MiniExcel.SaveAs(@"C:\temp\Book1.xlsx", dt, configuration: configuration);
 
 Works for null and DBNull values.
 
+#### 14. Freeze Panes
+```csharp
+/* ... */
+
+OpenXmlConfiguration configuration = new OpenXmlConfiguration()
+{
+    FreezeRowCount = 1,     // default is 1
+    FreezeColumnCount = 2   // default is 0
+};
+
+MiniExcel.SaveAs(@"C:\temp\Book1.xlsx", dt, configuration: configuration);
+```
+
+![image](docs/images/freeze-pane-1.png)
+
+
 ### Fill Data To Excel Template <a name="getstart3"></a>
 
 - The declaration is similar to Vue template `{{variable name}}`, or the collection rendering `{{collection name.field name}}`

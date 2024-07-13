@@ -40,10 +40,11 @@ namespace MiniExcelLibs.Csv
                         while (finalRow.Count(c => c == '"') % 2 != 0)
                         {
                             var nextPart = reader.ReadLine();
-                            if (nextPart == null ) {
+                            if (nextPart == null)
+                            {
                                 break;
                             }
-							finalRow = string.Concat( finalRow, _config.NewLine, nextPart );
+                            finalRow = string.Concat(finalRow, _config.NewLine, nextPart);
                         }
                     }
                     read = Split(finalRow);

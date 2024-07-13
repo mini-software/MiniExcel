@@ -3,6 +3,7 @@ using MiniExcelLibs.Attributes;
 using MiniExcelLibs.OpenXml;
 using MiniExcelLibs.Tests.Utils;
 using Newtonsoft.Json;
+using NSubstitute;
 using OfficeOpenXml;
 using System;
 using System.Collections.Generic;
@@ -703,6 +704,19 @@ namespace MiniExcelLibs.Tests
                 Assert.Equal(3.0, rows[1].Test1);
                 Assert.Equal(4.0, rows[1].Test2);
             }
+        }
+
+        [Fact]
+        public async Task EmptyDataReaderIssue()
+        {
+            var path = PathHelper.GetTempPath();
+
+            var reader = Substitute.For<IDataReader>();
+            MiniExcel.SaveAs(path, reader, overwriteFile: true);
+
+            var q = await MiniExcel.QueryAsync(path, true);
+            var rows = q.ToList();
+            Assert.Empty(rows);
         }
 
         /// <summary>

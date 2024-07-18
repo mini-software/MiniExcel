@@ -166,6 +166,21 @@ namespace MiniExcelLibs.Tests
 
             }
         }
+        
+        [Fact]
+        public void QueryRangeToIDictionary()
+        {
+            var path = @"../../../../../samples/xlsx/TestCenterEmptyRow/TestCenterEmptyRow.xlsx";
+            // tips：Only uppercase letters are effective
+            var rows = MiniExcel.QueryRange(path, startCell: "A2", endCell: "C")
+                .Cast<IDictionary<string, object>>()
+                .ToList();
+            Assert.Equal(5, rows.Count);
+            Assert.Equal(3, rows[0].Count);
+            Assert.Equal(2d, rows[1]["B"]);
+            Assert.Equal(null!, rows[2]["A"]);
+        }
+        
         [Fact()]
         public void CenterEmptyRowsQueryTest()
         {

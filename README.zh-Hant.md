@@ -265,6 +265,10 @@ foreach(IDictionary<string,object> row in MiniExcel.Query(path))
 
 // or
 var rows = MiniExcel.Query(path).Cast<IDictionary<string,object>>();
+// or 査詢指定範圍（要大寫才生效哦）
+// A2（左上角）代表A列的第二行，C3（右下角）代表C列的第三行
+// 如果你不想限制行，就不要包含數位
+var rows = MiniExcel.QueryRange(path, startCell: "A2", endCell: "C3").Cast<IDictionary<string, object>>();
 ```
 
 

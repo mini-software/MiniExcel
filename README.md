@@ -259,6 +259,10 @@ foreach(IDictionary<string,object> row in MiniExcel.Query(path))
 
 // or
 var rows = MiniExcel.Query(path).Cast<IDictionary<string,object>>();
+// or Query specified ranges (capitalized)
+// A2 represents the second row of column A, C3 represents the third row of column C
+// If you don't want to restrict rows, just don't include numbers
+var rows = MiniExcel.QueryRange(path, startCell: "A2", endCell: "C3").Cast<IDictionary<string, object>>();
 ```
 
 

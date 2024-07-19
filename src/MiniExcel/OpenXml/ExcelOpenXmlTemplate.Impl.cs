@@ -105,7 +105,9 @@ namespace MiniExcelLibs.OpenXml
             }
         }
 
-        private List<XRowInfo> XRowInfos { get; set; }
+		private List<XRowInfo> XRowInfos { get; set; }
+
+        private readonly List<string> CalcChainCellRefs = new List<string>();
 
         private Dictionary<string, XMergeCell> XMergeCellInfos { get; set; }
         public List<XMergeCell> NewXMergeCellInfos { get; private set; }
@@ -688,7 +690,10 @@ namespace MiniExcelLibs.OpenXml
 
                             var mergeBaseRowIndex = newRowIndex;
                             newRowIndex += rowInfo.IEnumerableMercell?.Height ?? 1;
-                            writer.Write(CleanXml(rowXml, endPrefix)); // pass StringBuilder for netcoreapp3.0 or above
+
+							// replace formulas
+							ProcessFormulas( rowXml, newRowIndex );
+							writer.Write(CleanXml( rowXml, endPrefix)); // pass StringBuilder for netcoreapp3.0 or above
 
                             //mergecells
                             if (rowInfo.RowMercells != null)
@@ -743,30 +748,6 @@ namespace MiniExcelLibs.OpenXml
                     else
                     {
 
-                        // convert cells starting with '$=' into formulas
-                        var cs = row.SelectNodes($"x:c", _ns);
-                        foreach (XmlElement c in cs)
-                        {
-                            /* Target:
-                             <c r="C8" s="3">
-                                <f>SUM(C2:C7)</f>
-                            </c>
-                             */
-                            var vs = c.SelectNodes($"x:v", _ns);
-                            foreach (XmlElement v in vs)
-                            {
-                                if (!v.InnerText.StartsWith("$="))
-                                {
-                                    continue;
-                                }
-                                var fNode = c.OwnerDocument.CreateElement("f", Config.SpreadsheetmlXmlns);
-                                fNode.InnerText = v.InnerText.Substring(2);
-                                c.InsertBefore(fNode, v);
-                                c.RemoveChild(v);
-                            }
-                        }
-                        innerXml = row.InnerXml;
-
                         rowXml.Clear()
                               .Append(outerXmlOpen)
                               .AppendFormat(@" r=""{0}"">", newRowIndex)
@@ -775,7 +756,10 @@ namespace MiniExcelLibs.OpenXml
                               .Replace($"{{{{$enumrowstart}}}}", enumrowstart.ToString())
                               .Replace($"{{{{$enumrowend}}}}", enumrowend.ToString())
                               .AppendFormat("</{0}>", row.Name);
-                        writer.Write(CleanXml(rowXml, endPrefix)); // pass StringBuilder for netcoreapp3.0 or above
+
+						ProcessFormulas( rowXml, newRowIndex );
+
+						writer.Write(CleanXml( rowXml, endPrefix)); // pass StringBuilder for netcoreapp3.0 or above
 
                         //mergecells
                         if (rowInfo.RowMercells != null)
@@ -810,6 +794,59 @@ namespace MiniExcelLibs.OpenXml
                 writer.Write(contents[1]);
             }
         }
+        
+        private void ProcessFormulas( StringBuilder rowXml, int rowIndex )
+        {
+
+            var rowXmlString = rowXml.ToString();
+
+            // exit early if possible
+            if ( !rowXmlString.Contains( "$=" ) ) {
+                return;
+            }
+
+			XmlReaderSettings settings = new XmlReaderSettings { NameTable = _ns.NameTable };
+			XmlParserContext context = new XmlParserContext( null, _ns, "", XmlSpace.Default );
+			XmlReader reader = XmlReader.Create( new StringReader( rowXmlString ), settings, context );
+            
+            XmlDocument d = new XmlDocument();
+            d.Load( reader );
+
+            var row = d.FirstChild as XmlElement;
+
+			// convert cells starting with '$=' into formulas
+			var cs = row.SelectNodes( $"x:c", _ns );
+			for ( var ci = 0; ci < cs.Count; ci++ )
+            {
+				var c = cs.Item( ci ) as XmlElement;
+				if ( c == null ) {
+					continue;
+				}
+				/* Target:
+				 <c r="C8" s="3">
+					<f>SUM(C2:C7)</f>
+				</c>
+				 */
+				var vs = c.SelectNodes( $"x:v", _ns );
+				foreach ( XmlElement v in vs )
+                {
+					if ( !v.InnerText.StartsWith( "$=" ) )
+                    {
+						continue;
+					}
+					var fNode = c.OwnerDocument.CreateElement( "f", Config.SpreadsheetmlXmlns );
+					fNode.InnerText = v.InnerText.Substring( 2 );
+					c.InsertBefore( fNode, v );
+					c.RemoveChild( v );
+
+					var celRef = ExcelOpenXmlUtils.ConvertXyToCell( ci + 1, rowIndex );
+					CalcChainCellRefs.Add( celRef );
+
+				}
+			}
+            rowXml.Clear();
+			rowXml.Append( row.OuterXml );
+		}
 
         private static string ConvertToDateTimeString(KeyValuePair<string, PropInfo> propInfo, object cellValue)
         {

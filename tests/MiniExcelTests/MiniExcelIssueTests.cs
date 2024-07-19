@@ -3641,5 +3641,54 @@ MyProperty4,MyProperty1,MyProperty5,MyProperty2,MyProperty6,,MyProperty3
             Assert.Equal(2, getRowsInfo.Length );
 
         }
+
+
+        [Fact]
+        public void Issue606_1()
+        {
+			// excel max rows: 1,048,576
+			// before changes: 1999999 => 25.8 GB mem
+			//  after changes: 1999999 => peaks at 3.2 GB mem (10:20 min)
+			//  after changes:  100000 => peaks at 222 MB mem (34 sec)
+
+			var value = new {
+                Title = "My Title",
+                OrderInfo = Enumerable
+                    .Range( 1, 100 )
+                    .Select( x => new
+                    {
+                        Standard = "standard",
+                        RegionName = "region",
+                        DealerName = "department",
+                        SalesPointName = "region",
+                        CustomerName = "customer",
+                        IdentityType = "aaaaaa",
+                        IdentitySeries = "ssssss",
+                        IdentityNumber = "nnnnn",
+                        BirthDate = "date",
+                        TariffPlanName = "plan",
+                        PhoneNumber = "num",
+                        SimCardIcc = "sss",
+                        BisContractNumber = "eee",
+                        CreatedAt = "dd.mm.yyyy",
+                        UserDescription = "fhtyrhthrthrt",
+                        UserName = "dfsfsdfds",
+                        PaymentsAmount = "dfhgdfgadfgdfg",
+                        OrderState = "agafgdafgadfgd",
+                    })
+             };
+
+			var path = Path.Combine(
+                Path.GetTempPath(),
+                string.Concat( nameof( MiniExcelIssueTests ), "_", nameof( Issue606_1 ), ".xlsx" )
+            );
+
+            var templateFileName = @"../../../../../samples/xlsx/TestIssue606_Template.xlsx";
+
+
+			MiniExcel.SaveAsByTemplate( path, Path.GetFullPath( templateFileName ), value );
+
+        }
+
     }
 }

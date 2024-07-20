@@ -1,4 +1,4 @@
-﻿using Dapper;
+using Dapper;
 using MiniExcelLibs.Attributes;
 using MiniExcelLibs.Csv;
 using MiniExcelLibs.Exceptions;
@@ -3646,12 +3646,13 @@ MyProperty4,MyProperty1,MyProperty5,MyProperty2,MyProperty6,,MyProperty3
         [Fact]
         public void Issue606_1()
         {
-			// excel max rows: 1,048,576
-			// before changes: 1999999 => 25.8 GB mem
-			//  after changes: 1999999 => peaks at 3.2 GB mem (10:20 min)
-			//  after changes:  100000 => peaks at 222 MB mem (34 sec)
+            // excel max rows: 1,048,576
+            // before changes: 1999999 => 25.8 GB mem
+            //  after changes: 1999999 => peaks at 3.2 GB mem (10:20 min)
+            //  after changes:  100000 => peaks at 222 MB mem (34 sec)
 
-			var value = new {
+            var value = new
+            {
                 Title = "My Title",
                 OrderInfo = Enumerable
                     .Range( 1, 100 )
@@ -3676,9 +3677,10 @@ MyProperty4,MyProperty1,MyProperty5,MyProperty2,MyProperty6,,MyProperty3
                         PaymentsAmount = "dfhgdfgadfgdfg",
                         OrderState = "agafgdafgadfgd",
                     })
-             };
+            };
 
-			var path = Path.Combine(
+            var path = Path.Combine
+            (
                 Path.GetTempPath(),
                 string.Concat( nameof( MiniExcelIssueTests ), "_", nameof( Issue606_1 ), ".xlsx" )
             );
@@ -3686,7 +3688,7 @@ MyProperty4,MyProperty1,MyProperty5,MyProperty2,MyProperty6,,MyProperty3
             var templateFileName = @"../../../../../samples/xlsx/TestIssue606_Template.xlsx";
 
 
-			MiniExcel.SaveAsByTemplate( path, Path.GetFullPath( templateFileName ), value );
+            MiniExcel.SaveAsByTemplate( path, Path.GetFullPath( templateFileName ), value );
 
         }
 

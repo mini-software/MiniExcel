@@ -51,7 +51,7 @@ Todo : https://github.com/mini-software/MiniExcel/projects/1?fullscreen=true</De
 	</ItemGroup>
 	<ItemGroup>
 		<None Include="icon.png" Pack="true" PackagePath="\" />
-		<None Include="..\..\README-NuGet.md" Link="README.md" Pack="true" PackagePath="" />
+		<None Include="..\..\README-NuGet.md" Link="README.md" Pack="true" PackagePath="README.md" />
 	</ItemGroup>
 	<ItemGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
 		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />

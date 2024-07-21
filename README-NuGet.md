@@ -1,7 +1,5 @@
 
-![](https://github.com/dotnet-foundation/swag/blob/main/logo/dotnetfoundation_v4_horizontal.png?raw=true)
-
-This project is part of the .NET Foundation and operates under their code of conduct.
+This project is part of the [.NET Foundation](https://dotnetfoundation.org/projects/project-detail/miniexcel) and operates under their code of conduct.
 
 ---
 

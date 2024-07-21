@@ -25,7 +25,8 @@ namespace MiniExcelLibs.OpenXml
             _isExpressionRegex = new Regex("(?<={{).*?(?=}})");
             _ns = new XmlNamespaceManager(new NameTable());
             _ns.AddNamespace("x", Config.SpreadsheetmlXmlns);
-        }
+            _ns.AddNamespace( "x14ac", Config.SpreadsheetmlXml_x14ac );
+		}
 
         private readonly Stream _stream;
         private readonly OpenXmlConfiguration _configuration;
@@ -118,10 +119,7 @@ namespace MiniExcelLibs.OpenXml
                         using (var filledStream = entry.Open())
                         {
                             sheetIdx++;
-                            var filledDoc = new XmlDocument();
-                            filledDoc.Load(filledStream);
-                            var filledSheetData = filledDoc.SelectSingleNode("/x:worksheet/x:sheetData", _ns);
-                            _calcChainContent.Append(CalcChainHelper.GetCalcChainContentFromSheet(filledSheetData, _ns, sheetIdx));
+                            _calcChainContent.Append( CalcChainHelper.GetCalcChainContent( CalcChainCellRefs, sheetIdx ) );
                         }
                     }
 

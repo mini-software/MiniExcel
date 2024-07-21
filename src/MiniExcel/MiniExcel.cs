@@ -91,6 +91,21 @@
 
         #region range
 
+        /// <summary>
+        /// Extract the given range。 Only uppercase letters are effective。
+        /// e.g.
+        ///     MiniExcel.QueryRange(path, startCell: "A2", endCell: "C3")
+        ///     A2 represents the second row of column A, C3 represents the third row of column C
+        ///     If you don't want to restrict rows, just don't include numbers
+        /// </summary>
+        /// <param name="path"></param>
+        /// <param name="useHeaderRow"></param>
+        /// <param name="sheetName"></param>
+        /// <param name="excelType"></param>
+        /// <param name="startCell">top left corner</param>
+        /// <param name="endCell">lower right corner</param>
+        /// <param name="configuration"></param>
+        /// <returns></returns>
         public static IEnumerable<dynamic> QueryRange(string path, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "a1", string endCell = "", IConfiguration configuration = null)
         {
             using (var stream = FileHelper.OpenSharedRead(path))

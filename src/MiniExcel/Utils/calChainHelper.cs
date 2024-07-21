@@ -1,6 +1,6 @@
-﻿using System.IO;
+﻿using System.Collections.Generic;
+using System.IO;
 using System.Text;
-using System.Xml;
 
 namespace MiniExcelLibs.Utils
 {
@@ -13,22 +13,18 @@ namespace MiniExcelLibs.Utils
         //      Each <c> element should have a r attribute that specifies the cell's address (e.g., "A1" or "B2").
         //      The  <c> element should also have a i attribute that specifies the index of the formula in the formulas collection (in the workbook's sheet data file).
         // https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.spreadsheet.calculationchain?view=openxml-2.8.1
-        public static string GetCalcChainContentFromSheet(in XmlNode sheetData, XmlNamespaceManager ns, int sheetIndex)
-        {
+		public static string GetCalcChainContent( List<string> cellRefs, int sheetIndex ) {
 
-            StringBuilder calcChainContent = new StringBuilder();
+			StringBuilder calcChainContent = new StringBuilder();
 
-            // each c having f nodes
-            var cs = sheetData.SelectNodes($"x:row/x:c[./x:f]", ns);
-            foreach (XmlElement c in cs)
-            {
-                calcChainContent.Append($@"<c r=""{c.GetAttribute("r")}"" i=""{sheetIndex}""/>");
-            }
+			foreach ( string cr in cellRefs ) {
+				calcChainContent.Append( $@"<c r=""{cr}"" i=""{sheetIndex}""/>" );
+			}
 
-            return calcChainContent.ToString();
-        }
+			return calcChainContent.ToString();
+		}
 
-        public static void GenerateCalcChainSheet(Stream calcChainStream, string calcChainContent)
+		public static void GenerateCalcChainSheet(Stream calcChainStream, string calcChainContent)
         {
             using (var writer = new StreamWriter(calcChainStream, Encoding.UTF8))
             {

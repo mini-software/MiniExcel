@@ -3719,7 +3719,10 @@ MyProperty4,MyProperty1,MyProperty5,MyProperty2,MyProperty6,,MyProperty3
                 TableStyles = TableStyles.None,
                 DynamicColumns = new DynamicExcelColumn[]
                 {
-                    new DynamicExcelColumn("Time") { Index = 0, Width = 20, Format = CultureInfo.CurrentCulture.DateTimeFormat.ShortDatePattern + " " + CultureInfo.CurrentCulture.DateTimeFormat.LongTimePattern },
+                    //new DynamicExcelColumn("Time") { Index = 0, Width = 20, Format = CultureInfo.CurrentCulture.DateTimeFormat.ShortDatePattern + " " + CultureInfo.CurrentCulture.DateTimeFormat.LongTimePattern },
+                    //new DynamicExcelColumn("Time") { Index = 0, Width = 20, Format = CultureInfo.InvariantCulture.DateTimeFormat.ShortDatePattern + " " + CultureInfo.InvariantCulture.DateTimeFormat.LongTimePattern },
+                    //new DynamicExcelColumn("Time") { Index = 0, Width = 20 },
+                    new DynamicExcelColumn("Time") { Index = 0, Width = 20, Format = "d.MM.yyyy" },
                 }
             };
 

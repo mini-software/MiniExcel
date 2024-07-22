@@ -1,6 +1,7 @@
 ﻿using MiniExcelLibs.Attributes;
 using MiniExcelLibs.OpenXml.Constants;
 using MiniExcelLibs.OpenXml.Models;
+using MiniExcelLibs.OpenXml.Styles;
 using MiniExcelLibs.Utils;
 using MiniExcelLibs.Zip;
 using System;
@@ -364,9 +365,9 @@ namespace MiniExcelLibs.OpenXml
             switch (_configuration.TableStyles)
             {
                 case TableStyles.None:
-                    return ExcelXml.SetupStyleXml(ExcelXml.NoneStylesXml, columns);
+                    return new MinimalSheetStyleBuilder().Build( columns);
                 case TableStyles.Default:
-                    return ExcelXml.SetupStyleXml(ExcelXml.DefaultStylesXml, columns);
+                    return new DefaultSheetStyleBuilder().Build( columns );
                 default:
                     return string.Empty;
             }

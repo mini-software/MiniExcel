@@ -1,4 +1,4 @@
-using Dapper;
+﻿using Dapper;
 using MiniExcelLibs.Attributes;
 using MiniExcelLibs.Csv;
 using MiniExcelLibs.Exceptions;
@@ -3692,5 +3692,47 @@ MyProperty4,MyProperty1,MyProperty5,MyProperty2,MyProperty6,,MyProperty3
 
         }
 
+        [Fact]
+        public void Issue632_1()
+        {
+            //https://github.com/mini-software/MiniExcel/issues/632
+            var values = new List<Dictionary<string, object>>();
+
+            foreach ( var item in Enumerable.Range( 1, 100 ) ) {
+                var dict = new Dictionary<string, object>
+                {
+                    { "Id", item },
+                    { "Time", DateTime.Now.ToLocalTime() },
+                    { "CPU Usage (%)", Math.Round( 56.345, 1 ) },
+                    { "Memory Usage (%)", Math.Round( 98.234, 1 ) },
+                    { "Disk Usage (%)", Math.Round( 32.456, 1 ) },
+                    { "CPU Temperature (°C)", Math.Round( 74.234, 1 ) },
+                    { "Voltage (V)", Math.Round( 6.3223, 1 ) },
+                    { "Network Usage (Kb/s)", Math.Round( 4503.23422, 1 ) },
+                    { "Instrument", "QT800050" }
+                };
+                values.Add( dict );
+            }
+
+            var config = new OpenXmlConfiguration
+            {
+                TableStyles = TableStyles.None,
+                DynamicColumns = new DynamicExcelColumn[]
+                {
+                    //new DynamicExcelColumn("Time") { Index = 0, Width = 20, Format = CultureInfo.CurrentCulture.DateTimeFormat.ShortDatePattern + " " + CultureInfo.CurrentCulture.DateTimeFormat.LongTimePattern },
+                    //new DynamicExcelColumn("Time") { Index = 0, Width = 20, Format = CultureInfo.InvariantCulture.DateTimeFormat.ShortDatePattern + " " + CultureInfo.InvariantCulture.DateTimeFormat.LongTimePattern },
+                    //new DynamicExcelColumn("Time") { Index = 0, Width = 20 },
+                    new DynamicExcelColumn("Time") { Index = 0, Width = 20, Format = "d.MM.yyyy" },
+                }
+            };
+
+            var path = Path.Combine(
+                Path.GetTempPath(),
+                string.Concat( nameof( MiniExcelIssueTests ), "_", nameof( Issue632_1 ), ".xlsx" )
+            );
+            
+            MiniExcel.SaveAs( path, values, excelType: ExcelType.XLSX, configuration: config, overwriteFile: true );
+            
+        }
     }
 }

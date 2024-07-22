@@ -29,10 +29,10 @@ namespace MiniExcelLibs.Tests
             string path = GetTempXlsxPath();
             char[] chars = new char[] {'\u0000','\u0001','\u0002','\u0003','\u0004','\u0005','\u0006','\u0007','\u0008',
                 '\u0009', //<HT>
-	            '\u000A', //<LF>
-	            '\u000B','\u000C',
+                '\u000A', //<LF>
+                '\u000B','\u000C',
                  '\u000D', //<CR>
-	            '\u000E','\u000F','\u0010','\u0011','\u0012','\u0013','\u0014','\u0015','\u0016',
+                '\u000E','\u000F','\u0010','\u0011','\u0012','\u0013','\u0014','\u0015','\u0016',
                  '\u0017','\u0018','\u0019','\u001A','\u001B','\u001C','\u001D','\u001E','\u001F','\u007F'
             };
             var input = chars.Select(s => new { Test = s.ToString() });

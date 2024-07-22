@@ -12,6 +12,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Docs and setting", "Docs an
 		appveyor.yml = appveyor.yml
 		.github\workflows\dotnet.yml = .github\workflows\dotnet.yml
 		LICENSE = LICENSE
+		README-NuGet.md = README-NuGet.md
 		README.md = README.md
 		README.zh-CN.md = README.zh-CN.md
 		README.zh-Hant.md = README.zh-Hant.md

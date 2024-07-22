@@ -24,6 +24,14 @@
 
 ---
 
+### 1.34.0
+- [New] 支持 freeze panes (#626) (via @meld-cp)
+- [New] 支持 DateTime Nullale support (via @jiaguangli)
+- [OPT] Reduce memory requirements when processing templates + template formulas (#638) (via @meld-cp)
+- [Bug] 修正 problem with multi-line when using Query (#628) (via @meld-cp)
+- [Bug] 修正 empty data reader issue. (#629) (via @duszekmestre)
+- [Bug] 修正 Fields of type long cannot be set to text normally #627 (via @shps951023)
+
 ### 1.33.0
 - [New] 支持 Template 公式 (#622) (via @meld-cp)
 - [New] 更新 DynamicConfiguration format (#595) (via @wangboshun)

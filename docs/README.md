@@ -22,6 +22,14 @@
 
 ---
 
+### 1.34.0
+- [New] Add freeze panes (#626) (via @meld-cp)
+- [New] Add DateTime Nullale support (via @jiaguangli)
+- [OPT] Reduce memory requirements when processing templates + template formulas (#638) (via @meld-cp)
+- [Bug] Fix problem with multi-line when using Query (#628) (via @meld-cp)
+- [Bug] Fix empty data reader issue. (#629) (via @duszekmestre)
+- [Bug] Fix Fields of type long cannot be set to text normally #627 (via @shps951023)
+
 ### 1.33.0
 - [New] Support Template formulas (#622) (via @meld-cp)
 - [New] Update DynamicConfiguration format (#595) (via @wangboshun)
@@ -103,7 +111,6 @@
 ### 1.27.0
 
 - [New] Support DateTimeOffset and ExcelFormat #430 (via @Lightczx , @shps951023 )
-
 - [Optimization] SaveAs by datareader support dimension #231 (via @shps951023)
 
 ### 1.26.7

@@ -1,0 +1,21 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<x:worksheet xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+    xmlns:x="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+    <x:dimension ref="A2" />
+    <x:cols>
+        <x:col min="1" max="1" width="25" customWidth="1" />
+    </x:cols>
+    <x:sheetData>
+        <x:row r="1">
+            <x:c r="A1" t="str" s="1">
+                <x:v>long2</x:v>
+            </x:c>
+        </x:row>
+        <x:row r="2">
+            <x:c r="A2" t="str" s="2">
+                <x:v>1550432695793487872</x:v>
+            </x:c>
+        </x:row>
+    </x:sheetData>
+    <x:drawing r:id="drawing1" />
+</x:worksheet>

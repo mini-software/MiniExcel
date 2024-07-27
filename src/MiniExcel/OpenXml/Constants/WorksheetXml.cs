@@ -16,7 +16,7 @@ namespace MiniExcelLibs.OpenXml.Constants
         internal const string StartSheetViews = "<x:sheetViews>";
         internal const string EndSheetViews = "</x:sheetViews>";
 
-        internal static string StartSheetView( int tabSelected=1, int workbookViewId=0 )
+        internal static string StartSheetView( int tabSelected=0, int workbookViewId=0 )
             => $"<x:sheetView tabSelected=\"{tabSelected}\" workbookViewId=\"{workbookViewId}\">";
         internal const string EndSheetView = "</x:sheetView>";
 

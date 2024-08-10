@@ -22,6 +22,10 @@
 
 ---
 
+### 1.34.1
+- [Bug] Fix Issue 632, refactor sheet styles (#640) (via @meld-cp)
+- [Bug] Fix StartSheetView for multiple selection (#641) (via @jiaguangli)
+
 ### 1.34.0
 - [New] Add freeze panes (#626) (via @meld-cp)
 - [New] Add DateTime Nullale support (via @jiaguangli)

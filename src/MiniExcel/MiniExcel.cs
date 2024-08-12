@@ -193,12 +193,12 @@
                 {
                     foreach (var entry in row)
                     {
-                        var columnName = useHeaderRow ? entry.Value.ToString() : entry.Key;
-                        if (!string.IsNullOrEmpty(columnName)) // avoid #298 : Column '' does not belong to table
+                        var columnName = useHeaderRow ? entry.Value?.ToString() : entry.Key;
+                        if (!string.IsNullOrWhiteSpace(columnName)) // avoid #298 : Column '' does not belong to table
                         {
                             var column = new DataColumn(columnName, typeof(object)) { Caption = columnName };
                             dt.Columns.Add(column);
-                            columnDict.Add(entry.Key, columnName);
+                            columnDict.Add(entry.Key, columnName);//same column name throw exception???
                         }
                     }
                     dt.BeginLoadData();

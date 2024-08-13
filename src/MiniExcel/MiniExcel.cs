@@ -184,31 +184,35 @@
 
             var dt = new DataTable(sheetName);
             var first = true;
-            var rows = ExcelReaderFactory.GetProvider(stream, ExcelTypeHelper.GetExcelType(stream, excelType), configuration).Query(useHeaderRow, sheetName, startCell);
+            var rows = ExcelReaderFactory.GetProvider(stream, ExcelTypeHelper.GetExcelType(stream, excelType), configuration).Query(false, sheetName, startCell);
 
-            var keys = new List<string>();
+            var columnDict = new Dictionary<string, string>();
             foreach (IDictionary<string, object> row in rows)
             {
                 if (first)
                 {
-                    foreach (var key in row.Keys)
+                    foreach (var entry in row)
                     {
-                        if (!string.IsNullOrEmpty(key)) // avoid #298 : Column '' does not belong to table
+                        var columnName = useHeaderRow ? entry.Value?.ToString() : entry.Key;
+                        if (!string.IsNullOrWhiteSpace(columnName)) // avoid #298 : Column '' does not belong to table
                         {
-                            var column = new DataColumn(key, typeof(object)) { Caption = key };
+                            var column = new DataColumn(columnName, typeof(object)) { Caption = columnName };
                             dt.Columns.Add(column);
-                            keys.Add(key);
+                            columnDict.Add(entry.Key, columnName);//same column name throw exception???
                         }
                     }
-
                     dt.BeginLoadData();
                     first = false;
+                    if (useHeaderRow)
+                    {
+                        continue;
+                    }
                 }
 
                 var newRow = dt.NewRow();
-                foreach (var key in keys)
+                foreach (var entry in columnDict)
                 {
-                    newRow[key] = row[key]; //TODO: optimize not using string key
+                    newRow[entry.Value] = row[entry.Key]; //TODO: optimize not using string key
                 }
 
                 dt.Rows.Add(newRow);

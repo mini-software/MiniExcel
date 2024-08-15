@@ -4,7 +4,7 @@
     using System.Data;
 
     /// <summary>
-    /// IDataReader 实现类基类
+    /// IDataReader Base Class
     /// </summary>
     public abstract class MiniExcelDataReaderBase : IDataReader
     {

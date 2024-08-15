@@ -1,12 +1,11 @@
 ﻿namespace MiniExcelLibs
 {
-    using System;
     using System.Collections.Generic;
     using System.Data;
     using System.IO;
     using System.Linq;
 
-    public class MiniExcelDataReader : IDataReader
+    public class MiniExcelDataReader : MiniExcelDataReaderBase
     {
         private readonly IEnumerator<IDictionary<string, object>> _source;
         private readonly int _fieldCount;
@@ -26,22 +25,29 @@
             }
         }
 
-        public void Dispose()
-        {
-            _stream.Dispose();
-        }
-
-        public object GetValue(int i)
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="i"></param>
+        /// <returns></returns>
+        public override object GetValue(int i)
         {
             return _source.Current[_keys[i]];
         }
 
-        public int FieldCount
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public override int FieldCount
         {
             get { return _fieldCount; }
         }
 
-        public bool Read()
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <returns></returns>
+        public override bool Read()
         {
             if (_isFirst)
             {
@@ -51,135 +57,37 @@
             return _source.MoveNext();
         }
 
-        public string GetName(int i)
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="i"></param>
+        /// <returns></returns>
+        public override string GetName(int i)
         {
             return _keys[i];
         }
 
-        public int GetOrdinal(string name)
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public override int GetOrdinal(string name)
         {
             var i = _keys.IndexOf(name);
             return _keys.IndexOf(name);
         }
 
-        public void Close()
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="disposing"></param>
+        protected override void Dispose(bool disposing)
         {
-            return;
-        }
-
-        public int Depth => throw new NotImplementedException();
-
-        public bool IsClosed => throw new NotImplementedException();
-
-        public int RecordsAffected => throw new NotImplementedException();
-
-        public object this[string name] => throw new NotImplementedException();
-
-        public object this[int i] => throw new NotImplementedException();
-
-        public DataTable GetSchemaTable()
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool NextResult()
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool GetBoolean(int i)
-        {
-            throw new NotImplementedException();
-        }
-
-        public byte GetByte(int i)
-        {
-            throw new NotImplementedException();
-        }
-
-        public long GetBytes(int i, long fieldOffset, byte[] buffer, int bufferoffset, int length)
-        {
-            throw new NotImplementedException();
-        }
-
-        public char GetChar(int i)
-        {
-            throw new NotImplementedException();
-        }
-
-        public long GetChars(int i, long fieldoffset, char[] buffer, int bufferoffset, int length)
-        {
-            throw new NotImplementedException();
-        }
-
-        public IDataReader GetData(int i)
-        {
-            throw new NotImplementedException();
-        }
-
-        public string GetDataTypeName(int i)
-        {
-            throw new NotImplementedException();
-        }
-
-        public DateTime GetDateTime(int i)
-        {
-            throw new NotImplementedException();
-        }
-
-        public decimal GetDecimal(int i)
-        {
-            throw new NotImplementedException();
-        }
-
-        public double GetDouble(int i)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Type GetFieldType(int i)
-        {
-            throw new NotImplementedException();
-        }
-
-        public float GetFloat(int i)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Guid GetGuid(int i)
-        {
-            throw new NotImplementedException();
-        }
-
-        public short GetInt16(int i)
-        {
-            throw new NotImplementedException();
-        }
-
-        public int GetInt32(int i)
-        {
-            throw new NotImplementedException();
-        }
-
-        public long GetInt64(int i)
-        {
-            throw new NotImplementedException();
-        }
-
-        public string GetString(int i)
-        {
-            throw new NotImplementedException();
-        }
-
-        public int GetValues(object[] values)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool IsDBNull(int i)
-        {
-            throw new NotImplementedException();
+            if (disposing)
+            {
+                _stream.Dispose();
+            }
         }
     }
 }

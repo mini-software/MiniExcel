@@ -27,7 +27,7 @@
         public static void Insert(string path, object value, string sheetName = "Sheet1", ExcelType excelType = ExcelType.UNKNOWN, IConfiguration configuration = null)
         {
             if (Path.GetExtension(path).ToLowerInvariant() != ".csv")
-                throw new NotSupportedException("MiniExcel SaveAs only support csv insert now");
+                throw new NotSupportedException("MiniExcel only support csv insert now");
 
             using (var stream = new FileStream(path, FileMode.Append, FileAccess.Write, FileShare.Read, 4096, FileOptions.SequentialScan))
                 Insert(stream, value, sheetName, ExcelTypeHelper.GetExcelType(path, excelType), configuration);
@@ -35,6 +35,9 @@
 
         public static void Insert(this Stream stream, object value, string sheetName = "Sheet1", ExcelType excelType = ExcelType.XLSX, IConfiguration configuration = null)
         {
+            if (excelType != ExcelType.CSV)
+                throw new NotSupportedException("MiniExcel only support csv insert now");
+
             // reuse code
             object v = null;
             {
@@ -43,6 +46,8 @@
                 else
                     v = value;
             }
+
+            stream.Seek(0, SeekOrigin.End);
             ExcelWriterFactory.GetProvider(stream, v, sheetName, excelType, configuration, false).Insert();
         }
 

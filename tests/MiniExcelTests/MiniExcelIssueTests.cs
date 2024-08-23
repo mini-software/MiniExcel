@@ -3734,5 +3734,82 @@ MyProperty4,MyProperty1,MyProperty5,MyProperty2,MyProperty6,,MyProperty3
             MiniExcel.SaveAs( path, values, excelType: ExcelType.XLSX, configuration: config, overwriteFile: true );
             
         }
+
+        private class Issue658TestData
+        {
+            public string FirstName { get; set; }
+            public string LastName { get; set; }
+        }
+
+        /// <summary>
+        /// https://github.com/mini-software/MiniExcel/issues/658
+        /// </summary>
+        [Fact]
+        public void Issue_658()
+        {
+            static IEnumerable<Issue658TestData> GetTestData()
+            {
+                yield return new() { FirstName = "Unit", LastName = "Test" };
+                yield return new() { FirstName = "Unit1", LastName = "Test1" };
+                yield return new() { FirstName = "Unit2", LastName = "Test2" };
+            }
+
+            using var memoryStream = new MemoryStream();
+            var testData = GetTestData();
+            memoryStream.SaveAs(testData, configuration: new OpenXmlConfiguration
+            {
+                FastMode = true,
+            });
+
+            memoryStream.Position = 0;
+
+            var queryData = memoryStream.Query<Issue658TestData>().ToList();
+
+            Assert.Equal(testData.Count(), queryData.Count);
+
+            var i = 0;
+            foreach (var data in testData)
+            {
+                Assert.Equal(data.FirstName, queryData[i].FirstName);
+                Assert.Equal(data.LastName, queryData[i].LastName);
+                i++;
+            }
+        }
+
+        /// <summary>
+        /// https://github.com/mini-software/MiniExcel/issues/658
+        /// </summary>
+        /// <returns></returns>
+        [Fact]
+        public async Task Issue_658_async()
+        {
+            static IEnumerable<Issue658TestData> GetTestData()
+            {
+                yield return new() { FirstName = "Unit", LastName = "Test" };
+                yield return new() { FirstName = "Unit1", LastName = "Test1" };
+                yield return new() { FirstName = "Unit2", LastName = "Test2" };
+            }
+
+            using var memoryStream = new MemoryStream();
+            var testData = GetTestData();
+            await memoryStream.SaveAsAsync(testData, configuration: new OpenXmlConfiguration
+            {
+                FastMode = true,
+            });
+
+            memoryStream.Position = 0;
+
+            var queryData = (await memoryStream.QueryAsync<Issue658TestData>()).ToList();
+
+            Assert.Equal(testData.Count(), queryData.Count);
+
+            var i = 0;
+            foreach (var data in testData)
+            {
+                Assert.Equal(data.FirstName, queryData[i].FirstName);
+                Assert.Equal(data.LastName, queryData[i].LastName);
+                i++;
+            }
+        }
     }
 }

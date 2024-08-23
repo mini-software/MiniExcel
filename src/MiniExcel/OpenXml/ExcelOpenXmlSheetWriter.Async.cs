@@ -77,9 +77,28 @@ namespace MiniExcelLibs.OpenXml
             await writer.WriteAsync(ExcelXml.EmptySheetXml);
         }
 
+        private async Task<long> WriteDimensionPlaceholderAsync(MiniExcelAsyncStreamWriter writer)
+        {
+            var dimensionPlaceholderPostition = await writer.WriteAndFlushAsync(WorksheetXml.StartDimension);
+            await writer.WriteAsync(WorksheetXml.DimensionPlaceholder); // end of code will be replaced
+
+            return dimensionPlaceholderPostition;
+        }
+
+        private async Task WriteDimensionAsync(MiniExcelAsyncStreamWriter writer, int maxRowIndex, int maxColumnIndex, long placeholderPosition)
+        {
+            // Flush and save position so that we can get back again.
+            var position = await writer.FlushAsync();
+
+            writer.SetPosition(placeholderPosition);
+            await writer.WriteAndFlushAsync($@"{GetDimensionRef(maxRowIndex, maxColumnIndex)}""");
+
+            writer.SetPosition(position);
+        }
+
         private async Task GenerateSheetByIDataReaderAsync(MiniExcelAsyncStreamWriter writer, IDataReader reader)
         {
-            long dimensionWritePosition = 0;
+            long dimensionPlaceholderPostition = 0;
             await writer.WriteAsync(WorksheetXml.StartWorksheet);
             var yIndex = 1;
             int maxColumnIndex;
@@ -87,8 +106,7 @@ namespace MiniExcelLibs.OpenXml
             {
                 if (_configuration.FastMode)
                 {
-                    dimensionWritePosition = await writer.WriteAndFlushAsync(WorksheetXml.StartDimension);
-                    await writer.WriteAsync(WorksheetXml.DimensionPlaceholder); // end of code will be replaced
+                    dimensionPlaceholderPostition = await WriteDimensionPlaceholderAsync(writer);
                 }
 
                 var props = new List<ExcelColumnInfo>();
@@ -139,8 +157,7 @@ namespace MiniExcelLibs.OpenXml
 
             if (_configuration.FastMode)
             {
-                writer.SetPosition(dimensionWritePosition);
-                await writer.WriteAndFlushAsync($@"{GetDimensionRef(maxRowIndex, maxColumnIndex)}""");
+                await WriteDimensionAsync(writer, maxRowIndex, maxColumnIndex, dimensionPlaceholderPostition);
             }
         }
 
@@ -210,14 +227,12 @@ namespace MiniExcelLibs.OpenXml
 
             await writer.WriteAsync(WorksheetXml.StartWorksheetWithRelationship);
 
-            long dimensionWritePosition = 0;
+            long dimensionPlaceholderPostition = 0;
 
             // We can write the dimensions directly if the row count is known
             if (_configuration.FastMode && rowCount == null)
             {
-                // Write a placeholder for the table dimensions and save thee position for later
-                dimensionWritePosition = await writer.WriteAndFlushAsync(WorksheetXml.StartDimension);
-                await writer.WriteAsync(WorksheetXml.DimensionPlaceholder);
+                dimensionPlaceholderPostition = await WriteDimensionPlaceholderAsync(writer);
             }
             else
             {
@@ -269,9 +284,7 @@ namespace MiniExcelLibs.OpenXml
             // The dimension has already been written if row count is defined
             if (_configuration.FastMode && rowCount == null)
             {
-                // Seek back and write the dimensions of the table
-                writer.SetPosition(dimensionWritePosition);
-                await writer.WriteAndFlushAsync($@"{GetDimensionRef(maxRowIndex, maxColumnIndex)}""");
+                await WriteDimensionAsync(writer, maxRowIndex, maxColumnIndex, dimensionPlaceholderPostition);
             }
         }
 

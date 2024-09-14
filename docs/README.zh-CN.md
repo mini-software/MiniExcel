@@ -25,6 +25,12 @@
 
 ---
 
+### 1.34.2
+- [New] Add MniExcelDataReaderBase class to simplify code (#651) (via @ArgoZhang )
+- [OPT] perf csv insert (#653) (via @izanhzh )
+- [Bug] Fix dimension writing in FastMode (#659) (via @Discolai )
+- [Bug] Fix QueryAsDataTable can't read Excel with only header rows (#647) (via @Discolai )
+
 ### 1.34.1
 - [Bug] Fix Issue 632, refactor sheet styles (#640) (via @meld-cp)
 - [Bug] Fix StartSheetView for multiple selection (#641) (via @jiaguangli)
@@ -51,7 +57,9 @@
 - [New] Using DynamicConfiguration when writing data using DataTable (via @pszybiak)
 - [New] Make System.DateOnly available as date in Excel (#576) (via @ofthelit)
 - [New] Allow ampersand in sheet names (via @ofthelit)
-- [OPT] Use true async processing for excel writer (#573) (via @duszekmestre)
+- [OPT] Us
+- 
+- e true async processing for excel writer (#573) (via @duszekmestre)
 - [Bug] Fix nullable enumeration conversion failure #567) (via @PurplestViper)
 - [Bug] IEnumerable traversed twice #422 (via @Discolai)
 - [Bug] Fix Read empty string as null (via @pszybiak)

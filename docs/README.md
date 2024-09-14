@@ -22,6 +22,14 @@
 
 ---
 
+
+### 1.34.2
+- [New] Add MniExcelDataReaderBase class to simplify code (#651) (via @ArgoZhang )
+- [OPT] perf csv insert (#653) (via @izanhzh )
+- [Bug] Fix dimension writing in FastMode (#659) (via @Discolai )
+- [Bug] Fix QueryAsDataTable can't read Excel with only header rows (#647) (via @Discolai )
+
+
 ### 1.34.1
 - [Bug] Fix Issue 632, refactor sheet styles (#640) (via @meld-cp)
 - [Bug] Fix StartSheetView for multiple selection (#641) (via @jiaguangli)

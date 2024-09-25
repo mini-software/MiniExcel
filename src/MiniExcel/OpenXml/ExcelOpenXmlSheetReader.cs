@@ -277,7 +277,11 @@ namespace MiniExcelLibs.OpenXml
 
                                 // row -> c
                                 if (!XmlReaderHelper.ReadFirstContent(reader))
+                                {
+                                    //Fill in case of self closed empty row tag eg. <row r="1"/>
+                                    yield return GetCell(useHeaderRow, maxColumnIndex, headRows, startColumnIndex); 
                                     continue;
+                                }
 
                                 // startcell pass rows
                                 if (rowIndex < startRowIndex)

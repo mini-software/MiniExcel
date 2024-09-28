@@ -180,7 +180,7 @@ namespace MiniExcelLibs.Tests
             Assert.Equal(2d, rows[1]["B"]);
             Assert.Equal(null!, rows[2]["A"]);
         }
-        
+
         [Fact()]
         public void CenterEmptyRowsQueryTest()
         {
@@ -201,7 +201,7 @@ namespace MiniExcelLibs.Tests
 
                 Assert.Equal(null, rows[2].A);
                 Assert.Equal(2, rows[2].B);
-                Assert.Equal(null, rows[2].C);
+                Assert.Equal(null, rows[2].C); 
                 Assert.Equal(4, rows[2].D);
 
                 Assert.Equal(null, rows[3].A);
@@ -249,6 +249,27 @@ namespace MiniExcelLibs.Tests
                 Assert.Equal(2, rows[4].b);
                 Assert.Equal(null, rows[4].c);
                 Assert.Equal(4, rows[4].d);
+            }
+        }
+
+        [Fact]
+        public void TestEmptyRowsQuerySelfClosingTag()
+        {
+            var path = @"../../../../../samples/xlsx/TestEmptySelfClosingRow.xlsx";
+            using (var stream = File.OpenRead(path))
+            {
+                var rows = stream.Query().ToList();
+
+                Assert.Equal(null, rows[0].A);
+                Assert.Equal(1, rows[1].A);
+                Assert.Equal(null, rows[2].A);
+                Assert.Equal(2, rows[3].A);
+                Assert.Equal(null, rows[4].A);
+                Assert.Equal(null, rows[5].A);
+                Assert.Equal(null, rows[6].A);
+                Assert.Equal(null, rows[7].A);
+                Assert.Equal(null, rows[8].A);
+                Assert.Equal(1, rows[9].A);
             }
         }
 

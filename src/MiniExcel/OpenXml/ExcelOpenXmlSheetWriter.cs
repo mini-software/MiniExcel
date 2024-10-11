@@ -582,7 +582,8 @@ namespace MiniExcelLibs.OpenXml
 
             /*Prefix and suffix blank space will lost after SaveAs #294*/
             var preserveSpace = cellValue != null && (cellValue.StartsWith(" ", StringComparison.Ordinal) || cellValue.EndsWith(" ", StringComparison.Ordinal));
-            writer.Write(WorksheetXml.Cell(columnReference, dataType, styleIndex, cellValue, preserveSpace: preserveSpace));
+            var isFormula = columnInfo?.ExcelFormula ?? false;
+            writer.Write(WorksheetXml.Cell(columnReference, dataType, styleIndex, cellValue, preserveSpace: preserveSpace, formula: isFormula));
         }
 
         private static void WriteCell(MiniExcelStreamWriter writer, string cellReference, string columnName)

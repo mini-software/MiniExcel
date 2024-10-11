@@ -103,6 +103,7 @@ namespace MiniExcelLibs.OpenXml
 
             prop.Nullable = true;
             prop.ExcelIgnore = dynamicColumn.Ignore;
+            prop.ExcelFormula = dynamicColumn.Formula;
             prop.ExcelColumnIndex = dynamicColumn.Index;
             prop.ExcelColumnWidth = dynamicColumn.Width;
             //prop.ExcludeNullableType = item2[key]?.GetType();

@@ -24,6 +24,7 @@
         public string ExcelIndexName { get; internal set; }
         public bool ExcelIgnore { get; internal set; }
         public int ExcelFormatId { get; internal set; }
+        public bool ExcelFormula { get; internal set; }
     }
 
     internal class ExcellSheetInfo
@@ -206,7 +207,8 @@
                     ExcelIndexName = p.GetAttribute<ExcelColumnIndexAttribute>()?.ExcelXName ?? excelColumn?.IndexName,
                     ExcelColumnWidth = p.GetAttribute<ExcelColumnWidthAttribute>()?.ExcelColumnWidth ?? excelColumn?.Width,
                     ExcelFormat = excelFormat ?? excelColumn?.Format,
-                    ExcelFormatId = excelColumn?.FormatId ?? -1
+                    ExcelFormatId = excelColumn?.FormatId ?? -1,
+                    ExcelFormula = excelColumn?.Formula ?? false
                 };
             }).Where(_ => _ != null);
         }
@@ -307,6 +309,7 @@
                         p.ExcelColumnName = dynamicColumn.Name;
                     isIgnore = dynamicColumn.Ignore;
                     p.ExcelColumnWidth = dynamicColumn.Width;
+                    p.ExcelFormula = dynamicColumn.Formula;
                 }
             }
             if (!isIgnore)

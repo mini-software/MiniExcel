@@ -52,8 +52,8 @@ namespace MiniExcelLibs.OpenXml.Constants
         internal static string EmptyCell(string cellReference, string styleIndex)
             => $"<x:c r=\"{cellReference}\" s=\"{styleIndex}\"></x:c>";
         //t check avoid format error ![image](https://user-images.githubusercontent.com/12729184/118770190-9eee3480-b8b3-11eb-9f5a-87a439f5e320.png)
-        internal static string Cell(string cellReference, string cellType, string styleIndex, string cellValue, bool preserveSpace = false)
-            => $"<x:c r=\"{cellReference}\"{(cellType == null ? string.Empty : $" t=\"{cellType}\"")} s=\"{styleIndex}\"{(preserveSpace ? " xml:space=\"preserve\"" : string.Empty)}><x:v>{cellValue}</x:v></x:c>";
+        internal static string Cell(string cellReference, string cellType, string styleIndex, string cellValue, bool preserveSpace = false, bool formula = false)
+            => $"<x:c r=\"{cellReference}\"{(cellType == null ? string.Empty : $" t=\"{cellType}\"")} s=\"{styleIndex}\"{(preserveSpace ? " xml:space=\"preserve\"" : string.Empty)}><x:{(formula ? "f" : "v")}>{cellValue}</x:{(formula ? "f" : "v")}></x:c>";
 
         internal static string Autofilter(string dimensionRef)
             => $"<x:autoFilter ref=\"{dimensionRef}\" />";

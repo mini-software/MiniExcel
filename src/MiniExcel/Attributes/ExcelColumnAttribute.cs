@@ -21,6 +21,8 @@ namespace MiniExcelLibs.Attributes
 
         public bool Ignore { get; set; }
 
+        public bool Formula { get; set; } = false;
+
         public int Index
         {
             get => _index;

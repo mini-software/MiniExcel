@@ -2,6 +2,7 @@
 {
     using MiniExcelLibs.Csv;
     using MiniExcelLibs.OpenXml;
+    using MiniExcelLibs.OpenXml.SaveByTemplate;
     using System;
     using System.IO;
 

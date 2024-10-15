@@ -9,7 +9,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace MiniExcelLibs.OpenXml
+namespace MiniExcelLibs.OpenXml.SaveByTemplate
 {
     internal partial class ExcelOpenXmlTemplate
     {

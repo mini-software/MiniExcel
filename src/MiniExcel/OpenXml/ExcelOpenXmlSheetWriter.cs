@@ -1,4 +1,5 @@
-﻿using MiniExcelLibs.OpenXml.Constants;
+﻿using MiniExcelLibs.Attributes;
+using MiniExcelLibs.OpenXml.Constants;
 using MiniExcelLibs.OpenXml.Models;
 using MiniExcelLibs.Utils;
 using MiniExcelLibs.Zip;
@@ -579,11 +580,11 @@ namespace MiniExcelLibs.OpenXml
             var styleIndex = tuple.Item1; // https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.spreadsheet.cell?view=openxml-3.0.1
             var dataType = tuple.Item2; // https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.spreadsheet.cellvalues?view=openxml-3.0.1
             var cellValue = tuple.Item3;
+            var columnType = columnInfo?.ExcelColumnType ?? ColumnType.Value;
 
             /*Prefix and suffix blank space will lost after SaveAs #294*/
             var preserveSpace = cellValue != null && (cellValue.StartsWith(" ", StringComparison.Ordinal) || cellValue.EndsWith(" ", StringComparison.Ordinal));
-            var isFormula = columnInfo?.ExcelFormula ?? false;
-            writer.Write(WorksheetXml.Cell(columnReference, dataType, styleIndex, cellValue, preserveSpace: preserveSpace, formula: isFormula));
+            writer.Write(WorksheetXml.Cell(columnReference, dataType, styleIndex, cellValue, preserveSpace: preserveSpace, columnType: columnType));
         }
 
         private static void WriteCell(MiniExcelStreamWriter writer, string cellReference, string columnName)

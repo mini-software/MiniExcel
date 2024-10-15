@@ -21,7 +21,7 @@ namespace MiniExcelLibs.Attributes
 
         public bool Ignore { get; set; }
 
-        public bool Formula { get; set; } = false;
+        public ColumnType Type { get; set; } = ColumnType.Value;
 
         public int Index
         {
@@ -52,6 +52,7 @@ namespace MiniExcelLibs.Attributes
         }
     }
 
+    public enum ColumnType { Value, Formula }
 
     public class DynamicExcelColumn : ExcelColumnAttribute
     {

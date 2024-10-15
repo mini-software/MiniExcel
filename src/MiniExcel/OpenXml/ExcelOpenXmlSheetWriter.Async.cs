@@ -1,4 +1,5 @@
-﻿using MiniExcelLibs.OpenXml.Constants;
+﻿using MiniExcelLibs.Attributes;
+using MiniExcelLibs.OpenXml.Constants;
 using MiniExcelLibs.Utils;
 using MiniExcelLibs.Zip;
 using System;
@@ -459,10 +460,11 @@ namespace MiniExcelLibs.OpenXml
             var styleIndex = tuple.Item1;
             var dataType = tuple.Item2;
             var cellValue = tuple.Item3;
+            var columnType = p.ExcelColumnType;
 
             /*Prefix and suffix blank space will lost after SaveAs #294*/
             var preserveSpace = cellValue != null && (cellValue.StartsWith(" ", StringComparison.Ordinal) || cellValue.EndsWith(" ", StringComparison.Ordinal));
-            await writer.WriteAsync(WorksheetXml.Cell(columnReference, dataType, styleIndex, cellValue, preserveSpace: preserveSpace, formula: p.ExcelFormula));
+            await writer.WriteAsync(WorksheetXml.Cell(columnReference, dataType, styleIndex, cellValue, preserveSpace: preserveSpace, columnType: columnType));
         }
 
         private async Task GenerateEndXmlAsync(CancellationToken cancellationToken)

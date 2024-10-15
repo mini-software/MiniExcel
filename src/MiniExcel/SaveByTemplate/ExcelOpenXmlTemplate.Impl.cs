@@ -12,7 +12,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml;
 
-namespace MiniExcelLibs.OpenXml
+namespace MiniExcelLibs.OpenXml.SaveByTemplate
 {
     internal partial class ExcelOpenXmlTemplate
     {
@@ -113,7 +113,7 @@ namespace MiniExcelLibs.OpenXml
         public List<XMergeCell> NewXMergeCellInfos { get; private set; }
 
         private void GenerateSheetXmlImpl(ZipArchiveEntry sheetZipEntry, Stream stream, Stream sheetStream,
-            Dictionary<string, object> inputMaps, IDictionary<int, string> sharedStrings,
+            IDictionary<string, object> inputMaps, IDictionary<int, string> sharedStrings,
             bool mergeCells = false)
         {
             var doc = new XmlDocument();
@@ -911,7 +911,7 @@ namespace MiniExcelLibs.OpenXml
             }
         }
 
-        private void UpdateDimensionAndGetRowsInfo(Dictionary<string, object> inputMaps, ref XmlDocument doc, ref XmlNodeList rows, bool changeRowIndex = true)
+        private void UpdateDimensionAndGetRowsInfo(IDictionary<string, object> inputMaps, ref XmlDocument doc, ref XmlNodeList rows, bool changeRowIndex = true)
         {
             // note : dimension need to put on the top ![image](https://user-images.githubusercontent.com/12729184/114507911-5dd88400-9c66-11eb-94c6-82ed7bdb5aab.png)
 

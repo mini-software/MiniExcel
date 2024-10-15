@@ -50,7 +50,8 @@
             switch (excelType)
             {
                 case ExcelType.XLSX:
-                    return new ExcelOpenXmlTemplate(stream, configuration);
+                    var valueExtractor = new InputValueExtractor();
+                    return new ExcelOpenXmlTemplate(stream, configuration, valueExtractor);
                 default:
                     throw new NotSupportedException($"Please Issue for me");
             }

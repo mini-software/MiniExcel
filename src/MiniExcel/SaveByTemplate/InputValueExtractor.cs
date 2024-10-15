@@ -6,9 +6,9 @@ using MiniExcelLibs.Utils;
 
 namespace MiniExcelLibs.OpenXml.SaveByTemplate
 {
-    public static class InputValueExtractor
+    public class InputValueExtractor : IInputValueExtractor
     {
-        public static IDictionary<string, object> ToValueDictionary(object valueObject)
+        public IDictionary<string, object> ToValueDictionary(object valueObject)
             => valueObject is Dictionary<string, object> valueDictionary
                 ? GetValuesFromDictionary(valueDictionary)
                 : GetValuesFromObject(valueObject);

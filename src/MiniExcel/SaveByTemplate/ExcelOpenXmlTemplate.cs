@@ -28,12 +28,14 @@
 
         private readonly Stream _stream;
         private readonly OpenXmlConfiguration _configuration;
+        private readonly IInputValueExtractor _inputValueExtractor;
         private readonly StringBuilder _calcChainContent = new StringBuilder();
 
-        public ExcelOpenXmlTemplate(Stream stream, IConfiguration configuration)
+        public ExcelOpenXmlTemplate(Stream stream, IConfiguration configuration, InputValueExtractor inputValueExtractor)
         {
             _stream = stream;
             _configuration = (OpenXmlConfiguration)configuration ?? OpenXmlConfiguration.DefaultConfig;
+            _inputValueExtractor = inputValueExtractor;
         }
 
         public void SaveAsByTemplate(string templatePath, object value)
@@ -77,11 +79,11 @@
                     var sheetStream = sheet.Open();
                     var fullName = sheet.FullName;
 
+                    var inputValues = _inputValueExtractor.ToValueDictionary(value);
                     ZipArchiveEntry entry = _archive.zipFile.CreateEntry(fullName);
                     using (var zipStream = entry.Open())
                     {
-                        GenerateSheetXmlImpl(sheet, zipStream, sheetStream,
-                            InputValueExtractor.ToValueDictionary(value), sharedStrings, false);
+                        GenerateSheetXmlImpl(sheet, zipStream, sheetStream, inputValues, sharedStrings, false);
                         //doc.Save(zipStream); //don't do it because : ![image](https://user-images.githubusercontent.com/12729184/114361127-61a5d100-9ba8-11eb-9bb9-34f076ee28a2.png)
                     }
 

@@ -119,6 +119,9 @@ namespace MiniExcelLibs.OpenXml
                 }
                 maxColumnIndex = props.Count;
 
+                //sheet view
+                await WritePanesAsync(writer);
+
                 await WriteColumnsWidthsAsync(writer, props);
 
                 await writer.WriteAsync(WorksheetXml.StartSheetData);
@@ -241,6 +244,9 @@ namespace MiniExcelLibs.OpenXml
                 await writer.WriteAsync(WorksheetXml.Dimension(GetDimensionRef(maxRowIndex, maxColumnIndex)));
             }
 
+            //sheet view
+            await WritePanesAsync(writer);
+
             //cols:width
             await WriteColumnsWidthsAsync(writer, props);
 
@@ -309,6 +315,9 @@ namespace MiniExcelLibs.OpenXml
                 props.Add(prop);
             }
 
+            //sheet view
+            await WritePanesAsync(writer);
+
             await WriteColumnsWidthsAsync(writer, props);
 
             await writer.WriteAsync(WorksheetXml.StartSheetData);
@@ -350,6 +359,93 @@ namespace MiniExcelLibs.OpenXml
             }
 
             await writer.WriteAsync(WorksheetXml.EndWorksheet);
+        }
+
+        private async Task WriteSheetViewsAsync(MiniExcelAsyncStreamWriter writer)
+        {
+            // exit early if no style to write
+            if (_configuration.FreezeRowCount <= 0 && _configuration.FreezeColumnCount <= 0)
+            {
+                return;
+            }
+
+            // start sheetViews
+            await writer.WriteAsync(WorksheetXml.StartSheetViews);
+            await writer.WriteAsync(WorksheetXml.StartSheetView());
+
+            // Write panes
+            await WritePanesAsync(writer);
+
+            // end sheetViews
+            await writer.WriteAsync(WorksheetXml.EndSheetView);
+            await writer.WriteAsync(WorksheetXml.EndSheetViews);
+        }
+
+        private async Task WritePanesAsync(MiniExcelAsyncStreamWriter writer)
+        {
+
+            string activePane;
+            if (_configuration.FreezeColumnCount > 0 && _configuration.FreezeRowCount > 0)
+            {
+                activePane = "bottomRight";
+            }
+            else if (_configuration.FreezeColumnCount > 0)
+            {
+                activePane = "topRight";
+            }
+            else
+            {
+                activePane = "bottomLeft";
+            }
+            await writer.WriteAsync(WorksheetXml.StartPane(
+                xSplit: _configuration.FreezeColumnCount > 0 ? _configuration.FreezeColumnCount : (int?)null,
+                ySplit: _configuration.FreezeRowCount > 0 ? _configuration.FreezeRowCount : (int?)null,
+                topLeftCell: ExcelOpenXmlUtils.ConvertXyToCell(
+                    _configuration.FreezeColumnCount + 1,
+                    _configuration.FreezeRowCount + 1
+                ),
+                activePane: activePane,
+                state: "frozen"
+            ));
+
+            // write pane selections
+            if (_configuration.FreezeColumnCount > 0 && _configuration.FreezeRowCount > 0)
+            {
+                // freeze row and column
+                /*
+                 <selection pane="topRight" activeCell="B1" sqref="B1"/>
+                 <selection pane="bottomLeft" activeCell="A3" sqref="A3"/>
+                 <selection pane="bottomRight" activeCell="B3" sqref="B3"/>
+                 */
+                var cellTR = ExcelOpenXmlUtils.ConvertXyToCell(_configuration.FreezeColumnCount + 1, 1);
+                await writer.WriteAsync(WorksheetXml.PaneSelection("topRight", cellTR, cellTR));
+
+                var cellBL = ExcelOpenXmlUtils.ConvertXyToCell(1, _configuration.FreezeRowCount + 1);
+                await writer.WriteAsync(WorksheetXml.PaneSelection("bottomLeft", cellBL, cellBL));
+
+                var cellBR = ExcelOpenXmlUtils.ConvertXyToCell(_configuration.FreezeColumnCount + 1, _configuration.FreezeRowCount + 1);
+                await writer.WriteAsync(WorksheetXml.PaneSelection("bottomRight", cellBR, cellBR));
+            }
+            else if (_configuration.FreezeColumnCount > 0)
+            {
+                // freeze column
+                /*
+                   <selection pane="topRight" activeCell="A1" sqref="A1"/>
+                */
+                var cellTR = ExcelOpenXmlUtils.ConvertXyToCell(_configuration.FreezeColumnCount, 1);
+                await writer.WriteAsync(WorksheetXml.PaneSelection("topRight", cellTR, cellTR));
+
+            }
+            else
+            {
+                // freeze row
+                /*
+                    <selection pane="bottomLeft"/>
+                */
+                await writer.WriteAsync(WorksheetXml.PaneSelection("bottomLeft", null, null));
+
+            }
+
         }
 
         private static async Task WriteColumnsWidthsAsync(MiniExcelAsyncStreamWriter writer, IEnumerable<ExcelColumnInfo> props)

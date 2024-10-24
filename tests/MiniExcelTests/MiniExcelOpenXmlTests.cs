@@ -166,7 +166,7 @@ namespace MiniExcelLibs.Tests
 
             }
         }
-        
+
         [Fact]
         public void QueryRangeToIDictionary()
         {
@@ -201,7 +201,7 @@ namespace MiniExcelLibs.Tests
 
                 Assert.Equal(null, rows[2].A);
                 Assert.Equal(2, rows[2].B);
-                Assert.Equal(null, rows[2].C); 
+                Assert.Equal(null, rows[2].C);
                 Assert.Equal(4, rows[2].D);
 
                 Assert.Equal(null, rows[3].A);
@@ -860,7 +860,8 @@ namespace MiniExcelLibs.Tests
         }
 
         [Fact()]
-        public void SaveAsFrozenRowsAndColumnsTest() {
+        public void SaveAsFrozenRowsAndColumnsTest()
+        {
 
             var config = new OpenXmlConfiguration
             {
@@ -880,7 +881,8 @@ namespace MiniExcelLibs.Tests
                     configuration: config
                 );
 
-                using (var stream = File.OpenRead(path)) {
+                using (var stream = File.OpenRead(path))
+                {
                     var rows = stream.Query(useHeaderRow: true).ToList();
 
                     Assert.Equal("MiniExcel", rows[0].Column1);
@@ -890,9 +892,9 @@ namespace MiniExcelLibs.Tests
                 }
 
                 Assert.Equal("A1:B3", Helpers.GetFirstSheetDimensionRefValue(path));
-                //File.Delete(path);
+                File.Delete(path);
             }
-            
+
             {
                 // test table
                 var table = new DataTable();
@@ -905,7 +907,7 @@ namespace MiniExcelLibs.Tests
                     table.Rows.Add(@"<test>Hello World</test>", -1234567890, false, DateTime.Now.Date);
                 }
                 var pathTable = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
-                MiniExcel.SaveAs(pathTable, table, configuration: config );
+                MiniExcel.SaveAs(pathTable, table, configuration: config);
 
                 Assert.Equal("A1:D3", Helpers.GetFirstSheetDimensionRefValue(pathTable));
 
@@ -1392,7 +1394,7 @@ namespace MiniExcelLibs.Tests
             {
                 table.Columns.Add("Column1", typeof(string));
                 table.Columns.Add("Column2", typeof(int));
-                table.Columns.Add("Column3", typeof(DateTime)); 
+                table.Columns.Add("Column3", typeof(DateTime));
                 table.Columns.Add("Column4", typeof(DateOnly));
                 table.Rows.Add("MiniExcel", 1, dateTime, onlyDate);
                 table.Rows.Add("Github", 2, dateTime, onlyDate);

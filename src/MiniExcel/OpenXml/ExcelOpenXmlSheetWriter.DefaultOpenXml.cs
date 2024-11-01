@@ -83,6 +83,103 @@ namespace MiniExcelLibs.OpenXml
 
             return info;
         }
+        
+        private string GetSheetViews()
+        {
+            // exit early if no style to write
+            if (_configuration.FreezeRowCount <= 0 && _configuration.FreezeColumnCount <= 0)
+            {
+                return string.Empty;
+            }
+
+            var sb = new StringBuilder();
+
+            // start sheetViews
+            sb.Append(WorksheetXml.StartSheetViews);
+            sb.Append(WorksheetXml.StartSheetView());
+
+            // Write panes
+            sb.Append(GetPanes());
+
+            // end sheetViews
+            sb.Append(WorksheetXml.EndSheetView);
+            sb.Append(WorksheetXml.EndSheetViews);
+
+            return sb.ToString();
+        }
+
+        private string GetPanes()
+        {
+
+            var sb = new StringBuilder();
+
+            string activePane;
+            if (_configuration.FreezeColumnCount > 0 && _configuration.FreezeRowCount > 0)
+            {
+                activePane = "bottomRight";
+            }
+            else if (_configuration.FreezeColumnCount > 0)
+            {
+                activePane = "topRight";
+            }
+            else
+            {
+                activePane = "bottomLeft";
+            }
+            sb.Append(
+                WorksheetXml.StartPane(
+                    xSplit: _configuration.FreezeColumnCount > 0 ? _configuration.FreezeColumnCount : (int?)null,
+                    ySplit: _configuration.FreezeRowCount > 0 ? _configuration.FreezeRowCount : (int?)null,
+                    topLeftCell: ExcelOpenXmlUtils.ConvertXyToCell(
+                        _configuration.FreezeColumnCount + 1,
+                        _configuration.FreezeRowCount + 1
+                    ),
+                    activePane: activePane,
+                    state: "frozen"
+                )
+            );
+
+            // write pane selections
+            if (_configuration.FreezeColumnCount > 0 && _configuration.FreezeRowCount > 0)
+            {
+                // freeze row and column
+                /*
+                 <selection pane="topRight" activeCell="B1" sqref="B1"/>
+                 <selection pane="bottomLeft" activeCell="A3" sqref="A3"/>
+                 <selection pane="bottomRight" activeCell="B3" sqref="B3"/>
+                 */
+                var cellTR = ExcelOpenXmlUtils.ConvertXyToCell(_configuration.FreezeColumnCount + 1, 1);
+                sb.Append(WorksheetXml.PaneSelection("topRight", cellTR, cellTR));
+
+                var cellBL = ExcelOpenXmlUtils.ConvertXyToCell(1, _configuration.FreezeRowCount + 1);
+                sb.Append(WorksheetXml.PaneSelection("bottomLeft", cellBL, cellBL));
+
+                var cellBR = ExcelOpenXmlUtils.ConvertXyToCell(_configuration.FreezeColumnCount + 1, _configuration.FreezeRowCount + 1);
+                sb.Append(WorksheetXml.PaneSelection("bottomRight", cellBR, cellBR));
+            }
+            else if (_configuration.FreezeColumnCount > 0)
+            {
+                // freeze column
+                /*
+                   <selection pane="topRight" activeCell="A1" sqref="A1"/>
+                */
+                var cellTR = ExcelOpenXmlUtils.ConvertXyToCell(_configuration.FreezeColumnCount, 1);
+                sb.Append(WorksheetXml.PaneSelection("topRight", cellTR, cellTR));
+
+            }
+            else
+            {
+                // freeze row
+                /*
+                    <selection pane="bottomLeft"/>
+                */
+                sb.Append(WorksheetXml.PaneSelection("bottomLeft", null, null));
+
+            }
+
+            return sb.ToString();
+
+        }
 
         private ExcelColumnInfo GetColumnInfosFromDynamicConfiguration(string columnName)
         {

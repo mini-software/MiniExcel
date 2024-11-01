@@ -152,7 +152,7 @@ namespace MiniExcelLibs.OpenXml
                 maxColumnIndex = props.Count;
 
                 //sheet view
-                WriteSheetViews(writer);
+                writer.Write(GetSheetViews());
 
                 WriteColumnsWidths(writer, props);
 
@@ -279,7 +279,7 @@ namespace MiniExcelLibs.OpenXml
             }
 
             //sheet view
-            WriteSheetViews(writer);
+            writer.Write(GetSheetViews());
 
             //cols:width
             WriteColumnsWidths(writer, props);
@@ -352,7 +352,7 @@ namespace MiniExcelLibs.OpenXml
             }
             
             //sheet view
-            WriteSheetViews(writer);
+            writer.Write(GetSheetViews());
 
             WriteColumnsWidths(writer, props);
 
@@ -409,91 +409,6 @@ namespace MiniExcelLibs.OpenXml
             }
 
             writer.Write(WorksheetXml.EndCols);
-        }
-
-        private void WriteSheetViews(MiniExcelStreamWriter writer) {
-            // exit early if no style to write
-            if (_configuration.FreezeRowCount <= 0 && _configuration.FreezeColumnCount <= 0)
-            {
-                return;
-            }
-
-            // start sheetViews
-            writer.Write(WorksheetXml.StartSheetViews);
-            writer.Write(WorksheetXml.StartSheetView());
-
-            // Write panes
-            WritePanes(writer);
-
-            // end sheetViews
-            writer.Write(WorksheetXml.EndSheetView);
-            writer.Write(WorksheetXml.EndSheetViews);
-        }
-
-        private void WritePanes(MiniExcelStreamWriter writer) {
-
-            string activePane;
-            if (_configuration.FreezeColumnCount > 0 && _configuration.FreezeRowCount > 0)
-            {
-                activePane = "bottomRight";
-            }
-            else if (_configuration.FreezeColumnCount > 0)
-            {
-                activePane = "topRight";
-            }
-            else
-            {
-                activePane = "bottomLeft";
-            }
-            writer.Write( WorksheetXml.StartPane(
-                xSplit: _configuration.FreezeColumnCount > 0 ? _configuration.FreezeColumnCount : (int?)null,
-                ySplit: _configuration.FreezeRowCount > 0 ? _configuration.FreezeRowCount : (int?)null,
-                topLeftCell: ExcelOpenXmlUtils.ConvertXyToCell(
-                    _configuration.FreezeColumnCount + 1,
-                    _configuration.FreezeRowCount + 1
-                ),
-                activePane: activePane,
-                state: "frozen"
-            ) );
-
-            // write pane selections
-            if (_configuration.FreezeColumnCount > 0 && _configuration.FreezeRowCount > 0)
-            {
-                // freeze row and column
-                /*
-                 <selection pane="topRight" activeCell="B1" sqref="B1"/>
-                 <selection pane="bottomLeft" activeCell="A3" sqref="A3"/>
-                 <selection pane="bottomRight" activeCell="B3" sqref="B3"/>
-                 */
-                var cellTR = ExcelOpenXmlUtils.ConvertXyToCell(_configuration.FreezeColumnCount+1, 1);
-                writer.Write(WorksheetXml.PaneSelection("topRight", cellTR, cellTR));
-
-                var cellBL = ExcelOpenXmlUtils.ConvertXyToCell(1, _configuration.FreezeRowCount+1);
-                writer.Write(WorksheetXml.PaneSelection("bottomLeft", cellBL, cellBL));
-
-                var cellBR = ExcelOpenXmlUtils.ConvertXyToCell(_configuration.FreezeColumnCount+1, _configuration.FreezeRowCount+1);
-                writer.Write(WorksheetXml.PaneSelection("bottomRight", cellBR, cellBR));
-            }
-            else if ( _configuration.FreezeColumnCount > 0 )
-            {
-                // freeze column
-                /*
-                   <selection pane="topRight" activeCell="A1" sqref="A1"/>
-                */
-                var cellTR = ExcelOpenXmlUtils.ConvertXyToCell(_configuration.FreezeColumnCount, 1);
-                writer.Write(WorksheetXml.PaneSelection("topRight", cellTR, cellTR));
-
-            }
-            else
-            {
-                // freeze row
-                /*
-                    <selection pane="bottomLeft"/>
-                */
-                writer.Write(WorksheetXml.PaneSelection("bottomLeft", null, null));
-
-            }
-
         }
 
         private static void PrintHeader(MiniExcelStreamWriter writer, List<ExcelColumnInfo> props)

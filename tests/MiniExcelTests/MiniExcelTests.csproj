@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net6.0</TargetFrameworks>
+		<TargetFrameworks>net8.0</TargetFrameworks>
 
 		<IsPackable>false</IsPackable>
 		<AssemblyOriginatorKeyFile>miniexcel.snk</AssemblyOriginatorKeyFile>
@@ -22,6 +22,7 @@
 		<PackageReference Include="EPPlus" Version="4.5.3.3" />
 		<PackageReference Include="ExcelDataReader" Version="3.6.0" />
 		<PackageReference Include="ExcelDataReader.DataSet" Version="3.6.0" />
+		<PackageReference Include="FluentAssertions" Version="6.12.1" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
 		<PackageReference Include="NPOI" Version="2.7.0" />
 		<PackageReference Include="NSubstitute" Version="5.1.0" />

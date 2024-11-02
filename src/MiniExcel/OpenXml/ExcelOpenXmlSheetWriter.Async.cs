@@ -119,6 +119,9 @@ namespace MiniExcelLibs.OpenXml
                 }
                 maxColumnIndex = props.Count;
 
+                //sheet view
+                await writer.WriteAsync(GetSheetViews());
+
                 await WriteColumnsWidthsAsync(writer, props);
 
                 await writer.WriteAsync(WorksheetXml.StartSheetData);
@@ -241,6 +244,9 @@ namespace MiniExcelLibs.OpenXml
                 await writer.WriteAsync(WorksheetXml.Dimension(GetDimensionRef(maxRowIndex, maxColumnIndex)));
             }
 
+            //sheet view
+            await writer.WriteAsync(GetSheetViews());
+
             //cols:width
             await WriteColumnsWidthsAsync(writer, props);
 
@@ -308,6 +314,9 @@ namespace MiniExcelLibs.OpenXml
                 var prop = GetColumnInfosFromDynamicConfiguration(columnName);
                 props.Add(prop);
             }
+
+            //sheet view
+            await writer.WriteAsync(GetSheetViews());
 
             await WriteColumnsWidthsAsync(writer, props);
 

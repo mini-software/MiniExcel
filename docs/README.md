@@ -23,7 +23,18 @@
 ---
 
 
+
+### 1.35.0
+
+- [New] Formula attribute added to support in rows with dto or dynamic attributes (#679) (via @RaZer0k & Co-authored-by: Eulises Vargas )
+- [New] Async implementation of freezing top row (#684)  (via @BaatenHannes )
+- [New] Upgrade to .NET 8.0 and refactor input value extraction (#681) (via @ramioh )
+- [Bug] Yield empty self-closing row tags as empty row during query. (#673) (via @aulickiDnv )
+
+
+
 ### 1.34.2
+
 - [New] Add MniExcelDataReaderBase class to simplify code (#651) (via @ArgoZhang )
 - [OPT] perf csv insert (#653) (via @izanhzh )
 - [Bug] Fix dimension writing in FastMode (#659) (via @Discolai )

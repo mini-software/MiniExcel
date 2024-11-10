@@ -30,6 +30,11 @@ namespace MiniExcelLibs.OpenXml
             return this._streamWriter.BaseStream.Position;
         }
 
+        public void WriteWhitespace(int length)
+        {
+            _streamWriter.Write(new string(' ', length));
+        }
+
         public long Flush()
         {
             this._streamWriter.Flush();

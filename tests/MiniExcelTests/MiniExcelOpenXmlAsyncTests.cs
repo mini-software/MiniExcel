@@ -1489,6 +1489,5 @@ namespace MiniExcelLibs.Tests
                 Assert.Equal(onlyDate.ToDateTime(TimeOnly.MinValue), (DateTime)rows[1]["Column4"]);
             }
         }
-
     }
 }

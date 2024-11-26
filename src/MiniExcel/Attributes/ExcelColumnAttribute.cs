@@ -57,6 +57,8 @@ namespace MiniExcelLibs.Attributes
     public class DynamicExcelColumn : ExcelColumnAttribute
     {
         public string Key { get; set; }
+        
+        public Func<object, string> CustomFormatter { get; set; }
 
         public DynamicExcelColumn(string key)
         {

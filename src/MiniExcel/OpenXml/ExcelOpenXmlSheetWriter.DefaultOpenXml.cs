@@ -192,7 +192,7 @@ namespace MiniExcelLibs.OpenXml
             if (_configuration.DynamicColumns == null || _configuration.DynamicColumns.Length <= 0)
                 return prop;
 
-            var dynamicColumn = _configuration.DynamicColumns.SingleOrDefault(_ => _.Key == columnName);
+            var dynamicColumn = _configuration.DynamicColumns.SingleOrDefault(_ => string.Equals(_.Key , columnName,StringComparison.OrdinalIgnoreCase));
             if (dynamicColumn == null || dynamicColumn.Ignore)
             {
                 return prop;
@@ -203,6 +203,7 @@ namespace MiniExcelLibs.OpenXml
             prop.ExcelColumnType = dynamicColumn.Type;
             prop.ExcelColumnIndex = dynamicColumn.Index;
             prop.ExcelColumnWidth = dynamicColumn.Width;
+            prop.CustomFormatter = dynamicColumn.CustomFormatter;
             //prop.ExcludeNullableType = item2[key]?.GetType();
 
             if (dynamicColumn.Format != null)

@@ -570,6 +570,19 @@ namespace MiniExcelLibs.OpenXml
             var styleIndex = tuple.Item1; // https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.spreadsheet.cell?view=openxml-3.0.1
             var dataType = tuple.Item2; // https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.spreadsheet.cellvalues?view=openxml-3.0.1
             var cellValue = tuple.Item3;
+            
+            if (columnInfo?.CustomFormatter != null)
+            {
+                try
+                {
+                    cellValue = columnInfo.CustomFormatter(cellValue);
+                }
+                catch (Exception e)
+                {
+                    //ignored
+                }
+            }
+            
             var columnType = columnInfo?.ExcelColumnType ?? ColumnType.Value;
 
             /*Prefix and suffix blank space will lost after SaveAs #294*/

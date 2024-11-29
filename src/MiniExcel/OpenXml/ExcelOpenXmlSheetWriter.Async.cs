@@ -117,8 +117,25 @@ namespace MiniExcelLibs.OpenXml
                 for (var i = 0; i < reader.FieldCount; i++)
                 {
                     var columnName = reader.GetName(i);
-                    var prop = GetColumnInfosFromDynamicConfiguration(columnName);
-                    props.Add(prop);
+
+                    if (!_configuration.DynamicColumnFirst)
+                    {
+                        var prop = GetColumnInfosFromDynamicConfiguration(columnName);
+                        props.Add(prop);
+                        continue;
+                    }
+
+                    if (_configuration
+                        .DynamicColumns
+                        .Any(a => string.Equals(
+                            a.Key,
+                            columnName,
+                            StringComparison.OrdinalIgnoreCase)))
+
+                    {
+                        var prop = GetColumnInfosFromDynamicConfiguration(columnName);
+                        props.Add(prop);
+                    }
                 }
                 maxColumnIndex = props.Count;
 
@@ -149,7 +166,18 @@ namespace MiniExcelLibs.OpenXml
                     var xIndex = 1;
                     for (int i = 0; i < fieldCount; i++)
                     {
-                        var cellValue = reader.GetValue(i);
+                        object cellValue;
+
+                        if (_configuration.DynamicColumnFirst)
+                        {
+                            var columnIndex = reader.GetOrdinal(props[i].Key.ToString());
+                            cellValue = reader.GetValue(columnIndex);
+                        }
+                        else
+                        {
+                            cellValue = reader.GetValue(i);
+                        }
+
                         await WriteCellAsync(writer, yIndex, xIndex, cellValue, props[i], widths);
                         xIndex++;
                     }
@@ -534,7 +562,21 @@ namespace MiniExcelLibs.OpenXml
             var columnType = p.ExcelColumnType;
 
             /*Prefix and suffix blank space will lost after SaveAs #294*/
-            var preserveSpace = cellValue != null && (cellValue.StartsWith(" ", StringComparison.Ordinal) || cellValue.EndsWith(" ", StringComparison.Ordinal));
+            var preserveSpace = cellValue != null && (cellValue.StartsWith(" ", StringComparison.Ordinal) ||
+                                                      cellValue.EndsWith(" ", StringComparison.Ordinal));
+
+            if (p.CustomFormatter != null)
+            {
+                try
+                {
+                    cellValue = p.CustomFormatter(cellValue);
+                }
+                catch (Exception e)
+                {
+                    //ignored
+                }
+            }
+            
             await writer.WriteAsync(WorksheetXml.Cell(columnReference, dataType, styleIndex, cellValue, preserveSpace: preserveSpace, columnType: columnType));
             widthCollection?.AdjustWidth(cellIndex, cellValue);
         }

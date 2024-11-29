@@ -10,5 +10,10 @@ namespace MiniExcelLibs
         public DynamicExcelColumn[] DynamicColumns { get; set; }
         public int BufferSize { get; set; } = 1024 * 512;
         public bool FastMode { get; set; } = false;
+        
+        /// <summary>
+        ///     When exporting using DataReader, the data not in DynamicColumn will be filtered.
+        /// </summary>
+        public bool DynamicColumnFirst { get; set; } = false;
     }
 }

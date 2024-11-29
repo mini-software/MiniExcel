@@ -25,6 +25,7 @@
         public bool ExcelIgnore { get; internal set; }
         public int ExcelFormatId { get; internal set; }
         public ColumnType ExcelColumnType { get; internal set; }
+        public Func<object, string> CustomFormatter { get; set; }
     }
 
     internal class ExcellSheetInfo
@@ -310,6 +311,7 @@
                     isIgnore = dynamicColumn.Ignore;
                     p.ExcelColumnWidth = dynamicColumn.Width;
                     p.ExcelColumnType = dynamicColumn.Type;
+                    p.CustomFormatter = dynamicColumn.CustomFormatter;
                 }
             }
             if (!isIgnore)

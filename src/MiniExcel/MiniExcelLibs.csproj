@@ -35,9 +35,6 @@ Todo : https://github.com/mini-software/MiniExcel/projects/1?fullscreen=true</De
 		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 	</PropertyGroup>
-	<ItemGroup Condition=" '$(TargetFramework)' == 'net461'">
-		<Reference Include="System.IO.Compression" />
-	</ItemGroup>
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net45'">
 		<Reference Include="System.IO.Compression" />
 	</ItemGroup>

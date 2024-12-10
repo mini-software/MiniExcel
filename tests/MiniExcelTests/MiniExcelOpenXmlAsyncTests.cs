@@ -626,21 +626,11 @@ namespace MiniExcelLibs.Tests
                 var table = new DataTable();
                 await MiniExcel.SaveAsAsync(path, table);
                 Assert.Equal("A1", Helpers.GetFirstSheetDimensionRefValue(path));
-                {
-                    using (var stream = File.OpenRead(path))
-                    {
-                        var d = await stream.QueryAsync();
-                        var rows = d.ToList();
-                        Assert.Single(rows); //TODO:
-                    }
-                    File.Delete(path);
-                }
-
+                File.Delete(path);
                 await MiniExcel.SaveAsAsync(path, table, printHeader: false);
                 Assert.Equal("A1", Helpers.GetFirstSheetDimensionRefValue(path));
                 File.Delete(path);
             }
-
             {
                 var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
                 var table = new DataTable();

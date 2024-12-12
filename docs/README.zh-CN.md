@@ -26,6 +26,12 @@
 ---
 
 
+### 1.36.0
+- [New] Write auto column width (#695) (via @Discolai)
+- [New] Enhance IDataReader export with DynamicColumnFirst and Custom Formatting Delegate (#700) (via @
+IcedMango)
+- [Bug] If cellValue is string no matter that it contains only numbers will put the value as text. Preventing of losing leading zeroes (via @psyhlo)
+
 
 ### 1.35.0
 

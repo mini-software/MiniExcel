@@ -339,7 +339,7 @@
             {
                 try
                 {
-                    return NextResult() ? Task.FromResult(true) : Task.FromResult(false);
+                    return Read() ? Task.FromResult(true) : Task.FromResult(false);
                 }
                 catch (Exception e)
                 {

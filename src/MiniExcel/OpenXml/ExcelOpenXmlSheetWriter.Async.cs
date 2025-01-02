@@ -1,12 +1,10 @@
-﻿using MiniExcelLibs.Attributes;
-using MiniExcelLibs.OpenXml.Constants;
+﻿using MiniExcelLibs.OpenXml.Constants;
 using MiniExcelLibs.Utils;
 using MiniExcelLibs.Zip;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
-using System.Globalization;
 using System.IO.Compression;
 using System.Linq;
 using System.Text;
@@ -100,6 +98,12 @@ namespace MiniExcelLibs.OpenXml
 
         private async Task GenerateSheetByIDataReaderAsync(MiniExcelAsyncStreamWriter writer, IDataReader reader)
         {
+            if (reader is IMiniExcelDataReader miniExcelDataReader)
+            {
+                await GenerateSheetByIMiniExcelDataReaderAsync(writer, miniExcelDataReader);
+                return;
+            }
+
             long dimensionPlaceholderPostition = 0;
             await writer.WriteAsync(WorksheetXml.StartWorksheet);
             var yIndex = 1;
@@ -157,7 +161,10 @@ namespace MiniExcelLibs.OpenXml
                 if (_printHeader)
                 {
                     await PrintHeaderAsync(writer, props);
-                    yIndex++;
+                    if (props.Count > 0)
+                    {
+                        yIndex++;
+                    }
                 }
 
                 while (reader.Read())
@@ -176,6 +183,119 @@ namespace MiniExcelLibs.OpenXml
                         else
                         {
                             cellValue = reader.GetValue(i);
+                        }
+
+                        await WriteCellAsync(writer, yIndex, xIndex, cellValue, props[i], widths);
+                        xIndex++;
+                    }
+                    await writer.WriteAsync(WorksheetXml.EndRow);
+                    yIndex++;
+                }
+
+                // Subtract 1 because cell indexing starts with 1
+                maxRowIndex = yIndex - 1;
+            }
+
+            await writer.WriteAsync(WorksheetXml.EndSheetData);
+
+            if (_configuration.AutoFilter)
+            {
+                await writer.WriteAsync(WorksheetXml.Autofilter(GetDimensionRef(maxRowIndex, maxColumnIndex)));
+            }
+
+            await writer.WriteAndFlushAsync(WorksheetXml.EndWorksheet);
+
+            if (_configuration.FastMode)
+            {
+                await WriteDimensionAsync(writer, maxRowIndex, maxColumnIndex, dimensionPlaceholderPostition);
+            }
+            if (_configuration.EnableAutoWidth)
+            {
+                await OverWriteColumnWidthPlaceholdersAsync(writer, columnWidthsPlaceholderPosition, widths.Columns);
+            }
+        }
+
+        private async Task GenerateSheetByIMiniExcelDataReaderAsync(MiniExcelAsyncStreamWriter writer, IMiniExcelDataReader reader)
+        {
+            long dimensionPlaceholderPostition = 0;
+            await writer.WriteAsync(WorksheetXml.StartWorksheet);
+            var yIndex = 1;
+            int maxColumnIndex;
+            int maxRowIndex;
+            ExcelWidthCollection widths = null;
+            long columnWidthsPlaceholderPosition = 0;
+            {
+                if (_configuration.FastMode)
+                {
+                    dimensionPlaceholderPostition = await WriteDimensionPlaceholderAsync(writer);
+                }
+
+                var props = new List<ExcelColumnInfo>();
+                for (var i = 0; i < reader.FieldCount; i++)
+                {
+                    var columnName = await reader.GetNameAsync(i);
+
+                    if (!_configuration.DynamicColumnFirst)
+                    {
+                        var prop = GetColumnInfosFromDynamicConfiguration(columnName);
+                        props.Add(prop);
+                        continue;
+                    }
+
+                    if (_configuration
+                        .DynamicColumns
+                        .Any(a => string.Equals(
+                            a.Key,
+                            columnName,
+                            StringComparison.OrdinalIgnoreCase)))
+
+                    {
+                        var prop = GetColumnInfosFromDynamicConfiguration(columnName);
+                        props.Add(prop);
+                    }
+                }
+                maxColumnIndex = props.Count;
+
+                //sheet view
+                await writer.WriteAsync(GetSheetViews());
+
+                if (_configuration.EnableAutoWidth)
+                {
+                    columnWidthsPlaceholderPosition = await WriteColumnWidthPlaceholdersAsync(writer, props);
+                    widths = new ExcelWidthCollection(_configuration.MinWidth, _configuration.MaxWidth, props);
+                }
+                else
+                {
+                    await WriteColumnsWidthsAsync(writer, ExcelColumnWidth.FromProps(props));
+                }
+
+                await writer.WriteAsync(WorksheetXml.StartSheetData);
+                int fieldCount = reader.FieldCount;
+                if (_printHeader)
+                {
+                    await PrintHeaderAsync(writer, props);
+                    if (props.Count > 0)
+                    {
+                        yIndex++;
+                    }
+                }
+
+                while (await reader.ReadAsync())
+                {
+                    await writer.WriteAsync(WorksheetXml.StartRow(yIndex));
+                    var xIndex = 1;
+                    for (int i = 0; i < fieldCount; i++)
+                    {
+                        object cellValue;
+
+                        if (_configuration.DynamicColumnFirst)
+                        {
+                            var columnIndex = reader.GetOrdinal(props[i].Key.ToString());
+                            cellValue = await reader.GetValueAsync(columnIndex);
+                        }
+                        else
+                        {
+                            cellValue = await reader.GetValueAsync(i);
                         }
 
                         await WriteCellAsync(writer, yIndex, xIndex, cellValue, props[i], widths);
@@ -576,7 +696,7 @@ namespace MiniExcelLibs.OpenXml
                     //ignored
                 }
             }
-            
+
             await writer.WriteAsync(WorksheetXml.Cell(columnReference, dataType, styleIndex, cellValue, preserveSpace: preserveSpace, columnType: columnType));
             widthCollection?.AdjustWidth(cellIndex, cellValue);
         }

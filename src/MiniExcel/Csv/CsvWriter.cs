@@ -140,10 +140,8 @@ namespace MiniExcelLibs.Csv
             await Task.Run(() => SaveAs(), cancellationToken).ConfigureAwait(false);
         }
 
-        private void GenerateSheetByIDataReader(object value, string seperator, string newLine, StreamWriter writer)
+        private void GenerateSheetByIDataReader(IDataReader reader, string seperator, string newLine, StreamWriter writer)
         {
-            var reader = (IDataReader)value;
-
             int fieldCount = reader.FieldCount;
             if (fieldCount == 0)
                 throw new InvalidDataException("fieldCount is 0");

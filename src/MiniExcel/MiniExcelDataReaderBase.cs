@@ -2,11 +2,13 @@
 {
     using System;
     using System.Data;
+    using System.Threading;
+    using System.Threading.Tasks;
 
     /// <summary>
-    /// IDataReader Base Class
+    /// IMiniExcelDataReader Base Class
     /// </summary>
-    public abstract class MiniExcelDataReaderBase : IDataReader
+    public abstract class MiniExcelDataReaderBase : IMiniExcelDataReader
     {
         /// <summary>
         /// <inheritdoc/>
@@ -205,9 +207,71 @@
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
+        /// <returns></returns>
+        public Task<bool> NextResultAsync() => NextResultAsync(CancellationToken.None);
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public virtual Task<bool> NextResultAsync(CancellationToken cancellationToken)
+        {
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return MiniExcelTask.FromCanceled<bool>(new CancellationToken(true));
+            }
+            else
+            {
+                try
+                {
+                    return NextResult() ? Task.FromResult(true) : Task.FromResult(false);
+                }
+                catch (Exception e)
+                {
+                    return MiniExcelTask.FromException<bool>(e);
+                }
+            }
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
         /// <param name="i"></param>
         /// <returns></returns>
         public abstract string GetName(int i);
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="i"></param>
+        /// <returns></returns>
+        public Task<string> GetNameAsync(int i) => GetNameAsync(i, CancellationToken.None);
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="i"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public virtual Task<string> GetNameAsync(int i, CancellationToken cancellationToken)
+        {
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return MiniExcelTask.FromCanceled<string>(new CancellationToken(true));
+            }
+            else
+            {
+                try
+                {
+                    return Task.FromResult(GetName(i));
+                }
+                catch (Exception e)
+                {
+                    return MiniExcelTask.FromException<string>(e);
+                }
+            }
+        }
 
         /// <summary>
         /// <inheritdoc/>
@@ -219,8 +283,70 @@
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
+        /// <param name="i"></param>
+        /// <returns></returns>
+        public Task<object> GetValueAsync(int i) => GetValueAsync(i, CancellationToken.None);
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="i"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public virtual Task<object> GetValueAsync(int i, CancellationToken cancellationToken)
+        {
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return MiniExcelTask.FromCanceled<object>(new CancellationToken(true));
+            }
+            else
+            {
+                try
+                {
+                    return Task.FromResult(GetValue(i));
+                }
+                catch (Exception e)
+                {
+                    return MiniExcelTask.FromException<object>(e);
+                }
+            }
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
         /// <returns></returns>
         public abstract bool Read();
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <returns></returns>
+        public Task<bool> ReadAsync() => ReadAsync(CancellationToken.None);
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public virtual Task<bool> ReadAsync(CancellationToken cancellationToken)
+        {
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return MiniExcelTask.FromCanceled<bool>(new CancellationToken(true));
+            }
+            else
+            {
+                try
+                {
+                    return NextResult() ? Task.FromResult(true) : Task.FromResult(false);
+                }
+                catch (Exception e)
+                {
+                    return MiniExcelTask.FromException<bool>(e);
+                }
+            }
+        }
 
         /// <summary>
         /// <inheritdoc/>
@@ -233,10 +359,18 @@
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        /// <param name="disposing"></param>
-        protected virtual void Dispose(bool disposing)
+        /// <returns></returns>
+        public virtual Task CloseAsync()
         {
-
+            try
+            {
+                Close();
+                return MiniExcelTask.CompletedTask;
+            }
+            catch (Exception e)
+            {
+                return MiniExcelTask.FromException(e);
+            }
         }
 
         /// <summary>
@@ -246,6 +380,28 @@
         {
             Dispose(true);
             GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <returns></returns>
+        public virtual Task DisposeAsync()
+        {
+            Dispose();
+            return MiniExcelTask.CompletedTask;
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="disposing"></param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                Close();
+            }
         }
     }
 }

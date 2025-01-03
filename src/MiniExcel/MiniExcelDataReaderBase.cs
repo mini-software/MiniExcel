@@ -2,11 +2,13 @@
 {
     using System;
     using System.Data;
+    using System.Threading;
+    using System.Threading.Tasks;
 
     /// <summary>
-    /// IDataReader Base Class
+    /// IMiniExcelDataReader Base Class
     /// </summary>
-    public abstract class MiniExcelDataReaderBase : IDataReader
+    public abstract class MiniExcelDataReaderBase : IMiniExcelDataReader
     {
         /// <summary>
         /// <inheritdoc/>
@@ -205,9 +207,58 @@
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public virtual Task<bool> NextResultAsync(CancellationToken cancellationToken = default)
+        {
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return MiniExcelTask.FromCanceled<bool>(cancellationToken);
+            }
+            else
+            {
+                try
+                {
+                    return NextResult() ? Task.FromResult(true) : Task.FromResult(false);
+                }
+                catch (Exception e)
+                {
+                    return MiniExcelTask.FromException<bool>(e);
+                }
+            }
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
         /// <param name="i"></param>
         /// <returns></returns>
         public abstract string GetName(int i);
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="i"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public virtual Task<string> GetNameAsync(int i, CancellationToken cancellationToken = default)
+        {
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return MiniExcelTask.FromCanceled<string>(cancellationToken);
+            }
+            else
+            {
+                try
+                {
+                    return Task.FromResult(GetName(i));
+                }
+                catch (Exception e)
+                {
+                    return MiniExcelTask.FromException<string>(e);
+                }
+            }
+        }
 
         /// <summary>
         /// <inheritdoc/>
@@ -219,8 +270,57 @@
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
+        /// <param name="i"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public virtual Task<object> GetValueAsync(int i, CancellationToken cancellationToken = default)
+        {
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return MiniExcelTask.FromCanceled<object>(cancellationToken);
+            }
+            else
+            {
+                try
+                {
+                    return Task.FromResult(GetValue(i));
+                }
+                catch (Exception e)
+                {
+                    return MiniExcelTask.FromException<object>(e);
+                }
+            }
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
         /// <returns></returns>
         public abstract bool Read();
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public virtual Task<bool> ReadAsync(CancellationToken cancellationToken = default)
+        {
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return MiniExcelTask.FromCanceled<bool>(cancellationToken);
+            }
+            else
+            {
+                try
+                {
+                    return Read() ? Task.FromResult(true) : Task.FromResult(false);
+                }
+                catch (Exception e)
+                {
+                    return MiniExcelTask.FromException<bool>(e);
+                }
+            }
+        }
 
         /// <summary>
         /// <inheritdoc/>
@@ -233,10 +333,18 @@
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        /// <param name="disposing"></param>
-        protected virtual void Dispose(bool disposing)
+        /// <returns></returns>
+        public virtual Task CloseAsync()
         {
-
+            try
+            {
+                Close();
+                return MiniExcelTask.CompletedTask;
+            }
+            catch (Exception e)
+            {
+                return MiniExcelTask.FromException(e);
+            }
         }
 
         /// <summary>
@@ -246,6 +354,31 @@
         {
             Dispose(true);
             GC.SuppressFinalize(this);
+        }
+
+#if NET8_0_OR_GREATER
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <returns></returns>
+        /// <exception cref="NotImplementedException"></exception>
+        public virtual ValueTask DisposeAsync()
+        {
+            Dispose();
+            return default;
+        }
+#endif
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="disposing"></param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                Close();
+            }
         }
     }
 }

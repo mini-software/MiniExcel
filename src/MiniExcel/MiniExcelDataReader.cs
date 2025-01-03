@@ -65,6 +65,7 @@
         {
             return _keys[i];
         }
+
         /// <inheritdoc/>
         protected override void Dispose(bool disposing)
         {

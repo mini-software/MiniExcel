@@ -393,16 +393,6 @@
             Dispose();
             return default;
         }
-#else
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <returns></returns>
-        public virtual Task DisposeAsync()
-        {
-            Dispose();
-            return MiniExcelTask.CompletedTask;
-        }
 #endif
 
         /// <summary>

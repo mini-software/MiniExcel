@@ -28,9 +28,5 @@ namespace MiniExcelLibs
         Task<bool> ReadAsync();
 
         Task<bool> ReadAsync(CancellationToken cancellationToken);
-
-#if !NET8_0_OR_GREATER
-        Task DisposeAsync();
-#endif
     }
 }

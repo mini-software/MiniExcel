@@ -1489,5 +1489,32 @@ namespace MiniExcelLibs.Tests
                 Assert.Equal(onlyDate.ToDateTime(TimeOnly.MinValue), (DateTime)rows[1]["Column4"]);
             }
         }
+
+        [Fact]
+        public async Task SaveAsByMiniExcelDataReader()
+        {
+            var path1 = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
+
+            var values = new List<Demo>()
+            {
+                new Demo { Column1= "MiniExcel" ,Column2 = 1 },
+                new Demo { Column1 = "Github", Column2 = 2 }
+            };
+            await MiniExcel.SaveAsAsync(path1, values);
+
+            var reader = (IMiniExcelDataReader)MiniExcel.GetReader(path1, true);
+
+            var path2 = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
+
+            await MiniExcel.SaveAsAsync(path2, reader);
+
+            var results = MiniExcel.Query<Demo>(path2);
+
+            Assert.True(results.Count() == 2);
+            Assert.True(results.First().Column1 == "MiniExcel");
+            Assert.True(results.First().Column2 == 1);
+            Assert.True(results.Last().Column1 == "Github");
+            Assert.True(results.Last().Column2 == 2);
+        }
     }
 }

@@ -1,10 +1,15 @@
-﻿using System.Data;
+﻿using System;
+using System.Data;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace MiniExcelLibs
 {
+#if !NET8_0_OR_GREATER
     public interface IMiniExcelDataReader : IDataReader
+#else
+    public interface IMiniExcelDataReader : IDataReader, IAsyncDisposable
+#endif
     {
         Task CloseAsync();
 
@@ -24,6 +29,8 @@ namespace MiniExcelLibs
 
         Task<bool> ReadAsync(CancellationToken cancellationToken);
 
+#if !NET8_0_OR_GREATER
         Task DisposeAsync();
+#endif
     }
 }

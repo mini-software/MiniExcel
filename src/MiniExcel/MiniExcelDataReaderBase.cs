@@ -382,6 +382,18 @@
             GC.SuppressFinalize(this);
         }
 
+#if NET8_0_OR_GREATER
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <returns></returns>
+        /// <exception cref="NotImplementedException"></exception>
+        public virtual ValueTask DisposeAsync()
+        {
+            Dispose();
+            return default;
+        }
+#else
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
@@ -391,6 +403,7 @@
             Dispose();
             return MiniExcelTask.CompletedTask;
         }
+#endif
 
         /// <summary>
         /// <inheritdoc/>

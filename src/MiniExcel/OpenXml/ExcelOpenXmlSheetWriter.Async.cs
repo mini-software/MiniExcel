@@ -56,7 +56,7 @@ namespace MiniExcelLibs.OpenXml
                     switch (value)
                     {
                         case IDataReader dataReader:
-                            await GenerateSheetByIDataReaderAsync(writer, dataReader);
+                            await GenerateSheetByIDataReaderAsync(writer, dataReader, cancellationToken);
                             break;
                         case IEnumerable enumerable:
                             await GenerateSheetByEnumerableAsync(writer, enumerable);
@@ -96,11 +96,11 @@ namespace MiniExcelLibs.OpenXml
             writer.SetPosition(position);
         }
 
-        private async Task GenerateSheetByIDataReaderAsync(MiniExcelAsyncStreamWriter writer, IDataReader reader)
+        private async Task GenerateSheetByIDataReaderAsync(MiniExcelAsyncStreamWriter writer, IDataReader reader, CancellationToken cancellationToken)
         {
             if (reader is IMiniExcelDataReader miniExcelDataReader)
             {
-                await GenerateSheetByIMiniExcelDataReaderAsync(writer, miniExcelDataReader);
+                await GenerateSheetByIMiniExcelDataReaderAsync(writer, miniExcelDataReader, cancellationToken);
                 return;
             }
 
@@ -215,7 +215,7 @@ namespace MiniExcelLibs.OpenXml
             }
         }
 
-        private async Task GenerateSheetByIMiniExcelDataReaderAsync(MiniExcelAsyncStreamWriter writer, IMiniExcelDataReader reader)
+        private async Task GenerateSheetByIMiniExcelDataReaderAsync(MiniExcelAsyncStreamWriter writer, IMiniExcelDataReader reader, CancellationToken cancellationToken)
         {
             long dimensionPlaceholderPostition = 0;
             await writer.WriteAsync(WorksheetXml.StartWorksheet);
@@ -233,7 +233,7 @@ namespace MiniExcelLibs.OpenXml
                 var props = new List<ExcelColumnInfo>();
                 for (var i = 0; i < reader.FieldCount; i++)
                 {
-                    var columnName = await reader.GetNameAsync(i);
+                    var columnName = await reader.GetNameAsync(i, cancellationToken);
 
                     if (!_configuration.DynamicColumnFirst)
                     {
@@ -280,7 +280,7 @@ namespace MiniExcelLibs.OpenXml
                     }
                 }
 
-                while (await reader.ReadAsync())
+                while (await reader.ReadAsync(cancellationToken))
                 {
                     await writer.WriteAsync(WorksheetXml.StartRow(yIndex));
                     var xIndex = 1;
@@ -291,11 +291,11 @@ namespace MiniExcelLibs.OpenXml
                         if (_configuration.DynamicColumnFirst)
                         {
                             var columnIndex = reader.GetOrdinal(props[i].Key.ToString());
-                            cellValue = await reader.GetValueAsync(columnIndex);
+                            cellValue = await reader.GetValueAsync(columnIndex, cancellationToken);
                         }
                         else
                         {
-                            cellValue = await reader.GetValueAsync(i);
+                            cellValue = await reader.GetValueAsync(i, cancellationToken);
                         }
 
                         await WriteCellAsync(writer, yIndex, xIndex, cellValue, props[i], widths);

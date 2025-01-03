@@ -219,7 +219,7 @@
         {
             if (cancellationToken.IsCancellationRequested)
             {
-                return MiniExcelTask.FromCanceled<bool>(new CancellationToken(true));
+                return MiniExcelTask.FromCanceled<bool>(cancellationToken);
             }
             else
             {
@@ -258,7 +258,7 @@
         {
             if (cancellationToken.IsCancellationRequested)
             {
-                return MiniExcelTask.FromCanceled<string>(new CancellationToken(true));
+                return MiniExcelTask.FromCanceled<string>(cancellationToken);
             }
             else
             {
@@ -297,7 +297,7 @@
         {
             if (cancellationToken.IsCancellationRequested)
             {
-                return MiniExcelTask.FromCanceled<object>(new CancellationToken(true));
+                return MiniExcelTask.FromCanceled<object>(cancellationToken);
             }
             else
             {
@@ -333,7 +333,7 @@
         {
             if (cancellationToken.IsCancellationRequested)
             {
-                return MiniExcelTask.FromCanceled<bool>(new CancellationToken(true));
+                return MiniExcelTask.FromCanceled<bool>(cancellationToken);
             }
             else
             {

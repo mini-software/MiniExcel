@@ -691,7 +691,7 @@ namespace MiniExcelLibs.OpenXml
                 {
                     cellValue = p.CustomFormatter(cellValue);
                 }
-                catch (Exception e)
+                catch
                 {
                     //ignored
                 }

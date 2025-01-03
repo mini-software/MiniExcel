@@ -13,20 +13,12 @@ namespace MiniExcelLibs
     {
         Task CloseAsync();
 
-        Task<string> GetNameAsync(int i);
+        Task<string> GetNameAsync(int i, CancellationToken cancellationToken = default);
 
-        Task<string> GetNameAsync(int i, CancellationToken cancellationToken);
+        Task<object> GetValueAsync(int i, CancellationToken cancellationToken = default);
 
-        Task<object> GetValueAsync(int i);
+        Task<bool> NextResultAsync(CancellationToken cancellationToken = default);
 
-        Task<object> GetValueAsync(int i, CancellationToken cancellationToken);
-
-        Task<bool> NextResultAsync();
-
-        Task<bool> NextResultAsync(CancellationToken cancellationToken);
-
-        Task<bool> ReadAsync();
-
-        Task<bool> ReadAsync(CancellationToken cancellationToken);
+        Task<bool> ReadAsync(CancellationToken cancellationToken = default);
     }
 }

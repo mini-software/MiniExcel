@@ -207,15 +207,9 @@
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        /// <returns></returns>
-        public Task<bool> NextResultAsync() => NextResultAsync(CancellationToken.None);
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public virtual Task<bool> NextResultAsync(CancellationToken cancellationToken)
+        public virtual Task<bool> NextResultAsync(CancellationToken cancellationToken = default)
         {
             if (cancellationToken.IsCancellationRequested)
             {
@@ -245,16 +239,9 @@
         /// <inheritdoc/>
         /// </summary>
         /// <param name="i"></param>
-        /// <returns></returns>
-        public Task<string> GetNameAsync(int i) => GetNameAsync(i, CancellationToken.None);
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="i"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public virtual Task<string> GetNameAsync(int i, CancellationToken cancellationToken)
+        public virtual Task<string> GetNameAsync(int i, CancellationToken cancellationToken = default)
         {
             if (cancellationToken.IsCancellationRequested)
             {
@@ -284,16 +271,9 @@
         /// <inheritdoc/>
         /// </summary>
         /// <param name="i"></param>
-        /// <returns></returns>
-        public Task<object> GetValueAsync(int i) => GetValueAsync(i, CancellationToken.None);
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="i"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public virtual Task<object> GetValueAsync(int i, CancellationToken cancellationToken)
+        public virtual Task<object> GetValueAsync(int i, CancellationToken cancellationToken = default)
         {
             if (cancellationToken.IsCancellationRequested)
             {
@@ -321,15 +301,9 @@
         /// <summary>
         /// <inheritdoc/>
         /// </summary>
-        /// <returns></returns>
-        public Task<bool> ReadAsync() => ReadAsync(CancellationToken.None);
-
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public virtual Task<bool> ReadAsync(CancellationToken cancellationToken)
+        public virtual Task<bool> ReadAsync(CancellationToken cancellationToken = default)
         {
             if (cancellationToken.IsCancellationRequested)
             {

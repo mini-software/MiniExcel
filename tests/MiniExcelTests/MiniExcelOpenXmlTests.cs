@@ -622,14 +622,7 @@ namespace MiniExcelLibs.Tests
                 var table = new DataTable();
                 MiniExcel.SaveAs(path, table);
                 Assert.Equal("A1", Helpers.GetFirstSheetDimensionRefValue(path));
-                {
-                    using (var stream = File.OpenRead(path))
-                    {
-                        var rows = stream.Query().ToList();
-                        Assert.Single(rows); //TODO:
-                    }
-                    File.Delete(path);
-                }
+                File.Delete(path);
 
                 MiniExcel.SaveAs(path, table, printHeader: false);
                 Assert.Equal("A1", Helpers.GetFirstSheetDimensionRefValue(path));

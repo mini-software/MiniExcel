@@ -1685,5 +1685,32 @@ namespace MiniExcelLibs.Tests
 ", content);
             }
         }
+
+        [Fact]
+        public async Task SaveAsByAsyncEnumerable()
+        {
+            var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
+
+#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
+            static async IAsyncEnumerable<Demo> GetValues()
+            {
+                yield return new Demo { Column1 = "MiniExcel", Column2 = 1 };
+                yield return new Demo { Column1 = "Github", Column2 = 2 };
+            }
+#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
+
+
+            await MiniExcel.SaveAsAsync(path, GetValues());
+
+            var results = MiniExcel.Query<Demo>(path);
+
+            Assert.True(results.Count() == 2);
+            Assert.True(results.First().Column1 == "MiniExcel");
+            Assert.True(results.First().Column2 == 1);
+            Assert.True(results.Last().Column1 == "Github");
+            Assert.True(results.Last().Column2 == 2);
+
+            File.Delete(path);
+        }
     }
 }

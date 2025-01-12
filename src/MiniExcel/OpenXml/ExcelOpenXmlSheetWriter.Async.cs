@@ -145,40 +145,60 @@ namespace MiniExcelLibs.OpenXml
             writer.SetPosition(position);
         }
 
-        private async Task WriteValuesAsync(MiniExcelAsyncStreamWriter writer, object values)
-        {
-            IMiniExcelWriteAdapter writeAdapter = null;
 #if NETSTANDARD2_0_OR_GREATER || NET
-            IAsyncMiniExcelWriteAdapter asyncWriteAdapter = null;
+        private bool TryGetAsyncExcelWriteAdapter(object values, Configuration configuration, out IAsyncMiniExcelWriteAdapter writeAdapter)
+        {
+            writeAdapter = null;
+            if (values.GetType().IsAsyncEnumerable(out var genericArgument))
+            {
+                var writeAdapterType = typeof(AsyncEnumerableWriteAdapter<>).MakeGenericType(genericArgument);
+                writeAdapter = (IAsyncMiniExcelWriteAdapter)Activator.CreateInstance(writeAdapterType, values, configuration);
+                return true;
+            }
+            if (values is IMiniExcelDataReader miniExcelDataReader)
+            {
+                writeAdapter = new MiniExcelDataReaderWriteAdapter(miniExcelDataReader, _configuration);
+                return true;
+            }
+
+            return false;
+        }
 #endif
+
+        private IMiniExcelWriteAdapter GetExcelWriteAdapter(object values, Configuration configuration)
+        {
             switch (values)
             {
-#if NETSTANDARD2_0_OR_GREATER || NET
-                case IMiniExcelDataReader miniExcelDataReader:
-                    asyncWriteAdapter = new MiniExcelDataReaderWriteAdapter(miniExcelDataReader, _configuration);
-                    break;
-#endif
                 case IDataReader dataReader:
-                    writeAdapter = new DataReaderWriteAdapter(dataReader, _configuration);
-                    break;
+                    return new DataReaderWriteAdapter(dataReader, _configuration);
                 case IEnumerable enumerable:
-                    writeAdapter = new EnumerableWriteAdapter(enumerable, _configuration);
-                    break;
+                    return new EnumerableWriteAdapter(enumerable, _configuration);
                 case DataTable dataTable:
-                    writeAdapter = new DataTableWriteAdapter(dataTable, _configuration);
-                    break;
+                    return new DataTableWriteAdapter(dataTable, _configuration);
                 default:
                     throw new NotImplementedException();
             }
+        }
 
+        private async Task WriteValuesAsync(MiniExcelAsyncStreamWriter writer, object values)
+        {
 #if NETSTANDARD2_0_OR_GREATER || NET
+            IMiniExcelWriteAdapter writeAdapter = null;
+            if (!TryGetAsyncExcelWriteAdapter(values, _configuration, out var asyncWriteAdapter))
+            {
+                writeAdapter = GetExcelWriteAdapter(values, _configuration);
+            }
+
             var count = 0;
             var hasCount = writeAdapter != null && writeAdapter.TryGetNonEnumeratedCount(out count);
             var props = writeAdapter?.GetColumns() ?? await asyncWriteAdapter.GetColumnsAsync();
 #else
+            IMiniExcelWriteAdapter writeAdapter =  GetExcelWriteAdapter(values, _configuration);
+
             var hasCount = writeAdapter.TryGetNonEnumeratedCount(out var count);
             var props = writeAdapter.GetColumns();
 #endif
+
             var maxColumnIndex = props.Count;
             int maxRowIndex;
             if (props.Count == 0)

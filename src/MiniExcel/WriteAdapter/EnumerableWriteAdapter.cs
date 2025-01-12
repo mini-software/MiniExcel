@@ -3,6 +3,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 
 namespace MiniExcelLibs.WriteAdapter
 {
@@ -50,7 +51,7 @@ namespace MiniExcelLibs.WriteAdapter
             return CustomPropertyHelper.GetColumnInfoFromValue(_enumerator.Current, _configuration);
         }
 
-        public IEnumerable<IEnumerable<CellWriteInfo>> GetRows(List<ExcelColumnInfo> props)
+        public IEnumerable<IEnumerable<CellWriteInfo>> GetRows(List<ExcelColumnInfo> props, CancellationToken cancellationToken = default)
         {
             if (_empty)
             {
@@ -68,6 +69,7 @@ namespace MiniExcelLibs.WriteAdapter
 
             do
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 yield return GetRowValues(_enumerator.Current, props);
             } while (_enumerator.MoveNext());
         }

@@ -1,5 +1,6 @@
 ﻿using MiniExcelLibs.Utils;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace MiniExcelLibs.WriteAdapter
 {
@@ -9,7 +10,7 @@ namespace MiniExcelLibs.WriteAdapter
 
         List<ExcelColumnInfo> GetColumns();
 
-        IEnumerable<IEnumerable<CellWriteInfo>> GetRows(List<ExcelColumnInfo> props);
+        IEnumerable<IEnumerable<CellWriteInfo>> GetRows(List<ExcelColumnInfo> props, CancellationToken cancellationToken = default);
     }
 
     internal readonly struct CellWriteInfo

@@ -1,6 +1,7 @@
 ﻿using MiniExcelLibs.Utils;
 using System.Collections.Generic;
 using System.Data;
+using System.Threading;
 
 namespace MiniExcelLibs.WriteAdapter
 {
@@ -33,10 +34,11 @@ namespace MiniExcelLibs.WriteAdapter
             return props;
         }
 
-        public IEnumerable<IEnumerable<CellWriteInfo>> GetRows(List<ExcelColumnInfo> props)
+        public IEnumerable<IEnumerable<CellWriteInfo>> GetRows(List<ExcelColumnInfo> props, CancellationToken cancellationToken = default)
         {
             for (int row = 0; row < _dataTable.Rows.Count; row++)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 yield return GetRowValues(row, props);
             }
         }

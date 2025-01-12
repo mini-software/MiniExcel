@@ -1,6 +1,8 @@
 ﻿using MiniExcelLibs.Utils;
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
 
 #if NETSTANDARD2_0_OR_GREATER || NET
@@ -35,7 +37,7 @@ namespace MiniExcelLibs.WriteAdapter
             return CustomPropertyHelper.GetColumnInfoFromValue(_enumerator.Current, _configuration);
         }
 
-        public async IAsyncEnumerable<IAsyncEnumerable<CellWriteInfo>> GetRowsAsync(List<ExcelColumnInfo> props)
+        public async IAsyncEnumerable<IAsyncEnumerable<CellWriteInfo>> GetRowsAsync(List<ExcelColumnInfo> props, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
             if (_empty)
             {
@@ -53,6 +55,7 @@ namespace MiniExcelLibs.WriteAdapter
 
             do
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 yield return GetRowValuesAsync(_enumerator.Current, props);
 
             } while (await _enumerator.MoveNextAsync());

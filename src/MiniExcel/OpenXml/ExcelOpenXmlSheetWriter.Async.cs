@@ -115,7 +115,7 @@ namespace MiniExcelLibs.OpenXml
                 }
                 else
                 {
-                    await WriteValuesAsync(writer, values);
+                    await WriteValuesAsync(writer, values, cancellationToken);
                 }
             }
             _zipDictionary.Add(sheetPath, new ZipPackageInfo(entry, ExcelContentTypes.Worksheet));
@@ -180,7 +180,7 @@ namespace MiniExcelLibs.OpenXml
             }
         }
 
-        private async Task WriteValuesAsync(MiniExcelAsyncStreamWriter writer, object values)
+        private async Task WriteValuesAsync(MiniExcelAsyncStreamWriter writer, object values, CancellationToken cancellationToken)
         {
 #if NETSTANDARD2_0_OR_GREATER || NET
             IMiniExcelWriteAdapter writeAdapter = null;
@@ -249,7 +249,7 @@ namespace MiniExcelLibs.OpenXml
 
             if (writeAdapter != null)
             {
-                foreach (var row in writeAdapter.GetRows(props))
+                foreach (var row in writeAdapter.GetRows(props, cancellationToken))
                 {
                     await writer.WriteAsync(WorksheetXml.StartRow(currentRowIndex));
                     foreach (var cellValue in row)
@@ -264,7 +264,7 @@ namespace MiniExcelLibs.OpenXml
 #if NETSTANDARD2_0_OR_GREATER || NET
             else
             {
-                await foreach (var row in asyncWriteAdapter.GetRowsAsync(props))
+                await foreach (var row in asyncWriteAdapter.GetRowsAsync(props, cancellationToken))
                 {
                     await writer.WriteAsync(WorksheetXml.StartRow(currentRowIndex));
                     await foreach (var cellValue in row)

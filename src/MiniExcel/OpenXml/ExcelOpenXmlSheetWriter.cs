@@ -183,17 +183,17 @@ namespace MiniExcelLibs.OpenXml
 
         private void WriteValues(MiniExcelStreamWriter writer, object values)
         {
-            IExcelWriteAdapter writeAdapter;
+            IMiniExcelWriteAdapter writeAdapter;
             switch (values)
             {
                 case IDataReader dataReader:
-                    writeAdapter = new DataReaderExcelWriteAdapter(dataReader, _configuration);
+                    writeAdapter = new DataReaderWriteAdapter(dataReader, _configuration);
                     break;
                 case IEnumerable enumerable:
                     writeAdapter = new EnumerableWriteAdapter(enumerable, _configuration);
                     break;
                 case DataTable dataTable:
-                    writeAdapter = new DataTableExcelWriteAdapter(dataTable, _configuration);
+                    writeAdapter = new DataTableWriteAdapter(dataTable, _configuration);
                     break;
                 default:
                     throw new NotImplementedException();

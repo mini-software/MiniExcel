@@ -147,9 +147,17 @@ namespace MiniExcelLibs.OpenXml
 
         private async Task WriteValuesAsync(MiniExcelAsyncStreamWriter writer, object values)
         {
-            IMiniExcelWriteAdapter writeAdapter;
+            IMiniExcelWriteAdapter writeAdapter = null;
+#if NETSTANDARD2_0_OR_GREATER || NET
+            IAsyncMiniExcelWriteAdapter asyncWriteAdapter = null;
+#endif
             switch (values)
             {
+#if NETSTANDARD2_0_OR_GREATER || NET
+                case IMiniExcelDataReader miniExcelDataReader:
+                    asyncWriteAdapter = new MiniExcelDataReaderWriteAdapter(miniExcelDataReader, _configuration);
+                    break;
+#endif
                 case IDataReader dataReader:
                     writeAdapter = new DataReaderWriteAdapter(dataReader, _configuration);
                     break;
@@ -163,8 +171,14 @@ namespace MiniExcelLibs.OpenXml
                     throw new NotImplementedException();
             }
 
+#if NETSTANDARD2_0_OR_GREATER || NET
+            var count = 0;
+            var hasCount = writeAdapter != null && writeAdapter.TryGetNonEnumeratedCount(out count);
+            var props = writeAdapter?.GetColumns() ?? await asyncWriteAdapter.GetColumnsAsync();
+#else
             var hasCount = writeAdapter.TryGetNonEnumeratedCount(out var count);
             var props = writeAdapter.GetColumns();
+#endif
             var maxColumnIndex = props.Count;
             int maxRowIndex;
             if (props.Count == 0)
@@ -213,17 +227,37 @@ namespace MiniExcelLibs.OpenXml
                 currentRowIndex++;
             }
 
-            foreach (var row in writeAdapter.GetRows(props))
+            if (writeAdapter != null)
             {
-                await writer.WriteAsync(WorksheetXml.StartRow(currentRowIndex));
-                foreach (var cellValue in row)
+                foreach (var row in writeAdapter.GetRows(props))
                 {
-                    await WriteCellAsync(writer, currentRowIndex, cellValue.CellIndex, cellValue.Value, cellValue.Prop, widths);
-                }
-                await writer.WriteAsync(WorksheetXml.EndRow);
+                    await writer.WriteAsync(WorksheetXml.StartRow(currentRowIndex));
+                    foreach (var cellValue in row)
+                    {
+                        await WriteCellAsync(writer, currentRowIndex, cellValue.CellIndex, cellValue.Value, cellValue.Prop, widths);
+                    }
+                    await writer.WriteAsync(WorksheetXml.EndRow);
 
-                currentRowIndex++;
+                    currentRowIndex++;
+                }
             }
+#if NETSTANDARD2_0_OR_GREATER || NET
+            else
+            {
+                await foreach (var row in asyncWriteAdapter.GetRowsAsync(props))
+                {
+                    await writer.WriteAsync(WorksheetXml.StartRow(currentRowIndex));
+                    await foreach (var cellValue in row)
+                    {
+                        await WriteCellAsync(writer, currentRowIndex, cellValue.CellIndex, cellValue.Value, cellValue.Prop, widths);
+                    }
+                    await writer.WriteAsync(WorksheetXml.EndRow);
+
+                    currentRowIndex++;
+                }
+            }
+#endif
+
             maxRowIndex = currentRowIndex;
 
             await writer.WriteAsync(WorksheetXml.Drawing(currentSheetIndex));

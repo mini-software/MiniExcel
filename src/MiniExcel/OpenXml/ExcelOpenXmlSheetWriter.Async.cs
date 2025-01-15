@@ -5,11 +5,8 @@ using MiniExcelLibs.Utils;
 using MiniExcelLibs.WriteAdapter;
 using MiniExcelLibs.Zip;
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Data;
 using System.IO.Compression;
-using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -145,55 +142,22 @@ namespace MiniExcelLibs.OpenXml
             writer.SetPosition(position);
         }
 
-#if NETSTANDARD2_0_OR_GREATER || NET
-        private bool TryGetAsyncExcelWriteAdapter(object values, Configuration configuration, out IAsyncMiniExcelWriteAdapter writeAdapter)
-        {
-            writeAdapter = null;
-            if (values.GetType().IsAsyncEnumerable(out var genericArgument))
-            {
-                var writeAdapterType = typeof(AsyncEnumerableWriteAdapter<>).MakeGenericType(genericArgument);
-                writeAdapter = (IAsyncMiniExcelWriteAdapter)Activator.CreateInstance(writeAdapterType, values, configuration);
-                return true;
-            }
-            if (values is IMiniExcelDataReader miniExcelDataReader)
-            {
-                writeAdapter = new MiniExcelDataReaderWriteAdapter(miniExcelDataReader, _configuration);
-                return true;
-            }
 
-            return false;
-        }
-#endif
-
-        private IMiniExcelWriteAdapter GetExcelWriteAdapter(object values, Configuration configuration)
-        {
-            switch (values)
-            {
-                case IDataReader dataReader:
-                    return new DataReaderWriteAdapter(dataReader, _configuration);
-                case IEnumerable enumerable:
-                    return new EnumerableWriteAdapter(enumerable, _configuration);
-                case DataTable dataTable:
-                    return new DataTableWriteAdapter(dataTable, _configuration);
-                default:
-                    throw new NotImplementedException();
-            }
-        }
 
         private async Task WriteValuesAsync(MiniExcelAsyncStreamWriter writer, object values, CancellationToken cancellationToken)
         {
 #if NETSTANDARD2_0_OR_GREATER || NET
             IMiniExcelWriteAdapter writeAdapter = null;
-            if (!TryGetAsyncExcelWriteAdapter(values, _configuration, out var asyncWriteAdapter))
+            if (!MiniExcelWriteAdapterFactory.TryGetAsyncWriteAdapter(values, _configuration, out var asyncWriteAdapter))
             {
-                writeAdapter = GetExcelWriteAdapter(values, _configuration);
+                writeAdapter = MiniExcelWriteAdapterFactory.GetWriteAdapter(values, _configuration);
             }
 
             var count = 0;
             var hasCount = writeAdapter != null && writeAdapter.TryGetNonEnumeratedCount(out count);
             var props = writeAdapter?.GetColumns() ?? await asyncWriteAdapter.GetColumnsAsync();
 #else
-            IMiniExcelWriteAdapter writeAdapter =  GetExcelWriteAdapter(values, _configuration);
+            IMiniExcelWriteAdapter writeAdapter =  MiniExcelWriteAdapterFactory.GetWriteAdapter(values, _configuration);
 
             var hasCount = writeAdapter.TryGetNonEnumeratedCount(out var count);
             var props = writeAdapter.GetColumns();

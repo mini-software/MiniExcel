@@ -8,10 +8,8 @@ using MiniExcelLibs.Zip;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Data;
 using System.IO;
 using System.IO.Compression;
-using System.Linq;
 using System.Text;
 
 namespace MiniExcelLibs.OpenXml
@@ -183,7 +181,7 @@ namespace MiniExcelLibs.OpenXml
 
         private void WriteValues(MiniExcelStreamWriter writer, object values)
         {
-            IMiniExcelWriteAdapter writeAdapter = GetExcelWriteAdapter(values, _configuration);
+            IMiniExcelWriteAdapter writeAdapter = MiniExcelWriteAdapterFactory.GetWriteAdapter(values, _configuration);
 
             var hasCount = writeAdapter.TryGetNonEnumeratedCount(out var count);
             var props = writeAdapter.GetColumns();

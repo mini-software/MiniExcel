@@ -89,9 +89,7 @@ namespace MiniExcelLibs.Tests
             {
                 var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.csv");
                 var table = new Dictionary<string, object>(); //TODO
-                MiniExcel.SaveAs(path, table);
-                //Assert.Throws<NotImplementedException>(() => MiniExcel.SaveAs(path, table));
-                Assert.Equal("\r\n", File.ReadAllText(path));
+                Assert.Throws<NotImplementedException>(() => MiniExcel.SaveAs(path, table));
                 File.Delete(path);
             }
 

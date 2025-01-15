@@ -1,11 +1,11 @@
 ﻿using MiniExcelLibs.Utils;
+using MiniExcelLibs.WriteAdapter;
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Data;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -31,42 +31,15 @@ namespace MiniExcelLibs.Csv
 
         public void SaveAs()
         {
-            var seperator = _configuration.Seperator.ToString();
-            var newLine = _configuration.NewLine;
+            if (_value == null)
             {
-                if (_value == null)
-                {
-                    _writer.Write("");
-                    this._writer.Flush();
-                    return;
-                }
-
-                var type = _value.GetType();
-
-                if (_value is IDataReader dataReader)
-                {
-                    GenerateSheetByIDataReader(dataReader, seperator, newLine, _writer);
-                }
-                else if (_value is IEnumerable enumerable)
-                {
-                    GenerateSheetByIEnumerable(enumerable, seperator, newLine, _writer);
-                }
-                else if (_value is DataTable dataTable)
-                {
-                    GenerateSheetByDataTable(_writer, dataTable, seperator, newLine);
-                }
-                else
-                {
-                    throw new NotImplementedException($"Type {type?.Name} not Implemented. please issue for me.");
-                }
-
-                this._writer.Flush();
+                _writer.Write("");
+                _writer.Flush();
+                return;
             }
-        }
 
-        public async Task SaveAsAsync(CancellationToken cancellationToken = default)
-        {
-            await Task.Run(() => SaveAs(), cancellationToken).ConfigureAwait(false);
+            WriteValues(_writer, _value);
+            _writer.Flush();
         }
 
         public void Insert(bool overwriteSheet = false)
@@ -74,162 +47,125 @@ namespace MiniExcelLibs.Csv
             SaveAs();
         }
 
-        public async Task InsertAsync(bool overwriteSheet = false, CancellationToken cancellationToken = default)
+        private void AppendColumn(StringBuilder rowBuilder, CellWriteInfo column)
         {
-            await Task.Run(() => SaveAs(), cancellationToken).ConfigureAwait(false);
+            rowBuilder.Append(CsvHelpers.ConvertToCsvValue(ToCsvString(column.Value, column.Prop), _configuration.AlwaysQuote, _configuration.Seperator));
+            rowBuilder.Append(_configuration.Seperator);
         }
 
-        private void GenerateSheetByIEnumerable(IEnumerable values, string seperator, string newLine, StreamWriter writer)
+        private void RemoveTrailingSeparator(StringBuilder rowBuilder) 
         {
-            Type genericType = null;
-            List<ExcelColumnInfo> props = null;
-            string mode = null;
-
-            var enumerator = values.GetEnumerator();
-            var empty = !enumerator.MoveNext();
-            if (empty)
+            if (rowBuilder.Length == 0) 
             {
-                // only when empty IEnumerable need to check this issue #133  https://github.com/shps951023/MiniExcel/issues/133
-                genericType = TypeHelper.GetGenericIEnumerables(values).FirstOrDefault();
-                if (genericType == null || genericType == typeof(object) // sometime generic type will be object, e.g: https://user-images.githubusercontent.com/12729184/132812859-52984314-44d1-4ee8-9487-2d1da159f1f0.png
-                    || typeof(IDictionary<string, object>).IsAssignableFrom(genericType)
-                    || typeof(IDictionary).IsAssignableFrom(genericType)
-                    || typeof(KeyValuePair<string, object>).IsAssignableFrom(genericType))
-                {
-                    _writer.Write(newLine);
-                    this._writer.Flush();
-                    return;
-                }
-
-                mode = "Properties";
-                props = CustomPropertyHelper.GetSaveAsProperties(genericType, _configuration);
+                return;
             }
-            else
-            {
-                var firstItem = enumerator.Current;
-                if (firstItem is IDictionary<string, object> genericDic)
-                {
-                    mode = "IDictionary<string, object>";
-                    props = CustomPropertyHelper.GetDictionaryColumnInfo(genericDic, null, _configuration);
-                }
-                else if (firstItem is IDictionary dic)
-                {
-                    mode = "IDictionary";
-                    props = CustomPropertyHelper.GetDictionaryColumnInfo(null, dic, _configuration);
-                    mode = "IDictionary";
-                }
-                else
-                {
-                    mode = "Properties";
-                    genericType = firstItem.GetType();
-                    props = CustomPropertyHelper.GetSaveAsProperties(genericType, _configuration);
-                }
-            }
-
-            if (this._printHeader)
-            {
-                _writer.Write(string.Join(seperator, props.Select(s => CsvHelpers.ConvertToCsvValue(s?.ExcelColumnName, _configuration.AlwaysQuote, _configuration.Seperator))));
-                _writer.Write(newLine);
-            }
-
-            if (!empty)
-            {
-                if (mode == "IDictionary<string, object>") //Dapper Row
-                    GenerateSheetByDapperRow(_writer, enumerator, props.Select(x => x.Key.ToString()).ToList(), seperator, newLine);
-                else if (mode == "IDictionary") //IDictionary
-                    GenerateSheetByIDictionary(_writer, enumerator, props.Select(x => x.Key).ToList(), seperator, newLine);
-                else if (mode == "Properties")
-                    GenerateSheetByProperties(_writer, enumerator, props, seperator, newLine);
-                else
-                    throw new NotImplementedException($"Mode for genericType {genericType?.Name} not Implemented. please issue for me.");
-            }
+            rowBuilder.Remove(rowBuilder.Length - 1, 1);
         }
 
-        private void GenerateSheetByIDataReader(IDataReader reader, string seperator, string newLine, StreamWriter writer)
+        private string GetHeader(List<ExcelColumnInfo> props) => string.Join(
+            _configuration.Seperator.ToString(),
+            props.Select(s => CsvHelpers.ConvertToCsvValue(s?.ExcelColumnName, _configuration.AlwaysQuote, _configuration.Seperator)));
+
+        private void WriteValues(StreamWriter writer, object values)
         {
-            int fieldCount = reader.FieldCount;
-            if (fieldCount == 0)
-                throw new InvalidDataException("fieldCount is 0");
+            IMiniExcelWriteAdapter writeAdapter =  MiniExcelWriteAdapterFactory.GetWriteAdapter(values, _configuration);
 
-            if (this._printHeader)
-            {
-                for (int i = 0; i < fieldCount; i++)
-                {
-                    var columnName = reader.GetName(i);
+            var props = writeAdapter.GetColumns();
 
-                    if (i != 0)
-                        writer.Write(seperator);
-                    writer.Write(CsvHelpers.ConvertToCsvValue(ToCsvString(columnName, null), _configuration.AlwaysQuote, _configuration.Seperator));
-                }
-                writer.Write(newLine);
-            }
-
-            while (reader.Read())
-            {
-                for (int i = 0; i < fieldCount; i++)
-                {
-                    var cellValue = reader.GetValue(i);
-                    if (i != 0)
-                        writer.Write(seperator);
-                    writer.Write(CsvHelpers.ConvertToCsvValue(ToCsvString(cellValue, null), _configuration.AlwaysQuote, _configuration.Seperator));
-                }
-                writer.Write(newLine);
-            }
-        }
-
-        private void GenerateSheetByDataTable(StreamWriter writer, DataTable dt, string seperator, string newLine)
-        {
             if (_printHeader)
             {
-                writer.Write(string.Join(seperator, dt.Columns.Cast<DataColumn>().Select(s => CsvHelpers.ConvertToCsvValue(s.Caption ?? s.ColumnName, _configuration.AlwaysQuote, _configuration.Seperator))));
-                writer.Write(newLine);
+                _writer.Write(GetHeader(props));
+                _writer.Write(_configuration.NewLine);
             }
-            for (int i = 0; i < dt.Rows.Count; i++)
+
+            var rowBuilder = new StringBuilder();
+            if (writeAdapter != null)
             {
-                var first = true;
-                for (int j = 0; j < dt.Columns.Count; j++)
+                foreach (var row in writeAdapter.GetRows(props))
                 {
-                    var cellValue = CsvHelpers.ConvertToCsvValue(ToCsvString(dt.Rows[i][j], null), _configuration.AlwaysQuote, _configuration.Seperator);
-                    if (!first)
-                        writer.Write(seperator);
-                    writer.Write(cellValue);
-                    first = false;
+                    rowBuilder.Clear();
+                    foreach (var column in row)
+                    {
+                        AppendColumn(rowBuilder, column);
+                    }
+                    RemoveTrailingSeparator(rowBuilder);
+                    _writer.Write(rowBuilder.ToString());
+                    _writer.Write(_configuration.NewLine);
                 }
-                writer.Write(newLine);
             }
         }
 
-        private void GenerateSheetByProperties(StreamWriter writer, IEnumerator value, List<ExcelColumnInfo> props, string seperator, string newLine)
+        private async Task WriteValuesAsync(StreamWriter writer, object values, string seperator, string newLine, CancellationToken cancellationToken)
         {
-            do
+#if NETSTANDARD2_0_OR_GREATER || NET
+            IMiniExcelWriteAdapter writeAdapter = null;
+            if (!MiniExcelWriteAdapterFactory.TryGetAsyncWriteAdapter(values, _configuration, out var asyncWriteAdapter))
             {
-                var v = value.Current;
-                var values = props.Select(s => CsvHelpers.ConvertToCsvValue(ToCsvString(s?.Property.GetValue(v), s), _configuration.AlwaysQuote, _configuration.Seperator));
-                writer.Write(string.Join(seperator, values));
-                writer.Write(newLine);
-            } while (value.MoveNext());
+                writeAdapter = MiniExcelWriteAdapterFactory.GetWriteAdapter(values, _configuration);
+            }
+            var props = writeAdapter?.GetColumns() ?? await asyncWriteAdapter.GetColumnsAsync();
+#else
+            IMiniExcelWriteAdapter writeAdapter =  MiniExcelWriteAdapterFactory.GetWriteAdapter(values, _configuration);
+            var props = writeAdapter.GetColumns();
+#endif
+
+            if (_printHeader)
+            {
+                await _writer.WriteAsync(GetHeader(props));
+                await _writer.WriteAsync(newLine);
+            }
+            var rowBuilder = new StringBuilder();
+            if (writeAdapter != null)
+            {
+                foreach (var row in writeAdapter.GetRows(props, cancellationToken))
+                {
+                    rowBuilder.Clear();
+                    foreach (var column in row)
+                    {
+                        AppendColumn(rowBuilder, column);
+                    }
+                    RemoveTrailingSeparator(rowBuilder);
+                    await _writer.WriteAsync(rowBuilder.ToString());
+                    await _writer.WriteAsync(newLine);
+                }
+            }
+#if NETSTANDARD2_0_OR_GREATER || NET
+            else
+            {
+                await foreach (var row in asyncWriteAdapter.GetRowsAsync(props, cancellationToken))
+                {
+                    rowBuilder.Clear();
+                    await foreach (var column in row)
+                    {
+                        AppendColumn(rowBuilder, column);
+                    }
+                    RemoveTrailingSeparator(rowBuilder);
+                    await _writer.WriteAsync(rowBuilder.ToString());
+                    await _writer.WriteAsync(newLine);
+                }
+            }
+#endif
         }
 
-        private void GenerateSheetByIDictionary(StreamWriter writer, IEnumerator value, List<object> keys, string seperator, string newLine)
+        public async Task SaveAsAsync(CancellationToken cancellationToken = default)
         {
-            do
+            var seperator = _configuration.Seperator.ToString();
+            var newLine = _configuration.NewLine;
+
+            if (_value == null)
             {
-                var v = (IDictionary)value.Current;
-                var values = keys.Select(key => CsvHelpers.ConvertToCsvValue(ToCsvString(v[key], null), _configuration.AlwaysQuote, _configuration.Seperator));
-                writer.Write(string.Join(seperator, values));
-                writer.Write(newLine);
-            } while (value.MoveNext());
+                await _writer.WriteAsync("");
+                await _writer.FlushAsync();
+                return;
+            }
+
+            await WriteValuesAsync(_writer, _value, seperator, newLine, cancellationToken);
+            await _writer.FlushAsync();
         }
 
-        private void GenerateSheetByDapperRow(StreamWriter writer, IEnumerator value, List<string> keys, string seperator, string newLine)
+        public async Task InsertAsync(bool overwriteSheet = false, CancellationToken cancellationToken = default)
         {
-            do
-            {
-                var v = (IDictionary<string, object>)value.Current;
-                var values = keys.Select(key => CsvHelpers.ConvertToCsvValue(ToCsvString(v[key], null), _configuration.AlwaysQuote, _configuration.Seperator));
-                writer.Write(string.Join(seperator, values));
-                writer.Write(newLine);
-            } while (value.MoveNext());
+            await SaveAsAsync(cancellationToken);
         }
 
         public string ToCsvString(object value, ExcelColumnInfo p)

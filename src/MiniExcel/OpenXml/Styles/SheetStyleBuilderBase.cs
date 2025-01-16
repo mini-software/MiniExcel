@@ -5,9 +5,21 @@ using System.Xml;
 
 namespace MiniExcelLibs.OpenXml.Styles
 {
-    internal abstract class SheetStyleBuilderBase: ISheetStyleBuilder
+    internal abstract class SheetStyleBuilderBase : ISheetStyleBuilder
     {
-        internal readonly static HashSet<string> _afterCellXfsElements = new HashSet<string> { "cellStyles", "dxfs", "tableStyles", "extLst" };
+        internal readonly static Dictionary<string, int> _allElements = new Dictionary<string, int>
+        {
+            ["numFmts"] = 0,
+            ["fonts"] = 1,
+            ["fills"] = 2,
+            ["borders"] = 3,
+            ["cellStyleXfs"] = 4,
+            ["cellXfs"] = 5,
+            ["cellStyles"] = 6,
+            ["dxfs"] = 7,
+            ["tableStyles"] = 8,
+            ["extLst"] = 9
+        };
 
         private readonly SheetStyleBuildContext _context;
 
@@ -254,32 +266,36 @@ namespace MiniExcelLibs.OpenXml.Styles
 
         protected virtual void GenerateElementBeforStartElement()
         {
-            if (_context.OldXmlReader.LocalName == "fonts" && !_context.OldElementInfos.ExistsNumFmts)
+            if (!_allElements.TryGetValue(_context.OldXmlReader.LocalName, out var elementIndex))
+            {
+                return;
+            }
+            if (!_context.OldElementInfos.ExistsNumFmts && !_context.GenerateElementInfos.ExistsNumFmts && _allElements["numFmts"] < elementIndex)
             {
                 GenerateNumFmts();
                 _context.GenerateElementInfos.ExistsNumFmts = true;
             }
-            else if (_context.OldXmlReader.LocalName == "fills" && !_context.OldElementInfos.ExistsFonts)
+            else if (!_context.OldElementInfos.ExistsFonts && !_context.GenerateElementInfos.ExistsFonts && _allElements["fonts"] < elementIndex)
             {
                 GenerateFonts();
                 _context.GenerateElementInfos.ExistsFonts = true;
             }
-            else if (_context.OldXmlReader.LocalName == "borders" && !_context.OldElementInfos.ExistsFills)
+            else if (!_context.OldElementInfos.ExistsFills && !_context.GenerateElementInfos.ExistsFills && _allElements["fills"] < elementIndex)
             {
                 GenerateFills();
                 _context.GenerateElementInfos.ExistsFills = true;
             }
-            else if (_context.OldXmlReader.LocalName == "cellStyleXfs" && !_context.OldElementInfos.ExistsBorders)
+            else if (!_context.OldElementInfos.ExistsBorders && !_context.GenerateElementInfos.ExistsBorders && _allElements["borders"] < elementIndex)
             {
                 GenerateBorders();
                 _context.GenerateElementInfos.ExistsBorders = true;
             }
-            else if (_context.OldXmlReader.LocalName == "cellXfs" && !_context.OldElementInfos.ExistsCellStyleXfs)
+            else if (!_context.OldElementInfos.ExistsCellStyleXfs && !_context.GenerateElementInfos.ExistsCellStyleXfs && _allElements["cellStyleXfs"] < elementIndex)
             {
                 GenerateCellStyleXfs();
                 _context.GenerateElementInfos.ExistsCellStyleXfs = true;
             }
-            else if (_afterCellXfsElements.Contains(_context.OldXmlReader.LocalName) && !_context.OldElementInfos.ExistsCellXfs && _context.GenerateElementInfos.ExistsCellXfs)
+            else if (!_context.OldElementInfos.ExistsCellXfs && !_context.GenerateElementInfos.ExistsCellXfs && _allElements["cellXfs"] < elementIndex)
             {
                 GenerateCellXfs();
                 _context.GenerateElementInfos.ExistsCellXfs = true;
@@ -288,32 +304,36 @@ namespace MiniExcelLibs.OpenXml.Styles
 
         protected virtual async Task GenerateElementBeforStartElementAsync()
         {
-            if (_context.OldXmlReader.LocalName == "fonts" && !_context.OldElementInfos.ExistsNumFmts)
+            if (!_allElements.TryGetValue(_context.OldXmlReader.LocalName, out var elementIndex))
+            {
+                return;
+            }
+            if (!_context.OldElementInfos.ExistsNumFmts && !_context.GenerateElementInfos.ExistsNumFmts && _allElements["numFmts"] < elementIndex)
             {
                 await GenerateNumFmtsAsync();
                 _context.GenerateElementInfos.ExistsNumFmts = true;
             }
-            else if (_context.OldXmlReader.LocalName == "fills" && !_context.OldElementInfos.ExistsFonts)
+            else if (!_context.OldElementInfos.ExistsFonts && !_context.GenerateElementInfos.ExistsFonts && _allElements["fonts"] < elementIndex)
             {
                 await GenerateFontsAsync();
                 _context.GenerateElementInfos.ExistsFonts = true;
             }
-            else if (_context.OldXmlReader.LocalName == "borders" && !_context.OldElementInfos.ExistsFills)
+            else if (!_context.OldElementInfos.ExistsFills && !_context.GenerateElementInfos.ExistsFills && _allElements["fills"] < elementIndex)
             {
                 await GenerateFillsAsync();
                 _context.GenerateElementInfos.ExistsFills = true;
             }
-            else if (_context.OldXmlReader.LocalName == "cellStyleXfs" && !_context.OldElementInfos.ExistsBorders)
+            else if (!_context.OldElementInfos.ExistsBorders && !_context.GenerateElementInfos.ExistsBorders && _allElements["borders"] < elementIndex)
             {
                 await GenerateBordersAsync();
                 _context.GenerateElementInfos.ExistsBorders = true;
             }
-            else if (_context.OldXmlReader.LocalName == "cellXfs" && !_context.OldElementInfos.ExistsCellStyleXfs)
+            else if (!_context.OldElementInfos.ExistsCellStyleXfs && !_context.GenerateElementInfos.ExistsCellStyleXfs && _allElements["cellStyleXfs"] < elementIndex)
             {
                 await GenerateCellStyleXfsAsync();
                 _context.GenerateElementInfos.ExistsCellStyleXfs = true;
             }
-            else if (_afterCellXfsElements.Contains(_context.OldXmlReader.LocalName) && !_context.OldElementInfos.ExistsCellXfs && _context.GenerateElementInfos.ExistsCellXfs)
+            else if (!_context.OldElementInfos.ExistsCellXfs && !_context.GenerateElementInfos.ExistsCellXfs && _allElements["cellXfs"] < elementIndex)
             {
                 await GenerateCellXfsAsync();
                 _context.GenerateElementInfos.ExistsCellXfs = true;
@@ -322,7 +342,11 @@ namespace MiniExcelLibs.OpenXml.Styles
 
         protected virtual void GenerateElementBeforEndElement()
         {
-            if (_context.OldXmlReader.LocalName == "numFmts")
+            if (_context.OldXmlReader.LocalName == "styleSheet" && !_context.OldElementInfos.ExistsNumFmts && !_context.GenerateElementInfos.ExistsNumFmts)
+            {
+                GenerateNumFmts();
+            }
+            else if (_context.OldXmlReader.LocalName == "numFmts")
             {
                 GenerateNumFmt();
             }
@@ -346,15 +370,15 @@ namespace MiniExcelLibs.OpenXml.Styles
             {
                 GenerateCellXf();
             }
-            else if (_context.OldXmlReader.LocalName == "styleSheet" && !_context.OldElementInfos.ExistsNumFmts && !_context.GenerateElementInfos.ExistsNumFmts)
-            {
-                GenerateNumFmts();
-            }
         }
 
         protected virtual async Task GenerateElementBeforEndElementAsync()
         {
-            if (_context.OldXmlReader.LocalName == "numFmts")
+            if (_context.OldXmlReader.LocalName == "styleSheet" && !_context.OldElementInfos.ExistsNumFmts && !_context.GenerateElementInfos.ExistsNumFmts)
+            {
+                await GenerateNumFmtsAsync();
+            }
+            else if (_context.OldXmlReader.LocalName == "numFmts")
             {
                 await GenerateNumFmtAsync();
             }
@@ -377,10 +401,6 @@ namespace MiniExcelLibs.OpenXml.Styles
             else if (_context.OldXmlReader.LocalName == "cellXfs")
             {
                 await GenerateCellXfAsync();
-            }
-            else if (_context.OldXmlReader.LocalName == "styleSheet" && !_context.OldElementInfos.ExistsNumFmts && !_context.GenerateElementInfos.ExistsNumFmts)
-            {
-                await GenerateNumFmtsAsync();
             }
         }
 

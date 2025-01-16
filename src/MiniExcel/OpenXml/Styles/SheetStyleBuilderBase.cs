@@ -103,7 +103,7 @@ namespace MiniExcelLibs.OpenXml.Styles
                         await WriteAttributesAsync(_context.OldXmlReader.LocalName);
                         if (_context.OldXmlReader.IsEmptyElement)
                         {
-                            GenerateElementBeforEndElement();
+                            await GenerateElementBeforEndElementAsync();
                             await _context.NewXmlWriter.WriteEndElementAsync();
                         }
                         break;
@@ -131,7 +131,7 @@ namespace MiniExcelLibs.OpenXml.Styles
                         await _context.NewXmlWriter.WriteCommentAsync(_context.OldXmlReader.Value);
                         break;
                     case XmlNodeType.EndElement:
-                        GenerateElementBeforEndElement();
+                        await GenerateElementBeforEndElementAsync();
                         await _context.NewXmlWriter.WriteFullEndElementAsync();
                         break;
                 }
@@ -420,7 +420,7 @@ namespace MiniExcelLibs.OpenXml.Styles
         protected virtual async Task GenerateNumFmtsAsync()
         {
             await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "numFmts", _context.OldXmlReader.NamespaceURI);
-            await _context.NewXmlWriter.WriteAttributeStringAsync(_context.OldXmlReader.Prefix, "count", _context.OldXmlReader.NamespaceURI, (_context.OldElementInfos.NumFmtCount + _context.GenerateElementInfos.NumFmtCount + _context.CustomFormatCount).ToString());
+            await _context.NewXmlWriter.WriteAttributeStringAsync(null, "count", null, (_context.OldElementInfos.NumFmtCount + _context.GenerateElementInfos.NumFmtCount + _context.CustomFormatCount).ToString());
             await GenerateNumFmtAsync();
             await _context.NewXmlWriter.WriteFullEndElementAsync();
 
@@ -450,7 +450,7 @@ namespace MiniExcelLibs.OpenXml.Styles
         protected virtual async Task GenerateFontsAsync()
         {
             await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "fonts", _context.OldXmlReader.NamespaceURI);
-            await _context.NewXmlWriter.WriteAttributeStringAsync(_context.OldXmlReader.Prefix, "count", _context.OldXmlReader.NamespaceURI, (_context.OldElementInfos.FontCount + _context.GenerateElementInfos.FontCount).ToString());
+            await _context.NewXmlWriter.WriteAttributeStringAsync(null, "count", null, (_context.OldElementInfos.FontCount + _context.GenerateElementInfos.FontCount).ToString());
             await GenerateFontAsync();
             await _context.NewXmlWriter.WriteFullEndElementAsync();
 
@@ -479,7 +479,7 @@ namespace MiniExcelLibs.OpenXml.Styles
         protected virtual async Task GenerateFillsAsync()
         {
             await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "fills", _context.OldXmlReader.NamespaceURI);
-            await _context.NewXmlWriter.WriteAttributeStringAsync(_context.OldXmlReader.Prefix, "count", _context.OldXmlReader.NamespaceURI, (_context.OldElementInfos.FillCount + _context.GenerateElementInfos.FillCount).ToString());
+            await _context.NewXmlWriter.WriteAttributeStringAsync(null, "count", null, (_context.OldElementInfos.FillCount + _context.GenerateElementInfos.FillCount).ToString());
             await GenerateFillAsync();
             await _context.NewXmlWriter.WriteFullEndElementAsync();
 
@@ -509,7 +509,7 @@ namespace MiniExcelLibs.OpenXml.Styles
         protected virtual async Task GenerateBordersAsync()
         {
             await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "borders", _context.OldXmlReader.NamespaceURI);
-            await _context.NewXmlWriter.WriteAttributeStringAsync(_context.OldXmlReader.Prefix, "count", _context.OldXmlReader.NamespaceURI, (_context.OldElementInfos.BorderCount + _context.GenerateElementInfos.BorderCount).ToString());
+            await _context.NewXmlWriter.WriteAttributeStringAsync(null, "count", null, (_context.OldElementInfos.BorderCount + _context.GenerateElementInfos.BorderCount).ToString());
             await GenerateBorderAsync();
             await _context.NewXmlWriter.WriteFullEndElementAsync();
 
@@ -539,7 +539,7 @@ namespace MiniExcelLibs.OpenXml.Styles
         protected virtual async Task GenerateCellStyleXfsAsync()
         {
             await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "cellStyleXfs", _context.OldXmlReader.NamespaceURI);
-            await _context.NewXmlWriter.WriteAttributeStringAsync(_context.OldXmlReader.Prefix, "count", _context.OldXmlReader.NamespaceURI, (_context.OldElementInfos.CellStyleXfCount + _context.GenerateElementInfos.CellStyleXfCount).ToString());
+            await _context.NewXmlWriter.WriteAttributeStringAsync(null, "count", null, (_context.OldElementInfos.CellStyleXfCount + _context.GenerateElementInfos.CellStyleXfCount).ToString());
             await GenerateCellStyleXfAsync();
             await _context.NewXmlWriter.WriteFullEndElementAsync();
 
@@ -564,7 +564,7 @@ namespace MiniExcelLibs.OpenXml.Styles
         protected virtual async Task GenerateCellXfsAsync()
         {
             await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "cellXfs", _context.OldXmlReader.NamespaceURI);
-            await _context.NewXmlWriter.WriteAttributeStringAsync(_context.OldXmlReader.Prefix, "count", _context.OldXmlReader.NamespaceURI, (_context.OldElementInfos.CellXfCount + _context.GenerateElementInfos.CellXfCount + _context.CustomFormatCount).ToString());
+            await _context.NewXmlWriter.WriteAttributeStringAsync(null, "count", null, (_context.OldElementInfos.CellXfCount + _context.GenerateElementInfos.CellXfCount + _context.CustomFormatCount).ToString());
             await GenerateCellXfAsync();
             await _context.NewXmlWriter.WriteFullEndElementAsync();
         }

@@ -16,12 +16,8 @@ namespace MiniExcelLibs.OpenXml
 {
     internal partial class ExcelOpenXmlSheetWriter : IExcelWriter
     {
-        public void Insert()
-        {
-            throw new NotImplementedException();
-        }
-
         private readonly Dictionary<string, ZipPackageInfo> _zipDictionary = new Dictionary<string, ZipPackageInfo>();
+        private Dictionary<string, string> cellXfIdMap;
 
         private IEnumerable<Tuple<SheetDto, object>> GetSheets()
         {
@@ -83,7 +79,7 @@ namespace MiniExcelLibs.OpenXml
 
             return info;
         }
-        
+
         private string GetSheetViews()
         {
             // exit early if no style to write
@@ -192,7 +188,7 @@ namespace MiniExcelLibs.OpenXml
             if (_configuration.DynamicColumns == null || _configuration.DynamicColumns.Length <= 0)
                 return prop;
 
-            var dynamicColumn = _configuration.DynamicColumns.SingleOrDefault(_ => string.Equals(_.Key , columnName,StringComparison.OrdinalIgnoreCase));
+            var dynamicColumn = _configuration.DynamicColumns.SingleOrDefault(_ => string.Equals(_.Key, columnName, StringComparison.OrdinalIgnoreCase));
             if (dynamicColumn == null || dynamicColumn.Ignore)
             {
                 return prop;
@@ -237,7 +233,7 @@ namespace MiniExcelLibs.OpenXml
             {
                 throw new NotImplementedException($"MiniExcel not support only {genericType.Name} value generic type");
             }
-            
+
             if (genericType == typeof(string) || genericType == typeof(DateTime) || genericType == typeof(Guid))
             {
                 throw new NotImplementedException($"MiniExcel not support only {genericType.Name} generic type");
@@ -261,7 +257,7 @@ namespace MiniExcelLibs.OpenXml
             }
 
             var type = GetValueType(value, columnInfo);
-            
+
 
             if (columnInfo?.ExcelFormat != null && columnInfo?.ExcelFormatId == -1 && value is IFormattable formattableValue)
             {
@@ -285,7 +281,7 @@ namespace MiniExcelLibs.OpenXml
                 var description = CustomPropertyHelper.DescriptionAttr(type, value);
                 return Tuple.Create("2", "str", description ?? value.ToString());
             }
-            
+
             if (TypeHelper.IsNumericType(type))
             {
                 var dataType = _configuration.Culture == CultureInfo.InvariantCulture ? "n" : "str";
@@ -295,7 +291,7 @@ namespace MiniExcelLibs.OpenXml
 
                 return Tuple.Create("2", dataType, cellValue);
             }
-            
+
             if (type == typeof(bool))
             {
                 return Tuple.Create("2", "b", (bool)value ? "1" : "0");
@@ -334,42 +330,42 @@ namespace MiniExcelLibs.OpenXml
             {
                 return ((decimal)value).ToString(_configuration.Culture);
             }
-            
+
             if (type.IsAssignableFrom(typeof(int)))
             {
                 return ((int)value).ToString(_configuration.Culture);
             }
-            
+
             if (type.IsAssignableFrom(typeof(double)))
             {
                 return ((double)value).ToString(_configuration.Culture);
             }
-            
+
             if (type.IsAssignableFrom(typeof(long)))
             {
                 return ((long)value).ToString(_configuration.Culture);
             }
-            
+
             if (type.IsAssignableFrom(typeof(uint)))
             {
                 return ((uint)value).ToString(_configuration.Culture);
             }
-            
+
             if (type.IsAssignableFrom(typeof(ushort)))
             {
                 return ((ushort)value).ToString(_configuration.Culture);
             }
-            
+
             if (type.IsAssignableFrom(typeof(ulong)))
             {
                 return ((ulong)value).ToString(_configuration.Culture);
             }
-            
+
             if (type.IsAssignableFrom(typeof(short)))
             {
                 return ((short)value).ToString(_configuration.Culture);
             }
-            
+
             if (type.IsAssignableFrom(typeof(float)))
             {
                 return ((float)value).ToString(_configuration.Culture);
@@ -459,19 +455,6 @@ namespace MiniExcelLibs.OpenXml
             return dimensionRef;
         }
 
-        private string GetStylesXml(ICollection<ExcelColumnAttribute> columns)
-        {
-            switch (_configuration.TableStyles)
-            {
-                case TableStyles.None:
-                    return new MinimalSheetStyleBuilder().Build( columns);
-                case TableStyles.Default:
-                    return new DefaultSheetStyleBuilder().Build( columns );
-                default:
-                    return string.Empty;
-            }
-        }
-
         private string GetDrawingRelationshipXml(int sheetIndex)
         {
             var drawing = new StringBuilder();
@@ -488,7 +471,7 @@ namespace MiniExcelLibs.OpenXml
             var drawing = new StringBuilder();
 
             for (int fileIndex = 0; fileIndex < _files.Count; fileIndex++)
-            { 
+            {
                 var file = _files[fileIndex];
                 if (file.IsImage && file.SheetId == sheetIndex + 1)
                 {
@@ -531,6 +514,15 @@ namespace MiniExcelLibs.OpenXml
 
             sb.Append(ExcelXml.EndTypes);
             return sb.ToString();
+        }
+
+        private string GetCellXfId(string styleIndex)
+        {
+            if (cellXfIdMap.TryGetValue(styleIndex, out var cellXfId))
+            {
+                return cellXfId.ToString();
+            }
+            return styleIndex.ToString();
         }
     }
 }

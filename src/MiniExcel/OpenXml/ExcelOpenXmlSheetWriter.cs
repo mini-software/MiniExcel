@@ -1,6 +1,7 @@
 ﻿using MiniExcelLibs.Attributes;
 using MiniExcelLibs.OpenXml.Constants;
 using MiniExcelLibs.OpenXml.Models;
+using MiniExcelLibs.OpenXml.Styles;
 using MiniExcelLibs.Utils;
 using MiniExcelLibs.Zip;
 using System;
@@ -11,7 +12,6 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace MiniExcelLibs.OpenXml
 {
@@ -66,6 +66,67 @@ namespace MiniExcelLibs.OpenXml
             }
 
             GenerateEndXml();
+            _archive.Dispose();
+        }
+
+        public void Insert(bool overwriteSheet = false)
+        {
+            if (!_configuration.FastMode)
+            {
+                throw new InvalidOperationException("Insert requires fast mode to be enabled");
+            }
+
+            var sheetRecords = new ExcelOpenXmlSheetReader(_stream, _configuration).GetWorkbookRels(_archive.Entries).ToArray();
+            foreach (var sheetRecord in sheetRecords.OrderBy(o => o.Id))
+            {
+                _sheets.Add(new SheetDto { Name = sheetRecord.Name, SheetIdx = (int)sheetRecord.Id, State = sheetRecord.State });
+            }
+            var existSheetDto = _sheets.SingleOrDefault(s => s.Name == _defaultSheetName);
+            if (existSheetDto != null && !overwriteSheet)
+            {
+                throw new Exception($"Sheet “{_defaultSheetName}” already exist");
+            }
+
+            GenerateStylesXml();//GenerateStylesXml必须在校验overwriteSheet之后，避免不必要的样式更改
+
+            if (existSheetDto == null)
+            {
+                currentSheetIndex = (int)sheetRecords.Max(m => m.Id) + 1;
+                var insertSheetInfo = GetSheetInfos(_defaultSheetName);
+                var insertSheetDto = insertSheetInfo.ToDto(currentSheetIndex);
+                _sheets.Add(insertSheetDto);
+                CreateSheetXml(_value, insertSheetDto.Path);
+            }
+            else
+            {
+                currentSheetIndex = existSheetDto.SheetIdx;
+                _archive.Entries.Single(s => s.FullName == existSheetDto.Path).Delete();
+                _archive.Entries.SingleOrDefault(s => s.FullName == ExcelFileNames.DrawingRels(currentSheetIndex))?.Delete();
+                _archive.Entries.SingleOrDefault(s => s.FullName == ExcelFileNames.Drawing(currentSheetIndex))?.Delete();
+                CreateSheetXml(_value, existSheetDto.Path);
+            }
+
+            AddFilesToZip();
+
+            GenerateDrawinRelXml(currentSheetIndex);
+
+            GenerateDrawingXml(currentSheetIndex);
+
+            GenerateWorkBookXmls(out StringBuilder workbookXml, out StringBuilder workbookRelsXml, out Dictionary<int, string> sheetsRelsXml);
+
+            foreach (var sheetRelsXml in sheetsRelsXml)
+            {
+                var sheetRelsXmlPath = ExcelFileNames.SheetRels(sheetRelsXml.Key);
+                _archive.Entries.SingleOrDefault(s => s.FullName == sheetRelsXmlPath)?.Delete();
+                CreateZipEntry(sheetRelsXmlPath, null, ExcelXml.DefaultSheetRelXml.Replace("{{format}}", sheetRelsXml.Value));
+            }
+
+            _archive.Entries.SingleOrDefault(s => s.FullName == ExcelFileNames.Workbook)?.Delete();
+            CreateZipEntry(ExcelFileNames.Workbook, ExcelContentTypes.Workbook, ExcelXml.DefaultWorkbookXml.Replace("{{sheets}}", workbookXml.ToString()));
+
+            _archive.Entries.SingleOrDefault(s => s.FullName == ExcelFileNames.WorkbookRels)?.Delete();
+            CreateZipEntry(ExcelFileNames.WorkbookRels, null, ExcelXml.DefaultWorkbookXmlRels.Replace("{{sheets}}", workbookRelsXml.ToString()));
+
             _archive.Dispose();
         }
 
@@ -486,7 +547,7 @@ namespace MiniExcelLibs.OpenXml
             writer.Write(WorksheetXml.EndCols);
         }
 
-        private static void PrintHeader(MiniExcelStreamWriter writer, List<ExcelColumnInfo> props)
+        private void PrintHeader(MiniExcelStreamWriter writer, List<ExcelColumnInfo> props)
         {
             var xIndex = 1;
             var yIndex = 1;
@@ -561,7 +622,7 @@ namespace MiniExcelLibs.OpenXml
 
             if (_configuration.EnableWriteNullValueCell && valueIsNull)
             {
-                writer.Write(WorksheetXml.EmptyCell(columnReference, "2"));
+                writer.Write(WorksheetXml.EmptyCell(columnReference, GetCellXfId("2")));
                 return;
             }
 
@@ -587,12 +648,12 @@ namespace MiniExcelLibs.OpenXml
 
             /*Prefix and suffix blank space will lost after SaveAs #294*/
             var preserveSpace = cellValue != null && (cellValue.StartsWith(" ", StringComparison.Ordinal) || cellValue.EndsWith(" ", StringComparison.Ordinal));
-            writer.Write(WorksheetXml.Cell(columnReference, dataType, styleIndex, cellValue, preserveSpace: preserveSpace, columnType: columnType));
+            writer.Write(WorksheetXml.Cell(columnReference, dataType, GetCellXfId(styleIndex), cellValue, preserveSpace: preserveSpace, columnType: columnType));
             widthCollection?.AdjustWidth(cellIndex, cellValue);
         }
 
-        private static void WriteCell(MiniExcelStreamWriter writer, string cellReference, string columnName)
-            => writer.Write(WorksheetXml.Cell(cellReference, "str", "1", ExcelOpenXmlUtils.EncodeXML(columnName)));
+        private void WriteCell(MiniExcelStreamWriter writer, string cellReference, string columnName)
+            => writer.Write(WorksheetXml.Cell(cellReference, "str", GetCellXfId("1"), ExcelOpenXmlUtils.EncodeXML(columnName)));
 
         private void GenerateEndXml()
         {
@@ -620,33 +681,55 @@ namespace MiniExcelLibs.OpenXml
         /// </summary>
         private void GenerateStylesXml()
         {
-            var styleXml = GetStylesXml(_configuration.DynamicColumns);
-            CreateZipEntry(ExcelFileNames.Styles, ExcelContentTypes.Styles, styleXml);
+            using (var context = new SheetStyleBuildContext(_zipDictionary, _archive, _utf8WithBom, _configuration.DynamicColumns))
+            {
+                var builder = (ISheetStyleBuilder)null;
+                switch (_configuration.TableStyles)
+                {
+                    case TableStyles.None:
+                        builder = new MinimalSheetStyleBuilder(context);
+                        break;
+                    case TableStyles.Default:
+                        builder = new DefaultSheetStyleBuilder(context);
+                        break;
+                }
+                var result = builder.Build();
+                cellXfIdMap = result.CellXfIdMap;
+            }
         }
 
         private void GenerateDrawinRelXml()
         {
             for (int sheetIndex = 0; sheetIndex < _sheets.Count; sheetIndex++)
             {
-                var drawing = GetDrawingRelationshipXml(sheetIndex);
-                CreateZipEntry(
-                    ExcelFileNames.DrawingRels(sheetIndex),
-                    null,
-                    ExcelXml.DefaultDrawingXmlRels.Replace("{{format}}", drawing));
+                GenerateDrawinRelXml(sheetIndex);
             }
+        }
+
+        private void GenerateDrawinRelXml(int sheetIndex)
+        {
+            var drawing = GetDrawingRelationshipXml(sheetIndex);
+            CreateZipEntry(
+                ExcelFileNames.DrawingRels(sheetIndex),
+                null,
+                ExcelXml.DefaultDrawingXmlRels.Replace("{{format}}", drawing));
         }
 
         private void GenerateDrawingXml()
         {
             for (int sheetIndex = 0; sheetIndex < _sheets.Count; sheetIndex++)
             {
-                var drawing = GetDrawingXml(sheetIndex);
-
-                CreateZipEntry(
-                    ExcelFileNames.Drawing(sheetIndex),
-                    ExcelContentTypes.Drawing,
-                    ExcelXml.DefaultDrawing.Replace("{{format}}", drawing));
+                GenerateDrawingXml(sheetIndex);
             }
+        }
+
+        private void GenerateDrawingXml(int sheetIndex)
+        {
+            var drawing = GetDrawingXml(sheetIndex);
+            CreateZipEntry(
+                ExcelFileNames.Drawing(sheetIndex),
+                ExcelContentTypes.Drawing,
+                ExcelXml.DefaultDrawing.Replace("{{format}}", drawing));
         }
 
         /// <summary>

@@ -64,6 +64,21 @@ namespace MiniExcelLibs.Csv
             }
         }
 
+        public async Task SaveAsAsync(CancellationToken cancellationToken = default)
+        {
+            await Task.Run(() => SaveAs(), cancellationToken).ConfigureAwait(false);
+        }
+
+        public void Insert(bool overwriteSheet = false)
+        {
+            SaveAs();
+        }
+
+        public async Task InsertAsync(bool overwriteSheet = false, CancellationToken cancellationToken = default)
+        {
+            await Task.Run(() => SaveAs(), cancellationToken).ConfigureAwait(false);
+        }
+
         private void GenerateSheetByIEnumerable(IEnumerable values, string seperator, string newLine, StreamWriter writer)
         {
             Type genericType = null;
@@ -128,16 +143,6 @@ namespace MiniExcelLibs.Csv
                 else
                     throw new NotImplementedException($"Mode for genericType {genericType?.Name} not Implemented. please issue for me.");
             }
-        }
-
-        public void Insert()
-        {
-            SaveAs();
-        }
-
-        public async Task SaveAsAsync(CancellationToken cancellationToken = default(CancellationToken))
-        {
-            await Task.Run(() => SaveAs(), cancellationToken).ConfigureAwait(false);
         }
 
         private void GenerateSheetByIDataReader(IDataReader reader, string seperator, string newLine, StreamWriter writer)

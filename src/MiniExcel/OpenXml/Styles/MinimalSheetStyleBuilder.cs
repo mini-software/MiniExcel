@@ -1,71 +1,214 @@
-﻿using MiniExcelLibs.Attributes;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Threading.Tasks;
 
-namespace MiniExcelLibs.OpenXml.Styles {
-    public class MinimalSheetStyleBuilder : ISheetStyleBuilder
+namespace MiniExcelLibs.OpenXml.Styles
+{
+    internal class MinimalSheetStyleBuilder : SheetStyleBuilderBase
     {
-        private const int startUpNumFmts = 1;
-        private const string NumFmtsToken = "{{numFmts}}";
-        private const string NumFmtsCountToken = "{{numFmtCount}}";
+        internal static SheetStyleElementInfos GenerateElementInfos = new SheetStyleElementInfos
+        {
+            NumFmtCount = 0,//默认的NumFmt数量是0，但是会有根据ColumnsToApply动态生成的NumFmt
+            FontCount = 1,
+            FillCount = 1,
+            BorderCount = 1,
+            CellStyleXfCount = 1,
+            CellXfCount = 5
+        };
 
-        private const int startUpCellXfs = 5;
-        private const string cellXfsToken = "{{cellXfs}}";
-        private const string cellXfsCountToken = "{{cellXfsCount}}";
+        private readonly SheetStyleBuildContext _context;
 
-        internal static readonly string NoneStylesXml = ExcelOpenXmlUtils.MinifyXml
-        ( $@"
-            <?xml version=""1.0"" encoding=""utf-8""?>
-            <x:styleSheet xmlns:x=""http://schemas.openxmlformats.org/spreadsheetml/2006/main"">
-                <x:numFmts count=""{NumFmtsCountToken}"">
-                    <x:numFmt numFmtId=""0"" formatCode="""" />
-                    {NumFmtsToken}
-                </x:numFmts>
-                <x:fonts>
-                    <x:font />
-                </x:fonts>
-                <x:fills>
-                    <x:fill />
-                </x:fills>
-                <x:borders>
-                    <x:border />
-                </x:borders>
-                <x:cellStyleXfs>
-                    <x:xf />
-                </x:cellStyleXfs>
-                <x:cellXfs count=""{cellXfsCountToken}"">
-                    <x:xf />
-                    <x:xf />
-                    <x:xf />
-                    <x:xf numFmtId=""14"" applyNumberFormat=""1"" />
-                    <x:xf />
-                    {cellXfsToken}
-                </x:cellXfs>
-            </x:styleSheet>"
-        );
-        
-        public string Build( ICollection<ExcelColumnAttribute> columns )
+        public MinimalSheetStyleBuilder(SheetStyleBuildContext context) : base(context)
+        {
+            _context = context;
+        }
+
+        protected override SheetStyleElementInfos GetGenerateElementInfos()
+        {
+            return GenerateElementInfos;
+        }
+
+        protected override void GenerateNumFmt()
         {
             const int numFmtIndex = 166;
 
-            var sb = new StringBuilder( NoneStylesXml );
-            var columnsToApply = SheetStyleBuilderHelper.GenerateStyleIds( startUpCellXfs, columns );
+            var index = 0;
+            foreach (var item in _context.ColumnsToApply)
+            {
+                index++;
 
-            var numFmts = columnsToApply.Select( ( x, i ) => {
-                return new {
-                    numFmt = $@"<x:numFmt numFmtId=""{numFmtIndex + i}"" formatCode=""{x.Format}"" />",
-                    cellXfs = $@"<x:xf numFmtId=""{numFmtIndex + i}"" applyNumberFormat=""1"" />"
-                };
-            } ).ToArray();
+                /*
+                 * <x:numFmt numFmtId="{numFmtIndex + i}" formatCode="{item.Format}" />
+                 */
+                _context.NewXmlWriter.WriteStartElement(_context.OldXmlReader.Prefix, "numFmt", _context.OldXmlReader.NamespaceURI);
+                _context.NewXmlWriter.WriteAttributeString("numFmtId", (numFmtIndex + index + _context.OldElementInfos.NumFmtCount).ToString());
+                _context.NewXmlWriter.WriteAttributeString("formatCode", item.Format);
+                _context.NewXmlWriter.WriteFullEndElement();
+            }
+        }
 
-            sb.Replace( NumFmtsToken, string.Join( string.Empty, numFmts.Select( x => x.numFmt ) ) );
-            sb.Replace( NumFmtsCountToken, (startUpNumFmts + numFmts.Length).ToString() );
+        protected override async Task GenerateNumFmtAsync()
+        {
+            const int numFmtIndex = 166;
+            var index = 0;
+            foreach (var item in _context.ColumnsToApply)
+            {
+                index++;
 
-            sb.Replace( cellXfsToken, string.Join( string.Empty, numFmts.Select( x => x.cellXfs ) ) );
-            sb.Replace( cellXfsCountToken, (5 + numFmts.Length).ToString() );
-            return sb.ToString();
+                /*
+                 * <x:numFmt numFmtId="{numFmtIndex + i}" formatCode="{item.Format}" />
+                 */
+                await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "numFmt", _context.OldXmlReader.NamespaceURI);
+                await _context.NewXmlWriter.WriteAttributeStringAsync(_context.OldXmlReader.Prefix, "numFmtId", _context.OldXmlReader.NamespaceURI, (numFmtIndex + index + _context.OldElementInfos.NumFmtCount).ToString());
+                await _context.NewXmlWriter.WriteAttributeStringAsync(_context.OldXmlReader.Prefix, "formatCode", _context.OldXmlReader.NamespaceURI, item.Format);
+                await _context.NewXmlWriter.WriteFullEndElementAsync();
+            }
+        }
+
+        protected override void GenerateFont()
+        {
+            /*
+             * <x:font />
+             */
+            _context.NewXmlWriter.WriteStartElement(_context.OldXmlReader.Prefix, "font", _context.OldXmlReader.NamespaceURI);
+            _context.NewXmlWriter.WriteFullEndElement();
+        }
+
+        protected override async Task GenerateFontAsync()
+        {
+            /*
+             * <x:font />
+             */
+            await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "font", _context.OldXmlReader.NamespaceURI);
+            await _context.NewXmlWriter.WriteFullEndElementAsync();
+        }
+
+        protected override void GenerateFill()
+        {
+            /*
+             * <x:fill />
+             */
+            _context.NewXmlWriter.WriteStartElement(_context.OldXmlReader.Prefix, "fill", _context.OldXmlReader.NamespaceURI);
+            _context.NewXmlWriter.WriteFullEndElement();
+        }
+
+        protected override async Task GenerateFillAsync()
+        {
+            /*
+             * <x:fill />
+             */
+            await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "fill", _context.OldXmlReader.NamespaceURI);
+            await _context.NewXmlWriter.WriteFullEndElementAsync();
+        }
+
+        protected override void GenerateBorder()
+        {
+            /*
+             * <x:border />
+             */
+            _context.NewXmlWriter.WriteStartElement(_context.OldXmlReader.Prefix, "border", _context.OldXmlReader.NamespaceURI);
+            _context.NewXmlWriter.WriteFullEndElement();
+        }
+
+        protected override async Task GenerateBorderAsync()
+        {
+            /*
+             * <x:border />
+             */
+            await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "border", _context.OldXmlReader.NamespaceURI);
+            await _context.NewXmlWriter.WriteFullEndElementAsync();
+        }
+
+        protected override void GenerateCellStyleXf()
+        {
+            /*
+             * <x:xf />
+             */
+            _context.NewXmlWriter.WriteStartElement(_context.OldXmlReader.Prefix, "xf", _context.OldXmlReader.NamespaceURI);
+            _context.NewXmlWriter.WriteFullEndElement();
+        }
+
+        protected override async Task GenerateCellStyleXfAsync()
+        {
+            /*
+             * <x:xf />
+             */
+            await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "xf", _context.OldXmlReader.NamespaceURI);
+            await _context.NewXmlWriter.WriteFullEndElementAsync();
+        }
+
+        protected override void GenerateCellXf()
+        {
+            /*
+             * <x:xf />
+             * <x:xf />
+             * <x:xf />
+             * <x:xf numFmtId="14" applyNumberFormat="1" />
+             * <x:xf />
+             */
+            _context.NewXmlWriter.WriteStartElement(_context.OldXmlReader.Prefix, "xf", _context.OldXmlReader.NamespaceURI);
+            _context.NewXmlWriter.WriteFullEndElement();
+            _context.NewXmlWriter.WriteStartElement(_context.OldXmlReader.Prefix, "xf", _context.OldXmlReader.NamespaceURI);
+            _context.NewXmlWriter.WriteFullEndElement();
+            _context.NewXmlWriter.WriteStartElement(_context.OldXmlReader.Prefix, "xf", _context.OldXmlReader.NamespaceURI);
+            _context.NewXmlWriter.WriteFullEndElement();
+            _context.NewXmlWriter.WriteStartElement(_context.OldXmlReader.Prefix, "xf", _context.OldXmlReader.NamespaceURI);
+            _context.NewXmlWriter.WriteAttributeString("numFmtId", "14");
+            _context.NewXmlWriter.WriteAttributeString("applyNumberFormat", "1");
+            _context.NewXmlWriter.WriteFullEndElement();
+            _context.NewXmlWriter.WriteStartElement(_context.OldXmlReader.Prefix, "xf", _context.OldXmlReader.NamespaceURI);
+            _context.NewXmlWriter.WriteFullEndElement();
+
+            const int numFmtIndex = 166;
+            var index = 0;
+            foreach (var item in _context.ColumnsToApply)
+            {
+                index++;
+
+                /*
+                 * <x:xf numFmtId="{numFmtIndex + i}" applyNumberFormat="1" 
+                 */
+                _context.NewXmlWriter.WriteStartElement(_context.OldXmlReader.Prefix, "xf", _context.OldXmlReader.NamespaceURI);
+                _context.NewXmlWriter.WriteAttributeString("numFmtId", (numFmtIndex + index).ToString());
+                _context.NewXmlWriter.WriteAttributeString("applyNumberFormat", "1");
+                _context.NewXmlWriter.WriteFullEndElement();
+            }
+        }
+
+        protected override async Task GenerateCellXfAsync()
+        {
+            /*
+             * <x:xf />
+             * <x:xf />
+             * <x:xf />
+             * <x:xf numFmtId="14" applyNumberFormat="1" />
+             * <x:xf />
+             */
+            await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "xf", _context.OldXmlReader.NamespaceURI);
+            await _context.NewXmlWriter.WriteFullEndElementAsync();
+            await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "xf", _context.OldXmlReader.NamespaceURI);
+            await _context.NewXmlWriter.WriteFullEndElementAsync();
+            await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "xf", _context.OldXmlReader.NamespaceURI);
+            await _context.NewXmlWriter.WriteFullEndElementAsync();
+            await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "xf", _context.OldXmlReader.NamespaceURI);
+            await _context.NewXmlWriter.WriteAttributeStringAsync(_context.OldXmlReader.Prefix, "numFmtId", _context.OldXmlReader.NamespaceURI, "14");
+            await _context.NewXmlWriter.WriteAttributeStringAsync(_context.OldXmlReader.Prefix, "applyNumberFormat", _context.OldXmlReader.NamespaceURI, "1");
+            await _context.NewXmlWriter.WriteFullEndElementAsync();
+            await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "xf", _context.OldXmlReader.NamespaceURI);
+            await _context.NewXmlWriter.WriteFullEndElementAsync();
+
+            const int numFmtIndex = 166;
+            var index = 0;
+            foreach (var item in _context.ColumnsToApply)
+            {
+                index++;
+
+                /*
+                 * <x:xf numFmtId="{numFmtIndex + i}" applyNumberFormat="1" 
+                 */
+                await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "xf", _context.OldXmlReader.NamespaceURI);
+                await _context.NewXmlWriter.WriteAttributeStringAsync(_context.OldXmlReader.Prefix, "numFmtId", _context.OldXmlReader.NamespaceURI, (numFmtIndex + index).ToString());
+                await _context.NewXmlWriter.WriteAttributeStringAsync(_context.OldXmlReader.Prefix, "applyNumberFormat", _context.OldXmlReader.NamespaceURI, "1");
+                await _context.NewXmlWriter.WriteFullEndElementAsync();
+            }
         }
     }
-
 }

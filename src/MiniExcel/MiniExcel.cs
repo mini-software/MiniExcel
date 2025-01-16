@@ -24,31 +24,53 @@
             return new MiniExcelDataReader(stream, useHeaderRow, sheetName, excelType, startCell, configuration);
         }
 
-        public static void Insert(string path, object value, string sheetName = "Sheet1", ExcelType excelType = ExcelType.UNKNOWN, IConfiguration configuration = null)
+        public static void Insert(string path, object value, string sheetName = "Sheet1", ExcelType excelType = ExcelType.UNKNOWN, IConfiguration configuration = null, bool printHeader = true, bool overwriteSheet = false)
         {
-            if (Path.GetExtension(path).ToLowerInvariant() != ".csv")
-                throw new NotSupportedException("MiniExcel only support csv insert now");
+            if (Path.GetExtension(path).ToLowerInvariant() == ".xlsm")
+                throw new NotSupportedException("MiniExcel Insert not support xlsm");
 
-            using (var stream = new FileStream(path, FileMode.Append, FileAccess.Write, FileShare.Read, 4096, FileOptions.SequentialScan))
-                Insert(stream, value, sheetName, ExcelTypeHelper.GetExcelType(path, excelType), configuration);
+            if (!File.Exists(path))
+            {
+                SaveAs(path, value, printHeader, sheetName, excelType);
+            }
+            else
+            {
+                if (excelType == ExcelType.CSV)
+                {
+                    using (var stream = new FileStream(path, FileMode.Append, FileAccess.Write, FileShare.Read, 4096, FileOptions.SequentialScan))
+                        Insert(stream, value, sheetName, ExcelTypeHelper.GetExcelType(path, excelType), configuration, printHeader, overwriteSheet);
+                }
+                else
+                {
+                    using (var stream = new FileStream(path, FileMode.Open, FileAccess.ReadWrite, FileShare.Read, 4096, FileOptions.SequentialScan))
+                        Insert(stream, value, sheetName, ExcelTypeHelper.GetExcelType(path, excelType), configuration, printHeader, overwriteSheet);
+                }
+            }
         }
 
-        public static void Insert(this Stream stream, object value, string sheetName = "Sheet1", ExcelType excelType = ExcelType.XLSX, IConfiguration configuration = null)
+        public static void Insert(this Stream stream, object value, string sheetName = "Sheet1", ExcelType excelType = ExcelType.XLSX, IConfiguration configuration = null, bool printHeader = true, bool overwriteSheet = false)
         {
-            if (excelType != ExcelType.CSV)
-                throw new NotSupportedException("MiniExcel only support csv insert now");
-
-            // reuse code
-            object v = null;
-            {
-                if (!(value is IEnumerable) && !(value is IDataReader) && !(value is IDictionary<string, object>) && !(value is IDictionary))
-                    v = Enumerable.Range(0, 1).Select(s => value);
-                else
-                    v = value;
-            }
-
             stream.Seek(0, SeekOrigin.End);
-            ExcelWriterFactory.GetProvider(stream, v, sheetName, excelType, configuration, false).Insert();
+            // reuse code
+            if (excelType == ExcelType.CSV)
+            {
+                object v = null;
+                {
+                    if (!(value is IEnumerable) && !(value is IDataReader) && !(value is IDictionary<string, object>) && !(value is IDictionary))
+                        v = Enumerable.Range(0, 1).Select(s => value);
+                    else
+                        v = value;
+                }
+                ExcelWriterFactory.GetProvider(stream, v, sheetName, excelType, configuration, false).Insert(overwriteSheet);
+            }
+            else
+            {
+                if (configuration == null)
+                {
+                    configuration = new OpenXmlConfiguration { FastMode = true };
+                }
+                ExcelWriterFactory.GetProvider(stream, value, sheetName, excelType, configuration, printHeader).Insert(overwriteSheet);
+            }
         }
 
         public static void SaveAs(string path, object value, bool printHeader = true, string sheetName = "Sheet1", ExcelType excelType = ExcelType.UNKNOWN, IConfiguration configuration = null, bool overwriteFile = false)

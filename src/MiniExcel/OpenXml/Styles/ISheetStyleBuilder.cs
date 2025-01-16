@@ -1,10 +1,12 @@
-﻿using MiniExcelLibs.Attributes;
-using System.Collections.Generic;
+﻿using System.Threading;
+using System.Threading.Tasks;
 
-namespace MiniExcelLibs.OpenXml.Styles {
-    public interface ISheetStyleBuilder
+namespace MiniExcelLibs.OpenXml.Styles
+{
+    internal interface ISheetStyleBuilder
     {
-        string Build( ICollection<ExcelColumnAttribute> columns );
-    }
+        SheetStyleBuildResult Build();
 
+        Task<SheetStyleBuildResult> BuildAsync(CancellationToken cancellationToken = default);
+    }
 }

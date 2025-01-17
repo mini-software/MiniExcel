@@ -67,6 +67,13 @@
         }
 
         /// <inheritdoc/>
+        public override int GetOrdinal(string name)
+        {
+            _keys.IndexOf(name);
+            return _keys.IndexOf(name);
+        }
+
+        /// <inheritdoc/>
         protected override void Dispose(bool disposing)
         {
             if (!_disposed)

@@ -47,7 +47,7 @@ namespace MiniExcelLibs.Tests
             };
             var path = Path.GetTempPath() + Guid.NewGuid() + ".xlsx";
             MiniExcel.SaveAs(path, data);
-            var rows = MiniExcel.Query(path,true).ToList();
+            var rows = MiniExcel.Query(path, true).ToList();
             {
                 using (FileStream stream = new FileStream(path, FileMode.Open, FileAccess.Read))
                 {
@@ -3536,7 +3536,8 @@ MyProperty4,MyProperty1,MyProperty5,MyProperty2,MyProperty6,,MyProperty3
             public int D { get; set; }
         }
 
-        class Issue507V02 {
+        class Issue507V02
+        {
             public DateTime B { get; set; }
             public int D { get; set; }
         }
@@ -3547,7 +3548,7 @@ MyProperty4,MyProperty1,MyProperty5,MyProperty2,MyProperty6,,MyProperty3
             //Problem with multi-line when using Query func
             //https://github.com/mini-software/MiniExcel/issues/507
 
-            var path = Path.Combine(Path.GetTempPath(), string.Concat( nameof(MiniExcelIssueTests),"_", nameof(Issue507_1), ".csv" ));
+            var path = Path.Combine(Path.GetTempPath(), string.Concat(nameof(MiniExcelIssueTests), "_", nameof(Issue507_1), ".csv"));
             var values = new Issue507V01[]
             {
                 new() { A = "Github", B = DateTime.Parse("2021-01-01"), C = "abcd", D = 123 },
@@ -3570,9 +3571,9 @@ MyProperty4,MyProperty1,MyProperty5,MyProperty2,MyProperty6,,MyProperty3
 
             // read
             var getRowsInfo = MiniExcel.Query<Issue507V01>(path, excelType: ExcelType.CSV, configuration: config).ToArray();
-            
+
             Assert.Equal(values.Length, getRowsInfo.Count());
-            
+
             Assert.Equal("Github", getRowsInfo[0].A);
             Assert.Equal("abcd", getRowsInfo[0].C);
 
@@ -3587,7 +3588,8 @@ MyProperty4,MyProperty1,MyProperty5,MyProperty2,MyProperty6,,MyProperty3
         }
 
         [Fact]
-        public void Issue507_2() {
+        public void Issue507_2()
+        {
             //Problem with multi-line when using Query func
             //https://github.com/mini-software/MiniExcel/issues/507
 
@@ -3620,7 +3622,8 @@ MyProperty4,MyProperty1,MyProperty5,MyProperty2,MyProperty6,,MyProperty3
         }
 
         [Fact]
-        public void Issue507_3_MismatchedQuoteCsv() {
+        public void Issue507_3_MismatchedQuoteCsv()
+        {
             //Problem with multi-line when using Query func
             //https://github.com/mini-software/MiniExcel/issues/507
 
@@ -3633,12 +3636,12 @@ MyProperty4,MyProperty1,MyProperty5,MyProperty2,MyProperty6,,MyProperty3
             var badCsv = "A,B,C\n\"r1a: no end quote,r1b,r1c";
 
             // create
-            using var stream = new MemoryStream( Encoding.UTF8.GetBytes( badCsv ) );
+            using var stream = new MemoryStream(Encoding.UTF8.GetBytes(badCsv));
 
             // read
-            var getRowsInfo = MiniExcel.Query( stream, excelType: ExcelType.CSV, configuration: config ).ToArray();
+            var getRowsInfo = MiniExcel.Query(stream, excelType: ExcelType.CSV, configuration: config).ToArray();
 
-            Assert.Equal(2, getRowsInfo.Length );
+            Assert.Equal(2, getRowsInfo.Length);
 
         }
 
@@ -3655,8 +3658,8 @@ MyProperty4,MyProperty1,MyProperty5,MyProperty2,MyProperty6,,MyProperty3
             {
                 Title = "My Title",
                 OrderInfo = Enumerable
-                    .Range( 1, 100 )
-                    .Select( x => new
+                    .Range(1, 100)
+                    .Select(x => new
                     {
                         Standard = "standard",
                         RegionName = "region",
@@ -3682,13 +3685,13 @@ MyProperty4,MyProperty1,MyProperty5,MyProperty2,MyProperty6,,MyProperty3
             var path = Path.Combine
             (
                 Path.GetTempPath(),
-                string.Concat( nameof( MiniExcelIssueTests ), "_", nameof( Issue606_1 ), ".xlsx" )
+                string.Concat(nameof(MiniExcelIssueTests), "_", nameof(Issue606_1), ".xlsx")
             );
 
             var templateFileName = @"../../../../../samples/xlsx/TestIssue606_Template.xlsx";
 
 
-            MiniExcel.SaveAsByTemplate( path, Path.GetFullPath( templateFileName ), value );
+            MiniExcel.SaveAsByTemplate(path, Path.GetFullPath(templateFileName), value);
 
         }
 
@@ -3698,7 +3701,8 @@ MyProperty4,MyProperty1,MyProperty5,MyProperty2,MyProperty6,,MyProperty3
             //https://github.com/mini-software/MiniExcel/issues/632
             var values = new List<Dictionary<string, object>>();
 
-            foreach ( var item in Enumerable.Range( 1, 100 ) ) {
+            foreach (var item in Enumerable.Range(1, 100))
+            {
                 var dict = new Dictionary<string, object>
                 {
                     { "Id", item },
@@ -3711,7 +3715,7 @@ MyProperty4,MyProperty1,MyProperty5,MyProperty2,MyProperty6,,MyProperty3
                     { "Network Usage (Kb/s)", Math.Round( 4503.23422, 1 ) },
                     { "Instrument", "QT800050" }
                 };
-                values.Add( dict );
+                values.Add(dict);
             }
 
             var config = new OpenXmlConfiguration
@@ -3728,11 +3732,11 @@ MyProperty4,MyProperty1,MyProperty5,MyProperty2,MyProperty6,,MyProperty3
 
             var path = Path.Combine(
                 Path.GetTempPath(),
-                string.Concat( nameof( MiniExcelIssueTests ), "_", nameof( Issue632_1 ), ".xlsx" )
+                string.Concat(nameof(MiniExcelIssueTests), "_", nameof(Issue632_1), ".xlsx")
             );
-            
-            MiniExcel.SaveAs( path, values, excelType: ExcelType.XLSX, configuration: config, overwriteFile: true );
-            
+
+            MiniExcel.SaveAs(path, values, excelType: ExcelType.XLSX, configuration: config, overwriteFile: true);
+
         }
 
         private class Issue658TestData
@@ -3809,6 +3813,33 @@ MyProperty4,MyProperty1,MyProperty5,MyProperty2,MyProperty6,,MyProperty3
                 Assert.Equal(data.FirstName, queryData[i].FirstName);
                 Assert.Equal(data.LastName, queryData[i].LastName);
                 i++;
+            }
+        }
+
+        [Fact]
+        public void Issue_710()
+        {
+            var values = new[] { new { Column1 = "MiniExcel", Column2 = 1, Column3 = "Test" } };
+            using var memoryStream = new MemoryStream();
+            memoryStream.SaveAs(values, configuration: new OpenXmlConfiguration
+            {
+                FastMode = true,
+            });
+
+            memoryStream.Position = 0;
+
+            var dataReader = memoryStream.GetReader(useHeaderRow: false);
+
+            dataReader.Read();
+            {
+                for (int i = 0; i < dataReader.FieldCount; i++)
+                {
+                    var columnName = dataReader.GetName(i);
+
+                    var ordinal = dataReader.GetOrdinal(columnName);
+
+                    Assert.Equal(i, ordinal);
+                }
             }
         }
     }

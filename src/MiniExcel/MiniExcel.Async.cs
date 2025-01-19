@@ -1,15 +1,67 @@
 ﻿namespace MiniExcelLibs
 {
+    using MiniExcelLibs.OpenXml;
     using System;
+    using System.Collections;
     using System.Collections.Generic;
     using System.Data;
     using System.IO;
+    using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
     using Utils;
 
     public static partial class MiniExcel
     {
+        public static async Task InsertAsync(string path, object value, string sheetName = "Sheet1", ExcelType excelType = ExcelType.UNKNOWN, IConfiguration configuration = null, bool printHeader = true, bool overwriteSheet = false, CancellationToken cancellationToken = default)
+        {
+            if (Path.GetExtension(path).ToLowerInvariant() == ".xlsm")
+                throw new NotSupportedException("MiniExcel Insert not support xlsm");
+
+            if (!File.Exists(path))
+            {
+                await SaveAsAsync(path, value, printHeader, sheetName, excelType, cancellationToken: cancellationToken);
+            }
+            else
+            {
+                if (excelType == ExcelType.CSV)
+                {
+                    using (var stream = new FileStream(path, FileMode.Append, FileAccess.Write, FileShare.Read, 4096, FileOptions.SequentialScan))
+                        await InsertAsync(stream, value, sheetName, ExcelTypeHelper.GetExcelType(path, excelType), configuration, printHeader, overwriteSheet, cancellationToken);
+                }
+                else
+                {
+                    using (var stream = new FileStream(path, FileMode.Open, FileAccess.ReadWrite, FileShare.Read, 4096, FileOptions.SequentialScan))
+                        await InsertAsync(stream, value, sheetName, ExcelTypeHelper.GetExcelType(path, excelType), configuration, printHeader, overwriteSheet, cancellationToken);
+                }
+            }
+        }
+
+        public static async Task InsertAsync(this Stream stream, object value, string sheetName = "Sheet1", ExcelType excelType = ExcelType.XLSX, IConfiguration configuration = null, bool printHeader = true, bool overwriteSheet = false, CancellationToken cancellationToken = default)
+        {
+            stream.Seek(0, SeekOrigin.End);
+            // reuse code
+            if (excelType == ExcelType.CSV)
+            {
+                object v = null;
+                {
+                    if (!(value is IEnumerable) && !(value is IDataReader) && !(value is IDictionary<string, object>) && !(value is IDictionary))
+                        v = Enumerable.Range(0, 1).Select(s => value);
+                    else
+                        v = value;
+                }
+                await ExcelWriterFactory.GetProvider(stream, v, sheetName, excelType, configuration, false).InsertAsync(overwriteSheet);
+            }
+            else
+            {
+                if (configuration == null)
+                {
+                    configuration = new OpenXmlConfiguration { FastMode = true };
+                }
+                await ExcelWriterFactory.GetProvider(stream, value, sheetName, excelType, configuration, printHeader).InsertAsync(overwriteSheet);
+            }
+        }
+
         public static async Task SaveAsAsync(string path, object value, bool printHeader = true, string sheetName = "Sheet1", ExcelType excelType = ExcelType.UNKNOWN, IConfiguration configuration = null, bool overwriteFile = false, CancellationToken cancellationToken = default(CancellationToken))
         {
             if (Path.GetExtension(path).ToLowerInvariant() == ".xlsm")

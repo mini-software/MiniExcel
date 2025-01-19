@@ -1455,5 +1455,141 @@ namespace MiniExcelLibs.Tests
                 Assert.Equal(onlyDate.ToDateTime(TimeOnly.MinValue), (DateTime)rows[1]["Column4"]);
             }
         }
+
+        [Fact]
+        public void InsertSheetTest()
+        {
+            var now = DateTime.Now;
+            var path = PathHelper.GetTempPath();
+            {
+                var table = new DataTable();
+                {
+                    table.Columns.Add("a", typeof(string));
+                    table.Columns.Add("b", typeof(decimal));
+                    table.Columns.Add("c", typeof(bool));
+                    table.Columns.Add("d", typeof(DateTime));
+                    table.Rows.Add(@"""<>+-*//}{\\n", 1234567890, true, now);
+                    table.Rows.Add(@"<test>Hello World</test>", -1234567890, false, now.Date);
+                }
+
+                MiniExcel.Insert(path, table, sheetName: "Sheet1");
+                using (var p = new ExcelPackage(new FileInfo(path)))
+                {
+                    var sheet1 = p.Workbook.Worksheets[0];
+
+                    Assert.True(sheet1.Cells["A1"].Value.ToString() == "a");
+                    Assert.True(sheet1.Cells["B1"].Value.ToString() == "b");
+                    Assert.True(sheet1.Cells["C1"].Value.ToString() == "c");
+                    Assert.True(sheet1.Cells["D1"].Value.ToString() == "d");
+
+                    Assert.True(sheet1.Cells["A2"].Value.ToString() == @"""<>+-*//}{\\n");
+                    Assert.True(sheet1.Cells["B2"].Value.ToString() == @"1234567890");
+                    Assert.True(sheet1.Cells["C2"].Value.ToString() == true.ToString());
+                    Assert.True(sheet1.Cells["D2"].Value.ToString() == now.ToString());
+
+                    Assert.True(sheet1.Name == "Sheet1");
+                }
+            }
+            {
+                var table = new DataTable();
+                {
+                    table.Columns.Add("Column1", typeof(string));
+                    table.Columns.Add("Column2", typeof(int));
+                    table.Rows.Add("MiniExcel", 1);
+                    table.Rows.Add("Github", 2);
+                }
+
+                MiniExcel.Insert(path, table, sheetName: "Sheet2");
+                using (var p = new ExcelPackage(new FileInfo(path)))
+                {
+                    var sheet2 = p.Workbook.Worksheets[1];
+
+                    Assert.True(sheet2.Cells["A1"].Value.ToString() == "Column1");
+                    Assert.True(sheet2.Cells["B1"].Value.ToString() == "Column2");
+
+                    Assert.True(sheet2.Cells["A2"].Value.ToString() == "MiniExcel");
+                    Assert.True(sheet2.Cells["B2"].Value.ToString() == "1");
+
+                    Assert.True(sheet2.Cells["A3"].Value.ToString() == "Github");
+                    Assert.True(sheet2.Cells["B3"].Value.ToString() == "2");
+
+                    Assert.True(sheet2.Name == "Sheet2");
+                }
+            }
+            {
+                var table = new DataTable();
+                {
+                    table.Columns.Add("Column1", typeof(string));
+                    table.Columns.Add("Column2", typeof(DateTime));
+                    table.Rows.Add("Test", now);
+                }
+
+                MiniExcel.Insert(path, table, sheetName: "Sheet2", printHeader: false, configuration: new OpenXmlConfiguration
+                {
+                    FastMode = true,
+                    AutoFilter = false,
+                    TableStyles = TableStyles.None,
+                    DynamicColumns = new[]
+                    {
+                        new DynamicExcelColumn("Column2")
+                        {
+                            Name = "Its Date",
+                            Index = 1,
+                            Width = 150,
+                            Format = "dd.mm.yyyy hh:mm:ss",
+                        }
+                    }
+                }, overwriteSheet: true);
+                using (var p = new ExcelPackage(new FileInfo(path)))
+                {
+                    var sheet2 = p.Workbook.Worksheets[1];
+
+                    Assert.True(sheet2.Cells["A1"].Value.ToString() == "Test");
+                    Assert.True(sheet2.Cells["B1"].Text == now.ToString("dd.MM.yyyy HH:mm:ss"));
+                    Assert.True(sheet2.Name == "Sheet2");
+                }
+            }
+            {
+                var table = new DataTable();
+                {
+                    table.Columns.Add("Column1", typeof(string));
+                    table.Columns.Add("Column2", typeof(DateTime));
+                    table.Rows.Add("MiniExcel", now);
+                    table.Rows.Add("Github", now);
+                }
+
+                MiniExcel.Insert(path, table, sheetName: "Sheet3", configuration: new OpenXmlConfiguration
+                {
+                    FastMode = true,
+                    AutoFilter = false,
+                    TableStyles = TableStyles.None,
+                    DynamicColumns = new[]
+                    {
+                        new DynamicExcelColumn("Column2")
+                        {
+                            Name = "Its Date",
+                            Index = 1,
+                            Width = 150,
+                            Format = "dd.mm.yyyy hh:mm:ss",
+                        }
+                    }
+                });
+                using (var p = new ExcelPackage(new FileInfo(path)))
+                {
+                    var sheet3 = p.Workbook.Worksheets[2];
+
+                    Assert.True(sheet3.Cells["A1"].Value.ToString() == "Column1");
+                    Assert.True(sheet3.Cells["B1"].Value.ToString() == "Its Date");
+
+                    Assert.True(sheet3.Cells["A2"].Value.ToString() == "MiniExcel");
+                    Assert.True(sheet3.Cells["B2"].Text == now.ToString("dd.MM.yyyy HH:mm:ss"));
+
+                    Assert.True(sheet3.Cells["A3"].Value.ToString() == "Github");
+                    Assert.True(sheet3.Cells["B3"].Text == now.ToString("dd.MM.yyyy HH:mm:ss"));
+
+                    Assert.True(sheet3.Name == "Sheet3");
+                }
+            }
+        }
     }
 }

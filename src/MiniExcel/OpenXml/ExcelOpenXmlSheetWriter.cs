@@ -179,16 +179,15 @@ namespace MiniExcelLibs.OpenXml
             writer.SetPosition(position);
         }
 
-
         private void WriteValues(MiniExcelStreamWriter writer, object values)
         {
             IMiniExcelWriteAdapter writeAdapter = MiniExcelWriteAdapterFactory.GetWriteAdapter(values, _configuration);
 
-            var hasCount = writeAdapter.TryGetNonEnumeratedCount(out var count);
+            var isKnownCount = writeAdapter.TryGetKnownCount(out var count);
             var props = writeAdapter.GetColumns();
             var maxColumnIndex = props.Count;
             int maxRowIndex;
-            if (props.Count == 0)
+            if (props == null)
             {
                 WriteEmptySheet(writer);
                 return;
@@ -199,13 +198,13 @@ namespace MiniExcelLibs.OpenXml
             long dimensionPlaceholderPostition = 0;
 
             // We can write the dimensions directly if the row count is known
-            if (_configuration.FastMode && !hasCount)
+            if (_configuration.FastMode && !isKnownCount)
             {
                 dimensionPlaceholderPostition = WriteDimensionPlaceholder(writer);
             }
-            else
+            else if (isKnownCount)
             {
-                maxRowIndex = count + (_printHeader && count > 0 ? 1 : 0);
+                maxRowIndex = count + (_printHeader ? 1 : 0);
                 writer.Write(WorksheetXml.Dimension(GetDimensionRef(maxRowIndex, props.Count)));
             }
 
@@ -242,8 +241,6 @@ namespace MiniExcelLibs.OpenXml
                     WriteCell(writer, currentRowIndex, cellValue.CellIndex, cellValue.Value, cellValue.Prop, widths);
                 }
                 writer.Write(WorksheetXml.EndRow);
-
-                ;
             }
             maxRowIndex = currentRowIndex;
 
@@ -266,7 +263,6 @@ namespace MiniExcelLibs.OpenXml
                 OverWriteColumnWidthPlaceholders(writer, columnWidthsPlaceholderPosition, widths.Columns);
             }
         }
-
 
         private long WriteColumnWidthPlaceholders(MiniExcelStreamWriter writer, ICollection<ExcelColumnInfo> props)
         {

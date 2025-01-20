@@ -143,8 +143,6 @@ namespace MiniExcelLibs.OpenXml
             writer.SetPosition(position);
         }
 
-
-
         private async Task WriteValuesAsync(MiniExcelAsyncStreamWriter writer, object values, CancellationToken cancellationToken)
         {
 #if NETSTANDARD2_0_OR_GREATER || NET
@@ -154,19 +152,18 @@ namespace MiniExcelLibs.OpenXml
                 writeAdapter = MiniExcelWriteAdapterFactory.GetWriteAdapter(values, _configuration);
             }
 
-            var count = 0;
-            var hasCount = writeAdapter != null && writeAdapter.TryGetNonEnumeratedCount(out count);
+            var isKnownCount = writeAdapter != null && writeAdapter.TryGetKnownCount(out var count);
             var props = writeAdapter?.GetColumns() ?? await asyncWriteAdapter.GetColumnsAsync();
 #else
             IMiniExcelWriteAdapter writeAdapter =  MiniExcelWriteAdapterFactory.GetWriteAdapter(values, _configuration);
 
-            var hasCount = writeAdapter.TryGetNonEnumeratedCount(out var count);
+            var isKnownCount = writeAdapter.TryGetKnownCount(out var count);
             var props = writeAdapter.GetColumns();
 #endif
 
             var maxColumnIndex = props.Count;
             int maxRowIndex;
-            if (props.Count == 0)
+            if (props == null)
             {
                 await WriteEmptySheetAsync(writer);
                 return;
@@ -177,13 +174,13 @@ namespace MiniExcelLibs.OpenXml
             long dimensionPlaceholderPostition = 0;
 
             // We can write the dimensions directly if the row count is known
-            if (_configuration.FastMode && !hasCount)
+            if (_configuration.FastMode && !isKnownCount)
             {
                 dimensionPlaceholderPostition = await WriteDimensionPlaceholderAsync(writer);
             }
-            else
+            else if (isKnownCount)
             {
-                maxRowIndex = count + (_printHeader && count > 0 ? 1 : 0);
+                maxRowIndex = count + (_printHeader ? 1 : 0);
                 await writer.WriteAsync(WorksheetXml.Dimension(GetDimensionRef(maxRowIndex, props.Count)));
             }
 
@@ -205,7 +202,7 @@ namespace MiniExcelLibs.OpenXml
 
             //header
             await writer.WriteAsync(WorksheetXml.StartSheetData);
-            var currentRowIndex = 1;
+            var currentRowIndex = 0;
             if (_printHeader)
             {
                 await PrintHeaderAsync(writer, props);
@@ -216,14 +213,12 @@ namespace MiniExcelLibs.OpenXml
             {
                 foreach (var row in writeAdapter.GetRows(props, cancellationToken))
                 {
-                    await writer.WriteAsync(WorksheetXml.StartRow(currentRowIndex));
+                    await writer.WriteAsync(WorksheetXml.StartRow(++currentRowIndex));
                     foreach (var cellValue in row)
                     {
                         await WriteCellAsync(writer, currentRowIndex, cellValue.CellIndex, cellValue.Value, cellValue.Prop, widths);
                     }
                     await writer.WriteAsync(WorksheetXml.EndRow);
-
-                    currentRowIndex++;
                 }
             }
 #if NETSTANDARD2_0_OR_GREATER || NET
@@ -231,14 +226,12 @@ namespace MiniExcelLibs.OpenXml
             {
                 await foreach (var row in asyncWriteAdapter.GetRowsAsync(props, cancellationToken))
                 {
-                    await writer.WriteAsync(WorksheetXml.StartRow(currentRowIndex));
+                    await writer.WriteAsync(WorksheetXml.StartRow(++currentRowIndex));
                     await foreach (var cellValue in row)
                     {
                         await WriteCellAsync(writer, currentRowIndex, cellValue.CellIndex, cellValue.Value, cellValue.Prop, widths);
                     }
                     await writer.WriteAsync(WorksheetXml.EndRow);
-
-                    currentRowIndex++;
                 }
             }
 #endif
@@ -323,7 +316,6 @@ namespace MiniExcelLibs.OpenXml
 
             await writer.WriteAsync(WorksheetXml.EndRow);
         }
-
 
         private async Task WriteCellAsync(MiniExcelAsyncStreamWriter writer, string cellReference, string columnName)
         {

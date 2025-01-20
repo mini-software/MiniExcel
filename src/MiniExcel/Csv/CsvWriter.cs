@@ -53,9 +53,9 @@ namespace MiniExcelLibs.Csv
             rowBuilder.Append(_configuration.Seperator);
         }
 
-        private void RemoveTrailingSeparator(StringBuilder rowBuilder) 
+        private void RemoveTrailingSeparator(StringBuilder rowBuilder)
         {
-            if (rowBuilder.Length == 0) 
+            if (rowBuilder.Length == 0)
             {
                 return;
             }
@@ -68,9 +68,15 @@ namespace MiniExcelLibs.Csv
 
         private void WriteValues(StreamWriter writer, object values)
         {
-            IMiniExcelWriteAdapter writeAdapter =  MiniExcelWriteAdapterFactory.GetWriteAdapter(values, _configuration);
+            IMiniExcelWriteAdapter writeAdapter = MiniExcelWriteAdapterFactory.GetWriteAdapter(values, _configuration);
 
             var props = writeAdapter.GetColumns();
+            if (props == null)
+            {
+                _writer.Write(_configuration.NewLine);
+                _writer.Flush();
+                return;
+            }
 
             if (_printHeader)
             {
@@ -108,7 +114,12 @@ namespace MiniExcelLibs.Csv
             IMiniExcelWriteAdapter writeAdapter =  MiniExcelWriteAdapterFactory.GetWriteAdapter(values, _configuration);
             var props = writeAdapter.GetColumns();
 #endif
-
+            if (props == null)
+            {
+                await _writer.WriteAsync(_configuration.NewLine);
+                await _writer.FlushAsync();
+                return;
+            }
             if (_printHeader)
             {
                 await _writer.WriteAsync(GetHeader(props));

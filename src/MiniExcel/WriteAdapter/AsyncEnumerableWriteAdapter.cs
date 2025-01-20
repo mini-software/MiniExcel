@@ -23,18 +23,23 @@ namespace MiniExcelLibs.WriteAdapter
 
         public async Task<List<ExcelColumnInfo>> GetColumnsAsync()
         {
-            if (CustomPropertyHelper.TryGetTypeColumnInfo(typeof(T), _configuration, out var props))
-            {
-                return props;
-            }
-
             _enumerator = _values.GetAsyncEnumerator();
             if (!await _enumerator.MoveNextAsync())
             {
-                _empty = true;
-                return new List<ExcelColumnInfo>();
+                if (CustomPropertyHelper.TryGetTypeColumnInfo(typeof(T), _configuration, out var props))
+                {
+                    return props;
+                }
+                else
+                {
+                    _empty = true;
+                    return null;
+                }
             }
-            return CustomPropertyHelper.GetColumnInfoFromValue(_enumerator.Current, _configuration);
+            else
+            {
+                return CustomPropertyHelper.GetColumnInfoFromValue(_enumerator.Current, _configuration);
+            }
         }
 
         public async IAsyncEnumerable<IAsyncEnumerable<CellWriteInfo>> GetRowsAsync(List<ExcelColumnInfo> props, [EnumeratorCancellation] CancellationToken cancellationToken)

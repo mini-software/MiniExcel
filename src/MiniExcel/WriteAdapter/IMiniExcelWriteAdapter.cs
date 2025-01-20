@@ -6,7 +6,7 @@ namespace MiniExcelLibs.WriteAdapter
 {
     internal interface IMiniExcelWriteAdapter
     {
-        bool TryGetNonEnumeratedCount(out int count);
+        bool TryGetKnownCount(out int count);
 
         List<ExcelColumnInfo> GetColumns();
 

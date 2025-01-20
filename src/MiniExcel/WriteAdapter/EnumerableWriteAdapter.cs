@@ -23,7 +23,7 @@ namespace MiniExcelLibs.WriteAdapter
             _genericType = TypeHelper.GetGenericIEnumerables(values).FirstOrDefault();
         }
 
-        public bool TryGetNonEnumeratedCount(out int count)
+        public bool TryGetKnownCount(out int count)
         {
             count = 0;
             if (_values is ICollection collection)
@@ -37,18 +37,23 @@ namespace MiniExcelLibs.WriteAdapter
 
         public List<ExcelColumnInfo> GetColumns()
         {
-            if (CustomPropertyHelper.TryGetTypeColumnInfo(_genericType, _configuration, out var props))
-            {
-                return props;
-            }
-
             _enumerator = _values.GetEnumerator();
             if (!_enumerator.MoveNext())
             {
-                _empty = true;
-                return new List<ExcelColumnInfo>();
+                if (CustomPropertyHelper.TryGetTypeColumnInfo(_genericType, _configuration, out var props))
+                {
+                    return props;
+                }
+                else
+                {
+                    _empty = true;
+                    return null;
+                }
             }
-            return CustomPropertyHelper.GetColumnInfoFromValue(_enumerator.Current, _configuration);
+            else
+            {
+                return CustomPropertyHelper.GetColumnInfoFromValue(_enumerator.Current, _configuration);
+            }
         }
 
         public IEnumerable<IEnumerable<CellWriteInfo>> GetRows(List<ExcelColumnInfo> props, CancellationToken cancellationToken = default)

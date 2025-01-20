@@ -16,7 +16,7 @@ namespace MiniExcelLibs.WriteAdapter
             _configuration = configuration;
         }
 
-        public bool TryGetNonEnumeratedCount(out int count)
+        public bool TryGetKnownCount(out int count)
         {
             count = _dataTable.Rows.Count;
             return true;

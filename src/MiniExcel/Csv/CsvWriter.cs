@@ -109,7 +109,7 @@ namespace MiniExcelLibs.Csv
             {
                 writeAdapter = MiniExcelWriteAdapterFactory.GetWriteAdapter(values, _configuration);
             }
-            var props = writeAdapter?.GetColumns() ?? await asyncWriteAdapter.GetColumnsAsync();
+            var props = writeAdapter != null ? writeAdapter.GetColumns() : await asyncWriteAdapter.GetColumnsAsync();
 #else
             IMiniExcelWriteAdapter writeAdapter =  MiniExcelWriteAdapterFactory.GetWriteAdapter(values, _configuration);
             var props = writeAdapter.GetColumns();

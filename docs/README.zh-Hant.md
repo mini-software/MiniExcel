@@ -25,6 +25,15 @@
 ---
 
 
+### 1.37.0
+- [New] feat: support insert sheet (#709) (via @izanhzh)
+- [Bug] fix(MiniExcelDataReader): GetOrdinal always returns 0 (#711) (via @izanhzh)
+- [OPT] Generalize excel writing with a common write adapter and implement writing IAsyncEnumerable (#712) (via @Discolai , @izanhzh)
+
+
+### 1.36.1
+- [New] feat(MiniExcelDataReaderBase): add asynchronous support (#706) (via @izanhzh , @ArgoZhang )
+
 ### 1.36.0
 - [New] Write auto column width (#695) (via @Discolai)
 - [New] Enhance IDataReader export with DynamicColumnFirst and Custom Formatting Delegate (#700) (via @

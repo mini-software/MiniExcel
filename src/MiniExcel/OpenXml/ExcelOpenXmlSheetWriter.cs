@@ -323,52 +323,6 @@ namespace MiniExcelLibs.OpenXml
             writer.Write(WorksheetXml.EndRow);
         }
 
-        private int GenerateSheetByColumnInfo<T>(MiniExcelStreamWriter writer, IEnumerator value, List<ExcelColumnInfo> props, ExcelWidthCollection widthCollection, int xIndex = 1, int yIndex = 1)
-        {
-            var isDic = typeof(T) == typeof(IDictionary);
-            var isDapperRow = typeof(T) == typeof(IDictionary<string, object>);
-            do
-            {
-                // The enumerator has already moved to the first item
-                T v = (T)value.Current;
-
-                writer.Write(WorksheetXml.StartRow(yIndex));
-                var cellIndex = xIndex;
-                foreach (var columnInfo in props)
-                {
-                    if (columnInfo == null) //reason:https://github.com/shps951023/MiniExcel/issues/142
-                    {
-                        cellIndex++;
-                        continue;
-                    }
-                    object cellValue = null;
-                    if (isDic)
-                    {
-                        cellValue = ((IDictionary)v)[columnInfo.Key];
-                        //WriteCell(writer, yIndex, cellIndex, cellValue, null); // why null because dictionary that needs to check type every time
-                        //TODO: user can specefic type to optimize efficiency
-                    }
-                    else if (isDapperRow)
-                    {
-                        cellValue = ((IDictionary<string, object>)v)[columnInfo.Key.ToString()];
-                    }
-                    else
-                    {
-                        cellValue = columnInfo.Property.GetValue(v);
-                    }
-
-                    WriteCell(writer, yIndex, cellIndex, cellValue, columnInfo, widthCollection);
-
-                    cellIndex++;
-                }
-
-                writer.Write(WorksheetXml.EndRow);
-                yIndex++;
-            } while (value.MoveNext());
-
-            return yIndex - 1;
-        }
-
         private void WriteCell(MiniExcelStreamWriter writer, int rowIndex, int cellIndex, object value, ExcelColumnInfo columnInfo, ExcelWidthCollection widthCollection)
         {
             var columnReference = ExcelOpenXmlUtils.ConvertXyToCell(cellIndex, rowIndex);

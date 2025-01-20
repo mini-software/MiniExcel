@@ -152,7 +152,8 @@ namespace MiniExcelLibs.OpenXml
                 writeAdapter = MiniExcelWriteAdapterFactory.GetWriteAdapter(values, _configuration);
             }
 
-            var isKnownCount = writeAdapter != null && writeAdapter.TryGetKnownCount(out var count);
+            var count = 0;
+            var isKnownCount = writeAdapter != null && writeAdapter.TryGetKnownCount(out count);
             var props = writeAdapter?.GetColumns() ?? await asyncWriteAdapter.GetColumnsAsync();
 #else
             IMiniExcelWriteAdapter writeAdapter =  MiniExcelWriteAdapterFactory.GetWriteAdapter(values, _configuration);

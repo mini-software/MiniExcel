@@ -177,73 +177,6 @@ namespace MiniExcelLibs.OpenXml
 
         }
 
-        private ExcelColumnInfo GetColumnInfosFromDynamicConfiguration(string columnName)
-        {
-            var prop = new ExcelColumnInfo
-            {
-                ExcelColumnName = columnName,
-                Key = columnName
-            };
-
-            if (_configuration.DynamicColumns == null || _configuration.DynamicColumns.Length <= 0)
-                return prop;
-
-            var dynamicColumn = _configuration.DynamicColumns.SingleOrDefault(_ => string.Equals(_.Key, columnName, StringComparison.OrdinalIgnoreCase));
-            if (dynamicColumn == null || dynamicColumn.Ignore)
-            {
-                return prop;
-            }
-
-            prop.Nullable = true;
-            prop.ExcelIgnore = dynamicColumn.Ignore;
-            prop.ExcelColumnType = dynamicColumn.Type;
-            prop.ExcelColumnIndex = dynamicColumn.Index;
-            prop.ExcelColumnWidth = dynamicColumn.Width;
-            prop.CustomFormatter = dynamicColumn.CustomFormatter;
-            //prop.ExcludeNullableType = item2[key]?.GetType();
-
-            if (dynamicColumn.Format != null)
-            {
-                prop.ExcelFormat = dynamicColumn.Format;
-                prop.ExcelFormatId = dynamicColumn.FormatId;
-            }
-
-            if (dynamicColumn.Aliases != null)
-            {
-                prop.ExcelColumnAliases = dynamicColumn.Aliases;
-            }
-
-            if (dynamicColumn.IndexName != null)
-            {
-                prop.ExcelIndexName = dynamicColumn.IndexName;
-            }
-
-            if (dynamicColumn.Name != null)
-            {
-                prop.ExcelColumnName = dynamicColumn.Name;
-            }
-
-            return prop;
-        }
-
-        private void SetGenericTypePropertiesMode(Type genericType, ref string mode, out int maxColumnIndex, out List<ExcelColumnInfo> props)
-        {
-            mode = "Properties";
-            if (genericType.IsValueType)
-            {
-                throw new NotImplementedException($"MiniExcel not support only {genericType.Name} value generic type");
-            }
-
-            if (genericType == typeof(string) || genericType == typeof(DateTime) || genericType == typeof(Guid))
-            {
-                throw new NotImplementedException($"MiniExcel not support only {genericType.Name} generic type");
-            }
-
-            props = CustomPropertyHelper.GetSaveAsProperties(genericType, _configuration);
-
-            maxColumnIndex = props.Count;
-        }
-
         private Tuple<string, string, string> GetCellValue(int rowIndex, int cellIndex, object value, ExcelColumnInfo columnInfo, bool valueIsNull)
         {
             if (valueIsNull)
@@ -446,7 +379,7 @@ namespace MiniExcelLibs.OpenXml
             string dimensionRef;
             if (maxRowIndex == 0 && maxColumnIndex == 0)
                 dimensionRef = "A1";
-            else if (maxColumnIndex == 1)
+            else if (maxColumnIndex <= 1)
                 dimensionRef = $"A{maxRowIndex}";
             else if (maxRowIndex == 0)
                 dimensionRef = $"A1:{ColumnHelper.GetAlphabetColumnName(maxColumnIndex - 1)}1";

@@ -161,5 +161,16 @@
             return newValue;
         }
 
+#if NETSTANDARD2_0_OR_GREATER || NET
+        public static bool IsAsyncEnumerable(this Type type, out Type genericArgument)
+        {
+            var asyncEnumrableInterfaceType = type
+                .GetInterfaces()
+                .FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IAsyncEnumerable<>));
+            genericArgument = asyncEnumrableInterfaceType?.GetGenericArguments().FirstOrDefault();
+            return genericArgument != null;
+        }
+#endif
+
     }
 }

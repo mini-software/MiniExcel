@@ -317,5 +317,98 @@
             if (!isIgnore)
                 _props.Add(p);
         }
+
+        internal static bool TryGetTypeColumnInfo(Type type, Configuration configuration, out List<ExcelColumnInfo> props)
+        {
+            // Unknown type
+            if (type == null)
+            {
+                props = null;
+                return false;
+            }
+
+            if (type.IsValueType)
+            {
+                throw new NotImplementedException($"MiniExcel not support only {type.Name} value generic type");
+            }
+
+            if (type == typeof(string) || type == typeof(DateTime) || type == typeof(Guid))
+            {
+                throw new NotImplementedException($"MiniExcel not support only {type.Name} generic type");
+            }
+
+            if (ValueIsNeededToDetermineProperties(type))
+            {
+                props = null;
+                return false;
+            }
+
+            props = GetSaveAsProperties(type, configuration);
+            return true;
+        }
+        internal static List<ExcelColumnInfo> GetColumnInfoFromValue(object value, Configuration configuration)
+        {
+            switch (value)
+            {
+                case IDictionary<string, object> genericDictionary:
+                    return GetDictionaryColumnInfo(genericDictionary, null, configuration);
+                case IDictionary dictionary:
+                    return GetDictionaryColumnInfo(null, dictionary, configuration);
+                default:
+                    return GetSaveAsProperties(value.GetType(), configuration);
+            }
+        }
+
+        private static bool ValueIsNeededToDetermineProperties(Type type) => type == typeof(object)
+                    || typeof(IDictionary<string, object>).IsAssignableFrom(type)
+                    || typeof(IDictionary).IsAssignableFrom(type);
+
+        internal static ExcelColumnInfo GetColumnInfosFromDynamicConfiguration(string columnName, Configuration configuration)
+        {
+            var prop = new ExcelColumnInfo
+            {
+                ExcelColumnName = columnName,
+                Key = columnName
+            };
+
+            if (configuration.DynamicColumns == null || configuration.DynamicColumns.Length <= 0)
+                return prop;
+
+            var dynamicColumn = configuration.DynamicColumns.SingleOrDefault(_ => string.Equals(_.Key, columnName, StringComparison.OrdinalIgnoreCase));
+            if (dynamicColumn == null || dynamicColumn.Ignore)
+            {
+                return prop;
+            }
+
+            prop.Nullable = true;
+            prop.ExcelIgnore = dynamicColumn.Ignore;
+            prop.ExcelColumnType = dynamicColumn.Type;
+            prop.ExcelColumnIndex = dynamicColumn.Index;
+            prop.ExcelColumnWidth = dynamicColumn.Width;
+            prop.CustomFormatter = dynamicColumn.CustomFormatter;
+
+            if (dynamicColumn.Format != null)
+            {
+                prop.ExcelFormat = dynamicColumn.Format;
+                prop.ExcelFormatId = dynamicColumn.FormatId;
+            }
+
+            if (dynamicColumn.Aliases != null)
+            {
+                prop.ExcelColumnAliases = dynamicColumn.Aliases;
+            }
+
+            if (dynamicColumn.IndexName != null)
+            {
+                prop.ExcelIndexName = dynamicColumn.IndexName;
+            }
+
+            if (dynamicColumn.Name != null)
+            {
+                prop.ExcelColumnName = dynamicColumn.Name;
+            }
+
+            return prop;
+        }
     }
 }

@@ -3,6 +3,9 @@
 		<TargetFrameworks>net45;netstandard2.0;net8.0;</TargetFrameworks>
 		<Version>1.36.1</Version>
 	</PropertyGroup>
+	<PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+		<LangVersion>8</LangVersion>
+	</PropertyGroup>
 	<PropertyGroup>
 		<AssemblyName>MiniExcel</AssemblyName>
 		<Company>Mini-Software</Company>
@@ -35,9 +38,6 @@ Todo : https://github.com/mini-software/MiniExcel/projects/1?fullscreen=true</De
 		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 	</PropertyGroup>
-	<ItemGroup Condition=" '$(TargetFramework)' == 'net461'">
-		<Reference Include="System.IO.Compression" />
-	</ItemGroup>
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net45'">
 		<Reference Include="System.IO.Compression" />
 	</ItemGroup>
@@ -55,5 +55,10 @@ Todo : https://github.com/mini-software/MiniExcel/projects/1?fullscreen=true</De
 	</ItemGroup>
 	<ItemGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
 		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
+	</ItemGroup>
+	<ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+	  <PackageReference Include="Microsoft.Bcl.AsyncInterfaces">
+	    <Version>9.0.0</Version>
+	  </PackageReference>
 	</ItemGroup>
 </Project>

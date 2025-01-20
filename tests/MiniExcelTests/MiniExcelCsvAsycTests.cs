@@ -59,9 +59,7 @@ namespace MiniExcelLibs.Tests
             {
                 var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.csv");
                 var table = new Dictionary<string, object>(); //TODO
-                await MiniExcel.SaveAsAsync(path, table);
-                //Assert.Throws<NotImplementedException>(() => MiniExcel.SaveAs(path, table));
-                Assert.Equal("\r\n", File.ReadAllText(path));
+                Assert.Throws<NotImplementedException>(() => MiniExcel.SaveAs(path, table));
                 File.Delete(path);
             }
 
@@ -316,6 +314,33 @@ namespace MiniExcelLibs.Tests
                 Assert.Null(rows[1].c1);
                 Assert.Null(rows[1].c2);
             }
+
+            File.Delete(path);
+        }
+
+        [Fact]
+        public async Task SaveAsByAsyncEnumerable()
+        {
+            var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.csv");
+
+#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
+            static async IAsyncEnumerable<Test> GetValues()
+            {
+                yield return new Test { c1 = "A1", c2 = "B1" };
+                yield return new Test { c1 = "A2", c2 = "B2" };
+            }
+#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
+
+
+            await MiniExcel.SaveAsAsync(path, GetValues());
+
+            var results = MiniExcel.Query<Test>(path);
+
+            Assert.True(results.Count() == 2);
+            Assert.True(results.First().c1 == "A1");
+            Assert.True(results.First().c2 == "B1");
+            Assert.True(results.Last().c1 == "A2");
+            Assert.True(results.Last().c2 == "B2");
 
             File.Delete(path);
         }

@@ -162,13 +162,13 @@ namespace MiniExcelLibs.OpenXml
             var props = writeAdapter.GetColumns();
 #endif
 
-            var maxColumnIndex = props.Count;
-            int maxRowIndex;
             if (props == null)
             {
                 await WriteEmptySheetAsync(writer);
                 return;
             }
+            var maxColumnIndex = props.Count;
+            int maxRowIndex;
 
             await writer.WriteAsync(WorksheetXml.StartWorksheetWithRelationship);
 

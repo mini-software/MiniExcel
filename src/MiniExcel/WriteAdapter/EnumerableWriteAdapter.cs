@@ -37,23 +37,18 @@ namespace MiniExcelLibs.WriteAdapter
 
         public List<ExcelColumnInfo> GetColumns()
         {
+            if (CustomPropertyHelper.TryGetTypeColumnInfo(_genericType, _configuration, out var props))
+            {
+                return props;
+            }
+
             _enumerator = _values.GetEnumerator();
             if (!_enumerator.MoveNext())
             {
-                if (CustomPropertyHelper.TryGetTypeColumnInfo(_genericType, _configuration, out var props))
-                {
-                    return props;
-                }
-                else
-                {
-                    _empty = true;
-                    return null;
-                }
+                _empty = true;
+                return null;
             }
-            else
-            {
-                return CustomPropertyHelper.GetColumnInfoFromValue(_enumerator.Current, _configuration);
-            }
+            return CustomPropertyHelper.GetColumnInfoFromValue(_enumerator.Current, _configuration);           
         }
 
         public IEnumerable<IEnumerable<CellWriteInfo>> GetRows(List<ExcelColumnInfo> props, CancellationToken cancellationToken = default)

@@ -185,13 +185,13 @@ namespace MiniExcelLibs.OpenXml
 
             var isKnownCount = writeAdapter.TryGetKnownCount(out var count);
             var props = writeAdapter.GetColumns();
-            var maxColumnIndex = props.Count;
-            int maxRowIndex;
             if (props == null)
             {
                 WriteEmptySheet(writer);
                 return;
             }
+            var maxColumnIndex = props.Count;
+            int maxRowIndex;
 
             writer.Write(WorksheetXml.StartWorksheetWithRelationship);
 

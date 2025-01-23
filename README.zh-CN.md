@@ -1123,6 +1123,24 @@ v1.28.0 开始支持 CSV 插入新增，在最后一行新增N笔数据
 
 ![image](https://user-images.githubusercontent.com/12729184/191023733-1e2fa732-db5c-4a3a-9722-b891fe5aa069.png)
 
+v1.37.0 开始支持在现有Excel工作簿中插入新工作表
+
+```csharp
+// 原始Excel
+{
+    var value = new[] {
+          new { ID=1,Name ="Jack",InDate=new DateTime(2021,01,03)},
+          new { ID=2,Name ="Henry",InDate=new DateTime(2020,05,03)},
+    };
+    MiniExcel.SaveAs(path, value, sheetName: "Sheet1");
+}
+// 新增一个Sheet
+{
+    var value = new { ID=3,Name = "Mike", InDate = new DateTime(2021, 04, 23) };
+    MiniExcel.Insert(path, table, sheetName: "Sheet2");
+}
+```
+
 
 
 #### 删除(未完成)

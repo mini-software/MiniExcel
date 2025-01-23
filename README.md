@@ -1240,6 +1240,24 @@ v1.28.0 support CSV insert N rows data after last row
 
 ![image](https://user-images.githubusercontent.com/12729184/191023733-1e2fa732-db5c-4a3a-9722-b891fe5aa069.png)
 
+v1.37.0 support excel insert a new sheet into an existing workbook
+
+```csharp
+// Origin excel
+{
+    var value = new[] {
+          new { ID=1,Name ="Jack",InDate=new DateTime(2021,01,03)},
+          new { ID=2,Name ="Henry",InDate=new DateTime(2020,05,03)},
+    };
+    MiniExcel.SaveAs(path, value, sheetName: "Sheet1");
+}
+// Insert a new sheet
+{
+    var value = new { ID=3,Name = "Mike", InDate = new DateTime(2021, 04, 23) };
+    MiniExcel.Insert(path, table, sheetName: "Sheet2");
+}
+```
+
 
 
 #### Delete(waiting)

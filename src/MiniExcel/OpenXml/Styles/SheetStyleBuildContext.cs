@@ -127,7 +127,7 @@ namespace MiniExcelLibs.OpenXml.Styles
             NewXmlWriter = XmlWriter.Create(newXmlWriterStream, new XmlWriterSettings() { Indent = true, Encoding = _encoding, Async = true });
 
             GenerateElementInfos = generateElementInfos;
-            ColumnsToApply = SheetStyleBuilderHelper.GenerateStyleIds(OldElementInfos.CellXfCount + generateElementInfos.CellXfCount, _columns).ToArray();//这里暂时加ToArray，避免多次计算，如果有性能问题再考虑优化
+            ColumnsToApply = SheetStyleBuilderHelper.GenerateStyleIds(OldElementInfos.CellXfCount + generateElementInfos.CellXfCount, _columns).ToArray();//ToArray to avoid multiple calculations, if there is a performance problem then consider optimizing the
             CustomFormatCount = ColumnsToApply.Count();
 
             initialized = true;

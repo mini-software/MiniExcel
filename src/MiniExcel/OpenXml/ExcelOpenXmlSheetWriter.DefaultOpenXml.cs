@@ -217,12 +217,17 @@ namespace MiniExcelLibs.OpenXml
 
             if (TypeHelper.IsNumericType(type))
             {
-                var dataType = _configuration.Culture == CultureInfo.InvariantCulture ? "n" : "str";
-                string cellValue;
+                var cellValue = GetNumericValue(value, type);
 
-                cellValue = GetNumericValue(value, type);
-
-                return Tuple.Create("2", dataType, cellValue);
+                if (columnInfo == null || columnInfo.ExcelFormat == null)
+                {
+                    var dataType = _configuration.Culture == CultureInfo.InvariantCulture ? "n" : "str";
+                    return Tuple.Create("2", dataType, cellValue);
+                }
+                else
+                {
+                    return Tuple.Create(columnInfo.ExcelFormatId.ToString(), (string)null, cellValue);
+                }
             }
 
             if (type == typeof(bool))

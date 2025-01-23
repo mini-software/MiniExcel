@@ -19,7 +19,7 @@ namespace MiniExcelLibs.Utils
         {
             var sections = Parser.ParseSections(formatString, out bool syntaxError);
 
-            IsValid = true;
+            IsValid = !syntaxError;
             FormatString = formatString;
 
             if (IsValid)

@@ -334,6 +334,18 @@ namespace MiniExcelLibs.OpenXml
                 return;
             }
 
+            if (p.CustomFormatter != null)
+            {
+                try
+                {
+                    value = p.CustomFormatter(value);
+                }
+                catch
+                {
+                    //ignored
+                }
+            }
+
             var tuple = GetCellValue(rowIndex, cellIndex, value, p, valueIsNull);
 
             var styleIndex = tuple.Item1;
@@ -344,18 +356,6 @@ namespace MiniExcelLibs.OpenXml
             /*Prefix and suffix blank space will lost after SaveAs #294*/
             var preserveSpace = cellValue != null && (cellValue.StartsWith(" ", StringComparison.Ordinal) ||
                                                       cellValue.EndsWith(" ", StringComparison.Ordinal));
-
-            if (p.CustomFormatter != null)
-            {
-                try
-                {
-                    cellValue = p.CustomFormatter(cellValue);
-                }
-                catch
-                {
-                    //ignored
-                }
-            }
 
             await writer.WriteAsync(WorksheetXml.Cell(columnReference, dataType, GetCellXfId(styleIndex), cellValue, preserveSpace: preserveSpace, columnType: columnType));
             widthCollection?.AdjustWidth(cellIndex, cellValue);

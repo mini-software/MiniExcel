@@ -25,7 +25,7 @@
         public bool ExcelIgnore { get; internal set; }
         public int ExcelFormatId { get; internal set; }
         public ColumnType ExcelColumnType { get; internal set; }
-        public Func<object, string> CustomFormatter { get; set; }
+        public Func<object, object> CustomFormatter { get; set; }
     }
 
     internal class ExcellSheetInfo
@@ -183,12 +183,9 @@
                 var excludeNullableType = gt ?? p.PropertyType;
                 var excelFormat = p.GetAttribute<ExcelFormatAttribute>()?.Format;
                 var excelColumn = p.GetAttribute<ExcelColumnAttribute>();
-                if (configuration.DynamicColumns != null && configuration.DynamicColumns.Length > 0)
-                {
-                    var dynamicColumn = configuration.DynamicColumns.SingleOrDefault(_ => _.Key == p.Name);
-                    if (dynamicColumn != null)
-                        excelColumn = dynamicColumn;
-                }
+                var dynamicColumn = configuration?.DynamicColumns?.SingleOrDefault(_ => _.Key == p.Name);
+                if (dynamicColumn != null)
+                    excelColumn = dynamicColumn;
 
                 var ignore = p.GetAttributeValue((ExcelIgnoreAttribute x) => x.ExcelIgnore) || p.GetAttributeValue((ExcelColumnAttribute x) => x.Ignore) || (excelColumn != null && excelColumn.Ignore);
                 if (ignore)
@@ -209,7 +206,8 @@
                     ExcelColumnWidth = p.GetAttribute<ExcelColumnWidthAttribute>()?.ExcelColumnWidth ?? excelColumn?.Width,
                     ExcelFormat = excelFormat ?? excelColumn?.Format,
                     ExcelFormatId = excelColumn?.FormatId ?? -1,
-                    ExcelColumnType = excelColumn?.Type ?? ColumnType.Value
+                    ExcelColumnType = excelColumn?.Type ?? ColumnType.Value,
+                    CustomFormatter = dynamicColumn?.CustomFormatter
                 };
             }).Where(_ => _ != null);
         }

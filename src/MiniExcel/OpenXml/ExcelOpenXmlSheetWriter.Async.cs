@@ -325,7 +325,7 @@ namespace MiniExcelLibs.OpenXml
 
         private async Task WriteCellAsync(MiniExcelAsyncStreamWriter writer, int rowIndex, int cellIndex, object value, ExcelColumnInfo p, ExcelWidthCollection widthCollection)
         {
-            if (p.CustomFormatter != null)
+            if (p?.CustomFormatter != null)
             {
                 try
                 {

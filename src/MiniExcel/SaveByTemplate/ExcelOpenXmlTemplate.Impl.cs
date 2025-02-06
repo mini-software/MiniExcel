@@ -976,7 +976,7 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                         }
 
                         var cellValue = inputMaps[propNames[0]]; // 1. From left to right, only the first set is used as the basis for the list
-                        if ((cellValue is IEnumerable || cellValue is IList<object>) && !(cellValue is string))
+                        if (cellValue is IEnumerable && !(cellValue is string))
                         {
                             if (this.XMergeCellInfos.ContainsKey(r))
                             {
@@ -987,7 +987,9 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                             }
 
                             xRowInfo.CellIEnumerableValues = cellValue as IEnumerable;
-                            xRowInfo.CellIlListValues = cellValue as IList<object>;
+                            xRowInfo.CellIlListValues = cellValue is IList<object> ?
+                                    cellValue as IList<object> :
+                                    xRowInfo.CellIEnumerableValues.Cast<object>().ToList();
 
                             // get ienumerable runtime type
                             if (xRowInfo.IEnumerableGenricType == null) //avoid duplicate to add rowindexdiff ![image](https://user-images.githubusercontent.com/12729184/114851348-522ac000-9e14-11eb-8244-4730754d6885.png)

@@ -136,21 +136,19 @@
             if (props.Count == 0)
                 throw new InvalidOperationException($"{type.Name} un-ignore properties count can't be 0");
 
+            var withCustomIndexProps = props.Where(w => w.ExcelColumnIndex != null && w.ExcelColumnIndex > -1);
+            if (withCustomIndexProps.GroupBy(g => g.ExcelColumnIndex).Any(_ => _.Count() > 1))
+                throw new InvalidOperationException("Duplicate column name");
+            var maxkey = keys.Last();
+            var maxIndex = ColumnHelper.GetColumnIndex(maxkey);
+            foreach (var p in props)
             {
-                var withCustomIndexProps = props.Where(w => w.ExcelColumnIndex != null && w.ExcelColumnIndex > -1);
-                if (withCustomIndexProps.GroupBy(g => g.ExcelColumnIndex).Any(_ => _.Count() > 1))
-                    throw new InvalidOperationException($"Duplicate column name");
-                var maxkey = keys.Last();
-                var maxIndex = ColumnHelper.GetColumnIndex(maxkey);
-                foreach (var p in props)
+                if (p.ExcelColumnIndex != null)
                 {
-                    if (p.ExcelColumnIndex != null)
-                    {
-                        if (p.ExcelColumnIndex > maxIndex)
-                            throw new ArgumentException($"ExcelColumnIndex {p.ExcelColumnIndex} over haeder max index {maxkey}");
-                        if (p.ExcelColumnName == null)
-                            throw new InvalidOperationException($"{p.Property.Info.DeclaringType.Name} {p.Property.Name}'s ExcelColumnIndex {p.ExcelColumnIndex} can't find excel column name");
-                    }
+                    if (p.ExcelColumnIndex > maxIndex)
+                        throw new ArgumentException($"ExcelColumnIndex {p.ExcelColumnIndex} over haeder max index {maxkey}");
+                    if (p.ExcelColumnName == null)
+                        throw new InvalidOperationException($"{p.Property.Info.DeclaringType.Name} {p.Property.Name}'s ExcelColumnIndex {p.ExcelColumnIndex} can't find excel column name");
                 }
             }
 

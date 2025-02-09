@@ -818,7 +818,7 @@ namespace MiniExcelLibs.OpenXml
             // if sheets count > 1 need to read xl/_rels/workbook.xml.rels
             var sheets = _archive.entries.Where(w => w.FullName.StartsWith("xl/worksheets/sheet", StringComparison.OrdinalIgnoreCase)
                 || w.FullName.StartsWith("/xl/worksheets/sheet", StringComparison.OrdinalIgnoreCase)
-            );
+            ).ToList();
             ZipArchiveEntry sheetEntry = null;
             if (sheetName != null)
             {
@@ -828,7 +828,7 @@ namespace MiniExcelLibs.OpenXml
                     throw new InvalidOperationException("Please check sheetName/Index is correct");
                 sheetEntry = sheets.Single(w => w.FullName == $"xl/{s.Path}" || w.FullName == $"/xl/{s.Path}" || w.FullName == s.Path || s.Path == $"/{w.FullName}");
             }
-            else if (sheets.Count() > 1)
+            else if (sheets.Count > 1)
             {
                 SetWorkbookRels(_archive.entries);
                 var s = _sheetRecords[0];

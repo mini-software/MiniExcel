@@ -88,12 +88,12 @@
             // https://github.com/shps951023/MiniExcel/issues/142
             //TODO: need optimize performance
 
-            var withCustomIndexProps = props.Where(w => w.ExcelColumnIndex != null && w.ExcelColumnIndex > -1);
+            var withCustomIndexProps = props.Where(w => w.ExcelColumnIndex != null && w.ExcelColumnIndex > -1).ToList();
             if (withCustomIndexProps.GroupBy(g => g.ExcelColumnIndex).Any(_ => _.Count() > 1))
-                throw new InvalidOperationException($"Duplicate column name");
+                throw new InvalidOperationException("Duplicate column name");
 
             var maxColumnIndex = props.Count - 1;
-            if (withCustomIndexProps.Any())
+            if (withCustomIndexProps.Count != 0)
                 maxColumnIndex = Math.Max((int)withCustomIndexProps.Max(w => w.ExcelColumnIndex), maxColumnIndex);
 
             var withoutCustomIndexProps = props.Where(w => w.ExcelColumnIndex == null || w.ExcelColumnIndex == -1).ToList();

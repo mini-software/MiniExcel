@@ -338,7 +338,7 @@ namespace MiniExcelLibs.OpenXml
             }
 
             var columnReference = ExcelOpenXmlUtils.ConvertXyToCell(cellIndex, rowIndex);
-            var valueIsNull = value is null || value is DBNull;
+            var valueIsNull = value is null || value is DBNull || (_configuration.WriteEmptyStringAsNull && value is String && value == string.Empty);
 
             if (_configuration.EnableWriteNullValueCell && valueIsNull)
             {

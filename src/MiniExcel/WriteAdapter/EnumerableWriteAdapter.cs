@@ -45,8 +45,16 @@ namespace MiniExcelLibs.WriteAdapter
             _enumerator = _values.GetEnumerator();
             if (!_enumerator.MoveNext())
             {
-                _empty = true;
-                return null;
+                try
+                {
+                    _empty = true;
+                    return null;
+                }
+                finally
+                {
+                    (_enumerator as IDisposable)?.Dispose();
+                    _enumerator = null;
+                }
             }
             return CustomPropertyHelper.GetColumnInfoFromValue(_enumerator.Current, _configuration);           
         }
@@ -58,20 +66,28 @@ namespace MiniExcelLibs.WriteAdapter
                 yield break;
             }
 
-            if (_enumerator is null)
+            try
             {
-                _enumerator = _values.GetEnumerator();
-                if (!_enumerator.MoveNext())
+                if (_enumerator is null)
                 {
-                    yield break;
+                    _enumerator = _values.GetEnumerator();
+                    if (!_enumerator.MoveNext())
+                    {
+                        yield break;
+                    }
                 }
-            }
 
-            do
+                do
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    yield return GetRowValues(_enumerator.Current, props);
+                } while (_enumerator.MoveNext());
+            }
+            finally
             {
-                cancellationToken.ThrowIfCancellationRequested();
-                yield return GetRowValues(_enumerator.Current, props);
-            } while (_enumerator.MoveNext());
+                (_enumerator as IDisposable)?.Dispose();
+                _enumerator = null;
+            }
         }
 
 

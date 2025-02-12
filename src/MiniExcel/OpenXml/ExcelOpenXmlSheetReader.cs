@@ -322,12 +322,11 @@ namespace MiniExcelLibs.OpenXml
                                                 {
                                                     _mergeCells.MergesValues[aR] = cellValue;
                                                 }
-                                                else if (_mergeCells.MergesMap.ContainsKey(aR))
+                                                else if (_mergeCells.MergesMap.TryGetValue(aR, out var mergeKey))
                                                 {
-                                                    var mergeKey = _mergeCells.MergesMap[aR];
                                                     object mergeValue = null;
-                                                    if (_mergeCells.MergesValues.ContainsKey(mergeKey))
-                                                        mergeValue = _mergeCells.MergesValues[mergeKey];
+                                                    if (_mergeCells.MergesValues.TryGetValue(mergeKey, out var value))
+                                                        mergeValue = value;
                                                     cellValue = mergeValue;
                                                 }
                                             }
@@ -398,9 +397,8 @@ namespace MiniExcelLibs.OpenXml
                 }
                 else
                 {
-                    if (headRows.ContainsKey(columnIndex))
+                    if (headRows.TryGetValue(columnIndex, out var key))
                     {
-                        var key = headRows[columnIndex];
                         cell[key] = cellValue;
                     }
                 }
@@ -467,10 +465,9 @@ namespace MiniExcelLibs.OpenXml
                     {
                         foreach (var alias in pInfo.ExcelColumnAliases)
                         {
-                            if (headersDic.ContainsKey(alias))
+                            if (headersDic.TryGetValue(alias, out var columnId))
                             {
                                 object newV = null;
-                                var columnId = headersDic[alias];
                                 var columnName = keys[columnId];
                                 item.TryGetValue(columnName, out var itemValue);
 
@@ -490,9 +487,8 @@ namespace MiniExcelLibs.OpenXml
                         {
                             item.TryGetValue(pInfo.ExcelIndexName, out itemValue);
                         }
-                        else if (headersDic.ContainsKey(pInfo.ExcelColumnName))
+                        else if (headersDic.TryGetValue(pInfo.ExcelColumnName, out var columnId))
                         {
-                            var columnId = headersDic[pInfo.ExcelColumnName];
                             var columnName = keys[columnId];
                             item.TryGetValue(columnName, out itemValue);
                         }
@@ -822,7 +818,7 @@ namespace MiniExcelLibs.OpenXml
             // if sheets count > 1 need to read xl/_rels/workbook.xml.rels
             var sheets = _archive.entries.Where(w => w.FullName.StartsWith("xl/worksheets/sheet", StringComparison.OrdinalIgnoreCase)
                 || w.FullName.StartsWith("/xl/worksheets/sheet", StringComparison.OrdinalIgnoreCase)
-            );
+            ).ToList();
             ZipArchiveEntry sheetEntry = null;
             if (sheetName != null)
             {
@@ -832,7 +828,7 @@ namespace MiniExcelLibs.OpenXml
                     throw new InvalidOperationException("Please check sheetName/Index is correct");
                 sheetEntry = sheets.Single(w => w.FullName == $"xl/{s.Path}" || w.FullName == $"/xl/{s.Path}" || w.FullName == s.Path || s.Path == $"/{w.FullName}");
             }
-            else if (sheets.Count() > 1)
+            else if (sheets.Count > 1)
             {
                 SetWorkbookRels(_archive.entries);
                 var s = _sheetRecords[0];
@@ -1086,13 +1082,9 @@ namespace MiniExcelLibs.OpenXml
                                                 {
                                                     _mergeCells.MergesValues[aR] = cellValue;
                                                 }
-                                                else if (_mergeCells.MergesMap.ContainsKey(aR))
+                                                else if (_mergeCells.MergesMap.TryGetValue(aR, out var mergeKey))
                                                 {
-                                                    var mergeKey = _mergeCells.MergesMap[aR];
-                                                    object mergeValue = null;
-                                                    if (_mergeCells.MergesValues.ContainsKey(mergeKey))
-                                                        mergeValue = _mergeCells.MergesValues[mergeKey];
-                                                    cellValue = mergeValue;
+                                                    _mergeCells.MergesValues.TryGetValue(mergeKey, out cellValue);
                                                 }
                                             }
                                             ////2022-09-24跳过endcell结束单元格所以在的列
@@ -1194,15 +1186,16 @@ namespace MiniExcelLibs.OpenXml
                     {
                         foreach (var alias in pInfo.ExcelColumnAliases)
                         {
-                            if (headersDic.ContainsKey(alias))
+                            if (headersDic.TryGetValue(alias, out var value))
                             {
                                 object newV = null;
-                                object itemValue = item[keys[headersDic[alias]]];
+                                object itemValue = item[keys[value]];
 
                                 if (itemValue == null)
                                     continue;
 
-                                newV = TypeHelper.TypeMapping(v, pInfo, newV, itemValue, rowIndex, startCell, configuration);
+                                newV = TypeHelper.TypeMapping(v, pInfo, newV, itemValue, rowIndex, startCell,
+                                    configuration);
                             }
                         }
                     }
@@ -1213,8 +1206,8 @@ namespace MiniExcelLibs.OpenXml
                         object itemValue = null;
                         if (pInfo.ExcelIndexName != null && keys.Contains(pInfo.ExcelIndexName))
                             itemValue = item[pInfo.ExcelIndexName];
-                        else if (headersDic.ContainsKey(pInfo.ExcelColumnName))
-                            itemValue = item[keys[headersDic[pInfo.ExcelColumnName]]];
+                        else if (headersDic.TryGetValue(pInfo.ExcelColumnName, out var value))
+                            itemValue = item[keys[value]];
 
                         if (itemValue == null)
                             continue;

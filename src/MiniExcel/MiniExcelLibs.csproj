@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFrameworks>net45;netstandard2.0;net8.0;</TargetFrameworks>
-		<Version>1.37.0</Version>
+		<Version>1.38.0</Version>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
 		<LangVersion>8</LangVersion>
@@ -17,9 +17,9 @@ Github : https://github.com/mini-software/MiniExcel
 Gitee : https://gitee.com/dotnetchina/MiniExcel
 Issues : https://github.com/mini-software/MiniExcel/issues
 Todo : https://github.com/mini-software/MiniExcel/projects/1?fullscreen=true</Description>
-		<Authors>LIN,WEI-HAN, Mini-Software team, eynarhaji</Authors>
+		<Authors>Wei Lin, Mini-Software team, eynarhaji</Authors>
 		<PackageId>MiniExcel</PackageId>
-		<Copyright>LIN,WEI-HAN, 2021 onwards</Copyright>
+		<Copyright>Wei Lin, 2021 onwards</Copyright>
 		<NeutralLanguage>en</NeutralLanguage>
 		<license>https://raw.githubusercontent.com/mini-software/MiniExcel/master/LICENSE</license>
 		<RootNamespace>MiniExcelLibs</RootNamespace>

@@ -151,6 +151,13 @@
                 else
                     newValue = Enum.Parse(pInfo.ExcludeNullableType, itemValue?.ToString(), true);
             }
+            else if (pInfo.ExcludeNullableType == typeof(Uri))
+            {
+                var rawValue = itemValue?.ToString();
+                if (!Uri.TryCreate(rawValue, UriKind.RelativeOrAbsolute, out var uri))
+                    throw new InvalidCastException($"Value \"{rawValue}\" cannot be converted to Uri");
+                newValue = uri;
+            }
             else
             {
                 // Use pInfo.ExcludeNullableType to resolve : https://github.com/shps951023/MiniExcel/issues/138

@@ -294,6 +294,66 @@ namespace MiniExcelTests.SaveByTemplate
             }
         }
 
+        private struct Employee
+        {
+            public string name { get; set; }
+            public string department { get; set; }
+        };
+
+        [Fact]
+        public void GroupTemplateTest()
+        {
+            var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
+            var templatePath = @"../../../../../samples/xlsx/TestTemplateBasicIEmumerableFillGroup.xlsx";
+            var value = new
+            {
+                employees = new List<Employee>()
+                {
+                    new(){ name = "Jack", department="HR" },
+                    new(){ name = "Jack", department="IT" },
+                    new(){ name = "Loan", department="IT" },
+                    new(){ name = "Eric", department="IT" },
+                    new(){ name = "Eric", department="HR" },
+                    new(){ name = "Keaton", department="IT" },
+                    new(){ name = "Felix", department="HR" },
+                },
+            };
+            MiniExcel.SaveAsByTemplate(path, templatePath, value);
+
+            {
+                var rows = MiniExcel.Query(path).ToList();
+
+                Assert.Equal(16, rows.Count);
+
+                Assert.Equal("Jack", rows[1].A);
+                Assert.Equal("Jack", rows[2].A);
+                Assert.Equal("HR", rows[2].B);
+                Assert.Equal("Jack", rows[3].A);
+                Assert.Equal("IT", rows[3].B);
+
+                Assert.Equal("Loan", rows[4].A);
+                Assert.Equal("Loan", rows[5].A);
+                Assert.Equal("IT", rows[5].B);
+
+                Assert.Equal("Eric", rows[6].A);
+                Assert.Equal("Eric", rows[7].A);
+                Assert.Equal("IT", rows[7].B);
+                Assert.Equal("Eric", rows[8].A);
+                Assert.Equal("HR", rows[8].B);
+
+                Assert.Equal("Keaton", rows[9].A);
+                Assert.Equal("Keaton", rows[10].A);
+                Assert.Equal("IT", rows[10].B);
+
+                Assert.Equal("Felix", rows[11].A);
+                Assert.Equal("Felix", rows[12].A);
+                Assert.Equal("HR", rows[12].B);
+
+                var demension = Helpers.GetFirstSheetDimensionRefValue(path);
+                Assert.Equal("A1:B20", demension);
+            }
+        }
+
         [Fact]
         public void TestGithubProject()
         {

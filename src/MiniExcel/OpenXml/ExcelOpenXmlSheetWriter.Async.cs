@@ -325,16 +325,7 @@ namespace MiniExcelLibs.OpenXml
 
         private async Task WriteCellAsync(MiniExcelAsyncStreamWriter writer, int rowIndex, int cellIndex, object value, ExcelColumnInfo p, ExcelWidthCollection widthCollection)
         {
-            var columnReference = ExcelOpenXmlUtils.ConvertXyToCell(cellIndex, rowIndex);
-            var valueIsNull = value is null || value is DBNull;
-
-            if (_configuration.EnableWriteNullValueCell && valueIsNull)
-            {
-                await writer.WriteAsync(WorksheetXml.EmptyCell(columnReference, GetCellXfId("2")));
-                return;
-            }
-
-            if (p.CustomFormatter != null)
+            if (p?.CustomFormatter != null)
             {
                 try
                 {
@@ -344,6 +335,15 @@ namespace MiniExcelLibs.OpenXml
                 {
                     //ignored
                 }
+            }
+
+            var columnReference = ExcelOpenXmlUtils.ConvertXyToCell(cellIndex, rowIndex);
+            var valueIsNull = value is null || value is DBNull;
+
+            if (_configuration.EnableWriteNullValueCell && valueIsNull)
+            {
+                await writer.WriteAsync(WorksheetXml.EmptyCell(columnReference, GetCellXfId("2")));
+                return;
             }
 
             var tuple = GetCellValue(rowIndex, cellIndex, value, p, valueIsNull);

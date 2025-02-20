@@ -482,9 +482,8 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                                         rowXml.Replace(key, "");
                                         continue;
                                     }
-                                    if (!dic.ContainsKey(propInfo.Key))
+                                    if (!dic.TryGetValue(propInfo.Key, out var cellValue))
                                         continue;
-                                    var cellValue = dic[propInfo.Key];
                                     if (cellValue == null)
                                     {
                                         rowXml.Replace(key, "");
@@ -899,9 +898,9 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                     if (t == "s")
                     {
                         //need to check sharedstring exist or not
-                        if (sharedStrings.ContainsKey(int.Parse(v.InnerText)))
+                        if (sharedStrings.TryGetValue(int.Parse(v.InnerText), out var shared))
                         {
-                            v.InnerText = sharedStrings[int.Parse(v.InnerText)];
+                            v.InnerText = shared;
                             // change type = str and replace its value
                             c.SetAttribute("t", "str");
                         }
@@ -935,11 +934,11 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                     var r = c.GetAttribute("r");
 
                     // ==== mergecells ====
-                    if (this.XMergeCellInfos.ContainsKey(r))
+                    if (this.XMergeCellInfos.TryGetValue(r, out var merCell))
                     {
                         if (xRowInfo.RowMercells == null)
                             xRowInfo.RowMercells = new List<XMergeCell>();
-                        xRowInfo.RowMercells.Add(this.XMergeCellInfos[r]);
+                        xRowInfo.RowMercells.Add(merCell);
                     }
 
                     if (changeRowIndex)
@@ -962,7 +961,7 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                             continue;
 
                         // TODO: default if not contain property key, clean the template string
-                        if (!inputMaps.ContainsKey(propNames[0]))
+                        if (!inputMaps.TryGetValue(propNames[0], out var cellValue))
                         {
                             if (_configuration.IgnoreTemplateParameterMissing)
                             {
@@ -975,19 +974,21 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                             }
                         }
 
-                        var cellValue = inputMaps[propNames[0]]; // 1. From left to right, only the first set is used as the basis for the list
-                        if ((cellValue is IEnumerable || cellValue is IList<object>) && !(cellValue is string))
+                        //cellValue = inputMaps[propNames[0]] - 1. From left to right, only the first set is used as the basis for the list
+                        if (cellValue is IEnumerable && !(cellValue is string))
                         {
-                            if (this.XMergeCellInfos.ContainsKey(r))
+                            if (xRowInfo.IEnumerableMercell == null)
                             {
-                                if (xRowInfo.IEnumerableMercell == null)
+                                if (this.XMergeCellInfos.TryGetValue(r, out var info))
                                 {
-                                    xRowInfo.IEnumerableMercell = this.XMergeCellInfos[r];
+                                    xRowInfo.IEnumerableMercell = info;
                                 }
                             }
 
                             xRowInfo.CellIEnumerableValues = cellValue as IEnumerable;
-                            xRowInfo.CellIlListValues = cellValue as IList<object>;
+                            xRowInfo.CellIlListValues = cellValue is IList<object> ?
+                                    cellValue as IList<object> :
+                                    xRowInfo.CellIEnumerableValues.Cast<object>().ToList();
 
                             // get ienumerable runtime type
                             if (xRowInfo.IEnumerableGenricType == null) //avoid duplicate to add rowindexdiff ![image](https://user-images.githubusercontent.com/12729184/114851348-522ac000-9e14-11eb-8244-4730754d6885.png)
@@ -1063,14 +1064,13 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                                 v.InnerText = v.InnerText.Replace($"{{{{{propNames[0]}}}}}", propNames[1]);
                                 break;
                             }
-                            if (!xRowInfo.PropsMap.ContainsKey(propNames[1]))
+                            if (!xRowInfo.PropsMap.TryGetValue(propNames[1], out var prop))
                             {
                                 v.InnerText = v.InnerText.Replace($"{{{{{propNames[0]}.{propNames[1]}}}}}", "");
                                 continue;
                                 throw new InvalidDataException($"{propNames[0]} doesn't have {propNames[1]} property");
                             }
                             // auto check type https://github.com/shps951023/MiniExcel/issues/177
-                            var prop = xRowInfo.PropsMap[propNames[1]];
                             var type = prop.UnderlyingTypePropType; //avoid nullable
 
                             if (isMultiMatch)

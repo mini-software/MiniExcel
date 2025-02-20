@@ -325,15 +325,6 @@ namespace MiniExcelLibs.OpenXml
 
         private void WriteCell(MiniExcelStreamWriter writer, int rowIndex, int cellIndex, object value, ExcelColumnInfo columnInfo, ExcelWidthCollection widthCollection)
         {
-            var columnReference = ExcelOpenXmlUtils.ConvertXyToCell(cellIndex, rowIndex);
-            var valueIsNull = value is null || value is DBNull;
-
-            if (_configuration.EnableWriteNullValueCell && valueIsNull)
-            {
-                writer.Write(WorksheetXml.EmptyCell(columnReference, GetCellXfId("2")));
-                return;
-            }
-
             if (columnInfo?.CustomFormatter != null)
             {
                 try
@@ -344,6 +335,15 @@ namespace MiniExcelLibs.OpenXml
                 {
                     //ignored
                 }
+            }
+
+            var columnReference = ExcelOpenXmlUtils.ConvertXyToCell(cellIndex, rowIndex);
+            var valueIsNull = value is null || value is DBNull || (_configuration.WriteEmptyStringAsNull && value is String && value == string.Empty);
+
+            if (_configuration.EnableWriteNullValueCell && valueIsNull)
+            {
+                writer.Write(WorksheetXml.EmptyCell(columnReference, GetCellXfId("2")));
+                return;
             }
 
             var tuple = GetCellValue(rowIndex, cellIndex, value, columnInfo, valueIsNull);

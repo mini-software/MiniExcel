@@ -381,6 +381,27 @@ namespace MiniExcelLibs.Tests
             }
         }
 
+        public class ExcelUriDemo
+        {
+            public string Name { get; set; }
+            public int Age { get; set; }
+            public Uri Url { get; set; }
+        }
+
+        [Fact]
+        public void UriMappingTest()
+        {
+            var path = "../../../../../samples/xlsx/TestUriMapping.xlsx";
+            using (var stream = File.OpenRead(path))
+            {
+                var rows = stream.Query<ExcelUriDemo>().ToList();
+
+                Assert.Equal("Felix", rows[1].Name);
+                Assert.Equal(44, rows[1].Age);
+                Assert.Equal(new Uri("https://friendly-utilization.net"), rows[1].Url);
+            }
+        }
+        
         [Fact()]
         public void TestDatetimeSpanFormat_ClosedXml()
         {

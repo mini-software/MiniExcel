@@ -498,7 +498,7 @@ namespace MiniExcelLibs.OpenXml
                     var partName = $"/{p.Key}";
                     if (!partNames.Contains(partName))
                     {
-                        var newElement = new XElement(ns + "Override", new XAttribute("PartName", partName), new XAttribute("ContentType", p.Value.ContentType));
+                        var newElement = new XElement(ns + "Override", new XAttribute("ContentType", p.Value.ContentType), new XAttribute("PartName", partName));
                         typesElement.Add(newElement);
                     }
                 }

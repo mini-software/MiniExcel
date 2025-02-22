@@ -129,6 +129,32 @@
                 else
                     throw new InvalidCastException($"{vs} can't cast to datetime");
             }
+            else if (pInfo.ExcludeNullableType == typeof(TimeSpan))
+            {
+                if (itemValue is TimeSpan || itemValue is TimeSpan?)
+                {
+                    newValue = itemValue;
+                    pInfo.Property.SetValue(v, newValue);
+                    return newValue;
+                }
+
+                var vs = itemValue?.ToString();
+                if (pInfo.ExcelFormat != null)
+                {
+                    if (TimeSpan.TryParseExact(vs, pInfo.ExcelFormat, CultureInfo.InvariantCulture, out var _v))
+                    {
+                        newValue = _v;
+                    }
+                }
+                else if (TimeSpan.TryParse(vs, _config.Culture, out var _v))
+                    newValue = _v;
+                else if (TimeSpan.TryParseExact(vs, "hh\\:mm\\:ss\\.fff", CultureInfo.InvariantCulture, out var _v2))
+                    newValue = _v2;
+                else if (double.TryParse(vs, NumberStyles.None, CultureInfo.InvariantCulture, out var _d))
+                    newValue = TimeSpan.FromMilliseconds(_d);
+                else
+                    throw new InvalidCastException($"{vs} can't cast to TimeSpan");
+            }
             else if (pInfo.ExcludeNullableType == typeof(bool))
             {
                 var vs = itemValue.ToString();

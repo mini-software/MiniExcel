@@ -6,12 +6,12 @@ using MiniExcelLibs.Utils;
 using MiniExcelLibs.WriteAdapter;
 using MiniExcelLibs.Zip;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Text;
+using System.Xml.Linq;
 
 namespace MiniExcelLibs.OpenXml
 {
@@ -101,19 +101,18 @@ namespace MiniExcelLibs.OpenXml
             {
                 currentSheetIndex = existSheetDto.SheetIdx;
                 _archive.Entries.Single(s => s.FullName == existSheetDto.Path).Delete();
-                _archive.Entries.SingleOrDefault(s => s.FullName == ExcelFileNames.DrawingRels(currentSheetIndex))?.Delete();
-                _archive.Entries.SingleOrDefault(s => s.FullName == ExcelFileNames.Drawing(currentSheetIndex))?.Delete();
                 CreateSheetXml(_value, existSheetDto.Path);
             }
 
             AddFilesToZip();
 
-            GenerateDrawinRelXml(currentSheetIndex);
+            _archive.Entries.SingleOrDefault(s => s.FullName == ExcelFileNames.DrawingRels(currentSheetIndex - 1))?.Delete();
+            GenerateDrawinRelXml(currentSheetIndex - 1);
 
-            GenerateDrawingXml(currentSheetIndex);
+            _archive.Entries.SingleOrDefault(s => s.FullName == ExcelFileNames.Drawing(currentSheetIndex - 1))?.Delete();
+            GenerateDrawingXml(currentSheetIndex - 1);
 
             GenerateWorkBookXmls(out StringBuilder workbookXml, out StringBuilder workbookRelsXml, out Dictionary<int, string> sheetsRelsXml);
-
             foreach (var sheetRelsXml in sheetsRelsXml)
             {
                 var sheetRelsXmlPath = ExcelFileNames.SheetRels(sheetRelsXml.Key);
@@ -121,11 +120,13 @@ namespace MiniExcelLibs.OpenXml
                 CreateZipEntry(sheetRelsXmlPath, null, ExcelXml.DefaultSheetRelXml.Replace("{{format}}", sheetRelsXml.Value));
             }
 
-            _archive.Entries.SingleOrDefault(s => s.FullName == ExcelFileNames.Workbook)?.Delete();
+            _archive.Entries.SingleOrDefault(s => s.FullName == ExcelFileNames.Workbook).Delete();
             CreateZipEntry(ExcelFileNames.Workbook, ExcelContentTypes.Workbook, ExcelXml.DefaultWorkbookXml.Replace("{{sheets}}", workbookXml.ToString()));
 
-            _archive.Entries.SingleOrDefault(s => s.FullName == ExcelFileNames.WorkbookRels)?.Delete();
+            _archive.Entries.SingleOrDefault(s => s.FullName == ExcelFileNames.WorkbookRels).Delete();
             CreateZipEntry(ExcelFileNames.WorkbookRels, null, ExcelXml.DefaultWorkbookXmlRels.Replace("{{sheets}}", workbookRelsXml.ToString()));
+
+            InsertContentTypesXml();
 
             _archive.Dispose();
         }
@@ -384,9 +385,6 @@ namespace MiniExcelLibs.OpenXml
             }
         }
 
-        /// <summary>
-        /// styles.xml
-        /// </summary>
         private void GenerateStylesXml()
         {
             using (var context = new SheetStyleBuildContext(_zipDictionary, _archive, _utf8WithBom, _configuration.DynamicColumns))
@@ -440,9 +438,6 @@ namespace MiniExcelLibs.OpenXml
                 ExcelXml.DefaultDrawing.Replace("{{format}}", drawing));
         }
 
-        /// <summary>
-        /// workbook.xml、workbookRelsXml
-        /// </summary>
         private void GenerateWorkbookXml()
         {
             GenerateWorkBookXmls(
@@ -469,14 +464,43 @@ namespace MiniExcelLibs.OpenXml
                 ExcelXml.DefaultWorkbookXmlRels.Replace("{{sheets}}", workbookRelsXml.ToString()));
         }
 
-        /// <summary>
-        /// [Content_Types].xml
-        /// </summary>
         private void GenerateContentTypesXml()
         {
             var contentTypes = GetContentTypesXml();
 
             CreateZipEntry(ExcelFileNames.ContentTypes, null, contentTypes);
+        }
+
+        private void InsertContentTypesXml()
+        {
+            var contentTypesZipEntry = _archive.Entries.SingleOrDefault(s => s.FullName == ExcelFileNames.ContentTypes);
+            if (contentTypesZipEntry == null)
+            {
+                GenerateContentTypesXml();
+                return;
+            }
+            using (var stream = contentTypesZipEntry.Open())
+            {
+                var doc = XDocument.Load(stream);
+                var ns = doc.Root.GetDefaultNamespace();
+                var typesElement = doc.Descendants(ns + "Types").Single();
+                var partNames = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
+                foreach (var partName in typesElement.Elements(ns + "Override").Select(s => s.Attribute("PartName").Value))
+                {
+                    partNames.Add(partName);
+                }
+                foreach (var p in _zipDictionary)
+                {
+                    var partName = $"/{p.Key}";
+                    if (!partNames.Contains(partName))
+                    {
+                        var newElement = new XElement(ns + "Override", new XAttribute("ContentType", p.Value.ContentType), new XAttribute("PartName", partName));
+                        typesElement.Add(newElement);
+                    }
+                }
+                stream.Position = 0;
+                doc.Save(stream);
+            }
         }
 
         private void CreateZipEntry(string path, string contentType, string content)

@@ -7,6 +7,7 @@ using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
@@ -495,15 +496,20 @@ namespace MiniExcelLibs.OpenXml
 
                         if (itemValue == null)
                             continue;
-
-                        newV = TypeHelper.TypeMapping(v, pInfo, newV, itemValue, rowIndex, startCell, configuration);
+                            if (pInfo.ExcludeNullableType == typeof(double) && (!Regex.IsMatch(itemValue?.ToString(), "^-?\\d+(\\.\\d+)?([eE][-+]?\\d+)?$") || itemValue?.ToString().Trim().Equals("NaN") == true))//double.NaN 无效值处理
+                            {
+                                newV = TypeHelper.TypeMapping(v, pInfo, newV, double.NaN, rowIndex, startCell, configuration);
+                            }
+                            else
+                            {
+                                newV = TypeHelper.TypeMapping(v, pInfo, newV, itemValue, rowIndex, startCell, configuration);
+                            }
                     }
                 }
                 rowIndex++;
                 yield return v;
             }
         }
-
         private void SetSharedStrings()
         {
             if (_sharedStrings != null)

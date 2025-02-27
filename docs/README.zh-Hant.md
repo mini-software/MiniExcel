@@ -25,6 +25,18 @@
 ---
 
 
+### 1.38.0
+- [New] feat(DynamicExcelColumn): make the CustomFormatter property more powerful (#715) (via @izanhzh)
+- [New] feat(ExcelNumberFormat): extend the SectionType (#716) (via @izanhzh)
+- [New] feat(ExcelOpenXmlSheetWriter): adjust the location of the CustomFormatter execution (#722) (via @izanhzh)
+- [New] WriteEmptyStringAsNull implementation (#725) (via @jiangyi1985)
+- [Bug] Fix @group tag not working with certain IEnumerable types (#723) (via @JamesDSource)
+- [OPT] Optimized ContainsKey calls to TryGetValue (via @michelebastione) 
+- [OPT] Changed Count() method calls to Count property (via @michelebastione) 
+- [OPT] Materialized some IEnumerables using ToList (via @michelebastione) 
+- [OPT] Added safe IDisposable cast to IEnumerator (via @michelebastione) 
+- [OPT] Removed superfluous indentation and parenthesis (via @michelebastione) 
+
 ### 1.37.0
 - [New] feat: support insert sheet (#709) (via @izanhzh)
 - [Bug] fix(MiniExcelDataReader): GetOrdinal always returns 0 (#711) (via @izanhzh)

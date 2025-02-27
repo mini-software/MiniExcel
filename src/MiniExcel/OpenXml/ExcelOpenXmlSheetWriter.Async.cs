@@ -11,6 +11,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 
 namespace MiniExcelLibs.OpenXml
 {
@@ -65,19 +66,18 @@ namespace MiniExcelLibs.OpenXml
             {
                 currentSheetIndex = existSheetDto.SheetIdx;
                 _archive.Entries.Single(s => s.FullName == existSheetDto.Path).Delete();
-                _archive.Entries.SingleOrDefault(s => s.FullName == ExcelFileNames.DrawingRels(currentSheetIndex))?.Delete();
-                _archive.Entries.SingleOrDefault(s => s.FullName == ExcelFileNames.Drawing(currentSheetIndex))?.Delete();
                 await CreateSheetXmlAsync(_value, existSheetDto.Path, cancellationToken);
             }
 
             await AddFilesToZipAsync(cancellationToken);
 
-            await GenerateDrawinRelXmlAsync(currentSheetIndex, cancellationToken);
+            _archive.Entries.SingleOrDefault(s => s.FullName == ExcelFileNames.DrawingRels(currentSheetIndex - 1))?.Delete();
+            await GenerateDrawinRelXmlAsync(currentSheetIndex - 1, cancellationToken);
 
-            await GenerateDrawingXmlAsync(currentSheetIndex, cancellationToken);
+            _archive.Entries.SingleOrDefault(s => s.FullName == ExcelFileNames.Drawing(currentSheetIndex - 1))?.Delete();
+            await GenerateDrawingXmlAsync(currentSheetIndex - 1, cancellationToken);
 
             GenerateWorkBookXmls(out StringBuilder workbookXml, out StringBuilder workbookRelsXml, out Dictionary<int, string> sheetsRelsXml);
-
             foreach (var sheetRelsXml in sheetsRelsXml)
             {
                 var sheetRelsXmlPath = ExcelFileNames.SheetRels(sheetRelsXml.Key);
@@ -90,6 +90,8 @@ namespace MiniExcelLibs.OpenXml
 
             _archive.Entries.SingleOrDefault(s => s.FullName == ExcelFileNames.WorkbookRels)?.Delete();
             await CreateZipEntryAsync(ExcelFileNames.WorkbookRels, null, ExcelXml.DefaultWorkbookXmlRels.Replace("{{sheets}}", workbookRelsXml.ToString()), cancellationToken);
+
+            await InsertContentTypesXmlAsync(cancellationToken);
 
             _archive.Dispose();
         }
@@ -382,9 +384,6 @@ namespace MiniExcelLibs.OpenXml
             }
         }
 
-        /// <summary>
-        /// styles.xml
-        /// </summary>
         private async Task GenerateStylesXmlAsync(CancellationToken cancellationToken)
         {
             using (var context = new SheetStyleBuildContext(_zipDictionary, _archive, _utf8WithBom, _configuration.DynamicColumns))
@@ -440,9 +439,6 @@ namespace MiniExcelLibs.OpenXml
                 cancellationToken);
         }
 
-        /// <summary>
-        /// workbook.xml 、 workbookRelsXml
-        /// </summary>
         private async Task GenerateWorkbookXmlAsync(CancellationToken cancellationToken)
         {
             GenerateWorkBookXmls(
@@ -472,14 +468,43 @@ namespace MiniExcelLibs.OpenXml
                     cancellationToken);
         }
 
-        /// <summary>
-        /// [Content_Types].xml
-        /// </summary>
         private async Task GenerateContentTypesXmlAsync(CancellationToken cancellationToken)
         {
             var contentTypes = GetContentTypesXml();
 
             await CreateZipEntryAsync(ExcelFileNames.ContentTypes, null, contentTypes, cancellationToken);
+        }
+
+        private async Task InsertContentTypesXmlAsync(CancellationToken cancellationToken)
+        {
+            var contentTypesZipEntry = _archive.Entries.SingleOrDefault(s => s.FullName == ExcelFileNames.ContentTypes);
+            if (contentTypesZipEntry == null)
+            {
+                await GenerateContentTypesXmlAsync(cancellationToken);
+                return;
+            }
+            using (var stream = contentTypesZipEntry.Open())
+            {
+                var doc = XDocument.Load(stream);
+                var ns = doc.Root.GetDefaultNamespace();
+                var typesElement = doc.Descendants(ns + "Types").Single();
+                var partNames = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
+                foreach (var partName in typesElement.Elements(ns + "Override").Select(s => s.Attribute("PartName").Value))
+                {
+                    partNames.Add(partName);
+                }
+                foreach (var p in _zipDictionary)
+                {
+                    var partName = $"/{p.Key}";
+                    if (!partNames.Contains(partName))
+                    {
+                        var newElement = new XElement(ns + "Override", new XAttribute("ContentType", p.Value.ContentType), new XAttribute("PartName", partName));
+                        typesElement.Add(newElement);
+                    }
+                }
+                stream.Position = 0;
+                doc.Save(stream);
+            }
         }
 
         private async Task CreateZipEntryAsync(string path, string contentType, string content, CancellationToken cancellationToken)

@@ -9,7 +9,7 @@ namespace MiniExcelLibs.Utils
     internal static class XmlReaderHelper
     {
         /// <summary>
-        /// Pass <?xml> and <worksheet>
+        /// Pass &lt;?xml&gt; and &lt;worksheet&gt;
         /// </summary>
         /// <param name="reader"></param>
         public static void PassXmlDeclartionAndWorksheet(this XmlReader reader)
@@ -26,7 +26,7 @@ namespace MiniExcelLibs.Utils
         {
             while (!reader.EOF)
             {
-                if (!XmlReaderHelper.SkipContent(reader))
+                if (!SkipContent(reader))
                     break;
             }
         }
@@ -65,36 +65,29 @@ namespace MiniExcelLibs.Utils
 
         public static string GetAttribute(XmlReader reader, string name, params string[] nss)
         {
-            foreach (var ns in nss)
-            {
-                var attribute = reader.GetAttribute(name, ns);
-                if (attribute != null)
-                {
-                    return attribute;
-                }
-            }
-
-            return null;
+            return nss
+                .Select(ns => reader.GetAttribute(name, ns))
+                .FirstOrDefault(at => at != null);
         }
 
         public static IEnumerable<string> GetSharedStrings(Stream stream, params string[] nss)
         {
             using (var reader = XmlReader.Create(stream))
             {
-                if (!XmlReaderHelper.IsStartElement(reader, "sst", nss))
+                if (!IsStartElement(reader, "sst", nss))
                     yield break;
 
-                if (!XmlReaderHelper.ReadFirstContent(reader))
+                if (!ReadFirstContent(reader))
                     yield break;
 
                 while (!reader.EOF)
                 {
-                    if (XmlReaderHelper.IsStartElement(reader, "si", nss))
+                    if (IsStartElement(reader, "si", nss))
                     {
                         var value = StringHelper.ReadStringItem(reader);
                         yield return value;
                     }
-                    else if (!XmlReaderHelper.SkipContent(reader))
+                    else if (!SkipContent(reader))
                     {
                         break;
                     }

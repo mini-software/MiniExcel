@@ -16,9 +16,7 @@
             while (reader.Read())
             {
                 yield return Enumerable.Range(0, reader.FieldCount)
-                 .ToDictionary(
-                     i => reader.GetName(i),
-                     i => reader.GetValue(i));
+                    .ToDictionary(reader.GetName, reader.GetValue);
             }
         }
 
@@ -69,7 +67,9 @@
                 var columnName = pInfo.ExcelColumnName ?? pInfo.Property.Name;
                 var startRowIndex = ReferenceHelper.ConvertCellToXY(startCell).Item2;
                 var errorRow = startRowIndex + rowIndex + 1;
-                throw new ExcelInvalidCastException(columnName, errorRow, itemValue, pInfo.Property.Info.PropertyType, $"ColumnName : {columnName}, CellRow : {errorRow}, Value : {itemValue}, it can't cast to {pInfo.Property.Info.PropertyType.Name} type.");
+                
+                var msg = $"ColumnName: {columnName}, CellRow: {errorRow}, Value: {itemValue}. The value cannot be cast to type {pInfo.Property.Info.PropertyType.Name}.";
+                throw new ExcelInvalidCastException(columnName, errorRow, itemValue, pInfo.Property.Info.PropertyType, msg);
             }
         }
 
@@ -96,7 +96,7 @@
                 else if (DateTimeOffset.TryParse(vs, _config.Culture, DateTimeStyles.None, out var _v))
                     newValue = _v;
                 else
-                    throw new InvalidCastException($"{vs} can't cast to datetime");
+                    throw new InvalidCastException($"{vs} cannot be cast to DateTime");
             }
             else if (pInfo.ExcludeNullableType == typeof(DateTime))
             {
@@ -127,7 +127,7 @@
                 else if (double.TryParse(vs, NumberStyles.None, CultureInfo.InvariantCulture, out var _d))
                     newValue = DateTimeHelper.FromOADate(_d);
                 else
-                    throw new InvalidCastException($"{vs} can't cast to datetime");
+                    throw new InvalidCastException($"{vs} cannot be cast to DateTime");
             }
             else if (pInfo.ExcludeNullableType == typeof(TimeSpan))
             {
@@ -153,7 +153,12 @@
                 else if (double.TryParse(vs, NumberStyles.None, CultureInfo.InvariantCulture, out var _d))
                     newValue = TimeSpan.FromMilliseconds(_d);
                 else
-                    throw new InvalidCastException($"{vs} can't cast to TimeSpan");
+                    throw new InvalidCastException($"{vs} cannot be cast to TimeSpan");
+            }
+            else if (pInfo.ExcludeNullableType == typeof(double)) // && (!Regex.IsMatch(itemValue.ToString(), @"^-?\d+(\.\d+)?([eE][-+]?\d+)?$") || itemValue.ToString().Trim().Equals("NaN")))
+            {
+                var invariantString = Convert.ToString(itemValue, CultureInfo.InvariantCulture);
+                newValue = double.TryParse(invariantString, NumberStyles.Any, CultureInfo.InvariantCulture, out var _v2) ? _v2 : double.NaN;
             }
             else if (pInfo.ExcludeNullableType == typeof(bool))
             {
@@ -204,6 +209,5 @@
             return genericArgument != null;
         }
 #endif
-
     }
 }

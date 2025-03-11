@@ -69,7 +69,6 @@
         /// <inheritdoc/>
         public override int GetOrdinal(string name)
         {
-            _keys.IndexOf(name);
             return _keys.IndexOf(name);
         }
 
@@ -81,6 +80,7 @@
                 if (disposing)
                 {
                     _stream?.Dispose();
+                    _source?.Dispose();
                 }
                 _disposed = true;
             }

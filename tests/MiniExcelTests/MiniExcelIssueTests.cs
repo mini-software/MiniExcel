@@ -1190,7 +1190,7 @@ namespace MiniExcelLibs.Tests
                 Assert.Equal(4, ex.Row);
                 Assert.Equal("Error", ex.Value);
                 Assert.Equal(typeof(int), ex.InvalidCastType);
-                Assert.Equal("ColumnName : SEQ, CellRow : 4, Value : Error, it can't cast to Int32 type.", ex.Message);
+                Assert.Equal("ColumnName: SEQ, CellRow: 4, Value: Error. The value cannot be cast to type Int32.", ex.Message);
             }
         }
 
@@ -1739,7 +1739,7 @@ Henry,44,Jerry,44
             catch (InvalidCastException ex)
             {
                 Assert.Equal(
-                    "ColumnName : Col2, CellRow : 6, Value : error, it can't cast to DateTime type.",
+                    "ColumnName: Col2, CellRow: 6, Value: error. The value cannot be cast to type DateTime.",
                     ex.Message
                 );
             }
@@ -1752,7 +1752,7 @@ Henry,44,Jerry,44
             catch (InvalidCastException ex)
             {
                 Assert.Equal(
-                    "ColumnName : Col1, CellRow : 3, Value : error, it can't cast to Int32 type.",
+                    "ColumnName: Col1, CellRow: 3, Value: error. The value cannot be cast to type Int32.",
                     ex.Message
                 );
             }

@@ -31,7 +31,7 @@
 
             if (!File.Exists(path))
             {
-                SaveAs(path, value, printHeader, sheetName, excelType);
+                SaveAs(path, value, printHeader, sheetName, excelType, configuration);
             }
             else
             {
@@ -56,7 +56,7 @@
             {
                 object v = null;
                 {
-                    if (!(value is IEnumerable) && !(value is IDataReader) && !(value is IDictionary<string, object>) && !(value is IDictionary))
+                    if (!(value is IEnumerable) && !(value is IDataReader))
                         v = Enumerable.Range(0, 1).Select(s => value);
                     else
                         v = value;

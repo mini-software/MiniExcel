@@ -18,33 +18,35 @@ namespace MiniExcelLibs.Csv
         private readonly bool _printHeader;
         private object _value;
         private readonly StreamWriter _writer;
-        private bool disposedValue;
+        private bool _disposedValue;
 
         public CsvWriter(Stream stream, object value, IConfiguration configuration, bool printHeader)
         {
-            this._stream = stream;
-            this._configuration = configuration == null ? CsvConfiguration.DefaultConfiguration : (CsvConfiguration)configuration;
-            this._printHeader = printHeader;
-            this._value = value;
-            this._writer = _configuration.StreamWriterFunc(_stream);
+            _stream = stream;
+            _configuration = configuration == null ? CsvConfiguration.DefaultConfiguration : (CsvConfiguration)configuration;
+            _printHeader = printHeader;
+            _value = value;
+            _writer = _configuration.StreamWriterFunc(_stream);
         }
 
-        public void SaveAs()
+        public int[] SaveAs()
         {
             if (_value == null)
             {
                 _writer.Write("");
                 _writer.Flush();
-                return;
+                return new int[0];
             }
 
-            WriteValues(_writer, _value);
+            var rowsWritten = WriteValues(_value);
             _writer.Flush();
+
+            return new[] { rowsWritten };
         }
 
-        public void Insert(bool overwriteSheet = false)
+        public int Insert(bool overwriteSheet = false)
         {
-            SaveAs();
+            return SaveAs().FirstOrDefault();
         }
 
         private void AppendColumn(StringBuilder rowBuilder, CellWriteInfo column)
@@ -53,12 +55,11 @@ namespace MiniExcelLibs.Csv
             rowBuilder.Append(_configuration.Seperator);
         }
 
-        private void RemoveTrailingSeparator(StringBuilder rowBuilder)
+        private static void RemoveTrailingSeparator(StringBuilder rowBuilder)
         {
             if (rowBuilder.Length == 0)
-            {
                 return;
-            }
+            
             rowBuilder.Remove(rowBuilder.Length - 1, 1);
         }
 
@@ -66,16 +67,16 @@ namespace MiniExcelLibs.Csv
             _configuration.Seperator.ToString(),
             props.Select(s => CsvHelpers.ConvertToCsvValue(s?.ExcelColumnName, _configuration.AlwaysQuote, _configuration.Seperator)));
 
-        private void WriteValues(StreamWriter writer, object values)
+        private int WriteValues(object values)
         {
-            IMiniExcelWriteAdapter writeAdapter = MiniExcelWriteAdapterFactory.GetWriteAdapter(values, _configuration);
+            var writeAdapter = MiniExcelWriteAdapterFactory.GetWriteAdapter(values, _configuration);
 
             var props = writeAdapter.GetColumns();
             if (props == null)
             {
                 _writer.Write(_configuration.NewLine);
                 _writer.Flush();
-                return;
+                return 0;
             }
 
             if (_printHeader)
@@ -84,25 +85,32 @@ namespace MiniExcelLibs.Csv
                 _writer.Write(_configuration.NewLine);
             }
 
+            if (writeAdapter == null) 
+                return 0;
+            
             var rowBuilder = new StringBuilder();
-            if (writeAdapter != null)
+            var rowsWritten = 0;
+
+            foreach (var row in writeAdapter.GetRows(props))
             {
-                foreach (var row in writeAdapter.GetRows(props))
+                rowBuilder.Clear();
+                foreach (var column in row)
                 {
-                    rowBuilder.Clear();
-                    foreach (var column in row)
-                    {
-                        AppendColumn(rowBuilder, column);
-                    }
-                    RemoveTrailingSeparator(rowBuilder);
-                    _writer.Write(rowBuilder.ToString());
-                    _writer.Write(_configuration.NewLine);
+                    AppendColumn(rowBuilder, column);
                 }
+                RemoveTrailingSeparator(rowBuilder);
+                _writer.Write(rowBuilder.ToString());
+                _writer.Write(_configuration.NewLine);
+                    
+                rowsWritten++;
             }
+            return rowsWritten;
         }
 
-        private async Task WriteValuesAsync(StreamWriter writer, object values, string seperator, string newLine, CancellationToken cancellationToken)
+        private async Task<int> WriteValuesAsync(StreamWriter writer, object values, string seperator, string newLine, CancellationToken cancellationToken)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+            
 #if NETSTANDARD2_0_OR_GREATER || NET
             IMiniExcelWriteAdapter writeAdapter = null;
             if (!MiniExcelWriteAdapterFactory.TryGetAsyncWriteAdapter(values, _configuration, out var asyncWriteAdapter))
@@ -118,14 +126,18 @@ namespace MiniExcelLibs.Csv
             {
                 await _writer.WriteAsync(_configuration.NewLine);
                 await _writer.FlushAsync();
-                return;
+                return 0;
             }
+            
             if (_printHeader)
             {
                 await _writer.WriteAsync(GetHeader(props));
                 await _writer.WriteAsync(newLine);
             }
+            
             var rowBuilder = new StringBuilder();
+            var rowsWritten = 0;
+            
             if (writeAdapter != null)
             {
                 foreach (var row in writeAdapter.GetRows(props, cancellationToken))
@@ -133,11 +145,15 @@ namespace MiniExcelLibs.Csv
                     rowBuilder.Clear();
                     foreach (var column in row)
                     {
+                        cancellationToken.ThrowIfCancellationRequested();
                         AppendColumn(rowBuilder, column);
                     }
+                    
                     RemoveTrailingSeparator(rowBuilder);
                     await _writer.WriteAsync(rowBuilder.ToString());
                     await _writer.WriteAsync(newLine);
+                    
+                    rowsWritten++;
                 }
             }
 #if NETSTANDARD2_0_OR_GREATER || NET
@@ -145,21 +161,30 @@ namespace MiniExcelLibs.Csv
             {
                 await foreach (var row in asyncWriteAdapter.GetRowsAsync(props, cancellationToken))
                 {
+                    cancellationToken.ThrowIfCancellationRequested();
                     rowBuilder.Clear();
+                    
                     await foreach (var column in row)
                     {
+                        cancellationToken.ThrowIfCancellationRequested();
                         AppendColumn(rowBuilder, column);
                     }
+                    
                     RemoveTrailingSeparator(rowBuilder);
                     await _writer.WriteAsync(rowBuilder.ToString());
                     await _writer.WriteAsync(newLine);
+                    
+                    rowsWritten++;
                 }
             }
 #endif
+            return rowsWritten;
         }
 
-        public async Task SaveAsAsync(CancellationToken cancellationToken = default)
+        public async Task<int[]> SaveAsAsync(CancellationToken cancellationToken = default)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+            
             var seperator = _configuration.Seperator.ToString();
             var newLine = _configuration.NewLine;
 
@@ -167,16 +192,19 @@ namespace MiniExcelLibs.Csv
             {
                 await _writer.WriteAsync("");
                 await _writer.FlushAsync();
-                return;
+                return new int[0];
             }
 
-            await WriteValuesAsync(_writer, _value, seperator, newLine, cancellationToken);
+            var rowsWritten = await WriteValuesAsync(_writer, _value, seperator, newLine, cancellationToken);
             await _writer.FlushAsync();
+         
+            return new[] { rowsWritten };
         }
 
-        public async Task InsertAsync(bool overwriteSheet = false, CancellationToken cancellationToken = default)
+        public async Task<int> InsertAsync(bool overwriteSheet = false, CancellationToken cancellationToken = default)
         {
-            await SaveAsAsync(cancellationToken);
+            var rowsWritten = await SaveAsAsync(cancellationToken);
+            return rowsWritten.FirstOrDefault();
         }
 
         public string ToCsvString(object value, ExcelColumnInfo p)
@@ -190,29 +218,30 @@ namespace MiniExcelLibs.Csv
                 {
                     return dateTime.ToString(p.ExcelFormat, _configuration.Culture);
                 }
-                return _configuration.Culture.Equals(CultureInfo.InvariantCulture) ? dateTime.ToString("yyyy-MM-dd HH:mm:ss", _configuration.Culture) : dateTime.ToString(_configuration.Culture);
+                return _configuration.Culture.Equals(CultureInfo.InvariantCulture) 
+                    ? dateTime.ToString("yyyy-MM-dd HH:mm:ss", _configuration.Culture) 
+                    : dateTime.ToString(_configuration.Culture);
             }
+            
             if (p?.ExcelFormat != null && value is IFormattable formattableValue)
-            {
                 return formattableValue.ToString(p.ExcelFormat, _configuration.Culture);
-            }
 
             return Convert.ToString(value, _configuration.Culture);
         }
 
         protected virtual void Dispose(bool disposing)
         {
-            if (!disposedValue)
+            if (!_disposedValue)
             {
                 if (disposing)
                 {
-                    this._writer.Dispose();
+                    _writer.Dispose();
                     // TODO: dispose managed state (managed objects)
                 }
 
                 // TODO: free unmanaged resources (unmanaged objects) and override finalizer
                 // TODO: set large fields to null
-                disposedValue = true;
+                _disposedValue = true;
             }
         }
 

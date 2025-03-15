@@ -530,7 +530,7 @@ namespace MiniExcelLibs.Tests
             //List<strongtype>
             {
                 var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
-                var values = new List<SaveAsFileWithDimensionByICollectionTestType>()
+                var values = new List<SaveAsFileWithDimensionByICollectionTestType>
                 {
                     new SaveAsFileWithDimensionByICollectionTestType{A="A",B="B"},
                     new SaveAsFileWithDimensionByICollectionTestType{A="A",B="B"},
@@ -880,10 +880,9 @@ namespace MiniExcelLibs.Tests
             }
         }
 
-        [Fact()]
+        [Fact]
         public void SaveAsFrozenRowsAndColumnsTest()
         {
-
             var config = new OpenXmlConfiguration
             {
                 FreezeRowCount = 1,
@@ -895,7 +894,8 @@ namespace MiniExcelLibs.Tests
                 var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
                 MiniExcel.SaveAs(
                     path,
-                    new[] {
+                    new[] 
+                    {
                         new { Column1 = "MiniExcel", Column2 = 1 },
                         new { Column1 = "Github", Column2 = 2}
                     },
@@ -1088,7 +1088,7 @@ namespace MiniExcelLibs.Tests
         public void SQLiteInsertTest()
         {
             // Avoid SQL Insert Large Size Xlsx OOM
-            var path = @"../../../../../samples/xlsx/Test5x2.xlsx";
+            var path = "../../../../../samples/xlsx/Test5x2.xlsx";
             var tempSqlitePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.db");
             var connectionString = $"Data Source={tempSqlitePath};Version=3;";
 
@@ -1119,14 +1119,17 @@ namespace MiniExcelLibs.Tests
             File.Delete(tempSqlitePath);
         }
 
-        [Fact()]
+        [Fact]
         public void SaveAsBasicCreateTest()
         {
             var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
-            MiniExcel.SaveAs(path, new[] {
-                  new { Column1 = "MiniExcel", Column2 = 1 },
-                  new { Column1 = "Github", Column2 = 2}
+            var rowsWritten = MiniExcel.SaveAs(path, new[] 
+            {
+                new { Column1 = "MiniExcel", Column2 = 1 },
+                new { Column1 = "Github", Column2 = 2}
             });
+            Assert.Single(rowsWritten);
+            Assert.Equal(2, rowsWritten[0]);
 
             using (var stream = File.OpenRead(path))
             {
@@ -1143,18 +1146,21 @@ namespace MiniExcelLibs.Tests
             File.Delete(path);
         }
 
-        [Fact()]
+        [Fact]
         public void SaveAsBasicStreamTest()
         {
             {
                 var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
-                var values = new[] {
-                      new { Column1 = "MiniExcel", Column2 = 1 },
-                      new { Column1 = "Github", Column2 = 2}
+                var values = new[] 
+                {
+                    new { Column1 = "MiniExcel", Column2 = 1 },
+                    new { Column1 = "Github", Column2 = 2}
                 };
                 using (var stream = new FileStream(path, FileMode.CreateNew))
                 {
-                    stream.SaveAs(values);
+                    var rowsWritten = stream.SaveAs(values);
+                    Assert.Single(rowsWritten);
+                    Assert.Equal(2, rowsWritten[0]);
                 }
 
                 using (var stream = File.OpenRead(path))
@@ -1165,22 +1171,25 @@ namespace MiniExcelLibs.Tests
                     Assert.Equal(1, rows[0].Column2);
                     Assert.Equal("Github", rows[1].Column1);
                     Assert.Equal(2, rows[1].Column2);
-                };
+                }
 
                 File.Delete(path);
             }
             {
                 var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
-                var values = new[] {
-                      new { Column1 = "MiniExcel", Column2 = 1 },
-                      new { Column1 = "Github", Column2 = 2}
+                var values = new[] 
+                {
+                    new { Column1 = "MiniExcel", Column2 = 1 },
+                    new { Column1 = "Github", Column2 = 2}
                 };
                 using (var stream = new MemoryStream())
                 using (var fileStream = new FileStream(path, FileMode.Create))
                 {
-                    stream.SaveAs(values);
+                    var rowsWritten = stream.SaveAs(values);
                     stream.Seek(0, SeekOrigin.Begin);
                     stream.CopyTo(fileStream);
+                    Assert.Single(rowsWritten);
+                    Assert.Equal(2, rowsWritten[0]);
                 }
 
                 using (var stream = File.OpenRead(path))
@@ -1191,36 +1200,43 @@ namespace MiniExcelLibs.Tests
                     Assert.Equal(1, rows[0].Column2);
                     Assert.Equal("Github", rows[1].Column1);
                     Assert.Equal(2, rows[1].Column2);
-                };
+                }
 
                 File.Delete(path);
             }
         }
 
-        [Fact()]
+        [Fact]
         public void SaveAsSpecialAndTypeCreateTest()
         {
             var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
-            MiniExcel.SaveAs(path, new[] {
+            var rowsWritten = MiniExcel.SaveAs(path, new[] 
+            {
                   new { a = @"""<>+-*//}{\\n", b = 1234567890,c = true,d=DateTime.Now },
                   new { a = "<test>Hello World</test>", b = -1234567890,c=false,d=DateTime.Now.Date}
-             });
+            });
+            Assert.Single(rowsWritten);
+            Assert.Equal(2, rowsWritten[0]);
+            
             var info = new FileInfo(path);
-
             Assert.True(info.FullName == path);
 
             File.Delete(path);
         }
 
-        [Fact()]
+        [Fact]
         public void SaveAsFileEpplusCanReadTest()
         {
             var now = DateTime.Now;
             var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
-            MiniExcel.SaveAs(path, new[] {
-                  new { a = @"""<>+-*//}{\\n", b = 1234567890,c = true,d= now},
-                  new { a = "<test>Hello World</test>", b = -1234567890,c=false,d=now.Date}
+            var rowsWritten = MiniExcel.SaveAs(path, new[]
+            {
+                new { a = @"""<>+-*//}{\\n", b = 1234567890,c = true,d= now},
+                new { a = "<test>Hello World</test>", b = -1234567890,c=false,d=now.Date}
              });
+            Assert.Single(rowsWritten);
+            Assert.Equal(2, rowsWritten[0]);
+            
             using (var p = new ExcelPackage(new FileInfo(path)))
             {
                 var ws = p.Workbook.Worksheets.First();
@@ -1231,22 +1247,26 @@ namespace MiniExcelLibs.Tests
                 Assert.True(ws.Cells["D1"].Value.ToString() == "d");
 
                 Assert.True(ws.Cells["A2"].Value.ToString() == @"""<>+-*//}{\\n");
-                Assert.True(ws.Cells["B2"].Value.ToString() == @"1234567890");
+                Assert.True(ws.Cells["B2"].Value.ToString() == "1234567890");
                 Assert.True(ws.Cells["C2"].Value.ToString() == true.ToString());
                 Assert.True(ws.Cells["D2"].Value.ToString() == now.ToString());
             }
             File.Delete(path);
         }
 
-        [Fact()]
+        [Fact]
         public void SavaAsClosedXmlCanReadTest()
         {
             var now = DateTime.Now;
             var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
-            MiniExcel.SaveAs(path, new[] {
-                  new { a = @"""<>+-*//}{\\n", b = 1234567890,c = true,d= now},
-                  new { a = "<test>Hello World</test>", b = -1234567890,c=false,d=now.Date}
-             }, sheetName: "R&D");
+            var rowsWritten = MiniExcel.SaveAs(path, new[] 
+            {
+                new { a = @"""<>+-*//}{\\n", b = 1234567890,c = true,d= now},
+                new { a = "<test>Hello World</test>", b = -1234567890,c=false,d=now.Date}
+            }, sheetName: "R&D");
+            Assert.Single(rowsWritten);
+            Assert.Equal(2, rowsWritten[0]);
+            
             using (var workbook = new XLWorkbook(path))
             {
                 var ws = workbook.Worksheets.First();
@@ -1266,33 +1286,38 @@ namespace MiniExcelLibs.Tests
             File.Delete(path);
         }
 
-        [Fact()]
+        [Fact]
         public void ContentTypeUriContentTypeReadCheckTest()
         {
             var now = DateTime.Now;
             var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
-            MiniExcel.SaveAs(path, new[] {
-                  new { a = @"""<>+-*//}{\\n", b = 1234567890,c = true,d= now},
-                  new { a = "<test>Hello World</test>", b = -1234567890,c=false,d=now.Date}
-             });
-            using (Package zip = System.IO.Packaging.Package.Open(path, FileMode.Open))
+            var rowsWritten = MiniExcel.SaveAs(path, new[] 
             {
-                var allParts = zip.GetParts().Select(s => new { s.CompressionOption, s.ContentType, s.Uri, s.Package.GetType().Name })
-                    .ToDictionary(s => s.Uri.ToString(), s => s)
-                    ;
-                Assert.True(allParts[@"/xl/styles.xml"].ContentType == "application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml");
-                Assert.True(allParts[@"/xl/workbook.xml"].ContentType == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml");
-                Assert.True(allParts[@"/xl/worksheets/sheet1.xml"].ContentType == "application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml");
-                Assert.True(allParts[@"/xl/_rels/workbook.xml.rels"].ContentType == "application/vnd.openxmlformats-package.relationships+xml");
-                Assert.True(allParts[@"/_rels/.rels"].ContentType == "application/vnd.openxmlformats-package.relationships+xml");
+                new { a = @"""<>+-*//}{\\n", b = 1234567890,c = true,d= now},
+                new { a = "<test>Hello World</test>", b = -1234567890,c=false,d=now.Date}
+            });
+            Assert.Single(rowsWritten);
+            Assert.Equal(2, rowsWritten[0]);
+            
+            using (var zip = Package.Open(path, FileMode.Open))
+            {
+                var allParts = zip.GetParts()
+                    .Select(s => new { s.CompressionOption, s.ContentType, s.Uri, s.Package.GetType().Name })
+                    .ToDictionary(s => s.Uri.ToString(), s => s);
+                
+                Assert.True(allParts["/xl/styles.xml"].ContentType == "application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml");
+                Assert.True(allParts["/xl/workbook.xml"].ContentType == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml");
+                Assert.True(allParts["/xl/worksheets/sheet1.xml"].ContentType == "application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml");
+                Assert.True(allParts["/xl/_rels/workbook.xml.rels"].ContentType == "application/vnd.openxmlformats-package.relationships+xml");
+                Assert.True(allParts["/_rels/.rels"].ContentType == "application/vnd.openxmlformats-package.relationships+xml");
             }
             File.Delete(path);
         }
 
-        [Fact()]
+        [Fact]
         public void TestStirctOpenXml()
         {
-            var path = @"../../../../../samples/xlsx/TestStrictOpenXml.xlsx";
+            var path = "../../../../../samples/xlsx/TestStrictOpenXml.xlsx";
             var columns = MiniExcel.GetColumns(path);
             Assert.Equal(new[] { "A", "B", "C" }, columns);
 
@@ -1490,10 +1515,12 @@ namespace MiniExcelLibs.Tests
                     table.Columns.Add("c", typeof(bool));
                     table.Columns.Add("d", typeof(DateTime));
                     table.Rows.Add(@"""<>+-*//}{\\n", 1234567890, true, now);
-                    table.Rows.Add(@"<test>Hello World</test>", -1234567890, false, now.Date);
+                    table.Rows.Add("<test>Hello World</test>", -1234567890, false, now.Date);
                 }
 
-                MiniExcel.Insert(path, table, sheetName: "Sheet1");
+                var rowsWritten = MiniExcel.Insert(path, table, sheetName: "Sheet1");
+                Assert.Equal(2, rowsWritten);
+                
                 using (var p = new ExcelPackage(new FileInfo(path)))
                 {
                     var sheet1 = p.Workbook.Worksheets[0];
@@ -1520,7 +1547,9 @@ namespace MiniExcelLibs.Tests
                     table.Rows.Add("Github", 2);
                 }
 
-                MiniExcel.Insert(path, table, sheetName: "Sheet2");
+                var rowsWritten = MiniExcel.Insert(path, table, sheetName: "Sheet2");
+                Assert.Equal(2, rowsWritten);
+                
                 using (var p = new ExcelPackage(new FileInfo(path)))
                 {
                     var sheet2 = p.Workbook.Worksheets[1];
@@ -1545,7 +1574,7 @@ namespace MiniExcelLibs.Tests
                     table.Rows.Add("Test", now);
                 }
 
-                MiniExcel.Insert(path, table, sheetName: "Sheet2", printHeader: false, configuration: new OpenXmlConfiguration
+                var rowsWritten = MiniExcel.Insert(path, table, sheetName: "Sheet2", printHeader: false, configuration: new OpenXmlConfiguration
                 {
                     FastMode = true,
                     AutoFilter = false,
@@ -1561,6 +1590,8 @@ namespace MiniExcelLibs.Tests
                         }
                     }
                 }, overwriteSheet: true);
+                Assert.Equal(1, rowsWritten);
+                
                 using (var p = new ExcelPackage(new FileInfo(path)))
                 {
                     var sheet2 = p.Workbook.Worksheets[1];
@@ -1579,7 +1610,7 @@ namespace MiniExcelLibs.Tests
                     table.Rows.Add("Github", now);
                 }
 
-                MiniExcel.Insert(path, table, sheetName: "Sheet3", configuration: new OpenXmlConfiguration
+                var rowsWritten = MiniExcel.Insert(path, table, sheetName: "Sheet3", configuration: new OpenXmlConfiguration
                 {
                     FastMode = true,
                     AutoFilter = false,
@@ -1595,6 +1626,8 @@ namespace MiniExcelLibs.Tests
                         }
                     }
                 });
+                Assert.Equal(2, rowsWritten);
+                
                 using (var p = new ExcelPackage(new FileInfo(path)))
                 {
                     var sheet3 = p.Workbook.Worksheets[2];

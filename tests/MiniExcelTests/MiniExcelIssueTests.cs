@@ -155,35 +155,46 @@ namespace MiniExcelLibs.Tests
                 };
                 MiniExcel.SaveAs(path, value);
                 var content = File.ReadAllText(path);
-                Assert.Contains(@"ID,Name,InDate
-1,Jack,""2021-01-03 00:00:00""
-2,Henry,""2020-05-03 00:00:00""
-", content);
+                Assert.Contains("""
+                                ID,Name,InDate
+                                1,Jack,"2021-01-03 00:00:00"
+                                2,Henry,"2020-05-03 00:00:00"
+
+                                """, content);
             }
             {
                 var value = new { ID = 3, Name = "Mike", InDate = new DateTime(2021, 04, 23) };
-                MiniExcel.Insert(path, value);
+                var rowsWritten = MiniExcel.Insert(path, value);
+                Assert.Equal(1, rowsWritten);
+                
                 var content = File.ReadAllText(path);
-                Assert.Equal(@"ID,Name,InDate
-1,Jack,""2021-01-03 00:00:00""
-2,Henry,""2020-05-03 00:00:00""
-3,Mike,""2021-04-23 00:00:00""
-", content);
+                Assert.Equal("""
+                             ID,Name,InDate
+                             1,Jack,"2021-01-03 00:00:00"
+                             2,Henry,"2020-05-03 00:00:00"
+                             3,Mike,"2021-04-23 00:00:00"
+
+                             """, content);
             }
             {
-                var value = new[] {
-                      new { ID=4,Name ="Frank",InDate=new DateTime(2021,06,07)},
-                      new { ID=5,Name ="Gloria",InDate=new DateTime(2022,05,03)},
+                var value = new[] 
+                {
+                    new { ID=4,Name ="Frank",InDate=new DateTime(2021,06,07)},
+                    new { ID=5,Name ="Gloria",InDate=new DateTime(2022,05,03)},
                 };
-                MiniExcel.Insert(path, value);
+                var rowsWritten = MiniExcel.Insert(path, value);
+                Assert.Equal(2, rowsWritten);
+                
                 var content = File.ReadAllText(path);
-                Assert.Equal(@"ID,Name,InDate
-1,Jack,""2021-01-03 00:00:00""
-2,Henry,""2020-05-03 00:00:00""
-3,Mike,""2021-04-23 00:00:00""
-4,Frank,""2021-06-07 00:00:00""
-5,Gloria,""2022-05-03 00:00:00""
-", content);
+                Assert.Equal("""
+                             ID,Name,InDate
+                             1,Jack,"2021-01-03 00:00:00"
+                             2,Henry,"2020-05-03 00:00:00"
+                             3,Mike,"2021-04-23 00:00:00"
+                             4,Frank,"2021-06-07 00:00:00"
+                             5,Gloria,"2022-05-03 00:00:00"
+
+                             """, content);
             }
         }
 
@@ -195,7 +206,8 @@ namespace MiniExcelLibs.Tests
         public void TestIssue430()
         {
             var outputPath = PathHelper.GetTempFilePath();
-            var value = new[] {
+            var value = new[]
+            {
                 new TestIssue430Dto{ Date=DateTimeOffset.Parse("2021-01-31 10:03:00 +05:00")}
             };
             MiniExcel.SaveAs(outputPath, value);

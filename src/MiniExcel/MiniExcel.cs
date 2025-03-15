@@ -24,67 +24,57 @@
             return new MiniExcelDataReader(stream, useHeaderRow, sheetName, excelType, startCell, configuration);
         }
 
-        public static void Insert(string path, object value, string sheetName = "Sheet1", ExcelType excelType = ExcelType.UNKNOWN, IConfiguration configuration = null, bool printHeader = true, bool overwriteSheet = false)
+        public static int Insert(string path, object value, string sheetName = "Sheet1", ExcelType excelType = ExcelType.UNKNOWN, IConfiguration configuration = null, bool printHeader = true, bool overwriteSheet = false)
         {
             if (Path.GetExtension(path).ToLowerInvariant() == ".xlsm")
-                throw new NotSupportedException("MiniExcel Insert not support xlsm");
+                throw new NotSupportedException("MiniExcel's Insert does not support the .xlsm format");
 
             if (!File.Exists(path))
             {
-                SaveAs(path, value, printHeader, sheetName, excelType, configuration);
+                var rowsWritten = SaveAs(path, value, printHeader, sheetName, excelType, configuration);
+                return rowsWritten.FirstOrDefault();
+            }
+
+            if (excelType == ExcelType.CSV)
+            {
+                using (var stream = new FileStream(path, FileMode.Append, FileAccess.Write, FileShare.Read, 4096, FileOptions.SequentialScan))
+                    return Insert(stream, value, sheetName, ExcelTypeHelper.GetExcelType(path, excelType), configuration, printHeader, overwriteSheet);
             }
             else
             {
-                if (excelType == ExcelType.CSV)
-                {
-                    using (var stream = new FileStream(path, FileMode.Append, FileAccess.Write, FileShare.Read, 4096, FileOptions.SequentialScan))
-                        Insert(stream, value, sheetName, ExcelTypeHelper.GetExcelType(path, excelType), configuration, printHeader, overwriteSheet);
-                }
-                else
-                {
-                    using (var stream = new FileStream(path, FileMode.Open, FileAccess.ReadWrite, FileShare.Read, 4096, FileOptions.SequentialScan))
-                        Insert(stream, value, sheetName, ExcelTypeHelper.GetExcelType(path, excelType), configuration, printHeader, overwriteSheet);
-                }
+                using (var stream = new FileStream(path, FileMode.Open, FileAccess.ReadWrite, FileShare.Read, 4096, FileOptions.SequentialScan))
+                    return Insert(stream, value, sheetName, ExcelTypeHelper.GetExcelType(path, excelType), configuration, printHeader, overwriteSheet);
             }
         }
 
-        public static void Insert(this Stream stream, object value, string sheetName = "Sheet1", ExcelType excelType = ExcelType.XLSX, IConfiguration configuration = null, bool printHeader = true, bool overwriteSheet = false)
+        public static int Insert(this Stream stream, object value, string sheetName = "Sheet1", ExcelType excelType = ExcelType.XLSX, IConfiguration configuration = null, bool printHeader = true, bool overwriteSheet = false)
         {
             stream.Seek(0, SeekOrigin.End);
             // reuse code
             if (excelType == ExcelType.CSV)
             {
-                object v = null;
-                {
-                    if (!(value is IEnumerable) && !(value is IDataReader))
-                        v = Enumerable.Range(0, 1).Select(s => value);
-                    else
-                        v = value;
-                }
-                ExcelWriterFactory.GetProvider(stream, v, sheetName, excelType, configuration, false).Insert(overwriteSheet);
+                var newValue = value is IEnumerable || value is IDataReader ? value : new[]{value}.AsEnumerable();
+                return ExcelWriterFactory.GetProvider(stream, newValue, sheetName, excelType, configuration, false).Insert(overwriteSheet);
             }
             else
             {
-                if (configuration == null)
-                {
-                    configuration = new OpenXmlConfiguration { FastMode = true };
-                }
-                ExcelWriterFactory.GetProvider(stream, value, sheetName, excelType, configuration, printHeader).Insert(overwriteSheet);
-            }
+                var configOrDefault = configuration ?? new OpenXmlConfiguration { FastMode = true };
+                return ExcelWriterFactory.GetProvider(stream, value, sheetName, excelType, configOrDefault, printHeader).Insert(overwriteSheet);
+            } 
         }
 
-        public static void SaveAs(string path, object value, bool printHeader = true, string sheetName = "Sheet1", ExcelType excelType = ExcelType.UNKNOWN, IConfiguration configuration = null, bool overwriteFile = false)
+        public static int[] SaveAs(string path, object value, bool printHeader = true, string sheetName = "Sheet1", ExcelType excelType = ExcelType.UNKNOWN, IConfiguration configuration = null, bool overwriteFile = false)
         {
             if (Path.GetExtension(path).ToLowerInvariant() == ".xlsm")
-                throw new NotSupportedException("MiniExcel SaveAs not support xlsm");
+                throw new NotSupportedException("MiniExcel's SaveAs does not support the .xlsm format");
 
             using (var stream = overwriteFile ? File.Create(path) : new FileStream(path, FileMode.CreateNew))
-                SaveAs(stream, value, printHeader, sheetName, ExcelTypeHelper.GetExcelType(path, excelType), configuration);
+                return SaveAs(stream, value, printHeader, sheetName, ExcelTypeHelper.GetExcelType(path, excelType), configuration);
         }
 
-        public static void SaveAs(this Stream stream, object value, bool printHeader = true, string sheetName = "Sheet1", ExcelType excelType = ExcelType.XLSX, IConfiguration configuration = null)
+        public static int[] SaveAs(this Stream stream, object value, bool printHeader = true, string sheetName = "Sheet1", ExcelType excelType = ExcelType.XLSX, IConfiguration configuration = null)
         {
-            ExcelWriterFactory.GetProvider(stream, value, sheetName, excelType, configuration, printHeader).SaveAs();
+            return ExcelWriterFactory.GetProvider(stream, value, sheetName, excelType, configuration, printHeader).SaveAs();
         }
 
         public static IEnumerable<T> Query<T>(string path, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null) where T : class, new()

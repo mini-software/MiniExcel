@@ -17,83 +17,97 @@ namespace MiniExcelLibs.OpenXml
 {
     internal partial class ExcelOpenXmlSheetWriter : IExcelWriter
     {
-        public async Task SaveAsAsync(CancellationToken cancellationToken = default)
+        public async Task<int[]> SaveAsAsync(CancellationToken cancellationToken = default)
         {
-            await GenerateDefaultOpenXmlAsync(cancellationToken);
-
-            var sheets = GetSheets();
-
-            foreach (var sheet in sheets)
+            try
             {
-                _sheets.Add(sheet.Item1); //TODO:remove
-                currentSheetIndex = sheet.Item1.SheetIdx;
-                await CreateSheetXmlAsync(sheet.Item2, sheet.Item1.Path, cancellationToken);
-            }
+                await GenerateDefaultOpenXmlAsync(cancellationToken);
 
-            await GenerateEndXmlAsync(cancellationToken);
-            _archive.Dispose();
+                var sheets = GetSheets();
+                var rowsWritten = new List<int>();
+
+                foreach (var sheet in sheets)
+                {
+                    _sheets.Add(sheet.Item1); //TODO:remove
+                    currentSheetIndex = sheet.Item1.SheetIdx;
+                    var rows = await CreateSheetXmlAsync(sheet.Item2, sheet.Item1.Path, cancellationToken);
+                    rowsWritten.Add(rows);
+                }
+
+                await GenerateEndXmlAsync(cancellationToken);
+                return rowsWritten.ToArray();
+            }
+            finally
+            {
+                _archive.Dispose();
+            }
         }
 
-        public async Task InsertAsync(bool overwriteSheet = false, CancellationToken cancellationToken = default)
+        public async Task<int> InsertAsync(bool overwriteSheet = false, CancellationToken cancellationToken = default)
         {
-            if (!_configuration.FastMode)
+            try
             {
-                throw new InvalidOperationException("Insert requires fast mode to be enabled");
-            }
+                if (!_configuration.FastMode)
+                    throw new InvalidOperationException("Insert requires fast mode to be enabled");
 
-            var sheetRecords = new ExcelOpenXmlSheetReader(_stream, _configuration).GetWorkbookRels(_archive.Entries).ToArray();
-            foreach (var sheetRecord in sheetRecords.OrderBy(o => o.Id))
-            {
-                _sheets.Add(new SheetDto { Name = sheetRecord.Name, SheetIdx = (int)sheetRecord.Id, State = sheetRecord.State });
-            }
-            var existSheetDto = _sheets.SingleOrDefault(s => s.Name == _defaultSheetName);
-            if (existSheetDto != null && !overwriteSheet)
-            {
-                throw new Exception($"Sheet “{_defaultSheetName}” already exist");
-            }
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    _sheets.Add(new SheetDto { Name = sheetRecord.Name, SheetIdx = (int)sheetRecord.Id, State = sheetRecord.State });
+                }
+                var existSheetDto = _sheets.SingleOrDefault(s => s.Name == _defaultSheetName);
+                if (existSheetDto != null && !overwriteSheet)
+                    throw new Exception($"Sheet “{_defaultSheetName}” already exist");
 
-            await GenerateStylesXmlAsync(cancellationToken);//GenerateStylesXml必须在校验overwriteSheet之后，避免不必要的样式更改
+                await GenerateStylesXmlAsync(cancellationToken);//GenerateStylesXml必须在校验overwriteSheet之后，避免不必要的样式更改
 
             if (existSheetDto == null)
-            {
-                currentSheetIndex = (int)sheetRecords.Max(m => m.Id) + 1;
                 var insertSheetInfo = GetSheetInfos(_defaultSheetName);
-                var insertSheetDto = insertSheetInfo.ToDto(currentSheetIndex);
-                _sheets.Add(insertSheetDto);
-                await CreateSheetXmlAsync(_value, insertSheetDto.Path, cancellationToken);
+                int rowsWritten;
+                if (existSheetDto == null)
+                {
+                    currentSheetIndex = (int)sheetRecords.Max(m => m.Id) + 1;
+                    var insertSheetInfo = GetSheetInfos(_defaultSheetName);
+                    var insertSheetDto = insertSheetInfo.ToDto(currentSheetIndex);
+                    _sheets.Add(insertSheetDto);
+                    rowsWritten = await CreateSheetXmlAsync(_value, insertSheetDto.Path, cancellationToken);
+                }
+                else
+                {
+                    currentSheetIndex = existSheetDto.SheetIdx;
+                    _archive.Entries.Single(s => s.FullName == existSheetDto.Path).Delete();
+                    rowsWritten = await CreateSheetXmlAsync(_value, existSheetDto.Path, cancellationToken);
+                }
+
+                await AddFilesToZipAsync(cancellationToken);
+
+                _archive.Entries.SingleOrDefault(s => s.FullName == ExcelFileNames.DrawingRels(currentSheetIndex - 1))?.Delete();
+                await GenerateDrawinRelXmlAsync(currentSheetIndex - 1, cancellationToken);
+
+                _archive.Entries.SingleOrDefault(s => s.FullName == ExcelFileNames.Drawing(currentSheetIndex - 1))?.Delete();
+                await GenerateDrawingXmlAsync(currentSheetIndex - 1, cancellationToken);
+
+                GenerateWorkBookXmls(out StringBuilder workbookXml, out StringBuilder workbookRelsXml, out Dictionary<int, string> sheetsRelsXml);
+                foreach (var sheetRelsXml in sheetsRelsXml)
+                {
+                    var sheetRelsXmlPath = ExcelFileNames.SheetRels(sheetRelsXml.Key);
+                    _archive.Entries.SingleOrDefault(s => s.FullName == sheetRelsXmlPath)?.Delete();
+                    await CreateZipEntryAsync(sheetRelsXmlPath, null, ExcelXml.DefaultSheetRelXml.Replace("{{format}}", sheetRelsXml.Value), cancellationToken);
+                }
+
+                _archive.Entries.SingleOrDefault(s => s.FullName == ExcelFileNames.Workbook)?.Delete();
+                await CreateZipEntryAsync(ExcelFileNames.Workbook, ExcelContentTypes.Workbook, ExcelXml.DefaultWorkbookXml.Replace("{{sheets}}", workbookXml.ToString()), cancellationToken);
+
+                _archive.Entries.SingleOrDefault(s => s.FullName == ExcelFileNames.WorkbookRels)?.Delete();
+                await CreateZipEntryAsync(ExcelFileNames.WorkbookRels, null, ExcelXml.DefaultWorkbookXmlRels.Replace("{{sheets}}", workbookRelsXml.ToString()), cancellationToken);
+
+                await InsertContentTypesXmlAsync(cancellationToken);
+
+                return rowsWritten;
             }
-            else
+            finally
             {
-                currentSheetIndex = existSheetDto.SheetIdx;
-                _archive.Entries.Single(s => s.FullName == existSheetDto.Path).Delete();
-                await CreateSheetXmlAsync(_value, existSheetDto.Path, cancellationToken);
+                _archive.Dispose();
             }
-
-            await AddFilesToZipAsync(cancellationToken);
-
-            _archive.Entries.SingleOrDefault(s => s.FullName == ExcelFileNames.DrawingRels(currentSheetIndex - 1))?.Delete();
-            await GenerateDrawinRelXmlAsync(currentSheetIndex - 1, cancellationToken);
-
-            _archive.Entries.SingleOrDefault(s => s.FullName == ExcelFileNames.Drawing(currentSheetIndex - 1))?.Delete();
-            await GenerateDrawingXmlAsync(currentSheetIndex - 1, cancellationToken);
-
-            GenerateWorkBookXmls(out StringBuilder workbookXml, out StringBuilder workbookRelsXml, out Dictionary<int, string> sheetsRelsXml);
-            foreach (var sheetRelsXml in sheetsRelsXml)
-            {
-                var sheetRelsXmlPath = ExcelFileNames.SheetRels(sheetRelsXml.Key);
-                _archive.Entries.SingleOrDefault(s => s.FullName == sheetRelsXmlPath)?.Delete();
-                await CreateZipEntryAsync(sheetRelsXmlPath, null, ExcelXml.DefaultSheetRelXml.Replace("{{format}}", sheetRelsXml.Value), cancellationToken);
-            }
-
-            _archive.Entries.SingleOrDefault(s => s.FullName == ExcelFileNames.Workbook)?.Delete();
-            await CreateZipEntryAsync(ExcelFileNames.Workbook, ExcelContentTypes.Workbook, ExcelXml.DefaultWorkbookXml.Replace("{{sheets}}", workbookXml.ToString()), cancellationToken);
-
-            _archive.Entries.SingleOrDefault(s => s.FullName == ExcelFileNames.WorkbookRels)?.Delete();
-            await CreateZipEntryAsync(ExcelFileNames.WorkbookRels, null, ExcelXml.DefaultWorkbookXmlRels.Replace("{{sheets}}", workbookRelsXml.ToString()), cancellationToken);
-
-            await InsertContentTypesXmlAsync(cancellationToken);
-
-            _archive.Dispose();
         }
 
         internal async Task GenerateDefaultOpenXmlAsync(CancellationToken cancellationToken)
@@ -103,11 +117,15 @@ namespace MiniExcelLibs.OpenXml
             await GenerateStylesXmlAsync(cancellationToken);
         }
 
-        private async Task CreateSheetXmlAsync(object values, string sheetPath, CancellationToken cancellationToken)
+        private async Task<int> CreateSheetXmlAsync(object values, string sheetPath, CancellationToken cancellationToken)
         {
-            ZipArchiveEntry entry = _archive.CreateEntry(sheetPath, CompressionLevel.Fastest);
+            cancellationToken.ThrowIfCancellationRequested();
+            
+            var entry = _archive.CreateEntry(sheetPath, CompressionLevel.Fastest);
+            var rowsWritten = 0;
+            
             using (var zipStream = entry.Open())
-            using (MiniExcelAsyncStreamWriter writer = new MiniExcelAsyncStreamWriter(zipStream, _utf8WithBom, _configuration.BufferSize, cancellationToken))
+            using (var writer = new MiniExcelAsyncStreamWriter(zipStream, _utf8WithBom, _configuration.BufferSize, cancellationToken))
             {
                 if (values == null)
                 {
@@ -115,18 +133,19 @@ namespace MiniExcelLibs.OpenXml
                 }
                 else
                 {
-                    await WriteValuesAsync(writer, values, cancellationToken);
+                    rowsWritten = await WriteValuesAsync(writer, values, cancellationToken);
                 }
             }
             _zipDictionary.Add(sheetPath, new ZipPackageInfo(entry, ExcelContentTypes.Worksheet));
+            return rowsWritten;
         }
 
-        private async Task WriteEmptySheetAsync(MiniExcelAsyncStreamWriter writer)
+        private static async Task WriteEmptySheetAsync(MiniExcelAsyncStreamWriter writer)
         {
             await writer.WriteAsync(ExcelXml.EmptySheetXml);
         }
 
-        private async Task<long> WriteDimensionPlaceholderAsync(MiniExcelAsyncStreamWriter writer)
+        private static async Task<long> WriteDimensionPlaceholderAsync(MiniExcelAsyncStreamWriter writer)
         {
             var dimensionPlaceholderPostition = await writer.WriteAndFlushAsync(WorksheetXml.StartDimension);
             await writer.WriteAsync(WorksheetXml.DimensionPlaceholder); // end of code will be replaced
@@ -134,7 +153,7 @@ namespace MiniExcelLibs.OpenXml
             return dimensionPlaceholderPostition;
         }
 
-        private async Task WriteDimensionAsync(MiniExcelAsyncStreamWriter writer, int maxRowIndex, int maxColumnIndex, long placeholderPosition)
+        private static async Task WriteDimensionAsync(MiniExcelAsyncStreamWriter writer, int maxRowIndex, int maxColumnIndex, long placeholderPosition)
         {
             // Flush and save position so that we can get back again.
             var position = await writer.FlushAsync();
@@ -145,7 +164,7 @@ namespace MiniExcelLibs.OpenXml
             writer.SetPosition(position);
         }
 
-        private async Task WriteValuesAsync(MiniExcelAsyncStreamWriter writer, object values, CancellationToken cancellationToken)
+        private async Task<int> WriteValuesAsync(MiniExcelAsyncStreamWriter writer, object values, CancellationToken cancellationToken)
         {
 #if NETSTANDARD2_0_OR_GREATER || NET
             IMiniExcelWriteAdapter writeAdapter = null;
@@ -167,7 +186,7 @@ namespace MiniExcelLibs.OpenXml
             if (props == null)
             {
                 await WriteEmptySheetAsync(writer);
-                return;
+                return 0;
             }
             var maxColumnIndex = props.Count;
             int maxRowIndex;
@@ -251,7 +270,7 @@ namespace MiniExcelLibs.OpenXml
 
             await writer.WriteAsync(WorksheetXml.EndWorksheet);
 
-            if (_configuration.FastMode && dimensionPlaceholderPostition != default)
+            if (_configuration.FastMode && dimensionPlaceholderPostition != 0)
             {
                 await WriteDimensionAsync(writer, maxRowIndex, maxColumnIndex, dimensionPlaceholderPostition);
             }
@@ -291,10 +310,10 @@ namespace MiniExcelLibs.OpenXml
                 }
                 await writer.WriteAsync(WorksheetXml.Column(column.Index, column.Width));
             }
+            
             if (!hasWrittenStart)
-            {
                 return;
-            }
+            
             await writer.WriteAsync(WorksheetXml.EndCols);
         }
 
@@ -366,13 +385,9 @@ namespace MiniExcelLibs.OpenXml
         private async Task GenerateEndXmlAsync(CancellationToken cancellationToken)
         {
             await AddFilesToZipAsync(cancellationToken);
-
             await GenerateDrawinRelXmlAsync(cancellationToken);
-
             await GenerateDrawingXmlAsync(cancellationToken);
-
             await GenerateWorkbookXmlAsync(cancellationToken);
-
             await GenerateContentTypesXmlAsync(cancellationToken);
         }
 
@@ -388,7 +403,7 @@ namespace MiniExcelLibs.OpenXml
         {
             using (var context = new SheetStyleBuildContext(_zipDictionary, _archive, _utf8WithBom, _configuration.DynamicColumns))
             {
-                var builder = (ISheetStyleBuilder)null;
+                ISheetStyleBuilder builder = null;
                 switch (_configuration.TableStyles)
                 {
                     case TableStyles.None:
@@ -399,7 +414,7 @@ namespace MiniExcelLibs.OpenXml
                         break;
                 }
                 var result = await builder.BuildAsync(cancellationToken);
-                cellXfIdMap = result.CellXfIdMap;
+                _cellXfIdMap = result.CellXfIdMap;
             }
         }
 
@@ -483,16 +498,19 @@ namespace MiniExcelLibs.OpenXml
                 await GenerateContentTypesXmlAsync(cancellationToken);
                 return;
             }
+            
             using (var stream = contentTypesZipEntry.Open())
             {
                 var doc = XDocument.Load(stream);
                 var ns = doc.Root.GetDefaultNamespace();
                 var typesElement = doc.Descendants(ns + "Types").Single();
+                
                 var partNames = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
                 foreach (var partName in typesElement.Elements(ns + "Override").Select(s => s.Attribute("PartName").Value))
                 {
                     partNames.Add(partName);
                 }
+                
                 foreach (var p in _zipDictionary)
                 {
                     var partName = $"/{p.Key}";
@@ -502,6 +520,7 @@ namespace MiniExcelLibs.OpenXml
                         typesElement.Add(newElement);
                     }
                 }
+                
                 stream.Position = 0;
                 doc.Save(stream);
             }
@@ -510,9 +529,11 @@ namespace MiniExcelLibs.OpenXml
         private async Task CreateZipEntryAsync(string path, string contentType, string content, CancellationToken cancellationToken)
         {
             ZipArchiveEntry entry = _archive.CreateEntry(path, CompressionLevel.Fastest);
+            var entry = _archive.CreateEntry(path, CompressionLevel.Fastest);
             using (var zipStream = entry.Open())
-            using (MiniExcelAsyncStreamWriter writer = new MiniExcelAsyncStreamWriter(zipStream, _utf8WithBom, _configuration.BufferSize, cancellationToken))
+            using (var writer = new MiniExcelAsyncStreamWriter(zipStream, _utf8WithBom, _configuration.BufferSize, cancellationToken))
                 await writer.WriteAsync(content);
+            
             if (!string.IsNullOrEmpty(contentType))
                 _zipDictionary.Add(path, new ZipPackageInfo(entry, contentType));
         }
@@ -520,6 +541,7 @@ namespace MiniExcelLibs.OpenXml
         private async Task CreateZipEntryAsync(string path, byte[] content, CancellationToken cancellationToken)
         {
             ZipArchiveEntry entry = _archive.CreateEntry(path, CompressionLevel.Fastest);
+            var entry = _archive.CreateEntry(path, CompressionLevel.Fastest);
             using (var zipStream = entry.Open())
                 await zipStream.WriteAsync(content, 0, content.Length, cancellationToken);
         }

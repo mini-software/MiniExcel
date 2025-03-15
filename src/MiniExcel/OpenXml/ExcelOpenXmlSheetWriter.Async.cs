@@ -28,6 +28,8 @@ namespace MiniExcelLibs.OpenXml
 
                 foreach (var sheet in sheets)
                 {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    
                     _sheets.Add(sheet.Item1); //TODO:remove
                     currentSheetIndex = sheet.Item1.SheetIdx;
                     var rows = await CreateSheetXmlAsync(sheet.Item2, sheet.Item1.Path, cancellationToken);
@@ -50,6 +52,10 @@ namespace MiniExcelLibs.OpenXml
                 if (!_configuration.FastMode)
                     throw new InvalidOperationException("Insert requires fast mode to be enabled");
 
+                cancellationToken.ThrowIfCancellationRequested();
+                
+                var sheetRecords = new ExcelOpenXmlSheetReader(_stream, _configuration).GetWorkbookRels(_archive.Entries).ToArray();
+                foreach (var sheetRecord in sheetRecords.OrderBy(o => o.Id))
                 {
                     cancellationToken.ThrowIfCancellationRequested();
                     _sheets.Add(new SheetDto { Name = sheetRecord.Name, SheetIdx = (int)sheetRecord.Id, State = sheetRecord.State });
@@ -60,8 +66,6 @@ namespace MiniExcelLibs.OpenXml
 
                 await GenerateStylesXmlAsync(cancellationToken);//GenerateStylesXml必须在校验overwriteSheet之后，避免不必要的样式更改
 
-            if (existSheetDto == null)
-                var insertSheetInfo = GetSheetInfos(_defaultSheetName);
                 int rowsWritten;
                 if (existSheetDto == null)
                 {
@@ -166,6 +170,8 @@ namespace MiniExcelLibs.OpenXml
 
         private async Task<int> WriteValuesAsync(MiniExcelAsyncStreamWriter writer, object values, CancellationToken cancellationToken)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+            
 #if NETSTANDARD2_0_OR_GREATER || NET
             IMiniExcelWriteAdapter writeAdapter = null;
             if (!MiniExcelWriteAdapterFactory.TryGetAsyncWriteAdapter(values, _configuration, out var asyncWriteAdapter))
@@ -219,7 +225,7 @@ namespace MiniExcelLibs.OpenXml
             }
             else
             {
-                await WriteColumnsWidthsAsync(writer, ExcelColumnWidth.FromProps(props));
+                await WriteColumnsWidthsAsync(writer, ExcelColumnWidth.FromProps(props), cancellationToken);
             }
 
             //header
@@ -227,7 +233,7 @@ namespace MiniExcelLibs.OpenXml
             var currentRowIndex = 0;
             if (_printHeader)
             {
-                await PrintHeaderAsync(writer, props);
+                await PrintHeaderAsync(writer, props, cancellationToken);
                 currentRowIndex++;
             }
 
@@ -235,9 +241,12 @@ namespace MiniExcelLibs.OpenXml
             {
                 foreach (var row in writeAdapter.GetRows(props, cancellationToken))
                 {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    
                     await writer.WriteAsync(WorksheetXml.StartRow(++currentRowIndex));
                     foreach (var cellValue in row)
                     {
+                        cancellationToken.ThrowIfCancellationRequested();
                         await WriteCellAsync(writer, currentRowIndex, cellValue.CellIndex, cellValue.Value, cellValue.Prop, widths);
                     }
                     await writer.WriteAsync(WorksheetXml.EndRow);
@@ -248,9 +257,12 @@ namespace MiniExcelLibs.OpenXml
             {
                 await foreach (var row in asyncWriteAdapter.GetRowsAsync(props, cancellationToken))
                 {
+                    cancellationToken.ThrowIfCancellationRequested();
                     await writer.WriteAsync(WorksheetXml.StartRow(++currentRowIndex));
+
                     await foreach (var cellValue in row)
                     {
+                        cancellationToken.ThrowIfCancellationRequested();
                         await WriteCellAsync(writer, currentRowIndex, cellValue.CellIndex, cellValue.Value, cellValue.Prop, widths);
                     }
                     await writer.WriteAsync(WorksheetXml.EndRow);
@@ -276,33 +288,40 @@ namespace MiniExcelLibs.OpenXml
             }
             if (_configuration.EnableAutoWidth)
             {
-                await OverWriteColumnWidthPlaceholdersAsync(writer, columnWidthsPlaceholderPosition, widths.Columns);
+                await OverWriteColumnWidthPlaceholdersAsync(writer, columnWidthsPlaceholderPosition, widths.Columns, cancellationToken);
             }
+
+            var toSubtract = _printHeader ? 1 : 0;
+            return maxRowIndex - toSubtract;
         }
 
-        private async Task<long> WriteColumnWidthPlaceholdersAsync(MiniExcelAsyncStreamWriter writer, ICollection<ExcelColumnInfo> props)
+        private static async Task<long> WriteColumnWidthPlaceholdersAsync(MiniExcelAsyncStreamWriter writer, ICollection<ExcelColumnInfo> props)
         {
             var placeholderPosition = await writer.FlushAsync();
             await writer.WriteWhitespaceAsync(WorksheetXml.GetColumnPlaceholderLength(props.Count));
             return placeholderPosition;
         }
 
-        private async Task OverWriteColumnWidthPlaceholdersAsync(MiniExcelAsyncStreamWriter writer, long placeholderPosition, IEnumerable<ExcelColumnWidth> columnWidths)
+        private static async Task OverWriteColumnWidthPlaceholdersAsync(MiniExcelAsyncStreamWriter writer, long placeholderPosition, IEnumerable<ExcelColumnWidth> columnWidths, CancellationToken cancellationToken = default)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+            
             var position = await writer.FlushAsync();
 
             writer.SetPosition(placeholderPosition);
-            await WriteColumnsWidthsAsync(writer, columnWidths);
+            await WriteColumnsWidthsAsync(writer, columnWidths, cancellationToken);
 
             await writer.FlushAsync();
             writer.SetPosition(position);
         }
 
-        private async Task WriteColumnsWidthsAsync(MiniExcelAsyncStreamWriter writer, IEnumerable<ExcelColumnWidth> columnWidths)
+        private static async Task WriteColumnsWidthsAsync(MiniExcelAsyncStreamWriter writer, IEnumerable<ExcelColumnWidth> columnWidths, CancellationToken cancellationToken = default)
         {
             var hasWrittenStart = false;
             foreach (var column in columnWidths)
             {
+                cancellationToken.ThrowIfCancellationRequested();
+                
                 if (!hasWrittenStart)
                 {
                     await writer.WriteAsync(WorksheetXml.StartCols);
@@ -317,7 +336,7 @@ namespace MiniExcelLibs.OpenXml
             await writer.WriteAsync(WorksheetXml.EndCols);
         }
 
-        private async Task PrintHeaderAsync(MiniExcelAsyncStreamWriter writer, List<ExcelColumnInfo> props)
+        private async Task PrintHeaderAsync(MiniExcelAsyncStreamWriter writer, List<ExcelColumnInfo> props, CancellationToken cancellationToken = default)
         {
             var xIndex = 1;
             var yIndex = 1;
@@ -325,6 +344,8 @@ namespace MiniExcelLibs.OpenXml
 
             foreach (var p in props)
             {
+                cancellationToken.ThrowIfCancellationRequested();
+                
                 if (p == null)
                 {
                     xIndex++; //reason : https://github.com/shps951023/MiniExcel/issues/142
@@ -395,12 +416,15 @@ namespace MiniExcelLibs.OpenXml
         {
             foreach (var item in _files)
             {
-                await this.CreateZipEntryAsync(item.Path, item.Byte, cancellationToken);
+                cancellationToken.ThrowIfCancellationRequested();
+                await CreateZipEntryAsync(item.Path, item.Byte, cancellationToken);
             }
         }
 
         private async Task GenerateStylesXmlAsync(CancellationToken cancellationToken)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+            
             using (var context = new SheetStyleBuildContext(_zipDictionary, _archive, _utf8WithBom, _configuration.DynamicColumns))
             {
                 ISheetStyleBuilder builder = null;
@@ -422,6 +446,7 @@ namespace MiniExcelLibs.OpenXml
         {
             for (int sheetIndex = 0; sheetIndex < _sheets.Count; sheetIndex++)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 await GenerateDrawinRelXmlAsync(sheetIndex, cancellationToken);
             }
         }
@@ -440,6 +465,7 @@ namespace MiniExcelLibs.OpenXml
         {
             for (int sheetIndex = 0; sheetIndex < _sheets.Count; sheetIndex++)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 await GenerateDrawingXmlAsync(sheetIndex, cancellationToken);
             }
         }
@@ -456,6 +482,8 @@ namespace MiniExcelLibs.OpenXml
 
         private async Task GenerateWorkbookXmlAsync(CancellationToken cancellationToken)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             GenerateWorkBookXmls(
                 out StringBuilder workbookXml,
                 out StringBuilder workbookRelsXml,
@@ -486,12 +514,13 @@ namespace MiniExcelLibs.OpenXml
         private async Task GenerateContentTypesXmlAsync(CancellationToken cancellationToken)
         {
             var contentTypes = GetContentTypesXml();
-
             await CreateZipEntryAsync(ExcelFileNames.ContentTypes, null, contentTypes, cancellationToken);
         }
 
         private async Task InsertContentTypesXmlAsync(CancellationToken cancellationToken)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+            
             var contentTypesZipEntry = _archive.Entries.SingleOrDefault(s => s.FullName == ExcelFileNames.ContentTypes);
             if (contentTypesZipEntry == null)
             {
@@ -513,6 +542,8 @@ namespace MiniExcelLibs.OpenXml
                 
                 foreach (var p in _zipDictionary)
                 {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    
                     var partName = $"/{p.Key}";
                     if (!partNames.Contains(partName))
                     {
@@ -528,7 +559,8 @@ namespace MiniExcelLibs.OpenXml
 
         private async Task CreateZipEntryAsync(string path, string contentType, string content, CancellationToken cancellationToken)
         {
-            ZipArchiveEntry entry = _archive.CreateEntry(path, CompressionLevel.Fastest);
+            cancellationToken.ThrowIfCancellationRequested();
+            
             var entry = _archive.CreateEntry(path, CompressionLevel.Fastest);
             using (var zipStream = entry.Open())
             using (var writer = new MiniExcelAsyncStreamWriter(zipStream, _utf8WithBom, _configuration.BufferSize, cancellationToken))
@@ -540,7 +572,8 @@ namespace MiniExcelLibs.OpenXml
 
         private async Task CreateZipEntryAsync(string path, byte[] content, CancellationToken cancellationToken)
         {
-            ZipArchiveEntry entry = _archive.CreateEntry(path, CompressionLevel.Fastest);
+            cancellationToken.ThrowIfCancellationRequested();
+            
             var entry = _archive.CreateEntry(path, CompressionLevel.Fastest);
             using (var zipStream = entry.Open())
                 await zipStream.WriteAsync(content, 0, content.Length, cancellationToken);

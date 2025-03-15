@@ -43,12 +43,12 @@
             if (excelType == ExcelType.CSV)
             {
                 var newValue = value is IEnumerable || value is IDataReader ? value : new[]{value}.AsEnumerable();
-                return await ExcelWriterFactory.GetProvider(stream, newValue, sheetName, excelType, configuration, false).InsertAsync(overwriteSheet);
+                return await ExcelWriterFactory.GetProvider(stream, newValue, sheetName, excelType, configuration, false).InsertAsync(overwriteSheet, cancellationToken);
             }
             else
             {
                 var configOrDefault = configuration ?? new OpenXmlConfiguration { FastMode = true };
-                return await ExcelWriterFactory.GetProvider(stream, value, sheetName, excelType, configOrDefault, printHeader).InsertAsync(overwriteSheet);
+                return await ExcelWriterFactory.GetProvider(stream, value, sheetName, excelType, configOrDefault, printHeader).InsertAsync(overwriteSheet, cancellationToken);
             }
         }
 
@@ -58,7 +58,7 @@
                 throw new NotSupportedException("MiniExcel's SaveAs does not support the .xlsm format");
 
             using (var stream = overwriteFile ? File.Create(path) : new FileStream(path, FileMode.CreateNew))
-                return await SaveAsAsync(stream, value, printHeader, sheetName, ExcelTypeHelper.GetExcelType(path, excelType), configuration);
+                return await SaveAsAsync(stream, value, printHeader, sheetName, ExcelTypeHelper.GetExcelType(path, excelType), configuration, cancellationToken);
         }
 
         public static async Task<int[]> SaveAsAsync(this Stream stream, object value, bool printHeader = true, string sheetName = "Sheet1", ExcelType excelType = ExcelType.XLSX, IConfiguration configuration = null, CancellationToken cancellationToken = default(CancellationToken))

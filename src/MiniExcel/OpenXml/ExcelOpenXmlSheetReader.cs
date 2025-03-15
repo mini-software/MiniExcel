@@ -29,7 +29,7 @@ namespace MiniExcelLibs.OpenXml
         {
             IgnoreComments = true,
             IgnoreWhitespace = true,
-            XmlResolver = null,
+            XmlResolver = null
         };
 
         public ExcelOpenXmlSheetReader(Stream stream, IConfiguration configuration)
@@ -68,7 +68,7 @@ namespace MiniExcelLibs.OpenXml
 
                 sheetEntry = sheets.Single(w => w.FullName == $"xl/{sheetRecord.Path}" || w.FullName == $"/xl/{sheetRecord.Path}" || w.FullName == sheetRecord.Path || sheetRecord.Path == $"/{w.FullName}");
             }
-            else if (sheets.Count() > 1)
+            else if (sheets.Length > 1)
             {
                 SetWorkbookRels(_archive.entries);
                 var s = _sheetRecords[0];
@@ -534,24 +534,49 @@ namespace MiniExcelLibs.OpenXml
             _sheetRecords = GetWorkbookRels(entries);
         }
 
-        internal IEnumerable<SheetRecord> ReadWorkbook(ReadOnlyCollection<ZipArchiveEntry> entries)
+        internal static IEnumerable<SheetRecord> ReadWorkbook(ReadOnlyCollection<ZipArchiveEntry> entries)
         {
             using (var stream = entries.Single(w => w.FullName == "xl/workbook.xml").Open())
-            using (XmlReader reader = XmlReader.Create(stream, _xmlSettings))
+            using (var reader = XmlReader.Create(stream, _xmlSettings))
             {
                 if (!XmlReaderHelper.IsStartElement(reader, "workbook", _ns))
                     yield break;
 
                 if (!XmlReaderHelper.ReadFirstContent(reader))
                     yield break;
-
+                
+                var activeSheetIndex = 0;
                 while (!reader.EOF)
                 {
-                    if (XmlReaderHelper.IsStartElement(reader, "sheets", _ns))
+                    if (XmlReaderHelper.IsStartElement(reader, "bookViews", _ns))
                     {
                         if (!XmlReaderHelper.ReadFirstContent(reader))
                             continue;
 
+                        while (!reader.EOF)
+                        {
+                            if (XmlReaderHelper.IsStartElement(reader, "workbookView", _ns))
+                            {
+                                var activeSheet = reader.GetAttribute("activeTab");
+                                if(int.TryParse(activeSheet, out var index))
+                                {
+                                    activeSheetIndex = index;
+                                }
+
+                                reader.Skip();
+                            }
+                            else if (!XmlReaderHelper.SkipContent(reader))
+                            {
+                                break;
+                            }
+                        }
+                    }
+                    else if (XmlReaderHelper.IsStartElement(reader, "sheets", _ns))
+                    {
+                        if (!XmlReaderHelper.ReadFirstContent(reader))
+                            continue;
+
+                        var sheetCount = 0;
                         while (!reader.EOF)
                         {
                             if (XmlReaderHelper.IsStartElement(reader, "sheet", _ns))
@@ -560,8 +585,10 @@ namespace MiniExcelLibs.OpenXml
                                     reader.GetAttribute("name"),
                                     reader.GetAttribute("state"),
                                     uint.Parse(reader.GetAttribute("sheetId")),
-                                    XmlReaderHelper.GetAttribute(reader, "id", _relationshiopNs)
+                                    XmlReaderHelper.GetAttribute(reader, "id", _relationshiopNs),
+                                    sheetCount == activeSheetIndex
                                 );
+                                sheetCount++;
                                 reader.Skip();
                             }
                             else if (!XmlReaderHelper.SkipContent(reader))
@@ -583,7 +610,7 @@ namespace MiniExcelLibs.OpenXml
             var sheetRecords = ReadWorkbook(entries).ToList();
 
             using (var stream = entries.Single(w => w.FullName == "xl/_rels/workbook.xml.rels").Open())
-            using (XmlReader reader = XmlReader.Create(stream, _xmlSettings))
+            using (var reader = XmlReader.Create(stream, _xmlSettings))
             {
                 if (!XmlReaderHelper.IsStartElement(reader, "Relationships", "http://schemas.openxmlformats.org/package/2006/relationships"))
                     return null;

@@ -3912,5 +3912,32 @@ Leave";
                 }
             }
         }
+        
+        [Fact]
+        public void Issue_732_First_Sheet_Active()
+        {
+            var path = "../../../../../samples/xlsx/TestIssue732_1.xlsx";
+            var info = MiniExcel.GetSheetInformations(path);
+            
+            Assert.Equal(0u, info.SingleOrDefault(x => x.Active)?.Index);
+        }
+        
+        [Fact]
+        public void Issue_732_Second_Sheet_Active()
+        {
+            var path = "../../../../../samples/xlsx/TestIssue732_2.xlsx";
+            var info = MiniExcel.GetSheetInformations(path);
+            
+            Assert.Equal(1u, info.SingleOrDefault(x => x.Active)?.Index);
+        }
+        
+        [Fact]
+        public void Issue_732_Only_One_Sheet()
+        {
+            var path = "../../../../../samples/xlsx/TestIssue732_3.xlsx";
+            var info = MiniExcel.GetSheetInformations(path);
+            
+            Assert.Equal(0u, info.SingleOrDefault(x => x.Active)?.Index);
+        }
     }
 }

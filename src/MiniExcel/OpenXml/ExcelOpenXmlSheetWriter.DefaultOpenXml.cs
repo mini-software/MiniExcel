@@ -285,7 +285,7 @@ namespace MiniExcelLibs.OpenXml
                 Byte = bytes,
                 RowIndex = rowIndex,
                 CellIndex = cellIndex,
-                SheetId = currentSheetIndex
+                SheetId = _currentSheetIndex
             };
 
             if (format != ImageFormat.unknown)

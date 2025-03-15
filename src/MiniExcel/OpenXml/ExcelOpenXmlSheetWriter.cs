@@ -26,7 +26,7 @@ namespace MiniExcelLibs.OpenXml
         private readonly string _defaultSheetName;
         private readonly List<SheetDto> _sheets = new List<SheetDto>();
         private readonly List<FileDto> _files = new List<FileDto>();
-        private int currentSheetIndex = 0;
+        private int _currentSheetIndex = 0;
 
         public ExcelOpenXmlSheetWriter(Stream stream, object value, string sheetName, IConfiguration configuration, bool printHeader)
         {
@@ -59,7 +59,7 @@ namespace MiniExcelLibs.OpenXml
             foreach (var sheet in sheets)
             {
                 _sheets.Add(sheet.Item1); //TODO:remove
-                currentSheetIndex = sheet.Item1.SheetIdx;
+                _currentSheetIndex = sheet.Item1.SheetIdx;
                 var rows = CreateSheetXml(sheet.Item2, sheet.Item1.Path);
                 rowsWritten.Add(rows);
             }
@@ -92,26 +92,26 @@ namespace MiniExcelLibs.OpenXml
             int rowsWritten;
             if (existSheetDto == null)
             {
-                currentSheetIndex = (int)sheetRecords.Max(m => m.Id) + 1;
+                _currentSheetIndex = (int)sheetRecords.Max(m => m.Id) + 1;
                 var insertSheetInfo = GetSheetInfos(_defaultSheetName);
-                var insertSheetDto = insertSheetInfo.ToDto(currentSheetIndex);
+                var insertSheetDto = insertSheetInfo.ToDto(_currentSheetIndex);
                 _sheets.Add(insertSheetDto);
                 rowsWritten = CreateSheetXml(_value, insertSheetDto.Path);
             }
             else
             {
-                currentSheetIndex = existSheetDto.SheetIdx;
+                _currentSheetIndex = existSheetDto.SheetIdx;
                 _archive.Entries.Single(s => s.FullName == existSheetDto.Path).Delete();
                 rowsWritten = CreateSheetXml(_value, existSheetDto.Path);
             }
 
             AddFilesToZip();
 
-            _archive.Entries.SingleOrDefault(s => s.FullName == ExcelFileNames.DrawingRels(currentSheetIndex - 1))?.Delete();
-            GenerateDrawinRelXml(currentSheetIndex - 1);
+            _archive.Entries.SingleOrDefault(s => s.FullName == ExcelFileNames.DrawingRels(_currentSheetIndex - 1))?.Delete();
+            GenerateDrawinRelXml(_currentSheetIndex - 1);
 
-            _archive.Entries.SingleOrDefault(s => s.FullName == ExcelFileNames.Drawing(currentSheetIndex - 1))?.Delete();
-            GenerateDrawingXml(currentSheetIndex - 1);
+            _archive.Entries.SingleOrDefault(s => s.FullName == ExcelFileNames.Drawing(_currentSheetIndex - 1))?.Delete();
+            GenerateDrawingXml(_currentSheetIndex - 1);
 
             GenerateWorkBookXmls(out StringBuilder workbookXml, out StringBuilder workbookRelsXml, out Dictionary<int, string> sheetsRelsXml);
             foreach (var sheetRelsXml in sheetsRelsXml)
@@ -121,10 +121,10 @@ namespace MiniExcelLibs.OpenXml
                 CreateZipEntry(sheetRelsXmlPath, null, ExcelXml.DefaultSheetRelXml.Replace("{{format}}", sheetRelsXml.Value));
             }
 
-            _archive.Entries.SingleOrDefault(s => s.FullName == ExcelFileNames.Workbook).Delete();
+            _archive.Entries.SingleOrDefault(s => s.FullName == ExcelFileNames.Workbook)?.Delete();
             CreateZipEntry(ExcelFileNames.Workbook, ExcelContentTypes.Workbook, ExcelXml.DefaultWorkbookXml.Replace("{{sheets}}", workbookXml.ToString()));
 
-            _archive.Entries.SingleOrDefault(s => s.FullName == ExcelFileNames.WorkbookRels).Delete();
+            _archive.Entries.SingleOrDefault(s => s.FullName == ExcelFileNames.WorkbookRels)?.Delete();
             CreateZipEntry(ExcelFileNames.WorkbookRels, null, ExcelXml.DefaultWorkbookXmlRels.Replace("{{sheets}}", workbookRelsXml.ToString()));
 
             InsertContentTypesXml();
@@ -258,7 +258,7 @@ namespace MiniExcelLibs.OpenXml
                 writer.Write(WorksheetXml.Autofilter(GetDimensionRef(maxRowIndex, maxColumnIndex)));
             }
 
-            writer.Write(WorksheetXml.Drawing(currentSheetIndex));
+            writer.Write(WorksheetXml.Drawing(_currentSheetIndex));
             writer.Write(WorksheetXml.EndWorksheet);
 
             if (_configuration.FastMode && dimensionPlaceholderPostition != 0)
@@ -267,7 +267,7 @@ namespace MiniExcelLibs.OpenXml
             }
             if (_configuration.EnableAutoWidth)
             {
-                OverWriteColumnWidthPlaceholders(writer, columnWidthsPlaceholderPosition, widths.Columns);
+                OverWriteColumnWidthPlaceholders(writer, columnWidthsPlaceholderPosition, widths?.Columns);
             }
 
             var toSubtract = _printHeader ? 1 : 0;
@@ -348,7 +348,9 @@ namespace MiniExcelLibs.OpenXml
             }
 
             var columnReference = ExcelOpenXmlUtils.ConvertXyToCell(cellIndex, rowIndex);
-            var valueIsNull = value is null || value is DBNull || (_configuration.WriteEmptyStringAsNull && value is String && value == string.Empty);
+            var valueIsNull = value is null || 
+                              value is DBNull || 
+                              (_configuration.WriteEmptyStringAsNull && value is string vs && vs == string.Empty);
 
             if (_configuration.EnableWriteNullValueCell && valueIsNull)
             {
@@ -408,8 +410,8 @@ namespace MiniExcelLibs.OpenXml
                         builder = new DefaultSheetStyleBuilder(context);
                         break;
                 }
-                var result = builder.Build();
-                _cellXfIdMap = result.CellXfIdMap;
+                var result = builder?.Build();
+                _cellXfIdMap = result?.CellXfIdMap;
             }
         }
 
@@ -491,10 +493,10 @@ namespace MiniExcelLibs.OpenXml
             using (var stream = contentTypesZipEntry.Open())
             {
                 var doc = XDocument.Load(stream);
-                var ns = doc.Root.GetDefaultNamespace();
+                var ns = doc.Root?.GetDefaultNamespace();
                 var typesElement = doc.Descendants(ns + "Types").Single();
                 var partNames = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
-                foreach (var partName in typesElement.Elements(ns + "Override").Select(s => s.Attribute("PartName").Value))
+                foreach (var partName in typesElement.Elements(ns + "Override").Select(s => s.Attribute("PartName")?.Value))
                 {
                     partNames.Add(partName);
                 }

@@ -31,7 +31,7 @@ namespace MiniExcelLibs.OpenXml
                     cancellationToken.ThrowIfCancellationRequested();
                     
                     _sheets.Add(sheet.Item1); //TODO:remove
-                    currentSheetIndex = sheet.Item1.SheetIdx;
+                    _currentSheetIndex = sheet.Item1.SheetIdx;
                     var rows = await CreateSheetXmlAsync(sheet.Item2, sheet.Item1.Path, cancellationToken);
                     rowsWritten.Add(rows);
                 }
@@ -69,26 +69,26 @@ namespace MiniExcelLibs.OpenXml
                 int rowsWritten;
                 if (existSheetDto == null)
                 {
-                    currentSheetIndex = (int)sheetRecords.Max(m => m.Id) + 1;
+                    _currentSheetIndex = (int)sheetRecords.Max(m => m.Id) + 1;
                     var insertSheetInfo = GetSheetInfos(_defaultSheetName);
-                    var insertSheetDto = insertSheetInfo.ToDto(currentSheetIndex);
+                    var insertSheetDto = insertSheetInfo.ToDto(_currentSheetIndex);
                     _sheets.Add(insertSheetDto);
                     rowsWritten = await CreateSheetXmlAsync(_value, insertSheetDto.Path, cancellationToken);
                 }
                 else
                 {
-                    currentSheetIndex = existSheetDto.SheetIdx;
+                    _currentSheetIndex = existSheetDto.SheetIdx;
                     _archive.Entries.Single(s => s.FullName == existSheetDto.Path).Delete();
                     rowsWritten = await CreateSheetXmlAsync(_value, existSheetDto.Path, cancellationToken);
                 }
 
                 await AddFilesToZipAsync(cancellationToken);
 
-                _archive.Entries.SingleOrDefault(s => s.FullName == ExcelFileNames.DrawingRels(currentSheetIndex - 1))?.Delete();
-                await GenerateDrawinRelXmlAsync(currentSheetIndex - 1, cancellationToken);
+                _archive.Entries.SingleOrDefault(s => s.FullName == ExcelFileNames.DrawingRels(_currentSheetIndex - 1))?.Delete();
+                await GenerateDrawinRelXmlAsync(_currentSheetIndex - 1, cancellationToken);
 
-                _archive.Entries.SingleOrDefault(s => s.FullName == ExcelFileNames.Drawing(currentSheetIndex - 1))?.Delete();
-                await GenerateDrawingXmlAsync(currentSheetIndex - 1, cancellationToken);
+                _archive.Entries.SingleOrDefault(s => s.FullName == ExcelFileNames.Drawing(_currentSheetIndex - 1))?.Delete();
+                await GenerateDrawingXmlAsync(_currentSheetIndex - 1, cancellationToken);
 
                 GenerateWorkBookXmls(out StringBuilder workbookXml, out StringBuilder workbookRelsXml, out Dictionary<int, string> sheetsRelsXml);
                 foreach (var sheetRelsXml in sheetsRelsXml)
@@ -272,7 +272,7 @@ namespace MiniExcelLibs.OpenXml
 
             maxRowIndex = currentRowIndex;
 
-            await writer.WriteAsync(WorksheetXml.Drawing(currentSheetIndex));
+            await writer.WriteAsync(WorksheetXml.Drawing(_currentSheetIndex));
             await writer.WriteAsync(WorksheetXml.EndSheetData);
 
             if (_configuration.AutoFilter)

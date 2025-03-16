@@ -16,27 +16,28 @@ namespace MiniExcelLibs.OpenXml
         private readonly Encoding _encoding;
         private readonly CancellationToken _cancellationToken;
         private readonly StreamWriter _streamWriter;
-        private bool disposedValue;
+        private bool _disposedValue;
+        
         public MiniExcelAsyncStreamWriter(Stream stream, Encoding encoding, int bufferSize, CancellationToken cancellationToken)
         {
-            this._stream = stream;
-            this._encoding = encoding;
-            this._cancellationToken = cancellationToken;
-            this._streamWriter = new StreamWriter(stream, this._encoding, bufferSize);
+            _stream = stream;
+            _encoding = encoding;
+            _cancellationToken = cancellationToken;
+            _streamWriter = new StreamWriter(stream, _encoding, bufferSize);
         }
         public async Task WriteAsync(string content)
         {
-            this._cancellationToken.ThrowIfCancellationRequested();
+            _cancellationToken.ThrowIfCancellationRequested();
 
             if (string.IsNullOrEmpty(content))
                 return;
-            await this._streamWriter.WriteAsync(content);
+            await _streamWriter.WriteAsync(content);
         }
 
         public async Task<long> WriteAndFlushAsync(string content)
         {
-            await this.WriteAsync(content);
-            return await this.FlushAsync();
+            await WriteAsync(content);
+            return await FlushAsync();
         }
 
         public async Task WriteWhitespaceAsync(int length)
@@ -46,23 +47,23 @@ namespace MiniExcelLibs.OpenXml
 
         public async Task<long> FlushAsync()
         {
-            this._cancellationToken.ThrowIfCancellationRequested();
+            _cancellationToken.ThrowIfCancellationRequested();
 
-            await this._streamWriter.FlushAsync();
-            return this._streamWriter.BaseStream.Position;
+            await _streamWriter.FlushAsync();
+            return _streamWriter.BaseStream.Position;
         }
 
         public void SetPosition(long position)
         {
-            this._streamWriter.BaseStream.Position = position;
+            _streamWriter.BaseStream.Position = position;
         }
 
         protected virtual void Dispose(bool disposing)
         {
-            if (!disposedValue)
+            if (!_disposedValue)
             {
-                this._streamWriter?.Dispose();
-                disposedValue = true;
+                _streamWriter?.Dispose();
+                _disposedValue = true;
             }
         }
 

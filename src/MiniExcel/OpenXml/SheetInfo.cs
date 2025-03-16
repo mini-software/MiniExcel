@@ -2,12 +2,13 @@
 {
     public class SheetInfo
     {
-        public SheetInfo(uint id, uint index, string name, SheetState sheetState)
+        public SheetInfo(uint id, uint index, string name, SheetState sheetState, bool active)
         {
             Id = id;
             Index = index;
             Name = name;
             State = sheetState;
+            Active = active;
         }
 
         /// <summary>
@@ -26,6 +27,10 @@
         /// Sheet visibility state
         /// </summary>
         public SheetState State { get; }
+        /// <summary>
+        /// Indicates whether the sheet is active
+        /// </summary>
+        public bool Active { get; }
     }
 
     public enum SheetState { Visible, Hidden, VeryHidden }

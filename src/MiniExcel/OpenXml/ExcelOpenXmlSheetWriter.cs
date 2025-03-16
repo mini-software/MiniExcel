@@ -26,50 +26,51 @@ namespace MiniExcelLibs.OpenXml
         private readonly string _defaultSheetName;
         private readonly List<SheetDto> _sheets = new List<SheetDto>();
         private readonly List<FileDto> _files = new List<FileDto>();
-        private int currentSheetIndex = 0;
+        private int _currentSheetIndex = 0;
 
         public ExcelOpenXmlSheetWriter(Stream stream, object value, string sheetName, IConfiguration configuration, bool printHeader)
         {
-            this._stream = stream;
+            _stream = stream;
             // Why ZipArchiveMode.Update not ZipArchiveMode.Create?
             // R : Mode create - ZipArchiveEntry does not support seeking.'
-            this._configuration = configuration as OpenXmlConfiguration ?? OpenXmlConfiguration.DefaultConfig;
+            _configuration = configuration as OpenXmlConfiguration ?? OpenXmlConfiguration.DefaultConfig;
             if (_configuration.EnableAutoWidth && !_configuration.FastMode)
-            {
                 throw new InvalidOperationException("Auto width requires fast mode to be enabled");
-            }
 
-            if (_configuration.FastMode)
-                this._archive = new MiniExcelZipArchive(_stream, ZipArchiveMode.Update, true, _utf8WithBom);
-            else
-                this._archive = new MiniExcelZipArchive(_stream, ZipArchiveMode.Create, true, _utf8WithBom);
-            this._printHeader = printHeader;
-            this._value = value;
-            this._defaultSheetName = sheetName;
+            var archiveMode = _configuration.FastMode ? ZipArchiveMode.Update : ZipArchiveMode.Create;
+            _archive = new MiniExcelZipArchive(_stream, archiveMode, true, _utf8WithBom);
+
+            _value = value;
+            _printHeader = printHeader;
+            _defaultSheetName = sheetName;
         }
 
         public ExcelOpenXmlSheetWriter()
         {
         }
 
-        public void SaveAs()
+        public int[] SaveAs()
         {
             GenerateDefaultOpenXml();
 
             var sheets = GetSheets();
-
+            var rowsWritten = new List<int>();
+            
             foreach (var sheet in sheets)
             {
                 _sheets.Add(sheet.Item1); //TODO:remove
-                currentSheetIndex = sheet.Item1.SheetIdx;
-                CreateSheetXml(sheet.Item2, sheet.Item1.Path);
+                _currentSheetIndex = sheet.Item1.SheetIdx;
+                var rows = CreateSheetXml(sheet.Item2, sheet.Item1.Path);
+                rowsWritten.Add(rows);
             }
 
             GenerateEndXml();
             _archive.Dispose();
+            
+            return rowsWritten.ToArray();
         }
 
-        public void Insert(bool overwriteSheet = false)
+        public int Insert(bool overwriteSheet = false)
         {
             if (!_configuration.FastMode)
             {
@@ -88,29 +89,29 @@ namespace MiniExcelLibs.OpenXml
             }
 
             GenerateStylesXml();//GenerateStylesXml必须在校验overwriteSheet之后，避免不必要的样式更改
-
+            int rowsWritten;
             if (existSheetDto == null)
             {
-                currentSheetIndex = (int)sheetRecords.Max(m => m.Id) + 1;
+                _currentSheetIndex = (int)sheetRecords.Max(m => m.Id) + 1;
                 var insertSheetInfo = GetSheetInfos(_defaultSheetName);
-                var insertSheetDto = insertSheetInfo.ToDto(currentSheetIndex);
+                var insertSheetDto = insertSheetInfo.ToDto(_currentSheetIndex);
                 _sheets.Add(insertSheetDto);
-                CreateSheetXml(_value, insertSheetDto.Path);
+                rowsWritten = CreateSheetXml(_value, insertSheetDto.Path);
             }
             else
             {
-                currentSheetIndex = existSheetDto.SheetIdx;
+                _currentSheetIndex = existSheetDto.SheetIdx;
                 _archive.Entries.Single(s => s.FullName == existSheetDto.Path).Delete();
-                CreateSheetXml(_value, existSheetDto.Path);
+                rowsWritten = CreateSheetXml(_value, existSheetDto.Path);
             }
 
             AddFilesToZip();
 
-            _archive.Entries.SingleOrDefault(s => s.FullName == ExcelFileNames.DrawingRels(currentSheetIndex - 1))?.Delete();
-            GenerateDrawinRelXml(currentSheetIndex - 1);
+            _archive.Entries.SingleOrDefault(s => s.FullName == ExcelFileNames.DrawingRels(_currentSheetIndex - 1))?.Delete();
+            GenerateDrawinRelXml(_currentSheetIndex - 1);
 
-            _archive.Entries.SingleOrDefault(s => s.FullName == ExcelFileNames.Drawing(currentSheetIndex - 1))?.Delete();
-            GenerateDrawingXml(currentSheetIndex - 1);
+            _archive.Entries.SingleOrDefault(s => s.FullName == ExcelFileNames.Drawing(_currentSheetIndex - 1))?.Delete();
+            GenerateDrawingXml(_currentSheetIndex - 1);
 
             GenerateWorkBookXmls(out StringBuilder workbookXml, out StringBuilder workbookRelsXml, out Dictionary<int, string> sheetsRelsXml);
             foreach (var sheetRelsXml in sheetsRelsXml)
@@ -120,15 +121,17 @@ namespace MiniExcelLibs.OpenXml
                 CreateZipEntry(sheetRelsXmlPath, null, ExcelXml.DefaultSheetRelXml.Replace("{{format}}", sheetRelsXml.Value));
             }
 
-            _archive.Entries.SingleOrDefault(s => s.FullName == ExcelFileNames.Workbook).Delete();
+            _archive.Entries.SingleOrDefault(s => s.FullName == ExcelFileNames.Workbook)?.Delete();
             CreateZipEntry(ExcelFileNames.Workbook, ExcelContentTypes.Workbook, ExcelXml.DefaultWorkbookXml.Replace("{{sheets}}", workbookXml.ToString()));
 
-            _archive.Entries.SingleOrDefault(s => s.FullName == ExcelFileNames.WorkbookRels).Delete();
+            _archive.Entries.SingleOrDefault(s => s.FullName == ExcelFileNames.WorkbookRels)?.Delete();
             CreateZipEntry(ExcelFileNames.WorkbookRels, null, ExcelXml.DefaultWorkbookXmlRels.Replace("{{sheets}}", workbookRelsXml.ToString()));
 
             InsertContentTypesXml();
 
             _archive.Dispose();
+            
+            return rowsWritten;
         }
 
         internal void GenerateDefaultOpenXml()
@@ -138,11 +141,13 @@ namespace MiniExcelLibs.OpenXml
             GenerateStylesXml();
         }
 
-        private void CreateSheetXml(object values, string sheetPath)
+        private int CreateSheetXml(object values, string sheetPath)
         {
-            ZipArchiveEntry entry = _archive.CreateEntry(sheetPath, CompressionLevel.Fastest);
+            var entry = _archive.CreateEntry(sheetPath, CompressionLevel.Fastest);
+            var rowsWritten = 0;
+            
             using (var zipStream = entry.Open())
-            using (MiniExcelStreamWriter writer = new MiniExcelStreamWriter(zipStream, _utf8WithBom, _configuration.BufferSize))
+            using (var writer = new MiniExcelStreamWriter(zipStream, _utf8WithBom, _configuration.BufferSize))
             {
                 if (values == null)
                 {
@@ -150,18 +155,19 @@ namespace MiniExcelLibs.OpenXml
                 }
                 else
                 {
-                    WriteValues(writer, values);
+                    rowsWritten = WriteValues(writer, values);
                 }
             }
             _zipDictionary.Add(sheetPath, new ZipPackageInfo(entry, ExcelContentTypes.Worksheet));
+            return rowsWritten;
         }
 
-        private void WriteEmptySheet(MiniExcelStreamWriter writer)
+        private static void WriteEmptySheet(MiniExcelStreamWriter writer)
         {
             writer.Write(ExcelXml.EmptySheetXml);
         }
 
-        private long WriteDimensionPlaceholder(MiniExcelStreamWriter writer)
+        private static long WriteDimensionPlaceholder(MiniExcelStreamWriter writer)
         {
             var dimensionPlaceholderPostition = writer.WriteAndFlush(WorksheetXml.StartDimension);
             writer.Write(WorksheetXml.DimensionPlaceholder); // end of code will be replaced
@@ -180,16 +186,16 @@ namespace MiniExcelLibs.OpenXml
             writer.SetPosition(position);
         }
 
-        private void WriteValues(MiniExcelStreamWriter writer, object values)
+        private int WriteValues(MiniExcelStreamWriter writer, object values)
         {
-            IMiniExcelWriteAdapter writeAdapter = MiniExcelWriteAdapterFactory.GetWriteAdapter(values, _configuration);
+            var writeAdapter = MiniExcelWriteAdapterFactory.GetWriteAdapter(values, _configuration);
 
             var isKnownCount = writeAdapter.TryGetKnownCount(out var count);
             var props = writeAdapter.GetColumns();
             if (props == null)
             {
                 WriteEmptySheet(writer);
-                return;
+                return 0;
             }
             var maxColumnIndex = props.Count;
             int maxRowIndex;
@@ -252,27 +258,30 @@ namespace MiniExcelLibs.OpenXml
                 writer.Write(WorksheetXml.Autofilter(GetDimensionRef(maxRowIndex, maxColumnIndex)));
             }
 
-            writer.Write(WorksheetXml.Drawing(currentSheetIndex));
+            writer.Write(WorksheetXml.Drawing(_currentSheetIndex));
             writer.Write(WorksheetXml.EndWorksheet);
 
-            if (_configuration.FastMode && dimensionPlaceholderPostition != default)
+            if (_configuration.FastMode && dimensionPlaceholderPostition != 0)
             {
                 WriteDimension(writer, maxRowIndex, maxColumnIndex, dimensionPlaceholderPostition);
             }
             if (_configuration.EnableAutoWidth)
             {
-                OverWriteColumnWidthPlaceholders(writer, columnWidthsPlaceholderPosition, widths.Columns);
+                OverWriteColumnWidthPlaceholders(writer, columnWidthsPlaceholderPosition, widths?.Columns);
             }
+
+            var toSubtract = _printHeader ? 1 : 0;
+            return maxRowIndex - toSubtract;
         }
 
-        private long WriteColumnWidthPlaceholders(MiniExcelStreamWriter writer, ICollection<ExcelColumnInfo> props)
+        private static long WriteColumnWidthPlaceholders(MiniExcelStreamWriter writer, ICollection<ExcelColumnInfo> props)
         {
             var placeholderPosition = writer.Flush();
             writer.WriteWhitespace(WorksheetXml.GetColumnPlaceholderLength(props.Count));
             return placeholderPosition;
         }
 
-        private void OverWriteColumnWidthPlaceholders(MiniExcelStreamWriter writer, long placeholderPosition, IEnumerable<ExcelColumnWidth> columnWidths)
+        private static void OverWriteColumnWidthPlaceholders(MiniExcelStreamWriter writer, long placeholderPosition, IEnumerable<ExcelColumnWidth> columnWidths)
         {
             var position = writer.Flush();
 
@@ -283,7 +292,7 @@ namespace MiniExcelLibs.OpenXml
             writer.SetPosition(position);
         }
 
-        private void WriteColumnsWidths(MiniExcelStreamWriter writer, IEnumerable<ExcelColumnWidth> columnWidths)
+        private static void WriteColumnsWidths(MiniExcelStreamWriter writer, IEnumerable<ExcelColumnWidth> columnWidths)
         {
             var hasWrittenStart = false;
             foreach (var column in columnWidths)
@@ -339,7 +348,9 @@ namespace MiniExcelLibs.OpenXml
             }
 
             var columnReference = ExcelOpenXmlUtils.ConvertXyToCell(cellIndex, rowIndex);
-            var valueIsNull = value is null || value is DBNull || (_configuration.WriteEmptyStringAsNull && value is String && value == string.Empty);
+            var valueIsNull = value is null || 
+                              value is DBNull || 
+                              (_configuration.WriteEmptyStringAsNull && value is string vs && vs == string.Empty);
 
             if (_configuration.EnableWriteNullValueCell && valueIsNull)
             {
@@ -399,8 +410,8 @@ namespace MiniExcelLibs.OpenXml
                         builder = new DefaultSheetStyleBuilder(context);
                         break;
                 }
-                var result = builder.Build();
-                cellXfIdMap = result.CellXfIdMap;
+                var result = builder?.Build();
+                _cellXfIdMap = result?.CellXfIdMap;
             }
         }
 
@@ -482,10 +493,10 @@ namespace MiniExcelLibs.OpenXml
             using (var stream = contentTypesZipEntry.Open())
             {
                 var doc = XDocument.Load(stream);
-                var ns = doc.Root.GetDefaultNamespace();
+                var ns = doc.Root?.GetDefaultNamespace();
                 var typesElement = doc.Descendants(ns + "Types").Single();
                 var partNames = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
-                foreach (var partName in typesElement.Elements(ns + "Override").Select(s => s.Attribute("PartName").Value))
+                foreach (var partName in typesElement.Elements(ns + "Override").Select(s => s.Attribute("PartName")?.Value))
                 {
                     partNames.Add(partName);
                 }

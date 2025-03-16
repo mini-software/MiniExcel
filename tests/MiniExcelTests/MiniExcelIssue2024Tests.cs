@@ -30,12 +30,14 @@ namespace MiniExcelLibs.Tests
             {
                 AutoFilter = false,
                 DynamicColumns =
-                    new[] {
-                        new DynamicExcelColumn("long2") { Format = "@", Width = 25 }
-                    }
+                [
+                    new DynamicExcelColumn("long2") { Format = "@", Width = 25 }
+                ]
             };
             var value = new[] { new { long2 = "1550432695793487872" } };
-            MiniExcel.SaveAs(path, value, configuration: config);
+            var rowsWritten = MiniExcel.SaveAs(path, value, configuration: config);
+            Assert.Single(rowsWritten);
+            Assert.Equal(1, rowsWritten[0]);
         }
     }
 }

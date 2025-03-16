@@ -260,7 +260,10 @@ namespace MiniExcelLibs.Tests
             };
 
             string path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
-            MiniExcel.SaveAs(path, sheets, configuration: configuration);
+            var rowsWritten = MiniExcel.SaveAs(path, sheets, configuration: configuration);
+            Assert.Equal(2, rowsWritten.Length);
+            Assert.Equal(2, rowsWritten[0]);
+
 
             var sheetInfos = MiniExcel.GetSheetInformations(path).ToList();
             Assert.Collection(sheetInfos,

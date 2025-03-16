@@ -5,9 +5,9 @@ namespace MiniExcelLibs
 {
     internal interface IExcelWriter
     {
-        void SaveAs();
-        Task SaveAsAsync(CancellationToken cancellationToken = default);
-        void Insert(bool overwriteSheet = false);
-        Task InsertAsync(bool overwriteSheet = false, CancellationToken cancellationToken = default);
+        int[] SaveAs();
+        Task<int[]> SaveAsAsync(CancellationToken cancellationToken = default);
+        int Insert(bool overwriteSheet = false);
+        Task<int> InsertAsync(bool overwriteSheet = false, CancellationToken cancellationToken = default);
     }
 }

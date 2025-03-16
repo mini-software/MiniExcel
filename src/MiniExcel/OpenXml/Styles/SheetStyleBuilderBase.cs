@@ -86,10 +86,11 @@ namespace MiniExcelLibs.OpenXml.Styles
 
             return new SheetStyleBuildResult(GetCellXfIdMap());
         }
-
+        
+        // Todo: add CancellationToken to all methods called inside of BuildAsync 
         public virtual async Task<SheetStyleBuildResult> BuildAsync(CancellationToken cancellationToken = default)
         {
-            await _context.InitializeAsync(GetGenerateElementInfos());
+            await _context.InitializeAsync(GetGenerateElementInfos(), cancellationToken);
 
             while (await _context.OldXmlReader.ReadAsync())
             {
@@ -100,7 +101,7 @@ namespace MiniExcelLibs.OpenXml.Styles
                     case XmlNodeType.Element:
                         await GenerateElementBeforStartElementAsync();
                         await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, _context.OldXmlReader.LocalName, _context.OldXmlReader.NamespaceURI);
-                        await WriteAttributesAsync(_context.OldXmlReader.LocalName);
+                        await WriteAttributesAsync(_context.OldXmlReader.LocalName, cancellationToken);
                         if (_context.OldXmlReader.IsEmptyElement)
                         {
                             await GenerateElementBeforEndElementAsync();
@@ -137,7 +138,7 @@ namespace MiniExcelLibs.OpenXml.Styles
                 }
             }
 
-            await _context.FinalizeAndUpdateZipDictionaryAsync();
+            await _context.FinalizeAndUpdateZipDictionaryAsync(cancellationToken);
 
             return new SheetStyleBuildResult(GetCellXfIdMap());
         }
@@ -204,13 +205,13 @@ namespace MiniExcelLibs.OpenXml.Styles
             }
         }
 
-        protected virtual async Task WriteAttributesAsync(string element)
+        protected virtual async Task WriteAttributesAsync(string element, CancellationToken cancellationToken = default)
         {
             if (_context.OldXmlReader.NodeType is XmlNodeType.Element || _context.OldXmlReader.NodeType is XmlNodeType.XmlDeclaration)
             {
                 if (_context.OldXmlReader.MoveToFirstAttribute())
                 {
-                    await WriteAttributesAsync(element);
+                    await WriteAttributesAsync(element, cancellationToken);
                     _context.OldXmlReader.MoveToElement();
                 }
             }
@@ -222,6 +223,8 @@ namespace MiniExcelLibs.OpenXml.Styles
                     var currentAttribute = _context.OldXmlReader.LocalName;
                     while (_context.OldXmlReader.ReadAttributeValue())
                     {
+                        cancellationToken.ThrowIfCancellationRequested();
+                        
                         if (_context.OldXmlReader.NodeType == XmlNodeType.EntityReference)
                         {
                             await _context.NewXmlWriter.WriteEntityRefAsync(_context.OldXmlReader.Name);
@@ -374,33 +377,29 @@ namespace MiniExcelLibs.OpenXml.Styles
 
         protected virtual async Task GenerateElementBeforEndElementAsync()
         {
-            if (_context.OldXmlReader.LocalName == "styleSheet" && !_context.OldElementInfos.ExistsNumFmts && !_context.GenerateElementInfos.ExistsNumFmts)
+            switch (_context.OldXmlReader.LocalName)
             {
-                await GenerateNumFmtsAsync();
-            }
-            else if (_context.OldXmlReader.LocalName == "numFmts")
-            {
-                await GenerateNumFmtAsync();
-            }
-            else if (_context.OldXmlReader.LocalName == "fonts")
-            {
-                await GenerateFontAsync();
-            }
-            else if (_context.OldXmlReader.LocalName == "fills")
-            {
-                await GenerateFillAsync();
-            }
-            else if (_context.OldXmlReader.LocalName == "borders")
-            {
-                await GenerateBorderAsync();
-            }
-            else if (_context.OldXmlReader.LocalName == "cellStyleXfs")
-            {
-                await GenerateCellStyleXfAsync();
-            }
-            else if (_context.OldXmlReader.LocalName == "cellXfs")
-            {
-                await GenerateCellXfAsync();
+                case "styleSheet" when !_context.OldElementInfos.ExistsNumFmts && !_context.GenerateElementInfos.ExistsNumFmts:
+                    await GenerateNumFmtsAsync();
+                    break;
+                case "numFmts":
+                    await GenerateNumFmtAsync();
+                    break;
+                case "fonts":
+                    await GenerateFontAsync();
+                    break;
+                case "fills":
+                    await GenerateFillAsync();
+                    break;
+                case "borders":
+                    await GenerateBorderAsync();
+                    break;
+                case "cellStyleXfs":
+                    await GenerateCellStyleXfAsync();
+                    break;
+                case "cellXfs":
+                    await GenerateCellXfAsync();
+                    break;
             }
         }
 

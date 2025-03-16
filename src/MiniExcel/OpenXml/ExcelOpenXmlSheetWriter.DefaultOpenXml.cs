@@ -17,7 +17,7 @@ namespace MiniExcelLibs.OpenXml
     internal partial class ExcelOpenXmlSheetWriter : IExcelWriter
     {
         private readonly Dictionary<string, ZipPackageInfo> _zipDictionary = new Dictionary<string, ZipPackageInfo>();
-        private Dictionary<string, string> cellXfIdMap;
+        private Dictionary<string, string> _cellXfIdMap;
 
         private IEnumerable<Tuple<SheetDto, object>> GetSheets()
         {
@@ -61,21 +61,15 @@ namespace MiniExcelLibs.OpenXml
             };
 
             if (_configuration.DynamicSheets == null || _configuration.DynamicSheets.Length <= 0)
-            {
                 return info;
-            }
 
             var dynamicSheet = _configuration.DynamicSheets.SingleOrDefault(_ => _.Key == sheetName);
             if (dynamicSheet == null)
-            {
                 return info;
-            }
 
             info.ExcelSheetState = dynamicSheet.State;
-            if (dynamicSheet.Name != null)
-            {
+            if (dynamicSheet.Name != null) 
                 info.ExcelSheetName = dynamicSheet.Name;
-            }
 
             return info;
         }
@@ -84,9 +78,7 @@ namespace MiniExcelLibs.OpenXml
         {
             // exit early if no style to write
             if (_configuration.FreezeRowCount <= 0 && _configuration.FreezeColumnCount <= 0)
-            {
                 return string.Empty;
-            }
 
             var sb = new StringBuilder();
 
@@ -106,21 +98,20 @@ namespace MiniExcelLibs.OpenXml
 
         private string GetPanes()
         {
-
             var sb = new StringBuilder();
 
             string activePane;
-            if (_configuration.FreezeColumnCount > 0 && _configuration.FreezeRowCount > 0)
+            switch (_configuration.FreezeColumnCount > 0)
             {
-                activePane = "bottomRight";
-            }
-            else if (_configuration.FreezeColumnCount > 0)
-            {
-                activePane = "topRight";
-            }
-            else
-            {
-                activePane = "bottomLeft";
+                case true when _configuration.FreezeRowCount > 0:
+                    activePane = "bottomRight";
+                    break;
+                case true:
+                    activePane = "topRight";
+                    break;
+                default:
+                    activePane = "bottomLeft";
+                    break;
             }
             sb.Append(
                 WorksheetXml.StartPane(
@@ -174,23 +165,17 @@ namespace MiniExcelLibs.OpenXml
             }
 
             return sb.ToString();
-
         }
 
         private Tuple<string, string, string> GetCellValue(int rowIndex, int cellIndex, object value, ExcelColumnInfo columnInfo, bool valueIsNull)
         {
             if (valueIsNull)
-            {
                 return Tuple.Create("2", "str", string.Empty);
-            }
 
             if (value is string str)
-            {
                 return Tuple.Create("2", "str", ExcelOpenXmlUtils.EncodeXML(str));
-            }
 
             var type = GetValueType(value, columnInfo);
-
 
             if (columnInfo?.ExcelFormat != null && columnInfo?.ExcelFormatId == -1 && value is IFormattable formattableValue)
             {
@@ -199,15 +184,11 @@ namespace MiniExcelLibs.OpenXml
             }
 
             if (type == typeof(DateTime))
-            {
                 return GetDateTimeValue((DateTime)value, columnInfo);
-            }
 
 #if NET6_0_OR_GREATER
             if (type == typeof(DateOnly))
-            {
                 return GetDateTimeValue(((DateOnly)value).ToDateTime(new TimeOnly()), columnInfo);
-            }
 #endif
             if (type.IsEnum)
             {
@@ -224,16 +205,12 @@ namespace MiniExcelLibs.OpenXml
                     var dataType = _configuration.Culture == CultureInfo.InvariantCulture ? "n" : "str";
                     return Tuple.Create("2", dataType, cellValue);
                 }
-                else
-                {
-                    return Tuple.Create(columnInfo.ExcelFormatId.ToString(), (string)null, cellValue);
-                }
+
+                return Tuple.Create(columnInfo.ExcelFormatId.ToString(), (string)null, cellValue);
             }
 
             if (type == typeof(bool))
-            {
                 return Tuple.Create("2", "b", (bool)value ? "1" : "0");
-            }
 
             if (type == typeof(byte[]) && _configuration.EnableConvertByteArray)
             {
@@ -265,49 +242,31 @@ namespace MiniExcelLibs.OpenXml
         private string GetNumericValue(object value, Type type)
         {
             if (type.IsAssignableFrom(typeof(decimal)))
-            {
                 return ((decimal)value).ToString(_configuration.Culture);
-            }
 
             if (type.IsAssignableFrom(typeof(int)))
-            {
                 return ((int)value).ToString(_configuration.Culture);
-            }
 
             if (type.IsAssignableFrom(typeof(double)))
-            {
                 return ((double)value).ToString(_configuration.Culture);
-            }
 
             if (type.IsAssignableFrom(typeof(long)))
-            {
                 return ((long)value).ToString(_configuration.Culture);
-            }
 
             if (type.IsAssignableFrom(typeof(uint)))
-            {
                 return ((uint)value).ToString(_configuration.Culture);
-            }
 
             if (type.IsAssignableFrom(typeof(ushort)))
-            {
                 return ((ushort)value).ToString(_configuration.Culture);
-            }
 
             if (type.IsAssignableFrom(typeof(ulong)))
-            {
                 return ((ulong)value).ToString(_configuration.Culture);
-            }
 
             if (type.IsAssignableFrom(typeof(short)))
-            {
                 return ((short)value).ToString(_configuration.Culture);
-            }
 
             if (type.IsAssignableFrom(typeof(float)))
-            {
                 return ((float)value).ToString(_configuration.Culture);
-            }
 
             return (decimal.Parse(value.ToString())).ToString(_configuration.Culture);
         }
@@ -326,7 +285,7 @@ namespace MiniExcelLibs.OpenXml
                 Byte = bytes,
                 RowIndex = rowIndex,
                 CellIndex = cellIndex,
-                SheetId = currentSheetIndex
+                SheetId = _currentSheetIndex
             };
 
             if (format != ImageFormat.unknown)
@@ -349,18 +308,19 @@ namespace MiniExcelLibs.OpenXml
         private Tuple<string, string, string> GetDateTimeValue(DateTime value, ExcelColumnInfo columnInfo)
         {
             string cellValue = null;
-            if (_configuration.Culture != CultureInfo.InvariantCulture)
+            if (!_configuration.Culture.Equals(CultureInfo.InvariantCulture))
             {
-                cellValue = (value).ToString(_configuration.Culture);
+                cellValue = value.ToString(_configuration.Culture);
                 return Tuple.Create("2", "str", cellValue);
             }
 
             var oaDate = CorrectDateTimeValue(value);
             cellValue = oaDate.ToString(CultureInfo.InvariantCulture);
-            if (columnInfo == null || columnInfo.ExcelFormat == null)
-                return Tuple.Create<string, string, string>("3", null, cellValue);
-            else
+            
+            if (columnInfo?.ExcelFormat != null)
                 return Tuple.Create(columnInfo.ExcelFormatId.ToString(), (string)null, cellValue);
+            
+            return Tuple.Create("3", (string)null, cellValue);
         }
 
         private static double CorrectDateTimeValue(DateTime value)
@@ -379,7 +339,7 @@ namespace MiniExcelLibs.OpenXml
             return oaDate;
         }
 
-        private string GetDimensionRef(int maxRowIndex, int maxColumnIndex)
+        private static string GetDimensionRef(int maxRowIndex, int maxColumnIndex)
         {
             string dimensionRef;
             if (maxRowIndex == 0 && maxColumnIndex == 0)
@@ -456,11 +416,7 @@ namespace MiniExcelLibs.OpenXml
 
         private string GetCellXfId(string styleIndex)
         {
-            if (cellXfIdMap.TryGetValue(styleIndex, out var cellXfId))
-            {
-                return cellXfId.ToString();
-            }
-            return styleIndex.ToString();
+            return _cellXfIdMap.TryGetValue(styleIndex, out var cellXfId) ? cellXfId : styleIndex;
         }
     }
 }

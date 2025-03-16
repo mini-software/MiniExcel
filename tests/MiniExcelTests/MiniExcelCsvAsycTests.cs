@@ -32,16 +32,34 @@ namespace MiniExcelLibs.Tests
         public async Task SeperatorTest()
         {
             var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.csv");
-            var values = new List<Dictionary<string, object>>()
+            var values = new List<Dictionary<string, object>>
+            {
+                new Dictionary<string, object>
                 {
-                    new Dictionary<string,object>{{ "a", @"""<>+-*//}{\\n" }, { "b", 1234567890 },{ "c", true },{ "d", new DateTime(2021, 1, 1) } },
-                    new Dictionary<string,object>{{ "a", @"<test>Hello World</test>" }, { "b", -1234567890 },{ "c", false },{ "d", new DateTime(2021, 1, 2) } },
-                };
-            await MiniExcel.SaveAsAsync(path, values, configuration: new Csv.CsvConfiguration() { Seperator = ';' });
-            var expected = @"a;b;c;d
-""""""<>+-*//}{\\n"";1234567890;True;""2021-01-01 00:00:00""
-""<test>Hello World</test>"";-1234567890;False;""2021-01-02 00:00:00""
-";
+                    { "a", @"""<>+-*//}{\\n" }, 
+                    { "b", 1234567890 }, 
+                    { "c", true },
+                    { "d", new DateTime(2021, 1, 1) }
+                },
+                new Dictionary<string, object>
+                {
+                    { "a", "<test>Hello World</test>" }, 
+                    { "b", -1234567890 }, 
+                    { "c", false },
+                    { "d", new DateTime(2021, 1, 2) }
+                }
+            };
+            
+            var rowsWritten = await MiniExcel.SaveAsAsync(path, values, configuration: new Csv.CsvConfiguration { Seperator = ';' });
+            Assert.Equal(2, rowsWritten[0]);
+            
+            const string expected =
+                """"
+                a;b;c;d
+                """<>+-*//}{\\n";1234567890;True;"2021-01-01 00:00:00"
+                "<test>Hello World</test>";-1234567890;False;"2021-01-02 00:00:00"
+
+                """";
             Assert.Equal(expected, File.ReadAllText(path));
         }
 
@@ -65,26 +83,36 @@ namespace MiniExcelLibs.Tests
 
             {
                 var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.csv");
-                var values = new List<Dictionary<string, object>>()
+                var values = new List<Dictionary<string, object>>
                 {
-                    new Dictionary<string,object>{{ "a", @"""<>+-*//}{\\n" }, { "b", 1234567890 },{ "c", true },{ "d", new DateTime(2021, 1, 1) } },
-                    new Dictionary<string,object>{{ "a", @"<test>Hello World</test>" }, { "b", -1234567890 },{ "c", false },{ "d", new DateTime(2021, 1, 2) } },
+                    new Dictionary<string, object>
+                    {
+                        { "a", @"""<>+-*//}{\\n" }, { "b", 1234567890 }, { "c", true },
+                        { "d", new DateTime(2021, 1, 1) }
+                    },
+                    
+                    new Dictionary<string, object>
+                    {
+                        { "a", "<test>Hello World</test>" }, { "b", -1234567890 }, { "c", false },
+                        { "d", new DateTime(2021, 1, 2) }
+                    },
                 };
-                await MiniExcel.SaveAsAsync(path, values);
+                var rowsWritten = await MiniExcel.SaveAsAsync(path, values);
+                Assert.Equal(2, rowsWritten[0]);
 
                 using (var reader = new StreamReader(path))
                 using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
                 {
                     var records = csv.GetRecords<dynamic>().ToList();
                     Assert.Equal(@"""<>+-*//}{\\n", records[0].a);
-                    Assert.Equal(@"1234567890", records[0].b);
-                    Assert.Equal(@"True", records[0].c);
-                    Assert.Equal(@"2021-01-01 00:00:00", records[0].d);
+                    Assert.Equal("1234567890", records[0].b);
+                    Assert.Equal("True", records[0].c);
+                    Assert.Equal("2021-01-01 00:00:00", records[0].d);
 
-                    Assert.Equal(@"<test>Hello World</test>", records[1].a);
-                    Assert.Equal(@"-1234567890", records[1].b);
-                    Assert.Equal(@"False", records[1].c);
-                    Assert.Equal(@"2021-01-02 00:00:00", records[1].d);
+                    Assert.Equal("<test>Hello World</test>", records[1].a);
+                    Assert.Equal("-1234567890", records[1].b);
+                    Assert.Equal("False", records[1].c);
+                    Assert.Equal("2021-01-02 00:00:00", records[1].d);
                 }
 
                 File.Delete(path);
@@ -94,10 +122,23 @@ namespace MiniExcelLibs.Tests
                 var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.csv");
                 var values = new List<Dictionary<int, object>>()
                 {
-                    new Dictionary<int,object>{{ 1, @"""<>+-*//}{\\n" }, { 2, 1234567890 },{ 3, true },{ 4, new DateTime(2021, 1, 1) } },
-                    new Dictionary<int,object>{{ 1, @"<test>Hello World</test>" }, { 2, -1234567890 },{ 3, false },{4, new DateTime(2021, 1, 2) } },
+                    new Dictionary<int, object>
+                    {
+                        { 1, @"""<>+-*//}{\\n" }, 
+                        { 2, 1234567890 }, 
+                        { 3, true }, 
+                        { 4, new DateTime(2021, 1, 1) }
+                    },
+                    new Dictionary<int, object>
+                    {
+                        { 1, "<test>Hello World</test>" }, 
+                        { 2, -1234567890 }, 
+                        { 3, false },
+                        { 4, new DateTime(2021, 1, 2) }
+                    },
                 };
-                await MiniExcel.SaveAsAsync(path, values);
+                var rowsWritten = await MiniExcel.SaveAsAsync(path, values);
+                Assert.Equal(2, rowsWritten[0]);
 
                 using (var reader = new StreamReader(path))
                 using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
@@ -106,16 +147,16 @@ namespace MiniExcelLibs.Tests
                     {
                         var row = records[0] as IDictionary<string, object>;
                         Assert.Equal(@"""<>+-*//}{\\n", row["1"]);
-                        Assert.Equal(@"1234567890", row["2"]);
-                        Assert.Equal(@"True", row["3"]);
-                        Assert.Equal(@"2021-01-01 00:00:00", row["4"]);
+                        Assert.Equal("1234567890", row["2"]);
+                        Assert.Equal("True", row["3"]);
+                        Assert.Equal("2021-01-01 00:00:00", row["4"]);
                     }
                     {
                         var row = records[1] as IDictionary<string, object>;
-                        Assert.Equal(@"<test>Hello World</test>", row["1"]);
-                        Assert.Equal(@"-1234567890", row["2"]);
-                        Assert.Equal(@"False", row["3"]);
-                        Assert.Equal(@"2021-01-02 00:00:00", row["4"]);
+                        Assert.Equal("<test>Hello World</test>", row["1"]);
+                        Assert.Equal("-1234567890", row["2"]);
+                        Assert.Equal("False", row["3"]);
+                        Assert.Equal("2021-01-02 00:00:00", row["4"]);
                     }
                 }
 
@@ -145,29 +186,29 @@ namespace MiniExcelLibs.Tests
                     table.Columns.Add("c", typeof(bool));
                     table.Columns.Add("d", typeof(DateTime));
                     table.Rows.Add(@"""<>+-*//}{\\n", 1234567890, true, new DateTime(2021, 1, 1));
-                    table.Rows.Add(@"<test>Hello World</test>", -1234567890, false, new DateTime(2021, 1, 2));
+                    table.Rows.Add("<test>Hello World</test>", -1234567890, false, new DateTime(2021, 1, 2));
                 }
 
-                await MiniExcel.SaveAsAsync(path, table);
-
+                var rowsWritten = await MiniExcel.SaveAsAsync(path, table);
+                Assert.Equal(2, rowsWritten[0]);
+                
                 using (var reader = new StreamReader(path))
                 using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
                 {
                     var records = csv.GetRecords<dynamic>().ToList();
                     Assert.Equal(@"""<>+-*//}{\\n", records[0].a);
-                    Assert.Equal(@"1234567890", records[0].b);
-                    Assert.Equal(@"True", records[0].c);
-                    Assert.Equal(@"2021-01-01 00:00:00", records[0].d);
+                    Assert.Equal("1234567890", records[0].b);
+                    Assert.Equal("True", records[0].c);
+                    Assert.Equal("2021-01-01 00:00:00", records[0].d);
 
-                    Assert.Equal(@"<test>Hello World</test>", records[1].a);
-                    Assert.Equal(@"-1234567890", records[1].b);
-                    Assert.Equal(@"False", records[1].c);
-                    Assert.Equal(@"2021-01-02 00:00:00", records[1].d);
+                    Assert.Equal("<test>Hello World</test>", records[1].a);
+                    Assert.Equal("-1234567890", records[1].b);
+                    Assert.Equal("False", records[1].c);
+                    Assert.Equal("2021-01-02 00:00:00", records[1].d);
                 }
 
                 File.Delete(path);
             }
-
         }
 
 
@@ -332,15 +373,15 @@ namespace MiniExcelLibs.Tests
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
 
 
-            await MiniExcel.SaveAsAsync(path, GetValues());
-
-            var results = MiniExcel.Query<Test>(path);
-
-            Assert.True(results.Count() == 2);
-            Assert.True(results.First().c1 == "A1");
-            Assert.True(results.First().c2 == "B1");
-            Assert.True(results.Last().c1 == "A2");
-            Assert.True(results.Last().c2 == "B2");
+            var rowsWritten = await MiniExcel.SaveAsAsync(path, GetValues());
+            Assert.Equal(2, rowsWritten[0]);
+    
+            var results = MiniExcel.Query<Test>(path).ToList();
+            Assert.Equal(2, results.Count);
+            Assert.Equal("A1", results[0].c1);
+            Assert.Equal("B1", results[0].c2);
+            Assert.Equal("A2", results[1].c1);
+            Assert.Equal("B2", results[1].c2);
 
             File.Delete(path);
         }

@@ -3886,6 +3886,17 @@ Leave";
             }
         }
 
+        [Fact]
+        public void Issue_686()
+        {
+            var path = PathHelper.GetFile("xlsx/TestIssue686.xlsx");
+            Assert.Throws<InvalidDataException>(() =>
+                MiniExcel.QueryRange(path, useHeaderRow: false, startCell: "ZZFF10", endCell:"ZZFF11").First());
+            
+            Assert.Throws<InvalidOperationException>(() =>
+                MiniExcel.QueryRange(path, useHeaderRow: false, startCell: "ZZFF@@10", endCell:"ZZFF@@11").First());
+        }
+        
         internal class Issue697
         {
             public int First { get; set; }

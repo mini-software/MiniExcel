@@ -949,14 +949,12 @@ namespace MiniExcelLibs.OpenXml
                         var rs = refAttr.Split(':');
                         // issue : https://github.com/shps951023/MiniExcel/issues/102
 
-                        if (ReferenceHelper.ParseReference(rs.Length == 2 ? rs[1] : rs[0], out int cIndex, out int rIndex) == false ? true : true)
-                        {
-                            maxColumnIndex = cIndex - 1;
-                            maxRowIndex = rIndex - 1;
-                            break;
-                        }
-                        else
+                        if (!ReferenceHelper.ParseReference(rs.Length == 2 ? rs[1] : rs[0], out int cIndex, out int rIndex))
                             throw new InvalidOperationException("Invaild sheet dimension start data");
+                        
+                        maxColumnIndex = cIndex - 1;
+                        maxRowIndex = rIndex - 1;
+                        break;
                     }
                 }
             }

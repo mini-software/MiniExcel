@@ -3886,6 +3886,24 @@ Leave";
             }
         }
 
+        internal class Issue697
+        {
+            public int First { get; set; }
+            public int Second { get; set; }
+            public int Third { get; set; }
+            public int Fourth { get; set; }
+        }
+        
+        [Fact]
+        public void Test_Issue_697_EmptyRowsStronglyTypedQuery()
+        {
+            var path = "../../../../../samples/xlsx/TestIssue697.xlsx";
+            var rowsIgnoreEmpty = MiniExcel.Query<Issue697>(path, configuration: new OpenXmlConfiguration{IgnoreEmptyRows = true}).ToList();
+            var rowsCountEmpty = MiniExcel.Query<Issue697>(path).ToList();
+            Assert.Equal(4, rowsIgnoreEmpty.Count);
+            Assert.Equal(5, rowsCountEmpty.Count);
+        }
+        
         [Fact]
         public void Test_Issue_693_SaveSheetWithLongName()
         {

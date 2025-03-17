@@ -47,26 +47,30 @@ namespace MiniExcelLibs.OpenXml
             startRowIndex--;
 
             // if sheets count > 1 need to read xl/_rels/workbook.xml.rels
-            var sheets = _archive.entries.Where(w => w.FullName.StartsWith("xl/worksheets/sheet", StringComparison.OrdinalIgnoreCase)
-                || w.FullName.StartsWith("/xl/worksheets/sheet", StringComparison.OrdinalIgnoreCase)
-            ).ToArray();
+            var sheets = _archive.entries
+                .Where(w => w.FullName.StartsWith("xl/worksheets/sheet", StringComparison.OrdinalIgnoreCase) || 
+                            w.FullName.StartsWith("/xl/worksheets/sheet", StringComparison.OrdinalIgnoreCase)
+                ).ToArray();
             ZipArchiveEntry sheetEntry = null;
             if (sheetName != null)
             {
                 SetWorkbookRels(_archive.entries);
-                var sheetRecord = _sheetRecords.SingleOrDefault(_ => _.Name == sheetName);
+                var sheetRecord = _sheetRecords.SingleOrDefault(s => s.Name == sheetName);
                 if (sheetRecord == null && _config.DynamicSheets != null)
                 {
                     var sheetConfig = _config.DynamicSheets.FirstOrDefault(ds => ds.Key == sheetName);
                     if (sheetConfig != null)
                     {
-                        sheetRecord = _sheetRecords.SingleOrDefault(_ => _.Name == sheetConfig.Name);
+                        sheetRecord = _sheetRecords.SingleOrDefault(s => s.Name == sheetConfig.Name);
                     }
                 }
                 if (sheetRecord == null)
                     throw new InvalidOperationException("Please check sheetName/Index is correct");
 
-                sheetEntry = sheets.Single(w => w.FullName == $"xl/{sheetRecord.Path}" || w.FullName == $"/xl/{sheetRecord.Path}" || w.FullName == sheetRecord.Path || sheetRecord.Path == $"/{w.FullName}");
+                sheetEntry = sheets.Single(w => w.FullName == $"xl/{sheetRecord.Path}"
+                                                || w.FullName == $"/xl/{sheetRecord.Path}"
+                                                || w.FullName == sheetRecord.Path
+                                                || $"/{w.FullName}" == sheetRecord.Path);
             }
             else if (sheets.Length > 1)
             {
@@ -78,7 +82,9 @@ namespace MiniExcelLibs.OpenXml
 
                 // fixed by argo@live.ca
                 // s.Path = "/xl/sheets/sheet1.xml" s.FullName = "/xl/sheets/sheet1.xml"
-                sheetEntry = sheets.Single(w => w.FullName == $"xl/{s.Path}" || w.FullName == $"/xl/{s.Path}" || w.FullName.TrimStart('/') == s.Path.TrimStart('/'));
+                sheetEntry = sheets.Single(w => w.FullName == $"xl/{s.Path}"
+                                                || w.FullName == $"/xl/{s.Path}"
+                                                || w.FullName.TrimStart('/') == s.Path.TrimStart('/'));
 //#endif
             }
             else
@@ -96,42 +102,42 @@ namespace MiniExcelLibs.OpenXml
                         yield break;
                     while (reader.Read())
                     {
-                        if (XmlReaderHelper.IsStartElement(reader, "mergeCells", _ns))
+                        if (!XmlReaderHelper.IsStartElement(reader, "mergeCells", _ns))
+                            continue;
+                        if (!XmlReaderHelper.ReadFirstContent(reader))
+                            yield break;
+                            
+                        while (!reader.EOF)
                         {
-                            if (!XmlReaderHelper.ReadFirstContent(reader))
-                                yield break;
-                            while (!reader.EOF)
+                            if (XmlReaderHelper.IsStartElement(reader, "mergeCell", _ns))
                             {
-                                if (XmlReaderHelper.IsStartElement(reader, "mergeCell", _ns))
+                                var refAttr = reader.GetAttribute("ref");
+                                var refs = refAttr.Split(':');
+                                if (refs.Length == 1)
+                                    continue;
+
+                                ReferenceHelper.ParseReference(refs[0], out var x1, out var y1);
+                                ReferenceHelper.ParseReference(refs[1], out var x2, out var y2);
+
+                                _mergeCells.MergesValues.Add(refs[0], null);
+
+                                // foreach range
+                                var isFirst = true;
+                                for (int x = x1; x <= x2; x++)
                                 {
-                                    var @ref = reader.GetAttribute("ref");
-                                    var refs = @ref.Split(':');
-                                    if (refs.Length == 1)
-                                        continue;
-
-                                    ReferenceHelper.ParseReference(refs[0], out var x1, out var y1);
-                                    ReferenceHelper.ParseReference(refs[1], out var x2, out var y2);
-
-                                    _mergeCells.MergesValues.Add(refs[0], null);
-
-                                    // foreach range
-                                    var isFirst = true;
-                                    for (int x = x1; x <= x2; x++)
+                                    for (int y = y1; y <= y2; y++)
                                     {
-                                        for (int y = y1; y <= y2; y++)
-                                        {
-                                            if (!isFirst)
-                                                _mergeCells.MergesMap.Add(ReferenceHelper.ConvertXyToCell(x, y), refs[0]);
-                                            isFirst = false;
-                                        }
+                                        if (!isFirst)
+                                            _mergeCells.MergesMap.Add(ReferenceHelper.ConvertXyToCell(x, y), refs[0]);
+                                        isFirst = false;
                                     }
+                                }
 
-                                    XmlReaderHelper.SkipContent(reader);
-                                }
-                                else if (!XmlReaderHelper.SkipContent(reader))
-                                {
-                                    break;
-                                }
+                                XmlReaderHelper.SkipContent(reader);
+                            }
+                            else if (!XmlReaderHelper.SkipContent(reader))
+                            {
+                                break;
                             }
                         }
                     }
@@ -173,19 +179,19 @@ namespace MiniExcelLibs.OpenXml
                     //this method logic depends on dimension to get maxcolumnIndex, if without dimension then it need to foreach all rows first time to get maxColumn and maxRowColumn
                     else if (XmlReaderHelper.IsStartElement(reader, "dimension", _ns))
                     {
-                        var @ref = reader.GetAttribute("ref");
-                        if (string.IsNullOrEmpty(@ref))
+                        var refAttr = reader.GetAttribute("ref");
+                        if (string.IsNullOrEmpty(refAttr))
                             throw new InvalidOperationException("Without sheet dimension data");
-                        var rs = @ref.Split(':');
+                        
+                        var rs = refAttr.Split(':');
+
                         // issue : https://github.com/shps951023/MiniExcel/issues/102
-                        if (ReferenceHelper.ParseReference(rs.Length == 2 ? rs[1] : rs[0], out int cIndex, out int rIndex))
-                        {
-                            maxColumnIndex = cIndex - 1;
-                            maxRowIndex = rIndex - 1;
-                            break;
-                        }
-                        else
+                        if (!ReferenceHelper.ParseReference(rs.Length == 2 ? rs[1] : rs[0], out int cIndex, out int rIndex))
                             throw new InvalidOperationException("Invaild sheet dimension start data");
+                        
+                        maxColumnIndex = cIndex - 1;
+                        maxRowIndex = rIndex - 1;
+                        break;
                     }
                 }
             }
@@ -291,10 +297,10 @@ namespace MiniExcelLibs.OpenXml
                                 }
 
                                 // fill empty rows
-                                var expectedRowIndex = isFirstRow ? startRowIndex : nextRowIndex;
-                                if (!(expectedRowIndex < startRowIndex))
+                                if (!_config.IgnoreEmptyRows)
                                 {
-                                    if (expectedRowIndex < rowIndex)
+                                    var expectedRowIndex = isFirstRow ? startRowIndex : nextRowIndex;
+                                    if (startRowIndex <= expectedRowIndex && expectedRowIndex < rowIndex)
                                     {
                                         for (int i = expectedRowIndex; i < rowIndex; i++)
                                         {
@@ -302,69 +308,68 @@ namespace MiniExcelLibs.OpenXml
                                         }
                                     }
                                 }
-
-                                // Set Cells
+    
+                                #region Set Cells
+                                var cell = GetCell(useHeaderRow, maxColumnIndex, headRows, startColumnIndex);
+                                var columnIndex = withoutCR ? -1 : 0;
+                                
+                                while (!reader.EOF)
                                 {
-                                    var cell = GetCell(useHeaderRow, maxColumnIndex, headRows, startColumnIndex);
-                                    var columnIndex = withoutCR ? -1 : 0;
-                                    while (!reader.EOF)
+                                    if (XmlReaderHelper.IsStartElement(reader, "c", _ns))
                                     {
-                                        if (XmlReaderHelper.IsStartElement(reader, "c", _ns))
+                                        var aS = reader.GetAttribute("s");
+                                        var aR = reader.GetAttribute("r");
+                                        var aT = reader.GetAttribute("t");
+                                        var cellValue = ReadCellAndSetColumnIndex(reader, ref columnIndex, withoutCR, startColumnIndex, aR, aT);
+
+                                        if (_config.FillMergedCells)
                                         {
-                                            var aS = reader.GetAttribute("s");
-                                            var aR = reader.GetAttribute("r");
-                                            var aT = reader.GetAttribute("t");
-                                            var cellValue = ReadCellAndSetColumnIndex(reader, ref columnIndex, withoutCR, startColumnIndex, aR, aT);
-
-                                            if (_config.FillMergedCells)
+                                            if (_mergeCells.MergesValues.ContainsKey(aR))
                                             {
-                                                if (_mergeCells.MergesValues.ContainsKey(aR))
-                                                {
-                                                    _mergeCells.MergesValues[aR] = cellValue;
-                                                }
-                                                else if (_mergeCells.MergesMap.TryGetValue(aR, out var mergeKey))
-                                                {
-                                                    object mergeValue = null;
-                                                    if (_mergeCells.MergesValues.TryGetValue(mergeKey, out var value))
-                                                        mergeValue = value;
-                                                    cellValue = mergeValue;
-                                                }
+                                                _mergeCells.MergesValues[aR] = cellValue;
                                             }
-
-                                            if (columnIndex < startColumnIndex)
-                                                continue;
-
-                                            if (!string.IsNullOrEmpty(aS)) // if c with s meaning is custom style need to check type by xl/style.xml
+                                            else if (_mergeCells.MergesMap.TryGetValue(aR, out var mergeKey))
                                             {
-                                                int xfIndex = -1;
-                                                if (int.TryParse(aS, NumberStyles.Any, CultureInfo.InvariantCulture, out var styleIndex))
-                                                    xfIndex = styleIndex;
-
-                                                // only when have s attribute then load styles xml data
-                                                if (_style == null)
-                                                    _style = new ExcelOpenXmlStyles(_archive);
-
-                                                cellValue = _style.ConvertValueByStyleFormat(xfIndex, cellValue);
-                                                SetCellsValueAndHeaders(cellValue, useHeaderRow, ref headRows, ref isFirstRow, ref cell, columnIndex);
-                                            }
-                                            else
-                                            {
-                                                SetCellsValueAndHeaders(cellValue, useHeaderRow, ref headRows, ref isFirstRow, ref cell, columnIndex);
+                                                object mergeValue = null;
+                                                if (_mergeCells.MergesValues.TryGetValue(mergeKey, out var value))
+                                                    mergeValue = value;
+                                                cellValue = mergeValue;
                                             }
                                         }
-                                        else if (!XmlReaderHelper.SkipContent(reader))
-                                            break;
-                                    }
 
-                                    if (isFirstRow)
-                                    {
-                                        isFirstRow = false; // for startcell logic
-                                        if (useHeaderRow)
+                                        if (columnIndex < startColumnIndex)
                                             continue;
-                                    }
 
-                                    yield return cell;
+                                        // if c with s meaning is custom style need to check type by xl/style.xml
+                                        if (!string.IsNullOrEmpty(aS))
+                                        {
+                                            int xfIndex = -1;
+                                            if (int.TryParse(aS, NumberStyles.Any, CultureInfo.InvariantCulture, out var styleIndex))
+                                                xfIndex = styleIndex;
+
+                                            // only when have s attribute then load styles xml data
+                                            if (_style == null)
+                                                _style = new ExcelOpenXmlStyles(_archive);
+
+                                            cellValue = _style.ConvertValueByStyleFormat(xfIndex, cellValue);
+                                        }
+                                        SetCellsValueAndHeaders(cellValue, useHeaderRow, ref headRows, ref isFirstRow, ref cell, columnIndex);
+                                    }
+                                    else if (!XmlReaderHelper.SkipContent(reader))
+                                    {
+                                        break;
+                                    }
                                 }
+                                #endregion
+
+                                if (isFirstRow)
+                                {
+                                    isFirstRow = false; // for startcell logic
+                                    if (useHeaderRow)
+                                        continue;
+                                }
+
+                                yield return cell;
                             }
                             else if (!XmlReaderHelper.SkipContent(reader))
                             {
@@ -380,79 +385,59 @@ namespace MiniExcelLibs.OpenXml
             }
         }
 
-        private IDictionary<string, object> GetCell(bool useHeaderRow, int maxColumnIndex, Dictionary<int, string> headRows, int startColumnIndex)
+        private static IDictionary<string, object> GetCell(bool useHeaderRow, int maxColumnIndex, Dictionary<int, string> headRows, int startColumnIndex)
         {
             return useHeaderRow ? CustomPropertyHelper.GetEmptyExpandoObject(headRows) : CustomPropertyHelper.GetEmptyExpandoObject(maxColumnIndex, startColumnIndex);
         }
 
-        private void SetCellsValueAndHeaders(object cellValue, bool useHeaderRow, ref Dictionary<int, string> headRows, ref bool isFirstRow, ref IDictionary<string, object> cell, int columnIndex)
+        private static void SetCellsValueAndHeaders(object cellValue, bool useHeaderRow, ref Dictionary<int, string> headRows, ref bool isFirstRow, ref IDictionary<string, object> cell, int columnIndex)
         {
-            if (useHeaderRow)
-            {
-                if (isFirstRow) // for startcell logic
-                {
-                    var cellValueString = cellValue?.ToString();
-                    if (!string.IsNullOrWhiteSpace(cellValueString))
-                        headRows.Add(columnIndex, cellValueString);
-                }
-                else
-                {
-                    if (headRows.TryGetValue(columnIndex, out var key))
-                    {
-                        cell[key] = cellValue;
-                    }
-                }
-            }
-            else
+            if (!useHeaderRow)
             {
                 //if not using First Head then using A,B,C as index
                 cell[ColumnHelper.GetAlphabetColumnName(columnIndex)] = cellValue;
+                return;
+            }
+
+            if (isFirstRow) // for startcell logic
+            {
+                var cellValueString = cellValue?.ToString();
+                if (!string.IsNullOrWhiteSpace(cellValueString))
+                    headRows.Add(columnIndex, cellValueString);
+            }
+            else if (headRows.TryGetValue(columnIndex, out var key))
+            {
+                cell[key] = cellValue;
             }
         }
 
         public IEnumerable<T> Query<T>(string sheetName, string startCell) where T : class, new()
         {
-            if (sheetName == null)
-            {
-                var sheetInfo = CustomPropertyHelper.GetExcellSheetInfo(typeof(T), this._config);
-                if (sheetInfo != null)
-                {
-                    sheetName = sheetInfo.ExcelSheetName;
-                }
-            }
-            return ExcelOpenXmlSheetReader.QueryImpl<T>(Query(false, sheetName, startCell), startCell, this._config);
+            if (sheetName == null) 
+                sheetName = CustomPropertyHelper.GetExcellSheetInfo(typeof(T), _config)?.ExcelSheetName;
+            
+            return QueryImpl<T>(Query(false, sheetName, startCell), startCell, _config);
         }
 
         public static IEnumerable<T> QueryImpl<T>(IEnumerable<IDictionary<string, object>> values, string startCell, Configuration configuration) where T : class, new()
         {
             var type = typeof(T);
 
-            List<ExcelColumnInfo> props = null;
             //TODO:need to optimize
-
-            string[] headers = null;
-
+            List<ExcelColumnInfo> props = null;
             Dictionary<string, int> headersDic = null;
             string[] keys = null;
             var first = true;
             var rowIndex = 0;
+            
             foreach (var item in values)
             {
                 if (first)
                 {
-                    keys = item.Keys.ToArray();//.Select((s, i) => new { s,i}).ToDictionary(_=>_.s,_=>_.i);
-                    headers = item?.Values?.Select(s => s?.ToString())?.ToArray(); //TODO:remove
-                    headersDic = headers.Select((o, i) => new { o = (o == null ? "" : o), i })
-                        .OrderBy(x => x.i)
-                        .GroupBy(x => x.o)
-                        .Select(group => new { Group = group, Count = group.Count() })
-                        .SelectMany(groupWithCount =>
-                           groupWithCount.Group.Select(b => b)
-                           .Zip(
-                               Enumerable.Range(1, groupWithCount.Count),
-                               (j, i) => new { key = (i == 1 ? j.o : $"{j.o}_____{i}"), idx = j.i, RowNumber = i }
-                           )
-                        ).ToDictionary(_ => _.key, _ => _.idx);
+                    keys = item.Keys.ToArray();
+                    var trimColumnNames = (configuration as OpenXmlConfiguration)?.TrimColumnNames ?? false;
+                    headersDic = CustomPropertyHelper.GetHeaders(item, trimColumnNames);
+                    
                     //TODO: alert don't duplicate column name
                     props = CustomPropertyHelper.GetExcelCustomPropertyInfos(type, keys, configuration);
                     first = false;
@@ -465,17 +450,17 @@ namespace MiniExcelLibs.OpenXml
                     {
                         foreach (var alias in pInfo.ExcelColumnAliases)
                         {
-                            if (headersDic.TryGetValue(alias, out var columnId))
-                            {
-                                object newV = null;
-                                var columnName = keys[columnId];
-                                item.TryGetValue(columnName, out var itemValue);
+                            if (!headersDic.TryGetValue(alias, out var columnId)) 
+                                continue;
+                            
+                            object newV = null;
+                            var columnName = keys[columnId];
+                            item.TryGetValue(columnName, out var itemValue);
 
-                                if (itemValue == null)
-                                    continue;
+                            if (itemValue == null)
+                                continue;
 
-                                newV = TypeHelper.TypeMapping(v, pInfo, newV, itemValue, rowIndex, startCell, configuration);
-                            }
+                            newV = TypeHelper.TypeMapping(v, pInfo, newV, itemValue, rowIndex, startCell, configuration);
                         }
                     }
 
@@ -503,6 +488,7 @@ namespace MiniExcelLibs.OpenXml
                 yield return v;
             }
         }
+        
         private void SetSharedStrings()
         {
             if (_sharedStrings != null)
@@ -519,10 +505,9 @@ namespace MiniExcelLibs.OpenXml
                     foreach (var sharedString in XmlReaderHelper.GetSharedStrings(stream, _ns))
                         _sharedStrings[idx++] = sharedString;
                 }
-                else
+                else if (_sharedStrings == null)
                 {
-                    if (_sharedStrings == null)
-                        _sharedStrings = XmlReaderHelper.GetSharedStrings(stream, _ns).ToDictionary((x) => idx++, x => x);
+                    _sharedStrings = XmlReaderHelper.GetSharedStrings(stream, _ns).ToDictionary((x) => idx++, x => x);
                 }
             }
         }
@@ -776,9 +761,9 @@ namespace MiniExcelLibs.OpenXml
             }
         }
 
-        public async Task<IEnumerable<IDictionary<string, object>>> QueryAsync(bool UseHeaderRow, string sheetName, string startCell, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<IEnumerable<IDictionary<string, object>>> QueryAsync(bool useHeaderRow, string sheetName, string startCell, CancellationToken cancellationToken = default(CancellationToken))
         {
-            return await Task.Run(() => Query(UseHeaderRow, sheetName, startCell), cancellationToken).ConfigureAwait(false);
+            return await Task.Run(() => Query(useHeaderRow, sheetName, startCell), cancellationToken).ConfigureAwait(false);
         }
 
         public async Task<IEnumerable<T>> QueryAsync<T>(string sheetName, string startCell, CancellationToken cancellationToken = default(CancellationToken)) where T : class, new()
@@ -818,7 +803,7 @@ namespace MiniExcelLibs.OpenXml
 
         public IEnumerable<IDictionary<string, object>> QueryRange(bool useHeaderRow, string sheetName, string startCell, string endCell)
         {
-            if (!ReferenceHelper.ParseReference(startCell, out var startColumnIndex, out var startRowIndex) == false ? true : true)
+            if (ReferenceHelper.ParseReference(startCell, out var startColumnIndex, out var startRowIndex))
             {
                 //throw new InvalidDataException($"startCell {startCell} is Invalid");
                 startColumnIndex--;
@@ -834,7 +819,7 @@ namespace MiniExcelLibs.OpenXml
             }
 
             //2022-09-24 获取结束单元格的，行，列
-            if (!ReferenceHelper.ParseReference(endCell, out var endColumnIndex, out var endRowIndex) == false ? true : true)
+            if (ReferenceHelper.ParseReference(endCell, out var endColumnIndex, out var endRowIndex))
             {
                 //throw new InvalidDataException($"endCell {endCell} is Invalid");
                 endColumnIndex--;
@@ -849,10 +834,10 @@ namespace MiniExcelLibs.OpenXml
             if (sheetName != null)
             {
                 SetWorkbookRels(_archive.entries);
-                var s = _sheetRecords.SingleOrDefault(_ => _.Name == sheetName);
-                if (s == null)
+                var sheet = _sheetRecords.SingleOrDefault(s => s.Name == sheetName);
+                if (sheet == null)
                     throw new InvalidOperationException("Please check sheetName/Index is correct");
-                sheetEntry = sheets.Single(w => w.FullName == $"xl/{s.Path}" || w.FullName == $"/xl/{s.Path}" || w.FullName == s.Path || s.Path == $"/{w.FullName}");
+                sheetEntry = sheets.Single(w => w.FullName == $"xl/{sheet.Path}" || w.FullName == $"/xl/{sheet.Path}" || w.FullName == sheet.Path || sheet.Path == $"/{w.FullName}");
             }
             else if (sheets.Count > 1)
             {
@@ -883,8 +868,8 @@ namespace MiniExcelLibs.OpenXml
                             {
                                 if (XmlReaderHelper.IsStartElement(reader, "mergeCell", _ns))
                                 {
-                                    var @ref = reader.GetAttribute("ref");
-                                    var refs = @ref.Split(':');
+                                    var refAttr = reader.GetAttribute("ref");
+                                    var refs = refAttr.Split(':');
                                     if (refs.Length == 1)
                                         continue;
 
@@ -954,24 +939,22 @@ namespace MiniExcelLibs.OpenXml
                     {
                         //2022-09-24 Range
                         //var @ref = reader.GetAttribute("ref");
-                        var @ref = startCell + ":" + endCell;
+                        var refAttr = $"{startCell}:{endCell}";
                         if (endCell == "" || startCell == "")
                         {
-                            @ref = reader.GetAttribute("ref");
+                            refAttr = reader.GetAttribute("ref");
                         }
-                        if (string.IsNullOrEmpty(@ref))
+                        if (string.IsNullOrEmpty(refAttr))
                             throw new InvalidOperationException("Without sheet dimension data");
-                        var rs = @ref.Split(':');
+                        var rs = refAttr.Split(':');
                         // issue : https://github.com/shps951023/MiniExcel/issues/102
 
-                        if (ReferenceHelper.ParseReference(rs.Length == 2 ? rs[1] : rs[0], out int cIndex, out int rIndex) == false ? true : true)
-                        {
-                            maxColumnIndex = cIndex - 1;
-                            maxRowIndex = rIndex - 1;
-                            break;
-                        }
-                        else
+                        if (!ReferenceHelper.ParseReference(rs.Length == 2 ? rs[1] : rs[0], out int cIndex, out int rIndex))
                             throw new InvalidOperationException("Invaild sheet dimension start data");
+                        
+                        maxColumnIndex = cIndex - 1;
+                        maxRowIndex = rIndex - 1;
+                        break;
                     }
                 }
             }
@@ -1130,12 +1113,8 @@ namespace MiniExcelLibs.OpenXml
                                                     _style = new ExcelOpenXmlStyles(_archive);
 
                                                 cellValue = _style.ConvertValueByStyleFormat(xfIndex, cellValue);
-                                                SetCellsValueAndHeaders(cellValue, useHeaderRow, ref headRows, ref isFirstRow, ref cell, columnIndex);
                                             }
-                                            else
-                                            {
-                                                SetCellsValueAndHeaders(cellValue, useHeaderRow, ref headRows, ref isFirstRow, ref cell, columnIndex);
-                                            }
+                                            SetCellsValueAndHeaders(cellValue, useHeaderRow, ref headRows, ref isFirstRow, ref cell, columnIndex);
                                         }
                                         else if (!XmlReaderHelper.SkipContent(reader))
                                             break;
@@ -1167,7 +1146,7 @@ namespace MiniExcelLibs.OpenXml
 
         public IEnumerable<T> QueryRange<T>(string sheetName, string startCell, string endCell) where T : class, new()
         {
-            return ExcelOpenXmlSheetReader.QueryImplRange<T>(QueryRange(false, sheetName, startCell, endCell), startCell, endCell, this._config);
+            return QueryImplRange<T>(QueryRange(false, sheetName, startCell, endCell), startCell, endCell, this._config);
         }
 
         public static IEnumerable<T> QueryImplRange<T>(IEnumerable<IDictionary<string, object>> values, string startCell, string endCell, Configuration configuration) where T : class, new()
@@ -1177,29 +1156,19 @@ namespace MiniExcelLibs.OpenXml
             List<ExcelColumnInfo> props = null;
             //TODO:need to optimize
 
-            string[] headers = null;
-
             Dictionary<string, int> headersDic = null;
             string[] keys = null;
             var first = true;
             var rowIndex = 0;
+            
             foreach (var item in values)
             {
                 if (first)
                 {
                     keys = item.Keys.ToArray();//.Select((s, i) => new { s,i}).ToDictionary(_=>_.s,_=>_.i);
-                    headers = item?.Values?.Select(s => s?.ToString())?.ToArray(); //TODO:remove
-                    headersDic = headers.Select((o, i) => new { o = (o == null ? string.Empty : o), i })
-                        .OrderBy(x => x.i)
-                        .GroupBy(x => x.o)
-                        .Select(group => new { Group = group, Count = group.Count() })
-                        .SelectMany(groupWithCount =>
-                           groupWithCount.Group.Select(b => b)
-                           .Zip(
-                               Enumerable.Range(1, groupWithCount.Count),
-                               (j, i) => new { key = (i == 1 ? j.o : $"{j.o}_____{i}"), idx = j.i, RowNumber = i }
-                           )
-                        ).ToDictionary(_ => _.key, _ => _.idx);
+                    var trimColumnNames = (configuration as OpenXmlConfiguration)?.TrimColumnNames ?? false;
+                    headersDic = CustomPropertyHelper.GetHeaders(item, trimColumnNames);
+
                     //TODO: alert don't duplicate column name
                     props = CustomPropertyHelper.GetExcelCustomPropertyInfos(type, keys, configuration);
                     first = false;
@@ -1220,8 +1189,7 @@ namespace MiniExcelLibs.OpenXml
                                 if (itemValue == null)
                                     continue;
 
-                                newV = TypeHelper.TypeMapping(v, pInfo, newV, itemValue, rowIndex, startCell,
-                                    configuration);
+                                newV = TypeHelper.TypeMapping(v, pInfo, newV, itemValue, rowIndex, startCell, configuration);
                             }
                         }
                     }
@@ -1246,9 +1214,9 @@ namespace MiniExcelLibs.OpenXml
             }
         }
 
-        public async Task<IEnumerable<IDictionary<string, object>>> QueryAsyncRange(bool UseHeaderRow, string sheetName, string startCell, string endCell, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<IEnumerable<IDictionary<string, object>>> QueryAsyncRange(bool useHeaderRow, string sheetName, string startCell, string endCell, CancellationToken cancellationToken = default(CancellationToken))
         {
-            return await Task.Run(() => Query(UseHeaderRow, sheetName, startCell), cancellationToken).ConfigureAwait(false);
+            return await Task.Run(() => Query(useHeaderRow, sheetName, startCell), cancellationToken).ConfigureAwait(false);
         }
 
         public async Task<IEnumerable<T>> QueryAsyncRange<T>(string sheetName, string startCell, string endCell, CancellationToken cancellationToken = default(CancellationToken)) where T : class, new()

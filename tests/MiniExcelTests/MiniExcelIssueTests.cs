@@ -5,7 +5,6 @@ using MiniExcelLibs.Exceptions;
 using MiniExcelLibs.OpenXml;
 using MiniExcelLibs.Tests.Utils;
 using Newtonsoft.Json;
-using NPOI.SS.UserModel;
 using NPOI.XSSF.UserModel;
 using OfficeOpenXml;
 using System;
@@ -26,7 +25,7 @@ using static MiniExcelLibs.Tests.MiniExcelOpenXmlTests;
 
 namespace MiniExcelLibs.Tests
 {
-    public partial class MiniExcelIssueTests
+    public class MiniExcelIssueTests
     {
         private readonly ITestOutputHelper _output;
 
@@ -41,7 +40,8 @@ namespace MiniExcelLibs.Tests
         [Fact]
         public void TestIssue549()
         {
-            var data = new[] {
+            var data = new[] 
+            {
                 new{id=1,name="jack"},
                 new{id=2,name="mike"},
             };
@@ -51,8 +51,8 @@ namespace MiniExcelLibs.Tests
             {
                 using (FileStream stream = new FileStream(path, FileMode.Open, FileAccess.Read))
                 {
-                    XSSFWorkbook workbook = new XSSFWorkbook(stream);
-                    ISheet sheet = workbook.GetSheetAt(0);
+                    using var workbook = new XSSFWorkbook(stream);
+                    var sheet = workbook.GetSheetAt(0);
                     var a2 = sheet.GetRow(1).GetCell(0);
                     var b2 = sheet.GetRow(1).GetCell(1);
                     Assert.Equal((string)rows[0].id.ToString(), a2.NumericCellValue.ToString());
@@ -67,14 +67,14 @@ namespace MiniExcelLibs.Tests
             {
                 var path = PathHelper.GetTempFilePath();
                 var templatePath = PathHelper.GetFile("xlsx/TestIssue24020201.xlsx");
-                var data = new Dictionary<string, object>()
+                var data = new Dictionary<string, object>
                 {
                     ["title"] = "This's title",
-                    ["B"] = new List<Dictionary<string, object>>()
+                    ["B"] = new List<Dictionary<string, object>>
                     {
-                        new Dictionary<string, object>(){ { "specialMark", 1 } },
-                        new Dictionary<string, object>(){ { "specialMark", 2 } },
-                        new Dictionary<string, object>(){ { "specialMark", 3 } },
+                        new() { { "specialMark", 1 } },
+                        new() { { "specialMark", 2 } },
+                        new() { { "specialMark", 3 } },
                     }
                 };
                 MiniExcel.SaveAsByTemplate(path, templatePath, data);
@@ -88,9 +88,12 @@ namespace MiniExcelLibs.Tests
             var templatePath = PathHelper.GetFile("xlsx/TestIssue553.xlsx");
             var data = new
             {
-                B = new[] {
-                new{ ITM=1 },new{ ITM=2 }, new{ ITM=3 },
-            }
+                B = new[] 
+                {
+                    new{ ITM=1 },
+                    new{ ITM=2 }, 
+                    new{ ITM=3 }
+                }
             };
             MiniExcel.SaveAsByTemplate(path, templatePath, data);
         }
@@ -111,11 +114,12 @@ namespace MiniExcelLibs.Tests
         public void TestIssue289()
         {
             var path = PathHelper.GetTempFilePath();
-            var value = new[] {
-                new Issue289Dto { Name="0001", UserType=Issue289Type.V1 },
-                new Issue289Dto { Name="0002", UserType=Issue289Type.V2 },
-                new Issue289Dto { Name="0003", UserType=Issue289Type.V3 },
-            };
+            Issue289Dto[] value =
+            [
+                new() { Name="0001", UserType=Issue289Type.V1 },
+                new() { Name="0002", UserType=Issue289Type.V2 },
+                new() { Name="0003", UserType=Issue289Type.V3 }
+            ];
             MiniExcel.SaveAs(path, value);
 
             var rows = MiniExcel.Query<Issue289Dto>(path).ToList();
@@ -149,13 +153,14 @@ namespace MiniExcelLibs.Tests
         {
             var path = PathHelper.GetTempFilePath("csv");
             {
-                var value = new[] {
+                var value = new[] 
+                {
                       new { ID=1,Name ="Jack",InDate=new DateTime(2021,01,03)},
                       new { ID=2,Name ="Henry",InDate=new DateTime(2020,05,03)},
                 };
                 MiniExcel.SaveAs(path, value);
                 var content = File.ReadAllText(path);
-                Assert.Contains("""
+                Assert.Equal("""
                                 ID,Name,InDate
                                 1,Jack,"2021-01-03 00:00:00"
                                 2,Henry,"2020-05-03 00:00:00"
@@ -224,22 +229,20 @@ namespace MiniExcelLibs.Tests
         [Fact]
         public void TestIssue_DataReaderSupportDimension()
         {
-            {
-                DataTable table = new DataTable();
-                {
-                    table.Columns.Add("id", typeof(int));
-                    table.Columns.Add("name", typeof(string));
-                    table.Rows.Add(1, "Jack");
-                    table.Rows.Add(2, "Mike");
-                }
-                var path = Path.GetTempPath() + Guid.NewGuid() + ".xlsx";
-                DataTableReader reader = table.CreateDataReader();
-                var config = new OpenXmlConfiguration() { FastMode = true };
-                MiniExcel.SaveAs(path, reader, configuration: config);
-                var xml = Helpers.GetZipFileContent(path, "xl/worksheets/sheet1.xml");
-                Assert.Contains("<x:autoFilter ref=\"A1:B3\" />", xml);
-                Assert.Contains("<x:dimension ref=\"A1:B3\" />", xml);
-            }
+            using var table = new DataTable();
+
+            table.Columns.Add("id", typeof(int));
+            table.Columns.Add("name", typeof(string));
+            table.Rows.Add(1, "Jack");
+            table.Rows.Add(2, "Mike");
+            
+            var path = Path.GetTempPath() + Guid.NewGuid() + ".xlsx";
+            using var reader = table.CreateDataReader();
+            var config = new OpenXmlConfiguration { FastMode = true };
+            MiniExcel.SaveAs(path, reader, configuration: config);
+            var xml = Helpers.GetZipFileContent(path, "xl/worksheets/sheet1.xml");
+            Assert.Contains("<x:autoFilter ref=\"A1:B3\" />", xml);
+            Assert.Contains("<x:dimension ref=\"A1:B3\" />", xml);
         }
 
         /// <summary>
@@ -252,9 +255,10 @@ namespace MiniExcelLibs.Tests
             var path = PathHelper.GetTempFilePath();
             var value = new
             {
-                list = new List<Dictionary<string, object>>{
-                    new Dictionary<string, object>{ { "id","001"},{ "time",new DateTime(2022,12,25)} },
-                    new Dictionary<string, object>{ { "id","002"},{ "time",new DateTime(2022,9,23)} },
+                list = new List<Dictionary<string, object>>
+                {
+                    new() { { "id","001"},{ "time",new DateTime(2022,12,25)} },
+                    new() { { "id","002"},{ "time",new DateTime(2022,9,23)} },
                 }
             };
             var templatePath = PathHelper.GetFile("xlsx/TestIssue413.xlsx");
@@ -286,17 +290,13 @@ namespace MiniExcelLibs.Tests
         [Fact]
         public void TestIssueI57WMM()
         {
-            var sheets = new[] {
-                new Dictionary<string,object>(){
-                    {"ID","0001"},{"Name","Jack"}
-                }
-            };
+            Dictionary<string,object>[] sheets = [ new() { ["ID"] = "0001", ["Name"] = "Jack" } ];
             var stream = new MemoryStream();
             stream.SaveAs(sheets, excelType: ExcelType.CSV);
             stream.Position = 0;
 
             // convert stream to string
-            StreamReader reader = new StreamReader(stream);
+            using var reader = new StreamReader(stream);
             string text = reader.ReadToEnd();
             var expected = "ID,Name\r\n0001,Jack\r\n";
             Assert.Equal(expected, text);
@@ -359,7 +359,7 @@ namespace MiniExcelLibs.Tests
         public void TestIssueI4ZYUU()
         {
             var path = PathHelper.GetTempPath();
-            var value = new TestIssueI4ZYUUDto[] { new() { MyProperty = "1", MyProperty2 = new DateTime(2022, 10, 15) } };
+            TestIssueI4ZYUUDto[] value = [new() { MyProperty = "1", MyProperty2 = new DateTime(2022, 10, 15) }];
             MiniExcel.SaveAs(path, value);
             var rows = MiniExcel.Query(path).ToList();
             Assert.Equal("2022-10", rows[1].B);
@@ -416,41 +416,38 @@ namespace MiniExcelLibs.Tests
         public void TestIssue352()
         {
             {
-                DataTable table = new DataTable();
-                {
-                    table.Columns.Add("id", typeof(int));
-                    table.Columns.Add("name", typeof(string));
-                    table.Rows.Add(1, "Jack");
-                    table.Rows.Add(2, "Mike");
-                }
+                using var table = new DataTable();
+                table.Columns.Add("id", typeof(int));
+                table.Columns.Add("name", typeof(string));
+                table.Rows.Add(1, "Jack");
+                table.Rows.Add(2, "Mike");
+                
                 var path = Path.GetTempPath() + Guid.NewGuid() + ".xlsx";
-                DataTableReader reader = table.CreateDataReader();
+                var reader = table.CreateDataReader();
                 MiniExcel.SaveAs(path, reader);
                 var xml = Helpers.GetZipFileContent(path, "xl/worksheets/sheet1.xml");
                 var cnt = Regex.Matches(xml, "<x:autoFilter ref=\"A1:B3\" />").Count;
             }
             {
-                DataTable table = new DataTable();
-                {
-                    table.Columns.Add("id", typeof(int));
-                    table.Columns.Add("name", typeof(string));
-                    table.Rows.Add(1, "Jack");
-                    table.Rows.Add(2, "Mike");
-                }
+                using var table = new DataTable();
+                table.Columns.Add("id", typeof(int));
+                table.Columns.Add("name", typeof(string));
+                table.Rows.Add(1, "Jack");
+                table.Rows.Add(2, "Mike");
+
                 var path = Path.GetTempPath() + Guid.NewGuid() + ".xlsx";
-                DataTableReader reader = table.CreateDataReader();
+                var reader = table.CreateDataReader();
                 MiniExcel.SaveAs(path, reader, false);
                 var xml = Helpers.GetZipFileContent(path, "xl/worksheets/sheet1.xml");
                 var cnt = Regex.Matches(xml, "<x:autoFilter ref=\"A1:B2\" />").Count;
             }
             {
-                DataTable table = new DataTable();
-                {
-                    table.Columns.Add("id", typeof(int));
-                    table.Columns.Add("name", typeof(string));
-                }
+                using var table = new DataTable();
+                table.Columns.Add("id", typeof(int));
+                table.Columns.Add("name", typeof(string));
+
                 var path = Path.GetTempPath() + Guid.NewGuid() + ".xlsx";
-                DataTableReader reader = table.CreateDataReader();
+                var reader = table.CreateDataReader();
                 MiniExcel.SaveAs(path, reader);
                 var xml = Helpers.GetZipFileContent(path, "xl/worksheets/sheet1.xml");
                 var cnt = Regex.Matches(xml, "<x:autoFilter ref=\"A1:B1\" />").Count;
@@ -1420,10 +1417,13 @@ namespace MiniExcelLibs.Tests
                 MiniExcel.ConvertXlsxToCsv(xlsxPath, csvPath);
 
                 var actualCotent = File.ReadAllText(csvPath);
-                Assert.Equal(@"Name,Age,Name,Age
-Jack,22,Mike,25
-Henry,44,Jerry,44
-", actualCotent);
+                Assert.Equal(
+                    """
+                    Name,Age,Name,Age
+                    Jack,22,Mike,25
+                    Henry,44,Jerry,44
+
+                    """, actualCotent);
             }
 
             {
@@ -1463,13 +1463,13 @@ Henry,44,Jerry,44
         public void TestIssueI49RYZ()
         {
             {
-                var values = new[]
-                {
-                    new I49RYZDto(){Name="Jack",UserType=I49RYZUserType.V1},
-                    new I49RYZDto(){Name="Leo",UserType=I49RYZUserType.V2},
-                    new I49RYZDto(){Name="Henry",UserType=I49RYZUserType.V3},
-                    new I49RYZDto(){Name="Lisa",UserType=null},
-                };
+                I49RYZDto[] values =
+                [
+                    new() {Name="Jack",UserType=I49RYZUserType.V1},
+                    new() {Name="Leo",UserType=I49RYZUserType.V2},
+                    new() {Name="Henry",UserType=I49RYZUserType.V3},
+                    new() {Name="Lisa",UserType=null}
+                ];
                 var path = PathHelper.GetTempPath();
                 MiniExcel.SaveAs(path, values);
                 var rows = MiniExcel.Query(path, true).ToList();
@@ -1795,7 +1795,7 @@ Henry,44,Jerry,44
         public void TestIssue261()
         {
             var csvPath = PathHelper.GetFile("csv/TestCsvToXlsx.csv");
-            var xlsxPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString() + ".xlsx");
+            var xlsxPath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
             CsvToXlsx(csvPath, xlsxPath);
             var rows = MiniExcel.Query(xlsxPath).ToList();
             Assert.Equal("Name", rows[0].A);
@@ -2821,7 +2821,7 @@ Leave";
         [Fact]
         public void Issue208()
         {
-            var path = @"../../../../../samples/xlsx/TestIssue208.xlsx";
+            var path = "../../../../../samples/xlsx/TestIssue208.xlsx";
             var columns = MiniExcel.GetColumns(path).ToList();
             Assert.Equal(16384, columns.Count);
             Assert.Equal("XFD", columns[16383]);
@@ -2835,7 +2835,7 @@ Leave";
         {
             {
                 var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
-                var templatePath = @"../../../../../samples/xlsx/TestTemplateBasicIEmumerableFill.xlsx";
+                var templatePath = "../../../../../samples/xlsx/TestTemplateBasicIEmumerableFill.xlsx";
 
                 var dt = new DataTable();
                 {
@@ -3887,17 +3887,60 @@ Leave";
         }
 
         [Fact]
+        public void Issue_686()
+        {
+            var path = PathHelper.GetFile("xlsx/TestIssue686.xlsx");
+            Assert.Throws<InvalidDataException>(() =>
+                MiniExcel.QueryRange(path, useHeaderRow: false, startCell: "ZZFF10", endCell:"ZZFF11").First());
+            
+            Assert.Throws<InvalidOperationException>(() =>
+                MiniExcel.QueryRange(path, useHeaderRow: false, startCell: "ZZFF@@10", endCell:"ZZFF@@11").First());
+        }
+        
+        internal class Issue697
+        {
+            public int First { get; set; }
+            public int Second { get; set; }
+            public int Third { get; set; }
+            public int Fourth { get; set; }
+        }
+        
+        [Fact]
+        public void Test_Issue_697_EmptyRowsStronglyTypedQuery()
+        {
+            var path = "../../../../../samples/xlsx/TestIssue697.xlsx";
+            var rowsIgnoreEmpty = MiniExcel.Query<Issue697>(path, configuration: new OpenXmlConfiguration{IgnoreEmptyRows = true}).ToList();
+            var rowsCountEmpty = MiniExcel.Query<Issue697>(path).ToList();
+            Assert.Equal(4, rowsIgnoreEmpty.Count);
+            Assert.Equal(5, rowsCountEmpty.Count);
+        }
+        
+        [Fact]
+        public void Test_Issue_693_SaveSheetWithLongName()
+        {
+            var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
+            try
+            {
+                List<Dictionary<string, object>> data = [ new() { ["First"] = 1, ["Second"] = 2 }];
+                Assert.Throws<ArgumentException>(() => MiniExcel.SaveAs(path, data, sheetName:"Some Really Looooooooooong Sheet Name"));
+            }
+            finally
+            {
+                File.Delete(path);
+            }
+        }
+
+        [Fact]
         public void Issue_710()
         {
             var values = new[] { new { Column1 = "MiniExcel", Column2 = 1, Column3 = "Test" } };
             using var memoryStream = new MemoryStream();
             memoryStream.SaveAs(values, configuration: new OpenXmlConfiguration
             {
-                FastMode = true,
+                FastMode = true
             });
 
             memoryStream.Position = 0;
-
             var dataReader = memoryStream.GetReader(useHeaderRow: false);
 
             dataReader.Read();
@@ -3905,7 +3948,6 @@ Leave";
                 for (int i = 0; i < dataReader.FieldCount; i++)
                 {
                     var columnName = dataReader.GetName(i);
-
                     var ordinal = dataReader.GetOrdinal(columnName);
 
                     Assert.Equal(i, ordinal);

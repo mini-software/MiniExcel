@@ -25,6 +25,15 @@
 
 ---
 
+### 1.39.0
+- [New] Added support for Uri mapping (#726) (via @michelebastione)
+- [New] Added insert sheet feature about ContentTypesXml processing (#728) (via @izanhzh)
+- [New] Supports the TimeSpan type, double.NaN exports invalid values, and when reading, it needs to be determined whether it is a double value. (via @wxn401)
+- [Bug] Fixed parsing bug in the conversion to double (#734) (via @michelebastione)
+- [Bug] Fixed configuration is not used when writing using IDataReader #735 (via @michelebastione)
+- [Bug] Fixed configuration is not used when writing using IDataReader #735 (via @michelebastione)
+- [Bug] Fixed cancellation token not working for some async methods, enhanced export methods by returning number of rows, added active tab functionality, tests and code cleanup (#738) (via @michelebastione)
+
 
 ### 1.38.0
 - [New] feat(DynamicExcelColumn): make the CustomFormatter property more powerful (#715) (via @izanhzh)

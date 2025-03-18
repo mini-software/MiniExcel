@@ -3896,7 +3896,26 @@ Leave";
             Assert.Throws<InvalidOperationException>(() =>
                 MiniExcel.QueryRange(path, useHeaderRow: false, startCell: "ZZFF@@10", endCell:"ZZFF@@11").First());
         }
-        
+                
+        [Fact]
+        public void Test_Issue_693_SaveSheetWithLongName()
+        {
+            var path1 = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
+            var path2 = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
+            try
+            {
+                List<Dictionary<string, object>> data = [ new() { ["First"] = 1, ["Second"] = 2 }];
+                Assert.Throws<ArgumentException>(() => MiniExcel.SaveAs(path1, data, sheetName:"Some Really Looooooooooong Sheet Name"));
+                MiniExcel.SaveAs(path2, new List<Dictionary<string, object>>());
+                Assert.Throws<ArgumentException>(() => MiniExcel.Insert(path1, data, sheetName:"Some Other Very Looooooong Sheet Name"));
+            }
+            finally
+            {
+                File.Delete(path1);
+                File.Delete(path2);
+            }
+        }
+
         internal class Issue697
         {
             public int First { get; set; }
@@ -3904,7 +3923,6 @@ Leave";
             public int Third { get; set; }
             public int Fourth { get; set; }
         }
-        
         [Fact]
         public void Test_Issue_697_EmptyRowsStronglyTypedQuery()
         {
@@ -3913,21 +3931,6 @@ Leave";
             var rowsCountEmpty = MiniExcel.Query<Issue697>(path).ToList();
             Assert.Equal(4, rowsIgnoreEmpty.Count);
             Assert.Equal(5, rowsCountEmpty.Count);
-        }
-        
-        [Fact]
-        public void Test_Issue_693_SaveSheetWithLongName()
-        {
-            var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
-            try
-            {
-                List<Dictionary<string, object>> data = [ new() { ["First"] = 1, ["Second"] = 2 }];
-                Assert.Throws<ArgumentException>(() => MiniExcel.SaveAs(path, data, sheetName:"Some Really Looooooooooong Sheet Name"));
-            }
-            finally
-            {
-                File.Delete(path);
-            }
         }
 
         [Fact]

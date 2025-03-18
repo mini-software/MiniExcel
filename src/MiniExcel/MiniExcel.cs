@@ -49,11 +49,13 @@
 
         public static int Insert(this Stream stream, object value, string sheetName = "Sheet1", ExcelType excelType = ExcelType.XLSX, IConfiguration configuration = null, bool printHeader = true, bool overwriteSheet = false)
         {
+            if (sheetName.Length > 31 && excelType == ExcelType.XLSX)
+                throw new ArgumentException("Sheet names must be less than 31 characters", nameof(sheetName));
+
             stream.Seek(0, SeekOrigin.End);
-            // reuse code
             if (excelType == ExcelType.CSV)
             {
-                var newValue = value is IEnumerable || value is IDataReader ? value : new[]{value}.AsEnumerable();
+                var newValue = value is IEnumerable || value is IDataReader ? value : new[]{value};
                 return ExcelWriterFactory.GetProvider(stream, newValue, sheetName, excelType, configuration, false).Insert(overwriteSheet);
             }
             else
@@ -90,9 +92,7 @@
         {
             using (var excelReader = ExcelReaderFactory.GetProvider(stream, ExcelTypeHelper.GetExcelType(stream, excelType), configuration))
                 foreach (var item in excelReader.Query<T>(sheetName, startCell))
-                {
                     yield return item;
-                }
         }
         public static IEnumerable<dynamic> Query(string path, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null)
         {

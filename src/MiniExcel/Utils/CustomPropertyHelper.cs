@@ -1,15 +1,15 @@
-﻿namespace MiniExcelLibs.Utils
+﻿using MiniExcelLibs.Attributes;
+using MiniExcelLibs.OpenXml;
+using MiniExcelLibs.OpenXml.Models;
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Linq;
+using System.Reflection;
+    
+namespace MiniExcelLibs.Utils
 {
-    using MiniExcelLibs.Attributes;
-    using MiniExcelLibs.OpenXml;
-    using MiniExcelLibs.OpenXml.Models;
-    using System;
-    using System.Collections;
-    using System.Collections.Generic;
-    using System.ComponentModel;
-    using System.Linq;
-    using System.Reflection;
-
     internal class ExcelColumnInfo
     {
         public object Key { get; set; }
@@ -33,14 +33,8 @@
         public object Key { get; set; }
         public string ExcelSheetName { get; set; }
         public SheetState ExcelSheetState { get; set; }
-
-        private string ExcelSheetStateAsString
-        {
-            get
-            {
-                return ExcelSheetState.ToString().ToLower();
-            }
-        }
+        
+        private string ExcelSheetStateAsString => ExcelSheetState.ToString().ToLower();
 
         public SheetDto ToDto(int sheetIndex)
         {
@@ -48,7 +42,7 @@
         }
     }
 
-    internal static partial class CustomPropertyHelper
+    internal static class CustomPropertyHelper
     {
         internal static IDictionary<string, object> GetEmptyExpandoObject(int maxColumnIndex, int startCellIndex)
         {
@@ -73,7 +67,7 @@
 
         internal static List<ExcelColumnInfo> GetSaveAsProperties(this Type type, Configuration configuration)
         {
-            List<ExcelColumnInfo> props = GetExcelPropertyInfo(type, BindingFlags.Public | BindingFlags.Instance, configuration)
+            var props = GetExcelPropertyInfo(type, BindingFlags.Public | BindingFlags.Instance, configuration)
                 .Where(prop => prop.Property.CanRead)
                 .ToList() /*ignore without set*/;
 
@@ -89,7 +83,7 @@
             //TODO: need optimize performance
 
             var withCustomIndexProps = props.Where(w => w.ExcelColumnIndex != null && w.ExcelColumnIndex > -1).ToList();
-            if (withCustomIndexProps.GroupBy(g => g.ExcelColumnIndex).Any(_ => _.Count() > 1))
+            if (withCustomIndexProps.GroupBy(g => g.ExcelColumnIndex).Any(x => x.Count() > 1))
                 throw new InvalidOperationException("Duplicate column name");
 
             var maxColumnIndex = props.Count - 1;
@@ -98,7 +92,7 @@
 
             var withoutCustomIndexProps = props.Where(w => w.ExcelColumnIndex == null || w.ExcelColumnIndex == -1).ToList();
 
-            List<ExcelColumnInfo> newProps = new List<ExcelColumnInfo>();
+            var newProps = new List<ExcelColumnInfo>();
             var index = 0;
             for (int i = 0; i <= maxColumnIndex; i++)
             {
@@ -127,7 +121,8 @@
 
         internal static List<ExcelColumnInfo> GetExcelCustomPropertyInfos(Type type, string[] keys, Configuration configuration)
         {
-            List<ExcelColumnInfo> props = GetExcelPropertyInfo(type, BindingFlags.SetProperty | BindingFlags.Public | BindingFlags.Instance, configuration)
+            var flags = BindingFlags.SetProperty | BindingFlags.Public | BindingFlags.Instance;
+            var props = GetExcelPropertyInfo(type, flags, configuration)
                 .Where(prop => prop.Property.Info.GetSetMethod() != null // why not .Property.CanWrite? because it will use private setter
                                && !prop.Property.Info.GetAttributeValue((ExcelIgnoreAttribute x) => x.ExcelIgnore)
                                && !prop.Property.Info.GetAttributeValue((ExcelColumnAttribute x) => x.Ignore))
@@ -137,19 +132,18 @@
                 throw new InvalidOperationException($"{type.Name} un-ignore properties count can't be 0");
 
             var withCustomIndexProps = props.Where(w => w.ExcelColumnIndex != null && w.ExcelColumnIndex > -1);
-            if (withCustomIndexProps.GroupBy(g => g.ExcelColumnIndex).Any(_ => _.Count() > 1))
+            if (withCustomIndexProps.GroupBy(g => g.ExcelColumnIndex).Any(x => x.Count() > 1))
                 throw new InvalidOperationException("Duplicate column name");
             var maxkey = keys.Last();
             var maxIndex = ColumnHelper.GetColumnIndex(maxkey);
             foreach (var p in props)
             {
-                if (p.ExcelColumnIndex != null)
-                {
-                    if (p.ExcelColumnIndex > maxIndex)
-                        throw new ArgumentException($"ExcelColumnIndex {p.ExcelColumnIndex} over haeder max index {maxkey}");
-                    if (p.ExcelColumnName == null)
-                        throw new InvalidOperationException($"{p.Property.Info.DeclaringType.Name} {p.Property.Name}'s ExcelColumnIndex {p.ExcelColumnIndex} can't find excel column name");
-                }
+                if (p.ExcelColumnIndex == null)
+                    continue;
+                if (p.ExcelColumnIndex > maxIndex)
+                    throw new ArgumentException($"ExcelColumnIndex {p.ExcelColumnIndex} over haeder max index {maxkey}");
+                if (p.ExcelColumnName == null)
+                    throw new InvalidOperationException($"{p.Property.Info.DeclaringType?.Name} {p.Property.Name}'s ExcelColumnIndex {p.ExcelColumnIndex} can't find excel column name");
             }
 
             return props;
@@ -157,24 +151,19 @@
 
         internal static string DescriptionAttr(Type type, object source)
         {
-            FieldInfo fi = type.GetField(source.ToString());
+            var fi = type.GetField(source.ToString());
             //For some database dirty data, there may be no way to change to the correct enumeration, will return NULL
             if (fi == null)
                 return source.ToString();
 
-            DescriptionAttribute[] attributes = (DescriptionAttribute[])fi.GetCustomAttributes(
-                typeof(DescriptionAttribute), false);
-
-            if (attributes != null && attributes.Length > 0)
-                return attributes[0].Description;
-            else
-                return source.ToString();
+            var attributes = (DescriptionAttribute[])fi.GetCustomAttributes(typeof(DescriptionAttribute), false);
+            return attributes.Length > 0 ? attributes[0].Description : source.ToString();
         }
 
         private static IEnumerable<ExcelColumnInfo> ConvertToExcelCustomPropertyInfo(PropertyInfo[] props, Configuration configuration)
         {
             // solve : https://github.com/shps951023/MiniExcel/issues/138
-            return props.Select(p =>
+            var columnInfos = props.Select(p =>
             {
                 var gt = Nullable.GetUnderlyingType(p.PropertyType);
                 var excelColumnName = p.GetAttribute<ExcelColumnNameAttribute>();
@@ -185,11 +174,12 @@
                 if (dynamicColumn != null)
                     excelColumn = dynamicColumn;
 
-                var ignore = p.GetAttributeValue((ExcelIgnoreAttribute x) => x.ExcelIgnore) || p.GetAttributeValue((ExcelColumnAttribute x) => x.Ignore) || (excelColumn != null && excelColumn.Ignore);
+                var ignore = p.GetAttributeValue((ExcelIgnoreAttribute x) => x.ExcelIgnore) ||
+                             p.GetAttributeValue((ExcelColumnAttribute x) => x.Ignore) ||
+                             (excelColumn?.Ignore ?? false);
                 if (ignore)
-                {
                     return null;
-                }
+                
                 //TODO:or configulation Dynamic
                 var excelColumnIndex = excelColumn?.Index > -1 ? excelColumn.Index : (int?)null;
                 return new ExcelColumnInfo
@@ -207,7 +197,9 @@
                     ExcelColumnType = excelColumn?.Type ?? ColumnType.Value,
                     CustomFormatter = dynamicColumn?.CustomFormatter
                 };
-            }).Where(_ => _ != null);
+            }); 
+            
+            return columnInfos.Where(x => x != null);
         }
 
         private static IEnumerable<ExcelColumnInfo> GetExcelPropertyInfo(Type type, BindingFlags bindingFlags, Configuration configuration)
@@ -219,7 +211,7 @@
         internal static ExcellSheetInfo GetExcellSheetInfo(Type type, Configuration configuration)
         {
             // default options
-            var sheetInfo = new ExcellSheetInfo()
+            var sheetInfo = new ExcellSheetInfo
             {
                 Key = type.Name,
                 ExcelSheetName = null, // will be generated automatically as Sheet<Index>
@@ -227,18 +219,17 @@
             };
 
             // options from ExcelSheetAttribute
-            ExcelSheetAttribute excelSheetAttribute = type.GetCustomAttribute(typeof(ExcelSheetAttribute)) as ExcelSheetAttribute;
-            if (excelSheetAttribute != null)
+            if (type.GetCustomAttribute(typeof(ExcelSheetAttribute)) is ExcelSheetAttribute excelSheetAttr)
             {
-                sheetInfo.ExcelSheetName = excelSheetAttribute.Name ?? type.Name;
-                sheetInfo.ExcelSheetState = excelSheetAttribute.State;
+                sheetInfo.ExcelSheetName = excelSheetAttr.Name ?? type.Name;
+                sheetInfo.ExcelSheetState = excelSheetAttr.State;
             }
 
             // options from DynamicSheets configuration
-            OpenXmlConfiguration openXmlCOnfiguration = configuration as OpenXmlConfiguration;
-            if (openXmlCOnfiguration != null && openXmlCOnfiguration.DynamicSheets != null && openXmlCOnfiguration.DynamicSheets.Length > 0)
+            var openXmlCOnfiguration = configuration as OpenXmlConfiguration;
+            if (openXmlCOnfiguration?.DynamicSheets?.Length > 0)
             {
-                var dynamicSheet = openXmlCOnfiguration.DynamicSheets.SingleOrDefault(_ => _.Key == type.Name);
+                var dynamicSheet = openXmlCOnfiguration.DynamicSheets.SingleOrDefault(x => x.Key == type.Name);
                 if (dynamicSheet != null)
                 {
                     sheetInfo.ExcelSheetName = dynamicSheet.Name;
@@ -251,43 +242,32 @@
 
         internal static List<ExcelColumnInfo> GetDictionaryColumnInfo(IDictionary<string, object> dicString, IDictionary dic, Configuration configuration)
         {
-            List<ExcelColumnInfo> props;
-            var _props = new List<ExcelColumnInfo>();
-            if (dicString != null)
-            {
-                foreach (var key in dicString.Keys)
-                {
-                    SetDictionaryColumnInfo(_props, key, configuration);
-                }
-            }
-            else if (dic != null)
-            {
-                foreach (var key in dic.Keys)
-                {
-                    SetDictionaryColumnInfo(_props, key, configuration);
-                }
-            }
-            else
-            {
-                throw new NotSupportedException("SetDictionaryColumnInfo Error");
-            }
+            var props = new List<ExcelColumnInfo>();
+            var keys = dicString?.Keys.ToList() ?? dic?.Keys
+                       ?? throw new NotSupportedException();
 
-            props = SortCustomProps(_props);
-            return props;
+            foreach (var key in keys)
+            {
+                SetDictionaryColumnInfo(props, key, configuration);
+            }
+            return SortCustomProps(props);
         }
 
-        internal static void SetDictionaryColumnInfo(List<ExcelColumnInfo> _props, object key, Configuration configuration)
+        internal static void SetDictionaryColumnInfo(List<ExcelColumnInfo> props, object key, Configuration configuration)
         {
-            var p = new ExcelColumnInfo();
-            p.ExcelColumnName = key?.ToString();
-            p.Key = key;
+            var p = new ExcelColumnInfo
+            {
+                Key = key,
+                ExcelColumnName = key?.ToString()
+            };
+            
             // TODO:Dictionary value type is not fiexed
             //var _t =
             //var gt = Nullable.GetUnderlyingType(p.PropertyType);
             var isIgnore = false;
             if (configuration.DynamicColumns != null && configuration.DynamicColumns.Length > 0)
             {
-                var dynamicColumn = configuration.DynamicColumns.SingleOrDefault(_ => _.Key == key.ToString());
+                var dynamicColumn = configuration.DynamicColumns.SingleOrDefault(x => x.Key == key?.ToString());
                 if (dynamicColumn != null)
                 {
                     p.Nullable = true;
@@ -311,7 +291,7 @@
                 }
             }
             if (!isIgnore)
-                _props.Add(p);
+                props.Add(p);
         }
 
         internal static bool TryGetTypeColumnInfo(Type type, Configuration configuration, out List<ExcelColumnInfo> props)
@@ -324,14 +304,9 @@
             }
 
             if (type.IsValueType)
-            {
-                throw new NotImplementedException($"MiniExcel not support only {type.Name} value generic type");
-            }
-
+                throw new NotImplementedException($"MiniExcel does not support only {type.Name} value generic type");
             if (type == typeof(string) || type == typeof(DateTime) || type == typeof(Guid))
-            {
-                throw new NotImplementedException($"MiniExcel not support only {type.Name} generic type");
-            }
+                throw new NotImplementedException($"MiniExcel does not support only {type.Name} generic type");
 
             if (ValueIsNeededToDetermineProperties(type))
             {
@@ -370,11 +345,11 @@
             if (configuration.DynamicColumns == null || configuration.DynamicColumns.Length <= 0)
                 return prop;
 
-            var dynamicColumn = configuration.DynamicColumns.SingleOrDefault(_ => string.Equals(_.Key, columnName, StringComparison.OrdinalIgnoreCase));
+            var dynamicColumn = configuration.DynamicColumns
+                .SingleOrDefault(col => string.Equals(col.Key, columnName, StringComparison.OrdinalIgnoreCase));
+            
             if (dynamicColumn == null || dynamicColumn.Ignore)
-            {
                 return prop;
-            }
 
             prop.Nullable = true;
             prop.ExcelIgnore = dynamicColumn.Ignore;
@@ -405,6 +380,37 @@
             }
 
             return prop;
+        }
+        
+        internal static Dictionary<string, int> GetHeaders(IDictionary<string, object> item, bool trimNames = false)
+        {
+            return DictToNameWithIndex(item)
+                .GroupBy(x => x.Name)
+                .SelectMany(GroupToNameWithIndex)
+                .ToDictionary(kv => trimNames ? kv.Name.Trim() : kv.Name, kv => kv.Index);
+        }
+
+        private static IEnumerable<NameIndexPair> DictToNameWithIndex(IDictionary<string, object> dict)
+        {
+            return dict.Values.Select((obj, idx) => new NameIndexPair(idx, obj?.ToString() ?? ""));
+        }
+        
+        private static IEnumerable<NameIndexPair> GroupToNameWithIndex(IGrouping<string, NameIndexPair> group)
+        {
+            return group.Select((grp, idx) =>
+                new NameIndexPair(grp.Index, idx == 0 ? grp.Name : $"{grp.Name}_____{idx + 1}"));
+        }
+        
+        private class NameIndexPair
+        {
+            public int Index { get; }
+            public string Name { get; }
+
+            public NameIndexPair(int index, string name)
+            {
+                Index = index;
+                Name = name;
+            }
         }
     }
 }

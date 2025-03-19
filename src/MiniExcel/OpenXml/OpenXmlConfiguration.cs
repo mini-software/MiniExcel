@@ -14,6 +14,8 @@ namespace MiniExcelLibs.OpenXml
         public bool IgnoreTemplateParameterMissing { get; set; } = true;
         public bool EnableWriteNullValueCell { get; set; } = true;
         public bool WriteEmptyStringAsNull { get; set; } = false;
+        public bool TrimColumnNames { get; set; } = true;
+        public bool IgnoreEmptyRows { get; set; } = false;
         public bool EnableSharedStringCache { get; set; } = true;
         public long SharedStringCacheSize { get; set; } = 5 * 1024 * 1024;
         public DynamicExcelSheet[] DynamicSheets { get; set; }

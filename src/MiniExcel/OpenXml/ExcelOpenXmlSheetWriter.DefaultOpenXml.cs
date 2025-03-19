@@ -308,7 +308,7 @@ namespace MiniExcelLibs.OpenXml
         private Tuple<string, string, string> GetDateTimeValue(DateTime value, ExcelColumnInfo columnInfo)
         {
             string cellValue = null;
-            if (!_configuration.Culture.Equals(CultureInfo.InvariantCulture))
+            if (!ReferenceEquals(_configuration.Culture, CultureInfo.InvariantCulture))
             {
                 cellValue = value.ToString(_configuration.Culture);
                 return Tuple.Create("2", "str", cellValue);
@@ -316,11 +316,9 @@ namespace MiniExcelLibs.OpenXml
 
             var oaDate = CorrectDateTimeValue(value);
             cellValue = oaDate.ToString(CultureInfo.InvariantCulture);
-            
-            if (columnInfo?.ExcelFormat != null)
-                return Tuple.Create(columnInfo.ExcelFormatId.ToString(), (string)null, cellValue);
-            
-            return Tuple.Create("3", (string)null, cellValue);
+            var format = columnInfo?.ExcelFormat != null ? columnInfo.ExcelFormatId.ToString() : "3";
+
+            return Tuple.Create(format, (string)null, cellValue);
         }
 
         private static double CorrectDateTimeValue(DateTime value)

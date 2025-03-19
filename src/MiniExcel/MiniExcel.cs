@@ -49,9 +49,6 @@
 
         public static int Insert(this Stream stream, object value, string sheetName = "Sheet1", ExcelType excelType = ExcelType.XLSX, IConfiguration configuration = null, bool printHeader = true, bool overwriteSheet = false)
         {
-            if (sheetName.Length > 31 && excelType == ExcelType.XLSX)
-                throw new ArgumentException("Sheet names must be less than 31 characters", nameof(sheetName));
-
             stream.Seek(0, SeekOrigin.End);
             if (excelType == ExcelType.CSV)
             {
@@ -76,8 +73,6 @@
 
         public static int[] SaveAs(this Stream stream, object value, bool printHeader = true, string sheetName = "Sheet1", ExcelType excelType = ExcelType.XLSX, IConfiguration configuration = null)
         {
-            if (sheetName.Length > 31 && excelType == ExcelType.XLSX)
-                throw new ArgumentException("Sheet names must be less than 31 characters", nameof(sheetName));
             return ExcelWriterFactory.GetProvider(stream, value, sheetName, excelType, configuration, printHeader).SaveAs();
         }
 

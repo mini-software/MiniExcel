@@ -19,6 +19,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using MiniExcelLibs.Utils;
 using Xunit;
 using Xunit.Abstractions;
 using static MiniExcelLibs.Tests.MiniExcelOpenXmlTests;
@@ -1749,7 +1750,7 @@ namespace MiniExcelLibs.Tests
 
         private static bool IsDateFormatString(string formatCode)
         {
-            return MiniExcelLibs.Utils.DateTimeHelper.IsDateTimeFormat(formatCode);
+            return DateTimeHelper.IsDateTimeFormat(formatCode);
         }
 
         [Fact]

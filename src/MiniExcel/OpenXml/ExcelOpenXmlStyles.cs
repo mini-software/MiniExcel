@@ -1,10 +1,10 @@
-﻿namespace MiniExcelLibs.OpenXml
-{
-    using MiniExcelLibs.Utils;
-    using MiniExcelLibs.Zip;
-    using System;
-    using System.Collections.Generic;
+﻿using MiniExcelLibs.Utils;
+using MiniExcelLibs.Zip;
+using System;
+using System.Collections.Generic;
 
+namespace MiniExcelLibs.OpenXml
+{
     internal class ExcelOpenXmlStyles
     {
         private static readonly string[] _ns = { Config.SpreadsheetmlXmlns, Config.SpreadsheetmlXmlStrictns };
@@ -14,68 +14,68 @@
 
         public ExcelOpenXmlStyles(ExcelOpenXmlZip zip)
         {
-            using (var Reader = zip.GetXmlReader(@"xl/styles.xml"))
+            using (var reader = zip.GetXmlReader(@"xl/styles.xml"))
             {
-                if (!XmlReaderHelper.IsStartElement(Reader, "styleSheet", _ns))
+                if (!XmlReaderHelper.IsStartElement(reader, "styleSheet", _ns))
                     return;
-                if (!XmlReaderHelper.ReadFirstContent(Reader))
+                if (!XmlReaderHelper.ReadFirstContent(reader))
                     return;
-                while (!Reader.EOF)
+                
+                while (!reader.EOF)
                 {
-                    if (XmlReaderHelper.IsStartElement(Reader, "cellXfs", _ns))
+                    if (XmlReaderHelper.IsStartElement(reader, "cellXfs", _ns))
                     {
-                        if (!XmlReaderHelper.ReadFirstContent(Reader))
+                        if (!XmlReaderHelper.ReadFirstContent(reader))
                             continue;
 
                         var index = 0;
-                        while (!Reader.EOF)
+                        while (!reader.EOF)
                         {
-                            if (XmlReaderHelper.IsStartElement(Reader, "xf", _ns))
+                            if (XmlReaderHelper.IsStartElement(reader, "xf", _ns))
                             {
-                                int.TryParse(Reader.GetAttribute("xfId"), out var xfId);
-                                int.TryParse(Reader.GetAttribute("numFmtId"), out var numFmtId);
+                                int.TryParse(reader.GetAttribute("xfId"), out var xfId);
+                                int.TryParse(reader.GetAttribute("numFmtId"), out var numFmtId);
                                 _cellXfs.Add(index, new StyleRecord() { XfId = xfId, NumFmtId = numFmtId });
-                                Reader.Skip();
+                                reader.Skip();
                                 index++;
                             }
-                            else if (!XmlReaderHelper.SkipContent(Reader))
+                            else if (!XmlReaderHelper.SkipContent(reader))
                                 break;
                         }
                     }
-                    else if (XmlReaderHelper.IsStartElement(Reader, "cellStyleXfs", _ns))
+                    else if (XmlReaderHelper.IsStartElement(reader, "cellStyleXfs", _ns))
                     {
-                        if (!XmlReaderHelper.ReadFirstContent(Reader))
+                        if (!XmlReaderHelper.ReadFirstContent(reader))
                             continue;
 
                         var index = 0;
-                        while (!Reader.EOF)
+                        while (!reader.EOF)
                         {
-                            if (XmlReaderHelper.IsStartElement(Reader, "xf", _ns))
+                            if (XmlReaderHelper.IsStartElement(reader, "xf", _ns))
                             {
-                                int.TryParse(Reader.GetAttribute("xfId"), out var xfId);
-                                int.TryParse(Reader.GetAttribute("numFmtId"), out var numFmtId);
+                                int.TryParse(reader.GetAttribute("xfId"), out var xfId);
+                                int.TryParse(reader.GetAttribute("numFmtId"), out var numFmtId);
 
                                 _cellStyleXfs.Add(index, new StyleRecord() { XfId = xfId, NumFmtId = numFmtId });
-                                Reader.Skip();
+                                reader.Skip();
                                 index++;
                             }
-                            else if (!XmlReaderHelper.SkipContent(Reader))
+                            else if (!XmlReaderHelper.SkipContent(reader))
                                 break;
                         }
                     }
-                    else if (XmlReaderHelper.IsStartElement(Reader, "numFmts", _ns))
+                    else if (XmlReaderHelper.IsStartElement(reader, "numFmts", _ns))
                     {
-                        if (!XmlReaderHelper.ReadFirstContent(Reader))
+                        if (!XmlReaderHelper.ReadFirstContent(reader))
                             continue;
 
-                        while (!Reader.EOF)
+                        while (!reader.EOF)
                         {
-                            if (XmlReaderHelper.IsStartElement(Reader, "numFmt", _ns))
+                            if (XmlReaderHelper.IsStartElement(reader, "numFmt", _ns))
                             {
-                                int.TryParse(Reader.GetAttribute("numFmtId"), out var numFmtId);
-                                var formatCode = Reader.GetAttribute("formatCode");
-
-
+                                int.TryParse(reader.GetAttribute("numFmtId"), out var numFmtId);
+                                var formatCode = reader.GetAttribute("formatCode");
+                                
                                 //TODO: determine the type according to the format
                                 var type = typeof(string);
                                 if (DateTimeHelper.IsDateTimeFormat(formatCode))
@@ -84,15 +84,15 @@
                                 }
 
                                 _customFormats.Add(numFmtId, new NumberFormatString(formatCode, type));
-                                Reader.Skip();
+                                reader.Skip();
                             }
-                            else if (!XmlReaderHelper.SkipContent(Reader))
+                            else if (!XmlReaderHelper.SkipContent(reader))
                             {
                                 break;
                             }
                         }
                     }
-                    else if (!XmlReaderHelper.SkipContent(Reader))
+                    else if (!XmlReaderHelper.SkipContent(reader))
                     {
                         break;
                     }
@@ -102,52 +102,41 @@
 
         public NumberFormatString GetStyleFormat(int index)
         {
-            if (_cellXfs.TryGetValue(index, out var styleRecord))
-            {
-                if (Formats.TryGetValue(styleRecord.NumFmtId, out var numberFormat))
-                {
-                    return numberFormat;
-                }
-                else if (_customFormats.TryGetValue(styleRecord.NumFmtId, out var customNumberFormat))
-                {
-                    return customNumberFormat;
-                }
+            if (!_cellXfs.TryGetValue(index, out var styleRecord)) 
                 return null;
-            }
+            
+            if (Formats.TryGetValue(styleRecord.NumFmtId, out var numberFormat))
+                return numberFormat;
+
+            if (_customFormats.TryGetValue(styleRecord.NumFmtId, out var customNumberFormat))
+                return customNumberFormat;
+            
             return null;
         }
 
         public object ConvertValueByStyleFormat(int index, object value)
         {
-            var sf = this.GetStyleFormat(index);
-            if (sf == null)
-                return value;
-            if (sf.Type == null)
+            var sf = GetStyleFormat(index);
+            if (sf?.Type == null)
                 return value;
 
             if (sf.Type == typeof(DateTime?))
             {
                 if (double.TryParse(value?.ToString(), out var s))
                 {
-                    if (s >= DateTimeHelper.OADateMaxAsDouble || s <= DateTimeHelper.OADateMinAsDouble)
-                    {
-                        return value;
-                    }
-                    return DateTimeHelper.FromOADate(s);
+                    return DateTimeHelper.IsValidOADateTime(s) ? DateTime.FromOADate(s) : value;
                 }
             }
             else if (sf.Type == typeof(TimeSpan?))
             {
                 if (double.TryParse(value?.ToString(), out var number))
-                {
                     return TimeSpan.FromDays(number);
-                }
             }
 
             return value;
         }
 
-        private static Dictionary<int, NumberFormatString> Formats { get; } = new Dictionary<int, NumberFormatString>()
+        private static Dictionary<int, NumberFormatString> Formats { get; } = new Dictionary<int, NumberFormatString>
         {
             { 0, new NumberFormatString("General",typeof(string)) },
             { 1, new NumberFormatString("0",typeof(decimal?)) },

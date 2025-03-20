@@ -17,7 +17,7 @@
                 case ExcelType.XLSX:
                     return new ExcelOpenXmlSheetReader(stream, configuration);
                 default:
-                    throw new NotSupportedException("Please Issue for me");
+                    throw new NotSupportedException("Something went wrong. Please report this issue you are experiencing with MiniExcel.");
             }
         }
     }
@@ -55,7 +55,7 @@
                     var valueExtractor = new InputValueExtractor();
                     return new ExcelOpenXmlTemplate(stream, configuration, valueExtractor);
                 default:
-                    throw new NotSupportedException("Please Issue for me");
+                    throw new NotSupportedException("Something went wrong. Please report this issue you are experiencing with MiniExcel.");
             }
         }
     }

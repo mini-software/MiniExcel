@@ -13,20 +13,18 @@ namespace MiniExcelLibs.Csv
 {
     internal class CsvWriter : IExcelWriter, IDisposable
     {
-        private readonly Stream _stream;
+        private readonly StreamWriter _writer;
         private readonly CsvConfiguration _configuration;
         private readonly bool _printHeader;
-        private object _value;
-        private readonly StreamWriter _writer;
+        private readonly object _value;
         private bool _disposedValue;
 
         public CsvWriter(Stream stream, object value, IConfiguration configuration, bool printHeader)
         {
-            _stream = stream;
             _configuration = configuration == null ? CsvConfiguration.DefaultConfiguration : (CsvConfiguration)configuration;
             _printHeader = printHeader;
             _value = value;
-            _writer = _configuration.StreamWriterFunc(_stream);
+            _writer = _configuration.StreamWriterFunc(stream);
         }
 
         public int[] SaveAs()

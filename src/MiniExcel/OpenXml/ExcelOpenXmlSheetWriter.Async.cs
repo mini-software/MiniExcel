@@ -527,11 +527,14 @@ namespace MiniExcelLibs.OpenXml
                 await GenerateContentTypesXmlAsync(cancellationToken);
                 return;
             }
-            
+#if NET5_0_OR_GREATER
+            await using (var stream = contentTypesZipEntry.Open())
+#else
             using (var stream = contentTypesZipEntry.Open())
+#endif
             {
                 var doc = XDocument.Load(stream);
-                var ns = doc.Root.GetDefaultNamespace();
+                var ns = doc.Root?.GetDefaultNamespace();
                 var typesElement = doc.Descendants(ns + "Types").Single();
                 
                 var partNames = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
@@ -562,9 +565,14 @@ namespace MiniExcelLibs.OpenXml
             cancellationToken.ThrowIfCancellationRequested();
             
             var entry = _archive.CreateEntry(path, CompressionLevel.Fastest);
+
+#if NET5_0_OR_GREATER
+            await using (var zipStream = entry.Open())
+#else
             using (var zipStream = entry.Open())
-            using (var writer = new MiniExcelAsyncStreamWriter(zipStream, _utf8WithBom, _configuration.BufferSize, cancellationToken))
-                await writer.WriteAsync(content);
+#endif
+                using (var writer = new MiniExcelAsyncStreamWriter(zipStream, _utf8WithBom, _configuration.BufferSize, cancellationToken))
+                    await writer.WriteAsync(content);
             
             if (!string.IsNullOrEmpty(contentType))
                 _zipDictionary.Add(path, new ZipPackageInfo(entry, contentType));
@@ -575,7 +583,12 @@ namespace MiniExcelLibs.OpenXml
             cancellationToken.ThrowIfCancellationRequested();
             
             var entry = _archive.CreateEntry(path, CompressionLevel.Fastest);
+            
+#if NET5_0_OR_GREATER
+            await using (var zipStream = entry.Open())
+#else
             using (var zipStream = entry.Open())
+#endif
                 await zipStream.WriteAsync(content, 0, content.Length, cancellationToken);
         }
     }

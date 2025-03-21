@@ -648,7 +648,7 @@ namespace MiniExcelLibs.Tests
             {
                 var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
                 var values = new List<int>();
-                Assert.Throws<NotImplementedException>(() => MiniExcel.SaveAs(path, values));
+                Assert.Throws<NotSupportedException>(() => MiniExcel.SaveAs(path, values));
             }
         }
 

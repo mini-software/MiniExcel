@@ -1462,15 +1462,15 @@ namespace MiniExcelLibs.Tests
         {
             var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
             //MiniExcel.SaveAs(path, new[] { "1", "2" });
-            await Assert.ThrowsAnyAsync<NotImplementedException>(async () => await MiniExcel.SaveAsAsync(path, new[] { 1, 2 }));
+            await Assert.ThrowsAnyAsync<NotSupportedException>(async () => await MiniExcel.SaveAsAsync(path, new[] { 1, 2 }));
             File.Delete(path);
-            await Assert.ThrowsAnyAsync<NotImplementedException>(async () => await MiniExcel.SaveAsAsync(path, new[] { "1", "2" }));
+            await Assert.ThrowsAnyAsync<NotSupportedException>(async () => await MiniExcel.SaveAsAsync(path, new[] { "1", "2" }));
             File.Delete(path);
-            await Assert.ThrowsAnyAsync<NotImplementedException>(async () => await MiniExcel.SaveAsAsync(path, new[] { '1', '2' }));
+            await Assert.ThrowsAnyAsync<NotSupportedException>(async () => await MiniExcel.SaveAsAsync(path, new[] { '1', '2' }));
             File.Delete(path);
-            await Assert.ThrowsAnyAsync<NotImplementedException>(async () => await MiniExcel.SaveAsAsync(path, new[] { DateTime.Now }));
+            await Assert.ThrowsAnyAsync<NotSupportedException>(async () => await MiniExcel.SaveAsAsync(path, new[] { DateTime.Now }));
             File.Delete(path);
-            await Assert.ThrowsAnyAsync<NotImplementedException>(async () => await MiniExcel.SaveAsAsync(path, new[] { Guid.NewGuid() }));
+            await Assert.ThrowsAnyAsync<NotSupportedException>(async () => await MiniExcel.SaveAsAsync(path, new[] { Guid.NewGuid() }));
             File.Delete(path);
         }
 

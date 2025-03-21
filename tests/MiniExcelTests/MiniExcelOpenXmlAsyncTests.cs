@@ -613,7 +613,7 @@ namespace MiniExcelLibs.Tests
             {
                 var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
                 var values = new List<int>();
-                Assert.Throws<NotImplementedException>(() => MiniExcel.SaveAsAsync(path, values).GetAwaiter().GetResult());
+                Assert.Throws<NotSupportedException>(() => MiniExcel.SaveAsAsync(path, values).GetAwaiter().GetResult());
                 File.Delete(path);
             }
         }

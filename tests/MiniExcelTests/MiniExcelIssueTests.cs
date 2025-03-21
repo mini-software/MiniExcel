@@ -3177,15 +3177,15 @@ Leave";
         {
             var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
             //MiniExcel.SaveAs(path, new[] { "1", "2" });
-            Assert.Throws<NotImplementedException>(() => MiniExcel.SaveAs(path, new[] { 1, 2 }));
+            Assert.Throws<NotSupportedException>(() => MiniExcel.SaveAs(path, new[] { 1, 2 }));
             File.Delete(path);
-            Assert.Throws<NotImplementedException>(() => MiniExcel.SaveAs(path, new[] { "1", "2" }));
+            Assert.Throws<NotSupportedException>(() => MiniExcel.SaveAs(path, new[] { "1", "2" }));
             File.Delete(path);
-            Assert.Throws<NotImplementedException>(() => MiniExcel.SaveAs(path, new[] { '1', '2' }));
+            Assert.Throws<NotSupportedException>(() => MiniExcel.SaveAs(path, new[] { '1', '2' }));
             File.Delete(path);
-            Assert.Throws<NotImplementedException>(() => MiniExcel.SaveAs(path, new[] { DateTime.Now }));
+            Assert.Throws<NotSupportedException>(() => MiniExcel.SaveAs(path, new[] { DateTime.Now }));
             File.Delete(path);
-            Assert.Throws<NotImplementedException>(() => MiniExcel.SaveAs(path, new[] { Guid.NewGuid() }));
+            Assert.Throws<NotSupportedException>(() => MiniExcel.SaveAs(path, new[] { Guid.NewGuid() }));
             File.Delete(path);
         }
 

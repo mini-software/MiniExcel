@@ -1,15 +1,15 @@
-﻿namespace MiniExcelLibs.Utils
-{
-    using MiniExcelLibs.Exceptions;
-    using System;
-    using System.Collections.Generic;
-    using System.ComponentModel;
-    using System.Data;
-    using System.Globalization;
-    using System.Linq;
-    using System.Reflection;
+﻿using MiniExcelLibs.Exceptions;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Globalization;
+using System.Linq;
+using System.Reflection;
 
-    internal static partial class TypeHelper
+namespace MiniExcelLibs.Utils
+{
+    internal static class TypeHelper
     {
         public static IEnumerable<IDictionary<string, object>> ConvertToEnumerableDictionary(IDataReader reader)
         {
@@ -19,7 +19,6 @@
                     .ToDictionary(reader.GetName, reader.GetValue);
             }
         }
-
 
         /// <summary>
         /// From : https://stackoverflow.com/questions/906499/getting-type-t-from-ienumerablet
@@ -125,7 +124,7 @@
                 else if (DateTime.TryParseExact(vs, "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out var _v2))
                     newValue = _v2;
                 else if (double.TryParse(vs, NumberStyles.None, CultureInfo.InvariantCulture, out var _d))
-                    newValue = DateTimeHelper.FromOADate(_d);
+                    newValue = DateTime.FromOADate(_d);
                 else
                     throw new InvalidCastException($"{vs} cannot be cast to DateTime");
             }

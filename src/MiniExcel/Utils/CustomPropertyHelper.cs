@@ -303,10 +303,8 @@ namespace MiniExcelLibs.Utils
                 return false;
             }
 
-            if (type.IsValueType)
-                throw new NotImplementedException($"MiniExcel does not support only {type.Name} value generic type");
-            if (type == typeof(string) || type == typeof(DateTime) || type == typeof(Guid))
-                throw new NotImplementedException($"MiniExcel does not support only {type.Name} generic type");
+            if (type.IsValueType || type == typeof(string))
+                throw new NotSupportedException($"MiniExcel does not support the use of {type.FullName} as a generic type");
 
             if (ValueIsNeededToDetermineProperties(type))
             {

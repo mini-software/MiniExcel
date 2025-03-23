@@ -134,6 +134,7 @@ namespace MiniExcelLibs.Utils
             var withCustomIndexProps = props.Where(w => w.ExcelColumnIndex != null && w.ExcelColumnIndex > -1);
             if (withCustomIndexProps.GroupBy(g => g.ExcelColumnIndex).Any(x => x.Count() > 1))
                 throw new InvalidOperationException("Duplicate column name");
+            
             var maxkey = keys.Last();
             var maxIndex = ColumnHelper.GetColumnIndex(maxkey);
             foreach (var p in props)

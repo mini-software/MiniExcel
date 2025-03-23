@@ -159,7 +159,7 @@ namespace MiniExcelLibs.Tests
         [Fact]
         public void QueryCastToIDictionary()
         {
-            var path = @"../../../../../samples/xlsx/TestCenterEmptyRow/TestCenterEmptyRow.xlsx";
+            var path = "../../../../../samples/xlsx/TestCenterEmptyRow/TestCenterEmptyRow.xlsx";
             foreach (IDictionary<string, object> row in MiniExcel.Query(path))
             {
 

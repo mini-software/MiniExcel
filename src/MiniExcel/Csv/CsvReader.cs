@@ -106,9 +106,9 @@ namespace MiniExcelLibs.Csv
                 }
             }
         }
-        public IEnumerable<T> Query<T>(string sheetName, string startCell) where T : class, new()
+        public IEnumerable<T> Query<T>(string sheetName, string startCell, bool hasHeader) where T : class, new()
         {
-            return ExcelOpenXmlSheetReader.QueryImpl<T>(Query(false, sheetName, startCell), startCell, this._config);
+            return ExcelOpenXmlSheetReader.QueryImpl<T>(Query(false, sheetName, startCell), startCell, hasHeader, _config);
         }
 
         private string[] Split(string row)
@@ -125,14 +125,14 @@ namespace MiniExcelLibs.Csv
             }
         }
 
-        public Task<IEnumerable<IDictionary<string, object>>> QueryAsync(bool UseHeaderRow, string sheetName, string startCell, CancellationToken cancellationToken = default(CancellationToken))
+        public Task<IEnumerable<IDictionary<string, object>>> QueryAsync(bool useHeaderRow, string sheetName, string startCell, CancellationToken cancellationToken = default)
         {
-            return Task.Run(() => Query(UseHeaderRow, sheetName, startCell), cancellationToken);
+            return Task.Run(() => Query(useHeaderRow, sheetName, startCell), cancellationToken);
         }
 
-        public Task<IEnumerable<T>> QueryAsync<T>(string sheetName, string startCell, CancellationToken cancellationToken = default(CancellationToken)) where T : class, new()
+        public Task<IEnumerable<T>> QueryAsync<T>(string sheetName, string startCell, bool hasHeader, CancellationToken cancellationToken = default) where T : class, new()
         {
-            return Task.Run(() => Query<T>(sheetName, startCell), cancellationToken);
+            return Task.Run(() => Query<T>(sheetName, startCell, hasHeader), cancellationToken);
         }
 
         public void Dispose()
@@ -190,14 +190,14 @@ namespace MiniExcelLibs.Csv
         {
             return ExcelOpenXmlSheetReader.QueryImplRange<T>(QueryRange(false, sheetName, startCell, endCel), startCell, endCel, this._config);
         }
-        public Task<IEnumerable<IDictionary<string, object>>> QueryAsyncRange(bool UseHeaderRow, string sheetName, string startCell, string endCel, CancellationToken cancellationToken = default(CancellationToken))
+        public Task<IEnumerable<IDictionary<string, object>>> QueryAsyncRange(bool UseHeaderRow, string sheetName, string startCell, string endCel, CancellationToken cancellationToken = default)
         {
             return Task.Run(() => QueryRange(UseHeaderRow, sheetName, startCell, endCel), cancellationToken);
         }
 
-        public Task<IEnumerable<T>> QueryAsyncRange<T>(string sheetName, string startCell, string endCel, CancellationToken cancellationToken = default(CancellationToken)) where T : class, new()
+        public Task<IEnumerable<T>> QueryAsyncRange<T>(string sheetName, string startCell, string endCel, bool hasHeader, CancellationToken cancellationToken = default) where T : class, new()
         {
-            return Task.Run(() => Query<T>(sheetName, startCell), cancellationToken);
+            return Task.Run(() => Query<T>(sheetName, startCell, hasHeader), cancellationToken);
         }
         #endregion
     }

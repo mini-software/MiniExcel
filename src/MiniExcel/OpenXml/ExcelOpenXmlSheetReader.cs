@@ -411,15 +411,17 @@ namespace MiniExcelLibs.OpenXml
             }
         }
 
-        public IEnumerable<T> Query<T>(string sheetName, string startCell) where T : class, new()
+        public IEnumerable<T> Query<T>(string sheetName, string startCell, bool hasHeader) where T : class, new()
         {
             if (sheetName == null) 
                 sheetName = CustomPropertyHelper.GetExcellSheetInfo(typeof(T), _config)?.ExcelSheetName;
-            
-            return QueryImpl<T>(Query(false, sheetName, startCell), startCell, _config);
+                     
+            //Todo: Find a way if possible to remove the 'hasHeader' parameter to check whether or not to include
+            // the first row in the result set in favor of modifying the already present 'useHeaderRow' to do the same job          
+            return QueryImpl<T>(Query(false, sheetName, startCell), startCell, hasHeader, _config);
         }
 
-        public static IEnumerable<T> QueryImpl<T>(IEnumerable<IDictionary<string, object>> values, string startCell, Configuration configuration) where T : class, new()
+        public static IEnumerable<T> QueryImpl<T>(IEnumerable<IDictionary<string, object>> values, string startCell, bool hasHeader, Configuration configuration) where T : class, new()
         {
             var type = typeof(T);
 
@@ -441,7 +443,9 @@ namespace MiniExcelLibs.OpenXml
                     //TODO: alert don't duplicate column name
                     props = CustomPropertyHelper.GetExcelCustomPropertyInfos(type, keys, configuration);
                     first = false;
-                    continue;
+
+                    if (hasHeader)
+                        continue;
                 }
                 var v = new T();
                 foreach (var pInfo in props)
@@ -761,14 +765,14 @@ namespace MiniExcelLibs.OpenXml
             }
         }
 
-        public async Task<IEnumerable<IDictionary<string, object>>> QueryAsync(bool useHeaderRow, string sheetName, string startCell, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<IEnumerable<IDictionary<string, object>>> QueryAsync(bool useHeaderRow, string sheetName, string startCell, CancellationToken cancellationToken = default)
         {
             return await Task.Run(() => Query(useHeaderRow, sheetName, startCell), cancellationToken).ConfigureAwait(false);
         }
 
-        public async Task<IEnumerable<T>> QueryAsync<T>(string sheetName, string startCell, CancellationToken cancellationToken = default(CancellationToken)) where T : class, new()
+        public async Task<IEnumerable<T>> QueryAsync<T>(string sheetName, string startCell, bool hasHeader = true, CancellationToken cancellationToken = default) where T : class, new()
         {
-            return await Task.Run(() => Query<T>(sheetName, startCell), cancellationToken).ConfigureAwait(false);
+            return await Task.Run(() => Query<T>(sheetName, startCell, hasHeader), cancellationToken).ConfigureAwait(false);
         }
 
         ~ExcelOpenXmlSheetReader()
@@ -1214,14 +1218,14 @@ namespace MiniExcelLibs.OpenXml
             }
         }
 
-        public async Task<IEnumerable<IDictionary<string, object>>> QueryAsyncRange(bool useHeaderRow, string sheetName, string startCell, string endCell, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<IEnumerable<IDictionary<string, object>>> QueryAsyncRange(bool useHeaderRow, string sheetName, string startCell, string endCell, CancellationToken cancellationToken = default)
         {
             return await Task.Run(() => Query(useHeaderRow, sheetName, startCell), cancellationToken).ConfigureAwait(false);
         }
 
-        public async Task<IEnumerable<T>> QueryAsyncRange<T>(string sheetName, string startCell, string endCell, CancellationToken cancellationToken = default(CancellationToken)) where T : class, new()
+        public async Task<IEnumerable<T>> QueryAsyncRange<T>(string sheetName, string startCell, string endCell, bool hasHeader = true, CancellationToken cancellationToken = default) where T : class, new()
         {
-            return await Task.Run(() => Query<T>(sheetName, startCell), cancellationToken).ConfigureAwait(false);
+            return await Task.Run(() => Query<T>(sheetName, startCell, hasHeader), cancellationToken).ConfigureAwait(false);
         }
 
         #endregion ReaderRange

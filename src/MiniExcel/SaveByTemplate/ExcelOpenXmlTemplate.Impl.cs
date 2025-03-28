@@ -834,7 +834,8 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                         enumrowend = newRowIndex-1;
 
                         var conditionalFormats = conditionalFormatRanges.Where(cfr => cfr.Ranges.Any(r => r.ContainsRow(originRowIndex)));
-                        foreach (var conditionalFormat in conditionalFormats) {
+                        foreach (var conditionalFormat in conditionalFormats) 
+                        {
                             var newConditionalFormat = conditionalFormat.Node.Clone();
                             var sqref = newConditionalFormat.Attributes["sqref"];
                             var ranges = conditionalFormat.Ranges.Where(r => r.ContainsRow(originRowIndex)).Select(r => new Range() 

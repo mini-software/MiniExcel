@@ -30,6 +30,7 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
             public IEnumerable CellIEnumerableValues { get; set; }
             public XMergeCell IEnumerableMercell { get; set; }
             public List<XMergeCell> RowMercells { get; set; }
+            public List<XmlElement> ConditionalFormats { get; set; }
         }
 
         public class PropInfo
@@ -153,6 +154,64 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
             }
         }
 
+        private static readonly Regex _cellRegex = new Regex("([A-Z]+)([0-9]+)");
+        private static IEnumerable<ConditionalFormatRange> ParseConditionalFormatRanges(XmlDocument doc) 
+        {
+            var conditionalFormatting = doc.SelectNodes("/x:worksheet/x:conditionalFormatting", _ns);
+
+            for(var i = 0; i < conditionalFormatting.Count; ++i) 
+            {
+                var conditionalFormat = conditionalFormatting[i];
+                var rangeValue = conditionalFormat.Attributes["sqref"]?.Value;
+                var rangeValues = rangeValue?.Split(' ');
+                var rangeList = new List<Range>();
+                foreach (var rangeVal in rangeValues) 
+                {
+                    var rangeValSplit = rangeVal.Split(':');
+                    if(rangeValSplit.Length != 0)
+                    {
+                        if(rangeValSplit.Length == 1)
+                        {
+                            var match = _cellRegex.Match(rangeValSplit[0]);
+                            if(match.Success)
+                            {
+                                var row = int.Parse(match.Groups[2].Value);
+                                var column = ColumnHelper.GetColumnIndex(match.Groups[1].Value);
+                                rangeList.Add(new Range
+                                {
+                                    StartColumn = column,
+                                    StartRow = row,
+                                    EndColumn = column,
+                                    EndRow = row
+                                });
+                            }
+                        }
+                        else
+                        {
+                            var match1 = _cellRegex.Match(rangeValSplit[0]);
+                            var match2 = _cellRegex.Match(rangeValSplit[1]);
+                            if (match1.Success && match2.Success) 
+                            {
+                                rangeList.Add(new Range
+                                {
+                                    StartColumn = ColumnHelper.GetColumnIndex(match1.Groups[1].Value),
+                                    StartRow = int.Parse(match1.Groups[2].Value),
+                                    EndColumn = ColumnHelper.GetColumnIndex(match2.Groups[1].Value),
+                                    EndRow = int.Parse(match2.Groups[2].Value)
+                                });
+                            }
+                        }
+                    }
+                }
+               
+                yield return new ConditionalFormatRange
+                {
+                    Node = conditionalFormat,
+                    Ranges = rangeList
+                };
+            }
+        }
+
         private class MergeCellIndex
         {
             public int RowStart { get; set; }
@@ -172,14 +231,44 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
             public int RowIndex { get; set; }
         }
 
+        private struct Range 
+        {
+            public int StartColumn { get; set; }
+            public int StartRow { get; set; }
+            public int EndColumn { get; set; }
+            public int EndRow { get; set; }
+
+            public bool ContainsRow(int row) 
+            {
+                return row >= StartRow && row <= EndRow;
+            }
+        }
+
+        private class ConditionalFormatRange
+        {
+            public XmlNode Node { get; set; }
+            public List<Range> Ranges { get; set; }
+        }
+
         private void WriteSheetXml(Stream stream, XmlDocument doc, XmlNode sheetData, bool mergeCells = false)
         {
+            var conditionalFormatRanges = ParseConditionalFormatRanges(doc).ToList();
+            var newConditionalFormatRanges = new List<ConditionalFormatRange>();
+            newConditionalFormatRanges.AddRange(conditionalFormatRanges);
+
             //Q.Why so complex?
             //A.Because try to use string stream avoid OOM when rendering rows
             sheetData.RemoveAll();
             sheetData.InnerText = "{{{{{{split}}}}}}"; //TODO: bad code smell
             var prefix = string.IsNullOrEmpty(sheetData.Prefix) ? "" : $"{sheetData.Prefix}:";
             var endPrefix = string.IsNullOrEmpty(sheetData.Prefix) ? "" : $":{sheetData.Prefix}"; //![image](https://user-images.githubusercontent.com/12729184/115000066-fd02b300-9ed4-11eb-8e65-bf0014015134.png)
+
+            var conditionalFormatNodes = doc.SelectNodes("/x:worksheet/x:conditionalFormatting", _ns);
+            for (var i = 0; i < conditionalFormatNodes.Count; ++i) 
+            {
+                var node = conditionalFormatNodes.Item(i);
+                node.ParentNode.RemoveChild(node);
+            }
             var contents = doc.InnerXml.Split(new string[] { $"<{prefix}sheetData>{{{{{{{{{{{{split}}}}}}}}}}}}</{prefix}sheetData>" }, StringSplitOptions.None);
             using (var writer = new StreamWriter(stream, Encoding.UTF8))
             {
@@ -743,6 +832,35 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                         }
 
                         enumrowend = newRowIndex-1;
+
+                        var conditionalFormats = conditionalFormatRanges.Where(cfr => cfr.Ranges.Any(r => r.ContainsRow(originRowIndex)));
+                        foreach (var conditionalFormat in conditionalFormats) {
+                            var newConditionalFormat = conditionalFormat.Node.Clone();
+                            var sqref = newConditionalFormat.Attributes["sqref"];
+                            var ranges = conditionalFormat.Ranges.Select(r => 
+                            {
+                                if (r.ContainsRow(originRowIndex))
+                                {
+                                    return new Range() 
+                                    { 
+                                        StartColumn = r.StartColumn,
+                                        StartRow = enumrowstart + 1,
+                                        EndColumn = r.EndColumn,
+                                        EndRow = enumrowend + 1
+                                    };
+                                }
+                                else 
+                                {
+                                    return r;
+                                }
+                            }).ToList();
+                            sqref.Value = string.Join(" ", ranges.Select(r => $"{ColumnHelper.GetAlphabetColumnName(r.StartColumn)}{r.StartRow}:{ColumnHelper.GetAlphabetColumnName(r.EndColumn)}{r.EndRow}"));
+                            newConditionalFormatRanges.Remove(conditionalFormat);
+                            newConditionalFormatRanges.Add(new ConditionalFormatRange {
+                                Node = newConditionalFormat,
+                                Ranges = ranges
+                            });
+                        }
                     }
                     else
                     {
@@ -790,6 +908,11 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                     writer.Write($"</{prefix}mergeCells>");
                 }
 
+                if(newConditionalFormatRanges.Count != 0)
+                {
+                    writer.Write(string.Join(string.Empty, newConditionalFormatRanges.Select(cf => cf.Node.OuterXml)));
+                }
+                
                 writer.Write(contents[1]);
             }
         }
@@ -913,7 +1036,6 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
         private void UpdateDimensionAndGetRowsInfo(IDictionary<string, object> inputMaps, ref XmlDocument doc, ref XmlNodeList rows, bool changeRowIndex = true)
         {
             // note : dimension need to put on the top ![image](https://user-images.githubusercontent.com/12729184/114507911-5dd88400-9c66-11eb-94c6-82ed7bdb5aab.png)
-
             var dimension = doc.SelectSingleNode("/x:worksheet/x:dimension", _ns) as XmlElement;
             if (dimension == null)
                 throw new NotImplementedException("Excel Dimension Xml is null, please issue file for me. https://github.com/shps951023/MiniExcel/issues");

@@ -39,6 +39,11 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
+      
+    - name: Setup .NET 9
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 9.0.x
 
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL

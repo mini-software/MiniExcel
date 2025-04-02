@@ -26,7 +26,6 @@ Todo : https://github.com/mini-software/MiniExcel/projects/1?fullscreen=true</De
 		<PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
 		<PackageProjectUrl>https://github.com/mini-software/MiniExcel</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/mini-software/MiniExcel</RepositoryUrl>
-		<PublishRepositoryUrl>true</PublishRepositoryUrl>
 		<PackageIcon>icon.png</PackageIcon>
 		<PackageReleaseNotes>Please Check [Release Notes](https://github.com/mini-software/MiniExcel/tree/master/docs)</PackageReleaseNotes>
 		<RepositoryType>Github</RepositoryType>

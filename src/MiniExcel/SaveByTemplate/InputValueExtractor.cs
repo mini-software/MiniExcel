@@ -15,12 +15,11 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
 
         private static IDictionary<string, object> GetValuesFromDictionary(Dictionary<string, object> valueDictionary)
         {
-            return valueDictionary
-                .ToDictionary(
-                    x => x.Key,
-                    x => x.Value is IDataReader dataReader
-                        ? TypeHelper.ConvertToEnumerableDictionary(dataReader).ToList()
-                        : x.Value);
+            return valueDictionary.ToDictionary(
+                x => x.Key,
+                x => x.Value is IDataReader dataReader
+                    ? TypeHelper.ConvertToEnumerableDictionary(dataReader).ToList()
+                    : x.Value);
         }
 
         private static IDictionary<string, object> GetValuesFromObject(object valueObject)

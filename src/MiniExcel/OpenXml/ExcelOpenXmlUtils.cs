@@ -14,15 +14,15 @@
         /// <summary>
         /// Encode to XML (special characteres: &apos; &quot; &gt; &lt; &amp;)
         /// </summary>
-        public static string EncodeXML(string value) => value == null
-                  ? string.Empty
-                  : XmlEncoder.EncodeString(value)
-                              .Replace("&", "&amp;")
-                              .Replace("<", "&lt;")
-                              .Replace(">", "&gt;")
-                              .Replace("\"", "&quot;")
-                              .Replace("'", "&apos;")
-                              .ToString();
+        public static string EncodeXML(string value) 
+            => value == null ? string.Empty 
+            : XmlEncoder.EncodeString(value)
+                      .Replace("&", "&amp;")
+                      .Replace("<", "&lt;")
+                      .Replace(">", "&gt;")
+                      .Replace("\"", "&quot;")
+                      .Replace("'", "&apos;")
+                      .ToString();
 
         /// <summary>X=CellLetter,Y=CellNumber,ex:A1=(1,1),B2=(2,2)</summary>
         public static string ConvertXyToCell(Tuple<int, int> xy)
@@ -34,14 +34,14 @@
         public static string ConvertXyToCell(int x, int y)
         {
             int dividend = x;
-            string columnName = String.Empty;
+            string columnName = string.Empty;
             int modulo;
 
             while (dividend > 0)
             {
                 modulo = (dividend - 1) % 26;
-                columnName = Convert.ToChar(65 + modulo).ToString() + columnName;
-                dividend = (int)((dividend - modulo) / 26);
+                columnName = Convert.ToChar(65 + modulo) + columnName;
+                dividend = (dividend - modulo) / 26;
             }
             return $"{columnName}{y}";
         }

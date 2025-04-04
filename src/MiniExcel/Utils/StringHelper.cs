@@ -1,27 +1,19 @@
-﻿namespace MiniExcelLibs.Utils
+﻿using MiniExcelLibs.OpenXml;
+using System.Linq;
+using System.Text;
+using System.Xml;
+    
+namespace MiniExcelLibs.Utils
 {
-    using MiniExcelLibs.OpenXml;
-    using System;
-    using System.Linq;
-    using System.Text;
-    using System.Xml;
-
     internal static class StringHelper
     {
         private static readonly string[] _ns = { Config.SpreadsheetmlXmlns, Config.SpreadsheetmlXmlStrictns };
-        public static string GetLetter(string content)
-        {
-            //TODO:need to chekc
-            return new String(content.Where(Char.IsLetter).ToArray());
-        }
-
-        public static int GetNumber(string content)
-        {
-            return int.Parse(new String(content.Where(Char.IsNumber).ToArray()));
-        }
+        public static string GetLetter(string content) => content.FirstOrDefault(char.IsLetter).ToString();
+        public static int GetDigit(string content) => content.FirstOrDefault(char.IsDigit) - '0';
+        public static int GetNumber(string content) => int.Parse(new string(content.Where(char.IsNumber).ToArray()));
 
         /// <summary>
-        /// Copy&Modify from ExcelDataReader @MIT License
+        /// Copied and modified from ExcelDataReader - @MIT License
         /// </summary>
         public static string ReadStringItem(XmlReader reader)
         {
@@ -50,7 +42,7 @@
         }
 
         /// <summary>
-        /// Copy&Modify from ExcelDataReader @MIT License
+        /// Copied and modified from ExcelDataReader - @MIT License
         /// </summary>
         private static string ReadRichTextRun(XmlReader reader)
         {
@@ -73,5 +65,4 @@
             return result.ToString();
         }
     }
-
 }

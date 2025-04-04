@@ -4,6 +4,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
+using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -14,108 +15,134 @@ using System.Xml;
 
 namespace MiniExcelLibs.OpenXml.SaveByTemplate
 {
+    #region Utils
+    internal class XRowInfo
+    {
+        public string FormatText { get; set; }
+        public string IEnumerablePropName { get; set; }
+        public XmlElement Row { get; set; }
+        public Type IEnumerableGenericType { get; set; }
+        public IDictionary<string, PropInfo> PropsMap { get; set; }
+        public bool IsDictionary { get; set; }
+        public bool IsDataTable { get; set; }
+        public int CellIEnumerableValuesCount { get; set; }
+        public IList<object> CellIlListValues { get; set; }
+        public IEnumerable CellIEnumerableValues { get; set; }
+        public XMergeCell IEnumerableMercell { get; set; }
+        public List<XMergeCell> RowMercells { get; set; }
+        public List<XmlElement> ConditionalFormats { get; set; }
+    }
+
+    internal class PropInfo
+    {
+        public PropertyInfo PropertyInfo { get; set; }
+        public FieldInfo FieldInfo { get; set; }
+        public Type UnderlyingTypePropType { get; set; }
+        public PropertyInfoOrFieldInfo PropertyInfoOrFieldInfo { get; set; } = PropertyInfoOrFieldInfo.None;
+    }
+
+    internal enum PropertyInfoOrFieldInfo
+    {
+        None = 0,
+        PropertyInfo = 1,
+        FieldInfo = 2
+    }
+
+    internal class XMergeCell
+    {
+        public XMergeCell(XMergeCell mergeCell)
+        {
+            Width = mergeCell.Width;
+            Height = mergeCell.Height;
+            X1 = mergeCell.X1;
+            Y1 = mergeCell.Y1;
+            X2 = mergeCell.X2;
+            Y2 = mergeCell.Y2;
+            MergeCell = mergeCell.MergeCell;
+        }
+        public XMergeCell(XmlElement mergeCell)
+        {
+            var refAttr = mergeCell.Attributes["ref"].Value;
+            var refs = refAttr.Split(':');
+
+            //TODO: width,height
+            var xy1 = refs[0];
+            X1 = ColumnHelper.GetColumnIndex(StringHelper.GetLetter(refs[0]));
+            Y1 = StringHelper.GetNumber(xy1);
+
+            var xy2 = refs[1];
+            X2 = ColumnHelper.GetColumnIndex(StringHelper.GetLetter(refs[1]));
+            Y2 = StringHelper.GetNumber(xy2);
+
+            Width = Math.Abs(X1 - X2) + 1;
+            Height = Math.Abs(Y1 - Y2) + 1;
+        }
+        public XMergeCell(string x1, int y1, string x2, int y2)
+        {
+            X1 = ColumnHelper.GetColumnIndex(x1);
+            Y1 = y1;
+
+            X2 = ColumnHelper.GetColumnIndex(x2);
+            Y2 = y2;
+
+            Width = Math.Abs(X1 - X2) + 1;
+            Height = Math.Abs(Y1 - Y2) + 1;
+        }
+
+        public string XY1 => $"{ColumnHelper.GetAlphabetColumnName(X1)}{Y1}";
+        public int X1 { get; set; }
+        public int Y1 { get; set; }
+        public string XY2 => $"{ColumnHelper.GetAlphabetColumnName(X2)}{Y2}";
+        public int X2 { get; set; }
+        public int Y2 { get; set; }
+        public string Ref => $"{ColumnHelper.GetAlphabetColumnName(X1)}{Y1}:{ColumnHelper.GetAlphabetColumnName(X2)}{Y2}";
+        public XmlElement MergeCell { get; set; }
+        public int Width { get; internal set; }
+        public int Height { get; internal set; }
+
+        public string ToXmlString(string prefix) 
+            => $"<{prefix}mergeCell ref=\"{ColumnHelper.GetAlphabetColumnName(X1)}{Y1}:{ColumnHelper.GetAlphabetColumnName(X2)}{Y2}\"/>";
+    }
+    
+    internal class MergeCellIndex
+    {
+        public int RowStart { get; set; }
+        public int RowEnd { get; set; }
+
+        public MergeCellIndex(int rowStart, int rowEnd)
+        {
+            RowStart = rowStart;
+            RowEnd = rowEnd;
+        }
+    }
+
+    internal class XChildNode
+    {
+        public string InnerText { get; set; }
+        public string ColIndex { get; set; }
+        public int RowIndex { get; set; }
+    }
+    #endregion
+    
     internal partial class ExcelOpenXmlTemplate
     {
-        public class XRowInfo
-        {
-            public string FormatText { get; set; }
-            public string IEnumerablePropName { get; set; }
-            public XmlElement Row { get; set; }
-            public Type IEnumerableGenricType { get; set; }
-            public IDictionary<string, PropInfo> PropsMap { get; set; }
-            public bool IsDictionary { get; set; }
-            public bool IsDataTable { get; set; }
-            public int CellIEnumerableValuesCount { get; set; }
-            public IList<object> CellIlListValues { get; set; }
-            public IEnumerable CellIEnumerableValues { get; set; }
-            public XMergeCell IEnumerableMercell { get; set; }
-            public List<XMergeCell> RowMercells { get; set; }
-            public List<XmlElement> ConditionalFormats { get; set; }
-        }
+        private List<XRowInfo> _xRowInfos;
+        private readonly List<string> _calcChainCellRefs = new List<string>();
+        private Dictionary<string, XMergeCell> _xMergeCellInfos;
+        private List<XMergeCell> _newXMergeCellInfos;
+      
+#if NET7_0_OR_GREATER
+        [GeneratedRegex("([A-Z]+)([0-9]+)")] private static partial Regex CellRegex();
+        private static readonly Regex _cellRegex = CellRegex();
+        [GeneratedRegex(@"\{\{([^}]+)\}\}")] private static partial Regex TemplateRegex();
+        private static readonly Regex _templateRegex = TemplateRegex();
 
-        public class PropInfo
-        {
-            public PropertyInfo PropertyInfo { get; set; }
-            public FieldInfo FieldInfo { get; set; }
-            public Type UnderlyingTypePropType { get; set; }
-            public PropertyInfoOrFieldInfo PropertyInfoOrFieldInfo { get; set; } = PropertyInfoOrFieldInfo.None;
-        }
+#else
+        private static readonly Regex _cellRegex = new Regex("([A-Z]+)([0-9]+)", RegexOptions.Compiled);
+        private static readonly Regex _templateRegex = new Regex(@"\{\{[^}]+\}\}", RegexOptions.Compiled);
+#endif
 
-        public enum PropertyInfoOrFieldInfo
-        {
-            None = 0,
-            PropertyInfo = 1,
-            FieldInfo = 2
-        }
-
-        public class XMergeCell
-        {
-            public XMergeCell(XMergeCell mergeCell)
-            {
-                this.Width = mergeCell.Width;
-                this.Height = mergeCell.Height;
-                this.X1 = mergeCell.X1;
-                this.Y1 = mergeCell.Y1;
-                this.X2 = mergeCell.X2;
-                this.Y2 = mergeCell.Y2;
-                this.MergeCell = mergeCell.MergeCell;
-            }
-            public XMergeCell(XmlElement mergeCell)
-            {
-                var @ref = mergeCell.Attributes["ref"].Value;
-                var refs = @ref.Split(':');
-
-                //TODO: width,height
-                var xy1 = refs[0];
-                X1 = ColumnHelper.GetColumnIndex(StringHelper.GetLetter(refs[0]));
-                Y1 = StringHelper.GetNumber(xy1);
-
-                var xy2 = refs[1];
-                X2 = ColumnHelper.GetColumnIndex(StringHelper.GetLetter(refs[1]));
-                Y2 = StringHelper.GetNumber(xy2);
-
-                Width = Math.Abs(X1 - X2) + 1;
-                Height = Math.Abs(Y1 - Y2) + 1;
-            }
-            public XMergeCell(string x1, int y1, string x2, int y2)
-            {
-                X1 = ColumnHelper.GetColumnIndex(x1);
-                Y1 = y1;
-
-                X2 = ColumnHelper.GetColumnIndex(x2);
-                Y2 = y2;
-
-                Width = Math.Abs(X1 - X2) + 1;
-                Height = Math.Abs(Y1 - Y2) + 1;
-            }
-
-            public string XY1 { get { return $"{ColumnHelper.GetAlphabetColumnName(X1)}{Y1}"; } }
-            public int X1 { get; set; }
-            public int Y1 { get; set; }
-            public string XY2 { get { return $"{ColumnHelper.GetAlphabetColumnName(X2)}{Y2}"; } }
-            public int X2 { get; set; }
-            public int Y2 { get; set; }
-            public string Ref { get { return $"{ColumnHelper.GetAlphabetColumnName(X1)}{Y1}:{ColumnHelper.GetAlphabetColumnName(X2)}{Y2}"; } }
-            public XmlElement MergeCell { get; set; }
-            public int Width { get; internal set; }
-            public int Height { get; internal set; }
-
-            public string ToXmlString(string prefix)
-            {
-                return $"<{prefix}mergeCell ref=\"{ColumnHelper.GetAlphabetColumnName(X1)}{Y1}:{ColumnHelper.GetAlphabetColumnName(X2)}{Y2}\"/>";
-            }
-        }
-
-        private List<XRowInfo> XRowInfos { get; set; }
-
-        private readonly List<string> CalcChainCellRefs = new List<string>();
-
-        private Dictionary<string, XMergeCell> XMergeCellInfos { get; set; }
-        public List<XMergeCell> NewXMergeCellInfos { get; private set; }
-
-        private void GenerateSheetXmlImpl(ZipArchiveEntry sheetZipEntry, Stream stream, Stream sheetStream,
-            IDictionary<string, object> inputMaps, IDictionary<int, string> sharedStrings,
-            bool mergeCells = false)
+        private void GenerateSheetXmlImpl(ZipArchiveEntry sheetZipEntry, Stream stream, Stream sheetStream, IDictionary<string, object> inputMaps, IDictionary<int, string> sharedStrings, bool mergeCells = false)
         {
             var doc = new XmlDocument();
             doc.Load(sheetStream);
@@ -125,81 +152,80 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
 
             var worksheet = doc.SelectSingleNode("/x:worksheet", _ns);
             var sheetData = doc.SelectSingleNode("/x:worksheet/x:sheetData", _ns);
-            var newSheetData = sheetData.Clone(); //avoid delete lost data
-            var rows = newSheetData.SelectNodes($"x:row", _ns);
+            var newSheetData = sheetData?.Clone(); //avoid delete lost data
+            var rows = newSheetData?.SelectNodes("x:row", _ns);
 
-            ReplaceSharedStringsToStr(sharedStrings, ref rows);
-            GetMercells(doc, worksheet);
-            UpdateDimensionAndGetRowsInfo(inputMaps, ref doc, ref rows, !mergeCells);
+            ReplaceSharedStringsToStr(sharedStrings, rows);
+            GetMergeCells(doc, worksheet);
+            UpdateDimensionAndGetRowsInfo(inputMaps, doc, rows, !mergeCells);
 
             WriteSheetXml(stream, doc, sheetData, mergeCells);
-
         }
 
-        private void GetMercells(XmlDocument doc, XmlNode worksheet)
+        private void GetMergeCells(XmlDocument doc, XmlNode worksheet)
         {
-            var mergeCells = doc.SelectSingleNode($"/x:worksheet/x:mergeCells", _ns);
-            if (mergeCells != null)
-            {
-                var newMergeCells = mergeCells.Clone();
-                //mergeCells.RemoveAll();
-                worksheet.RemoveChild(mergeCells);
+            var mergeCells = doc.SelectSingleNode("/x:worksheet/x:mergeCells", _ns);
+            if (mergeCells == null)
+                return;
+            
+            var newMergeCells = mergeCells.Clone();
+            worksheet.RemoveChild(mergeCells);
 
-                foreach (XmlElement cell in newMergeCells)
-                {
-                    var @ref = cell.Attributes["ref"].Value;
-                    var mergerCell = new XMergeCell(cell);
-                    this.XMergeCellInfos[mergerCell.XY1] = mergerCell;
-                }
+            foreach (XmlElement cell in newMergeCells)
+            {
+                var mergerCell = new XMergeCell(cell);
+                _xMergeCellInfos[mergerCell.XY1] = mergerCell;
             }
         }
 
-        private static readonly Regex _cellRegex = new Regex("([A-Z]+)([0-9]+)");
         private static IEnumerable<ConditionalFormatRange> ParseConditionalFormatRanges(XmlDocument doc) 
         {
             var conditionalFormatting = doc.SelectNodes("/x:worksheet/x:conditionalFormatting", _ns);
+            if (conditionalFormatting == null)
+                yield break;
 
-            for(var i = 0; i < conditionalFormatting.Count; ++i) 
+            foreach(XmlNode conditionalFormat in conditionalFormatting)
             {
-                var conditionalFormat = conditionalFormatting[i];
-                var rangeValue = conditionalFormat.Attributes["sqref"]?.Value;
-                var rangeValues = rangeValue?.Split(' ');
+                var rangeValues = conditionalFormat.Attributes?["sqref"]?.Value.Split(' ');
+                if (rangeValues == null)
+                    continue;
+                
                 var rangeList = new List<Range>();
                 foreach (var rangeVal in rangeValues) 
                 {
                     var rangeValSplit = rangeVal.Split(':');
-                    if(rangeValSplit.Length != 0)
+                    if (rangeValSplit.Length == 0) 
+                        continue;
+                    
+                    if (rangeValSplit.Length == 1)
                     {
-                        if(rangeValSplit.Length == 1)
+                        var match = _cellRegex.Match(rangeValSplit[0]);
+                        if (!match.Success)
+                            continue;
+                        
+                        var row = int.Parse(match.Groups[2].Value);
+                        var column = ColumnHelper.GetColumnIndex(match.Groups[1].Value);
+                        rangeList.Add(new Range
                         {
-                            var match = _cellRegex.Match(rangeValSplit[0]);
-                            if(match.Success)
-                            {
-                                var row = int.Parse(match.Groups[2].Value);
-                                var column = ColumnHelper.GetColumnIndex(match.Groups[1].Value);
-                                rangeList.Add(new Range
-                                {
-                                    StartColumn = column,
-                                    StartRow = row,
-                                    EndColumn = column,
-                                    EndRow = row
-                                });
-                            }
-                        }
-                        else
+                            StartColumn = column,
+                            StartRow = row,
+                            EndColumn = column,
+                            EndRow = row
+                        });
+                    }
+                    else
+                    {
+                        var match1 = _cellRegex.Match(rangeValSplit[0]);
+                        var match2 = _cellRegex.Match(rangeValSplit[1]);
+                        if (match1.Success && match2.Success) 
                         {
-                            var match1 = _cellRegex.Match(rangeValSplit[0]);
-                            var match2 = _cellRegex.Match(rangeValSplit[1]);
-                            if (match1.Success && match2.Success) 
+                            rangeList.Add(new Range
                             {
-                                rangeList.Add(new Range
-                                {
-                                    StartColumn = ColumnHelper.GetColumnIndex(match1.Groups[1].Value),
-                                    StartRow = int.Parse(match1.Groups[2].Value),
-                                    EndColumn = ColumnHelper.GetColumnIndex(match2.Groups[1].Value),
-                                    EndRow = int.Parse(match2.Groups[2].Value)
-                                });
-                            }
+                                StartColumn = ColumnHelper.GetColumnIndex(match1.Groups[1].Value),
+                                StartRow = int.Parse(match1.Groups[2].Value),
+                                EndColumn = ColumnHelper.GetColumnIndex(match2.Groups[1].Value),
+                                EndRow = int.Parse(match2.Groups[2].Value)
+                            });
                         }
                     }
                 }
@@ -224,13 +250,6 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
             }
         }
 
-        private class XChildNode
-        {
-            public string InnerText { get; set; }
-            public string ColIndex { get; set; }
-            public int RowIndex { get; set; }
-        }
-
         private struct Range 
         {
             public int StartColumn { get; set; }
@@ -238,10 +257,7 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
             public int EndColumn { get; set; }
             public int EndRow { get; set; }
 
-            public bool ContainsRow(int row) 
-            {
-                return row >= StartRow && row <= EndRow;
-            }
+            public bool ContainsRow(int row) => StartRow <= row && row <= EndRow;
         }
 
         private class ConditionalFormatRange
@@ -252,146 +268,39 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
 
         private void WriteSheetXml(Stream stream, XmlDocument doc, XmlNode sheetData, bool mergeCells = false)
         {
+            //Q.Why so complex?
+            //A.Because try to use string stream avoid OOM when rendering rows
+
             var conditionalFormatRanges = ParseConditionalFormatRanges(doc).ToList();
             var newConditionalFormatRanges = new List<ConditionalFormatRange>();
             newConditionalFormatRanges.AddRange(conditionalFormatRanges);
 
-            //Q.Why so complex?
-            //A.Because try to use string stream avoid OOM when rendering rows
             sheetData.RemoveAll();
             sheetData.InnerText = "{{{{{{split}}}}}}"; //TODO: bad code smell
+            
             var prefix = string.IsNullOrEmpty(sheetData.Prefix) ? "" : $"{sheetData.Prefix}:";
-            var endPrefix = string.IsNullOrEmpty(sheetData.Prefix) ? "" : $":{sheetData.Prefix}"; //![image](https://user-images.githubusercontent.com/12729184/115000066-fd02b300-9ed4-11eb-8e65-bf0014015134.png)
+            var endPrefix = string.IsNullOrEmpty(sheetData.Prefix) ? "" : $":{sheetData.Prefix}"; // https://user-images.githubusercontent.com/12729184/115000066-fd02b300-9ed4-11eb-8e65-bf0014015134.png
+            var contents = doc.InnerXml.Split(new[] { $"<{prefix}sheetData>{{{{{{{{{{{{split}}}}}}}}}}}}</{prefix}sheetData>" }, StringSplitOptions.None);
 
             var conditionalFormatNodes = doc.SelectNodes("/x:worksheet/x:conditionalFormatting", _ns);
-            for (var i = 0; i < conditionalFormatNodes.Count; ++i) 
+            for (var i = 0; i < conditionalFormatNodes?.Count; ++i) 
             {
                 var node = conditionalFormatNodes.Item(i);
                 node.ParentNode.RemoveChild(node);
             }
-            var contents = doc.InnerXml.Split(new string[] { $"<{prefix}sheetData>{{{{{{{{{{{{split}}}}}}}}}}}}</{prefix}sheetData>" }, StringSplitOptions.None);
+
             using (var writer = new StreamWriter(stream, Encoding.UTF8))
             {
                 writer.Write(contents[0]);
                 writer.Write($"<{prefix}sheetData>"); // prefix problem
 
-                #region MergeCells
-
                 if (mergeCells)
                 {
-                    var mergeTaggedColumns = new Dictionary<XChildNode, XChildNode>();
-                    var columns = XRowInfos.SelectMany(s => s.Row.Cast<XmlElement>())
-                        .Where(s => !string.IsNullOrEmpty(s.InnerText)).Select(s =>
-                        {
-                            var att = s.GetAttribute("r");
-                            return new XChildNode()
-                            {
-                                InnerText = s.InnerText,
-                                ColIndex = StringHelper.GetLetter(att),
-                                RowIndex = StringHelper.GetNumber(att)
-                            };
-                        }).OrderBy(x => x.RowIndex).ToList();
-
-                    var mergeColumns = columns.Where(s => s.InnerText.Contains("@merge")).ToList();
-                    var endMergeColumns = columns.Where(s => s.InnerText.Contains("@endmerge")).ToList();
-                    var mergeLimitColumn = mergeColumns.FirstOrDefault(x => x.InnerText.Contains("@mergelimit"));
-
-                    foreach (var mergeColumn in mergeColumns)
-                    {
-                        var endMergeColumn = endMergeColumns.FirstOrDefault(s =>
-                            s.ColIndex == mergeColumn.ColIndex && s.RowIndex > mergeColumn.RowIndex);
-
-                        if (endMergeColumn != null)
-                        {
-                            mergeTaggedColumns[mergeColumn] = endMergeColumn;
-                        }
-                    }
-
-                    var calculatedColumns = new List<XChildNode>();
-
-                    if (mergeTaggedColumns.Count > 0)
-                    {
-                        foreach (var taggedColumn in mergeTaggedColumns)
-                        {
-                            calculatedColumns.AddRange(columns.Where(x =>
-                                x.ColIndex == taggedColumn.Key.ColIndex && x.RowIndex > taggedColumn.Key.RowIndex &&
-                                x.RowIndex < taggedColumn.Value.RowIndex));
-                        }
-
-                        Dictionary<int, MergeCellIndex>
-                            lastMergeCellIndexes = new Dictionary<int, MergeCellIndex>();
-
-                        for (int rowNo = 0; rowNo < XRowInfos.Count; rowNo++)
-                        {
-                            var rowInfo = XRowInfos[rowNo];
-                            var row = rowInfo.Row;
-                            var childNodes = row.ChildNodes.Cast<XmlElement>().ToList();
-
-                            foreach (var childNode in childNodes)
-                            {
-                                var att = childNode.GetAttribute("r");
-                                var childNodeLetter = StringHelper.GetLetter(att);
-                                var childNodeNumber = StringHelper.GetNumber(att);
-
-                                if (!string.IsNullOrEmpty(childNode.InnerText))
-                                {
-                                    var xmlNodes = calculatedColumns
-                                        .Where(j => j.InnerText == childNode.InnerText && j.ColIndex == childNodeLetter)
-                                        .OrderBy(s => s.RowIndex).ToList();
-
-                                    if (xmlNodes.Count > 1)
-                                    {
-                                        if (mergeLimitColumn != null)
-                                        {
-                                            var limitedNode = calculatedColumns.First(j =>
-                                                j.ColIndex == mergeLimitColumn.ColIndex && j.RowIndex == childNodeNumber);
-
-                                            var limitedMaxNode = calculatedColumns.Last(j =>
-                                                j.ColIndex == mergeLimitColumn.ColIndex && j.InnerText == limitedNode.InnerText);
-
-                                            xmlNodes = xmlNodes.Where(j => j.RowIndex >= limitedNode.RowIndex && j.RowIndex <= limitedMaxNode.RowIndex).ToList();
-                                        }
-
-                                        var firstRow = xmlNodes.FirstOrDefault();
-                                        var lastRow = xmlNodes.LastOrDefault(s =>
-                                            s.RowIndex <= firstRow?.RowIndex + xmlNodes.Count &&
-                                            s.RowIndex != firstRow?.RowIndex);
-
-                                        if (firstRow != null && lastRow != null)
-                                        {
-                                            var mergeCell = new XMergeCell(firstRow.ColIndex, firstRow.RowIndex,
-                                                lastRow.ColIndex, lastRow.RowIndex);
-
-                                            var mergeIndexResult =
-                                                lastMergeCellIndexes.TryGetValue(mergeCell.X1, out var mergeIndex);
-
-                                            if (!mergeIndexResult || mergeCell.Y1 < mergeIndex.RowStart ||
-                                                mergeCell.Y2 > mergeIndex.RowEnd)
-                                            {
-                                                lastMergeCellIndexes[mergeCell.X1] =
-                                                    new MergeCellIndex(mergeCell.Y1, mergeCell.Y2);
-
-                                                if (rowInfo.RowMercells == null)
-                                                {
-                                                    rowInfo.RowMercells = new List<XMergeCell>();
-                                                }
-
-                                                rowInfo.RowMercells.Add(mergeCell);
-                                            }
-                                        }
-                                    }
-                                }
-
-                                childNode.SetAttribute("r", $"{childNodeLetter}{{{{$rowindex}}}}"); //TODO:
-                            }
-                        }
-                    }
+                    MergeCells(_xRowInfos);
                 }
 
-                #endregion
-
                 #region Generate rows and cells
-                int originRowIndex;
+
                 int rowIndexDiff = 0;
                 var rowXml = new StringBuilder();
 
@@ -409,17 +318,15 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                 int groupRowCount = 0;
                 int headerDiff = 0;
                 bool isFirstRound = true;
-                string currentHeader = "";
                 string prevHeader = "";
-                bool isHeaderRow = false;
                 int mergeRowCount = 0;
 
-                for (int rowNo = 0; rowNo < XRowInfos.Count; rowNo++)
+                for (int rowNo = 0; rowNo < _xRowInfos.Count; rowNo++)
                 {
-                    isHeaderRow = false;
-                    currentHeader = "";
+                    var isHeaderRow = false;
+                    var currentHeader = "";
 
-                    var rowInfo = XRowInfos[rowNo];
+                    var rowInfo = _xRowInfos[rowNo];
                     var row = rowInfo.Row;
 
                     if (row.InnerText.Contains("@group"))
@@ -442,6 +349,7 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                             headerDiff++;
                             continue;
                         }
+                        
                         rowNo = groupStartRowIndex;
                         cellIEnumerableValuesIndex++;
                         isFirstRound = false;
@@ -462,15 +370,16 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                         continue;
                     }
 
-                    if (groupingStarted && !isCellIEnumerableValuesSet && rowInfo.CellIlListValues != null)
+                    if (groupingStarted && !isCellIEnumerableValuesSet)
                     {
-                        cellIEnumerableValues = rowInfo.CellIlListValues;
+                        cellIEnumerableValues = rowInfo.CellIlListValues 
+                            ?? rowInfo.CellIEnumerableValues.Cast<object>().ToList();
                         isCellIEnumerableValuesSet = true;
                     }
 
-                    var groupingRowDiff =
-                        (hasEverGroupStarted ? (-1 + cellIEnumerableValuesIndex * groupRowCount - headerDiff) : 0);
-
+                    var groupingRowDiff = hasEverGroupStarted 
+                        ? cellIEnumerableValuesIndex * groupRowCount - headerDiff - 1 : 0;
+                    
                     if (groupingStarted)
                     {
                         if (isFirstRound)
@@ -481,25 +390,27 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                         if (cellIEnumerableValues != null)
                         {
                             rowInfo.CellIEnumerableValuesCount = 1;
-                            rowInfo.CellIEnumerableValues =
-                                cellIEnumerableValues.Skip(cellIEnumerableValuesIndex).Take(1).ToList();
+                            
+                            var listValue = new List<object> { cellIEnumerableValues[cellIEnumerableValuesIndex] };
+                            rowInfo.CellIEnumerableValues = listValue;
+                            rowInfo.CellIlListValues = listValue;
                         }
                     }
 
                     //TODO: some xlsx without r
-                    originRowIndex = int.Parse(row.GetAttribute("r"));
+                    var originRowIndex = int.Parse(row.GetAttribute("r"));
                     var newRowIndex = originRowIndex + rowIndexDiff + groupingRowDiff - mergeRowCount;
 
                     string innerXml = row.InnerXml;
-                    rowXml.Clear()
-                          .AppendFormat(@"<{0}", row.Name);
-                    foreach (var attr in row.Attributes.Cast<XmlAttribute>()
-                                                       .Where(e => e.Name != "r"))
+                    rowXml.Clear().AppendFormat("<{0}", row.Name);
+                    foreach (XmlAttribute attr in row.Attributes)
                     {
-                        rowXml.AppendFormat(@" {0}=""{1}""", attr.Name, attr.Value);
+                        if (attr.Name != "r")
+                            rowXml.AppendFormat(@" {0}=""{1}""", attr.Name, attr.Value);
                     }
 
-                    string outerXmlOpen = rowXml.ToString();
+                    var outerXmlOpen = new StringBuilder();
+                    outerXmlOpen.Append(rowXml);
 
                     if (rowInfo.CellIEnumerableValues != null)
                     {
@@ -512,11 +423,11 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                             iEnumerableIndex++;
 
                             rowXml.Clear()
-                                  .Append(outerXmlOpen)
-                                  .AppendFormat(@" r=""{0}"">", newRowIndex)
-                                  .Append(innerXml)
-                                  .Replace($"{{{{$rowindex}}}}", newRowIndex.ToString())
-                                  .AppendFormat(@"</{0}>", row.Name);
+                                .Append(outerXmlOpen)
+                                .AppendFormat(@" r=""{0}"">", newRowIndex)
+                                .Append(innerXml)
+                                .Replace($"{{{{$rowindex}}}}", newRowIndex.ToString())
+                                .AppendFormat("</{0}>", row.Name);
 
                             var rowXmlString = rowXml.ToString();
                             var extract = "";
@@ -529,208 +440,107 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                             {
                                 extract = rowXmlString.Substring(ifIndex, endifIndex - ifIndex + 6);
                             }
-
                             var lines = extract.Split('\n');
 
-                            if (rowInfo.IsDictionary)
+                            var isDictOrTable = rowInfo.IsDictionary || rowInfo.IsDataTable;
+                            var dict = item as IDictionary<string, object>;
+                            var dataRow = item as DataRow;
+                            
+                            for (var i = 0; i < lines.Length; i++)
                             {
-                                var dic = item as IDictionary<string, object>;
-
-                                for (var i = 0; i < lines.Length; i++)
+                                if (lines[i].Contains("@if") || lines[i].Contains("@elseif"))
                                 {
-                                    if (lines[i].Contains("@if") || lines[i].Contains("@elseif"))
+                                    var newLines = lines[i]
+                                        .Replace("@elseif(", "")
+                                        .Replace("@if(", "")
+                                        .Replace(")", "")
+                                        .Split(' ');
+                                    
+                                    object value;
+                                    if (rowInfo.IsDictionary)
                                     {
-                                        var newLines = lines[i].Replace("@elseif(", "").Replace("@if(", "").Replace(")", "").Split(' ');
-
-                                        var value = dic[newLines[0]];
-                                        var evaluation = EvaluateStatement(value, newLines[1], newLines[2]);
-
-                                        if (evaluation)
-                                        {
-                                            newCellValue += lines[i + 1];
-                                            break;
-                                        }
+                                        value = dict[newLines[0]];
                                     }
-                                    else if (lines[i].Contains("@else"))
+                                    else if (rowInfo.IsDataTable)
                                     {
-                                        newCellValue += lines[i + 1];
-                                        break;
+                                        value = dataRow[newLines[0]];
                                     }
-                                }
-
-                                if (!string.IsNullOrEmpty(newCellValue))
-                                {
-                                    rowXml.Replace(extract, newCellValue);
-                                }
-
-                                foreach (var propInfo in rowInfo.PropsMap)
-                                {
-                                    var key = $"{{{{{rowInfo.IEnumerablePropName}.{propInfo.Key}}}}}";
-                                    if (item == null) //![image](https://user-images.githubusercontent.com/12729184/114728510-bc3e5900-9d71-11eb-9721-8a414dca21a0.png)
+                                    else
                                     {
-                                        rowXml.Replace(key, "");
-                                        continue;
-                                    }
-                                    if (!dic.TryGetValue(propInfo.Key, out var cellValue))
-                                        continue;
-                                    if (cellValue == null)
-                                    {
-                                        rowXml.Replace(key, "");
-                                        continue;
-                                    }
-
-
-                                    var cellValueStr = ExcelOpenXmlUtils.EncodeXML(cellValue?.ToString());
-                                    var type = propInfo.Value.UnderlyingTypePropType;
-                                    if (type == typeof(bool))
-                                    {
-                                        cellValueStr = (bool)cellValue ? "1" : "0";
-                                    }
-                                    else if (type == typeof(DateTime))
-                                    {
-                                        cellValueStr = ConvertToDateTimeString(propInfo, cellValue);
-                                    }
-
-                                    //TODO: ![image](https://user-images.githubusercontent.com/12729184/114848248-17735880-9e11-11eb-8258-63266bda0a1a.png)
-
-                                    rowXml.Replace("@header" + key, cellValueStr);
-                                    rowXml.Replace(key, cellValueStr);
-
-                                    if (isHeaderRow && row.InnerText.Contains(key))
-                                    {
-                                        currentHeader += cellValueStr;
-                                    }
-                                }
-                            }
-                            else if (rowInfo.IsDataTable)
-                            {
-                                var datarow = item as DataRow;
-
-                                for (var i = 0; i < lines.Length; i++)
-                                {
-                                    if (lines[i].Contains("@if") || lines[i].Contains("@elseif"))
-                                    {
-                                        var newLines = lines[i].Replace("@elseif(", "").Replace("@if(", "").Replace(")", "").Split(' ');
-
-                                        var value = datarow[newLines[0]];
-                                        var evaluation = EvaluateStatement(value, newLines[1], newLines[2]);
-
-                                        if (evaluation)
-                                        {
-                                            newCellValue += lines[i + 1];
-                                            break;
-                                        }
-                                    }
-                                    else if (lines[i].Contains("@else"))
-                                    {
-                                        newCellValue += lines[i + 1];
-                                        break;
-                                    }
-                                }
-
-                                if (!string.IsNullOrEmpty(newCellValue))
-                                {
-                                    rowXml.Replace(extract, newCellValue);
-                                }
-
-                                foreach (var propInfo in rowInfo.PropsMap)
-                                {
-                                    var key = $"{{{{{rowInfo.IEnumerablePropName}.{propInfo.Key}}}}}";
-                                    if (item == null) //![image](https://user-images.githubusercontent.com/12729184/114728510-bc3e5900-9d71-11eb-9721-8a414dca21a0.png)
-                                    {
-                                        rowXml.Replace(key, "");
-                                        continue;
-                                    }
-
-                                    var cellValue = datarow[propInfo.Key];
-                                    if (cellValue == null)
-                                    {
-                                        rowXml.Replace(key, "");
-                                        continue;
-                                    }
-
-
-                                    var cellValueStr = ExcelOpenXmlUtils.EncodeXML(cellValue?.ToString());
-                                    var type = propInfo.Value.UnderlyingTypePropType;
-                                    if (type == typeof(bool))
-                                    {
-                                        cellValueStr = (bool)cellValue ? "1" : "0";
-                                    }
-                                    else if (type == typeof(DateTime))
-                                    {
-                                        cellValueStr = ConvertToDateTimeString(propInfo, cellValue);
-                                    }
-
-                                    //TODO: ![image](https://user-images.githubusercontent.com/12729184/114848248-17735880-9e11-11eb-8258-63266bda0a1a.png)
-
-                                    rowXml.Replace("@header" + key, cellValueStr);
-                                    rowXml.Replace(key, cellValueStr);
-
-                                    if (isHeaderRow && row.InnerText.Contains(key))
-                                    {
-                                        currentHeader += cellValueStr;
-                                    }
-                                }
-                            }
-                            else
-                            {
-                                for (var i = 0; i < lines.Length; i++)
-                                {
-                                    if (lines[i].Contains("@if") || lines[i].Contains("@elseif"))
-                                    {
-                                        var newLines = lines[i].Replace("@elseif(", "").Replace("@if(", "").Replace(")", "").Split(' ');
-
+                                        value = string.Empty;
                                         var prop = rowInfo.PropsMap[newLines[0]];
-                                        object value = string.Empty;
                                         if (prop.PropertyInfoOrFieldInfo == PropertyInfoOrFieldInfo.PropertyInfo)
                                         {
-                                            value = rowInfo.PropsMap[newLines[0]].PropertyInfo.GetValue(item);
+                                            value = prop.PropertyInfo.GetValue(item);
                                         }
                                         else if (prop.PropertyInfoOrFieldInfo == PropertyInfoOrFieldInfo.FieldInfo)
                                         {
-                                            value = rowInfo.PropsMap[newLines[0]].FieldInfo.GetValue(item);
-                                        }
-
-                                        var evaluation = EvaluateStatement(value, newLines[1], newLines[2]);
-
-                                        if (evaluation)
-                                        {
-                                            newCellValue += lines[i + 1];
-                                            break;
+                                            value = prop.FieldInfo.GetValue(item);
                                         }
                                     }
-                                    else if (lines[i].Contains("@else"))
+
+                                    var evaluation = EvaluateStatement(value, newLines[1], newLines[2]);
+                                    if (evaluation)
                                     {
                                         newCellValue += lines[i + 1];
                                         break;
                                     }
                                 }
-
-                                if (!string.IsNullOrEmpty(newCellValue))
+                                else if (lines[i].Contains("@else"))
                                 {
-                                    rowXml.Replace(extract, newCellValue);
+                                    newCellValue += lines[i + 1];
+                                    break;
                                 }
+                            }
 
-                                foreach (var propInfo in rowInfo.PropsMap)
+                            if (!string.IsNullOrEmpty(newCellValue))
+                            {
+                                rowXml.Replace(extract, newCellValue);
+                            }
+
+                            var substXmlRow = rowXml.ToString(); 
+
+                            if (item == null)
+                            {
+                                substXmlRow = _templateRegex.Replace(substXmlRow, "");
+                            }
+                            else
+                            {
+                                var replacements = new Dictionary<string, string>();
+#if NETCOREAPP3_0_OR_GREATER
+                                string MatchDelegate(Match x) => CollectionExtensions.GetValueOrDefault(replacements, x.Groups[1].Value, "");
+#else
+                                string MatchDelegate(Match x) => replacements.TryGetValue(x.Groups[1].Value, out var repl) ? repl : "";
+#endif
+                                foreach (var prop in rowInfo.PropsMap)
                                 {
-                                    var prop = propInfo.Value.PropertyInfo;
+                                    var propInfo = prop.Value.PropertyInfo;
+                                    var name = isDictOrTable ? prop.Key : propInfo.Name;
+                                    var key = $"{rowInfo.IEnumerablePropName}.{name}";
 
-                                    var key = $"{{{{{rowInfo.IEnumerablePropName}.{prop.Name}}}}}";
-                                    if (item == null) //![image](https://user-images.githubusercontent.com/12729184/114728510-bc3e5900-9d71-11eb-9721-8a414dca21a0.png)
+                                    object cellValue;
+                                    if (rowInfo.IsDictionary)
                                     {
-                                        rowXml.Replace(key, "");
-                                        continue;
+                                        if(!dict.TryGetValue(prop.Key, out cellValue))
+                                            continue;
+                                    }
+                                    else if (rowInfo.IsDataTable)
+                                    {
+                                        cellValue = dataRow[prop.Key];
+                                    }
+                                    else
+                                    {
+                                        cellValue = propInfo.GetValue(item);
                                     }
 
-                                    var cellValue = prop.GetValue(item);
                                     if (cellValue == null)
-                                    {
-                                        rowXml.Replace(key, "");
                                         continue;
-                                    }
-
-                                    var cellValueStr = ExcelOpenXmlUtils.EncodeXML(cellValue?.ToString());
-                                    var type = Nullable.GetUnderlyingType(prop.PropertyType) ?? prop.PropertyType;
+                                    
+                                    var type = isDictOrTable
+                                        ? prop.Value.UnderlyingTypePropType
+                                        : Nullable.GetUnderlyingType(propInfo.PropertyType) ?? propInfo.PropertyType;
+                                        
+                                    string cellValueStr;
                                     if (type == typeof(bool))
                                     {
                                         cellValueStr = (bool)cellValue ? "1" : "0";
@@ -739,23 +549,31 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                                     {
                                         cellValueStr = ConvertToDateTimeString(propInfo, cellValue);
                                     }
-                                    else if (TypeHelper.IsNumericType(type))
+                                    else
                                     {
-                                        if (decimal.TryParse(cellValueStr, out var decimalValue))
-                                            cellValueStr = decimalValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                                        cellValueStr = ExcelOpenXmlUtils.EncodeXML(cellValue?.ToString());
+                                        if (!isDictOrTable && TypeHelper.IsNumericType(type))
+                                        {
+                                            if (decimal.TryParse(cellValueStr, out var decimalValue))
+                                                cellValueStr = decimalValue.ToString(CultureInfo.InvariantCulture);
+                                        }
                                     }
 
-                                    //TODO: ![image](https://user-images.githubusercontent.com/12729184/114848248-17735880-9e11-11eb-8258-63266bda0a1a.png)
-
-                                    rowXml.Replace("@header" + key, cellValueStr);
-                                    rowXml.Replace(key, cellValueStr);
-
+                                    replacements[key] = cellValueStr; 
+                                    rowXml.Replace($"@header{{{{{key}}}}}", cellValueStr);
+                                        
                                     if (isHeaderRow && row.InnerText.Contains(key))
                                     {
                                         currentHeader += cellValueStr;
                                     }
                                 }
+                                
+                                substXmlRow = rowXml.ToString();
+                                substXmlRow = _templateRegex.Replace(substXmlRow, MatchDelegate);
                             }
+                            
+                            rowXml.Clear();
+                            rowXml.Append(substXmlRow);
 
                             if (isHeaderRow)
                             {
@@ -769,85 +587,87 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                                     prevHeader = currentHeader;
                                 }
                             }
-
-                            // note: only first time need add diff ![image](https://user-images.githubusercontent.com/12729184/114494728-6bceda80-9c4f-11eb-9685-8b5ed054eabe.png)
+                            
+                            // note: only first time need add diff https://user-images.githubusercontent.com/12729184/114494728-6bceda80-9c4f-11eb-9685-8b5ed054eabe.png
                             if (!first)
-                                //rowIndexDiff++;
-                                rowIndexDiff += (rowInfo.IEnumerableMercell?.Height ?? 1); //TODO:base on the merge size
+                                rowIndexDiff += rowInfo.IEnumerableMercell?.Height ?? 1; //TODO:base on the merge size
                             first = false;
 
                             var mergeBaseRowIndex = newRowIndex;
                             newRowIndex += rowInfo.IEnumerableMercell?.Height ?? 1;
 
                             // replace formulas
-                            ProcessFormulas( rowXml, newRowIndex );
-                            writer.Write(CleanXml( rowXml, endPrefix)); // pass StringBuilder for netcoreapp3.0 or above
+                            ProcessFormulas(rowXml, newRowIndex);
+                            writer.Write(CleanXml(rowXml, endPrefix));
 
                             //mergecells
-                            if (rowInfo.RowMercells != null)
+                            if (rowInfo.RowMercells == null)
+                                continue;
+                            
+                            foreach (var mergeCell in rowInfo.RowMercells)
                             {
-                                foreach (var mergeCell in rowInfo.RowMercells)
+                                var newMergeCell = new XMergeCell(mergeCell);
+                                newMergeCell.Y1 = newMergeCell.Y1 + rowIndexDiff + groupingRowDiff - mergeRowCount;
+                                newMergeCell.Y2 = newMergeCell.Y2 + rowIndexDiff + groupingRowDiff - mergeRowCount;
+                                _newXMergeCellInfos.Add(newMergeCell);
+                            }
+
+                            // Last merge one don't add new row, or it'll get duplicate result like : https://github.com/shps951023/MiniExcel/issues/207#issuecomment-824550950
+                            if (iEnumerableIndex == rowInfo.CellIEnumerableValuesCount)
+                                continue;
+
+                            if (rowInfo.IEnumerableMercell != null)
+                                continue;
+
+                            // https://github.com/mini-software/MiniExcel/assets/12729184/1a699497-57e8-4602-b01e-9ffcfef1478d
+                            if (rowInfo.IEnumerableMercell?.Height == null)
+                                continue;
+                                
+                            // https://github.com/shps951023/MiniExcel/issues/207#issuecomment-824518897
+                            for (int i = 1; i < rowInfo.IEnumerableMercell.Height; i++)
+                            {
+                                mergeBaseRowIndex++;
+                                var newRow = row.Clone() as XmlElement;
+                                newRow.SetAttribute("r", mergeBaseRowIndex.ToString());
+
+                                var cs = newRow.SelectNodes("x:c", _ns);
+                                // all v replace by empty
+                                // TODO: remove c/v
+                                foreach (XmlElement c in cs)
                                 {
-                                    var newMergeCell = new XMergeCell(mergeCell);
-                                    newMergeCell.Y1 = newMergeCell.Y1 + rowIndexDiff + groupingRowDiff - mergeRowCount;
-                                    newMergeCell.Y2 = newMergeCell.Y2 + rowIndexDiff + groupingRowDiff - mergeRowCount;
-                                    this.NewXMergeCellInfos.Add(newMergeCell);
-                                }
-
-                                // Last merge one don't add new row, or it'll get duplicate result like : https://github.com/shps951023/MiniExcel/issues/207#issuecomment-824550950
-                                if (iEnumerableIndex == rowInfo.CellIEnumerableValuesCount)
-                                    continue;
-
-                                if (rowInfo.IEnumerableMercell != null)
-                                    continue;
-
-                                // https://github.com/mini-software/MiniExcel/assets/12729184/1a699497-57e8-4602-b01e-9ffcfef1478d
-                                if (rowInfo?.IEnumerableMercell?.Height != null)
-                                {
-                                    // https://github.com/shps951023/MiniExcel/issues/207#issuecomment-824518897
-                                    for (int i = 1; i < rowInfo.IEnumerableMercell.Height; i++)
+                                    c.RemoveAttribute("t");
+                                    foreach (XmlNode ch in c.ChildNodes)
                                     {
-                                        mergeBaseRowIndex++;
-                                        var _newRow = row.Clone() as XmlElement;
-                                        _newRow.SetAttribute("r", mergeBaseRowIndex.ToString());
-
-                                        var cs = _newRow.SelectNodes($"x:c", _ns);
-                                        // all v replace by empty
-                                        // TODO: remove c/v
-                                        foreach (XmlElement _c in cs)
-                                        {
-                                            _c.RemoveAttribute("t");
-                                            foreach (XmlNode ch in _c.ChildNodes)
-                                            {
-                                                _c.RemoveChild(ch);
-                                            }
-                                        }
-
-                                        _newRow.InnerXml = new StringBuilder(_newRow.InnerXml).Replace($"{{{{$rowindex}}}}", mergeBaseRowIndex.ToString()).ToString();
-                                        writer.Write(CleanXml(_newRow.OuterXml, endPrefix));
+                                        c.RemoveChild(ch);
                                     }
                                 }
 
+                                newRow.InnerXml = new StringBuilder(newRow.InnerXml).Replace($"{{{{$rowindex}}}}", mergeBaseRowIndex.ToString()).ToString();
+                                writer.Write(CleanXml(newRow.OuterXml, endPrefix));
                             }
                         }
-
                         enumrowend = newRowIndex-1;
-
+                        
                         var conditionalFormats = conditionalFormatRanges.Where(cfr => cfr.Ranges.Any(r => r.ContainsRow(originRowIndex)));
                         foreach (var conditionalFormat in conditionalFormats) 
                         {
                             var newConditionalFormat = conditionalFormat.Node.Clone();
                             var sqref = newConditionalFormat.Attributes["sqref"];
-                            var ranges = conditionalFormat.Ranges.Where(r => r.ContainsRow(originRowIndex)).Select(r => new Range() 
+                            var ranges = conditionalFormat.Ranges
+                                .Where(r => r.ContainsRow(originRowIndex))
+                                .Select(r => new Range 
                                 { 
                                     StartColumn = r.StartColumn,
                                     StartRow = enumrowstart,
                                     EndColumn = r.EndColumn,
                                     EndRow = enumrowend
-                                }).ToList();
+                                })
+                                .ToList();
+                            
                             sqref.Value = string.Join(" ", ranges.Select(r => $"{ColumnHelper.GetAlphabetColumnName(r.StartColumn)}{r.StartRow}:{ColumnHelper.GetAlphabetColumnName(r.EndColumn)}{r.EndRow}"));
                             newConditionalFormatRanges.Remove(conditionalFormat);
-                            newConditionalFormatRanges.Add(new ConditionalFormatRange {
+                            newConditionalFormatRanges.Add(new ConditionalFormatRange 
+                            {
                                 Node = newConditionalFormat,
                                 Ranges = ranges
                             });
@@ -855,44 +675,41 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                     }
                     else
                     {
-
                         rowXml.Clear()
-                              .Append(outerXmlOpen)
-                              .AppendFormat(@" r=""{0}"">", newRowIndex)
-                              .Append(innerXml)
-                              .Replace($"{{{{$rowindex}}}}", newRowIndex.ToString())
-                              .Replace($"{{{{$enumrowstart}}}}", enumrowstart.ToString())
-                              .Replace($"{{{{$enumrowend}}}}", enumrowend.ToString())
-                              .AppendFormat("</{0}>", row.Name);
+                            .Append(outerXmlOpen)
+                            .AppendFormat(@" r=""{0}"">", newRowIndex)
+                            .Append(innerXml)
+                            .Replace($"{{{{$rowindex}}}}", newRowIndex.ToString())
+                            .Replace($"{{{{$enumrowstart}}}}", enumrowstart.ToString())
+                            .Replace($"{{{{$enumrowend}}}}", enumrowend.ToString())
+                            .AppendFormat("</{0}>", row.Name);
 
-                        ProcessFormulas( rowXml, newRowIndex );
-
-                        writer.Write(CleanXml( rowXml, endPrefix)); // pass StringBuilder for netcoreapp3.0 or above
+                        ProcessFormulas(rowXml, newRowIndex);
+                        writer.Write(CleanXml(rowXml, endPrefix));
 
                         //mergecells
-                        if (rowInfo.RowMercells != null)
+                        if (rowInfo.RowMercells == null)
+                            continue;
+                        
+                        foreach (var mergeCell in rowInfo.RowMercells)
                         {
-                            foreach (var mergeCell in rowInfo.RowMercells)
-                            {
-                                var newMergeCell = new XMergeCell(mergeCell);
-                                newMergeCell.Y1 = newMergeCell.Y1 + rowIndexDiff + groupingRowDiff - mergeRowCount;
-                                newMergeCell.Y2 = newMergeCell.Y2 + rowIndexDiff + groupingRowDiff - mergeRowCount;
-                                this.NewXMergeCellInfos.Add(newMergeCell);
-                            }
+                            var newMergeCell = new XMergeCell(mergeCell);
+                            newMergeCell.Y1 = newMergeCell.Y1 + rowIndexDiff + groupingRowDiff - mergeRowCount;
+                            newMergeCell.Y2 = newMergeCell.Y2 + rowIndexDiff + groupingRowDiff - mergeRowCount;
+                            _newXMergeCellInfos.Add(newMergeCell);
                         }
-
                     }
-
                     // get the row's all mergecells then update the rowindex
                 }
+
                 #endregion
 
                 writer.Write($"</{prefix}sheetData>");
 
-                if (this.NewXMergeCellInfos.Count != 0)
+                if (_newXMergeCellInfos.Count != 0)
                 {
-                    writer.Write($"<{prefix}mergeCells count=\"{this.NewXMergeCellInfos.Count}\">");
-                    foreach (var cell in this.NewXMergeCellInfos)
+                    writer.Write($"<{prefix}mergeCells count=\"{_newXMergeCellInfos.Count}\">");
+                    foreach (var cell in _newXMergeCellInfos)
                     {
                         writer.Write(cell.ToXmlString(prefix));
                     }
@@ -908,128 +725,222 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
             }
         }
         
-        private void ProcessFormulas( StringBuilder rowXml, int rowIndex )
+        private static void MergeCells(List<XRowInfo> xRowInfos)
         {
+            var mergeTaggedColumns = new Dictionary<XChildNode, XChildNode>();
+            var columns = xRowInfos
+                .SelectMany(s => s.Row.Cast<XmlElement>())
+                .Where(s => !string.IsNullOrEmpty(s.InnerText))
+                .Select(s =>
+                {
+                    var att = s.GetAttribute("r");
+                    return new XChildNode
+                    {
+                        InnerText = s.InnerText,
+                        ColIndex = StringHelper.GetLetter(att),
+                        RowIndex = StringHelper.GetNumber(att)
+                    };
+                })
+                .OrderBy(x => x.RowIndex)
+                .ToList();
 
+            var mergeColumns = columns.Where(s => s.InnerText.Contains("@merge")).ToList();
+            var endMergeColumns = columns.Where(s => s.InnerText.Contains("@endmerge")).ToList();
+            var mergeLimitColumn = mergeColumns.FirstOrDefault(x => x.InnerText.Contains("@mergelimit"));
+
+            foreach (var mergeColumn in mergeColumns)
+            {
+                var endMergeColumn = endMergeColumns.FirstOrDefault(s =>
+                    s.ColIndex == mergeColumn.ColIndex && s.RowIndex > mergeColumn.RowIndex);
+
+                if (endMergeColumn != null)
+                {
+                    mergeTaggedColumns[mergeColumn] = endMergeColumn;
+                }
+            }
+
+            if (mergeTaggedColumns.Count <= 0)
+                return;
+            
+            var calculatedColumns = new List<XChildNode>();
+            foreach (var taggedColumn in mergeTaggedColumns)
+            {
+                calculatedColumns.AddRange(columns.Where(x =>
+                    x.ColIndex == taggedColumn.Key.ColIndex && x.RowIndex > taggedColumn.Key.RowIndex &&
+                    x.RowIndex < taggedColumn.Value.RowIndex));
+            }
+
+            var lastMergeCellIndexes = new Dictionary<int, MergeCellIndex>();
+            foreach (var rowInfo in xRowInfos)
+            {
+                var row = rowInfo.Row;
+                var childNodes = row.ChildNodes.Cast<XmlElement>();
+
+                foreach (var childNode in childNodes)
+                {
+                    var att = childNode.GetAttribute("r");
+                    var childNodeLetter = StringHelper.GetLetter(att);
+                    var childNodeNumber = StringHelper.GetNumber(att);
+
+                    if (!string.IsNullOrEmpty(childNode.InnerText))
+                    {
+                        var xmlNodes = calculatedColumns
+                            .Where(j => 
+                                j.InnerText == childNode.InnerText && 
+                                j.ColIndex == childNodeLetter)
+                            .OrderBy(s => s.RowIndex)
+                            .ToList();
+
+                        if (xmlNodes.Count > 1)
+                        {
+                            if (mergeLimitColumn != null)
+                            {
+                                var limitedNode = calculatedColumns.First(j =>
+                                    j.ColIndex == mergeLimitColumn.ColIndex && j.RowIndex == childNodeNumber);
+
+                                var limitedMaxNode = calculatedColumns.Last(j =>
+                                    j.ColIndex == mergeLimitColumn.ColIndex && j.InnerText == limitedNode.InnerText);
+
+                                xmlNodes = xmlNodes
+                                    .Where(j => 
+                                        j.RowIndex >= limitedNode.RowIndex && 
+                                        j.RowIndex <= limitedMaxNode.RowIndex)
+                                    .ToList();
+                            }
+
+                            var firstRow = xmlNodes.FirstOrDefault();
+                            var lastRow = xmlNodes.LastOrDefault(s =>
+                                s.RowIndex <= firstRow?.RowIndex + xmlNodes.Count &&
+                                s.RowIndex != firstRow.RowIndex);
+
+                            if (firstRow != null && lastRow != null)
+                            {
+                                var mergeCell = new XMergeCell(firstRow.ColIndex, firstRow.RowIndex, lastRow.ColIndex, lastRow.RowIndex);
+                                var mergeIndexResult = lastMergeCellIndexes.TryGetValue(mergeCell.X1, out var mergeIndex);
+
+                                if (!mergeIndexResult ||
+                                    mergeCell.Y1 < mergeIndex.RowStart || 
+                                    mergeCell.Y2 > mergeIndex.RowEnd)
+                                {
+                                    lastMergeCellIndexes[mergeCell.X1] = new MergeCellIndex(mergeCell.Y1, mergeCell.Y2);
+                                    if (rowInfo.RowMercells == null)
+                                    {
+                                        rowInfo.RowMercells = new List<XMergeCell>();
+                                    }
+
+                                    rowInfo.RowMercells.Add(mergeCell);
+                                }
+                            }
+                        }
+                    }
+
+                    childNode.SetAttribute("r", $"{childNodeLetter}{{{{$rowindex}}}}");
+                }
+            }
+        }
+
+        private void ProcessFormulas(StringBuilder rowXml, int rowIndex)
+        {
             var rowXmlString = rowXml.ToString();
 
             // exit early if possible
-            if ( !rowXmlString.Contains( "$=" ) ) {
+            if (!rowXmlString.Contains("$="))
                 return;
-            }
 
-            XmlReaderSettings settings = new XmlReaderSettings { NameTable = _ns.NameTable };
-            XmlParserContext context = new XmlParserContext( null, _ns, "", XmlSpace.Default );
-            XmlReader reader = XmlReader.Create( new StringReader( rowXmlString ), settings, context );
-            
-            XmlDocument d = new XmlDocument();
-            d.Load( reader );
-
-            var row = d.FirstChild as XmlElement;
-
-            // convert cells starting with '$=' into formulas
-            var cs = row.SelectNodes( $"x:c", _ns );
-            for ( var ci = 0; ci < cs.Count; ci++ )
+            var settings = new XmlReaderSettings { NameTable = _ns.NameTable };
+            var context = new XmlParserContext(null, _ns, "", XmlSpace.Default);
+            using (var reader = XmlReader.Create(new StringReader(rowXmlString), settings, context))
             {
-                var c = cs.Item( ci ) as XmlElement;
-                if ( c == null ) {
-                    continue;
-                }
-                /* Target:
-                 <c r="C8" s="3">
-                    <f>SUM(C2:C7)</f>
-                </c>
-                 */
-                var vs = c.SelectNodes( $"x:v", _ns );
-                foreach ( XmlElement v in vs )
+                var d = new XmlDocument();
+                d.Load(reader);
+
+                var row = d.FirstChild as XmlElement;
+
+                // convert cells starting with '$=' into formulas
+                var cs = row.SelectNodes("x:c", _ns);
+                for (var ci = 0; ci < cs.Count; ci++)
                 {
-                    if ( !v.InnerText.StartsWith( "$=" ) )
-                    {
+                    var c = cs.Item(ci) as XmlElement;
+                    if (c == null)
                         continue;
+
+                    /* Target:
+                     <c r="C8" s="3">
+                        <f>SUM(C2:C7)</f>
+                    </c>
+                     */
+                    var vs = c.SelectNodes("x:v", _ns);
+                    foreach (XmlElement v in vs)
+                    {
+                        if (!v.InnerText.StartsWith("$="))
+                            continue;
+
+                        var fNode = c.OwnerDocument.CreateElement("f", Config.SpreadsheetmlXmlns);
+                        fNode.InnerText = v.InnerText.Substring(2);
+                        c.InsertBefore(fNode, v);
+                        c.RemoveChild(v);
+
+                        var celRef = ExcelOpenXmlUtils.ConvertXyToCell(ci + 1, rowIndex);
+                        _calcChainCellRefs.Add(celRef);
                     }
-                    var fNode = c.OwnerDocument.CreateElement( "f", Config.SpreadsheetmlXmlns );
-                    fNode.InnerText = v.InnerText.Substring( 2 );
-                    c.InsertBefore( fNode, v );
-                    c.RemoveChild( v );
-
-                    var celRef = ExcelOpenXmlUtils.ConvertXyToCell( ci + 1, rowIndex );
-                    CalcChainCellRefs.Add( celRef );
-
                 }
+
+                rowXml.Clear();
+                rowXml.Append(row.OuterXml);
             }
-            rowXml.Clear();
-            rowXml.Append( row.OuterXml );
         }
 
-        private static string ConvertToDateTimeString(KeyValuePair<string, PropInfo> propInfo, object cellValue)
+        private static string ConvertToDateTimeString(PropertyInfo propInfo, object cellValue)
         {
-            string cellValueStr;
-
-
             //TODO:c.SetAttribute("t", "d"); and custom format
-            var format = string.Empty;
-            if (propInfo.Value.PropertyInfo == null)
-            {
-                format = "yyyy-MM-dd HH:mm:ss";
-            }
-            else
-            {
-                format = propInfo.Value.PropertyInfo.GetAttributeValue((ExcelFormatAttribute x) => x.Format)
-                             ?? propInfo.Value.PropertyInfo.GetAttributeValue((ExcelColumnAttribute x) => x.Format)
-                             ?? "yyyy-MM-dd HH:mm:ss";
-            }
+            var format = propInfo?.GetAttributeValue((ExcelFormatAttribute x) => x.Format) 
+                     ?? propInfo?.GetAttributeValue((ExcelColumnAttribute x) => x.Format) 
+                     ?? "yyyy-MM-dd HH:mm:ss";
 
-            cellValueStr = (cellValue as DateTime?)?.ToString(format);
-            return cellValueStr;
+            return (cellValue as DateTime?)?.ToString(format);
         }
 
-        private static StringBuilder CleanXml(StringBuilder xml, string endPrefix)
-        {
-            return xml
-               .Replace("xmlns:x14ac=\"http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac\"", "")
-               .Replace($"xmlns{endPrefix}=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"", "");
-        }
+        //TODO: need to optimize
+        private static string CleanXml(string xml, string endPrefix) => CleanXml(new StringBuilder(xml), endPrefix).ToString();
+        private static StringBuilder CleanXml(StringBuilder xml, string endPrefix) => xml
+            .Replace("xmlns:x14ac=\"http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac\"", "")
+            .Replace($"xmlns{endPrefix}=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"", "");
 
-        private static string CleanXml(string xml, string endPrefix)
-        {
-            //TODO: need to optimize
-            return CleanXml(new StringBuilder(xml), endPrefix)
-                .ToString();
-        }
-
-        private void ReplaceSharedStringsToStr(IDictionary<int, string> sharedStrings, ref XmlNodeList rows)
+        private static void ReplaceSharedStringsToStr(IDictionary<int, string> sharedStrings, XmlNodeList rows)
         {
             foreach (XmlElement row in rows)
             {
-                var cs = row.SelectNodes($"x:c", _ns);
+                var cs = row.SelectNodes("x:c", _ns);
                 foreach (XmlElement c in cs)
                 {
                     var t = c.GetAttribute("t");
                     var v = c.SelectSingleNode("x:v", _ns);
-                    if (v == null || v.InnerText == null) //![image](https://user-images.githubusercontent.com/12729184/114363496-075a3f80-9bab-11eb-9883-8e3fec10765c.png)
+                    if (v?.InnerText == null) //![image](https://user-images.githubusercontent.com/12729184/114363496-075a3f80-9bab-11eb-9883-8e3fec10765c.png)
                         continue;
 
-                    if (t == "s")
-                    {
-                        //need to check sharedstring exist or not
-                        if (sharedStrings.TryGetValue(int.Parse(v.InnerText), out var shared))
-                        {
-                            v.InnerText = shared;
-                            // change type = str and replace its value
-                            c.SetAttribute("t", "str");
-                        }
-                        //TODO: remove sharedstring?
-                    }
+                    if (t != "s")
+                        continue;
+
+                    //need to check sharedstring exist or not
+                    if (!sharedStrings.TryGetValue(int.Parse(v.InnerText), out var shared))
+                        continue;
+                    
+                    // change type = str and replace its value
+                    //TODO: remove sharedstring?
+                    v.InnerText = shared;
+                    c.SetAttribute("t", "str");
                 }
             }
         }
 
-        private void UpdateDimensionAndGetRowsInfo(IDictionary<string, object> inputMaps, ref XmlDocument doc, ref XmlNodeList rows, bool changeRowIndex = true)
+        private void UpdateDimensionAndGetRowsInfo(IDictionary<string, object> inputMaps, XmlDocument doc, XmlNodeList rows, bool changeRowIndex = true)
         {
-            // note : dimension need to put on the top ![image](https://user-images.githubusercontent.com/12729184/114507911-5dd88400-9c66-11eb-94c6-82ed7bdb5aab.png)
+            // note : dimension need to put on the top (https://user-images.githubusercontent.com/12729184/114507911-5dd88400-9c66-11eb-94c6-82ed7bdb5aab.png)
+
             var dimension = doc.SelectSingleNode("/x:worksheet/x:dimension", _ns) as XmlElement;
             if (dimension == null)
-                throw new NotImplementedException("Excel Dimension Xml is null, please issue file for me. https://github.com/shps951023/MiniExcel/issues");
+                throw new NotImplementedException("Excel Dimension Xml is null, please file an issue for this problem: https://github.com/mini-software/MiniExcel/issues");
+            
             var maxRowIndexDiff = 0;
             foreach (XmlElement row in rows)
             {
@@ -1041,13 +952,14 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                 {
                     Row = row
                 };
-                XRowInfos.Add(xRowInfo);
-                foreach (XmlElement c in row.SelectNodes($"x:c", _ns))
+                
+                _xRowInfos.Add(xRowInfo);
+                foreach (XmlElement c in row.SelectNodes("x:c", _ns))
                 {
                     var r = c.GetAttribute("r");
 
                     // ==== mergecells ====
-                    if (this.XMergeCellInfos.TryGetValue(r, out var merCell))
+                    if (_xMergeCellInfos.TryGetValue(r, out var merCell))
                     {
                         if (xRowInfo.RowMercells == null)
                             xRowInfo.RowMercells = new List<XMergeCell>();
@@ -1056,114 +968,107 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
 
                     if (changeRowIndex)
                     {
-                        c.SetAttribute("r", $"{StringHelper.GetLetter(r)}{{{{$rowindex}}}}"); //TODO:
+                        c.SetAttribute("r", $"{StringHelper.GetLetter(r)}{{{{$rowindex}}}}");
                     }
 
                     var v = c.SelectSingleNode("x:v", _ns);
                     if (v?.InnerText == null)
                         continue;
 
-                    var matchs = (_isExpressionRegex.Matches(v.InnerText).Cast<Match>().GroupBy(x => x.Value).Select(varGroup => varGroup.First().Value)).ToArray();
-                    var matchCnt = matchs.Length;
-                    var isMultiMatch = matchCnt > 1 || (matchCnt == 1 && v.InnerText != $"{{{{{matchs[0]}}}}}");
-                    foreach (var formatText in matchs)
+                    var matches = _isExpressionRegex.Matches(v.InnerText)
+                        .Cast<Match>()
+                        .Select(x => x.Value)
+                        .Distinct()
+                        .ToArray();
+                    
+                    var matchCnt = matches.Length;
+                    var isMultiMatch = matchCnt > 1 || (matchCnt == 1 && v.InnerText != $"{{{{{matches[0]}}}}}");
+                    
+                    foreach (var formatText in matches)
                     {
                         xRowInfo.FormatText = formatText;
                         var propNames = formatText.Split('.');
                         if (propNames[0].StartsWith("$")) //e.g:"$rowindex" it doesn't need to check cell value type
                             continue;
-
+                        
                         // TODO: default if not contain property key, clean the template string
                         if (!inputMaps.TryGetValue(propNames[0], out var cellValue))
                         {
-                            if (_configuration.IgnoreTemplateParameterMissing)
-                            {
-                                v.InnerText = v.InnerText.Replace($"{{{{{propNames[0]}}}}}", "");
-                                break;
-                            }
-                            else
-                            {
-                                throw new KeyNotFoundException($"Please check {propNames[0]} parameter, it's not exist.");
-                            }
+                            if (!_configuration.IgnoreTemplateParameterMissing)
+                                throw new KeyNotFoundException($"The parameter '{propNames[0]}' was not found.");
+
+                            v.InnerText = v.InnerText.Replace($"{{{{{propNames[0]}}}}}", "");
+                            break;
                         }
 
                         //cellValue = inputMaps[propNames[0]] - 1. From left to right, only the first set is used as the basis for the list
-                        if (cellValue is IEnumerable && !(cellValue is string))
+                        if (cellValue is IEnumerable value && !(cellValue is string))
                         {
-                            if (xRowInfo.IEnumerableMercell == null)
+                            if (xRowInfo.IEnumerableMercell == null && _xMergeCellInfos.TryGetValue(r, out var info))
                             {
-                                if (this.XMergeCellInfos.TryGetValue(r, out var info))
-                                {
-                                    xRowInfo.IEnumerableMercell = info;
-                                }
+                                xRowInfo.IEnumerableMercell = info;
                             }
-
-                            xRowInfo.CellIEnumerableValues = cellValue as IEnumerable;
-                            xRowInfo.CellIlListValues = cellValue is IList<object> ?
-                                    cellValue as IList<object> :
-                                    xRowInfo.CellIEnumerableValues.Cast<object>().ToList();
+                            
+                            // var listValue = value as IList<object> ?? value.Cast<object>().ToList();
+                            // xRowInfo.CellIlListValues = value as IList<object> ?? value.Cast<object>().ToList();
+                            xRowInfo.CellIEnumerableValues = value;
 
                             // get ienumerable runtime type
-                            if (xRowInfo.IEnumerableGenricType == null) //avoid duplicate to add rowindexdiff ![image](https://user-images.githubusercontent.com/12729184/114851348-522ac000-9e14-11eb-8244-4730754d6885.png)
+                            if (xRowInfo.IEnumerableGenericType == null) //avoid duplicate to add rowindexdiff (https://user-images.githubusercontent.com/12729184/114851348-522ac000-9e14-11eb-8244-4730754d6885.png)
                             {
-                                var first = true;
-                                //TODO:if CellIEnumerableValues is ICollection or Array then get length or Count
+                                //TODO: optimize performance?              
 
-                                foreach (var element in xRowInfo.CellIEnumerableValues) //TODO: optimize performance?
+                                var first = true;
+                                foreach (var element in xRowInfo.CellIEnumerableValues)
                                 {
                                     xRowInfo.CellIEnumerableValuesCount++;
-
-                                    if (xRowInfo.IEnumerableGenricType == null)
-                                        if (element != null)
+                                    if (xRowInfo.IEnumerableGenericType == null && element != null)
+                                    {
+                                        xRowInfo.IEnumerablePropName = propNames[0];
+                                        xRowInfo.IEnumerableGenericType = element.GetType();
+                                        
+                                        if (element is IDictionary<string, object> dic)
                                         {
-                                            xRowInfo.IEnumerablePropName = propNames[0];
-                                            xRowInfo.IEnumerableGenricType = element.GetType();
-                                            if (element is IDictionary<string, object>)
-                                            {
-                                                xRowInfo.IsDictionary = true;
-                                                var dic = element as IDictionary<string, object>;
-                                                xRowInfo.PropsMap = dic.Keys.ToDictionary(key => key, key => dic[key] != null
-                                                    ? new PropInfo { UnderlyingTypePropType = Nullable.GetUnderlyingType(dic[key].GetType()) ?? dic[key].GetType() }
+                                            xRowInfo.IsDictionary = true;
+                                            xRowInfo.PropsMap = dic.ToDictionary(
+                                                kv => kv.Key, 
+                                                kv => kv.Value != null
+                                                    ? new PropInfo { UnderlyingTypePropType = Nullable.GetUnderlyingType(kv.Value.GetType()) ?? kv.Value.GetType() }
                                                     : new PropInfo { UnderlyingTypePropType = typeof(object) });
-                                            }
-                                            else
-                                            {
-
-                                                var values = new Dictionary<string, PropInfo>();
-
-                                                var props = xRowInfo.IEnumerableGenricType.GetProperties();
-
-                                                foreach (var p in props)
+                                        }
+                                        else
+                                        {
+                                            var props = xRowInfo.IEnumerableGenericType.GetProperties();
+                                            var values = props.ToDictionary(
+                                                p => p.Name, 
+                                                p => new PropInfo
                                                 {
-                                                    values.Add(p.Name, new PropInfo
+                                                    PropertyInfo = p,
+                                                    PropertyInfoOrFieldInfo = PropertyInfoOrFieldInfo.PropertyInfo,
+                                                    UnderlyingTypePropType = Nullable.GetUnderlyingType(p.PropertyType) ?? p.PropertyType
+                                                });
+
+                                            var fields = xRowInfo.IEnumerableGenericType.GetFields();
+                                            foreach (var f in fields)
+                                            {
+                                                if (!values.ContainsKey(f.Name))
+                                                {
+                                                    values.Add(f.Name, new PropInfo
                                                     {
-                                                        PropertyInfo = p,
-                                                        PropertyInfoOrFieldInfo = PropertyInfoOrFieldInfo.PropertyInfo,
-                                                        UnderlyingTypePropType = Nullable.GetUnderlyingType(p.PropertyType) ?? p.PropertyType
+                                                        FieldInfo = f,
+                                                        PropertyInfoOrFieldInfo = PropertyInfoOrFieldInfo.FieldInfo,
+                                                        UnderlyingTypePropType = Nullable.GetUnderlyingType(f.FieldType) ?? f.FieldType
                                                     });
                                                 }
-
-                                                var fields = xRowInfo.IEnumerableGenricType.GetFields();
-                                                foreach (var f in fields)
-                                                {
-                                                    if (!values.ContainsKey(f.Name))
-                                                    {
-
-                                                        values.Add(f.Name, new PropInfo
-                                                        {
-                                                            FieldInfo = f,
-                                                            PropertyInfoOrFieldInfo = PropertyInfoOrFieldInfo.FieldInfo,
-                                                            UnderlyingTypePropType = Nullable.GetUnderlyingType(f.FieldType) ?? f.FieldType
-                                                        });
-                                                    }
-                                                }
-
-                                                xRowInfo.PropsMap = values;
                                             }
+
+                                            xRowInfo.PropsMap = values;
                                         }
+                                    }
+
                                     // ==== get dimension max rowindex ====
                                     if (!first) //avoid duplicate add first one, this row not add status  ![image](https://user-images.githubusercontent.com/12729184/114851829-d2512580-9e14-11eb-8e7d-520c89a7ebee.png)
-                                        maxRowIndexDiff = maxRowIndexDiff + (xRowInfo.IEnumerableMercell == null ? 1 : xRowInfo.IEnumerableMercell.Height);
+                                        maxRowIndexDiff += xRowInfo.IEnumerableMercell?.Height ?? 1;
                                     first = false;
                                 }
                             }
@@ -1181,6 +1086,8 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                             {
                                 v.InnerText = v.InnerText.Replace($"{{{{{propNames[0]}.{propNames[1]}}}}}", "");
                                 continue;
+                                
+                                //why unreachable exception?
                                 throw new InvalidDataException($"{propNames[0]} doesn't have {propNames[1]} property");
                             }
                             // auto check type https://github.com/shps951023/MiniExcel/issues/177
@@ -1205,16 +1112,18 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
 
                             break;
                         }
-                        else if (cellValue is DataTable)
+                        else if (cellValue is DataTable dt)
                         {
-                            var dt = cellValue as DataTable;
                             if (xRowInfo.CellIEnumerableValues == null)
                             {
                                 xRowInfo.IEnumerablePropName = propNames[0];
-                                xRowInfo.IEnumerableGenricType = typeof(DataRow);
+                                xRowInfo.IEnumerableGenericType = typeof(DataRow);
                                 xRowInfo.IsDataTable = true;
-                                xRowInfo.CellIEnumerableValues = dt.Rows.Cast<object>().ToList(); //TODO: need to optimize performance
-                                xRowInfo.CellIlListValues = dt.Rows.Cast<object>().ToList();
+                                
+                                var listValues = dt.Rows.Cast<object>().ToList();
+                                xRowInfo.CellIEnumerableValues = listValues;
+                                xRowInfo.CellIlListValues = listValues;
+                                
                                 var first = true;
                                 foreach (var element in xRowInfo.CellIEnumerableValues)
                                 {
@@ -1225,9 +1134,10 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                                 }
                                 //TODO:need to optimize
                                 //maxRowIndexDiff = dt.Rows.Count <= 1 ? 0 : dt.Rows.Count-1;
-                                xRowInfo.PropsMap = dt.Columns.Cast<DataColumn>().ToDictionary(col => col.ColumnName, col =>
-                                new PropInfo { UnderlyingTypePropType = Nullable.GetUnderlyingType(col.DataType) }
-                            );
+                                xRowInfo.PropsMap = dt.Columns.Cast<DataColumn>().ToDictionary(col => 
+                                    col.ColumnName, 
+                                    col => new PropInfo { UnderlyingTypePropType = Nullable.GetUnderlyingType(col.DataType) }
+                                );
                             }
 
                             var column = dt.Columns[propNames[1]];
@@ -1254,48 +1164,49 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                         }
                         else
                         {
-                            var cellValueStr = cellValue?.ToString(); /* value did encodexml, so don't duplicate encode value https://gitee.com/dotnetchina/MiniExcel/issues/I4DQUN*/
-                            if (isMultiMatch || cellValue is string) // if matchs count over 1 need to set type=str ![image](https://user-images.githubusercontent.com/12729184/114530109-39d46d00-9c7d-11eb-8f6b-52ad8600aca3.png)
+                            var cellValueStr = cellValue?.ToString(); // value did encodexml, so don't duplicate encode value https://gitee.com/dotnetchina/MiniExcel/issues/I4DQUN
+                            if (isMultiMatch || cellValue is string) // if matchs count over 1 need to set type=str (https://user-images.githubusercontent.com/12729184/114530109-39d46d00-9c7d-11eb-8f6b-52ad8600aca3.png)
                             {
                                 c.SetAttribute("t", "str");
                             }
                             else if (decimal.TryParse(cellValueStr, out var outV))
                             {
                                 c.SetAttribute("t", "n");
-                                cellValueStr = outV.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                                cellValueStr = outV.ToString(CultureInfo.InvariantCulture);
                             }
-                            else if (cellValue is bool)
+                            else if (cellValue is bool b)
                             {
                                 c.SetAttribute("t", "b");
-                                cellValueStr = (bool)cellValue ? "1" : "0";
+                                cellValueStr = b ? "1" : "0";
                             }
-                            else if (cellValue is DateTime || cellValue is DateTime?)
+                            else if (cellValue is DateTime timestamp)
                             {
                                 //c.SetAttribute("t", "d");
-                                cellValueStr = ((DateTime)cellValue).ToString("yyyy-MM-dd HH:mm:ss");
+                                cellValueStr = timestamp.ToString("yyyy-MM-dd HH:mm:ss");
                             }
 
                             v.InnerText = v.InnerText.Replace($"{{{{{propNames[0]}}}}}", cellValueStr); //TODO: auto check type and set value
                         }
+
                     }
                     //if (xRowInfo.CellIEnumerableValues != null) //2. From left to right, only the first set is used as the basis for the list
                     //    break;
                 }
             }
-
+            
             // e.g <dimension ref=\"A1:B6\" /> only need to update B6 to BMaxRowIndex
-            var @refs = dimension.GetAttribute("ref").Split(':');
-            if (@refs.Length == 2)
+            var refs = dimension.GetAttribute("ref").Split(':');
+            if (refs.Length == 2)
             {
-                var letter = new String(refs[1].Where(Char.IsLetter).ToArray());
-                var digit = int.Parse(new String(refs[1].Where(Char.IsDigit).ToArray()));
+                var letter = StringHelper.GetLetter(refs[1]);
+                var digit = StringHelper.GetDigit(refs[1]);
 
                 dimension.SetAttribute("ref", $"{refs[0]}:{letter}{digit + maxRowIndexDiff}");
             }
             else
             {
-                var letter = new String(refs[0].Where(Char.IsLetter).ToArray());
-                var digit = int.Parse(new String(refs[0].Where(Char.IsDigit).ToArray()));
+                var letter = StringHelper.GetLetter(refs[0]);
+                var digit = StringHelper.GetDigit(refs[0]);
 
                 dimension.SetAttribute("ref", $"A1:{letter}{digit + maxRowIndexDiff}");
             }
@@ -1303,97 +1214,54 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
 
         private static bool EvaluateStatement(object tagValue, string comparisonOperator, string value)
         {
-            var checkStatement = false;
-
             switch (tagValue)
             {
                 case double dtg when double.TryParse(value, out var doubleNumber):
                     switch (comparisonOperator)
                     {
-                        case "==":
-                            checkStatement = dtg.Equals(doubleNumber);
-                            break;
-                        case "!=":
-                            checkStatement = !dtg.Equals(doubleNumber);
-                            break;
-                        case ">":
-                            checkStatement = dtg > doubleNumber;
-                            break;
-                        case "<":
-                            checkStatement = dtg < doubleNumber;
-                            break;
-                        case ">=":
-                            checkStatement = dtg >= doubleNumber;
-                            break;
-                        case "<=":
-                            checkStatement = dtg <= doubleNumber;
-                            break;
+                        case "==": return dtg.Equals(doubleNumber);
+                        case "!=": return !dtg.Equals(doubleNumber);
+                        case ">": return dtg > doubleNumber;
+                        case "<": return dtg < doubleNumber;
+                        case ">=": return dtg >= doubleNumber;
+                        case "<=": return dtg <= doubleNumber;
                     }
-
                     break;
+
                 case int itg when int.TryParse(value, out var intNumber):
                     switch (comparisonOperator)
                     {
-                        case "==":
-                            checkStatement = itg.Equals(intNumber);
-                            break;
-                        case "!=":
-                            checkStatement = !itg.Equals(intNumber);
-                            break;
-                        case ">":
-                            checkStatement = itg > intNumber;
-                            break;
-                        case "<":
-                            checkStatement = itg < intNumber;
-                            break;
-                        case ">=":
-                            checkStatement = itg >= intNumber;
-                            break;
-                        case "<=":
-                            checkStatement = itg <= intNumber;
-                            break;
+                        case "==": return itg.Equals(intNumber);
+                        case "!=": return !itg.Equals(intNumber);
+                        case ">": return itg > intNumber;
+                        case "<": return itg < intNumber;
+                        case ">=": return itg >= intNumber;
+                        case "<=": return itg <= intNumber;
                     }
-
                     break;
+
                 case DateTime dttg when DateTime.TryParse(value, out var date):
                     switch (comparisonOperator)
                     {
-                        case "==":
-                            checkStatement = dttg.Equals(date);
-                            break;
-                        case "!=":
-                            checkStatement = !dttg.Equals(date);
-                            break;
-                        case ">":
-                            checkStatement = dttg > date;
-                            break;
-                        case "<":
-                            checkStatement = dttg < date;
-                            break;
-                        case ">=":
-                            checkStatement = dttg >= date;
-                            break;
-                        case "<=":
-                            checkStatement = dttg <= date;
-                            break;
+                        case "==": return dttg.Equals(date);
+                        case "!=": return !dttg.Equals(date);
+                        case ">": return dttg > date;
+                        case "<": return dttg < date;
+                        case ">=": return dttg >= date;
+                        case "<=": return dttg <= date;
                     }
-
                     break;
+
                 case string stg:
                     switch (comparisonOperator)
                     {
-                        case "==":
-                            checkStatement = stg == value;
-                            break;
-                        case "!=":
-                            checkStatement = stg != value;
-                            break;
+                        case "==": return stg == value;
+                        case "!=": return stg != value;
                     }
-
                     break;
             }
 
-            return checkStatement;
+            return false;
         }
     }
 }

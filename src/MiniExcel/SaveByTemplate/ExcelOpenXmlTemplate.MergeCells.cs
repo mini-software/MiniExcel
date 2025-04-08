@@ -27,10 +27,10 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
 
         private void MergeSameCellsImpl(Stream stream)
         {
-            stream.CopyTo(_stream);
+            stream.CopyTo(_outputFileStream);
 
-            var reader = new ExcelOpenXmlSheetReader(_stream, null);
-            var archive = new ExcelOpenXmlZip(_stream, mode: ZipArchiveMode.Update, true, Encoding.UTF8);
+            var reader = new ExcelOpenXmlSheetReader(_outputFileStream, null);
+            var archive = new ExcelOpenXmlZip(_outputFileStream, mode: ZipArchiveMode.Update, true, Encoding.UTF8);
             
             //read sharedString
             var sharedStrings = reader._sharedStrings;

@@ -22,7 +22,7 @@ namespace MiniExcelLibs.OpenXml
         internal IDictionary<int, string> _sharedStrings;
         private MergeCells _mergeCells;
         private ExcelOpenXmlStyles _style;
-        private readonly ExcelOpenXmlZip _archive;
+        internal readonly ExcelOpenXmlZip _archive;
         private readonly OpenXmlConfiguration _config;
 
         private static readonly XmlReaderSettings _xmlSettings = new XmlReaderSettings
@@ -35,6 +35,18 @@ namespace MiniExcelLibs.OpenXml
         public ExcelOpenXmlSheetReader(Stream stream, IConfiguration configuration)
         {
             _archive = new ExcelOpenXmlZip(stream);
+            try
+            {
+                _archive.entries = _archive.zipFile.Entries; //TODO:need to remove
+            }
+            catch (InvalidDataException e)
+            {
+                throw new InvalidDataException($"It's not legal excel zip, please check or issue for me. {e.Message}");
+            }
+            foreach (var entry in _archive.zipFile.Entries)
+            {
+                _archive._entries.Add(entry.FullName.Replace('\\', '/'), entry);
+            }
             _config = (OpenXmlConfiguration)configuration ?? OpenXmlConfiguration.DefaultConfig;
             SetSharedStrings();
         }

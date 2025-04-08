@@ -1,8 +1,10 @@
 ﻿using MiniExcelLibs.Attributes;
 using MiniExcelLibs.OpenXml;
+using MiniExcelLibs.Tests.Utils;
 using NPOI.SS.UserModel;
 using NPOI.XSSF.UserModel;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Xunit;
@@ -10,13 +12,34 @@ using Xunit.Abstractions;
 
 namespace MiniExcelLibs.Tests
 {
-    public partial class MiniExcelIssue2024Tests
+    public partial class MiniExcelIssue2024_2025_Tests
     {
         private readonly ITestOutputHelper output;
 
-        public MiniExcelIssue2024Tests(ITestOutputHelper output)
+        public MiniExcelIssue2024_2025_Tests(ITestOutputHelper output)
         {
             this.output = output;
+        }
+
+        /// <summary>
+        /// https://github.com/mini-software/MiniExcel/issues/750
+        /// </summary>
+        [Fact]
+        public void TestIssue20250403_SaveAsByTemplate_OPT()
+        {
+            long memoryBefore = GC.GetTotalMemory(true);
+            {
+                var path = PathHelper.GetTempFilePath();
+                var templatePath = PathHelper.GetFile("xlsx/TestIssue20250403_SaveAsByTemplate_OPT.xlsx");
+                var data = new Dictionary<string, object>
+                {
+                    ["list"] = Enumerable.Range(0, 1000000).Select(s => new { value1 = Guid.NewGuid(), value2 = Guid.NewGuid(), })
+                };
+                MiniExcel.SaveAsByTemplate(path, templatePath, data);
+            }
+            long memoryAfter = GC.GetTotalMemory(true);
+            long memoryIncrease = memoryAfter - memoryBefore;
+            Assert.True(memoryIncrease < 5318168);
         }
 
         /// <summary>

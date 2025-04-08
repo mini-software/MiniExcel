@@ -11,7 +11,7 @@ namespace MiniExcelLibs.Zip
     /// Copy & modified by ExcelDataReader ZipWorker @MIT License
     internal class ExcelOpenXmlZip : IDisposable
     {
-        private readonly Dictionary<string, ZipArchiveEntry> _entries;
+        internal readonly Dictionary<string, ZipArchiveEntry> _entries;
         private bool _disposed;
         internal MiniExcelZipArchive zipFile;
         public ReadOnlyCollection<ZipArchiveEntry> entries;
@@ -28,17 +28,17 @@ namespace MiniExcelLibs.Zip
             _entries = new Dictionary<string, ZipArchiveEntry>(StringComparer.OrdinalIgnoreCase);
             try
             {
-                entries = zipFile.Entries; //TODO:need to remove
+                //entries = zipFile.Entries; //TODO:need to remove
             }
             catch (InvalidDataException e)
             {
                 throw new InvalidDataException($"It's not legal excel zip, please check or issue for me. {e.Message}");
             }
 
-            foreach (var entry in zipFile.Entries)
-            {
-                _entries.Add(entry.FullName.Replace('\\', '/'), entry);
-            }
+            //foreach (var entry in zipFile.Entries)
+            //{
+            //    _entries.Add(entry.FullName.Replace('\\', '/'), entry);
+            //}
         }
 
         public ZipArchiveEntry GetEntry(string path)

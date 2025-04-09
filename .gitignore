@@ -401,3 +401,4 @@ FodyWeavers.xsd
 /BenchmarkDotNet.Artifacts
 /tests/MiniExcel.Tests.AspNetMvc/packages
 /TestTemplate
+/tests/MiniExcelTests/TemplateOptimization

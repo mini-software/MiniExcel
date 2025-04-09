@@ -7,37 +7,38 @@ using BenchmarkDotNet.Jobs;
 using BenchmarkDotNet.Loggers;
 using BenchmarkDotNet.Order;
 
-namespace MiniExcelLibs.Benchmarks
+namespace MiniExcelLibs.Benchmarks;
+
+public class Config : ManualConfig
 {
-    public class Config : ManualConfig
+    private const int Launches = 1;
+    private const int Warmups = 3;
+    private const int Unrolls = 3;
+    private const int Iterations = 3;
+
+    public Config()
     {
-        public const int Iterations = 3;
+        AddLogger(ConsoleLogger.Default);
 
-        public Config()
-        {
-            AddLogger(ConsoleLogger.Default);
+        AddExporter(CsvExporter.Default);
+        AddExporter(MarkdownExporter.GitHub);
+        AddExporter(HtmlExporter.Default);
 
-            AddExporter(CsvExporter.Default);
-            AddExporter(MarkdownExporter.GitHub);
-            AddExporter(HtmlExporter.Default);
+        AddDiagnoser(MemoryDiagnoser.Default);
+        AddColumn(TargetMethodColumn.Method);
+        AddColumn(StatisticColumn.Mean);
+        AddColumn(StatisticColumn.StdDev);
+        AddColumn(StatisticColumn.Error);
+        AddColumn(BaselineRatioColumn.RatioMean);
+        AddColumnProvider(DefaultColumnProviders.Metrics);
 
-            var md = MemoryDiagnoser.Default;
-            AddDiagnoser(md);
-            AddColumn(TargetMethodColumn.Method);
-            AddColumn(StatisticColumn.Mean);
-            AddColumn(StatisticColumn.StdDev);
-            AddColumn(StatisticColumn.Error);
-            AddColumn(BaselineRatioColumn.RatioMean);
-            AddColumnProvider(DefaultColumnProviders.Metrics);
+        AddJob(Job.ShortRun
+            .WithLaunchCount(Launches)
+            .WithWarmupCount(Warmups)
+            .WithUnrollFactor(Unrolls)
+            .WithIterationCount(Iterations));
 
-            AddJob(Job.ShortRun
-                   .WithLaunchCount(1)
-                   .WithWarmupCount(2)
-                   .WithUnrollFactor(Iterations)
-                   .WithIterationCount(3)
-            );
-            Orderer = new DefaultOrderer(SummaryOrderPolicy.FastestToSlowest);
-            Options |= ConfigOptions.JoinSummary;
-        }
+        Orderer = new DefaultOrderer(SummaryOrderPolicy.FastestToSlowest);
+        Options |= ConfigOptions.JoinSummary;
     }
 }

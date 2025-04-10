@@ -134,12 +134,12 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
 #if NET7_0_OR_GREATER
         [GeneratedRegex("([A-Z]+)([0-9]+)")] private static partial Regex CellRegex();
         private static readonly Regex _cellRegex = CellRegex();
-        [GeneratedRegex(@"\{\{([^}]+)\}\}")] private static partial Regex TemplateRegex();
+        [GeneratedRegex(@"\{\{(.*?)\}\}")] private static partial Regex TemplateRegex();
         private static readonly Regex _templateRegex = TemplateRegex();
 
 #else
         private static readonly Regex _cellRegex = new Regex("([A-Z]+)([0-9]+)", RegexOptions.Compiled);
-        private static readonly Regex _templateRegex = new Regex(@"\{\{[^}]+\}\}", RegexOptions.Compiled);
+        private static readonly Regex _templateRegex = new Regex(@"\{\{(.*?)\}\}", RegexOptions.Compiled);
 #endif
 
         private void GenerateSheetXmlImplByUpdateMode(ZipArchiveEntry sheetZipEntry, Stream stream, Stream sheetStream, IDictionary<string, object> inputMaps, IDictionary<int, string> sharedStrings, bool mergeCells = false)
@@ -1043,8 +1043,6 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                                 xRowInfo.IEnumerableMercell = info;
                             }
                             
-                            // var listValue = value as IList<object> ?? value.Cast<object>().ToList();
-                            // xRowInfo.CellIlListValues = value as IList<object> ?? value.Cast<object>().ToList();
                             xRowInfo.CellIEnumerableValues = value;
 
                             // get ienumerable runtime type

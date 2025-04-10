@@ -1,11 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Xml;
 
 namespace MiniExcelLibs.Utils
 {
-    using System.Xml;
-
     internal static class XmlReaderHelper
     {
         /// <summary>
@@ -95,5 +94,4 @@ namespace MiniExcelLibs.Utils
             }
         }
     }
-
 }

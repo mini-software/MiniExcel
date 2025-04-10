@@ -142,10 +142,35 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
         private static readonly Regex _templateRegex = new Regex(@"\{\{[^}]+\}\}", RegexOptions.Compiled);
 #endif
 
-        private void GenerateSheetXmlImpl(ZipArchiveEntry templateSheetZipEntry, Stream outputZipSheetEntryStream, Stream outputSheetStream, IDictionary<string, object> inputMaps, IDictionary<int, string> sharedStrings, bool mergeCells = false)
+        private void GenerateSheetXmlImplByUpdateMode(ZipArchiveEntry sheetZipEntry, Stream stream, Stream sheetStream, IDictionary<string, object> inputMaps, IDictionary<int, string> sharedStrings, bool mergeCells = false)
         {
             var doc = new XmlDocument();
-            doc.Load(templateSheetZipEntry.Open());
+            doc.Load(sheetStream);
+            sheetStream.Dispose();
+
+            sheetZipEntry.Delete(); // ZipArchiveEntry can't update directly, so need to delete then create logic
+
+            var worksheet = doc.SelectSingleNode("/x:worksheet", _ns);
+            var sheetData = doc.SelectSingleNode("/x:worksheet/x:sheetData", _ns);
+            var newSheetData = sheetData?.Clone(); //avoid delete lost data
+            var rows = newSheetData?.SelectNodes("x:row", _ns);
+
+            ReplaceSharedStringsToStr(sharedStrings, rows);
+            GetMergeCells(doc, worksheet);
+            UpdateDimensionAndGetRowsInfo(inputMaps, doc, rows, !mergeCells);
+
+            WriteSheetXml(stream, doc, sheetData, mergeCells);
+        }
+
+
+        private void GenerateSheetXmlImplByCreateMode(ZipArchiveEntry templateSheetZipEntry, Stream outputZipSheetEntryStream, Stream outputSheetStream, IDictionary<string, object> inputMaps, IDictionary<int, string> sharedStrings, bool mergeCells = false)
+        {
+            var doc = new XmlDocument();
+            using(var newTemplateStream = templateSheetZipEntry.Open())
+            {
+                doc.Load(newTemplateStream);
+            }
+            
             //outputSheetStream.Dispose();
 
             //sheetZipEntry.Delete(); // ZipArchiveEntry can't update directly, so need to delete then create logic

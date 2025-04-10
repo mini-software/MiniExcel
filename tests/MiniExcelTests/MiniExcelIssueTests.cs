@@ -97,6 +97,11 @@ namespace MiniExcelLibs.Tests
                 }
             };
             MiniExcel.SaveAsByTemplate(path, templatePath, data);
+
+            var rows = MiniExcel.Query(path).ToList();
+            Assert.Equal(rows[2].A, 1);
+            Assert.Equal(rows[3].A, 2);
+            Assert.Equal(rows[4].A, 3);
         }
 
         [Fact]

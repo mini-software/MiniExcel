@@ -32,21 +32,9 @@ namespace MiniExcelLibs.OpenXml
             XmlResolver = null
         };
 
-        public ExcelOpenXmlSheetReader(Stream stream, IConfiguration configuration)
+        public ExcelOpenXmlSheetReader(Stream stream, IConfiguration configuration, bool isUpdateMode = true)
         {
             _archive = new ExcelOpenXmlZip(stream);
-            try
-            {
-                _archive.entries = _archive.zipFile.Entries; //TODO:need to remove
-            }
-            catch (InvalidDataException e)
-            {
-                throw new InvalidDataException($"It's not legal excel zip, please check or issue for me. {e.Message}");
-            }
-            foreach (var entry in _archive.zipFile.Entries)
-            {
-                _archive._entries.Add(entry.FullName.Replace('\\', '/'), entry);
-            }
             _config = (OpenXmlConfiguration)configuration ?? OpenXmlConfiguration.DefaultConfig;
             SetSharedStrings();
         }

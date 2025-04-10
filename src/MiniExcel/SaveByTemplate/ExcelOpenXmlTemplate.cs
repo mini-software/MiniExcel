@@ -63,7 +63,7 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
             // foreach all templateStream and create file for _outputFileStream and not create sheet file
             templateStream.Position = 0;
             var templateReader = new ExcelOpenXmlSheetReader(templateStream, null);
-            var outputFileArchive = new ExcelOpenXmlZip(_outputFileStream, mode: ZipArchiveMode.Create, true, Encoding.UTF8);
+            var outputFileArchive = new ExcelOpenXmlZip(_outputFileStream, mode: ZipArchiveMode.Create, true, Encoding.UTF8, isUpdateMode: false);
             try
             {
                 outputFileArchive.entries = templateReader._archive.zipFile.Entries; //TODO:need to remove
@@ -72,7 +72,7 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
             {
                 throw new InvalidDataException($"It's not legal excel zip, please check or issue for me. {e.Message}");
             }
-            
+
             foreach (var entry in templateReader._archive.zipFile.Entries)
             {
                 outputFileArchive._entries.Add(entry.FullName.Replace('\\', '/'), entry);
@@ -88,11 +88,14 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                     foreach (ZipArchiveEntry entry in originalArchive.Entries)
                     {
                         if (entry.FullName.StartsWith("xl/worksheets/sheet", StringComparison.OrdinalIgnoreCase) ||
-                    entry.FullName.StartsWith("/xl/worksheets/sheet", StringComparison.OrdinalIgnoreCase))
+                    entry.FullName.StartsWith("/xl/worksheets/sheet", StringComparison.OrdinalIgnoreCase)
+                            || entry.FullName.Contains("xl/calcChain.xml")
+                    )
                             continue;
                         // Create a new entry in the new archive with the same name
                         ZipArchiveEntry newEntry = outputFileArchive.zipFile.CreateEntry(entry.FullName);
                         Debug.WriteLine(entry.FullName);
+
                         // Copy the content of the original entry to the new entry
                         using (Stream originalEntryStream = entry.Open())
                         using (Stream newEntryStream = newEntry.Open())
@@ -105,7 +108,7 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
 
 
 
-            
+
 
             //read sharedString
             var templateSharedStrings = templateReader._sharedStrings;
@@ -134,7 +137,7 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                 var outputZipEntry = outputFileArchive.zipFile.CreateEntry(templateFullName);
                 using (var outputZipSheetEntryStream = outputZipEntry.Open())
                 {
-                    GenerateSheetXmlImpl(templateSheet, outputZipSheetEntryStream, templateSheetStream, inputValues, templateSharedStrings, false);
+                    GenerateSheetXmlImplByCreateMode(templateSheet, outputZipSheetEntryStream, templateSheetStream, inputValues, templateSharedStrings, false);
                     //doc.Save(zipStream); //don't do it because: https://user-images.githubusercontent.com/12729184/114361127-61a5d100-9ba8-11eb-9bb9-34f076ee28a2.png
                     // disposing writer disposes streams as well. read and parse calc functions before that
                     sheetIdx++;
@@ -142,16 +145,33 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                 }
             }
 
+            // create mode we need to not create first then create here
             var calcChain = outputFileArchive.entries.FirstOrDefault(e => e.FullName.Contains("xl/calcChain.xml"));
             if (calcChain != null)
             {
                 var calcChainPathName = calcChain.FullName;
-                calcChain.Delete();
-                
+                //calcChain.Delete();
+
                 var calcChainEntry = outputFileArchive.zipFile.CreateEntry(calcChainPathName);
                 using (var calcChainStream = calcChainEntry.Open())
                 {
                     CalcChainHelper.GenerateCalcChainSheet(calcChainStream, _calcChainContent.ToString());
+                }
+            }
+            else
+            {
+                foreach (ZipArchiveEntry entry in originalArchive.Entries)
+                {
+                    if (entry.FullName.Contains("xl/calcChain.xml"))
+                    {
+                        ZipArchiveEntry newEntry = outputFileArchive.zipFile.CreateEntry(entry.FullName);
+                        Debug.WriteLine(entry.FullName);
+
+                        // Copy the content of the original entry to the new entry
+                        using (Stream originalEntryStream = entry.Open())
+                        using (Stream newEntryStream = newEntry.Open())
+                            originalEntryStream.CopyTo(newEntryStream);
+                    }
                 }
             }
 

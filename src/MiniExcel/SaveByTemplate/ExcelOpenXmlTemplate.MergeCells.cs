@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Runtime.InteropServices.ComTypes;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -27,11 +28,11 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
 
         private void MergeSameCellsImpl(Stream stream)
         {
-            stream.CopyTo(_stream);
+            stream.CopyTo(_outputFileStream);
 
-            var reader = new ExcelOpenXmlSheetReader(_stream, null);
-            var archive = new ExcelOpenXmlZip(_stream, mode: ZipArchiveMode.Update, true, Encoding.UTF8);
-            
+            var reader = new ExcelOpenXmlSheetReader(_outputFileStream, null);
+            var archive = new ExcelOpenXmlZip(_outputFileStream, mode: ZipArchiveMode.Update, true, Encoding.UTF8);
+
             //read sharedString
             var sharedStrings = reader._sharedStrings;
 
@@ -53,7 +54,7 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                 var entry = archive.zipFile.CreateEntry(fullName);
                 using (var zipStream = entry.Open())
                 {
-                    GenerateSheetXmlImpl(sheet, zipStream, sheetStream, new Dictionary<string, object>(), sharedStrings, mergeCells: true);
+                    GenerateSheetXmlImplByUpdateMode(sheet, zipStream, sheetStream, new Dictionary<string, object>(), sharedStrings, mergeCells: true);
                     //doc.Save(zipStream); //don't do it beacause: https://user-images.githubusercontent.com/12729184/114361127-61a5d100-9ba8-11eb-9bb9-34f076ee28a2.png
                 }
             }

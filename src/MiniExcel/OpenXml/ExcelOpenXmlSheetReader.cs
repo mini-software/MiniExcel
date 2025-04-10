@@ -22,7 +22,7 @@ namespace MiniExcelLibs.OpenXml
         internal IDictionary<int, string> _sharedStrings;
         private MergeCells _mergeCells;
         private ExcelOpenXmlStyles _style;
-        private readonly ExcelOpenXmlZip _archive;
+        internal readonly ExcelOpenXmlZip _archive;
         private readonly OpenXmlConfiguration _config;
 
         private static readonly XmlReaderSettings _xmlSettings = new XmlReaderSettings
@@ -32,7 +32,7 @@ namespace MiniExcelLibs.OpenXml
             XmlResolver = null
         };
 
-        public ExcelOpenXmlSheetReader(Stream stream, IConfiguration configuration)
+        public ExcelOpenXmlSheetReader(Stream stream, IConfiguration configuration, bool isUpdateMode = true)
         {
             _archive = new ExcelOpenXmlZip(stream);
             _config = (OpenXmlConfiguration)configuration ?? OpenXmlConfiguration.DefaultConfig;

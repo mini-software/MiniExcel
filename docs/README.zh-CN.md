@@ -25,12 +25,25 @@
 
 ---
 
+### 1.40.0
+- [New] Added exception to warn for sheet name too long (via @michelebastione)
+- [New] Added options for trimming column names and ignoring empty rows (via @michelebastione)
+- [New] Added IAsyncDisposable calls to ExcelOpenXmlsheetWriter.Async (via @michelebastione)
+- [New] Add conditional formatting support to Excel template (#745) (via @Notallthatevil)
+- [New] Add support for .NET 9.0 in project file (#744) (via @Notallthatevil)
+- [Bug] Bugfix of invalid cell values being mistakenly parsed as valid (via @michelebastione)
+- [Bug] Changing NotImplementedException assert in some tests to NotSupportedException (via @michelebastione)
+- [Bug] Moved sheet name check and fixed datetime formatting bug (via @michelebastione)
+- [OPT] Optimize max memory usage of SaveAsByTemplate #750 (#752) (via @shps951023)
+- [OPT] Optimization of SaveAsTemplate method (#749) (via @michelebastione)
+- [OPT] Removing DateTimeHelper.FromOADate and related code (via @michelebastione)
+- [OPT] Remove redundant property in csproj file (#748) (via @AZhrZho)
+
 ### 1.39.0
 - [New] Added support for Uri mapping (#726) (via @michelebastione)
 - [New] Added insert sheet feature about ContentTypesXml processing (#728) (via @izanhzh)
 - [New] Supports the TimeSpan type, double.NaN exports invalid values, and when reading, it needs to be determined whether it is a double value. (via @wxn401)
 - [Bug] Fixed parsing bug in the conversion to double (#734) (via @michelebastione)
-- [Bug] Fixed configuration is not used when writing using IDataReader #735 (via @michelebastione)
 - [Bug] Fixed configuration is not used when writing using IDataReader #735 (via @michelebastione)
 - [Bug] Fixed cancellation token not working for some async methods, enhanced export methods by returning number of rows, added active tab functionality, tests and code cleanup (#738) (via @michelebastione)
 

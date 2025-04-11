@@ -100,10 +100,10 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
         public int Width { get; internal set; }
         public int Height { get; internal set; }
 
-        public string ToXmlString(string prefix) 
+        public string ToXmlString(string prefix)
             => $"<{prefix}mergeCell ref=\"{ColumnHelper.GetAlphabetColumnName(X1)}{Y1}:{ColumnHelper.GetAlphabetColumnName(X2)}{Y2}\"/>";
     }
-    
+
     internal class MergeCellIndex
     {
         public int RowStart { get; set; }
@@ -123,14 +123,14 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
         public int RowIndex { get; set; }
     }
     #endregion
-    
+
     internal partial class ExcelOpenXmlTemplate
     {
         private List<XRowInfo> _xRowInfos;
         private readonly List<string> _calcChainCellRefs = new List<string>();
         private Dictionary<string, XMergeCell> _xMergeCellInfos;
         private List<XMergeCell> _newXMergeCellInfos;
-      
+
 #if NET7_0_OR_GREATER
         [GeneratedRegex("([A-Z]+)([0-9]+)")] private static partial Regex CellRegex();
         private static readonly Regex _cellRegex = CellRegex();
@@ -166,11 +166,11 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
         private void GenerateSheetXmlImplByCreateMode(ZipArchiveEntry templateSheetZipEntry, Stream outputZipSheetEntryStream, Stream outputSheetStream, IDictionary<string, object> inputMaps, IDictionary<int, string> sharedStrings, bool mergeCells = false)
         {
             var doc = new XmlDocument();
-            using(var newTemplateStream = templateSheetZipEntry.Open())
+            using (var newTemplateStream = templateSheetZipEntry.Open())
             {
                 doc.Load(newTemplateStream);
             }
-            
+
             //outputSheetStream.Dispose();
 
             //sheetZipEntry.Delete(); // ZipArchiveEntry can't update directly, so need to delete then create logic
@@ -192,7 +192,7 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
             var mergeCells = doc.SelectSingleNode("/x:worksheet/x:mergeCells", _ns);
             if (mergeCells == null)
                 return;
-            
+
             var newMergeCells = mergeCells.Clone();
             worksheet.RemoveChild(mergeCells);
 
@@ -203,31 +203,31 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
             }
         }
 
-        private static IEnumerable<ConditionalFormatRange> ParseConditionalFormatRanges(XmlDocument doc) 
+        private static IEnumerable<ConditionalFormatRange> ParseConditionalFormatRanges(XmlDocument doc)
         {
             var conditionalFormatting = doc.SelectNodes("/x:worksheet/x:conditionalFormatting", _ns);
             if (conditionalFormatting == null)
                 yield break;
 
-            foreach(XmlNode conditionalFormat in conditionalFormatting)
+            foreach (XmlNode conditionalFormat in conditionalFormatting)
             {
                 var rangeValues = conditionalFormat.Attributes?["sqref"]?.Value.Split(' ');
                 if (rangeValues == null)
                     continue;
-                
+
                 var rangeList = new List<Range>();
-                foreach (var rangeVal in rangeValues) 
+                foreach (var rangeVal in rangeValues)
                 {
                     var rangeValSplit = rangeVal.Split(':');
-                    if (rangeValSplit.Length == 0) 
+                    if (rangeValSplit.Length == 0)
                         continue;
-                    
+
                     if (rangeValSplit.Length == 1)
                     {
                         var match = _cellRegex.Match(rangeValSplit[0]);
                         if (!match.Success)
                             continue;
-                        
+
                         var row = int.Parse(match.Groups[2].Value);
                         var column = ColumnHelper.GetColumnIndex(match.Groups[1].Value);
                         rangeList.Add(new Range
@@ -242,7 +242,7 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                     {
                         var match1 = _cellRegex.Match(rangeValSplit[0]);
                         var match2 = _cellRegex.Match(rangeValSplit[1]);
-                        if (match1.Success && match2.Success) 
+                        if (match1.Success && match2.Success)
                         {
                             rangeList.Add(new Range
                             {
@@ -254,7 +254,7 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                         }
                     }
                 }
-               
+
                 yield return new ConditionalFormatRange
                 {
                     Node = conditionalFormat,
@@ -275,7 +275,7 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
             }
         }
 
-        private struct Range 
+        private struct Range
         {
             public int StartColumn { get; set; }
             public int StartRow { get; set; }
@@ -302,13 +302,13 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
 
             sheetData.RemoveAll();
             sheetData.InnerText = "{{{{{{split}}}}}}"; //TODO: bad code smell
-            
+
             var prefix = string.IsNullOrEmpty(sheetData.Prefix) ? "" : $"{sheetData.Prefix}:";
             var endPrefix = string.IsNullOrEmpty(sheetData.Prefix) ? "" : $":{sheetData.Prefix}"; // https://user-images.githubusercontent.com/12729184/115000066-fd02b300-9ed4-11eb-8e65-bf0014015134.png
             var contents = doc.InnerXml.Split(new[] { $"<{prefix}sheetData>{{{{{{{{{{{{split}}}}}}}}}}}}</{prefix}sheetData>" }, StringSplitOptions.None);
 
             var conditionalFormatNodes = doc.SelectNodes("/x:worksheet/x:conditionalFormatting", _ns);
-            for (var i = 0; i < conditionalFormatNodes?.Count; ++i) 
+            for (var i = 0; i < conditionalFormatNodes?.Count; ++i)
             {
                 var node = conditionalFormatNodes.Item(i);
                 node.ParentNode.RemoveChild(node);
@@ -374,7 +374,7 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                             headerDiff++;
                             continue;
                         }
-                        
+
                         rowNo = groupStartRowIndex;
                         cellIEnumerableValuesIndex++;
                         isFirstRound = false;
@@ -397,14 +397,14 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
 
                     if (groupingStarted && !isCellIEnumerableValuesSet)
                     {
-                        cellIEnumerableValues = rowInfo.CellIlListValues 
+                        cellIEnumerableValues = rowInfo.CellIlListValues
                             ?? rowInfo.CellIEnumerableValues.Cast<object>().ToList();
                         isCellIEnumerableValuesSet = true;
                     }
 
-                    var groupingRowDiff = hasEverGroupStarted 
+                    var groupingRowDiff = hasEverGroupStarted
                         ? cellIEnumerableValuesIndex * groupRowCount - headerDiff - 1 : 0;
-                    
+
                     if (groupingStarted)
                     {
                         if (isFirstRound)
@@ -415,7 +415,7 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                         if (cellIEnumerableValues != null)
                         {
                             rowInfo.CellIEnumerableValuesCount = 1;
-                            
+
                             var listValue = new List<object> { cellIEnumerableValues[cellIEnumerableValuesIndex] };
                             rowInfo.CellIEnumerableValues = listValue;
                             rowInfo.CellIlListValues = listValue;
@@ -488,7 +488,7 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                         //mergecells
                         if (rowInfo.RowMercells == null)
                             continue;
-                        
+
                         foreach (var mergeCell in rowInfo.RowMercells)
                         {
                             var newMergeCell = new XMergeCell(mergeCell);
@@ -514,27 +514,31 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                     writer.Write($"</{prefix}mergeCells>");
                 }
 
-                if(newConditionalFormatRanges.Count != 0)
+                if (newConditionalFormatRanges.Count != 0)
                 {
                     writer.Write(string.Join(string.Empty, newConditionalFormatRanges.Select(cf => cf.Node.OuterXml)));
                 }
-                
+
                 writer.Write(contents[1]);
             }
         }
 
-        private void CellIEnumerableValuesGenerate(string endPrefix, StreamWriter writer, ref int rowIndexDiff, 
+        private void CellIEnumerableValuesGenerate(string endPrefix, StreamWriter writer, ref int rowIndexDiff,
             StringBuilder rowXml, ref int headerDiff, ref string prevHeader, int mergeRowCount, bool isHeaderRow,
-            ref string currentHeader, XRowInfo rowInfo, XmlElement row, int groupingRowDiff, ref int newRowIndex, 
+            ref string currentHeader, XRowInfo rowInfo, XmlElement row, int groupingRowDiff, ref int newRowIndex,
             string innerXml, StringBuilder outerXmlOpen, ref bool isFirst, ref int iEnumerableIndex)
         {
+            // Just need to remove space string one time https://github.com/mini-software/MiniExcel/issues/751
+            var cleanRowXml = CleanXml(rowXml, endPrefix);
+            var cleanOuterXmlOpen = CleanXml(outerXmlOpen, endPrefix);
+            var cleanInnerXml = CleanXml(innerXml, endPrefix);
             foreach (var item in rowInfo.CellIEnumerableValues)
             {
                 iEnumerableIndex++;
                 rowXml.Clear()
-                    .Append(outerXmlOpen)
+                    .Append(cleanOuterXmlOpen)
                     .AppendFormat(@" r=""{0}"">", newRowIndex)
-                    .Append(innerXml)
+                    .Append(cleanInnerXml)
                     .Replace($"{{{{$rowindex}}}}", newRowIndex.ToString())
                     .AppendFormat("</{0}>", row.Name);
 
@@ -619,7 +623,7 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
 #if NETCOREAPP3_0_OR_GREATER
                     string MatchDelegate(Match x) => CollectionExtensions.GetValueOrDefault(replacements, x.Groups[1].Value, "");
 #else
-                                string MatchDelegate(Match x) => replacements.TryGetValue(x.Groups[1].Value, out var repl) ? repl : "";
+                    string MatchDelegate(Match x) => replacements.TryGetValue(x.Groups[1].Value, out var repl) ? repl : "";
 #endif
                     foreach (var prop in rowInfo.PropsMap)
                     {
@@ -708,7 +712,7 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
 
                 // replace formulas
                 ProcessFormulas(rowXml, newRowIndex);
-                writer.Write(CleanXml(rowXml, endPrefix));
+                writer.Write(rowXml);
 
                 //mergecells
                 if (rowInfo.RowMercells == null)
@@ -794,7 +798,7 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
 
             if (mergeTaggedColumns.Count <= 0)
                 return;
-            
+
             var calculatedColumns = new List<XChildNode>();
             foreach (var taggedColumn in mergeTaggedColumns)
             {
@@ -818,8 +822,8 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                     if (!string.IsNullOrEmpty(childNode.InnerText))
                     {
                         var xmlNodes = calculatedColumns
-                            .Where(j => 
-                                j.InnerText == childNode.InnerText && 
+                            .Where(j =>
+                                j.InnerText == childNode.InnerText &&
                                 j.ColIndex == childNodeLetter)
                             .OrderBy(s => s.RowIndex)
                             .ToList();
@@ -835,8 +839,8 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                                     j.ColIndex == mergeLimitColumn.ColIndex && j.InnerText == limitedNode.InnerText);
 
                                 xmlNodes = xmlNodes
-                                    .Where(j => 
-                                        j.RowIndex >= limitedNode.RowIndex && 
+                                    .Where(j =>
+                                        j.RowIndex >= limitedNode.RowIndex &&
                                         j.RowIndex <= limitedMaxNode.RowIndex)
                                     .ToList();
                             }
@@ -852,7 +856,7 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                                 var mergeIndexResult = lastMergeCellIndexes.TryGetValue(mergeCell.X1, out var mergeIndex);
 
                                 if (!mergeIndexResult ||
-                                    mergeCell.Y1 < mergeIndex.RowStart || 
+                                    mergeCell.Y1 < mergeIndex.RowStart ||
                                     mergeCell.Y2 > mergeIndex.RowEnd)
                                 {
                                     lastMergeCellIndexes[mergeCell.X1] = new MergeCellIndex(mergeCell.Y1, mergeCell.Y2);
@@ -926,8 +930,8 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
         private static string ConvertToDateTimeString(PropertyInfo propInfo, object cellValue)
         {
             //TODO:c.SetAttribute("t", "d"); and custom format
-            var format = propInfo?.GetAttributeValue((ExcelFormatAttribute x) => x.Format) 
-                     ?? propInfo?.GetAttributeValue((ExcelColumnAttribute x) => x.Format) 
+            var format = propInfo?.GetAttributeValue((ExcelFormatAttribute x) => x.Format)
+                     ?? propInfo?.GetAttributeValue((ExcelColumnAttribute x) => x.Format)
                      ?? "yyyy-MM-dd HH:mm:ss";
 
             return (cellValue as DateTime?)?.ToString(format);
@@ -958,7 +962,7 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                     //need to check sharedstring exist or not
                     if (sharedStrings == null || !sharedStrings.TryGetValue(int.Parse(v.InnerText), out var shared))
                         continue;
-                    
+
                     // change type = str and replace its value
                     //TODO: remove sharedstring?
                     v.InnerText = shared;
@@ -974,7 +978,7 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
             var dimension = doc.SelectSingleNode("/x:worksheet/x:dimension", _ns) as XmlElement;
             if (dimension == null)
                 throw new NotImplementedException("Excel Dimension Xml is null, please file an issue for this problem: https://github.com/mini-software/MiniExcel/issues");
-            
+
             var maxRowIndexDiff = 0;
             foreach (XmlElement row in rows)
             {
@@ -986,7 +990,7 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                 {
                     Row = row
                 };
-                
+
                 _xRowInfos.Add(xRowInfo);
                 foreach (XmlElement c in row.SelectNodes("x:c", _ns))
                 {
@@ -1014,17 +1018,17 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                         .Select(x => x.Value)
                         .Distinct()
                         .ToArray();
-                    
+
                     var matchCnt = matches.Length;
                     var isMultiMatch = matchCnt > 1 || (matchCnt == 1 && v.InnerText != $"{{{{{matches[0]}}}}}");
-                    
+
                     foreach (var formatText in matches)
                     {
                         xRowInfo.FormatText = formatText;
                         var propNames = formatText.Split('.');
                         if (propNames[0].StartsWith("$")) //e.g:"$rowindex" it doesn't need to check cell value type
                             continue;
-                        
+
                         // TODO: default if not contain property key, clean the template string
                         if (!inputMaps.TryGetValue(propNames[0], out var cellValue))
                         {
@@ -1042,7 +1046,7 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                             {
                                 xRowInfo.IEnumerableMercell = info;
                             }
-                            
+
                             xRowInfo.CellIEnumerableValues = value;
 
                             // get ienumerable runtime type
@@ -1058,12 +1062,12 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                                     {
                                         xRowInfo.IEnumerablePropName = propNames[0];
                                         xRowInfo.IEnumerableGenericType = element.GetType();
-                                        
+
                                         if (element is IDictionary<string, object> dic)
                                         {
                                             xRowInfo.IsDictionary = true;
                                             xRowInfo.PropsMap = dic.ToDictionary(
-                                                kv => kv.Key, 
+                                                kv => kv.Key,
                                                 kv => kv.Value != null
                                                     ? new PropInfo { UnderlyingTypePropType = Nullable.GetUnderlyingType(kv.Value.GetType()) ?? kv.Value.GetType() }
                                                     : new PropInfo { UnderlyingTypePropType = typeof(object) });
@@ -1072,7 +1076,7 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                                         {
                                             var props = xRowInfo.IEnumerableGenericType.GetProperties();
                                             var values = props.ToDictionary(
-                                                p => p.Name, 
+                                                p => p.Name,
                                                 p => new PropInfo
                                                 {
                                                     PropertyInfo = p,
@@ -1118,7 +1122,7 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                             {
                                 v.InnerText = v.InnerText.Replace($"{{{{{propNames[0]}.{propNames[1]}}}}}", "");
                                 continue;
-                                
+
                                 //why unreachable exception?
                                 throw new InvalidDataException($"{propNames[0]} doesn't have {propNames[1]} property");
                             }
@@ -1151,11 +1155,11 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                                 xRowInfo.IEnumerablePropName = propNames[0];
                                 xRowInfo.IEnumerableGenericType = typeof(DataRow);
                                 xRowInfo.IsDataTable = true;
-                                
+
                                 var listValues = dt.Rows.Cast<object>().ToList();
                                 xRowInfo.CellIEnumerableValues = listValues;
                                 xRowInfo.CellIlListValues = listValues;
-                                
+
                                 var first = true;
                                 foreach (var element in xRowInfo.CellIEnumerableValues)
                                 {
@@ -1166,8 +1170,8 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                                 }
                                 //TODO:need to optimize
                                 //maxRowIndexDiff = dt.Rows.Count <= 1 ? 0 : dt.Rows.Count-1;
-                                xRowInfo.PropsMap = dt.Columns.Cast<DataColumn>().ToDictionary(col => 
-                                    col.ColumnName, 
+                                xRowInfo.PropsMap = dt.Columns.Cast<DataColumn>().ToDictionary(col =>
+                                    col.ColumnName,
                                     col => new PropInfo { UnderlyingTypePropType = Nullable.GetUnderlyingType(col.DataType) }
                                 );
                             }
@@ -1225,7 +1229,7 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                     //    break;
                 }
             }
-            
+
             // e.g <dimension ref=\"A1:B6\" /> only need to update B6 to BMaxRowIndex
             var refs = dimension.GetAttribute("ref").Split(':');
             if (refs.Length == 2)

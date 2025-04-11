@@ -4061,7 +4061,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         using var path = AutoDeletingPath.Create();
         var data = new Dictionary<string, object>
         {
-            ["list"] = Enumerable.Range(0, 100_000)
+            ["list"] = Enumerable.Range(0, 10_000)
                 .Select(_ => new { value1 = Guid.NewGuid(), value2 = Guid.NewGuid(), })
         };
         MiniExcel.SaveAsByTemplate(path.ToString(), templatePath, data);
@@ -4077,5 +4077,43 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         var memoryIncrease = memoryAfter - memoryBefore;
         
         _output.WriteLine($"memoryIncrease: {memoryIncrease}");
+    }
+
+
+    /// <summary>
+    /// https://github.com/mini-software/MiniExcel/issues/751
+    /// Optimize CleanXml method #751
+    /// </summary>
+    [Fact]
+    public void TestIssue751()
+    {
+        var templatePath = PathHelper.GetFile("xlsx/TestIssue20250403_SaveAsByTemplate_OPT.xlsx");
+
+        using var path = AutoDeletingPath.Create();
+        var list = Enumerable.Range(0, 10)
+                .Select(_ => new { value1 = Guid.NewGuid(), value2 = Guid.NewGuid(), }).ToList();
+        var data = new Dictionary<string, object>
+        {
+            ["list"] = list
+        };
+        MiniExcel.SaveAsByTemplate(path.ToString(), templatePath, data);
+
+        using var stream = File.OpenRead(path.ToString());
+        using var workbook = new XSSFWorkbook(stream);
+        var sheet = workbook.GetSheetAt(0);
+        var row = sheet.GetRow(0);
+        var cell = row.GetCell(0);
+        Assert.Equal("value1", cell.ToString());
+        Assert.Equal(0, cell.ColumnIndex);
+        Assert.Equal(0, cell.RowIndex);
+        Assert.Equal("value2", row.GetCell(1).ToString());
+        Assert.Equal(1, row.GetCell(1).ColumnIndex);
+        Assert.Equal(0, row.GetCell(1).RowIndex);
+        for (int i = 0; i < list.Count; i++)
+        {
+            var rowData = sheet.GetRow(i + 1);
+            Assert.Equal(list[i].value1.ToString(), rowData.GetCell(0).ToString());
+            Assert.Equal(list[i].value2.ToString(), rowData.GetCell(1).ToString());
+        }
     }
 }

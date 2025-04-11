@@ -1,35 +1,35 @@
-﻿using System;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using BenchmarkDotNet.Attributes;
+﻿using BenchmarkDotNet.Attributes;
+using MiniExcelLibs.Benchmarks.Utils;
 
-namespace MiniExcelLibs.Benchmarks
+namespace MiniExcelLibs.Benchmarks;
+
+public class XlsxAsyncBenchmark : BenchmarkBase
 {
-    public class XlsxAsyncBenchmark : BenchmarkBase
+    [Benchmark(Description = "MiniExcel Create Xlsx Async")]
+    public async Task MiniExcelCreateAsyncTest()
     {
-        [Benchmark(Description = "MiniExcel Async Create Xlsx")]
-        public async Task MiniExcelCreateAsyncTest()
-        {
-            var value = Getvalue();
-            var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
-            using (var stream = File.Create(path))
-                await stream.SaveAsAsync(value);
-            File.Delete(path);
-        }
+        using var path = AutoDeletingPath.Create();
+        using var stream = File.Create(path.FilePath);
 
-        [Benchmark(Description = "MiniExcel Async Template Generate")]
-        public async Task MiniExcel_Template_Generate_Async_Test()
+        await stream.SaveAsAsync(GetValue());
+    }
+
+    [Benchmark(Description = "MiniExcel Generate Template Async")]
+    public async Task MiniExcel_Template_Generate_Async_Test()
+    {
+        const string templatePath = "TestTemplateBasicIEmumerableFill.xlsx";
+
+        using var path = AutoDeletingPath.Create();
+        var value = new
         {
-            {
-                var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
-                const string templatePath = @"TestTemplateBasicIEmumerableFill.xlsx";
-                var value = new
+            employees = Enumerable.Range(1, rowCount)
+                .Select(s => new 
                 {
-                    employees = Enumerable.Range(1, rowCount).Select(s => new { name = "Jack", department = "HR" })
-                };
-                await MiniExcel.SaveAsByTemplateAsync(path, templatePath, value);
-            }
-        }
+                    name = "Jack",
+                    department = "HR"
+                })
+        };
+     
+        await MiniExcel.SaveAsByTemplateAsync(path.FilePath, templatePath, value);
     }
 }

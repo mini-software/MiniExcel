@@ -1,13 +1,15 @@
-﻿namespace MiniExcelLibs.Utils
+﻿using System;
+using System.IO;
+
+namespace MiniExcelLibs.Utils
 {
-    using System;
-    using System.IO;
-    public static partial class ExcelTypeHelper
+    public static class ExcelTypeHelper
     {
         internal static ExcelType GetExcelType(string filePath, ExcelType excelType)
         {
             if (excelType != ExcelType.UNKNOWN)
                 return excelType;
+            
             var extension = Path.GetExtension(filePath).ToLowerInvariant();
             switch (extension)
             {
@@ -19,7 +21,7 @@
                 //case ".xls":
                 //    return ExcelType.XLS;
                 default:
-                    throw new NotSupportedException($"Extension : {extension} not suppprt, or you can specify exceltype.");
+                    throw new NotSupportedException($"Extension {extension} is not suppprted. Try specifying the ExcelType if you know what the underlying format is.");
             }
         }
 

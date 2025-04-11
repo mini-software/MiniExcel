@@ -1,7 +1,8 @@
-﻿namespace MiniExcelLibs.Utils
+﻿using System;
+
+namespace MiniExcelLibs.Utils
 {
-    using System;
-    internal class ImageHelper
+    internal static class ImageHelper
     {
         public enum ImageFormat
         {
@@ -16,13 +17,13 @@
 #if NET45||NETSTANDARD2_0
         public static ImageFormat GetImageFormat(byte[] bytes)
         {
-            byte[] bmp = new byte[] { (byte)'B', (byte)'M' };            // BMP
-            byte[] gif = new byte[] { (byte)'G', (byte)'I', (byte)'F' }; // GIF
-            byte[] png = new byte[] { 137, 80, 78, 71 };                 // PNG
-            byte[] tiff = new byte[] { 73, 73, 42 };                     // TIFF
-            byte[] tiff2 = new byte[] { 77, 77, 42 };                    // TIFF
-            byte[] jpeg = new byte[] { 255, 216, 255, 224 };             // jpeg
-            byte[] jpeg2 = new byte[] { 255, 216, 255, 225 };            // jpeg canon
+            var bmp = new byte[] { (byte)'B', (byte)'M' };            // BMP
+            var gif = new byte[] { (byte)'G', (byte)'I', (byte)'F' }; // GIF
+            var png = new byte[] { 137, 80, 78, 71 };                 // PNG
+            var tiff = new byte[] { 73, 73, 42 };                     // TIFF
+            var tiff2 = new byte[] { 77, 77, 42 };                    // TIFF
+            var jpeg = new byte[] { 255, 216, 255, 224 };             // jpeg
+            var jpeg2 = new byte[] { 255, 216, 255, 225 };            // jpeg canon
 
             if (bytes.StartsWith(bmp))
                 return ImageFormat.bmp;
@@ -47,8 +48,8 @@
 
             return ImageFormat.unknown;
         }
-#endif
-#if NET5_0_OR_GREATER
+        
+#elif NET5_0_OR_GREATER
         public static ImageFormat GetImageFormat(ReadOnlySpan<byte> bytes)
         {
             ReadOnlySpan<byte> bmp = stackalloc byte[] { (byte)'B', (byte)'M' };            // BMP
@@ -83,7 +84,5 @@
             return ImageFormat.unknown;
         }
 #endif
-
     }
-
 }

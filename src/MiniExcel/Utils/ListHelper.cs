@@ -1,9 +1,9 @@
-﻿namespace MiniExcelLibs.Utils
-{
-    using System;
-    using System.Collections.Generic;
-    using System.Linq;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 
+namespace MiniExcelLibs.Utils
+{
     public static class IEnumerableHelper
     {
         public static bool StartsWith<T>(this IList<T> span, IList<T> value) where T : IEquatable<T>

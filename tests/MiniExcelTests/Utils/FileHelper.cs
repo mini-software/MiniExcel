@@ -1,26 +1,18 @@
-﻿using System;
-using System.IO;
+﻿namespace MiniExcelLibs.Tests.Utils;
 
-namespace MiniExcelLibs.Tests.Utils
+public static class FileHelper
 {
-    public partial class MiniExcelOpenXml
+    public static Stream OpenRead(string path)
     {
-        public class FileHelper
+        try
         {
-            public static Stream OpenRead(string path)
-            {
-                try
-                {
-                    return File.OpenRead(path);
-                }
-                catch (IOException)
-                {
-                    var newPath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
-                    File.Copy(path, newPath);
-                    return File.OpenRead(newPath);
-                }
-            }
-
+            return File.OpenRead(path);
+        }
+        catch (IOException)
+        {
+            var newPath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
+            File.Copy(path, newPath);
+            return File.OpenRead(newPath);
         }
     }
 }

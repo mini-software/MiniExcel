@@ -1977,8 +1977,8 @@ Thanks for providing a free All product IDE for this project ([License](https://
 
 
 
-### Benefit
-Link https://github.com/mini-software/MiniExcel/issues/560#issue-2080619180
+### Contribution sharing donate
+Link https://github.com/orgs/mini-software/discussions/754
 
 ### Contributors
 

@@ -1839,9 +1839,8 @@ public static DataTable QueryAsDataTableWithoutEmptyRow(Stream stream, bool useH
 
 
 
-### 收益流水
-目前收益 https://github.com/mini-software/MiniExcel/issues/560#issue-2080619180
-
+### Contribution sharing donate
+Link https://github.com/orgs/mini-software/discussions/754
 
 ### Contributors
 

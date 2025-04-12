@@ -18,6 +18,7 @@ namespace MiniExcelLibs.OpenXml
         public bool IgnoreEmptyRows { get; set; } = false;
         public bool EnableSharedStringCache { get; set; } = true;
         public long SharedStringCacheSize { get; set; } = 5 * 1024 * 1024;
+        public OpenXmlStyleOptions StyleOptions { get; set; } = new OpenXmlStyleOptions();
         public DynamicExcelSheet[] DynamicSheets { get; set; }
 
         /// <summary>

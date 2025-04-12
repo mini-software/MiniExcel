@@ -434,7 +434,7 @@ namespace MiniExcelLibs.OpenXml
                         builder = new MinimalSheetStyleBuilder(context);
                         break;
                     case TableStyles.Default:
-                        builder = new DefaultSheetStyleBuilder(context);
+                        builder = new DefaultSheetStyleBuilder(context, _configuration.StyleOptions);
                         break;
                 }
                 var result = await builder.BuildAsync(cancellationToken);

@@ -10,24 +10,26 @@ namespace MiniExcelLibs.OpenXml
         private readonly Encoding _encoding;
         private readonly StreamWriter _streamWriter;
         private bool disposedValue;
+        
         public MiniExcelStreamWriter(Stream stream, Encoding encoding, int bufferSize)
         {
-            this._stream = stream;
-            this._encoding = encoding;
-            this._streamWriter = new StreamWriter(stream, this._encoding, bufferSize);
+            _stream = stream;
+            _encoding = encoding;
+            _streamWriter = new StreamWriter(stream, _encoding, bufferSize);
         }
         public void Write(string content)
         {
             if (string.IsNullOrEmpty(content))
                 return;
-            this._streamWriter.Write(content);
+            
+            _streamWriter.Write(content);
         }
 
         public long WriteAndFlush(string content)
         {
-            this.Write(content);
-            this._streamWriter.Flush();
-            return this._streamWriter.BaseStream.Position;
+            Write(content);
+            _streamWriter.Flush();
+            return _streamWriter.BaseStream.Position;
         }
 
         public void WriteWhitespace(int length)
@@ -37,20 +39,20 @@ namespace MiniExcelLibs.OpenXml
 
         public long Flush()
         {
-            this._streamWriter.Flush();
-            return this._streamWriter.BaseStream.Position;
+            _streamWriter.Flush();
+            return _streamWriter.BaseStream.Position;
         }
 
         public void SetPosition(long position)
         {
-            this._streamWriter.BaseStream.Position = position;
+            _streamWriter.BaseStream.Position = position;
         }
 
         protected virtual void Dispose(bool disposing)
         {
             if (!disposedValue)
             {
-                this._streamWriter?.Dispose();
+                _streamWriter?.Dispose();
                 disposedValue = true;
             }
         }

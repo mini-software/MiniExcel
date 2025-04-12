@@ -38,50 +38,16 @@ namespace MiniExcelLibs.WriteAdapter
         public List<ExcelColumnInfo> GetColumns()
         {
             if (CustomPropertyHelper.TryGetTypeColumnInfo(_genericType, _configuration, out var props))
-            {
                 return props;
-            }
 
             _enumerator = _values.GetEnumerator();
-            if (!_enumerator.MoveNext())
-            {
-                try
-                {
-                    _empty = true;
-                    return null;
-                }
-                finally
-                {
-                    (_enumerator as IDisposable)?.Dispose();
-                    _enumerator = null;
-                }
-            }
-            return CustomPropertyHelper.GetColumnInfoFromValue(_enumerator.Current, _configuration);           
-        }
-
-        public IEnumerable<IEnumerable<CellWriteInfo>> GetRows(List<ExcelColumnInfo> props, CancellationToken cancellationToken = default)
-        {
-            if (_empty)
-            {
-                yield break;
-            }
-
+            if (_enumerator.MoveNext())
+                return CustomPropertyHelper.GetColumnInfoFromValue(_enumerator.Current, _configuration);
+            
             try
             {
-                if (_enumerator is null)
-                {
-                    _enumerator = _values.GetEnumerator();
-                    if (!_enumerator.MoveNext())
-                    {
-                        yield break;
-                    }
-                }
-
-                do
-                {
-                    cancellationToken.ThrowIfCancellationRequested();
-                    yield return GetRowValues(_enumerator.Current, props);
-                } while (_enumerator.MoveNext());
+                _empty = true;
+                return null;
             }
             finally
             {
@@ -90,7 +56,34 @@ namespace MiniExcelLibs.WriteAdapter
             }
         }
 
+        public IEnumerable<IEnumerable<CellWriteInfo>> GetRows(List<ExcelColumnInfo> props, CancellationToken cancellationToken = default)
+        {
+            if (_empty)
+                yield break;
 
+            try
+            {
+                if (_enumerator is null)
+                {
+                    _enumerator = _values.GetEnumerator();
+                    if (!_enumerator.MoveNext())
+                        yield break;
+                }
+
+                do
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    yield return GetRowValues(_enumerator.Current, props);
+                } 
+                while (_enumerator.MoveNext());
+            }
+            finally
+            {
+                (_enumerator as IDisposable)?.Dispose();
+                _enumerator = null;
+            }
+        }
+        
         public static IEnumerable<CellWriteInfo> GetRowValues(object currentValue, List<ExcelColumnInfo> props)
         {
             var column = 1;
@@ -113,6 +106,7 @@ namespace MiniExcelLibs.WriteAdapter
                 {
                     cellValue = prop.Property.GetValue(currentValue);
                 }
+                
                 yield return new CellWriteInfo(cellValue, column, prop);
                 column++;
             }

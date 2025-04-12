@@ -6,7 +6,7 @@ namespace MiniExcelLibs.OpenXml.Constants
     {
         static ExcelXml()
         {
-            DefaultRels = ExcelOpenXmlUtils.MinifyXml( DefaultRels);
+            DefaultRels = ExcelOpenXmlUtils.MinifyXml(DefaultRels);
             DefaultWorkbookXml = ExcelOpenXmlUtils.MinifyXml(DefaultWorkbookXml);
             DefaultWorkbookXmlRels = ExcelOpenXmlUtils.MinifyXml(DefaultWorkbookXmlRels);
             DefaultSheetRelXml = ExcelOpenXmlUtils.MinifyXml(DefaultSheetRelXml);
@@ -14,7 +14,7 @@ namespace MiniExcelLibs.OpenXml.Constants
         }
 
 
-        internal static readonly string EmptySheetXml = $@"<?xml version=""1.0"" encoding=""utf-8""?><x:worksheet xmlns:x=""http://schemas.openxmlformats.org/spreadsheetml/2006/main""><x:dimension ref=""A1""/><x:sheetData></x:sheetData></x:worksheet>";
+        internal const string EmptySheetXml = @"<?xml version=""1.0"" encoding=""utf-8""?><x:worksheet xmlns:x=""http://schemas.openxmlformats.org/spreadsheetml/2006/main""><x:dimension ref=""A1""/><x:sheetData></x:sheetData></x:worksheet>";
 
         internal static readonly string DefaultRels = @"<?xml version=""1.0"" encoding=""utf-8""?>
 <Relationships xmlns=""http://schemas.openxmlformats.org/package/2006/relationships"">
@@ -40,22 +40,24 @@ namespace MiniExcelLibs.OpenXml.Constants
 <Relationships xmlns=""http://schemas.openxmlformats.org/package/2006/relationships"">
     {{format}}
 </Relationships>";
+        
         internal static readonly string DefaultDrawing = @"<?xml version=""1.0"" encoding=""utf-8"" standalone=""yes""?>
 <xdr:wsDr xmlns:a=""http://schemas.openxmlformats.org/drawingml/2006/main""
     xmlns:r=""http://schemas.openxmlformats.org/officeDocument/2006/relationships""
     xmlns:xdr=""http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing"">
     {{format}}
 </xdr:wsDr>";
-        internal static readonly string DefaultDrawingXmlRels = @"<?xml version=""1.0"" encoding=""utf-8"" standalone=""yes""?>
+        
+        internal const string DefaultDrawingXmlRels = @"<?xml version=""1.0"" encoding=""utf-8"" standalone=""yes""?>
 <Relationships xmlns=""http://schemas.openxmlformats.org/package/2006/relationships"">
     {{format}}
 </Relationships>";
 
-        internal static readonly string DefaultSharedString = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\" ?><sst xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" count=\"0\" uniqueCount=\"0\"></sst>";
+        internal const string DefaultSharedString = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\" ?><sst xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" count=\"0\" uniqueCount=\"0\"></sst>";
 
-        internal static readonly string StartTypes = @"<?xml version=""1.0"" encoding=""UTF-8"" standalone=""yes""?><Types xmlns=""http://schemas.openxmlformats.org/package/2006/content-types""><Default ContentType=""application/vnd.openxmlformats-officedocument.spreadsheetml.printerSettings"" Extension=""bin""/><Default ContentType=""application/xml"" Extension=""xml""/><Default ContentType=""image/jpeg"" Extension=""jpg""/><Default ContentType=""image/png"" Extension=""png""/><Default ContentType=""image/gif"" Extension=""gif""/><Default ContentType=""application/vnd.openxmlformats-package.relationships+xml"" Extension=""rels""/>";
+        internal const string StartTypes = @"<?xml version=""1.0"" encoding=""UTF-8"" standalone=""yes""?><Types xmlns=""http://schemas.openxmlformats.org/package/2006/content-types""><Default ContentType=""application/vnd.openxmlformats-officedocument.spreadsheetml.printerSettings"" Extension=""bin""/><Default ContentType=""application/xml"" Extension=""xml""/><Default ContentType=""image/jpeg"" Extension=""jpg""/><Default ContentType=""image/png"" Extension=""png""/><Default ContentType=""image/gif"" Extension=""gif""/><Default ContentType=""application/vnd.openxmlformats-package.relationships+xml"" Extension=""rels""/>";
         internal static string ContentType(string contentType, string partName) => $"<Override ContentType=\"{contentType}\" PartName=\"/{partName}\" />";
-        internal static readonly string EndTypes = "</Types>";
+        internal const string EndTypes = "</Types>";
 
         internal static string WorksheetRelationship(SheetDto sheetDto)
             => $@"<Relationship Type=""http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet"" Target=""/{sheetDto.Path}"" Id=""{sheetDto.ID}"" />";

@@ -12,15 +12,10 @@ namespace MiniExcelLibs.Attributes
         internal int FormatId { get; set; } = -1;
 
         public string Name { get; set; }
-
         public string[] Aliases { get; set; }
-
         public double Width { get; set; } = 9.28515625;
-
         public string Format { get; set; }
-
         public bool Ignore { get; set; }
-
         public ColumnType Type { get; set; } = ColumnType.Value;
 
         public int Index
@@ -38,16 +33,11 @@ namespace MiniExcelLibs.Attributes
         private void Init(int index, string columnName = null)
         {
             if (index < 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(index), index,
-                    $"Column index {index} must be greater or equal to zero.");
-            }
+                throw new ArgumentOutOfRangeException(nameof(index), index, $"Column index {index} must be greater or equal to zero.");
 
             if (_xName == null)
-                if (columnName != null)
-                    _xName = columnName;
-                else
-                    _xName = ColumnHelper.GetAlphabetColumnName(index);
+                _xName = columnName ?? ColumnHelper.GetAlphabetColumnName(index);
+            
             _index = index;
         }
     }
@@ -57,7 +47,6 @@ namespace MiniExcelLibs.Attributes
     public class DynamicExcelColumn : ExcelColumnAttribute
     {
         public string Key { get; set; }
-        
         public Func<object, object> CustomFormatter { get; set; }
 
         public DynamicExcelColumn(string key)

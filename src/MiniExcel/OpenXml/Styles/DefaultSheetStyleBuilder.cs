@@ -4,7 +4,7 @@ namespace MiniExcelLibs.OpenXml.Styles
 {
     internal class DefaultSheetStyleBuilder : SheetStyleBuilderBase
     {
-        internal static SheetStyleElementInfos GenerateElementInfos = new SheetStyleElementInfos
+        internal static readonly SheetStyleElementInfos GenerateElementInfos = new SheetStyleElementInfos
         {
             NumFmtCount = 0,//默认的NumFmt数量是0，但是会有根据ColumnsToApply动态生成的NumFmt
             FontCount = 2,

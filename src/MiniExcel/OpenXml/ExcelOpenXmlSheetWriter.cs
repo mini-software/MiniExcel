@@ -18,7 +18,7 @@ namespace MiniExcelLibs.OpenXml
     internal partial class ExcelOpenXmlSheetWriter : IExcelWriter
     {
         private readonly MiniExcelZipArchive _archive;
-        private readonly static UTF8Encoding _utf8WithBom = new UTF8Encoding(true);
+        private static readonly UTF8Encoding _utf8WithBom = new UTF8Encoding(true);
         private readonly OpenXmlConfiguration _configuration;
         private readonly Stream _stream;
         private readonly bool _printHeader;
@@ -43,10 +43,6 @@ namespace MiniExcelLibs.OpenXml
             _value = value;
             _printHeader = printHeader;
             _defaultSheetName = sheetName;
-        }
-
-        public ExcelOpenXmlSheetWriter()
-        {
         }
 
         public int[] SaveAs()
@@ -175,7 +171,7 @@ namespace MiniExcelLibs.OpenXml
             return dimensionPlaceholderPostition;
         }
 
-        private void WriteDimension(MiniExcelStreamWriter writer, int maxRowIndex, int maxColumnIndex, long placeholderPosition)
+        private static void WriteDimension(MiniExcelStreamWriter writer, int maxRowIndex, int maxColumnIndex, long placeholderPosition)
         {
             // Flush and save position so that we can get back again.
             var position = writer.Flush();
@@ -378,13 +374,9 @@ namespace MiniExcelLibs.OpenXml
         private void GenerateEndXml()
         {
             AddFilesToZip();
-
             GenerateDrawinRelXml();
-
             GenerateDrawingXml();
-
             GenerateWorkbookXml();
-
             GenerateContentTypesXml();
         }
 
@@ -392,7 +384,7 @@ namespace MiniExcelLibs.OpenXml
         {
             foreach (var item in _files)
             {
-                this.CreateZipEntry(item.Path, item.Byte);
+                CreateZipEntry(item.Path, item.Byte);
             }
         }
 
@@ -400,14 +392,14 @@ namespace MiniExcelLibs.OpenXml
         {
             using (var context = new SheetStyleBuildContext(_zipDictionary, _archive, _utf8WithBom, _configuration.DynamicColumns))
             {
-                var builder = (ISheetStyleBuilder)null;
+                ISheetStyleBuilder builder = null;
                 switch (_configuration.TableStyles)
                 {
                     case TableStyles.None:
                         builder = new MinimalSheetStyleBuilder(context);
                         break;
                     case TableStyles.Default:
-                        builder = new DefaultSheetStyleBuilder(context);
+                        builder = new DefaultSheetStyleBuilder(context, _configuration.StyleOptions);
                         break;
                 }
                 var result = builder?.Build();

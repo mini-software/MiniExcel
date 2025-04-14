@@ -4,9 +4,9 @@ namespace MiniExcelLibs.OpenXml.Styles
 {
     internal class DefaultSheetStyleBuilder : SheetStyleBuilderBase
     {
-        internal static SheetStyleElementInfos GenerateElementInfos = new SheetStyleElementInfos
+        private static readonly SheetStyleElementInfos GenerateElementInfos = new SheetStyleElementInfos
         {
-            NumFmtCount = 0,//默认的NumFmt数量是0，但是会有根据ColumnsToApply动态生成的NumFmt
+            NumFmtCount = 0,//The default NumFmt number is 0, but there will be NumFmt dynamically generated based on ColumnsToApply
             FontCount = 2,
             FillCount = 3,
             BorderCount = 2,
@@ -15,10 +15,12 @@ namespace MiniExcelLibs.OpenXml.Styles
         };
 
         private readonly SheetStyleBuildContext _context;
+        private OpenXmlStyleOptions _styleOptions;
 
-        public DefaultSheetStyleBuilder(SheetStyleBuildContext context) : base(context)
+        public DefaultSheetStyleBuilder(SheetStyleBuildContext context, OpenXmlStyleOptions styleOptions) : base(context)
         {
             _context = context;
+            _styleOptions = styleOptions;
         }
 
         protected override SheetStyleElementInfos GetGenerateElementInfos()
@@ -676,7 +678,7 @@ namespace MiniExcelLibs.OpenXml.Styles
             _context.NewXmlWriter.WriteAttributeString("horizontal", "general");
             _context.NewXmlWriter.WriteAttributeString("vertical", "bottom");
             _context.NewXmlWriter.WriteAttributeString("textRotation", "0");
-            _context.NewXmlWriter.WriteAttributeString("wrapText", "0");
+            _context.NewXmlWriter.WriteAttributeString("wrapText", _styleOptions.WrapCellContents ? "1" : "0");
             _context.NewXmlWriter.WriteAttributeString("indent", "0");
             _context.NewXmlWriter.WriteAttributeString("relativeIndent", "0");
             _context.NewXmlWriter.WriteAttributeString("justifyLastLine", "0");

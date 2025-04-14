@@ -42,7 +42,7 @@ namespace MiniExcelLibs.OpenXml
         public IEnumerable<IDictionary<string, object>> Query(bool useHeaderRow, string sheetName, string startCell)
         {
             if (!ReferenceHelper.ParseReference(startCell, out var startColumnIndex, out var startRowIndex))
-                throw new InvalidDataException($"startCell {startCell} is Invalid");
+                throw new ArgumentException($"Value {startCell} is not a valid cell reference.");
             startColumnIndex--;
             startRowIndex--;
 

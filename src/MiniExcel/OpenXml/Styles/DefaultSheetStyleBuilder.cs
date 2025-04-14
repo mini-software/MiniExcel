@@ -6,7 +6,7 @@ namespace MiniExcelLibs.OpenXml.Styles
     {
         private static readonly SheetStyleElementInfos GenerateElementInfos = new SheetStyleElementInfos
         {
-            NumFmtCount = 0,//默认的NumFmt数量是0，但是会有根据ColumnsToApply动态生成的NumFmt
+            NumFmtCount = 0,//The default NumFmt number is 0, but there will be NumFmt dynamically generated based on ColumnsToApply
             FontCount = 2,
             FillCount = 3,
             BorderCount = 2,

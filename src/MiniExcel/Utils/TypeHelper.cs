@@ -80,7 +80,7 @@ namespace MiniExcelLibs.Utils
             }
             else if (pInfo.ExcludeNullableType == typeof(Guid))
             {
-                newValue = Guid.Parse(itemValue.ToString());
+                newValue = Guid.Parse(itemValue.ToString() ?? Guid.Empty.ToString());
             }
             else if (pInfo.ExcludeNullableType == typeof(DateTimeOffset))
             {
@@ -100,7 +100,7 @@ namespace MiniExcelLibs.Utils
             else if (pInfo.ExcludeNullableType == typeof(DateTime))
             {
                 // fix issue 257 https://github.com/shps951023/MiniExcel/issues/257
-                if (itemValue is DateTime || itemValue is DateTime?)
+                if (itemValue is DateTime)
                 {
                     newValue = itemValue;
                     pInfo.Property.SetValue(v, newValue);
@@ -128,9 +128,37 @@ namespace MiniExcelLibs.Utils
                 else
                     throw new InvalidCastException($"{vs} cannot be cast to DateTime");
             }
+#if NET6_0_OR_GREATER
+            else if (pInfo.ExcludeNullableType == typeof(DateOnly))
+            {
+                if (itemValue is DateOnly)
+                {
+                    newValue = itemValue;
+                    pInfo.Property.SetValue(v, newValue);
+                    return newValue;
+                }
+
+                var vs = itemValue?.ToString();
+                if (pInfo.ExcelFormat != null)
+                {
+                    if (DateOnly.TryParseExact(vs, pInfo.ExcelFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out var _v))
+                    {
+                        newValue = _v;
+                    }
+                }
+                else if (DateOnly.TryParse(vs, _config.Culture, DateTimeStyles.None, out var _v))
+                    newValue = _v;
+                else if (DateOnly.TryParseExact(vs, "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out var _v2))
+                    newValue = _v2;
+                else if (double.TryParse(vs, NumberStyles.None, CultureInfo.InvariantCulture, out var _d))
+                    newValue = DateOnly.FromDateTime(DateTime.FromOADate(_d));
+                else
+                    throw new InvalidCastException($"{vs} cannot be cast to DateOnly");                
+            }
+#endif
             else if (pInfo.ExcludeNullableType == typeof(TimeSpan))
             {
-                if (itemValue is TimeSpan || itemValue is TimeSpan?)
+                if (itemValue is TimeSpan)
                 {
                     newValue = itemValue;
                     pInfo.Property.SetValue(v, newValue);

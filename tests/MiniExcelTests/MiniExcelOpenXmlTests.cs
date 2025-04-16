@@ -1524,4 +1524,24 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
             Assert.True(sheet3.Name == "Sheet3");
         }
     }
+    
+    private class DateOnlyTest
+    {
+        public DateOnly Date { get; set; }
+        [ExcelFormat("d.M.yyyy")] public DateOnly DateWithFormat { get; set; }
+    }
+
+    [Fact]
+    public void DateOnlySupportTest()
+    {
+        var query = MiniExcel.Query<DateOnlyTest>(PathHelper.GetFile("xlsx/TestDateOnlyMapping.xlsx")).ToList();
+        
+        Assert.Equal(new DateOnly(2020, 9, 27), query[0].Date);
+        Assert.Equal(new DateOnly(2020, 10, 25), query[1].Date);
+        Assert.Equal(new DateOnly(2021, 10, 4), query[2].Date);
+        
+        Assert.Equal(new DateOnly(2020, 9, 27), query[0].DateWithFormat);
+        Assert.Equal(new DateOnly(2020, 10, 25), query[1].DateWithFormat);
+        Assert.Equal(new DateOnly(2020, 6, 1), query[7].DateWithFormat);
+    }
 }

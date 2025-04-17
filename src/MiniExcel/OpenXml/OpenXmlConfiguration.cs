@@ -1,4 +1,4 @@
-﻿using MiniExcelLibs.Attributes;
+using MiniExcelLibs.Attributes;
 
 namespace MiniExcelLibs.OpenXml
 {
@@ -19,7 +19,7 @@ namespace MiniExcelLibs.OpenXml
         public bool EnableSharedStringCache { get; set; } = true;
         public long SharedStringCacheSize { get; set; } = 5 * 1024 * 1024;
         public DynamicExcelSheet[] DynamicSheets { get; set; }
-
+        public bool EnableWriteFilePath{ get; set; } = true;
         /// <summary>
         /// Calculate column widths automatically from each column value.
         /// </summary>

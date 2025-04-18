@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"
+    xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="x15 xr xr6 xr10 xr2"
+    xmlns:x15="http://schemas.microsoft.com/office/spreadsheetml/2010/11/main"
+    xmlns:xr="http://schemas.microsoft.com/office/spreadsheetml/2014/revision"
+    xmlns:xr6="http://schemas.microsoft.com/office/spreadsheetml/2016/revision6"
+    xmlns:xr10="http://schemas.microsoft.com/office/spreadsheetml/2016/revision10"
+    xmlns:xr2="http://schemas.microsoft.com/office/spreadsheetml/2015/revision2">
+    <fileVersion appName="xl" lastEdited="7" lowestEdited="7" rupBuild="28623" />
+    <workbookPr defaultThemeVersion="202300" />
+    <mc:AlternateContent xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006">
+        <mc:Choice Requires="x15">
+            <x15ac:absPath url="C:\Users\Wei\Downloads\"
+                xmlns:x15ac="http://schemas.microsoft.com/office/spreadsheetml/2010/11/ac" />
+        </mc:Choice>
+    </mc:AlternateContent>
+    <xr:revisionPtr revIDLastSave="0" documentId="13_ncr:1_{C293A24B-A8B2-482F-B0EF-E2825F953004}"
+        xr6:coauthVersionLast="47" xr6:coauthVersionMax="47"
+        xr10:uidLastSave="{00000000-0000-0000-0000-000000000000}" />
+    <bookViews>
+        <workbookView xWindow="-108" yWindow="-108" windowWidth="23256" windowHeight="12720"
+            xr2:uid="{00000000-000D-0000-FFFF-FFFF00000000}" />
+    </bookViews>
+    <sheets>
+        <sheet name="Sheet1" sheetId="1" r:id="rId1" />
+    </sheets>
+    <calcPr calcId="0" />
+</workbook>

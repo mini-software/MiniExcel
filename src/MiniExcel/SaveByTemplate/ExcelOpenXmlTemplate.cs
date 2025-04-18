@@ -94,7 +94,6 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                             continue;
                         // Create a new entry in the new archive with the same name
                         ZipArchiveEntry newEntry = outputFileArchive.zipFile.CreateEntry(entry.FullName);
-                        Debug.WriteLine(entry.FullName);
 
                         // Copy the content of the original entry to the new entry
                         using (Stream originalEntryStream = entry.Open())
@@ -165,7 +164,6 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                     if (entry.FullName.Contains("xl/calcChain.xml"))
                     {
                         ZipArchiveEntry newEntry = outputFileArchive.zipFile.CreateEntry(entry.FullName);
-                        Debug.WriteLine(entry.FullName);
 
                         // Copy the content of the original entry to the new entry
                         using (Stream originalEntryStream = entry.Open())

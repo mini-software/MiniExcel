@@ -24,6 +24,10 @@
 
 ---
 
+### 1.40.1
+- [New] Added support for DateOnly type in query mapping (via @michelebastione)
+- [New] Added StyleOptions class to OpenXmlConfiguration to allow more direct control over cell styles (#761) (via @michelebastione)
+- [Bug] Fix SaveAsByTemplate empty generated result
 
 ### 1.40.0
 - [New] Added exception to warn for sheet name too long (via @michelebastione)
@@ -38,6 +42,8 @@
 - [OPT] Optimization of SaveAsTemplate method (#749) (via @michelebastione)
 - [OPT] Removing DateTimeHelper.FromOADate and related code (via @michelebastione)
 - [OPT] Remove redundant property in csproj file (#748) (via @AZhrZho)
+- [Breaking Change] QueryRange doesn't support column name without row number #763 (via @michelebastione)
+
 
 ### 1.39.0
 - [New] Added support for Uri mapping (#726) (via @michelebastione)

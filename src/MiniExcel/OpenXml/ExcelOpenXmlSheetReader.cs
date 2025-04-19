@@ -185,7 +185,7 @@ namespace MiniExcelLibs.OpenXml
                         
                         var rs = refAttr.Split(':');
 
-                        // issue : https://github.com/shps951023/MiniExcel/issues/102
+                        // issue : https://github.com/mini-software/MiniExcel/issues/102
                         if (!ReferenceHelper.ParseReference(rs.Length == 2 ? rs[1] : rs[0], out int cIndex, out int rIndex))
                             throw new InvalidOperationException("Invaild sheet dimension start data");
                         
@@ -711,7 +711,7 @@ namespace MiniExcelLibs.OpenXml
                     var v = XmlEncoder.DecodeString(rawValue);
                     if (_config.EnableConvertByteArray)
                     {
-                        //if str start with "data:image/png;base64," then convert to byte[] https://github.com/shps951023/MiniExcel/issues/318
+                        //if str start with "data:image/png;base64," then convert to byte[] https://github.com/mini-software/MiniExcel/issues/318
                         if (v != null && v.StartsWith("@@@fileid@@@,", StringComparison.Ordinal))
                         {
                             var path = v.Substring(13);
@@ -951,7 +951,7 @@ namespace MiniExcelLibs.OpenXml
                         if (string.IsNullOrEmpty(refAttr))
                             throw new InvalidOperationException("Without sheet dimension data");
                         var rs = refAttr.Split(':');
-                        // issue : https://github.com/shps951023/MiniExcel/issues/102
+                        // issue : https://github.com/mini-software/MiniExcel/issues/102
 
                         if (!ReferenceHelper.ParseReference(rs.Length == 2 ? rs[1] : rs[0], out int cIndex, out int rIndex))
                             throw new InvalidOperationException("Invaild sheet dimension start data");

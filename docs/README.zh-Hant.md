@@ -4,8 +4,8 @@
 
 <div align="center">
 <p><a href="https://www.nuget.org/packages/MiniExcel"><img src="https://img.shields.io/nuget/v/MiniExcel.svg" alt="NuGet"></a>  <a href="https://www.nuget.org/packages/MiniExcel"><img src="https://img.shields.io/nuget/dt/MiniExcel.svg" alt=""></a>  
-<a href="https://ci.appveyor.com/project/shps951023/miniexcel/branch/master"><img src="https://ci.appveyor.com/api/projects/status/b2vustrwsuqx45f4/branch/master?svg=true" alt="Build status"></a>
-<a href="https://gitee.com/dotnetchina/MiniExcel"><img src="https://gitee.com/dotnetchina/MiniExcel/badge/star.svg" alt="star"></a> <a href="https://github.com/shps951023/MiniExcel" rel="nofollow"><img src="https://img.shields.io/github/stars/shps951023/MiniExcel?logo=github" alt="GitHub stars"></a> 
+<a href="https://ci.appveyor.com/project/mini-software/miniexcel/branch/master"><img src="https://ci.appveyor.com/api/projects/status/b2vustrwsuqx45f4/branch/master?svg=true" alt="Build status"></a>
+<a href="https://gitee.com/dotnetchina/MiniExcel"><img src="https://gitee.com/dotnetchina/MiniExcel/badge/star.svg" alt="star"></a> <a href="https://github.com/mini-software/MiniExcel" rel="nofollow"><img src="https://img.shields.io/github/stars/mini-software/MiniExcel?logo=github" alt="GitHub stars"></a> 
 <a href="https://www.nuget.org/packages/MiniExcel"><img src="https://img.shields.io/badge/.NET-%3E%3D%204.5-red.svg" alt="version"></a>
 </p>
 </div>
@@ -19,7 +19,7 @@
 ---
 
 <div align="center">
-<p> 您的 <a href="https://github.com/shps951023/miniexcel">Star</a> 和 <a href="https://miniexcel.github.io">贊助</a> 能幫助 MiniExcel 成長 </p>
+<p> 您的 <a href="https://github.com/mini-software/miniexcel">Star</a> 和 <a href="https://miniexcel.github.io">贊助</a> 能幫助 MiniExcel 成長 </p>
 </div>
 
 ---
@@ -391,26 +391,26 @@ IcedMango)
 - [Breaking Change] 更換 OpenXmlConfiguration FillMergedCells 名稱
 
 ### 0.14.4
-- [New] Query 支持向下填充合併的單元格 [#122](https://github.com/shps951023/MiniExcel/issues/122)
+- [New] Query 支持向下填充合併的單元格 [#122](https://github.com/mini-software/MiniExcel/issues/122)
 - [Bug] 修正 QueryAsDataTable 錯誤 "Cannot set Column to be null" #229
 
 ### 0.14.3
 - [Opt] 支持 Xlsm 自動判斷 #227
-- [Bug] 修正 SaveAsByTemplate 單列 demension 索引錯誤 [#226](https://github.com/shps951023/MiniExcel/issues/226)
+- [Bug] 修正 SaveAsByTemplate 單列 demension 索引錯誤 [#226](https://github.com/mini-software/MiniExcel/issues/226)
 
 ### 0.14.2
-- [Bug] 修正 asp.net webform gridview datasource 不能使用 QueryAsDataTable [#223](https://github.com/shps951023/MiniExcel/issues/223)
+- [Bug] 修正 asp.net webform gridview datasource 不能使用 QueryAsDataTable [#223](https://github.com/mini-software/MiniExcel/issues/223)
 
 ### 0.14.1
-- [Bug] 修正自定義 m/d 格式沒轉成 datetime [#222](https://github.com/shps951023/MiniExcel/issues/222)
+- [Bug] 修正自定義 m/d 格式沒轉成 datetime [#222](https://github.com/mini-software/MiniExcel/issues/222)
 
 ### 0.14.0
-- [New] Query、GetColumns 支持 startCell 能指定 cell 開始讀取資料 [#147](https://github.com/shps951023/MiniExcel/issues/147)
+- [New] Query、GetColumns 支持 startCell 能指定 cell 開始讀取資料 [#147](https://github.com/mini-software/MiniExcel/issues/147)
 - [New] GetColumns 支持讀取表頭
 
 ### 0.13.5
-- [New] 新增 QueryAsDataTable 方法 [#216](https://github.com/shps951023/MiniExcel/issues/216)
-- [New] SaveAs 支持 IDataReader value 參數 [#211](https://github.com/shps951023/MiniExcel/issues/211)
+- [New] 新增 QueryAsDataTable 方法 [#216](https://github.com/mini-software/MiniExcel/issues/216)
+- [New] SaveAs 支持 IDataReader value 參數 [#211](https://github.com/mini-software/MiniExcel/issues/211)
 - [Bug] 修正數字格式的字串會被強制轉換為decimal類型 [#I3OSKV](https://gitee.com/dotnetchina/MiniExcel/issues/I3OSKV)
 - [Opt] 優化 SaveAs 類別轉換算法，避免效率浪費
 
@@ -420,18 +420,18 @@ IcedMango)
 - [OPT] 優化 stream excel 類別(xlsx or csv)檢查 #215
 
 ### 0.13.3
-- [New] 支持 Excel 單純讀取模式，避免同時改模版又運行 MiniExcel 出現錯誤 "The process cannot access the file because it is being used by another process" [#87](https://github.com/shps951023/MiniExcel/issues/87)
+- [New] 支持 Excel 單純讀取模式，避免同時改模版又運行 MiniExcel 出現錯誤 "The process cannot access the file because it is being used by another process" [#87](https://github.com/mini-software/MiniExcel/issues/87)
 - [Breaking Change] CSV SaveAs datetime 預設格式改為 "yyyy-MM-dd HH:mm:ss"
-- [Bug] 修正模版模式集合渲染遇到合併列會出現異常問題 [#207](https://github.com/shps951023/MiniExcel/issues/207)
+- [Bug] 修正模版模式集合渲染遇到合併列會出現異常問題 [#207](https://github.com/mini-software/MiniExcel/issues/207)
 - [Bug] 修正 MiniExcel.SaveAs(path, value,sheetName:"Name"), 實際 sheetName 是 Sheet1
 
 ### 0.13.2
-- [Bug] 超過 255 列無法讀取錯誤 [#208](https://github.com/shps951023/MiniExcel/issues/208)
+- [Bug] 超過 255 列無法讀取錯誤 [#208](https://github.com/mini-software/MiniExcel/issues/208)
 
 ### 0.13.1
-- [New] SaveAsByTemplate 支持讀取模板 byte[],方便緩存跟支持多用戶同時讀取同一個模板 [#189](https://github.com/shps951023/MiniExcel/issues/189)
-- [New] SaveAsByTemplate 支持傳入 `IEnmerable<IDicionary<string,object>> 或 DapperRows 或 DataTable` 參數 [#201](https://github.com/shps951023/MiniExcel/issues/201)
-- [Bug] 修正使用 stream SaveAs/SaveAsByTemplate 系統會自動關閉流 stream [#200](https://github.com/shps951023/MiniExcel/issues/200)
+- [New] SaveAsByTemplate 支持讀取模板 byte[],方便緩存跟支持多用戶同時讀取同一個模板 [#189](https://github.com/mini-software/MiniExcel/issues/189)
+- [New] SaveAsByTemplate 支持傳入 `IEnmerable<IDicionary<string,object>> 或 DapperRows 或 DataTable` 參數 [#201](https://github.com/mini-software/MiniExcel/issues/201)
+- [Bug] 修正使用 stream SaveAs/SaveAsByTemplate 系統會自動關閉流 stream [#200](https://github.com/mini-software/MiniExcel/issues/200)
 
 ### 0.13.0
 - [New] 支持 .NET Framework 4.5 以上版本
@@ -453,7 +453,7 @@ IcedMango)
 - [New] 支持`填充Excel`模式 ，借由 SaveAsByTemplate 方法以模板填充資料，
 
 ### 0.11.1
-- [New] 支持 ColumnIndex Attribute [#142](https://github.com/shps951023/MiniExcel/issues/142) & [#I3I3EB](https://gitee.com/dotnetchina/MiniExcel/issues/I3I3EB)
+- [New] 支持 ColumnIndex Attribute [#142](https://github.com/mini-software/MiniExcel/issues/142) & [#I3I3EB](https://gitee.com/dotnetchina/MiniExcel/issues/I3I3EB)
 - [Bug] 修正 issue #157 : 特別情況無法使用指定 sheet name 查詢
 - [Update] issue #150 : SaveAs 值集合錯誤訊息更明細
 
@@ -465,11 +465,11 @@ IcedMango)
 - [Optimization] 優化 SaveAs/Query excel 檔案類型自動判斷
 
 ### 0.10.3(請勿使用) 
-- [Bug] 修正 Query SharedStrings 控制字符沒有 encoding (issue [Issue #149](https://github.com/shps951023/MiniExcel/issues/149))
+- [Bug] 修正 Query SharedStrings 控制字符沒有 encoding (issue [Issue #149](https://github.com/mini-software/MiniExcel/issues/149))
 
 ### 0.10.2
-- [Bug] 修正 SharedStrings get wrong index (issue [#153](https://github.com/shps951023/MiniExcel/issues/153))
-- [Bug] SaveAs 支持 control character encoding (issue [Issue #149](https://github.com/shps951023/MiniExcel/issues/149))
+- [Bug] 修正 SharedStrings get wrong index (issue [#153](https://github.com/mini-software/MiniExcel/issues/153))
+- [Bug] SaveAs 支持 control character encoding (issue [Issue #149](https://github.com/mini-software/MiniExcel/issues/149))
 
 ### 0.10.1(請勿使用) 
 - [New] SaveAs 支持 POCO excel 欄位名稱/忽略 attribute
@@ -519,11 +519,11 @@ IcedMango)
 ### 0.2.2(請勿使用)
 - SavaAs 支持 xl/sheet dimension
 - [Breaking Changes] SaveAs value 類別準許 object & DataTable & ICollection
-- [Bug] 修正 ICollection with type 沒有資料錯誤 (https://github.com/shps951023/MiniExcel/issues/105)
+- [Bug] 修正 ICollection with type 沒有資料錯誤 (https://github.com/mini-software/MiniExcel/issues/105)
 
 ### 0.2.1(請勿使用)  
 - [Optimize] Optimize type mapping bool and datetime auto check
-- [New] Query 支持 xl/worksheets/Sheet Xml `<c>` 沒有 `r` 屬性或是沒有 `<dimension>` 但 `<c>` 有 `r` 屬性情況, 但是效率會遠低於有 dimension ([](https://github.com/shps951023/MiniExcel/issues/2))
+- [New] Query 支持 xl/worksheets/Sheet Xml `<c>` 沒有 `r` 屬性或是沒有 `<dimension>` 但 `<c>` 有 `r` 屬性情況, 但是效率會遠低於有 dimension ([](https://github.com/mini-software/MiniExcel/issues/2))
 
 ### 0.2.0(請勿使用)  
 - 發布至 nuget.org

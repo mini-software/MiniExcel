@@ -19,8 +19,8 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
     private readonly ITestOutputHelper _output = output;
 
     /// <summary>
-    /// [SaveAsByTemplate support DateTime custom format · Issue #255 · shps951023/MiniExcel]
-    /// (https://github.com/shps951023/MiniExcel/issues/255)
+    /// [SaveAsByTemplate support DateTime custom format · Issue #255 · mini-software/MiniExcel]
+    /// (https://github.com/mini-software/MiniExcel/issues/255)
     /// </summary>
     [Fact]
     public async Task Issue255()
@@ -77,7 +77,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
 
     /// <summary>
     /// [Dynamic QueryAsync custom format not using mapping format · Issue #256]
-    /// (https://github.com/shps951023/MiniExcel/issues/256)
+    /// (https://github.com/mini-software/MiniExcel/issues/256)
     /// </summary>
     [Fact]
     public async Task Issue256()
@@ -151,7 +151,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
     }
 
     /// <summary>
-    /// [CSV SaveAs support datareader · Issue #251 · shps951023/MiniExcel](https://github.com/shps951023/MiniExcel/issues/251)
+    /// [CSV SaveAs support datareader · Issue #251 · mini-software/MiniExcel](https://github.com/mini-software/MiniExcel/issues/251)
     /// </summary>
     [Fact]
     public async Task Issue251()
@@ -412,7 +412,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
 
     /// <summary>
     /// Csv QueryAsync split comma not correct #237
-    /// https://github.com/shps951023/MiniExcel/issues/237
+    /// https://github.com/mini-software/MiniExcel/issues/237
     /// </summary>
     [Fact]
     public async Task Issue237()
@@ -488,7 +488,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
 
     /// <summary>
     /// SaveAs By Reader Closed error : 'Error! Invalid attempt to call FieldCount when reader is closed' #230
-    /// https://github.com/shps951023/MiniExcel/issues/230
+    /// https://github.com/mini-software/MiniExcel/issues/230
     /// </summary>
     [Fact]
     public async Task Issue230()
@@ -550,7 +550,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
 
     /// <summary>
     /// v0.14.3 QueryAsDataTable error "Cannot set Column to be null" #229
-    /// https://github.com/shps951023/MiniExcel/issues/229
+    /// https://github.com/mini-software/MiniExcel/issues/229
     /// </summary>
     [Fact]
     public async Task Issue229()
@@ -569,8 +569,8 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
     }
 
     /// <summary>
-    /// [QueryAsync Merge cells data · Issue #122 · shps951023/MiniExcel]
-    /// (https://github.com/shps951023/MiniExcel/issues/122)
+    /// [QueryAsync Merge cells data · Issue #122 · mini-software/MiniExcel]
+    /// (https://github.com/mini-software/MiniExcel/issues/122)
     /// </summary>
     [Fact]
     public async Task Issue122()
@@ -609,8 +609,8 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
     }
 
     /// <summary>
-    /// [Support Xlsm AutoCheck · Issue #227 · shps951023/MiniExcel]
-    /// (https://github.com/shps951023/MiniExcel/issues/227)
+    /// [Support Xlsm AutoCheck · Issue #227 · mini-software/MiniExcel]
+    /// (https://github.com/mini-software/MiniExcel/issues/227)
     /// </summary>
     [Fact]
     public async Task Issue227()
@@ -654,7 +654,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
     }
 
     /// <summary>
-    /// https://github.com/shps951023/MiniExcel/issues/226
+    /// https://github.com/mini-software/MiniExcel/issues/226
     /// Fix SaveAsByTemplate single column demension index error #226
     /// </summary>
     [Fact]
@@ -668,7 +668,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
 
     /// <summary>
     /// ASP.NET Webform gridview datasource can't use miniexcel queryasdatatable · Issue #223]
-    /// (https://github.com/shps951023/MiniExcel/issues/223)
+    /// (https://github.com/mini-software/MiniExcel/issues/223)
     /// </summary>
     [Fact]
     public async Task Issue223()
@@ -697,7 +697,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
 
     /// <summary>
     /// [Custom yyyy-MM-dd format not convert datetime · Issue #222]
-    /// (https://github.com/shps951023/MiniExcel/issues/222)
+    /// (https://github.com/mini-software/MiniExcel/issues/222)
     /// </summary>
     [Fact]
     public async Task Issue222()
@@ -711,7 +711,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
 
     /// <summary>
     /// QueryAsync Support StartCell #147
-    /// https://github.com/shps951023/MiniExcel/issues/147
+    /// https://github.com/mini-software/MiniExcel/issues/147
     /// </summary>
     [Fact]
     public async Task Issue147()
@@ -762,8 +762,8 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
 
 
     /// <summary>
-    /// [Can SaveAs support iDataReader export to avoid the dataTable consuming too much memory · Issue #211 · shps951023/MiniExcel]
-    /// (https://github.com/shps951023/MiniExcel/issues/211)
+    /// [Can SaveAs support iDataReader export to avoid the dataTable consuming too much memory · Issue #211 · mini-software/MiniExcel]
+    /// (https://github.com/mini-software/MiniExcel/issues/211)
     /// </summary>
     [Fact]
     public async Task Issue211()
@@ -812,7 +812,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
     }
 
     /// <summary>
-    /// [When reading Excel, can return IDataReader and DataTable to facilitate the import of database. Like ExcelDataReader provide reader.AsDataSet() · Issue #216 · shps951023/MiniExcel](https://github.com/shps951023/MiniExcel/issues/216)
+    /// [When reading Excel, can return IDataReader and DataTable to facilitate the import of database. Like ExcelDataReader provide reader.AsDataSet() · Issue #216 · mini-software/MiniExcel](https://github.com/mini-software/MiniExcel/issues/216)
     /// </summary>
     [Fact]
     public async Task Issue216()
@@ -879,8 +879,8 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
     }
 
     /// <summary>
-    /// [Dynamic QueryAsync can't summary numeric cell value default, need to cast · Issue #220 · shps951023/MiniExcel]
-    /// (https://github.com/shps951023/MiniExcel/issues/220)
+    /// [Dynamic QueryAsync can't summary numeric cell value default, need to cast · Issue #220 · mini-software/MiniExcel]
+    /// (https://github.com/mini-software/MiniExcel/issues/220)
     /// </summary>
     [Fact]
     public async Task Issue220()
@@ -904,7 +904,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
 
     /// <summary>
     /// Optimize stream excel type check
-    /// https://github.com/shps951023/MiniExcel/issues/215
+    /// https://github.com/mini-software/MiniExcel/issues/215
     /// </summary>
     [Fact]
     public async Task Issue215()
@@ -921,7 +921,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
 
     /// <summary>
     /// Support Enum Mapping
-    /// https://github.com/shps951023/MiniExcel/issues/89
+    /// https://github.com/mini-software/MiniExcel/issues/89
     /// </summary>
     [Fact]
     public async Task Issue89()
@@ -997,7 +997,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
 
     /// <summary>
     /// DataTable recommended to use Caption for column name first, then use columname
-    /// https://github.com/shps951023/MiniExcel/issues/217
+    /// https://github.com/mini-software/MiniExcel/issues/217
     /// </summary>
     [Fact]
     public async Task Issue217()
@@ -1036,7 +1036,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
 
     /// <summary>
     /// MiniExcel.SaveAs(path, table,sheetName:“Name”) ，the actual sheetName is Sheet1
-    /// https://github.com/shps951023/MiniExcel/issues/212
+    /// https://github.com/mini-software/MiniExcel/issues/212
     /// </summary>
     [Fact]
     public async Task Issue212()
@@ -1052,7 +1052,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
 
     /// <summary>
     /// Version &lt;= v0.13.1 Template merge row list rendering has no merge
-    /// https://github.com/shps951023/MiniExcel/issues/207
+    /// https://github.com/mini-software/MiniExcel/issues/207
     /// </summary>
     [Fact]
     public async Task Issue207()
@@ -1138,7 +1138,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
     }
 
     /// <summary>
-    /// https://github.com/shps951023/MiniExcel/issues/87
+    /// https://github.com/mini-software/MiniExcel/issues/87
     /// </summary>
     [Fact]
     public async Task Issue87()
@@ -1158,7 +1158,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
     }
 
     /// <summary>
-    /// https://github.com/shps951023/MiniExcel/issues/206
+    /// https://github.com/mini-software/MiniExcel/issues/206
     /// </summary>
     [Fact]
     public async Task Issue206()
@@ -1201,7 +1201,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
 
 
     /// <summary>
-    /// https://github.com/shps951023/MiniExcel/issues/193
+    /// https://github.com/mini-software/MiniExcel/issues/193
     /// </summary>
     [Fact]
     public async Task Issue193()
@@ -1466,7 +1466,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
     }
 
     /// <summary>
-    /// https://github.com/shps951023/MiniExcel/issues/150
+    /// https://github.com/mini-software/MiniExcel/issues/150
     /// </summary>
     [Fact]
     public async Task Issue150()
@@ -1490,7 +1490,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
     }
 
     /// <summary>
-    /// https://github.com/shps951023/MiniExcel/issues/157
+    /// https://github.com/mini-software/MiniExcel/issues/157
     /// </summary>
     [Fact]
     public async Task Issue157()
@@ -1595,7 +1595,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
     }
 
     /// <summary>
-    /// https://github.com/shps951023/MiniExcel/issues/149
+    /// https://github.com/mini-software/MiniExcel/issues/149
     /// </summary>
     [Fact]
     public async Task Issue149()
@@ -1673,7 +1673,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
     }
 
     /// <summary>
-    /// https://github.com/shps951023/MiniExcel/issues/153
+    /// https://github.com/mini-software/MiniExcel/issues/153
     /// </summary>
     [Fact]
     public async Task Issue153()
@@ -1690,7 +1690,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
     }
 
     /// <summary>
-    /// https://github.com/shps951023/MiniExcel/issues/137
+    /// https://github.com/mini-software/MiniExcel/issues/137
     /// </summary>
     [Fact]
     public async Task Issue137()
@@ -1783,7 +1783,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
 
 
     /// <summary>
-    /// https://github.com/shps951023/MiniExcel/issues/138
+    /// https://github.com/mini-software/MiniExcel/issues/138
     /// </summary>
     [Fact]
     public async Task Issue138()

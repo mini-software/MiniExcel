@@ -317,7 +317,7 @@ namespace MiniExcelLibs.OpenXml
             {
                 if (p == null)
                 {
-                    xIndex++; //reason : https://github.com/shps951023/MiniExcel/issues/142
+                    xIndex++; //reason : https://github.com/mini-software/MiniExcel/issues/142
                     continue;
                 }
 

@@ -99,7 +99,7 @@ namespace MiniExcelLibs.Utils
             }
             else if (pInfo.ExcludeNullableType == typeof(DateTime))
             {
-                // fix issue 257 https://github.com/shps951023/MiniExcel/issues/257
+                // fix issue 257 https://github.com/mini-software/MiniExcel/issues/257
                 if (itemValue is DateTime)
                 {
                     newValue = itemValue;
@@ -218,7 +218,7 @@ namespace MiniExcelLibs.Utils
             }
             else
             {
-                // Use pInfo.ExcludeNullableType to resolve : https://github.com/shps951023/MiniExcel/issues/138
+                // Use pInfo.ExcludeNullableType to resolve : https://github.com/mini-software/MiniExcel/issues/138
                 newValue = Convert.ChangeType(itemValue, pInfo.ExcludeNullableType, _config.Culture);
             }
 

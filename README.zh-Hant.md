@@ -1,7 +1,7 @@
 <div align="center">
 <p><a href="https://www.nuget.org/packages/MiniExcel"><img src="https://img.shields.io/nuget/v/MiniExcel.svg" alt="NuGet"></a>  <a href="https://www.nuget.org/packages/MiniExcel"><img src="https://img.shields.io/nuget/dt/MiniExcel.svg" alt=""></a>
-<a href="https://ci.appveyor.com/project/shps951023/miniexcel/branch/master"><img src="https://ci.appveyor.com/api/projects/status/b2vustrwsuqx45f4/branch/master?svg=true" alt="Build status"></a>
-<a href="https://gitee.com/dotnetchina/MiniExcel"><img src="https://gitee.com/dotnetchina/MiniExcel/badge/star.svg" alt="star"></a> <a href="https://github.com/shps951023/MiniExcel" rel="nofollow"><img src="https://img.shields.io/github/stars/shps951023/MiniExcel?logo=github" alt="GitHub stars"></a>
+<a href="https://ci.appveyor.com/project/mini-software/miniexcel/branch/master"><img src="https://ci.appveyor.com/api/projects/status/b2vustrwsuqx45f4/branch/master?svg=true" alt="Build status"></a>
+<a href="https://gitee.com/dotnetchina/MiniExcel"><img src="https://gitee.com/dotnetchina/MiniExcel/badge/star.svg" alt="star"></a> <a href="https://github.com/mini-software/MiniExcel" rel="nofollow"><img src="https://img.shields.io/github/stars/mini-software/MiniExcel?logo=github" alt="GitHub stars"></a>
 <a href="https://www.nuget.org/packages/MiniExcel"><img src="https://img.shields.io/badge/.NET-%3E%3D%204.5-red.svg" alt="version"></a>
 </p>
 </div>
@@ -23,7 +23,7 @@
 ---
 
 <div align="center">
-<p> 您的 <a href="https://github.com/shps951023/miniexcel">Star</a> 和 <a href="https://miniexcel.github.io">贊助</a> 能幫助 MiniExcel 成長 </p>
+<p> 您的 <a href="https://github.com/mini-software/miniexcel">Star</a> 和 <a href="https://miniexcel.github.io">贊助</a> 能幫助 MiniExcel 成長 </p>
 </div>
 
 ---
@@ -68,7 +68,7 @@ MiniExcel 簡單、高效避免OOM的.NET處理Excel查、寫、填充工具。
 
 ### TODO
 
-請查看 [TODO](https://github.com/shps951023/MiniExcel/projects/1?fullscreen=true)
+請查看 [TODO](https://github.com/mini-software/MiniExcel/projects/1?fullscreen=true)
 
 ### 性能比較、測試
 
@@ -88,7 +88,7 @@ Intel Core i7-7700 CPU 3.60GHz (Kaby Lake), 1 CPU, 8 logical and 4 physical core
 IterationCount=3  LaunchCount=3  WarmupCount=3
 ```
 
-Benchmark History :  [Link](https://github.com/shps951023/MiniExcel/issues/276)
+Benchmark History :  [Link](https://github.com/mini-software/MiniExcel/issues/276)
 
 
 
@@ -849,9 +849,9 @@ MiniExcel.SaveAsByTemplate(path, templatePath, value);
 ```csharp
 var projects = new[]
 {
-    new {Name = "MiniExcel",Link="https://github.com/shps951023/MiniExcel",Star=146, CreateTime=new DateTime(2021,03,01)},
-    new {Name = "HtmlTableHelper",Link="https://github.com/shps951023/HtmlTableHelper",Star=16, CreateTime=new DateTime(2020,02,01)},
-    new {Name = "PocoClassGenerator",Link="https://github.com/shps951023/PocoClassGenerator",Star=16, CreateTime=new DateTime(2019,03,17)}
+    new {Name = "MiniExcel",Link="https://github.com/mini-software/MiniExcel",Star=146, CreateTime=new DateTime(2021,03,01)},
+    new {Name = "HtmlTableHelper",Link="https://github.com/mini-software/HtmlTableHelper",Star=16, CreateTime=new DateTime(2020,02,01)},
+    new {Name = "PocoClassGenerator",Link="https://github.com/mini-software/PocoClassGenerator",Star=16, CreateTime=new DateTime(2019,03,17)}
 };
 var value = new
 {
@@ -1705,7 +1705,7 @@ private IEnumerable<Dictionary<int, object>> ConvertToIntIndexRows(IEnumerable<o
 
 #### Q. 導出時數組為空時生成沒有標題空 Excel
 
-因為 MiniExcel 使用類似 JSON.NET 動態從值獲取類別機制簡化 API 操作，沒有數據就無法獲取類別。可以查看[ issue #133](https://github.com/shps951023/MiniExcel/issues/133) 了解。
+因為 MiniExcel 使用類似 JSON.NET 動態從值獲取類別機制簡化 API 操作，沒有數據就無法獲取類別。可以查看[ issue #133](https://github.com/mini-software/MiniExcel/issues/133) 了解。
 
 ![image](https://user-images.githubusercontent.com/12729184/122639771-546c0c00-d12e-11eb-800c-498db27889ca.png)
 
@@ -1829,4 +1829,4 @@ Link https://github.com/orgs/mini-software/discussions/754
 
 ### Contributors
 
-![](https://contrib.rocks/image?repo=shps951023/MiniExcel)
+![](https://contrib.rocks/image?repo=mini-software/MiniExcel)

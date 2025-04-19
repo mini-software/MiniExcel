@@ -627,7 +627,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     }
 
     /// <summary>
-    /// Excel was unable to open the file https://github.com/shps951023/MiniExcel/issues/343
+    /// Excel was unable to open the file https://github.com/mini-software/MiniExcel/issues/343
     /// </summary>
     [Fact]
     public void TestIssue343()
@@ -1129,7 +1129,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     }
 
     /// <summary>
-    /// https://github.com/shps951023/MiniExcel/issues/325
+    /// https://github.com/mini-software/MiniExcel/issues/325
     /// </summary>
     [Fact]
     public void TestIssue325()
@@ -1149,7 +1149,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
 
     /// <summary>
     /// https://gitee.com/dotnetchina/MiniExcel/issues/I49RZH
-    /// https://github.com/shps951023/MiniExcel/issues/305
+    /// https://github.com/mini-software/MiniExcel/issues/305
     /// </summary>
     [Fact]
     public void TestIssueI49RZH()
@@ -1190,7 +1190,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     }
 
     /// <summary>
-    /// https://github.com/shps951023/MiniExcel/issues/312
+    /// https://github.com/mini-software/MiniExcel/issues/312
     /// </summary>
     [Fact]
     public void TestIssue312()
@@ -1232,7 +1232,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
 
     /// <summary>
     /// Query type conversion error
-    /// https://github.com/shps951023/MiniExcel/issues/309
+    /// https://github.com/mini-software/MiniExcel/issues/309
     /// </summary>
     [Fact]
     public void TestIssue209()
@@ -1260,7 +1260,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     }
 
     /// <summary>
-    /// [SaveAs and Query support btye[] base64 converter · Issue #318 · shps951023/MiniExcel](https://github.com/shps951023/MiniExcel/issues/318)
+    /// [SaveAs and Query support btye[] base64 converter · Issue #318 · mini-software/MiniExcel](https://github.com/mini-software/MiniExcel/issues/318)
     /// </summary>
     [Fact]
     public void TestIssue318()
@@ -1294,7 +1294,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
 
 
     /// <summary>
-    /// SaveAs support Image type · Issue #304  https://github.com/shps951023/MiniExcel/issues/304
+    /// SaveAs support Image type · Issue #304  https://github.com/mini-software/MiniExcel/issues/304
     /// </summary>
     [Fact]
     public void TestIssue304()
@@ -1340,8 +1340,8 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     }
 
     /// <summary>
-    /// [Prefix and suffix blank space will lost after SaveAs · Issue #294 · shps951023/MiniExcel]
-    /// (https://github.com/shps951023/MiniExcel/issues/294)
+    /// [Prefix and suffix blank space will lost after SaveAs · Issue #294 · mini-software/MiniExcel]
+    /// (https://github.com/mini-software/MiniExcel/issues/294)
     /// </summary>
     [Fact]
     public void TestIssue294()
@@ -1371,7 +1371,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
 
     /// <summary>
     /// Column '' does not belong to table when csv convert to datatable #298
-    /// https://github.com/shps951023/MiniExcel/issues/298
+    /// https://github.com/mini-software/MiniExcel/issues/298
     /// </summary>
     [Fact]
     public void TestIssue298()
@@ -1405,7 +1405,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     }
 
     /// <summary>
-    /// [SaveAs default theme support filter mode · Issue #190 · shps951023/MiniExcel](https://github.com/shps951023/MiniExcel/issues/190)
+    /// [SaveAs default theme support filter mode · Issue #190 · mini-software/MiniExcel](https://github.com/mini-software/MiniExcel/issues/190)
     /// </summary>
     [Fact]
     public void TestIssue190()
@@ -1448,7 +1448,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     }
 
     /// <summary>
-    /// [According to the XLSX to CSV example, there will be data loss if there is no header. · Issue #292 · shps951023/MiniExcel](https://github.com/shps951023/MiniExcel/issues/292)
+    /// [According to the XLSX to CSV example, there will be data loss if there is no header. · Issue #292 · mini-software/MiniExcel](https://github.com/mini-software/MiniExcel/issues/292)
     /// </summary>
     [Fact]
     public void TestIssue292()
@@ -1488,7 +1488,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     }
 
     /// <summary>
-    /// [Csv Query then SaveAs will throw "Stream was not readable." exception · Issue #293 · shps951023/MiniExcel](https://github.com/shps951023/MiniExcel/issues/293)
+    /// [Csv Query then SaveAs will throw "Stream was not readable." exception · Issue #293 · mini-software/MiniExcel](https://github.com/mini-software/MiniExcel/issues/293)
     /// </summary>
     [Fact]
     public void TestIssue293()
@@ -1690,7 +1690,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     }
 
     /// <summary>
-    /// [Support column width attribute · Issue #280 · shps951023/MiniExcel](https://github.com/shps951023/MiniExcel/issues/280)
+    /// [Support column width attribute · Issue #280 · mini-software/MiniExcel](https://github.com/mini-software/MiniExcel/issues/280)
     /// </summary>
     [Fact]
     public void TestIssue280()
@@ -1713,7 +1713,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     }
 
     /// <summary>
-    /// Csv not support QueryAsDataTable #279 https://github.com/shps951023/MiniExcel/issues/279
+    /// Csv not support QueryAsDataTable #279 https://github.com/mini-software/MiniExcel/issues/279
     /// </summary>
     [Fact]
     public void TestIssue279()
@@ -1825,7 +1825,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     }
 
     /// <summary>
-    /// [Convert csv to xlsx · Issue #261 · shps951023/MiniExcel](https://github.com/shps951023/MiniExcel/issues/261)
+    /// [Convert csv to xlsx · Issue #261 · mini-software/MiniExcel](https://github.com/mini-software/MiniExcel/issues/261)
     /// </summary>
     [Fact]
     public void TestIssue261()
@@ -1854,8 +1854,8 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     }
 
     /// <summary>
-    /// [SaveAsByTemplate support DateTime custom format · Issue #255 · shps951023/MiniExcel]
-    /// (https://github.com/shps951023/MiniExcel/issues/255)
+    /// [SaveAsByTemplate support DateTime custom format · Issue #255 · mini-software/MiniExcel]
+    /// (https://github.com/mini-software/MiniExcel/issues/255)
     /// </summary>
     [Fact]
     public void Issue255()
@@ -1900,7 +1900,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
 
     /// <summary>
     /// [Dynamic Query custom format not using mapping format · Issue #256]
-    /// (https://github.com/shps951023/MiniExcel/issues/256)
+    /// (https://github.com/mini-software/MiniExcel/issues/256)
     /// </summary>
     [Fact]
     public void Issue256()
@@ -1966,7 +1966,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     }
 
     /// <summary>
-    /// [CSV SaveAs support datareader · Issue #251 · shps951023/MiniExcel](https://github.com/shps951023/MiniExcel/issues/251)
+    /// [CSV SaveAs support datareader · Issue #251 · mini-software/MiniExcel](https://github.com/mini-software/MiniExcel/issues/251)
     /// </summary>
     [Fact]
     public void Issue251()
@@ -2197,7 +2197,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
 
     /// <summary>
     /// Csv Query split comma not correct #237
-    /// https://github.com/shps951023/MiniExcel/issues/237
+    /// https://github.com/mini-software/MiniExcel/issues/237
     /// </summary>
     [Fact]
     public void Issue237()
@@ -2264,7 +2264,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
 
     /// <summary>
     /// SaveAs By Reader Closed error : 'Error! Invalid attempt to call FieldCount when reader is closed' #230
-    /// https://github.com/shps951023/MiniExcel/issues/230
+    /// https://github.com/mini-software/MiniExcel/issues/230
     /// </summary>
     [Fact]
     public void Issue230()
@@ -2318,7 +2318,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
 
     /// <summary>
     /// v0.14.3 QueryAsDataTable error "Cannot set Column to be null" #229
-    /// https://github.com/shps951023/MiniExcel/issues/229
+    /// https://github.com/mini-software/MiniExcel/issues/229
     /// </summary>
     [Fact]
     public void Issue229()
@@ -2333,8 +2333,8 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     }
 
     /// <summary>
-    /// [Query Merge cells data · Issue #122 · shps951023/MiniExcel]
-    /// (https://github.com/shps951023/MiniExcel/issues/122)
+    /// [Query Merge cells data · Issue #122 · mini-software/MiniExcel]
+    /// (https://github.com/mini-software/MiniExcel/issues/122)
     /// </summary>
     [Fact]
     public void Issue122()
@@ -2371,8 +2371,8 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     }
 
     /// <summary>
-    /// [Support Xlsm AutoCheck · Issue #227 · shps951023/MiniExcel]
-    /// (https://github.com/shps951023/MiniExcel/issues/227)
+    /// [Support Xlsm AutoCheck · Issue #227 · mini-software/MiniExcel]
+    /// (https://github.com/mini-software/MiniExcel/issues/227)
     /// </summary>
     [Fact]
     public void Issue227()
@@ -2416,7 +2416,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     }
 
     /// <summary>
-    /// https://github.com/shps951023/MiniExcel/issues/226
+    /// https://github.com/mini-software/MiniExcel/issues/226
     /// Fix SaveAsByTemplate single column dimension index error #226
     /// </summary>
     [Fact]
@@ -2430,7 +2430,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
 
     /// <summary>
     /// ASP.NET Webform gridview datasource can't use miniexcel queryasdatatable · Issue #223]
-    /// (https://github.com/shps951023/MiniExcel/issues/223)
+    /// (https://github.com/mini-software/MiniExcel/issues/223)
     /// </summary>
     [Fact]
     public void Issue223()
@@ -2455,7 +2455,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
 
     /// <summary>
     /// [Custom yyyy-MM-dd format not convert datetime · Issue #222]
-    /// (https://github.com/shps951023/MiniExcel/issues/222)
+    /// (https://github.com/mini-software/MiniExcel/issues/222)
     /// </summary>
     [Fact]
     public void Issue222()
@@ -2468,7 +2468,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
 
     /// <summary>
     /// Query Support StartCell #147
-    /// https://github.com/shps951023/MiniExcel/issues/147
+    /// https://github.com/mini-software/MiniExcel/issues/147
     /// </summary>
     [Fact]
     public void Issue147()
@@ -2514,8 +2514,8 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
 
 
     /// <summary>
-    /// [Can SaveAs support iDataReader export to avoid the dataTable consuming too much memory · Issue #211 · shps951023/MiniExcel]
-    /// (https://github.com/shps951023/MiniExcel/issues/211)
+    /// [Can SaveAs support iDataReader export to avoid the dataTable consuming too much memory · Issue #211 · mini-software/MiniExcel]
+    /// (https://github.com/mini-software/MiniExcel/issues/211)
     /// </summary>
     [Fact]
     public void Issue211()
@@ -2536,7 +2536,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     }
 
     /// <summary>
-    /// [When reading Excel, can return IDataReader and DataTable to facilitate the import of database. Like ExcelDataReader provide reader.AsDataSet() · Issue #216 · shps951023/MiniExcel](https://github.com/shps951023/MiniExcel/issues/216)
+    /// [When reading Excel, can return IDataReader and DataTable to facilitate the import of database. Like ExcelDataReader provide reader.AsDataSet() · Issue #216 · mini-software/MiniExcel](https://github.com/mini-software/MiniExcel/issues/216)
     /// </summary>
     [Fact]
     public void Issue216()
@@ -2598,8 +2598,8 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
 
 
     /// <summary>
-    /// [Dynamic Query can't summary numeric cell value default, need to cast · Issue #220 · shps951023/MiniExcel]
-    /// (https://github.com/shps951023/MiniExcel/issues/220)
+    /// [Dynamic Query can't summary numeric cell value default, need to cast · Issue #220 · mini-software/MiniExcel]
+    /// (https://github.com/mini-software/MiniExcel/issues/220)
     /// </summary>
     [Fact]
     public void Issue220()
@@ -2623,7 +2623,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
 
     /// <summary>
     /// Optimize stream excel type check
-    /// https://github.com/shps951023/MiniExcel/issues/215
+    /// https://github.com/mini-software/MiniExcel/issues/215
     /// </summary>
     [Fact]
     public void Issue215()
@@ -2638,7 +2638,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
 
     /// <summary>
     /// Support Enum Mapping
-    /// https://github.com/shps951023/MiniExcel/issues/89
+    /// https://github.com/mini-software/MiniExcel/issues/89
     /// </summary>
     [Fact]
     public void Issue89()
@@ -2707,7 +2707,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
 
     /// <summary>
     /// DataTable recommended to use Caption for column name first, then use columname
-    /// https://github.com/shps951023/MiniExcel/issues/217
+    /// https://github.com/mini-software/MiniExcel/issues/217
     /// </summary>
     [Fact]
     public void Issue217()
@@ -2742,7 +2742,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
 
     /// <summary>
     /// MiniExcel.SaveAs(path, table,sheetName:“Name”) ，the actual sheetName is Sheet1
-    /// https://github.com/shps951023/MiniExcel/issues/212
+    /// https://github.com/mini-software/MiniExcel/issues/212
     /// </summary>
     [Fact]
     public void Issue212()
@@ -2757,7 +2757,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
 
     /// <summary>
     /// Version &lt;= v0.13.1 Template merge row list rendering has no merge
-    /// https://github.com/shps951023/MiniExcel/issues/207
+    /// https://github.com/mini-software/MiniExcel/issues/207
     /// </summary>
     [Fact]
     public void Issue207()
@@ -2838,7 +2838,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     }
 
     /// <summary>
-    /// https://github.com/shps951023/MiniExcel/issues/87
+    /// https://github.com/mini-software/MiniExcel/issues/87
     /// </summary>
     [Fact]
     public void Issue87()
@@ -2855,7 +2855,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     }
 
     /// <summary>
-    /// https://github.com/shps951023/MiniExcel/issues/208
+    /// https://github.com/mini-software/MiniExcel/issues/208
     /// </summary>
     [Fact]
     public void Issue208()
@@ -2867,7 +2867,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     }
 
     /// <summary>
-    /// https://github.com/shps951023/MiniExcel/issues/206
+    /// https://github.com/mini-software/MiniExcel/issues/206
     /// </summary>
     [Fact]
     public void Issue206()
@@ -2911,7 +2911,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
 
 
     /// <summary>
-    /// https://github.com/shps951023/MiniExcel/issues/193
+    /// https://github.com/mini-software/MiniExcel/issues/193
     /// </summary>
     [Fact]
     public void Issue193()
@@ -3185,7 +3185,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     }
 
     /// <summary>
-    /// https://github.com/shps951023/MiniExcel/issues/150
+    /// https://github.com/mini-software/MiniExcel/issues/150
     /// </summary>
     [Fact]
     public void Issue150()
@@ -3209,7 +3209,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     }
 
     /// <summary>
-    /// https://github.com/shps951023/MiniExcel/issues/157
+    /// https://github.com/mini-software/MiniExcel/issues/157
     /// </summary>
     [Fact]
     public void Issue157()
@@ -3295,7 +3295,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     }
 
     /// <summary>
-    /// https://github.com/shps951023/MiniExcel/issues/149
+    /// https://github.com/mini-software/MiniExcel/issues/149
     /// </summary>
     [Fact]
     public void Issue149()
@@ -3364,7 +3364,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     }
 
     /// <summary>
-    /// https://github.com/shps951023/MiniExcel/issues/153
+    /// https://github.com/mini-software/MiniExcel/issues/153
     /// </summary>
     [Fact]
     public void Issue153()
@@ -3379,7 +3379,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     }
 
     /// <summary>
-    /// https://github.com/shps951023/MiniExcel/issues/137
+    /// https://github.com/mini-software/MiniExcel/issues/137
     /// </summary>
     [Fact]
     public void Issue137()
@@ -3466,7 +3466,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
 
 
     /// <summary>
-    /// https://github.com/shps951023/MiniExcel/issues/138
+    /// https://github.com/mini-software/MiniExcel/issues/138
     /// </summary>
     [Fact]
     public void Issue138()

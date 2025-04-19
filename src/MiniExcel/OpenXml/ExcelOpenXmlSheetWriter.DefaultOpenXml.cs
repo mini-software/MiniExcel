@@ -282,7 +282,7 @@ namespace MiniExcelLibs.OpenXml
             // TODO: Setting configuration because it might have high cost?
             var format = GetImageFormat(bytes);
             //it can't insert to zip first to avoid cache image to memory
-            //because sheet xml is opening.. https://github.com/shps951023/MiniExcel/issues/304#issuecomment-1017031691
+            //because sheet xml is opening.. https://github.com/mini-software/MiniExcel/issues/304#issuecomment-1017031691
             //int rowIndex, int cellIndex
             var file = new FileDto()
             {

@@ -1,7 +1,7 @@
 <div align="center">
 <p><a href="https://www.nuget.org/packages/MiniExcel"><img src="https://img.shields.io/nuget/v/MiniExcel.svg" alt="NuGet"></a>  <a href="https://www.nuget.org/packages/MiniExcel"><img src="https://img.shields.io/nuget/dt/MiniExcel.svg" alt=""></a>
-<a href="https://ci.appveyor.com/project/shps951023/miniexcel/branch/master"><img src="https://ci.appveyor.com/api/projects/status/b2vustrwsuqx45f4/branch/master?svg=true" alt="Build status"></a>
-<a href="https://gitee.com/dotnetchina/MiniExcel"><img src="https://gitee.com/dotnetchina/MiniExcel/badge/star.svg" alt="star"></a> <a href="https://github.com/shps951023/MiniExcel" rel="nofollow"><img src="https://img.shields.io/github/stars/shps951023/MiniExcel?logo=github" alt="GitHub stars"></a>
+<a href="https://ci.appveyor.com/project/mini-software/miniexcel/branch/master"><img src="https://ci.appveyor.com/api/projects/status/b2vustrwsuqx45f4/branch/master?svg=true" alt="Build status"></a>
+<a href="https://gitee.com/dotnetchina/MiniExcel"><img src="https://gitee.com/dotnetchina/MiniExcel/badge/star.svg" alt="star"></a> <a href="https://github.com/mini-software/MiniExcel" rel="nofollow"><img src="https://img.shields.io/github/stars/mini-software/MiniExcel?logo=github" alt="GitHub stars"></a>
 <a href="https://www.nuget.org/packages/MiniExcel"><img src="https://img.shields.io/badge/.NET-%3E%3D%204.5-red.svg" alt="version"></a>
 </p>
 </div>
@@ -23,7 +23,7 @@
 ---
 
 <div align="center">
- Your <a href="https://github.com/shps951023/MiniExcel">Star</a> and <a href="https://miniexcel.github.io">Donate</a> can make MiniExcel better
+ Your <a href="https://github.com/mini-software/MiniExcel">Star</a> and <a href="https://miniexcel.github.io">Donate</a> can make MiniExcel better
 </div>
 
 ---
@@ -71,7 +71,7 @@ Please Check [Release Notes](docs)
 
 ### TODO
 
-Please Check  [TODO](https://github.com/shps951023/MiniExcel/projects/1?fullscreen=true)
+Please Check  [TODO](https://github.com/mini-software/MiniExcel/projects/1?fullscreen=true)
 
 ### Performance
 
@@ -91,7 +91,7 @@ Intel Core i7-7700 CPU 3.60GHz (Kaby Lake), 1 CPU, 8 logical and 4 physical core
 IterationCount=3  LaunchCount=3  WarmupCount=3
 ```
 
-Benchmark History :  [Link](https://github.com/shps951023/MiniExcel/issues/276)
+Benchmark History :  [Link](https://github.com/mini-software/MiniExcel/issues/276)
 
 
 
@@ -875,9 +875,9 @@ Code
 ```csharp
 var projects = new[]
 {
-    new {Name = "MiniExcel",Link="https://github.com/shps951023/MiniExcel",Star=146, CreateTime=new DateTime(2021,03,01)},
-    new {Name = "HtmlTableHelper",Link="https://github.com/shps951023/HtmlTableHelper",Star=16, CreateTime=new DateTime(2020,02,01)},
-    new {Name = "PocoClassGenerator",Link="https://github.com/shps951023/PocoClassGenerator",Star=16, CreateTime=new DateTime(2019,03,17)}
+    new {Name = "MiniExcel",Link="https://github.com/mini-software/MiniExcel",Star=146, CreateTime=new DateTime(2021,03,01)},
+    new {Name = "HtmlTableHelper",Link="https://github.com/mini-software/HtmlTableHelper",Star=16, CreateTime=new DateTime(2020,02,01)},
+    new {Name = "PocoClassGenerator",Link="https://github.com/mini-software/PocoClassGenerator",Star=16, CreateTime=new DateTime(2019,03,17)}
 };
 var value = new
 {
@@ -1853,7 +1853,7 @@ private IEnumerable<Dictionary<int, object>> ConvertToIntIndexRows(IEnumerable<o
 
 #### Q. No title empty excel is generated when the value is empty when exporting Excel
 
-Because MiniExcel uses a logic similar to JSON.NET to dynamically get type from values to simplify API operations, type cannot be knew without data. You can check [issue #133](https://github.com/shps951023/MiniExcel/issues/133) for understanding.
+Because MiniExcel uses a logic similar to JSON.NET to dynamically get type from values to simplify API operations, type cannot be knew without data. You can check [issue #133](https://github.com/mini-software/MiniExcel/issues/133) for understanding.
 
 ![image](https://user-images.githubusercontent.com/12729184/122639771-546c0c00-d12e-11eb-800c-498db27889ca.png)
 
@@ -1982,4 +1982,4 @@ Link https://github.com/orgs/mini-software/discussions/754
 
 ### Contributors
 
-![](https://contrib.rocks/image?repo=shps951023/MiniExcel)
+![](https://contrib.rocks/image?repo=mini-software/MiniExcel)

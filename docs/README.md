@@ -2,8 +2,8 @@
 
 <div align="center">
 <p><a href="https://www.nuget.org/packages/MiniExcel"><img src="https://img.shields.io/nuget/v/MiniExcel.svg" alt="NuGet"></a>  <a href="https://www.nuget.org/packages/MiniExcel"><img src="https://img.shields.io/nuget/dt/MiniExcel.svg" alt=""></a>  
-<a href="https://ci.appveyor.com/project/shps951023/miniexcel/branch/master"><img src="https://ci.appveyor.com/api/projects/status/b2vustrwsuqx45f4/branch/master?svg=true" alt="Build status"></a>
-<a href="https://gitee.com/dotnetchina/MiniExcel"><img src="https://gitee.com/dotnetchina/MiniExcel/badge/star.svg" alt="star"></a> <a href="https://github.com/shps951023/MiniExcel" rel="nofollow"><img src="https://img.shields.io/github/stars/shps951023/MiniExcel?logo=github" alt="GitHub stars"></a> 
+<a href="https://ci.appveyor.com/project/mini-software/miniexcel/branch/master"><img src="https://ci.appveyor.com/api/projects/status/b2vustrwsuqx45f4/branch/master?svg=true" alt="Build status"></a>
+<a href="https://gitee.com/dotnetchina/MiniExcel"><img src="https://gitee.com/dotnetchina/MiniExcel/badge/star.svg" alt="star"></a> <a href="https://github.com/mini-software/MiniExcel" rel="nofollow"><img src="https://img.shields.io/github/stars/mini-software/MiniExcel?logo=github" alt="GitHub stars"></a> 
 <a href="https://www.nuget.org/packages/MiniExcel"><img src="https://img.shields.io/badge/.NET-%3E%3D%204.5-red.svg" alt="version"></a>
 </p>
 </div>
@@ -17,7 +17,7 @@
 ---
 
 <div align="center">
- Your <a href="https://github.com/shps951023/MiniExcel">Star</a> and <a href="https://miniexcel.github.io">Donate</a> can make MiniExcel better 
+ Your <a href="https://github.com/mini-software/MiniExcel">Star</a> and <a href="https://miniexcel.github.io">Donate</a> can make MiniExcel better 
 </div>
 
 ---
@@ -394,26 +394,26 @@
 - [Breaking Change] Rename OpenXmlConfiguration FillMergedCells
 
 ### 0.14.4
-- [New] Query support Fill Merged Cells Down [#122](https://github.com/shps951023/MiniExcel/issues/122)
+- [New] Query support Fill Merged Cells Down [#122](https://github.com/mini-software/MiniExcel/issues/122)
 - [Bug] Fix QueryAsDataTable error "Cannot set Column to be null" #229
 
 ### 0.14.3
 - [Opt] Support Xlsm AutoCheck #227
-- [Bug] Fix SaveAsByTemplate single column demension index error [#226](https://github.com/shps951023/MiniExcel/issues/226)
+- [Bug] Fix SaveAsByTemplate single column demension index error [#226](https://github.com/mini-software/MiniExcel/issues/226)
 
 ### 0.14.2
-- [Bug] Fix asp.net webform gridview datasource can't use QueryAsDataTable [#223](https://github.com/shps951023/MiniExcel/issues/223)
+- [Bug] Fix asp.net webform gridview datasource can't use QueryAsDataTable [#223](https://github.com/mini-software/MiniExcel/issues/223)
 
 ### 0.14.1
-- [Bug] Fix custom m/d format not convert datetime [#222](https://github.com/shps951023/MiniExcel/issues/222)
+- [Bug] Fix custom m/d format not convert datetime [#222](https://github.com/mini-software/MiniExcel/issues/222)
 
 ### 0.14.0
-- [New] Query、GetColumns support startCell [#147](https://github.com/shps951023/MiniExcel/issues/147)
+- [New] Query、GetColumns support startCell [#147](https://github.com/mini-software/MiniExcel/issues/147)
 - [New] GetColumns support read headers
 
 ### 0.13.5
-- [New] Support QueryAsDataTable method [#216](https://github.com/shps951023/MiniExcel/issues/216)
-- [New] SaveAs support IDataReader value parameter [#211](https://github.com/shps951023/MiniExcel/issues/211)
+- [New] Support QueryAsDataTable method [#216](https://github.com/mini-software/MiniExcel/issues/216)
+- [New] SaveAs support IDataReader value parameter [#211](https://github.com/mini-software/MiniExcel/issues/211)
 - [Bug] Fix numeric format string will be cast to numeric type [#I3OSKV](https://gitee.com/dotnetchina/MiniExcel/issues/I3OSKV)
 - [Opt] Optimize SaveAs convert value type logic to improve performance
 
@@ -423,18 +423,18 @@
 - [OPT] Optimize stream excel type check #215
 
 ### 0.13.3
-- [New] Support open with read only mode, avoid error of The process cannot access the file because it is being used by another process [#87](https://github.com/shps951023/MiniExcel/issues/87)
+- [New] Support open with read only mode, avoid error of The process cannot access the file because it is being used by another process [#87](https://github.com/mini-software/MiniExcel/issues/87)
 - [Breaking Change] Change CSV SaveAs datetime default format : "yyyy-MM-dd HH:mm:ss"
-- [Bug] Fixed SaveAsByTemplate when merge cells will cause collection rendering error [#207](https://github.com/shps951023/MiniExcel/issues/207)
+- [Bug] Fixed SaveAsByTemplate when merge cells will cause collection rendering error [#207](https://github.com/mini-software/MiniExcel/issues/207)
 - [Bug] Fixed MiniExcel.SaveAs(path, value,sheetName:"Name"), the actual sheetName is Sheet1
 
 ### 0.13.2
-- [Bug] Fix Column more than 255 rows cannot be read error [#208](https://github.com/shps951023/MiniExcel/issues/208)
+- [Bug] Fix Column more than 255 rows cannot be read error [#208](https://github.com/mini-software/MiniExcel/issues/208)
 
 ### 0.13.1
 - [New] SaveAsByTemplate by template bytes, convenient to cache and support multiple users to read the same template at the same time #189
-- [New] SaveAsByTemplate support input `IEnmerable<IDicionary<string,object>> or DapperRows or DataTable` parameters [#201](https://github.com/shps951023/MiniExcel/issues/201)
-- [Bug] Fix after stream SaveAs/SaveAsByTemplate, miniexcel will close stream [#200](https://github.com/shps951023/MiniExcel/issues/200)
+- [New] SaveAsByTemplate support input `IEnmerable<IDicionary<string,object>> or DapperRows or DataTable` parameters [#201](https://github.com/mini-software/MiniExcel/issues/201)
+- [Bug] Fix after stream SaveAs/SaveAsByTemplate, miniexcel will close stream [#200](https://github.com/mini-software/MiniExcel/issues/200)
 
 ### 0.13.0
 - [New] Support .NET Framework 4.5
@@ -456,7 +456,7 @@
 - [New] Support `Filling Excel` by SaveAsByTemplate method to fill data into excel by xlsx template
 
 ### 0.11.1
-- [New] Support ColumnIndex Attribute [#142](https://github.com/shps951023/MiniExcel/issues/142) & [#I3I3EB](https://gitee.com/dotnetchina/MiniExcel/issues/I3I3EB)
+- [New] Support ColumnIndex Attribute [#142](https://github.com/mini-software/MiniExcel/issues/142) & [#I3I3EB](https://gitee.com/dotnetchina/MiniExcel/issues/I3I3EB)
 - [Bug] Fix issue #157 : Special conditions will get the wrong worksheet name
 - [Update] issue #150 : SaveAs input IEnuerable<valuetype> should throw clear msg exception
 
@@ -468,11 +468,11 @@
 - [OPT] Optimize SaveAs/Query excel file type auto-check
 
 ### 0.10.3(Don't use this version)
-- [Bug] Fix Query SharedStrings control character not encoding (issue [Issue #149](https://github.com/shps951023/MiniExcel/issues/149))
+- [Bug] Fix Query SharedStrings control character not encoding (issue [Issue #149](https://github.com/mini-software/MiniExcel/issues/149))
 
 ### 0.10.2(Don't use this version)
-- [Bug] Fix SharedStrings get wrong index (issue [#153](https://github.com/shps951023/MiniExcel/issues/153))
-- [Bug] SaveAs support control character encoding (issue [Issue #149](https://github.com/shps951023/MiniExcel/issues/149))
+- [Bug] Fix SharedStrings get wrong index (issue [#153](https://github.com/mini-software/MiniExcel/issues/153))
+- [Bug] SaveAs support control character encoding (issue [Issue #149](https://github.com/mini-software/MiniExcel/issues/149))
 
 ### 0.10.1(Don't use this version)
 - [New] SaveAs support POCO excel column name/ignore attribute
@@ -522,11 +522,11 @@
 ### 0.2.2(Don't use this version) 
 - SavaAs support xl/sheet dimension
 - [Breaking Changes] SaveAs value type from object to DataTable & ICollection
-- [Bug] Fix ICollection with type but no data error (https://github.com/shps951023/MiniExcel/issues/105)
+- [Bug] Fix ICollection with type but no data error (https://github.com/mini-software/MiniExcel/issues/105)
 
 ### 0.2.1(Don't use this version)  
 - [Optimize] Optimize type mapping bool and datetime auto check
-- [New] Query Support xl/worksheets/Sheet Xml Xml `<c>` without `r` attribute or without `<dimension>` but `<c>` with `r` attribute, but now performance is slow than with dimension ([](https://github.com/shps951023/MiniExcel/issues/2))
+- [New] Query Support xl/worksheets/Sheet Xml Xml `<c>` without `r` attribute or without `<dimension>` but `<c>` with `r` attribute, but now performance is slow than with dimension ([](https://github.com/mini-software/MiniExcel/issues/2))
 
 ### 0.2.0(Don't use this version)  
 - Release to nuget.org

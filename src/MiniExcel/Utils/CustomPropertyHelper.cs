@@ -79,7 +79,7 @@ namespace MiniExcelLibs.Utils
 
         internal static List<ExcelColumnInfo> SortCustomProps(List<ExcelColumnInfo> props)
         {
-            // https://github.com/shps951023/MiniExcel/issues/142
+            // https://github.com/mini-software/MiniExcel/issues/142
             //TODO: need optimize performance
 
             var withCustomIndexProps = props.Where(w => w.ExcelColumnIndex != null && w.ExcelColumnIndex > -1).ToList();
@@ -163,7 +163,7 @@ namespace MiniExcelLibs.Utils
 
         private static IEnumerable<ExcelColumnInfo> ConvertToExcelCustomPropertyInfo(PropertyInfo[] props, Configuration configuration)
         {
-            // solve : https://github.com/shps951023/MiniExcel/issues/138
+            // solve : https://github.com/mini-software/MiniExcel/issues/138
             var columnInfos = props.Select(p =>
             {
                 var gt = Nullable.GetUnderlyingType(p.PropertyType);

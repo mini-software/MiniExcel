@@ -44,7 +44,7 @@ Please Check [Release Notes](docs)
 
 ### TODO
 
-Please Check  [TODO](https://github.com/shps951023/MiniExcel/projects/1?fullscreen=true)
+Please Check  [TODO](https://github.com/mini-software/MiniExcel/projects/1?fullscreen=true)
 
 ### Performance
 
@@ -64,7 +64,7 @@ Intel Core i7-7700 CPU 3.60GHz (Kaby Lake), 1 CPU, 8 logical and 4 physical core
 IterationCount=3  LaunchCount=3  WarmupCount=3
 ```
 
-Benchmark History :  [Link](https://github.com/shps951023/MiniExcel/issues/276)
+Benchmark History :  [Link](https://github.com/mini-software/MiniExcel/issues/276)
 
 
 

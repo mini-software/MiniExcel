@@ -726,7 +726,7 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                     _newXMergeCellInfos.Add(newMergeCell);
                 }
 
-                // Last merge one don't add new row, or it'll get duplicate result like : https://github.com/shps951023/MiniExcel/issues/207#issuecomment-824550950
+                // Last merge one don't add new row, or it'll get duplicate result like : https://github.com/mini-software/MiniExcel/issues/207#issuecomment-824550950
                 if (iEnumerableIndex == rowInfo.CellIEnumerableValuesCount)
                     continue;
 
@@ -737,7 +737,7 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                 if (rowInfo.IEnumerableMercell?.Height == null)
                     continue;
 
-                // https://github.com/shps951023/MiniExcel/issues/207#issuecomment-824518897
+                // https://github.com/mini-software/MiniExcel/issues/207#issuecomment-824518897
                 for (int i = 1; i < rowInfo.IEnumerableMercell.Height; i++)
                 {
                     mergeBaseRowIndex++;
@@ -1126,7 +1126,7 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                                 //why unreachable exception?
                                 throw new InvalidDataException($"{propNames[0]} doesn't have {propNames[1]} property");
                             }
-                            // auto check type https://github.com/shps951023/MiniExcel/issues/177
+                            // auto check type https://github.com/mini-software/MiniExcel/issues/177
                             var type = prop.UnderlyingTypePropType; //avoid nullable
 
                             if (isMultiMatch)

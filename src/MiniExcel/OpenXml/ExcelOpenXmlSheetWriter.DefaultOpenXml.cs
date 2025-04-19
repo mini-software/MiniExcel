@@ -1,4 +1,4 @@
-﻿using MiniExcelLibs.Attributes;
+using MiniExcelLibs.Attributes;
 using MiniExcelLibs.OpenXml.Constants;
 using MiniExcelLibs.OpenXml.Models;
 using MiniExcelLibs.OpenXml.Styles;
@@ -215,7 +215,11 @@ namespace MiniExcelLibs.OpenXml
             if (type == typeof(byte[]) && _configuration.EnableConvertByteArray)
             {
                 var base64 = GetFileValue(rowIndex, cellIndex, value);
-                return Tuple.Create("4", "str", ExcelOpenXmlUtils.EncodeXML(base64));
+                if (_configuration.EnableWriteFilePath)
+                {
+                    return Tuple.Create("4", "str", ExcelOpenXmlUtils.EncodeXML(base64));
+                }
+                return Tuple.Create("4", "str", "");  
             }
 
             return Tuple.Create("2", "str", ExcelOpenXmlUtils.EncodeXML(value.ToString()));

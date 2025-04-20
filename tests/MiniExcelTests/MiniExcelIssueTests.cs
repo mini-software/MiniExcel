@@ -4168,18 +4168,15 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             new MiniExcelPicture
             {
                 ImageBytes = File.ReadAllBytes(PathHelper.GetFile("images/github_logo.png")),
-                PictureType = "image/png",
-                SheetName = "sheet1",
-                ColumnNumber = 2,
-                RowNumber = 2,
-                WidthPx = 100,
-                HeightPx = 100,
+                SheetName = null, // default null is first sheet
+                ColumnNumber = 2, // required
+                RowNumber = 2, // required
             },
             new MiniExcelPicture
             {
                 ImageBytes = File.ReadAllBytes(PathHelper.GetFile("images/google_logo.png")),
                 PictureType = "image/png",
-                SheetName = "sheet1",
+                SheetName = "Sheet1",
                 ColumnNumber = 2,
                 RowNumber = 8,
                 WidthPx = 100,

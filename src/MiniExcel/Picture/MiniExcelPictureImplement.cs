@@ -2,15 +2,23 @@
 
 namespace MiniExcelLibs.Picture
 {
+    using MiniExcelLibs.OpenXml;
+    using MiniExcelLibs.Zip;
     using System;
     using System.IO;
     using System.IO.Compression;
+    using System.Linq;
+    using System.Runtime.InteropServices.ComTypes;
     using System.Xml;
 
     internal static class MiniExcelPictureImplement
     {
         public static void AddPicture(Stream excelStream, params MiniExcelPicture[] images)
         {
+            // get sheets
+            var excelArchive = new ExcelOpenXmlZip(excelStream);
+            var sheetEntries = new ExcelOpenXmlSheetReader(excelStream, null).GetWorkbookRels(excelArchive.entries).ToList();
+
             var drawingRelId = $"rId{Guid.NewGuid().ToString("N")}";
             var drawingId = Guid.NewGuid().ToString("N");
             var imageId = 2;
@@ -20,7 +28,10 @@ namespace MiniExcelLibs.Picture
                 foreach (var image in images)
                 {
                     var imageBytes = image.ImageBytes;
-                    var sheetName = image.SheetName;
+                    
+                    var sheetEnt = image.SheetName==null?sheetEntries.First():sheetEntries.FirstOrDefault(x => x.Name == image.SheetName)?? sheetEntries.First();
+
+                    var sheetName = sheetEnt.Path.Split('/').Last().Split('.')[0];
                     var col = image.ColumnNumber;
                     var row = image.RowNumber;
                     var widthPx = image.WidthPx;

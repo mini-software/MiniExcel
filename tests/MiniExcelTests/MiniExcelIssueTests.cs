@@ -18,6 +18,7 @@ using MiniExcelLibs.Utils;
 using Xunit;
 using Xunit.Abstractions;
 using static MiniExcelLibs.Tests.MiniExcelOpenXmlTests;
+using MiniExcelLibs.Picture;
 
 namespace MiniExcelLibs.Tests;
 
@@ -4151,5 +4152,35 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         var rows = MiniExcel.Query(path,startCell:"A16").ToList();
         Assert.Equal(list[0].value1.ToString(), rows[0].A.ToString());
         Assert.Equal(list[1].value1.ToString(), rows[1].A.ToString());
+    }
+    /// <summary>
+    /// https://github.com/mini-software/MiniExcel/issues/186
+    /// Optimize CleanXml method #751
+    /// </summary>
+    [Fact]
+    public void TestIssue186()
+    {
+        var originPath = PathHelper.GetFile("xlsx/TestIssue186_Template.xlsx");
+        var path = Path.GetTempPath() + Guid.NewGuid() + ".xlsx";
+        File.Copy(originPath, path);
+        var images = new[]
+        {
+            new MiniExcelPicture
+            {
+                ImageBytes = File.ReadAllBytes(PathHelper.GetFile("images/github_logo.png")),
+                SheetName = null, // default null is first sheet
+                CellAddress = "C3", // required
+            },
+            new MiniExcelPicture
+            {
+                ImageBytes = File.ReadAllBytes(PathHelper.GetFile("images/google_logo.png")),
+                PictureType = "image/png", // default PictureType = image/png
+                SheetName = "Demo",
+                CellAddress = "C9", // required
+                WidthPx = 100,
+                HeightPx = 100,
+            },
+        };
+        MiniExcel.AddPicture(path, images);
     }
 }

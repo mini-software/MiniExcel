@@ -1,5 +1,6 @@
 ﻿namespace MiniExcelLibs
 {
+    using MiniExcelLibs.Picture;
     using OpenXml;
     using System;
     using System.Collections;
@@ -13,6 +14,15 @@
 
     public static partial class MiniExcel
     {
+        public static void AddPicture(string path, params MiniExcelPicture[] images)
+        {
+            using (var stream = File.Open(path,FileMode.OpenOrCreate))
+                MiniExcelPictureImplement.AddPicture(stream, images);
+        }
+        public static void AddPicture(Stream excelStream, params MiniExcelPicture[] images)
+        {
+            MiniExcelPictureImplement.AddPicture(excelStream, images);
+        }
         public static MiniExcelDataReader GetReader(string path, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null)
         {
             var stream = FileHelper.OpenSharedRead(path);

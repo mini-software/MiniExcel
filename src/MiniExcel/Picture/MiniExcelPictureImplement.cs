@@ -22,7 +22,6 @@ namespace MiniExcelLibs.Picture
             var drawingRelId = $"rId{Guid.NewGuid().ToString("N")}";
             var drawingId = Guid.NewGuid().ToString("N");
             var imageId = 2;
-            var isCreatedSheetDrawing = false;
             using (var archive = new ZipArchive(excelStream, ZipArchiveMode.Update, true))
             {
                 foreach (var image in images)
@@ -192,7 +191,7 @@ namespace MiniExcelLibs.Picture
         <xdr:spPr xmlns:xdr=""http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing"">
             <a:xfrm xmlns:a=""http://schemas.openxmlformats.org/drawingml/2006/main"">
                 <a:off x=""0"" y=""0"" xmlns:a=""http://schemas.openxmlformats.org/drawingml/2006/main""/>
-                <a:ext cx=""{widthPx * 9525}"" cy=""{heightPx * 9525}"" xmlns:a=""http://schemas.openxmlformats.org/drawingml/2006/main""/>
+                <a:ext {(widthPx==null?"":$@"cx = ""{widthPx * 9525}""")} {(heightPx == null ? "" : $@"cy=""{heightPx * 9525}""")} xmlns:a=""http://schemas.openxmlformats.org/drawingml/2006/main""/>
             </a:xfrm>
             <a:prstGeom prst=""rect"" xmlns:a=""http://schemas.openxmlformats.org/drawingml/2006/main"">
                 <a:avLst xmlns:a=""http://schemas.openxmlformats.org/drawingml/2006/main""/>
@@ -296,7 +295,7 @@ namespace MiniExcelLibs.Picture
                 <a:blip r:embed=""{relId}"" xmlns:r=""http://schemas.openxmlformats.org/officeDocument/2006/relationships""/>
                 <a:stretch><a:fillRect/></a:stretch>
             </xdr:blipFill>
-            <xdr:spPr><a:xfrm><a:off x=""0"" y=""0""/><a:ext cx=""{widthPx * 9525}"" cy=""{heightPx * 9525}""/></a:xfrm><a:prstGeom prst=""rect""><a:avLst/></a:prstGeom></xdr:spPr>
+            <xdr:spPr><a:xfrm><a:off x=""0"" y=""0""/><a:ext {(widthPx == null ? "" : $@"cx = ""{widthPx * 9525}""")} {(heightPx == null ? "" : $@"cy=""{heightPx * 9525}""")}/></a:xfrm><a:prstGeom prst=""rect""><a:avLst/></a:prstGeom></xdr:spPr>
         </xdr:pic>
         <xdr:clientData/>
     </xdr:twoCellAnchor>

@@ -1488,10 +1488,30 @@ var config = new OpenXmlConfiguration() { FastMode = true };
 MiniExcel.SaveAs(path, reader,configuration:config);
 ```
 
+#### 6. Batch Add Image (MiniExcel.AddPicture)
 
-
-
-
+```csharp
+var images = new[]
+{
+    new MiniExcelPicture
+    {
+        ImageBytes = File.ReadAllBytes(PathHelper.GetFile("images/github_logo.png")),
+        SheetName = null, // default null is first sheet
+        CellAddress = "C3", // required
+    },
+    new MiniExcelPicture
+    {
+        ImageBytes = File.ReadAllBytes(PathHelper.GetFile("images/google_logo.png")),
+        PictureType = "image/png", // default PictureType = image/png
+        SheetName = "Demo",
+        CellAddress = "C9", // required
+        WidthPx = 100,
+        HeightPx = 100,
+    },
+};
+MiniExcel.AddPicture(path, images);
+```
+![Image](https://github.com/user-attachments/assets/19c4d241-9753-4ede-96c8-f810c1a22247)
 
 ### Examples:
 

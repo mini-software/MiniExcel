@@ -25,6 +25,10 @@
 
 ---
 
+### 1.41.0
+- [New] 支持批量图片新增 MiniExcel AddPicture #770 (via @shps951023)
+- [New] OpenXmlConfiguration中添加 是否写入文件路径的配置项 ，实现导入图片时候对应单元格可以不填充文本. (via @dotnetfans)
+
 ### 1.40.1
 - [New] Added support for DateOnly type in query mapping (via @michelebastione)
 - [New] Added StyleOptions class to OpenXmlConfiguration to allow more direct control over cell styles (#761) (via @michelebastione)

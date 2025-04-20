@@ -22,10 +22,16 @@
 
 ---
 
+
+### 1.41.0
+- [New] MiniExcel AddPicture #770 (via @shps951023)
+- [New] Add a configuration item in OpenXmlConfiguration to control writing the file path, enabling the corresponding cell to remain empty when importing images. (via @dotnetfans)
+
+
 ### 1.40.1
 - [New] Added support for DateOnly type in query mapping (via @michelebastione)
 - [New] Added StyleOptions class to OpenXmlConfiguration to allow more direct control over cell styles (#761) (via @michelebastione)
-- [Bug] Fix SaveAsByTemplate empty generated result
+- [Bug] Fix SaveAsByTemplate empty generated result (via @shps951023)
 
 
 ### 1.40.0

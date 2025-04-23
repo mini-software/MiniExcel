@@ -31,6 +31,8 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
         public XMergeCell IEnumerableMercell { get; set; }
         public List<XMergeCell> RowMercells { get; set; }
         public List<XmlElement> ConditionalFormats { get; set; }
+
+
     }
 
     internal class PropInfo
@@ -443,7 +445,7 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                         var iEnumerableIndex = 0;
                         enumrowstart = newRowIndex;
 
-                        CellIEnumerableValuesGenerate(endPrefix, writer, ref rowIndexDiff, rowXml, ref headerDiff, ref prevHeader, mergeRowCount, isHeaderRow, ref currentHeader, rowInfo, row, groupingRowDiff, ref newRowIndex, innerXml, outerXmlOpen, ref isFirst, ref iEnumerableIndex);
+                        CellIEnumerableValuesGenerate(endPrefix, writer, ref rowIndexDiff, rowXml, ref headerDiff, ref prevHeader, mergeRowCount, isHeaderRow, ref currentHeader, rowInfo, row, groupingRowDiff, ref newRowIndex, innerXml, outerXmlOpen, ref isFirst, ref iEnumerableIndex, row);
                         enumrowend = newRowIndex - 1;
 
                         var conditionalFormats = conditionalFormatRanges.Where(cfr => cfr.Ranges.Any(r => r.ContainsRow(originRowIndex)));
@@ -526,12 +528,20 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
         private void CellIEnumerableValuesGenerate(string endPrefix, StreamWriter writer, ref int rowIndexDiff,
             StringBuilder rowXml, ref int headerDiff, ref string prevHeader, int mergeRowCount, bool isHeaderRow,
             ref string currentHeader, XRowInfo rowInfo, XmlElement row, int groupingRowDiff, ref int newRowIndex,
-            string innerXml, StringBuilder outerXmlOpen, ref bool isFirst, ref int iEnumerableIndex)
+            string innerXml, StringBuilder outerXmlOpen, ref bool isFirst, ref int iEnumerableIndex, XmlElement rowElement)
         {
             // Just need to remove space string one time https://github.com/mini-software/MiniExcel/issues/751
             var cleanRowXml = CleanXml(rowXml, endPrefix);
             var cleanOuterXmlOpen = CleanXml(outerXmlOpen, endPrefix);
             var cleanInnerXml = CleanXml(innerXml, endPrefix);
+            var notFirstRowInnerXmlElement = rowElement.Clone();
+            foreach (XmlElement c in notFirstRowInnerXmlElement.SelectNodes("x:c", _ns))
+            {
+                var v = c.SelectSingleNode("x:v", _ns);
+                if (v != null && !Regex.IsMatch(v.InnerText, @".*?\{\{.*?\}\}.*?"))
+                    v.InnerText = string.Empty;
+            }
+            var cleannotFirstRowInnerXmlElementInnerXml = CleanXml(notFirstRowInnerXmlElement.InnerXml, endPrefix);
             foreach (var item in rowInfo.CellIEnumerableValues)
             {
                 iEnumerableIndex++;
@@ -705,7 +715,11 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                 if (!isFirst)
                     rowIndexDiff += rowInfo.IEnumerableMercell?.Height ?? 1; //TODO:base on the merge size
                 if (isFirst)
+                {
+                    cleanInnerXml = cleannotFirstRowInnerXmlElementInnerXml;
                     isFirst = false;
+                }
+                    
 
                 var mergeBaseRowIndex = newRowIndex;
                 newRowIndex += rowInfo.IEnumerableMercell?.Height ?? 1;

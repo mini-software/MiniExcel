@@ -4196,4 +4196,29 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         var rows = MiniExcel.Query(path, sheetName: "Supply plan(daily)", startCell:"A1").Cast<IDictionary<string, object>>().ToArray();
         Assert.Equal("01108083-1Delta", (string)rows[19]["C"]);
     }
+
+    /// <summary>
+    /// https://github.com/mini-software/MiniExcel/issues/771
+    /// </summary>
+    [Fact]
+    public void TestIssue771()
+    {
+        var template = PathHelper.GetFile("xlsx/TestIssue771.xlsx");
+        var path = Path.GetTempPath() + Guid.NewGuid() + ".xlsx";
+        var value = new {
+            list = Enumerable.Range(0, 3).Select(s => new { ID = Guid.NewGuid(), level = s }),
+            list2 = Enumerable.Range(0, 3).Select(s => new { ID = Guid.NewGuid(), level = s }),
+            list3 = Enumerable.Range(0, 3).Select(s => new { ID = Guid.NewGuid(), level = s }),
+            list4 = Enumerable.Range(0, 3).Select(s => new { ID = Guid.NewGuid(), level = s }),
+            list5 = Enumerable.Range(0, 3).Select(s => new { ID = Guid.NewGuid(), level = s }),
+            list6 = Enumerable.Range(0, 3).Select(s => new { ID = Guid.NewGuid(), level = s }),
+            list7 = Enumerable.Range(0, 3).Select(s => new { ID = Guid.NewGuid(), level = s }),
+            list8 = Enumerable.Range(0, 3).Select(s => new { ID = Guid.NewGuid(), level = s }),
+            list9 = Enumerable.Range(0, 3).Select(s => new { ID = Guid.NewGuid(), level = s }),
+            list10 = Enumerable.Range(0, 3).Select(s => new { ID = Guid.NewGuid(), level = s }),
+            list11 = Enumerable.Range(0, 3).Select(s => new { ID = Guid.NewGuid(), level = s }),
+            list12 = Enumerable.Range(0, 3).Select(s => new { ID = Guid.NewGuid(), level = s }),
+        };
+        MiniExcel.SaveAsByTemplate(path,template, value);
+    }
 }

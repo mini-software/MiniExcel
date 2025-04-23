@@ -534,7 +534,9 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
             var cleanRowXml = CleanXml(rowXml, endPrefix);
             var cleanOuterXmlOpen = CleanXml(outerXmlOpen, endPrefix);
             var cleanInnerXml = CleanXml(innerXml, endPrefix);
-            var notFirstRowInnerXmlElement = rowElement.Clone();
+
+            // https://github.com/mini-software/MiniExcel/issues/771 Saving by template introduces unintended value replication in each row #771
+            var notFirstRowInnerXmlElement = rowElement.Clone(); 
             foreach (XmlElement c in notFirstRowInnerXmlElement.SelectNodes("x:c", _ns))
             {
                 var v = c.SelectSingleNode("x:v", _ns);
@@ -542,6 +544,8 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                     v.InnerText = string.Empty;
             }
             var cleannotFirstRowInnerXmlElementInnerXml = CleanXml(notFirstRowInnerXmlElement.InnerXml, endPrefix);
+            
+            
             foreach (var item in rowInfo.CellIEnumerableValues)
             {
                 iEnumerableIndex++;
@@ -716,7 +720,10 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                     rowIndexDiff += rowInfo.IEnumerableMercell?.Height ?? 1; //TODO:base on the merge size
                 if (isFirst)
                 {
+                    // https://github.com/mini-software/MiniExcel/issues/771 Saving by template introduces unintended value replication in each row #771
                     cleanInnerXml = cleannotFirstRowInnerXmlElementInnerXml;
+
+
                     isFirst = false;
                 }
                     

@@ -4220,5 +4220,10 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             list12 = Enumerable.Range(0, 3).Select(s => new { ID = Guid.NewGuid(), level = s }),
         };
         MiniExcel.SaveAsByTemplate(path,template, value);
+        var rows = MiniExcel.Query(path).ToList();
+        Assert.Equal("2025-1", rows[2].B);
+        Assert.Equal(null, rows[3].B);
+        Assert.Equal(null, rows[4].B);
+        Assert.Equal("2025-2", rows[5].B);
     }
 }

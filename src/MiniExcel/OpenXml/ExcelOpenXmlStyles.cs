@@ -2,6 +2,7 @@
 using MiniExcelLibs.Zip;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace MiniExcelLibs.OpenXml
 {
@@ -83,7 +84,8 @@ namespace MiniExcelLibs.OpenXml
                                     type = typeof(DateTime?);
                                 }
 
-                                _customFormats.Add(numFmtId, new NumberFormatString(formatCode, type));
+                                if (!_customFormats.ContainsKey(numFmtId))
+                                    _customFormats.Add(numFmtId, new NumberFormatString(formatCode, type));
                                 reader.Skip();
                             }
                             else if (!XmlReaderHelper.SkipContent(reader))

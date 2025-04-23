@@ -19,6 +19,9 @@ using Xunit;
 using Xunit.Abstractions;
 using static MiniExcelLibs.Tests.MiniExcelOpenXmlTests;
 using MiniExcelLibs.Picture;
+using DocumentFormat.OpenXml.Spreadsheet;
+using NPOI.Util;
+using TableStyles = MiniExcelLibs.OpenXml.TableStyles;
 
 namespace MiniExcelLibs.Tests;
 
@@ -4155,7 +4158,6 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     }
     /// <summary>
     /// https://github.com/mini-software/MiniExcel/issues/186
-    /// Optimize CleanXml method #751
     /// </summary>
     [Fact]
     public void TestIssue186()
@@ -4182,5 +4184,16 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             },
         };
         MiniExcel.AddPicture(path, images);
+    }
+
+    /// <summary>
+    /// https://github.com/mini-software/MiniExcel/issues/772
+    /// </summary>
+    [Fact]
+    public void TestIssue772()
+    {
+        var path = PathHelper.GetFile("xlsx/TestIssue772.xlsx");
+        var rows = MiniExcel.Query(path, sheetName: "Supply plan(daily)", startCell:"A1").Cast<IDictionary<string, object>>().ToArray();
+        Assert.Equal("01108083-1Delta", (string)rows[19]["C"]);
     }
 }

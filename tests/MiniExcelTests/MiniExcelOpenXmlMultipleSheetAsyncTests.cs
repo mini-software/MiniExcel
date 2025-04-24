@@ -84,13 +84,13 @@ public class MiniExcelOpenXmlMultipleSheetAsyncTests
             {
                 var rows = await MiniExcel.QueryAsync(path, sheetName: sheetName);
             }
-            Assert.Equal(new[] { "Sheet2", "Sheet1", "Sheet3" }, sheetNames);
+            Assert.Equal(new[] { "Sheet1", "Sheet2", "Sheet3" }, sheetNames);
         }
 
         {
             await using var stream = File.OpenRead(path);
             var sheetNames = stream.GetSheetNames().ToList();
-            Assert.Equal(new[] { "Sheet2", "Sheet1", "Sheet3" }, sheetNames);
+            Assert.Equal(new[] { "Sheet1", "Sheet2", "Sheet3" }, sheetNames);
             foreach (var sheetName in sheetNames)
             {
                 var rows = (await stream.QueryAsync(sheetName: sheetName)).ToList();

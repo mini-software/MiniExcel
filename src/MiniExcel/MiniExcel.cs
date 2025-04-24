@@ -1,17 +1,18 @@
-﻿namespace MiniExcelLibs
-{
-    using MiniExcelLibs.Picture;
-    using OpenXml;
-    using System;
-    using System.Collections;
-    using System.Collections.Generic;
-    using System.Data;
-    using System.Dynamic;
-    using System.IO;
-    using System.Linq;
-    using Utils;
-    using Zip;
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Data;
+using System.Dynamic;
+using System.IO;
+using System.Linq;
+using MiniExcelLibs.OpenXml;
+using MiniExcelLibs.OpenXml.Models;
+using MiniExcelLibs.Picture;
+using MiniExcelLibs.Utils;
+using MiniExcelLibs.Zip;
 
+namespace MiniExcelLibs
+{
     public static partial class MiniExcel
     {
         public static void AddPicture(string path, params MiniExcelPicture[] images)
@@ -19,10 +20,12 @@
             using (var stream = File.Open(path,FileMode.OpenOrCreate))
                 MiniExcelPictureImplement.AddPicture(stream, images);
         }
+        
         public static void AddPicture(Stream excelStream, params MiniExcelPicture[] images)
         {
             MiniExcelPictureImplement.AddPicture(excelStream, images);
         }
+        
         public static MiniExcelDataReader GetReader(string path, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null)
         {
             var stream = FileHelper.OpenSharedRead(path);
@@ -283,6 +286,17 @@
         public static ICollection<string> GetColumns(this Stream stream, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null)
         {
             return (Query(stream, useHeaderRow, sheetName, excelType, startCell, configuration).FirstOrDefault() as IDictionary<string, object>)?.Keys;
+        }
+        
+        public static IList<ExcelRange> GetSheetDimensions(string path)
+        {
+            using (var stream = FileHelper.OpenSharedRead(path))
+                return GetSheetDimensions(stream);
+        }
+
+        public static IList<ExcelRange> GetSheetDimensions(this Stream stream)
+        {
+            return new ExcelOpenXmlSheetReader(stream, null).GetDimensions();
         }
 
         public static IList<ExcelRange> GetSheetsDimensions(string path)

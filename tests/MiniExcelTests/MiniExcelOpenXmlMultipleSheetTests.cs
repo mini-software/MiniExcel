@@ -81,13 +81,13 @@ public class MiniExcelOpenXmlMultipleSheetTests
                 var rows = MiniExcel.Query(path, sheetName: sheetName).ToList();
             }
 
-            Assert.Equal(new[] { "Sheet2", "Sheet1", "Sheet3" }, sheetNames);
+            Assert.Equal(new[] { "Sheet1", "Sheet2", "Sheet3" }, sheetNames);
         }
 
         {
             using var stream = File.OpenRead(path);
             var sheetNames = stream.GetSheetNames().ToList();
-            Assert.Equal(new[] { "Sheet2", "Sheet1", "Sheet3" }, sheetNames);
+            Assert.Equal(new[] { "Sheet1", "Sheet2", "Sheet3" }, sheetNames);
             foreach (var sheetName in sheetNames)
             {
                 var rows = stream.Query(sheetName: sheetName).ToList();

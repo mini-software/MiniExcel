@@ -138,10 +138,12 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
         private static readonly Regex _cellRegex = CellRegex();
         [GeneratedRegex(@"\{\{(.*?)\}\}")] private static partial Regex TemplateRegex();
         private static readonly Regex _templateRegex = TemplateRegex();
-
+        [GeneratedRegex(@".*?\{\{.*?\}\}.*?")] private static partial Regex NonTemplateRegex();
+        private static readonly Regex _nonTemplateRegex = TemplateRegex();
 #else
         private static readonly Regex _cellRegex = new Regex("([A-Z]+)([0-9]+)", RegexOptions.Compiled);
         private static readonly Regex _templateRegex = new Regex(@"\{\{(.*?)\}\}", RegexOptions.Compiled);
+        private static readonly Regex _nonTemplateRegex = new Regex(@".*?\{\{.*?\}\}.*?", RegexOptions.Compiled);
 #endif
 
         private void GenerateSheetXmlImplByUpdateMode(ZipArchiveEntry sheetZipEntry, Stream stream, Stream sheetStream, IDictionary<string, object> inputMaps, IDictionary<int, string> sharedStrings, bool mergeCells = false)
@@ -174,7 +176,6 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
             }
 
             //outputSheetStream.Dispose();
-
             //sheetZipEntry.Delete(); // ZipArchiveEntry can't update directly, so need to delete then create logic
 
             var worksheet = doc.SelectSingleNode("/x:worksheet", _ns);
@@ -445,7 +446,7 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                         var iEnumerableIndex = 0;
                         enumrowstart = newRowIndex;
 
-                        CellIEnumerableValuesGenerate(endPrefix, writer, ref rowIndexDiff, rowXml, ref headerDiff, ref prevHeader, mergeRowCount, isHeaderRow, ref currentHeader, rowInfo, row, groupingRowDiff, ref newRowIndex, innerXml, outerXmlOpen, ref isFirst, ref iEnumerableIndex, row);
+                        GenerateCellValues(endPrefix, writer, ref rowIndexDiff, rowXml, ref headerDiff, ref prevHeader, mergeRowCount, isHeaderRow, ref currentHeader, rowInfo, row, groupingRowDiff, ref newRowIndex, innerXml, outerXmlOpen, ref isFirst, ref iEnumerableIndex, row);
                         enumrowend = newRowIndex - 1;
 
                         var conditionalFormats = conditionalFormatRanges.Where(cfr => cfr.Ranges.Any(r => r.ContainsRow(originRowIndex)));
@@ -479,9 +480,9 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                             .Append(outerXmlOpen)
                             .AppendFormat(@" r=""{0}"">", newRowIndex)
                             .Append(innerXml)
-                            .Replace($"{{{{$rowindex}}}}", newRowIndex.ToString())
-                            .Replace($"{{{{$enumrowstart}}}}", enumrowstart.ToString())
-                            .Replace($"{{{{$enumrowend}}}}", enumrowend.ToString())
+                            .Replace("{{$rowindex}}", newRowIndex.ToString())
+                            .Replace("{{$enumrowstart}}", enumrowstart.ToString())
+                            .Replace("{{$enumrowend}}", enumrowend.ToString())
                             .AppendFormat("</{0}>", row.Name);
 
                         ProcessFormulas(rowXml, newRowIndex);
@@ -525,13 +526,13 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
             }
         }
 
-        private void CellIEnumerableValuesGenerate(string endPrefix, StreamWriter writer, ref int rowIndexDiff,
+        //todo: refactor in a way that needs less parameters
+        private void GenerateCellValues(string endPrefix, StreamWriter writer, ref int rowIndexDiff,
             StringBuilder rowXml, ref int headerDiff, ref string prevHeader, int mergeRowCount, bool isHeaderRow,
             ref string currentHeader, XRowInfo rowInfo, XmlElement row, int groupingRowDiff, ref int newRowIndex,
             string innerXml, StringBuilder outerXmlOpen, ref bool isFirst, ref int iEnumerableIndex, XmlElement rowElement)
         {
             // Just need to remove space string one time https://github.com/mini-software/MiniExcel/issues/751
-            var cleanRowXml = CleanXml(rowXml, endPrefix);
             var cleanOuterXmlOpen = CleanXml(outerXmlOpen, endPrefix);
             var cleanInnerXml = CleanXml(innerXml, endPrefix);
 
@@ -540,11 +541,10 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
             foreach (XmlElement c in notFirstRowInnerXmlElement.SelectNodes("x:c", _ns))
             {
                 var v = c.SelectSingleNode("x:v", _ns);
-                if (v != null && !Regex.IsMatch(v.InnerText, @".*?\{\{.*?\}\}.*?"))
+                if (v != null && !_nonTemplateRegex.IsMatch(v.InnerText)) 
                     v.InnerText = string.Empty;
             }
-            var cleannotFirstRowInnerXmlElementInnerXml = CleanXml(notFirstRowInnerXmlElement.InnerXml, endPrefix);
-            
+            var cleanNotFirstRowInnerXmlElement = CleanXml(notFirstRowInnerXmlElement.InnerXml, endPrefix);
             
             foreach (var item in rowInfo.CellIEnumerableValues)
             {
@@ -553,7 +553,7 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                     .Append(cleanOuterXmlOpen)
                     .AppendFormat(@" r=""{0}"">", newRowIndex)
                     .Append(cleanInnerXml)
-                    .Replace($"{{{{$rowindex}}}}", newRowIndex.ToString())
+                    .Replace("{{$rowindex}}", newRowIndex.ToString())
                     .AppendFormat("</{0}>", row.Name);
 
                 var rowXmlString = rowXml.ToString();
@@ -721,7 +721,7 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                 if (isFirst)
                 {
                     // https://github.com/mini-software/MiniExcel/issues/771 Saving by template introduces unintended value replication in each row #771
-                    cleanInnerXml = cleannotFirstRowInnerXmlElementInnerXml;
+                    cleanInnerXml = cleanNotFirstRowInnerXmlElement;
 
 
                     isFirst = false;
@@ -777,7 +777,7 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                         }
                     }
 
-                    newRow.InnerXml = new StringBuilder(newRow.InnerXml).Replace($"{{{{$rowindex}}}}", mergeBaseRowIndex.ToString()).ToString();
+                    newRow.InnerXml = new StringBuilder(newRow.InnerXml).Replace("{{$rowindex}}", mergeBaseRowIndex.ToString()).ToString();
                     writer.Write(CleanXml(newRow.OuterXml, endPrefix));
                 }
             }
@@ -1007,6 +1007,7 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                 //Type ienumerableGenricType = null;
                 //IDictionary<string, PropertyInfo> props = null;
                 //IEnumerable ienumerable = null;
+                
                 var xRowInfo = new XRowInfo
                 {
                     Row = row
@@ -1040,8 +1041,8 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                         .Distinct()
                         .ToArray();
 
-                    var matchCnt = matches.Length;
-                    var isMultiMatch = matchCnt > 1 || (matchCnt == 1 && v.InnerText != $"{{{{{matches[0]}}}}}");
+                    var matchCount = matches.Length;
+                    var isMultiMatch = matchCount > 1 || (matchCount == 1 && v.InnerText != $"{{{{{matches[0]}}}}}");
 
                     foreach (var formatText in matches)
                     {

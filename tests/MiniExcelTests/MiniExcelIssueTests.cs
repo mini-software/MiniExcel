@@ -3984,7 +3984,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         Assert.Throws<InvalidDataException>(() =>
             MiniExcel.QueryRange(path, useHeaderRow: false, startCell: "ZZFF10", endCell: "ZZFF11").First());
 
-        Assert.Throws<InvalidOperationException>(() =>
+        Assert.Throws<InvalidDataException>(() =>
             MiniExcel.QueryRange(path, useHeaderRow: false, startCell: "ZZFF@@10", endCell: "ZZFF@@11").First());
     }
 
@@ -4134,7 +4134,6 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         Assert.Equal(null, rows[0].J);
     }
 
-
     /// <summary>
     /// https://github.com/mini-software/MiniExcel/issues/768
     /// Optimize CleanXml method #751
@@ -4143,19 +4142,29 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     public void TestIssue768()
     {
         var templatePath = PathHelper.GetFile("xlsx/TestIssue768.xlsx");
-        var path = Path.GetTempPath() + Guid.NewGuid() + ".xlsx";
+        using var path = AutoDeletingPath.Create();
+
         var list = Enumerable.Range(0, 10)
-                .Select(_ => new { value1 = Guid.NewGuid(), value2 = Guid.NewGuid(), }).ToList();
+            .Select(_ => new
+                {
+                    value1 = Guid.NewGuid(),
+                    value2 = Guid.NewGuid()
+                }
+            )
+            .ToList();
+
         var data = new Dictionary<string, object>
         {
             ["list"] = list
         };
-        MiniExcel.SaveAsByTemplate(path.ToString(), templatePath, data);
 
-        var rows = MiniExcel.Query(path,startCell:"A16").ToList();
+        MiniExcel.SaveAsByTemplate(path.ToString(), templatePath, data);
+        var rows = MiniExcel.Query(path.ToString(), startCell: "A16").ToList();
+
         Assert.Equal(list[0].value1.ToString(), rows[0].A.ToString());
         Assert.Equal(list[1].value1.ToString(), rows[1].A.ToString());
     }
+    
     /// <summary>
     /// https://github.com/mini-software/MiniExcel/issues/186
     /// </summary>
@@ -4163,40 +4172,31 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     public void TestIssue186()
     {
         var originPath = PathHelper.GetFile("xlsx/TestIssue186_Template.xlsx");
-        var path = Path.GetTempPath() + Guid.NewGuid() + ".xlsx";
-        File.Copy(originPath, path);
-        var images = new[]
-        {
-            new MiniExcelPicture
+        using var path = AutoDeletingPath.Create();
+        File.Copy(originPath, path.FilePath);
+        
+        MiniExcelPicture[] images =
+        [
+            new()
             {
                 ImageBytes = File.ReadAllBytes(PathHelper.GetFile("images/github_logo.png")),
                 SheetName = null, // default null is first sheet
                 CellAddress = "C3", // required
             },
-            new MiniExcelPicture
+            new()
             {
                 ImageBytes = File.ReadAllBytes(PathHelper.GetFile("images/google_logo.png")),
                 PictureType = "image/png", // default PictureType = image/png
                 SheetName = "Demo",
                 CellAddress = "C9", // required
                 WidthPx = 100,
-                HeightPx = 100,
-            },
-        };
-        MiniExcel.AddPicture(path, images);
+                HeightPx = 100
+            }
+        ];
+        
+        MiniExcel.AddPicture(path.FilePath, images);
     }
-
-    /// <summary>
-    /// https://github.com/mini-software/MiniExcel/issues/772
-    /// </summary>
-    [Fact]
-    public void TestIssue772()
-    {
-        var path = PathHelper.GetFile("xlsx/TestIssue772.xlsx");
-        var rows = MiniExcel.Query(path, sheetName: "Supply plan(daily)", startCell:"A1").Cast<IDictionary<string, object>>().ToArray();
-        Assert.Equal("01108083-1Delta", (string)rows[19]["C"]);
-    }
-
+    
     /// <summary>
     /// https://github.com/mini-software/MiniExcel/issues/771
     /// </summary>
@@ -4204,26 +4204,47 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     public void TestIssue771()
     {
         var template = PathHelper.GetFile("xlsx/TestIssue771.xlsx");
-        var path = Path.GetTempPath() + Guid.NewGuid() + ".xlsx";
-        var value = new {
-            list = Enumerable.Range(0, 3).Select(s => new { ID = Guid.NewGuid(), level = s }),
-            list2 = Enumerable.Range(0, 3).Select(s => new { ID = Guid.NewGuid(), level = s }),
-            list3 = Enumerable.Range(0, 3).Select(s => new { ID = Guid.NewGuid(), level = s }),
-            list4 = Enumerable.Range(0, 3).Select(s => new { ID = Guid.NewGuid(), level = s }),
-            list5 = Enumerable.Range(0, 3).Select(s => new { ID = Guid.NewGuid(), level = s }),
-            list6 = Enumerable.Range(0, 3).Select(s => new { ID = Guid.NewGuid(), level = s }),
-            list7 = Enumerable.Range(0, 3).Select(s => new { ID = Guid.NewGuid(), level = s }),
-            list8 = Enumerable.Range(0, 3).Select(s => new { ID = Guid.NewGuid(), level = s }),
-            list9 = Enumerable.Range(0, 3).Select(s => new { ID = Guid.NewGuid(), level = s }),
-            list10 = Enumerable.Range(0, 3).Select(s => new { ID = Guid.NewGuid(), level = s }),
-            list11 = Enumerable.Range(0, 3).Select(s => new { ID = Guid.NewGuid(), level = s }),
-            list12 = Enumerable.Range(0, 3).Select(s => new { ID = Guid.NewGuid(), level = s }),
+        using var path = AutoDeletingPath.Create();
+        
+        var value = new
+        {
+            list = GetEnumerable(),
+            list2 = GetEnumerable(),
+            list3 = GetEnumerable(),
+            list4 = GetEnumerable(),
+            list5 = GetEnumerable(),
+            list6 = GetEnumerable(),
+            list7 = GetEnumerable(),
+            list8 = GetEnumerable(),
+            list9 = GetEnumerable(),
+            list10 = GetEnumerable(),
+            list11 = GetEnumerable(),
+            list12 = GetEnumerable()
         };
-        MiniExcel.SaveAsByTemplate(path,template, value);
-        var rows = MiniExcel.Query(path).ToList();
+        
+        MiniExcel.SaveAsByTemplate(path.FilePath, template, value);
+        var rows = MiniExcel.Query(path.FilePath).ToList();
+        
         Assert.Equal("2025-1", rows[2].B);
         Assert.Equal(null, rows[3].B);
         Assert.Equal(null, rows[4].B);
         Assert.Equal("2025-2", rows[5].B);
+        return;
+
+        IEnumerable<object> GetEnumerable() => Enumerable.Range(0, 3).Select(s => new { ID = Guid.NewGuid(), level = s });
+    }
+    
+    /// <summary>
+    /// https://github.com/mini-software/MiniExcel/issues/772
+    /// </summary>
+    [Fact]
+    public void TestIssue772()
+    {
+        var path = PathHelper.GetFile("xlsx/TestIssue772.xlsx");
+        var rows = MiniExcel.Query(path, sheetName: "Supply plan(daily)", startCell:"A1")
+            .Cast<IDictionary<string, object>>()
+            .ToArray();
+        
+        Assert.Equal("01108083-1Delta", (string)rows[19]["C"]);
     }
 }

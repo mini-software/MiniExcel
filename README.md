@@ -1513,6 +1513,12 @@ MiniExcel.AddPicture(path, images);
 ```
 ![Image](https://github.com/user-attachments/assets/19c4d241-9753-4ede-96c8-f810c1a22247)
 
+#### 7. Get Sheets Dimension
+
+```csharp
+var dim = MiniExcel.GetSheetsDimensions(path);
+```
+
 ### Examples:
 
 #### 1. SQLite & Dapper `Large Size File` SQL Insert Avoid OOM

@@ -23,6 +23,14 @@
 ---
 
 
+### 1.41.1
+- [New] Added sheet dimensions feature (#774) (via @michelebastione)
+- [Bug] Fix Saving by template introduces unintended value replication in each row #771
+(via @shps951023)
+- [Bug] SaveAsByTemplate not working in > v1.39.0 for templates with columns past Z #773 (via @shps951023)
+- [Bug] Fix Excel style.xml duplicate numFmtId, system error: An item with the same key has already been added. #772 (via @shps951023)
+
+
 ### 1.41.0
 - [New] MiniExcel AddPicture #770 (via @shps951023)
 - [New] Add a configuration item in OpenXmlConfiguration to control writing the file path, enabling the corresponding cell to remain empty when importing images. (via @dotnetfans)

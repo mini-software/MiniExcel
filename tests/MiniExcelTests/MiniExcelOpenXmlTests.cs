@@ -1544,4 +1544,62 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
         Assert.Equal(new DateOnly(2020, 10, 25), query[1].DateWithFormat);
         Assert.Equal(new DateOnly(2020, 6, 1), query[7].DateWithFormat);
     }
+
+    [Fact]
+    public void SheetDimensionsTest()
+    {
+        var path1 = PathHelper.GetFile("xlsx/TestTypeMapping.xlsx");
+        var dim1 = MiniExcel.GetSheetsDimensions(path1);
+        Assert.Equal("A1", dim1[0].StartCell);
+        Assert.Equal("H101", dim1[0].EndCell);
+        Assert.Equal(101, dim1[0].Rows.Count);
+        Assert.Equal(8, dim1[0].Columns.Count);
+        Assert.Equal(1, dim1[0].Rows.StartIndex);
+        Assert.Equal(101, dim1[0].Rows.EndIndex);
+        Assert.Equal(1, dim1[0].Columns.StartIndex);
+        Assert.Equal(8, dim1[0].Columns.EndIndex);
+
+        var path2 = PathHelper.GetFile("xlsx/TestNoDimension.xlsx");
+        var dim2 = MiniExcel.GetSheetsDimensions(path2);
+        Assert.Equal(101, dim2[0].Rows.Count);
+        Assert.Equal(7, dim2[0].Columns.Count);
+        Assert.Equal(1, dim2[0].Rows.StartIndex);
+        Assert.Equal(101, dim2[0].Rows.EndIndex);
+        Assert.Equal(1, dim2[0].Columns.StartIndex);
+        Assert.Equal(7, dim2[0].Columns.EndIndex);
+    }
+    
+    [Fact]
+    public void SheetDimensionsTest_MultiSheet()
+    {
+        var path = PathHelper.GetFile("xlsx/TestMultiSheet.xlsx");
+        var dim = MiniExcel.GetSheetsDimensions(path);
+        
+        Assert.Equal("A1", dim[0].StartCell);
+        Assert.Equal("D12", dim[0].EndCell);
+        Assert.Equal(12, dim[0].Rows.Count);
+        Assert.Equal(4, dim[0].Columns.Count);
+        Assert.Equal(1, dim[0].Rows.StartIndex);
+        Assert.Equal(12, dim[0].Rows.EndIndex);
+        Assert.Equal(1, dim[0].Columns.StartIndex);
+        Assert.Equal(4, dim[0].Columns.EndIndex);
+
+        Assert.Equal("A1", dim[1].StartCell);
+        Assert.Equal("D12", dim[1].EndCell);
+        Assert.Equal(12, dim[1].Rows.Count);
+        Assert.Equal(4, dim[1].Columns.Count);
+        Assert.Equal(1, dim[1].Rows.StartIndex);
+        Assert.Equal(12, dim[1].Rows.EndIndex);
+        Assert.Equal(1, dim[1].Columns.StartIndex);
+        Assert.Equal(4, dim[1].Columns.EndIndex);
+
+        Assert.Equal("A1", dim[2].StartCell);
+        Assert.Equal("B5", dim[2].EndCell);
+        Assert.Equal(5, dim[2].Rows.Count);
+        Assert.Equal(2, dim[2].Columns.Count);
+        Assert.Equal(1, dim[2].Rows.StartIndex);
+        Assert.Equal(5, dim[2].Rows.EndIndex);
+        Assert.Equal(1, dim[2].Columns.StartIndex);
+        Assert.Equal(2, dim[2].Columns.EndIndex);
+    }
 }

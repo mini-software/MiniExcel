@@ -11,7 +11,7 @@ namespace MiniExcelLibs.Utils
         /// Pass &lt;?xml&gt; and &lt;worksheet&gt;
         /// </summary>
         /// <param name="reader"></param>
-        public static void PassXmlDeclartionAndWorksheet(this XmlReader reader)
+        public static void PassXmlDeclarationAndWorksheet(this XmlReader reader)
         {
             reader.MoveToContent();
             reader.Read();

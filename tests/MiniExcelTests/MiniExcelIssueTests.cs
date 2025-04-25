@@ -4247,4 +4247,28 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         
         Assert.Equal("01108083-1Delta", (string)rows[19]["C"]);
     }
+
+    /// <summary>
+    /// https://github.com/mini-software/MiniExcel/issues/773
+    /// </summary>
+    [Fact]
+    public void TestIssue773()
+    {
+        var templatePath = PathHelper.GetFile("xlsx/TestIssue773_Template.xlsx");
+        List<dynamic> a = new List<dynamic>{
+            new  { Id = 1, Name = "Bill", A = "a1", B = "b1", C = "c1", D = "d1", E = "e1", F = "f1", G = "g1", H = "H1" },
+            new  { Id = 2, Name = "Steve", A = "a2", B = "b2", C = "c2", D = "d2", E = "e2", F = "f2", G = "g2", H = "H2" },
+            new  { Id = 3, Name = "Ram", A = "a3", B = "b3", C = "c3", D = "d3", E = "e3", F = "f3", G = "g3", H = "H3" },
+        };
+
+        var fill = new { t = a };
+        var path = Path.GetTempPath() + Guid.NewGuid() + ".xlsx";
+        Console.WriteLine(path);
+        MiniExcel.SaveAsByTemplate(path, templatePath, fill);
+
+        var rows = MiniExcel.Query(path, false).ToList();
+        Assert.Equal("H1", rows[4].AF);
+        Assert.Equal("c3", rows[6].AA);
+        Assert.Equal("Ram", rows[6].B);
+    }
 }

@@ -1256,15 +1256,20 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
             var refs = dimension.GetAttribute("ref").Split(':');
             if (refs.Length == 2)
             {
-                var letter = StringHelper.GetLetter(refs[1]);
-                var digit = StringHelper.GetDigit(refs[1]);
+                //var letter = StringHelper.GetLetter(refs[1]);
+                //var digit = StringHelper.GetDigit(refs[1]);
+                var letter = new String(refs[1].Where(Char.IsLetter).ToArray());
+                var digit = int.Parse(new String(refs[1].Where(Char.IsDigit).ToArray()));
 
                 dimension.SetAttribute("ref", $"{refs[0]}:{letter}{digit + maxRowIndexDiff}");
             }
             else
             {
-                var letter = StringHelper.GetLetter(refs[0]);
-                var digit = StringHelper.GetDigit(refs[0]);
+                //var letter = StringHelper.GetLetter(refs[0]);
+                //var digit = StringHelper.GetDigit(refs[0]);
+
+                var letter = new String(refs[0].Where(Char.IsLetter).ToArray());
+                var digit = int.Parse(new String(refs[0].Where(Char.IsDigit).ToArray()));
 
                 dimension.SetAttribute("ref", $"A1:{letter}{digit + maxRowIndexDiff}");
             }

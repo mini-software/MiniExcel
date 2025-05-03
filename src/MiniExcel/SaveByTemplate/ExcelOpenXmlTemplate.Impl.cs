@@ -69,11 +69,11 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
 
             //TODO: width,height
             var xy1 = refs[0];
-            X1 = ColumnHelper.GetColumnIndex(StringHelper.GetLetter(refs[0]));
+            X1 = ColumnHelper.GetColumnIndex(StringHelper.GetLetters(refs[0]));
             Y1 = StringHelper.GetNumber(xy1);
 
             var xy2 = refs[1];
-            X2 = ColumnHelper.GetColumnIndex(StringHelper.GetLetter(refs[1]));
+            X2 = ColumnHelper.GetColumnIndex(StringHelper.GetLetters(refs[1]));
             Y2 = StringHelper.GetNumber(xy2);
 
             Width = Math.Abs(X1 - X2) + 1;
@@ -718,15 +718,13 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                 // note: only first time need add diff https://user-images.githubusercontent.com/12729184/114494728-6bceda80-9c4f-11eb-9685-8b5ed054eabe.png
                 if (!isFirst)
                     rowIndexDiff += rowInfo.IEnumerableMercell?.Height ?? 1; //TODO:base on the merge size
+                
                 if (isFirst)
                 {
                     // https://github.com/mini-software/MiniExcel/issues/771 Saving by template introduces unintended value replication in each row #771
                     cleanInnerXml = cleanNotFirstRowInnerXmlElement;
-
-
                     isFirst = false;
                 }
-                    
 
                 var mergeBaseRowIndex = newRowIndex;
                 newRowIndex += rowInfo.IEnumerableMercell?.Height ?? 1;
@@ -795,7 +793,7 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                     return new XChildNode
                     {
                         InnerText = s.InnerText,
-                        ColIndex = StringHelper.GetLetter(att),
+                        ColIndex = StringHelper.GetLetters(att),
                         RowIndex = StringHelper.GetNumber(att)
                     };
                 })
@@ -837,7 +835,7 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                 foreach (var childNode in childNodes)
                 {
                     var att = childNode.GetAttribute("r");
-                    var childNodeLetter = StringHelper.GetLetter(att);
+                    var childNodeLetter = StringHelper.GetLetters(att);
                     var childNodeNumber = StringHelper.GetNumber(att);
 
                     if (!string.IsNullOrEmpty(childNode.InnerText))
@@ -952,8 +950,8 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
         {
             //TODO:c.SetAttribute("t", "d"); and custom format
             var format = propInfo?.GetAttributeValue((ExcelFormatAttribute x) => x.Format)
-                     ?? propInfo?.GetAttributeValue((ExcelColumnAttribute x) => x.Format)
-                     ?? "yyyy-MM-dd HH:mm:ss";
+                ?? propInfo?.GetAttributeValue((ExcelColumnAttribute x) => x.Format)
+                ?? "yyyy-MM-dd HH:mm:ss";
 
             return (cellValue as DateTime?)?.ToString(format);
         }
@@ -962,8 +960,7 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
         private static string CleanXml(string xml, string endPrefix) => CleanXml(new StringBuilder(xml), endPrefix).ToString();
         private static StringBuilder CleanXml(StringBuilder xml, string endPrefix) => xml
             .Replace("xmlns:x14ac=\"http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac\"", "")
-            .Replace($"xmlns{endPrefix}=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"", "")
-         ;
+            .Replace($"xmlns{endPrefix}=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"", "");
 
         private static void ReplaceSharedStringsToStr(IDictionary<int, string> sharedStrings, XmlNodeList rows)
         {
@@ -1028,7 +1025,7 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
 
                     if (changeRowIndex)
                     {
-                        c.SetAttribute("r", $"{StringHelper.GetLetter(r)}{{{{$rowindex}}}}");
+                        c.SetAttribute("r", $"{StringHelper.GetLetters(r)}{{{{$rowindex}}}}");
                     }
 
                     var v = c.SelectSingleNode("x:v", _ns);
@@ -1256,20 +1253,15 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
             var refs = dimension.GetAttribute("ref").Split(':');
             if (refs.Length == 2)
             {
-                //var letter = StringHelper.GetLetter(refs[1]);
-                //var digit = StringHelper.GetDigit(refs[1]);
-                var letter = new String(refs[1].Where(Char.IsLetter).ToArray());
-                var digit = int.Parse(new String(refs[1].Where(Char.IsDigit).ToArray()));
+                var letter = StringHelper.GetLetters(refs[1]);
+                var digit = StringHelper.GetNumber(refs[1]);
 
                 dimension.SetAttribute("ref", $"{refs[0]}:{letter}{digit + maxRowIndexDiff}");
             }
             else
             {
-                //var letter = StringHelper.GetLetter(refs[0]);
-                //var digit = StringHelper.GetDigit(refs[0]);
-
-                var letter = new String(refs[0].Where(Char.IsLetter).ToArray());
-                var digit = int.Parse(new String(refs[0].Where(Char.IsDigit).ToArray()));
+                var letter = StringHelper.GetLetters(refs[0]);
+                var digit = StringHelper.GetNumber(refs[0]);
 
                 dimension.SetAttribute("ref", $"A1:{letter}{digit + maxRowIndexDiff}");
             }

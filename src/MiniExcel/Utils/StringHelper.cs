@@ -9,19 +9,9 @@ namespace MiniExcelLibs.Utils
     internal static class StringHelper
     {
         private static readonly string[] _ns = { Config.SpreadsheetmlXmlns, Config.SpreadsheetmlXmlStrictns };
-        //public static string GetLetter(string content) => content.FirstOrDefault(char.IsLetter).ToString();
-        public static int GetDigit(string content) => content.FirstOrDefault(char.IsDigit) - '0';
-        //public static int GetNumber(string content) => int.Parse(new string(content.Where(char.IsNumber).ToArray()));
-        public static string GetLetter(string content)
-        {
-            //TODO:need to chekc
-            return new String(content.Where(Char.IsLetter).ToArray());
-        }
 
-        public static int GetNumber(string content)
-        {
-            return int.Parse(new String(content.Where(Char.IsNumber).ToArray()));
-        }
+        public static string GetLetters(string content) => new string(content.Where(char.IsLetter).ToArray());
+        public static int GetNumber(string content) => int.Parse(new string(content.Where(char.IsNumber).ToArray()));
 
         /// <summary>
         /// Copied and modified from ExcelDataReader - @MIT License

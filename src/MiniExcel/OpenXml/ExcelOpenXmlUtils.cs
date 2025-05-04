@@ -1,45 +1,38 @@
-﻿namespace MiniExcelLibs.OpenXml
+﻿using System;
+using System.Runtime.CompilerServices;
+using MiniExcelLibs.Utils;
+
+namespace MiniExcelLibs.OpenXml
 {
-    using MiniExcelLibs.Utils;
-    using System;
-#if DEBUG
-    public
-#else
-    internal
-#endif
-    static class ExcelOpenXmlUtils
+    internal static class ExcelOpenXmlUtils
     {
-        public static string MinifyXml( string xml ) => xml.Replace( "\r", "" ).Replace( "\n", "" ).Replace( "\t", "" ).Trim();
+        public static string MinifyXml(string xml) => xml
+            .Replace("\r", "")
+            .Replace("\n", "")
+            .Replace("\t", "")
+            .Trim();
 
         /// <summary>
         /// Encode to XML (special characteres: &apos; &quot; &gt; &lt; &amp;)
         /// </summary>
-        public static string EncodeXML(string value) 
-            => value == null ? string.Empty 
+        public static string EncodeXML(string value) => value == null ? string.Empty 
             : XmlEncoder.EncodeString(value)
-                      .Replace("&", "&amp;")
-                      .Replace("<", "&lt;")
-                      .Replace(">", "&gt;")
-                      .Replace("\"", "&quot;")
-                      .Replace("'", "&apos;")
-                      .ToString();
-
-        /// <summary>X=CellLetter,Y=CellNumber,ex:A1=(1,1),B2=(2,2)</summary>
-        public static string ConvertXyToCell(Tuple<int, int> xy)
-        {
-            return ConvertXyToCell(xy.Item1, xy.Item2);
-        }
-
+                  .Replace("&", "&amp;")
+                  .Replace("<", "&lt;")
+                  .Replace(">", "&gt;")
+                  .Replace("\"", "&quot;")
+                  .Replace("'", "&apos;")
+                  .ToString();
+        
         /// <summary>X=CellLetter,Y=CellNumber,ex:A1=(1,1),B2=(2,2)</summary>
         public static string ConvertXyToCell(int x, int y)
         {
             int dividend = x;
             string columnName = string.Empty;
-            int modulo;
 
             while (dividend > 0)
             {
-                modulo = (dividend - 1) % 26;
+                var modulo = (dividend - 1) % 26;
                 columnName = Convert.ToChar(65 + modulo) + columnName;
                 dividend = (dividend - modulo) / 26;
             }
@@ -47,10 +40,10 @@
         }
 
         /// <summary>X=CellLetter,Y=CellNumber,ex:A1=(1,1),B2=(2,2)</summary>
-        public static Tuple<int, int> ConvertCellToXY(string cell)
-        {
-            return Tuple.Create(GetCellColumnIndex(cell), GetCellRowNumber(cell));
-        }
+        public static string ConvertXyToCell(Tuple<int, int> xy) => ConvertXyToCell(xy.Item1, xy.Item2);
+
+        /// <summary>X=CellLetter,Y=CellNumber,ex:A1=(1,1),B2=(2,2)</summary>
+        public static Tuple<int, int> ConvertCellToXY(string cell) => Tuple.Create(GetCellColumnIndex(cell), GetCellRowNumber(cell));
 
         public static int GetColumnNumber(string name)
         {
@@ -73,8 +66,8 @@
             var x = 0;
             var cellLetter = GetCellColumnLetter(cell);
             //AA=27,ZZ=702
-            for (int i = 0; i < cellLetter.Length; i++)
-                x = x * mode + keys.IndexOf(cellLetter[i]);
+            foreach (var t in cellLetter)
+                x = x * mode + keys.IndexOf(t);
 
             return x;
         }
@@ -83,11 +76,11 @@
         {
             if (string.IsNullOrEmpty(cell))
                 throw new Exception("cell is null or empty");
-            string cellNumber = string.Empty;
-            for (int i = 0; i < cell.Length; i++)
+            var cellNumber = string.Empty;
+            foreach (var t in cell)
             {
-                if (Char.IsDigit(cell[i]))
-                    cellNumber += cell[i];
+                if (char.IsDigit(t))
+                    cellNumber += t;
             }
             return int.Parse(cellNumber);
         }
@@ -95,10 +88,10 @@
         public static string GetCellColumnLetter(string cell)
         {
             string GetCellLetter = string.Empty;
-            for (int i = 0; i < cell.Length; i++)
+            foreach (var t in cell)
             {
-                if (Char.IsLetter(cell[i]))
-                    GetCellLetter += cell[i];
+                if (char.IsLetter(t))
+                    GetCellLetter += t;
             }
             return GetCellLetter;
         }
@@ -106,14 +99,13 @@
         public static string ConvertColumnName(int x)
         {
             int dividend = x;
-            string columnName = String.Empty;
-            int modulo;
+            string columnName = string.Empty;
 
             while (dividend > 0)
             {
-                modulo = (dividend - 1) % 26;
-                columnName = Convert.ToChar(65 + modulo).ToString() + columnName;
-                dividend = (int)((dividend - modulo) / 26);
+                var modulo = (dividend - 1) % 26;
+                columnName = Convert.ToChar(65 + modulo) + columnName;
+                dividend = (dividend - modulo) / 26;
             }
             return columnName;
         }

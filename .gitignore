@@ -402,3 +402,4 @@ FodyWeavers.xsd
 /tests/MiniExcel.Tests.AspNetMvc/packages
 /TestTemplate
 /tests/MiniExcelTests/TemplateOptimization
+/samples/xlsx/Test_EnableWriteFilePath.xlsx

@@ -403,11 +403,11 @@ public class MiniExcelOpenXmlAsyncTests
     public async Task QueryExcelDataReaderCheckTest(string path)
     {
 #if NETCOREAPP3_1_OR_GREATER
-        Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
+        Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 #endif
 
         await using var fs = File.OpenRead(path);
-        using var reader = ExcelReaderFactory.CreateReader(fs);
+        using var reader = ExcelDataReader.ExcelReaderFactory.CreateReader(fs);
         var exceldatareaderResult = reader.AsDataSet();
         await using var stream = File.OpenRead(path);
 

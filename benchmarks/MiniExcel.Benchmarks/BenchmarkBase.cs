@@ -2,13 +2,10 @@
 
 public abstract class BenchmarkBase
 {
-    //public const string filePath = @"Test10x10.xlsx";
-    //public const int rowCount = 1_0;
+    public const string FilePath = "Test1,000,000x10.xlsx";
+    public const int RowCount = 1_000_000;
 
-    public const string filePath = "Test1,000,000x10.xlsx";
-    public const int rowCount = 1_000_000;
-
-    public IEnumerable<DemoDto> GetValue() => Enumerable.Range(1, rowCount).Select(s => new DemoDto());
+    public IEnumerable<DemoDto> GetValue() => Enumerable.Range(1, RowCount).Select(s => new DemoDto());
 
     public class DemoDto
     {

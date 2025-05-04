@@ -20,35 +20,21 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\src\MiniExcel\MiniExcelLibs.csproj" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<None Update="Test1,000,000x10.xlsx">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Update="Test10,000x10.xlsx">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Update="Test100,000x10.xlsx">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Update="Test10x10.xlsx">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Update="Test100x10.xlsx">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Update="TestTemplateBasicIEmumerableFill.xlsx">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Update="TestTemplateBasicIEmumerableFill_ClosedXML_Report.xlsx">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
+		<None Update="Test1,000,000x10.xlsx" CopyToOutputDirectory="PreserveNewest" />
+		<None Update="Test10,000x10.xlsx" CopyToOutputDirectory="PreserveNewest" />
+		<None Update="Test100,000x10.xlsx" CopyToOutputDirectory="PreserveNewest" />
+		<None Update="Test10x10.xlsx" CopyToOutputDirectory="PreserveNewest" />
+		<None Update="Test100x10.xlsx" CopyToOutputDirectory="PreserveNewest" />
+		<None Update="TestTemplateBasicIEmumerableFill.xlsx" CopyToOutputDirectory="PreserveNewest" />
+		<None Update="TestTemplateBasicIEmumerableFill_ClosedXML_Report.xlsx" CopyToOutputDirectory="PreserveNewest" />
 	</ItemGroup>
 
 	<ItemGroup>
 	  <Folder Include="Properties\" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\..\src\MiniExcel\MiniExcelLibs.csproj" />
 	</ItemGroup>
 
 </Project>

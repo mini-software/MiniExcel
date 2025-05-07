@@ -2,25 +2,23 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace MiniExcelLibs.OpenXml
 {
-#if DEBUG
-    public
-#else
-    internal 
-#endif
-    class SharedStringsDiskCache : IDictionary<int, string>, IDisposable
+    internal class SharedStringsDiskCache : IDictionary<int, string>, IDisposable
     {
+        private static readonly Encoding _encoding = new UTF8Encoding(true);
+        
         private readonly FileStream _positionFs;
         private readonly FileStream _lengthFs;
         private readonly FileStream _valueFs;
         private bool _disposedValue;
-        private readonly static Encoding _encoding = new UTF8Encoding(true);
+        
+        private long _maxIndx = -1;
         public int Count => checked((int)(_maxIndx + 1));
         public string this[int key] { get => GetValue(key); set => Add(key, value); }
-        private long _maxIndx = -1;
         public bool ContainsKey(int key)
         {
             return key <= _maxIndx;

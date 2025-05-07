@@ -435,7 +435,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 #endif
         using var fs = File.OpenRead(path);
-        using var reader = ExcelReaderFactory.CreateReader(fs);
+        using var reader = ExcelDataReader. ExcelReaderFactory.CreateReader(fs);
         var exceldatareaderResult = reader.AsDataSet();
 
         using var stream = File.OpenRead(path);

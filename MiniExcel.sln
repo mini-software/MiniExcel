@@ -33,6 +33,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MiniExcelTests", "tests\Min
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "benchmarks", "benchmarks", "{77A8A169-168B-457F-AB5F-48F30D6BB33C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MiniExcel.Benchmarks", "benchmarks\MiniExcel.Benchmarks\MiniExcel.Benchmarks.csproj", "{F1BDF4D7-F3C4-4114-82F6-EF81567DFBD8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -47,6 +49,10 @@ Global
 		{77F2C86B-0F17-4370-AB38-A089F9DF4ED5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{77F2C86B-0F17-4370-AB38-A089F9DF4ED5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{77F2C86B-0F17-4370-AB38-A089F9DF4ED5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F1BDF4D7-F3C4-4114-82F6-EF81567DFBD8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F1BDF4D7-F3C4-4114-82F6-EF81567DFBD8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F1BDF4D7-F3C4-4114-82F6-EF81567DFBD8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F1BDF4D7-F3C4-4114-82F6-EF81567DFBD8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -54,6 +60,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{097903C9-1F81-4427-B4C8-530CB59687B8} = {CC1E0601-AEC9-42D7-8F6A-3FB3939EED16}
 		{77F2C86B-0F17-4370-AB38-A089F9DF4ED5} = {359A7094-3353-48F2-B3E1-FE9E59698318}
+		{F1BDF4D7-F3C4-4114-82F6-EF81567DFBD8} = {77A8A169-168B-457F-AB5F-48F30D6BB33C}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {51DF25DA-2DCB-4883-90FE-399DA950D4F2}

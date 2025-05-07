@@ -1,0 +1,114 @@
+name: MiniExcel Benchmarks
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  QueryBenchmark:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+      - name: Restore dependencies
+        run: dotnet restore
+        working-directory: ./benchmarks/MiniExcel.Benchmarks
+      - name: Build
+        run: dotnet build --no-restore
+        working-directory: ./benchmarks/MiniExcel.Benchmarks
+      - name: Benchmark
+        run: dotnet run -c Release -f net9.0
+        working-directory: ./benchmarks/MiniExcel.Benchmarks
+        env:
+          BenchmarkMode: Automatic
+          BenchmarkSection: query
+      - name: Commit report
+        working-directory: ./benchmarks
+        run: |
+          cp -r ./MiniExcel.Benchmarks/BenchmarkDotNet.Artifacts/results ./
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git pull
+          cd ./results
+          git add '*.md'
+          git commit -am "Automated benchmark report - query section"
+          git push --force
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
+  CreateBenchmark:
+    runs-on: ubuntu-latest
+  
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+      - name: Restore dependencies
+        run: dotnet restore
+        working-directory: ./benchmarks/MiniExcel.Benchmarks
+      - name: Build
+        run: dotnet build --no-restore
+        working-directory: ./benchmarks/MiniExcel.Benchmarks
+      - name: Benchmark
+        run: dotnet run -c Release -f net9.0
+        working-directory: ./benchmarks/MiniExcel.Benchmarks
+        env:
+          BenchmarkMode: Automatic
+          BenchmarkSection: create
+      - name: Commit report
+        working-directory: ./benchmarks
+        run: |
+          cp -r ./MiniExcel.Benchmarks/BenchmarkDotNet.Artifacts/results ./
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git pull
+          cd ./results
+          git add '*.md'
+          git commit -am "Automated benchmark report - create section"
+          git push --force
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}          
+  
+  TemplateBenchmark:
+    runs-on: ubuntu-latest
+  
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+      - name: Restore dependencies
+        run: dotnet restore
+        working-directory: ./benchmarks/MiniExcel.Benchmarks
+      - name: Build
+        run: dotnet build --no-restore
+        working-directory: ./benchmarks/MiniExcel.Benchmarks
+      - name: Benchmark
+        run: dotnet run -c Release -f net9.0
+        working-directory: ./benchmarks/MiniExcel.Benchmarks
+        env:
+          BenchmarkMode: Automatic
+          BenchmarkSection: template
+      - name: Commit report
+        working-directory: ./benchmarks
+        run: |
+          cp -r ./MiniExcel.Benchmarks/BenchmarkDotNet.Artifacts/results ./
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git pull
+          cd ./results
+          git add '*.md'
+          git commit -am "Automated benchmark report - template section"
+          git push --force
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -3615,6 +3615,31 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         Assert.Equal(1, enumerableWithCount.GetEnumeratorCount);
     }
 
+    [Fact]
+    public void Issue459()
+    {
+        var template = PathHelper.GetFile("xlsx/TestIssue459.xlsx");
+        using var ms = new MemoryStream();
+        var values = new
+        {
+            title = "FooCompany",
+            managers = new[] 
+            {
+                new { name = "Jack", department = "HR" },
+                new { name = "Loan", department = "IT" }
+            },
+            employees = new[] 
+            {
+                new { name = "Wade", department = "HR" },
+                new { name = "Felix", department = "HR" },
+                new { name = "Eric", department = "IT" },
+                new { name = "Keaton", department = "IT" }
+            }
+        };
+        
+        ms.SaveAsByTemplate(template, values);
+    }
+    
     private class Issue585VO1
     {
         public string Col1 { get; set; }

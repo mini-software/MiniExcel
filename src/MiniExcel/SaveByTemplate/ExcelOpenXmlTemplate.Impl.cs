@@ -991,30 +991,38 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
 
         private void UpdateDimensionAndGetRowsInfo(IDictionary<string, object> inputMaps, XmlDocument doc, XmlNodeList rows, bool changeRowIndex = true)
         {
-            // note : dimension need to put on the top (https://user-images.githubusercontent.com/12729184/114507911-5dd88400-9c66-11eb-94c6-82ed7bdb5aab.png)
+            string[] refs;
+            if (doc.SelectSingleNode("/x:worksheet/x:dimension", _ns) is XmlElement dimension)
+            {
+                refs = dimension.GetAttribute("ref").Split(':');
+            }
+            else
+            {
+                var firstRow = rows[0].SelectNodes("x:c", _ns);
+                var lastRow = rows[rows.Count - 1].SelectNodes("x:c", _ns);
+                
+                var dimStart = ((XmlElement)firstRow?[0])?.GetAttribute("r");
+                var dimEnd = ((XmlElement)lastRow?[lastRow.Count - 1])?.GetAttribute("r");
+                
+                refs = new[] { dimStart, dimEnd };
 
-            var dimension = doc.SelectSingleNode("/x:worksheet/x:dimension", _ns) as XmlElement;
-            if (dimension == null)
-                throw new NotImplementedException("Excel Dimension Xml is null, please file an issue for this problem: https://github.com/mini-software/MiniExcel/issues");
+                dimension = (XmlElement)doc.CreateNode(XmlNodeType.Element, "dimension", null);
+                var worksheet = doc.SelectSingleNode("/x:worksheet", _ns);
+                worksheet?.InsertBefore(dimension, worksheet.FirstChild);
+            }
 
             var maxRowIndexDiff = 0;
             foreach (XmlElement row in rows)
             {
                 // ==== get ienumerable infomation & maxrowindexdiff ====
-                //Type ienumerableGenricType = null;
-                //IDictionary<string, PropertyInfo> props = null;
-                //IEnumerable ienumerable = null;
                 
-                var xRowInfo = new XRowInfo
-                {
-                    Row = row
-                };
-
+                var xRowInfo = new XRowInfo { Row = row };
                 _xRowInfos.Add(xRowInfo);
+
                 foreach (XmlElement c in row.SelectNodes("x:c", _ns))
                 {
                     var r = c.GetAttribute("r");
-
+                    
                     // ==== mergecells ====
                     if (_xMergeCellInfos.TryGetValue(r, out var merCell))
                     {
@@ -1122,7 +1130,7 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                                     }
 
                                     // ==== get dimension max rowindex ====
-                                    if (!first) //avoid duplicate add first one, this row not add status  ![image](https://user-images.githubusercontent.com/12729184/114851829-d2512580-9e14-11eb-8e7d-520c89a7ebee.png)
+                                    if (!first) //avoid duplicate add first one, this row not add status  (https://user-images.githubusercontent.com/12729184/114851829-d2512580-9e14-11eb-8e7d-520c89a7ebee.png)
                                         maxRowIndexDiff += xRowInfo.IEnumerableMercell?.Height ?? 1;
                                     first = false;
                                 }
@@ -1183,7 +1191,7 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                                 foreach (var element in xRowInfo.CellIEnumerableValues)
                                 {
                                     // ==== get demension max rowindex ====
-                                    if (!first) //avoid duplicate add first one, this row not add status  ![image](https://user-images.githubusercontent.com/12729184/114851829-d2512580-9e14-11eb-8e7d-520c89a7ebee.png)
+                                    if (!first) //avoid duplicate add first one, this row not add status (https://user-images.githubusercontent.com/12729184/114851829-d2512580-9e14-11eb-8e7d-520c89a7ebee.png)
                                         maxRowIndexDiff++;
                                     first = false;
                                 }
@@ -1249,20 +1257,17 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                 }
             }
 
-            // e.g <dimension ref=\"A1:B6\" /> only need to update B6 to BMaxRowIndex
-            var refs = dimension.GetAttribute("ref").Split(':');
+            // e.g <dimension ref=\"A1:B6\" /> we only need to update B6 to BMaxRowIndex
             if (refs.Length == 2)
             {
                 var letter = StringHelper.GetLetters(refs[1]);
                 var digit = StringHelper.GetNumber(refs[1]);
-
                 dimension.SetAttribute("ref", $"{refs[0]}:{letter}{digit + maxRowIndexDiff}");
             }
             else
             {
                 var letter = StringHelper.GetLetters(refs[0]);
                 var digit = StringHelper.GetNumber(refs[0]);
-
                 dimension.SetAttribute("ref", $"A1:{letter}{digit + maxRowIndexDiff}");
             }
         }

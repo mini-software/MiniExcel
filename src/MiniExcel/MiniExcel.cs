@@ -298,18 +298,7 @@ namespace MiniExcelLibs
         {
             return new ExcelOpenXmlSheetReader(stream, null).GetDimensions();
         }
-
-        public static IList<ExcelRange> GetSheetsDimensions(string path)
-        {
-            using (var stream = FileHelper.OpenSharedRead(path))
-                return GetSheetsDimensions(stream);
-        }
-
-        public static IList<ExcelRange> GetSheetsDimensions(this Stream stream)
-        {
-            return new ExcelOpenXmlSheetReader(stream, null).GetDimensions();
-        }
-
+        
         public static void ConvertCsvToXlsx(string csv, string xlsx)
         {
             using (var csvStream = FileHelper.OpenSharedRead(csv))

@@ -1549,7 +1549,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
     public void SheetDimensionsTest()
     {
         var path1 = PathHelper.GetFile("xlsx/TestTypeMapping.xlsx");
-        var dim1 = MiniExcel.GetSheetsDimensions(path1);
+        var dim1 = MiniExcel.GetSheetDimensions(path1);
         Assert.Equal("A1", dim1[0].StartCell);
         Assert.Equal("H101", dim1[0].EndCell);
         Assert.Equal(101, dim1[0].Rows.Count);
@@ -1560,7 +1560,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
         Assert.Equal(8, dim1[0].Columns.EndIndex);
 
         var path2 = PathHelper.GetFile("xlsx/TestNoDimension.xlsx");
-        var dim2 = MiniExcel.GetSheetsDimensions(path2);
+        var dim2 = MiniExcel.GetSheetDimensions(path2);
         Assert.Equal(101, dim2[0].Rows.Count);
         Assert.Equal(7, dim2[0].Columns.Count);
         Assert.Equal(1, dim2[0].Rows.StartIndex);
@@ -1573,7 +1573,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
     public void SheetDimensionsTest_MultiSheet()
     {
         var path = PathHelper.GetFile("xlsx/TestMultiSheet.xlsx");
-        var dim = MiniExcel.GetSheetsDimensions(path);
+        var dim = MiniExcel.GetSheetDimensions(path);
         
         Assert.Equal("A1", dim[0].StartCell);
         Assert.Equal("D12", dim[0].EndCell);

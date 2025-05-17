@@ -388,15 +388,13 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                     {
                         isHeaderRow = true;
                     }
-                    else if (row.InnerText.Contains("@merge") && mergeCells)
+                    else if (mergeCells)
                     {
-                        mergeRowCount++;
-                        continue;
-                    }
-                    else if (row.InnerText.Contains("@endmerge") && mergeCells)
-                    {
-                        mergeRowCount++;
-                        continue;
+                        if (row.InnerText.Contains("@merge") || row.InnerText.Contains("@endmerge"))
+                        {
+                            mergeRowCount++;
+                            continue;
+                        }
                     }
 
                     if (groupingStarted && !isCellIEnumerableValuesSet)
@@ -538,14 +536,14 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
             var cleanInnerXml = CleanXml(innerXml, endPrefix);
 
             // https://github.com/mini-software/MiniExcel/issues/771 Saving by template introduces unintended value replication in each row #771
-            var notFirstRowInnerXmlElement = rowElement.Clone(); 
-            foreach (XmlElement c in notFirstRowInnerXmlElement.SelectNodes("x:c", _ns))
+            var notFirstRowElement = rowElement.Clone(); 
+            foreach (XmlElement c in notFirstRowElement.SelectNodes("x:c", _ns))
             {
                 var v = c.SelectSingleNode("x:v", _ns);
                 if (v != null && !_nonTemplateRegex.IsMatch(v.InnerText)) 
                     v.InnerText = string.Empty;
             }
-            var cleanNotFirstRowInnerXmlElement = CleanXml(notFirstRowInnerXmlElement.InnerXml, endPrefix);
+            var cleanNotFirstRowInnerXml = CleanXml(notFirstRowElement.InnerXml, endPrefix);
             
             foreach (var item in rowInfo.CellIEnumerableValues)
             {
@@ -728,7 +726,7 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                 if (isFirst)
                 {
                     // https://github.com/mini-software/MiniExcel/issues/771 Saving by template introduces unintended value replication in each row #771
-                    cleanInnerXml = cleanNotFirstRowInnerXmlElement;
+                    cleanInnerXml = cleanNotFirstRowInnerXml;
                     isFirst = false;
                 }
 
@@ -1004,6 +1002,8 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
             }
             else
             {
+                // ==== add dimension element if not found ====
+                
                 var firstRow = rows[0].SelectNodes("x:c", _ns);
                 var lastRow = rows[rows.Count - 1].SelectNodes("x:c", _ns);
                 
@@ -1122,12 +1122,13 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                                             {
                                                 if (!values.ContainsKey(f.Name))
                                                 {
-                                                    values.Add(f.Name, new PropInfo
+                                                    var propInfo = new PropInfo
                                                     {
                                                         FieldInfo = f,
                                                         PropertyInfoOrFieldInfo = PropertyInfoOrFieldInfo.FieldInfo,
                                                         UnderlyingTypePropType = Nullable.GetUnderlyingType(f.FieldType) ?? f.FieldType
-                                                    });
+                                                    };
+                                                    values.Add(f.Name, propInfo);
                                                 }
                                             }
 
@@ -1233,7 +1234,7 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                         }
                         else
                         {
-                            var cellValueStr = cellValue?.ToString(); // value did encodexml, so don't duplicate encode value https://gitee.com/dotnetchina/MiniExcel/issues/I4DQUN
+                            var cellValueStr = cellValue?.ToString(); // value did encodexml, so don't duplicate encode value (https://gitee.com/dotnetchina/MiniExcel/issues/I4DQUN)
                             if (isMultiMatch || cellValue is string) // if matchs count over 1 need to set type=str (https://user-images.githubusercontent.com/12729184/114530109-39d46d00-9c7d-11eb-8f6b-52ad8600aca3.png)
                             {
                                 c.SetAttribute("t", "str");
@@ -1256,7 +1257,6 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
 
                             v.InnerText = v.InnerText.Replace($"{{{{{propNames[0]}}}}}", cellValueStr); //TODO: auto check type and set value
                         }
-
                     }
                     //if (xRowInfo.CellIEnumerableValues != null) //2. From left to right, only the first set is used as the basis for the list
                     //    break;

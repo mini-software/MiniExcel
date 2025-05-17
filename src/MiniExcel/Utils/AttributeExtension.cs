@@ -26,23 +26,20 @@
 
             return default(TValue);
         }
+
         internal static TAttribute GetAttribute<TAttribute>(
-               this PropertyInfo prop,
-               bool isInherit = true
-           )
-           where TAttribute : Attribute
+           this MemberInfo prop,
+           bool isInherit = true) where TAttribute : Attribute
         {
             return GetAttributeValue(prop, (TAttribute attr) => attr, isInherit);
         }
 
         internal static TValue GetAttributeValue<TAttribute, TValue>(
-                this PropertyInfo prop,
+                this MemberInfo prop,
                 Func<TAttribute, TValue> selector,
-                bool isInherit = true
-            )
-            where TAttribute : Attribute
+                bool isInherit = true ) where TAttribute : Attribute
         {
-            TAttribute attr = Attribute.GetCustomAttribute(prop, typeof(TAttribute), isInherit) as TAttribute;
+            var attr = Attribute.GetCustomAttribute(prop, typeof(TAttribute), isInherit) as TAttribute;
             return GetValueOrDefault(selector, attr);
         }
 

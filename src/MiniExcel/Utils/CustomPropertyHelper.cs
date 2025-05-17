@@ -152,13 +152,12 @@ namespace MiniExcelLibs.Utils
 
         internal static string DescriptionAttr(Type type, object source)
         {
-            var fi = type.GetField(source.ToString());
-            //For some database dirty data, there may be no way to change to the correct enumeration, will return NULL
-            if (fi == null)
-                return source.ToString();
-
-            var attributes = (DescriptionAttribute[])fi.GetCustomAttributes(typeof(DescriptionAttribute), false);
-            return attributes.Length > 0 ? attributes[0].Description : source.ToString();
+            var name = source?.ToString();
+            return type
+                .GetField(name)? //For some database dirty data, there may be no way to change to the correct enumeration, will return NULL
+                .GetCustomAttribute<DescriptionAttribute>(false)?
+                .Description
+                ?? name;
         }
 
         private static IEnumerable<ExcelColumnInfo> ConvertToExcelCustomPropertyInfo(PropertyInfo[] props, Configuration configuration)

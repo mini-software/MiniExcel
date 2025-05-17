@@ -3,6 +3,7 @@ using MiniExcelLibs.Utils;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data;
 using System.Globalization;
 using System.IO;
@@ -676,6 +677,11 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                         {
                             cellValueStr = ConvertToDateTimeString(propInfo, cellValue);
                         }
+                        else if (type?.IsEnum ?? false)
+                        {
+                            var description = CustomPropertyHelper.DescriptionAttr(type, cellValue);
+                            cellValueStr = ExcelOpenXmlUtils.EncodeXML(description);
+                        }
                         else
                         {
                             cellValueStr = ExcelOpenXmlUtils.EncodeXML(cellValue?.ToString());
@@ -1160,7 +1166,7 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                             {
                                 c.SetAttribute("t", "str");
                             }
-                            else if (TypeHelper.IsNumericType(type))
+                            else if (TypeHelper.IsNumericType(type) && !type.IsEnum)
                             {
                                 c.SetAttribute("t", "n");
                             }
@@ -1212,7 +1218,7 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                             {
                                 c.SetAttribute("t", "str");
                             }
-                            else if (TypeHelper.IsNumericType(type))
+                            else if (TypeHelper.IsNumericType(type) && !type.IsEnum)
                             {
                                 c.SetAttribute("t", "n");
                             }

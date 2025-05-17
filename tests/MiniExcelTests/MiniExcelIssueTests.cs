@@ -114,28 +114,28 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     public void TestIssue289()
     {
         using var path = AutoDeletingPath.Create();
-        Issue289Dto[] value =
+        DescriptionEnumDto[] value =
         [
-            new() { Name="0001", UserType=Issue289Type.V1 },
-            new() { Name="0002", UserType=Issue289Type.V2 },
-            new() { Name="0003", UserType=Issue289Type.V3 }
+            new() { Name="0001", UserType=DescriptionEnum.V1 },
+            new() { Name="0002", UserType=DescriptionEnum.V2 },
+            new() { Name="0003", UserType=DescriptionEnum.V3 }
         ];
         MiniExcel.SaveAs(path.ToString(), value);
 
-        var rows = MiniExcel.Query<Issue289Dto>(path.ToString()).ToList();
+        var rows = MiniExcel.Query<DescriptionEnumDto>(path.ToString()).ToList();
 
-        Assert.Equal(Issue289Type.V1, rows[0].UserType);
-        Assert.Equal(Issue289Type.V2, rows[1].UserType);
-        Assert.Equal(Issue289Type.V3, rows[2].UserType);
+        Assert.Equal(DescriptionEnum.V1, rows[0].UserType);
+        Assert.Equal(DescriptionEnum.V2, rows[1].UserType);
+        Assert.Equal(DescriptionEnum.V3, rows[2].UserType);
     }
 
-    private class Issue289Dto
+    private class DescriptionEnumDto
     {
         public string Name { get; set; }
-        public Issue289Type UserType { get; set; }
+        public DescriptionEnum UserType { get; set; }
     }
 
-    private enum Issue289Type
+    private enum DescriptionEnum
     {
         [Description("General User")] V1,
         [Description("General Administrator")] V2,
@@ -3638,6 +3638,26 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         };
         
         ms.SaveAsByTemplate(template, values);
+    }
+    
+    [Fact]
+    public void Issue527()
+    {
+        List<DescriptionEnumDto> row =
+        [
+            new() { Name = "Bill", UserType = DescriptionEnum.V1 },
+            new() { Name = "Bob", UserType = DescriptionEnum.V2 }
+        ];
+        
+        var value = new { t = row };
+        var template = PathHelper.GetFile("xlsx/Issue527Template.xlsx");
+        
+        using var path = AutoDeletingPath.Create();
+        MiniExcel.SaveAsByTemplate(path.FilePath, template, value);
+
+        var rows = MiniExcel.Query(path.FilePath).ToList();
+        Assert.Equal("General User", rows[1].B);
+        Assert.Equal("General Administrator", rows[2].B);
     }
     
     private class Issue585VO1

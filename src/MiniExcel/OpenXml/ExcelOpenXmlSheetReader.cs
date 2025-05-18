@@ -448,6 +448,7 @@ namespace MiniExcelLibs.OpenXml
                     if (hasHeader)
                         continue;
                 }
+
                 var v = new T();
                 foreach (var pInfo in props)
                 {
@@ -455,38 +456,34 @@ namespace MiniExcelLibs.OpenXml
                     {
                         foreach (var alias in pInfo.ExcelColumnAliases)
                         {
-                            if (!headersDic.TryGetValue(alias, out var columnId)) 
-                                continue;
-                            
-                            object newV = null;
-                            var columnName = keys[columnId];
-                            item.TryGetValue(columnName, out var itemValue);
+                            if (headersDic.TryGetValue(alias, out var columnId))
+                            {
+                                var columnName = keys[columnId];
+                                item.TryGetValue(columnName, out var aliasItemValue);
 
-                            if (itemValue == null)
-                                continue;
-
-                            newV = TypeHelper.TypeMapping(v, pInfo, newV, itemValue, rowIndex, startCell, configuration);
+                                if (aliasItemValue != null)
+                                {
+                                    var newAliasValue = TypeHelper.TypeMapping(v, pInfo, aliasItemValue, rowIndex, startCell, configuration);
+                                }
+                            }
                         }
                     }
 
                     //Q: Why need to check every time? A: it needs to check everytime, because it's dictionary
+                    object itemValue = null;
+                    if (pInfo.ExcelIndexName != null && keys.Contains(pInfo.ExcelIndexName))
                     {
-                        object newV = null;
-                        object itemValue = null;
-                        if (pInfo.ExcelIndexName != null && keys.Contains(pInfo.ExcelIndexName))
-                        {
-                            item.TryGetValue(pInfo.ExcelIndexName, out itemValue);
-                        }
-                        else if (headersDic.TryGetValue(pInfo.ExcelColumnName, out var columnId))
-                        {
-                            var columnName = keys[columnId];
-                            item.TryGetValue(columnName, out itemValue);
-                        }
+                        item.TryGetValue(pInfo.ExcelIndexName, out itemValue);
+                    }
+                    else if (headersDic.TryGetValue(pInfo.ExcelColumnName, out var columnId))
+                    {
+                        var columnName = keys[columnId];
+                        item.TryGetValue(columnName, out itemValue);
+                    }
 
-                        if (itemValue == null)
-                            continue;
-                        
-                        newV = TypeHelper.TypeMapping(v, pInfo, newV, itemValue, rowIndex, startCell, configuration);
+                    if (itemValue != null)
+                    {
+                        var newValue = TypeHelper.TypeMapping(v, pInfo, itemValue, rowIndex, startCell, configuration);
                     }
                 }
                 rowIndex++;
@@ -1317,6 +1314,7 @@ namespace MiniExcelLibs.OpenXml
                     first = false;
                     continue;
                 }
+                
                 var v = new T();
                 foreach (var pInfo in props)
                 {
@@ -1326,32 +1324,33 @@ namespace MiniExcelLibs.OpenXml
                         {
                             if (headersDic.TryGetValue(alias, out var value))
                             {
-                                object newV = null;
-                                object itemValue = item[keys[value]];
-
-                                if (itemValue == null)
-                                    continue;
-
-                                newV = TypeHelper.TypeMapping(v, pInfo, newV, itemValue, rowIndex, startCell, configuration);
+                                var columnName = keys[value];
+                                item.TryGetValue(columnName, out var aliasItemValue);
+                                if (aliasItemValue != null)
+                                {
+                                    object newAliasValue = TypeHelper.TypeMapping(v, pInfo, aliasItemValue, rowIndex, startCell, configuration);
+                                }
                             }
                         }
                     }
 
                     //Q: Why need to check every time? A: it needs to check everytime, because it's dictionary
+                    object itemValue = null;
+                    if (pInfo.ExcelIndexName != null && keys.Contains(pInfo.ExcelIndexName))
                     {
-                        object newV = null;
-                        object itemValue = null;
-                        if (pInfo.ExcelIndexName != null && keys.Contains(pInfo.ExcelIndexName))
-                            itemValue = item[pInfo.ExcelIndexName];
-                        else if (headersDic.TryGetValue(pInfo.ExcelColumnName, out var value))
-                            itemValue = item[keys[value]];
+                        itemValue = item[pInfo.ExcelIndexName];
+                    }
+                    else if (headersDic.TryGetValue(pInfo.ExcelColumnName, out var value))
+                    {
+                        itemValue = item[keys[value]];
+                    }
 
-                        if (itemValue == null)
-                            continue;
-
-                        newV = TypeHelper.TypeMapping(v, pInfo, newV, itemValue, rowIndex, startCell, configuration);
+                    if (itemValue != null)
+                    {
+                        object newValue = TypeHelper.TypeMapping(v, pInfo, itemValue, rowIndex, startCell, configuration);
                     }
                 }
+                
                 rowIndex++;
                 yield return v;
             }

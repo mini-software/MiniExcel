@@ -36,6 +36,7 @@ namespace MiniExcelLibs.Utils
         {
             if (isNullableUnderlyingType)
                 type = Nullable.GetUnderlyingType(type) ?? type;
+ 
             switch (Type.GetTypeCode(type))
             {
                 //case TypeCode.Byte:
@@ -55,11 +56,11 @@ namespace MiniExcelLibs.Utils
             }
         }
 
-        public static object TypeMapping<T>(T v, ExcelColumnInfo pInfo, object newValue, object itemValue, int rowIndex, string startCell, Configuration _config) where T : class, new()
+        public static object TypeMapping<T>(T v, ExcelColumnInfo pInfo, object itemValue, int rowIndex, string startCell, Configuration config) where T : class, new()
         {
             try
             {
-                return TypeMappingImpl(v, pInfo, ref newValue, itemValue, _config);
+                return TypeMappingImpl(v, pInfo, itemValue, config);
             }
             catch (Exception ex) when (ex is InvalidCastException || ex is FormatException)
             {
@@ -72,30 +73,34 @@ namespace MiniExcelLibs.Utils
             }
         }
 
-        private static object TypeMappingImpl<T>(T v, ExcelColumnInfo pInfo, ref object newValue, object itemValue, Configuration _config) where T : class, new()
+        private static object TypeMappingImpl<T>(T v, ExcelColumnInfo pInfo, object itemValue, Configuration config) where T : class, new()
         {
+            object newValue = null;
             if (pInfo.Nullable && string.IsNullOrWhiteSpace(itemValue?.ToString()))
             {
-                newValue = null;
             }
             else if (pInfo.ExcludeNullableType == typeof(Guid))
             {
-                newValue = Guid.Parse(itemValue.ToString() ?? Guid.Empty.ToString());
+                newValue = Guid.Parse(itemValue?.ToString() ?? Guid.Empty.ToString());
             }
             else if (pInfo.ExcludeNullableType == typeof(DateTimeOffset))
             {
                 var vs = itemValue?.ToString();
                 if (pInfo.ExcelFormat != null)
                 {
-                    if (DateTimeOffset.TryParseExact(vs, pInfo.ExcelFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out var _v))
+                    if (DateTimeOffset.TryParseExact(vs, pInfo.ExcelFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out var value))
                     {
-                        newValue = _v;
+                        newValue = value;
                     }
                 }
-                else if (DateTimeOffset.TryParse(vs, _config.Culture, DateTimeStyles.None, out var _v))
-                    newValue = _v;
+                else if (DateTimeOffset.TryParse(vs, config.Culture, DateTimeStyles.None, out var value))
+                {
+                    newValue = value;
+                }
                 else
+                {
                     throw new InvalidCastException($"{vs} cannot be cast to DateTime");
+                }
             }
             else if (pInfo.ExcludeNullableType == typeof(DateTime))
             {
@@ -110,21 +115,21 @@ namespace MiniExcelLibs.Utils
                 var vs = itemValue?.ToString();
                 if (pInfo.ExcelFormat != null)
                 {
-                    if (pInfo.Property.Info.PropertyType == typeof(DateTimeOffset) && DateTimeOffset.TryParseExact(vs, pInfo.ExcelFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out var _v2))
+                    if (pInfo.Property.Info.PropertyType == typeof(DateTimeOffset) && DateTimeOffset.TryParseExact(vs, pInfo.ExcelFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out var offsetValue))
                     {
-                        newValue = _v2;
+                        newValue = offsetValue;
                     }
-                    else if (DateTime.TryParseExact(vs, pInfo.ExcelFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out var _v))
+                    else if (DateTime.TryParseExact(vs, pInfo.ExcelFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out var value))
                     {
-                        newValue = _v;
+                        newValue = value;
                     }
                 }
-                else if (DateTime.TryParse(vs, _config.Culture, DateTimeStyles.None, out var _v))
-                    newValue = _v;
-                else if (DateTime.TryParseExact(vs, "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out var _v2))
-                    newValue = _v2;
-                else if (double.TryParse(vs, NumberStyles.None, CultureInfo.InvariantCulture, out var _d))
-                    newValue = DateTime.FromOADate(_d);
+                else if (DateTime.TryParse(vs, config.Culture, DateTimeStyles.None, out var dtValue))
+                    newValue = dtValue;
+                else if (DateTime.TryParseExact(vs, "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out var dtExactValue))
+                    newValue = dtExactValue;
+                else if (double.TryParse(vs, NumberStyles.None, CultureInfo.InvariantCulture, out var doubleValue))
+                    newValue = DateTime.FromOADate(doubleValue);
                 else
                     throw new InvalidCastException($"{vs} cannot be cast to DateTime");
             }
@@ -146,7 +151,7 @@ namespace MiniExcelLibs.Utils
                         newValue = _v;
                     }
                 }
-                else if (DateOnly.TryParse(vs, _config.Culture, DateTimeStyles.None, out var _v))
+                else if (DateOnly.TryParse(vs, config.Culture, DateTimeStyles.None, out var _v))
                     newValue = _v;
                 else if (DateOnly.TryParseExact(vs, "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out var _v2))
                     newValue = _v2;
@@ -168,24 +173,24 @@ namespace MiniExcelLibs.Utils
                 var vs = itemValue?.ToString();
                 if (pInfo.ExcelFormat != null)
                 {
-                    if (TimeSpan.TryParseExact(vs, pInfo.ExcelFormat, CultureInfo.InvariantCulture, out var _v))
+                    if (TimeSpan.TryParseExact(vs, pInfo.ExcelFormat, CultureInfo.InvariantCulture, out var value))
                     {
-                        newValue = _v;
+                        newValue = value;
                     }
                 }
-                else if (TimeSpan.TryParse(vs, _config.Culture, out var _v))
-                    newValue = _v;
-                else if (TimeSpan.TryParseExact(vs, "hh\\:mm\\:ss\\.fff", CultureInfo.InvariantCulture, out var _v2))
-                    newValue = _v2;
-                else if (double.TryParse(vs, NumberStyles.None, CultureInfo.InvariantCulture, out var _d))
-                    newValue = TimeSpan.FromMilliseconds(_d);
+                else if (TimeSpan.TryParse(vs, config.Culture, out var tsValue))
+                    newValue = tsValue;
+                else if (TimeSpan.TryParseExact(vs, @"hh\:mm\:ss\.fff", CultureInfo.InvariantCulture, out var tsExactValue))
+                    newValue = tsExactValue;
+                else if (double.TryParse(vs, NumberStyles.None, CultureInfo.InvariantCulture, out var msValue))
+                    newValue = TimeSpan.FromMilliseconds(msValue);
                 else
                     throw new InvalidCastException($"{vs} cannot be cast to TimeSpan");
             }
             else if (pInfo.ExcludeNullableType == typeof(double)) // && (!Regex.IsMatch(itemValue.ToString(), @"^-?\d+(\.\d+)?([eE][-+]?\d+)?$") || itemValue.ToString().Trim().Equals("NaN")))
             {
                 var invariantString = Convert.ToString(itemValue, CultureInfo.InvariantCulture);
-                newValue = double.TryParse(invariantString, NumberStyles.Any, CultureInfo.InvariantCulture, out var _v2) ? _v2 : double.NaN;
+                newValue = double.TryParse(invariantString, NumberStyles.Any, CultureInfo.InvariantCulture, out var value) ? value : double.NaN;
             }
             else if (pInfo.ExcludeNullableType == typeof(bool))
             {
@@ -204,10 +209,8 @@ namespace MiniExcelLibs.Utils
             else if (pInfo.ExcludeNullableType.IsEnum)
             {
                 var fieldInfo = pInfo.ExcludeNullableType.GetFields().FirstOrDefault(e => e.GetCustomAttribute<DescriptionAttribute>(false)?.Description == itemValue?.ToString());
-                if (fieldInfo != null)
-                    newValue = Enum.Parse(pInfo.ExcludeNullableType, fieldInfo.Name, true);
-                else
-                    newValue = Enum.Parse(pInfo.ExcludeNullableType, itemValue?.ToString(), true);
+                var value = fieldInfo?.Name ?? itemValue.ToString();
+                newValue = Enum.Parse(pInfo.ExcludeNullableType, value, true);
             }
             else if (pInfo.ExcludeNullableType == typeof(Uri))
             {
@@ -219,7 +222,7 @@ namespace MiniExcelLibs.Utils
             else
             {
                 // Use pInfo.ExcludeNullableType to resolve : https://github.com/mini-software/MiniExcel/issues/138
-                newValue = Convert.ChangeType(itemValue, pInfo.ExcludeNullableType, _config.Culture);
+                newValue = Convert.ChangeType(itemValue, pInfo.ExcludeNullableType, config.Culture);
             }
 
             pInfo.Property.SetValue(v, newValue);

@@ -23,6 +23,13 @@
 ---
 
 
+### 1.41.2
+- [New] Fixes enum behaviour and adds support for DescriptionAttribute when saving by template (via @michelebastione )
+- [Bug] SaveAsByTemplate - Excel Dimension Xml is null #459 (via @michelebastione )
+- [Other] Benchmarks refactoring and adaptation for making them run on Github Actions (#777) (via @michelebastione )
+- [Other] add deepwiki link and badge (via @isdaniel )
+
+
 ### 1.41.1
 - [New] Added sheet dimensions feature (#774) (via @michelebastione)
 - [Bug] Fix Saving by template introduces unintended value replication in each row #771

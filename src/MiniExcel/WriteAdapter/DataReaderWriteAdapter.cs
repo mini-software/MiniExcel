@@ -30,21 +30,8 @@ namespace MiniExcelLibs.WriteAdapter
             for (var i = 0; i < _reader.FieldCount; i++)
             {
                 var columnName = _reader.GetName(i);
-
-                if (!_configuration.DynamicColumnFirst)
-                {
-                    var prop = CustomPropertyHelper.GetColumnInfosFromDynamicConfiguration(columnName, _configuration);
-                    props.Add(prop);
-                    continue;
-                }
-
-                if (_configuration
-                    .DynamicColumns
-                    .Any(a => string.Equals(
-                        a.Key,
-                        columnName,
-                        StringComparison.OrdinalIgnoreCase)))
-
+                if (!_configuration.DynamicColumnFirst || 
+                    _configuration.DynamicColumns.Any(d => string.Equals(d.Key, columnName, StringComparison.OrdinalIgnoreCase)))
                 {
                     var prop = CustomPropertyHelper.GetColumnInfosFromDynamicConfiguration(columnName, _configuration);
                     props.Add(prop);
@@ -64,16 +51,17 @@ namespace MiniExcelLibs.WriteAdapter
 
         private IEnumerable<CellWriteInfo> GetRowValues(List<ExcelColumnInfo> props)
         {
-            for (int i = 0, column = 1; i < _reader.FieldCount; i++, column++)
+            var column = 1;
+            for (int i = 0; i < _reader.FieldCount; i++)
             {
-                if (_configuration.DynamicColumnFirst)
+                var prop = props[i];
+                if (prop != null && !prop.ExcelIgnore)
                 {
-                    var columnIndex = _reader.GetOrdinal(props[i].Key.ToString());
-                    yield return new CellWriteInfo(_reader.GetValue(columnIndex), column, props[i]);
-                }
-                else
-                {
-                    yield return new CellWriteInfo(_reader.GetValue(i), column, props[i]);
+                    var columnIndex = _configuration.DynamicColumnFirst 
+                        ? _reader.GetOrdinal(prop.Key.ToString()) : i;
+                    
+                    yield return new CellWriteInfo(_reader.GetValue(columnIndex), column, prop);
+                    column++;
                 }
             }
         }

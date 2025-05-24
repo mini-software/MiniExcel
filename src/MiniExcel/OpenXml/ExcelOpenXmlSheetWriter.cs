@@ -62,7 +62,7 @@ namespace MiniExcelLibs.OpenXml
 
             GenerateEndXml();
             _archive.Dispose();
-            
+
             return rowsWritten.ToArray();
         }
 
@@ -193,7 +193,7 @@ namespace MiniExcelLibs.OpenXml
                 WriteEmptySheet(writer);
                 return 0;
             }
-            var maxColumnIndex = props.Count;
+            
             int maxRowIndex;
             var maxColumnIndex = props.Count(x => x != null && !x.ExcelIgnore);
 
@@ -264,11 +264,13 @@ namespace MiniExcelLibs.OpenXml
             }
             if (_configuration.EnableAutoWidth)
             {
-                OverWriteColumnWidthPlaceholders(writer, columnWidthsPlaceholderPosition, widths?.Columns);
+                OverwriteColumnWidthPlaceholders(writer, columnWidthsPlaceholderPosition, widths?.Columns);
             }
 
-            var toSubtract = _printHeader ? 1 : 0;
-            return maxRowIndex - toSubtract;
+            if (_printHeader)
+                maxRowIndex--;
+
+            return maxRowIndex;
         }
 
         private static long WriteColumnWidthPlaceholders(MiniExcelStreamWriter writer, int count)
@@ -278,7 +280,7 @@ namespace MiniExcelLibs.OpenXml
             return placeholderPosition;
         }
 
-        private static void OverWriteColumnWidthPlaceholders(MiniExcelStreamWriter writer, long placeholderPosition, IEnumerable<ExcelColumnWidth> columnWidths)
+        private static void OverwriteColumnWidthPlaceholders(MiniExcelStreamWriter writer, long placeholderPosition, IEnumerable<ExcelColumnWidth> columnWidths)
         {
             var position = writer.Flush();
 
@@ -301,19 +303,19 @@ namespace MiniExcelLibs.OpenXml
                 }
                 writer.Write(WorksheetXml.Column(column.Index, column.Width));
             }
-            if (!hasWrittenStart)
+
+            if (hasWrittenStart)
             {
-                return;
+                writer.Write(WorksheetXml.EndCols);
             }
-            writer.Write(WorksheetXml.EndCols);
         }
 
         private void PrintHeader(MiniExcelStreamWriter writer, List<ExcelColumnInfo> props)
         {
-            var xIndex = 1;
-            var yIndex = 1;
+            const int yIndex = 1;
             writer.Write(WorksheetXml.StartRow(yIndex));
 
+            var xIndex = 1;
             foreach (var p in props)
             {
                 //reason : https://github.com/mini-software/MiniExcel/issues/142

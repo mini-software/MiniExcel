@@ -30,21 +30,8 @@ namespace MiniExcelLibs.WriteAdapter
             for (var i = 0; i < _reader.FieldCount; i++)
             {
                 var columnName = _reader.GetName(i);
-
-                if (!_configuration.DynamicColumnFirst)
-                {
-                    var prop = CustomPropertyHelper.GetColumnInfosFromDynamicConfiguration(columnName, _configuration);
-                    props.Add(prop);
-                    continue;
-                }
-
-                if (_configuration
-                    .DynamicColumns
-                    .Any(a => string.Equals(
-                        a.Key,
-                        columnName,
-                        StringComparison.OrdinalIgnoreCase)))
-
+                if (!_configuration.DynamicColumnFirst || 
+                    _configuration.DynamicColumns.Any(d => string.Equals(d.Key, columnName, StringComparison.OrdinalIgnoreCase)))
                 {
                     var prop = CustomPropertyHelper.GetColumnInfosFromDynamicConfiguration(columnName, _configuration);
                     props.Add(prop);

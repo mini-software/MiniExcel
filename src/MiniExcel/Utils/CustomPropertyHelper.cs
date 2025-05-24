@@ -121,7 +121,7 @@ namespace MiniExcelLibs.Utils
 
         internal static List<ExcelColumnInfo> GetExcelCustomPropertyInfos(Type type, string[] keys, Configuration configuration)
         {
-            var flags = BindingFlags.SetProperty | BindingFlags.Public | BindingFlags.Instance;
+            const BindingFlags flags = BindingFlags.SetProperty | BindingFlags.Public | BindingFlags.Instance;
             var props = GetExcelPropertyInfo(type, flags, configuration)
                 .Where(prop => prop.Property.Info.GetSetMethod() != null // why not .Property.CanWrite? because it will use private setter
                                && !prop.Property.Info.GetAttributeValue((ExcelIgnoreAttribute x) => x.ExcelIgnore)
@@ -154,9 +154,9 @@ namespace MiniExcelLibs.Utils
         {
             var name = source?.ToString();
             return type
-                .GetField(name)? //For some database dirty data, there may be no way to change to the correct enumeration, will return NULL
-                .GetCustomAttribute<DescriptionAttribute>(false)?
-                .Description
+                .GetField(name) //For some database dirty data, there may be no way to change to the correct enumeration, will return NULL
+                ?.GetCustomAttribute<DescriptionAttribute>(false)
+                ?.Description 
                 ?? name;
         }
 
@@ -243,8 +243,10 @@ namespace MiniExcelLibs.Utils
         internal static List<ExcelColumnInfo> GetDictionaryColumnInfo(IDictionary<string, object> dicString, IDictionary dic, Configuration configuration)
         {
             var props = new List<ExcelColumnInfo>();
-            var keys = dicString?.Keys.ToList() ?? dic?.Keys
-                       ?? throw new NotSupportedException();
+            
+            var keys = dicString?.Keys.ToList() 
+                ?? dic?.Keys
+                ?? throw new NotSupportedException();
 
             foreach (var key in keys)
             {
@@ -261,9 +263,7 @@ namespace MiniExcelLibs.Utils
                 ExcelColumnName = key?.ToString()
             };
             
-            // TODO:Dictionary value type is not fiexed
-            //var _t =
-            //var gt = Nullable.GetUnderlyingType(p.PropertyType);
+            // TODO:Dictionary value type is not fixed
             var isIgnore = false;
             if (configuration.DynamicColumns != null && configuration.DynamicColumns.Length > 0)
             {
@@ -328,9 +328,10 @@ namespace MiniExcelLibs.Utils
             }
         }
 
-        private static bool ValueIsNeededToDetermineProperties(Type type) => type == typeof(object)
-                    || typeof(IDictionary<string, object>).IsAssignableFrom(type)
-                    || typeof(IDictionary).IsAssignableFrom(type);
+        private static bool ValueIsNeededToDetermineProperties(Type type) => 
+            typeof(object) == type ||
+            typeof(IDictionary<string, object>).IsAssignableFrom(type) ||
+            typeof(IDictionary).IsAssignableFrom(type);
 
         internal static ExcelColumnInfo GetColumnInfosFromDynamicConfiguration(string columnName, Configuration configuration)
         {

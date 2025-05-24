@@ -154,8 +154,8 @@ public class MiniExcelAutoAdjustWidthTests
         {
             var expectedWidth = column.Min.Value switch
             {
-                1 => ExcelWidthCollection.GetApproximateRequiredCalibriWidth(AutoAdjustTestParameters.column1MaxStringLength),
-                2 => ExcelWidthCollection.GetApproximateRequiredCalibriWidth(AutoAdjustTestParameters.column2MaxStringLength),
+                1 => ExcelWidthCollection.GetApproximateTextWidth(AutoAdjustTestParameters.column1MaxStringLength),
+                2 => ExcelWidthCollection.GetApproximateTextWidth(AutoAdjustTestParameters.column2MaxStringLength),
                 3 => configuration.MinWidth,
                 4 => configuration.MaxWidth,
                 _ => throw new Exception("Unexpected column"),
@@ -198,8 +198,8 @@ public class MiniExcelAutoAdjustWidthTests
         {
             EnableAutoWidth = true,
             FastMode = true,
-            MinWidth = ExcelWidthCollection.GetApproximateRequiredCalibriWidth(minStringLength),
-            MaxWidth = ExcelWidthCollection.GetApproximateRequiredCalibriWidth(maxStringLength)
+            MinWidth = ExcelWidthCollection.GetApproximateTextWidth(minStringLength),
+            MaxWidth = ExcelWidthCollection.GetApproximateTextWidth(maxStringLength)
         };
     }
 }

@@ -19,8 +19,6 @@ using Xunit;
 using Xunit.Abstractions;
 using static MiniExcelLibs.Tests.MiniExcelOpenXmlTests;
 using MiniExcelLibs.Picture;
-using DocumentFormat.OpenXml.Spreadsheet;
-using NPOI.Util;
 using TableStyles = MiniExcelLibs.OpenXml.TableStyles;
 
 namespace MiniExcelLibs.Tests;
@@ -107,7 +105,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
                 .Select(s => Regex.Replace(s.Replace("\"\"", "\""), "^\"|\"$", ""))
                 .ToArray()
         };
-        var rows = MiniExcel.Query(path.ToString(), configuration: config).ToList();
+        var rows = MiniExcel.Query(path, configuration: config).ToList();
     }
 
     [Fact]
@@ -535,11 +533,23 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             var config = new OpenXmlConfiguration { AutoFilter = autoFilter };
             using (var connection = Db.GetConnection("Data Source=:memory:"))
             {
-                using var command = new SQLiteCommand(@"select 'MiniExcel' as Column1,1 as Column2 union all select 'Github',2", connection);
                 connection.Open();
+                
+                using var command = connection.CreateCommand();
+                command.CommandText =
+                    """
+                    SELECT 
+                        'MiniExcel' as Column1,
+                        1 as Column2 
+
+                    UNION ALL 
+                    SELECT 'Github', 2
+                    """;
+                
                 using var reader = command.ExecuteReader();
                 MiniExcel.SaveAs(path.ToString(), reader, configuration: config);
             }
+            
             var xml = Helpers.GetZipFileContent(path.ToString(), "xl/worksheets/sheet1.xml");
             var cnt = Regex.Matches(xml, "autoFilter").Count;
             Assert.Equal(count, cnt);
@@ -708,7 +718,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         {
             var path = PathHelper.GetFile("csv/TestIssue338.csv");
             var row = (await MiniExcel.QueryAsync(path)).FirstOrDefault();
-            Assert.Equal("���Ĳ�������", row.A);
+            Assert.Equal("���Ĳ�������", row!.A);
         }
         {
             var path = PathHelper.GetFile("csv/TestIssue338.csv");
@@ -717,7 +727,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
                 StreamReaderFunc = stream => new StreamReader(stream, Encoding.GetEncoding("gb2312"))
             };
             var row = (await MiniExcel.QueryAsync(path, configuration: config)).FirstOrDefault();
-            Assert.Equal("中文测试内容", row.A);
+            Assert.Equal("中文测试内容", row!.A);
         }
         {
             var path = PathHelper.GetFile("csv/TestIssue338.csv");
@@ -728,7 +738,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             await using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read))
             {
                 var row = (await stream.QueryAsync(configuration: config, excelType: ExcelType.CSV)).FirstOrDefault();
-                Assert.Equal("中文测试内容", row.A);
+                Assert.Equal("中文测试内容", row!.A);
             }
         }
     }
@@ -1723,7 +1733,9 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     public void TestIssue279()
     {
         var path = PathHelper.GetFile("/csv/TestHeader.csv");
+#pragma warning disable CS0618 // Type or member is obsolete
         using var dt = MiniExcel.QueryAsDataTable(path, true, null, ExcelType.CSV);
+#pragma warning restore CS0618
         Assert.Equal("A1", dt.Rows[0]["Column1"]);
         Assert.Equal("A2", dt.Rows[1]["Column1"]);
         Assert.Equal("B1", dt.Rows[0]["Column2"]);
@@ -1756,7 +1768,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     {
         var path = PathHelper.GetFile("/xlsx/TestIssue267.xlsx");
         var row = MiniExcel.Query(path).SingleOrDefault();
-        Assert.Equal(10618, row.A);
+        Assert.Equal(10618, row!.A);
         Assert.Equal("2021-02-23", row.B);
         Assert.Equal(43.199999999999996, row.C);
         Assert.Equal(1.2, row.D);
@@ -2149,14 +2161,14 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             new { Name = "Jack", Age = 25 },
             new { Name = "Mike", Age = 44 }
         }));
-        users.TableName = "users";
+        users!.TableName = "users";
 
         var department = JsonConvert.DeserializeObject<DataTable>(JsonConvert.SerializeObject(new[]
         {
             new { ID = "01", Name = "HR" },
             new { ID = "02", Name = "IT" }
         }));
-        department.TableName = "department";
+        department!.TableName = "department";
 
         dataSet.Tables.Add(users);
         dataSet.Tables.Add(department);
@@ -2192,7 +2204,9 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     public void Issue233()
     {
         var path = PathHelper.GetFile("xlsx/TestIssue233.xlsx");
+#pragma warning disable CS0618 // Type or member is obsolete
         using var dt = MiniExcel.QueryAsDataTable(path);
+#pragma warning restore CS0618
         var rows = dt.Rows;
 
         Assert.Equal(0.55, rows[0]["Size"]);
@@ -2328,7 +2342,9 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     public void Issue229()
     {
         var path = PathHelper.GetFile("xlsx/TestIssue229.xlsx");
+#pragma warning disable CS0618 // Type or member is obsolete
         using var dt = MiniExcel.QueryAsDataTable(path);
+#pragma warning restore CS0618
         foreach (DataColumn column in dt.Columns)
         {
             var v = dt.Rows[3][column];
@@ -2448,7 +2464,9 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         using var path = AutoDeletingPath.Create();
         MiniExcel.SaveAs(path.ToString(), value);
 
+#pragma warning disable CS0618 // Type or member is obsolete
         using var dt = MiniExcel.QueryAsDataTable(path.ToString());
+#pragma warning restore CS0618
         var columns = dt.Columns;
         Assert.Equal(typeof(object), columns[0].DataType);
         Assert.Equal(typeof(object), columns[1].DataType);
@@ -2554,7 +2572,9 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         MiniExcel.SaveAs(path.ToString(), value);
 
         {
+#pragma warning disable CS0618 // Type or member is obsolete
             using var table = MiniExcel.QueryAsDataTable(path.ToString());
+#pragma warning restore CS0618
             Assert.Equal("Test1", table.Columns[0].ColumnName);
             Assert.Equal("Test2", table.Columns[1].ColumnName);
             Assert.Equal("1", table.Rows[0]["Test1"]);
@@ -2564,7 +2584,9 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         }
 
         {
+#pragma warning disable CS0618 // Type or member is obsolete
             using var dt = MiniExcel.QueryAsDataTable(path.ToString(), false);
+#pragma warning restore CS0618
             Assert.Equal("Test1", dt.Rows[0]["A"]);
             Assert.Equal("Test2", dt.Rows[0]["B"]);
             Assert.Equal("1", dt.Rows[1]["A"]);
@@ -2851,7 +2873,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         using var path = AutoDeletingPath.Create();
         var value = new
         {
-            Tests = Enumerable.Range(1, 5).Select((s, i) => new { test1 = i, test2 = i })
+            Tests = Enumerable.Range(1, 5).Select((_, i) => new { test1 = i, test2 = i })
         };
 
         var rows = MiniExcel.Query(templatePath).ToList();
@@ -2900,11 +2922,10 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             using var path = AutoDeletingPath.Create();
 
             using var dt = new DataTable();
-            {
-                dt.Columns.Add("name");
-                dt.Columns.Add("department");
-                dt.Rows.Add("Jack", "HR");
-            }
+            dt.Columns.Add("name");
+            dt.Columns.Add("department");
+            dt.Rows.Add("Jack", "HR");
+            
             var value = new Dictionary<string, object> { ["employees"] = dt };
             MiniExcel.SaveAsByTemplate(path.ToString(), templatePath, value);
 

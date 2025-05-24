@@ -3659,7 +3659,43 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         Assert.Equal("General User", rows[1].B);
         Assert.Equal("General Administrator", rows[2].B);
     }
-    
+
+    [Fact]
+    public void TestIssue584()
+    {
+        var excelconfig = new OpenXmlConfiguration
+        {
+            FastMode = true,
+            DynamicColumns =
+            [
+                new DynamicExcelColumn("Id") { Ignore = true }
+            ]
+        };
+
+        using var conn = Db.GetConnection();
+        conn.Open();
+        
+        using var cmd = conn.CreateCommand();
+        cmd.CommandText = 
+            """
+            WITH test('Id', 'Name') AS (
+                VALUES 
+                    (1, 'test1'), 
+                    (2, 'test2'), 
+                    (3, 'test3')
+                )
+            SELECT * FROM test;
+            """;
+        using var reader = cmd.ExecuteReader();
+
+        using var path = AutoDeletingPath.Create();
+        MiniExcel.SaveAs(path.FilePath, reader, configuration: excelconfig, overwriteFile: true);
+
+        var rows = MiniExcel.Query(path.FilePath).ToList();
+        Assert.All(rows, x => Assert.Single(x));
+        Assert.Equal("Name", rows[0].A);
+    }
+
     private class Issue585VO1
     {
         public string Col1 { get; set; }

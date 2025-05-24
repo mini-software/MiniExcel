@@ -346,16 +346,20 @@ namespace MiniExcelLibs.Utils
             var dynamicColumn = configuration.DynamicColumns
                 .SingleOrDefault(col => string.Equals(col.Key, columnName, StringComparison.OrdinalIgnoreCase));
             
-            if (dynamicColumn == null || dynamicColumn.Ignore)
+            if (dynamicColumn == null)
                 return prop;
 
             prop.Nullable = true;
             prop.ExcelIgnore = dynamicColumn.Ignore;
             prop.ExcelColumnType = dynamicColumn.Type;
-            prop.ExcelColumnIndex = dynamicColumn.Index;
             prop.ExcelColumnWidth = dynamicColumn.Width;
             prop.CustomFormatter = dynamicColumn.CustomFormatter;
 
+            if (dynamicColumn.Index > -1)
+            {
+                prop.ExcelColumnIndex = dynamicColumn.Index;
+            }
+            
             if (dynamicColumn.Format != null)
             {
                 prop.ExcelFormat = dynamicColumn.Format;

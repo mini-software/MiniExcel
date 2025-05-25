@@ -62,7 +62,7 @@ namespace MiniExcelLibs.OpenXml
 
             GenerateEndXml();
             _archive.Dispose();
-            
+
             return rowsWritten.ToArray();
         }
 
@@ -193,22 +193,23 @@ namespace MiniExcelLibs.OpenXml
                 WriteEmptySheet(writer);
                 return 0;
             }
-            var maxColumnIndex = props.Count;
+            
             int maxRowIndex;
+            var maxColumnIndex = props.Count(x => x != null && !x.ExcelIgnore);
 
             writer.Write(WorksheetXml.StartWorksheetWithRelationship);
 
             long dimensionPlaceholderPostition = 0;
 
             // We can write the dimensions directly if the row count is known
-            if (_configuration.FastMode && !isKnownCount)
+            if (isKnownCount)
+            {
+                maxRowIndex = _printHeader ? count + 1 : count;
+                writer.Write(WorksheetXml.Dimension(GetDimensionRef(maxRowIndex, maxColumnIndex)));
+            }
+            else if (_configuration.FastMode)
             {
                 dimensionPlaceholderPostition = WriteDimensionPlaceholder(writer);
-            }
-            else if (isKnownCount)
-            {
-                maxRowIndex = count + (_printHeader ? 1 : 0);
-                writer.Write(WorksheetXml.Dimension(GetDimensionRef(maxRowIndex, props.Count)));
             }
 
             //sheet view
@@ -219,7 +220,7 @@ namespace MiniExcelLibs.OpenXml
             long columnWidthsPlaceholderPosition = 0;
             if (_configuration.EnableAutoWidth)
             {
-                columnWidthsPlaceholderPosition = WriteColumnWidthPlaceholders(writer, props);
+                columnWidthsPlaceholderPosition = WriteColumnWidthPlaceholders(writer, maxColumnIndex);
                 widths = new ExcelWidthCollection(_configuration.MinWidth, _configuration.MaxWidth, props);
             }
             else
@@ -263,21 +264,23 @@ namespace MiniExcelLibs.OpenXml
             }
             if (_configuration.EnableAutoWidth)
             {
-                OverWriteColumnWidthPlaceholders(writer, columnWidthsPlaceholderPosition, widths?.Columns);
+                OverwriteColumnWidthPlaceholders(writer, columnWidthsPlaceholderPosition, widths?.Columns);
             }
 
-            var toSubtract = _printHeader ? 1 : 0;
-            return maxRowIndex - toSubtract;
+            if (_printHeader)
+                maxRowIndex--;
+
+            return maxRowIndex;
         }
 
-        private static long WriteColumnWidthPlaceholders(MiniExcelStreamWriter writer, ICollection<ExcelColumnInfo> props)
+        private static long WriteColumnWidthPlaceholders(MiniExcelStreamWriter writer, int count)
         {
             var placeholderPosition = writer.Flush();
-            writer.WriteWhitespace(WorksheetXml.GetColumnPlaceholderLength(props.Count));
+            writer.WriteWhitespace(WorksheetXml.GetColumnPlaceholderLength(count));
             return placeholderPosition;
         }
 
-        private static void OverWriteColumnWidthPlaceholders(MiniExcelStreamWriter writer, long placeholderPosition, IEnumerable<ExcelColumnWidth> columnWidths)
+        private static void OverwriteColumnWidthPlaceholders(MiniExcelStreamWriter writer, long placeholderPosition, IEnumerable<ExcelColumnWidth> columnWidths)
         {
             var position = writer.Flush();
 
@@ -300,29 +303,30 @@ namespace MiniExcelLibs.OpenXml
                 }
                 writer.Write(WorksheetXml.Column(column.Index, column.Width));
             }
-            if (!hasWrittenStart)
+
+            if (hasWrittenStart)
             {
-                return;
+                writer.Write(WorksheetXml.EndCols);
             }
-            writer.Write(WorksheetXml.EndCols);
         }
 
         private void PrintHeader(MiniExcelStreamWriter writer, List<ExcelColumnInfo> props)
         {
-            var xIndex = 1;
-            var yIndex = 1;
+            const int yIndex = 1;
             writer.Write(WorksheetXml.StartRow(yIndex));
 
+            var xIndex = 1;
             foreach (var p in props)
             {
-                if (p == null)
+                //reason : https://github.com/mini-software/MiniExcel/issues/142
+                if (p != null)
                 {
-                    xIndex++; //reason : https://github.com/mini-software/MiniExcel/issues/142
-                    continue;
+                    if (p.ExcelIgnore)
+                        continue;
+                            
+                    var r = ExcelOpenXmlUtils.ConvertXyToCell(xIndex, yIndex);
+                    WriteCell(writer, r, columnName: p.ExcelColumnName);
                 }
-
-                var r = ExcelOpenXmlUtils.ConvertXyToCell(xIndex, yIndex);
-                WriteCell(writer, r, columnName: p.ExcelColumnName);
                 xIndex++;
             }
 

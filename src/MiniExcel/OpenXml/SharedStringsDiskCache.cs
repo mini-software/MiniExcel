@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace MiniExcelLibs.OpenXml
@@ -37,9 +36,11 @@ namespace MiniExcelLibs.OpenXml
         {
             if (index > _maxIndx)
                 _maxIndx = index;
-            byte[] valueBs = _encoding.GetBytes(value);
+            
+            var valueBs = _encoding.GetBytes(value);
             if (value.Length > 32767) //check info length, becasue cell string max length is 47483647
-                throw new ArgumentOutOfRangeException("Excel one cell max length is 32,767 characters");
+                throw new ArgumentOutOfRangeException("", "Excel one cell max length is 32,767 characters");
+            
             _positionFs.Write(BitConverter.GetBytes(_valueFs.Position), 0, 4);
             _lengthFs.Write(BitConverter.GetBytes(valueBs.Length), 0, 4);
             _valueFs.Write(valueBs, 0, valueBs.Length);
@@ -49,16 +50,19 @@ namespace MiniExcelLibs.OpenXml
         {
             _positionFs.Position = index * 4;
             var bytes = new byte[4];
-            _positionFs.Read(bytes, 0, 4);
+            _ = _positionFs.Read(bytes, 0, 4);
             var position = BitConverter.ToInt32(bytes, 0);
+            
+            bytes = new byte[4];
             _lengthFs.Position = index * 4;
-            _lengthFs.Read(bytes, 0, 4);
+            _ = _lengthFs.Read(bytes, 0, 4);
             var length = BitConverter.ToInt32(bytes, 0);
-            _valueFs.Position = position;
+            
             bytes = new byte[length];
-            _valueFs.Read(bytes, 0, length);
-            var v = _encoding.GetString(bytes);
-            return v;
+            _valueFs.Position = position;
+            _ = _valueFs.Read(bytes, 0, length);
+
+            return _encoding.GetString(bytes);
         }
 
         protected virtual void Dispose(bool disposing)
@@ -69,15 +73,19 @@ namespace MiniExcelLibs.OpenXml
                 {
                     // TODO: dispose managed state (managed objects)
                 }
+                
                 _positionFs.Dispose();
                 if (File.Exists(_positionFs.Name))
                     File.Delete(_positionFs.Name);
+                
                 _lengthFs.Dispose();
                 if (File.Exists(_lengthFs.Name))
                     File.Delete(_lengthFs.Name);
+                
                 _valueFs.Dispose();
                 if (File.Exists(_valueFs.Name))
                     File.Delete(_valueFs.Name);
+                
                 _disposedValue = true;
             }
         }

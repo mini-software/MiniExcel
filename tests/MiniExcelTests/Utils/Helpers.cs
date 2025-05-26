@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.IO.Compression;
-using System.Linq;
+﻿using System.IO.Compression;
 using System.Text;
 using System.Xml;
 using System.Xml.Linq;
@@ -12,50 +8,43 @@ namespace MiniExcelLibs.Tests.Utils;
 
 internal static class Helpers
 {
-    private const int GENERAL_COLUMN_INDEX = 255;
-    private const int MAX_COLUMN_INDEX = 16383;
-    private static Dictionary<int, string>? _IntMappingAlphabet;
-    private static Dictionary<string, int>? _AlphabetMappingInt;
+    private const int GeneralColumnIndex = 255;
+    private const int MaxColumnIndex = 16383;
     
-    static Helpers()
-    {
-        if (_IntMappingAlphabet != null || _AlphabetMappingInt != null)
-            return;
-        
-        _IntMappingAlphabet = new Dictionary<int, string>();
-        _AlphabetMappingInt = new Dictionary<string, int>();
-        for (int i = 0; i <= GENERAL_COLUMN_INDEX; i++)
-        {
-            _IntMappingAlphabet.Add(i, IntToLetters(i));
-            _AlphabetMappingInt.Add(IntToLetters(i), i);
-        }
-    }
+    private static readonly Dictionary<int, string> IntMappingAlphabet = Enumerable
+        .Range(0, GeneralColumnIndex)
+        .ToDictionary(i => i, IntToLetters);
+    
+    private static readonly Dictionary<string, int> AlphabetMappingInt = Enumerable
+        .Range(0, MaxColumnIndex)
+        .ToDictionary(IntToLetters, i => i);
 
+    
     public static string GetAlphabetColumnName(int columnIndex)
     {
         CheckAndSetMaxColumnIndex(columnIndex);
-        return _IntMappingAlphabet[columnIndex];
+        return IntMappingAlphabet[columnIndex];
     }
 
     public static int GetColumnIndex(string columnName)
     {
-        var columnIndex = _AlphabetMappingInt[columnName];
+        var columnIndex = AlphabetMappingInt[columnName];
         CheckAndSetMaxColumnIndex(columnIndex);
         return columnIndex;
     }
 
     private static void CheckAndSetMaxColumnIndex(int columnIndex)
     {
-        if (columnIndex < _IntMappingAlphabet.Count)
+        if (columnIndex < IntMappingAlphabet.Count)
             return;
         
-        if (columnIndex > MAX_COLUMN_INDEX)
+        if (columnIndex > MaxColumnIndex)
             throw new InvalidDataException($"ColumnIndex {columnIndex} is over Excel vaild max index.");
         
-        for (int i = _IntMappingAlphabet.Count; i <= columnIndex; i++)
+        for (int i = IntMappingAlphabet.Count; i <= columnIndex; i++)
         {
-            _IntMappingAlphabet.Add(i, IntToLetters(i));
-            _AlphabetMappingInt.Add(IntToLetters(i), i);
+            IntMappingAlphabet.Add(i, IntToLetters(i));
+            AlphabetMappingInt.Add(IntToLetters(i), i);
         }
     }
 
@@ -87,7 +76,7 @@ internal static class Helpers
         return doc.ToString();
     }
 
-    internal static string GetFirstSheetDimensionRefValue(string path)
+    internal static string? GetFirstSheetDimensionRefValue(string path)
     {
         var ns = new XmlNamespaceManager(new NameTable());
         ns.AddNamespace("x", "http://schemas.openxmlformats.org/spreadsheetml/2006/main");
@@ -101,7 +90,7 @@ internal static class Helpers
         using var sheetStream = sheet.Open();
         var doc = XDocument.Load(sheetStream);
         var dimension = doc.XPathSelectElement("/x:worksheet/x:dimension", ns);
-        var refV = dimension.Attribute("ref").Value;
+        var refV = dimension?.Attribute("ref")?.Value;
 
         return refV;
     }

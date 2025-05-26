@@ -32,7 +32,10 @@ namespace MiniExcelLibs.Utils
 
             var probe = new byte[8];
             stream.Seek(0, SeekOrigin.Begin);
-            stream.Read(probe, 0, probe.Length);
+            var read = stream.Read(probe, 0, probe.Length);
+            if (read != probe.Length)
+                throw new InvalidDataException("The file/stream does not contain enough data to process");
+            
             stream.Seek(0, SeekOrigin.Begin);
 
             // New office format (can be any ZIP archive)
@@ -41,7 +44,7 @@ namespace MiniExcelLibs.Utils
                 return ExcelType.XLSX;
             }
 
-            throw new NotSupportedException("Stream cannot know the file type, please specify ExcelType manually");
+            throw new InvalidDataException("The file type could not be inferred automatically, please specify ExcelType manually");
         }
     }
 }

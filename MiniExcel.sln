@@ -16,6 +16,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Docs and setting", "Docs an
 		README.md = README.md
 		README.zh-CN.md = README.zh-CN.md
 		README.zh-Hant.md = README.zh-Hant.md
+		.github\workflows\benchmark.yml = .github\workflows\benchmark.yml
+		.github\workflows\codeql-analysis.yml = .github\workflows\codeql-analysis.yml
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{CC1E0601-AEC9-42D7-8F6A-3FB3939EED16}"

@@ -4374,4 +4374,23 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         Assert.Equal("c3", rows[6].AA);
         Assert.Equal("Ram", rows[6].B);
     }
+
+    /// <summary>
+    /// https://github.com/mini-software/MiniExcel/issues/789
+    /// </summary>
+    [Fact]
+    public void TestIssue789()
+    {
+        var path = PathHelper.GetTempPath();
+        var value = new[] {
+            new Dictionary<string, object> { {"no","1"} },
+            new Dictionary<string, object> { {"no","2"} },
+            new Dictionary<string, object> { {"no","3"} },
+        };
+        MiniExcel.SaveAs(path, value);
+
+        var xml = Helpers.GetZipFileContent(path.ToString(), "xl/worksheets/sheet1.xml");
+
+        Assert.Contains("<x:autoFilter ref=\"A1:A4\" />", xml);
+    }
 }

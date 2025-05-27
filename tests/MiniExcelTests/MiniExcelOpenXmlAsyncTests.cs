@@ -651,7 +651,6 @@ public class MiniExcelOpenXmlAsyncTests
             Assert.Equal("A1:D2", Helpers.GetFirstSheetDimensionRefValue(path));
         }
 
-        //TODO:StartCell
         {
             using var path = AutoDeletingPath.Create();
             using var table = new DataTable();
@@ -660,7 +659,7 @@ public class MiniExcelOpenXmlAsyncTests
             table.Rows.Add("B");
             
             await MiniExcel.SaveAsAsync(path.ToString(), table);
-            Assert.Equal("A3", Helpers.GetFirstSheetDimensionRefValue(path.ToString()));
+            Assert.Equal("A1:A3", Helpers.GetFirstSheetDimensionRefValue(path.ToString()));
         }
     }
 

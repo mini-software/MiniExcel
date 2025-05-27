@@ -346,6 +346,8 @@ namespace MiniExcelLibs.OpenXml
             string dimensionRef;
             if (maxRowIndex == 0 && maxColumnIndex == 0)
                 dimensionRef = "A1";
+            else if (maxRowIndex <= 1 && maxColumnIndex == 0)
+                dimensionRef = "A1";
             else if (maxColumnIndex <= 1)
                 dimensionRef = $"A1:A{maxRowIndex}";
             else if (maxRowIndex == 0)

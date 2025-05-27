@@ -673,7 +673,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
             table.Rows.Add("B");
             
             MiniExcel.SaveAs(path.ToString(), table);
-            Assert.Equal("A3", Helpers.GetFirstSheetDimensionRefValue(path.ToString()));
+            Assert.Equal("A1:A3", Helpers.GetFirstSheetDimensionRefValue(path.ToString()));
         }
     }
 

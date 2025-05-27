@@ -1,6 +1,7 @@
 name: MiniExcel Benchmarks
 
 on:
+  workflow_dispatch:
   release:
     types: [published]
 
@@ -29,19 +30,14 @@ jobs:
         env:
           BenchmarkMode: Automatic
           BenchmarkSection: query
-      - name: Commit report
-        working-directory: ./benchmarks
-        run: |
-          cp -r ./MiniExcel.Benchmarks/BenchmarkDotNet.Artifacts/results ./
-          git config user.name github-actions
-          git config user.email github-actions@github.com
-          git pull
-          cd ./results
-          git add '*.md'
-          git commit -am "Automated benchmark report - query section"
-          git push --force
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Renaming result file
+        run: mv MiniExcelLibs.Benchmarks.XlsxBenchmark-report-github.md query-benchmark.md
+        working-directory: ./benchmarks/MiniExcel.Benchmarks/BenchMarkDotNet.Artifacts/results
+      - name: Save benchmark results
+        uses: actions/upload-artifact@v4
+        with:
+          name: query-benchmark-result
+          path: ./benchmark/MiniExcel.Benchmarks/BenchMarkDotNet.Artifacts/results/*.md
           
   CreateBenchmark:
     runs-on: ubuntu-latest
@@ -64,20 +60,15 @@ jobs:
         env:
           BenchmarkMode: Automatic
           BenchmarkSection: create
-      - name: Commit report
-        working-directory: ./benchmarks
-        run: |
-          cp -r ./MiniExcel.Benchmarks/BenchmarkDotNet.Artifacts/results ./
-          git config user.name github-actions
-          git config user.email github-actions@github.com
-          git pull
-          cd ./results
-          git add '*.md'
-          git commit -am "Automated benchmark report - create section"
-          git push --force
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}          
-  
+      - name: Renaming result file
+        run: mv MiniExcelLibs.Benchmarks.XlsxBenchmark-report-github.md create-benchmark.md
+        working-directory: ./benchmarks/MiniExcel.Benchmarks/BenchMarkDotNet.Artifacts/results
+      - name: Save benchmark results
+        uses: actions/upload-artifact@v4
+        with:
+          name: create-benchmark-result
+          path: ./benchmark/MiniExcel.Benchmarks/BenchMarkDotNet.Artifacts/results/*.md
+          
   TemplateBenchmark:
     runs-on: ubuntu-latest
   
@@ -99,16 +90,33 @@ jobs:
         env:
           BenchmarkMode: Automatic
           BenchmarkSection: template
-      - name: Commit report
-        working-directory: ./benchmarks
+      - name: Renaming result file
+        run: mv MiniExcelLibs.Benchmarks.XlsxBenchmark-report-github.md template-benchmark.md
+        working-directory: ./benchmarks/MiniExcel.Benchmarks/BenchMarkDotNet.Artifacts/results        
+      - name: Save benchmark results
+        uses: actions/upload-artifact@v4
+        with:
+          name: template-benchmark-result
+          path: ./benchmark/MiniExcel.Benchmarks/BenchMarkDotNet.Artifacts/results/*.md
+
+  PushBenchmarksResults:
+    runs-on: ubuntu-latest
+    needs: [ QueryBenchmark, CreateBenchmark, TemplateBenchmark ]
+    
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Fetch benchmark results
+        uses: actions/download-artifact@v4
+        with:
+            path: ./benchmarks/results
+            merge-multiple: true
+      - name: Commit reports
+        working-directory: ./benchmarks/results
         run: |
-          cp -r ./MiniExcel.Benchmarks/BenchmarkDotNet.Artifacts/results ./
           git config user.name github-actions
           git config user.email github-actions@github.com
-          git pull
-          cd ./results
-          git add '*.md'
-          git commit -am "Automated benchmark report - template section"
-          git push --force
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          git add ./*.md
+          git commit -am "Automated benchmark report - ${{ github.ref_name }}"
+          git push origin master --force-with-lease

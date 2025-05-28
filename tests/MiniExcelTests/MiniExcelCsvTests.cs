@@ -60,6 +60,43 @@ public class MiniExcelCsvTests
             """";
         Assert.Equal(expected, File.ReadAllText(path));
     }
+    
+    [Fact]
+    public void DontQuoteWhitespacesTest()
+    {
+        using var file = AutoDeletingPath.Create(ExcelType.CSV);
+        var path = file.ToString();
+
+        List<Dictionary<string, object>> values =
+        [
+            new()
+            {
+                { "a", @"""<>+-*//}{\\n" },
+                { "b", 1234567890 },
+                { "c", true },
+                { "d", new DateTime(2021, 1, 1) }
+            },
+
+            new()
+            {
+                { "a", "<test>Hello World</test>" },
+                { "b", -1234567890 },
+                { "c", false },
+                { "d", new DateTime(2021, 1, 2) }
+            }
+        ];
+        var rowsWritten = MiniExcel.SaveAs(path, values, configuration: new Csv.CsvConfiguration { QuoteWhitespaces = false });
+        Assert.Equal(2, rowsWritten[0]);
+            
+        const string expected =
+            """"
+            a,b,c,d
+            """<>+-*//}{\\n",1234567890,True,2021-01-01 00:00:00
+            <test>Hello World</test>,-1234567890,False,2021-01-02 00:00:00
+
+            """";
+        Assert.Equal(expected, File.ReadAllText(path));
+    }
 
     [Fact]
     public void AlwaysQuoteTest()

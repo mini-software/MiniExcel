@@ -152,8 +152,8 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         {
             var value = new[]
             {
-                new { ID=1,Name ="Jack",InDate=new DateTime(2021,01,03)},
-                new { ID=2,Name ="Henry",InDate=new DateTime(2020,05,03)},
+                new { ID = 1, Name = "Jack", InDate = new DateTime(2021,01,03)},
+                new { ID = 2, Name = "Henry", InDate = new DateTime(2020,05,03)}
             };
             MiniExcel.SaveAs(path, value);
             var content = File.ReadAllText(path);
@@ -2012,7 +2012,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         Assert.Throws<NotSupportedException>(() => MiniExcel.Query(path).ToList());
 
         using var stream = File.OpenRead(path);
-        Assert.Throws<NotSupportedException>(() => stream.Query().ToList());
+        Assert.Throws<InvalidDataException>(() => stream.Query().ToList());
     }
 
     /// <summary>

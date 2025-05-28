@@ -3,7 +3,7 @@
     internal static class CsvHelpers
     {
         /// <summary>If content contains special characters then use "{value}" format</summary>
-        public static string ConvertToCsvValue(string value, bool alwaysQuote, char separator)
+        public static string ConvertToCsvValue(string value, CsvConfiguration configuration)
         {
             if (value == null)
                 return string.Empty;
@@ -13,16 +13,14 @@
                 value = value.Replace("\"", "\"\"");
                 return $"\"{value}\"";
             }
-
-            if (value.Contains(separator.ToString()) || value.Contains(" ") || value.Contains("\n") || value.Contains("\r"))
-            {
-                return $"\"{value}\"";
-            }
-
-            if (alwaysQuote)
-                return $"\"{value}\"";
-
-            return value;
+            
+            var shouldQuote = configuration.AlwaysQuote ||
+                              (configuration.QuoteWhitespaces && value.Contains(" ")) ||
+                              value.Contains(configuration.Seperator.ToString()) ||
+                              value.Contains("\r") ||
+                              value.Contains("\n");
+            
+            return shouldQuote ? $"\"{value}\"" : value;
         }
     }
 }

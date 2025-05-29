@@ -60,6 +60,43 @@ public class MiniExcelCsvTests
             """";
         Assert.Equal(expected, File.ReadAllText(path));
     }
+    
+    [Fact]
+    public void DontQuoteWhitespacesTest()
+    {
+        using var file = AutoDeletingPath.Create(ExcelType.CSV);
+        var path = file.ToString();
+
+        List<Dictionary<string, object>> values =
+        [
+            new()
+            {
+                { "a", @"""<>+-*//}{\\n" },
+                { "b", 1234567890 },
+                { "c", true },
+                { "d", new DateTime(2021, 1, 1) }
+            },
+
+            new()
+            {
+                { "a", "<test>Hello World</test>" },
+                { "b", -1234567890 },
+                { "c", false },
+                { "d", new DateTime(2021, 1, 2) }
+            }
+        ];
+        var rowsWritten = MiniExcel.SaveAs(path, values, configuration: new Csv.CsvConfiguration { QuoteWhitespaces = false });
+        Assert.Equal(2, rowsWritten[0]);
+            
+        const string expected =
+            """"
+            a,b,c,d
+            """<>+-*//}{\\n",1234567890,True,2021-01-01 00:00:00
+            <test>Hello World</test>,-1234567890,False,2021-01-02 00:00:00
+
+            """";
+        Assert.Equal(expected, File.ReadAllText(path));
+    }
 
     [Fact]
     public void AlwaysQuoteTest()
@@ -203,14 +240,14 @@ public class MiniExcelCsvTests
                 var records = csv.GetRecords<dynamic>().ToList();
                 {
                     var row = records[0] as IDictionary<string, object>;
-                    Assert.Equal(@"""<>+-*//}{\\n", row["1"]);
+                    Assert.Equal(@"""<>+-*//}{\\n", row!["1"]);
                     Assert.Equal("1234567890", row["2"]);
                     Assert.Equal("True", row["3"]);
                     Assert.Equal("2021-01-01 00:00:00", row["4"]);
                 }
                 {
                     var row = records[1] as IDictionary<string, object>;
-                    Assert.Equal("<test>Hello World</test>", row["1"]);
+                    Assert.Equal("<test>Hello World</test>", row!["1"]);
                     Assert.Equal("-1234567890", row["2"]);
                     Assert.Equal("False", row["3"]);
                     Assert.Equal("2021-01-02 00:00:00", row["4"]);
@@ -283,33 +320,27 @@ public class MiniExcelCsvTests
     [Fact]
     public void CsvExcelTypeTest()
     {
-        {
-            using var file = AutoDeletingPath.Create(ExcelType.CSV);
-            var path = file.ToString();
+        using var file = AutoDeletingPath.Create(ExcelType.CSV);
+        var path = file.ToString();
             
-            var input = new[] { new { A = "Test1", B = "Test2" } };
-            MiniExcel.SaveAs(path.ToString(), input);
+        var input = new[] { new { A = "Test1", B = "Test2" } };
+        MiniExcel.SaveAs(path, input);
 
-            var texts = File.ReadAllLines(path.ToString());
-            Assert.Equal("A,B", texts[0]);
-            Assert.Equal("Test1,Test2", texts[1]);
+        var texts = File.ReadAllLines(path);
+        Assert.Equal("A,B", texts[0]);
+        Assert.Equal("Test1,Test2", texts[1]);
 
-            {
-                var rows = MiniExcel.Query(path.ToString()).ToList();
-                Assert.Equal("A", rows[0].A);
-                Assert.Equal("B", rows[0].B);
-                Assert.Equal("Test1", rows[1].A);
-                Assert.Equal("Test2", rows[1].B);
-            }
+        var rows = MiniExcel.Query(path).ToList();
+        Assert.Equal("A", rows[0].A);
+        Assert.Equal("B", rows[0].B);
+        Assert.Equal("Test1", rows[1].A);
+        Assert.Equal("Test2", rows[1].B);
 
-            using var reader = new StreamReader(path.ToString());
-            using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
-            {
-                var rows = csv.GetRecords<dynamic>().ToList();
-                Assert.Equal("Test1", rows[0].A);
-                Assert.Equal("Test2", rows[0].B);
-            }
-        }
+        using var reader = new StreamReader(path);
+        using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
+        var records = csv.GetRecords<dynamic>().ToList();
+        Assert.Equal("Test1", records[0].A);
+        Assert.Equal("Test2", records[0].B);
     }
 
     [Fact]
@@ -388,7 +419,7 @@ public class MiniExcelCsvTests
             Assert.Equal(2, exception.RowIndex);
             Assert.Null(exception.ColumnIndex);
             Assert.True(exception.RowValues is IDictionary<string, object>);
-            Assert.Equal(1, ((IDictionary<string, object>)exception.RowValues).Count);
+            Assert.Single((IDictionary<string, object>)exception.RowValues);
         }
 
         {
@@ -398,7 +429,7 @@ public class MiniExcelCsvTests
             Assert.Equal(2, exception.RowIndex);
             Assert.Null(exception.ColumnIndex);
             Assert.True(exception.RowValues is IDictionary<string, object>);
-            Assert.Equal(1, ((IDictionary<string, object>)exception.RowValues).Count);
+            Assert.Single((IDictionary<string, object>)exception.RowValues);
         }
     }
 
@@ -417,7 +448,7 @@ public class MiniExcelCsvTests
             Assert.Equal(2, exception.RowIndex);
             Assert.Null(exception.ColumnIndex);
             Assert.True(exception.RowValues is IDictionary<string, object>);
-            Assert.Equal(1, ((IDictionary<string, object>)exception.RowValues).Count);
+            Assert.Single((IDictionary<string, object>)exception.RowValues);
         }
 
         {
@@ -427,7 +458,7 @@ public class MiniExcelCsvTests
             Assert.Equal(2, exception.RowIndex);
             Assert.Null(exception.ColumnIndex);
             Assert.True(exception.RowValues is IDictionary<string, object>);
-            Assert.Equal(1, ((IDictionary<string, object>)exception.RowValues).Count);
+            Assert.Single((IDictionary<string, object>)exception.RowValues);
         }
     }
 

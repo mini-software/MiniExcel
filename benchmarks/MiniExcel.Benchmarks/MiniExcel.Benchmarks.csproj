@@ -10,13 +10,12 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="BenchmarkDotNet" Version="0.14.0" />
-		<PackageReference Include="ClosedXML" Version="0.102.3" />
-		<PackageReference Include="ClosedXML.Report" Version="0.2.11" />
-		<PackageReference Include="DocumentFormat.OpenXml" Version="2.20.0" />
-		<PackageReference Include="EPPlus" Version="7.7.0" />
+		<PackageReference Include="BenchmarkDotNet" Version="0.15.0" />
+		<PackageReference Include="ClosedXML" Version="0.105.0" />
+		<PackageReference Include="ClosedXML.Report" Version="0.2.12" />
+		<PackageReference Include="DocumentFormat.OpenXml" Version="3.3.0" />
+		<PackageReference Include="EPPlus" Version="7.7.2" />
 		<PackageReference Include="ExcelDataReader" Version="3.7.0" />
-		<PackageReference Include="System.IO.Packaging" Version="9.0.3" />
 	</ItemGroup>
 
 	<ItemGroup>

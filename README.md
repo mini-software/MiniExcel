@@ -1517,7 +1517,7 @@ MiniExcel.AddPicture(path, images);
 #### 7. Get Sheets Dimension
 
 ```csharp
-var dim = MiniExcel.GetSheetsDimensions(path);
+var dim = MiniExcel.GetSheetDimensions(path);
 ```
 
 ### Examples:

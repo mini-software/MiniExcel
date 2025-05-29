@@ -49,7 +49,7 @@ namespace MiniExcelLibs.Csv
 
         private void AppendColumn(StringBuilder rowBuilder, CellWriteInfo column)
         {
-            rowBuilder.Append(CsvHelpers.ConvertToCsvValue(ToCsvString(column.Value, column.Prop), _configuration.AlwaysQuote, _configuration.Seperator));
+            rowBuilder.Append(CsvHelpers.ConvertToCsvValue(ToCsvString(column.Value, column.Prop), _configuration));
             rowBuilder.Append(_configuration.Seperator);
         }
 
@@ -63,7 +63,7 @@ namespace MiniExcelLibs.Csv
 
         private string GetHeader(List<ExcelColumnInfo> props) => string.Join(
             _configuration.Seperator.ToString(),
-            props.Select(s => CsvHelpers.ConvertToCsvValue(s?.ExcelColumnName, _configuration.AlwaysQuote, _configuration.Seperator)));
+            props.Select(s => CsvHelpers.ConvertToCsvValue(s?.ExcelColumnName, _configuration)));
 
         private int WriteValues(object values)
         {

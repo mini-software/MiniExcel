@@ -102,25 +102,23 @@ public class MiniExcelCsvAsycTests
                     { "c", false },
                     { "d", new DateTime(2021, 1, 2) }
                 }
-
             ];
             var rowsWritten = await MiniExcel.SaveAsAsync(path, values);
             Assert.Equal(2, rowsWritten[0]);
 
-            using (var reader = new StreamReader(path))
-            using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
-            {
-                var records = csv.GetRecords<dynamic>().ToList();
-                Assert.Equal(@"""<>+-*//}{\\n", records[0].a);
-                Assert.Equal("1234567890", records[0].b);
-                Assert.Equal("True", records[0].c);
-                Assert.Equal("2021-01-01 00:00:00", records[0].d);
+            using var reader = new StreamReader(path);
+            using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
+            var records = csv.GetRecords<dynamic>().ToList();
+            
+            Assert.Equal(@"""<>+-*//}{\\n", records[0].a);
+            Assert.Equal("1234567890", records[0].b);
+            Assert.Equal("True", records[0].c);
+            Assert.Equal("2021-01-01 00:00:00", records[0].d);
 
-                Assert.Equal("<test>Hello World</test>", records[1].a);
-                Assert.Equal("-1234567890", records[1].b);
-                Assert.Equal("False", records[1].c);
-                Assert.Equal("2021-01-02 00:00:00", records[1].d);
-            }
+            Assert.Equal("<test>Hello World</test>", records[1].a);
+            Assert.Equal("-1234567890", records[1].b);
+            Assert.Equal("False", records[1].c);
+            Assert.Equal("2021-01-02 00:00:00", records[1].d);
         }
 
         {
@@ -145,116 +143,104 @@ public class MiniExcelCsvAsycTests
                     { 4, new DateTime(2021, 1, 2) }
                 }
             ];
+            
             var rowsWritten = await MiniExcel.SaveAsAsync(path, values);
             Assert.Equal(2, rowsWritten[0]);
 
-            using (var reader = new StreamReader(path))
-            using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
-            {
-                var records = csv.GetRecords<dynamic>().ToList();
-                {
-                    var row = records[0] as IDictionary<string, object>;
-                    Assert.Equal(@"""<>+-*//}{\\n", row["1"]);
-                    Assert.Equal("1234567890", row["2"]);
-                    Assert.Equal("True", row["3"]);
-                    Assert.Equal("2021-01-01 00:00:00", row["4"]);
-                }
-                {
-                    var row = records[1] as IDictionary<string, object>;
-                    Assert.Equal("<test>Hello World</test>", row["1"]);
-                    Assert.Equal("-1234567890", row["2"]);
-                    Assert.Equal("False", row["3"]);
-                    Assert.Equal("2021-01-02 00:00:00", row["4"]);
-                }
-            }
+            using var reader = new StreamReader(path);
+            using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
+            var records = csv.GetRecords<dynamic>().ToList();
+            
+            var row1 = records[0] as IDictionary<string, object>;
+            Assert.Equal(@"""<>+-*//}{\\n", row1!["1"]);
+            Assert.Equal("1234567890", row1["2"]);
+            Assert.Equal("True", row1["3"]);
+            Assert.Equal("2021-01-01 00:00:00", row1["4"]);
+            
+            var row2 = records[1] as IDictionary<string, object>;
+            Assert.Equal("<test>Hello World</test>", row2!["1"]);
+            Assert.Equal("-1234567890", row2["2"]);
+            Assert.Equal("False", row2["3"]);
+            Assert.Equal("2021-01-02 00:00:00", row2["4"]);
         }
     }
 
     [Fact]
     public async Task SaveAsByDataTableTest()
     {
-        {
-            using var file = AutoDeletingPath.Create(ExcelType.CSV);
-            var path = file.ToString();
+        using var file1 = AutoDeletingPath.Create(ExcelType.CSV);
+        var path1 = file1.ToString();
 
-            var table = new DataTable();
-            await MiniExcel.SaveAsAsync(path, table);
+        var emptyTable = new DataTable();
+        await MiniExcel.SaveAsAsync(path1, emptyTable);
 
-            var text = File.ReadAllText(path);
-            Assert.Equal("\r\n", text);
-        }
+        var text = await File.ReadAllTextAsync(path1);
+        Assert.Equal("\r\n", text);
 
-        {
-            var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.csv");
+        
+        using var file2= AutoDeletingPath.Create(ExcelType.CSV);
+        var path2 = file2.ToString();
 
-            var table = new DataTable();
-            {
-                table.Columns.Add("a", typeof(string));
-                table.Columns.Add("b", typeof(decimal));
-                table.Columns.Add("c", typeof(bool));
-                table.Columns.Add("d", typeof(DateTime));
-                table.Rows.Add(@"""<>+-*//}{\\n", 1234567890, true, new DateTime(2021, 1, 1));
-                table.Rows.Add("<test>Hello World</test>", -1234567890, false, new DateTime(2021, 1, 2));
-            }
+        var table = new DataTable();
+        table.Columns.Add("a", typeof(string));
+        table.Columns.Add("b", typeof(decimal));
+        table.Columns.Add("c", typeof(bool));
+        table.Columns.Add("d", typeof(DateTime));
+        table.Rows.Add(@"""<>+-*//}{\\n", 1234567890, true, new DateTime(2021, 1, 1));
+        table.Rows.Add("<test>Hello World</test>", -1234567890, false, new DateTime(2021, 1, 2));
 
-            var rowsWritten = await MiniExcel.SaveAsAsync(path, table);
-            Assert.Equal(2, rowsWritten[0]);
-                
-            using (var reader = new StreamReader(path))
-            using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
-            {
-                var records = csv.GetRecords<dynamic>().ToList();
-                Assert.Equal(@"""<>+-*//}{\\n", records[0].a);
-                Assert.Equal("1234567890", records[0].b);
-                Assert.Equal("True", records[0].c);
-                Assert.Equal("2021-01-01 00:00:00", records[0].d);
+        var rowsWritten = await MiniExcel.SaveAsAsync(path2, table);
+        Assert.Equal(2, rowsWritten[0]);
 
-                Assert.Equal("<test>Hello World</test>", records[1].a);
-                Assert.Equal("-1234567890", records[1].b);
-                Assert.Equal("False", records[1].c);
-                Assert.Equal("2021-01-02 00:00:00", records[1].d);
-            }
-        }
+        using var reader = new StreamReader(path2);
+        using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
+        var records = csv.GetRecords<dynamic>().ToList();
+            
+        Assert.Equal(@"""<>+-*//}{\\n", records[0].a);
+        Assert.Equal("1234567890", records[0].b);
+        Assert.Equal("True", records[0].c);
+        Assert.Equal("2021-01-01 00:00:00", records[0].d);
+
+        Assert.Equal("<test>Hello World</test>", records[1].a);
+        Assert.Equal("-1234567890", records[1].b);
+        Assert.Equal("False", records[1].c);
+        Assert.Equal("2021-01-02 00:00:00", records[1].d);
     }
 
 
     private class Test
     {
-        public string c1 { get; set; }
-        public string c2 { get; set; }
+        public string? c1 { get; set; }
+        public string? c2 { get; set; }
     }
 
     [Fact]
     public async Task CsvExcelTypeTest()
     {
-        {
-            using var file = AutoDeletingPath.Create(ExcelType.CSV);
-            var path = file.ToString();
+        using var file = AutoDeletingPath.Create(ExcelType.CSV);
+        var path = file.ToString();
 
-            var input = new[] { new { A = "Test1", B = "Test2" } };
-            await MiniExcel.SaveAsAsync(path, input);
+        var input = new[] { new { A = "Test1", B = "Test2" } };
+        await MiniExcel.SaveAsAsync(path, input);
 
-            var texts = File.ReadAllLines(path);
-            Assert.Equal("A,B", texts[0]);
-            Assert.Equal("Test1,Test2", texts[1]);
+        var texts = await File.ReadAllLinesAsync(path);
+        Assert.Equal("A,B", texts[0]);
+        Assert.Equal("Test1,Test2", texts[1]);
 
-            {
-                var q = await MiniExcel.QueryAsync(path);
-                var rows = q.ToList();
-                Assert.Equal("A", rows[0].A);
-                Assert.Equal("B", rows[0].B);
-                Assert.Equal("Test1", rows[1].A);
-                Assert.Equal("Test2", rows[1].B);
-            }
+        var q = await MiniExcel.QueryAsync(path);
+        var rows1 = q.ToList();
 
-            using (var reader = new StreamReader(path))
-            using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
-            {
-                var rows = csv.GetRecords<dynamic>().ToList();
-                Assert.Equal("Test1", rows[0].A);
-                Assert.Equal("Test2", rows[0].B);
-            }
-        }
+        Assert.Equal("A", rows1[0].A);
+        Assert.Equal("B", rows1[0].B);
+        Assert.Equal("Test1", rows1[1].A);
+        Assert.Equal("Test2", rows1[1].B);
+
+        using var reader = new StreamReader(path);
+        using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
+        var rows2 = csv.GetRecords<dynamic>().ToList();
+        
+        Assert.Equal("Test1", rows2[0].A);
+        Assert.Equal("Test2", rows2[0].B);
     }
 
     [Fact]
@@ -263,14 +249,15 @@ public class MiniExcelCsvAsycTests
         using var file = AutoDeletingPath.Create(ExcelType.CSV);
         var path = file.ToString();
 
-        await MiniExcel.SaveAsAsync(path, new[] {
-            new { c1 = "A1" ,c2 = "B1"},
-            new { c1 = "A2" ,c2 = "B2"},
+        await MiniExcel.SaveAsAsync(path, new[] 
+        {
+            new { c1 = "A1", c2 = "B1"},
+            new { c1 = "A2", c2 = "B2"},
         });
 
-        using (var stream = File.OpenRead(path))
+        await using (var stream = File.OpenRead(path))
         {
-            var rows = stream.Query(useHeaderRow: true, excelType: ExcelType.CSV).ToList();
+            var rows = (await stream.QueryAsync(useHeaderRow: true, excelType: ExcelType.CSV)).ToList();
             Assert.Equal("A1", rows[0].c1);
             Assert.Equal("B1", rows[0].c2);
             Assert.Equal("A2", rows[1].c1);
@@ -278,7 +265,7 @@ public class MiniExcelCsvAsycTests
         }
 
         {
-            var rows = MiniExcel.Query(path, useHeaderRow: true, excelType: ExcelType.CSV).ToList();
+            var rows = (await MiniExcel.QueryAsync(path, useHeaderRow: true, excelType: ExcelType.CSV)).ToList();
             Assert.Equal("A1", rows[0].c1);
             Assert.Equal("B1", rows[0].c2);
             Assert.Equal("A2", rows[1].c1);
@@ -292,12 +279,13 @@ public class MiniExcelCsvAsycTests
         using var file = AutoDeletingPath.Create(ExcelType.CSV);
         var path = file.ToString();
 
-        await MiniExcel.SaveAsAsync(path, new[] {
-            new { c1 = "A1" ,c2 = "B1"},
-            new { c1 = "A2" ,c2 = "B2"},
+        await MiniExcel.SaveAsAsync(path, new[] 
+        {
+            new { c1 = "A1", c2 = "B1"},
+            new { c1 = "A2", c2 = "B2"}
         });
 
-        using (var stream = File.OpenRead(path))
+        await using (var stream = File.OpenRead(path))
         {
             var rows = stream.Query<Test>(excelType: ExcelType.CSV).ToList();
             Assert.Equal("A1", rows[0].c1);
@@ -323,11 +311,11 @@ public class MiniExcelCsvAsycTests
         
         await MiniExcel.SaveAsAsync(path, new[] 
         {
-            new { c1 = "A1", c2 = (string)null},
-            new { c1 = (string)null, c2 = (string)null},
+            new { c1 = (string?)"A1", c2 = (string?)null},
+            new { c1 = (string?)null, c2 = (string?)null}
         });
 
-        using (var stream = File.OpenRead(path))
+        await using (var stream = File.OpenRead(path))
         {
             var rows = stream.Query<Test>(excelType: ExcelType.CSV).ToList();
             Assert.Equal("A1", rows[0].c1);
@@ -345,7 +333,7 @@ public class MiniExcelCsvAsycTests
         }
 
         var config = new Csv.CsvConfiguration { ReadEmptyStringAsNull = true };
-        using (var stream = File.OpenRead(path))
+        await using (var stream = File.OpenRead(path))
         {
             var rows = stream.Query<Test>(excelType: ExcelType.CSV, configuration: config).ToList();
             Assert.Equal("A1", rows[0].c1);

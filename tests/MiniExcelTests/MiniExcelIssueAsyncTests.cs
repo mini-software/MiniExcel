@@ -186,7 +186,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
         await Assert.ThrowsAsync<NotSupportedException>(async () => _ = (await MiniExcel.QueryAsync(path)).ToList());
 
         await using var stream = File.OpenRead(path);
-        await Assert.ThrowsAsync<NotSupportedException>(async () => _ = (await stream.QueryAsync()).ToList());
+        await Assert.ThrowsAsync<InvalidDataException>(async () => _ = (await stream.QueryAsync()).ToList());
     }
 
     /// <summary>

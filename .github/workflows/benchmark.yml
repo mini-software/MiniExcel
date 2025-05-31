@@ -31,17 +31,17 @@ jobs:
           BenchmarkMode: Automatic
           BenchmarkSection: query
       - name: Renaming result file
-        run: mv MiniExcelLibs.Benchmarks.XlsxBenchmark-report-github.md query-benchmark.md
-        working-directory: ./benchmarks/MiniExcel.Benchmarks/BenchMarkDotNet.Artifacts/results
+        run: mv MiniExcelLibs.Benchmarks.BenchmarkSections.QueryXlsxBenchmark-report-github.md query-benchmark.md
+        working-directory: ./benchmarks/MiniExcel.Benchmarks/BenchmarkDotNet.Artifacts/results
       - name: Save benchmark results
         uses: actions/upload-artifact@v4
         with:
           name: query-benchmark-result
-          path: ./benchmark/MiniExcel.Benchmarks/BenchMarkDotNet.Artifacts/results/*.md
-          
+          path: ./benchmarks/MiniExcel.Benchmarks/BenchmarkDotNet.Artifacts/results/*.md
+
   CreateBenchmark:
     runs-on: ubuntu-latest
-  
+
     steps:
       - uses: actions/checkout@v4
       - name: Setup .NET
@@ -61,17 +61,17 @@ jobs:
           BenchmarkMode: Automatic
           BenchmarkSection: create
       - name: Renaming result file
-        run: mv MiniExcelLibs.Benchmarks.XlsxBenchmark-report-github.md create-benchmark.md
-        working-directory: ./benchmarks/MiniExcel.Benchmarks/BenchMarkDotNet.Artifacts/results
+        run: mv MiniExcelLibs.Benchmarks.BenchmarkSections.CreateXlsxBenchmark-report-github.md create-benchmark.md
+        working-directory: ./benchmarks/MiniExcel.Benchmarks/BenchmarkDotNet.Artifacts/results
       - name: Save benchmark results
         uses: actions/upload-artifact@v4
         with:
           name: create-benchmark-result
-          path: ./benchmark/MiniExcel.Benchmarks/BenchMarkDotNet.Artifacts/results/*.md
-          
+          path: ./benchmarks/MiniExcel.Benchmarks/BenchmarkDotNet.Artifacts/results/*.md
+
   TemplateBenchmark:
     runs-on: ubuntu-latest
-  
+
     steps:
       - uses: actions/checkout@v4
       - name: Setup .NET
@@ -91,18 +91,18 @@ jobs:
           BenchmarkMode: Automatic
           BenchmarkSection: template
       - name: Renaming result file
-        run: mv MiniExcelLibs.Benchmarks.XlsxBenchmark-report-github.md template-benchmark.md
-        working-directory: ./benchmarks/MiniExcel.Benchmarks/BenchMarkDotNet.Artifacts/results        
+        run: mv MiniExcelLibs.Benchmarks.BenchmarkSections.TemplateXlsxBenchmark-report-github.md template-benchmark.md
+        working-directory: ./benchmarks/MiniExcel.Benchmarks/BenchmarkDotNet.Artifacts/results
       - name: Save benchmark results
         uses: actions/upload-artifact@v4
         with:
           name: template-benchmark-result
-          path: ./benchmark/MiniExcel.Benchmarks/BenchMarkDotNet.Artifacts/results/*.md
+          path: ./benchmarks/MiniExcel.Benchmarks/BenchmarkDotNet.Artifacts/results/*.md
 
   PushBenchmarksResults:
     runs-on: ubuntu-latest
     needs: [ QueryBenchmark, CreateBenchmark, TemplateBenchmark ]
-    
+ 
     steps:
       - uses: actions/checkout@v4
         with:
@@ -110,8 +110,8 @@ jobs:
       - name: Fetch benchmark results
         uses: actions/download-artifact@v4
         with:
-            path: ./benchmarks/results
-            merge-multiple: true
+          path: ./benchmarks/results
+          merge-multiple: true
       - name: Commit reports
         working-directory: ./benchmarks/results
         run: |

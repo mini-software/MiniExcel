@@ -1,4 +1,4 @@
-<div align="center">
+<div style="text-align: center">
 <p><a href="https://www.nuget.org/packages/MiniExcel"><img src="https://img.shields.io/nuget/v/MiniExcel.svg" alt="NuGet"></a>  <a href="https://www.nuget.org/packages/MiniExcel"><img src="https://img.shields.io/nuget/dt/MiniExcel.svg" alt=""></a>
 <a href="https://ci.appveyor.com/project/mini-software/miniexcel/branch/master"><img src="https://ci.appveyor.com/api/projects/status/b2vustrwsuqx45f4/branch/master?svg=true" alt="Build status"></a>
 <a href="https://gitee.com/dotnetchina/MiniExcel"><img src="https://gitee.com/dotnetchina/MiniExcel/badge/star.svg" alt="star"></a> <a href="https://github.com/mini-software/MiniExcel" rel="nofollow"><img src="https://img.shields.io/github/stars/mini-software/MiniExcel?logo=github" alt="GitHub stars"></a>
@@ -11,19 +11,19 @@
 
 [<img align="right" src="https://github.com/dotnet-foundation/swag/blob/main/logo/dotnetfoundation_v4.png?raw=true" width="100" />](https://www.dotnetfoundation.org/)
 
-<div align="center">
+<div style="text-align: center">
 <p>This project is part of the <a href="https://www.dotnetfoundation.org/">.NET Foundation</a> and operates under their <a href="https://www.dotnetfoundation.org/code-of-conduct">code of conduct</a>. </p>
 </div>
 
 ---
 
-<div align="center">
+<div style="text-align: center">
 <p><strong><a href="README.md">English</a> | <a href="README.zh-CN.md">简体中文</a> | <a href="README.zh-Hant.md">繁體中文</a></strong></p>
 </div>
 
 ---
 
-<div align="center">
+<div style="text-align: center">
  Your <a href="https://github.com/mini-software/MiniExcel">Star</a> and <a href="https://miniexcel.github.io">Donate</a> can make MiniExcel better
 </div>
 
@@ -43,9 +43,9 @@ At present, most popular frameworks need to load all the data into the memory to
 ### Features
 
 - Low memory consumption, avoid OOM (out of memory) and full GC
-- Support `real-time` operation of each row of data
-- Support LINQ deferred execution, it can do low-consumption, fast paging and other complex queries
-- Lightweight, without Microsoft Office installed, no COM+, DLL size is less than 150KB
+- Supports real time operation of each row of data
+- Supports LINQ deferred execution, it can do low-consumption, fast paging and other complex queries
+- Lightweight, without Microsoft Office installed, no COM+, DLL size is less than 400KB
 - Easy API style to read/write/fill excel
 
 ### Get Started
@@ -76,54 +76,18 @@ Please Check  [TODO](https://github.com/mini-software/MiniExcel/projects/1?fulls
 
 ### Performance
 
-Benchmarks logic can be found in  [MiniExcel.Benchmarks](benchmarks/MiniExcel.Benchmarks/Program.cs) , and test cli
+The code for the benchmarks can be found in [MiniExcel.Benchmarks](benchmarks/MiniExcel.Benchmarks/Program.cs).
+
+The file used to test performance is [**Test1,000,000x10.xlsx**](benchmarks/MiniExcel.Benchmarks/Test1%2C000%2C000x10.xlsx), a 32MB document containing 1,000,000 rows * 10 columns whose cells are filled with the string "HelloWorld".
+
+To run all the benchmarks use:
 
 ```bash
-dotnet run -p .\benchmarks\MiniExcel.Benchmarks\ -c Release -f netcoreapp3.1 -- -f * --join
+dotnet run -project .\benchmarks\MiniExcel.Benchmarks -c Release -f net9.0 -filter * --join
 ```
 
-Output from the latest run is :
+You can find the benchmarks' results for the latest release [here](benchmarks/results).
 
-```bash
-BenchmarkDotNet=v0.12.1, OS=Windows 10.0.19042
-Intel Core i7-7700 CPU 3.60GHz (Kaby Lake), 1 CPU, 8 logical and 4 physical cores
-  [Host]     : .NET Framework 4.8 (4.8.4341.0), X64 RyuJIT
-  Job-ZYYABG : .NET Framework 4.8 (4.8.4341.0), X64 RyuJIT
-IterationCount=3  LaunchCount=3  WarmupCount=3
-```
-
-Benchmark History :  [Link](https://github.com/mini-software/MiniExcel/issues/276)
-
-
-
-#### Import/Query Excel
-
-Logic : [**Test1,000,000x10.xlsx**](benchmarks/MiniExcel.Benchmarks/Test1%2C000%2C000x10.xlsx)  as performance test basic file, 1,000,000 rows * 10 columns  "HelloWorld" cells, 23 MB file size
-
-
-| Library      | Method                       | Max Memory Usage |         Mean |
-| ---------------------------- | -------------: | ---------------: | ---------------: |
-| MiniExcel | 'MiniExcel QueryFirst'       |       0.109 MB | 0.0007264 sec |
-| ExcelDataReader | 'ExcelDataReader QueryFirst' |       15.24 MB | 10.66421 sec |
-| MiniExcel  | 'MiniExcel Query'            |        17.3 MB | 14.17933 sec |
-| ExcelDataReader | 'ExcelDataReader Query'      |        17.3 MB | 22.56508 sec |
-| Epplus    | 'Epplus QueryFirst'          |       1,452 MB | 18.19801 sec |
-| Epplus        | 'Epplus Query'               |       1,451 MB | 23.64747 sec |
-| OpenXmlSDK | 'OpenXmlSDK Query'           |       1,412 MB | 52.00327 sec |
-| OpenXmlSDK | 'OpenXmlSDK QueryFirst'      |       1,413 MB | 52.34865 sec |
-| ClosedXml | 'ClosedXml QueryFirst'       |       2,158 MB | 66.18897 sec |
-| ClosedXml  | 'ClosedXml Query'            |       2,184 MB | 191.43412 sec |
-
-#### Export/Create Excel
-
-Logic : create a total of 10,000,000 "HelloWorld" excel
-
-| Library            | Method                   | Max Memory Usage |         Mean |
-| ------------------------ | -------------: | ---------------: | -----------: |
-| MiniExcel | 'MiniExcel Create Xlsx'  |          15 MB | 11.53181 sec |
-| Epplus | 'Epplus Create Xlsx'     |       1,204 MB | 22.50971 sec |
-| OpenXmlSdk | 'OpenXmlSdk Create Xlsx' |       2,621 MB | 42.47399 sec |
-| ClosedXml | 'ClosedXml Create Xlsx'  |       7,141 MB | 140.93992 sec |
 
 ### Excel Query/Import  <a name="getstart1"></a>
 
@@ -156,9 +120,9 @@ using (var stream = File.OpenRead(path))
 
 * dynamic key is `A.B.C.D..`
 
-| MiniExcel     | 1     |
-| -------- | -------- |
-| Github     | 2     |
+| MiniExcel | 1 |
+|-----------|---|
+| Github    | 2 |
 
 ```csharp
 
@@ -182,10 +146,10 @@ note : same column name use last right one
 
 Input Excel :
 
-| Column1 | Column2 |
-| -------- | -------- |
-| MiniExcel     | 1     |
-| Github     | 2     |
+| Column1   | Column2 |
+|-----------|---------|
+| MiniExcel | 1       |
+| Github    | 2       |
 
 
 ```csharp
@@ -372,10 +336,10 @@ MiniExcel.SaveAs(path, values);
 
 Create File Result :
 
-| Column1 | Column2 |
-| -------- | -------- |
-| MiniExcel     | 1     |
-| Github     | 2     |
+| Column1   | Column2 |
+|-----------|---------|
+| MiniExcel | 1       |
+| Github    | 2       |
 
 
 #### 3.  IDataReader
@@ -993,11 +957,11 @@ When the template is rendered, the `$` prefix will be removed and `$enumrowstart
 
 ##### 2. Other Example Formulas:
 
-|            |                                                                                         |
-|------------|-----------------------------------------------------------------------------------------|
-|Sum         |`$=SUM(C{{$enumrowstart}}:C{{$enumrowend}})`                                             |
-|Alt. Average|`$=SUM(C{{$enumrowstart}}:C{{$enumrowend}}) / COUNT(C{{$enumrowstart}}:C{{$enumrowend}})`|
-|Range       |`$=MAX(C{{$enumrowstart}}:C{{$enumrowend}}) - MIN(C{{$enumrowstart}}:C{{$enumrowend}})`  |
+|              |                                                                                           |
+|--------------|-------------------------------------------------------------------------------------------|
+| Sum          | `$=SUM(C{{$enumrowstart}}:C{{$enumrowend}})`                                              |
+| Alt. Average | `$=SUM(C{{$enumrowstart}}:C{{$enumrowend}}) / COUNT(C{{$enumrowstart}}:C{{$enumrowend}})` |
+| Range        | `$=MAX(C{{$enumrowstart}}:C{{$enumrowend}}) - MIN(C{{$enumrowstart}}:C{{$enumrowend}})`   |
 
 
 #### 11. Other

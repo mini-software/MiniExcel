@@ -848,7 +848,7 @@ namespace MiniExcelLibs.OpenXml.Styles
             await _context.NewXmlWriter.WriteAttributeStringAsync(null, "horizontal", null, "general");
             await _context.NewXmlWriter.WriteAttributeStringAsync(null, "vertical", null, "bottom");
             await _context.NewXmlWriter.WriteAttributeStringAsync(null, "textRotation", null, "0");
-            await _context.NewXmlWriter.WriteAttributeStringAsync(null, "wrapText", null, "0");
+            await _context.NewXmlWriter.WriteAttributeStringAsync(null, "wrapText", null, _styleOptions.WrapCellContents ? "1" : "0");
             await _context.NewXmlWriter.WriteAttributeStringAsync(null, "indent", null, "0");
             await _context.NewXmlWriter.WriteAttributeStringAsync(null, "relativeIndent", null, "0");
             await _context.NewXmlWriter.WriteAttributeStringAsync(null, "justifyLastLine", null, "0");

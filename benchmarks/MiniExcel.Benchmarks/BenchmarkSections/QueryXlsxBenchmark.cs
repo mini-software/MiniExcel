@@ -4,6 +4,7 @@ using ClosedXML.Excel;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using ExcelDataReader;
+using NPOI.XSSF.UserModel;
 using OfficeOpenXml;
 
 namespace MiniExcelLibs.Benchmarks.BenchmarkSections;
@@ -96,7 +97,31 @@ public class QueryXlsxBenchmark : BenchmarkBase
         using var workbook = new XLWorkbook(FilePath);
         workbook.Worksheet(1).Rows();
     }
-    
+    [Benchmark(Description = "NPOI QueryFirst")]
+    public void NPOI_QueryFirst_Test()
+    {
+        using var wb = new XSSFWorkbook(FilePath,true);
+        wb.GetSheetAt(0).GetRow(1);
+    }
+    [Benchmark(Description = "NPOI Query")]
+    public void NPOI_Query_Test()
+    {
+        using var wb = new XSSFWorkbook(FilePath, true);
+        var worksheet = wb.GetSheetAt(0);
+        var start = worksheet.FirstRowNum;
+        var end = worksheet.LastRowNum;
+
+        for (var i = start; i <= end; i++)
+        {
+            var row = worksheet.GetRow(i);
+            if (row == null)
+                continue;
+            for (var j = row.FirstCellNum; j <= row.LastCellNum; j++)
+            {
+                var cellValue = row.GetCell(j)?.StringCellValue;
+            }
+        }
+    }
     [Benchmark(Description = "OpenXmlSDK QueryFirst")]
     public void OpenXmlSDK_QueryFirst_Test()
     {

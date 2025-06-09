@@ -15,7 +15,7 @@ namespace MiniExcelLibs.Csv
     {
         private Stream _stream;
         private CsvConfiguration _config;
-        
+
         public CsvReader(Stream stream, IConfiguration configuration)
         {
             _stream = stream;
@@ -28,7 +28,7 @@ namespace MiniExcelLibs.Csv
 
             if (_stream.CanSeek)
                 _stream.Position = 0;
- 
+
             var reader = _config.StreamReaderFunc(_stream);
             var firstRow = true;
             var headRows = new Dictionary<int, string>();
@@ -59,7 +59,7 @@ namespace MiniExcelLibs.Csv
                     var rowValues = read
                         .Select((x, i) => new KeyValuePair<string, object>(headRows[i], x))
                         .ToDictionary(x => x.Key, x => x.Value);
-                    
+
                     throw new ExcelColumnNotFoundException(columnIndex: null, headRows[colIndex], null, rowIndex, headers, rowValues, $"Csv read error: Column {colIndex} not found in Row {rowIndex}");
                 }
 
@@ -145,16 +145,16 @@ namespace MiniExcelLibs.Csv
         {
             if (startCell != "A1")
                 throw new NotImplementedException("CSV does not implement parameter startCell");
-            
+
             if (_stream.CanSeek)
                 _stream.Position = 0;
-            
+
             var reader = _config.StreamReaderFunc(_stream);
-            
+
             string row;
             var firstRow = true;
             var headRows = new Dictionary<int, string>();
-            
+
             while ((row = reader.ReadLine()) != null)
             {
                 var read = Split(row);
@@ -182,20 +182,20 @@ namespace MiniExcelLibs.Csv
                 var cell = CustomPropertyHelper.GetEmptyExpandoObject(read.Length - 1, 0);
                 for (int i = 0; i <= read.Length - 1; i++)
                     cell[ColumnHelper.GetAlphabetColumnName(i)] = read[i];
-                
+
                 yield return cell;
             }
         }
-        public IEnumerable<T> QueryRange<T>(string sheetName, string startCell, string endCel) where T : class, new()
+        public IEnumerable<T> QueryRange<T>(string sheetName, string startCell, string endCell, bool hasHeader) where T : class, new()
         {
-            return ExcelOpenXmlSheetReader.QueryImplRange<T>(QueryRange(false, sheetName, startCell, endCel), startCell, endCel, this._config);
+            return ExcelOpenXmlSheetReader.QueryImpl<T>(QueryRange(false, sheetName, startCell, endCell), startCell, hasHeader, this._config);
         }
-        public Task<IEnumerable<IDictionary<string, object>>> QueryAsyncRange(bool useHeaderRow, string sheetName, string startCell, string endCel, CancellationToken cancellationToken = default)
+        public Task<IEnumerable<IDictionary<string, object>>> QueryRangeAsync(bool useHeaderRow, string sheetName, string startCell, string endCel, CancellationToken cancellationToken = default)
         {
             return Task.Run(() => QueryRange(useHeaderRow, sheetName, startCell, endCel), cancellationToken);
         }
 
-        public Task<IEnumerable<T>> QueryAsyncRange<T>(string sheetName, string startCell, string endCel, bool hasHeader, CancellationToken cancellationToken = default) where T : class, new()
+        public Task<IEnumerable<T>> QueryRangeAsync<T>(string sheetName, string startCell, string endCel, bool hasHeader, CancellationToken cancellationToken = default) where T : class, new()
         {
             return Task.Run(() => Query<T>(sheetName, startCell, hasHeader), cancellationToken);
         }

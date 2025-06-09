@@ -5,6 +5,7 @@ using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using MiniExcelLibs.Benchmarks.Utils;
+using NPOI.XSSF.UserModel;
 using OfficeOpenXml;
 
 namespace MiniExcelLibs.Benchmarks.BenchmarkSections;
@@ -47,6 +48,34 @@ public class CreateXlsxBenchmark : BenchmarkBase
         worksheet.Cells["A1"].LoadFromCollection(Collection: GetValue(), PrintHeaders: true);
 
         excelFile.Save();
+    }
+    [Benchmark(Description = "NPOI Create Xlsx")]
+    public void NPOICreateTest()
+    {
+        using var path = AutoDeletingPath.Create();
+        using var wb= new XSSFWorkbook();
+        var worksheet = wb.CreateSheet("Sheet1");
+
+        int i = 0;
+        foreach (var item in GetValue())
+        {
+            var row = worksheet.CreateRow(i);
+            row.CreateCell(0).SetCellValue(item.Column1);
+            row.CreateCell(1).SetCellValue(item.Column2);
+            row.CreateCell(2).SetCellValue(item.Column3);
+            row.CreateCell(3).SetCellValue(item.Column4);
+            row.CreateCell(4).SetCellValue(item.Column5);
+            row.CreateCell(5).SetCellValue(item.Column6);
+            row.CreateCell(6).SetCellValue(item.Column7);
+            row.CreateCell(7).SetCellValue(item.Column8);
+            row.CreateCell(8).SetCellValue(item.Column9);
+            row.CreateCell(9).SetCellValue(item.Column10);
+            i++;
+        }
+        using (var fs = File.Create(path.FilePath))
+        {
+            wb.Write(fs);
+        }
     }
 
     [Benchmark(Description = "OpenXmlSdk Create Xlsx by DOM mode")]

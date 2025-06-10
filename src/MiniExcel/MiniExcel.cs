@@ -102,12 +102,14 @@ namespace MiniExcelLibs
                 foreach (var item in excelReader.Query<T>(sheetName, startCell, hasHeader))
                     yield return item;
         }
+       
         public static IEnumerable<dynamic> Query(string path, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null)
         {
             using (var stream = FileHelper.OpenSharedRead(path))
                 foreach (var item in Query(stream, useHeaderRow, sheetName, ExcelTypeHelper.GetExcelType(path, excelType), startCell, configuration))
                     yield return item;
         }
+        
         public static IEnumerable<dynamic> Query(this Stream stream, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null)
         {
             using (var excelReader = ExcelReaderFactory.GetProvider(stream, ExcelTypeHelper.GetExcelType(stream, excelType), configuration))
@@ -116,7 +118,7 @@ namespace MiniExcelLibs
                             (dict, p) => { dict.Add(p); return dict; });
         }
 
-        #region range
+        #region QueryRange
 
         /// <summary>
         /// Extract the given range。 Only uppercase letters are effective。
@@ -136,19 +138,34 @@ namespace MiniExcelLibs
         public static IEnumerable<dynamic> QueryRange(string path, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", string endCell = "", IConfiguration configuration = null)
         {
             using (var stream = FileHelper.OpenSharedRead(path))
-                foreach (var item in QueryRange(stream, useHeaderRow, sheetName, ExcelTypeHelper.GetExcelType(path, excelType), startCell == "" ? "A1" : startCell, endCell, configuration))
+                foreach (var item in QueryRange(stream, useHeaderRow, sheetName, ExcelTypeHelper.GetExcelType(path, excelType), startCell, endCell, configuration))
                     yield return item;
         }
 
         public static IEnumerable<dynamic> QueryRange(this Stream stream, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", string endCell = "", IConfiguration configuration = null)
         {
             using (var excelReader = ExcelReaderFactory.GetProvider(stream, ExcelTypeHelper.GetExcelType(stream, excelType), configuration))
-                foreach (var item in excelReader.QueryRange(useHeaderRow, sheetName, startCell == "" ? "A1" : startCell, endCell))
+                foreach (var item in excelReader.QueryRange(useHeaderRow, sheetName, startCell, endCell))
                     yield return item.Aggregate(new ExpandoObject() as IDictionary<string, object>,
                             (dict, p) => { dict.Add(p); return dict; });
         }
 
-        #endregion range
+        public static IEnumerable<dynamic> QueryRange(string path, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, int startRowIndex = 1, int startColumnIndex = 1, int? endRowIndex = null, int? endColumnIndex = null, IConfiguration configuration = null)
+        {
+            using (var stream = FileHelper.OpenSharedRead(path))
+                foreach (var item in QueryRange(stream, useHeaderRow, sheetName, ExcelTypeHelper.GetExcelType(path, excelType), startRowIndex, startColumnIndex, endRowIndex, endColumnIndex, configuration))
+                    yield return item;
+        }
+        
+        public static IEnumerable<dynamic> QueryRange(this Stream stream, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, int startRowIndex = 1, int startColumnIndex = 1, int? endRowIndex = null, int? endColumnIndex = null, IConfiguration configuration = null)
+        {
+            using (var excelReader = ExcelReaderFactory.GetProvider(stream, ExcelTypeHelper.GetExcelType(stream, excelType), configuration))
+                foreach (var item in excelReader.QueryRange(useHeaderRow, sheetName, startRowIndex, startColumnIndex, endRowIndex, endColumnIndex))
+                    yield return item.Aggregate(new ExpandoObject() as IDictionary<string, object>,
+                            (dict, p) => { dict.Add(p); return dict; });
+        }
+
+        #endregion QueryRange
 
         public static void SaveAsByTemplate(string path, string templatePath, object value, IConfiguration configuration = null)
         {

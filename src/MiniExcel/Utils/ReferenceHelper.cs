@@ -56,7 +56,7 @@ namespace MiniExcelLibs.Utils
         /// <param name="value">The value.</param>
         /// <param name="column">The column, 1-based.</param>
         /// <param name="row">The row, 1-based.</param>
-        public static bool TryParseReference(string value, out int column, out int row)
+        public static bool ParseReference(string value, out int column, out int row)
         {
             row = 0;
             column = 0;

@@ -1,9 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFrameworks>net45;netstandard2.0;net8.0;net9.0</TargetFrameworks>
+		<TargetFrameworks>net462;netstandard2.0;net8.0;net9.0</TargetFrameworks>
 		<Version>1.41.2</Version>
 	</PropertyGroup>
-	<PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+	<PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.0' or '$(TargetFramework)' == 'net462'">
 		<LangVersion>8</LangVersion>
 	</PropertyGroup>
 	<PropertyGroup>
@@ -38,7 +38,7 @@ Todo : https://github.com/mini-software/MiniExcel/projects/1?fullscreen=true</De
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 	</PropertyGroup>
 	
-	<ItemGroup Condition=" '$(TargetFramework)' == 'net45'">
+	<ItemGroup Condition=" '$(TargetFramework)' == 'net462'">
 		<Reference Include="System.IO.Compression" />
 	</ItemGroup>
 	<ItemGroup>
@@ -52,7 +52,13 @@ Todo : https://github.com/mini-software/MiniExcel/projects/1?fullscreen=true</De
 	<ItemGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
 		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
 	</ItemGroup>
-	<ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+	<ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0' or '$(TargetFramework)' == 'net462'">
 	  <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="9.0.0" />
+	</ItemGroup>
+	<ItemGroup>
+	  <PackageReference Include="Zomp.SyncMethodGenerator" Version="1.4.27">
+	    <PrivateAssets>all</PrivateAssets>
+	    <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+	  </PackageReference>
 	</ItemGroup>
 </Project>

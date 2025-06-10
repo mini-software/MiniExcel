@@ -1,59 +1,93 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Xml;
 
 namespace MiniExcelLibs.Utils
 {
-    internal static class XmlReaderHelper
+    internal static partial class XmlReaderHelper
     {
         /// <summary>
         /// Pass &lt;?xml&gt; and &lt;worksheet&gt;
         /// </summary>
         /// <param name="reader"></param>
-        public static void PassXmlDeclarationAndWorksheet(this XmlReader reader)
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        public static async Task PassXmlDeclarationAndWorksheet(this XmlReader reader, CancellationToken ct = default)
         {
-            reader.MoveToContent();
-            reader.Read();
+            await reader.MoveToContentAsync()
+#if NET6_0_OR_GREATER
+                        .WaitAsync(ct)
+#endif
+;
+            await reader.ReadAsync()
+#if NET6_0_OR_GREATER
+                        .WaitAsync(ct)
+#endif
+;
         }
 
         /// <summary>
         /// e.g skip row 1 to row 2
         /// </summary>
         /// <param name="reader"></param>
-        public static void SkipToNextSameLevelDom(XmlReader reader)
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        public static async Task SkipToNextSameLevelDomAsync(XmlReader reader, CancellationToken ct = default)
         {
             while (!reader.EOF)
             {
-                if (!SkipContent(reader))
+                if (!await SkipContentAsync(reader, ct))
                     break;
             }
         }
 
         //Method from ExcelDataReader @MIT License
-        public static bool ReadFirstContent(XmlReader reader)
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        public static async Task<bool> ReadFirstContentAsync(XmlReader reader, CancellationToken ct = default)
         {
             if (reader.IsEmptyElement)
             {
-                reader.Read();
+                await reader.ReadAsync()
+#if NET6_0_OR_GREATER
+                        .WaitAsync(ct)
+#endif
+;
                 return false;
             }
 
-            reader.MoveToContent();
-            reader.Read();
+            await reader.MoveToContentAsync()
+#if NET6_0_OR_GREATER
+                        .WaitAsync(ct)
+#endif
+                ;
+            await reader.ReadAsync()
+#if NET6_0_OR_GREATER
+                        .WaitAsync(ct)
+#endif
+                ;
             return true;
         }
 
         //Method from ExcelDataReader @MIT License
-        public static bool SkipContent(XmlReader reader)
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        public static async Task<bool> SkipContentAsync(XmlReader reader, CancellationToken ct = default)
         {
             if (reader.NodeType == XmlNodeType.EndElement)
             {
-                reader.Read();
+                await reader.ReadAsync()
+#if NET6_0_OR_GREATER
+                        .WaitAsync(ct)
+#endif
+;
                 return false;
             }
 
-            reader.Skip();
+            await reader.SkipAsync()
+#if NET6_0_OR_GREATER
+                        .WaitAsync(ct)
+#endif
+ ;
             return true;
         }
 
@@ -69,14 +103,15 @@ namespace MiniExcelLibs.Utils
                 .FirstOrDefault(at => at != null);
         }
 
-        public static IEnumerable<string> GetSharedStrings(Stream stream, params string[] nss)
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        public static async IAsyncEnumerable<string> GetSharedStringsAsync(Stream stream, CancellationToken ct = default, params string[] nss)
         {
             using (var reader = XmlReader.Create(stream))
             {
                 if (!IsStartElement(reader, "sst", nss))
                     yield break;
 
-                if (!ReadFirstContent(reader))
+                if (!await ReadFirstContentAsync(reader, ct))
                     yield break;
 
                 while (!reader.EOF)
@@ -86,7 +121,7 @@ namespace MiniExcelLibs.Utils
                         var value = StringHelper.ReadStringItem(reader);
                         yield return value;
                     }
-                    else if (!SkipContent(reader))
+                    else if (!await SkipContentAsync(reader, ct))
                     {
                         break;
                     }

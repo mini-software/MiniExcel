@@ -8,6 +8,7 @@ using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
@@ -26,12 +27,7 @@ namespace MiniExcelLibs.OpenXml
         internal readonly ExcelOpenXmlZip _archive;
         private readonly OpenXmlConfiguration _config;
 
-        private static readonly XmlReaderSettings _xmlSettings = new XmlReaderSettings
-        {
-            IgnoreComments = true,
-            IgnoreWhitespace = true,
-            XmlResolver = null
-        };
+        private static readonly XmlReaderSettings _xmlSettings = GetXmlReaderSettings(false);
 
         public ExcelOpenXmlSheetReader(Stream stream, IConfiguration configuration, bool isUpdateMode = true)
         {
@@ -40,22 +36,25 @@ namespace MiniExcelLibs.OpenXml
             SetSharedStrings();
         }
 
-        public IEnumerable<IDictionary<string, object>> Query(bool useHeaderRow, string sheetName, string startCell)
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        public IAsyncEnumerable<IDictionary<string, object>> QueryAsync(bool useHeaderRow, string sheetName, string startCell, CancellationToken ct = default)
         {
-            return QueryRange(useHeaderRow, sheetName, startCell, "");
+            return QueryRangeAsync(useHeaderRow, sheetName, startCell, "", ct);
         }
 
-        public IEnumerable<T> Query<T>(string sheetName, string startCell, bool hasHeader) where T : class, new()
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        public IAsyncEnumerable<T> QueryAsync<T>(string sheetName, string startCell, bool hasHeader, CancellationToken ct = default) where T : class, new()
         {
             if (sheetName == null)
                 sheetName = CustomPropertyHelper.GetExcellSheetInfo(typeof(T), _config)?.ExcelSheetName;
 
             //Todo: Find a way if possible to remove the 'hasHeader' parameter to check whether or not to include
             // the first row in the result set in favor of modifying the already present 'useHeaderRow' to do the same job          
-            return QueryImpl<T>(Query(false, sheetName, startCell), startCell, hasHeader, _config);
+            return QueryImplAsync<T>(QueryAsync(false, sheetName, startCell, ct), startCell, hasHeader, _config);
         }
 
-        public IEnumerable<IDictionary<string, object>> QueryRange(bool useHeaderRow, string sheetName, string startCell, string endCell)
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        public IAsyncEnumerable<IDictionary<string, object>> QueryRangeAsync(bool useHeaderRow, string sheetName, string startCell, string endCell, CancellationToken ct = default)
         {
             if (!ReferenceHelper.ParseReference(startCell, out var startColumnIndex, out var startRowIndex))
             {
@@ -80,15 +79,17 @@ namespace MiniExcelLibs.OpenXml
                 endRowIndex = rIndex - 1;
             }
 
-            return InternalQueryRange(useHeaderRow, sheetName, startRowIndex, startColumnIndex, endRowIndex, endColumnIndex);
+            return InternalQueryRangeAsync(useHeaderRow, sheetName, startRowIndex, startColumnIndex, endRowIndex, endColumnIndex, ct);
         }
 
-        public IEnumerable<T> QueryRange<T>(string sheetName, string startCell, string endCell, bool hasHeader) where T : class, new()
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        public IAsyncEnumerable<T> QueryRangeAsync<T>(string sheetName, string startCell, string endCell, bool hasHeader, CancellationToken ct = default) where T : class, new()
         {
-            return QueryImpl<T>(QueryRange(false, sheetName, startCell, endCell), startCell, hasHeader, this._config);
+            return QueryImplAsync<T>(QueryRangeAsync(false, sheetName, startCell, endCell, ct), startCell, hasHeader, this._config);
         }
 
-        public IEnumerable<IDictionary<string, object>> QueryRange(bool useHeaderRow, string sheetName, int startRowIndex, int startColumnIndex, int? endRowIndex, int? endColumnIndex)
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        public IAsyncEnumerable<IDictionary<string, object>> QueryRangeAsync(bool useHeaderRow, string sheetName, int startRowIndex, int startColumnIndex, int? endRowIndex, int? endColumnIndex, CancellationToken ct = default)
         {
             if (startRowIndex <= 0)
             {
@@ -121,16 +122,26 @@ namespace MiniExcelLibs.OpenXml
                 endColumnIndex--;
             }
 
-            return InternalQueryRange(useHeaderRow, sheetName, startRowIndex, startColumnIndex, endRowIndex, endColumnIndex);
+            return InternalQueryRangeAsync(useHeaderRow, sheetName, startRowIndex, startColumnIndex, endRowIndex, endColumnIndex, ct);
         }
 
-        public IEnumerable<T> QueryRange<T>(string sheetName, int startRowIndex, int startColumnIndex, int? endRowIndex, int? endColumnIndex, bool hasHeader) where T : class, new()
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        public IAsyncEnumerable<T> QueryRangeAsync<T>(string sheetName, int startRowIndex, int startColumnIndex, int? endRowIndex, int? endColumnIndex, bool hasHeader, CancellationToken ct = default) where T : class, new()
         {
-            return QueryImpl<T>(QueryRange(false, sheetName, startRowIndex, startColumnIndex, endRowIndex, endColumnIndex), ReferenceHelper.ConvertXyToCell(startColumnIndex, startRowIndex), hasHeader, _config);
+            return QueryImplAsync<T>(QueryRangeAsync(false, sheetName, startRowIndex, startColumnIndex, endRowIndex, endColumnIndex, ct), ReferenceHelper.ConvertXyToCell(startColumnIndex, startRowIndex), hasHeader, _config);
         }
 
-        internal IEnumerable<IDictionary<string, object>> InternalQueryRange(bool useHeaderRow, string sheetName, int startRowIndex, int startColumnIndex, int? endRowIndex, int? endColumnIndex)
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        internal async IAsyncEnumerable<IDictionary<string, object>> InternalQueryRangeAsync(bool useHeaderRow, string sheetName, int startRowIndex, int startColumnIndex, int? endRowIndex, int? endColumnIndex, [EnumeratorCancellation] CancellationToken ct = default)
         {
+            var xmlSettings = GetXmlReaderSettings(
+#if SYNC_ONLY
+                false
+#else
+                true
+#endif
+                );
+
             var sheetEntry = GetSheetEntry(sheetName);
 
             // TODO: need to optimize performance
@@ -152,19 +163,19 @@ namespace MiniExcelLibs.OpenXml
             }
 
             using (var sheetStream = sheetEntry.Open())
-            using (var reader = XmlReader.Create(sheetStream, _xmlSettings))
+            using (var reader = XmlReader.Create(sheetStream, xmlSettings))
             {
                 if (!XmlReaderHelper.IsStartElement(reader, "worksheet", _ns))
                     yield break;
 
-                if (!XmlReaderHelper.ReadFirstContent(reader))
+                if (!await XmlReaderHelper.ReadFirstContentAsync(reader, ct))
                     yield break;
 
                 while (!reader.EOF)
                 {
                     if (XmlReaderHelper.IsStartElement(reader, "sheetData", _ns))
                     {
-                        if (!XmlReaderHelper.ReadFirstContent(reader))
+                        if (!await XmlReaderHelper.ReadFirstContentAsync(reader, ct))
                             continue;
 
                         var headRows = new Dictionary<int, string>();
@@ -182,8 +193,8 @@ namespace MiniExcelLibs.OpenXml
 
                                 if (rowIndex < startRowIndex)
                                 {
-                                    XmlReaderHelper.ReadFirstContent(reader);
-                                    XmlReaderHelper.SkipToNextSameLevelDom(reader);
+                                    await XmlReaderHelper.ReadFirstContentAsync(reader, ct);
+                                    await XmlReaderHelper.SkipToNextSameLevelDomAsync(reader, ct);
                                     continue;
                                 }
                                 if (endRowIndex.HasValue && rowIndex > endRowIndex.Value)
@@ -205,7 +216,7 @@ namespace MiniExcelLibs.OpenXml
                                 }
 
                                 // row -> c, must after `if (nextRowIndex < rowIndex)` condition code, eg. The first empty row has no xml element,and the second row xml element is <row r="2"/>
-                                if (!XmlReaderHelper.ReadFirstContent(reader) && !_config.IgnoreEmptyRows)
+                                if (!await XmlReaderHelper.ReadFirstContentAsync(reader, ct) && !_config.IgnoreEmptyRows)
                                 {
                                     //Fill in case of self closed empty row tag eg. <row r="1"/>
                                     yield return GetCell(useHeaderRow, maxColumnIndex, headRows, startColumnIndex);
@@ -272,13 +283,13 @@ namespace MiniExcelLibs.OpenXml
 
                                 yield return cell;
                             }
-                            else if (!XmlReaderHelper.SkipContent(reader))
+                            else if (!await XmlReaderHelper.SkipContentAsync(reader, ct))
                             {
                                 break;
                             }
                         }
                     }
-                    else if (!XmlReaderHelper.SkipContent(reader))
+                    else if (!await XmlReaderHelper.SkipContentAsync(reader, ct))
                     {
                         break;
                     }
@@ -286,7 +297,8 @@ namespace MiniExcelLibs.OpenXml
             }
         }
 
-        public static IEnumerable<T> QueryImpl<T>(IEnumerable<IDictionary<string, object>> values, string startCell, bool hasHeader, Configuration configuration) where T : class, new()
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        public static async IAsyncEnumerable<T> QueryImplAsync<T>(IAsyncEnumerable<IDictionary<string, object>> values, string startCell, bool hasHeader, Configuration configuration, [EnumeratorCancellation] CancellationToken ct = default) where T : class, new()
         {
             var type = typeof(T);
 
@@ -297,7 +309,7 @@ namespace MiniExcelLibs.OpenXml
             var first = true;
             var rowIndex = 0;
 
-            foreach (var item in values)
+            await foreach (var item in values.WithCancellation(ct).ConfigureAwait(false))
             {
                 if (first)
                 {
@@ -415,6 +427,17 @@ namespace MiniExcelLibs.OpenXml
             {
                 cell[key] = cellValue;
             }
+        }
+
+        private static XmlReaderSettings GetXmlReaderSettings(bool async)
+        {
+            return new XmlReaderSettings
+            {
+                IgnoreComments = true,
+                IgnoreWhitespace = true,
+                XmlResolver = null,
+                Async = async,
+            };
         }
 
         private void SetSharedStrings()

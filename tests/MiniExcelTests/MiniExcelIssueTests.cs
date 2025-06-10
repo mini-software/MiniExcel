@@ -4066,7 +4066,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
 
         memoryStream.Position = 0;
 
-        var queryData = (await memoryStream.QueryAsync<Issue658TestData>()).ToList();
+        var queryData = (memoryStream.QueryAsync<Issue658TestData>()).ToBlockingEnumerable().ToList();
 
         Assert.Equal(testData.Count(), queryData.Count);
 

@@ -319,8 +319,8 @@ public class MiniExcelOpenXmlAsyncTests
         const string path = "../../../../../samples/xlsx/TestTypeMapping.xlsx";
         await using (var stream = File.OpenRead(path))
         {
-            var d = await stream.QueryAsync<UserAccount>();
-            var rows = d.ToList();
+            var d = stream.QueryAsync<UserAccount>();
+            var rows = d.ToBlockingEnumerable().ToList();
             Assert.Equal(100, rows.Count);
 
             Assert.Equal(Guid.Parse("78DE23D2-DCB6-BD3D-EC67-C112BBC322A2"), rows[0].ID);
@@ -360,7 +360,7 @@ public class MiniExcelOpenXmlAsyncTests
     {
         const string path = "../../../../../samples/xlsx/TestTypeMapping_AutoCheckFormat.xlsx";
         await using var stream = FileHelper.OpenRead(path);
-        _ = (await stream.QueryAsync<AutoCheckType>()).ToList();
+        _ = stream.QueryAsync<AutoCheckType>().ToBlockingEnumerable().ToList();
     }
 
     [Fact]
@@ -384,7 +384,7 @@ public class MiniExcelOpenXmlAsyncTests
         const string path = "../../../../../benchmarks/MiniExcel.Benchmarks/Test1,000,000x10.xlsx";
         await using (var stream = File.OpenRead(path))
         {
-            var d = await stream.QueryAsync<DemoPocoHelloWorld>();
+            var d = stream.QueryAsync<DemoPocoHelloWorld>().ToBlockingEnumerable();
             var rows = d.Take(2).ToList();
             Assert.Equal("HelloWorld2", rows[0].HelloWorld1);
             Assert.Equal("HelloWorld3", rows[1].HelloWorld1);

@@ -638,7 +638,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
             }
             {
                 await using var stream = File.OpenRead(path);
-                var q = await stream.QueryAsync<UserAccount>();
+                var q = stream.QueryAsync<UserAccount>().ToBlockingEnumerable();
                 var rows = q.ToList();
                 Assert.Equal(100, rows.Count);
 
@@ -942,7 +942,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
             await writer.FlushAsync();
             
             stream.Position = 0;
-            var q = await stream.QueryAsync<Issue89VO>(excelType: ExcelType.CSV);
+            var q = stream.QueryAsync<Issue89VO>(excelType: ExcelType.CSV).ToBlockingEnumerable();
             var rows = q.ToList();
             
             Assert.Equal(Issue89VO.WorkState.OnDuty, rows[0].State);

@@ -131,36 +131,7 @@ namespace MiniExcelLibs.OpenXml
 
         internal IEnumerable<IDictionary<string, object>> InternalQueryRange(bool useHeaderRow, string sheetName, int startRowIndex, int startColumnIndex, int? endRowIndex, int? endColumnIndex)
         {
-            // if sheets count > 1 need to read xl/_rels/workbook.xml.rels
-            var sheets = _archive.entries
-                .Where(w => w.FullName.StartsWith("xl/worksheets/sheet", StringComparison.OrdinalIgnoreCase) || w.FullName.StartsWith("/xl/worksheets/sheet", StringComparison.OrdinalIgnoreCase))
-                .ToArray();
-            ZipArchiveEntry sheetEntry = null;
-            if (sheetName != null)
-            {
-                SetWorkbookRels(_archive.entries);
-                var sheetRecord = _sheetRecords.SingleOrDefault(s => s.Name == sheetName);
-                if (sheetRecord == null)
-                {
-                    if (_config.DynamicSheets == null)
-                        throw new InvalidOperationException("Please check that parameters sheetName/Index are correct");
-
-                    var sheetConfig = _config.DynamicSheets.FirstOrDefault(ds => ds.Key == sheetName);
-                    if (sheetConfig != null)
-                    {
-                        sheetRecord = _sheetRecords.SingleOrDefault(s => s.Name == sheetConfig.Name);
-                    }
-                }
-                sheetEntry = sheets.Single(w => w.FullName == $"xl/{sheetRecord.Path}" || w.FullName == $"/xl/{sheetRecord.Path}" || w.FullName == sheetRecord.Path || sheetRecord.Path == $"/{w.FullName}");
-            }
-            else if (sheets.Length > 1)
-            {
-                SetWorkbookRels(_archive.entries);
-                var s = _sheetRecords[0];
-                sheetEntry = sheets.Single(w => w.FullName == $"xl/{s.Path}" || w.FullName == $"/xl/{s.Path}" || w.FullName.TrimStart('/') == s.Path.TrimStart('/'));
-            }
-            else
-                sheetEntry = sheets.Single();
+            var sheetEntry = GetSheetEntry(sheetName);
 
             // TODO: need to optimize performance
             // Q. why need 3 times openstream merge one open read? A. no, zipstream can't use position = 0
@@ -385,6 +356,42 @@ namespace MiniExcelLibs.OpenXml
                 rowIndex++;
                 yield return v;
             }
+        }
+        
+        private ZipArchiveEntry GetSheetEntry(string sheetName)
+        {
+            // if sheets count > 1 need to read xl/_rels/workbook.xml.rels
+            var sheets = _archive.entries
+                .Where(w => w.FullName.StartsWith("xl/worksheets/sheet", StringComparison.OrdinalIgnoreCase) || w.FullName.StartsWith("/xl/worksheets/sheet", StringComparison.OrdinalIgnoreCase))
+                .ToArray();
+            ZipArchiveEntry sheetEntry = null;
+            if (sheetName != null)
+            {
+                SetWorkbookRels(_archive.entries);
+                var sheetRecord = _sheetRecords.SingleOrDefault(s => s.Name == sheetName);
+                if (sheetRecord == null)
+                {
+                    if (_config.DynamicSheets == null)
+                        throw new InvalidOperationException("Please check that parameters sheetName/Index are correct");
+
+                    var sheetConfig = _config.DynamicSheets.FirstOrDefault(ds => ds.Key == sheetName);
+                    if (sheetConfig != null)
+                    {
+                        sheetRecord = _sheetRecords.SingleOrDefault(s => s.Name == sheetConfig.Name);
+                    }
+                }
+                sheetEntry = sheets.Single(w => w.FullName == $"xl/{sheetRecord.Path}" || w.FullName == $"/xl/{sheetRecord.Path}" || w.FullName == sheetRecord.Path || sheetRecord.Path == $"/{w.FullName}");
+            }
+            else if (sheets.Length > 1)
+            {
+                SetWorkbookRels(_archive.entries);
+                var s = _sheetRecords[0];
+                sheetEntry = sheets.Single(w => w.FullName == $"xl/{s.Path}" || w.FullName == $"/xl/{s.Path}" || w.FullName.TrimStart('/') == s.Path.TrimStart('/'));
+            }
+            else
+                sheetEntry = sheets.Single();
+
+            return sheetEntry;
         }
 
         private static IDictionary<string, object> GetCell(bool useHeaderRow, int maxColumnIndex, Dictionary<int, string> headRows, int startColumnIndex)

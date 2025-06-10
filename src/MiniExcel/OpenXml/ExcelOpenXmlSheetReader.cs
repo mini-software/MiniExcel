@@ -136,12 +136,9 @@ namespace MiniExcelLibs.OpenXml
             // TODO: need to optimize performance
             // Q. why need 3 times openstream merge one open read? A. no, zipstream can't use position = 0
 
-            if (_config.FillMergedCells)
+            if (_config.FillMergedCells && !TryGetMergeCells(sheetEntry, out _mergeCells))
             {
-                if (!TryGetMergeCells(sheetEntry, out _mergeCells))
-                {
-                    yield break;
-                }
+                yield break;
             }
 
             if (!TryGetMaxRowColumnIndex(sheetEntry, out var withoutCR, out var maxRowIndex, out var maxColumnIndex))

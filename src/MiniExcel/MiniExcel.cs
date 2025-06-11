@@ -1,15 +1,15 @@
-﻿using System;
+﻿using MiniExcelLibs.OpenXml;
+using MiniExcelLibs.OpenXml.Models;
+using MiniExcelLibs.Picture;
+using MiniExcelLibs.Utils;
+using MiniExcelLibs.Zip;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Dynamic;
 using System.IO;
 using System.Linq;
-using MiniExcelLibs.OpenXml;
-using MiniExcelLibs.OpenXml.Models;
-using MiniExcelLibs.Picture;
-using MiniExcelLibs.Utils;
-using MiniExcelLibs.Zip;
 
 namespace MiniExcelLibs
 {
@@ -17,15 +17,15 @@ namespace MiniExcelLibs
     {
         public static void AddPicture(string path, params MiniExcelPicture[] images)
         {
-            using (var stream = File.Open(path,FileMode.OpenOrCreate))
+            using (var stream = File.Open(path, FileMode.OpenOrCreate))
                 MiniExcelPictureImplement.AddPicture(stream, images);
         }
-        
+
         public static void AddPicture(Stream excelStream, params MiniExcelPicture[] images)
         {
             MiniExcelPictureImplement.AddPicture(excelStream, images);
         }
-        
+
         public static MiniExcelDataReader GetReader(string path, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null)
         {
             var stream = FileHelper.OpenSharedRead(path);
@@ -65,14 +65,14 @@ namespace MiniExcelLibs
             stream.Seek(0, SeekOrigin.End);
             if (excelType == ExcelType.CSV)
             {
-                var newValue = value is IEnumerable || value is IDataReader ? value : new[]{value};
+                var newValue = value is IEnumerable || value is IDataReader ? value : new[] { value };
                 return ExcelWriterFactory.GetProvider(stream, newValue, sheetName, excelType, configuration, false).Insert(overwriteSheet);
             }
             else
             {
                 var configOrDefault = configuration ?? new OpenXmlConfiguration { FastMode = true };
                 return ExcelWriterFactory.GetProvider(stream, value, sheetName, excelType, configOrDefault, printHeader).Insert(overwriteSheet);
-            } 
+            }
         }
 
         public static int[] SaveAs(string path, object value, bool printHeader = true, string sheetName = "Sheet1", ExcelType excelType = ExcelType.UNKNOWN, IConfiguration configuration = null, bool overwriteFile = false)
@@ -102,12 +102,14 @@ namespace MiniExcelLibs
                 foreach (var item in excelReader.Query<T>(sheetName, startCell, hasHeader))
                     yield return item;
         }
+       
         public static IEnumerable<dynamic> Query(string path, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null)
         {
             using (var stream = FileHelper.OpenSharedRead(path))
                 foreach (var item in Query(stream, useHeaderRow, sheetName, ExcelTypeHelper.GetExcelType(path, excelType), startCell, configuration))
                     yield return item;
         }
+        
         public static IEnumerable<dynamic> Query(this Stream stream, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null)
         {
             using (var excelReader = ExcelReaderFactory.GetProvider(stream, ExcelTypeHelper.GetExcelType(stream, excelType), configuration))
@@ -116,7 +118,7 @@ namespace MiniExcelLibs
                             (dict, p) => { dict.Add(p); return dict; });
         }
 
-        #region range
+        #region QueryRange
 
         /// <summary>
         /// Extract the given range。 Only uppercase letters are effective。
@@ -133,22 +135,37 @@ namespace MiniExcelLibs
         /// <param name="endCell">lower right corner</param>
         /// <param name="configuration"></param>
         /// <returns></returns>
-        public static IEnumerable<dynamic> QueryRange(string path, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "a1", string endCell = "", IConfiguration configuration = null)
+        public static IEnumerable<dynamic> QueryRange(string path, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", string endCell = "", IConfiguration configuration = null)
         {
             using (var stream = FileHelper.OpenSharedRead(path))
-                foreach (var item in QueryRange(stream, useHeaderRow, sheetName, ExcelTypeHelper.GetExcelType(path, excelType), startCell == "" ? "a1" : startCell, endCell, configuration))
+                foreach (var item in QueryRange(stream, useHeaderRow, sheetName, ExcelTypeHelper.GetExcelType(path, excelType), startCell, endCell, configuration))
                     yield return item;
         }
 
-        public static IEnumerable<dynamic> QueryRange(this Stream stream, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "a1", string endCell = "", IConfiguration configuration = null)
+        public static IEnumerable<dynamic> QueryRange(this Stream stream, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", string endCell = "", IConfiguration configuration = null)
         {
             using (var excelReader = ExcelReaderFactory.GetProvider(stream, ExcelTypeHelper.GetExcelType(stream, excelType), configuration))
-                foreach (var item in excelReader.QueryRange(useHeaderRow, sheetName, startCell == "" ? "a1" : startCell, endCell))
+                foreach (var item in excelReader.QueryRange(useHeaderRow, sheetName, startCell, endCell))
                     yield return item.Aggregate(new ExpandoObject() as IDictionary<string, object>,
                             (dict, p) => { dict.Add(p); return dict; });
         }
 
-        #endregion range
+        public static IEnumerable<dynamic> QueryRange(string path, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, int startRowIndex = 1, int startColumnIndex = 1, int? endRowIndex = null, int? endColumnIndex = null, IConfiguration configuration = null)
+        {
+            using (var stream = FileHelper.OpenSharedRead(path))
+                foreach (var item in QueryRange(stream, useHeaderRow, sheetName, ExcelTypeHelper.GetExcelType(path, excelType), startRowIndex, startColumnIndex, endRowIndex, endColumnIndex, configuration))
+                    yield return item;
+        }
+        
+        public static IEnumerable<dynamic> QueryRange(this Stream stream, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, int startRowIndex = 1, int startColumnIndex = 1, int? endRowIndex = null, int? endColumnIndex = null, IConfiguration configuration = null)
+        {
+            using (var excelReader = ExcelReaderFactory.GetProvider(stream, ExcelTypeHelper.GetExcelType(stream, excelType), configuration))
+                foreach (var item in excelReader.QueryRange(useHeaderRow, sheetName, startRowIndex, startColumnIndex, endRowIndex, endColumnIndex))
+                    yield return item.Aggregate(new ExpandoObject() as IDictionary<string, object>,
+                            (dict, p) => { dict.Add(p); return dict; });
+        }
+
+        #endregion QueryRange
 
         public static void SaveAsByTemplate(string path, string templatePath, object value, IConfiguration configuration = null)
         {
@@ -287,7 +304,7 @@ namespace MiniExcelLibs
         {
             return (Query(stream, useHeaderRow, sheetName, excelType, startCell, configuration).FirstOrDefault() as IDictionary<string, object>)?.Keys;
         }
-        
+
         public static IList<ExcelRange> GetSheetDimensions(string path)
         {
             using (var stream = FileHelper.OpenSharedRead(path))
@@ -298,7 +315,7 @@ namespace MiniExcelLibs
         {
             return new ExcelOpenXmlSheetReader(stream, null).GetDimensions();
         }
-        
+
         public static void ConvertCsvToXlsx(string csv, string xlsx)
         {
             using (var csvStream = FileHelper.OpenSharedRead(csv))

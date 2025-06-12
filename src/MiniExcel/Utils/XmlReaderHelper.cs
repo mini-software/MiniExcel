@@ -118,10 +118,10 @@ namespace MiniExcelLibs.Utils
                 {
                     if (IsStartElement(reader, "si", nss))
                     {
-                        var value = StringHelper.ReadStringItem(reader);
+                        var value = await StringHelper.ReadStringItemAsync(reader, ct).ConfigureAwait(false);
                         yield return value;
                     }
-                    else if (!await SkipContentAsync(reader, ct))
+                    else if (!await SkipContentAsync(reader, ct).ConfigureAwait(false))
                     {
                         break;
                     }

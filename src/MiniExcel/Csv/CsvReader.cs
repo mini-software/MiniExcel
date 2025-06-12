@@ -41,7 +41,7 @@ namespace MiniExcelLibs.Csv
 #if NET7_0_OR_GREATER
 ct
 #endif
-                )) != null; rowIndex++)
+                ).ConfigureAwait(false)) != null; rowIndex++)
             {
                 string finalRow = row;
                 if (_config.ReadLineBreaksWithinQuotes)
@@ -52,7 +52,7 @@ ct
 #if NET7_0_OR_GREATER
 ct
 #endif
-                            );
+                            ).ConfigureAwait(false);
                         if (nextPart == null)
                         {
                             break;

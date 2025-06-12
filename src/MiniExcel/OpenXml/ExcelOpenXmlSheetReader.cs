@@ -168,14 +168,14 @@ namespace MiniExcelLibs.OpenXml
                 if (!XmlReaderHelper.IsStartElement(reader, "worksheet", _ns))
                     yield break;
 
-                if (!await XmlReaderHelper.ReadFirstContentAsync(reader, ct))
+                if (!await XmlReaderHelper.ReadFirstContentAsync(reader, ct).ConfigureAwait(false))
                     yield break;
 
                 while (!reader.EOF)
                 {
                     if (XmlReaderHelper.IsStartElement(reader, "sheetData", _ns))
                     {
-                        if (!await XmlReaderHelper.ReadFirstContentAsync(reader, ct))
+                        if (!await XmlReaderHelper.ReadFirstContentAsync(reader, ct).ConfigureAwait(false))
                             continue;
 
                         var headRows = new Dictionary<int, string>();
@@ -193,8 +193,8 @@ namespace MiniExcelLibs.OpenXml
 
                                 if (rowIndex < startRowIndex)
                                 {
-                                    await XmlReaderHelper.ReadFirstContentAsync(reader, ct);
-                                    await XmlReaderHelper.SkipToNextSameLevelDomAsync(reader, ct);
+                                    await XmlReaderHelper.ReadFirstContentAsync(reader, ct).ConfigureAwait(false);
+                                    await XmlReaderHelper.SkipToNextSameLevelDomAsync(reader, ct).ConfigureAwait(false);
                                     continue;
                                 }
                                 if (endRowIndex.HasValue && rowIndex > endRowIndex.Value)
@@ -216,7 +216,7 @@ namespace MiniExcelLibs.OpenXml
                                 }
 
                                 // row -> c, must after `if (nextRowIndex < rowIndex)` condition code, eg. The first empty row has no xml element,and the second row xml element is <row r="2"/>
-                                if (!await XmlReaderHelper.ReadFirstContentAsync(reader, ct) && !_config.IgnoreEmptyRows)
+                                if (!await XmlReaderHelper.ReadFirstContentAsync(reader, ct).ConfigureAwait(false) && !_config.IgnoreEmptyRows)
                                 {
                                     //Fill in case of self closed empty row tag eg. <row r="1"/>
                                     yield return GetCell(useHeaderRow, maxColumnIndex, headRows, startColumnIndex);
@@ -283,13 +283,13 @@ namespace MiniExcelLibs.OpenXml
 
                                 yield return cell;
                             }
-                            else if (!await XmlReaderHelper.SkipContentAsync(reader, ct))
+                            else if (!await XmlReaderHelper.SkipContentAsync(reader, ct).ConfigureAwait(false))
                             {
                                 break;
                             }
                         }
                     }
-                    else if (!await XmlReaderHelper.SkipContentAsync(reader, ct))
+                    else if (!await XmlReaderHelper.SkipContentAsync(reader, ct).ConfigureAwait(false))
                     {
                         break;
                     }

@@ -81,44 +81,6 @@
             await ExcelTemplateFactory.GetProvider(stream, configuration, excelType).MergeSameCellsAsync(fileBytes, cancellationToken);
         }
 
-        public static async Task<IEnumerable<dynamic>> QueryAsync(string path, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null, CancellationToken cancellationToken = default)
-        {
-            return await Task.Run(() => Query(path, useHeaderRow, sheetName, excelType, startCell, configuration), cancellationToken);
-        }
-
-        public static IAsyncEnumerable<T> QueryAsync<T>(this Stream stream, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null, bool hasHeader = true, CancellationToken cancellationToken = default) where T : class, new()
-        {
-            return ExcelReaderFactory.GetProvider(stream, ExcelTypeHelper.GetExcelType(stream, excelType), configuration).QueryAsync<T>(sheetName, startCell, hasHeader, cancellationToken);
-        }
-
-        public static async Task<IEnumerable<T>> QueryAsync<T>(string path, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null, CancellationToken cancellationToken = default, bool hasHeader = true) where T : class, new()
-        {
-            return await Task.Run(() => Query<T>(path, sheetName, excelType, startCell, configuration, hasHeader), cancellationToken).ConfigureAwait(false);
-        }
-
-        public static async Task<IEnumerable<dynamic>> QueryAsync(this Stream stream, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null, CancellationToken cancellationToken = default)
-        {
-            var tcs = new TaskCompletionSource<IEnumerable<dynamic>>();
-            cancellationToken.Register(() =>
-            {
-                tcs.TrySetCanceled();
-            });
-
-            await Task.Run(() =>
-            {
-                try
-                {
-                    tcs.TrySetResult(Query(stream, useHeaderRow, sheetName, excelType, startCell, configuration));
-                }
-                catch (Exception ex)
-                {
-                    tcs.TrySetException(ex);
-                }
-            }, cancellationToken);
-
-            return await tcs.Task;
-
-        }
         public static async Task SaveAsByTemplateAsync(this Stream stream, string templatePath, object value, IConfiguration configuration = null, CancellationToken cancellationToken = default)
         {
             await ExcelTemplateFactory.GetProvider(stream, configuration).SaveAsByTemplateAsync(templatePath, value, cancellationToken).ConfigureAwait(false);

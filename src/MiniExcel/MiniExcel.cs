@@ -10,6 +10,9 @@ using System.Data;
 using System.Dynamic;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace MiniExcelLibs
 {
@@ -89,31 +92,35 @@ namespace MiniExcelLibs
             return ExcelWriterFactory.GetProvider(stream, value, sheetName, excelType, configuration, printHeader).SaveAs();
         }
 
-        public static IEnumerable<T> Query<T>(string path, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null, bool hasHeader = true) where T : class, new()
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        public static async IAsyncEnumerable<T> QueryAsync<T>(string path, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null, bool hasHeader = true, [EnumeratorCancellation] CancellationToken ct = default) where T : class, new()
         {
             using (var stream = FileHelper.OpenSharedRead(path))
-                foreach (var item in Query<T>(stream, sheetName, ExcelTypeHelper.GetExcelType(path, excelType), startCell, configuration, hasHeader))
+                await foreach (var item in QueryAsync<T>(stream, sheetName, ExcelTypeHelper.GetExcelType(path, excelType), startCell, configuration, hasHeader, ct).WithCancellation(ct).ConfigureAwait(false))
                     yield return item; //Foreach yield return twice reason : https://stackoverflow.com/questions/66791982/ienumerable-extract-code-lazy-loading-show-stream-was-not-readable
         }
 
-        public static IEnumerable<T> Query<T>(this Stream stream, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null, bool hasHeader = true) where T : class, new()
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        public static async IAsyncEnumerable<T> QueryAsync<T>(this Stream stream, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null, bool hasHeader = true, [EnumeratorCancellation] CancellationToken ct = default) where T : class, new()
         {
             using (var excelReader = ExcelReaderFactory.GetProvider(stream, ExcelTypeHelper.GetExcelType(stream, excelType), configuration))
-                foreach (var item in excelReader.Query<T>(sheetName, startCell, hasHeader))
+                await foreach (var item in excelReader.QueryAsync<T>(sheetName, startCell, hasHeader, ct).WithCancellation(ct).ConfigureAwait(false))
                     yield return item;
         }
        
-        public static IEnumerable<dynamic> Query(string path, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null)
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        public static async IAsyncEnumerable<dynamic> QueryAsync(string path, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null, [EnumeratorCancellation] CancellationToken ct = default)
         {
             using (var stream = FileHelper.OpenSharedRead(path))
-                foreach (var item in Query(stream, useHeaderRow, sheetName, ExcelTypeHelper.GetExcelType(path, excelType), startCell, configuration))
+                await foreach (var item in QueryAsync(stream, useHeaderRow, sheetName, ExcelTypeHelper.GetExcelType(path, excelType), startCell, configuration, ct).WithCancellation(ct).ConfigureAwait(false))
                     yield return item;
         }
         
-        public static IEnumerable<dynamic> Query(this Stream stream, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null)
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        public static async IAsyncEnumerable<dynamic> QueryAsync(this Stream stream, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null, [EnumeratorCancellation] CancellationToken ct = default)
         {
             using (var excelReader = ExcelReaderFactory.GetProvider(stream, ExcelTypeHelper.GetExcelType(stream, excelType), configuration))
-                foreach (var item in excelReader.Query(useHeaderRow, sheetName, startCell))
+                await foreach (var item in excelReader.QueryAsync(useHeaderRow, sheetName, startCell, ct).WithCancellation(ct).ConfigureAwait(false))
                     yield return item.Aggregate(new ExpandoObject() as IDictionary<string, object>,
                             (dict, p) => { dict.Add(p); return dict; });
         }

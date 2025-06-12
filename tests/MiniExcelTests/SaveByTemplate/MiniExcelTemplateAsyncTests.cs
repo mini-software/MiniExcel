@@ -30,7 +30,7 @@ public class MiniExcelTemplateAsyncTests
                 ["employees"] = employees
             };
             await MiniExcel.SaveAsByTemplateAsync(path.ToString(), templatePath, value);
-            var rows = (await MiniExcel.QueryAsync(path.ToString())).ToList();
+            var rows = MiniExcel.QueryAsync(path.ToString()).ToBlockingEnumerable().ToList();
 
             var dimension = Helpers.GetFirstSheetDimensionRefValue(path.ToString());
             Assert.Equal("A1:C5", dimension);
@@ -55,7 +55,7 @@ public class MiniExcelTemplateAsyncTests
             };
             
             await MiniExcel.SaveAsByTemplateAsync(path.ToString(), templatePath, value);
-            var rows = (await MiniExcel.QueryAsync(path.ToString())).ToList();
+            var rows = MiniExcel.QueryAsync(path.ToString()).ToBlockingEnumerable().ToList();
 
             var dimension = Helpers.GetFirstSheetDimensionRefValue(path.ToString());
             Assert.Equal("A1:C5", dimension);
@@ -89,7 +89,7 @@ public class MiniExcelTemplateAsyncTests
             ["employees"] = employees
         };
         await MiniExcel.SaveAsByTemplateAsync(path.ToString(), templatePath, value);
-        var rows = (await MiniExcel.QueryAsync(path.ToString())).ToList();
+        var rows = MiniExcel.QueryAsync(path.ToString()).ToBlockingEnumerable().ToList();
 
         var dimension = Helpers.GetFirstSheetDimensionRefValue(path.ToString());
         Assert.Equal("A1:C9", dimension);
@@ -112,7 +112,7 @@ public class MiniExcelTemplateAsyncTests
         Assert.Equal("IT", rows[8].C);
 
         {
-            rows = (await MiniExcel.QueryAsync(path.ToString(), sheetName: "Sheet2")).ToList();
+            rows = MiniExcel.QueryAsync(path.ToString(), sheetName: "Sheet2").ToBlockingEnumerable().ToList();
             Assert.Equal(9, rows.Count);
 
             Assert.Equal("FooCompany", rows[0].A);
@@ -152,7 +152,7 @@ public class MiniExcelTemplateAsyncTests
         await MiniExcel.SaveAsByTemplateAsync(path.ToString(), templatePath, value);
 
         {
-            var rows = (await MiniExcel.QueryAsync(path.ToString())).ToList();
+            var rows = MiniExcel.QueryAsync(path.ToString()).ToBlockingEnumerable().ToList();
 
             Assert.Equal(9, rows.Count);
 
@@ -177,7 +177,7 @@ public class MiniExcelTemplateAsyncTests
         }
 
         {
-            var rows = (await MiniExcel.QueryAsync(path.ToString(), sheetName: "Sheet2")).ToList();
+            var rows = MiniExcel.QueryAsync(path.ToString(), sheetName: "Sheet2").ToBlockingEnumerable().ToList();
             Assert.Equal(9, rows.Count);
 
             Assert.Equal("FooCompany", rows[0].A);
@@ -296,7 +296,7 @@ public class MiniExcelTemplateAsyncTests
         };
         await MiniExcel.SaveAsByTemplateAsync(path.ToString(), templatePath, value);
 
-        var rows = (await MiniExcel.QueryAsync(path.ToString())).ToList();
+        var rows = MiniExcel.QueryAsync(path.ToString()).ToBlockingEnumerable().ToList();
         Assert.Equal("ITWeiHan Github Projects", rows[0].B);
         Assert.Equal("Total Star : 178", rows[8].C);
 
@@ -451,7 +451,7 @@ public class MiniExcelTemplateAsyncTests
             };
             await MiniExcel.SaveAsByTemplateAsync(path.ToString(), templatePath, value);
 
-            var rows = (await MiniExcel.QueryAsync(path.ToString())).ToList();
+            var rows = MiniExcel.QueryAsync(path.ToString()).ToBlockingEnumerable().ToList();
             Assert.Equal("Jack", rows[1].A);
             Assert.Equal("2021-01-01 00:00:00", rows[1].B);
             Assert.Equal(true, rows[1].C);
@@ -475,7 +475,7 @@ public class MiniExcelTemplateAsyncTests
             };
             await MiniExcel.SaveAsByTemplateAsync(path, templateBytes, value);
 
-            var rows = (await MiniExcel.QueryAsync(path)).ToList();
+            var rows = (MiniExcel.QueryAsync(path).ToBlockingEnumerable()).ToList();
             Assert.Equal("Jack", rows[1].A);
             Assert.Equal("2021-01-01 00:00:00", rows[1].B);
             Assert.Equal(true, rows[1].C);
@@ -503,7 +503,7 @@ public class MiniExcelTemplateAsyncTests
                 await stream.SaveAsByTemplateAsync(templateBytes, value);
             }
 
-            var rows = (await MiniExcel.QueryAsync(path.ToString())).ToList();
+            var rows = MiniExcel.QueryAsync(path.ToString()).ToBlockingEnumerable().ToList();
             Assert.Equal("Jack", rows[1].A);
             Assert.Equal("2021-01-01 00:00:00", rows[1].B);
             Assert.Equal(true, rows[1].C);
@@ -527,7 +527,7 @@ public class MiniExcelTemplateAsyncTests
             };
             await MiniExcel.SaveAsByTemplateAsync(path.ToString(), templatePath, value);
 
-            var rows = (await MiniExcel.QueryAsync(path.ToString())).ToList();
+            var rows = MiniExcel.QueryAsync(path.ToString()).ToBlockingEnumerable().ToList();
             Assert.Equal("Jack", rows[1].A);
             Assert.Equal("2021-01-01 00:00:00", rows[1].B);
             Assert.Equal(true, rows[1].C);
@@ -788,7 +788,7 @@ public class MiniExcelTemplateAsyncTests
             await MiniExcel.SaveAsByTemplateAsync(path.ToString(), templatePath, value);
 
             {
-                var rows = (await MiniExcel.QueryAsync(path.ToString())).ToList();
+                var rows = MiniExcel.QueryAsync(path.ToString()).ToBlockingEnumerable().ToList();
                 Assert.Equal(9, rows.Count);
 
                 Assert.Equal("FooCompany", rows[0].A);
@@ -812,7 +812,7 @@ public class MiniExcelTemplateAsyncTests
             }
 
             {
-                var rows = (await MiniExcel.QueryAsync(path.ToString(), sheetName: "Sheet2")).ToList();
+                var rows = MiniExcel.QueryAsync(path.ToString(), sheetName: "Sheet2").ToBlockingEnumerable().ToList();
                 Assert.Equal(9, rows.Count);
 
                 Assert.Equal("FooCompany", rows[0].A);
@@ -858,7 +858,7 @@ public class MiniExcelTemplateAsyncTests
             };
             await MiniExcel.SaveAsByTemplateAsync(path.ToString(), templatePath, value);
 
-            var rows = (await MiniExcel.QueryAsync(path.ToString())).ToList();
+            var rows = MiniExcel.QueryAsync(path.ToString()).ToBlockingEnumerable().ToList();
             Assert.Equal("FooCompany", rows[0].A);
             Assert.Equal("Jack", rows[2].B);
             Assert.Equal("HR", rows[2].C);

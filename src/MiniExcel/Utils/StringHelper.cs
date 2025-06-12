@@ -34,7 +34,7 @@ namespace MiniExcelLibs.Utils
 #if NET6_0_OR_GREATER
                         .WaitAsync(ct)
 #endif
-                        );
+                        .ConfigureAwait(false));
                 }
                 else if (XmlReaderHelper.IsStartElement(reader, "r", _ns))
                 {
@@ -67,7 +67,7 @@ namespace MiniExcelLibs.Utils
 #if NET6_0_OR_GREATER
                         .WaitAsync(ct)
 #endif
-);
+                        .ConfigureAwait(false));
                 }
                 else if (!await XmlReaderHelper.SkipContentAsync(reader, ct))
                 {

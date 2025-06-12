@@ -20,12 +20,12 @@ namespace MiniExcelLibs.Utils
 #if NET6_0_OR_GREATER
                         .WaitAsync(ct)
 #endif
-;
+                        .ConfigureAwait(false);
             await reader.ReadAsync()
 #if NET6_0_OR_GREATER
                         .WaitAsync(ct)
 #endif
-;
+                        .ConfigureAwait(false);
         }
 
         /// <summary>
@@ -52,7 +52,7 @@ namespace MiniExcelLibs.Utils
 #if NET6_0_OR_GREATER
                         .WaitAsync(ct)
 #endif
-;
+                        .ConfigureAwait(false);
                 return false;
             }
 
@@ -60,12 +60,12 @@ namespace MiniExcelLibs.Utils
 #if NET6_0_OR_GREATER
                         .WaitAsync(ct)
 #endif
-                ;
+                        .ConfigureAwait(false);
             await reader.ReadAsync()
 #if NET6_0_OR_GREATER
                         .WaitAsync(ct)
 #endif
-                ;
+                        .ConfigureAwait(false);
             return true;
         }
 
@@ -79,7 +79,7 @@ namespace MiniExcelLibs.Utils
 #if NET6_0_OR_GREATER
                         .WaitAsync(ct)
 #endif
-;
+                        .ConfigureAwait(false);
                 return false;
             }
 
@@ -87,7 +87,7 @@ namespace MiniExcelLibs.Utils
 #if NET6_0_OR_GREATER
                         .WaitAsync(ct)
 #endif
- ;
+                        .ConfigureAwait(false);
             return true;
         }
 

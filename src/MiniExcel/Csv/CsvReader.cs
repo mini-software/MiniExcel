@@ -144,7 +144,7 @@ ct
         }
 
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
-        public IAsyncEnumerable<T> QueryRange<T>(string sheetName, int startRowIndex, int startColumnIndex, int? endRowIndex, int? endColumnIndex, bool hasHeader, CancellationToken ct = default) where T : class, new()
+        public IAsyncEnumerable<T> QueryRangeAsync<T>(string sheetName, int startRowIndex, int startColumnIndex, int? endRowIndex, int? endColumnIndex, bool hasHeader, CancellationToken ct = default) where T : class, new()
         {
             var dynamicRecords = QueryRangeAsync(false, sheetName, startRowIndex, startColumnIndex, endRowIndex, endColumnIndex, ct);
             return ExcelOpenXmlSheetReader.QueryImplAsync<T>(dynamicRecords, ReferenceHelper.ConvertXyToCell(startRowIndex, startColumnIndex), hasHeader, this._config, ct);

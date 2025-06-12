@@ -3,7 +3,6 @@ using MiniExcelLibs.Utils;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Data;
 using System.Globalization;
 using System.IO;
@@ -309,7 +308,6 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
 
             var prefix = string.IsNullOrEmpty(sheetData.Prefix) ? "" : $"{sheetData.Prefix}:";
             var endPrefix = string.IsNullOrEmpty(sheetData.Prefix) ? "" : $":{sheetData.Prefix}"; // https://user-images.githubusercontent.com/12729184/115000066-fd02b300-9ed4-11eb-8e65-bf0014015134.png
-            var contents = doc.InnerXml.Split(new[] { $"<{prefix}sheetData>{{{{{{{{{{{{split}}}}}}}}}}}}</{prefix}sheetData>" }, StringSplitOptions.None);
 
             var conditionalFormatNodes = doc.SelectNodes("/x:worksheet/x:conditionalFormatting", _ns);
             for (var i = 0; i < conditionalFormatNodes?.Count; ++i)
@@ -317,6 +315,16 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                 var node = conditionalFormatNodes.Item(i);
                 node.ParentNode.RemoveChild(node);
             }
+
+            var phoneticPr = doc.SelectSingleNode("/x:worksheet/x:phoneticPr", _ns);
+            var phoneticPrXml = string.Empty;
+            if (phoneticPr != null)
+            {
+                phoneticPrXml = phoneticPr.OuterXml;
+                phoneticPr.ParentNode.RemoveChild(phoneticPr);
+            }
+
+            var contents = doc.InnerXml.Split(new[] { $"<{prefix}sheetData>{{{{{{{{{{{{split}}}}}}}}}}}}</{prefix}sheetData>" }, StringSplitOptions.None);
 
             using (var writer = new StreamWriter(outputFileStream, Encoding.UTF8))
             {
@@ -516,6 +524,11 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                     writer.Write($"</{prefix}mergeCells>");
                 }
 
+                if (!string.IsNullOrEmpty(phoneticPrXml))
+                {
+                    writer.Write(phoneticPrXml);
+                }
+
                 if (newConditionalFormatRanges.Count != 0)
                 {
                     writer.Write(string.Join(string.Empty, newConditionalFormatRanges.Select(cf => cf.Node.OuterXml)));
@@ -536,15 +549,15 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
             var cleanInnerXml = CleanXml(innerXml, endPrefix);
 
             // https://github.com/mini-software/MiniExcel/issues/771 Saving by template introduces unintended value replication in each row #771
-            var notFirstRowElement = rowElement.Clone(); 
+            var notFirstRowElement = rowElement.Clone();
             foreach (XmlElement c in notFirstRowElement.SelectNodes("x:c", _ns))
             {
                 var v = c.SelectSingleNode("x:v", _ns);
-                if (v != null && !_nonTemplateRegex.IsMatch(v.InnerText)) 
+                if (v != null && !_nonTemplateRegex.IsMatch(v.InnerText))
                     v.InnerText = string.Empty;
             }
             var cleanNotFirstRowInnerXml = CleanXml(notFirstRowElement.InnerXml, endPrefix);
-            
+
             foreach (var item in rowInfo.CellIEnumerableValues)
             {
                 iEnumerableIndex++;
@@ -722,7 +735,7 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                 // note: only first time need add diff https://user-images.githubusercontent.com/12729184/114494728-6bceda80-9c4f-11eb-9685-8b5ed054eabe.png
                 if (!isFirst)
                     rowIndexDiff += rowInfo.IEnumerableMercell?.Height ?? 1; //TODO:base on the merge size
-                
+
                 if (isFirst)
                 {
                     // https://github.com/mini-software/MiniExcel/issues/771 Saving by template introduces unintended value replication in each row #771
@@ -1003,13 +1016,13 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
             else
             {
                 // ==== add dimension element if not found ====
-                
+
                 var firstRow = rows[0].SelectNodes("x:c", _ns);
                 var lastRow = rows[rows.Count - 1].SelectNodes("x:c", _ns);
-                
+
                 var dimStart = ((XmlElement)firstRow?[0])?.GetAttribute("r");
                 var dimEnd = ((XmlElement)lastRow?[lastRow.Count - 1])?.GetAttribute("r");
-                
+
                 refs = new[] { dimStart, dimEnd };
 
                 dimension = (XmlElement)doc.CreateNode(XmlNodeType.Element, "dimension", null);
@@ -1021,14 +1034,14 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
             foreach (XmlElement row in rows)
             {
                 // ==== get ienumerable infomation & maxrowindexdiff ====
-                
+
                 var xRowInfo = new XRowInfo { Row = row };
                 _xRowInfos.Add(xRowInfo);
 
                 foreach (XmlElement c in row.SelectNodes("x:c", _ns))
                 {
                     var r = c.GetAttribute("r");
-                    
+
                     // ==== mergecells ====
                     if (_xMergeCellInfos.TryGetValue(r, out var merCell))
                     {
@@ -1285,44 +1298,64 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                 case double dtg when double.TryParse(value, out var doubleNumber):
                     switch (comparisonOperator)
                     {
-                        case "==": return dtg.Equals(doubleNumber);
-                        case "!=": return !dtg.Equals(doubleNumber);
-                        case ">": return dtg > doubleNumber;
-                        case "<": return dtg < doubleNumber;
-                        case ">=": return dtg >= doubleNumber;
-                        case "<=": return dtg <= doubleNumber;
+                        case "==":
+                            return dtg.Equals(doubleNumber);
+                        case "!=":
+                            return !dtg.Equals(doubleNumber);
+                        case ">":
+                            return dtg > doubleNumber;
+                        case "<":
+                            return dtg < doubleNumber;
+                        case ">=":
+                            return dtg >= doubleNumber;
+                        case "<=":
+                            return dtg <= doubleNumber;
                     }
                     break;
 
                 case int itg when int.TryParse(value, out var intNumber):
                     switch (comparisonOperator)
                     {
-                        case "==": return itg.Equals(intNumber);
-                        case "!=": return !itg.Equals(intNumber);
-                        case ">": return itg > intNumber;
-                        case "<": return itg < intNumber;
-                        case ">=": return itg >= intNumber;
-                        case "<=": return itg <= intNumber;
+                        case "==":
+                            return itg.Equals(intNumber);
+                        case "!=":
+                            return !itg.Equals(intNumber);
+                        case ">":
+                            return itg > intNumber;
+                        case "<":
+                            return itg < intNumber;
+                        case ">=":
+                            return itg >= intNumber;
+                        case "<=":
+                            return itg <= intNumber;
                     }
                     break;
 
                 case DateTime dttg when DateTime.TryParse(value, out var date):
                     switch (comparisonOperator)
                     {
-                        case "==": return dttg.Equals(date);
-                        case "!=": return !dttg.Equals(date);
-                        case ">": return dttg > date;
-                        case "<": return dttg < date;
-                        case ">=": return dttg >= date;
-                        case "<=": return dttg <= date;
+                        case "==":
+                            return dttg.Equals(date);
+                        case "!=":
+                            return !dttg.Equals(date);
+                        case ">":
+                            return dttg > date;
+                        case "<":
+                            return dttg < date;
+                        case ">=":
+                            return dttg >= date;
+                        case "<=":
+                            return dttg <= date;
                     }
                     break;
 
                 case string stg:
                     switch (comparisonOperator)
                     {
-                        case "==": return stg == value;
-                        case "!=": return stg != value;
+                        case "==":
+                            return stg == value;
+                        case "!=":
+                            return stg != value;
                     }
                     break;
             }

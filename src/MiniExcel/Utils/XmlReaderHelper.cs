@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
@@ -14,7 +15,7 @@ namespace MiniExcelLibs.Utils
         /// </summary>
         /// <param name="reader"></param>
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
-        public static async Task PassXmlDeclarationAndWorksheet(this XmlReader reader, CancellationToken ct = default)
+        public static async Task PassXmlDeclarationAndWorksheetAsync(this XmlReader reader, CancellationToken ct = default)
         {
             await reader.MoveToContentAsync()
 #if NET6_0_OR_GREATER
@@ -104,14 +105,14 @@ namespace MiniExcelLibs.Utils
         }
 
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
-        public static async IAsyncEnumerable<string> GetSharedStringsAsync(Stream stream, CancellationToken ct = default, params string[] nss)
+        public static async IAsyncEnumerable<string> GetSharedStringsAsync(Stream stream, [EnumeratorCancellation]CancellationToken ct = default, params string[] nss)
         {
             using (var reader = XmlReader.Create(stream))
             {
                 if (!IsStartElement(reader, "sst", nss))
                     yield break;
 
-                if (!await ReadFirstContentAsync(reader, ct))
+                if (!await ReadFirstContentAsync(reader, ct).ConfigureAwait(false))
                     yield break;
 
                 while (!reader.EOF)

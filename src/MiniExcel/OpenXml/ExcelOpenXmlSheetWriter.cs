@@ -45,13 +45,6 @@ namespace MiniExcelLibs.OpenXml
             _defaultSheetName = sheetName;
         }
 
-        internal void GenerateDefaultOpenXml()
-        {
-            CreateZipEntry(ExcelFileNames.Rels, ExcelContentTypes.Relationships, ExcelXml.DefaultRels);
-            CreateZipEntry(ExcelFileNames.SharedStrings, ExcelContentTypes.SharedStrings, ExcelXml.DefaultSharedString);
-            GenerateStylesXml();
-        }
-
         private int CreateSheetXml(object values, string sheetPath)
         {
             var entry = _archive.CreateEntry(sheetPath, CompressionLevel.Fastest);
@@ -76,25 +69,6 @@ namespace MiniExcelLibs.OpenXml
         private static void WriteEmptySheet(MiniExcelStreamWriter writer)
         {
             writer.Write(ExcelXml.EmptySheetXml);
-        }
-
-        private static long WriteDimensionPlaceholder(MiniExcelStreamWriter writer)
-        {
-            var dimensionPlaceholderPostition = writer.WriteAndFlush(WorksheetXml.StartDimension);
-            writer.Write(WorksheetXml.DimensionPlaceholder); // end of code will be replaced
-
-            return dimensionPlaceholderPostition;
-        }
-
-        private static void WriteDimension(MiniExcelStreamWriter writer, int maxRowIndex, int maxColumnIndex, long placeholderPosition)
-        {
-            // Flush and save position so that we can get back again.
-            var position = writer.Flush();
-
-            writer.SetPosition(placeholderPosition);
-            writer.WriteAndFlush($@"{GetDimensionRef(maxRowIndex, maxColumnIndex)}""");
-
-            writer.SetPosition(position);
         }
 
         private int WriteValues(MiniExcelStreamWriter writer, object values)
@@ -193,36 +167,6 @@ namespace MiniExcelLibs.OpenXml
             return placeholderPosition;
         }
 
-        private static void OverwriteColumnWidthPlaceholders(MiniExcelStreamWriter writer, long placeholderPosition, IEnumerable<ExcelColumnWidth> columnWidths)
-        {
-            var position = writer.Flush();
-
-            writer.SetPosition(placeholderPosition);
-            WriteColumnsWidths(writer, columnWidths);
-
-            writer.Flush();
-            writer.SetPosition(position);
-        }
-
-        private static void WriteColumnsWidths(MiniExcelStreamWriter writer, IEnumerable<ExcelColumnWidth> columnWidths)
-        {
-            var hasWrittenStart = false;
-            foreach (var column in columnWidths)
-            {
-                if (!hasWrittenStart)
-                {
-                    writer.Write(WorksheetXml.StartCols);
-                    hasWrittenStart = true;
-                }
-                writer.Write(WorksheetXml.Column(column.Index, column.Width));
-            }
-
-            if (hasWrittenStart)
-            {
-                writer.Write(WorksheetXml.EndCols);
-            }
-        }
-
         private void PrintHeader(MiniExcelStreamWriter writer, List<ExcelColumnInfo> props)
         {
             const int yIndex = 1;
@@ -244,73 +188,6 @@ namespace MiniExcelLibs.OpenXml
             }
 
             writer.Write(WorksheetXml.EndRow);
-        }
-
-        private void GenerateDrawinRelXml()
-        {
-            for (int sheetIndex = 0; sheetIndex < _sheets.Count; sheetIndex++)
-            {
-                GenerateDrawinRelXml(sheetIndex);
-            }
-        }
-
-        private void GenerateDrawinRelXml(int sheetIndex)
-        {
-            var drawing = GetDrawingRelationshipXml(sheetIndex);
-            CreateZipEntry(
-                ExcelFileNames.DrawingRels(sheetIndex),
-                null,
-                ExcelXml.DefaultDrawingXmlRels.Replace("{{format}}", drawing));
-        }
-
-        private void GenerateDrawingXml()
-        {
-            for (int sheetIndex = 0; sheetIndex < _sheets.Count; sheetIndex++)
-            {
-                GenerateDrawingXml(sheetIndex);
-            }
-        }
-
-        private void GenerateDrawingXml(int sheetIndex)
-        {
-            var drawing = GetDrawingXml(sheetIndex);
-            CreateZipEntry(
-                ExcelFileNames.Drawing(sheetIndex),
-                ExcelContentTypes.Drawing,
-                ExcelXml.DefaultDrawing.Replace("{{format}}", drawing));
-        }
-
-        private void GenerateWorkbookXml()
-        {
-            GenerateWorkBookXmls(
-                out StringBuilder workbookXml,
-                out StringBuilder workbookRelsXml,
-                out Dictionary<int, string> sheetsRelsXml);
-
-            foreach (var sheetRelsXml in sheetsRelsXml)
-            {
-                CreateZipEntry(
-                    ExcelFileNames.SheetRels(sheetRelsXml.Key),
-                    null,
-                    ExcelXml.DefaultSheetRelXml.Replace("{{format}}", sheetRelsXml.Value));
-            }
-
-            CreateZipEntry(
-                ExcelFileNames.Workbook,
-                ExcelContentTypes.Workbook,
-                ExcelXml.DefaultWorkbookXml.Replace("{{sheets}}", workbookXml.ToString()));
-
-            CreateZipEntry(
-                ExcelFileNames.WorkbookRels,
-                null,
-                ExcelXml.DefaultWorkbookXmlRels.Replace("{{sheets}}", workbookRelsXml.ToString()));
-        }
-
-        private void GenerateContentTypesXml()
-        {
-            var contentTypes = GetContentTypesXml();
-
-            CreateZipEntry(ExcelFileNames.ContentTypes, null, contentTypes);
         }
 
         private void CreateZipEntry(string path, string contentType, string content)

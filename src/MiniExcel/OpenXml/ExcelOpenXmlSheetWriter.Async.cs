@@ -116,6 +116,7 @@ namespace MiniExcelLibs.OpenXml
             }
         }
 
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
         internal async Task GenerateDefaultOpenXmlAsync(CancellationToken cancellationToken)
         {
             await CreateZipEntryAsync(ExcelFileNames.Rels, ExcelContentTypes.Relationships, ExcelXml.DefaultRels, cancellationToken);
@@ -151,7 +152,14 @@ namespace MiniExcelLibs.OpenXml
             await writer.WriteAsync(ExcelXml.EmptySheetXml);
         }
 
-        private static async Task<long> WriteDimensionPlaceholderAsync(MiniExcelAsyncStreamWriter writer)
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        private static async Task<long> WriteDimensionPlaceholderAsync(
+#if SYNC_ONLY
+            global::MiniExcelLibs.OpenXml.MiniExcelStreamWriter writer
+#else
+            MiniExcelAsyncStreamWriter writer
+#endif
+            )
         {
             var dimensionPlaceholderPostition = await writer.WriteAndFlushAsync(WorksheetXml.StartDimension);
             await writer.WriteAsync(WorksheetXml.DimensionPlaceholder); // end of code will be replaced
@@ -159,7 +167,14 @@ namespace MiniExcelLibs.OpenXml
             return dimensionPlaceholderPostition;
         }
 
-        private static async Task WriteDimensionAsync(MiniExcelAsyncStreamWriter writer, int maxRowIndex, int maxColumnIndex, long placeholderPosition)
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        private static async Task WriteDimensionAsync(
+#if SYNC_ONLY
+            global::MiniExcelLibs.OpenXml.MiniExcelStreamWriter writer,
+#else
+            MiniExcelAsyncStreamWriter writer,
+#endif
+            int maxRowIndex, int maxColumnIndex, long placeholderPosition)
         {
             // Flush and save position so that we can get back again.
             var position = await writer.FlushAsync();
@@ -170,6 +185,8 @@ namespace MiniExcelLibs.OpenXml
             writer.SetPosition(position);
         }
 
+        // Async and sync diverge. Do not apply the attribute
+        //[Zomp.SyncMethodGenerator.CreateSyncVersion]
         private async Task<int> WriteValuesAsync(MiniExcelAsyncStreamWriter writer, object values, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -290,21 +307,36 @@ namespace MiniExcelLibs.OpenXml
             }
             if (_configuration.EnableAutoWidth)
             {
-                await OverWriteColumnWidthPlaceholdersAsync(writer, columnWidthsPlaceholderPosition, widths.Columns, cancellationToken);
+                await OverwriteColumnWidthPlaceholdersAsync(writer, columnWidthsPlaceholderPosition, widths.Columns, cancellationToken);
             }
 
             var toSubtract = _printHeader ? 1 : 0;
             return maxRowIndex - toSubtract;
         }
 
-        private static async Task<long> WriteColumnWidthPlaceholdersAsync(MiniExcelAsyncStreamWriter writer, ICollection<ExcelColumnInfo> props)
+        // Async and sync diverge. Do not apply the attribute
+        //[Zomp.SyncMethodGenerator.CreateSyncVersion]
+        private static async Task<long> WriteColumnWidthPlaceholdersAsync(
+#if SYNC_ONLY
+            global::MiniExcelLibs.OpenXml.MiniExcelStreamWriter writer,
+#else
+            MiniExcelAsyncStreamWriter writer,
+#endif
+            ICollection<ExcelColumnInfo> props)
         {
             var placeholderPosition = await writer.FlushAsync();
             await writer.WriteWhitespaceAsync(WorksheetXml.GetColumnPlaceholderLength(props.Count));
             return placeholderPosition;
         }
 
-        private static async Task OverWriteColumnWidthPlaceholdersAsync(MiniExcelAsyncStreamWriter writer, long placeholderPosition, IEnumerable<ExcelColumnWidth> columnWidths, CancellationToken cancellationToken = default)
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        private static async Task OverwriteColumnWidthPlaceholdersAsync(
+#if SYNC_ONLY
+            global::MiniExcelLibs.OpenXml.MiniExcelStreamWriter writer,
+#else
+            MiniExcelAsyncStreamWriter writer,
+#endif
+            long placeholderPosition, IEnumerable<ExcelColumnWidth> columnWidths, CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
             
@@ -317,7 +349,14 @@ namespace MiniExcelLibs.OpenXml
             writer.SetPosition(position);
         }
 
-        private static async Task WriteColumnsWidthsAsync(MiniExcelAsyncStreamWriter writer, IEnumerable<ExcelColumnWidth> columnWidths, CancellationToken cancellationToken = default)
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        private static async Task WriteColumnsWidthsAsync(
+#if SYNC_ONLY
+            global::MiniExcelLibs.OpenXml.MiniExcelStreamWriter writer,
+#else
+            MiniExcelAsyncStreamWriter writer,
+#endif
+            IEnumerable<ExcelColumnWidth> columnWidths, CancellationToken cancellationToken = default)
         {
             var hasWrittenStart = false;
             foreach (var column in columnWidths)
@@ -338,7 +377,15 @@ namespace MiniExcelLibs.OpenXml
             await writer.WriteAsync(WorksheetXml.EndCols);
         }
 
-        private async Task PrintHeaderAsync(MiniExcelAsyncStreamWriter writer, List<ExcelColumnInfo> props, CancellationToken cancellationToken = default)
+        // Async and sync diverge. Do not apply the attribute
+        //[Zomp.SyncMethodGenerator.CreateSyncVersion]
+        private async Task PrintHeaderAsync(
+#if SYNC_ONLY
+            global::MiniExcelLibs.OpenXml.MiniExcelStreamWriter writer,
+#else
+            MiniExcelAsyncStreamWriter writer,
+#endif
+            List<ExcelColumnInfo> props, CancellationToken cancellationToken = default)
         {
             var xIndex = 1;
             var yIndex = 1;
@@ -463,6 +510,7 @@ namespace MiniExcelLibs.OpenXml
             }
         }
 
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
         private async Task GenerateDrawinRelXmlAsync(CancellationToken cancellationToken)
         {
             for (int sheetIndex = 0; sheetIndex < _sheets.Count; sheetIndex++)
@@ -472,6 +520,7 @@ namespace MiniExcelLibs.OpenXml
             }
         }
 
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
         private async Task GenerateDrawinRelXmlAsync(int sheetIndex, CancellationToken cancellationToken)
         {
             var drawing = GetDrawingRelationshipXml(sheetIndex);
@@ -482,6 +531,7 @@ namespace MiniExcelLibs.OpenXml
                 cancellationToken);
         }
 
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
         private async Task GenerateDrawingXmlAsync(CancellationToken cancellationToken)
         {
             for (int sheetIndex = 0; sheetIndex < _sheets.Count; sheetIndex++)
@@ -491,6 +541,7 @@ namespace MiniExcelLibs.OpenXml
             }
         }
 
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
         private async Task GenerateDrawingXmlAsync(int sheetIndex, CancellationToken cancellationToken)
         {
             var drawing = GetDrawingXml(sheetIndex);
@@ -501,6 +552,7 @@ namespace MiniExcelLibs.OpenXml
                 cancellationToken);
         }
 
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
         private async Task GenerateWorkbookXmlAsync(CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -532,6 +584,7 @@ namespace MiniExcelLibs.OpenXml
                     cancellationToken);
         }
 
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
         private async Task GenerateContentTypesXmlAsync(CancellationToken cancellationToken)
         {
             var contentTypes = GetContentTypesXml();

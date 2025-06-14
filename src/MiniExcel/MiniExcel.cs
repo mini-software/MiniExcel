@@ -10,6 +10,9 @@ using System.Data;
 using System.Dynamic;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace MiniExcelLibs
 {
@@ -75,45 +78,51 @@ namespace MiniExcelLibs
             }
         }
 
-        public static int[] SaveAs(string path, object value, bool printHeader = true, string sheetName = "Sheet1", ExcelType excelType = ExcelType.UNKNOWN, IConfiguration configuration = null, bool overwriteFile = false)
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        public static async Task<int[]> SaveAsAsync(string path, object value, bool printHeader = true, string sheetName = "Sheet1", ExcelType excelType = ExcelType.UNKNOWN, IConfiguration configuration = null, bool overwriteFile = false, CancellationToken ct = default)
         {
             if (Path.GetExtension(path).ToLowerInvariant() == ".xlsm")
                 throw new NotSupportedException("MiniExcel's SaveAs does not support the .xlsm format");
 
             using (var stream = overwriteFile ? File.Create(path) : new FileStream(path, FileMode.CreateNew))
-                return SaveAs(stream, value, printHeader, sheetName, ExcelTypeHelper.GetExcelType(path, excelType), configuration);
+                return await SaveAsAsync(stream, value, printHeader, sheetName, ExcelTypeHelper.GetExcelType(path, excelType), configuration, ct).ConfigureAwait(false);
         }
 
-        public static int[] SaveAs(this Stream stream, object value, bool printHeader = true, string sheetName = "Sheet1", ExcelType excelType = ExcelType.XLSX, IConfiguration configuration = null)
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        public static async Task<int[]> SaveAsAsync(this Stream stream, object value, bool printHeader = true, string sheetName = "Sheet1", ExcelType excelType = ExcelType.XLSX, IConfiguration configuration = null, CancellationToken ct = default)
         {
-            return ExcelWriterFactory.GetProvider(stream, value, sheetName, excelType, configuration, printHeader).SaveAs();
+            return await ExcelWriterFactory.GetProvider(stream, value, sheetName, excelType, configuration, printHeader).SaveAsAsync(ct).ConfigureAwait(false);
         }
 
-        public static IEnumerable<T> Query<T>(string path, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null, bool hasHeader = true) where T : class, new()
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        public static async IAsyncEnumerable<T> QueryAsync<T>(string path, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null, bool hasHeader = true, [EnumeratorCancellation] CancellationToken ct = default) where T : class, new()
         {
             using (var stream = FileHelper.OpenSharedRead(path))
-                foreach (var item in Query<T>(stream, sheetName, ExcelTypeHelper.GetExcelType(path, excelType), startCell, configuration, hasHeader))
+                await foreach (var item in QueryAsync<T>(stream, sheetName, ExcelTypeHelper.GetExcelType(path, excelType), startCell, configuration, hasHeader, ct).WithCancellation(ct).ConfigureAwait(false))
                     yield return item; //Foreach yield return twice reason : https://stackoverflow.com/questions/66791982/ienumerable-extract-code-lazy-loading-show-stream-was-not-readable
         }
 
-        public static IEnumerable<T> Query<T>(this Stream stream, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null, bool hasHeader = true) where T : class, new()
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        public static async IAsyncEnumerable<T> QueryAsync<T>(this Stream stream, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null, bool hasHeader = true, [EnumeratorCancellation] CancellationToken ct = default) where T : class, new()
         {
             using (var excelReader = ExcelReaderFactory.GetProvider(stream, ExcelTypeHelper.GetExcelType(stream, excelType), configuration))
-                foreach (var item in excelReader.Query<T>(sheetName, startCell, hasHeader))
+                await foreach (var item in excelReader.QueryAsync<T>(sheetName, startCell, hasHeader, ct).WithCancellation(ct).ConfigureAwait(false))
                     yield return item;
         }
        
-        public static IEnumerable<dynamic> Query(string path, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null)
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        public static async IAsyncEnumerable<dynamic> QueryAsync(string path, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null, [EnumeratorCancellation] CancellationToken ct = default)
         {
             using (var stream = FileHelper.OpenSharedRead(path))
-                foreach (var item in Query(stream, useHeaderRow, sheetName, ExcelTypeHelper.GetExcelType(path, excelType), startCell, configuration))
+                await foreach (var item in QueryAsync(stream, useHeaderRow, sheetName, ExcelTypeHelper.GetExcelType(path, excelType), startCell, configuration, ct).WithCancellation(ct).ConfigureAwait(false))
                     yield return item;
         }
         
-        public static IEnumerable<dynamic> Query(this Stream stream, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null)
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        public static async IAsyncEnumerable<dynamic> QueryAsync(this Stream stream, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null, [EnumeratorCancellation] CancellationToken ct = default)
         {
             using (var excelReader = ExcelReaderFactory.GetProvider(stream, ExcelTypeHelper.GetExcelType(stream, excelType), configuration))
-                foreach (var item in excelReader.Query(useHeaderRow, sheetName, startCell))
+                await foreach (var item in excelReader.QueryAsync(useHeaderRow, sheetName, startCell, ct).WithCancellation(ct).ConfigureAwait(false))
                     yield return item.Aggregate(new ExpandoObject() as IDictionary<string, object>,
                             (dict, p) => { dict.Add(p); return dict; });
         }
@@ -167,44 +176,51 @@ namespace MiniExcelLibs
 
         #endregion QueryRange
 
-        public static void SaveAsByTemplate(string path, string templatePath, object value, IConfiguration configuration = null)
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        public static async Task SaveAsByTemplateAsync(string path, string templatePath, object value, IConfiguration configuration = null, CancellationToken ct = default)
         {
             using (var stream = File.Create(path))
-                SaveAsByTemplate(stream, templatePath, value, configuration);
+                await SaveAsByTemplateAsync(stream, templatePath, value, configuration, ct);
         }
 
-        public static void SaveAsByTemplate(string path, byte[] templateBytes, object value, IConfiguration configuration = null)
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        public static async Task SaveAsByTemplateAsync(string path, byte[] templateBytes, object value, IConfiguration configuration = null, CancellationToken ct = default)
         {
             using (var stream = File.Create(path))
-                SaveAsByTemplate(stream, templateBytes, value, configuration);
+                await SaveAsByTemplateAsync(stream, templateBytes, value, configuration, ct);
         }
 
-        public static void SaveAsByTemplate(this Stream stream, string templatePath, object value, IConfiguration configuration = null)
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        public static async Task SaveAsByTemplateAsync(this Stream stream, string templatePath, object value, IConfiguration configuration = null, CancellationToken ct = default)
         {
-            ExcelTemplateFactory.GetProvider(stream, configuration).SaveAsByTemplate(templatePath, value);
+            await ExcelTemplateFactory.GetProvider(stream, configuration).SaveAsByTemplateAsync(templatePath, value, ct);
         }
 
-        public static void SaveAsByTemplate(this Stream stream, byte[] templateBytes, object value, IConfiguration configuration = null)
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        public static async Task SaveAsByTemplateAsync(this Stream stream, byte[] templateBytes, object value, IConfiguration configuration = null, CancellationToken ct = default)
         {
-            ExcelTemplateFactory.GetProvider(stream, configuration).SaveAsByTemplate(templateBytes, value);
+            await ExcelTemplateFactory.GetProvider(stream, configuration).SaveAsByTemplateAsync(templateBytes, value, ct);
         }
 
         #region MergeCells
 
-        public static void MergeSameCells(string mergedFilePath, string path, ExcelType excelType = ExcelType.XLSX, IConfiguration configuration = null)
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        public static async Task MergeSameCellsAsync(string mergedFilePath, string path, ExcelType excelType = ExcelType.XLSX, IConfiguration configuration = null, CancellationToken ct = default)
         {
             using (var stream = File.Create(mergedFilePath))
-                MergeSameCells(stream, path, excelType, configuration);
+                await MergeSameCellsAsync(stream, path, excelType, configuration, ct).ConfigureAwait(false);
         }
 
-        public static void MergeSameCells(this Stream stream, string path, ExcelType excelType = ExcelType.XLSX, IConfiguration configuration = null)
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        public static async Task MergeSameCellsAsync(this Stream stream, string path, ExcelType excelType = ExcelType.XLSX, IConfiguration configuration = null, CancellationToken ct = default)
         {
-            ExcelTemplateFactory.GetProvider(stream, configuration, excelType).MergeSameCells(path);
+            await ExcelTemplateFactory.GetProvider(stream, configuration, excelType).MergeSameCellsAsync(path, ct).ConfigureAwait(false);
         }
 
-        public static void MergeSameCells(this Stream stream, byte[] filePath, ExcelType excelType = ExcelType.XLSX, IConfiguration configuration = null)
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        public static async Task MergeSameCellsAsync(this Stream stream, byte[] filePath, ExcelType excelType = ExcelType.XLSX, IConfiguration configuration = null, CancellationToken ct = default)
         {
-            ExcelTemplateFactory.GetProvider(stream, configuration, excelType).MergeSameCells(filePath);
+            await ExcelTemplateFactory.GetProvider(stream, configuration, excelType).MergeSameCellsAsync(filePath, ct).ConfigureAwait(false);
         }
 
         #endregion

@@ -11,6 +11,8 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Xml;
 
 namespace MiniExcelLibs.OpenXml.SaveByTemplate
@@ -146,7 +148,8 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
         private static readonly Regex _nonTemplateRegex = new Regex(@".*?\{\{.*?\}\}.*?", RegexOptions.Compiled);
 #endif
 
-        private void GenerateSheetXmlImplByUpdateMode(ZipArchiveEntry sheetZipEntry, Stream stream, Stream sheetStream, IDictionary<string, object> inputMaps, IDictionary<int, string> sharedStrings, bool mergeCells = false)
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        private async Task GenerateSheetXmlImplByUpdateModeAsync(ZipArchiveEntry sheetZipEntry, Stream stream, Stream sheetStream, IDictionary<string, object> inputMaps, IDictionary<int, string> sharedStrings, bool mergeCells = false, CancellationToken ct = default)
         {
             var doc = new XmlDocument();
             doc.Load(sheetStream);
@@ -163,7 +166,7 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
             GetMergeCells(doc, worksheet);
             UpdateDimensionAndGetRowsInfo(inputMaps, doc, rows, !mergeCells);
 
-            WriteSheetXml(stream, doc, sheetData, mergeCells);
+            await WriteSheetXmlAsync(stream, doc, sheetData, mergeCells, ct).ConfigureAwait(false);
         }
 
 
@@ -294,7 +297,8 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
             public List<Range> Ranges { get; set; }
         }
 
-        private void WriteSheetXml(Stream outputFileStream, XmlDocument doc, XmlNode sheetData, bool mergeCells = false)
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        private async Task WriteSheetXmlAsync(Stream outputFileStream, XmlDocument doc, XmlNode sheetData, bool mergeCells = false, CancellationToken ct = default)
         {
             //Q.Why so complex?
             //A.Because try to use string stream avoid OOM when rendering rows
@@ -328,8 +332,16 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
 
             using (var writer = new StreamWriter(outputFileStream, Encoding.UTF8))
             {
-                writer.Write(contents[0]);
-                writer.Write($"<{prefix}sheetData>"); // prefix problem
+                await writer.WriteAsync(contents[0]
+#if NET7_0_OR_GREATER
+                    .AsMemory(), ct
+#endif
+                    ).ConfigureAwait(false);
+                await writer.WriteAsync($"<{prefix}sheetData>"
+#if NET7_0_OR_GREATER
+                    .AsMemory(), ct
+#endif
+                    ).ConfigureAwait(false); // prefix problem
 
                 if (mergeCells)
                 {
@@ -453,7 +465,27 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                         var iEnumerableIndex = 0;
                         enumrowstart = newRowIndex;
 
-                        GenerateCellValues(endPrefix, writer, ref rowIndexDiff, rowXml, ref headerDiff, ref prevHeader, mergeRowCount, isHeaderRow, ref currentHeader, rowInfo, row, groupingRowDiff, ref newRowIndex, innerXml, outerXmlOpen, ref isFirst, ref iEnumerableIndex, row);
+                        var generateCellValuesContext = new GenerateCellValuesContext()
+                        {
+                            currentHeader = currentHeader,
+                            headerDiff = headerDiff,
+                            iEnumerableIndex = iEnumerableIndex,
+                            isFirst = isFirst,
+                            newRowIndex = newRowIndex,
+                            prevHeader = prevHeader,
+                            rowIndexDiff = rowIndexDiff,
+                        };
+
+                        generateCellValuesContext = await GenerateCellValuesAsync(generateCellValuesContext, endPrefix, writer, rowXml, mergeRowCount, isHeaderRow, rowInfo, row, groupingRowDiff, innerXml, outerXmlOpen, row, ct).ConfigureAwait(false);
+
+                        rowIndexDiff = generateCellValuesContext.rowIndexDiff;
+                        headerDiff = generateCellValuesContext.headerDiff;
+                        prevHeader = generateCellValuesContext.prevHeader;
+                        newRowIndex = generateCellValuesContext.newRowIndex;
+                        isFirst = generateCellValuesContext.isFirst;
+                        iEnumerableIndex = generateCellValuesContext.iEnumerableIndex;
+                        currentHeader = generateCellValuesContext.currentHeader;
+
                         enumrowend = newRowIndex - 1;
 
                         var conditionalFormats = conditionalFormatRanges.Where(cfr => cfr.Ranges.Any(r => r.ContainsRow(originRowIndex)));
@@ -512,38 +544,86 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
 
                 #endregion
 
-                writer.Write($"</{prefix}sheetData>");
+                await writer.WriteAsync($"</{prefix}sheetData>"
+#if NET7_0_OR_GREATER
+                    .AsMemory(), ct
+#endif
+                    ).ConfigureAwait(false);
 
                 if (_newXMergeCellInfos.Count != 0)
                 {
-                    writer.Write($"<{prefix}mergeCells count=\"{_newXMergeCellInfos.Count}\">");
+                    await writer.WriteAsync($"<{prefix}mergeCells count=\"{_newXMergeCellInfos.Count}\">"
+#if NET7_0_OR_GREATER
+                    .AsMemory(), ct
+#endif
+                        ).ConfigureAwait(false);
                     foreach (var cell in _newXMergeCellInfos)
                     {
-                        writer.Write(cell.ToXmlString(prefix));
+                        await writer.WriteAsync(cell.ToXmlString(prefix)
+#if NET7_0_OR_GREATER
+                    .AsMemory(), ct
+#endif
+                            ).ConfigureAwait(false);
                     }
-                    writer.Write($"</{prefix}mergeCells>");
+                    await writer.WriteLineAsync($"</{prefix}mergeCells>"
+#if NET7_0_OR_GREATER
+                    .AsMemory(), ct
+#endif
+                        ).ConfigureAwait(false);
                 }
 
                 if (!string.IsNullOrEmpty(phoneticPrXml))
                 {
-                    writer.Write(phoneticPrXml);
+                    await writer.WriteAsync(phoneticPrXml
+#if NET7_0_OR_GREATER
+                    .AsMemory(), ct
+#endif
+                        ).ConfigureAwait(false);
                 }
 
                 if (newConditionalFormatRanges.Count != 0)
                 {
-                    writer.Write(string.Join(string.Empty, newConditionalFormatRanges.Select(cf => cf.Node.OuterXml)));
+                    await writer.WriteAsync(string.Join(string.Empty, newConditionalFormatRanges.Select(cf => cf.Node.OuterXml))
+#if NET7_0_OR_GREATER
+                    .AsMemory(), ct
+#endif
+                        ).ConfigureAwait(false);
                 }
 
-                writer.Write(contents[1]);
+                await writer.WriteAsync(contents[1]
+#if NET7_0_OR_GREATER
+                    .AsMemory(), ct
+#endif
+                    ).ConfigureAwait(false);
             }
         }
 
-        //todo: refactor in a way that needs less parameters
-        private void GenerateCellValues(string endPrefix, StreamWriter writer, ref int rowIndexDiff,
-            StringBuilder rowXml, ref int headerDiff, ref string prevHeader, int mergeRowCount, bool isHeaderRow,
-            ref string currentHeader, XRowInfo rowInfo, XmlElement row, int groupingRowDiff, ref int newRowIndex,
-            string innerXml, StringBuilder outerXmlOpen, ref bool isFirst, ref int iEnumerableIndex, XmlElement rowElement)
+        class GenerateCellValuesContext
         {
+            public int rowIndexDiff { get; set; }
+            public int headerDiff { get; set; }
+            public string prevHeader { get; set; }
+            public string currentHeader { get; set; }
+            public int newRowIndex { get; set; }
+            public bool isFirst { get; set; }
+            public int iEnumerableIndex { get; set; }
+        }
+
+        //todo: refactor in a way that needs less parameters
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        private async Task<GenerateCellValuesContext> GenerateCellValuesAsync(GenerateCellValuesContext generateCellValuesContext, string endPrefix, StreamWriter writer,
+            StringBuilder rowXml, int mergeRowCount, bool isHeaderRow,
+            XRowInfo rowInfo, XmlElement row, int groupingRowDiff,
+            string innerXml, StringBuilder outerXmlOpen, XmlElement rowElement, CancellationToken ct = default)
+        {
+            var rowIndexDiff = generateCellValuesContext.rowIndexDiff;
+            var headerDiff = generateCellValuesContext.headerDiff;
+            var prevHeader = generateCellValuesContext.prevHeader;
+            var newRowIndex = generateCellValuesContext.newRowIndex;
+            var isFirst = generateCellValuesContext.isFirst;
+            var iEnumerableIndex = generateCellValuesContext.iEnumerableIndex;
+            var currentHeader = generateCellValuesContext.currentHeader;
+
             // Just need to remove space string one time https://github.com/mini-software/MiniExcel/issues/751
             var cleanOuterXmlOpen = CleanXml(outerXmlOpen, endPrefix);
             var cleanInnerXml = CleanXml(innerXml, endPrefix);
@@ -748,7 +828,11 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
 
                 // replace formulas
                 ProcessFormulas(rowXml, newRowIndex);
-                writer.Write(rowXml);
+                await writer.WriteAsync(rowXml.ToString()
+#if NET7_0_OR_GREATER
+                    .AsMemory(), ct
+#endif
+                    ).ConfigureAwait(false);
 
                 //mergecells
                 if (rowInfo.RowMercells == null)
@@ -793,9 +877,24 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                     }
 
                     newRow.InnerXml = new StringBuilder(newRow.InnerXml).Replace("{{$rowindex}}", mergeBaseRowIndex.ToString()).ToString();
-                    writer.Write(CleanXml(newRow.OuterXml, endPrefix));
+                    await writer.WriteAsync(CleanXml(newRow.OuterXml, endPrefix)
+#if NET7_0_OR_GREATER
+                        .AsMemory(), ct
+#endif
+                        ).ConfigureAwait(false);
                 }
             }
+
+            return new GenerateCellValuesContext()
+            {
+                currentHeader = currentHeader,
+                headerDiff = headerDiff,
+                iEnumerableIndex = iEnumerableIndex,
+                isFirst = isFirst,
+                newRowIndex = newRowIndex,
+                prevHeader = prevHeader,
+                rowIndexDiff = rowIndexDiff,
+            };
         }
 
         private static void MergeCells(List<XRowInfo> xRowInfos)

@@ -1,10 +1,12 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace MiniExcelLibs.Utils
 {
-    internal static class CalcChainHelper
+    internal static partial class CalcChainHelper
     {
 
         // The calcChain.xml file in an Excel file (in the xl folder) is an XML file that stores the calculation chain for the workbook.
@@ -24,11 +26,12 @@ namespace MiniExcelLibs.Utils
 			return calcChainContent.ToString();
 		}
 
-		public static void GenerateCalcChainSheet(Stream calcChainStream, string calcChainContent)
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+		public static async Task GenerateCalcChainSheetAsync(Stream calcChainStream, string calcChainContent, CancellationToken ct = default)
         {
             using (var writer = new StreamWriter(calcChainStream, Encoding.UTF8))
             {
-                writer.Write($"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><calcChain xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\">{calcChainContent}</calcChain>");
+                await writer.WriteAsync($"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><calcChain xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\">{calcChainContent}</calcChain>").ConfigureAwait(false);
             }
         }
     }

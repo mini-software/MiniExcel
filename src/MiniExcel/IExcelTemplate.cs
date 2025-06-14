@@ -3,19 +3,15 @@ using System.Threading.Tasks;
 
 namespace MiniExcelLibs
 {
-    internal interface IExcelTemplate
+    internal partial interface IExcelTemplateAsync
     {
-        void SaveAsByTemplate(string templatePath, object value);
-        void SaveAsByTemplate(byte[] templateBtyes, object value);
-        void MergeSameCells(string path);
-        void MergeSameCells(byte[] fileInBytes);
-    }
-
-    internal interface IExcelTemplateAsync : IExcelTemplate
-    {
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
         Task SaveAsByTemplateAsync(string templatePath, object value, CancellationToken cancellationToken = default(CancellationToken));
-        Task SaveAsByTemplateAsync(byte[] templateBtyes, object value, CancellationToken cancellationToken = default(CancellationToken));
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        Task SaveAsByTemplateAsync(byte[] templateBytes, object value, CancellationToken cancellationToken = default(CancellationToken));
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
         Task MergeSameCellsAsync(string path, CancellationToken cancellationToken = default(CancellationToken));
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
         Task MergeSameCellsAsync(byte[] fileInBytes, CancellationToken cancellationToken = default(CancellationToken));
     }
 }

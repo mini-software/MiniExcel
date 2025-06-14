@@ -3,10 +3,9 @@ using System.Threading.Tasks;
 
 namespace MiniExcelLibs.OpenXml.Styles
 {
-    internal interface ISheetStyleBuilder
+    internal partial interface ISheetStyleBuilder
     {
-        SheetStyleBuildResult Build();
-
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
         Task<SheetStyleBuildResult> BuildAsync(CancellationToken cancellationToken = default);
     }
 }

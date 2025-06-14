@@ -362,18 +362,32 @@ namespace MiniExcelLibs.OpenXml
             await writer.WriteAsync(WorksheetXml.EndRow);
         }
 
-        private async Task WriteCellAsync(MiniExcelAsyncStreamWriter writer, string cellReference, string columnName)
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        private async Task WriteCellAsync(
+#if SYNC_ONLY
+            global::MiniExcelLibs.OpenXml.MiniExcelStreamWriter writer,
+#else
+            MiniExcelAsyncStreamWriter writer,
+#endif
+            string cellReference, string columnName)
         {
             await writer.WriteAsync(WorksheetXml.Cell(cellReference, "str", GetCellXfId("1"), ExcelOpenXmlUtils.EncodeXML(columnName)));
         }
 
-        private async Task WriteCellAsync(MiniExcelAsyncStreamWriter writer, int rowIndex, int cellIndex, object value, ExcelColumnInfo p, ExcelWidthCollection widthCollection)
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        private async Task WriteCellAsync(
+#if SYNC_ONLY
+            global::MiniExcelLibs.OpenXml.MiniExcelStreamWriter writer,
+#else
+            MiniExcelAsyncStreamWriter writer,
+#endif
+            int rowIndex, int cellIndex, object value, ExcelColumnInfo columnInfo, ExcelWidthCollection widthCollection)
         {
-            if (p?.CustomFormatter != null)
+            if (columnInfo?.CustomFormatter != null)
             {
                 try
                 {
-                    value = p.CustomFormatter(value);
+                    value = columnInfo.CustomFormatter(value);
                 }
                 catch
                 {
@@ -382,7 +396,9 @@ namespace MiniExcelLibs.OpenXml
             }
 
             var columnReference = ExcelOpenXmlUtils.ConvertXyToCell(cellIndex, rowIndex);
-            var valueIsNull = value is null || value is DBNull;
+            var valueIsNull = value is null ||
+                              value is DBNull ||
+                              (_configuration.WriteEmptyStringAsNull && value is string vs && vs == string.Empty);
 
             if (_configuration.EnableWriteNullValueCell && valueIsNull)
             {
@@ -390,12 +406,12 @@ namespace MiniExcelLibs.OpenXml
                 return;
             }
 
-            var tuple = GetCellValue(rowIndex, cellIndex, value, p, valueIsNull);
+            var tuple = GetCellValue(rowIndex, cellIndex, value, columnInfo, valueIsNull);
 
             var styleIndex = tuple.Item1;
             var dataType = tuple.Item2;
             var cellValue = tuple.Item3;
-            var columnType = p.ExcelColumnType;
+            var columnType = columnInfo.ExcelColumnType;
 
             /*Prefix and suffix blank space will lost after SaveAs #294*/
             var preserveSpace = cellValue != null && (cellValue.StartsWith(" ", StringComparison.Ordinal) ||

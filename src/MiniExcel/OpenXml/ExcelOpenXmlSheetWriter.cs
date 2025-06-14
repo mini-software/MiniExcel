@@ -246,48 +246,6 @@ namespace MiniExcelLibs.OpenXml
             writer.Write(WorksheetXml.EndRow);
         }
 
-        private void WriteCell(MiniExcelStreamWriter writer, int rowIndex, int cellIndex, object value, ExcelColumnInfo columnInfo, ExcelWidthCollection widthCollection)
-        {
-            if (columnInfo?.CustomFormatter != null)
-            {
-                try
-                {
-                    value = columnInfo.CustomFormatter(value);
-                }
-                catch
-                {
-                    //ignored
-                }
-            }
-
-            var columnReference = ExcelOpenXmlUtils.ConvertXyToCell(cellIndex, rowIndex);
-            var valueIsNull = value is null || 
-                              value is DBNull || 
-                              (_configuration.WriteEmptyStringAsNull && value is string vs && vs == string.Empty);
-
-            if (_configuration.EnableWriteNullValueCell && valueIsNull)
-            {
-                writer.Write(WorksheetXml.EmptyCell(columnReference, GetCellXfId("2")));
-                return;
-            }
-
-            var tuple = GetCellValue(rowIndex, cellIndex, value, columnInfo, valueIsNull);
-
-            var styleIndex = tuple.Item1; // https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.spreadsheet.cell?view=openxml-3.0.1
-            var dataType = tuple.Item2; // https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.spreadsheet.cellvalues?view=openxml-3.0.1
-            var cellValue = tuple.Item3;
-
-            var columnType = columnInfo?.ExcelColumnType ?? ColumnType.Value;
-
-            /*Prefix and suffix blank space will lost after SaveAs #294*/
-            var preserveSpace = cellValue != null && (cellValue.StartsWith(" ", StringComparison.Ordinal) || cellValue.EndsWith(" ", StringComparison.Ordinal));
-            writer.Write(WorksheetXml.Cell(columnReference, dataType, GetCellXfId(styleIndex), cellValue, preserveSpace: preserveSpace, columnType: columnType));
-            widthCollection?.AdjustWidth(cellIndex, cellValue);
-        }
-
-        private void WriteCell(MiniExcelStreamWriter writer, string cellReference, string columnName)
-            => writer.Write(WorksheetXml.Cell(cellReference, "str", GetCellXfId("1"), ExcelOpenXmlUtils.EncodeXML(columnName)));
-
         private void GenerateEndXml()
         {
             AddFilesToZip();

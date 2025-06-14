@@ -20,7 +20,7 @@
 
             if (!File.Exists(path))
             {
-                var rowsWritten = await SaveAsAsync(path, value, printHeader, sheetName, excelType, configuration, cancellationToken: cancellationToken);
+                var rowsWritten = await SaveAsAsync(path, value, printHeader, sheetName, excelType, configuration, ct: cancellationToken);
                 return rowsWritten.FirstOrDefault();
             }
 
@@ -50,55 +50,6 @@
                 var configOrDefault = configuration ?? new OpenXmlConfiguration { FastMode = true };
                 return await ExcelWriterFactory.GetProvider(stream, value, sheetName, excelType, configOrDefault, printHeader).InsertAsync(overwriteSheet, cancellationToken);
             }
-        }
-
-        public static async Task<int[]> SaveAsAsync(string path, object value, bool printHeader = true, string sheetName = "Sheet1", ExcelType excelType = ExcelType.UNKNOWN, IConfiguration configuration = null, bool overwriteFile = false, CancellationToken cancellationToken = default)
-        {
-            if (Path.GetExtension(path).ToLowerInvariant() == ".xlsm")
-                throw new NotSupportedException("MiniExcel's SaveAs does not support the .xlsm format");
-
-            using (var stream = overwriteFile ? File.Create(path) : new FileStream(path, FileMode.CreateNew))
-                return await SaveAsAsync(stream, value, printHeader, sheetName, ExcelTypeHelper.GetExcelType(path, excelType), configuration, cancellationToken);
-        }
-
-        public static async Task<int[]> SaveAsAsync(this Stream stream, object value, bool printHeader = true, string sheetName = "Sheet1", ExcelType excelType = ExcelType.XLSX, IConfiguration configuration = null, CancellationToken cancellationToken = default)
-        {
-            return await ExcelWriterFactory.GetProvider(stream, value, sheetName, excelType, configuration, printHeader).SaveAsAsync(cancellationToken);
-        }
-
-        public static async Task MergeSameCellsAsync(string mergedFilePath, string path, ExcelType excelType = ExcelType.UNKNOWN, IConfiguration configuration = null, CancellationToken cancellationToken = default)
-        {
-            await Task.Run(() => MergeSameCells(mergedFilePath, path, excelType, configuration), cancellationToken).ConfigureAwait(false);
-        }
-
-        public static async Task MergeSameCellsAsync(this Stream stream, string path, ExcelType excelType = ExcelType.XLSX, IConfiguration configuration = null, CancellationToken cancellationToken = default)
-        {
-            await ExcelTemplateFactory.GetProvider(stream, configuration, excelType).MergeSameCellsAsync(path, cancellationToken);
-        }
-
-        public static async Task MergeSameCellsAsync(this Stream stream, byte[] fileBytes, ExcelType excelType = ExcelType.XLSX, IConfiguration configuration = null, CancellationToken cancellationToken = default)
-        {
-            await ExcelTemplateFactory.GetProvider(stream, configuration, excelType).MergeSameCellsAsync(fileBytes, cancellationToken);
-        }
-
-        public static async Task SaveAsByTemplateAsync(this Stream stream, string templatePath, object value, IConfiguration configuration = null, CancellationToken cancellationToken = default)
-        {
-            await ExcelTemplateFactory.GetProvider(stream, configuration).SaveAsByTemplateAsync(templatePath, value, cancellationToken).ConfigureAwait(false);
-        }
-
-        public static async Task SaveAsByTemplateAsync(this Stream stream, byte[] templateBytes, object value, IConfiguration configuration = null, CancellationToken cancellationToken = default)
-        {
-            await ExcelTemplateFactory.GetProvider(stream, configuration).SaveAsByTemplateAsync(templateBytes, value, cancellationToken).ConfigureAwait(false);
-        }
-
-        public static async Task SaveAsByTemplateAsync(string path, string templatePath, object value, IConfiguration configuration = null, CancellationToken cancellationToken = default)
-        {
-            await Task.Run(() => SaveAsByTemplate(path, templatePath, value, configuration), cancellationToken).ConfigureAwait(false);
-        }
-
-        public static async Task SaveAsByTemplateAsync(string path, byte[] templateBytes, object value, IConfiguration configuration = null, CancellationToken cancellationToken = default)
-        {
-            await Task.Run(() => SaveAsByTemplate(path, templateBytes, value, configuration), cancellationToken).ConfigureAwait(false);
         }
 
         /// <summary>

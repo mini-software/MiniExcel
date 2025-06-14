@@ -17,11 +17,12 @@ namespace MiniExcelLibs.OpenXml
 {
     internal partial class ExcelOpenXmlSheetWriter : IExcelWriter
     {
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
         public async Task<int[]> SaveAsAsync(CancellationToken cancellationToken = default)
         {
             try
             {
-                await GenerateDefaultOpenXmlAsync(cancellationToken);
+                await GenerateDefaultOpenXmlAsync(cancellationToken).ConfigureAwait(false);
 
                 var sheets = GetSheets();
                 var rowsWritten = new List<int>();
@@ -32,11 +33,11 @@ namespace MiniExcelLibs.OpenXml
                     
                     _sheets.Add(sheet.Item1); //TODO:remove
                     _currentSheetIndex = sheet.Item1.SheetIdx;
-                    var rows = await CreateSheetXmlAsync(sheet.Item2, sheet.Item1.Path, cancellationToken);
+                    var rows = await CreateSheetXmlAsync(sheet.Item2, sheet.Item1.Path, cancellationToken).ConfigureAwait(false);
                     rowsWritten.Add(rows);
                 }
 
-                await GenerateEndXmlAsync(cancellationToken);
+                await GenerateEndXmlAsync(cancellationToken).ConfigureAwait(false);
                 return rowsWritten.ToArray();
             }
             finally
@@ -45,6 +46,7 @@ namespace MiniExcelLibs.OpenXml
             }
         }
 
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
         public async Task<int> InsertAsync(bool overwriteSheet = false, CancellationToken cancellationToken = default)
         {
             try
@@ -54,7 +56,7 @@ namespace MiniExcelLibs.OpenXml
 
                 cancellationToken.ThrowIfCancellationRequested();
                 
-                var sheetRecords = new ExcelOpenXmlSheetReader(_stream, _configuration).GetWorkbookRels(_archive.Entries).ToArray();
+                var sheetRecords = (await new ExcelOpenXmlSheetReader(_stream, _configuration).GetWorkbookRelsAsync(_archive.Entries, cancellationToken).ConfigureAwait(false)).ToArray();
                 foreach (var sheetRecord in sheetRecords.OrderBy(o => o.Id))
                 {
                     cancellationToken.ThrowIfCancellationRequested();

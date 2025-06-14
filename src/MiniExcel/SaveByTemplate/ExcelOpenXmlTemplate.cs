@@ -14,7 +14,7 @@ using System.Xml;
 
 namespace MiniExcelLibs.OpenXml.SaveByTemplate
 {
-    internal partial class ExcelOpenXmlTemplate : IExcelTemplate, IExcelTemplateAsync
+    internal partial class ExcelOpenXmlTemplate : IExcelTemplateAsync
     {
 #if NET7_0_OR_GREATER
         [GeneratedRegex("(?<={{).*?(?=}})")] private static partial Regex ExpressionRegex();
@@ -43,19 +43,22 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
             _inputValueExtractor = inputValueExtractor;
         }
 
-        public void SaveAsByTemplate(string templatePath, object value)
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        public async Task SaveAsByTemplateAsync(string templatePath, object value, CancellationToken ct = default)
         {
             using (var stream = FileHelper.OpenSharedRead(templatePath))
-                SaveAsByTemplateImpl(stream, value);
+                await SaveAsByTemplateImplAsync(stream, value, ct).ConfigureAwait(false);
         }
 
-        public void SaveAsByTemplate(byte[] templateBtyes, object value)
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        public async Task SaveAsByTemplateAsync(byte[] templateBytes, object value, CancellationToken ct = default)
         {
-            using (Stream stream = new MemoryStream(templateBtyes))
-                SaveAsByTemplateImpl(stream, value);
+            using (Stream stream = new MemoryStream(templateBytes))
+                await SaveAsByTemplateImplAsync(stream, value, ct).ConfigureAwait(false);
         }
 
-        internal void SaveAsByTemplateImpl(Stream templateStream, object value)
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        internal async Task SaveAsByTemplateImplAsync(Stream templateStream, object value, CancellationToken ct = default)
         {
             //only support xlsx
             //templateStream.CopyTo(_outputFileStream);
@@ -101,7 +104,11 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                     using (Stream originalEntryStream = entry.Open())
                     using (Stream newEntryStream = newEntry.Open())
                     {
-                        originalEntryStream.CopyTo(newEntryStream);
+                        await originalEntryStream.CopyToAsync(newEntryStream
+#if NETCOREAPP2_1_OR_GREATER
+                                    , ct
+#endif
+                            ).ConfigureAwait(false);
                     }
                 }
 
@@ -148,7 +155,7 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                     var calcChainEntry = outputFileArchive.zipFile.CreateEntry(calcChainPathName);
                     using (var calcChainStream = calcChainEntry.Open())
                     {
-                        CalcChainHelper.GenerateCalcChainSheet(calcChainStream, _calcChainContent.ToString());
+                        await CalcChainHelper.GenerateCalcChainSheetAsync(calcChainStream, _calcChainContent.ToString(), ct).ConfigureAwait(false);
                     }
                 }
                 else
@@ -163,7 +170,11 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                             using (Stream originalEntryStream = entry.Open())
                             using (Stream newEntryStream = newEntry.Open())
                             {
-                                originalEntryStream.CopyTo(newEntryStream);
+                                await originalEntryStream.CopyToAsync(newEntryStream
+#if NETCOREAPP2_1_OR_GREATER
+                                    , ct
+#endif
+                                    ).ConfigureAwait(false);
                             }
                         }
                     }
@@ -171,16 +182,6 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
 
                 outputFileArchive.zipFile.Dispose();
             }
-        }
-
-        public Task SaveAsByTemplateAsync(string templatePath, object value, CancellationToken cancellationToken = default)
-        {
-            return Task.Run(() => SaveAsByTemplate(templatePath, value), cancellationToken);
-        }
-
-        public Task SaveAsByTemplateAsync(byte[] templateBtyes, object value, CancellationToken cancellationToken = default)
-        {
-            return Task.Run(() => SaveAsByTemplate(templateBtyes, value), cancellationToken);
         }
     }
 }

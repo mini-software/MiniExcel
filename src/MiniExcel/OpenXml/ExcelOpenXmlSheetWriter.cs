@@ -246,42 +246,6 @@ namespace MiniExcelLibs.OpenXml
             writer.Write(WorksheetXml.EndRow);
         }
 
-        private void GenerateEndXml()
-        {
-            AddFilesToZip();
-            GenerateDrawinRelXml();
-            GenerateDrawingXml();
-            GenerateWorkbookXml();
-            GenerateContentTypesXml();
-        }
-
-        private void AddFilesToZip()
-        {
-            foreach (var item in _files)
-            {
-                CreateZipEntry(item.Path, item.Byte);
-            }
-        }
-
-        private void GenerateStylesXml()
-        {
-            using (var context = new SheetStyleBuildContext(_zipDictionary, _archive, _utf8WithBom, _configuration.DynamicColumns))
-            {
-                ISheetStyleBuilder builder = null;
-                switch (_configuration.TableStyles)
-                {
-                    case TableStyles.None:
-                        builder = new MinimalSheetStyleBuilder(context);
-                        break;
-                    case TableStyles.Default:
-                        builder = new DefaultSheetStyleBuilder(context, _configuration.StyleOptions);
-                        break;
-                }
-                var result = builder?.Build();
-                _cellXfIdMap = result?.CellXfIdMap;
-            }
-        }
-
         private void GenerateDrawinRelXml()
         {
             for (int sheetIndex = 0; sheetIndex < _sheets.Count; sheetIndex++)
@@ -347,38 +311,6 @@ namespace MiniExcelLibs.OpenXml
             var contentTypes = GetContentTypesXml();
 
             CreateZipEntry(ExcelFileNames.ContentTypes, null, contentTypes);
-        }
-
-        private void InsertContentTypesXml()
-        {
-            var contentTypesZipEntry = _archive.Entries.SingleOrDefault(s => s.FullName == ExcelFileNames.ContentTypes);
-            if (contentTypesZipEntry == null)
-            {
-                GenerateContentTypesXml();
-                return;
-            }
-            using (var stream = contentTypesZipEntry.Open())
-            {
-                var doc = XDocument.Load(stream);
-                var ns = doc.Root?.GetDefaultNamespace();
-                var typesElement = doc.Descendants(ns + "Types").Single();
-                var partNames = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
-                foreach (var partName in typesElement.Elements(ns + "Override").Select(s => s.Attribute("PartName")?.Value))
-                {
-                    partNames.Add(partName);
-                }
-                foreach (var p in _zipDictionary)
-                {
-                    var partName = $"/{p.Key}";
-                    if (!partNames.Contains(partName))
-                    {
-                        var newElement = new XElement(ns + "Override", new XAttribute("ContentType", p.Value.ContentType), new XAttribute("PartName", partName));
-                        typesElement.Add(newElement);
-                    }
-                }
-                stream.Position = 0;
-                doc.Save(stream);
-            }
         }
 
         private void CreateZipEntry(string path, string contentType, string content)

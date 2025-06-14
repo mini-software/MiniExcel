@@ -421,6 +421,7 @@ namespace MiniExcelLibs.OpenXml
             widthCollection?.AdjustWidth(cellIndex, cellValue);
         }
 
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
         private async Task GenerateEndXmlAsync(CancellationToken cancellationToken)
         {
             await AddFilesToZipAsync(cancellationToken);
@@ -430,6 +431,7 @@ namespace MiniExcelLibs.OpenXml
             await GenerateContentTypesXmlAsync(cancellationToken);
         }
 
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
         private async Task AddFilesToZipAsync(CancellationToken cancellationToken)
         {
             foreach (var item in _files)
@@ -439,6 +441,7 @@ namespace MiniExcelLibs.OpenXml
             }
         }
 
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
         private async Task GenerateStylesXmlAsync(CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -535,6 +538,7 @@ namespace MiniExcelLibs.OpenXml
             await CreateZipEntryAsync(ExcelFileNames.ContentTypes, null, contentTypes, cancellationToken);
         }
 
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
         private async Task InsertContentTypesXmlAsync(CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();

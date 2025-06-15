@@ -27,11 +27,18 @@ namespace MiniExcelLibs.OpenXml
         internal readonly ExcelOpenXmlZip _archive;
         private readonly OpenXmlConfiguration _config;
 
-        public ExcelOpenXmlSheetReader(Stream stream, IConfiguration configuration, bool isUpdateMode = true)
+        private ExcelOpenXmlSheetReader(Stream stream, IConfiguration configuration, bool isUpdateMode)
         {
             _archive = new ExcelOpenXmlZip(stream);
             _config = (OpenXmlConfiguration)configuration ?? OpenXmlConfiguration.DefaultConfig;
-            SetSharedStrings();
+        }
+
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        public static async Task<ExcelOpenXmlSheetReader> CreateAsync(Stream stream, IConfiguration configuration, bool isUpdateMode = true, CancellationToken ct = default)
+        {
+            var reader = new ExcelOpenXmlSheetReader(stream, configuration, isUpdateMode);
+            await reader.SetSharedStringsAsync(ct).ConfigureAwait(false);
+            return reader;
         }
 
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
@@ -133,7 +140,7 @@ namespace MiniExcelLibs.OpenXml
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
         internal async IAsyncEnumerable<IDictionary<string, object>> InternalQueryRangeAsync(bool useHeaderRow, string sheetName, int startRowIndex, int startColumnIndex, int? endRowIndex, int? endColumnIndex, [EnumeratorCancellation] CancellationToken ct = default)
         {
-            var xmlSettings = GetXmlReaderSettings(
+            var xmlSettings = XmlReaderHelper.GetXmlReaderSettings(
 #if SYNC_ONLY
                 false
 #else
@@ -439,17 +446,6 @@ namespace MiniExcelLibs.OpenXml
             }
         }
 
-        private static XmlReaderSettings GetXmlReaderSettings(bool async)
-        {
-            return new XmlReaderSettings
-            {
-                IgnoreComments = true,
-                IgnoreWhitespace = true,
-                XmlResolver = null,
-                Async = async,
-            };
-        }
-
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
         private async Task SetSharedStringsAsync(CancellationToken ct = default)
         {
@@ -489,7 +485,7 @@ namespace MiniExcelLibs.OpenXml
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
         internal static async IAsyncEnumerable<SheetRecord> ReadWorkbookAsync(ReadOnlyCollection<ZipArchiveEntry> entries, [EnumeratorCancellation] CancellationToken ct = default)
         {
-            var xmlSettings = GetXmlReaderSettings(
+            var xmlSettings = XmlReaderHelper.GetXmlReaderSettings(
 #if SYNC_ONLY
                 false
 #else
@@ -570,7 +566,7 @@ namespace MiniExcelLibs.OpenXml
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
         internal async Task<List<SheetRecord>> GetWorkbookRelsAsync(ReadOnlyCollection<ZipArchiveEntry> entries, CancellationToken ct = default)
         {
-            var xmlSettings = GetXmlReaderSettings(
+            var xmlSettings = XmlReaderHelper.GetXmlReaderSettings(
 #if SYNC_ONLY
                 false
 #else
@@ -775,7 +771,7 @@ namespace MiniExcelLibs.OpenXml
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
         internal async Task<IList<ExcelRange>> GetDimensionsAsync(CancellationToken ct = default)
         {
-            var xmlSettings = GetXmlReaderSettings(
+            var xmlSettings = XmlReaderHelper.GetXmlReaderSettings(
 #if SYNC_ONLY
                 false
 #else
@@ -935,7 +931,7 @@ namespace MiniExcelLibs.OpenXml
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
         internal static async Task<GetMaxRowColumnIndexResult> TryGetMaxRowColumnIndexAsync(ZipArchiveEntry sheetEntry, CancellationToken ct = default)
         {
-            var xmlSettings = GetXmlReaderSettings(
+            var xmlSettings = XmlReaderHelper.GetXmlReaderSettings(
 #if SYNC_ONLY
                 false
 #else
@@ -1072,7 +1068,7 @@ namespace MiniExcelLibs.OpenXml
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
         internal static async Task<MergeCellsResult> TryGetMergeCellsAsync(ZipArchiveEntry sheetEntry, CancellationToken ct = default)
         {
-            var xmlSettings = GetXmlReaderSettings(
+            var xmlSettings = XmlReaderHelper.GetXmlReaderSettings(
 #if SYNC_ONLY
                 false
 #else

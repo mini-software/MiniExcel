@@ -65,7 +65,7 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
 
             // foreach all templateStream and create file for _outputFileStream and not create sheet file
             templateStream.Position = 0;
-            var templateReader = new ExcelOpenXmlSheetReader(templateStream, null);
+            var templateReader = await ExcelOpenXmlSheetReader.CreateAsync(templateStream, null, ct: ct).ConfigureAwait(false);
             var outputFileArchive = new ExcelOpenXmlZip(_outputFileStream, mode: ZipArchiveMode.Create, true, Encoding.UTF8, isUpdateMode: false);
             try
             {

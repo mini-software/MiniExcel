@@ -37,7 +37,7 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
 #endif
                 ).ConfigureAwait(false);
 
-            var reader = new ExcelOpenXmlSheetReader(_outputFileStream, null);
+            var reader = await ExcelOpenXmlSheetReader.CreateAsync (_outputFileStream, null, ct: ct).ConfigureAwait(false);
             var archive = new ExcelOpenXmlZip(_outputFileStream, mode: ZipArchiveMode.Update, true, Encoding.UTF8);
 
             //read sharedString

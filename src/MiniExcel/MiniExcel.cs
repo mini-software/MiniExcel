@@ -109,7 +109,7 @@ namespace MiniExcelLibs
                 await foreach (var item in excelReader.QueryAsync<T>(sheetName, startCell, hasHeader, ct).WithCancellation(ct).ConfigureAwait(false))
                     yield return item;
         }
-       
+
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
         public static async IAsyncEnumerable<dynamic> QueryAsync(string path, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null, [EnumeratorCancellation] CancellationToken ct = default)
         {
@@ -117,7 +117,7 @@ namespace MiniExcelLibs
                 await foreach (var item in QueryAsync(stream, useHeaderRow, sheetName, ExcelTypeHelper.GetExcelType(path, excelType), startCell, configuration, ct).WithCancellation(ct).ConfigureAwait(false))
                     yield return item;
         }
-        
+
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
         public static async IAsyncEnumerable<dynamic> QueryAsync(this Stream stream, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null, [EnumeratorCancellation] CancellationToken ct = default)
         {
@@ -165,7 +165,7 @@ namespace MiniExcelLibs
                 foreach (var item in QueryRange(stream, useHeaderRow, sheetName, ExcelTypeHelper.GetExcelType(path, excelType), startRowIndex, startColumnIndex, endRowIndex, endColumnIndex, configuration))
                     yield return item;
         }
-        
+
         public static IEnumerable<dynamic> QueryRange(this Stream stream, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, int startRowIndex = 1, int startColumnIndex = 1, int? endRowIndex = null, int? endColumnIndex = null, IConfiguration configuration = null)
         {
             using (var excelReader = ExcelReaderFactory.GetProvider(stream, ExcelTypeHelper.GetExcelType(stream, excelType), configuration))
@@ -282,82 +282,105 @@ namespace MiniExcelLibs
             return dt;
         }
 
-        public static List<string> GetSheetNames(string path, OpenXmlConfiguration config = null)
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        public static async Task<List<string>> GetSheetNamesAsync(string path, OpenXmlConfiguration config = null, CancellationToken ct = default)
         {
             using (var stream = FileHelper.OpenSharedRead(path))
-                return GetSheetNames(stream, config);
+                return await GetSheetNamesAsync(stream, config, ct);
         }
 
-        public static List<string> GetSheetNames(this Stream stream, OpenXmlConfiguration config = null)
+       [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        public static async Task<List<string>> GetSheetNamesAsync(this Stream stream, OpenXmlConfiguration config = null, CancellationToken ct = default)
         {
             config = config ?? OpenXmlConfiguration.DefaultConfig;
 
             var archive = new ExcelOpenXmlZip(stream);
-            return new ExcelOpenXmlSheetReader(stream, config).GetWorkbookRels(archive.entries).Select(s => s.Name).ToList();
+            var reader = await ExcelOpenXmlSheetReader.CreateAsync(stream, config, ct: ct).ConfigureAwait(false);
+            var rels = await reader.GetWorkbookRelsAsync(archive.entries, ct).ConfigureAwait(false);
+            return rels.Select(s => s.Name).ToList();
         }
 
-        public static List<SheetInfo> GetSheetInformations(string path, OpenXmlConfiguration config = null)
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        public static async Task<List<SheetInfo>> GetSheetInformationsAsync(string path, OpenXmlConfiguration config = null, CancellationToken ct = default)
         {
             using (var stream = FileHelper.OpenSharedRead(path))
-                return GetSheetInformations(stream, config);
+                return await GetSheetInformationsAsync(stream, config, ct).ConfigureAwait(false);
         }
 
-        public static List<SheetInfo> GetSheetInformations(this Stream stream, OpenXmlConfiguration config = null)
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        public static async Task<List<SheetInfo>> GetSheetInformationsAsync(this Stream stream, OpenXmlConfiguration config = null, CancellationToken ct = default)
         {
             config = config ?? OpenXmlConfiguration.DefaultConfig;
 
             var archive = new ExcelOpenXmlZip(stream);
-            return new ExcelOpenXmlSheetReader(stream, config).GetWorkbookRels(archive.entries).Select((s, i) => s.ToSheetInfo((uint)i)).ToList();
+            var reader = await ExcelOpenXmlSheetReader.CreateAsync(stream, config, ct: ct).ConfigureAwait(false);
+            var rels = await reader.GetWorkbookRelsAsync(archive.entries, ct).ConfigureAwait(false);
+            return rels.Select((s, i) => s.ToSheetInfo((uint)i)).ToList();
         }
 
-        public static ICollection<string> GetColumns(string path, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null)
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        public static async Task<ICollection<string>> GetColumnsAsync(string path, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null, CancellationToken ct = default)
         {
             using (var stream = FileHelper.OpenSharedRead(path))
-                return GetColumns(stream, useHeaderRow, sheetName, excelType, startCell, configuration);
+                return await GetColumnsAsync(stream, useHeaderRow, sheetName, excelType, startCell, configuration, ct).ConfigureAwait(false);
         }
 
-        public static ICollection<string> GetColumns(this Stream stream, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null)
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        public static async Task<ICollection<string>> GetColumnsAsync(this Stream stream, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null, CancellationToken ct = default)
         {
-            return (Query(stream, useHeaderRow, sheetName, excelType, startCell, configuration).FirstOrDefault() as IDictionary<string, object>)?.Keys;
+            var enumerator = QueryAsync(stream, useHeaderRow, sheetName, excelType, startCell, configuration).GetAsyncEnumerator(ct);
+            _ = enumerator.ConfigureAwait(false);
+            if (!await enumerator.MoveNextAsync())
+            {
+                return null;
+            }
+            return (enumerator.Current as IDictionary<string, object>)?.Keys;
         }
 
-        public static IList<ExcelRange> GetSheetDimensions(string path)
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        public static async Task<IList<ExcelRange>> GetSheetDimensionsAsync(string path, CancellationToken ct = default)
         {
             using (var stream = FileHelper.OpenSharedRead(path))
-                return GetSheetDimensions(stream);
+                return await GetSheetDimensionsAsync(stream, ct).ConfigureAwait(false);
         }
 
-        public static IList<ExcelRange> GetSheetDimensions(this Stream stream)
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        public static async Task<IList<ExcelRange>> GetSheetDimensionsAsync(this Stream stream, CancellationToken ct = default)
         {
-            return new ExcelOpenXmlSheetReader(stream, null).GetDimensions();
+            var reader = await ExcelOpenXmlSheetReader.CreateAsync(stream, null, ct: ct).ConfigureAwait(false);
+            return reader.GetDimensions();
         }
 
-        public static void ConvertCsvToXlsx(string csv, string xlsx)
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        public static async Task ConvertCsvToXlsxAsync(string csv, string xlsx, CancellationToken ct = default)
         {
             using (var csvStream = FileHelper.OpenSharedRead(csv))
             using (var xlsxStream = new FileStream(xlsx, FileMode.CreateNew))
             {
-                ConvertCsvToXlsx(csvStream, xlsxStream);
+                await ConvertCsvToXlsxAsync(csvStream, xlsxStream, ct: ct).ConfigureAwait(false);
             }
         }
 
-        public static void ConvertCsvToXlsx(Stream csv, Stream xlsx)
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        public static async Task ConvertCsvToXlsxAsync(Stream csv, Stream xlsx, CancellationToken ct = default)
         {
-            var value = Query(csv, useHeaderRow: false, excelType: ExcelType.CSV);
-            SaveAs(xlsx, value, printHeader: false, excelType: ExcelType.XLSX);
+            var value = QueryAsync(csv, useHeaderRow: false, excelType: ExcelType.CSV);
+            await SaveAsAsync(xlsx, value, printHeader: false, excelType: ExcelType.XLSX, ct: ct).ConfigureAwait(false);
         }
 
-        public static void ConvertXlsxToCsv(string xlsx, string csv)
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        public static async Task ConvertXlsxToCsvAsync(string xlsx, string csv, CancellationToken ct = default)
         {
             using (var xlsxStream = FileHelper.OpenSharedRead(xlsx))
             using (var csvStream = new FileStream(csv, FileMode.CreateNew))
-                ConvertXlsxToCsv(xlsxStream, csvStream);
+                await ConvertXlsxToCsvAsync(xlsxStream, csvStream, ct).ConfigureAwait(false);
         }
 
-        public static void ConvertXlsxToCsv(Stream xlsx, Stream csv)
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        public static async Task ConvertXlsxToCsvAsync(Stream xlsx, Stream csv, CancellationToken ct = default)
         {
             var value = Query(xlsx, useHeaderRow: false, excelType: ExcelType.XLSX);
-            SaveAs(csv, value, printHeader: false, excelType: ExcelType.CSV);
+            await SaveAsAsync(csv, value, printHeader: false, excelType: ExcelType.CSV, ct: ct).ConfigureAwait(false);
         }
     }
 }

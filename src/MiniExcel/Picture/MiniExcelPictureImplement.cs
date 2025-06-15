@@ -4,17 +4,21 @@ using System;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Xml;
 
 namespace MiniExcelLibs.Picture
 {
-    internal static class MiniExcelPictureImplement
+    internal static partial class MiniExcelPictureImplement
     {
-        public static void AddPicture(Stream excelStream, params MiniExcelPicture[] images)
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        public static async Task AddPictureAsync(Stream excelStream, CancellationToken ct = default, params MiniExcelPicture[] images)
         {
             // get sheets
             var excelArchive = new ExcelOpenXmlZip(excelStream);
-            var sheetEntries = new ExcelOpenXmlSheetReader(excelStream, null).GetWorkbookRels(excelArchive.entries).ToList();
+            var reader = await ExcelOpenXmlSheetReader.CreateAsync(excelStream, null, ct: ct).ConfigureAwait(false);
+            var sheetEntries = await reader.GetWorkbookRelsAsync(excelArchive.entries, ct).ConfigureAwait(false);
 
             var drawingRelId = $"rId{Guid.NewGuid():N}";
             var drawingId = Guid.NewGuid().ToString("N");

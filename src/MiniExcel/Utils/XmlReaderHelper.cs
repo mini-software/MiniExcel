@@ -107,7 +107,14 @@ namespace MiniExcelLibs.Utils
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
         public static async IAsyncEnumerable<string> GetSharedStringsAsync(Stream stream, [EnumeratorCancellation]CancellationToken ct = default, params string[] nss)
         {
-            using (var reader = XmlReader.Create(stream))
+            var xmlSettings = GetXmlReaderSettings(
+#if SYNC_ONLY
+                false
+#else
+                true
+#endif
+                );
+            using (var reader = XmlReader.Create(stream, xmlSettings))
             {
                 if (!IsStartElement(reader, "sst", nss))
                     yield break;
@@ -128,6 +135,17 @@ namespace MiniExcelLibs.Utils
                     }
                 }
             }
+        }
+
+        internal static XmlReaderSettings GetXmlReaderSettings(bool async)
+        {
+            return new XmlReaderSettings
+            {
+                IgnoreComments = true,
+                IgnoreWhitespace = true,
+                XmlResolver = null,
+                Async = async,
+            };
         }
     }
 }

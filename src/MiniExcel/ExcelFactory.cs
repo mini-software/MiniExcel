@@ -15,7 +15,7 @@
                 case ExcelType.CSV:
                     return new CsvReader(stream, configuration);
                 case ExcelType.XLSX:
-                    return new ExcelOpenXmlSheetReader(stream, configuration);
+                    return ExcelOpenXmlSheetReader.Create(stream, configuration);
                 default:
                     throw new NotSupportedException("Something went wrong. Please report this issue you are experiencing with MiniExcel.");
             }

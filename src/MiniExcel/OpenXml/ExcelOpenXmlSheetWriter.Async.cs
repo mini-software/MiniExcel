@@ -55,8 +55,9 @@ namespace MiniExcelLibs.OpenXml
                     throw new InvalidOperationException("Insert requires fast mode to be enabled");
 
                 cancellationToken.ThrowIfCancellationRequested();
-                
-                var sheetRecords = (await new ExcelOpenXmlSheetReader(_stream, _configuration).GetWorkbookRelsAsync(_archive.Entries, cancellationToken).ConfigureAwait(false)).ToArray();
+
+                var reader = await ExcelOpenXmlSheetReader.CreateAsync(_stream, _configuration, ct: cancellationToken).ConfigureAwait(false);
+                var sheetRecords = (await reader.GetWorkbookRelsAsync(_archive.Entries, cancellationToken).ConfigureAwait(false)).ToArray();
                 foreach (var sheetRecord in sheetRecords.OrderBy(o => o.Id))
                 {
                     cancellationToken.ThrowIfCancellationRequested();

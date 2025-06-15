@@ -198,7 +198,6 @@ namespace MiniExcelLibs.OpenXml
         {
             cancellationToken.ThrowIfCancellationRequested();
             
-#if NETSTANDARD2_0_OR_GREATER || NET
             IMiniExcelWriteAdapter writeAdapter = null;
             if (!MiniExcelWriteAdapterFactory.TryGetAsyncWriteAdapter(values, _configuration, out var asyncWriteAdapter))
             {
@@ -208,13 +207,6 @@ namespace MiniExcelLibs.OpenXml
             var count = 0;
             var isKnownCount = writeAdapter != null && writeAdapter.TryGetKnownCount(out count);
             var props = writeAdapter != null ? writeAdapter?.GetColumns() : await asyncWriteAdapter.GetColumnsAsync();
-#else
-            IMiniExcelWriteAdapter writeAdapter =  MiniExcelWriteAdapterFactory.GetWriteAdapter(values, _configuration);
-
-            var isKnownCount = writeAdapter.TryGetKnownCount(out var count);
-            var props = writeAdapter.GetColumns();
-#endif
-
             if (props == null)
             {
                 await WriteEmptySheetAsync(writer);
@@ -278,7 +270,6 @@ namespace MiniExcelLibs.OpenXml
                     await writer.WriteAsync(WorksheetXml.EndRow);
                 }
             }
-#if NETSTANDARD2_0_OR_GREATER || NET
             else
             {
                 await foreach (var row in asyncWriteAdapter.GetRowsAsync(props, cancellationToken))
@@ -294,7 +285,6 @@ namespace MiniExcelLibs.OpenXml
                     await writer.WriteAsync(WorksheetXml.EndRow);
                 }
             }
-#endif
             maxRowIndex = currentRowIndex;
 
             await writer.WriteAsync(WorksheetXml.EndSheetData);

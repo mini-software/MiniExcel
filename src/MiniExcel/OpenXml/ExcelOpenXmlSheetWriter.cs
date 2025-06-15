@@ -160,36 +160,6 @@ namespace MiniExcelLibs.OpenXml
             return maxRowIndex;
         }
 
-        private static long WriteColumnWidthPlaceholders(MiniExcelStreamWriter writer, int count)
-        {
-            var placeholderPosition = writer.Flush();
-            writer.WriteWhitespace(WorksheetXml.GetColumnPlaceholderLength(count));
-            return placeholderPosition;
-        }
-
-        private void PrintHeader(MiniExcelStreamWriter writer, List<ExcelColumnInfo> props)
-        {
-            const int yIndex = 1;
-            writer.Write(WorksheetXml.StartRow(yIndex));
-
-            var xIndex = 1;
-            foreach (var p in props)
-            {
-                //reason : https://github.com/mini-software/MiniExcel/issues/142
-                if (p != null)
-                {
-                    if (p.ExcelIgnore)
-                        continue;
-                            
-                    var r = ExcelOpenXmlUtils.ConvertXyToCell(xIndex, yIndex);
-                    WriteCell(writer, r, columnName: p.ExcelColumnName);
-                }
-                xIndex++;
-            }
-
-            writer.Write(WorksheetXml.EndRow);
-        }
-
         private void CreateZipEntry(string path, string contentType, string content)
         {
             ZipArchiveEntry entry = _archive.CreateEntry(path, CompressionLevel.Fastest);

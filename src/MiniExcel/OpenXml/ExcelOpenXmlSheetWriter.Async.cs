@@ -188,7 +188,13 @@ namespace MiniExcelLibs.OpenXml
 
         // Async and sync diverge. Do not apply the attribute
         //[Zomp.SyncMethodGenerator.CreateSyncVersion]
-        private async Task<int> WriteValuesAsync(MiniExcelAsyncStreamWriter writer, object values, CancellationToken cancellationToken)
+        private async Task<int> WriteValuesAsync(
+#if SYNC_ONLY
+            global::MiniExcelLibs.OpenXml.MiniExcelStreamWriter writer,
+#else
+            MiniExcelAsyncStreamWriter writer,
+#endif
+            object values, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
             
@@ -214,22 +220,22 @@ namespace MiniExcelLibs.OpenXml
                 await WriteEmptySheetAsync(writer);
                 return 0;
             }
-            var maxColumnIndex = props.Count;
             int maxRowIndex;
+            var maxColumnIndex = props.Count(x => x != null && !x.ExcelIgnore);
 
             await writer.WriteAsync(WorksheetXml.StartWorksheetWithRelationship);
 
             long dimensionPlaceholderPostition = 0;
 
             // We can write the dimensions directly if the row count is known
-            if (_configuration.FastMode && !isKnownCount)
+            if (isKnownCount)
+            {
+                maxRowIndex = _printHeader ? count + 1 : count;
+                await writer.WriteAsync(WorksheetXml.Dimension(GetDimensionRef(maxRowIndex, props.Count)));
+            }
+            else if (_configuration.FastMode)
             {
                 dimensionPlaceholderPostition = await WriteDimensionPlaceholderAsync(writer);
-            }
-            else if (isKnownCount)
-            {
-                maxRowIndex = count + (_printHeader ? 1 : 0);
-                await writer.WriteAsync(WorksheetXml.Dimension(GetDimensionRef(maxRowIndex, props.Count)));
             }
 
             //sheet view
@@ -240,7 +246,7 @@ namespace MiniExcelLibs.OpenXml
             long columnWidthsPlaceholderPosition = 0;
             if (_configuration.EnableAutoWidth)
             {
-                columnWidthsPlaceholderPosition = await WriteColumnWidthPlaceholdersAsync(writer, props);
+                columnWidthsPlaceholderPosition = await WriteColumnWidthPlaceholdersAsync(writer, maxColumnIndex);
                 widths = new ExcelWidthCollection(_configuration.MinWidth, _configuration.MaxWidth, props);
             }
             else
@@ -289,10 +295,8 @@ namespace MiniExcelLibs.OpenXml
                 }
             }
 #endif
-
             maxRowIndex = currentRowIndex;
 
-            await writer.WriteAsync(WorksheetXml.Drawing(_currentSheetIndex));
             await writer.WriteAsync(WorksheetXml.EndSheetData);
 
             if (_configuration.AutoFilter)
@@ -300,6 +304,7 @@ namespace MiniExcelLibs.OpenXml
                 await writer.WriteAsync(WorksheetXml.Autofilter(GetDimensionRef(maxRowIndex, maxColumnIndex)));
             }
 
+            await writer.WriteAsync(WorksheetXml.Drawing(_currentSheetIndex));
             await writer.WriteAsync(WorksheetXml.EndWorksheet);
 
             if (_configuration.FastMode && dimensionPlaceholderPostition != 0)
@@ -308,25 +313,26 @@ namespace MiniExcelLibs.OpenXml
             }
             if (_configuration.EnableAutoWidth)
             {
-                await OverwriteColumnWidthPlaceholdersAsync(writer, columnWidthsPlaceholderPosition, widths.Columns, cancellationToken);
+                await OverwriteColumnWidthPlaceholdersAsync(writer, columnWidthsPlaceholderPosition, widths?.Columns, cancellationToken);
             }
 
-            var toSubtract = _printHeader ? 1 : 0;
-            return maxRowIndex - toSubtract;
+            if (_printHeader)
+                maxRowIndex--;
+
+            return maxRowIndex;
         }
 
-        // Async and sync diverge. Do not apply the attribute
-        //[Zomp.SyncMethodGenerator.CreateSyncVersion]
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
         private static async Task<long> WriteColumnWidthPlaceholdersAsync(
 #if SYNC_ONLY
             global::MiniExcelLibs.OpenXml.MiniExcelStreamWriter writer,
 #else
             MiniExcelAsyncStreamWriter writer,
 #endif
-            ICollection<ExcelColumnInfo> props)
+            int count)
         {
             var placeholderPosition = await writer.FlushAsync();
-            await writer.WriteWhitespaceAsync(WorksheetXml.GetColumnPlaceholderLength(props.Count));
+            await writer.WriteWhitespaceAsync(WorksheetXml.GetColumnPlaceholderLength(count));
             return placeholderPosition;
         }
 
@@ -378,8 +384,7 @@ namespace MiniExcelLibs.OpenXml
             await writer.WriteAsync(WorksheetXml.EndCols);
         }
 
-        // Async and sync diverge. Do not apply the attribute
-        //[Zomp.SyncMethodGenerator.CreateSyncVersion]
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
         private async Task PrintHeaderAsync(
 #if SYNC_ONLY
             global::MiniExcelLibs.OpenXml.MiniExcelStreamWriter writer,
@@ -388,22 +393,21 @@ namespace MiniExcelLibs.OpenXml
 #endif
             List<ExcelColumnInfo> props, CancellationToken cancellationToken = default)
         {
-            var xIndex = 1;
-            var yIndex = 1;
+            const int yIndex = 1;
             await writer.WriteAsync(WorksheetXml.StartRow(yIndex));
 
+            var xIndex = 1;
             foreach (var p in props)
             {
-                cancellationToken.ThrowIfCancellationRequested();
-                
-                if (p == null)
+                //reason : https://github.com/mini-software/MiniExcel/issues/142
+                if (p != null)
                 {
-                    xIndex++; //reason : https://github.com/mini-software/MiniExcel/issues/142
-                    continue;
-                }
+                    if (p.ExcelIgnore)
+                        continue;
 
-                var r = ExcelOpenXmlUtils.ConvertXyToCell(xIndex, yIndex);
-                await WriteCellAsync(writer, r, columnName: p.ExcelColumnName);
+                    var r = ExcelOpenXmlUtils.ConvertXyToCell(xIndex, yIndex);
+                    await WriteCellAsync(writer, r, columnName: p.ExcelColumnName);
+                }
                 xIndex++;
             }
 

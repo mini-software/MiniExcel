@@ -5,7 +5,6 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
-#if NETSTANDARD2_0_OR_GREATER || NET
 namespace MiniExcelLibs.WriteAdapter
 {
     internal class AsyncEnumerableWriteAdapter<T> : IAsyncMiniExcelWriteAdapter
@@ -92,4 +91,3 @@ namespace MiniExcelLibs.WriteAdapter
         }
     }
 }
-#endif

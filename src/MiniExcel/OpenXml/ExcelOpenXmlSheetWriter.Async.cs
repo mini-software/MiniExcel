@@ -186,8 +186,7 @@ namespace MiniExcelLibs.OpenXml
             writer.SetPosition(position);
         }
 
-        // Async and sync diverge. Do not apply the attribute
-        //[Zomp.SyncMethodGenerator.CreateSyncVersion]
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
         private async Task<int> WriteValuesAsync(
 #if SYNC_ONLY
             global::MiniExcelLibs.OpenXml.MiniExcelStreamWriter writer,
@@ -206,7 +205,12 @@ namespace MiniExcelLibs.OpenXml
 
             var count = 0;
             var isKnownCount = writeAdapter != null && writeAdapter.TryGetKnownCount(out count);
-            var props = writeAdapter != null ? writeAdapter?.GetColumns() : await asyncWriteAdapter.GetColumnsAsync();
+            List<ExcelColumnInfo> props;
+#if SYNC_ONLY
+            props = writeAdapter?.GetColumns();
+#else
+            props = writeAdapter != null ? writeAdapter?.GetColumns() : await asyncWriteAdapter.GetColumnsAsync();
+#endif
             if (props == null)
             {
                 await WriteEmptySheetAsync(writer);
@@ -272,6 +276,7 @@ namespace MiniExcelLibs.OpenXml
             }
             else
             {
+#if !SYNC_ONLY
                 await foreach (var row in asyncWriteAdapter.GetRowsAsync(props, cancellationToken))
                 {
                     cancellationToken.ThrowIfCancellationRequested();
@@ -284,6 +289,7 @@ namespace MiniExcelLibs.OpenXml
                     }
                     await writer.WriteAsync(WorksheetXml.EndRow);
                 }
+#endif
             }
             maxRowIndex = currentRowIndex;
 

@@ -26,6 +26,8 @@ namespace MiniExcelLibs.Csv
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
         public async IAsyncEnumerable<IDictionary<string, object>> QueryAsync(bool useHeaderRow, string sheetName, string startCell, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             if (startCell != "A1")
                 throw new NotImplementedException("CSV does not implement parameter startCell");
 

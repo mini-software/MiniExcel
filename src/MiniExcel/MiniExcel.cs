@@ -249,6 +249,8 @@ namespace MiniExcelLibs
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
         public async static Task<DataTable> QueryAsDataTableAsync(this Stream stream, bool useHeaderRow = true, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null, CancellationToken cancellationToken = default)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             if (sheetName == null && excelType != ExcelType.CSV) /*Issue #279*/
                 sheetName = (await stream.GetSheetNamesAsync(configuration as OpenXmlConfiguration, cancellationToken).ConfigureAwait(false)).First();
 

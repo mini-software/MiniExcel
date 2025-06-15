@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading;
@@ -31,7 +32,11 @@ namespace MiniExcelLibs.Utils
         {
             using (var writer = new StreamWriter(calcChainStream, Encoding.UTF8))
             {
-                await writer.WriteAsync($"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><calcChain xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\">{calcChainContent}</calcChain>").ConfigureAwait(false);
+                await writer.WriteAsync($"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><calcChain xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\">{calcChainContent}</calcChain>"
+#if NET7_0_OR_GREATER
+                    .AsMemory(), cancellationToken
+#endif
+                    ).ConfigureAwait(false);
             }
         }
     }

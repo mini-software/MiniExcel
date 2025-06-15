@@ -1227,12 +1227,12 @@ public class MiniExcelOpenXmlAsyncTests
     [Fact]
     public async Task ReadBigExcel_TakeCancel_Throws_TaskCanceledException()
     {
-        await Assert.ThrowsAsync<TaskCanceledException>(async () =>
+        await Assert.ThrowsAsync<OperationCanceledException>(async () =>
         {
             const string path = "../../../../../samples/xlsx/bigExcel.xlsx";
             using var cts = new CancellationTokenSource();
 
-            cts.CancelAsync();
+            await cts.CancelAsync();
 
             await using var stream = FileHelper.OpenRead(path);
             var rows = stream.QueryAsync(cancellationToken: cts.Token).ToBlockingEnumerable(cts.Token).ToList();

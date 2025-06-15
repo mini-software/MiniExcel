@@ -61,6 +61,8 @@ namespace MiniExcelLibs.OpenXml
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
         public IAsyncEnumerable<IDictionary<string, object>> QueryRangeAsync(bool useHeaderRow, string sheetName, string startCell, string endCell, CancellationToken cancellationToken = default)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             if (!ReferenceHelper.ParseReference(startCell, out var startColumnIndex, out var startRowIndex))
             {
                 throw new InvalidDataException($"Value {startCell} is not a valid cell reference.");
@@ -96,6 +98,8 @@ namespace MiniExcelLibs.OpenXml
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
         public IAsyncEnumerable<IDictionary<string, object>> QueryRangeAsync(bool useHeaderRow, string sheetName, int startRowIndex, int startColumnIndex, int? endRowIndex, int? endColumnIndex, CancellationToken cancellationToken = default)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             if (startRowIndex <= 0)
             {
                 throw new ArgumentOutOfRangeException(nameof(startRowIndex), "Start row index is 1-based and must be greater than 0.");
@@ -140,6 +144,8 @@ namespace MiniExcelLibs.OpenXml
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
         internal async IAsyncEnumerable<IDictionary<string, object>> InternalQueryRangeAsync(bool useHeaderRow, string sheetName, int startRowIndex, int startColumnIndex, int? endRowIndex, int? endColumnIndex, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             var xmlSettings = XmlReaderHelper.GetXmlReaderSettings(
 #if SYNC_ONLY
                 false
@@ -317,6 +323,8 @@ namespace MiniExcelLibs.OpenXml
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
         public static async IAsyncEnumerable<T> QueryImplAsync<T>(IAsyncEnumerable<IDictionary<string, object>> values, string startCell, bool hasHeader, Configuration configuration, [EnumeratorCancellation] CancellationToken cancellationToken = default) where T : class, new()
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             var type = typeof(T);
 
             //TODO:need to optimize
@@ -449,6 +457,8 @@ namespace MiniExcelLibs.OpenXml
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
         private async Task SetSharedStringsAsync(CancellationToken cancellationToken = default)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             if (_sharedStrings != null)
                 return;
             var sharedStringsEntry = _archive.GetEntry("xl/sharedStrings.xml");
@@ -634,6 +644,8 @@ namespace MiniExcelLibs.OpenXml
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
         private async Task<CellAndColumn> ReadCellAndSetColumnIndexAsync(XmlReader reader, int columnIndex, bool withoutCR, int startColumnIndex, string aR, string aT, CancellationToken cancellationToken = default)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             const int xfIndex = -1;
             int newColumnIndex;
 
@@ -771,6 +783,8 @@ namespace MiniExcelLibs.OpenXml
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
         internal async Task<IList<ExcelRange>> GetDimensionsAsync(CancellationToken cancellationToken = default)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             var xmlSettings = XmlReaderHelper.GetXmlReaderSettings(
 #if SYNC_ONLY
                 false
@@ -931,6 +945,8 @@ namespace MiniExcelLibs.OpenXml
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
         internal static async Task<GetMaxRowColumnIndexResult> TryGetMaxRowColumnIndexAsync(ZipArchiveEntry sheetEntry, CancellationToken cancellationToken = default)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             var xmlSettings = XmlReaderHelper.GetXmlReaderSettings(
 #if SYNC_ONLY
                 false
@@ -1068,6 +1084,8 @@ namespace MiniExcelLibs.OpenXml
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
         internal static async Task<MergeCellsResult> TryGetMergeCellsAsync(ZipArchiveEntry sheetEntry, CancellationToken cancellationToken = default)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             var xmlSettings = XmlReaderHelper.GetXmlReaderSettings(
 #if SYNC_ONLY
                 false

@@ -884,7 +884,7 @@ public class MiniExcelTemplateAsyncTests
     public async Task SaveAsByTemplateAsync_TakeCancel_Throws_TaskCanceledException()
     {
         const string templatePath = "../../../../../samples/xlsx/TestTemplateEasyFill.xlsx";
-        await Assert.ThrowsAsync<TaskCanceledException>(async () =>
+        await Assert.ThrowsAsync<OperationCanceledException>(async () =>
         {
             using var cts = new CancellationTokenSource();
             using var path = AutoDeletingPath.Create();

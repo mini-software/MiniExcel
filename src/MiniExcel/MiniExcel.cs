@@ -40,41 +40,43 @@ namespace MiniExcelLibs
             return new MiniExcelDataReader(stream, useHeaderRow, sheetName, excelType, startCell, configuration);
         }
 
-        public static int Insert(string path, object value, string sheetName = "Sheet1", ExcelType excelType = ExcelType.UNKNOWN, IConfiguration configuration = null, bool printHeader = true, bool overwriteSheet = false)
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        public static async Task<int> InsertAsync(string path, object value, string sheetName = "Sheet1", ExcelType excelType = ExcelType.UNKNOWN, IConfiguration configuration = null, bool printHeader = true, bool overwriteSheet = false, CancellationToken ct = default)
         {
             if (Path.GetExtension(path).ToLowerInvariant() == ".xlsm")
                 throw new NotSupportedException("MiniExcel's Insert does not support the .xlsm format");
 
             if (!File.Exists(path))
             {
-                var rowsWritten = SaveAs(path, value, printHeader, sheetName, excelType, configuration);
+                var rowsWritten = await SaveAsAsync(path, value, printHeader, sheetName, excelType, configuration, ct: ct).ConfigureAwait(false);
                 return rowsWritten.FirstOrDefault();
             }
 
             if (excelType == ExcelType.CSV)
             {
                 using (var stream = new FileStream(path, FileMode.Append, FileAccess.Write, FileShare.Read, 4096, FileOptions.SequentialScan))
-                    return Insert(stream, value, sheetName, ExcelTypeHelper.GetExcelType(path, excelType), configuration, printHeader, overwriteSheet);
+                    return await InsertAsync(stream, value, sheetName, ExcelTypeHelper.GetExcelType(path, excelType), configuration, printHeader, overwriteSheet, ct).ConfigureAwait(false);
             }
             else
             {
                 using (var stream = new FileStream(path, FileMode.Open, FileAccess.ReadWrite, FileShare.Read, 4096, FileOptions.SequentialScan))
-                    return Insert(stream, value, sheetName, ExcelTypeHelper.GetExcelType(path, excelType), configuration, printHeader, overwriteSheet);
+                    return await InsertAsync(stream, value, sheetName, ExcelTypeHelper.GetExcelType(path, excelType), configuration, printHeader, overwriteSheet, ct).ConfigureAwait(false);
             }
         }
 
-        public static int Insert(this Stream stream, object value, string sheetName = "Sheet1", ExcelType excelType = ExcelType.XLSX, IConfiguration configuration = null, bool printHeader = true, bool overwriteSheet = false)
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        public static async Task <int> InsertAsync(this Stream stream, object value, string sheetName = "Sheet1", ExcelType excelType = ExcelType.XLSX, IConfiguration configuration = null, bool printHeader = true, bool overwriteSheet = false, CancellationToken ct = default)
         {
             stream.Seek(0, SeekOrigin.End);
             if (excelType == ExcelType.CSV)
             {
                 var newValue = value is IEnumerable || value is IDataReader ? value : new[] { value };
-                return ExcelWriterFactory.GetProvider(stream, newValue, sheetName, excelType, configuration, false).Insert(overwriteSheet);
+                return await ExcelWriterFactory.GetProvider(stream, newValue, sheetName, excelType, configuration, false).InsertAsync(overwriteSheet, ct).ConfigureAwait(false);
             }
             else
             {
                 var configOrDefault = configuration ?? new OpenXmlConfiguration { FastMode = true };
-                return ExcelWriterFactory.GetProvider(stream, value, sheetName, excelType, configOrDefault, printHeader).Insert(overwriteSheet);
+                return await ExcelWriterFactory.GetProvider(stream, value, sheetName, excelType, configOrDefault, printHeader).InsertAsync(overwriteSheet, ct).ConfigureAwait(false);
             }
         }
 
@@ -105,7 +107,7 @@ namespace MiniExcelLibs
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
         public static async IAsyncEnumerable<T> QueryAsync<T>(this Stream stream, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null, bool hasHeader = true, [EnumeratorCancellation] CancellationToken ct = default) where T : class, new()
         {
-            using (var excelReader = ExcelReaderFactory.GetProvider(stream, ExcelTypeHelper.GetExcelType(stream, excelType), configuration))
+            using (var excelReader = await ExcelReaderFactory.GetProviderAsync(stream, ExcelTypeHelper.GetExcelType(stream, excelType), configuration, ct).ConfigureAwait(false))
                 await foreach (var item in excelReader.QueryAsync<T>(sheetName, startCell, hasHeader, ct).WithCancellation(ct).ConfigureAwait(false))
                     yield return item;
         }
@@ -121,7 +123,7 @@ namespace MiniExcelLibs
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
         public static async IAsyncEnumerable<dynamic> QueryAsync(this Stream stream, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null, [EnumeratorCancellation] CancellationToken ct = default)
         {
-            using (var excelReader = ExcelReaderFactory.GetProvider(stream, ExcelTypeHelper.GetExcelType(stream, excelType), configuration))
+            using (var excelReader = await ExcelReaderFactory.GetProviderAsync(stream, ExcelTypeHelper.GetExcelType(stream, excelType), configuration, ct).ConfigureAwait(false))
                 await foreach (var item in excelReader.QueryAsync(useHeaderRow, sheetName, startCell, ct).WithCancellation(ct).ConfigureAwait(false))
                     yield return item.Aggregate(new ExpandoObject() as IDictionary<string, object>,
                             (dict, p) => { dict.Add(p); return dict; });
@@ -144,32 +146,36 @@ namespace MiniExcelLibs
         /// <param name="endCell">lower right corner</param>
         /// <param name="configuration"></param>
         /// <returns></returns>
-        public static IEnumerable<dynamic> QueryRange(string path, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", string endCell = "", IConfiguration configuration = null)
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        public static async IAsyncEnumerable<dynamic> QueryRangeAsync(string path, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", string endCell = "", IConfiguration configuration = null, [EnumeratorCancellation] CancellationToken ct = default)
         {
             using (var stream = FileHelper.OpenSharedRead(path))
-                foreach (var item in QueryRange(stream, useHeaderRow, sheetName, ExcelTypeHelper.GetExcelType(path, excelType), startCell, endCell, configuration))
+                await foreach (var item in QueryRangeAsync(stream, useHeaderRow, sheetName, ExcelTypeHelper.GetExcelType(path, excelType), startCell, endCell, configuration, ct).WithCancellation(ct).ConfigureAwait(false))
                     yield return item;
         }
 
-        public static IEnumerable<dynamic> QueryRange(this Stream stream, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", string endCell = "", IConfiguration configuration = null)
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        public static async IAsyncEnumerable<dynamic> QueryRangeAsync(this Stream stream, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", string endCell = "", IConfiguration configuration = null, [EnumeratorCancellation] CancellationToken ct = default)
         {
-            using (var excelReader = ExcelReaderFactory.GetProvider(stream, ExcelTypeHelper.GetExcelType(stream, excelType), configuration))
-                foreach (var item in excelReader.QueryRange(useHeaderRow, sheetName, startCell, endCell))
+            using (var excelReader = await ExcelReaderFactory.GetProviderAsync(stream, ExcelTypeHelper.GetExcelType(stream, excelType), configuration, ct).ConfigureAwait(false))
+                await foreach (var item in excelReader.QueryRangeAsync(useHeaderRow, sheetName, startCell, endCell, ct).WithCancellation(ct).ConfigureAwait(false))
                     yield return item.Aggregate(new ExpandoObject() as IDictionary<string, object>,
                             (dict, p) => { dict.Add(p); return dict; });
         }
 
-        public static IEnumerable<dynamic> QueryRange(string path, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, int startRowIndex = 1, int startColumnIndex = 1, int? endRowIndex = null, int? endColumnIndex = null, IConfiguration configuration = null)
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        public static async IAsyncEnumerable<dynamic> QueryRangeAsync(string path, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, int startRowIndex = 1, int startColumnIndex = 1, int? endRowIndex = null, int? endColumnIndex = null, IConfiguration configuration = null, [EnumeratorCancellation] CancellationToken ct = default)
         {
             using (var stream = FileHelper.OpenSharedRead(path))
-                foreach (var item in QueryRange(stream, useHeaderRow, sheetName, ExcelTypeHelper.GetExcelType(path, excelType), startRowIndex, startColumnIndex, endRowIndex, endColumnIndex, configuration))
+                await foreach(var item in QueryRangeAsync(stream, useHeaderRow, sheetName, ExcelTypeHelper.GetExcelType(path, excelType), startRowIndex, startColumnIndex, endRowIndex, endColumnIndex, configuration, ct).WithCancellation(ct).ConfigureAwait(false))
                     yield return item;
         }
 
-        public static IEnumerable<dynamic> QueryRange(this Stream stream, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, int startRowIndex = 1, int startColumnIndex = 1, int? endRowIndex = null, int? endColumnIndex = null, IConfiguration configuration = null)
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        public static async IAsyncEnumerable<dynamic> QueryRangeAsync(this Stream stream, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, int startRowIndex = 1, int startColumnIndex = 1, int? endRowIndex = null, int? endColumnIndex = null, IConfiguration configuration = null, [EnumeratorCancellation] CancellationToken ct = default)
         {
-            using (var excelReader = ExcelReaderFactory.GetProvider(stream, ExcelTypeHelper.GetExcelType(stream, excelType), configuration))
-                foreach (var item in excelReader.QueryRange(useHeaderRow, sheetName, startRowIndex, startColumnIndex, endRowIndex, endColumnIndex))
+            using (var excelReader = await ExcelReaderFactory.GetProviderAsync(stream, ExcelTypeHelper.GetExcelType(stream, excelType), configuration, ct).ConfigureAwait(false))
+                await foreach (var item in excelReader.QueryRangeAsync(useHeaderRow, sheetName, startRowIndex, startColumnIndex, endRowIndex, endColumnIndex, ct).WithCancellation(ct).ConfigureAwait(false))
                     yield return item.Aggregate(new ExpandoObject() as IDictionary<string, object>,
                             (dict, p) => { dict.Add(p); return dict; });
         }
@@ -229,25 +235,28 @@ namespace MiniExcelLibs
         /// QueryAsDataTable is not recommended, because it'll load all data into memory.
         /// </summary>
         [Obsolete("QueryAsDataTable is not recommended, because it'll load all data into memory.")]
-        public static DataTable QueryAsDataTable(string path, bool useHeaderRow = true, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null)
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        public async static Task<DataTable> QueryAsDataTableAsync(string path, bool useHeaderRow = true, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null, CancellationToken ct = default)
         {
             using (var stream = FileHelper.OpenSharedRead(path))
             {
-                return QueryAsDataTable(stream, useHeaderRow, sheetName, excelType: ExcelTypeHelper.GetExcelType(path, excelType), startCell, configuration);
+                return await QueryAsDataTableAsync(stream, useHeaderRow, sheetName, excelType: ExcelTypeHelper.GetExcelType(path, excelType), startCell, configuration, ct).ConfigureAwait(false);
             }
         }
 
-        public static DataTable QueryAsDataTable(this Stream stream, bool useHeaderRow = true, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null)
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        public async static Task<DataTable> QueryAsDataTableAsync(this Stream stream, bool useHeaderRow = true, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null, CancellationToken ct = default)
         {
             if (sheetName == null && excelType != ExcelType.CSV) /*Issue #279*/
-                sheetName = stream.GetSheetNames(configuration as OpenXmlConfiguration).First();
+                sheetName = (await stream.GetSheetNamesAsync(configuration as OpenXmlConfiguration, ct).ConfigureAwait(false)).First();
 
             var dt = new DataTable(sheetName);
             var first = true;
-            var rows = ExcelReaderFactory.GetProvider(stream, ExcelTypeHelper.GetExcelType(stream, excelType), configuration).Query(false, sheetName, startCell);
+            var provider = await ExcelReaderFactory.GetProviderAsync(stream, ExcelTypeHelper.GetExcelType(stream, excelType), configuration, ct).ConfigureAwait(false);
+            var rows = provider.QueryAsync(false, sheetName, startCell);
 
             var columnDict = new Dictionary<string, string>();
-            foreach (IDictionary<string, object> row in rows)
+            await foreach (IDictionary<string, object> row in rows.WithCancellation(ct).ConfigureAwait(false))
             {
                 if (first)
                 {

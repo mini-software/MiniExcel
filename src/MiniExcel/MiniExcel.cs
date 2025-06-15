@@ -18,15 +18,17 @@ namespace MiniExcelLibs
 {
     public static partial class MiniExcel
     {
-        public static void AddPicture(string path, params MiniExcelPicture[] images)
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        public static async Task AddPictureAsync(string path, CancellationToken ct = default, params MiniExcelPicture[] images)
         {
             using (var stream = File.Open(path, FileMode.OpenOrCreate))
-                MiniExcelPictureImplement.AddPicture(stream, images);
+                await MiniExcelPictureImplement.AddPictureAsync(stream, ct, images).ConfigureAwait(false);
         }
 
-        public static void AddPicture(Stream excelStream, params MiniExcelPicture[] images)
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        public static async Task AddPicture(Stream excelStream, CancellationToken ct = default, params MiniExcelPicture[] images)
         {
-            MiniExcelPictureImplement.AddPicture(excelStream, images);
+            await MiniExcelPictureImplement.AddPictureAsync(excelStream, ct, images).ConfigureAwait(false);
         }
 
         public static MiniExcelDataReader GetReader(string path, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null)

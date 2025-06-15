@@ -359,7 +359,7 @@ namespace MiniExcelLibs
         public static async Task<IList<ExcelRange>> GetSheetDimensionsAsync(this Stream stream, CancellationToken cancellationToken = default)
         {
             var reader = await ExcelOpenXmlSheetReader.CreateAsync(stream, null, cancellationToken: cancellationToken).ConfigureAwait(false);
-            return reader.GetDimensions();
+            return await reader.GetDimensionsAsync(cancellationToken).ConfigureAwait(false);
         }
 
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
@@ -390,7 +390,7 @@ namespace MiniExcelLibs
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
         public static async Task ConvertXlsxToCsvAsync(Stream xlsx, Stream csv, CancellationToken cancellationToken = default)
         {
-            var value = Query(xlsx, useHeaderRow: false, excelType: ExcelType.XLSX);
+            var value = QueryAsync(xlsx, useHeaderRow: false, excelType: ExcelType.XLSX);
             await SaveAsAsync(csv, value, printHeader: false, excelType: ExcelType.CSV, cancellationToken: cancellationToken).ConfigureAwait(false);
         }
     }

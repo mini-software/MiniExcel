@@ -27,7 +27,7 @@ namespace MiniExcelLibs.Utils
 		}
 
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
-		public static async Task GenerateCalcChainSheetAsync(Stream calcChainStream, string calcChainContent, CancellationToken ct = default)
+		public static async Task GenerateCalcChainSheetAsync(Stream calcChainStream, string calcChainContent, CancellationToken cancellationToken = default)
         {
             using (var writer = new StreamWriter(calcChainStream, Encoding.UTF8))
             {

@@ -15,16 +15,16 @@ namespace MiniExcelLibs.Utils
         /// </summary>
         /// <param name="reader"></param>
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
-        public static async Task PassXmlDeclarationAndWorksheetAsync(this XmlReader reader, CancellationToken ct = default)
+        public static async Task PassXmlDeclarationAndWorksheetAsync(this XmlReader reader, CancellationToken cancellationToken = default)
         {
             await reader.MoveToContentAsync()
 #if NET6_0_OR_GREATER
-                        .WaitAsync(ct)
+                        .WaitAsync(cancellationToken)
 #endif
                         .ConfigureAwait(false);
             await reader.ReadAsync()
 #if NET6_0_OR_GREATER
-                        .WaitAsync(ct)
+                        .WaitAsync(cancellationToken)
 #endif
                         .ConfigureAwait(false);
         }
@@ -34,24 +34,24 @@ namespace MiniExcelLibs.Utils
         /// </summary>
         /// <param name="reader"></param>
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
-        public static async Task SkipToNextSameLevelDomAsync(XmlReader reader, CancellationToken ct = default)
+        public static async Task SkipToNextSameLevelDomAsync(XmlReader reader, CancellationToken cancellationToken = default)
         {
             while (!reader.EOF)
             {
-                if (!await SkipContentAsync(reader, ct))
+                if (!await SkipContentAsync(reader, cancellationToken).ConfigureAwait(false))
                     break;
             }
         }
 
         //Method from ExcelDataReader @MIT License
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
-        public static async Task<bool> ReadFirstContentAsync(XmlReader reader, CancellationToken ct = default)
+        public static async Task<bool> ReadFirstContentAsync(XmlReader reader, CancellationToken cancellationToken = default)
         {
             if (reader.IsEmptyElement)
             {
                 await reader.ReadAsync()
 #if NET6_0_OR_GREATER
-                        .WaitAsync(ct)
+                        .WaitAsync(cancellationToken)
 #endif
                         .ConfigureAwait(false);
                 return false;
@@ -59,12 +59,12 @@ namespace MiniExcelLibs.Utils
 
             await reader.MoveToContentAsync()
 #if NET6_0_OR_GREATER
-                        .WaitAsync(ct)
+                        .WaitAsync(cancellationToken)
 #endif
                         .ConfigureAwait(false);
             await reader.ReadAsync()
 #if NET6_0_OR_GREATER
-                        .WaitAsync(ct)
+                        .WaitAsync(cancellationToken)
 #endif
                         .ConfigureAwait(false);
             return true;
@@ -72,13 +72,13 @@ namespace MiniExcelLibs.Utils
 
         //Method from ExcelDataReader @MIT License
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
-        public static async Task<bool> SkipContentAsync(XmlReader reader, CancellationToken ct = default)
+        public static async Task<bool> SkipContentAsync(XmlReader reader, CancellationToken cancellationToken = default)
         {
             if (reader.NodeType == XmlNodeType.EndElement)
             {
                 await reader.ReadAsync()
 #if NET6_0_OR_GREATER
-                        .WaitAsync(ct)
+                        .WaitAsync(cancellationToken)
 #endif
                         .ConfigureAwait(false);
                 return false;
@@ -86,7 +86,7 @@ namespace MiniExcelLibs.Utils
 
             await reader.SkipAsync()
 #if NET6_0_OR_GREATER
-                        .WaitAsync(ct)
+                        .WaitAsync(cancellationToken)
 #endif
                         .ConfigureAwait(false);
             return true;
@@ -105,7 +105,7 @@ namespace MiniExcelLibs.Utils
         }
 
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
-        public static async IAsyncEnumerable<string> GetSharedStringsAsync(Stream stream, [EnumeratorCancellation]CancellationToken ct = default, params string[] nss)
+        public static async IAsyncEnumerable<string> GetSharedStringsAsync(Stream stream, [EnumeratorCancellation]CancellationToken cancellationToken = default, params string[] nss)
         {
             var xmlSettings = GetXmlReaderSettings(
 #if SYNC_ONLY
@@ -119,17 +119,17 @@ namespace MiniExcelLibs.Utils
                 if (!IsStartElement(reader, "sst", nss))
                     yield break;
 
-                if (!await ReadFirstContentAsync(reader, ct).ConfigureAwait(false))
+                if (!await ReadFirstContentAsync(reader, cancellationToken).ConfigureAwait(false))
                     yield break;
 
                 while (!reader.EOF)
                 {
                     if (IsStartElement(reader, "si", nss))
                     {
-                        var value = await StringHelper.ReadStringItemAsync(reader, ct).ConfigureAwait(false);
+                        var value = await StringHelper.ReadStringItemAsync(reader, cancellationToken).ConfigureAwait(false);
                         yield return value;
                     }
-                    else if (!await SkipContentAsync(reader, ct).ConfigureAwait(false))
+                    else if (!await SkipContentAsync(reader, cancellationToken).ConfigureAwait(false))
                     {
                         break;
                     }

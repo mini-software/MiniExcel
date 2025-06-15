@@ -19,10 +19,10 @@ namespace MiniExcelLibs.Utils
         /// Copied and modified from ExcelDataReader - @MIT License
         /// </summary>
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
-        public static async Task<string> ReadStringItemAsync(XmlReader reader, CancellationToken ct = default)
+        public static async Task<string> ReadStringItemAsync(XmlReader reader, CancellationToken cancellationToken = default)
         {
             var result = new StringBuilder();
-            if (!await XmlReaderHelper.ReadFirstContentAsync(reader, ct))
+            if (!await XmlReaderHelper.ReadFirstContentAsync(reader, cancellationToken).ConfigureAwait(false))
                 return string.Empty;
 
             while (!reader.EOF)
@@ -32,15 +32,15 @@ namespace MiniExcelLibs.Utils
                     // There are multiple <t> in a <si>. Concatenate <t> within an <si>.
                     result.Append(await reader.ReadElementContentAsStringAsync()
 #if NET6_0_OR_GREATER
-                        .WaitAsync(ct)
+                        .WaitAsync(cancellationToken)
 #endif
                         .ConfigureAwait(false));
                 }
                 else if (XmlReaderHelper.IsStartElement(reader, "r", _ns))
                 {
-                    result.Append(await ReadRichTextRunAsync(reader, ct));
+                    result.Append(await ReadRichTextRunAsync(reader, cancellationToken).ConfigureAwait(false));
                 }
-                else if (!await XmlReaderHelper.SkipContentAsync(reader, ct))
+                else if (!await XmlReaderHelper.SkipContentAsync(reader, cancellationToken).ConfigureAwait(false))
                 {
                     break;
                 }
@@ -53,10 +53,10 @@ namespace MiniExcelLibs.Utils
         /// Copied and modified from ExcelDataReader - @MIT License
         /// </summary>
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
-        private static async Task<string> ReadRichTextRunAsync(XmlReader reader, CancellationToken ct = default)
+        private static async Task<string> ReadRichTextRunAsync(XmlReader reader, CancellationToken cancellationToken = default)
         {
             var result = new StringBuilder();
-            if (!await XmlReaderHelper.ReadFirstContentAsync(reader, ct))
+            if (!await XmlReaderHelper.ReadFirstContentAsync(reader, cancellationToken).ConfigureAwait(false))
                 return string.Empty;
 
             while (!reader.EOF)
@@ -65,11 +65,11 @@ namespace MiniExcelLibs.Utils
                 {
                     result.Append(await reader.ReadElementContentAsStringAsync()
 #if NET6_0_OR_GREATER
-                        .WaitAsync(ct)
+                        .WaitAsync(cancellationToken)
 #endif
                         .ConfigureAwait(false));
                 }
-                else if (!await XmlReaderHelper.SkipContentAsync(reader, ct))
+                else if (!await XmlReaderHelper.SkipContentAsync(reader, cancellationToken).ConfigureAwait(false))
                 {
                     break;
                 }

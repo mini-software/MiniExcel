@@ -24,7 +24,7 @@ namespace MiniExcelLibs.Csv
         }
 
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
-        public async IAsyncEnumerable<IDictionary<string, object>> QueryAsync(bool useHeaderRow, string sheetName, string startCell, [EnumeratorCancellation] CancellationToken ct = default)
+        public async IAsyncEnumerable<IDictionary<string, object>> QueryAsync(bool useHeaderRow, string sheetName, string startCell, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
             if (startCell != "A1")
                 throw new NotImplementedException("CSV does not implement parameter startCell");
@@ -39,7 +39,7 @@ namespace MiniExcelLibs.Csv
             string row;
             for (var rowIndex = 1; (row = await reader.ReadLineAsync(
 #if NET7_0_OR_GREATER
-ct
+cancellationToken
 #endif
                 ).ConfigureAwait(false)) != null; rowIndex++)
             {
@@ -50,7 +50,7 @@ ct
                     {
                         var nextPart = await reader.ReadLineAsync(
 #if NET7_0_OR_GREATER
-ct
+cancellationToken
 #endif
                             ).ConfigureAwait(false);
                         if (nextPart == null)
@@ -118,36 +118,36 @@ ct
         }
 
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
-        public IAsyncEnumerable<T> QueryAsync<T>(string sheetName, string startCell, bool hasHeader, CancellationToken ct = default) where T : class, new()
+        public IAsyncEnumerable<T> QueryAsync<T>(string sheetName, string startCell, bool hasHeader, CancellationToken cancellationToken = default) where T : class, new()
         {
-            var dynamicRecords = QueryAsync(false, sheetName, startCell, ct);
-            return ExcelOpenXmlSheetReader.QueryImplAsync<T>(dynamicRecords, startCell, hasHeader, _config, ct);
+            var dynamicRecords = QueryAsync(false, sheetName, startCell, cancellationToken);
+            return ExcelOpenXmlSheetReader.QueryImplAsync<T>(dynamicRecords, startCell, hasHeader, _config, cancellationToken);
         }
 
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
-        public IAsyncEnumerable<IDictionary<string, object>> QueryRangeAsync(bool useHeaderRow, string sheetName, string startCell, string endCell, CancellationToken ct = default)
+        public IAsyncEnumerable<IDictionary<string, object>> QueryRangeAsync(bool useHeaderRow, string sheetName, string startCell, string endCell, CancellationToken cancellationToken = default)
         {
             throw new NotImplementedException("CSV does not implement QueryRange");
         }
 
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
-        public IAsyncEnumerable<T> QueryRangeAsync<T>(string sheetName, string startCell, string endCell, bool hasHeader, CancellationToken ct = default) where T : class, new()
+        public IAsyncEnumerable<T> QueryRangeAsync<T>(string sheetName, string startCell, string endCell, bool hasHeader, CancellationToken cancellationToken = default) where T : class, new()
         {
-            var dynamicRecords = QueryRangeAsync(false, sheetName, startCell, endCell, ct);
-            return ExcelOpenXmlSheetReader.QueryImplAsync<T>(dynamicRecords, startCell, hasHeader, this._config, ct);
+            var dynamicRecords = QueryRangeAsync(false, sheetName, startCell, endCell, cancellationToken);
+            return ExcelOpenXmlSheetReader.QueryImplAsync<T>(dynamicRecords, startCell, hasHeader, this._config, cancellationToken);
         }
 
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
-        public IAsyncEnumerable<IDictionary<string, object>> QueryRangeAsync(bool useHeaderRow, string sheetName, int startRowIndex, int startColumnIndex, int? endRowIndex, int? endColumnIndex, CancellationToken ct = default)
+        public IAsyncEnumerable<IDictionary<string, object>> QueryRangeAsync(bool useHeaderRow, string sheetName, int startRowIndex, int startColumnIndex, int? endRowIndex, int? endColumnIndex, CancellationToken cancellationToken = default)
         {
             throw new NotImplementedException("CSV does not implement QueryRange");
         }
 
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
-        public IAsyncEnumerable<T> QueryRangeAsync<T>(string sheetName, int startRowIndex, int startColumnIndex, int? endRowIndex, int? endColumnIndex, bool hasHeader, CancellationToken ct = default) where T : class, new()
+        public IAsyncEnumerable<T> QueryRangeAsync<T>(string sheetName, int startRowIndex, int startColumnIndex, int? endRowIndex, int? endColumnIndex, bool hasHeader, CancellationToken cancellationToken = default) where T : class, new()
         {
-            var dynamicRecords = QueryRangeAsync(false, sheetName, startRowIndex, startColumnIndex, endRowIndex, endColumnIndex, ct);
-            return ExcelOpenXmlSheetReader.QueryImplAsync<T>(dynamicRecords, ReferenceHelper.ConvertXyToCell(startRowIndex, startColumnIndex), hasHeader, this._config, ct);
+            var dynamicRecords = QueryRangeAsync(false, sheetName, startRowIndex, startColumnIndex, endRowIndex, endColumnIndex, cancellationToken);
+            return ExcelOpenXmlSheetReader.QueryImplAsync<T>(dynamicRecords, ReferenceHelper.ConvertXyToCell(startRowIndex, startColumnIndex), hasHeader, this._config, cancellationToken);
         }
 
         private string[] Split(string row)

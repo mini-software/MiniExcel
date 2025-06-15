@@ -11,14 +11,14 @@
     internal static partial class ExcelReaderFactory
     {
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
-        internal static async Task<IExcelReader> GetProviderAsync(Stream stream, ExcelType excelType, IConfiguration configuration, CancellationToken ct = default)
+        internal static async Task<IExcelReader> GetProviderAsync(Stream stream, ExcelType excelType, IConfiguration configuration, CancellationToken cancellationToken = default)
         {
             switch (excelType)
             {
                 case ExcelType.CSV:
                     return new CsvReader(stream, configuration);
                 case ExcelType.XLSX:
-                    return await ExcelOpenXmlSheetReader.CreateAsync(stream, configuration, ct: ct).ConfigureAwait(false);
+                    return await ExcelOpenXmlSheetReader.CreateAsync(stream, configuration, cancellationToken: cancellationToken).ConfigureAwait(false);
                 default:
                     throw new NotSupportedException("Something went wrong. Please report this issue you are experiencing with MiniExcel.");
             }

@@ -1235,7 +1235,7 @@ public class MiniExcelOpenXmlAsyncTests
             cts.CancelAsync();
 
             await using var stream = FileHelper.OpenRead(path);
-            var rows = stream.QueryAsync(ct: cts.Token).ToBlockingEnumerable(cts.Token).ToList();
+            var rows = stream.QueryAsync(cancellationToken: cts.Token).ToBlockingEnumerable(cts.Token).ToList();
         });
     }
 
@@ -1255,7 +1255,7 @@ public class MiniExcelOpenXmlAsyncTests
             });
 
             await using var stream = FileHelper.OpenRead(path);
-            var d = stream.QueryAsync(ct: cts.Token).ToBlockingEnumerable(cts.Token);
+            var d = stream.QueryAsync(cancellationToken: cts.Token).ToBlockingEnumerable(cts.Token);
             await cancelTask;
             _ = d.ToList();
         });

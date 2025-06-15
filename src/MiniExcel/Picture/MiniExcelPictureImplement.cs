@@ -13,12 +13,12 @@ namespace MiniExcelLibs.Picture
     internal static partial class MiniExcelPictureImplement
     {
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
-        public static async Task AddPictureAsync(Stream excelStream, CancellationToken ct = default, params MiniExcelPicture[] images)
+        public static async Task AddPictureAsync(Stream excelStream, CancellationToken cancellationToken = default, params MiniExcelPicture[] images)
         {
             // get sheets
             var excelArchive = new ExcelOpenXmlZip(excelStream);
-            var reader = await ExcelOpenXmlSheetReader.CreateAsync(excelStream, null, ct: ct).ConfigureAwait(false);
-            var sheetEntries = await reader.GetWorkbookRelsAsync(excelArchive.entries, ct).ConfigureAwait(false);
+            var reader = await ExcelOpenXmlSheetReader.CreateAsync(excelStream, null, cancellationToken: cancellationToken).ConfigureAwait(false);
+            var sheetEntries = await reader.GetWorkbookRelsAsync(excelArchive.entries, cancellationToken).ConfigureAwait(false);
 
             var drawingRelId = $"rId{Guid.NewGuid():N}";
             var drawingId = Guid.NewGuid().ToString("N");

@@ -898,7 +898,7 @@ public class MiniExcelTemplateAsyncTests
             };
 
             await cts.CancelAsync();
-            await MiniExcel.SaveAsByTemplateAsync(path.ToString(), templatePath, value, ct: cts.Token);
+            await MiniExcel.SaveAsByTemplateAsync(path.ToString(), templatePath, value, cancellationToken: cts.Token);
         });
     }
 }

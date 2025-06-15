@@ -56,7 +56,7 @@ namespace MiniExcelLibs.OpenXml
 
                 cancellationToken.ThrowIfCancellationRequested();
 
-                var reader = await ExcelOpenXmlSheetReader.CreateAsync(_stream, _configuration, ct: cancellationToken).ConfigureAwait(false);
+                var reader = await ExcelOpenXmlSheetReader.CreateAsync(_stream, _configuration, cancellationToken: cancellationToken).ConfigureAwait(false);
                 var sheetRecords = (await reader.GetWorkbookRelsAsync(_archive.Entries, cancellationToken).ConfigureAwait(false)).ToArray();
                 foreach (var sheetRecord in sheetRecords.OrderBy(o => o.Id))
                 {

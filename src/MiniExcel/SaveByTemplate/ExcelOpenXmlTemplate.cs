@@ -44,28 +44,28 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
         }
 
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
-        public async Task SaveAsByTemplateAsync(string templatePath, object value, CancellationToken ct = default)
+        public async Task SaveAsByTemplateAsync(string templatePath, object value, CancellationToken cancellationToken = default)
         {
             using (var stream = FileHelper.OpenSharedRead(templatePath))
-                await SaveAsByTemplateImplAsync(stream, value, ct).ConfigureAwait(false);
+                await SaveAsByTemplateImplAsync(stream, value, cancellationToken).ConfigureAwait(false);
         }
 
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
-        public async Task SaveAsByTemplateAsync(byte[] templateBytes, object value, CancellationToken ct = default)
+        public async Task SaveAsByTemplateAsync(byte[] templateBytes, object value, CancellationToken cancellationToken = default)
         {
             using (Stream stream = new MemoryStream(templateBytes))
-                await SaveAsByTemplateImplAsync(stream, value, ct).ConfigureAwait(false);
+                await SaveAsByTemplateImplAsync(stream, value, cancellationToken).ConfigureAwait(false);
         }
 
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
-        internal async Task SaveAsByTemplateImplAsync(Stream templateStream, object value, CancellationToken ct = default)
+        internal async Task SaveAsByTemplateImplAsync(Stream templateStream, object value, CancellationToken cancellationToken = default)
         {
             //only support xlsx
             //templateStream.CopyTo(_outputFileStream);
 
             // foreach all templateStream and create file for _outputFileStream and not create sheet file
             templateStream.Position = 0;
-            var templateReader = await ExcelOpenXmlSheetReader.CreateAsync(templateStream, null, ct: ct).ConfigureAwait(false);
+            var templateReader = await ExcelOpenXmlSheetReader.CreateAsync(templateStream, null, cancellationToken: cancellationToken).ConfigureAwait(false);
             var outputFileArchive = new ExcelOpenXmlZip(_outputFileStream, mode: ZipArchiveMode.Create, true, Encoding.UTF8, isUpdateMode: false);
             try
             {
@@ -106,7 +106,7 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                     {
                         await originalEntryStream.CopyToAsync(newEntryStream
 #if NETCOREAPP2_1_OR_GREATER
-                                    , ct
+                                    , cancellationToken
 #endif
                             ).ConfigureAwait(false);
                     }
@@ -155,7 +155,7 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                     var calcChainEntry = outputFileArchive.zipFile.CreateEntry(calcChainPathName);
                     using (var calcChainStream = calcChainEntry.Open())
                     {
-                        await CalcChainHelper.GenerateCalcChainSheetAsync(calcChainStream, _calcChainContent.ToString(), ct).ConfigureAwait(false);
+                        await CalcChainHelper.GenerateCalcChainSheetAsync(calcChainStream, _calcChainContent.ToString(), cancellationToken).ConfigureAwait(false);
                     }
                 }
                 else
@@ -172,7 +172,7 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                             {
                                 await originalEntryStream.CopyToAsync(newEntryStream
 #if NETCOREAPP2_1_OR_GREATER
-                                    , ct
+                                    , cancellationToken
 #endif
                                     ).ConfigureAwait(false);
                             }

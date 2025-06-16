@@ -32,7 +32,7 @@ namespace MiniExcelLibs.OpenXml.Styles
         private ZipArchiveEntry _newStyleXmlZipEntry;
         private Stream _oldXmlReaderStream;
         private Stream _newXmlWriterStream;
-        
+
         private bool _initialized;
         private bool _finalized;
         private bool _disposed;
@@ -94,9 +94,9 @@ namespace MiniExcelLibs.OpenXml.Styles
         {
             if (_initialized)
                 throw new InvalidOperationException("The context has already been initialized.");
-            
+
             cancellationToken.ThrowIfCancellationRequested();
-            
+
             _oldStyleXmlZipEntry = _archive.Mode == ZipArchiveMode.Update ? _archive.Entries.SingleOrDefault(s => s.FullName == ExcelFileNames.Styles) : null;
             if (_oldStyleXmlZipEntry != null)
             {
@@ -136,14 +136,14 @@ namespace MiniExcelLibs.OpenXml.Styles
                 throw new ObjectDisposedException(nameof(SheetStyleBuildContext));
             if (_finalized)
                 throw new InvalidOperationException("The context has been finalized.");
-            
+
             try
             {
                 OldXmlReader.Dispose();
                 OldXmlReader = null;
                 _oldXmlReaderStream?.Dispose();
                 _oldXmlReaderStream = null;
-                
+
                 _emptyStylesXmlStringReader?.Dispose();
                 _emptyStylesXmlStringReader = null;
 
@@ -151,7 +151,7 @@ namespace MiniExcelLibs.OpenXml.Styles
                 NewXmlWriter.Close();
                 NewXmlWriter.Dispose();
                 NewXmlWriter = null;
-                
+
                 _newXmlWriterStream.Dispose();
                 _newXmlWriterStream = null;
 
@@ -164,13 +164,13 @@ namespace MiniExcelLibs.OpenXml.Styles
                     _oldStyleXmlZipEntry?.Delete();
                     _oldStyleXmlZipEntry = null;
                     var finalStyleXmlZipEntry = _archive.CreateEntry(ExcelFileNames.Styles, CompressionLevel.Fastest);
-                    
+
                     using (var tempStream = _newStyleXmlZipEntry.Open())
                     using (var newStream = finalStyleXmlZipEntry.Open())
                     {
                         tempStream.CopyTo(newStream);
                     }
-                    
+
                     _zipDictionary[ExcelFileNames.Styles] = new ZipPackageInfo(finalStyleXmlZipEntry, ExcelContentTypes.Styles);
                     _newStyleXmlZipEntry.Delete();
                     _newStyleXmlZipEntry = null;
@@ -192,14 +192,21 @@ namespace MiniExcelLibs.OpenXml.Styles
                 throw new ObjectDisposedException(nameof(SheetStyleBuildContext));
             if (_finalized)
                 throw new InvalidOperationException("The context has been finalized.");
-            
+
             try
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                
+
                 OldXmlReader.Dispose();
                 OldXmlReader = null;
+#if NET5_0_OR_GREATER
+                if (_oldXmlReaderStream != null)
+                {
+                    await _oldXmlReaderStream.DisposeAsync().ConfigureAwait(false);
+                }
+#else
                 _oldXmlReaderStream?.Dispose();
+#endif
                 _oldXmlReaderStream = null;
 
                 _emptyStylesXmlStringReader?.Dispose();
@@ -207,10 +214,21 @@ namespace MiniExcelLibs.OpenXml.Styles
 
                 await NewXmlWriter.FlushAsync().ConfigureAwait(false);
                 NewXmlWriter.Close();
+                //NewXmlWriter.Dispose();
+
+#if NET5_0_OR_GREATER
+                await NewXmlWriter.DisposeAsync().ConfigureAwait(false);
+#else
                 NewXmlWriter.Dispose();
+#endif
+
                 NewXmlWriter = null;
-                
+
+#if NET5_0_OR_GREATER
+                await _newXmlWriterStream.DisposeAsync().ConfigureAwait(false);
+#else
                 _newXmlWriterStream.Dispose();
+#endif
                 _newXmlWriterStream = null;
 
                 if (_oldStyleXmlZipEntry == null)
@@ -222,13 +240,13 @@ namespace MiniExcelLibs.OpenXml.Styles
                     _oldStyleXmlZipEntry?.Delete();
                     _oldStyleXmlZipEntry = null;
                     var finalStyleXmlZipEntry = _archive.CreateEntry(ExcelFileNames.Styles, CompressionLevel.Fastest);
-                    
+
                     using (var tempStream = _newStyleXmlZipEntry.Open())
                     using (var newStream = finalStyleXmlZipEntry.Open())
                     {
                         await tempStream.CopyToAsync(newStream, 4096, cancellationToken).ConfigureAwait(false);
                     }
-                    
+
                     _zipDictionary[ExcelFileNames.Styles] = new ZipPackageInfo(finalStyleXmlZipEntry, ExcelContentTypes.Styles);
                     _newStyleXmlZipEntry.Delete();
                     _newStyleXmlZipEntry = null;
@@ -267,7 +285,7 @@ namespace MiniExcelLibs.OpenXml.Styles
         {
             if (reader.NodeType != XmlNodeType.Element)
                 return;
-            
+
             switch (reader.LocalName)
             {
                 case "numFmts":
@@ -313,7 +331,7 @@ namespace MiniExcelLibs.OpenXml.Styles
         {
             if (_disposed)
                 return;
-            
+
             if (disposing)
             {
                 OldXmlReader?.Dispose();

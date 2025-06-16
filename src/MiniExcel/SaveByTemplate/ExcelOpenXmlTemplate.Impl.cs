@@ -153,7 +153,12 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
         {
             var doc = new XmlDocument();
             doc.Load(sheetStream);
+#if NET5_0_OR_GREATER
+            await sheetStream.DisposeAsync().ConfigureAwait(false);
+#else
             sheetStream.Dispose();
+#endif
+
 
             sheetZipEntry.Delete(); // ZipArchiveEntry can't update directly, so need to delete then create logic
 
@@ -525,7 +530,11 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                             .AppendFormat("</{0}>", row.Name);
 
                         ProcessFormulas(rowXml, newRowIndex);
-                        writer.Write(CleanXml(rowXml, endPrefix));
+                        await writer.WriteAsync(CleanXml(rowXml, endPrefix).ToString()
+#if NET5_0_OR_GREATER
+                            .AsMemory(), cancellationToken
+#endif
+                            ).ConfigureAwait(false);
 
                         //mergecells
                         if (rowInfo.RowMercells == null)

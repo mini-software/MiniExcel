@@ -15,7 +15,11 @@ dotnet_style_qualification_for_method = false
 # IDE0065: Misplaced using directive
 csharp_using_directive_placement = outside_namespace
 
+# CA1835: Prefer the memory-based overloads of ReadAsync/WriteAsync methods in stream-based classes
 dotnet_diagnostic.CA1835.severity = error
+
+# CA1849: Call async methods when in an async method
+dotnet_diagnostic.CA1849.severity = error
 
 # CA2007: Do not directly await a Task
 dotnet_diagnostic.CA2007.severity = error

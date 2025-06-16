@@ -291,7 +291,7 @@ namespace MiniExcelLibs.OpenXml
 
                                         SetCellsValueAndHeaders(cellValue, useHeaderRow, ref headRows, ref isFirstRow, ref cell, columnIndex);
                                     }
-                                    else if (!XmlReaderHelper.SkipContent(reader))
+                                    else if (!await XmlReaderHelper.SkipContentAsync(reader, cancellationToken).ConfigureAwait(false))
                                         break;
                                 }
 
@@ -531,7 +531,11 @@ namespace MiniExcelLibs.OpenXml
                                     activeSheetIndex = index;
                                 }
 
-                                reader.Skip();
+                                await reader.SkipAsync()
+#if NET6_0_OR_GREATER
+                                    .WaitAsync(cancellationToken)
+#endif
+                                    .ConfigureAwait(false);
                             }
                             else if (!await XmlReaderHelper.SkipContentAsync(reader, cancellationToken).ConfigureAwait(false))
                             {
@@ -557,7 +561,11 @@ namespace MiniExcelLibs.OpenXml
                                     sheetCount == activeSheetIndex
                                 );
                                 sheetCount++;
-                                reader.Skip();
+                                await reader.SkipAsync()
+#if NET6_0_OR_GREATER
+                                    .WaitAsync(cancellationToken)
+#endif
+                                    .ConfigureAwait(false);
                             }
                             else if (!await XmlReaderHelper.SkipContentAsync(reader, cancellationToken).ConfigureAwait(false))
                             {
@@ -680,13 +688,17 @@ namespace MiniExcelLibs.OpenXml
             {
                 if (XmlReaderHelper.IsStartElement(reader, "v", _ns))
                 {
-                    var rawValue = reader.ReadElementContentAsString();
+                    var rawValue = await reader.ReadElementContentAsStringAsync()
+#if NET6_0_OR_GREATER
+                            .WaitAsync(cancellationToken)
+#endif
+                            .ConfigureAwait(false);
                     if (!string.IsNullOrEmpty(rawValue))
                         ConvertCellValue(rawValue, aT, xfIndex, out value);
                 }
                 else if (XmlReaderHelper.IsStartElement(reader, "is", _ns))
                 {
-                    var rawValue = StringHelper.ReadStringItem(reader);
+                    var rawValue = await StringHelper.ReadStringItemAsync(reader,cancellationToken).ConfigureAwait(false);
                     if (!string.IsNullOrEmpty(rawValue))
                         ConvertCellValue(rawValue, aT, xfIndex, out value);
                 }

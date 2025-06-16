@@ -3,11 +3,11 @@ using System.Threading.Tasks;
 
 namespace MiniExcelLibs
 {
-    internal interface IExcelWriter
+    internal partial interface IExcelWriter
     {
-        int[] SaveAs();
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
         Task<int[]> SaveAsAsync(CancellationToken cancellationToken = default);
-        int Insert(bool overwriteSheet = false);
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
         Task<int> InsertAsync(bool overwriteSheet = false, CancellationToken cancellationToken = default);
     }
 }

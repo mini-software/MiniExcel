@@ -4,17 +4,21 @@ using System;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Xml;
 
 namespace MiniExcelLibs.Picture
 {
-    internal static class MiniExcelPictureImplement
+    internal static partial class MiniExcelPictureImplement
     {
-        public static void AddPicture(Stream excelStream, params MiniExcelPicture[] images)
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        public static async Task AddPictureAsync(Stream excelStream, CancellationToken cancellationToken = default, params MiniExcelPicture[] images)
         {
             // get sheets
-            var excelArchive = new ExcelOpenXmlZip(excelStream);
-            var sheetEntries = new ExcelOpenXmlSheetReader(excelStream, null).GetWorkbookRels(excelArchive.entries).ToList();
+            using var excelArchive = new ExcelOpenXmlZip(excelStream);
+            using var reader = await ExcelOpenXmlSheetReader.CreateAsync(excelStream, null, cancellationToken: cancellationToken).ConfigureAwait(false);
+            var sheetEntries = await reader.GetWorkbookRelsAsync(excelArchive.entries, cancellationToken).ConfigureAwait(false);
 
             var drawingRelId = $"rId{Guid.NewGuid():N}";
             var drawingId = Guid.NewGuid().ToString("N");
@@ -24,8 +28,8 @@ namespace MiniExcelLibs.Picture
                 foreach (var image in images)
                 {
                     var imageBytes = image.ImageBytes;
-                    var sheetEnt = image?.SheetName == null 
-                        ? sheetEntries[0] 
+                    var sheetEnt = image?.SheetName == null
+                        ? sheetEntries[0]
                         : sheetEntries.FirstOrDefault(x => x.Name == image.SheetName) ?? sheetEntries.First();
 
                     var sheetName = sheetEnt.Path.Split('/').Last().Split('.')[0];
@@ -40,7 +44,11 @@ namespace MiniExcelLibs.Picture
                     var imageEntry = archive.CreateEntry(imagePath);
                     using (var entryStream = imageEntry.Open())
                     {
-                        entryStream.Write(imageBytes, 0, imageBytes.Length);
+#if NET5_0_OR_GREATER
+                        await entryStream.WriteAsync(imageBytes.AsMemory(), cancellationToken).ConfigureAwait(false);
+#else
+                        await entryStream.WriteAsync(imageBytes, 0, imageBytes.Length, cancellationToken).ConfigureAwait(false);
+#endif
                     }
 
                     // Step 2: Update [Content_Types].xml
@@ -132,7 +140,7 @@ namespace MiniExcelLibs.Picture
                             sheetRelsDoc.DocumentElement.AppendChild(relNode);
                             SaveXml(sheetRelsDoc, sheetRelsEntry);
                         }
-                        
+
                     }
 
                     // Step 4: Update exist xl/drawings/drawingX if not create one
@@ -185,7 +193,7 @@ namespace MiniExcelLibs.Picture
         <xdr:spPr xmlns:xdr=""http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing"">
             <a:xfrm xmlns:a=""http://schemas.openxmlformats.org/drawingml/2006/main"">
                 <a:off x=""0"" y=""0"" xmlns:a=""http://schemas.openxmlformats.org/drawingml/2006/main""/>
-                <a:ext {(widthPx==null?"":$@"cx = ""{widthPx * 9525}""")} {(heightPx == null ? "" : $@"cy=""{heightPx * 9525}""")} xmlns:a=""http://schemas.openxmlformats.org/drawingml/2006/main""/>
+                <a:ext {(widthPx == null ? "" : $@"cx = ""{widthPx * 9525}""")} {(heightPx == null ? "" : $@"cy=""{heightPx * 9525}""")} xmlns:a=""http://schemas.openxmlformats.org/drawingml/2006/main""/>
             </a:xfrm>
             <a:prstGeom prst=""rect"" xmlns:a=""http://schemas.openxmlformats.org/drawingml/2006/main"">
                 <a:avLst xmlns:a=""http://schemas.openxmlformats.org/drawingml/2006/main""/>
@@ -239,7 +247,7 @@ namespace MiniExcelLibs.Picture
                 doc.LoadXml(@"<?xml version=""1.0"" encoding=""UTF-8"" standalone=""yes""?><Relationships xmlns=""http://schemas.openxmlformats.org/package/2006/relationships""/>");
                 return doc;
             }
-            
+
             using (var stream = entry.Open())
             using (var reader = new StreamReader(stream))
             {
@@ -252,7 +260,7 @@ namespace MiniExcelLibs.Picture
                 stream.Position = 0;
                 doc.Load(stream);
             }
-            
+
             return doc;
         }
 

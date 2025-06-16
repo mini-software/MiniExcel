@@ -717,7 +717,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
         {
             var path = PathHelper.GetFile("csv/TestIssue338.csv");
-            var row = (await MiniExcel.QueryAsync(path)).FirstOrDefault();
+            var row = MiniExcel.QueryAsync(path).ToBlockingEnumerable().FirstOrDefault();
             Assert.Equal("���Ĳ�������", row!.A);
         }
         {
@@ -726,7 +726,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             {
                 StreamReaderFunc = stream => new StreamReader(stream, Encoding.GetEncoding("gb2312"))
             };
-            var row = (await MiniExcel.QueryAsync(path, configuration: config)).FirstOrDefault();
+            var row = MiniExcel.QueryAsync(path, configuration: config).ToBlockingEnumerable().FirstOrDefault();
             Assert.Equal("中文测试内容", row!.A);
         }
         {
@@ -737,7 +737,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             };
             await using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read))
             {
-                var row = (await stream.QueryAsync(configuration: config, excelType: ExcelType.CSV)).FirstOrDefault();
+                var row = stream.QueryAsync(configuration: config, excelType: ExcelType.CSV).ToBlockingEnumerable().FirstOrDefault();
                 Assert.Equal("中文测试内容", row!.A);
             }
         }
@@ -2205,7 +2205,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     {
         var path = PathHelper.GetFile("xlsx/TestIssue233.xlsx");
 #pragma warning disable CS0618 // Type or member is obsolete
-        using var dt = MiniExcel.QueryAsDataTable(path);
+        var dt = MiniExcel.QueryAsDataTable(path);
 #pragma warning restore CS0618
         var rows = dt.Rows;
 
@@ -4066,7 +4066,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
 
         memoryStream.Position = 0;
 
-        var queryData = (await memoryStream.QueryAsync<Issue658TestData>()).ToList();
+        var queryData = (memoryStream.QueryAsync<Issue658TestData>().ToBlockingEnumerable()).ToList();
 
         Assert.Equal(testData.Count(), queryData.Count);
 

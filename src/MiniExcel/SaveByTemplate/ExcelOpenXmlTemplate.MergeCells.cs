@@ -14,24 +14,31 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
 {
     internal partial class ExcelOpenXmlTemplate
     {
-        public void MergeSameCells(string path)
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        public async Task MergeSameCellsAsync(string path, CancellationToken cancellationToken = default)
         {
             using (var stream = FileHelper.OpenSharedRead(path))
-                MergeSameCellsImpl(stream);
+                await MergeSameCellsImplAsync(stream, cancellationToken).ConfigureAwait(false);
         }
 
-        public void MergeSameCells(byte[] fileInBytes)
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        public async Task MergeSameCellsAsync(byte[] fileInBytes, CancellationToken cancellationToken = default)
         {
             using (Stream stream = new MemoryStream(fileInBytes))
-                MergeSameCellsImpl(stream);
+                await MergeSameCellsImplAsync(stream, cancellationToken).ConfigureAwait(false);
         }
 
-        private void MergeSameCellsImpl(Stream stream)
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        private async Task MergeSameCellsImplAsync(Stream stream, CancellationToken cancellationToken = default)
         {
-            stream.CopyTo(_outputFileStream);
+            await stream.CopyToAsync(_outputFileStream
+#if NETCOREAPP2_1_OR_GREATER
+                                    , cancellationToken
+#endif
+                ).ConfigureAwait(false);
 
-            var reader = new ExcelOpenXmlSheetReader(_outputFileStream, null);
-            var archive = new ExcelOpenXmlZip(_outputFileStream, mode: ZipArchiveMode.Update, true, Encoding.UTF8);
+            using var reader = await ExcelOpenXmlSheetReader.CreateAsync (_outputFileStream, null, cancellationToken: cancellationToken).ConfigureAwait(false);
+            using var archive = new ExcelOpenXmlZip(_outputFileStream, mode: ZipArchiveMode.Update, true, Encoding.UTF8);
 
             //read sharedString
             var sharedStrings = reader._sharedStrings;
@@ -54,22 +61,12 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                 var entry = archive.zipFile.CreateEntry(fullName);
                 using (var zipStream = entry.Open())
                 {
-                    GenerateSheetXmlImplByUpdateMode(sheet, zipStream, sheetStream, new Dictionary<string, object>(), sharedStrings, mergeCells: true);
+                    await GenerateSheetXmlImplByUpdateModeAsync(sheet, zipStream, sheetStream, new Dictionary<string, object>(), sharedStrings, mergeCells: true, cancellationToken).ConfigureAwait(false);
                     //doc.Save(zipStream); //don't do it beacause: https://user-images.githubusercontent.com/12729184/114361127-61a5d100-9ba8-11eb-9bb9-34f076ee28a2.png
                 }
             }
 
             archive.zipFile.Dispose();
-        }
-
-        public Task MergeSameCellsAsync(string path, CancellationToken cancellationToken = default(CancellationToken))
-        {
-            return Task.Run(() => MergeSameCells(path), cancellationToken);
-        }
-
-        public Task MergeSameCellsAsync(byte[] fileInBytes, CancellationToken cancellationToken = default(CancellationToken))
-        {
-            return Task.Run(() => MergeSameCells(fileInBytes), cancellationToken);
         }
     }
 }

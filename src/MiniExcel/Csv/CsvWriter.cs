@@ -115,22 +115,38 @@ namespace MiniExcelLibs.Csv
             {
                 writeAdapter = MiniExcelWriteAdapterFactory.GetWriteAdapter(values, _configuration);
             }
-            var props = writeAdapter != null ? writeAdapter.GetColumns() : await asyncWriteAdapter.GetColumnsAsync();
+            var props = writeAdapter != null ? writeAdapter.GetColumns() : await asyncWriteAdapter.GetColumnsAsync().ConfigureAwait(false);
 #else
             IMiniExcelWriteAdapter writeAdapter =  MiniExcelWriteAdapterFactory.GetWriteAdapter(values, _configuration);
             var props = writeAdapter.GetColumns();
 #endif
             if (props == null)
             {
-                await _writer.WriteAsync(_configuration.NewLine);
-                await _writer.FlushAsync();
+                await _writer.WriteAsync(_configuration.NewLine
+#if NET5_0_OR_GREATER
+                    .AsMemory(), cancellationToken
+#endif
+                    ).ConfigureAwait(false);
+                await _writer.FlushAsync(
+#if NET8_0_OR_GREATER
+                    cancellationToken
+#endif
+                    ).ConfigureAwait(false);
                 return 0;
             }
             
             if (_printHeader)
             {
-                await _writer.WriteAsync(GetHeader(props));
-                await _writer.WriteAsync(newLine);
+                await _writer.WriteAsync(GetHeader(props)
+#if NET5_0_OR_GREATER
+                    .AsMemory(), cancellationToken
+#endif
+                    ).ConfigureAwait(false);
+                await _writer.WriteAsync(newLine
+#if NET5_0_OR_GREATER
+                    .AsMemory(), cancellationToken
+#endif
+                    ).ConfigureAwait(false);
             }
             
             var rowBuilder = new StringBuilder();
@@ -148,8 +164,16 @@ namespace MiniExcelLibs.Csv
                     }
                     
                     RemoveTrailingSeparator(rowBuilder);
-                    await _writer.WriteAsync(rowBuilder.ToString());
-                    await _writer.WriteAsync(newLine);
+                    await _writer.WriteAsync(rowBuilder.ToString()
+#if NET5_0_OR_GREATER
+                        .AsMemory(), cancellationToken
+#endif
+                    ).ConfigureAwait(false);
+                    await _writer.WriteAsync(newLine
+#if NET5_0_OR_GREATER
+                        .AsMemory(), cancellationToken
+#endif
+                    ).ConfigureAwait(false);
                     
                     rowsWritten++;
                 }
@@ -157,20 +181,28 @@ namespace MiniExcelLibs.Csv
 #if NETSTANDARD2_0_OR_GREATER || NET
             else
             {
-                await foreach (var row in asyncWriteAdapter.GetRowsAsync(props, cancellationToken))
+                await foreach (var row in asyncWriteAdapter.GetRowsAsync(props, cancellationToken).ConfigureAwait(false))
                 {
                     cancellationToken.ThrowIfCancellationRequested();
                     rowBuilder.Clear();
                     
-                    await foreach (var column in row)
+                    await foreach (var column in row.ConfigureAwait(false))
                     {
                         cancellationToken.ThrowIfCancellationRequested();
                         AppendColumn(rowBuilder, column);
                     }
                     
                     RemoveTrailingSeparator(rowBuilder);
-                    await _writer.WriteAsync(rowBuilder.ToString());
-                    await _writer.WriteAsync(newLine);
+                    await _writer.WriteAsync(rowBuilder.ToString()
+#if NET5_0_OR_GREATER
+                    .AsMemory(), cancellationToken
+#endif
+                    ).ConfigureAwait(false);
+                    await _writer.WriteAsync(newLine
+#if NET5_0_OR_GREATER
+                    .AsMemory(), cancellationToken
+#endif
+                    ).ConfigureAwait(false);
                     
                     rowsWritten++;
                 }
@@ -188,20 +220,32 @@ namespace MiniExcelLibs.Csv
 
             if (_value == null)
             {
-                await _writer.WriteAsync("");
-                await _writer.FlushAsync();
+                await _writer.WriteAsync(""
+#if NET5_0_OR_GREATER
+                    .AsMemory(), cancellationToken
+#endif
+                    ).ConfigureAwait(false);
+                await _writer.FlushAsync(
+#if NET8_0_OR_GREATER
+                    cancellationToken
+#endif
+                    ).ConfigureAwait(false);
                 return new int[0];
             }
 
-            var rowsWritten = await WriteValuesAsync(_writer, _value, seperator, newLine, cancellationToken);
-            await _writer.FlushAsync();
+            var rowsWritten = await WriteValuesAsync(_writer, _value, seperator, newLine, cancellationToken).ConfigureAwait(false);
+            await _writer.FlushAsync(
+#if NET8_0_OR_GREATER
+                    cancellationToken
+#endif
+                ).ConfigureAwait(false);
          
             return new[] { rowsWritten };
         }
 
         public async Task<int> InsertAsync(bool overwriteSheet = false, CancellationToken cancellationToken = default)
         {
-            var rowsWritten = await SaveAsAsync(cancellationToken);
+            var rowsWritten = await SaveAsAsync(cancellationToken).ConfigureAwait(false);
             return rowsWritten.FirstOrDefault();
         }
 

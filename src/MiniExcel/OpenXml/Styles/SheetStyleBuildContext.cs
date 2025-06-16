@@ -62,7 +62,8 @@ namespace MiniExcelLibs.OpenXml.Styles
             {
                 using (var oldStyleXmlStream = _oldStyleXmlZipEntry.Open())
                 {
-                    OldElementInfos = ReadSheetStyleElementInfos(XmlReader.Create(oldStyleXmlStream, new XmlReaderSettings { IgnoreWhitespace = true }));
+                    using XmlReader reader = XmlReader.Create(oldStyleXmlStream, new XmlReaderSettings { IgnoreWhitespace = true });
+                    OldElementInfos = ReadSheetStyleElementInfos(reader);
                 }
 
                 _oldXmlReaderStream = _oldStyleXmlZipEntry.Open();
@@ -102,7 +103,8 @@ namespace MiniExcelLibs.OpenXml.Styles
             {
                 using (var oldStyleXmlStream = _oldStyleXmlZipEntry.Open())
                 {
-                    OldElementInfos = await ReadSheetStyleElementInfosAsync(XmlReader.Create(oldStyleXmlStream, new XmlReaderSettings { IgnoreWhitespace = true, Async = true }), cancellationToken).ConfigureAwait(false);
+                    using var reader = XmlReader.Create(oldStyleXmlStream, new XmlReaderSettings { IgnoreWhitespace = true, Async = true });
+                    OldElementInfos = await ReadSheetStyleElementInfosAsync(reader, cancellationToken).ConfigureAwait(false);
                 }
                 _oldXmlReaderStream = _oldStyleXmlZipEntry.Open();
                 OldXmlReader = XmlReader.Create(_oldXmlReaderStream, new XmlReaderSettings { IgnoreWhitespace = true, Async = true });

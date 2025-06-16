@@ -65,8 +65,8 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
 
             // foreach all templateStream and create file for _outputFileStream and not create sheet file
             templateStream.Position = 0;
-            var templateReader = await ExcelOpenXmlSheetReader.CreateAsync(templateStream, null, cancellationToken: cancellationToken).ConfigureAwait(false);
-            var outputFileArchive = new ExcelOpenXmlZip(_outputFileStream, mode: ZipArchiveMode.Create, true, Encoding.UTF8, isUpdateMode: false);
+            using var templateReader = await ExcelOpenXmlSheetReader.CreateAsync(templateStream, null, cancellationToken: cancellationToken).ConfigureAwait(false);
+            using var outputFileArchive = new ExcelOpenXmlZip(_outputFileStream, mode: ZipArchiveMode.Create, true, Encoding.UTF8, isUpdateMode: false);
             try
             {
                 outputFileArchive.entries = templateReader._archive.zipFile.Entries; //TODO:need to remove

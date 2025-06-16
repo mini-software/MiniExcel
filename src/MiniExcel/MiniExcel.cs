@@ -67,13 +67,15 @@ namespace MiniExcelLibs
         }
 
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "TODO: CsvWriter needs to be disposed")]
         public static async Task<int> InsertAsync(this Stream stream, object value, string sheetName = "Sheet1", ExcelType excelType = ExcelType.XLSX, IConfiguration configuration = null, bool printHeader = true, bool overwriteSheet = false, CancellationToken cancellationToken = default)
         {
             stream.Seek(0, SeekOrigin.End);
             if (excelType == ExcelType.CSV)
             {
                 var newValue = value is IEnumerable || value is IDataReader ? value : new[] { value };
-                return await ExcelWriterFactory.GetProvider(stream, newValue, sheetName, excelType, configuration, false).InsertAsync(overwriteSheet, cancellationToken).ConfigureAwait(false);
+                var provider = ExcelWriterFactory.GetProvider(stream, newValue, sheetName, excelType, configuration, false);
+                return await provider.InsertAsync(overwriteSheet, cancellationToken).ConfigureAwait(false);
             }
             else
             {
@@ -93,6 +95,7 @@ namespace MiniExcelLibs
         }
 
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "TODO: CsvWriter needs to be disposed")]
         public static async Task<int[]> SaveAsAsync(this Stream stream, object value, bool printHeader = true, string sheetName = "Sheet1", ExcelType excelType = ExcelType.XLSX, IConfiguration configuration = null, CancellationToken cancellationToken = default)
         {
             return await ExcelWriterFactory.GetProvider(stream, value, sheetName, excelType, configuration, printHeader).SaveAsAsync(cancellationToken).ConfigureAwait(false);
@@ -307,8 +310,8 @@ namespace MiniExcelLibs
         {
             config = config ?? OpenXmlConfiguration.DefaultConfig;
 
-            var archive = new ExcelOpenXmlZip(stream);
-            var reader = await ExcelOpenXmlSheetReader.CreateAsync(stream, config, cancellationToken: cancellationToken).ConfigureAwait(false);
+            using var archive = new ExcelOpenXmlZip(stream);
+            using var reader = await ExcelOpenXmlSheetReader.CreateAsync(stream, config, cancellationToken: cancellationToken).ConfigureAwait(false);
             var rels = await reader.GetWorkbookRelsAsync(archive.entries, cancellationToken).ConfigureAwait(false);
             return rels.Select(s => s.Name).ToList();
         }
@@ -325,8 +328,8 @@ namespace MiniExcelLibs
         {
             config = config ?? OpenXmlConfiguration.DefaultConfig;
 
-            var archive = new ExcelOpenXmlZip(stream);
-            var reader = await ExcelOpenXmlSheetReader.CreateAsync(stream, config, cancellationToken: cancellationToken).ConfigureAwait(false);
+            using var archive = new ExcelOpenXmlZip(stream);
+            using var reader = await ExcelOpenXmlSheetReader.CreateAsync(stream, config, cancellationToken: cancellationToken).ConfigureAwait(false);
             var rels = await reader.GetWorkbookRelsAsync(archive.entries, cancellationToken).ConfigureAwait(false);
             return rels.Select((s, i) => s.ToSheetInfo((uint)i)).ToList();
         }
@@ -362,7 +365,7 @@ namespace MiniExcelLibs
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
         public static async Task<IList<ExcelRange>> GetSheetDimensionsAsync(this Stream stream, CancellationToken cancellationToken = default)
         {
-            var reader = await ExcelOpenXmlSheetReader.CreateAsync(stream, null, cancellationToken: cancellationToken).ConfigureAwait(false);
+            using var reader = await ExcelOpenXmlSheetReader.CreateAsync(stream, null, cancellationToken: cancellationToken).ConfigureAwait(false);
             return await reader.GetDimensionsAsync(cancellationToken).ConfigureAwait(false);
         }
 

@@ -16,8 +16,8 @@ namespace MiniExcelLibs.Picture
         public static async Task AddPictureAsync(Stream excelStream, CancellationToken cancellationToken = default, params MiniExcelPicture[] images)
         {
             // get sheets
-            var excelArchive = new ExcelOpenXmlZip(excelStream);
-            var reader = await ExcelOpenXmlSheetReader.CreateAsync(excelStream, null, cancellationToken: cancellationToken).ConfigureAwait(false);
+            using var excelArchive = new ExcelOpenXmlZip(excelStream);
+            using var reader = await ExcelOpenXmlSheetReader.CreateAsync(excelStream, null, cancellationToken: cancellationToken).ConfigureAwait(false);
             var sheetEntries = await reader.GetWorkbookRelsAsync(excelArchive.entries, cancellationToken).ConfigureAwait(false);
 
             var drawingRelId = $"rId{Guid.NewGuid():N}";

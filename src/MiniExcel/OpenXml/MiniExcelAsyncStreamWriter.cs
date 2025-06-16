@@ -31,25 +31,25 @@ namespace MiniExcelLibs.OpenXml
 
             if (string.IsNullOrEmpty(content))
                 return;
-            await _streamWriter.WriteAsync(content);
+            await _streamWriter.WriteAsync(content).ConfigureAwait(false);
         }
 
         public async Task<long> WriteAndFlushAsync(string content)
         {
-            await WriteAsync(content);
-            return await FlushAsync();
+            await WriteAsync(content).ConfigureAwait(false);
+            return await FlushAsync().ConfigureAwait(false);
         }
 
         public async Task WriteWhitespaceAsync(int length)
         {
-            await _streamWriter.WriteAsync(new string(' ', length));
+            await _streamWriter.WriteAsync(new string(' ', length)).ConfigureAwait(false);
         }
 
         public async Task<long> FlushAsync()
         {
             _cancellationToken.ThrowIfCancellationRequested();
 
-            await _streamWriter.FlushAsync();
+            await _streamWriter.FlushAsync().ConfigureAwait(false);
             return _streamWriter.BaseStream.Position;
         }
 

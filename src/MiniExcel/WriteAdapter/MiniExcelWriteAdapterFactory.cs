@@ -7,7 +7,6 @@ namespace MiniExcelLibs.WriteAdapter
 {
     internal static class MiniExcelWriteAdapterFactory
     {
-#if NETSTANDARD2_0_OR_GREATER || NET
         public static bool TryGetAsyncWriteAdapter(object values, Configuration configuration, out IAsyncMiniExcelWriteAdapter writeAdapter)
         {
             writeAdapter = null;
@@ -25,7 +24,6 @@ namespace MiniExcelLibs.WriteAdapter
 
             return false;
         }
-#endif
 
         public static IMiniExcelWriteAdapter GetWriteAdapter(object values, Configuration configuration)
         {

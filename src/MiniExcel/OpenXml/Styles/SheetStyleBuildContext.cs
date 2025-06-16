@@ -102,7 +102,7 @@ namespace MiniExcelLibs.OpenXml.Styles
             {
                 using (var oldStyleXmlStream = _oldStyleXmlZipEntry.Open())
                 {
-                    OldElementInfos = await ReadSheetStyleElementInfosAsync(XmlReader.Create(oldStyleXmlStream, new XmlReaderSettings { IgnoreWhitespace = true, Async = true }), cancellationToken);
+                    OldElementInfos = await ReadSheetStyleElementInfosAsync(XmlReader.Create(oldStyleXmlStream, new XmlReaderSettings { IgnoreWhitespace = true, Async = true }), cancellationToken).ConfigureAwait(false);
                 }
                 _oldXmlReaderStream = _oldStyleXmlZipEntry.Open();
                 OldXmlReader = XmlReader.Create(_oldXmlReaderStream, new XmlReaderSettings { IgnoreWhitespace = true, Async = true });
@@ -205,7 +205,7 @@ namespace MiniExcelLibs.OpenXml.Styles
                 _emptyStylesXmlStringReader?.Dispose();
                 _emptyStylesXmlStringReader = null;
 
-                await NewXmlWriter.FlushAsync();
+                await NewXmlWriter.FlushAsync().ConfigureAwait(false);
                 NewXmlWriter.Close();
                 NewXmlWriter.Dispose();
                 NewXmlWriter = null;
@@ -226,7 +226,7 @@ namespace MiniExcelLibs.OpenXml.Styles
                     using (var tempStream = _newStyleXmlZipEntry.Open())
                     using (var newStream = finalStyleXmlZipEntry.Open())
                     {
-                        await tempStream.CopyToAsync(newStream, 4096, cancellationToken);
+                        await tempStream.CopyToAsync(newStream, 4096, cancellationToken).ConfigureAwait(false);
                     }
                     
                     _zipDictionary[ExcelFileNames.Styles] = new ZipPackageInfo(finalStyleXmlZipEntry, ExcelContentTypes.Styles);
@@ -255,7 +255,7 @@ namespace MiniExcelLibs.OpenXml.Styles
         private static async Task<SheetStyleElementInfos> ReadSheetStyleElementInfosAsync(XmlReader reader, CancellationToken cancellationToken = default)
         {
             var elementInfos = new SheetStyleElementInfos();
-            while (await reader.ReadAsync())
+            while (await reader.ReadAsync().ConfigureAwait(false))
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 SetElementInfos(reader, elementInfos);

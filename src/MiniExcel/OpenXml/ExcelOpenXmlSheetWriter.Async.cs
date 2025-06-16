@@ -111,7 +111,7 @@ namespace MiniExcelLibs.OpenXml
                 _archive.Entries.SingleOrDefault(s => s.FullName == ExcelFileNames.WorkbookRels)?.Delete();
                 await CreateZipEntryAsync(ExcelFileNames.WorkbookRels, null, ExcelXml.DefaultWorkbookXmlRels.Replace("{{sheets}}", workbookRelsXml.ToString()), cancellationToken).ConfigureAwait(false);
 
-                await InsertContentTypesXmlAsync(cancellationToken);
+                await InsertContentTypesXmlAsync(cancellationToken).ConfigureAwait(false);
 
                 return rowsWritten;
             }
@@ -167,7 +167,7 @@ namespace MiniExcelLibs.OpenXml
             )
         {
             var dimensionPlaceholderPostition = await writer.WriteAndFlushAsync(WorksheetXml.StartDimension).ConfigureAwait(false);
-            await writer.WriteAsync(WorksheetXml.DimensionPlaceholder); // end of code will be replaced
+            await writer.WriteAsync(WorksheetXml.DimensionPlaceholder).ConfigureAwait(false); // end of code will be replaced
 
             return dimensionPlaceholderPostition;
         }
@@ -251,7 +251,7 @@ namespace MiniExcelLibs.OpenXml
             }
             else
             {
-                await WriteColumnsWidthsAsync(writer, ExcelColumnWidth.FromProps(props), cancellationToken);
+                await WriteColumnsWidthsAsync(writer, ExcelColumnWidth.FromProps(props), cancellationToken).ConfigureAwait(false);
             }
 
             //header
@@ -273,7 +273,7 @@ namespace MiniExcelLibs.OpenXml
                     foreach (var cellValue in row)
                     {
                         cancellationToken.ThrowIfCancellationRequested();
-                        await WriteCellAsync(writer, currentRowIndex, cellValue.CellIndex, cellValue.Value, cellValue.Prop, widths);
+                        await WriteCellAsync(writer, currentRowIndex, cellValue.CellIndex, cellValue.Value, cellValue.Prop, widths).ConfigureAwait(false);
                     }
                     await writer.WriteAsync(WorksheetXml.EndRow).ConfigureAwait(false);
                 }
@@ -281,7 +281,7 @@ namespace MiniExcelLibs.OpenXml
             else
             {
 #if !SYNC_ONLY
-                await foreach (var row in asyncWriteAdapter.GetRowsAsync(props, cancellationToken))
+                await foreach (var row in asyncWriteAdapter.GetRowsAsync(props, cancellationToken).ConfigureAwait(false))
                 {
                     cancellationToken.ThrowIfCancellationRequested();
                     await writer.WriteAsync(WorksheetXml.StartRow(++currentRowIndex)).ConfigureAwait(false);
@@ -610,7 +610,9 @@ namespace MiniExcelLibs.OpenXml
                 return;
             }
 #if NET5_0_OR_GREATER
+#pragma warning disable CA2007 // Consider calling ConfigureAwait on the awaited task
             await using (var stream = contentTypesZipEntry.Open())
+#pragma warning restore CA2007 // Consider calling ConfigureAwait on the awaited task
 #else
             using (var stream = contentTypesZipEntry.Open())
 #endif
@@ -657,7 +659,9 @@ namespace MiniExcelLibs.OpenXml
             var entry = _archive.CreateEntry(path, CompressionLevel.Fastest);
 
 #if NET5_0_OR_GREATER
+#pragma warning disable CA2007 // Consider calling ConfigureAwait on the awaited task
             await using (var zipStream = entry.Open())
+#pragma warning restore CA2007 // Consider calling ConfigureAwait on the awaited task
 #else
             using (var zipStream = entry.Open())
 #endif
@@ -675,11 +679,14 @@ namespace MiniExcelLibs.OpenXml
             var entry = _archive.CreateEntry(path, CompressionLevel.Fastest);
 
 #if NET5_0_OR_GREATER
+#pragma warning disable CA2007 // Consider calling ConfigureAwait on the awaited task
             await using (var zipStream = entry.Open())
+                await zipStream.WriteAsync(content, cancellationToken).ConfigureAwait(false);
+#pragma warning restore CA2007 // Consider calling ConfigureAwait on the awaited task
 #else
             using (var zipStream = entry.Open())
-#endif
                 await zipStream.WriteAsync(content, 0, content.Length, cancellationToken).ConfigureAwait(false);
+#endif
         }
     }
 }

@@ -38,10 +38,10 @@ namespace MiniExcelLibs.OpenXml.Styles
                 /*
                  * <x:numFmt numFmtId="{numFmtIndex + i}" formatCode="{item.Format}" />
                  */
-                await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "numFmt", _context.OldXmlReader.NamespaceURI);
-                await _context.NewXmlWriter.WriteAttributeStringAsync(null, "numFmtId", null, (numFmtIndex + index + _context.OldElementInfos.NumFmtCount).ToString());
-                await _context.NewXmlWriter.WriteAttributeStringAsync(null, "formatCode", null, item.Format);
-                await _context.NewXmlWriter.WriteFullEndElementAsync();
+                await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "numFmt", _context.OldXmlReader.NamespaceURI).ConfigureAwait(false);
+                await _context.NewXmlWriter.WriteAttributeStringAsync(null, "numFmtId", null, (numFmtIndex + index + _context.OldElementInfos.NumFmtCount).ToString()).ConfigureAwait(false);
+                await _context.NewXmlWriter.WriteAttributeStringAsync(null, "formatCode", null, item.Format).ConfigureAwait(false);
+                await _context.NewXmlWriter.WriteFullEndElementAsync().ConfigureAwait(false);
             }
         }
 
@@ -51,8 +51,8 @@ namespace MiniExcelLibs.OpenXml.Styles
             /*
              * <x:font />
              */
-            await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "font", _context.OldXmlReader.NamespaceURI);
-            await _context.NewXmlWriter.WriteFullEndElementAsync();
+            await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "font", _context.OldXmlReader.NamespaceURI).ConfigureAwait(false);
+            await _context.NewXmlWriter.WriteFullEndElementAsync().ConfigureAwait(false);
         }
 
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
@@ -61,8 +61,8 @@ namespace MiniExcelLibs.OpenXml.Styles
             /*
              * <x:fill />
              */
-            await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "fill", _context.OldXmlReader.NamespaceURI);
-            await _context.NewXmlWriter.WriteFullEndElementAsync();
+            await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "fill", _context.OldXmlReader.NamespaceURI).ConfigureAwait(false);
+            await _context.NewXmlWriter.WriteFullEndElementAsync().ConfigureAwait(false);
         }
 
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
@@ -71,8 +71,8 @@ namespace MiniExcelLibs.OpenXml.Styles
             /*
              * <x:border />
              */
-            await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "border", _context.OldXmlReader.NamespaceURI);
-            await _context.NewXmlWriter.WriteFullEndElementAsync();
+            await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "border", _context.OldXmlReader.NamespaceURI).ConfigureAwait(false);
+            await _context.NewXmlWriter.WriteFullEndElementAsync().ConfigureAwait(false);
         }
 
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
@@ -81,8 +81,8 @@ namespace MiniExcelLibs.OpenXml.Styles
             /*
              * <x:xf />
              */
-            await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "xf", _context.OldXmlReader.NamespaceURI);
-            await _context.NewXmlWriter.WriteFullEndElementAsync();
+            await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "xf", _context.OldXmlReader.NamespaceURI).ConfigureAwait(false);
+            await _context.NewXmlWriter.WriteFullEndElementAsync().ConfigureAwait(false);
         }
 
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
@@ -95,18 +95,18 @@ namespace MiniExcelLibs.OpenXml.Styles
              * <x:xf numFmtId="14" applyNumberFormat="1" />
              * <x:xf />
              */
-            await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "xf", _context.OldXmlReader.NamespaceURI);
-            await _context.NewXmlWriter.WriteFullEndElementAsync();
-            await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "xf", _context.OldXmlReader.NamespaceURI);
-            await _context.NewXmlWriter.WriteFullEndElementAsync();
-            await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "xf", _context.OldXmlReader.NamespaceURI);
-            await _context.NewXmlWriter.WriteFullEndElementAsync();
-            await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "xf", _context.OldXmlReader.NamespaceURI);
-            await _context.NewXmlWriter.WriteAttributeStringAsync(null, "numFmtId", null, "14");
-            await _context.NewXmlWriter.WriteAttributeStringAsync(null, "applyNumberFormat", null, "1");
-            await _context.NewXmlWriter.WriteFullEndElementAsync();
-            await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "xf", _context.OldXmlReader.NamespaceURI);
-            await _context.NewXmlWriter.WriteFullEndElementAsync();
+            await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "xf", _context.OldXmlReader.NamespaceURI).ConfigureAwait(false);
+            await _context.NewXmlWriter.WriteFullEndElementAsync().ConfigureAwait(false);
+            await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "xf", _context.OldXmlReader.NamespaceURI).ConfigureAwait(false);
+            await _context.NewXmlWriter.WriteFullEndElementAsync().ConfigureAwait(false);
+            await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "xf", _context.OldXmlReader.NamespaceURI).ConfigureAwait(false);
+            await _context.NewXmlWriter.WriteFullEndElementAsync().ConfigureAwait(false);
+            await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "xf", _context.OldXmlReader.NamespaceURI).ConfigureAwait(false);
+            await _context.NewXmlWriter.WriteAttributeStringAsync(null, "numFmtId", null, "14").ConfigureAwait(false);
+            await _context.NewXmlWriter.WriteAttributeStringAsync(null, "applyNumberFormat", null, "1").ConfigureAwait(false);
+            await _context.NewXmlWriter.WriteFullEndElementAsync().ConfigureAwait(false);
+            await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "xf", _context.OldXmlReader.NamespaceURI).ConfigureAwait(false);
+            await _context.NewXmlWriter.WriteFullEndElementAsync().ConfigureAwait(false);
 
             const int numFmtIndex = 166;
             var index = 0;
@@ -117,10 +117,10 @@ namespace MiniExcelLibs.OpenXml.Styles
                 /*
                  * <x:xf numFmtId="{numFmtIndex + i}" applyNumberFormat="1" 
                  */
-                await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "xf", _context.OldXmlReader.NamespaceURI);
-                await _context.NewXmlWriter.WriteAttributeStringAsync(null, "numFmtId", null, (numFmtIndex + index).ToString());
-                await _context.NewXmlWriter.WriteAttributeStringAsync(null, "applyNumberFormat", null, "1");
-                await _context.NewXmlWriter.WriteFullEndElementAsync();
+                await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "xf", _context.OldXmlReader.NamespaceURI).ConfigureAwait(false);
+                await _context.NewXmlWriter.WriteAttributeStringAsync(null, "numFmtId", null, (numFmtIndex + index).ToString()).ConfigureAwait(false);
+                await _context.NewXmlWriter.WriteAttributeStringAsync(null, "applyNumberFormat", null, "1").ConfigureAwait(false);
+                await _context.NewXmlWriter.WriteFullEndElementAsync().ConfigureAwait(false);
             }
         }
     }

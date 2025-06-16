@@ -28,7 +28,7 @@ namespace MiniExcelLibs.WriteAdapter
             }
 
             _enumerator = _values.GetAsyncEnumerator();
-            if (!await _enumerator.MoveNextAsync())
+            if (!await _enumerator.MoveNextAsync().ConfigureAwait(false))
             {
                 _empty = true;
                 return null;
@@ -45,8 +45,8 @@ namespace MiniExcelLibs.WriteAdapter
 
             if (_enumerator is null)
             {
-                _enumerator = _values.GetAsyncEnumerator();
-                if (!await _enumerator.MoveNextAsync())
+                _enumerator = _values.GetAsyncEnumerator(cancellationToken);
+                if (!await _enumerator.MoveNextAsync().ConfigureAwait(false))
                 {
                     yield break;
                 }
@@ -57,7 +57,7 @@ namespace MiniExcelLibs.WriteAdapter
                 cancellationToken.ThrowIfCancellationRequested();
                 yield return GetRowValuesAsync(_enumerator.Current, props);
 
-            } while (await _enumerator.MoveNextAsync());
+            } while (await _enumerator.MoveNextAsync().ConfigureAwait(false));
         }
 
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously

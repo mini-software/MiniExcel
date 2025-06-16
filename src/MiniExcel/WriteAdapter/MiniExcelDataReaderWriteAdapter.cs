@@ -24,7 +24,7 @@ namespace MiniExcelLibs.WriteAdapter
             var props = new List<ExcelColumnInfo>();
             for (var i = 0; i < _reader.FieldCount; i++)
             {
-                var columnName = await _reader.GetNameAsync(i);
+                var columnName = await _reader.GetNameAsync(i).ConfigureAwait(false);
 
                 if (!_configuration.DynamicColumnFirst)
                 {
@@ -50,7 +50,7 @@ namespace MiniExcelLibs.WriteAdapter
 
         public async IAsyncEnumerable<IAsyncEnumerable<CellWriteInfo>> GetRowsAsync(List<ExcelColumnInfo> props, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
-            while (await _reader.ReadAsync())
+            while (await _reader.ReadAsync(cancellationToken).ConfigureAwait(false))
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 yield return GetRowValuesAsync(props);
@@ -64,11 +64,11 @@ namespace MiniExcelLibs.WriteAdapter
                 if (_configuration.DynamicColumnFirst)
                 {
                     var columnIndex = _reader.GetOrdinal(props[i].Key.ToString());
-                    yield return new CellWriteInfo(await _reader.GetValueAsync(columnIndex), column, props[i]);
+                    yield return new CellWriteInfo(await _reader.GetValueAsync(columnIndex).ConfigureAwait(false), column, props[i]);
                 }
                 else
                 {
-                    yield return new CellWriteInfo(await _reader.GetValueAsync(i), column, props[i]);
+                    yield return new CellWriteInfo(await _reader.GetValueAsync(i).ConfigureAwait(false), column, props[i]);
                 }
             }
         }

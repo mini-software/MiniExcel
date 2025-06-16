@@ -55,7 +55,7 @@ namespace MiniExcelLibs.OpenXml
 
             //Todo: Find a way if possible to remove the 'hasHeader' parameter to check whether or not to include
             // the first row in the result set in favor of modifying the already present 'useHeaderRow' to do the same job          
-            return QueryImplAsync<T>(QueryAsync(false, sheetName, startCell, cancellationToken), startCell, hasHeader, _config);
+            return QueryImplAsync<T>(QueryAsync(false, sheetName, startCell, cancellationToken), startCell, hasHeader, _config, cancellationToken);
         }
 
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
@@ -92,7 +92,7 @@ namespace MiniExcelLibs.OpenXml
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
         public IAsyncEnumerable<T> QueryRangeAsync<T>(string sheetName, string startCell, string endCell, bool hasHeader, CancellationToken cancellationToken = default) where T : class, new()
         {
-            return QueryImplAsync<T>(QueryRangeAsync(false, sheetName, startCell, endCell, cancellationToken), startCell, hasHeader, this._config);
+            return QueryImplAsync<T>(QueryRangeAsync(false, sheetName, startCell, endCell, cancellationToken), startCell, hasHeader, this._config, cancellationToken);
         }
 
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
@@ -137,7 +137,7 @@ namespace MiniExcelLibs.OpenXml
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
         public IAsyncEnumerable<T> QueryRangeAsync<T>(string sheetName, int startRowIndex, int startColumnIndex, int? endRowIndex, int? endColumnIndex, bool hasHeader, CancellationToken cancellationToken = default) where T : class, new()
         {
-            return QueryImplAsync<T>(QueryRangeAsync(false, sheetName, startRowIndex, startColumnIndex, endRowIndex, endColumnIndex, cancellationToken), ReferenceHelper.ConvertXyToCell(startColumnIndex, startRowIndex), hasHeader, _config);
+            return QueryImplAsync<T>(QueryRangeAsync(false, sheetName, startRowIndex, startColumnIndex, endRowIndex, endColumnIndex, cancellationToken), ReferenceHelper.ConvertXyToCell(startColumnIndex, startRowIndex), hasHeader, _config, cancellationToken);
         }
 
 

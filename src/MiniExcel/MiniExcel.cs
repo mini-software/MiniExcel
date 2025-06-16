@@ -67,7 +67,7 @@ namespace MiniExcelLibs
         }
 
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
-        public static async Task <int> InsertAsync(this Stream stream, object value, string sheetName = "Sheet1", ExcelType excelType = ExcelType.XLSX, IConfiguration configuration = null, bool printHeader = true, bool overwriteSheet = false, CancellationToken cancellationToken = default)
+        public static async Task<int> InsertAsync(this Stream stream, object value, string sheetName = "Sheet1", ExcelType excelType = ExcelType.XLSX, IConfiguration configuration = null, bool printHeader = true, bool overwriteSheet = false, CancellationToken cancellationToken = default)
         {
             stream.Seek(0, SeekOrigin.End);
             if (excelType == ExcelType.CSV)
@@ -169,7 +169,7 @@ namespace MiniExcelLibs
         public static async IAsyncEnumerable<dynamic> QueryRangeAsync(string path, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, int startRowIndex = 1, int startColumnIndex = 1, int? endRowIndex = null, int? endColumnIndex = null, IConfiguration configuration = null, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
             using (var stream = FileHelper.OpenSharedRead(path))
-                await foreach(var item in QueryRangeAsync(stream, useHeaderRow, sheetName, ExcelTypeHelper.GetExcelType(path, excelType), startRowIndex, startColumnIndex, endRowIndex, endColumnIndex, configuration, cancellationToken).WithCancellation(cancellationToken).ConfigureAwait(false))
+                await foreach (var item in QueryRangeAsync(stream, useHeaderRow, sheetName, ExcelTypeHelper.GetExcelType(path, excelType), startRowIndex, startColumnIndex, endRowIndex, endColumnIndex, configuration, cancellationToken).WithCancellation(cancellationToken).ConfigureAwait(false))
                     yield return item;
         }
 
@@ -257,7 +257,7 @@ namespace MiniExcelLibs
             var dt = new DataTable(sheetName);
             var first = true;
             var provider = await ExcelReaderFactory.GetProviderAsync(stream, ExcelTypeHelper.GetExcelType(stream, excelType), configuration, cancellationToken).ConfigureAwait(false);
-            var rows = provider.QueryAsync(false, sheetName, startCell);
+            var rows = provider.QueryAsync(false, sheetName, startCell, cancellationToken).ConfigureAwait(false);
 
             var columnDict = new Dictionary<string, string>();
             await foreach (IDictionary<string, object> row in rows.WithCancellation(cancellationToken).ConfigureAwait(false))
@@ -302,7 +302,7 @@ namespace MiniExcelLibs
                 return await GetSheetNamesAsync(stream, config, cancellationToken).ConfigureAwait(false);
         }
 
-       [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
         public static async Task<List<string>> GetSheetNamesAsync(this Stream stream, OpenXmlConfiguration config = null, CancellationToken cancellationToken = default)
         {
             config = config ?? OpenXmlConfiguration.DefaultConfig;
@@ -341,9 +341,11 @@ namespace MiniExcelLibs
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
         public static async Task<ICollection<string>> GetColumnsAsync(this Stream stream, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null, CancellationToken cancellationToken = default)
         {
-            var enumerator = QueryAsync(stream, useHeaderRow, sheetName, excelType, startCell, configuration).GetAsyncEnumerator(cancellationToken);
+#pragma warning disable CA2007 // Consider calling ConfigureAwait on the awaited task
+            await using var enumerator = QueryAsync(stream, useHeaderRow, sheetName, excelType, startCell, configuration, cancellationToken).GetAsyncEnumerator(cancellationToken);
+#pragma warning restore CA2007 // Consider calling ConfigureAwait on the awaited task
             _ = enumerator.ConfigureAwait(false);
-            if (!await enumerator.MoveNextAsync())
+            if (!await enumerator.MoveNextAsync().ConfigureAwait(false))
             {
                 return null;
             }
@@ -377,7 +379,7 @@ namespace MiniExcelLibs
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
         public static async Task ConvertCsvToXlsxAsync(Stream csv, Stream xlsx, CancellationToken cancellationToken = default)
         {
-            var value = QueryAsync(csv, useHeaderRow: false, excelType: ExcelType.CSV);
+            var value = QueryAsync(csv, useHeaderRow: false, excelType: ExcelType.CSV, cancellationToken: cancellationToken);
             await SaveAsAsync(xlsx, value, printHeader: false, excelType: ExcelType.XLSX, cancellationToken: cancellationToken).ConfigureAwait(false);
         }
 
@@ -392,7 +394,7 @@ namespace MiniExcelLibs
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
         public static async Task ConvertXlsxToCsvAsync(Stream xlsx, Stream csv, CancellationToken cancellationToken = default)
         {
-            var value = QueryAsync(xlsx, useHeaderRow: false, excelType: ExcelType.XLSX);
+            var value = QueryAsync(xlsx, useHeaderRow: false, excelType: ExcelType.XLSX, cancellationToken: cancellationToken);
             await SaveAsAsync(csv, value, printHeader: false, excelType: ExcelType.CSV, cancellationToken: cancellationToken).ConfigureAwait(false);
         }
     }

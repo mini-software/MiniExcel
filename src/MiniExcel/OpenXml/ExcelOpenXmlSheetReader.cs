@@ -334,7 +334,7 @@ namespace MiniExcelLibs.OpenXml
             var first = true;
             var rowIndex = 0;
 
-            await foreach (var item in values.WithCancellation(cancellationToken).ConfigureAwait(false))
+            await foreach (var item in values.ConfigureAwait(false))
             {
                 if (first)
                 {
@@ -470,13 +470,13 @@ namespace MiniExcelLibs.OpenXml
                 if (_config.EnableSharedStringCache && sharedStringsEntry.Length >= _config.SharedStringCacheSize)
                 {
                     _sharedStrings = new SharedStringsDiskCache();
-                    await foreach (var sharedString in XmlReaderHelper.GetSharedStringsAsync(stream, cancellationToken, _ns).WithCancellation(cancellationToken).ConfigureAwait(false))
+                    await foreach (var sharedString in XmlReaderHelper.GetSharedStringsAsync(stream, cancellationToken, _ns).ConfigureAwait(false))
                         _sharedStrings[idx++] = sharedString;
                 }
                 else if (_sharedStrings == null)
                 {
                     var list = new List<string>();
-                    await foreach (var str in XmlReaderHelper.GetSharedStringsAsync(stream, cancellationToken, _ns).WithCancellation(cancellationToken).ConfigureAwait(false))
+                    await foreach (var str in XmlReaderHelper.GetSharedStringsAsync(stream, cancellationToken, _ns).ConfigureAwait(false))
                     {
                         list.Add(str);
                     }
@@ -593,7 +593,7 @@ namespace MiniExcelLibs.OpenXml
                 );
 
             var sheetRecords = new List<SheetRecord>();
-            await foreach (var sheetRecord in ReadWorkbookAsync(entries, cancellationToken).WithCancellation(cancellationToken).ConfigureAwait(false))
+            await foreach (var sheetRecord in ReadWorkbookAsync(entries, cancellationToken).ConfigureAwait(false))
             {
                 sheetRecords.Add(sheetRecord);
             }

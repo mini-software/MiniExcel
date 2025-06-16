@@ -105,7 +105,7 @@ namespace MiniExcelLibs
         public static async IAsyncEnumerable<T> QueryAsync<T>(string path, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null, bool hasHeader = true, [EnumeratorCancellation] CancellationToken cancellationToken = default) where T : class, new()
         {
             using (var stream = FileHelper.OpenSharedRead(path))
-                await foreach (var item in QueryAsync<T>(stream, sheetName, ExcelTypeHelper.GetExcelType(path, excelType), startCell, configuration, hasHeader, cancellationToken).WithCancellation(cancellationToken).ConfigureAwait(false))
+                await foreach (var item in QueryAsync<T>(stream, sheetName, ExcelTypeHelper.GetExcelType(path, excelType), startCell, configuration, hasHeader, cancellationToken).ConfigureAwait(false))
                     yield return item; //Foreach yield return twice reason : https://stackoverflow.com/questions/66791982/ienumerable-extract-code-lazy-loading-show-stream-was-not-readable
         }
 
@@ -113,7 +113,7 @@ namespace MiniExcelLibs
         public static async IAsyncEnumerable<T> QueryAsync<T>(this Stream stream, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null, bool hasHeader = true, [EnumeratorCancellation] CancellationToken cancellationToken = default) where T : class, new()
         {
             using (var excelReader = await ExcelReaderFactory.GetProviderAsync(stream, ExcelTypeHelper.GetExcelType(stream, excelType), configuration, cancellationToken).ConfigureAwait(false))
-                await foreach (var item in excelReader.QueryAsync<T>(sheetName, startCell, hasHeader, cancellationToken).WithCancellation(cancellationToken).ConfigureAwait(false))
+                await foreach (var item in excelReader.QueryAsync<T>(sheetName, startCell, hasHeader, cancellationToken).ConfigureAwait(false))
                     yield return item;
         }
 
@@ -121,7 +121,7 @@ namespace MiniExcelLibs
         public static async IAsyncEnumerable<dynamic> QueryAsync(string path, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
             using (var stream = FileHelper.OpenSharedRead(path))
-                await foreach (var item in QueryAsync(stream, useHeaderRow, sheetName, ExcelTypeHelper.GetExcelType(path, excelType), startCell, configuration, cancellationToken).WithCancellation(cancellationToken).ConfigureAwait(false))
+                await foreach (var item in QueryAsync(stream, useHeaderRow, sheetName, ExcelTypeHelper.GetExcelType(path, excelType), startCell, configuration, cancellationToken).ConfigureAwait(false))
                     yield return item;
         }
 
@@ -129,7 +129,7 @@ namespace MiniExcelLibs
         public static async IAsyncEnumerable<dynamic> QueryAsync(this Stream stream, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration configuration = null, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
             using (var excelReader = await ExcelReaderFactory.GetProviderAsync(stream, ExcelTypeHelper.GetExcelType(stream, excelType), configuration, cancellationToken).ConfigureAwait(false))
-                await foreach (var item in excelReader.QueryAsync(useHeaderRow, sheetName, startCell, cancellationToken).WithCancellation(cancellationToken).ConfigureAwait(false))
+                await foreach (var item in excelReader.QueryAsync(useHeaderRow, sheetName, startCell, cancellationToken).ConfigureAwait(false))
                     yield return item.Aggregate(new ExpandoObject() as IDictionary<string, object>,
                             (dict, p) => { dict.Add(p); return dict; });
         }
@@ -155,7 +155,7 @@ namespace MiniExcelLibs
         public static async IAsyncEnumerable<dynamic> QueryRangeAsync(string path, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", string endCell = "", IConfiguration configuration = null, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
             using (var stream = FileHelper.OpenSharedRead(path))
-                await foreach (var item in QueryRangeAsync(stream, useHeaderRow, sheetName, ExcelTypeHelper.GetExcelType(path, excelType), startCell, endCell, configuration, cancellationToken).WithCancellation(cancellationToken).ConfigureAwait(false))
+                await foreach (var item in QueryRangeAsync(stream, useHeaderRow, sheetName, ExcelTypeHelper.GetExcelType(path, excelType), startCell, endCell, configuration, cancellationToken).ConfigureAwait(false))
                     yield return item;
         }
 
@@ -163,7 +163,7 @@ namespace MiniExcelLibs
         public static async IAsyncEnumerable<dynamic> QueryRangeAsync(this Stream stream, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", string endCell = "", IConfiguration configuration = null, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
             using (var excelReader = await ExcelReaderFactory.GetProviderAsync(stream, ExcelTypeHelper.GetExcelType(stream, excelType), configuration, cancellationToken).ConfigureAwait(false))
-                await foreach (var item in excelReader.QueryRangeAsync(useHeaderRow, sheetName, startCell, endCell, cancellationToken).WithCancellation(cancellationToken).ConfigureAwait(false))
+                await foreach (var item in excelReader.QueryRangeAsync(useHeaderRow, sheetName, startCell, endCell, cancellationToken).ConfigureAwait(false))
                     yield return item.Aggregate(new ExpandoObject() as IDictionary<string, object>,
                             (dict, p) => { dict.Add(p); return dict; });
         }
@@ -172,7 +172,7 @@ namespace MiniExcelLibs
         public static async IAsyncEnumerable<dynamic> QueryRangeAsync(string path, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, int startRowIndex = 1, int startColumnIndex = 1, int? endRowIndex = null, int? endColumnIndex = null, IConfiguration configuration = null, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
             using (var stream = FileHelper.OpenSharedRead(path))
-                await foreach (var item in QueryRangeAsync(stream, useHeaderRow, sheetName, ExcelTypeHelper.GetExcelType(path, excelType), startRowIndex, startColumnIndex, endRowIndex, endColumnIndex, configuration, cancellationToken).WithCancellation(cancellationToken).ConfigureAwait(false))
+                await foreach (var item in QueryRangeAsync(stream, useHeaderRow, sheetName, ExcelTypeHelper.GetExcelType(path, excelType), startRowIndex, startColumnIndex, endRowIndex, endColumnIndex, configuration, cancellationToken).ConfigureAwait(false))
                     yield return item;
         }
 
@@ -180,7 +180,7 @@ namespace MiniExcelLibs
         public static async IAsyncEnumerable<dynamic> QueryRangeAsync(this Stream stream, bool useHeaderRow = false, string sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, int startRowIndex = 1, int startColumnIndex = 1, int? endRowIndex = null, int? endColumnIndex = null, IConfiguration configuration = null, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
             using (var excelReader = await ExcelReaderFactory.GetProviderAsync(stream, ExcelTypeHelper.GetExcelType(stream, excelType), configuration, cancellationToken).ConfigureAwait(false))
-                await foreach (var item in excelReader.QueryRangeAsync(useHeaderRow, sheetName, startRowIndex, startColumnIndex, endRowIndex, endColumnIndex, cancellationToken).WithCancellation(cancellationToken).ConfigureAwait(false))
+                await foreach (var item in excelReader.QueryRangeAsync(useHeaderRow, sheetName, startRowIndex, startColumnIndex, endRowIndex, endColumnIndex, cancellationToken).ConfigureAwait(false))
                     yield return item.Aggregate(new ExpandoObject() as IDictionary<string, object>,
                             (dict, p) => { dict.Add(p); return dict; });
         }

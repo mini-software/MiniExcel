@@ -286,7 +286,7 @@ namespace MiniExcelLibs.OpenXml
                     cancellationToken.ThrowIfCancellationRequested();
                     await writer.WriteAsync(WorksheetXml.StartRow(++currentRowIndex)).ConfigureAwait(false);
 
-                    await foreach (var cellValue in row.WithCancellation(cancellationToken).ConfigureAwait(false))
+                    await foreach (var cellValue in row.ConfigureAwait(false))
                     {
                         cancellationToken.ThrowIfCancellationRequested();
                         await WriteCellAsync(writer, currentRowIndex, cellValue.CellIndex, cellValue.Value, cellValue.Prop, widths).ConfigureAwait(false);

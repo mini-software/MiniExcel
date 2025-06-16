@@ -310,7 +310,10 @@ namespace MiniExcelLibs
         {
             config = config ?? OpenXmlConfiguration.DefaultConfig;
 
-            using var archive = new ExcelOpenXmlZip(stream);
+            // For some reason this breaks the tests
+#pragma warning disable CA2000 // Dispose objects before losing scope
+            var archive = new ExcelOpenXmlZip(stream);
+#pragma warning restore CA2000 // Dispose objects before losing scope
             using var reader = await ExcelOpenXmlSheetReader.CreateAsync(stream, config, cancellationToken: cancellationToken).ConfigureAwait(false);
             var rels = await reader.GetWorkbookRelsAsync(archive.entries, cancellationToken).ConfigureAwait(false);
             return rels.Select(s => s.Name).ToList();

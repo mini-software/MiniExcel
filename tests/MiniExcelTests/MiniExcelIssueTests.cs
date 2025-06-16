@@ -2205,7 +2205,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     {
         var path = PathHelper.GetFile("xlsx/TestIssue233.xlsx");
 #pragma warning disable CS0618 // Type or member is obsolete
-        using var dt = MiniExcel.QueryAsDataTable(path);
+        var dt = MiniExcel.QueryAsDataTable(path);
 #pragma warning restore CS0618
         var rows = dt.Rows;
 

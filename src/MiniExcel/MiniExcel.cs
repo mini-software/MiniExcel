@@ -26,7 +26,7 @@ namespace MiniExcelLibs
         }
 
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
-        public static async Task AddPicture(Stream excelStream, CancellationToken cancellationToken = default, params MiniExcelPicture[] images)
+        public static async Task AddPictureAsync(Stream excelStream, CancellationToken cancellationToken = default, params MiniExcelPicture[] images)
         {
             await MiniExcelPictureImplement.AddPictureAsync(excelStream, cancellationToken, images).ConfigureAwait(false);
         }
@@ -263,7 +263,7 @@ namespace MiniExcelLibs
             var rows = provider.QueryAsync(false, sheetName, startCell, cancellationToken).ConfigureAwait(false);
 
             var columnDict = new Dictionary<string, string>();
-            await foreach (IDictionary<string, object> row in rows.WithCancellation(cancellationToken).ConfigureAwait(false))
+            await foreach (IDictionary<string, object> row in rows)
             {
                 if (first)
                 {

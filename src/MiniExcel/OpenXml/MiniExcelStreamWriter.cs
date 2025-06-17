@@ -1,45 +1,50 @@
 ﻿using System;
 using System.IO;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace MiniExcelLibs.OpenXml
 {
-    internal class MiniExcelStreamWriter : IDisposable
+    internal partial class MiniExcelStreamWriter : IDisposable
     {
-        private readonly Stream _stream;
-        private readonly Encoding _encoding;
         private readonly StreamWriter _streamWriter;
-        private bool disposedValue;
-        
+        private bool _disposedValue;
+
         public MiniExcelStreamWriter(Stream stream, Encoding encoding, int bufferSize)
         {
-            _stream = stream;
-            _encoding = encoding;
-            _streamWriter = new StreamWriter(stream, _encoding, bufferSize);
+            _streamWriter = new StreamWriter(stream, encoding, bufferSize);
         }
-        public void Write(string content)
+
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        public async Task WriteAsync(string content, CancellationToken cancellationToken = default)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             if (string.IsNullOrEmpty(content))
                 return;
-            
-            _streamWriter.Write(content);
+            await _streamWriter.WriteAsync(content).ConfigureAwait(false);
         }
 
-        public long WriteAndFlush(string content)
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        public async Task<long> WriteAndFlushAsync(string content, CancellationToken cancellationToken = default)
         {
-            Write(content);
-            _streamWriter.Flush();
-            return _streamWriter.BaseStream.Position;
+            cancellationToken.ThrowIfCancellationRequested();
+
+            await WriteAsync(content, cancellationToken).ConfigureAwait(false);
+            return await FlushAsync().ConfigureAwait(false);
         }
 
-        public void WriteWhitespace(int length)
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        public async Task WriteWhitespaceAsync(int length)
         {
-            _streamWriter.Write(new string(' ', length));
+            await _streamWriter.WriteAsync(new string(' ', length)).ConfigureAwait(false);
         }
 
-        public long Flush()
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        public async Task<long> FlushAsync()
         {
-            _streamWriter.Flush();
+            await _streamWriter.FlushAsync().ConfigureAwait(false);
             return _streamWriter.BaseStream.Position;
         }
 
@@ -50,10 +55,10 @@ namespace MiniExcelLibs.OpenXml
 
         protected virtual void Dispose(bool disposing)
         {
-            if (!disposedValue)
+            if (!_disposedValue)
             {
                 _streamWriter?.Dispose();
-                disposedValue = true;
+                _disposedValue = true;
             }
         }
 

@@ -9,7 +9,7 @@ namespace MiniExcelLibs.OpenXml
     internal partial class MiniExcelStreamWriter : IDisposable
     {
         private readonly StreamWriter _streamWriter;
-        private bool _disposedValue;
+        private bool disposedValue;
 
         public MiniExcelStreamWriter(Stream stream, Encoding encoding, int bufferSize)
         {
@@ -59,10 +59,10 @@ namespace MiniExcelLibs.OpenXml
 
         protected virtual void Dispose(bool disposing)
         {
-            if (!_disposedValue)
+            if (!disposedValue)
             {
                 _streamWriter?.Dispose();
-                _disposedValue = true;
+                disposedValue = true;
             }
         }
 

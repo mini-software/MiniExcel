@@ -46,7 +46,7 @@ namespace MiniExcelLibs.Csv
             props.Select(s => CsvHelpers.ConvertToCsvValue(s?.ExcelColumnName, _configuration)));
 
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
-        private async Task<int> WriteValuesAsync(StreamWriter writer, object values, string seperator, string newLine, CancellationToken cancellationToken)
+        private async Task<int> WriteValuesAsync(StreamWriter writer, object values, string seperator, string newLine, CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
 

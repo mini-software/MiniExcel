@@ -1,45 +1,54 @@
 ﻿using System;
 using System.IO;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace MiniExcelLibs.OpenXml
 {
-    internal class MiniExcelStreamWriter : IDisposable
+    internal partial class MiniExcelStreamWriter : IDisposable
     {
-        private readonly Stream _stream;
-        private readonly Encoding _encoding;
         private readonly StreamWriter _streamWriter;
         private bool disposedValue;
-        
+
         public MiniExcelStreamWriter(Stream stream, Encoding encoding, int bufferSize)
         {
-            _stream = stream;
-            _encoding = encoding;
-            _streamWriter = new StreamWriter(stream, _encoding, bufferSize);
+            _streamWriter = new StreamWriter(stream, encoding, bufferSize);
         }
-        public void Write(string content)
+
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        public async Task WriteAsync(string content, CancellationToken cancellationToken = default)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             if (string.IsNullOrEmpty(content))
                 return;
-            
-            _streamWriter.Write(content);
+            await _streamWriter.WriteAsync(content).ConfigureAwait(false);
         }
 
-        public long WriteAndFlush(string content)
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        public async Task<long> WriteAndFlushAsync(string content, CancellationToken cancellationToken = default)
         {
-            Write(content);
-            _streamWriter.Flush();
-            return _streamWriter.BaseStream.Position;
+            cancellationToken.ThrowIfCancellationRequested();
+
+            await WriteAsync(content, cancellationToken).ConfigureAwait(false);
+            return await FlushAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        public void WriteWhitespace(int length)
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        public async Task WriteWhitespaceAsync(int length)
         {
-            _streamWriter.Write(new string(' ', length));
+            await _streamWriter.WriteAsync(new string(' ', length)).ConfigureAwait(false);
         }
 
-        public long Flush()
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        public async Task<long> FlushAsync(CancellationToken cancellationToken = default)
         {
-            _streamWriter.Flush();
+            await _streamWriter.FlushAsync(
+#if NET8_0_OR_GREATER
+                cancellationToken
+#endif
+                ).ConfigureAwait(false);
             return _streamWriter.BaseStream.Position;
         }
 

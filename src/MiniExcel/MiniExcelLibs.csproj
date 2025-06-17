@@ -56,6 +56,6 @@ Todo : https://github.com/mini-software/MiniExcel/projects/1?fullscreen=true</De
 	  <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="9.0.0" />
 	</ItemGroup>
 	<ItemGroup>
-	  <PackageReference Include="Zomp.SyncMethodGenerator" Version="1.4.30" PrivateAssets="all" IncludeAssets="runtime; build; native; contentfiles; analyzers; buildtransitive" />
+	  <PackageReference Include="Zomp.SyncMethodGenerator" Version="1.4.32" PrivateAssets="all" IncludeAssets="runtime; build; native; contentfiles; analyzers; buildtransitive" />
 	</ItemGroup>
 </Project>

@@ -341,7 +341,7 @@ namespace MiniExcelLibs.OpenXml
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            var placeholderPosition = await writer.FlushAsync().ConfigureAwait(false);
+            var placeholderPosition = await writer.FlushAsync(cancellationToken).ConfigureAwait(false);
             await writer.WriteWhitespaceAsync(WorksheetXml.GetColumnPlaceholderLength(count)).ConfigureAwait(false);
             return placeholderPosition;
         }
@@ -351,12 +351,12 @@ namespace MiniExcelLibs.OpenXml
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            var position = await writer.FlushAsync().ConfigureAwait(false);
+            var position = await writer.FlushAsync(cancellationToken).ConfigureAwait(false);
 
             writer.SetPosition(placeholderPosition);
             await WriteColumnsWidthsAsync(writer, columnWidths, cancellationToken).ConfigureAwait(false);
 
-            await writer.FlushAsync().ConfigureAwait(false);
+            await writer.FlushAsync(cancellationToken).ConfigureAwait(false);
             writer.SetPosition(position);
         }
 

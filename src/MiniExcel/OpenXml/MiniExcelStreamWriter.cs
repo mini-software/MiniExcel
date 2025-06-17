@@ -32,7 +32,7 @@ namespace MiniExcelLibs.OpenXml
             cancellationToken.ThrowIfCancellationRequested();
 
             await WriteAsync(content, cancellationToken).ConfigureAwait(false);
-            return await FlushAsync().ConfigureAwait(false);
+            return await FlushAsync(cancellationToken).ConfigureAwait(false);
         }
 
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
@@ -42,9 +42,13 @@ namespace MiniExcelLibs.OpenXml
         }
 
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
-        public async Task<long> FlushAsync()
+        public async Task<long> FlushAsync(CancellationToken cancellationToken = default)
         {
-            await _streamWriter.FlushAsync().ConfigureAwait(false);
+            await _streamWriter.FlushAsync(
+#if NET8_0_OR_GREATER
+                cancellationToken
+#endif
+                ).ConfigureAwait(false);
             return _streamWriter.BaseStream.Position;
         }
 

@@ -20,6 +20,7 @@ using Xunit.Abstractions;
 using static MiniExcelLibs.Tests.MiniExcelOpenXmlTests;
 using MiniExcelLibs.Picture;
 using TableStyles = MiniExcelLibs.OpenXml.TableStyles;
+using System.Threading.Tasks;
 
 namespace MiniExcelLibs.Tests;
 
@@ -534,7 +535,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             using (var connection = Db.GetConnection("Data Source=:memory:"))
             {
                 connection.Open();
-                
+
                 using var command = connection.CreateCommand();
                 command.CommandText =
                     """
@@ -545,11 +546,11 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
                     UNION ALL 
                     SELECT 'Github', 2
                     """;
-                
+
                 using var reader = command.ExecuteReader();
                 MiniExcel.SaveAs(path.ToString(), reader, configuration: config);
             }
-            
+
             var xml = Helpers.GetZipFileContent(path.ToString(), "xl/worksheets/sheet1.xml");
             var cnt = Regex.Matches(xml, "autoFilter").Count;
             Assert.Equal(count, cnt);
@@ -2925,7 +2926,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             dt.Columns.Add("name");
             dt.Columns.Add("department");
             dt.Rows.Add("Jack", "HR");
-            
+
             var value = new Dictionary<string, object> { ["employees"] = dt };
             MiniExcel.SaveAsByTemplate(path.ToString(), templatePath, value);
 
@@ -3644,12 +3645,12 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         var values = new
         {
             title = "FooCompany",
-            managers = new[] 
+            managers = new[]
             {
                 new { name = "Jack", department = "HR" },
                 new { name = "Loan", department = "IT" }
             },
-            employees = new[] 
+            employees = new[]
             {
                 new { name = "Wade", department = "HR" },
                 new { name = "Felix", department = "HR" },
@@ -3657,10 +3658,10 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
                 new { name = "Keaton", department = "IT" }
             }
         };
-        
+
         ms.SaveAsByTemplate(template, values);
     }
-    
+
     [Fact]
     public void Issue527()
     {
@@ -3669,10 +3670,10 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             new() { Name = "Bill", UserType = DescriptionEnum.V1 },
             new() { Name = "Bob", UserType = DescriptionEnum.V2 }
         ];
-        
+
         var value = new { t = row };
         var template = PathHelper.GetFile("xlsx/Issue527Template.xlsx");
-        
+
         using var path = AutoDeletingPath.Create();
         MiniExcel.SaveAsByTemplate(path.FilePath, template, value);
 
@@ -3695,9 +3696,9 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
 
         using var conn = Db.GetConnection();
         conn.Open();
-        
+
         using var cmd = conn.CreateCommand();
-        cmd.CommandText = 
+        cmd.CommandText =
             """
             WITH test('Id', 'Name') AS (
                 VALUES 
@@ -4248,10 +4249,10 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
 
         var list = Enumerable.Range(0, 10)
             .Select(_ => new
-                {
-                    value1 = Guid.NewGuid(),
-                    value2 = Guid.NewGuid()
-                }
+            {
+                value1 = Guid.NewGuid(),
+                value2 = Guid.NewGuid()
+            }
             )
             .ToList();
 
@@ -4266,7 +4267,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         Assert.Equal(list[0].value1.ToString(), rows[0].A.ToString());
         Assert.Equal(list[1].value1.ToString(), rows[1].A.ToString());
     }
-    
+
     /// <summary>
     /// https://github.com/mini-software/MiniExcel/issues/186
     /// </summary>
@@ -4276,7 +4277,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         var originPath = PathHelper.GetFile("xlsx/TestIssue186_Template.xlsx");
         using var path = AutoDeletingPath.Create();
         File.Copy(originPath, path.FilePath);
-        
+
         MiniExcelPicture[] images =
         [
             new()
@@ -4295,10 +4296,10 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
                 HeightPx = 100
             }
         ];
-        
+
         MiniExcel.AddPicture(path.FilePath, images);
     }
-    
+
     /// <summary>
     /// https://github.com/mini-software/MiniExcel/issues/771
     /// </summary>
@@ -4307,7 +4308,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     {
         var template = PathHelper.GetFile("xlsx/TestIssue771.xlsx");
         using var path = AutoDeletingPath.Create();
-        
+
         var value = new
         {
             list = GetEnumerable(),
@@ -4323,10 +4324,10 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             list11 = GetEnumerable(),
             list12 = GetEnumerable()
         };
-        
+
         MiniExcel.SaveAsByTemplate(path.FilePath, template, value);
         var rows = MiniExcel.Query(path.FilePath).ToList();
-        
+
         Assert.Equal("2025-1", rows[2].B);
         Assert.Equal(null, rows[3].B);
         Assert.Equal(null, rows[4].B);
@@ -4335,7 +4336,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
 
         IEnumerable<object> GetEnumerable() => Enumerable.Range(0, 3).Select(s => new { ID = Guid.NewGuid(), level = s });
     }
-    
+
     /// <summary>
     /// https://github.com/mini-software/MiniExcel/issues/772
     /// </summary>
@@ -4343,10 +4344,10 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     public void TestIssue772()
     {
         var path = PathHelper.GetFile("xlsx/TestIssue772.xlsx");
-        var rows = MiniExcel.Query(path, sheetName: "Supply plan(daily)", startCell:"A1")
+        var rows = MiniExcel.Query(path, sheetName: "Supply plan(daily)", startCell: "A1")
             .Cast<IDictionary<string, object>>()
             .ToArray();
-        
+
         Assert.Equal("01108083-1Delta", (string)rows[19]["C"]);
     }
 
@@ -4369,7 +4370,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
 
         MiniExcel.SaveAsByTemplate(path.FilePath, templatePath, fill);
         var rows = MiniExcel.Query(path.FilePath).ToList();
-        
+
         Assert.Equal("H1", rows[4].AF);
         Assert.Equal("c3", rows[6].AA);
         Assert.Equal("Ram", rows[6].B);
@@ -4392,5 +4393,18 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         var xml = Helpers.GetZipFileContent(path.ToString(), "xl/worksheets/sheet1.xml");
 
         Assert.Contains("<x:autoFilter ref=\"A1:A4\" />", xml);
+    }
+
+    /// <summary>
+    /// https://github.com/mini-software/MiniExcel/issues/809
+    /// </summary>
+    [Fact]
+    public void TestIssue809()
+    {
+        var path = PathHelper.GetFile("xlsx/TestIssue809.xlsx");
+        var rows = MiniExcel.Query(path).ToList();
+        Assert.Equal(3, rows.Count);
+        Assert.Equal(null, rows[0].A);
+        Assert.Equal(2, rows[2].B);
     }
 }

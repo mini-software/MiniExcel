@@ -22,7 +22,6 @@ namespace MiniExcelLibs.OpenXml
         private static readonly string[] _relationshiopNs = { Config.SpreadsheetmlXmlRelationshipns, Config.SpreadsheetmlXmlStrictRelationshipns };
         private List<SheetRecord> _sheetRecords;
         internal IDictionary<int, string> _sharedStrings;
-        private MergeCells _mergeCells;
         private ExcelOpenXmlStyles _style;
         internal readonly ExcelOpenXmlZip _archive;
         private readonly OpenXmlConfiguration _config;
@@ -140,7 +139,6 @@ namespace MiniExcelLibs.OpenXml
             return QueryImplAsync<T>(QueryRangeAsync(false, sheetName, startRowIndex, startColumnIndex, endRowIndex, endColumnIndex, cancellationToken), ReferenceHelper.ConvertXyToCell(startColumnIndex, startRowIndex), hasHeader, _config, cancellationToken);
         }
 
-
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
         internal async IAsyncEnumerable<IDictionary<string, object>> InternalQueryRangeAsync(bool useHeaderRow, string sheetName, int startRowIndex, int startColumnIndex, int? endRowIndex, int? endColumnIndex, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
@@ -164,8 +162,6 @@ namespace MiniExcelLibs.OpenXml
             {
                 yield break;
             }
-
-            _mergeCells = mergeCellsResult.MergeCells;
 
             var maxRowColumnIndexResult = await TryGetMaxRowColumnIndexAsync(sheetEntry, cancellationToken).ConfigureAwait(false);
             if (!maxRowColumnIndexResult.IsSuccess)
@@ -222,89 +218,16 @@ namespace MiniExcelLibs.OpenXml
                                     break;
                                 }
 
-                                // fill empty rows
-                                if (!_config.IgnoreEmptyRows)
+                                await foreach (var row in QueryRowAsync(reader, isFirstRow, startRowIndex, nextRowIndex, rowIndex, startColumnIndex, endColumnIndex, maxColumnIndex, withoutCR, useHeaderRow, headRows, mergeCellsResult.MergeCells, cancellationToken).ConfigureAwait(false))
                                 {
-                                    var expectedRowIndex = isFirstRow ? startRowIndex : nextRowIndex;
-                                    if (startRowIndex <= expectedRowIndex && expectedRowIndex < rowIndex)
+                                    if (isFirstRow)
                                     {
-                                        for (int i = expectedRowIndex; i < rowIndex; i++)
-                                        {
-                                            yield return GetCell(useHeaderRow, maxColumnIndex, headRows, startColumnIndex);
-                                        }
-                                    }
-                                }
-
-                                // row -> c, must after `if (nextRowIndex < rowIndex)` condition code, eg. The first empty row has no xml element,and the second row xml element is <row r="2"/>
-                                if (!await XmlReaderHelper.ReadFirstContentAsync(reader, cancellationToken).ConfigureAwait(false) && !_config.IgnoreEmptyRows)
-                                {
-                                    //Fill in case of self closed empty row tag eg. <row r="1"/>
-                                    yield return GetCell(useHeaderRow, maxColumnIndex, headRows, startColumnIndex);
-                                    continue;
-                                }
-
-                                #region Set Cells
-
-                                var cell = GetCell(useHeaderRow, maxColumnIndex, headRows, startColumnIndex);
-                                var columnIndex = withoutCR ? -1 : 0;
-                                while (!reader.EOF)
-                                {
-                                    if (XmlReaderHelper.IsStartElement(reader, "c", _ns))
-                                    {
-                                        var aS = reader.GetAttribute("s");
-                                        var aR = reader.GetAttribute("r");
-                                        var aT = reader.GetAttribute("t");
-                                        var cellAndColumn = await ReadCellAndSetColumnIndexAsync(reader, columnIndex, withoutCR,
-                                            startColumnIndex, aR, aT, cancellationToken).ConfigureAwait(false);
-
-                                        var cellValue = cellAndColumn.CellValue;
-                                        columnIndex = cellAndColumn.ColumnIndex;
-
-                                        if (_config.FillMergedCells)
-                                        {
-                                            if (_mergeCells.MergesValues.ContainsKey(aR))
-                                            {
-                                                _mergeCells.MergesValues[aR] = cellValue;
-                                            }
-                                            else if (_mergeCells.MergesMap.TryGetValue(aR, out var mergeKey))
-                                            {
-                                                _mergeCells.MergesValues.TryGetValue(mergeKey, out cellValue);
-                                            }
-                                        }
-
-                                        if (columnIndex < startColumnIndex || (endColumnIndex.HasValue && columnIndex > endColumnIndex.Value))
+                                        isFirstRow = false; // for startcell logic
+                                        if (useHeaderRow)
                                             continue;
-
-                                        if (!string.IsNullOrEmpty(aS)) // if c with s meaning is custom style need to check type by xl/style.xml
-                                        {
-                                            int xfIndex = -1;
-                                            if (int.TryParse(aS, NumberStyles.Any, CultureInfo.InvariantCulture,
-                                                    out var styleIndex))
-                                                xfIndex = styleIndex;
-
-                                            // only when have s attribute then load styles xml data
-                                            if (_style == null)
-                                                _style = new ExcelOpenXmlStyles(_archive);
-
-                                            cellValue = _style.ConvertValueByStyleFormat(xfIndex, cellValue);
-                                        }
-
-                                        SetCellsValueAndHeaders(cellValue, useHeaderRow, ref headRows, ref isFirstRow, ref cell, columnIndex);
                                     }
-                                    else if (!await XmlReaderHelper.SkipContentAsync(reader, cancellationToken).ConfigureAwait(false))
-                                        break;
+                                    yield return row;
                                 }
-
-                                #endregion
-
-                                if (isFirstRow)
-                                {
-                                    isFirstRow = false; // for startcell logic
-                                    if (useHeaderRow)
-                                        continue;
-                                }
-
-                                yield return cell;
                             }
                             else if (!await XmlReaderHelper.SkipContentAsync(reader, cancellationToken).ConfigureAwait(false))
                             {
@@ -318,6 +241,94 @@ namespace MiniExcelLibs.OpenXml
                     }
                 }
             }
+        }
+
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        private async IAsyncEnumerable<IDictionary<string, object>> QueryRowAsync(
+            XmlReader reader,
+            bool isFirstRow,
+            int startRowIndex,
+            int nextRowIndex,
+            int rowIndex,
+            int startColumnIndex,
+            int? endColumnIndex,
+            int maxColumnIndex,
+            bool withoutCR,
+            bool useHeaderRow,
+            Dictionary<int, string> headRows,
+            MergeCells mergeCells,
+            [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        {
+            // fill empty rows
+            if (!_config.IgnoreEmptyRows)
+            {
+                var expectedRowIndex = isFirstRow ? startRowIndex : nextRowIndex;
+                if (startRowIndex <= expectedRowIndex && expectedRowIndex < rowIndex)
+                {
+                    for (int i = expectedRowIndex; i < rowIndex; i++)
+                    {
+                        yield return GetCell(useHeaderRow, maxColumnIndex, headRows, startColumnIndex);
+                    }
+                }
+            }
+
+            // row -> c, must after `if (nextRowIndex < rowIndex)` condition code, eg. The first empty row has no xml element,and the second row xml element is <row r="2"/>
+            if (!await XmlReaderHelper.ReadFirstContentAsync(reader, cancellationToken).ConfigureAwait(false) && !_config.IgnoreEmptyRows)
+            {
+                //Fill in case of self closed empty row tag eg. <row r="1"/>
+                yield return GetCell(useHeaderRow, maxColumnIndex, headRows, startColumnIndex);
+                yield break;
+            }
+
+            var cell = GetCell(useHeaderRow, maxColumnIndex, headRows, startColumnIndex);
+            var columnIndex = withoutCR ? -1 : 0;
+            while (!reader.EOF)
+            {
+                if (XmlReaderHelper.IsStartElement(reader, "c", _ns))
+                {
+                    var aS = reader.GetAttribute("s");
+                    var aR = reader.GetAttribute("r");
+                    var aT = reader.GetAttribute("t");
+                    var cellAndColumn = await ReadCellAndSetColumnIndexAsync(reader, columnIndex, withoutCR, startColumnIndex, aR, aT, cancellationToken).ConfigureAwait(false);
+
+                    var cellValue = cellAndColumn.CellValue;
+                    columnIndex = cellAndColumn.ColumnIndex;
+
+                    if (_config.FillMergedCells)
+                    {
+                        if (mergeCells.MergesValues.ContainsKey(aR))
+                        {
+                            mergeCells.MergesValues[aR] = cellValue;
+                        }
+                        else if (mergeCells.MergesMap.TryGetValue(aR, out var mergeKey))
+                        {
+                            mergeCells.MergesValues.TryGetValue(mergeKey, out cellValue);
+                        }
+                    }
+
+                    if (columnIndex < startColumnIndex || (endColumnIndex.HasValue && columnIndex > endColumnIndex.Value))
+                        continue;
+
+                    if (!string.IsNullOrEmpty(aS)) // if c with s meaning is custom style need to check type by xl/style.xml
+                    {
+                        int xfIndex = -1;
+                        if (int.TryParse(aS, NumberStyles.Any, CultureInfo.InvariantCulture,
+                                out var styleIndex))
+                            xfIndex = styleIndex;
+
+                        // only when have s attribute then load styles xml data
+                        if (_style == null)
+                            _style = new ExcelOpenXmlStyles(_archive);
+
+                        cellValue = _style.ConvertValueByStyleFormat(xfIndex, cellValue);
+                    }
+
+                    SetCellsValueAndHeaders(cellValue, useHeaderRow, headRows, isFirstRow, cell, columnIndex);
+                }
+                else if (!await XmlReaderHelper.SkipContentAsync(reader, cancellationToken).ConfigureAwait(false))
+                    break;
+            }
+            yield return cell;
         }
 
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
@@ -433,7 +444,7 @@ namespace MiniExcelLibs.OpenXml
             return useHeaderRow ? CustomPropertyHelper.GetEmptyExpandoObject(headRows) : CustomPropertyHelper.GetEmptyExpandoObject(maxColumnIndex, startColumnIndex);
         }
 
-        private static void SetCellsValueAndHeaders(object cellValue, bool useHeaderRow, ref Dictionary<int, string> headRows, ref bool isFirstRow, ref IDictionary<string, object> cell, int columnIndex)
+        private static void SetCellsValueAndHeaders(object cellValue, bool useHeaderRow, Dictionary<int, string> headRows, bool isFirstRow, IDictionary<string, object> cell, int columnIndex)
         {
             if (!useHeaderRow)
             {
@@ -698,7 +709,7 @@ namespace MiniExcelLibs.OpenXml
                 }
                 else if (XmlReaderHelper.IsStartElement(reader, "is", _ns))
                 {
-                    var rawValue = await StringHelper.ReadStringItemAsync(reader,cancellationToken).ConfigureAwait(false);
+                    var rawValue = await StringHelper.ReadStringItemAsync(reader, cancellationToken).ConfigureAwait(false);
                     if (!string.IsNullOrEmpty(rawValue))
                         ConvertCellValue(rawValue, aT, xfIndex, out value);
                 }
@@ -1087,7 +1098,7 @@ namespace MiniExcelLibs.OpenXml
             }
 
             public MergeCellsResult(bool isSuccess, MergeCells mergeCells)
-                : this (isSuccess)
+                : this(isSuccess)
             {
                 MergeCells = mergeCells;
             }

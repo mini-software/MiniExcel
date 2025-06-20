@@ -1,13 +1,16 @@
-﻿using MiniExcelLibs.OpenXml;
-using MiniExcelLibs.Zip;
-using System;
-using System.IO;
-using System.IO.Compression;
-using System.Linq;
-using System.Xml;
+﻿using System.Collections.Generic;
 
 namespace MiniExcelLibs.Picture
 {
+    using MiniExcelLibs.OpenXml;
+    using MiniExcelLibs.Zip;
+    using System;
+    using System.IO;
+    using System.IO.Compression;
+    using System.Linq;
+    using System.Runtime.InteropServices.ComTypes;
+    using System.Xml;
+
     internal static class MiniExcelPictureImplement
     {
         public static void AddPicture(Stream excelStream, params MiniExcelPicture[] images)
@@ -16,7 +19,7 @@ namespace MiniExcelLibs.Picture
             var excelArchive = new ExcelOpenXmlZip(excelStream);
             var sheetEntries = new ExcelOpenXmlSheetReader(excelStream, null).GetWorkbookRels(excelArchive.entries).ToList();
 
-            var drawingRelId = $"rId{Guid.NewGuid():N}";
+            var drawingRelId = $"rId{Guid.NewGuid().ToString("N")}";
             var drawingId = Guid.NewGuid().ToString("N");
             var imageId = 2;
             using (var archive = new ZipArchive(excelStream, ZipArchiveMode.Update, true))
@@ -24,24 +27,21 @@ namespace MiniExcelLibs.Picture
                 foreach (var image in images)
                 {
                     var imageBytes = image.ImageBytes;
-                    var sheetEnt = image?.SheetName == null 
-                        ? sheetEntries[0] 
-                        : sheetEntries.FirstOrDefault(x => x.Name == image.SheetName) ?? sheetEntries.First();
+
+                    var sheetEnt = image.SheetName == null ? sheetEntries.First() : sheetEntries.FirstOrDefault(x => x.Name == image.SheetName) ?? sheetEntries.First();
 
                     var sheetName = sheetEnt.Path.Split('/').Last().Split('.')[0];
                     var col = image.ColumnNumber;
                     var row = image.RowNumber;
-                    var widthPx = image?.WidthPx;
-                    var heightPx = image?.HeightPx;
+                    var widthPx = image.WidthPx;
+                    var heightPx = image.HeightPx;
 
                     // Step 1: Add image to /xl/media/
-                    var imageName = $"image{Guid.NewGuid():N}.png";
-                    var imagePath = $"xl/media/{imageName}";
+                    string imageName = $"image{Guid.NewGuid().ToString("N")}.png";
+                    string imagePath = $"xl/media/{imageName}";
                     var imageEntry = archive.CreateEntry(imagePath);
                     using (var entryStream = imageEntry.Open())
-                    {
                         entryStream.Write(imageBytes, 0, imageBytes.Length);
-                    }
 
                     // Step 2: Update [Content_Types].xml
                     var contentTypesEntry = archive.GetEntry("[Content_Types].xml");
@@ -54,10 +54,16 @@ namespace MiniExcelLibs.Picture
                         contentTypesDoc.DocumentElement.AppendChild(defaultNode);
                     }
 
-                    var overrideDrawingFileExists = contentTypesDoc.DocumentElement.ChildNodes
-                        .Cast<XmlNode>()
-                        .Any(node => node.Name == "Override" && node.Attributes?["PartName"].Value == $"/xl/drawings/drawing{drawingId}.xml");
 
+                    var overrideDrawingFileExists = false;
+                    foreach (XmlNode node in contentTypesDoc.DocumentElement.ChildNodes)
+                    {
+                        if (node.Name == "Override" && node.Attributes["PartName"].Value == $"/xl/drawings/drawing{drawingId}.xml")
+                        {
+                            overrideDrawingFileExists = true;
+                            break;
+                        }
+                    }
                     if (!overrideDrawingFileExists)
                     {
                         var overrideNode = contentTypesDoc.CreateElement("Override", contentTypesDoc.DocumentElement.NamespaceURI);
@@ -68,40 +74,34 @@ namespace MiniExcelLibs.Picture
                     SaveXml(contentTypesDoc, contentTypesEntry);
 
                     // Step 3: Update xl/worksheets/sheetX.xml
-                    var sheetPath = $"xl/worksheets/{sheetName}.xml";
+                    string sheetPath = $"xl/worksheets/{sheetName}.xml";
                     var sheetEntry = archive.GetEntry(sheetPath);
                     var sheetDoc = LoadXml(sheetEntry);
-                    var relId = $"rId{Guid.NewGuid():N}";
+                    var relId = $"rId{Guid.NewGuid().ToString("N")}";
                     // unique relId for drawing
 
                     // existMiniExcelUniqueDrawingNode = check sheetDoc exist <drawing r:id="rId51b2a752f2454acfba519a539186a413"/> and check its attribut r:id = drawingRelId
-                    var uniqueDrawingNode = sheetDoc.SelectSingleNode(
+                    var existMiniExcelUniqueDrawingNode = sheetDoc.SelectSingleNode(
                         $"/x:worksheet/x:drawing[@r:id='{drawingRelId}']",
-                        GetRNamespaceManager(sheetDoc));
-
-                    if (uniqueDrawingNode != null)
+                        GetRNamespaceManager(sheetDoc)
+                    ) != null;
+                    if (!existMiniExcelUniqueDrawingNode)
                     {
-                        var drawingNode = sheetDoc.CreateElement("drawing", sheetDoc.DocumentElement?.NamespaceURI);
-                        drawingNode.Attributes
-                            .Append(sheetDoc.CreateAttribute("r", "id", "http://schemas.openxmlformats.org/officeDocument/2006/relationships"))
+                        var drawingNode = sheetDoc.CreateElement("drawing", sheetDoc.DocumentElement.NamespaceURI);
+                        drawingNode.Attributes.Append(sheetDoc.CreateAttribute("r", "id", "http://schemas.openxmlformats.org/officeDocument/2006/relationships"))
                             .Value = drawingRelId;
                         sheetDoc.DocumentElement.AppendChild(drawingNode);
                     }
                     SaveXml(sheetDoc, sheetEntry);
 
                     {
-                        var drawingPath = $"xl/worksheets/_rels/{sheetName}.xml.rels";
+                        string drawingPath = $"xl/worksheets/_rels/{sheetName}.xml.rels";
                         var isExistEntry = false;
                         var sheetRelsEntry = archive.GetEntry(drawingPath);
                         if (sheetRelsEntry != null)
-                        {
                             isExistEntry = true;
-                        }
                         else
-                        {
                             sheetRelsEntry = archive.CreateEntry(drawingPath);
-                        }
-
                         if (isExistEntry)
                         {
                             var sheetRelsDoc = LoadXml(sheetRelsEntry);
@@ -132,15 +132,21 @@ namespace MiniExcelLibs.Picture
                             sheetRelsDoc.DocumentElement.AppendChild(relNode);
                             SaveXml(sheetRelsDoc, sheetRelsEntry);
                         }
-                        
+
                     }
 
                     // Step 4: Update exist xl/drawings/drawingX if not create one
                     {
-                        XmlDocument drawingDoc;
-                        var drawingPath = $"xl/drawings/drawing{drawingId}.xml";
+                        string drawingPath = $"xl/drawings/drawing{drawingId}.xml";
+                        var isExistEntry = false;
                         var drawingEntry = archive.GetEntry(drawingPath);
                         if (drawingEntry != null)
+                            isExistEntry = true;
+                        else
+                            drawingEntry = archive.CreateEntry(drawingPath);
+                        XmlDocument drawingDoc;
+
+                        if (isExistEntry)
                         {
                             drawingDoc = LoadXml(drawingEntry);
                             if (drawingDoc.DocumentElement != null)
@@ -185,7 +191,7 @@ namespace MiniExcelLibs.Picture
         <xdr:spPr xmlns:xdr=""http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing"">
             <a:xfrm xmlns:a=""http://schemas.openxmlformats.org/drawingml/2006/main"">
                 <a:off x=""0"" y=""0"" xmlns:a=""http://schemas.openxmlformats.org/drawingml/2006/main""/>
-                <a:ext {(widthPx==null?"":$@"cx = ""{widthPx * 9525}""")} {(heightPx == null ? "" : $@"cy=""{heightPx * 9525}""")} xmlns:a=""http://schemas.openxmlformats.org/drawingml/2006/main""/>
+                <a:ext {(widthPx == null ? "" : $@"cx = ""{widthPx * 9525}""")} {(heightPx == null ? "" : $@"cy=""{heightPx * 9525}""")} xmlns:a=""http://schemas.openxmlformats.org/drawingml/2006/main""/>
             </a:xfrm>
             <a:prstGeom prst=""rect"" xmlns:a=""http://schemas.openxmlformats.org/drawingml/2006/main"">
                 <a:avLst xmlns:a=""http://schemas.openxmlformats.org/drawingml/2006/main""/>
@@ -204,26 +210,28 @@ namespace MiniExcelLibs.Picture
                         }
                         else
                         {
-                            drawingEntry = archive.CreateEntry(drawingPath);
                             drawingDoc = CreateDrawingXml(col, row, widthPx, heightPx, relId);
                         }
 
                         SaveXml(drawingDoc, drawingEntry);
                     }
 
+
                     // Step 5: Create or update xl/drawings/_rels/drawingX.xml.rels
                     {
-                        var drawingRelsPath = $"xl/drawings/_rels/drawing{drawingId}.xml.rels";
+                        string drawingRelsPath = $"xl/drawings/_rels/drawing{drawingId}.xml.rels";
                         var drawingRelsEntry = archive.GetEntry(drawingRelsPath) ?? archive.CreateEntry(drawingRelsPath);
                         var drawingRelsDoc = LoadXml(drawingRelsEntry);
 
                         // Check if the relationship already exists
-                        var existingRel = drawingRelsDoc.SelectSingleNode($"/x:Relationships/x:Relationship[@Id='{relId}']", GetNamespaceManager(drawingRelsDoc)); //todo: why never used?
-                        var relNode = drawingRelsDoc.CreateElement("Relationship", drawingRelsDoc.DocumentElement.NamespaceURI);
-                        relNode.SetAttribute("Id", relId);
-                        relNode.SetAttribute("Type", "http://schemas.openxmlformats.org/officeDocument/2006/relationships/image");
-                        relNode.SetAttribute("Target", $"../media/{imageName}");
-                        drawingRelsDoc.DocumentElement.AppendChild(relNode);
+                        var existingRel = drawingRelsDoc.SelectSingleNode($"/x:Relationships/x:Relationship[@Id='{relId}']", GetNamespaceManager(drawingRelsDoc));
+                        {
+                            var relNode = drawingRelsDoc.CreateElement("Relationship", drawingRelsDoc.DocumentElement.NamespaceURI);
+                            relNode.SetAttribute("Id", relId);
+                            relNode.SetAttribute("Type", "http://schemas.openxmlformats.org/officeDocument/2006/relationships/image");
+                            relNode.SetAttribute("Target", $"../media/{imageName}");
+                            drawingRelsDoc.DocumentElement.AppendChild(relNode);
+                        }
 
                         SaveXml(drawingRelsDoc, drawingRelsEntry);
                     }
@@ -239,7 +247,6 @@ namespace MiniExcelLibs.Picture
                 doc.LoadXml(@"<?xml version=""1.0"" encoding=""UTF-8"" standalone=""yes""?><Relationships xmlns=""http://schemas.openxmlformats.org/package/2006/relationships""/>");
                 return doc;
             }
-            
             using (var stream = entry.Open())
             using (var reader = new StreamReader(stream))
             {
@@ -252,7 +259,6 @@ namespace MiniExcelLibs.Picture
                 stream.Position = 0;
                 doc.Load(stream);
             }
-            
             return doc;
         }
 
@@ -272,7 +278,7 @@ namespace MiniExcelLibs.Picture
             return nsmgr;
         }
 
-        private static XmlDocument CreateDrawingXml(int col, int row, int? widthPx, int? heightPx, string relId)
+        private static XmlDocument CreateDrawingXml(int col, int row, int widthPx, int heightPx, string relId)
         {
             var doc = new XmlDocument();
             doc.LoadXml($@"<?xml version=""1.0"" encoding=""UTF-8"" standalone=""yes""?>

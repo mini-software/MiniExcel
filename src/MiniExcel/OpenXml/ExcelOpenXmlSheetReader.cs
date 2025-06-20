@@ -159,13 +159,14 @@ namespace MiniExcelLibs.OpenXml
             // TODO: need to optimize performance
             // Q. why need 3 times openstream merge one open read? A. no, zipstream can't use position = 0
 
-            var mergeCellsResult = await TryGetMergeCellsAsync(sheetEntry, cancellationToken).ConfigureAwait(false);
-            if (_config.FillMergedCells && !mergeCellsResult.IsSuccess)
+            var mergeCellsContext = new MergeCellsContext { };
+
+            if (_config.FillMergedCells && !await TryGetMergeCellsAsync(sheetEntry, mergeCellsContext, cancellationToken).ConfigureAwait(false))
             {
                 yield break;
             }
 
-            _mergeCells = mergeCellsResult.MergeCells;
+            _mergeCells = mergeCellsContext.MergeCells;
 
             var maxRowColumnIndexResult = await TryGetMaxRowColumnIndexAsync(sheetEntry, cancellationToken).ConfigureAwait(false);
             if (!maxRowColumnIndexResult.IsSuccess)
@@ -698,7 +699,7 @@ namespace MiniExcelLibs.OpenXml
                 }
                 else if (XmlReaderHelper.IsStartElement(reader, "is", _ns))
                 {
-                    var rawValue = await StringHelper.ReadStringItemAsync(reader,cancellationToken).ConfigureAwait(false);
+                    var rawValue = await StringHelper.ReadStringItemAsync(reader, cancellationToken).ConfigureAwait(false);
                     if (!string.IsNullOrEmpty(rawValue))
                         ConvertCellValue(rawValue, aT, xfIndex, out value);
                 }
@@ -1076,25 +1077,13 @@ namespace MiniExcelLibs.OpenXml
             return new GetMaxRowColumnIndexResult(true, withoutCR, maxRowIndex, maxColumnIndex);
         }
 
-        internal class MergeCellsResult
+        internal class MergeCellsContext
         {
-            public bool IsSuccess { get; }
-            public MergeCells MergeCells { get; }
-
-            public MergeCellsResult(bool isSuccess)
-            {
-                IsSuccess = isSuccess;
-            }
-
-            public MergeCellsResult(bool isSuccess, MergeCells mergeCells)
-                : this (isSuccess)
-            {
-                MergeCells = mergeCells;
-            }
+            public MergeCells MergeCells { get; set; }
         }
 
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
-        internal static async Task<MergeCellsResult> TryGetMergeCellsAsync(ZipArchiveEntry sheetEntry, CancellationToken cancellationToken = default)
+        internal static async Task<bool> TryGetMergeCellsAsync(ZipArchiveEntry sheetEntry, MergeCellsContext mergeCellsContext, CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -1110,7 +1099,7 @@ namespace MiniExcelLibs.OpenXml
             using (XmlReader reader = XmlReader.Create(sheetStream, xmlSettings))
             {
                 if (!XmlReaderHelper.IsStartElement(reader, "worksheet", _ns))
-                    return new MergeCellsResult(false);
+                    return false;
                 while (await reader.ReadAsync().ConfigureAwait(false))
                 {
                     if (!XmlReaderHelper.IsStartElement(reader, "mergeCells", _ns))
@@ -1119,7 +1108,7 @@ namespace MiniExcelLibs.OpenXml
                     }
 
                     if (!await XmlReaderHelper.ReadFirstContentAsync(reader, cancellationToken).ConfigureAwait(false))
-                        return new MergeCellsResult(false);
+                        return false;
 
                     while (!reader.EOF)
                     {
@@ -1155,7 +1144,9 @@ namespace MiniExcelLibs.OpenXml
                         }
                     }
                 }
-                return new MergeCellsResult(true, mergeCells);
+
+                mergeCellsContext.MergeCells = mergeCells;
+                return true;
             }
         }
 

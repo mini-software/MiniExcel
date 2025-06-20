@@ -157,8 +157,7 @@ namespace MiniExcelLibs.OpenXml
             // TODO: need to optimize performance
             // Q. why need 3 times openstream merge one open read? A. no, zipstream can't use position = 0
 
-            var mergeCellsContext = new MergeCellsContext { };
-
+            var mergeCellsContext = new MergeCellsContext();
             if (_config.FillMergedCells && !await TryGetMergeCellsAsync(sheetEntry, mergeCellsContext, cancellationToken).ConfigureAwait(false))
             {
                 yield break;
@@ -219,7 +218,7 @@ namespace MiniExcelLibs.OpenXml
                                     break;
                                 }
 
-                                await foreach (var row in QueryRowAsync(reader, isFirstRow, startRowIndex, nextRowIndex, rowIndex, startColumnIndex, endColumnIndex, maxColumnIndex, withoutCR, useHeaderRow, headRows, mergeCellsResult.MergeCells, cancellationToken).ConfigureAwait(false))
+                                await foreach (var row in QueryRowAsync(reader, isFirstRow, startRowIndex, nextRowIndex, rowIndex, startColumnIndex, endColumnIndex, maxColumnIndex, withoutCR, useHeaderRow, headRows, mergeCellsContext.MergeCells, cancellationToken).ConfigureAwait(false))
                                 {
                                     if (isFirstRow)
                                     {
@@ -1090,19 +1089,7 @@ namespace MiniExcelLibs.OpenXml
 
         internal class MergeCellsContext
         {
-            public bool IsSuccess { get; }
-            public MergeCells MergeCells { get; }
-
-            public MergeCellsResult(bool isSuccess)
-            {
-                IsSuccess = isSuccess;
-            }
-
-            public MergeCellsResult(bool isSuccess, MergeCells mergeCells)
-                : this(isSuccess)
-            {
-                MergeCells = mergeCells;
-            }
+            public MergeCells MergeCells { get; set; }
         }
 
         [Zomp.SyncMethodGenerator.CreateSyncVersion]
@@ -1116,7 +1103,7 @@ namespace MiniExcelLibs.OpenXml
 #else
                 true
 #endif
-                );
+            );
             var mergeCells = new MergeCells();
             using (var sheetStream = sheetEntry.Open())
             using (XmlReader reader = XmlReader.Create(sheetStream, xmlSettings))

@@ -4402,9 +4402,6 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     [Fact]
     public void TestIssue814()
     {
-        // if (!OperatingSystem.IsWindows())
-        //     return;
-        
         var originPath = PathHelper.GetFile("xlsx/TestIssue186_Template.xlsx");
         using var path = AutoDeletingPath.Create();
         File.Copy(originPath, path.FilePath);
@@ -4458,9 +4455,6 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     [Fact]
     public void TestIssue815()
     {
-        // if (!OperatingSystem.IsWindows())
-        //     return;
-
         var originPath = PathHelper.GetFile("xlsx/TestIssue186_Template.xlsx");
         using var path = AutoDeletingPath.Create();
         File.Copy(originPath, path.FilePath);
@@ -4518,9 +4512,6 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     [Fact]
     public void TestIssue816()
     {
-        // if (!OperatingSystem.IsWindows())
-        //     return;
-
         var originPath = PathHelper.GetFile("xlsx/TestIssue186_Template.xlsx");
         using var path = AutoDeletingPath.Create();
         File.Copy(originPath, path.FilePath);

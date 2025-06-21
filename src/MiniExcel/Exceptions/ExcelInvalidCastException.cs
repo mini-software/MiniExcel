@@ -1,19 +1,12 @@
 ﻿using System;
 
-namespace MiniExcelLibs.Exceptions
+namespace MiniExcelLibs.Exceptions;
+
+public class ExcelInvalidCastException(string columnName, int row, object value, Type invalidCastType, string message)
+    : InvalidCastException(message)
 {
-    public class ExcelInvalidCastException : InvalidCastException
-    {
-        public string ColumnName { get; set; }
-        public int Row { get; set; }
-        public object Value { get; set; }
-        public Type InvalidCastType { get; set; }
-        public ExcelInvalidCastException(string columnName, int row, object value, Type invalidCastType, string message) : base(message)
-        {
-            ColumnName = columnName;
-            Row = row;
-            Value = value;
-            InvalidCastType = invalidCastType;
-        }
-    }
+    public string ColumnName { get; set; } = columnName;
+    public int Row { get; set; } = row;
+    public object Value { get; set; } = value;
+    public Type InvalidCastType { get; set; } = invalidCastType;
 }

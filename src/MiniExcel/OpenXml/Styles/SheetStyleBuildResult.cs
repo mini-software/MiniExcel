@@ -1,14 +1,13 @@
 ﻿using System.Collections.Generic;
 
-namespace MiniExcelLibs.OpenXml.Styles
-{
-    internal class SheetStyleBuildResult
-    {
-        public SheetStyleBuildResult(Dictionary<string, string> cellXfIdMap)
-        {
-            CellXfIdMap = cellXfIdMap;
-        }
+namespace MiniExcelLibs.OpenXml.Styles;
 
-        public Dictionary<string, string> CellXfIdMap { get; set; }
+internal class SheetStyleBuildResult
+{
+    public SheetStyleBuildResult(Dictionary<string, string> cellXfIdMap)
+    {
+        CellXfIdMap = cellXfIdMap;
     }
+
+    public Dictionary<string, string> CellXfIdMap { get; set; }
 }

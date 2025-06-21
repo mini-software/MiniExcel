@@ -1,43 +1,39 @@
-﻿using MiniExcelLibs.Utils;
-using System;
+﻿using System;
 using System.Collections;
 using System.Data;
+using MiniExcelLibs.Utils;
 
-namespace MiniExcelLibs.WriteAdapter
+namespace MiniExcelLibs.WriteAdapter;
+
+internal static class MiniExcelWriteAdapterFactory
 {
-    internal static class MiniExcelWriteAdapterFactory
+    public static bool TryGetAsyncWriteAdapter(object values, MiniExcelConfiguration configuration, out IAsyncMiniExcelWriteAdapter? writeAdapter)
     {
-        public static bool TryGetAsyncWriteAdapter(object values, Configuration configuration, out IAsyncMiniExcelWriteAdapter writeAdapter)
+        writeAdapter = null;
+        if (values.GetType().IsAsyncEnumerable(out var genericArgument))
         {
-            writeAdapter = null;
-            if (values.GetType().IsAsyncEnumerable(out var genericArgument))
-            {
-                var writeAdapterType = typeof(AsyncEnumerableWriteAdapter<>).MakeGenericType(genericArgument);
-                writeAdapter = (IAsyncMiniExcelWriteAdapter)Activator.CreateInstance(writeAdapterType, values, configuration);
-                return true;
-            }
-            if (values is IMiniExcelDataReader miniExcelDataReader)
-            {
-                writeAdapter = new MiniExcelDataReaderWriteAdapter(miniExcelDataReader, configuration);
-                return true;
-            }
-
-            return false;
+            var writeAdapterType = typeof(AsyncEnumerableWriteAdapter<>).MakeGenericType(genericArgument);
+            writeAdapter = (IAsyncMiniExcelWriteAdapter)Activator.CreateInstance(writeAdapterType, values, configuration);
+            return true;
+        }
+        
+        if (values is IMiniExcelDataReader miniExcelDataReader)
+        {
+            writeAdapter = new MiniExcelDataReaderWriteAdapter(miniExcelDataReader, configuration);
+            return true;
         }
 
-        public static IMiniExcelWriteAdapter GetWriteAdapter(object values, Configuration configuration)
+        return false;
+    }
+
+    public static IMiniExcelWriteAdapter GetWriteAdapter(object values, MiniExcelConfiguration configuration)
+    {
+        return values switch
         {
-            switch (values)
-            {
-                case IDataReader dataReader:
-                    return new DataReaderWriteAdapter(dataReader, configuration);
-                case IEnumerable enumerable:
-                    return new EnumerableWriteAdapter(enumerable, configuration);
-                case DataTable dataTable:
-                    return new DataTableWriteAdapter(dataTable, configuration);
-                default:
-                    throw new NotImplementedException();
-            }
-        }
+            IDataReader dataReader => new DataReaderWriteAdapter(dataReader, configuration),
+            IEnumerable enumerable => new EnumerableWriteAdapter(enumerable, configuration),
+            DataTable dataTable => new DataTableWriteAdapter(dataTable, configuration),
+            _ => throw new NotImplementedException()
+        };
     }
 }

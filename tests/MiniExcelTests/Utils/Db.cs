@@ -9,7 +9,7 @@ internal static class Db
 
     internal static string GenerateDummyQuery(List<Dictionary<string, object>> data)
     {
-        if (data == null || data.Count == 0)
+        if (data is null or [])
             throw new ArgumentException("The data list cannot be null or empty.");
 
         var queryBuilder = new StringBuilder();

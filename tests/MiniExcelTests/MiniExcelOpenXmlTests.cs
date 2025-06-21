@@ -37,7 +37,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
 
         {
             var columns = MiniExcel.GetColumns(tePath);
-            Assert.Null(columns);
+            Assert.Empty(columns);
         }
     }
 

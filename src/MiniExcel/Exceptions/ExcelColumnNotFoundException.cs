@@ -1,24 +1,20 @@
 ﻿using System.Collections.Generic;
 
-namespace MiniExcelLibs.Exceptions
-{
-    public class ExcelColumnNotFoundException : KeyNotFoundException
-    {
-        public string ColumnName { get; set; }
-        public string[] ColumnAliases { get; }
-        public string ColumnIndex { get; set; }
-        public int RowIndex { get; set; }
-        public IDictionary<string, int> Headers { get; }
-        public object RowValues { get; set; }
+namespace MiniExcelLibs.Exceptions;
 
-        public ExcelColumnNotFoundException(string columnIndex, string columnName, string[] columnAliases, int rowIndex, IDictionary<string, int> headers, object value, string message) : base(message)
-        {
-            ColumnIndex = columnIndex;
-            ColumnName = columnName;
-            ColumnAliases = columnAliases;
-            RowIndex = rowIndex;
-            Headers = headers;
-            RowValues = value;
-        }
-    }
+public class ExcelColumnNotFoundException(
+    string? columnIndex,
+    string? columnName,
+    string[] columnAliases,
+    int rowIndex,
+    IDictionary<string, int> headers,
+    object value,
+    string message) : KeyNotFoundException(message)
+{
+    public string? ColumnName { get; set; } = columnName;
+    public string? ColumnIndex { get; set; } = columnIndex;
+    public string[] ColumnAliases { get; } = columnAliases;
+    public int RowIndex { get; set; } = rowIndex;
+    public IDictionary<string, int> Headers { get; } = headers;
+    public object RowValues { get; set; } = value;
 }

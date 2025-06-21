@@ -1,21 +1,16 @@
-﻿using MiniExcelLibs.OpenXml;
-using System;
+﻿using System;
+using MiniExcelLibs.OpenXml;
 
-namespace MiniExcelLibs.Attributes
+namespace MiniExcelLibs.Attributes;
+
+[AttributeUsage(AttributeTargets.Class)]
+public class ExcelSheetAttribute : Attribute
 {
-    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
-    public class ExcelSheetAttribute : Attribute
-    {
-        public string Name { get; set; }
-        public SheetState State { get; set; } = SheetState.Visible;
-    }
+    public string? Name { get; set; }
+    public SheetState State { get; set; } = SheetState.Visible;
+}
 
-    public class DynamicExcelSheet : ExcelSheetAttribute
-    {
-        public string Key { get; set; }
-        public DynamicExcelSheet(string key)
-        {
-            Key = key;
-        }
-    }
+public class DynamicExcelSheet(string key) : ExcelSheetAttribute
+{
+    public string Key { get; set; } = key;
 }

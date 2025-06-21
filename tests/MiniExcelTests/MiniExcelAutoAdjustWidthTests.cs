@@ -149,7 +149,7 @@ public class MiniExcelAutoAdjustWidthTests
         var worksheetPart = document.WorkbookPart.WorksheetParts.First();
 
         var columns = worksheetPart.Worksheet.GetFirstChild<Columns>();
-        Assert.False(columns == null, "No column width information was written.");
+        Assert.False(columns is null, "No column width information was written.");
         foreach (var column in columns.Elements<Column>())
         {
             var expectedWidth = column.Min.Value switch

@@ -1750,15 +1750,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     public void TestIssue272()
     {
         var path = PathHelper.GetFile("/xlsx/TestIssue272.xlsx");
-        try
-        {
-            var rows = MiniExcel.Query(path).ToList();
-        }
-        catch (Exception e)
-        {
-            Assert.Equal(typeof(InvalidDataException), e.GetType());
-            Assert.StartsWith("It's not legal excel zip, please check or issue for me.", e.Message);
-        }
+        Assert.Throws<InvalidDataException>(() => MiniExcel.Query(path).ToList());
     }
 
     /// <summary>

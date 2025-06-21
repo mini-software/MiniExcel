@@ -14,7 +14,7 @@ namespace MiniExcelLibs.Utils
             unknown
         }
 
-#if NET45||NETSTANDARD2_0
+#if NET462||NETSTANDARD2_0
         public static ImageFormat GetImageFormat(byte[] bytes)
         {
             var bmp = new byte[] { (byte)'B', (byte)'M' };            // BMP

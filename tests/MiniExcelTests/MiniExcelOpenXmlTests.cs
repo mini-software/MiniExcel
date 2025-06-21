@@ -95,7 +95,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
     {
         const string path = "../../../../../samples/xlsx/TestCustomExcelColumnAttribute.xlsx";
         var rows = MiniExcel.Query<ExcelAttributeDemo>(path).ToList();
-        
+
         Assert.Equal("Column1", rows[0].Test1);
         Assert.Equal("Column2", rows[0].Test2);
         Assert.Null(rows[0].Test3);
@@ -117,11 +117,11 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
                 Test3 = "Test3",
                 Test4 = "Test4",
             });
-        
+
         MiniExcel.SaveAs(path.ToString(), input);
         var rows = MiniExcel.Query(path.ToString(), true).ToList();
         var first = rows[0] as IDictionary<string, object>;
-        
+
         Assert.Equal(3, rows.Count);
         Assert.Equal(["Column1", "Column2", "Test5", "Test7", "Test6", "Test4"], first?.Keys);
         Assert.Equal("Test1", rows[0].Column1);
@@ -159,11 +159,35 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
         var rows = MiniExcel.QueryRange(path, startCell: "A2", endCell: "C7")
             .Cast<IDictionary<string, object>>()
             .ToList();
-        
+
         Assert.Equal(5, rows.Count);
         Assert.Equal(3, rows[0].Count);
         Assert.Equal(2d, rows[1]["B"]);
         Assert.Equal(null!, rows[2]["A"]);
+
+        var startCellXY = MiniExcelLibs.Utils.ReferenceHelper.ConvertCellToXY("A2");
+        var endCellXY = MiniExcelLibs.Utils.ReferenceHelper.ConvertCellToXY("C7");
+        rows = MiniExcel.QueryRange(path, startRowIndex: startCellXY.Item2, startColumnIndex: startCellXY.Item1, endRowIndex: endCellXY.Item2, endColumnIndex: endCellXY.Item1)
+            .Cast<IDictionary<string, object>>()
+            .ToList();
+        Assert.Equal(5, rows.Count);
+        Assert.Equal(3, rows[0].Count);
+        Assert.Equal(2d, rows[1]["B"]);
+        Assert.Equal(null!, rows[2]["A"]);
+
+        rows = MiniExcel.QueryRange(path, startRowIndex:2, startColumnIndex: 1, endRowIndex: 3)
+          .Cast<IDictionary<string, object>>()
+          .ToList();
+        Assert.Equal(2, rows.Count);
+        Assert.Equal(4, rows[0].Count);
+        Assert.Equal(4d, rows[1]["D"]);
+
+        rows = MiniExcel.QueryRange(path, startRowIndex: 2, startColumnIndex: 1, endColumnIndex: 3)
+        .Cast<IDictionary<string, object>>()
+        .ToList();
+        Assert.Equal(5, rows.Count);
+        Assert.Equal(3, rows[0].Count);
+        Assert.Equal(3d, rows[3]["C"]);
     }
 
     [Fact]
@@ -235,7 +259,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
             Assert.Equal(4, rows[4].d);
         }
     }
-        
+
     [Fact]
     public void TestEmptyRowsQuerySelfClosingTag()
     {
@@ -393,13 +417,13 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
         Assert.Equal("sagittis.lobortis@leoMorbi.com", rows[4].Mail);
         Assert.Equal(8209.76m, rows[4].Points);
     }
-        
+
     [Fact]
     public void TestDatetimeSpanFormat_ClosedXml()
     {
         const string path = "../../../../../samples/xlsx/TestDatetimeSpanFormat_ClosedXml.xlsx";
         using var stream = FileHelper.OpenRead(path);
-        
+
         var row = stream.Query().First();
         var a = row.A;
         var b = row.B;
@@ -435,13 +459,13 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 #endif
         using var fs = File.OpenRead(path);
-        using var reader = ExcelDataReader. ExcelReaderFactory.CreateReader(fs);
+        using var reader = ExcelDataReader.ExcelReaderFactory.CreateReader(fs);
         var exceldatareaderResult = reader.AsDataSet();
 
         using var stream = File.OpenRead(path);
         var rows = stream.Query().ToList();
         Assert.Equal(exceldatareaderResult.Tables[0].Rows.Count, rows.Count);
-        
+
         foreach (IDictionary<string, object?> row in rows)
         {
             var rowIndex = rows.IndexOf(row);
@@ -509,14 +533,14 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
         {
             using var file = AutoDeletingPath.Create();
             var path = file.ToString();
-            
+
             List<SaveAsFileWithDimensionByICollectionTestType> values =
             [
                 new() { A = "A", B = "B" },
                 new() { A = "A", B = "B" }
             ];
             MiniExcel.SaveAs(path, values);
-            
+
             using (var stream = File.OpenRead(path))
             {
                 var rows = stream.Query(useHeaderRow: false).ToList();
@@ -543,7 +567,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
             using var file = AutoDeletingPath.Create();
             var path = file.ToString();
             List<SaveAsFileWithDimensionByICollectionTestType> values = [];
-            
+
             MiniExcel.SaveAs(path, values, false);
             {
                 using (var stream = File.OpenRead(path))
@@ -610,7 +634,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
         {
             using var file = AutoDeletingPath.Create();
             var path = file.ToString();
-            
+
             var table = new DataTable();
             MiniExcel.SaveAs(path, table);
             Assert.Equal("A1", Helpers.GetFirstSheetDimensionRefValue(path));
@@ -627,7 +651,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
         {
             using var file = AutoDeletingPath.Create();
             var path = file.ToString();
-            
+
             var table = new DataTable();
             table.Columns.Add("a", typeof(string));
             table.Columns.Add("b", typeof(decimal));
@@ -635,10 +659,10 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
             table.Columns.Add("d", typeof(DateTime));
             table.Rows.Add(@"""<>+-*//}{\\n", 1234567890);
             table.Rows.Add("<test>Hello World</test>", -1234567890, false, DateTime.Now);
-            
+
             MiniExcel.SaveAs(path, table);
             Assert.Equal("A1:D3", Helpers.GetFirstSheetDimensionRefValue(path));
-            
+
             using (var stream = File.OpenRead(path))
             {
                 var rows = stream.Query(useHeaderRow: true).ToList();
@@ -666,12 +690,12 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
         //TODO:StartCell
         {
             using var path = AutoDeletingPath.Create();
-            
+
             var table = new DataTable();
             table.Columns.Add("a", typeof(string));
             table.Rows.Add("A");
             table.Rows.Add("B");
-            
+
             MiniExcel.SaveAs(path.ToString(), table);
             Assert.Equal("A1:A3", Helpers.GetFirstSheetDimensionRefValue(path.ToString()));
         }
@@ -761,7 +785,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
     {
         using var file = AutoDeletingPath.Create();
         var path = file.ToString();
-        
+
         {
             var values = new List<Dictionary<string, object>>
             {
@@ -835,7 +859,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
         using var path = AutoDeletingPath.Create();
         MiniExcel.SaveAs(
             path.ToString(),
-            new[] 
+            new[]
             {
                 new { Column1 = "MiniExcel", Column2 = 1 },
                 new { Column1 = "Github", Column2 = 2 }
@@ -881,7 +905,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
     {
         using var file = AutoDeletingPath.Create();
         var path = file.ToString();
-        
+
         // Dapper Query
         using (var connection = Db.GetConnection("Data Source=:memory:"))
         {
@@ -1039,13 +1063,13 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
     public void SaveAsBasicCreateTest()
     {
         using var path = AutoDeletingPath.Create();
-        
-        var rowsWritten = MiniExcel.SaveAs(path.ToString(), new[] 
+
+        var rowsWritten = MiniExcel.SaveAs(path.ToString(), new[]
         {
             new { Column1 = "MiniExcel", Column2 = 1 },
             new { Column1 = "Github", Column2 = 2}
         });
-        
+
         Assert.Single(rowsWritten);
         Assert.Equal(2, rowsWritten[0]);
 
@@ -1067,7 +1091,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
     {
         {
             using var path = AutoDeletingPath.Create();
-            var values = new[] 
+            var values = new[]
             {
                 new { Column1 = "MiniExcel", Column2 = 1 },
                 new { Column1 = "Github", Column2 = 2 }
@@ -1091,7 +1115,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
         }
         {
             using var path = AutoDeletingPath.Create();
-            var values = new[] 
+            var values = new[]
             {
                 new { Column1 = "MiniExcel", Column2 = 1 },
                 new { Column1 = "Github", Column2 = 2}
@@ -1122,14 +1146,14 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
     public void SaveAsSpecialAndTypeCreateTest()
     {
         using var path = AutoDeletingPath.Create();
-        var rowsWritten = MiniExcel.SaveAs(path.ToString(), new[] 
+        var rowsWritten = MiniExcel.SaveAs(path.ToString(), new[]
         {
             new { a = @"""<>+-*//}{\\n", b = 1234567890, c = true, d = DateTime.Now },
             new { a = "<test>Hello World</test>", b = -1234567890, c = false, d = DateTime.Now.Date }
         });
         Assert.Single(rowsWritten);
         Assert.Equal(2, rowsWritten[0]);
-            
+
         var info = new FileInfo(path.ToString());
         Assert.True(info.FullName == path.ToString());
     }
@@ -1166,12 +1190,12 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
     {
         var now = DateTime.Now;
         using var path = AutoDeletingPath.Create();
-        var rowsWritten = MiniExcel.SaveAs(path.ToString(), new[] 
+        var rowsWritten = MiniExcel.SaveAs(path.ToString(), new[]
         {
             new { a = @"""<>+-*//}{\\n", b = 1234567890, c = true, d = now },
             new { a = "<test>Hello World</test>", b = -1234567890, c = false, d = now.Date }
         }, sheetName: "R&D");
-        
+
         Assert.Single(rowsWritten);
         Assert.Equal(2, rowsWritten[0]);
 
@@ -1196,7 +1220,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
     {
         var now = DateTime.Now;
         using var path = AutoDeletingPath.Create();
-        var rowsWritten = MiniExcel.SaveAs(path.ToString(), new[] 
+        var rowsWritten = MiniExcel.SaveAs(path.ToString(), new[]
         {
             new { a = @"""<>+-*//}{\\n", b = 1234567890, c = true, d= now },
             new { a = "<test>Hello World</test>", b = -1234567890, c = false, d = now.Date }
@@ -1208,7 +1232,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
         var allParts = zip.GetParts()
             .Select(s => new { s.CompressionOption, s.ContentType, s.Uri, s.Package.GetType().Name })
             .ToDictionary(s => s.Uri.ToString(), s => s);
-                
+
         Assert.True(allParts["/xl/styles.xml"].ContentType == "application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml");
         Assert.True(allParts["/xl/workbook.xml"].ContentType == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml");
         Assert.True(allParts["/xl/worksheets/sheet1.xml"].ContentType == "application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml");
@@ -1241,7 +1265,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
         _ = MiniExcel.Query(path, configuration: new OpenXmlConfiguration { EnableSharedStringCache = true }).First();
         using var currentProcess = Process.GetCurrentProcess();
         var totalBytesOfMemoryUsed = currentProcess.WorkingSet64;
-        
+
         _output.WriteLine("totalBytesOfMemoryUsed: " + totalBytesOfMemoryUsed);
         _output.WriteLine("elapsedMilliseconds: " + Stopwatch.GetElapsedTime(ts).TotalMilliseconds);
     }
@@ -1265,7 +1289,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
         using var path = AutoDeletingPath.Create();
         var dateTime = DateTime.Now;
         var onlyDate = DateOnly.FromDateTime(dateTime);
-        
+
         var table = new DataTable();
         table.Columns.Add("Column1", typeof(string));
         table.Columns.Add("Column2", typeof(int));
@@ -1332,7 +1356,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
         using var path = AutoDeletingPath.Create();
         var dateTime = DateTime.Now;
         var onlyDate = DateOnly.FromDateTime(dateTime);
-        
+
         var table = new DataTable();
         table.Columns.Add("Column1", typeof(string));
         table.Columns.Add("Column2", typeof(int));
@@ -1400,7 +1424,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
         var now = DateTime.Now;
         using var file = AutoDeletingPath.Create();
         var path = file.ToString();
-        
+
         {
             var table = new DataTable();
             table.Columns.Add("a", typeof(string));
@@ -1474,9 +1498,9 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
                     }
                 ]
             }, overwriteSheet: true);
-            
+
             Assert.Equal(1, rowsWritten);
-            
+
             using var p = new ExcelPackage(new FileInfo(path));
             var sheet2 = p.Workbook.Worksheets[1];
 
@@ -1524,7 +1548,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
             Assert.True(sheet3.Name == "Sheet3");
         }
     }
-    
+
     private class DateOnlyTest
     {
         public DateOnly Date { get; set; }
@@ -1535,11 +1559,11 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
     public void DateOnlySupportTest()
     {
         var query = MiniExcel.Query<DateOnlyTest>(PathHelper.GetFile("xlsx/TestDateOnlyMapping.xlsx")).ToList();
-        
+
         Assert.Equal(new DateOnly(2020, 9, 27), query[0].Date);
         Assert.Equal(new DateOnly(2020, 10, 25), query[1].Date);
         Assert.Equal(new DateOnly(2021, 10, 4), query[2].Date);
-        
+
         Assert.Equal(new DateOnly(2020, 9, 27), query[0].DateWithFormat);
         Assert.Equal(new DateOnly(2020, 10, 25), query[1].DateWithFormat);
         Assert.Equal(new DateOnly(2020, 6, 1), query[7].DateWithFormat);
@@ -1568,13 +1592,13 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
         Assert.Equal(1, dim2[0].Columns.StartIndex);
         Assert.Equal(7, dim2[0].Columns.EndIndex);
     }
-    
+
     [Fact]
     public void SheetDimensionsTest_MultiSheet()
     {
         var path = PathHelper.GetFile("xlsx/TestMultiSheet.xlsx");
         var dim = MiniExcel.GetSheetDimensions(path);
-        
+
         Assert.Equal("A1", dim[0].StartCell);
         Assert.Equal("D12", dim[0].EndCell);
         Assert.Equal(12, dim[0].Rows.Count);

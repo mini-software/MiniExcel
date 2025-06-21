@@ -2,11 +2,12 @@
 
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
-		<TargetFrameworks>net472;net481;net8.0;net9.0</TargetFrameworks>
+		<TargetFrameworks>net8.0;net9.0</TargetFrameworks>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<LangVersion>latest</LangVersion>
 		<RootNamespace>MiniExcelLibs.Benchmarks</RootNamespace>
+		<NoWarn>$(NoWarn);CA2000;CA2007</NoWarn>
 	</PropertyGroup>
 
 	<ItemGroup>

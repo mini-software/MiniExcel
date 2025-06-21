@@ -5,7 +5,7 @@ using System.Xml;
 
 namespace MiniExcelLibs.OpenXml.Styles
 {
-    internal abstract class SheetStyleBuilderBase : ISheetStyleBuilder
+    internal abstract partial class SheetStyleBuilderBase : ISheetStyleBuilder
     {
         internal readonly static Dictionary<string, int> _allElements = new Dictionary<string, int>
         {
@@ -28,190 +28,73 @@ namespace MiniExcelLibs.OpenXml.Styles
             _context = context;
         }
 
-        public virtual SheetStyleBuildResult Build()
-        {
-            _context.Initialize(GetGenerateElementInfos());
-
-            while (_context.OldXmlReader.Read())
-            {
-                switch (_context.OldXmlReader.NodeType)
-                {
-                    case XmlNodeType.Element:
-                        GenerateElementBeforStartElement();
-                        _context.NewXmlWriter.WriteStartElement(_context.OldXmlReader.Prefix, _context.OldXmlReader.LocalName, _context.OldXmlReader.NamespaceURI);
-                        WriteAttributes(_context.OldXmlReader.LocalName);
-                        if (_context.OldXmlReader.IsEmptyElement)
-                        {
-                            GenerateElementBeforEndElement();
-                            _context.NewXmlWriter.WriteEndElement();
-                        }
-                        break;
-
-                    case XmlNodeType.Text:
-                        _context.NewXmlWriter.WriteString(_context.OldXmlReader.Value);
-                        break;
-
-                    case XmlNodeType.Whitespace:
-                    case XmlNodeType.SignificantWhitespace:
-                        _context.NewXmlWriter.WriteWhitespace(_context.OldXmlReader.Value);
-                        break;
-
-                    case XmlNodeType.CDATA:
-                        _context.NewXmlWriter.WriteCData(_context.OldXmlReader.Value);
-                        break;
-
-                    case XmlNodeType.EntityReference:
-                        _context.NewXmlWriter.WriteEntityRef(_context.OldXmlReader.Name);
-                        break;
-
-                    case XmlNodeType.XmlDeclaration:
-                    case XmlNodeType.ProcessingInstruction:
-                        _context.NewXmlWriter.WriteProcessingInstruction(_context.OldXmlReader.Name, _context.OldXmlReader.Value);
-                        break;
-                    case XmlNodeType.DocumentType:
-                        _context.NewXmlWriter.WriteDocType(_context.OldXmlReader.Name, _context.OldXmlReader.GetAttribute("PUBLIC"), _context.OldXmlReader.GetAttribute("SYSTEM"), _context.OldXmlReader.Value);
-                        break;
-
-                    case XmlNodeType.Comment:
-                        _context.NewXmlWriter.WriteComment(_context.OldXmlReader.Value);
-                        break;
-                    case XmlNodeType.EndElement:
-                        GenerateElementBeforEndElement();
-                        _context.NewXmlWriter.WriteFullEndElement();
-                        break;
-                }
-            }
-
-            _context.FinalizeAndUpdateZipDictionary();
-
-            return new SheetStyleBuildResult(GetCellXfIdMap());
-        }
-        
-        // Todo: add CancellationToken to all methods called inside of BuildAsync 
+        // Todo: add CancellationToken to all methods called inside of BuildAsync
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
         public virtual async Task<SheetStyleBuildResult> BuildAsync(CancellationToken cancellationToken = default)
         {
-            await _context.InitializeAsync(GetGenerateElementInfos(), cancellationToken);
+            await _context.InitializeAsync(GetGenerateElementInfos(), cancellationToken).ConfigureAwait(false);
 
-            while (await _context.OldXmlReader.ReadAsync())
+            while (await _context.OldXmlReader.ReadAsync().ConfigureAwait(false))
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
                 switch (_context.OldXmlReader.NodeType)
                 {
                     case XmlNodeType.Element:
-                        await GenerateElementBeforStartElementAsync();
-                        await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, _context.OldXmlReader.LocalName, _context.OldXmlReader.NamespaceURI);
-                        await WriteAttributesAsync(_context.OldXmlReader.LocalName, cancellationToken);
+                        await GenerateElementBeforStartElementAsync().ConfigureAwait(false);
+                        await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, _context.OldXmlReader.LocalName, _context.OldXmlReader.NamespaceURI).ConfigureAwait(false);
+                        await WriteAttributesAsync(_context.OldXmlReader.LocalName, cancellationToken).ConfigureAwait(false);
                         if (_context.OldXmlReader.IsEmptyElement)
                         {
-                            await GenerateElementBeforEndElementAsync();
-                            await _context.NewXmlWriter.WriteEndElementAsync();
+                            await GenerateElementBeforEndElementAsync().ConfigureAwait(false);
+                            await _context.NewXmlWriter.WriteEndElementAsync().ConfigureAwait(false);
                         }
                         break;
                     case XmlNodeType.Text:
-                        await _context.NewXmlWriter.WriteStringAsync(_context.OldXmlReader.Value);
+                        await _context.NewXmlWriter.WriteStringAsync(_context.OldXmlReader.Value).ConfigureAwait(false);
                         break;
                     case XmlNodeType.Whitespace:
                     case XmlNodeType.SignificantWhitespace:
-                        await _context.NewXmlWriter.WriteWhitespaceAsync(_context.OldXmlReader.Value);
+                        await _context.NewXmlWriter.WriteWhitespaceAsync(_context.OldXmlReader.Value).ConfigureAwait(false);
                         break;
                     case XmlNodeType.CDATA:
-                        await _context.NewXmlWriter.WriteCDataAsync(_context.OldXmlReader.Value);
+                        await _context.NewXmlWriter.WriteCDataAsync(_context.OldXmlReader.Value).ConfigureAwait(false);
                         break;
                     case XmlNodeType.EntityReference:
-                        await _context.NewXmlWriter.WriteEntityRefAsync(_context.OldXmlReader.Name);
+                        await _context.NewXmlWriter.WriteEntityRefAsync(_context.OldXmlReader.Name).ConfigureAwait(false);
                         break;
                     case XmlNodeType.XmlDeclaration:
                     case XmlNodeType.ProcessingInstruction:
-                        await _context.NewXmlWriter.WriteProcessingInstructionAsync(_context.OldXmlReader.Name, _context.OldXmlReader.Value);
+                        await _context.NewXmlWriter.WriteProcessingInstructionAsync(_context.OldXmlReader.Name, _context.OldXmlReader.Value).ConfigureAwait(false);
                         break;
                     case XmlNodeType.DocumentType:
-                        await _context.NewXmlWriter.WriteDocTypeAsync(_context.OldXmlReader.Name, _context.OldXmlReader.GetAttribute("PUBLIC"), _context.OldXmlReader.GetAttribute("SYSTEM"), _context.OldXmlReader.Value);
+                        await _context.NewXmlWriter.WriteDocTypeAsync(_context.OldXmlReader.Name, _context.OldXmlReader.GetAttribute("PUBLIC"), _context.OldXmlReader.GetAttribute("SYSTEM"), _context.OldXmlReader.Value).ConfigureAwait(false);
                         break;
                     case XmlNodeType.Comment:
-                        await _context.NewXmlWriter.WriteCommentAsync(_context.OldXmlReader.Value);
+                        await _context.NewXmlWriter.WriteCommentAsync(_context.OldXmlReader.Value).ConfigureAwait(false);
                         break;
                     case XmlNodeType.EndElement:
-                        await GenerateElementBeforEndElementAsync();
-                        await _context.NewXmlWriter.WriteFullEndElementAsync();
+                        await GenerateElementBeforEndElementAsync().ConfigureAwait(false);
+                        await _context.NewXmlWriter.WriteFullEndElementAsync().ConfigureAwait(false);
                         break;
                 }
             }
 
-            await _context.FinalizeAndUpdateZipDictionaryAsync(cancellationToken);
+            await _context.FinalizeAndUpdateZipDictionaryAsync(cancellationToken).ConfigureAwait(false);
 
             return new SheetStyleBuildResult(GetCellXfIdMap());
         }
 
         protected abstract SheetStyleElementInfos GetGenerateElementInfos();
 
-        protected virtual void WriteAttributes(string element)
-        {
-            if (_context.OldXmlReader.NodeType is XmlNodeType.Element || _context.OldXmlReader.NodeType is XmlNodeType.XmlDeclaration)
-            {
-                if (_context.OldXmlReader.MoveToFirstAttribute())
-                {
-                    WriteAttributes(element);
-                    _context.OldXmlReader.MoveToElement();
-                }
-            }
-            else if (_context.OldXmlReader.NodeType == XmlNodeType.Attribute)
-            {
-                do
-                {
-                    _context.NewXmlWriter.WriteStartAttribute(_context.OldXmlReader.Prefix, _context.OldXmlReader.LocalName, _context.OldXmlReader.NamespaceURI);
-                    var currentAttribute = _context.OldXmlReader.LocalName;
-                    while (_context.OldXmlReader.ReadAttributeValue())
-                    {
-                        if (_context.OldXmlReader.NodeType == XmlNodeType.EntityReference)
-                        {
-                            _context.NewXmlWriter.WriteEntityRef(_context.OldXmlReader.Name);
-                        }
-                        else if (currentAttribute == "count")
-                        {
-                            switch (element)
-                            {
-                                case "numFmts":
-                                    _context.NewXmlWriter.WriteString((_context.OldElementInfos.NumFmtCount + _context.GenerateElementInfos.NumFmtCount + _context.CustomFormatCount).ToString());
-                                    break;
-                                case "fonts":
-                                    _context.NewXmlWriter.WriteString((_context.OldElementInfos.FontCount + _context.GenerateElementInfos.FontCount).ToString());
-                                    break;
-                                case "fills":
-                                    _context.NewXmlWriter.WriteString((_context.OldElementInfos.FillCount + _context.GenerateElementInfos.FillCount).ToString());
-                                    break;
-                                case "borders":
-                                    _context.NewXmlWriter.WriteString((_context.OldElementInfos.BorderCount + _context.GenerateElementInfos.BorderCount).ToString());
-                                    break;
-                                case "cellStyleXfs":
-                                    _context.NewXmlWriter.WriteString((_context.OldElementInfos.CellStyleXfCount + _context.GenerateElementInfos.CellStyleXfCount).ToString());
-                                    break;
-                                case "cellXfs":
-                                    _context.NewXmlWriter.WriteString((_context.OldElementInfos.CellXfCount + _context.GenerateElementInfos.CellXfCount + _context.CustomFormatCount).ToString());
-                                    break;
-                                default:
-                                    _context.NewXmlWriter.WriteString(_context.OldXmlReader.Value);
-                                    break;
-                            }
-                        }
-                        else
-                        {
-                            _context.NewXmlWriter.WriteString(_context.OldXmlReader.Value);
-                        }
-                    }
-                    _context.NewXmlWriter.WriteEndAttribute();
-                }
-                while (_context.OldXmlReader.MoveToNextAttribute());
-            }
-        }
-
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
         protected virtual async Task WriteAttributesAsync(string element, CancellationToken cancellationToken = default)
         {
             if (_context.OldXmlReader.NodeType is XmlNodeType.Element || _context.OldXmlReader.NodeType is XmlNodeType.XmlDeclaration)
             {
                 if (_context.OldXmlReader.MoveToFirstAttribute())
                 {
-                    await WriteAttributesAsync(element, cancellationToken);
+                    await WriteAttributesAsync(element, cancellationToken).ConfigureAwait(false);
                     _context.OldXmlReader.MoveToElement();
                 }
             }
@@ -227,38 +110,38 @@ namespace MiniExcelLibs.OpenXml.Styles
                         
                         if (_context.OldXmlReader.NodeType == XmlNodeType.EntityReference)
                         {
-                            await _context.NewXmlWriter.WriteEntityRefAsync(_context.OldXmlReader.Name);
+                            await _context.NewXmlWriter.WriteEntityRefAsync(_context.OldXmlReader.Name).ConfigureAwait(false);
                         }
                         else if (currentAttribute == "count")
                         {
                             switch (element)
                             {
                                 case "numFmts":
-                                    await _context.NewXmlWriter.WriteStringAsync((_context.OldElementInfos.NumFmtCount + _context.GenerateElementInfos.NumFmtCount + _context.CustomFormatCount).ToString());
+                                    await _context.NewXmlWriter.WriteStringAsync((_context.OldElementInfos.NumFmtCount + _context.GenerateElementInfos.NumFmtCount + _context.CustomFormatCount).ToString()).ConfigureAwait(false);
                                     break;
                                 case "fonts":
-                                    await _context.NewXmlWriter.WriteStringAsync((_context.OldElementInfos.FontCount + _context.GenerateElementInfos.FontCount).ToString());
+                                    await _context.NewXmlWriter.WriteStringAsync((_context.OldElementInfos.FontCount + _context.GenerateElementInfos.FontCount).ToString()).ConfigureAwait(false);
                                     break;
                                 case "fills":
-                                    await _context.NewXmlWriter.WriteStringAsync((_context.OldElementInfos.FillCount + _context.GenerateElementInfos.FillCount).ToString());
+                                    await _context.NewXmlWriter.WriteStringAsync((_context.OldElementInfos.FillCount + _context.GenerateElementInfos.FillCount).ToString()).ConfigureAwait(false);
                                     break;
                                 case "borders":
-                                    await _context.NewXmlWriter.WriteStringAsync((_context.OldElementInfos.BorderCount + _context.GenerateElementInfos.BorderCount).ToString());
+                                    await _context.NewXmlWriter.WriteStringAsync((_context.OldElementInfos.BorderCount + _context.GenerateElementInfos.BorderCount).ToString()).ConfigureAwait(false);
                                     break;
                                 case "cellStyleXfs":
-                                    await _context.NewXmlWriter.WriteStringAsync((_context.OldElementInfos.CellStyleXfCount + _context.GenerateElementInfos.CellStyleXfCount).ToString());
+                                    await _context.NewXmlWriter.WriteStringAsync((_context.OldElementInfos.CellStyleXfCount + _context.GenerateElementInfos.CellStyleXfCount).ToString()).ConfigureAwait(false);
                                     break;
                                 case "cellXfs":
-                                    await _context.NewXmlWriter.WriteStringAsync((_context.OldElementInfos.CellXfCount + _context.GenerateElementInfos.CellXfCount + _context.CustomFormatCount).ToString());
+                                    await _context.NewXmlWriter.WriteStringAsync((_context.OldElementInfos.CellXfCount + _context.GenerateElementInfos.CellXfCount + _context.CustomFormatCount).ToString()).ConfigureAwait(false);
                                     break;
                                 default:
-                                    await _context.NewXmlWriter.WriteStringAsync(_context.OldXmlReader.Value);
+                                    await _context.NewXmlWriter.WriteStringAsync(_context.OldXmlReader.Value).ConfigureAwait(false);
                                     break;
                             }
                         }
                         else
                         {
-                            await _context.NewXmlWriter.WriteStringAsync(_context.OldXmlReader.Value);
+                            await _context.NewXmlWriter.WriteStringAsync(_context.OldXmlReader.Value).ConfigureAwait(false);
                         }
                     }
                     _context.NewXmlWriter.WriteEndAttribute();
@@ -267,44 +150,7 @@ namespace MiniExcelLibs.OpenXml.Styles
             }
         }
 
-        protected virtual void GenerateElementBeforStartElement()
-        {
-            if (!_allElements.TryGetValue(_context.OldXmlReader.LocalName, out var elementIndex))
-            {
-                return;
-            }
-            if (!_context.OldElementInfos.ExistsNumFmts && !_context.GenerateElementInfos.ExistsNumFmts && _allElements["numFmts"] < elementIndex)
-            {
-                GenerateNumFmts();
-                _context.GenerateElementInfos.ExistsNumFmts = true;
-            }
-            else if (!_context.OldElementInfos.ExistsFonts && !_context.GenerateElementInfos.ExistsFonts && _allElements["fonts"] < elementIndex)
-            {
-                GenerateFonts();
-                _context.GenerateElementInfos.ExistsFonts = true;
-            }
-            else if (!_context.OldElementInfos.ExistsFills && !_context.GenerateElementInfos.ExistsFills && _allElements["fills"] < elementIndex)
-            {
-                GenerateFills();
-                _context.GenerateElementInfos.ExistsFills = true;
-            }
-            else if (!_context.OldElementInfos.ExistsBorders && !_context.GenerateElementInfos.ExistsBorders && _allElements["borders"] < elementIndex)
-            {
-                GenerateBorders();
-                _context.GenerateElementInfos.ExistsBorders = true;
-            }
-            else if (!_context.OldElementInfos.ExistsCellStyleXfs && !_context.GenerateElementInfos.ExistsCellStyleXfs && _allElements["cellStyleXfs"] < elementIndex)
-            {
-                GenerateCellStyleXfs();
-                _context.GenerateElementInfos.ExistsCellStyleXfs = true;
-            }
-            else if (!_context.OldElementInfos.ExistsCellXfs && !_context.GenerateElementInfos.ExistsCellXfs && _allElements["cellXfs"] < elementIndex)
-            {
-                GenerateCellXfs();
-                _context.GenerateElementInfos.ExistsCellXfs = true;
-            }
-        }
-
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
         protected virtual async Task GenerateElementBeforStartElementAsync()
         {
             if (!_allElements.TryGetValue(_context.OldXmlReader.LocalName, out var elementIndex))
@@ -313,263 +159,160 @@ namespace MiniExcelLibs.OpenXml.Styles
             }
             if (!_context.OldElementInfos.ExistsNumFmts && !_context.GenerateElementInfos.ExistsNumFmts && _allElements["numFmts"] < elementIndex)
             {
-                await GenerateNumFmtsAsync();
+                await GenerateNumFmtsAsync().ConfigureAwait(false);
                 _context.GenerateElementInfos.ExistsNumFmts = true;
             }
             else if (!_context.OldElementInfos.ExistsFonts && !_context.GenerateElementInfos.ExistsFonts && _allElements["fonts"] < elementIndex)
             {
-                await GenerateFontsAsync();
+                await GenerateFontsAsync().ConfigureAwait(false);
                 _context.GenerateElementInfos.ExistsFonts = true;
             }
             else if (!_context.OldElementInfos.ExistsFills && !_context.GenerateElementInfos.ExistsFills && _allElements["fills"] < elementIndex)
             {
-                await GenerateFillsAsync();
+                await GenerateFillsAsync().ConfigureAwait(false);
                 _context.GenerateElementInfos.ExistsFills = true;
             }
             else if (!_context.OldElementInfos.ExistsBorders && !_context.GenerateElementInfos.ExistsBorders && _allElements["borders"] < elementIndex)
             {
-                await GenerateBordersAsync();
+                await GenerateBordersAsync().ConfigureAwait(false);
                 _context.GenerateElementInfos.ExistsBorders = true;
             }
             else if (!_context.OldElementInfos.ExistsCellStyleXfs && !_context.GenerateElementInfos.ExistsCellStyleXfs && _allElements["cellStyleXfs"] < elementIndex)
             {
-                await GenerateCellStyleXfsAsync();
+                await GenerateCellStyleXfsAsync().ConfigureAwait(false);
                 _context.GenerateElementInfos.ExistsCellStyleXfs = true;
             }
             else if (!_context.OldElementInfos.ExistsCellXfs && !_context.GenerateElementInfos.ExistsCellXfs && _allElements["cellXfs"] < elementIndex)
             {
-                await GenerateCellXfsAsync();
+                await GenerateCellXfsAsync().ConfigureAwait(false);
                 _context.GenerateElementInfos.ExistsCellXfs = true;
             }
         }
 
-        protected virtual void GenerateElementBeforEndElement()
-        {
-            if (_context.OldXmlReader.LocalName == "styleSheet" && !_context.OldElementInfos.ExistsNumFmts && !_context.GenerateElementInfos.ExistsNumFmts)
-            {
-                GenerateNumFmts();
-            }
-            else if (_context.OldXmlReader.LocalName == "numFmts")
-            {
-                GenerateNumFmt();
-            }
-            else if (_context.OldXmlReader.LocalName == "fonts")
-            {
-                GenerateFont();
-            }
-            else if (_context.OldXmlReader.LocalName == "fills")
-            {
-                GenerateFill();
-            }
-            else if (_context.OldXmlReader.LocalName == "borders")
-            {
-                GenerateBorder();
-            }
-            else if (_context.OldXmlReader.LocalName == "cellStyleXfs")
-            {
-                GenerateCellStyleXf();
-            }
-            else if (_context.OldXmlReader.LocalName == "cellXfs")
-            {
-                GenerateCellXf();
-            }
-        }
-
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
         protected virtual async Task GenerateElementBeforEndElementAsync()
         {
             switch (_context.OldXmlReader.LocalName)
             {
                 case "styleSheet" when !_context.OldElementInfos.ExistsNumFmts && !_context.GenerateElementInfos.ExistsNumFmts:
-                    await GenerateNumFmtsAsync();
+                    await GenerateNumFmtsAsync().ConfigureAwait(false);
                     break;
                 case "numFmts":
-                    await GenerateNumFmtAsync();
+                    await GenerateNumFmtAsync().ConfigureAwait(false);
                     break;
                 case "fonts":
-                    await GenerateFontAsync();
+                    await GenerateFontAsync().ConfigureAwait(false);
                     break;
                 case "fills":
-                    await GenerateFillAsync();
+                    await GenerateFillAsync().ConfigureAwait(false);
                     break;
                 case "borders":
-                    await GenerateBorderAsync();
+                    await GenerateBorderAsync().ConfigureAwait(false);
                     break;
                 case "cellStyleXfs":
-                    await GenerateCellStyleXfAsync();
+                    await GenerateCellStyleXfAsync().ConfigureAwait(false);
                     break;
                 case "cellXfs":
-                    await GenerateCellXfAsync();
+                    await GenerateCellXfAsync().ConfigureAwait(false);
                     break;
             }
         }
 
-        protected virtual void GenerateNumFmts()
-        {
-            _context.NewXmlWriter.WriteStartElement(_context.OldXmlReader.Prefix, "numFmts", _context.OldXmlReader.NamespaceURI);
-            _context.NewXmlWriter.WriteAttributeString("count", (_context.OldElementInfos.NumFmtCount + _context.GenerateElementInfos.NumFmtCount + _context.CustomFormatCount).ToString());
-            GenerateNumFmt();
-            _context.NewXmlWriter.WriteFullEndElement();
-
-            if (!_context.OldElementInfos.ExistsFonts)
-            {
-                GenerateFonts();
-            }
-        }
-
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
         protected virtual async Task GenerateNumFmtsAsync()
         {
-            await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "numFmts", _context.OldXmlReader.NamespaceURI);
-            await _context.NewXmlWriter.WriteAttributeStringAsync(null, "count", null, (_context.OldElementInfos.NumFmtCount + _context.GenerateElementInfos.NumFmtCount + _context.CustomFormatCount).ToString());
-            await GenerateNumFmtAsync();
-            await _context.NewXmlWriter.WriteFullEndElementAsync();
+            await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "numFmts", _context.OldXmlReader.NamespaceURI).ConfigureAwait(false);
+            await _context.NewXmlWriter.WriteAttributeStringAsync(null, "count", null, (_context.OldElementInfos.NumFmtCount + _context.GenerateElementInfos.NumFmtCount + _context.CustomFormatCount).ToString()).ConfigureAwait(false);
+            await GenerateNumFmtAsync().ConfigureAwait(false);
+            await _context.NewXmlWriter.WriteFullEndElementAsync().ConfigureAwait(false);
 
             if (!_context.OldElementInfos.ExistsFonts)
             {
-                await GenerateFontsAsync();
+                await GenerateFontsAsync().ConfigureAwait(false);
             }
         }
 
-        protected abstract void GenerateNumFmt();
-
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
         protected abstract Task GenerateNumFmtAsync();
 
-        protected virtual void GenerateFonts()
-        {
-            _context.NewXmlWriter.WriteStartElement(_context.OldXmlReader.Prefix, "fonts", _context.OldXmlReader.NamespaceURI);
-            _context.NewXmlWriter.WriteAttributeString("count", (_context.OldElementInfos.FontCount + _context.GenerateElementInfos.FontCount).ToString());
-            GenerateFont();
-            _context.NewXmlWriter.WriteFullEndElement();
-
-            if (!_context.OldElementInfos.ExistsFills)
-            {
-                GenerateFills();
-            }
-        }
-
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
         protected virtual async Task GenerateFontsAsync()
         {
-            await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "fonts", _context.OldXmlReader.NamespaceURI);
-            await _context.NewXmlWriter.WriteAttributeStringAsync(null, "count", null, (_context.OldElementInfos.FontCount + _context.GenerateElementInfos.FontCount).ToString());
-            await GenerateFontAsync();
-            await _context.NewXmlWriter.WriteFullEndElementAsync();
+            await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "fonts", _context.OldXmlReader.NamespaceURI).ConfigureAwait(false);
+            await _context.NewXmlWriter.WriteAttributeStringAsync(null, "count", null, (_context.OldElementInfos.FontCount + _context.GenerateElementInfos.FontCount).ToString()).ConfigureAwait(false);
+            await GenerateFontAsync().ConfigureAwait(false);
+            await _context.NewXmlWriter.WriteFullEndElementAsync().ConfigureAwait(false);
 
             if (!_context.OldElementInfos.ExistsFills)
             {
-                await GenerateFillsAsync();
+                await GenerateFillsAsync().ConfigureAwait(false);
             }
         }
 
-        protected abstract void GenerateFont();
-
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
         protected abstract Task GenerateFontAsync();
 
-        protected virtual void GenerateFills()
-        {
-            _context.NewXmlWriter.WriteStartElement(_context.OldXmlReader.Prefix, "fills", _context.OldXmlReader.NamespaceURI);
-            _context.NewXmlWriter.WriteAttributeString("count", (_context.OldElementInfos.FillCount + _context.GenerateElementInfos.FillCount).ToString());
-            GenerateFill();
-            _context.NewXmlWriter.WriteFullEndElement();
-            if (!_context.OldElementInfos.ExistsBorders)
-            {
-                GenerateBorders();
-            }
-        }
-
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
         protected virtual async Task GenerateFillsAsync()
         {
-            await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "fills", _context.OldXmlReader.NamespaceURI);
-            await _context.NewXmlWriter.WriteAttributeStringAsync(null, "count", null, (_context.OldElementInfos.FillCount + _context.GenerateElementInfos.FillCount).ToString());
-            await GenerateFillAsync();
-            await _context.NewXmlWriter.WriteFullEndElementAsync();
+            await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "fills", _context.OldXmlReader.NamespaceURI).ConfigureAwait(false);
+            await _context.NewXmlWriter.WriteAttributeStringAsync(null, "count", null, (_context.OldElementInfos.FillCount + _context.GenerateElementInfos.FillCount).ToString()).ConfigureAwait(false);
+            await GenerateFillAsync().ConfigureAwait(false);
+            await _context.NewXmlWriter.WriteFullEndElementAsync().ConfigureAwait(false);
 
             if (!_context.OldElementInfos.ExistsBorders)
             {
-                await GenerateBordersAsync();
+                await GenerateBordersAsync().ConfigureAwait(false);
             }
         }
 
-        protected abstract void GenerateFill();
-
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
         protected abstract Task GenerateFillAsync();
 
-        protected virtual void GenerateBorders()
-        {
-            _context.NewXmlWriter.WriteStartElement(_context.OldXmlReader.Prefix, "borders", _context.OldXmlReader.NamespaceURI);
-            _context.NewXmlWriter.WriteAttributeString("count", (_context.OldElementInfos.BorderCount + _context.GenerateElementInfos.BorderCount).ToString());
-            GenerateBorder();
-            _context.NewXmlWriter.WriteFullEndElement();
-
-            if (!_context.OldElementInfos.ExistsCellStyleXfs)
-            {
-                GenerateCellStyleXfs();
-            }
-        }
-
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
         protected virtual async Task GenerateBordersAsync()
         {
-            await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "borders", _context.OldXmlReader.NamespaceURI);
-            await _context.NewXmlWriter.WriteAttributeStringAsync(null, "count", null, (_context.OldElementInfos.BorderCount + _context.GenerateElementInfos.BorderCount).ToString());
-            await GenerateBorderAsync();
-            await _context.NewXmlWriter.WriteFullEndElementAsync();
+            await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "borders", _context.OldXmlReader.NamespaceURI).ConfigureAwait(false);
+            await _context.NewXmlWriter.WriteAttributeStringAsync(null, "count", null, (_context.OldElementInfos.BorderCount + _context.GenerateElementInfos.BorderCount).ToString()).ConfigureAwait(false);
+            await GenerateBorderAsync().ConfigureAwait(false);
+            await _context.NewXmlWriter.WriteFullEndElementAsync().ConfigureAwait(false);
 
             if (!_context.OldElementInfos.ExistsCellStyleXfs)
             {
-                await GenerateCellStyleXfsAsync();
+                await GenerateCellStyleXfsAsync().ConfigureAwait(false);
             }
         }
 
-        protected abstract void GenerateBorder();
-
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
         protected abstract Task GenerateBorderAsync();
 
-        protected virtual void GenerateCellStyleXfs()
-        {
-            _context.NewXmlWriter.WriteStartElement(_context.OldXmlReader.Prefix, "cellStyleXfs", _context.OldXmlReader.NamespaceURI);
-            _context.NewXmlWriter.WriteAttributeString("count", (_context.OldElementInfos.CellStyleXfCount + _context.GenerateElementInfos.CellStyleXfCount).ToString());
-            GenerateCellStyleXf();
-            _context.NewXmlWriter.WriteFullEndElement();
-
-            if (!_context.OldElementInfos.ExistsCellXfs)
-            {
-                GenerateCellXfs();
-            }
-        }
-
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
         protected virtual async Task GenerateCellStyleXfsAsync()
         {
-            await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "cellStyleXfs", _context.OldXmlReader.NamespaceURI);
-            await _context.NewXmlWriter.WriteAttributeStringAsync(null, "count", null, (_context.OldElementInfos.CellStyleXfCount + _context.GenerateElementInfos.CellStyleXfCount).ToString());
-            await GenerateCellStyleXfAsync();
-            await _context.NewXmlWriter.WriteFullEndElementAsync();
+            await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "cellStyleXfs", _context.OldXmlReader.NamespaceURI).ConfigureAwait(false);
+            await _context.NewXmlWriter.WriteAttributeStringAsync(null, "count", null, (_context.OldElementInfos.CellStyleXfCount + _context.GenerateElementInfos.CellStyleXfCount).ToString()).ConfigureAwait(false);
+            await GenerateCellStyleXfAsync().ConfigureAwait(false);
+            await _context.NewXmlWriter.WriteFullEndElementAsync().ConfigureAwait(false);
 
             if (!_context.OldElementInfos.ExistsCellXfs)
             {
-                await GenerateCellXfsAsync();
+                await GenerateCellXfsAsync().ConfigureAwait(false);
             }
         }
 
-        protected abstract void GenerateCellStyleXf();
-
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
         protected abstract Task GenerateCellStyleXfAsync();
 
-        protected virtual void GenerateCellXfs()
-        {
-            _context.NewXmlWriter.WriteStartElement(_context.OldXmlReader.Prefix, "cellXfs", _context.OldXmlReader.NamespaceURI);
-            _context.NewXmlWriter.WriteAttributeString("count", (_context.OldElementInfos.CellXfCount + _context.GenerateElementInfos.CellXfCount + _context.CustomFormatCount).ToString());
-            GenerateCellXf();
-            _context.NewXmlWriter.WriteFullEndElement();
-        }
-
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
         protected virtual async Task GenerateCellXfsAsync()
         {
-            await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "cellXfs", _context.OldXmlReader.NamespaceURI);
-            await _context.NewXmlWriter.WriteAttributeStringAsync(null, "count", null, (_context.OldElementInfos.CellXfCount + _context.GenerateElementInfos.CellXfCount + _context.CustomFormatCount).ToString());
-            await GenerateCellXfAsync();
-            await _context.NewXmlWriter.WriteFullEndElementAsync();
+            await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "cellXfs", _context.OldXmlReader.NamespaceURI).ConfigureAwait(false);
+            await _context.NewXmlWriter.WriteAttributeStringAsync(null, "count", null, (_context.OldElementInfos.CellXfCount + _context.GenerateElementInfos.CellXfCount + _context.CustomFormatCount).ToString()).ConfigureAwait(false);
+            await GenerateCellXfAsync().ConfigureAwait(false);
+            await _context.NewXmlWriter.WriteFullEndElementAsync().ConfigureAwait(false);
         }
 
-        protected abstract void GenerateCellXf();
-
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
         protected abstract Task GenerateCellXfAsync();
 
         private Dictionary<string, string> GetCellXfIdMap()

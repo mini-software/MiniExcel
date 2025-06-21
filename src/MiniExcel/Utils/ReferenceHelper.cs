@@ -93,7 +93,7 @@ namespace MiniExcelLibs.Utils
             if (position == 0)
                 return false;
 
-            return int.TryParse(value.Substring(position), NumberStyles.None, CultureInfo.InvariantCulture, out row);
+            return int.TryParse(value.Substring(position), NumberStyles.None, CultureInfo.InvariantCulture, out row) && row > 0;
         }
     }
 }

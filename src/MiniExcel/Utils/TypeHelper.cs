@@ -229,7 +229,6 @@ namespace MiniExcelLibs.Utils
             return newValue;
         }
 
-#if NETSTANDARD2_0_OR_GREATER || NET
         public static bool IsAsyncEnumerable(this Type type, out Type genericArgument)
         {
             var asyncEnumrableInterfaceType = type
@@ -238,6 +237,5 @@ namespace MiniExcelLibs.Utils
             genericArgument = asyncEnumrableInterfaceType?.GetGenericArguments().FirstOrDefault();
             return genericArgument != null;
         }
-#endif
     }
 }

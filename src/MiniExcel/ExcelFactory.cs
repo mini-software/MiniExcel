@@ -5,17 +5,20 @@
     using MiniExcelLibs.OpenXml.SaveByTemplate;
     using System;
     using System.IO;
+    using System.Threading;
+    using System.Threading.Tasks;
 
-    internal static class ExcelReaderFactory
+    internal static partial class ExcelReaderFactory
     {
-        internal static IExcelReader GetProvider(Stream stream, ExcelType excelType, IConfiguration configuration)
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        internal static async Task<IExcelReader> GetProviderAsync(Stream stream, ExcelType excelType, IConfiguration configuration, CancellationToken cancellationToken = default)
         {
             switch (excelType)
             {
                 case ExcelType.CSV:
                     return new CsvReader(stream, configuration);
                 case ExcelType.XLSX:
-                    return new ExcelOpenXmlSheetReader(stream, configuration);
+                    return await ExcelOpenXmlSheetReader.CreateAsync(stream, configuration, cancellationToken: cancellationToken).ConfigureAwait(false);
                 default:
                     throw new NotSupportedException("Something went wrong. Please report this issue you are experiencing with MiniExcel.");
             }

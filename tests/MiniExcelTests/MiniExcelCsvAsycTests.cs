@@ -18,7 +18,7 @@ public class MiniExcelCsvAsycTests
         {
             StreamReaderFunc = stream => new StreamReader(stream, encoding: Encoding.GetEncoding("gb2312"))
         };
-        var q = await MiniExcel.QueryAsync(path, true, excelType: ExcelType.CSV, configuration: config);
+        var q = MiniExcel.QueryAsync(path, true, excelType: ExcelType.CSV, configuration: config).ToBlockingEnumerable();
         var rows = q.ToList();
         Assert.Equal("世界你好", rows[0].栏位1);
     }
@@ -227,7 +227,7 @@ public class MiniExcelCsvAsycTests
         Assert.Equal("A,B", texts[0]);
         Assert.Equal("Test1,Test2", texts[1]);
 
-        var q = await MiniExcel.QueryAsync(path);
+        var q = MiniExcel.QueryAsync(path).ToBlockingEnumerable();
         var rows1 = q.ToList();
 
         Assert.Equal("A", rows1[0].A);
@@ -257,7 +257,7 @@ public class MiniExcelCsvAsycTests
 
         await using (var stream = File.OpenRead(path))
         {
-            var rows = (await stream.QueryAsync(useHeaderRow: true, excelType: ExcelType.CSV)).ToList();
+            var rows = stream.QueryAsync(useHeaderRow: true, excelType: ExcelType.CSV).ToBlockingEnumerable().ToList();
             Assert.Equal("A1", rows[0].c1);
             Assert.Equal("B1", rows[0].c2);
             Assert.Equal("A2", rows[1].c1);
@@ -265,7 +265,7 @@ public class MiniExcelCsvAsycTests
         }
 
         {
-            var rows = (await MiniExcel.QueryAsync(path, useHeaderRow: true, excelType: ExcelType.CSV)).ToList();
+            var rows = MiniExcel.QueryAsync(path, useHeaderRow: true, excelType: ExcelType.CSV).ToBlockingEnumerable().ToList();
             Assert.Equal("A1", rows[0].c1);
             Assert.Equal("B1", rows[0].c2);
             Assert.Equal("A2", rows[1].c1);

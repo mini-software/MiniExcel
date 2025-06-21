@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
-#if NETSTANDARD2_0_OR_GREATER || NET
 namespace MiniExcelLibs.WriteAdapter
 {
     internal interface IAsyncMiniExcelWriteAdapter 
@@ -13,4 +12,3 @@ namespace MiniExcelLibs.WriteAdapter
         IAsyncEnumerable<IAsyncEnumerable<CellWriteInfo>> GetRowsAsync(List<ExcelColumnInfo> props, CancellationToken cancellationToken);
     }
 }
-#endif

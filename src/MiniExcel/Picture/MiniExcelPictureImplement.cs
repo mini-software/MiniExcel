@@ -28,11 +28,13 @@
 
             return node != null;
         }
-        public static void AddPicture(Stream excelStream, params MiniExcelPicture[] images)
+        [Zomp.SyncMethodGenerator.CreateSyncVersion]
+        public static async Task AddPictureAsync(Stream excelStream, CancellationToken cancellationToken = default, params MiniExcelPicture[] images)
         {
             // get sheets
-            var excelArchive = new ExcelOpenXmlZip(excelStream);
-            var sheetEntries = new ExcelOpenXmlSheetReader(excelStream, null).GetWorkbookRels(excelArchive.entries).ToList();
+            using var excelArchive = new ExcelOpenXmlZip(excelStream);
+            using var reader = await ExcelOpenXmlSheetReader.CreateAsync(excelStream, null, cancellationToken: cancellationToken).ConfigureAwait(false);
+            var sheetEntries = await reader.GetWorkbookRelsAsync(excelArchive.entries, cancellationToken).ConfigureAwait(false);
 
             using (var archive = new ZipArchive(excelStream, ZipArchiveMode.Update, true))
             {
@@ -44,6 +46,7 @@
                     var sheetEnt = sheetEntries.FirstOrDefault(x => x.Name == sheetName) ?? sheetEntries.First();
                     var sheetXmlName = sheetEnt.Path.Split('/').Last().Split('.')[0];
                     string sheetPath = $"xl/worksheets/{sheetXmlName}.xml";
+
                     var sheetEntry = archive.GetEntry(sheetPath);
                     var sheetDoc = LoadXml(sheetEntry);
 
@@ -169,6 +172,7 @@
                 doc.LoadXml(@"<?xml version=""1.0"" encoding=""UTF-8"" standalone=""yes""?><Relationships xmlns=""http://schemas.openxmlformats.org/package/2006/relationships""/>");
                 return doc;
             }
+
             using (var stream = entry.Open())
             using (var reader = new StreamReader(stream))
             {
@@ -181,6 +185,7 @@
                 stream.Position = 0;
                 doc.Load(stream);
             }
+
             return doc;
         }
 

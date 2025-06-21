@@ -1634,8 +1634,6 @@ public class Order
 
 #### 6. 批量添加/插入图片 (MiniExcel.AddPicture)
 
-请在批量生成行数据之前添加图片，否则在调用 AddPicture 时系统会占用大量内存。
-
 ```csharp
 var images = new[]
 {

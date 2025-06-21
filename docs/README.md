@@ -23,14 +23,6 @@
 ---
 
 
-### 1.41.3
-- [New] Adding QuoteWhitespaces option to CsvConfiguration for adding double quotes to string containing whitespaces #790 (via @michelebastione )
-- [Bug] Fixed bug that made the DynamicExcelColumn property "Ignore" not work when generating using an IDataReader as source #584 (via @michelebastione )
-- [Bug] v1.41.2 AddPicture not working #814 (via @shps951023)
-- [Bug] v1.41.1 AddPicture image max column and row are 2 cells #815 (via @shps951023)
-- [Bug] AddPicture get error same export file and second time. #816 (via @shps951023)
-
-
 ### 1.41.2
 - [New] Fixes enum behaviour and adds support for DescriptionAttribute when saving by template (via @michelebastione )
 - [Bug] SaveAsByTemplate - Excel Dimension Xml is null #459 (via @michelebastione )

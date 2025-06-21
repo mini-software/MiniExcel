@@ -1,6 +1,0 @@
-﻿<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
-  <Relationship Id="rId1cf978002c1147d3b91019c9f8803c6f"
-    Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing"
-    Target="../drawings/drawing98482106b774449083d3adfa462f1707.xml" />
-</Relationships>

@@ -1,28 +1,27 @@
-﻿using Dapper;
-using MiniExcelLibs.Attributes;
-using MiniExcelLibs.Csv;
-using MiniExcelLibs.Exceptions;
-using MiniExcelLibs.OpenXml;
-using MiniExcelLibs.Tests.Utils;
-using Newtonsoft.Json;
-using NPOI.XSSF.UserModel;
-using OfficeOpenXml;
-using System.Collections;
+﻿using System.Collections;
 using System.ComponentModel;
 using System.Data;
 using System.Data.SQLite;
 using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
+using ClosedXML.Excel;
+using Dapper;
+using MiniExcelLibs.Attributes;
+using MiniExcelLibs.Csv;
+using MiniExcelLibs.Exceptions;
+using MiniExcelLibs.OpenXml;
+using MiniExcelLibs.Picture;
+using MiniExcelLibs.Tests.Utils;
 using MiniExcelLibs.Utils;
+using Newtonsoft.Json;
+using NPOI.XSSF.UserModel;
+using OfficeOpenXml;
+using OfficeOpenXml.Drawing;
 using Xunit;
 using Xunit.Abstractions;
 using static MiniExcelLibs.Tests.MiniExcelOpenXmlTests;
-using MiniExcelLibs.Picture;
 using TableStyles = MiniExcelLibs.OpenXml.TableStyles;
-using ClosedXML.Excel;
-using System.Drawing;
-using System.Threading.Tasks;
 
 namespace MiniExcelLibs.Tests;
 
@@ -383,7 +382,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         var rows = MiniExcel.Query(path.ToString()).ToList();
         Assert.Equal("2022-10", rows[1].B);
 
-        using var workbook = new ClosedXML.Excel.XLWorkbook(path.ToString());
+        using var workbook = new XLWorkbook(path.ToString());
         var ws = workbook.Worksheet(1);
 
         Assert.True(ws.Column("A").Width > 0);
@@ -4441,12 +4440,12 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
 
         // Check picture in the first sheet (C3)  
         var firstSheet = package.Workbook.Worksheets[0];
-        var pictureInC3 = firstSheet.Drawings.OfType<OfficeOpenXml.Drawing.ExcelPicture>().FirstOrDefault(p => p.From.Column == 2 && p.From.Row == 2);
+        var pictureInC3 = firstSheet.Drawings.OfType<ExcelPicture>().FirstOrDefault(p => p.From.Column == 2 && p.From.Row == 2);
         Assert.NotNull(pictureInC3);
 
         // Check picture in the "Demo" sheet (C9)  
         var demoSheet = package.Workbook.Worksheets["Demo"];
-        var pictureInC9 = demoSheet.Drawings.OfType<OfficeOpenXml.Drawing.ExcelPicture>().FirstOrDefault(p => p.From.Column == 2 && p.From.Row == 8);
+        var pictureInC9 = demoSheet.Drawings.OfType<ExcelPicture>().FirstOrDefault(p => p.From.Column == 2 && p.From.Row == 8);
         Assert.NotNull(pictureInC9);
     }
 
@@ -4494,12 +4493,12 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             {
                 // Check picture in the first sheet (C3)  
                 var firstSheet = package.Workbook.Worksheets[0];
-                var pictureInC3 = firstSheet.Drawings.OfType<OfficeOpenXml.Drawing.ExcelPicture>().FirstOrDefault(p => p.From.Column == 2 && p.From.Row == 2);
+                var pictureInC3 = firstSheet.Drawings.OfType<ExcelPicture>().FirstOrDefault(p => p.From.Column == 2 && p.From.Row == 2);
                 Assert.NotNull(pictureInC3);
 
                 // Check picture in the "Demo" sheet (C9)  
                 var demoSheet = package.Workbook.Worksheets["Demo"];
-                var pictureInC9 = demoSheet.Drawings.OfType<OfficeOpenXml.Drawing.ExcelPicture>().FirstOrDefault(p => p.From.Column == 2 && p.From.Row == 8);
+                var pictureInC9 = demoSheet.Drawings.OfType<ExcelPicture>().FirstOrDefault(p => p.From.Column == 2 && p.From.Row == 8);
                 Assert.NotNull(pictureInC9);
             }
         }
@@ -4525,6 +4524,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
                     SheetName = null, // default null is first sheet  
                     CellAddress = "C3", // required  
                 },
+                
                 new()
                 {
                     ImageBytes = File.ReadAllBytes(PathHelper.GetFile("images/google_logo.png")),
@@ -4534,6 +4534,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
                     WidthPx = 500,
                     HeightPx = 500
                 },
+                
                 new()
                 {
                     ImageBytes = File.ReadAllBytes(PathHelper.GetFile("images/google_logo.png")),
@@ -4551,14 +4552,18 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             {
                 // Check picture in the first sheet (C3)  
                 var firstSheet = package.Workbook.Worksheets[0];
-                var pictureInC3 = firstSheet.Drawings.OfType<OfficeOpenXml.Drawing.ExcelPicture>()
+                var pictureInC3 = firstSheet.Drawings
+                    .OfType<ExcelPicture>()
                     .FirstOrDefault(p => p.From.Column == 2 && p.From.Row == 2);
+                
                 Assert.NotNull(pictureInC3);
 
                 // Check picture in the "Demo" sheet (C9)  
                 var demoSheet = package.Workbook.Worksheets["Demo"];
-                var pictureInC9 = demoSheet.Drawings.OfType<OfficeOpenXml.Drawing.ExcelPicture>()
+                var pictureInC9 = demoSheet.Drawings
+                    .OfType<ExcelPicture>()
                     .FirstOrDefault(p => p.From.Column == 2 && p.From.Row == 8);
+                
                 Assert.NotNull(pictureInC9);
             }
         }
@@ -4572,6 +4577,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
                     SheetName = null, // default null is first sheet  
                     CellAddress = "D3", // required  
                 },
+                
                 new()
                 {
                     ImageBytes = File.ReadAllBytes(PathHelper.GetFile("images/google_logo.png")),
@@ -4581,6 +4587,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
                     WidthPx = 500,
                     HeightPx = 500
                 },
+                
                 new()
                 {
                     ImageBytes = File.ReadAllBytes(PathHelper.GetFile("images/google_logo.png")),
@@ -4599,33 +4606,42 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
                 {
                     // Check picture in the first sheet (C3)  
                     var firstSheet = package.Workbook.Worksheets[0];
-                    var pictureInC3 = firstSheet.Drawings.OfType<OfficeOpenXml.Drawing.ExcelPicture>()
+                    var pictureInC3 = firstSheet.Drawings.
+                        OfType<ExcelPicture>()
                         .FirstOrDefault(p => p.From.Column == 2 && p.From.Row == 2);
+                    
                     Assert.NotNull(pictureInC3);
 
                     // Check picture in the "Demo" sheet (C9)  
                     var demoSheet = package.Workbook.Worksheets["Demo"];
-                    var pictureInC9 = demoSheet.Drawings.OfType<OfficeOpenXml.Drawing.ExcelPicture>()
+                    var pictureInC9 = demoSheet.Drawings
+                        .OfType<ExcelPicture>()
                         .FirstOrDefault(p => p.From.Column == 2 && p.From.Row == 8);
+                    
                     Assert.NotNull(pictureInC9);
                 }
 
                 {
                     // Check picture in the first sheet (D3)
                     var firstSheet = package.Workbook.Worksheets[0];
-                    var pictureInD3 = firstSheet.Drawings.OfType<OfficeOpenXml.Drawing.ExcelPicture>()
+                    var pictureInD3 = firstSheet.Drawings
+                        .OfType<ExcelPicture>()
                         .FirstOrDefault(p => p.From.Column == 3 && p.From.Row == 2);
                     Assert.NotNull(pictureInD3);
 
                     // Check picture in the "Demo" sheet (D9)
                     var demoSheet = package.Workbook.Worksheets["Demo"];
-                    var pictureInD9 = demoSheet.Drawings.OfType<OfficeOpenXml.Drawing.ExcelPicture>()
+                    var pictureInD9 = demoSheet.Drawings
+                        .OfType<ExcelPicture>()
                         .FirstOrDefault(p => p.From.Column == 3 && p.From.Row == 8);
+                    
                     Assert.NotNull(pictureInD9);
 
                     // Check picture in the "Demo" sheet (F9)
-                    var pictureInF9 = demoSheet.Drawings.OfType<OfficeOpenXml.Drawing.ExcelPicture>()
+                    var pictureInF9 = demoSheet.Drawings
+                        .OfType<ExcelPicture>()
                         .FirstOrDefault(p => p.From.Column == 5 && p.From.Row == 8);
+                    
                     Assert.NotNull(pictureInF9);
                 }
             }

@@ -4395,13 +4395,16 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
 
         Assert.Contains("<x:autoFilter ref=\"A1:A4\" />", xml);
     }
-
+    
     /// <summary>
     /// https://github.com/mini-software/MiniExcel/issues/814
     /// </summary>
     [Fact]
     public void TestIssue814()
     {
+        // if (!OperatingSystem.IsWindows())
+        //     return;
+        
         var originPath = PathHelper.GetFile("xlsx/TestIssue186_Template.xlsx");
         using var path = AutoDeletingPath.Create();
         File.Copy(originPath, path.FilePath);
@@ -4455,6 +4458,9 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     [Fact]
     public void TestIssue815()
     {
+        // if (!OperatingSystem.IsWindows())
+        //     return;
+
         var originPath = PathHelper.GetFile("xlsx/TestIssue186_Template.xlsx");
         using var path = AutoDeletingPath.Create();
         File.Copy(originPath, path.FilePath);
@@ -4512,6 +4518,9 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     [Fact]
     public void TestIssue816()
     {
+        // if (!OperatingSystem.IsWindows())
+        //     return;
+
         var originPath = PathHelper.GetFile("xlsx/TestIssue186_Template.xlsx");
         using var path = AutoDeletingPath.Create();
         File.Copy(originPath, path.FilePath);
@@ -4627,6 +4636,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
                     var pictureInD3 = firstSheet.Drawings
                         .OfType<ExcelPicture>()
                         .FirstOrDefault(p => p.From.Column == 3 && p.From.Row == 2);
+                    
                     Assert.NotNull(pictureInD3);
 
                     // Check picture in the "Demo" sheet (D9)

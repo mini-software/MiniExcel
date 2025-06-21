@@ -12,6 +12,6 @@ public class MiniExcelPicture
     internal int ColumnNumber => ReferenceHelper.ConvertCellToXY(CellAddress).Item1 -1;
     internal int RowNumber => ReferenceHelper.ConvertCellToXY(CellAddress).Item2 - 1;
     
-    public int WidthPx { get; set; }
-    public int HeightPx { get; set; }
+    public int WidthPx { get; set; } = 80;
+    public int HeightPx { get; set; } = 24;
 }

@@ -1,0 +1,114 @@
+﻿<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<xdr:wsDr xmlns:xdr="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+  <xdr:twoCellAnchor editAs="oneCell">
+    <xdr:from>
+      <xdr:col>2</xdr:col>
+      <xdr:colOff>0</xdr:colOff>
+      <xdr:row>2</xdr:row>
+      <xdr:rowOff>0</xdr:rowOff>
+    </xdr:from>
+    <xdr:to>
+      <xdr:col>3</xdr:col>
+      <xdr:colOff>0</xdr:colOff>
+      <xdr:row>3</xdr:row>
+      <xdr:rowOff>0</xdr:rowOff>
+    </xdr:to>
+    <xdr:pic>
+      <xdr:nvPicPr>
+        <xdr:cNvPr id="2" name="Picture rId6e691456b84d4f58976b037f1302d48d" />
+        <xdr:cNvPicPr>
+          <a:picLocks noChangeAspect="1" />
+        </xdr:cNvPicPr>
+      </xdr:nvPicPr>
+      <xdr:blipFill>
+        <a:blip r:embed="rId6e691456b84d4f58976b037f1302d48d" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" />
+        <a:stretch>
+          <a:fillRect />
+        </a:stretch>
+      </xdr:blipFill>
+      <xdr:spPr>
+        <a:xfrm>
+          <a:off x="0" y="0" />
+          <a:ext cx="0" cy="0" />
+        </a:xfrm>
+        <a:prstGeom prst="rect">
+          <a:avLst />
+        </a:prstGeom>
+      </xdr:spPr>
+    </xdr:pic>
+    <xdr:clientData />
+  </xdr:twoCellAnchor>
+  <xdr:twoCellAnchor editAs="oneCell">
+    <xdr:from>
+      <xdr:col xmlns:xdr="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing">2</xdr:col>
+      <xdr:colOff xmlns:xdr="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing">0</xdr:colOff>
+      <xdr:row xmlns:xdr="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing">8</xdr:row>
+      <xdr:rowOff xmlns:xdr="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing">0</xdr:rowOff>
+    </xdr:from>
+    <xdr:to>
+      <xdr:col xmlns:xdr="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing">3</xdr:col>
+      <xdr:colOff xmlns:xdr="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing">4762500</xdr:colOff>
+      <xdr:row xmlns:xdr="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing">9</xdr:row>
+      <xdr:rowOff xmlns:xdr="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing">4762500</xdr:rowOff>
+    </xdr:to>
+    <xdr:pic>
+      <xdr:nvPicPr xmlns:xdr="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing">
+        <xdr:cNvPr id="3" name="Picture rId3842f074730c46a98cae98a8e4608ec3" />
+        <xdr:cNvPicPr>
+          <a:picLocks noChangeAspect="1" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" />
+        </xdr:cNvPicPr>
+      </xdr:nvPicPr>
+      <xdr:blipFill xmlns:xdr="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing">
+        <a:blip r:embed="rId3842f074730c46a98cae98a8e4608ec3" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" />
+        <a:stretch xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+          <a:fillRect />
+        </a:stretch>
+      </xdr:blipFill>
+      <xdr:spPr xmlns:xdr="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing">
+        <a:xfrm xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+          <a:off x="0" y="0" />
+          <a:ext cx="4762500" cy="4762500" />
+        </a:xfrm>
+        <a:prstGeom prst="rect" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+          <a:avLst />
+        </a:prstGeom>
+      </xdr:spPr>
+    </xdr:pic>
+    <xdr:clientData />
+  </xdr:twoCellAnchor>
+  <xdr:twoCellAnchor editAs="oneCell">
+    <xdr:from>
+        <xdr:col xmlns:xdr="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing">7</xdr:col>
+        <xdr:colOff xmlns:xdr="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing">0</xdr:colOff>
+        <xdr:row xmlns:xdr="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing">8</xdr:row>
+        <xdr:rowOff xmlns:xdr="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing">0</xdr:rowOff></xdr:from>
+    <xdr:to>
+        <xdr:col xmlns:xdr="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing">8</xdr:col>
+        <xdr:colOff xmlns:xdr="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing">476250</xdr:colOff>
+        <xdr:row xmlns:xdr="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing">9</xdr:row>
+        <xdr:rowOff xmlns:xdr="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing">476250</xdr:rowOff></xdr:to>
+    <xdr:pic>
+        <xdr:nvPicPr xmlns:xdr="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing">
+            <xdr:cNvPr id="4" name="Picture rIda0f17c326b2e4324a717f8cbcc8c8ec2" />
+            <xdr:cNvPicPr>
+                <a:picLocks noChangeAspect="1" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" />
+            </xdr:cNvPicPr>
+        </xdr:nvPicPr>
+        <xdr:blipFill xmlns:xdr="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing">
+            <a:blip r:embed="rIda0f17c326b2e4324a717f8cbcc8c8ec2" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" />
+            <a:stretch xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+                <a:fillRect />
+            </a:stretch>
+        </xdr:blipFill>
+        <xdr:spPr xmlns:xdr="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing">
+            <a:xfrm xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+                <a:off x="0" y="0" />
+                <a:ext cx="476250" cy="476250" />
+            </a:xfrm>
+            <a:prstGeom prst="rect" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+                <a:avLst />
+            </a:prstGeom>
+        </xdr:spPr></xdr:pic>
+    <xdr:clientData />
+  </xdr:twoCellAnchor>
+</xdr:wsDr>

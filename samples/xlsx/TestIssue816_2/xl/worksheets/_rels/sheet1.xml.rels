@@ -1,0 +1,9 @@
+﻿<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId5173cc386875457ca5aabbdc89d36adb"
+    Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing"
+    Target="../drawings/drawingcea5e87afab34a1b886841980881e6a6.xml" />
+  <Relationship Id="rId33b2741071c24075b03eb77c4c72237c"
+    Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing"
+    Target="../drawings/drawinga13dc3bfd6be4e238ad8f91fcc6c646d.xml" />
+</Relationships>

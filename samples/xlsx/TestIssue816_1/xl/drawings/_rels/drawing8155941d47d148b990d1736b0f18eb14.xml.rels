@@ -1,6 +1,0 @@
-﻿<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
-  <Relationship Id="rId3978bcd9fdce4aef8776fa2047bd8a8e" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="../media/imagef63d9dc50eff42f7964d4d5830991165.png" />
-  <Relationship Id="rId9859e53bc21c40548b2a02a7b81d0b15" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="../media/image6ef1fcd090e14c71a7feddd858da8770.png" />
-  <Relationship Id="rIde3c515eab1e647fe854f029c88745886" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="../media/imagefb0519c58a7b412ba445a8775ba5a5cf.png" />
-</Relationships>

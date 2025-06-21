@@ -1368,8 +1368,6 @@ MiniExcel.SaveAs(path, reader,configuration:config);
 
 #### 6. 批量添加/插入圖片 (MiniExcel.AddPicture)
 
-請在批量生成行資料之前新增圖片，否則在呼叫 AddPicture 時系統將會佔用大量記憶體。
-
 ```csharp
 var images = new[]
 {

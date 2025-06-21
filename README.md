@@ -1457,8 +1457,6 @@ MiniExcel.SaveAs(path, reader,configuration:config);
 
 #### 6. Batch Add Image (MiniExcel.AddPicture)
 
-Please add pictures before batch generate rows data, or system will load large memory usage when calling AddPicture.
-
 ```csharp
 var images = new[]
 {

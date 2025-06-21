@@ -4503,6 +4503,18 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             }
         }
 
+        // TODO:check C3 image WidthPx = 80px, HeightPx = 24px, C9 WidthPx=500,HeightPx=500 
+    }
+
+    /// <summary>
+    /// https://github.com/mini-software/MiniExcel/issues/816
+    /// </summary>
+    [Fact]
+    public void TestIssue816()
+    {
+        var originPath = PathHelper.GetFile("xlsx/TestIssue186_Template.xlsx");
+        using var path = AutoDeletingPath.Create();
+        File.Copy(originPath, path.FilePath);
         {
             MiniExcelPicture[] images =
             [
@@ -4548,6 +4560,68 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             }
         }
 
-        // TODO:check C3 image WidthPx = 80px, HeightPx = 24px, C9 WidthPx=500,HeightPx=500 
+        {
+            MiniExcelPicture[] images =
+            [
+                new()
+               {
+                   ImageBytes = File.ReadAllBytes(PathHelper.GetFile("images/github_logo.png")),
+                   SheetName = null, // default null is first sheet  
+                   CellAddress = "D3", // required  
+               },
+               new()
+               {
+                   ImageBytes = File.ReadAllBytes(PathHelper.GetFile("images/google_logo.png")),
+                   PictureType = "image/png", // default PictureType = image/png  
+                   SheetName = "Demo",
+                   CellAddress = "D9", // required  
+                   WidthPx = 500,
+                   HeightPx = 500
+               },
+               new()
+               {
+                   ImageBytes = File.ReadAllBytes(PathHelper.GetFile("images/google_logo.png")),
+                   PictureType = "image/png", // default PictureType = image/png  
+                   SheetName = "Demo",
+                   CellAddress = "F9", // required  
+                   WidthPx = 800,
+                   HeightPx = 850
+               }
+            ];
+
+            MiniExcel.AddPicture(path.FilePath, images);
+
+            using (var package = new ExcelPackage(new FileInfo(path.FilePath)))
+            {
+                {
+                    // Check picture in the first sheet (C3)  
+                    var firstSheet = package.Workbook.Worksheets[0];
+                    var pictureInC3 = firstSheet.Drawings.OfType<OfficeOpenXml.Drawing.ExcelPicture>().FirstOrDefault(p => p.From.Column == 2 && p.From.Row == 2);
+                    Assert.NotNull(pictureInC3);
+
+                    // Check picture in the "Demo" sheet (C9)  
+                    var demoSheet = package.Workbook.Worksheets["Demo"];
+                    var pictureInC9 = demoSheet.Drawings.OfType<OfficeOpenXml.Drawing.ExcelPicture>().FirstOrDefault(p => p.From.Column == 2 && p.From.Row == 8);
+                    Assert.NotNull(pictureInC9);
+                }
+
+                {
+                    // Check picture in the first sheet (D3)
+                    var firstSheet = package.Workbook.Worksheets[0];
+                    var pictureInD3 = firstSheet.Drawings.OfType<OfficeOpenXml.Drawing.ExcelPicture>().FirstOrDefault(p => p.From.Column == 3 && p.From.Row == 2);
+                    Assert.NotNull(pictureInD3);
+
+                    // Check picture in the "Demo" sheet (D9)
+                    var demoSheet = package.Workbook.Worksheets["Demo"];
+                    var pictureInD9 = demoSheet.Drawings.OfType<OfficeOpenXml.Drawing.ExcelPicture>().FirstOrDefault(p => p.From.Column == 3 && p.From.Row == 8);
+                    Assert.NotNull(pictureInD9);
+
+                    // Check picture in the "Demo" sheet (F9)
+                    var pictureInF9 = demoSheet.Drawings.OfType<OfficeOpenXml.Drawing.ExcelPicture>().FirstOrDefault(p => p.From.Column == 5 && p.From.Row == 8);
+                    Assert.NotNull(pictureInF9);
+                }
+            }
+
+        }
     }
 }

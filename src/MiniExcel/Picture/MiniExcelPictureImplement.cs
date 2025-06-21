@@ -34,171 +34,129 @@
             var excelArchive = new ExcelOpenXmlZip(excelStream);
             var sheetEntries = new ExcelOpenXmlSheetReader(excelStream, null).GetWorkbookRels(excelArchive.entries).ToList();
 
-            var drawingRelId = $"rId{Guid.NewGuid().ToString("N")}";
-            var drawingId = Guid.NewGuid().ToString("N");
-            var imageId = 2;
             using (var archive = new ZipArchive(excelStream, ZipArchiveMode.Update, true))
             {
-                foreach (var image in images)
+                // Group images by sheet
+                var imagesBySheet = images.GroupBy(img => img.SheetName ?? sheetEntries.First().Name);
+                foreach (var sheetGroup in imagesBySheet)
                 {
-                    var imageBytes = image.ImageBytes;
-
-                    var sheetEnt = image.SheetName == null ? sheetEntries.First() : sheetEntries.FirstOrDefault(x => x.Name == image.SheetName) ?? sheetEntries.First();
-
-                    var sheetName = sheetEnt.Path.Split('/').Last().Split('.')[0];
-                    var col = image.ColumnNumber;
-                    var row = image.RowNumber;
-                    var widthPx = image.WidthPx;
-                    var heightPx = image.HeightPx;
-
-                    // Step 1: Add image to /xl/media/
-                    string imageName = $"image{Guid.NewGuid().ToString("N")}.png";
-                    string imagePath = $"xl/media/{imageName}";
-                    var imageEntry = archive.CreateEntry(imagePath);
-                    using (var entryStream = imageEntry.Open())
-                        entryStream.Write(imageBytes, 0, imageBytes.Length);
-
-                    // Step 2: Update [Content_Types].xml
-                    var contentTypesEntry = archive.GetEntry("[Content_Types].xml");
-                    var contentTypesDoc = LoadXml(contentTypesEntry);
-                    if (!contentTypesDoc.DocumentElement.InnerXml.Contains("image/png"))
-                    {
-                        var defaultNode = contentTypesDoc.CreateElement("Default", contentTypesDoc.DocumentElement.NamespaceURI);
-                        defaultNode.SetAttribute("Extension", "png");
-                        defaultNode.SetAttribute("ContentType", "image/png");
-                        contentTypesDoc.DocumentElement.AppendChild(defaultNode);
-                    }
-
-
-                    var overrideDrawingFileExists = false;
-                    foreach (XmlNode node in contentTypesDoc.DocumentElement.ChildNodes)
-                    {
-                        if (node.Name == "Override" && node.Attributes["PartName"].Value == $"/xl/drawings/drawing{drawingId}.xml")
-                        {
-                            overrideDrawingFileExists = true;
-                            break;
-                        }
-                    }
-                    if (!overrideDrawingFileExists)
-                    {
-                        var overrideNode = contentTypesDoc.CreateElement("Override", contentTypesDoc.DocumentElement.NamespaceURI);
-                        overrideNode.SetAttribute("PartName", $"/xl/drawings/drawing{drawingId}.xml");
-                        overrideNode.SetAttribute("ContentType", "application/vnd.openxmlformats-officedocument.drawing+xml");
-                        contentTypesDoc.DocumentElement.AppendChild(overrideNode);
-                    }
-                    SaveXml(contentTypesDoc, contentTypesEntry);
-
-                    // Step 3: Update xl/worksheets/sheetX.xml
-                    string sheetPath = $"xl/worksheets/{sheetName}.xml";
+                    var sheetName = sheetGroup.Key;
+                    var sheetEnt = sheetEntries.FirstOrDefault(x => x.Name == sheetName) ?? sheetEntries.First();
+                    var sheetXmlName = sheetEnt.Path.Split('/').Last().Split('.')[0];
+                    string sheetPath = $"xl/worksheets/{sheetXmlName}.xml";
                     var sheetEntry = archive.GetEntry(sheetPath);
                     var sheetDoc = LoadXml(sheetEntry);
-                    var relId = $"rId{Guid.NewGuid().ToString("N")}";
-                    // unique relId for drawing
 
-                    // existMiniExcelUniqueDrawingNode = check sheetDoc exist <drawing r:id="rId51b2a752f2454acfba519a539186a413"/> and check its attribut r:id = drawingRelId
-                    var existMiniExcelUniqueDrawingNode = sheetDoc.SelectSingleNode(
-                        $"/x:worksheet/x:drawing[@r:id='{drawingRelId}']",
-                        GetRNamespaceManager(sheetDoc)
-                    ) != null;
-                    if (!existMiniExcelUniqueDrawingNode)
+                    // Check for existing <drawing> node
+                    var nsmgr = GetRNamespaceManager(sheetDoc);
+                    var drawingNode = sheetDoc.SelectSingleNode("/x:worksheet/x:drawing", nsmgr) as XmlElement;
+                    string drawingRelId;
+                    string drawingId;
+                    if (drawingNode != null)
                     {
-                        var drawingNode = sheetDoc.CreateElement("drawing", sheetDoc.DocumentElement.NamespaceURI);
-                        drawingNode.Attributes.Append(sheetDoc.CreateAttribute("r", "id", "http://schemas.openxmlformats.org/officeDocument/2006/relationships"))
-                            .Value = drawingRelId;
-                        sheetDoc.DocumentElement.AppendChild(drawingNode);
+                        // Drawing exists, get r:id
+                        drawingRelId = drawingNode.GetAttribute("id", nsmgr.LookupNamespace("r"));
+                        // Find the drawing target from .rels
+                        string relsPath = $"xl/worksheets/_rels/{sheetXmlName}.xml.rels";
+                        var relsEntry = archive.GetEntry(relsPath);
+                        var relsDoc = LoadXml(relsEntry);
+                        var namespaceManager = new XmlNamespaceManager(relsDoc.NameTable);
+                        namespaceManager.AddNamespace("x", "http://schemas.openxmlformats.org/package/2006/relationships");
+                        var xpath = $"/x:Relationships/x:Relationship[@Id='{drawingRelId}']";
+                        var relNode = relsDoc.SelectSingleNode(xpath, namespaceManager);
+                        string drawingTarget = relNode?.Attributes["Target"]?.Value;
+                        drawingId = drawingTarget != null ? drawingTarget.Split('/').Last().Replace("drawing", "").Replace(".xml", "") : Guid.NewGuid().ToString("N");
                     }
-                    SaveXml(sheetDoc, sheetEntry);
-
+                    else
                     {
-                        string drawingPath = $"xl/worksheets/_rels/{sheetName}.xml.rels";
-                        var isExistEntry = false;
-                        var sheetRelsEntry = archive.GetEntry(drawingPath);
-                        if (sheetRelsEntry != null)
-                            isExistEntry = true;
-                        else
-                            sheetRelsEntry = archive.CreateEntry(drawingPath);
-                        if (isExistEntry)
+                        // No drawing, create new
+                        drawingRelId = $"rId{Guid.NewGuid().ToString("N")}";
+                        drawingId = Guid.NewGuid().ToString("N");
+                        // Add <drawing> node
+                        var newDrawingNode = sheetDoc.CreateElement("drawing", sheetDoc.DocumentElement.NamespaceURI);
+                        newDrawingNode.SetAttribute("id", nsmgr.LookupNamespace("r"), drawingRelId);
+                        sheetDoc.DocumentElement.AppendChild(newDrawingNode);
+                        SaveXml(sheetDoc, sheetEntry);
+                        // Add relationship
+                        string relsPath = $"xl/worksheets/_rels/{sheetXmlName}.xml.rels";
+                        var relsEntry = archive.GetEntry(relsPath) ?? archive.CreateEntry(relsPath);
+                        var relsDoc = LoadXml(relsEntry);
+                        var relNode = relsDoc.CreateElement("Relationship", relsDoc.DocumentElement.NamespaceURI);
+                        relNode.SetAttribute("Id", drawingRelId);
+                        relNode.SetAttribute("Type", "http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing");
+                        relNode.SetAttribute("Target", $"../drawings/drawing{drawingId}.xml");
+                        relsDoc.DocumentElement.AppendChild(relNode);
+                        SaveXml(relsDoc, relsEntry);
+                        // Update [Content_Types].xml for drawing
+                        var contentTypesEntry = archive.GetEntry("[Content_Types].xml");
+                        var contentTypesDoc = LoadXml(contentTypesEntry);
+                        var overrideDrawingFileExists = false;
+                        foreach (XmlNode node in contentTypesDoc.DocumentElement.ChildNodes)
                         {
-                            var sheetRelsDoc = LoadXml(sheetRelsEntry);
-                            var exists = CheckRelationshipExists(
-                                sheetRelsDoc,
-                                drawingRelId,
-                                "http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing",
-                                $"../drawings/drawing{drawingId}.xml"
-                            );
-                            if (!exists)
+                            if (node.Name == "Override" && node.Attributes["PartName"].Value == $"/xl/drawings/drawing{drawingId}.xml")
                             {
-                                var relNode = sheetRelsDoc.CreateElement("Relationship", sheetRelsDoc.DocumentElement.NamespaceURI);
-                                relNode.SetAttribute("Id", drawingRelId);
-                                relNode.SetAttribute("Type", "http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing");
-                                relNode.SetAttribute("Target", $"../drawings/drawing{drawingId}.xml");
-                                sheetRelsDoc.DocumentElement.AppendChild(relNode);
+                                overrideDrawingFileExists = true;
+                                break;
                             }
-                            SaveXml(sheetRelsDoc, sheetRelsEntry);
                         }
-                        else
+                        if (!overrideDrawingFileExists)
                         {
-                            var sheetRelsDoc = new XmlDocument();
-                            sheetRelsDoc.LoadXml(@"<?xml version=""1.0"" encoding=""UTF-8"" standalone=""yes""?><Relationships xmlns=""http://schemas.openxmlformats.org/package/2006/relationships""/>");
-                            var relNode = sheetRelsDoc.CreateElement("Relationship", sheetRelsDoc.DocumentElement.NamespaceURI);
-                            relNode.SetAttribute("Id", drawingRelId);
-                            relNode.SetAttribute("Type", "http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing");
-                            relNode.SetAttribute("Target", $"../drawings/drawing{drawingId}.xml");
-                            sheetRelsDoc.DocumentElement.AppendChild(relNode);
-                            SaveXml(sheetRelsDoc, sheetRelsEntry);
+                            var overrideNode = contentTypesDoc.CreateElement("Override", contentTypesDoc.DocumentElement.NamespaceURI);
+                            overrideNode.SetAttribute("PartName", $"/xl/drawings/drawing{drawingId}.xml");
+                            overrideNode.SetAttribute("ContentType", "application/vnd.openxmlformats-officedocument.drawing+xml");
+                            contentTypesDoc.DocumentElement.AppendChild(overrideNode);
                         }
-
+                        SaveXml(contentTypesDoc, contentTypesEntry);
                     }
 
-                    // Step 4: Update exist xl/drawings/drawingX if not create one
+
+                    // Load or create drawing XML
+                    string drawingPath = $"xl/drawings/drawing{drawingId}.xml";
+                    var drawingEntry = archive.GetEntry(drawingPath) ?? archive.CreateEntry(drawingPath);
+                    XmlDocument drawingDoc = LoadXml(drawingEntry);
+
+                    // Load or create drawing rels
+                    string drawingRelsPath = $"xl/drawings/_rels/drawing{drawingId}.xml.rels";
+                    var drawingRelsEntry = archive.GetEntry(drawingRelsPath) ?? archive.CreateEntry(drawingRelsPath);
+                    var drawingRelsDoc = LoadXml(drawingRelsEntry);
+
+                    // Add each image to drawing and rels
+                    foreach (var image in sheetGroup)
                     {
-                        string drawingPath = $"xl/drawings/drawing{drawingId}.xml";
-                        var isExistEntry = false;
-                        var drawingEntry = archive.GetEntry(drawingPath);
-                        if (drawingEntry != null)
-                            isExistEntry = true;
-                        else
-                            drawingEntry = archive.CreateEntry(drawingPath);
-                        XmlDocument drawingDoc;
-
-                        if (isExistEntry)
+                        var imageBytes = image.ImageBytes;
+                        var col = image.ColumnNumber;
+                        var row = image.RowNumber;
+                        var widthPx = image.WidthPx;
+                        var heightPx = image.HeightPx;
+                        // Step 1: Add image to /xl/media/
+                        string imageName = $"image{Guid.NewGuid().ToString("N")}.png";
+                        string imagePath = $"xl/media/{imageName}";
+                        var imageEntry = archive.CreateEntry(imagePath);
+                        using (var entryStream = imageEntry.Open())
+                            entryStream.Write(imageBytes, 0, imageBytes.Length);
+                        // Step 2: Update [Content_Types].xml for image
+                        var contentTypesEntry = archive.GetEntry("[Content_Types].xml");
+                        var contentTypesDoc = LoadXml(contentTypesEntry);
+                        if (!contentTypesDoc.DocumentElement.InnerXml.Contains("image/png"))
                         {
-                            drawingDoc = LoadXml(drawingEntry);
-                            if (drawingDoc.DocumentElement != null)
-                            {
-                                drawingDoc = CreateDrawingXml(drawingDoc, col, row, widthPx, heightPx, relId);
-                                // Append the new node after the last <xdr:twoCellAnchor>
-                                //drawingDoc.DocumentElement.AppendChild(drawingDoc2);
-                            }
-
+                            var defaultNode = contentTypesDoc.CreateElement("Default", contentTypesDoc.DocumentElement.NamespaceURI);
+                            defaultNode.SetAttribute("Extension", "png");
+                            defaultNode.SetAttribute("ContentType", "image/png");
+                            contentTypesDoc.DocumentElement.AppendChild(defaultNode);
+                            SaveXml(contentTypesDoc, contentTypesEntry);
                         }
-                        else
-                        {
-                            drawingDoc = CreateDrawingXml(null, col, row, widthPx, heightPx, relId);
-                        }
-
-                        SaveXml(drawingDoc, drawingEntry);
+                        // Step 3: Add anchor to drawing XML
+                        var relId = $"rId{Guid.NewGuid().ToString("N")}";
+                        drawingDoc = CreateDrawingXml(drawingDoc, col, row, widthPx, heightPx, relId);
+                        // Step 4: Add image relationship to drawing rels
+                        var relNode = drawingRelsDoc.CreateElement("Relationship", drawingRelsDoc.DocumentElement.NamespaceURI);
+                        relNode.SetAttribute("Id", relId);
+                        relNode.SetAttribute("Type", "http://schemas.openxmlformats.org/officeDocument/2006/relationships/image");
+                        relNode.SetAttribute("Target", $"../media/{imageName}");
+                        drawingRelsDoc.DocumentElement.AppendChild(relNode);
                     }
-
-
-                    // Step 5: Create or update xl/drawings/_rels/drawingX.xml.rels
-                    {
-                        string drawingRelsPath = $"xl/drawings/_rels/drawing{drawingId}.xml.rels";
-                        var drawingRelsEntry = archive.GetEntry(drawingRelsPath) ?? archive.CreateEntry(drawingRelsPath);
-                        var drawingRelsDoc = LoadXml(drawingRelsEntry);
-
-                        // Check if the relationship already exists
-                        var existingRel = drawingRelsDoc.SelectSingleNode($"/x:Relationships/x:Relationship[@Id='{relId}']", GetNamespaceManager(drawingRelsDoc));
-                        {
-                            var relNode = drawingRelsDoc.CreateElement("Relationship", drawingRelsDoc.DocumentElement.NamespaceURI);
-                            relNode.SetAttribute("Id", relId);
-                            relNode.SetAttribute("Type", "http://schemas.openxmlformats.org/officeDocument/2006/relationships/image");
-                            relNode.SetAttribute("Target", $"../media/{imageName}");
-                            drawingRelsDoc.DocumentElement.AppendChild(relNode);
-                        }
-
-                        SaveXml(drawingRelsDoc, drawingRelsEntry);
-                    }
+                    SaveXml(drawingDoc, drawingEntry);
+                    SaveXml(drawingRelsDoc, drawingRelsEntry);
                 }
             }
         }

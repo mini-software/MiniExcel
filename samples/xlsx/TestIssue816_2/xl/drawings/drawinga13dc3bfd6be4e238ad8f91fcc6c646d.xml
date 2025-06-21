@@ -1,0 +1,119 @@
+<xdr:wsDr xmlns:xdr="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+  <xdr:oneCellAnchor>
+    <xdr:from>
+      <xdr:col>3</xdr:col>
+      <xdr:colOff>0</xdr:colOff>
+      <xdr:row>2</xdr:row>
+      <xdr:rowOff>0</xdr:rowOff>
+    </xdr:from>
+    <xdr:ext cx="762000" cy="228600" />
+    <xdr:pic>
+      <xdr:nvPicPr>
+        <xdr:cNvPr id="2" name="ImageAtD3">
+          <a:extLst>
+            <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+              <a16:creationId a16:id="{00000000-0008-0000-0000-0000000002000000}" xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" />
+            </a:ext>
+          </a:extLst>
+        </xdr:cNvPr>
+        <xdr:cNvPicPr>
+          <a:picLocks noChangeAspect="1" />
+        </xdr:cNvPicPr>
+      </xdr:nvPicPr>
+      <xdr:blipFill>
+        <a:blip xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:embed="rId9e02464b082c49a499f49816d6e1fac6" cstate="print" />
+        <a:stretch>
+          <a:fillRect />
+        </a:stretch>
+      </xdr:blipFill>
+      <xdr:spPr>
+        <a:xfrm>
+          <a:off x="0" y="0" />
+          <a:ext cx="0" cy="0" />
+        </a:xfrm>
+        <a:prstGeom prst="rect">
+          <a:avLst />
+        </a:prstGeom>
+      </xdr:spPr>
+    </xdr:pic>
+    <xdr:clientData />
+  </xdr:oneCellAnchor>
+  <xdr:oneCellAnchor>
+    <xdr:from>
+      <xdr:col>3</xdr:col>
+      <xdr:colOff>0</xdr:colOff>
+      <xdr:row>8</xdr:row>
+      <xdr:rowOff>0</xdr:rowOff>
+    </xdr:from>
+    <xdr:ext cx="4762500" cy="4762500" />
+    <xdr:pic>
+      <xdr:nvPicPr>
+        <xdr:cNvPr id="3" name="ImageAtD9">
+          <a:extLst>
+            <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+              <a16:creationId a16:id="{00000000-0008-0000-0000-0000000003000000}" xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" />
+            </a:ext>
+          </a:extLst>
+        </xdr:cNvPr>
+        <xdr:cNvPicPr>
+          <a:picLocks noChangeAspect="1" />
+        </xdr:cNvPicPr>
+      </xdr:nvPicPr>
+      <xdr:blipFill>
+        <a:blip xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:embed="rId235f0727ae5c4e4dab1331c5a3b5b81d" cstate="print" />
+        <a:stretch>
+          <a:fillRect />
+        </a:stretch>
+      </xdr:blipFill>
+      <xdr:spPr>
+        <a:xfrm>
+          <a:off x="0" y="0" />
+          <a:ext cx="0" cy="0" />
+        </a:xfrm>
+        <a:prstGeom prst="rect">
+          <a:avLst />
+        </a:prstGeom>
+      </xdr:spPr>
+    </xdr:pic>
+    <xdr:clientData />
+  </xdr:oneCellAnchor>
+  <xdr:oneCellAnchor>
+    <xdr:from>
+      <xdr:col>3</xdr:col>
+      <xdr:colOff>0</xdr:colOff>
+      <xdr:row>8</xdr:row>
+      <xdr:rowOff>0</xdr:rowOff>
+    </xdr:from>
+    <xdr:ext cx="7620000" cy="8096250" />
+    <xdr:pic>
+      <xdr:nvPicPr>
+        <xdr:cNvPr id="4" name="ImageAtD9">
+          <a:extLst>
+            <a:ext uri="{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}">
+              <a16:creationId a16:id="{00000000-0008-0000-0000-0000000004000000}" xmlns:a16="http://schemas.microsoft.com/office/drawing/2014/main" />
+            </a:ext>
+          </a:extLst>
+        </xdr:cNvPr>
+        <xdr:cNvPicPr>
+          <a:picLocks noChangeAspect="1" />
+        </xdr:cNvPicPr>
+      </xdr:nvPicPr>
+      <xdr:blipFill>
+        <a:blip xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:embed="rId0f75ec16f8fe4e3fb3da8cd0c673e405" cstate="print" />
+        <a:stretch>
+          <a:fillRect />
+        </a:stretch>
+      </xdr:blipFill>
+      <xdr:spPr>
+        <a:xfrm>
+          <a:off x="0" y="0" />
+          <a:ext cx="0" cy="0" />
+        </a:xfrm>
+        <a:prstGeom prst="rect">
+          <a:avLst />
+        </a:prstGeom>
+      </xdr:spPr>
+    </xdr:pic>
+    <xdr:clientData />
+  </xdr:oneCellAnchor>
+</xdr:wsDr>

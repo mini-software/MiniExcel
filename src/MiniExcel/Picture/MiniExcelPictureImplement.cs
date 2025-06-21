@@ -1,12 +1,10 @@
-﻿using MiniExcelLibs.OpenXml;
-using MiniExcelLibs.Zip;
-using System;
+﻿using System;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Xml;
-using System.Threading;
-using System.Threading.Tasks;
+using MiniExcelLibs.OpenXml;
+using MiniExcelLibs.Zip;
 
 namespace MiniExcelLibs.Picture
 {
@@ -31,7 +29,7 @@ namespace MiniExcelLibs.Picture
             return node != null;
         }
 
-        public static async Task AddPictureAsync(Stream excelStream, CancellationToken cancellationToken = default, params MiniExcelPicture[] images)
+        public static void AddPicture(Stream excelStream, params MiniExcelPicture[] images)
         {
             // get sheets
             var excelArchive = new ExcelOpenXmlZip(excelStream);

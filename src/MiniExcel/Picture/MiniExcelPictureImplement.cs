@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace MiniExcelLibs.Picture
+﻿namespace MiniExcelLibs.Picture
 {
     using MiniExcelLibs.OpenXml;
     using MiniExcelLibs.Zip;
@@ -8,11 +6,28 @@ namespace MiniExcelLibs.Picture
     using System.IO;
     using System.IO.Compression;
     using System.Linq;
-    using System.Runtime.InteropServices.ComTypes;
     using System.Xml;
 
     internal static class MiniExcelPictureImplement
     {
+        private static XmlNamespaceManager GetRNamespaceManager(XmlDocument doc)
+        {
+            var nsmgr = new XmlNamespaceManager(doc.NameTable);
+            nsmgr.AddNamespace("x", "http://schemas.openxmlformats.org/spreadsheetml/2006/main");
+            nsmgr.AddNamespace("r", "http://schemas.openxmlformats.org/officeDocument/2006/relationships");
+            return nsmgr;
+        }
+
+        private static bool CheckRelationshipExists(XmlDocument doc, string id, string type, string target)
+        {
+            var namespaceManager = new XmlNamespaceManager(doc.NameTable);
+            namespaceManager.AddNamespace("x", "http://schemas.openxmlformats.org/package/2006/relationships");
+
+            var xpath = $"/x:Relationships/x:Relationship[@Id='{id}' and @Type='{type}' and @Target='{target}']";
+            var node = doc.SelectSingleNode(xpath, namespaceManager);
+
+            return node != null;
+        }
         public static void AddPicture(Stream excelStream, params MiniExcelPicture[] images)
         {
             // get sheets
@@ -151,66 +166,15 @@ namespace MiniExcelLibs.Picture
                             drawingDoc = LoadXml(drawingEntry);
                             if (drawingDoc.DocumentElement != null)
                             {
-                                // Create the new <xdr:twoCellAnchor> node
-                                var newTwoCellAnchor = drawingDoc.CreateElement("xdr", "twoCellAnchor", "http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing");
-                                newTwoCellAnchor.SetAttribute("editAs", "oneCell");
-
-                                // Add the <xdr:from> node
-                                var fromNode = drawingDoc.CreateElement("xdr", "from", "http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing");
-                                fromNode.InnerXml = $@"
-        <xdr:col xmlns:xdr=""http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing"">{col}</xdr:col>
-        <xdr:colOff xmlns:xdr=""http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing"">0</xdr:colOff>
-        <xdr:row xmlns:xdr=""http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing"">{row}</xdr:row>
-        <xdr:rowOff xmlns:xdr=""http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing"">0</xdr:rowOff>";
-                                newTwoCellAnchor.AppendChild(fromNode);
-
-                                // Add the <xdr:to> node
-                                var toNode = drawingDoc.CreateElement("xdr", "to", "http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing");
-                                toNode.InnerXml = $@"
-        <xdr:col xmlns:xdr=""http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing"">{col + 1}</xdr:col>
-        <xdr:colOff xmlns:xdr=""http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing"">{widthPx * 9525}</xdr:colOff>
-        <xdr:row xmlns:xdr=""http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing"">{row + 1}</xdr:row>
-        <xdr:rowOff xmlns:xdr=""http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing"">{heightPx * 9525}</xdr:rowOff>";
-                                newTwoCellAnchor.AppendChild(toNode);
-
-                                // Add the <xdr:pic> node
-                                var picNode = drawingDoc.CreateElement("xdr", "pic", "http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing");
-                                picNode.InnerXml = $@"
-        <xdr:nvPicPr xmlns:xdr=""http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing"">
-            <xdr:cNvPr id=""{++imageId}"" name=""Picture {relId}"" xmlns:xdr=""http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing""/>
-            <xdr:cNvPicPr xmlns:xdr=""http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing"">
-                <a:picLocks noChangeAspect=""1"" xmlns:a=""http://schemas.openxmlformats.org/drawingml/2006/main""/>
-            </xdr:cNvPicPr>
-        </xdr:nvPicPr>
-        <xdr:blipFill xmlns:xdr=""http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing"">
-            <a:blip r:embed=""{relId}"" xmlns:r=""http://schemas.openxmlformats.org/officeDocument/2006/relationships"" xmlns:a=""http://schemas.openxmlformats.org/drawingml/2006/main""/>
-            <a:stretch xmlns:a=""http://schemas.openxmlformats.org/drawingml/2006/main"">
-                <a:fillRect xmlns:a=""http://schemas.openxmlformats.org/drawingml/2006/main""/>
-            </a:stretch>
-        </xdr:blipFill>
-        <xdr:spPr xmlns:xdr=""http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing"">
-            <a:xfrm xmlns:a=""http://schemas.openxmlformats.org/drawingml/2006/main"">
-                <a:off x=""0"" y=""0"" xmlns:a=""http://schemas.openxmlformats.org/drawingml/2006/main""/>
-                <a:ext {(widthPx == null ? "" : $@"cx = ""{widthPx * 9525}""")} {(heightPx == null ? "" : $@"cy=""{heightPx * 9525}""")} xmlns:a=""http://schemas.openxmlformats.org/drawingml/2006/main""/>
-            </a:xfrm>
-            <a:prstGeom prst=""rect"" xmlns:a=""http://schemas.openxmlformats.org/drawingml/2006/main"">
-                <a:avLst xmlns:a=""http://schemas.openxmlformats.org/drawingml/2006/main""/>
-            </a:prstGeom>
-        </xdr:spPr>";
-                                newTwoCellAnchor.AppendChild(picNode);
-
-                                // Add the <xdr:clientData> node
-                                var clientDataNode = drawingDoc.CreateElement("xdr", "clientData", "http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing");
-                                newTwoCellAnchor.AppendChild(clientDataNode);
-
+                                drawingDoc = CreateDrawingXml(drawingDoc, col, row, widthPx, heightPx, relId);
                                 // Append the new node after the last <xdr:twoCellAnchor>
-                                drawingDoc.DocumentElement.AppendChild(newTwoCellAnchor);
+                                //drawingDoc.DocumentElement.AppendChild(drawingDoc2);
                             }
 
                         }
                         else
                         {
-                            drawingDoc = CreateDrawingXml(col, row, widthPx, heightPx, relId);
+                            drawingDoc = CreateDrawingXml(null, col, row, widthPx, heightPx, relId);
                         }
 
                         SaveXml(drawingDoc, drawingEntry);
@@ -278,48 +242,175 @@ namespace MiniExcelLibs.Picture
             return nsmgr;
         }
 
-        private static XmlDocument CreateDrawingXml(int col, int row, int widthPx, int heightPx, string relId)
+        private static XmlDocument CreateDrawingXml(XmlDocument existingDoc, int col, int row, int widthPx, int heightPx, string relId)
         {
-            var doc = new XmlDocument();
-            doc.LoadXml($@"<?xml version=""1.0"" encoding=""UTF-8"" standalone=""yes""?>
-<xdr:wsDr xmlns:xdr=""http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing"" xmlns:a=""http://schemas.openxmlformats.org/drawingml/2006/main"">
-    <xdr:twoCellAnchor editAs=""oneCell"">
-        <xdr:from><xdr:col>{col}</xdr:col><xdr:colOff>0</xdr:colOff><xdr:row>{row}</xdr:row><xdr:rowOff>0</xdr:rowOff></xdr:from>
-        <xdr:to><xdr:col>{col + 1}</xdr:col><xdr:colOff>{widthPx * 9525}</xdr:colOff><xdr:row>{row + 1}</xdr:row><xdr:rowOff>{heightPx * 9525}</xdr:rowOff></xdr:to>
-        <xdr:pic>
-            <xdr:nvPicPr>
-                <xdr:cNvPr id=""2"" name=""Picture {relId}""/>
-                <xdr:cNvPicPr><a:picLocks noChangeAspect=""1""/></xdr:cNvPicPr>
-            </xdr:nvPicPr>
-            <xdr:blipFill>
-                <a:blip r:embed=""{relId}"" xmlns:r=""http://schemas.openxmlformats.org/officeDocument/2006/relationships""/>
-                <a:stretch><a:fillRect/></a:stretch>
-            </xdr:blipFill>
-            <xdr:spPr><a:xfrm><a:off x=""0"" y=""0""/><a:ext {(widthPx == null ? "" : $@"cx = ""{widthPx * 9525}""")} {(heightPx == null ? "" : $@"cy=""{heightPx * 9525}""")}/></a:xfrm><a:prstGeom prst=""rect""><a:avLst/></a:prstGeom></xdr:spPr>
-        </xdr:pic>
-        <xdr:clientData/>
-    </xdr:twoCellAnchor>
-</xdr:wsDr>");
-            return doc;
+            return DrawingXmlHelper.CreateOrUpdateDrawingXml(existingDoc, col, row, widthPx, heightPx, relId);
         }
 
-        private static XmlNamespaceManager GetRNamespaceManager(XmlDocument doc)
+
+        public class DrawingXmlHelper
         {
-            var nsmgr = new XmlNamespaceManager(doc.NameTable);
-            nsmgr.AddNamespace("x", "http://schemas.openxmlformats.org/spreadsheetml/2006/main");
-            nsmgr.AddNamespace("r", "http://schemas.openxmlformats.org/officeDocument/2006/relationships");
-            return nsmgr;
-        }
+            private const string XdrNamespace = "http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing";
+            private const string ANamespace = "http://schemas.openxmlformats.org/drawingml/2006/main";
 
-        private static bool CheckRelationshipExists(XmlDocument doc, string id, string type, string target)
-        {
-            var namespaceManager = new XmlNamespaceManager(doc.NameTable);
-            namespaceManager.AddNamespace("x", "http://schemas.openxmlformats.org/package/2006/relationships");
+            private static long PixelsToEMU(int pixels) => (long)(pixels * 9525);
 
-            var xpath = $"/x:Relationships/x:Relationship[@Id='{id}' and @Type='{type}' and @Target='{target}']";
-            var node = doc.SelectSingleNode(xpath, namespaceManager);
+            private static string GetColumnName(int colIndex)
+            {
+                string columnName = "";
+                int dividend = colIndex + 1;
+                while (dividend > 0)
+                {
+                    int modulo = (dividend - 1) % 26;
+                    columnName = Convert.ToChar('A' + modulo).ToString() + columnName;
+                    dividend = (dividend - modulo) / 26;
+                }
+                return columnName;
+            }
 
-            return node != null;
+            public static XmlDocument CreateOrUpdateDrawingXml(
+    XmlDocument existingDoc,
+    int col, int row,
+    int widthPx, int heightPx,
+    string relId)
+            {
+                var doc = existingDoc ?? new XmlDocument();
+                var ns = new XmlNamespaceManager(doc.NameTable);
+                ns.AddNamespace("xdr", XdrNamespace);
+                ns.AddNamespace("a", ANamespace);
+                ns.AddNamespace("r", "http://schemas.openxmlformats.org/officeDocument/2006/relationships");
+
+
+                // check or create <xdr:wsDr>
+                XmlElement wsDr;
+                if (existingDoc == null)
+                {
+                    wsDr = doc.CreateElement("xdr", "wsDr", XdrNamespace);
+                    wsDr.SetAttribute("xmlns:xdr", XdrNamespace);
+                    wsDr.SetAttribute("xmlns:a", ANamespace);
+                    doc.AppendChild(wsDr);
+                }
+                else
+                {
+                    wsDr = doc.DocumentElement;
+                }
+
+                // get current oneCellAnchor to get id 和 name
+                XmlNodeList anchors = wsDr.SelectNodes("//xdr:oneCellAnchor", ns);
+                int imageCount = anchors?.Count ?? 0;
+
+                // next ID（2）
+                int nextId = imageCount + 2;
+
+                // create oneCellAnchor
+                var oneCellAnchor = doc.CreateElement("xdr", "oneCellAnchor", XdrNamespace);
+
+                // <xdr:from>
+                var from = doc.CreateElement("xdr", "from", XdrNamespace);
+                AppendXmlElement(doc, from, "xdr", "col", col.ToString());
+                AppendXmlElement(doc, from, "xdr", "colOff", "0");
+                AppendXmlElement(doc, from, "xdr", "row", row.ToString());
+                AppendXmlElement(doc, from, "xdr", "rowOff", "0");
+
+                // <xdr:ext>
+                var ext = doc.CreateElement("xdr", "ext", XdrNamespace);
+                ext.SetAttribute("cx", PixelsToEMU(widthPx).ToString());
+                ext.SetAttribute("cy", PixelsToEMU(heightPx).ToString());
+
+                // <xdr:pic>
+                var pic = doc.CreateElement("xdr", "pic", XdrNamespace);
+
+                // <xdr:nvPicPr>
+                var nvPicPr = doc.CreateElement("xdr", "nvPicPr", XdrNamespace);
+                var cNvPr = doc.CreateElement("xdr", "cNvPr", XdrNamespace);
+                cNvPr.SetAttribute("id", nextId.ToString());
+                cNvPr.SetAttribute("name", $"ImageAt{GetColumnName(col)}{row + 1}");
+
+                // <a:extLst>...<a16:creationId ... />
+                var extLst = doc.CreateElement("a", "extLst", ANamespace);
+                var extNode = doc.CreateElement("a", "ext", ANamespace);
+                extNode.SetAttribute("uri", "{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}");
+
+                var creationId = doc.CreateElement("a16", "creationId", "http://schemas.microsoft.com/office/drawing/2014/main");
+                creationId.SetAttribute("id", "http://schemas.microsoft.com/office/drawing/2014/main", $"{{00000000-0008-0000-0000-0000{nextId:D6}000000}}");
+
+                extNode.AppendChild(creationId);
+                extLst.AppendChild(extNode);
+                cNvPr.AppendChild(extLst);
+
+                // <xdr:cNvPicPr><a:picLocks noChangeAspect="1" /></xdr:cNvPicPr>
+                var cNvPicPr = doc.CreateElement("xdr", "cNvPicPr", XdrNamespace);
+                var picLocks = doc.CreateElement("a", "picLocks", ANamespace);
+                picLocks.SetAttribute("noChangeAspect", "1");
+                cNvPicPr.AppendChild(picLocks);
+
+                nvPicPr.AppendChild(cNvPr);
+                nvPicPr.AppendChild(cNvPicPr);
+                pic.AppendChild(nvPicPr);
+
+                // <xdr:blipFill>
+
+                var blipFill = doc.CreateElement("xdr", "blipFill", XdrNamespace);
+                var blip = doc.CreateElement("a", "blip", ANamespace);
+
+                blip.SetAttribute("xmlns:r", "http://schemas.openxmlformats.org/officeDocument/2006/relationships");
+                blip.SetAttribute("embed", ns.LookupNamespace("r"), relId);
+                blip.SetAttribute("cstate", "print");
+
+
+                var stretch = doc.CreateElement("a", "stretch", ANamespace);
+                var fillRect = doc.CreateElement("a", "fillRect", ANamespace);
+                stretch.AppendChild(fillRect);
+
+                blipFill.AppendChild(blip);
+                blipFill.AppendChild(stretch);
+                pic.AppendChild(blipFill);
+
+                // <xdr:spPr>
+                var spPr = doc.CreateElement("xdr", "spPr", XdrNamespace);
+                var xfrm = doc.CreateElement("a", "xfrm", ANamespace);
+
+                var off = doc.CreateElement("a", "off", ANamespace);
+                off.SetAttribute("x", "0");
+                off.SetAttribute("y", "0");
+
+                var spExt = doc.CreateElement("a", "ext", ANamespace);
+                spExt.SetAttribute("cx", "0");
+                spExt.SetAttribute("cy", "0");
+
+                xfrm.AppendChild(off);
+                xfrm.AppendChild(spExt);
+
+                var prstGeom = doc.CreateElement("a", "prstGeom", ANamespace);
+                prstGeom.SetAttribute("prst", "rect");
+
+                var avLst = doc.CreateElement("a", "avLst", ANamespace);
+                prstGeom.AppendChild(avLst);
+
+                spPr.AppendChild(xfrm);
+                spPr.AppendChild(prstGeom);
+
+                pic.AppendChild(spPr);
+
+                // <xdr:clientData />
+                var clientData = doc.CreateElement("xdr", "clientData", XdrNamespace);
+
+                oneCellAnchor.AppendChild(from);
+                oneCellAnchor.AppendChild(ext);
+                oneCellAnchor.AppendChild(pic);
+                oneCellAnchor.AppendChild(clientData);
+
+                wsDr.AppendChild(oneCellAnchor);
+
+                return doc;
+            }
+
+            private static void AppendXmlElement(XmlDocument doc, XmlElement parent, string prefix, string localName, string value)
+            {
+                var el = doc.CreateElement(prefix, localName, prefix == "xdr" ? XdrNamespace : ANamespace);
+                el.InnerText = value;
+                parent.AppendChild(el);
+            }
         }
     }
 }

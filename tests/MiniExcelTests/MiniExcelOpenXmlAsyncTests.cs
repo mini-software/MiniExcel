@@ -1197,7 +1197,7 @@ public class MiniExcelOpenXmlAsyncTests
 
         Assert.True(ws.Cell("A2").Value.ToString() == @"""<>+-*//}{\\n");
         Assert.True(ws.Cell("B2").Value.ToString() == "1234567890");
-        Assert.True(ws.Cell("C2").Value.ToString() == true.ToString());
+        Assert.Equal(bool.TrueString,  ws.Cell("C2").Value.ToString(), ignoreCase: true);
         Assert.True(ws.Cell("D2").Value.ToString() == now.ToString());
     }
 

@@ -1,5 +1,5 @@
 using System.Data;
-using MiniExcelLibs.OpenXml.SaveByTemplate;
+using MiniExcelLibs.SaveByTemplate;
 using Xunit;
 
 namespace MiniExcelLibs.Tests.SaveByTemplate;

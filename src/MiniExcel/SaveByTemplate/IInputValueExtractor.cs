@@ -1,9 +1,8 @@
 using System.Collections.Generic;
 
-namespace MiniExcelLibs.OpenXml.SaveByTemplate
+namespace MiniExcelLibs.SaveByTemplate;
+
+public interface IInputValueExtractor
 {
-    public interface IInputValueExtractor
-    {
-        IDictionary<string, object> ToValueDictionary(object valueObject);
-    }
+    IDictionary<string, object> ToValueDictionary(object valueObject);
 }

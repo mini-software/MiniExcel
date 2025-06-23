@@ -1,47 +1,48 @@
-﻿using System.Globalization;
-using System.Text;
+﻿using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml;
 
-namespace MiniExcelLibs.Utils
+namespace MiniExcelLibs.Utils;
+
+/// <summary> XmlEncoder MIT Copyright ©2021 from https://github.com/ClosedXML </summary>
+internal static partial class XmlEncoder
 {
-    /// <summary> XmlEncoder MIT Copyright ©2021 from https://github.com/ClosedXML </summary>
-    internal static class XmlEncoder
+#if NET7_0_OR_GREATER
+    [GeneratedRegex("_(x[\\dA-Fa-f]{4})_", RegexOptions.Compiled)] private static partial Regex X4LRegexImpl();
+    private static readonly Regex X4LRegex = X4LRegexImpl();
+    
+    [GeneratedRegex("_(X[\\dA-Fa-f]{4})_", RegexOptions.Compiled)] private static partial Regex UppercaseX4LRegexImpl();
+    private static readonly Regex UppercaseX4LRegex = UppercaseX4LRegexImpl();
+#else
+    private static readonly Regex X4LRegex = new("_(x[\\dA-Fa-f]{4})_", RegexOptions.Compiled);
+    private static readonly Regex UppercaseX4LRegex = new("_(X[\\dA-Fa-f]{4})_", RegexOptions.Compiled);
+#endif
+
+    public static StringBuilder? EncodeString(string? encodeStr)
     {
-        private static readonly Regex xHHHHRegex = new Regex("_(x[\\dA-Fa-f]{4})_", RegexOptions.Compiled);
-        private static readonly Regex Uppercase_X_HHHHRegex = new Regex("_(X[\\dA-Fa-f]{4})_", RegexOptions.Compiled);
-        private static readonly Regex EscapeRegex = new Regex("_x([0-9A-F]{4,4})_");
+        if (encodeStr is null)
+            return null;
 
-        public static StringBuilder EncodeString(string encodeStr)
+        encodeStr = X4LRegex.Replace(encodeStr, "_x005F_$1_");
+
+        var sb = new StringBuilder(encodeStr.Length);
+        foreach (var ch in encodeStr)
         {
-            if (encodeStr == null)
-                return null;
-
-            encodeStr = xHHHHRegex.Replace(encodeStr, "_x005F_$1_");
-
-            var sb = new StringBuilder(encodeStr.Length);
-            foreach (var ch in encodeStr)
-            {
-                if (XmlConvert.IsXmlChar(ch))
-                    sb.Append(ch);
-                else
-                    sb.Append(XmlConvert.EncodeName(ch.ToString()));
-            }
-            return sb;
+            if (XmlConvert.IsXmlChar(ch))
+                sb.Append(ch);
+            else
+                sb.Append(XmlConvert.EncodeName(ch.ToString()));
         }
 
-        public static string DecodeString(string decodeStr)
-        {
-            if (string.IsNullOrEmpty(decodeStr))
-                return string.Empty;
-            
-            decodeStr = Uppercase_X_HHHHRegex.Replace(decodeStr, "_x005F_$1_");
-            return XmlConvert.DecodeName(decodeStr);
-        }
+        return sb;
+    }
 
-        public static string ConvertEscapeChars(string input)
-        {
-            return EscapeRegex.Replace(input, m => ((char)uint.Parse(m.Groups[1].Value, NumberStyles.HexNumber)).ToString());
-        }
+    public static string? DecodeString(string? decodeStr)
+    {
+        if (string.IsNullOrEmpty(decodeStr))
+            return string.Empty;
+
+        decodeStr = UppercaseX4LRegex.Replace(decodeStr, "_x005F_$1_");
+        return XmlConvert.DecodeName(decodeStr);
     }
 }

@@ -113,12 +113,12 @@ public class QueryXlsxBenchmark : BenchmarkBase
 
         for (var i = start; i <= end; i++)
         {
-            var row = worksheet.GetRow(i);
-            if (row == null)
-                continue;
-            for (var j = row.FirstCellNum; j <= row.LastCellNum; j++)
+            if (worksheet.GetRow(i) is { } row)
             {
-                var cellValue = row.GetCell(j)?.StringCellValue;
+                for (var j = row.FirstCellNum; j <= row.LastCellNum; j++)
+                {
+                    var cellValue = row.GetCell(j)?.StringCellValue;
+                }
             }
         }
     }

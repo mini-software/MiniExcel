@@ -1,15 +1,10 @@
-namespace MiniExcelLibs.Attributes
+using System;
+
+namespace MiniExcelLibs.Attributes;
+
+[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
+public class ExcelColumnNameAttribute(string excelColumnName, string[]? aliases = null) : Attribute
 {
-    using System;
-    [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false)]
-    public class ExcelColumnNameAttribute : Attribute
-    {
-        public string ExcelColumnName { get; set; }
-        public string[] Aliases { get; set; }
-        public ExcelColumnNameAttribute(string excelColumnName, string[] aliases = null)
-        {
-            ExcelColumnName = excelColumnName;
-            Aliases = aliases;
-        }
-    }
+    public string ExcelColumnName { get; set; } = excelColumnName;
+    public string[] Aliases { get; set; } = aliases ?? [];
 }

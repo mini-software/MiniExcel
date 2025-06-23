@@ -2,47 +2,41 @@
 using System.Linq;
 using System.Reflection;
 
-namespace MiniExcelLibs.Utils
+namespace MiniExcelLibs.Utils;
+
+internal static class AttributeExtension
 {
-    internal static class AttributeExtension
+    internal static TValue? GetAttributeValue<TAttribute, TValue>(
+        this Type targetType,
+        Func<TAttribute?, TValue> selector) where TAttribute : Attribute
     {
-        internal static TValue GetAttributeValue<TAttribute, TValue>(
-           this Type targetType,
-           Func<TAttribute, TValue> selector) where TAttribute : Attribute
-        {
-            var attributeType = targetType
-                .GetCustomAttributes(typeof(TAttribute), true)
-                .FirstOrDefault() as TAttribute;
+        var attributeType = targetType
+            .GetCustomAttributes(typeof(TAttribute), true)
+            .FirstOrDefault() as TAttribute;
             
-            return GetValueOrDefault(selector, attributeType);
-        }
+        return GetValueOrDefault(selector, attributeType);
+    }
 
-        private static TValue GetValueOrDefault<TAttribute, TValue>(
-            Func<TAttribute, TValue> selector, 
-            TAttribute attr) where TAttribute : Attribute
-        {
-            return attr != null ? selector(attr) : default;
-        }
+    private static TValue? GetValueOrDefault<TAttribute, TValue>(
+        Func<TAttribute, TValue> selector, 
+        TAttribute? attr) where TAttribute : Attribute
+    {
+        return attr is not null ? selector(attr) : default;
+    }
 
-        internal static TAttribute GetAttribute<TAttribute>(
-           this MemberInfo prop,
-           bool isInherit = true) where TAttribute : Attribute
-        {
-            return GetAttributeValue(prop, (TAttribute attr) => attr, isInherit);
-        }
+    internal static TAttribute? GetAttribute<TAttribute>(
+        this MemberInfo prop,
+        bool isInherit = true) where TAttribute : Attribute
+    {
+        return GetAttributeValue(prop, (TAttribute attr) => attr, isInherit);
+    }
 
-        internal static TValue GetAttributeValue<TAttribute, TValue>(
-                this MemberInfo prop,
-                Func<TAttribute, TValue> selector,
-                bool isInherit = true ) where TAttribute : Attribute
-        {
-            var attr = Attribute.GetCustomAttribute(prop, typeof(TAttribute), isInherit) as TAttribute;
-            return GetValueOrDefault(selector, attr);
-        }
-
-        internal static bool IsUseAttribute<TAttribute>(this PropertyInfo prop)
-        {
-            return Attribute.GetCustomAttribute(prop, typeof(TAttribute)) != null;
-        }
+    internal static TValue? GetAttributeValue<TAttribute, TValue>(
+        this MemberInfo prop,
+        Func<TAttribute, TValue> selector,
+        bool isInherit = true ) where TAttribute : Attribute
+    {
+        var attr = Attribute.GetCustomAttribute(prop, typeof(TAttribute), isInherit) as TAttribute;
+        return GetValueOrDefault(selector, attr);
     }
 }

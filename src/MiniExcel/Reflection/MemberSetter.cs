@@ -2,36 +2,34 @@ using System;
 using System.Linq.Expressions;
 using System.Reflection;
 
-namespace MiniExcelLibs
+namespace MiniExcelLibs;
+
+public class MemberSetter
 {
-    public class MemberSetter
+    private readonly Action<object, object?> _setFunc;
+
+    public MemberSetter(PropertyInfo property)
     {
-        private readonly Action<object, object> setFunc;
+        if (property is null)
+            throw new ArgumentNullException(nameof(property));
+        
+        _setFunc = CreateSetterDelegate(property);
+    }
 
-        public MemberSetter(PropertyInfo property)
-        {
-            if (property == null)
-            {
-                throw new ArgumentNullException(nameof(property));
-            }
-            setFunc = CreateSetterDelegate(property);
-        }
+    public void Invoke(object instance, object? value)
+    {
+        _setFunc.Invoke(instance, value);
+    }
 
-        public void Invoke(object instance, object value)
-        {
-            setFunc.Invoke(instance, value);
-        }
+    private static Action<object, object?> CreateSetterDelegate(PropertyInfo property)
+    {
+        var paramInstance = Expression.Parameter(typeof(object));
+        var paramValue = Expression.Parameter(typeof(object));
 
-        private static Action<object, object> CreateSetterDelegate(PropertyInfo property)
-        {
-            var param_instance = Expression.Parameter(typeof(object));
-            var param_value = Expression.Parameter(typeof(object));
+        var bodyInstance = Expression.Convert(paramInstance, property.DeclaringType!);
+        var bodyValue = Expression.Convert(paramValue, property.PropertyType);
+        var bodyCall = Expression.Call(bodyInstance, property.GetSetMethod(true)!, bodyValue);
 
-            var body_instance = Expression.Convert(param_instance, property.DeclaringType);
-            var body_value = Expression.Convert(param_value, property.PropertyType);
-            var body_call = Expression.Call(body_instance, property.GetSetMethod(true), body_value);
-
-            return Expression.Lambda<Action<object, object>>(body_call, param_instance, param_value).Compile();
-        }
+        return Expression.Lambda<Action<object, object?>>(bodyCall, paramInstance, paramValue).Compile();
     }
 }

@@ -18,6 +18,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Docs and setting", "Docs an
 		README.zh-Hant.md = README.zh-Hant.md
 		.github\workflows\benchmark.yml = .github\workflows\benchmark.yml
 		.github\workflows\codeql-analysis.yml = .github\workflows\codeql-analysis.yml
+		docs\core_logic_diagram.drawio = docs\core_logic_diagram.drawio
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{CC1E0601-AEC9-42D7-8F6A-3FB3939EED16}"

@@ -1,13 +1,14 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
+using Zomp.SyncMethodGenerator;
 
-namespace MiniExcelLibs
+namespace MiniExcelLibs;
+
+internal partial interface IExcelWriter
 {
-    internal partial interface IExcelWriter
-    {
-        [Zomp.SyncMethodGenerator.CreateSyncVersion]
-        Task<int[]> SaveAsAsync(CancellationToken cancellationToken = default);
-        [Zomp.SyncMethodGenerator.CreateSyncVersion]
-        Task<int> InsertAsync(bool overwriteSheet = false, CancellationToken cancellationToken = default);
-    }
+    [CreateSyncVersion]
+    Task<int[]> SaveAsAsync(CancellationToken cancellationToken = default);
+
+    [CreateSyncVersion]
+    Task<int> InsertAsync(bool overwriteSheet = false, CancellationToken cancellationToken = default);
 }

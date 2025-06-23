@@ -1,88 +1,42 @@
-﻿using System;
+﻿namespace MiniExcelLibs.Utils;
 
-namespace MiniExcelLibs.Utils
+internal static class ImageHelper
 {
-    internal static class ImageHelper
+    private static readonly byte[] Bmp = [(byte)'B', (byte)'M'];
+    private static readonly byte[] Gif = [(byte)'G', (byte)'I', (byte)'F'];
+    private static readonly byte[] Png = [137, 80, 78, 71];
+    private static readonly byte[] Tiff = [73, 73, 42];
+    private static readonly byte[] Tiff2 = [77, 77, 42];
+    private static readonly byte[] Jpeg = [255, 216, 255, 224];
+    private static readonly byte[] Jpeg2 = [255, 216, 255, 225];
+    
+    public enum ImageFormat
     {
-        public enum ImageFormat
-        {
-            bmp,
-            jpg,
-            gif,
-            tiff,
-            png,
-            unknown
-        }
+        Bmp,
+        Jpg,
+        Gif,
+        Tiff,
+        Png,
+        Unknown
+    }
 
-#if NET462||NETSTANDARD2_0
-        public static ImageFormat GetImageFormat(byte[] bytes)
-        {
-            var bmp = new byte[] { (byte)'B', (byte)'M' };            // BMP
-            var gif = new byte[] { (byte)'G', (byte)'I', (byte)'F' }; // GIF
-            var png = new byte[] { 137, 80, 78, 71 };                 // PNG
-            var tiff = new byte[] { 73, 73, 42 };                     // TIFF
-            var tiff2 = new byte[] { 77, 77, 42 };                    // TIFF
-            var jpeg = new byte[] { 255, 216, 255, 224 };             // jpeg
-            var jpeg2 = new byte[] { 255, 216, 255, 225 };            // jpeg canon
-
-            if (bytes.StartsWith(bmp))
-                return ImageFormat.bmp;
-
-            if (bytes.StartsWith(gif))
-                return ImageFormat.gif;
-
-            if (bytes.StartsWith(png))
-                return ImageFormat.png;
-
-            if (bytes.StartsWith(tiff))
-                return ImageFormat.tiff;
-
-            if (bytes.StartsWith(tiff2))
-                return ImageFormat.tiff;
-
-            if (bytes.StartsWith(jpeg))
-                return ImageFormat.jpg;
-
-            if (bytes.StartsWith(jpeg2))
-                return ImageFormat.jpg;
-
-            return ImageFormat.unknown;
-        }
+    public static ImageFormat GetImageFormat(byte[] bytes)
+    {
+        if (bytes.StartsWith(Bmp))
+            return ImageFormat.Bmp;
         
-#elif NET5_0_OR_GREATER
-        public static ImageFormat GetImageFormat(ReadOnlySpan<byte> bytes)
-        {
-            ReadOnlySpan<byte> bmp = stackalloc byte[] { (byte)'B', (byte)'M' };            // BMP
-            ReadOnlySpan<byte> gif = stackalloc byte[] { (byte)'G', (byte)'I', (byte)'F' }; // GIF
-            ReadOnlySpan<byte> png = stackalloc byte[] { 137, 80, 78, 71 };                 // PNG
-            ReadOnlySpan<byte> tiff = stackalloc byte[] { 73, 73, 42 };                     // TIFF
-            ReadOnlySpan<byte> tiff2 = stackalloc byte[] { 77, 77, 42 };                    // TIFF
-            ReadOnlySpan<byte> jpeg = stackalloc byte[] { 255, 216, 255, 224 };             // jpeg
-            ReadOnlySpan<byte> jpeg2 = stackalloc byte[] { 255, 216, 255, 225 };            // jpeg canon
+        if (bytes.StartsWith(Gif))
+            return ImageFormat.Gif;
 
-            if (bytes.StartsWith(bmp))
-                return ImageFormat.bmp;
+        if (bytes.StartsWith(Png))
+            return ImageFormat.Png;
 
-            if (bytes.StartsWith(gif))
-                return ImageFormat.gif;
+        if (bytes.StartsWith(Tiff) || bytes.StartsWith(Tiff2))
+            return ImageFormat.Tiff;
 
-            if (bytes.StartsWith(png))
-                return ImageFormat.png;
+        if (bytes.StartsWith(Jpeg) || bytes.StartsWith(Jpeg2))
+            return ImageFormat.Jpg;
 
-            if (bytes.StartsWith(tiff))
-                return ImageFormat.tiff;
-
-            if (bytes.StartsWith(tiff2))
-                return ImageFormat.tiff;
-
-            if (bytes.StartsWith(jpeg))
-                return ImageFormat.jpg;
-
-            if (bytes.StartsWith(jpeg2))
-                return ImageFormat.jpg;
-
-            return ImageFormat.unknown;
-        }
-#endif
+        return ImageFormat.Unknown;
     }
 }

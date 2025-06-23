@@ -573,39 +573,34 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
     /// (https://github.com/mini-software/MiniExcel/issues/122)
     /// </summary>
     [Fact]
-    public async Task Issue122()
+    public Task Issue122()
     {
         var config = new OpenXmlConfiguration
         {
             FillMergedCells = true
         };
-        {
-            var path = PathHelper.GetFile("xlsx/TestIssue122.xlsx");
-            {
-                var q = MiniExcel.QueryAsync(path, useHeaderRow: true, configuration: config).ToBlockingEnumerable();
-                var rows = q.ToList();
-                Assert.Equal("HR", rows[0].Department);
-                Assert.Equal("HR", rows[1].Department);
-                Assert.Equal("HR", rows[2].Department);
-                Assert.Equal("IT", rows[3].Department);
-                Assert.Equal("IT", rows[4].Department);
-                Assert.Equal("IT", rows[5].Department);
-            }
-        }
+            
+        var path1 = PathHelper.GetFile("xlsx/TestIssue122.xlsx");
+        var rows1 = MiniExcel.QueryAsync(path1, useHeaderRow: true, configuration: config).ToBlockingEnumerable().ToList();
+        
+        Assert.Equal("HR", rows1[0].Department);
+        Assert.Equal("HR", rows1[1].Department);
+        Assert.Equal("HR", rows1[2].Department);
+        Assert.Equal("IT", rows1[3].Department);
+        Assert.Equal("IT", rows1[4].Department);
+        Assert.Equal("IT", rows1[5].Department);
 
-        {
-            var path = PathHelper.GetFile("xlsx/TestIssue122_2.xlsx");
-            {
-                var q = MiniExcel.QueryAsync(path, useHeaderRow: true, configuration: config).ToBlockingEnumerable();
-                var rows = q.ToList();
-                Assert.Equal("V1", rows[2].Test1);
-                Assert.Equal("V2", rows[5].Test2);
-                Assert.Equal("V3", rows[1].Test3);
-                Assert.Equal("V4", rows[2].Test4);
-                Assert.Equal("V5", rows[3].Test5);
-                Assert.Equal("V6", rows[5].Test5);
-            }
-        }
+        var path2 = PathHelper.GetFile("xlsx/TestIssue122_2.xlsx");
+        var rows2 = MiniExcel.QueryAsync(path2, useHeaderRow: true, configuration: config).ToBlockingEnumerable().ToList();
+
+        Assert.Equal("V1", rows2[2].Test1);
+        Assert.Equal("V2", rows2[5].Test2);
+        Assert.Equal("V3", rows2[1].Test3);
+        Assert.Equal("V4", rows2[2].Test4);
+        Assert.Equal("V5", rows2[3].Test5);
+        Assert.Equal("V6", rows2[5].Test5);
+        
+        return Task.CompletedTask;
     }
 
     /// <summary>

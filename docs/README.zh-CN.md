@@ -27,6 +27,17 @@
 
 
 
+### 1.41.3
+
+* 【新增】在 `CsvConfiguration` 中新增 `QuoteWhitespaces` 选项，用于对空白单元的字符串加上双引号 #790（贡献者：@michelebastione）
+* 【修复】修正使用 `IDataReader` 作为数据源时，`DynamicExcelColumn` 的 `Ignore` 属性无效的问题 #584（贡献者：@michelebastione）
+* 【修复】v1.41.2 中 `AddPicture` 功能无法使用的问题 #814（贡献者：@shps951023）
+* 【修复】v1.41.1 中 `AddPicture` 插入的图片最大列和行仅限于2个单元格的问题 #815（贡献者：@shps951023）
+* 【修复】`AddPicture` 在导出文件后再次执行时出现错误的问题 #817（贡献者：@shps951023）
+
+
+
+
 ### 1.41.2
 - [New] 增加 enum behaviour and adds support for DescriptionAttribute when saving by template (via @michelebastione )
 - [Bug] SaveAsByTemplate - Excel Dimension Xml is null #459 (via @michelebastione )

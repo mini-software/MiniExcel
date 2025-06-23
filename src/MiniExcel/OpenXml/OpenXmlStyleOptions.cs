@@ -1,7 +1,6 @@
-namespace MiniExcelLibs.OpenXml
+namespace MiniExcelLibs.OpenXml;
+
+public class OpenXmlStyleOptions
 {
-    public class OpenXmlStyleOptions
-    {
-        public bool WrapCellContents { get; set; }
-    }
+    public bool WrapCellContents { get; set; }
 }

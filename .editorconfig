@@ -28,3 +28,5 @@ dotnet_diagnostic.CA2007.severity = error
 
 # CA2016: Forward the CancellationToken parameter to methods that take one
 dotnet_diagnostic.CA2016.severity = error
+
+csharp_style_namespace_declarations = file_scoped:silent

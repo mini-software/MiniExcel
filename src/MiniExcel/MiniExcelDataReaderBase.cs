@@ -212,7 +212,7 @@ public abstract class MiniExcelDataReaderBase : IMiniExcelDataReader
     public virtual Task<bool> NextResultAsync(CancellationToken cancellationToken = default)
     {
         if (cancellationToken.IsCancellationRequested)
-            return MiniExcelTask.FromCanceled<bool>(cancellationToken);
+            return Task.FromCanceled<bool>(cancellationToken);
 
         try
         {
@@ -220,7 +220,7 @@ public abstract class MiniExcelDataReaderBase : IMiniExcelDataReader
         }
         catch (Exception e)
         {
-            return MiniExcelTask.FromException<bool>(e);
+            return Task.FromException<bool>(e);
         }
     }
 
@@ -240,7 +240,7 @@ public abstract class MiniExcelDataReaderBase : IMiniExcelDataReader
     public virtual Task<string> GetNameAsync(int i, CancellationToken cancellationToken = default)
     {
         if (cancellationToken.IsCancellationRequested)
-            return MiniExcelTask.FromCanceled<string>(cancellationToken);
+            return Task.FromCanceled<string>(cancellationToken);
         
         try
         {
@@ -248,7 +248,7 @@ public abstract class MiniExcelDataReaderBase : IMiniExcelDataReader
         }
         catch (Exception e)
         {
-            return MiniExcelTask.FromException<string>(e);
+            return Task.FromException<string>(e);
         }
     }
 
@@ -268,7 +268,7 @@ public abstract class MiniExcelDataReaderBase : IMiniExcelDataReader
     public virtual Task<object> GetValueAsync(int i, CancellationToken cancellationToken = default)
     {
         if (cancellationToken.IsCancellationRequested)
-            return MiniExcelTask.FromCanceled<object>(cancellationToken);
+            return Task.FromCanceled<object>(cancellationToken);
 
         try
         {
@@ -276,7 +276,7 @@ public abstract class MiniExcelDataReaderBase : IMiniExcelDataReader
         }
         catch (Exception e)
         {
-            return MiniExcelTask.FromException<object>(e);
+            return Task.FromException<object>(e);
         }
     }
 
@@ -294,7 +294,7 @@ public abstract class MiniExcelDataReaderBase : IMiniExcelDataReader
     public virtual Task<bool> ReadAsync(CancellationToken cancellationToken = default)
     {
         if (cancellationToken.IsCancellationRequested)
-            return MiniExcelTask.FromCanceled<bool>(cancellationToken);
+            return Task.FromCanceled<bool>(cancellationToken);
 
         try
         {
@@ -302,7 +302,7 @@ public abstract class MiniExcelDataReaderBase : IMiniExcelDataReader
         }
         catch (Exception e)
         {
-            return MiniExcelTask.FromException<bool>(e);
+            return Task.FromException<bool>(e);
         }
     }
 
@@ -322,11 +322,11 @@ public abstract class MiniExcelDataReaderBase : IMiniExcelDataReader
         try
         {
             Close();
-            return MiniExcelTask.CompletedTask;
+            return Task.CompletedTask;
         }
         catch (Exception e)
         {
-            return MiniExcelTask.FromException(e);
+            return Task.FromException(e);
         }
     }
 

@@ -29,11 +29,11 @@
 
 ### 1.41.3
 
-* 【新增】在 `CsvConfiguration` 中新增 `QuoteWhitespaces` 選項，用於對包含空白字元的字串加上雙引號 #790（貢獻者：@michelebastione）
-* 【錯誤修正】修正使用 `IDataReader` 作為來源產生資料時，`DynamicExcelColumn` 的 `Ignore` 屬性無效的問題 #584（貢獻者：@michelebastione）
-* 【錯誤修正】v1.41.2 中 `AddPicture` 功能無法使用的問題 #814（貢獻者：@shps951023）
-* 【錯誤修正】v1.41.1 中 `AddPicture` 插入的圖片最大列與欄僅限於 2 個儲存格的問題 #815（貢獻者：@shps951023）
-* 【錯誤修正】`AddPicture` 在匯出檔案後再次執行時出現錯誤的問題 #816（貢獻者：@shps951023）
+* 【新增】在 `CsvConfiguration` 中新增 `QuoteWhitespaces` 选项，用于对空白单元的字符串加上双引号 #790（贡献者：@michelebastione）
+* 【修复】修正使用 `IDataReader` 作为数据源时，`DynamicExcelColumn` 的 `Ignore` 属性无效的问题 #584（贡献者：@michelebastione）
+* 【修复】v1.41.2 中 `AddPicture` 功能无法使用的问题 #814（贡献者：@shps951023）
+* 【修复】v1.41.1 中 `AddPicture` 插入的图片最大列和行仅限于2个单元格的问题 #815（贡献者：@shps951023）
+* 【修复】`AddPicture` 在导出文件后再次执行时出现错误的问题 #817（贡献者：@shps951023）
 
 
 

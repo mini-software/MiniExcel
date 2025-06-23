@@ -28,7 +28,7 @@
 - [Bug] Fixed bug that made the DynamicExcelColumn property "Ignore" not work when generating using an IDataReader as source #584 (via @michelebastione )
 - [Bug] v1.41.2 AddPicture not working #814 (via @shps951023)
 - [Bug] v1.41.1 AddPicture image max column and row are 2 cells #815 (via @shps951023)
-- [Bug] AddPicture get error same export file and second time. #816 (via @shps951023)
+- [Bug] AddPicture get error same export file and second time. #817 (via @shps951023)
 
 
 ### 1.41.2

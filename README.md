@@ -26,29 +26,27 @@
 ---
 
 <div style="text-align: center">
- Your <a href="https://github.com/mini-software/MiniExcel">Star</a> and <a href="https://miniexcel.github.io">Donate</a> can make MiniExcel better
+ Your <a href="https://github.com/mini-software/MiniExcel">Stars</a> or <a href="https://miniexcel.github.io">Donations</a> can make MiniExcel better
 </div>
 
 ---
 
 ### Introduction
 
-MiniExcel is simple and efficient to avoid OOM's .NET processing Excel tool.
+MiniExcel is a simple and efficient Excel processing tool for .NET, specifically designed to minimize memory usage.
 
-At present, most popular frameworks need to load all the data into the memory to facilitate operation, but it will cause memory consumption problems. MiniExcel tries to use algorithm from a stream to reduce the original 1000 MB occupation to a few MB to avoid OOM(out of memory).
+At present, most popular frameworks need to load all the data from an Excel document into memory to facilitate operations, but this may cause memory consumption problems. MiniExcel's approach is different: the data is processed row by row in a streaming manner, reducing the original consumption from potentially hundreds of megabytes to just a few megabytes, effectively preventing out-of-memory(OOM) issues.
 
-![image](https://user-images.githubusercontent.com/12729184/113086657-ab8bd000-9214-11eb-9563-c970ac1ee35e.png)
-
-
+![Screenshot 2025-06-22 123525](https://github.com/user-attachments/assets/0b99a61e-8061-4604-8957-0b1f3ec74544)
 
 
 ### Features
 
-- Low memory consumption, avoid OOM (out of memory) and full GC
-- Supports real time operation of each row of data
-- Supports LINQ deferred execution, it can do low-consumption, fast paging and other complex queries
-- Lightweight, without Microsoft Office installed, no COM+, DLL size is less than 400KB
-- Easy API style to read/write/fill excel
+- Minimizes memory consumption, preventing out-of-memory (OOM) errors and avoiding full garbage collections
+- Enables real-time, row-level data operations for better performance on large datasets
+- Supports LINQ with deferred execution, allowing for fast, memory-efficient paging and complex queries
+- Lightweight, without the need for Microsoft Office or COM+ components, and a DLL size under 500KB
+- Simple and intuitive API style to read/write/fill excel
 
 ### Get Started
 

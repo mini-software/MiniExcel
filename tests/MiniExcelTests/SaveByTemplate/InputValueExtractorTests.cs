@@ -1,8 +1,8 @@
 using System.Data;
-using MiniExcelLibs.SaveByTemplate;
+using MiniExcelLib.Core.OpenXml.Templates;
 using Xunit;
 
-namespace MiniExcelLibs.Tests.SaveByTemplate;
+namespace MiniExcelLib.Tests.SaveByTemplate;
 
 public class InputValueExtractorTests
 {
@@ -16,7 +16,7 @@ public class InputValueExtractorTests
             ["Fruits"] = new List<string> { "Apples, Oranges" },
         };
 
-        var sut = new InputValueExtractor();
+        var sut = new OpenXmlValueExtractor();
         var result = sut.ToValueDictionary(valueDictionary);
         
         Assert.Equal(result.Count, valueDictionary.Count);
@@ -47,7 +47,7 @@ public class InputValueExtractorTests
             ["DataReader"] = dataTable.CreateDataReader()
         };
 
-        var sut = new InputValueExtractor();
+        var sut = new OpenXmlValueExtractor();
         var extracted = sut.ToValueDictionary(valueDictionary);
         var result = (List<IDictionary<string, object>>)extracted["DataReader"];
 
@@ -76,7 +76,7 @@ public class InputValueExtractorTests
             ["Fruits"] = new List<string> { "Apples, Oranges" }
         };
 
-        var sut = new InputValueExtractor();
+        var sut = new OpenXmlValueExtractor();
         var result = sut.ToValueDictionary(valueObject);
 
         Assert.Equal(result.Count, expectedOutput.Count);
@@ -103,7 +103,7 @@ public class InputValueExtractorTests
             ["Fruits"] = new List<string> { "Apples, Oranges" }
         };
 
-        var sut = new InputValueExtractor();
+        var sut = new OpenXmlValueExtractor();
         var result = sut.ToValueDictionary(valueObject);
      
         Assert.Equal(result.Count, expectedOutput.Count);

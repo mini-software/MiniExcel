@@ -1,6 +1,6 @@
 using OfficeOpenXml;
 
-namespace MiniExcelLibs.Tests.Utils;
+namespace MiniExcelLib.Tests.Utils;
 
 internal static class EpplusLicence
 {

@@ -4,11 +4,12 @@ using ClosedXML.Excel;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
-using MiniExcelLibs.Benchmarks.Utils;
+using MiniExcelLib.Benchmarks.Utils;
 using NPOI.XSSF.UserModel;
 using OfficeOpenXml;
+using Exporter = MiniExcelLib.MiniExcel.Exporter;
 
-namespace MiniExcelLibs.Benchmarks.BenchmarkSections;
+namespace MiniExcelLib.Benchmarks.BenchmarkSections;
 
 public class CreateXlsxBenchmark : BenchmarkBase
 {
@@ -23,7 +24,7 @@ public class CreateXlsxBenchmark : BenchmarkBase
     public void MiniExcelCreateTest()
     {
         using var path = AutoDeletingPath.Create();
-        MiniExcel.SaveAs(path.FilePath, GetValue());
+        Exporter.ExportXlsx(path.FilePath, GetValue());
     }
 
     [Benchmark(Description = "ClosedXml Create Xlsx")]

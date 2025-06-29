@@ -7,9 +7,9 @@
 		
 		<IsPackable>false</IsPackable>
 		<SignAssembly>true</SignAssembly>
-		<AssemblyOriginatorKeyFile>..\..\src\MiniExcel\miniexcel.snk</AssemblyOriginatorKeyFile>
+		<AssemblyOriginatorKeyFile>..\..\src\miniexcel.snk</AssemblyOriginatorKeyFile>
 		<NoWarn>$(NoWarn);IDE0017;IDE0034;IDE0037;IDE0039;IDE0042;IDE0044;IDE0051;IDE0052;IDE0059;IDE0060;IDE0063;IDE1006;xUnit1004;CA1806;CA1816;CA1822;CA1825;CA1849;CA2000;CA2007;CA2208</NoWarn>
-		<RootNamespace>MiniExcelLibs.Tests</RootNamespace>
+		<RootNamespace>MiniExcelLib.Tests</RootNamespace>
 	</PropertyGroup>
 	
 	<ItemGroup>
@@ -30,13 +30,17 @@
 			<PrivateAssets>all</PrivateAssets>
 		</PackageReference>
 	</ItemGroup>
-
+	
 	<ItemGroup>
-		<ProjectReference Include="..\..\src\MiniExcel\MiniExcelLibs.csproj" />
+		<ProjectReference Include="..\..\src\MiniExcelLib.Core\MiniExcelLib.Core.csproj" />
+		<ProjectReference Include="..\..\src\MiniExcelLib.Csv\MiniExcelLib.Csv.csproj" />
+		<ProjectReference Include="..\..\src\MiniExcel\MiniExcel.csproj" />
 	</ItemGroup>
-
+	
 	<ItemGroup>
-	  <None Include="..\..\src\MiniExcel\miniexcel.snk" Link="miniexcel.snk" />
+	  <None Include="..\..\src\miniexcel.snk">
+	    <Link>miniexcel.snk</Link>
+	  </None>
 	</ItemGroup>
 
 </Project>

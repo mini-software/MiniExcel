@@ -1,4 +1,4 @@
-﻿namespace MiniExcelLibs.Tests.Utils;
+﻿namespace MiniExcelLib.Tests.Utils;
 
 public static class FileHelper
 {

@@ -1,4 +1,4 @@
-namespace MiniExcelLibs.Tests.Utils;
+namespace MiniExcelLib.Tests.Utils;
 
 public class AutoDeletingPath : IDisposable
 {
@@ -11,7 +11,7 @@ public class AutoDeletingPath : IDisposable
 
     public static AutoDeletingPath Create(string path) => new(path);
     public static AutoDeletingPath Create(string path, string filename) => new(Path.Combine(path, filename));
-    public static AutoDeletingPath Create(ExcelType type = ExcelType.XLSX) => Create(
+    public static AutoDeletingPath Create(ExcelType type = ExcelType.Xlsx) => Create(
         Path.GetTempPath(), 
         $"{Guid.NewGuid()}.{type.ToString().ToLowerInvariant()}");
 
@@ -22,3 +22,5 @@ public class AutoDeletingPath : IDisposable
     
     public override string ToString() => FilePath;
 }
+
+public enum ExcelType { Xlsx, Csv }

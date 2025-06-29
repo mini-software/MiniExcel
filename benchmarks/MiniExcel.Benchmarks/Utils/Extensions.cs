@@ -1,6 +1,6 @@
 ﻿using DocumentFormat.OpenXml.Spreadsheet;
 
-namespace MiniExcelLibs.Benchmarks.Utils;
+namespace MiniExcelLib.Benchmarks.Utils;
 
 internal static class Extensions
 {

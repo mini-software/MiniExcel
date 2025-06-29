@@ -1,18 +1,21 @@
-﻿using ClosedXML.Excel;
-using Dapper;
-using ExcelDataReader;
-using MiniExcelLibs.Attributes;
-using MiniExcelLibs.OpenXml;
-using MiniExcelLibs.Tests.Utils;
-using OfficeOpenXml;
-using System.Data;
+﻿using System.Data;
 using System.Data.SQLite;
 using System.Globalization;
 using System.IO.Packaging;
 using System.Text;
+using ClosedXML.Excel;
+using Dapper;
+using ExcelDataReader;
+using MiniExcelLib.Core.Abstractions;
+using MiniExcelLib.Core.Attributes;
+using MiniExcelLib.Core.OpenXml;
+using MiniExcelLib.Tests.Utils;
+using Importer = MiniExcelLib.MiniExcel.Importer;
+using Exporter = MiniExcelLib.MiniExcel.Exporter;
+using OfficeOpenXml;
 using Xunit;
 
-namespace MiniExcelLibs.Tests;
+namespace MiniExcelLib.Tests;
 
 public class MiniExcelOpenXmlAsyncTests
 {
@@ -33,10 +36,10 @@ public class MiniExcelOpenXmlAsyncTests
             '\u0017','\u0018','\u0019','\u001A','\u001B','\u001C','\u001D','\u001E','\u001F','\u007F'
         ];
         var input = chars.Select(s => new { Test = s.ToString() });
-        await MiniExcel.SaveAsAsync(path, input);
+        await Exporter.ExportXlsxAsync(path, input);
 
-        var rows2 = MiniExcel.QueryAsync(path, true).ToBlockingEnumerable().ToArray();
-        var rows1 = MiniExcel.QueryAsync<SaveAsControlChracterVO>(path).ToBlockingEnumerable().ToArray();
+        var rows2 = Importer.QueryXlsxAsync(path, true).ToBlockingEnumerable().ToArray();
+        var rows1 = Importer.QueryXlsxAsync<SaveAsControlChracterVO>(path).ToBlockingEnumerable().ToArray();
     }
 
     private class SaveAsControlChracterVO
@@ -46,33 +49,33 @@ public class MiniExcelOpenXmlAsyncTests
 
     private class ExcelAttributeDemo
     {
-        [ExcelColumnName("Column1")]
+        [MiniExcelColumnName("Column1")]
         public string Test1 { get; set; }
-        [ExcelColumnName("Column2")]
+        [MiniExcelColumnName("Column2")]
         public string Test2 { get; set; }
-        [ExcelIgnore]
+        [MiniExcelIgnore]
         public string Test3 { get; set; }
-        [ExcelColumnIndex("I")] // system will convert "I" to 8 index
+        [MiniExcelColumnIndex("I")] // system will convert "I" to 8 index
         public string Test4 { get; set; }
         public string Test5 { get; } //wihout set will ignore
         public string Test6 { get; private set; } //un-public set will ignore
-        [ExcelColumnIndex(3)] // start with 0
+        [MiniExcelColumnIndex(3)] // start with 0
         public string Test7 { get; set; }
     }
 
     private class ExcelAttributeDemo2
     {
-        [ExcelColumn(Name = "Column1")]
+        [MiniExcelColumn(Name = "Column1")]
         public string Test1 { get; set; }
-        [ExcelColumn(Name = "Column2")]
+        [MiniExcelColumn(Name = "Column2")]
         public string Test2 { get; set; }
-        [ExcelColumn(Ignore = true)]
+        [MiniExcelColumn(Ignore = true)]
         public string Test3 { get; set; }
-        [ExcelColumn(IndexName = "I")] // system will convert "I" to 8 index
+        [MiniExcelColumn(IndexName = "I")] // system will convert "I" to 8 index
         public string Test4 { get; set; }
         public string Test5 { get; } //wihout set will ignore
         public string Test6 { get; private set; } //un-public set will ignore
-        [ExcelColumn(Index = 3)] // start with 0
+        [MiniExcelColumn(Index = 3)] // start with 0
         public string Test7 { get; set; }
     }
 
@@ -82,7 +85,7 @@ public class MiniExcelOpenXmlAsyncTests
         const string path = "../../../../../samples/xlsx/TestCustomExcelColumnAttribute.xlsx";
         await Assert.ThrowsAsync<InvalidOperationException>(async () =>
         {
-            _ = MiniExcel.QueryAsync<CustomAttributesWihoutVaildPropertiesTestPoco>(path).ToBlockingEnumerable().ToList();
+            _ = Importer.QueryXlsxAsync<CustomAttributesWihoutVaildPropertiesTestPoco>(path).ToBlockingEnumerable().ToList();
         });
     }
 
@@ -90,7 +93,7 @@ public class MiniExcelOpenXmlAsyncTests
     public async Task QueryCustomAttributesTest()
     {
         const string path = "../../../../../samples/xlsx/TestCustomExcelColumnAttribute.xlsx";
-        var rows = MiniExcel.QueryAsync<ExcelAttributeDemo>(path).ToBlockingEnumerable().ToList();
+        var rows = Importer.QueryXlsxAsync<ExcelAttributeDemo>(path).ToBlockingEnumerable().ToList();
 
         Assert.Equal("Column1", rows[0].Test1);
         Assert.Equal("Column2", rows[0].Test2);
@@ -105,7 +108,7 @@ public class MiniExcelOpenXmlAsyncTests
     public async Task QueryCustomAttributes2Test()
     {
         const string path = "../../../../../samples/xlsx/TestCustomExcelColumnAttribute.xlsx";
-        var rows = MiniExcel.QueryAsync<ExcelAttributeDemo2>(path).ToBlockingEnumerable().ToList();
+        var rows = Importer.QueryXlsxAsync<ExcelAttributeDemo2>(path).ToBlockingEnumerable().ToList();
 
         Assert.Equal("Column1", rows[0].Test1);
         Assert.Equal("Column2", rows[0].Test2);
@@ -129,8 +132,8 @@ public class MiniExcelOpenXmlAsyncTests
                 Test4 = "Test4",
             });
 
-        await MiniExcel.SaveAsAsync(path.ToString(), input);
-        var d = MiniExcel.QueryAsync(path.ToString(), true).ToBlockingEnumerable();
+        await Exporter.ExportXlsxAsync(path.ToString(), input);
+        var d = Importer.QueryXlsxAsync(path.ToString(), true).ToBlockingEnumerable();
         var rows = d.ToList();
         var first = rows[0] as IDictionary<string, object>;
 
@@ -156,8 +159,8 @@ public class MiniExcelOpenXmlAsyncTests
                 Test4 = "Test4",
             });
 
-        await MiniExcel.SaveAsAsync(path.ToString(), input);
-        var d = MiniExcel.QueryAsync(path.ToString(), true).ToBlockingEnumerable();
+        await Exporter.ExportXlsxAsync(path.ToString(), input);
+        var d = Importer.QueryXlsxAsync(path.ToString(), true).ToBlockingEnumerable();
         var rows = d.ToList();
         var first = rows[0] as IDictionary<string, object>;
 
@@ -172,7 +175,7 @@ public class MiniExcelOpenXmlAsyncTests
 
     private class CustomAttributesWihoutVaildPropertiesTestPoco
     {
-        [ExcelIgnore]
+        [MiniExcelIgnore]
         public string Test3 { get; set; }
         public string Test5 { get; }
         public string Test6 { get; private set; }
@@ -182,7 +185,7 @@ public class MiniExcelOpenXmlAsyncTests
     public async Task QueryCastToIDictionary()
     {
         const string path = "../../../../../samples/xlsx/TestCenterEmptyRow/TestCenterEmptyRow.xlsx";
-        foreach (IDictionary<string, object> row in MiniExcel.QueryAsync(path).ToBlockingEnumerable())
+        foreach (IDictionary<string, object> row in Importer.QueryXlsxAsync(path).ToBlockingEnumerable())
         {
             _ = row;
         }
@@ -194,7 +197,7 @@ public class MiniExcelOpenXmlAsyncTests
         const string path = "../../../../../samples/xlsx/TestCenterEmptyRow/TestCenterEmptyRow.xlsx";
         await using (var stream = File.OpenRead(path))
         {
-            var d = (stream.QueryAsync().ToBlockingEnumerable()).Cast<IDictionary<string, object>>();
+            var d = Importer.QueryXlsxAsync(stream).ToBlockingEnumerable().Cast<IDictionary<string, object>>();
             var rows = d.ToList();
             Assert.Equal("a", rows[0]["A"]);
             Assert.Equal("b", rows[0]["B"]);
@@ -230,7 +233,7 @@ public class MiniExcelOpenXmlAsyncTests
 
         await using (var stream = File.OpenRead(path))
         {
-            var d = (stream.QueryAsync(useHeaderRow: true).ToBlockingEnumerable()).Cast<IDictionary<string, object>>();
+            var d = Importer.QueryXlsxAsync(stream, useHeaderRow: true).ToBlockingEnumerable().Cast<IDictionary<string, object>>();
             var rows = d.ToList();
             Assert.Equal(1d, rows[0]["a"]);
             Assert.Null(rows[0]["b"]);
@@ -264,7 +267,7 @@ public class MiniExcelOpenXmlAsyncTests
     {
         const string path = "../../../../../samples/xlsx/TestDynamicQueryBasic_WithoutHead.xlsx";
         await using var stream = File.OpenRead(path);
-        var d = (stream.QueryAsync().ToBlockingEnumerable()).Cast<IDictionary<string, object>>();
+        var d = Importer.QueryXlsxAsync(stream).ToBlockingEnumerable().Cast<IDictionary<string, object>>();
         var rows = d.ToList();
 
         Assert.Equal("MiniExcel", rows[0]["A"]);
@@ -279,7 +282,7 @@ public class MiniExcelOpenXmlAsyncTests
         const string path = "../../../../../samples/xlsx/TestDynamicQueryBasic.xlsx";
         await using (var stream = File.OpenRead(path))
         {
-            var d = (stream.QueryAsync(useHeaderRow: true).ToBlockingEnumerable()).Cast<IDictionary<string, object>>();
+            var d = Importer.QueryXlsxAsync(stream, useHeaderRow: true).ToBlockingEnumerable().Cast<IDictionary<string, object>>();
             var rows = d.ToList();
             Assert.Equal("MiniExcel", rows[0]["Column1"]);
             Assert.Equal(1d, rows[0]["Column2"]);
@@ -288,7 +291,7 @@ public class MiniExcelOpenXmlAsyncTests
         }
 
         {
-            var d = MiniExcel.QueryAsync(path, useHeaderRow: true).ToBlockingEnumerable();
+            var d = Importer.QueryXlsxAsync(path, useHeaderRow: true).ToBlockingEnumerable();
             var rows = d.ToList();
             Assert.Equal("MiniExcel", rows[0].Column1);
             Assert.Equal(1d, rows[0].Column2);
@@ -319,7 +322,7 @@ public class MiniExcelOpenXmlAsyncTests
         const string path = "../../../../../samples/xlsx/TestTypeMapping.xlsx";
         await using (var stream = File.OpenRead(path))
         {
-            var d = stream.QueryAsync<UserAccount>();
+            var d = Importer.QueryXlsxAsync<UserAccount>(stream);
             var rows = d.ToBlockingEnumerable().ToList();
             Assert.Equal(100, rows.Count);
 
@@ -333,7 +336,7 @@ public class MiniExcelOpenXmlAsyncTests
         }
 
         {
-            var rows = MiniExcel.Query<UserAccount>(path).ToList();
+            var rows = Importer.QueryXlsx<UserAccount>(path).ToList();
             Assert.Equal(100, rows.Count);
 
             Assert.Equal(Guid.Parse("78DE23D2-DCB6-BD3D-EC67-C112BBC322A2"), rows[0].ID);
@@ -360,7 +363,7 @@ public class MiniExcelOpenXmlAsyncTests
     {
         const string path = "../../../../../samples/xlsx/TestTypeMapping_AutoCheckFormat.xlsx";
         await using var stream = FileHelper.OpenRead(path);
-        _ = stream.QueryAsync<AutoCheckType>().ToBlockingEnumerable().ToList();
+        _ = Importer.QueryXlsxAsync<AutoCheckType>(stream).ToBlockingEnumerable().ToList();
     }
 
     [Fact]
@@ -369,7 +372,7 @@ public class MiniExcelOpenXmlAsyncTests
         const string path = "../../../../../samples/xlsx/TestDatetimeSpanFormat_ClosedXml.xlsx";
         await using var stream = FileHelper.OpenRead(path);
 
-        var d = (stream.QueryAsync().ToBlockingEnumerable()).Cast<IDictionary<string, object>>();
+        var d = Importer.QueryXlsxAsync(stream).ToBlockingEnumerable().Cast<IDictionary<string, object>>();
         var row = d.First();
         var a = row["A"];
         var b = row["B"];
@@ -384,13 +387,13 @@ public class MiniExcelOpenXmlAsyncTests
         const string path = "../../../../../benchmarks/MiniExcel.Benchmarks/Test1,000,000x10.xlsx";
         await using (var stream = File.OpenRead(path))
         {
-            var d = stream.QueryAsync<DemoPocoHelloWorld>().ToBlockingEnumerable();
+            var d = Importer.QueryXlsxAsync<DemoPocoHelloWorld>(stream).ToBlockingEnumerable();
             var rows = d.Take(2).ToList();
             Assert.Equal("HelloWorld2", rows[0].HelloWorld1);
             Assert.Equal("HelloWorld3", rows[1].HelloWorld1);
         }
         {
-            var d = MiniExcel.QueryAsync<DemoPocoHelloWorld>(path).ToBlockingEnumerable();
+            var d = Importer.QueryXlsxAsync<DemoPocoHelloWorld>(path).ToBlockingEnumerable();
             var rows = d.Take(2).ToList();
             Assert.Equal("HelloWorld2", rows[0].HelloWorld1);
             Assert.Equal("HelloWorld3", rows[1].HelloWorld1);
@@ -407,11 +410,11 @@ public class MiniExcelOpenXmlAsyncTests
 #endif
 
         await using var fs = File.OpenRead(path);
-        using var reader = ExcelDataReader.ExcelReaderFactory.CreateReader(fs);
+        using var reader = ExcelReaderFactory.CreateReader(fs);
         var exceldatareaderResult = reader.AsDataSet();
         await using var stream = File.OpenRead(path);
 
-        var d = stream.QueryAsync().ToBlockingEnumerable();
+        var d = Importer.QueryXlsxAsync(stream).ToBlockingEnumerable();
         var rows = d.ToList();
         Assert.Equal(exceldatareaderResult.Tables[0].Rows.Count, rows.Count);
 
@@ -433,7 +436,7 @@ public class MiniExcelOpenXmlAsyncTests
         const string path = "../../../../../samples/xlsx/TestWihoutRAttribute.xlsx";
         await using var stream = File.OpenRead(path);
 
-        var d = (stream.QueryAsync().ToBlockingEnumerable()).Cast<IDictionary<string, object>>();
+        var d = Importer.QueryXlsxAsync(stream).ToBlockingEnumerable().Cast<IDictionary<string, object>>();
         var rows = d.ToList();
         var keys = rows.First().Keys;
 
@@ -456,7 +459,7 @@ public class MiniExcelOpenXmlAsyncTests
     {
         const string path = "../../../../../samples/xlsx/TestDimensionC3.xlsx";
         await using var stream = File.OpenRead(path);
-        var d = stream.QueryAsync().ToBlockingEnumerable();
+        var d = Importer.QueryXlsxAsync(stream).ToBlockingEnumerable();
         var rows = d.ToList();
         var keys = (rows.First() as IDictionary<string, object>)?.Keys;
         Assert.Equal(3, keys?.Count);
@@ -482,10 +485,10 @@ public class MiniExcelOpenXmlAsyncTests
             using (var file = AutoDeletingPath.Create())
             {
                 var path = file.ToString();
-                await MiniExcel.SaveAsAsync(path, values);
+                await Exporter.ExportXlsxAsync(path, values);
                 await using (var stream = File.OpenRead(path))
                 {
-                    var d = (stream.QueryAsync(useHeaderRow: false).ToBlockingEnumerable()).Cast<IDictionary<string, object>>();
+                    var d = Importer.QueryXlsxAsync(stream, useHeaderRow: false).ToBlockingEnumerable().Cast<IDictionary<string, object>>();
                     var rows = d.ToList();
                     Assert.Equal(3, rows.Count);
                     Assert.Equal("A", rows[0]["A"]);
@@ -495,7 +498,7 @@ public class MiniExcelOpenXmlAsyncTests
 
                 await using (var stream = File.OpenRead(path))
                 {
-                    var d = (stream.QueryAsync(useHeaderRow: true).ToBlockingEnumerable()).Cast<IDictionary<string, object>>();
+                    var d = Importer.QueryXlsxAsync(stream, useHeaderRow: true).ToBlockingEnumerable().Cast<IDictionary<string, object>>();
                     var rows = d.ToList();
                     Assert.Equal(2, rows.Count);
                     Assert.Equal("A", rows[0]["A"]);
@@ -506,7 +509,7 @@ public class MiniExcelOpenXmlAsyncTests
             }
 
             using var newPath = AutoDeletingPath.Create();
-            await MiniExcel.SaveAsAsync(newPath.ToString(), values, false);
+            await Exporter.ExportXlsxAsync(newPath.ToString(), values, false);
             Assert.Equal("A1:B2", Helpers.GetFirstSheetDimensionRefValue(newPath.ToString()));
         }
 
@@ -516,10 +519,10 @@ public class MiniExcelOpenXmlAsyncTests
             using (var file = AutoDeletingPath.Create())
             {
                 var path = file.ToString();
-                await MiniExcel.SaveAsAsync(path, values, false);
+                await Exporter.ExportXlsxAsync(path, values, false);
                 await using (var stream = File.OpenRead(path))
                 {
-                    var d = stream.QueryAsync(useHeaderRow: false).ToBlockingEnumerable();
+                    var d = Importer.QueryXlsxAsync(stream, useHeaderRow: false).ToBlockingEnumerable();
                     var rows = d.ToList();
                     Assert.Empty(rows);
                 }
@@ -530,10 +533,10 @@ public class MiniExcelOpenXmlAsyncTests
             using (var file = AutoDeletingPath.Create())
             {
                 var path = file.ToString();
-                await MiniExcel.SaveAsAsync(path, values);
+                await Exporter.ExportXlsxAsync(path, values);
                 {
                     await using var stream = File.OpenRead(path);
-                    var d = stream.QueryAsync(useHeaderRow: false).ToBlockingEnumerable();
+                    var d = Importer.QueryXlsxAsync(stream, useHeaderRow: false).ToBlockingEnumerable();
                     var rows = d.ToList();
                     Assert.Single(rows);
                 }
@@ -552,11 +555,11 @@ public class MiniExcelOpenXmlAsyncTests
             using (var file = AutoDeletingPath.Create())
             {
                 var path = file.ToString();
-                await MiniExcel.SaveAsAsync(path, values);
+                await Exporter.ExportXlsxAsync(path, values);
 
                 await using (var stream = File.OpenRead(path))
                 {
-                    var d = (stream.QueryAsync(useHeaderRow: false).ToBlockingEnumerable()).Cast<IDictionary<string, object>>();
+                    var d = Importer.QueryXlsxAsync(stream, useHeaderRow: false).ToBlockingEnumerable().Cast<IDictionary<string, object>>();
                     var rows = d.ToList();
                     Assert.Equal(3, rows.Count);
                     Assert.Equal("A", rows[0]["A"]);
@@ -566,7 +569,7 @@ public class MiniExcelOpenXmlAsyncTests
 
                 await using (var stream = File.OpenRead(path))
                 {
-                    var d = (stream.QueryAsync(useHeaderRow: true).ToBlockingEnumerable()).Cast<IDictionary<string, object>>();
+                    var d = Importer.QueryXlsxAsync(stream, useHeaderRow: true).ToBlockingEnumerable().Cast<IDictionary<string, object>>();
                     var rows = d.ToList();
                     Assert.Equal(2, rows.Count);
                     Assert.Equal("A", rows[0]["A"]);
@@ -578,7 +581,7 @@ public class MiniExcelOpenXmlAsyncTests
 
             using (var path = AutoDeletingPath.Create())
             {
-                await MiniExcel.SaveAsAsync(path.ToString(), values, false);
+                await Exporter.ExportXlsxAsync(path.ToString(), values, false);
                 Assert.Equal("A1:B2", Helpers.GetFirstSheetDimensionRefValue(path.ToString()));
             }
         }
@@ -587,7 +590,7 @@ public class MiniExcelOpenXmlAsyncTests
         {
             using var path = AutoDeletingPath.Create();
             var values = new List<int>();
-            await Assert.ThrowsAsync<NotSupportedException>(() => MiniExcel.SaveAsAsync(path.ToString(), values));
+            await Assert.ThrowsAsync<NotSupportedException>(() => Exporter.ExportXlsxAsync(path.ToString(), values));
         }
     }
 
@@ -599,15 +602,15 @@ public class MiniExcelOpenXmlAsyncTests
             var path = file.ToString();
 
             using var table = new DataTable();
-            await MiniExcel.SaveAsAsync(path, table);
+            await Exporter.ExportXlsxAsync(path, table);
             Assert.Equal("A1", Helpers.GetFirstSheetDimensionRefValue(path));
             {
                 await using var stream = File.OpenRead(path);
-                var d = stream.QueryAsync().ToBlockingEnumerable();
+                var d = Importer.QueryXlsxAsync(stream).ToBlockingEnumerable();
                 var rows = d.ToList();
                 Assert.Single(rows);
             }
-            await MiniExcel.SaveAsAsync(path, table, printHeader: false, overwriteFile: true);
+            await Exporter.ExportXlsxAsync(path, table, printHeader: false, overwriteFile: true);
             Assert.Equal("A1", Helpers.GetFirstSheetDimensionRefValue(path));
         }
         {
@@ -622,12 +625,12 @@ public class MiniExcelOpenXmlAsyncTests
             table.Rows.Add(@"""<>+-*//}{\\n", 1234567890);
             table.Rows.Add("<test>Hello World</test>", -1234567890, false, DateTime.Now);
 
-            await MiniExcel.SaveAsAsync(path, table);
+            await Exporter.ExportXlsxAsync(path, table);
             Assert.Equal("A1:D3", Helpers.GetFirstSheetDimensionRefValue(path));
 
             await using (var stream = File.OpenRead(path))
             {
-                var d = (stream.QueryAsync(useHeaderRow: true).ToBlockingEnumerable()).Cast<IDictionary<string, object>>();
+                var d = Importer.QueryXlsxAsync(stream, useHeaderRow: true).ToBlockingEnumerable().Cast<IDictionary<string, object>>();
                 var rows = d.ToList();
                 Assert.Equal(2, rows.Count);
                 Assert.Equal(@"""<>+-*//}{\\n", rows[0]["a"]);
@@ -638,7 +641,7 @@ public class MiniExcelOpenXmlAsyncTests
 
             await using (var stream = File.OpenRead(path))
             {
-                var d = (stream.QueryAsync().ToBlockingEnumerable()).Cast<IDictionary<string, object>>();
+                var d = Importer.QueryXlsxAsync(stream).ToBlockingEnumerable().Cast<IDictionary<string, object>>();
                 var rows = d.ToList();
                 Assert.Equal(3, rows.Count);
                 Assert.Equal("a", rows[0]["A"]);
@@ -647,7 +650,7 @@ public class MiniExcelOpenXmlAsyncTests
                 Assert.Equal("d", rows[0]["D"]);
             }
 
-            await MiniExcel.SaveAsAsync(path, table, printHeader: false, overwriteFile: true);
+            await Exporter.ExportXlsxAsync(path, table, printHeader: false, overwriteFile: true);
             Assert.Equal("A1:D2", Helpers.GetFirstSheetDimensionRefValue(path));
         }
 
@@ -658,7 +661,7 @@ public class MiniExcelOpenXmlAsyncTests
             table.Rows.Add("A");
             table.Rows.Add("B");
 
-            await MiniExcel.SaveAsAsync(path.ToString(), table);
+            await Exporter.ExportXlsxAsync(path.ToString(), table);
             Assert.Equal("A1:A3", Helpers.GetFirstSheetDimensionRefValue(path.ToString()));
         }
     }
@@ -680,7 +683,7 @@ public class MiniExcelOpenXmlAsyncTests
             table.Rows.Add(@"""<>+-*//}{\\n", 1234567890, true, now);
             table.Rows.Add("<test>Hello World</test>", -1234567890, false, now.Date);
 
-            await MiniExcel.SaveAsAsync(path, table);
+            await Exporter.ExportXlsxAsync(path, table);
 
             using var p = new ExcelPackage(new FileInfo(path));
             var ws = p.Workbook.Worksheets.First();
@@ -703,7 +706,7 @@ public class MiniExcelOpenXmlAsyncTests
             table.Rows.Add("MiniExcel", 1);
             table.Rows.Add("Github", 2);
 
-            await MiniExcel.SaveAsAsync(path.ToString(), table);
+            await Exporter.ExportXlsxAsync(path.ToString(), table);
         }
     }
 
@@ -713,19 +716,19 @@ public class MiniExcelOpenXmlAsyncTests
         const string path = "../../../../../benchmarks/MiniExcel.Benchmarks/Test1,000,000x10.xlsx";
 
         {
-            var row = (MiniExcel.QueryAsync(path).ToBlockingEnumerable()).First();
+            var row = Importer.QueryXlsxAsync(path).ToBlockingEnumerable().First();
             Assert.Equal("HelloWorld1", row.A);
         }
 
         await using (var stream = File.OpenRead(path))
         {
-            var d = (stream.QueryAsync().ToBlockingEnumerable()).Cast<IDictionary<string, object>>();
+            var d = Importer.QueryXlsxAsync(stream).ToBlockingEnumerable().Cast<IDictionary<string, object>>();
             var row = d.First();
             Assert.Equal("HelloWorld1", row["A"]);
         }
 
         {
-            var d = (MiniExcel.QueryAsync(path).ToBlockingEnumerable()).Cast<IDictionary<string, object>>();
+            var d = Importer.QueryXlsxAsync(path).ToBlockingEnumerable().Cast<IDictionary<string, object>>();
             var rows = d.Take(10);
             Assert.Equal(10, rows.Count());
         }
@@ -739,12 +742,12 @@ public class MiniExcelOpenXmlAsyncTests
         await using (var connection = Db.GetConnection("Data Source=:memory:"))
         {
             var rows = await connection.QueryAsync("with cte as (select 1 id,2 val) select * from cte where 1=2");
-            await MiniExcel.SaveAsAsync(path.ToString(), rows);
+            await Exporter.ExportXlsxAsync(path.ToString(), rows);
         }
 
         await using (var stream = File.OpenRead(path.ToString()))
         {
-            var row = stream.QueryAsync(useHeaderRow: true).ToBlockingEnumerable();
+            var row = Importer.QueryXlsxAsync(stream, useHeaderRow: true).ToBlockingEnumerable();
             Assert.Empty(row);
         }
     }
@@ -761,11 +764,11 @@ public class MiniExcelOpenXmlAsyncTests
                 new() { { "Column1", "MiniExcel" }, { "Column2", 1 } },
                 new() { { "Column1", "Github" }, { "Column2", 2 } }
             ];
-            await MiniExcel.SaveAsAsync(path, values);
+            await Exporter.ExportXlsxAsync(path, values);
 
             await using (var stream = File.OpenRead(path))
             {
-                var d = (stream.QueryAsync(useHeaderRow: false).ToBlockingEnumerable()).Cast<IDictionary<string, object>>();
+                var d = Importer.QueryXlsxAsync(stream, useHeaderRow: false).ToBlockingEnumerable().Cast<IDictionary<string, object>>();
                 var rows = d.ToList();
                 Assert.Equal("Column1", rows[0]["A"]);
                 Assert.Equal("Column2", rows[0]["B"]);
@@ -777,7 +780,7 @@ public class MiniExcelOpenXmlAsyncTests
 
             await using (var stream = File.OpenRead(path))
             {
-                var d = (stream.QueryAsync(useHeaderRow: true).ToBlockingEnumerable()).Cast<IDictionary<string, object>>();
+                var d = Importer.QueryXlsxAsync(stream, useHeaderRow: true).ToBlockingEnumerable().Cast<IDictionary<string, object>>();
                 var rows = d.ToList();
                 Assert.Equal(2, rows.Count);
                 Assert.Equal("MiniExcel", rows[0]["Column1"]);
@@ -798,11 +801,11 @@ public class MiniExcelOpenXmlAsyncTests
                 new() { { 1, "MiniExcel" }, { 2, 1 } },
                 new() { { 1, "Github" }, { 2, 2 } }
             ];
-            await MiniExcel.SaveAsAsync(path, values);
+            await Exporter.ExportXlsxAsync(path, values);
 
             await using (var stream = File.OpenRead(path))
             {
-                var d = stream.QueryAsync(useHeaderRow: false).ToBlockingEnumerable();
+                var d = Importer.QueryXlsxAsync(stream, useHeaderRow: false).ToBlockingEnumerable();
                 var rows = d.ToList();
                 Assert.Equal(3, rows.Count);
             }
@@ -830,11 +833,11 @@ public class MiniExcelOpenXmlAsyncTests
             new() { { "Column1", "MiniExcel" }, { "Column2", 1 } },
             new() { { "Column1", "Github" }, { "Column2", 2 } }
         ];
-        await MiniExcel.SaveAsAsync(path, values, configuration: config);
+        await Exporter.ExportXlsxAsync(path, values, configuration: config);
 
         await using (var stream = File.OpenRead(path))
         {
-            var d = (stream.QueryAsync(useHeaderRow: true).ToBlockingEnumerable()).Cast<IDictionary<string, object>>();
+            var d = Importer.QueryXlsxAsync(stream, useHeaderRow: true).ToBlockingEnumerable().Cast<IDictionary<string, object>>();
             var rows = d.ToList();
             Assert.Equal(2, rows.Count);
             Assert.Equal("Name Column", rows[0].Keys.ElementAt(0));
@@ -861,7 +864,7 @@ public class MiniExcelOpenXmlAsyncTests
         using var file = AutoDeletingPath.Create();
         var path = file.ToString();
 
-        await MiniExcel.SaveAsAsync(
+        await Exporter.ExportXlsxAsync(
             path,
             new[]
             {
@@ -873,7 +876,7 @@ public class MiniExcelOpenXmlAsyncTests
 
         await using (var stream = File.OpenRead(path))
         {
-            var rows = (stream.QueryAsync(useHeaderRow: true).ToBlockingEnumerable()).ToList();
+            var rows = Importer.QueryXlsxAsync(stream, useHeaderRow: true).ToBlockingEnumerable().ToList();
 
             Assert.Equal("MiniExcel", rows[0].Column1);
             Assert.Equal(1, rows[0].Column2);
@@ -892,13 +895,13 @@ public class MiniExcelOpenXmlAsyncTests
         table.Rows.Add("<test>Hello World</test>", -1234567890, false, DateTime.Now.Date);
 
         using var pathTable = AutoDeletingPath.Create();
-        await MiniExcel.SaveAsAsync(pathTable.ToString(), table, configuration: config);
+        await Exporter.ExportXlsxAsync(pathTable.ToString(), table, configuration: config);
         Assert.Equal("A1:D3", Helpers.GetFirstSheetDimensionRefValue(pathTable.ToString()));
 
         // data reader
         await using var reader = table.CreateDataReader();
         using var pathReader = AutoDeletingPath.Create();
-        await MiniExcel.SaveAsAsync(pathReader.ToString(), reader, configuration: config);
+        await Exporter.ExportXlsxAsync(pathReader.ToString(), reader, configuration: config);
         Assert.Equal("A1:D3", Helpers.GetFirstSheetDimensionRefValue(pathTable.ToString()));
     }
 
@@ -912,13 +915,13 @@ public class MiniExcelOpenXmlAsyncTests
         await using (var connection = Db.GetConnection("Data Source=:memory:"))
         {
             var rows = await connection.QueryAsync("select 'MiniExcel' as Column1,1 as Column2 union all select 'Github',2");
-            await MiniExcel.SaveAsAsync(path, rows);
+            await Exporter.ExportXlsxAsync(path, rows);
         }
         Assert.Equal("A1:B3", Helpers.GetFirstSheetDimensionRefValue(path));
 
         await using (var stream = File.OpenRead(path))
         {
-            var rows = (stream.QueryAsync(useHeaderRow: true).ToBlockingEnumerable()).Cast<IDictionary<string, object>>().ToList();
+            var rows = Importer.QueryXlsxAsync(stream, useHeaderRow: true).ToBlockingEnumerable().Cast<IDictionary<string, object>>().ToList();
             Assert.Equal("MiniExcel", rows[0]["Column1"]);
             Assert.Equal(1d, rows[0]["Column2"]);
             Assert.Equal("Github", rows[1]["Column1"]);
@@ -929,18 +932,18 @@ public class MiniExcelOpenXmlAsyncTests
         await using (var connection = Db.GetConnection("Data Source=:memory:"))
         {
             var rows = (await connection.QueryAsync("with cte as (select 'MiniExcel' as Column1,1 as Column2 union all select 'Github',2)select * from cte where 1=2")).ToList();
-            await MiniExcel.SaveAsAsync(path, rows, overwriteFile: true);
+            await Exporter.ExportXlsxAsync(path, rows, overwriteFile: true);
         }
 
         await using (var stream = File.OpenRead(path))
         {
-            var rows = (stream.QueryAsync(useHeaderRow: false).ToBlockingEnumerable()).ToList();
+            var rows = Importer.QueryXlsxAsync(stream, useHeaderRow: false).ToBlockingEnumerable().ToList();
             Assert.Empty(rows);
         }
 
         await using (var stream = File.OpenRead(path))
         {
-            var rows = (stream.QueryAsync(useHeaderRow: true).ToBlockingEnumerable()).ToList();
+            var rows = Importer.QueryXlsxAsync(stream, useHeaderRow: true).ToBlockingEnumerable().ToList();
             Assert.Empty(rows);
         }
         Assert.Equal("A1", Helpers.GetFirstSheetDimensionRefValue(path));
@@ -949,13 +952,13 @@ public class MiniExcelOpenXmlAsyncTests
         await using (var connection = Db.GetConnection("Data Source=:memory:"))
         {
             var rows = (await connection.QueryAsync("select 'MiniExcel' as Column1,1 as Column2 union all select 'Github',2")).ToList();
-            await MiniExcel.SaveAsAsync(path, rows, overwriteFile: true);
+            await Exporter.ExportXlsxAsync(path, rows, overwriteFile: true);
         }
         Assert.Equal("A1:B3", Helpers.GetFirstSheetDimensionRefValue(path));
 
         await using (var stream = File.OpenRead(path))
         {
-            var rows = (stream.QueryAsync(useHeaderRow: false).ToBlockingEnumerable()).Cast<IDictionary<string, object>>().ToList();
+            var rows = Importer.QueryXlsxAsync(stream, useHeaderRow: false).ToBlockingEnumerable().Cast<IDictionary<string, object>>().ToList();
             Assert.Equal("Column1", rows[0]["A"]);
             Assert.Equal("Column2", rows[0]["B"]);
             Assert.Equal("MiniExcel", rows[1]["A"]);
@@ -966,7 +969,7 @@ public class MiniExcelOpenXmlAsyncTests
 
         await using (var stream = File.OpenRead(path))
         {
-            var rows = (stream.QueryAsync(useHeaderRow: true).ToBlockingEnumerable()).Cast<IDictionary<string, object>>().ToList();
+            var rows = Importer.QueryXlsxAsync(stream, useHeaderRow: true).ToBlockingEnumerable().Cast<IDictionary<string, object>>().ToList();
             Assert.Equal("MiniExcel", rows[0]["Column1"]);
             Assert.Equal(1d, rows[0]["Column2"]);
             Assert.Equal("Github", rows[1]["Column1"]);
@@ -990,10 +993,10 @@ public class MiniExcelOpenXmlAsyncTests
             new() { Column1 = "MiniExcel", Column2 = 1 },
             new() { Column1 = "Github", Column2 = 2 }
         ];
-        await MiniExcel.SaveAsAsync(path, values);
+        await Exporter.ExportXlsxAsync(path, values);
 
         await using var stream = File.OpenRead(path);
-        var rows = (stream.QueryAsync(useHeaderRow: true).ToBlockingEnumerable()).Cast<IDictionary<string, object>>().ToList();
+        var rows = Importer.QueryXlsxAsync(stream, useHeaderRow: true).ToBlockingEnumerable().Cast<IDictionary<string, object>>().ToList();
 
         Assert.Equal("MiniExcel", rows[0]["Column1"]);
         Assert.Equal(1d, rows[0]["Column2"]);
@@ -1011,10 +1014,10 @@ public class MiniExcelOpenXmlAsyncTests
             new() { { "Column1", "MiniExcel" }, { "Column2", 1 } },
             new() { { "Column1", "Github" }, { "Column2", 2 } }
         ];
-        await MiniExcel.SaveAsAsync(path, values);
+        await Exporter.ExportXlsxAsync(path, values);
 
         await using var stream = File.OpenRead(path);
-        var rows = (stream.QueryAsync(useHeaderRow: true).ToBlockingEnumerable()).Cast<IDictionary<string, object>>().ToList();
+        var rows = Importer.QueryXlsxAsync(stream, useHeaderRow: true).ToBlockingEnumerable().Cast<IDictionary<string, object>>().ToList();
 
         Assert.Equal("MiniExcel", rows[0]["Column1"]);
         Assert.Equal(1d, rows[0]["Column2"]);
@@ -1041,7 +1044,7 @@ public class MiniExcelOpenXmlAsyncTests
             await using (var transaction = connection.BeginTransaction())
             await using (var stream = File.OpenRead(path))
             {
-                var rows = (stream.QueryAsync().ToBlockingEnumerable()).Cast<IDictionary<string, object>>();
+                var rows = Importer.QueryXlsxAsync(stream).ToBlockingEnumerable().Cast<IDictionary<string, object>>();
                 foreach (var row in rows)
                     await connection.ExecuteAsync(
                         "insert into T (A,B) values (@A,@B)",
@@ -1066,7 +1069,7 @@ public class MiniExcelOpenXmlAsyncTests
         using var file = AutoDeletingPath.Create();
         var path = file.ToString();
 
-        await MiniExcel.SaveAsAsync(path, new[]
+        await Exporter.ExportXlsxAsync(path, new[]
         {
             new { Column1 = "MiniExcel", Column2 = 1 },
             new { Column1 = "Github", Column2 = 2}
@@ -1074,7 +1077,7 @@ public class MiniExcelOpenXmlAsyncTests
 
         await using (var stream = File.OpenRead(path))
         {
-            var d = (stream.QueryAsync(useHeaderRow: true).ToBlockingEnumerable()).Cast<IDictionary<string, object>>();
+            var d = Importer.QueryXlsxAsync(stream, useHeaderRow: true).ToBlockingEnumerable().Cast<IDictionary<string, object>>();
             var rows = d.ToList();
             Assert.Equal("MiniExcel", rows[0]["Column1"]);
             Assert.Equal(1d, rows[0]["Column2"]);
@@ -1098,12 +1101,12 @@ public class MiniExcelOpenXmlAsyncTests
             };
             await using (var stream = new FileStream(path, FileMode.CreateNew))
             {
-                await stream.SaveAsAsync(values);
+                await Exporter.ExportXlsxAsync(stream, values);
             }
 
             await using (var stream = File.OpenRead(path))
             {
-                var rows = (stream.QueryAsync(useHeaderRow: true).ToBlockingEnumerable()).Cast<IDictionary<string, object>>().ToList();
+                var rows = Importer.QueryXlsxAsync(stream, useHeaderRow: true).ToBlockingEnumerable().Cast<IDictionary<string, object>>().ToList();
                 Assert.Equal("MiniExcel", rows[0]["Column1"]);
                 Assert.Equal(1d, rows[0]["Column2"]);
                 Assert.Equal("Github", rows[1]["Column1"]);
@@ -1121,14 +1124,14 @@ public class MiniExcelOpenXmlAsyncTests
             await using (var stream = new MemoryStream())
             await using (var fileStream = new FileStream(path, FileMode.Create))
             {
-                await stream.SaveAsAsync(values);
+                await Exporter.ExportXlsxAsync(stream, values);
                 stream.Seek(0, SeekOrigin.Begin);
                 await stream.CopyToAsync(fileStream);
             }
 
             await using (var stream = File.OpenRead(path))
             {
-                var rows = (stream.QueryAsync(useHeaderRow: true).ToBlockingEnumerable()).Cast<IDictionary<string, object>>().ToList();
+                var rows = Importer.QueryXlsxAsync(stream, useHeaderRow: true).ToBlockingEnumerable().Cast<IDictionary<string, object>>().ToList();
                 Assert.Equal("MiniExcel", rows[0]["Column1"]);
                 Assert.Equal(1d, rows[0]["Column2"]);
                 Assert.Equal("Github", rows[1]["Column1"]);
@@ -1141,7 +1144,7 @@ public class MiniExcelOpenXmlAsyncTests
     public async Task SaveAsSpecialAndTypeCreateTest()
     {
         using var path = AutoDeletingPath.Create();
-        await MiniExcel.SaveAsAsync(path.ToString(), new[]
+        await Exporter.ExportXlsxAsync(path.ToString(), new[]
         {
             new { a = @"""<>+-*//}{\\n", b = 1234567890, c = true, d = DateTime.Now },
             new { a = "<test>Hello World</test>", b = -1234567890, c = false, d = DateTime.Now.Date}
@@ -1156,7 +1159,7 @@ public class MiniExcelOpenXmlAsyncTests
         using var path = AutoDeletingPath.Create();
         var now = DateTime.Now;
 
-        await MiniExcel.SaveAsAsync(path.ToString(), new[]
+        await Exporter.ExportXlsxAsync(path.ToString(), new[]
         {
             new { a = @"""<>+-*//}{\\n", b = 1234567890, c = true, d = now},
             new { a = "<test>Hello World</test>", b = -1234567890, c = false, d = now.Date}
@@ -1182,7 +1185,7 @@ public class MiniExcelOpenXmlAsyncTests
         var now = DateTime.Now;
         using var path = AutoDeletingPath.Create();
 
-        await MiniExcel.SaveAsAsync(path.ToString(), new[]
+        await Exporter.ExportXlsxAsync(path.ToString(), new[]
         {
             new { a = @"""<>+-*//}{\\n", b = 1234567890, c = true, d = now},
             new { a = "<test>Hello World</test>", b = -1234567890, c = false, d = now.Date}
@@ -1207,7 +1210,7 @@ public class MiniExcelOpenXmlAsyncTests
         var now = DateTime.Now;
         using var path = AutoDeletingPath.Create();
 
-        await MiniExcel.SaveAsAsync(path.ToString(), new[]
+        await Exporter.ExportXlsxAsync(path.ToString(), new[]
         {
             new { a = @"""<>+-*//}{\\n", b = 1234567890, c = true, d = now},
             new { a = "<test>Hello World</test>", b = -1234567890, c = false, d = now.Date}
@@ -1235,7 +1238,7 @@ public class MiniExcelOpenXmlAsyncTests
             await cts.CancelAsync();
 
             await using var stream = FileHelper.OpenRead(path);
-            var rows = stream.QueryAsync(cancellationToken: cts.Token).ToBlockingEnumerable(cts.Token).ToList();
+            var rows = Importer.QueryXlsxAsync(stream, cancellationToken: cts.Token).ToBlockingEnumerable(cts.Token).ToList();
         });
     }
 
@@ -1255,7 +1258,7 @@ public class MiniExcelOpenXmlAsyncTests
             });
 
             await using var stream = FileHelper.OpenRead(path);
-            var d = stream.QueryAsync(cancellationToken: cts.Token).ToBlockingEnumerable(cts.Token);
+            var d = Importer.QueryXlsxAsync(stream, cancellationToken: cts.Token).ToBlockingEnumerable(cts.Token);
             await cancelTask;
             _ = d.ToList();
         });
@@ -1303,10 +1306,10 @@ public class MiniExcelOpenXmlAsyncTests
             ]
         };
         await using var reader = table.CreateDataReader();
-        await MiniExcel.SaveAsAsync(path.ToString(), reader, configuration: configuration);
+        await Exporter.ExportXlsxAsync(path.ToString(), reader, configuration: configuration);
 
         await using var stream = File.OpenRead(path.ToString());
-        var rows = (stream.QueryAsync(useHeaderRow: true).ToBlockingEnumerable())
+        var rows = Importer.QueryXlsxAsync(stream, useHeaderRow: true).ToBlockingEnumerable()
             .Cast<IDictionary<string, object>>()
             .ToList();
 
@@ -1369,10 +1372,10 @@ public class MiniExcelOpenXmlAsyncTests
                 }
             ]
         };
-        await MiniExcel.SaveAsAsync(path.ToString(), table, configuration: configuration);
+        await Exporter.ExportXlsxAsync(path.ToString(), table, configuration: configuration);
 
         await using var stream = File.OpenRead(path.ToString());
-        var rows = (stream.QueryAsync(useHeaderRow: true).ToBlockingEnumerable())
+        var rows = Importer.QueryXlsxAsync(stream, useHeaderRow: true).ToBlockingEnumerable()
             .Cast<IDictionary<string, object>>()
             .ToList();
 
@@ -1405,13 +1408,13 @@ public class MiniExcelOpenXmlAsyncTests
             new() { Column1= "MiniExcel" ,Column2 = 1 },
             new() { Column1 = "Github", Column2 = 2 }
         };
-        await MiniExcel.SaveAsAsync(path1.ToString(), values);
+        await Exporter.ExportXlsxAsync(path1.ToString(), values);
 
-        await using (IMiniExcelDataReader? reader = MiniExcel.GetReader(path1.ToString(), true))
+        await using (IMiniExcelDataReader? reader = Importer.GetXlsxDataReader(path1.ToString(), true))
         {
             using var path2 = AutoDeletingPath.Create();
-            await MiniExcel.SaveAsAsync(path2.ToString(), reader);
-            var results = MiniExcel.QueryAsync<Demo>(path2.ToString()).ToBlockingEnumerable().ToList();
+            await Exporter.ExportXlsxAsync(path2.ToString(), reader);
+            var results = Importer.QueryXlsxAsync<Demo>(path2.ToString()).ToBlockingEnumerable().ToList();
 
             Assert.True(results.Count == 2);
             Assert.True(results.First().Column1 == "MiniExcel");
@@ -1437,7 +1440,7 @@ public class MiniExcelOpenXmlAsyncTests
             table.Rows.Add(@"""<>+-*//}{\\n", 1234567890, true, now);
             table.Rows.Add("<test>Hello World</test>", -1234567890, false, now.Date);
 
-            await MiniExcel.InsertAsync(path, table, sheetName: "Sheet1");
+            await Exporter.InsertXlsxSheetAsync(path, table, sheetName: "Sheet1");
             using var p = new ExcelPackage(new FileInfo(path));
             var sheet1 = p.Workbook.Worksheets[0];
 
@@ -1460,7 +1463,7 @@ public class MiniExcelOpenXmlAsyncTests
             table.Rows.Add("MiniExcel", 1);
             table.Rows.Add("Github", 2);
 
-            await MiniExcel.InsertAsync(path, table, sheetName: "Sheet2");
+            await Exporter.InsertXlsxSheetAsync(path, table, sheetName: "Sheet2");
             using var p = new ExcelPackage(new FileInfo(path));
             var sheet2 = p.Workbook.Worksheets[1];
 
@@ -1481,7 +1484,7 @@ public class MiniExcelOpenXmlAsyncTests
             table.Columns.Add("Column2", typeof(DateTime));
             table.Rows.Add("Test", now);
 
-            await MiniExcel.InsertAsync(path, table, sheetName: "Sheet2", printHeader: false, configuration: new OpenXmlConfiguration
+            await Exporter.InsertXlsxSheetAsync(path, table, sheetName: "Sheet2", printHeader: false, configuration: new OpenXmlConfiguration
             {
                 FastMode = true,
                 AutoFilter = false,
@@ -1512,7 +1515,7 @@ public class MiniExcelOpenXmlAsyncTests
             table.Rows.Add("MiniExcel", now);
             table.Rows.Add("Github", now);
 
-            await MiniExcel.InsertAsync(path, table, sheetName: "Sheet3", configuration: new OpenXmlConfiguration
+            await Exporter.InsertXlsxSheetAsync(path, table, sheetName: "Sheet3", configuration: new OpenXmlConfiguration
             {
                 FastMode = true,
                 AutoFilter = false,
@@ -1546,63 +1549,6 @@ public class MiniExcelOpenXmlAsyncTests
     }
 
     [Fact]
-    public async Task InsertCsvTest()
-    {
-        using var file = AutoDeletingPath.Create(ExcelType.CSV);
-        var path = file.ToString();
-
-        {
-            var value = new[]
-            {
-                new { ID=1,Name ="Jack",InDate=new DateTime(2021,01,03)},
-                new { ID=2,Name ="Henry",InDate=new DateTime(2020,05,03)},
-            };
-            await MiniExcel.SaveAsAsync(path, value);
-            var content = await File.ReadAllTextAsync(path);
-            Assert.Equal(
-                """
-                ID,Name,InDate
-                1,Jack,"2021-01-03 00:00:00"
-                2,Henry,"2020-05-03 00:00:00"
-
-                """, content);
-        }
-        {
-            var value = new { ID = 3, Name = "Mike", InDate = new DateTime(2021, 04, 23) };
-            await MiniExcel.InsertAsync(path, value);
-            var content = await File.ReadAllTextAsync(path);
-            Assert.Equal(
-                """
-                ID,Name,InDate
-                1,Jack,"2021-01-03 00:00:00"
-                2,Henry,"2020-05-03 00:00:00"
-                3,Mike,"2021-04-23 00:00:00"
-
-                """, content);
-        }
-        {
-            var value = new[]
-            {
-                new { ID=4,Name ="Frank",InDate=new DateTime(2021,06,07)},
-                new { ID=5,Name ="Gloria",InDate=new DateTime(2022,05,03)},
-            };
-
-            await MiniExcel.InsertAsync(path, value);
-            var content = await File.ReadAllTextAsync(path);
-            Assert.Equal(
-                """
-                ID,Name,InDate
-                1,Jack,"2021-01-03 00:00:00"
-                2,Henry,"2020-05-03 00:00:00"
-                3,Mike,"2021-04-23 00:00:00"
-                4,Frank,"2021-06-07 00:00:00"
-                5,Gloria,"2022-05-03 00:00:00"
-
-                """, content);
-        }
-    }
-
-    [Fact]
     public async Task SaveAsByAsyncEnumerable()
     {
         using var path = AutoDeletingPath.Create();
@@ -1615,8 +1561,8 @@ public class MiniExcelOpenXmlAsyncTests
         }
 #pragma warning restore CS1998
 
-        await MiniExcel.SaveAsAsync(path.ToString(), GetValues());
-        var results = MiniExcel.Query<Demo>(path.ToString()).ToList();
+        await Exporter.ExportXlsxAsync(path.ToString(), GetValues());
+        var results = Importer.QueryXlsx<Demo>(path.ToString()).ToList();
 
         Assert.True(results.Count == 2);
         Assert.True(results.First().Column1 == "MiniExcel");

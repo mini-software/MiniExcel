@@ -3,6 +3,7 @@ name: MiniExcel Benchmarks
 on:
   workflow_dispatch:
   release:
+    branches: [master]
     types: [published]
 
 permissions:

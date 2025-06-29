@@ -1,8 +1,9 @@
 using BenchmarkDotNet.Attributes;
 using ClosedXML.Report;
-using MiniExcelLibs.Benchmarks.Utils;
+using MiniExcelLib.Benchmarks.Utils;
+using _templater = MiniExcelLib.MiniExcel.Templater;
 
-namespace MiniExcelLibs.Benchmarks.BenchmarkSections;
+namespace MiniExcelLib.Benchmarks.BenchmarkSections;
 
 public class TemplateXlsxBenchmark : BenchmarkBase
 {
@@ -22,7 +23,7 @@ public class TemplateXlsxBenchmark : BenchmarkBase
                 })
         };
 
-        MiniExcel.SaveAsByTemplate(path.FilePath, templatePath, value);
+        _templater.ApplyXlsxTemplate(path.FilePath, templatePath, value);
     }
 
     [Benchmark(Description = "ClosedXml.Report Template Generate")]

@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MiniExcelLibs", "src\MiniExcel\MiniExcelLibs.csproj", "{097903C9-1F81-4427-B4C8-530CB59687B8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MiniExcelLib.Core", "src\MiniExcelLib.Core\MiniExcelLib.Core.csproj", "{097903C9-1F81-4427-B4C8-530CB59687B8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MiniExcelLib.Csv", "src\MiniExcelLib.Csv\MiniExcelLib.Csv.csproj", "{0B0C3A11-BA5A-457F-BCBE-3001CEAF9FB6}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Docs and setting", "Docs and setting", "{2AFABF2E-D6C3-4983-B43A-76ADA2BB2876}"
 	ProjectSection(SolutionItems) = preProject
@@ -38,6 +40,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "benchmarks", "benchmarks", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MiniExcel.Benchmarks", "benchmarks\MiniExcel.Benchmarks\MiniExcel.Benchmarks.csproj", "{F1BDF4D7-F3C4-4114-82F6-EF81567DFBD8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MiniExcel", "src\MiniExcel\MiniExcel.csproj", "{BF42A3A5-6C2D-4C20-9494-450B9605CA6F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -56,6 +60,14 @@ Global
 		{F1BDF4D7-F3C4-4114-82F6-EF81567DFBD8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F1BDF4D7-F3C4-4114-82F6-EF81567DFBD8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F1BDF4D7-F3C4-4114-82F6-EF81567DFBD8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0B0C3A11-BA5A-457F-BCBE-3001CEAF9FB6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0B0C3A11-BA5A-457F-BCBE-3001CEAF9FB6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0B0C3A11-BA5A-457F-BCBE-3001CEAF9FB6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0B0C3A11-BA5A-457F-BCBE-3001CEAF9FB6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BF42A3A5-6C2D-4C20-9494-450B9605CA6F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BF42A3A5-6C2D-4C20-9494-450B9605CA6F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BF42A3A5-6C2D-4C20-9494-450B9605CA6F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BF42A3A5-6C2D-4C20-9494-450B9605CA6F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -64,6 +76,8 @@ Global
 		{097903C9-1F81-4427-B4C8-530CB59687B8} = {CC1E0601-AEC9-42D7-8F6A-3FB3939EED16}
 		{77F2C86B-0F17-4370-AB38-A089F9DF4ED5} = {359A7094-3353-48F2-B3E1-FE9E59698318}
 		{F1BDF4D7-F3C4-4114-82F6-EF81567DFBD8} = {77A8A169-168B-457F-AB5F-48F30D6BB33C}
+		{0B0C3A11-BA5A-457F-BCBE-3001CEAF9FB6} = {CC1E0601-AEC9-42D7-8F6A-3FB3939EED16}
+		{BF42A3A5-6C2D-4C20-9494-450B9605CA6F} = {CC1E0601-AEC9-42D7-8F6A-3FB3939EED16}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {51DF25DA-2DCB-4883-90FE-399DA950D4F2}

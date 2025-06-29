@@ -6,8 +6,9 @@ using DocumentFormat.OpenXml.Spreadsheet;
 using ExcelDataReader;
 using NPOI.XSSF.UserModel;
 using OfficeOpenXml;
+using Importer =  MiniExcelLib.MiniExcel.Importer;
 
-namespace MiniExcelLibs.Benchmarks.BenchmarkSections;
+namespace MiniExcelLib.Benchmarks.BenchmarkSections;
 
 public class QueryXlsxBenchmark : BenchmarkBase
 {
@@ -21,13 +22,13 @@ public class QueryXlsxBenchmark : BenchmarkBase
     [Benchmark(Description = "MiniExcel QueryFirst")]
     public void MiniExcel_QueryFirst_Test()
     {
-        _ = MiniExcel.Query(FilePath).First();
+        _ = Importer.QueryXlsx(FilePath).First();
     }
 
     [Benchmark(Description = "MiniExcel Query")]
     public void MiniExcel_Query()
     {
-        foreach (var _ in MiniExcel.Query(FilePath)) { }
+        foreach (var _ in Importer.QueryXlsx(FilePath)) { }
     }
 
     [Benchmark(Description = "ExcelDataReader QueryFirst")]

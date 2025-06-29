@@ -1,6 +1,6 @@
 ﻿using BenchmarkDotNet.Running;
-using MiniExcelLibs.Benchmarks;
-using MiniExcelLibs.Benchmarks.BenchmarkSections;
+using MiniExcelLib.Benchmarks;
+using MiniExcelLib.Benchmarks.BenchmarkSections;
 
 if (Environment.GetEnvironmentVariable("BenchmarkMode") == "Automatic")
 {
@@ -13,7 +13,7 @@ if (Environment.GetEnvironmentVariable("BenchmarkMode") == "Automatic")
         _ => throw new ArgumentException($"Benchmark section {section} does not exist")
     };
     
-    BenchmarkRunner.Run(benchmark, new Config(), args);
+    BenchmarkRunner.Run(benchmark, BenchmarkConfig.Default, args);
 }
 else
 {
@@ -24,5 +24,5 @@ else
             typeof(CreateXlsxBenchmark),
             typeof(TemplateXlsxBenchmark)
         ])
-        .Run(args, new Config());
+        .Run(args, BenchmarkConfig.Default);
 }

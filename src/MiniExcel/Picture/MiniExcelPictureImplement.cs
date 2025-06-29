@@ -1,12 +1,14 @@
-﻿using System;
+﻿using MiniExcelLibs.Enums;
+using MiniExcelLibs.OpenXml;
+using MiniExcelLibs.Zip;
+using System;
+using System.Drawing;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
-using MiniExcelLibs.OpenXml;
-using MiniExcelLibs.Zip;
 using Zomp.SyncMethodGenerator;
 
 namespace MiniExcelLibs.Picture;
@@ -140,9 +142,10 @@ internal static partial class MiniExcelPictureImplement
                 var row = image.RowNumber;
                 var widthPx = image.WidthPx;
                 var heightPx = image.HeightPx;
-                
-                // Step 1: Add image to /xl/media/
-                var imageName = $"image{Guid.NewGuid():N}.png";
+                var imgtype = image.ImgType;
+                var location = image.Location;
+				// Step 1: Add image to /xl/media/
+				var imageName = $"image{Guid.NewGuid():N}.png";
                 var imagePath = $"xl/media/{imageName}";
                 var imageEntry = archive.CreateEntry(imagePath);
                     
@@ -167,7 +170,7 @@ internal static partial class MiniExcelPictureImplement
 
                 // Step 3: Add anchor to drawing XML
                 var relId = $"rId{Guid.NewGuid():N}";
-                drawingDoc = CreateDrawingXml(drawingDoc, col, row, widthPx, heightPx, relId);
+                drawingDoc = CreateDrawingXml(drawingDoc, col, row, widthPx, heightPx, relId, imgtype,location);
                     
                 // Step 4: Add image relationship to drawing rels
                 var relNode = drawingRelsDoc.CreateElement("Relationship", drawingRelsDoc.DocumentElement.NamespaceURI);
@@ -288,6 +291,8 @@ internal static partial class MiniExcelPictureImplement
                 var row = image.RowNumber;
                 var widthPx = image.WidthPx;
                 var heightPx = image.HeightPx;
+                var imgtype = image.ImgType;
+                var location = image.Location;
                 // Step 1: Add image to /xl/media/
                 var imageName = $"image{Guid.NewGuid():N}.png";
                 var imagePath = $"xl/media/{imageName}";
@@ -312,7 +317,7 @@ internal static partial class MiniExcelPictureImplement
     
                 // Step 3: Add anchor to drawing XML
                 var relId = $"rId{Guid.NewGuid():N}";
-                drawingDoc = CreateDrawingXml(drawingDoc, col, row, widthPx, heightPx, relId);
+                drawingDoc = CreateDrawingXml(drawingDoc, col, row, widthPx, heightPx, relId, imgtype,location);
                     
                 // Step 4: Add image relationship to drawing rels
                 var relNode = drawingRelsDoc.CreateElement("Relationship", drawingRelsDoc.DocumentElement.NamespaceURI);
@@ -364,12 +369,16 @@ internal static partial class MiniExcelPictureImplement
         return nsmgr;
     }
 
-    private static XmlDocument CreateDrawingXml(XmlDocument existingDoc, int col, int row, int widthPx, int heightPx, string relId)
-    {
-        return DrawingXmlHelper.CreateOrUpdateDrawingXml(existingDoc, col, row, widthPx, heightPx, relId);
-    }
+	private static XmlDocument CreateDrawingXml(XmlDocument existingDoc, int col, int row, int widthPx, int heightPx, string relId)
+	{
+		return DrawingXmlHelper.CreateOrUpdateDrawingXml(existingDoc, col, row, widthPx, heightPx, relId);
+	}
+	private static XmlDocument CreateDrawingXml(XmlDocument existingDoc, int col, int row, int widthPx, int heightPx, string relId,XlsxImgType imgtype,Point location)
+	{
+		return DrawingXmlHelper.CreateOrUpdateDrawingXml(existingDoc, col, row, widthPx, heightPx, relId,imgtype, location);
+	}
 
-    public class DrawingXmlHelper
+	public class DrawingXmlHelper
     {
         private const string XdrNamespace = "http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing";
         private const string ANamespace = "http://schemas.openxmlformats.org/drawingml/2006/main";
@@ -389,8 +398,198 @@ internal static partial class MiniExcelPictureImplement
 
             return columnName;
         }
+		public static XmlDocument CreateOrUpdateDrawingXml(
+	XmlDocument? existingDoc,
+	int col, int row,
+	int widthPx, int heightPx,
+	string relId,
+	XlsxImgType imgType,
+    Point Location
+)
+		{
+			var doc = existingDoc ?? new XmlDocument();
+			var ns = new XmlNamespaceManager(doc.NameTable);
+			ns.AddNamespace("xdr", XdrNamespace);
+			ns.AddNamespace("a", ANamespace);
+			ns.AddNamespace("r", "http://schemas.openxmlformats.org/officeDocument/2006/relationships");
 
-        public static XmlDocument CreateOrUpdateDrawingXml(
+			// Root
+			XmlElement wsDr;
+			if (existingDoc is null)
+			{
+				wsDr = doc.CreateElement("xdr", "wsDr", XdrNamespace);
+				wsDr.SetAttribute("xmlns:xdr", XdrNamespace);
+				wsDr.SetAttribute("xmlns:a", ANamespace);
+				doc.AppendChild(wsDr);
+			}
+			else
+			{
+				wsDr = doc.DocumentElement!;
+			}
+
+			XmlNodeList anchors = wsDr.SelectNodes("//xdr:oneCellAnchor | //xdr:twoCellAnchor | //xdr:absoluteAnchor", ns);
+			int imageCount = anchors?.Count ?? 0;
+			int nextId = imageCount + 2;
+
+			string anchorType = imgType switch
+			{
+				XlsxImgType.AbsoluteAnchor => "absoluteAnchor",
+				XlsxImgType.TwoCellAnchor => "twoCellAnchor",
+				XlsxImgType.OneCellAnchor => "oneCellAnchor",
+				_ => "oneCellAnchor"
+			};
+
+			var anchor = doc.CreateElement("xdr", anchorType, XdrNamespace);
+			if (imgType == XlsxImgType.TwoCellAnchor)
+				anchor.SetAttribute("editAs", "twoCell");
+
+			if (imgType == XlsxImgType.AbsoluteAnchor)
+			{
+				
+
+				var pos = doc.CreateElement("xdr", "pos", XdrNamespace);
+				pos.SetAttribute("x", PixelsToEmu(Location.X).ToString()); // 使用实际列宽
+				pos.SetAttribute("y", PixelsToEmu(Location.Y).ToString()); // 使用实际行高
+
+				var ext = doc.CreateElement("xdr", "ext", XdrNamespace);
+				ext.SetAttribute("cx", PixelsToEmu(widthPx).ToString());
+				ext.SetAttribute("cy", PixelsToEmu(heightPx).ToString());
+
+				anchor.AppendChild(pos);
+				anchor.AppendChild(ext);
+			
+			}
+			else if (imgType == XlsxImgType.TwoCellAnchor)
+			{
+                var from = doc.CreateElement("xdr", "from", XdrNamespace);
+                AppendXmlElement(doc, from, "xdr", "col", col.ToString());
+                AppendXmlElement(doc, from, "xdr", "colOff", "0");
+                AppendXmlElement(doc, from, "xdr", "row", row.ToString());
+                AppendXmlElement(doc, from, "xdr", "rowOff", "0");
+              var to = doc.CreateElement("xdr", "to", XdrNamespace);
+				AppendXmlElement(doc, to, "xdr", "col", (col + 1).ToString());
+				AppendXmlElement(doc, to, "xdr", "colOff", "0");
+				AppendXmlElement(doc, to, "xdr", "row", (row + 1).ToString());
+				AppendXmlElement(doc, to, "xdr", "rowOff", "0");
+
+				anchor.AppendChild(from);
+				anchor.AppendChild(to);
+			}
+			else // OneCellAnchor
+			{
+                var from = doc.CreateElement("xdr", "from", XdrNamespace);
+                AppendXmlElement(doc, from, "xdr", "col", col.ToString());
+                AppendXmlElement(doc, from, "xdr", "colOff", "0");
+                AppendXmlElement(doc, from, "xdr", "row", row.ToString());
+                AppendXmlElement(doc, from, "xdr", "rowOff", "0");
+				var to = doc.CreateElement("xdr", "to", XdrNamespace);
+				AppendXmlElement(doc, to, "xdr", "col", (col ).ToString()); // Adjust the column and row for size
+				AppendXmlElement(doc, to, "xdr", "colOff", "0");
+				AppendXmlElement(doc, to, "xdr", "row", (row ).ToString());
+				AppendXmlElement(doc, to, "xdr", "rowOff", "0");
+
+				var ext = doc.CreateElement("xdr", "ext", XdrNamespace);
+				ext.SetAttribute("cx", PixelsToEmu(widthPx).ToString());
+				ext.SetAttribute("cy", PixelsToEmu(heightPx).ToString());
+
+				anchor.AppendChild(from);
+				anchor.AppendChild(ext);
+			}
+
+			// -------- Image Content --------
+			// <xdr:pic>
+			var pic = doc.CreateElement("xdr", "pic", XdrNamespace);
+
+			// <xdr:nvPicPr>
+			var nvPicPr = doc.CreateElement("xdr", "nvPicPr", XdrNamespace);
+			var cNvPr = doc.CreateElement("xdr", "cNvPr", XdrNamespace);
+			cNvPr.SetAttribute("id", nextId.ToString());
+			cNvPr.SetAttribute("name", $"ImageAt{GetColumnName(col)}{row + 1}");
+
+			// <a:extLst>...<a16:creationId ... />
+			var extLst = doc.CreateElement("a", "extLst", ANamespace);
+			var extNode = doc.CreateElement("a", "ext", ANamespace);
+			extNode.SetAttribute("uri", "{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}");
+
+			var creationId = doc.CreateElement("a16", "creationId", "http://schemas.microsoft.com/office/drawing/2014/main");
+			creationId.SetAttribute("id", "http://schemas.microsoft.com/office/drawing/2014/main", $"{{00000000-0008-0000-0000-0000{nextId:D6}000000}}");
+
+			extNode.AppendChild(creationId);
+			extLst.AppendChild(extNode);
+			cNvPr.AppendChild(extLst);
+
+			// <xdr:cNvPicPr><a:picLocks noChangeAspect="1" /></xdr:cNvPicPr>
+			var cNvPicPr = doc.CreateElement("xdr", "cNvPicPr", XdrNamespace);
+			var picLocks = doc.CreateElement("a", "picLocks", ANamespace);
+			picLocks.SetAttribute("noChangeAspect", "1");
+			cNvPicPr.AppendChild(picLocks);
+
+			nvPicPr.AppendChild(cNvPr);
+			nvPicPr.AppendChild(cNvPicPr);
+			pic.AppendChild(nvPicPr);
+
+			// <xdr:blipFill>
+			var blipFill = doc.CreateElement("xdr", "blipFill", XdrNamespace);
+			var blip = doc.CreateElement("a", "blip", ANamespace);
+
+			blip.SetAttribute("xmlns:r", "http://schemas.openxmlformats.org/officeDocument/2006/relationships");
+			blip.SetAttribute("embed", ns.LookupNamespace("r"), relId);
+			blip.SetAttribute("cstate", "print");
+
+			var stretch = doc.CreateElement("a", "stretch", ANamespace);
+			var fillRect = doc.CreateElement("a", "fillRect", ANamespace);
+			stretch.AppendChild(fillRect);
+
+			blipFill.AppendChild(blip);
+			blipFill.AppendChild(stretch);
+			pic.AppendChild(blipFill);
+
+			// <xdr:spPr>
+			var spPr = doc.CreateElement("xdr", "spPr", XdrNamespace);
+			var xfrm = doc.CreateElement("a", "xfrm", ANamespace);
+
+			var off = doc.CreateElement("a", "off", ANamespace);
+			off.SetAttribute("x", "0");
+			off.SetAttribute("y", "0");
+
+			//var spExt = doc.CreateElement("a", "ext", ANamespace);
+			//spExt.SetAttribute("cx", "0");
+			//spExt.SetAttribute("cy", "0");
+
+			xfrm.AppendChild(off);
+			//xfrm.AppendChild(spExt);
+
+			var prstGeom = doc.CreateElement("a", "prstGeom", ANamespace);
+			prstGeom.SetAttribute("prst", "rect");
+
+			var avLst = doc.CreateElement("a", "avLst", ANamespace);
+			prstGeom.AppendChild(avLst);
+
+			spPr.AppendChild(xfrm);
+			spPr.AppendChild(prstGeom);
+
+			pic.AppendChild(spPr);
+
+			// <xdr:clientData />
+			var clientData = doc.CreateElement("xdr", "clientData", XdrNamespace);
+
+			//oneCellAnchor.AppendChild(from);
+			//oneCellAnchor.AppendChild(ext);
+			//oneCellAnchor.AppendChild(pic);
+			//oneCellAnchor.AppendChild(clientData);
+
+			//wsDr.AppendChild(oneCellAnchor);
+			//var pic = CreatePictureNode(doc, col, row, widthPx, heightPx, relId, nextId);
+		//	var clientData = doc.CreateElement("xdr", "clientData", XdrNamespace);
+
+			anchor.AppendChild(pic);
+			anchor.AppendChild(clientData);
+			wsDr.AppendChild(anchor);
+
+			return doc;
+		}
+		
+		public static XmlDocument CreateOrUpdateDrawingXml(
             XmlDocument? existingDoc,
             int col, int row,
             int widthPx, int heightPx,

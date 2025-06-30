@@ -101,12 +101,20 @@ internal class SheetStyleBuildContext : IDisposable
         _oldStyleXmlZipEntry = _archive.Mode == ZipArchiveMode.Update ? _archive.Entries.SingleOrDefault(s => s.FullName == ExcelFileNames.Styles) : null;
         if (_oldStyleXmlZipEntry is not null)
         {
+#if NET10_0_OR_GREATER
+            using (var oldStyleXmlStream = await _oldStyleXmlZipEntry.OpenAsync(cancellationToken).ConfigureAwait(false))
+#else
             using (var oldStyleXmlStream = _oldStyleXmlZipEntry.Open())
+#endif
             {
                 using var reader = XmlReader.Create(oldStyleXmlStream, new XmlReaderSettings { IgnoreWhitespace = true, Async = true });
                 OldElementInfos = await ReadSheetStyleElementInfosAsync(reader, cancellationToken).ConfigureAwait(false);
             }
+#if NET10_0_OR_GREATER
+            _oldXmlReaderStream = await _oldStyleXmlZipEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
+#else
             _oldXmlReaderStream = _oldStyleXmlZipEntry.Open();
+#endif
             OldXmlReader = XmlReader.Create(_oldXmlReaderStream, new XmlReaderSettings { IgnoreWhitespace = true, Async = true });
 
             _newStyleXmlZipEntry = _archive.CreateEntry(ExcelFileNames.Styles + ".temp", CompressionLevel.Fastest);
@@ -120,7 +128,11 @@ internal class SheetStyleBuildContext : IDisposable
             _newStyleXmlZipEntry = _archive.CreateEntry(ExcelFileNames.Styles, CompressionLevel.Fastest);
         }
 
+#if NET10_0_OR_GREATER
+        _newXmlWriterStream = await _newStyleXmlZipEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
+#else
         _newXmlWriterStream = _newStyleXmlZipEntry.Open();
+#endif
         NewXmlWriter = XmlWriter.Create(_newXmlWriterStream, new XmlWriterSettings { Indent = true, Encoding = _encoding, Async = true });
 
         GenerateElementInfos = generateElementInfos;
@@ -243,8 +255,16 @@ internal class SheetStyleBuildContext : IDisposable
                 _oldStyleXmlZipEntry = null;
                 var finalStyleXmlZipEntry = _archive.CreateEntry(ExcelFileNames.Styles, CompressionLevel.Fastest);
 
+#if NET10_0_OR_GREATER
+                using (var tempStream = await _newStyleXmlZipEntry.OpenAsync(cancellationToken).ConfigureAwait(false))
+#else
                 using (var tempStream = _newStyleXmlZipEntry.Open())
+#endif
+#if NET10_0_OR_GREATER
+                using (var newStream = await finalStyleXmlZipEntry.OpenAsync(cancellationToken).ConfigureAwait(false))
+#else
                 using (var newStream = finalStyleXmlZipEntry.Open())
+#endif
                 {
                     await tempStream.CopyToAsync(newStream, 4096, cancellationToken).ConfigureAwait(false);
                 }

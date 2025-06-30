@@ -172,7 +172,11 @@ internal partial class ExcelOpenXmlSheetReader : IExcelReader
             maxColumnIndex = endColumnIndex.Value;
         }
 
+#if NET10_0_OR_GREATER
+        using var sheetStream = await sheetEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
+#else
         using var sheetStream = sheetEntry.Open();
+#endif
         using var reader = XmlReader.Create(sheetStream, xmlSettings);
 
         if (!XmlReaderHelper.IsStartElement(reader, "worksheet", Ns))
@@ -491,7 +495,11 @@ internal partial class ExcelOpenXmlSheetReader : IExcelReader
             return;
         
         var idx = 0;
+#if NET10_0_OR_GREATER
+        using var stream = await sharedStringsEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
+#else
         using var stream = sharedStringsEntry.Open();
+#endif
         if (_config.EnableSharedStringCache && sharedStringsEntry.Length >= _config.SharedStringCacheSize)
         {
             SharedStrings = new SharedStringsDiskCache();
@@ -525,8 +533,13 @@ internal partial class ExcelOpenXmlSheetReader : IExcelReader
             true
 #endif
         );
-        
-        using var stream = entries.Single(w => w.FullName == "xl/workbook.xml").Open();
+
+        var entry = entries.Single(w => w.FullName == "xl/workbook.xml");
+#if NET10_0_OR_GREATER
+            using var stream = await entry.OpenAsync(cancellationToken).ConfigureAwait(false);
+#else
+        using var stream = entry.Open();
+#endif
         using var reader = XmlReader.Create(stream, xmlSettings);
         
         if (!XmlReaderHelper.IsStartElement(reader, "workbook", Ns))
@@ -616,7 +629,12 @@ internal partial class ExcelOpenXmlSheetReader : IExcelReader
             .CreateListAsync(cancellationToken)
             .ConfigureAwait(false);
 
-        using var stream = entries.Single(w => w.FullName == "xl/_rels/workbook.xml.rels").Open();
+        var entry = entries.Single(w => w.FullName == "xl/_rels/workbook.xml.rels");
+#if NET10_0_OR_GREATER
+            using var stream = await entry.OpenAsync(cancellationToken).ConfigureAwait(false);
+#else
+        using var stream = entry.Open();
+#endif
         using var reader = XmlReader.Create(stream, xmlSettings);
         
         if (!XmlReaderHelper.IsStartElement(reader, "Relationships", "http://schemas.openxmlformats.org/package/2006/relationships"))
@@ -836,7 +854,11 @@ internal partial class ExcelOpenXmlSheetReader : IExcelReader
 
             var withoutCr = false;
 
+#if NET10_0_OR_GREATER
+            using (var sheetStream = await sheet.OpenAsync(cancellationToken).ConfigureAwait(false))
+#else
             using (var sheetStream = sheet.Open())
+#endif
             using (var reader = XmlReader.Create(sheetStream, xmlSettings))
             {
                 while (await reader.ReadAsync().ConfigureAwait(false))
@@ -884,7 +906,11 @@ internal partial class ExcelOpenXmlSheetReader : IExcelReader
 
             if (withoutCr)
             {
+#if NET10_0_OR_GREATER
+                using var sheetStream = await sheet.OpenAsync(cancellationToken).ConfigureAwait(false);
+#else
                 using var sheetStream = sheet.Open();
+#endif
                 using var reader = XmlReader.Create(sheetStream, xmlSettings);
                 
                 if (!XmlReaderHelper.IsStartElement(reader, "worksheet", Ns))
@@ -978,7 +1004,11 @@ internal partial class ExcelOpenXmlSheetReader : IExcelReader
         bool withoutCr = false;
         int maxRowIndex = -1;
         int maxColumnIndex = -1;
+#if NET10_0_OR_GREATER
+        using (var sheetStream = await sheetEntry.OpenAsync(cancellationToken).ConfigureAwait(false))
+#else
         using (var sheetStream = sheetEntry.Open())
+#endif
         using (var reader = XmlReader.Create(sheetStream, xmlSettings))
         {
             while (await reader.ReadAsync()
@@ -1028,7 +1058,11 @@ internal partial class ExcelOpenXmlSheetReader : IExcelReader
 
         if (withoutCr)
         {
+#if NET10_0_OR_GREATER
+            using var sheetStream = await sheetEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
+#else
             using var sheetStream = sheetEntry.Open();
+#endif
             using var reader = XmlReader.Create(sheetStream, xmlSettings);
             
             if (!XmlReaderHelper.IsStartElement(reader, "worksheet", Ns))
@@ -1101,8 +1135,12 @@ internal partial class ExcelOpenXmlSheetReader : IExcelReader
 #endif
         );
         var mergeCells = new MergeCells();
-        
+
+#if NET10_0_OR_GREATER
+        using var sheetStream = await sheetEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
+#else
         using var sheetStream = sheetEntry.Open();
+#endif
         using var reader = XmlReader.Create(sheetStream, xmlSettings);
         
         if (!XmlReaderHelper.IsStartElement(reader, "worksheet", Ns))

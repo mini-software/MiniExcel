@@ -96,9 +96,18 @@ internal partial class ExcelOpenXmlTemplate : IExcelTemplate
             var newEntry = outputFileArchive.ZipFile.CreateEntry(entry.FullName);
 
             // Copy the content of the original entry to the new entry
+#if NET10_0_OR_GREATER
+            using var originalEntryStream = await entry.OpenAsync(cancellationToken).ConfigureAwait(false);
+#else
             using var originalEntryStream = entry.Open();
+#endif
+            // Copy the content of the original entry to the new entry
+#if NET10_0_OR_GREATER
+            using var newEntryStream = await newEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
+#else
             using var newEntryStream = newEntry.Open();
-            
+#endif
+
             await originalEntryStream.CopyToAsync(newEntryStream
 #if NETCOREAPP2_1_OR_GREATER
                     , cancellationToken
@@ -124,13 +133,21 @@ internal partial class ExcelOpenXmlTemplate : IExcelTemplate
             _xMergeCellInfos = [];
             _newXMergeCellInfos = [];
 
+#if NET10_0_OR_GREATER
+            var templateSheetStream = await templateSheet.OpenAsync(cancellationToken).ConfigureAwait(false);
+#else
             var templateSheetStream = templateSheet.Open();
+#endif
             var templateFullName = templateSheet.FullName;
 
             var inputValues = _inputValueExtractor.ToValueDictionary(value);
             var outputZipEntry = outputFileArchive.ZipFile.CreateEntry(templateFullName);
-            
+
+#if NET10_0_OR_GREATER
+            using var outputZipSheetEntryStream = await outputZipEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
+#else
             using var outputZipSheetEntryStream = outputZipEntry.Open();
+#endif
             GenerateSheetXmlImplByCreateMode(templateSheet, outputZipSheetEntryStream, templateSheetStream, inputValues, templateSharedStrings, false);
             //doc.Save(zipStream); //don't do it because: https://user-images.githubusercontent.com/12729184/114361127-61a5d100-9ba8-11eb-9bb9-34f076ee28a2.png
             // disposing writer disposes streams as well. read and parse calc functions before that
@@ -147,7 +164,11 @@ internal partial class ExcelOpenXmlTemplate : IExcelTemplate
             //calcChain.Delete();
 
             var calcChainEntry = outputFileArchive.ZipFile.CreateEntry(calcChainPathName);
+#if NET10_0_OR_GREATER
+            using var calcChainStream = await calcChainEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
+#else
             using var calcChainStream = calcChainEntry.Open();
+#endif
             await CalcChainHelper.GenerateCalcChainSheetAsync(calcChainStream, _calcChainContent.ToString(), cancellationToken).ConfigureAwait(false);
         }
         else
@@ -159,9 +180,17 @@ internal partial class ExcelOpenXmlTemplate : IExcelTemplate
                     var newEntry = outputFileArchive.ZipFile.CreateEntry(entry.FullName);
 
                     // Copy the content of the original entry to the new entry
+#if NET10_0_OR_GREATER
+                    using var originalEntryStream = await entry.OpenAsync(cancellationToken).ConfigureAwait(false);
+#else
                     using var originalEntryStream = entry.Open();
+#endif
+#if NET10_0_OR_GREATER
+                    using var newEntryStream = await newEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
+#else
                     using var newEntryStream = newEntry.Open();
-                    
+#endif
+
                     await originalEntryStream.CopyToAsync(newEntryStream
 #if NETCOREAPP2_1_OR_GREATER
                         , cancellationToken
@@ -171,6 +200,10 @@ internal partial class ExcelOpenXmlTemplate : IExcelTemplate
             }
         }
 
+#if NET10_0_OR_GREATER
+        await outputFileArchive.ZipFile.DisposeAsync().ConfigureAwait(false);
+#else
         outputFileArchive.ZipFile.Dispose();
+#endif
     }
 }

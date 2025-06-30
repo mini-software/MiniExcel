@@ -55,15 +55,27 @@ internal partial class ExcelOpenXmlTemplate
             _xMergeCellInfos = [];
             _newXMergeCellInfos = [];
 
+#if NET10_0_OR_GREATER
+            var sheetStream = await sheet.OpenAsync(cancellationToken).ConfigureAwait(false);
+#else
             var sheetStream = sheet.Open();
+#endif
             var fullName = sheet.FullName;
 
             var entry = archive.ZipFile.CreateEntry(fullName);
+#if NET10_0_OR_GREATER
+            using var zipStream = await entry.OpenAsync(cancellationToken).ConfigureAwait(false);
+#else
             using var zipStream = entry.Open();
+#endif
             await GenerateSheetXmlImplByUpdateModeAsync(sheet, zipStream, sheetStream, new Dictionary<string, object>(), sharedStrings, mergeCells: true, cancellationToken).ConfigureAwait(false);
             //doc.Save(zipStream); //don't do it beacause: https://user-images.githubusercontent.com/12729184/114361127-61a5d100-9ba8-11eb-9bb9-34f076ee28a2.png
         }
 
+#if NET10_0_OR_GREATER
+        await archive.ZipFile.DisposeAsync().ConfigureAwait(false);
+#else
         archive.ZipFile.Dispose();
+#endif
     }
 }

@@ -21,6 +21,7 @@ using static MiniExcelLibs.Tests.MiniExcelOpenXmlTests;
 using MiniExcelLibs.Picture;
 using TableStyles = MiniExcelLibs.OpenXml.TableStyles;
 using System.Threading.Tasks;
+using LicenseContext = OfficeOpenXml.LicenseContext;
 
 namespace MiniExcelLibs.Tests;
 
@@ -4428,9 +4429,8 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         MiniExcel.AddPicture(path.FilePath, images);
 
         using var package = new ExcelPackage(new FileInfo(path.FilePath));
-
-        // Check picture in the first sheet (C3)  
-        var firstSheet = package.Workbook.Worksheets[0];
+		// Check picture in the first sheet (C3)  
+		var firstSheet = package.Workbook.Worksheets[0];
         var pictureInC3 = firstSheet.Drawings.OfType<OfficeOpenXml.Drawing.ExcelPicture>().FirstOrDefault(p => p.From.Column == 2 && p.From.Row == 2);
         Assert.NotNull(pictureInC3);
 
@@ -4479,8 +4479,9 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             ];
 
             MiniExcel.AddPicture(path.FilePath, images);
+			//ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
 
-            using (var package = new ExcelPackage(new FileInfo(path.FilePath)))
+			using (var package = new ExcelPackage(new FileInfo(path.FilePath)))
             {
                 // Check picture in the first sheet (C3)  
                 var firstSheet = package.Workbook.Worksheets[0];
@@ -4538,8 +4539,9 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             ];
 
             MiniExcel.AddPicture(path.FilePath, images);
+			//ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
 
-            using var package = new ExcelPackage(new FileInfo(path.FilePath));
+			using var package = new ExcelPackage(new FileInfo(path.FilePath));
             
             // Check picture in the first sheet (C3)  
             var firstSheet = package.Workbook.Worksheets[0];

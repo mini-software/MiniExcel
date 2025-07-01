@@ -3,22 +3,23 @@
 namespace MiniExcelLibs.Enums;
 
 /// <summary>
-/// Excel 图片展示方式（是否随单元格对齐/缩放）。
+/// Excel image display mode (whether the image aligns/scales with cells).
 /// </summary>
 public enum XlsxImgType
 {
-	/// <summary>
-	/// 图片随单元格移动但不缩放（OneCellAnchor）。
-	/// 通常用于图片只绑定一个起点单元格。
-	/// </summary>
-	OneCellAnchor,
-	/// <summary>
-	/// 图片浮动在表格上，固定位置不随单元格变化（AbsoluteAnchor）。
-	/// </summary>
-	AbsoluteAnchor,
-	/// <summary>
-	/// 图片嵌入单元格中，随单元格移动和缩放（TwoCellAnchor）。
-	/// </summary>
-	TwoCellAnchor,
-	
+    /// <summary>
+    /// The image moves with the cell but does not scale (OneCellAnchor).
+    /// Typically used when the image is bound to a single starting cell.
+    /// </summary>
+    OneCellAnchor,
+
+    /// <summary>
+    /// The image floats over the worksheet, maintaining a fixed position regardless of cell changes (AbsoluteAnchor).
+    /// </summary>
+    AbsoluteAnchor,
+
+    /// <summary>
+    /// The image is embedded in the cell and moves and scales with the cell (TwoCellAnchor).
+    /// </summary>
+    TwoCellAnchor
 }

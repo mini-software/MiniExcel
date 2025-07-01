@@ -13,90 +13,88 @@ namespace MiniExcelLibs.Tests.SaveByTemplate;
 
 public class MiniExcelTemplateTests
 {
-	[Fact]
-	public void TestImageType()
-	{
-		const string templatePath = "../../../../../samples/xlsx/TestImageType.xlsx";
-		{
-			string absolutePath = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, templatePath));
+    [Fact]
+    public void TestImageType()
+    {
+        const string templatePath = "../../../../../samples/xlsx/TestImageType.xlsx";
+        {
+            string absolutePath = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, templatePath));
 
-			using var path = AutoDeletingPath.Create();
-			File.Copy(absolutePath, path.FilePath, overwrite: true); // 拷贝模板文件
+            using var path = AutoDeletingPath.Create();
+            File.Copy(absolutePath, path.FilePath, overwrite: true); // Copy the template file
 
-			var img1Bytes = File.ReadAllBytes("../../../../../samples/images/TestIssue327.png");  // 使用你本地的图片
-			var img2Bytes = File.ReadAllBytes("../../../../../samples/images/TestIssue327.png");  // 使用你本地的图片
-			var img3Bytes = File.ReadAllBytes("../../../../../samples/images/TestIssue327.png");  // 使用你本地的图片
+            var img1Bytes = File.ReadAllBytes("../../../../../samples/images/TestIssue327.png");  // Use your local image
+            var img2Bytes = File.ReadAllBytes("../../../../../samples/images/TestIssue327.png");  // Use your local image
+            var img3Bytes = File.ReadAllBytes("../../../../../samples/images/TestIssue327.png");  // Use your local image
 
             var pictures = new[]
             {
-            new MiniExcelPicture
-            {
-                CellAddress = "B2",
-                ImageBytes = img1Bytes,
-                PictureType = "png",
-                ImgType = XlsxImgType.AbsoluteAnchor,
-                Location = new System.Drawing.Point(255,255),
-
-                WidthPx = 1920,
-                HeightPx = 1032
-            },
-            new MiniExcelPicture
-            {
-                CellAddress = "D4",
-                ImageBytes = img2Bytes,
-                PictureType = "png",
-                ImgType = XlsxImgType.TwoCellAnchor,
-                WidthPx = 1920,
-                HeightPx = 1032
-            },
                 new MiniExcelPicture
+                {
+                    CellAddress = "B2",
+                    ImageBytes = img1Bytes,
+                    PictureType = "png",
+                    ImgType = XlsxImgType.AbsoluteAnchor,
+                    Location = new System.Drawing.Point(255,255),
+                    WidthPx = 1920,
+                    HeightPx = 1032
+                },
+                new MiniExcelPicture
+                {
+                    CellAddress = "D4",
+                    ImageBytes = img2Bytes,
+                    PictureType = "png",
+                    ImgType = XlsxImgType.TwoCellAnchor,
+                    WidthPx = 1920,
+                    HeightPx = 1032
+                },
+                new MiniExcelPicture
+                {
+                    CellAddress = "F6",
+                    ImageBytes = img3Bytes,
+                    PictureType = "png",
+                    ImgType = XlsxImgType.OneCellAnchor,
+                    WidthPx = 1920,
+                    HeightPx = 1032
+                }
+            };
+
+            // Act
+            MiniExcel.AddPicture(path.ToString(), pictures);
+
+            // Assert
+            using var zip = ZipFile.OpenRead(path.FilePath);
+            var mediaEntries = zip.Entries.Where(x => x.FullName.StartsWith("xl/media/")).ToList();
+            Assert.Equal(pictures.Length, mediaEntries.Count);
+
+            // Assert (use EPPlus to verify that images are inserted correctly)
+            using (var package = new ExcelPackage(new FileInfo(path.FilePath)))
             {
-                CellAddress = "F6",
-                ImageBytes = img3Bytes,
-                PictureType = "png",
-                ImgType = XlsxImgType.OneCellAnchor,
-                WidthPx = 1920,
-                HeightPx = 1032
+                var sheet = package.Workbook.Worksheets[0];
+                var picB2 = sheet.Drawings.OfType<ExcelPicture>()
+                    .FirstOrDefault(p => p.EditAs == eEditAs.Absolute);
+
+                Assert.NotNull(picB2);
+                Assert.Equal(1920 * 9525, picB2.Size.Width);
+                Assert.Equal(1032 * 9525, picB2.Size.Height);
+                //Console.WriteLine("✅ AbsoluteAnchor image exists and the size is as expected (1920x1032)");
+
+                //Console.WriteLine("✅ Image inserted successfully (B2 - AbsoluteAnchor)");
+
+                // Validate image at D4 (ImgType.TwoCellAnchor)
+                var picD4 = sheet.Drawings.OfType<ExcelPicture>()
+                    .FirstOrDefault(p => p.EditAs == eEditAs.TwoCell && p.From != null && p.From.Column == 3 && p.From.Row == 3);
+                Assert.NotNull(picD4);
+                //Console.WriteLine("✅ Image inserted successfully (D4 - TwoCellAnchor)");
+
+                // Validate image at F6 (ImgType.OneCellAnchor)
+                var picF6 = sheet.Drawings.OfType<ExcelPicture>()
+                    .FirstOrDefault(p => p.EditAs == eEditAs.OneCell && p.From != null && p.From.Column == 5 && p.From.Row == 5);
+                Assert.NotNull(picF6);
+                //Console.WriteLine("✅ Image inserted successfully (F6 - OneCellAnchor)");
             }
-        };
-			
-			// Act
-			MiniExcel.AddPicture(path.ToString(), pictures);
-
-			// Assert
-			using var zip = ZipFile.OpenRead(path.FilePath);
-			var mediaEntries = zip.Entries.Where(x => x.FullName.StartsWith("xl/media/")).ToList();
-           // ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
-			Assert.Equal(pictures.Length, mediaEntries.Count);
-
-			// Assert（使用 EPPlus 验证图片是否正确插入）
-			using (var package = new ExcelPackage(new FileInfo(path.FilePath)))
-			{
-				var sheet = package.Workbook.Worksheets[0];
-				var picB2 = sheet.Drawings.OfType<ExcelPicture>()
-					.FirstOrDefault(p => p.EditAs == eEditAs.Absolute);
-
-				Assert.NotNull(picB2);
-				Assert.Equal(1920 * 9525, picB2.Size.Width);
-				Assert.Equal(1032 * 9525, picB2.Size.Height);
-				Console.WriteLine("✅ AbsoluteAnchor 图片存在，并且尺寸符合预期（1920x1032）");
-
-				Console.WriteLine("✅ 图片插入成功（B2 - AbsoluteAnchor）");
-
-				// 验证 D4 的图片（ImgType.TwoCellAnchor）
-				var picD4 = sheet.Drawings.OfType<ExcelPicture>()
-					.FirstOrDefault(p => p.EditAs == eEditAs.TwoCell && p.From != null && p.From.Column == 3 && p.From.Row == 3);
-				Assert.NotNull(picD4);
-				Console.WriteLine("✅ 图片插入成功（D4 - TwoCellAnchor）");
-
-				// 验证 F6 的图片（ImgType.OneCellAnchor）
-				var picF6 = sheet.Drawings.OfType<ExcelPicture>()
-					.FirstOrDefault(p => p.EditAs == eEditAs.OneCell && p.From != null && p.From.Column == 5 && p.From.Row == 5);
-				Assert.NotNull(picF6);
-				Console.WriteLine("✅ 图片插入成功（F6 - OneCellAnchor）");
-			}
-		}
-	}
+        }
+    }
 	[Fact]
     public void DatatableTemptyRowTest()
     {

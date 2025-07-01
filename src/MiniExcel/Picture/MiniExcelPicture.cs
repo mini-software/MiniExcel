@@ -10,9 +10,9 @@ public class MiniExcelPicture
     public string? SheetName { get; set; }
     public string? PictureType { get; set; }
     public string? CellAddress { get; set; }
-	/// <summary>
-	/// 只有当图片处于AbsoluteAnchor浮动才会生效
-	/// </summary>
+    /// <summary>
+    /// Only takes effect when the image is in AbsoluteAnchor floating mode
+    /// </summary>
 	public Point Location { get; set; }
 	public XlsxImgType ImgType { get; set; }
     internal int ColumnNumber => ReferenceHelper.ConvertCellToXY(CellAddress).Item1 -1;

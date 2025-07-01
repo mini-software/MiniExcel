@@ -1,8 +1,11 @@
 using System.Data;
+using System.IO.Compression;
 using Dapper;
 using MiniExcelLib.Core.Enums;
 using MiniExcelLib.Core.OpenXml.Picture;
 using MiniExcelLib.Tests.Utils;
+using OfficeOpenXml;
+using OfficeOpenXml.Drawing;
 using Importer = MiniExcelLib.MiniExcel.Importer;
 using Templater = MiniExcelLib.MiniExcel.Templater;
 using Xunit;
@@ -58,7 +61,7 @@ public class MiniExcelTemplateTests
             };
 
             // Act
-            MiniExcel.AddPicture(path.ToString(), pictures);
+            MiniExcel.Exporter.AddPictureXlsx(path.ToString(), pictures);
 
             // Assert
             using var zip = ZipFile.OpenRead(path.FilePath);

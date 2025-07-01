@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace MiniExcelLibs.Enums;
+﻿namespace MiniExcelLib.Core.Enums;
 
 /// <summary>
 /// Excel image display mode (whether the image aligns/scales with cells).

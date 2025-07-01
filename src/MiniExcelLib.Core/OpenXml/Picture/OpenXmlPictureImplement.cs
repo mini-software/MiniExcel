@@ -138,6 +138,8 @@ internal static partial class MiniExcelPictureImplement
                 var row = image.RowNumber;
                 var widthPx = image.WidthPx;
                 var heightPx = image.HeightPx;
+                var imgtype = image.ImgType;
+                var location = image.Location;
                 
                 // Step 1: Add image to /xl/media/
                 var imageName = $"image{Guid.NewGuid():N}.png";
@@ -378,7 +380,7 @@ internal static partial class MiniExcelPictureImplement
 	{
 		return DrawingXmlHelper.CreateOrUpdateDrawingXml(existingDoc, col, row, widthPx, heightPx, relId);
 	}
-	private static XmlDocument CreateDrawingXml(XmlDocument existingDoc, int col, int row, int widthPx, int heightPx, string relId,XlsxImgType imgtype,Point location)
+	private static XmlDocument CreateDrawingXml(XmlDocument existingDoc, int col, int row, int widthPx, int heightPx, string relId,XlsxImgType imgtype, Point location)
 	{
 		return DrawingXmlHelper.CreateOrUpdateDrawingXml(existingDoc, col, row, widthPx, heightPx, relId,imgtype, location);
 	}

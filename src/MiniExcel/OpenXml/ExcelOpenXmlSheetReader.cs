@@ -536,7 +536,7 @@ internal partial class ExcelOpenXmlSheetReader : IExcelReader
 
         var entry = entries.Single(w => w.FullName == "xl/workbook.xml");
 #if NET10_0_OR_GREATER
-            using var stream = await entry.OpenAsync(cancellationToken).ConfigureAwait(false);
+        using var stream = await entry.OpenAsync(cancellationToken).ConfigureAwait(false);
 #else
         using var stream = entry.Open();
 #endif
@@ -631,7 +631,7 @@ internal partial class ExcelOpenXmlSheetReader : IExcelReader
 
         var entry = entries.Single(w => w.FullName == "xl/_rels/workbook.xml.rels");
 #if NET10_0_OR_GREATER
-            using var stream = await entry.OpenAsync(cancellationToken).ConfigureAwait(false);
+        using var stream = await entry.OpenAsync(cancellationToken).ConfigureAwait(false);
 #else
         using var stream = entry.Open();
 #endif

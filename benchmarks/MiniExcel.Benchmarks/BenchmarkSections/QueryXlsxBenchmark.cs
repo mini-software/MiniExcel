@@ -4,30 +4,34 @@ using ClosedXML.Excel;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using ExcelDataReader;
+using MiniExcelLib.Core;
 using NPOI.XSSF.UserModel;
 using OfficeOpenXml;
 
-namespace MiniExcelLibs.Benchmarks.BenchmarkSections;
+namespace MiniExcelLib.Benchmarks.BenchmarkSections;
 
 public class QueryXlsxBenchmark : BenchmarkBase
 {
+    private MiniExcelImporter _importer;
+    
     [GlobalSetup]
     public void SetUp()
     {
         ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+        _importer = new MiniExcelImporter();
     }
 
     [Benchmark(Description = "MiniExcel QueryFirst")]
     public void MiniExcel_QueryFirst_Test()
     {
-        _ = MiniExcel.Query(FilePath).First();
+        _ = _importer.QueryXlsx(FilePath).First();
     }
 
     [Benchmark(Description = "MiniExcel Query")]
     public void MiniExcel_Query()
     {
-        foreach (var _ in MiniExcel.Query(FilePath)) { }
+        foreach (var _ in _importer.QueryXlsx(FilePath)) { }
     }
 
     [Benchmark(Description = "ExcelDataReader QueryFirst")]

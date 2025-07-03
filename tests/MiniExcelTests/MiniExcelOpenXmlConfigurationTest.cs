@@ -1,40 +1,46 @@
-using MiniExcelLibs.Attributes;
-using MiniExcelLibs.OpenXml;
-using MiniExcelLibs.Tests.Utils;
+using MiniExcelLib.Core;
+using MiniExcelLib.Core.Attributes;
+using MiniExcelLib.Core.Helpers;
+using MiniExcelLib.Core.OpenXml;
+using MiniExcelLib.Csv.MiniExcelExtensions;
+using MiniExcelLib.Tests.Utils;
 using Xunit;
 
-namespace MiniExcelLibs.Tests;
+namespace MiniExcelLib.Tests;
 
 public class MiniExcelOpenXmlConfigurationTest
 {
+    private readonly MiniExcelImporter _importer =  MiniExcel.GetImporter();
+    private readonly MiniExcelExporter _exporter =  MiniExcel.GetExporter();
+    
     [Fact]
     public async Task EnableWriteFilePathTest()
     {
         var img = await new HttpClient().GetByteArrayAsync("https://user-images.githubusercontent.com/12729184/150462383-ad9931b3-ed8d-4221-a1d6-66f799743433.png");
-        var value = new[]
-        {
-            new ImgExportTestDto { Name = "github", Img = File.ReadAllBytes(PathHelper.GetFile("images/github_logo.png")) },
-            new ImgExportTestDto { Name = "google", Img = File.ReadAllBytes(PathHelper.GetFile("images/google_logo.png")) },
-            new ImgExportTestDto { Name = "microsoft", Img = File.ReadAllBytes(PathHelper.GetFile("images/microsoft_logo.png")) },
-            new ImgExportTestDto { Name = "reddit", Img = File.ReadAllBytes(PathHelper.GetFile("images/reddit_logo.png")) },
-            new ImgExportTestDto { Name = "statck_overflow", Img = File.ReadAllBytes(PathHelper.GetFile("images/statck_overflow_logo.png")) },
-            new ImgExportTestDto { Name = "statck_over", Img = img },
-        };
+        ImgExportTestDto[] value =
+        [
+            new() { Name = "github", Img = await File.ReadAllBytesAsync(PathHelper.GetFile("images/github_logo.png")) },
+            new() { Name = "google", Img = await File.ReadAllBytesAsync(PathHelper.GetFile("images/google_logo.png")) },
+            new() { Name = "microsoft", Img = await File.ReadAllBytesAsync(PathHelper.GetFile("images/microsoft_logo.png")) },
+            new() { Name = "reddit", Img = await File.ReadAllBytesAsync(PathHelper.GetFile("images/reddit_logo.png")) },
+            new() { Name = "statck_overflow", Img = await File.ReadAllBytesAsync(PathHelper.GetFile("images/statck_overflow_logo.png")) },
+            new() { Name = "statck_over", Img = img }
+        ];
 
         var path = PathHelper.GetFile("xlsx/Test_EnableWriteFilePath.xlsx");
-        MiniExcel.SaveAs(path, value, configuration: new OpenXmlConfiguration { EnableWriteFilePath = false }, overwriteFile: true);
+        await _exporter.ExportXlsxAsync(path, value, configuration: new OpenXmlConfiguration { EnableWriteFilePath = false }, overwriteFile: true);
         Assert.True(File.Exists(path));
 
-        var rows = MiniExcel.Query<ImgExportTestDto>(path).ToList();
-        Assert.True(rows.All(x => x.Img is null || x.Img.Length < 1));
+        var rows = await _importer.QueryXlsxAsync<ImgExportTestDto>(path).CreateListAsync();
+        Assert.True(rows.All(x => x.Img is null or []));
     }
     
     private class ImgExportTestDto
     {
         public string Name { get; set; }
 
-        [ExcelColumn(Name = "图片", Width = 100)]
-        public byte[] Img { get; set; }
+        [MiniExcelColumn(Name = "图片", Width = 100)]
+        public byte[]? Img { get; set; }
     }
 }
 

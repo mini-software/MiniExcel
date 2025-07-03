@@ -1,4 +1,4 @@
-﻿namespace MiniExcelLibs.Benchmarks;
+﻿namespace MiniExcelLib.Benchmarks;
 
 public abstract class BenchmarkBase
 {

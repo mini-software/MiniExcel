@@ -1,7 +1,7 @@
 ﻿using System.Data.SQLite;
 using System.Text;
 
-namespace MiniExcelLibs.Tests.Utils;
+namespace MiniExcelLib.Tests.Utils;
 
 internal static class Db
 {

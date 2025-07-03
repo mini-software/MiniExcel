@@ -1,34 +1,36 @@
-﻿using Dapper;
-using MiniExcelLibs.Attributes;
-using MiniExcelLibs.Csv;
-using MiniExcelLibs.Exceptions;
-using MiniExcelLibs.OpenXml;
-using MiniExcelLibs.Tests.Utils;
-using Newtonsoft.Json;
-using NPOI.XSSF.UserModel;
-using OfficeOpenXml;
-using System.Collections;
+﻿using System.Collections;
 using System.ComponentModel;
 using System.Data;
 using System.Data.SQLite;
 using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
-using MiniExcelLibs.Utils;
+using Dapper;
+using MiniExcelLib.Core;
+using MiniExcelLib.Core.Attributes;
+using MiniExcelLib.Core.Exceptions;
+using MiniExcelLib.Core.OpenXml;
+using MiniExcelLib.Core.OpenXml.Picture;
+using MiniExcelLib.Core.OpenXml.Utils;
+using MiniExcelLib.Csv;
+using MiniExcelLib.Csv.MiniExcelExtensions;
+using MiniExcelLib.Tests.Utils;
+using Newtonsoft.Json;
+using NPOI.XSSF.UserModel;
+using OfficeOpenXml;
 using Xunit;
 using Xunit.Abstractions;
-using static MiniExcelLibs.Tests.MiniExcelOpenXmlTests;
-using MiniExcelLibs.Picture;
-using TableStyles = MiniExcelLibs.OpenXml.TableStyles;
-using System.Threading.Tasks;
-using LicenseContext = OfficeOpenXml.LicenseContext;
 
-namespace MiniExcelLibs.Tests;
+namespace MiniExcelLib.Tests;
 
 public class MiniExcelIssueTests(ITestOutputHelper output)
 {
     private readonly ITestOutputHelper _output = output;
-
+    
+    private readonly MiniExcelImporter _importer =  MiniExcel.GetImporter();
+    private readonly MiniExcelExporter _exporter =  MiniExcel.GetExporter();
+    private readonly MiniExcelTemplater _templater =  MiniExcel.GetTemplater();
+    
     /// <summary>
     /// https://github.com/mini-software/MiniExcel/issues/549
     /// </summary>
@@ -43,8 +45,8 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         using var file = AutoDeletingPath.Create();
         var path = file.ToString();
 
-        MiniExcel.SaveAs(path, data);
-        var rows = MiniExcel.Query(path, true).ToList();
+         _exporter.ExportXlsx(path, data);
+        var rows =  _importer.QueryXlsx(path, true).ToList();
         {
             using var stream = new FileStream(path, FileMode.Open, FileAccess.Read);
             using var workbook = new XSSFWorkbook(stream);
@@ -72,7 +74,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
                 new() { { "specialMark", 3 } },
             }
         };
-        MiniExcel.SaveAsByTemplate(path.ToString(), templatePath, data);
+         _templater.ApplyXlsxTemplate(path.ToString(), templatePath, data);
     }
 
     [Fact]
@@ -89,9 +91,9 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
                 new{ ITM=3 }
             }
         };
-        MiniExcel.SaveAsByTemplate(path.ToString(), templatePath, data);
+         _templater.ApplyXlsxTemplate(path.ToString(), templatePath, data);
 
-        var rows = MiniExcel.Query(path.ToString()).ToList();
+        var rows =  _importer.QueryXlsx(path.ToString()).ToList();
         Assert.Equal(rows[2].A, 1);
         Assert.Equal(rows[3].A, 2);
         Assert.Equal(rows[4].A, 3);
@@ -107,7 +109,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
                 .Select(s => Regex.Replace(s.Replace("\"\"", "\""), "^\"|\"$", ""))
                 .ToArray()
         };
-        var rows = MiniExcel.Query(path, configuration: config).ToList();
+        var rows =  _importer.QueryCsv(path, configuration: config).ToList();
     }
 
     [Fact]
@@ -120,9 +122,9 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             new() { Name="0002", UserType=DescriptionEnum.V2 },
             new() { Name="0003", UserType=DescriptionEnum.V3 }
         ];
-        MiniExcel.SaveAs(path.ToString(), value);
+         _exporter.ExportXlsx(path.ToString(), value);
 
-        var rows = MiniExcel.Query<DescriptionEnumDto>(path.ToString()).ToList();
+        var rows =  _importer.QueryXlsx<DescriptionEnumDto>(path.ToString()).ToList();
 
         Assert.Equal(DescriptionEnum.V1, rows[0].UserType);
         Assert.Equal(DescriptionEnum.V2, rows[1].UserType);
@@ -148,7 +150,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     [Fact]
     public void TestIssueI4X92G()
     {
-        using var file = AutoDeletingPath.Create(ExcelType.CSV);
+        using var file = AutoDeletingPath.Create(ExcelType.Csv);
         var path = file.ToString();
 
         {
@@ -157,7 +159,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
                 new { ID = 1, Name = "Jack", InDate = new DateTime(2021,01,03)},
                 new { ID = 2, Name = "Henry", InDate = new DateTime(2020,05,03)}
             };
-            MiniExcel.SaveAs(path, value);
+             _exporter.ExportCsv(path, value);
             var content = File.ReadAllText(path);
             Assert.Equal(
                 """
@@ -170,7 +172,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         }
         {
             var value = new { ID = 3, Name = "Mike", InDate = new DateTime(2021, 04, 23) };
-            var rowsWritten = MiniExcel.Insert(path, value);
+            var rowsWritten =  _exporter.AppendToCsv(path, value);
             Assert.Equal(1, rowsWritten);
 
             var content = File.ReadAllText(path);
@@ -190,7 +192,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
                 new { ID=4,Name ="Frank",InDate=new DateTime(2021,06,07)},
                 new { ID=5,Name ="Gloria",InDate=new DateTime(2022,05,03)},
             };
-            var rowsWritten = MiniExcel.Insert(path, value);
+            var rowsWritten =  _exporter.AppendToCsv(path, value);
             Assert.Equal(2, rowsWritten);
 
             var content = File.ReadAllText(path);
@@ -210,7 +212,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
 
 
     /// <summary>
-    /// Exception : MiniExcelLibs.Exceptions.ExcelInvalidCastException: 'ColumnName : Date, CellRow : 2, Value : 2021-01-31 10:03:00 +08:00, it can't cast to DateTimeOffset type.'
+    /// Exception : MiniExcelLibs.Core.Exceptions.ExcelInvalidCastException: 'ColumnName : Date, CellRow : 2, Value : 2021-01-31 10:03:00 +08:00, it can't cast to DateTimeOffset type.'
     /// </summary>
     [Fact]
     public void TestIssue430()
@@ -220,14 +222,14 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         {
             new TestIssue430Dto{ Date=DateTimeOffset.Parse("2021-01-31 10:03:00 +05:00")}
         };
-        MiniExcel.SaveAs(path.ToString(), value);
-        var rows = MiniExcel.Query<TestIssue430Dto>(path.ToString()).ToArray();
+         _exporter.ExportXlsx(path.ToString(), value);
+        var rows =  _importer.QueryXlsx<TestIssue430Dto>(path.ToString()).ToArray();
         Assert.Equal("2021-01-31 10:03:00 +05:00", rows[0].Date.ToString("yyyy-MM-dd HH:mm:ss zzz"));
     }
 
     private class TestIssue430Dto
     {
-        [ExcelFormat("yyyy-MM-dd HH:mm:ss zzz")]
+        [MiniExcelFormat("yyyy-MM-dd HH:mm:ss zzz")]
         public DateTimeOffset Date { get; set; }
     }
 
@@ -244,7 +246,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         using var path = AutoDeletingPath.Create();
         using var reader = table.CreateDataReader();
         var config = new OpenXmlConfiguration { FastMode = true };
-        MiniExcel.SaveAs(path.ToString(), reader, configuration: config);
+         _exporter.ExportXlsx(path.ToString(), reader, configuration: config);
         var xml = Helpers.GetZipFileContent(path.ToString(), "xl/worksheets/sheet1.xml");
 
         Assert.Contains("<x:autoFilter ref=\"A1:B3\" />", xml);
@@ -268,8 +270,8 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             }
         };
         var templatePath = PathHelper.GetFile("xlsx/TestIssue413.xlsx");
-        MiniExcel.SaveAsByTemplate(path.ToString(), templatePath, value);
-        var rows = MiniExcel.Query(path.ToString()).ToList();
+         _templater.ApplyXlsxTemplate(path.ToString(), templatePath, value);
+        var rows =  _importer.QueryXlsx(path.ToString()).ToList();
 
         Assert.Equal("2022-12-25 00:00:00", rows[1].B);
         Assert.Equal("2022-09-23 00:00:00", rows[2].B);
@@ -284,7 +286,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     {
         using var path = AutoDeletingPath.Create();
         var value = new[] { new { id = 1, name = "test" } };
-        MiniExcel.SaveAs(path.ToString(), value);
+         _exporter.ExportXlsx(path.ToString(), value);
 
         var xml = Helpers.GetZipFileContent(path.ToString(), "xl/sharedStrings.xml");
         Assert.StartsWith("<sst xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"", xml);
@@ -299,8 +301,10 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     {
         Dictionary<string, object>[] sheets = [new() { ["ID"] = "0001", ["Name"] = "Jack" }];
         using var stream = new MemoryStream();
-        stream.SaveAs(sheets, excelType: ExcelType.CSV);
-        stream.Position = 0;
+        
+        var config = new CsvConfiguration { StreamWriterFunc = x => new StreamWriter(x, Encoding.Default, leaveOpen: true)};
+         _exporter.ExportCsv(stream, sheets, configuration: config);
+        stream.Seek(0, SeekOrigin.Begin);
 
         // convert stream to string
         using var reader = new StreamReader(stream);
@@ -335,9 +339,9 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         }, Formatting.Indented);
 
         var value = JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(json);
-        MiniExcel.SaveAs(path.ToString(), value, configuration: config);
+         _exporter.ExportXlsx(path.ToString(), value, configuration: config);
 
-        var rows = MiniExcel.Query(path.ToString()).ToList();
+        var rows =  _importer.QueryXlsx(path.ToString()).ToList();
         Assert.Equal("createdate", rows[0].A);
         Assert.Equal(new DateTime(2022, 04, 12), rows[1].A);
         Assert.Equal("name", rows[0].B);
@@ -361,9 +365,9 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         };
         using var path = AutoDeletingPath.Create();
         var value = new[] { new { id = 1, name = "Jack", createdate = new DateTime(2022, 04, 12), point = 123.456 } };
-        MiniExcel.SaveAs(path.ToString(), value, configuration: config);
+         _exporter.ExportXlsx(path.ToString(), value, configuration: config);
 
-        var rows = MiniExcel.Query(path.ToString()).ToList();
+        var rows =  _importer.QueryXlsx(path.ToString()).ToList();
         Assert.Equal("createdate", rows[0].A);
         Assert.Equal(new DateTime(2022, 04, 12), rows[1].A);
         Assert.Equal("name", rows[0].B);
@@ -377,9 +381,9 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     {
         using var path = AutoDeletingPath.Create();
         TestIssueI4ZYUUDto[] value = [new() { MyProperty = "1", MyProperty2 = new DateTime(2022, 10, 15) }];
-        MiniExcel.SaveAs(path.ToString(), value);
+         _exporter.ExportXlsx(path.ToString(), value);
 
-        var rows = MiniExcel.Query(path.ToString()).ToList();
+        var rows =  _importer.QueryXlsx(path.ToString()).ToList();
         Assert.Equal("2022-10", rows[1].B);
 
         using var workbook = new ClosedXML.Excel.XLWorkbook(path.ToString());
@@ -391,9 +395,9 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
 
     private class TestIssueI4ZYUUDto
     {
-        [ExcelColumn(Name = "ID", Index = 0)]
+        [MiniExcelColumn(Name = "ID", Index = 0)]
         public string MyProperty { get; set; }
-        [ExcelColumn(Name = "CreateDate", Index = 1, Format = "yyyy-MM", Width = 100)]
+        [MiniExcelColumn(Name = "CreateDate", Index = 1, Format = "yyyy-MM", Width = 100)]
         public DateTime MyProperty2 { get; set; }
     }
 
@@ -402,10 +406,10 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     {
         var path = PathHelper.GetFile("xlsx/NotDuplicateSharedStrings_10x100.xlsx");
         var config = new OpenXmlConfiguration { SharedStringCacheSize = 1 };
-        var sheets = MiniExcel.GetSheetNames(path);
+        var sheets =  _importer.GetSheetNames(path);
         foreach (var sheetName in sheets)
         {
-            var dt = MiniExcel.QueryAsDataTable(path, useHeaderRow: true, sheetName: sheetName, configuration: config);
+            var dt =  _importer.QueryXlsxAsDataTable(path, useHeaderRow: true, sheetName: sheetName, configuration: config);
         }
     }
 
@@ -442,7 +446,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
 
             using var path = AutoDeletingPath.Create();
             var reader = table.CreateDataReader();
-            MiniExcel.SaveAs(path.ToString(), reader);
+             _exporter.ExportXlsx(path.ToString(), reader);
             var xml = Helpers.GetZipFileContent(path.ToString(), "xl/worksheets/sheet1.xml");
             var cnt = Regex.Matches(xml, "<x:autoFilter ref=\"A1:B3\" />").Count;
         }
@@ -455,7 +459,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
 
             using var path = AutoDeletingPath.Create();
             var reader = table.CreateDataReader();
-            MiniExcel.SaveAs(path.ToString(), reader, false);
+             _exporter.ExportXlsx(path.ToString(), reader, false);
             var xml = Helpers.GetZipFileContent(path.ToString(), "xl/worksheets/sheet1.xml");
             var cnt = Regex.Matches(xml, "<x:autoFilter ref=\"A1:B2\" />").Count;
         }
@@ -466,7 +470,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
 
             using var path = AutoDeletingPath.Create();
             var reader = table.CreateDataReader();
-            MiniExcel.SaveAs(path.ToString(), reader);
+             _exporter.ExportXlsx(path.ToString(), reader);
             var xml = Helpers.GetZipFileContent(path.ToString(), "xl/worksheets/sheet1.xml");
             var cnt = Regex.Matches(xml, "<x:autoFilter ref=\"A1:B1\" />").Count;
         }
@@ -490,7 +494,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             var reader = table.CreateDataReader();
             using var path = AutoDeletingPath.Create();
             var config = new OpenXmlConfiguration { AutoFilter = autoFilter };
-            MiniExcel.SaveAs(path.ToString(), reader, configuration: config);
+             _exporter.ExportXlsx(path.ToString(), reader, configuration: config);
 
             var xml = Helpers.GetZipFileContent(path.ToString(), "xl/worksheets/sheet1.xml");
             var cnt = Regex.Matches(xml, "<x:autoFilter ref=\"A1:B3\" />").Count;
@@ -507,7 +511,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             var reader = table.CreateDataReader();
             using var path = AutoDeletingPath.Create();
             var config = new OpenXmlConfiguration { AutoFilter = autoFilter };
-            MiniExcel.SaveAs(path.ToString(), reader, false, configuration: config);
+             _exporter.ExportXlsx(path.ToString(), reader, false, configuration: config);
 
             var xml = Helpers.GetZipFileContent(path.ToString(), "xl/worksheets/sheet1.xml");
             var cnt = Regex.Matches(xml, "<x:autoFilter ref=\"A1:B2\" />").Count;
@@ -522,7 +526,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             var reader = table.CreateDataReader();
             using var path = AutoDeletingPath.Create();
             var config = new OpenXmlConfiguration { AutoFilter = autoFilter };
-            MiniExcel.SaveAs(path.ToString(), reader, configuration: config);
+             _exporter.ExportXlsx(path.ToString(), reader, configuration: config);
 
             var xml = Helpers.GetZipFileContent(path.ToString(), "xl/worksheets/sheet1.xml");
             var cnt = Regex.Matches(xml, "<x:autoFilter ref=\"A1:B1\" />").Count;
@@ -540,7 +544,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
                 using var command = connection.CreateCommand();
                 command.CommandText =
                     """
-                    SELECT 
+                    SELECT
                         'MiniExcel' as Column1,
                         1 as Column2 
 
@@ -549,7 +553,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
                     """;
 
                 using var reader = command.ExecuteReader();
-                MiniExcel.SaveAs(path.ToString(), reader, configuration: config);
+                 _exporter.ExportXlsx(path.ToString(), reader, configuration: config);
             }
 
             var xml = Helpers.GetZipFileContent(path.ToString(), "xl/worksheets/sheet1.xml");
@@ -573,7 +577,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
                 using (var transaction = connection.BeginTransaction())
                 using (var stream = File.OpenRead(xlsxPath))
                 {
-                    var rows = stream.Query();
+                    var rows =  _importer.QueryXlsx(stream);
                     foreach (var row in rows)
                         connection.Execute(
                             "insert into T (A,B) values (@A,@B)",
@@ -591,7 +595,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
                 using var command = new SQLiteCommand("select * from T", connection);
                 connection.Open();
                 using var reader = command.ExecuteReader();
-                MiniExcel.SaveAs(path.ToString(), reader, configuration: config);
+                 _exporter.ExportXlsx(path.ToString(), reader, configuration: config);
             }
 
             var xml = Helpers.GetZipFileContent(path.ToString(), "xl/worksheets/sheet1.xml");
@@ -607,12 +611,12 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         var path = file.ToString();
         var value = new[] { new { id = 1, name = "Jack" } };
 
-        await MiniExcel.SaveAsAsync(path, value);
-        Assert.Throws<IOException>(() => MiniExcel.SaveAs(path, value));
+        await  _exporter.ExportXlsxAsync(path, value);
+        Assert.Throws<IOException>(() =>  _exporter.ExportXlsx(path, value));
 
-        await MiniExcel.SaveAsAsync(path, value, overwriteFile: true);
-        await Assert.ThrowsAsync<IOException>(async () => await MiniExcel.SaveAsAsync(path, value));
-        await MiniExcel.SaveAsAsync(path, value, overwriteFile: true);
+        await  _exporter.ExportXlsxAsync(path, value, overwriteFile: true);
+        await Assert.ThrowsAsync<IOException>(async () => await  _exporter.ExportXlsxAsync(path, value));
+        await  _exporter.ExportXlsxAsync(path, value, overwriteFile: true);
     }
 
     [Fact]
@@ -620,8 +624,8 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     {
         using var path = AutoDeletingPath.Create();
         var value = new[] { new TestIssue310Dto { V1 = null }, new TestIssue310Dto { V1 = 2 } };
-        MiniExcel.SaveAs(path.ToString(), value);
-        var rows = MiniExcel.Query<TestIssue310Dto>(path.ToString()).ToList();
+         _exporter.ExportXlsx(path.ToString(), value);
+        var rows =  _importer.QueryXlsx<TestIssue310Dto>(path.ToString()).ToList();
     }
 
     [Fact]
@@ -633,8 +637,8 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             new TestIssue310Dto { V1 = null },
             new TestIssue310Dto { V1 = 2 }
         };
-        MiniExcel.SaveAs(path.ToString(), value, configuration: new OpenXmlConfiguration { EnableWriteNullValueCell = false });
-        var rows = MiniExcel.Query<TestIssue310Dto>(path.ToString()).ToList();
+         _exporter.ExportXlsx(path.ToString(), value, configuration: new OpenXmlConfiguration { EnableWriteNullValueCell = false });
+        var rows =  _importer.QueryXlsx<TestIssue310Dto>(path.ToString()).ToList();
     }
 
     private class TestIssue310Dto
@@ -660,9 +664,9 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             table.Rows.Add(date, date);
         }
         var reader = table.CreateDataReader();
-        MiniExcel.SaveAs(path.ToString(), reader);
+         _exporter.ExportXlsx(path.ToString(), reader);
 
-        var rows = MiniExcel.Query(path.ToString(), true).ToArray();
+        var rows =  _importer.QueryXlsx(path.ToString(), true).ToArray();
         Assert.Equal(date, rows[0].time1);
         Assert.Equal(date, rows[0].time2);
     }
@@ -670,10 +674,10 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     [Fact]
     public void TestIssueI4YCLQ_2()
     {
-        var c = ExcelOpenXmlUtils.ConvertColumnName(1);
-        var c2 = ExcelOpenXmlUtils.ConvertColumnName(3);
+        var c = GeneralHelper.ConvertColumnName(1);
+        var c2 = GeneralHelper.ConvertColumnName(3);
         var path = PathHelper.GetFile("xlsx/TestIssueI4YCLQ_2.xlsx");
-        var rows = MiniExcel.Query<TestIssueI4YCLQ_2Dto>(path, startCell: "B2").ToList();
+        var rows =  _importer.QueryXlsx<TestIssueI4YCLQ_2Dto>(path, startCell: "B2").ToList();
 
         Assert.Null(rows[0].站点编码);
         Assert.Equal("N1", rows[0].站址名称);
@@ -690,26 +694,26 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
 
     private class TestIssueI4YCLQ_2Dto
     {
-        [ExcelColumnIndex("A")]
+        [MiniExcelColumnIndex("A")]
         public string 站点编码 { get; set; }
-        [ExcelColumnIndex("B")]
+        [MiniExcelColumnIndex("B")]
         public string 站址名称 { get; set; }
-        [ExcelColumnIndex("C")]
+        [MiniExcelColumnIndex("C")]
         public string 值1 { get; set; }
-        [ExcelColumnIndex("D")]
+        [MiniExcelColumnIndex("D")]
         public string 值2 { get; set; }
-        [ExcelColumnIndex("E")]
+        [MiniExcelColumnIndex("E")]
         public string 值3 { get; set; }
-        [ExcelColumnIndex("F")]
+        [MiniExcelColumnIndex("F")]
         public string 资源ID { get; set; }
-        [ExcelColumnIndex("G")]
+        [MiniExcelColumnIndex("G")]
         public string 值4 { get; set; }
-        [ExcelColumnIndex("H")]
+        [MiniExcelColumnIndex("H")]
         public string 值5 { get; set; }
-        [ExcelColumnIndex("I")]
+        [MiniExcelColumnIndex("I")]
         public string 值6 { get; set; }
         public string 值7 { get; set; }
-        [ExcelColumnName("NotExist")]
+        [MiniExcelColumnName("NotExist")]
         public string 值8 { get; set; }
     }
 
@@ -719,7 +723,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
         {
             var path = PathHelper.GetFile("csv/TestIssue338.csv");
-            var row = MiniExcel.QueryAsync(path).ToBlockingEnumerable().FirstOrDefault();
+            var row =  _importer.QueryCsvAsync(path).ToBlockingEnumerable().FirstOrDefault();
             Assert.Equal("���Ĳ�������", row!.A);
         }
         {
@@ -728,7 +732,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             {
                 StreamReaderFunc = stream => new StreamReader(stream, Encoding.GetEncoding("gb2312"))
             };
-            var row = MiniExcel.QueryAsync(path, configuration: config).ToBlockingEnumerable().FirstOrDefault();
+            var row =  _importer.QueryCsvAsync(path, configuration: config).ToBlockingEnumerable().FirstOrDefault();
             Assert.Equal("中文测试内容", row!.A);
         }
         {
@@ -739,7 +743,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             };
             await using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read))
             {
-                var row = stream.QueryAsync(configuration: config, excelType: ExcelType.CSV).ToBlockingEnumerable().FirstOrDefault();
+                var row =  _importer.QueryCsvAsync(stream, configuration: config).ToBlockingEnumerable().FirstOrDefault();
                 Assert.Equal("中文测试内容", row!.A);
             }
         }
@@ -754,8 +758,8 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         {
             ["users"] = Array.Empty<TestIssueI4WM67Dto>()
         };
-        MiniExcel.SaveAsByTemplate(path.ToString(), templatePath, value);
-        var rows = MiniExcel.Query(path.ToString()).ToList();
+         _templater.ApplyXlsxTemplate(path.ToString(), templatePath, value);
+        var rows =  _importer.QueryXlsx(path.ToString()).ToList();
         Assert.Single(rows);
     }
 
@@ -777,7 +781,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
                 ["Amount"] = 1000,
                 ["Department"] = "HR"
             };
-            MiniExcel.SaveAsByTemplate(path.ToString(), templatePath, value);
+             _templater.ApplyXlsxTemplate(path.ToString(), templatePath, value);
         }
 
         {
@@ -793,21 +797,21 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
                 ["Amount"] = 1000,
                 ["Department"] = "HR"
             };
-            Assert.Throws<KeyNotFoundException>(() => MiniExcel.SaveAsByTemplate(path.ToString(), templatePath, value, config));
+            Assert.Throws<KeyNotFoundException>(() =>  _templater.ApplyXlsxTemplate(path.ToString(), templatePath, value, config));
         }
     }
 
     [Fact]
     public void TestIssueI4WDA9()
     {
-        using var path = AutoDeletingPath.Create(ExcelType.CSV);
+        using var path = AutoDeletingPath.Create(ExcelType.Csv);
         var value = new DataTable();
         {
             value.Columns.Add("\"name\"");
             value.Rows.Add("\"Jack\"");
         }
 
-        MiniExcel.SaveAs(path.ToString(), value);
+         _exporter.ExportCsv(path.ToString(), value);
         Assert.Equal("\"\"\"name\"\"\"\r\n\"\"\"Jack\"\"\"\r\n", File.ReadAllText(path.ToString()));
     }
 
@@ -832,7 +836,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         });
 
         using var path = AutoDeletingPath.Create();
-        MiniExcel.SaveAs(path.ToString(), data, configuration: config);
+         _exporter.ExportXlsx(path.ToString(), data, configuration: config);
         CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo(cln);
     }
 
@@ -851,9 +855,9 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         });
 
         using var path = AutoDeletingPath.Create();
-        MiniExcel.SaveAs(path.ToString(), data);
+         _exporter.ExportXlsx(path.ToString(), data);
 
-        var rows = MiniExcel.Query(path.ToString(), startCell: "A2").ToArray();
+        var rows =  _importer.QueryXlsx(path.ToString(), startCell: "A2").ToArray();
         Assert.Equal(1.5, rows[2].B);
         Assert.Equal(1.5, rows[2].C);
 
@@ -875,16 +879,16 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         var path = file.ToString();
         var value = new[] { new TestIssueI4TXGTDto { ID = 1, Name = "Apple", Spc = "X", Up = 6999 } };
 
-        MiniExcel.SaveAs(path, value);
+         _exporter.ExportXlsx(path, value);
         {
-            var rows = MiniExcel.Query(path).ToList();
+            var rows =  _importer.QueryXlsx(path).ToList();
             Assert.Equal("ID", rows[0].A);
             Assert.Equal("Name", rows[0].B);
             Assert.Equal("Specification", rows[0].C);
             Assert.Equal("Unit Price", rows[0].D);
         }
         {
-            var rows = MiniExcel.Query<TestIssueI4TXGTDto>(path).ToList();
+            var rows =  _importer.QueryXlsx<TestIssueI4TXGTDto>(path).ToList();
             Assert.Equal(1, rows[0].ID);
             Assert.Equal("Apple", rows[0].Name);
             Assert.Equal("X", rows[0].Spc);
@@ -923,10 +927,10 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
                 file = File.ReadAllBytes(PathHelper.GetFile("other/TestIssue327.txt"))
             },
         };
-        MiniExcel.SaveAs(path.ToString(), value);
+         _exporter.ExportXlsx(path.ToString(), value);
 
         var rowIndx = 0;
-        using var reader = MiniExcel.GetReader(path.ToString(), true);
+        using var reader =  _importer.GetXlsxDataReader(path.ToString(), true);
 
         Assert.Equal("id", reader.GetName(0));
         Assert.Equal("name", reader.GetName(1));
@@ -963,8 +967,8 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             new { id = 2, file = File.ReadAllBytes(PathHelper.GetFile("other/TestIssue327.txt")) },
             new { id = 3, file = File.ReadAllBytes(PathHelper.GetFile("other/TestIssue327.html")) },
         };
-        MiniExcel.SaveAs(path.ToString(), value);
-        var rows = MiniExcel.Query(path.ToString(), true).ToList();
+         _exporter.ExportXlsx(path.ToString(), value);
+        var rows =  _importer.QueryXlsx(path.ToString(), true).ToList();
 
         Assert.Equal(value[0].file, rows[0].file);
         Assert.Equal(value[1].file, rows[1].file);
@@ -978,162 +982,153 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     {
         // XLSX
         {
+            using var file = AutoDeletingPath.Create();
+            var path = file.ToString();
+            var value = new[]
             {
-                using var file = AutoDeletingPath.Create();
-                var path = file.ToString();
-                var value = new[]
+                new{ Amount=123_456.789M, CreateTime=DateTime.Parse("2018-01-31",CultureInfo.InvariantCulture)}
+            };
+            var config = new OpenXmlConfiguration
+            {
+                Culture = new CultureInfo("fr-FR"),
+            };
+             _exporter.ExportXlsx(path, value, configuration: config);
+
+            //Datetime error
+            Assert.Throws<MiniExcelInvalidCastException>(() =>
+            {
+                var conf = new OpenXmlConfiguration
                 {
-                    new{ Amount=123_456.789M, CreateTime=DateTime.Parse("2018-01-31",CultureInfo.InvariantCulture)}
+                    Culture = new CultureInfo("en-US"),
                 };
+                _ =  _importer.QueryXlsx<TestIssue316Dto>(path, configuration: conf).ToList();
+            });
+
+            // dynamic
+            var rows =  _importer.QueryXlsx(path, true).ToList();
+            Assert.Equal("123456,789", rows[0].Amount);
+            Assert.Equal("31/01/2018 00:00:00", rows[0].CreateTime);
+        }
+
+        // type
+        {
+            using var file = AutoDeletingPath.Create();
+            var path = file.ToString();
+            var value = new[]
+            {
+                new { Amount = 123_456.789M, CreateTime = new DateTime(2018, 5, 12) }
+            };
+            {
                 var config = new OpenXmlConfiguration
                 {
                     Culture = new CultureInfo("fr-FR"),
                 };
-                MiniExcel.SaveAs(path, value, configuration: config);
-
-                //Datetime error
-                {
-                    Assert.Throws<ExcelInvalidCastException>(() =>
-                    {
-                        var conf = new OpenXmlConfiguration
-                        {
-                            Culture = new CultureInfo("en-US"),
-                        };
-                        _ = MiniExcel.Query<TestIssue316Dto>(path, configuration: conf).ToList();
-                    });
-                }
-
-                // dynamic
-                {
-                    var rows = MiniExcel.Query(path, true).ToList();
-                    Assert.Equal("123456,789", rows[0].Amount);
-                    Assert.Equal("31/01/2018 00:00:00", rows[0].CreateTime);
-                }
+                 _exporter.ExportXlsx(path, value, configuration: config);
             }
 
-            // type
             {
-                using var file = AutoDeletingPath.Create();
-                var path = file.ToString();
-                var value = new[]
+                var rows =  _importer.QueryXlsx(path, true).ToList();
+                Assert.Equal("123456,789", rows[0].Amount);
+                Assert.Equal("12/05/2018 00:00:00", rows[0].CreateTime);
+            }
+
+            {
+                var config = new OpenXmlConfiguration
                 {
-                    new{ Amount=123_456.789M, CreateTime=DateTime.Parse("2018-05-12", CultureInfo.InvariantCulture)}
+                    Culture = new CultureInfo("en-US"),
                 };
+                var rows =  _importer.QueryXlsx<TestIssue316Dto>(path, configuration: config).ToList();
+
+                Assert.Equal("2018-12-05 00:00:00", rows[0].CreateTime.ToString("yyyy-MM-dd HH:mm:ss"));
+                Assert.Equal(123456789m, rows[0].Amount);
+            }
+
+            {
+                var config = new OpenXmlConfiguration
                 {
-                    var config = new OpenXmlConfiguration
-                    {
-                        Culture = new CultureInfo("fr-FR"),
-                    };
-                    MiniExcel.SaveAs(path, value, configuration: config);
-                }
+                    Culture = new CultureInfo("fr-FR"),
+                };
+                var rows =  _importer.QueryXlsx<TestIssue316Dto>(path, configuration: config).ToList();
 
-                {
-                    var rows = MiniExcel.Query(path, true).ToList();
-                    Assert.Equal("123456,789", rows[0].Amount);
-                    Assert.Equal("12/05/2018 00:00:00", rows[0].CreateTime);
-                }
-
-                {
-                    var config = new OpenXmlConfiguration
-                    {
-                        Culture = new CultureInfo("en-US"),
-                    };
-                    var rows = MiniExcel.Query<TestIssue316Dto>(path, configuration: config).ToList();
-
-                    Assert.Equal("2018-12-05 00:00:00", rows[0].CreateTime.ToString("yyyy-MM-dd HH:mm:ss"));
-                    Assert.Equal(123456789m, rows[0].Amount);
-                }
-
-                {
-                    var config = new OpenXmlConfiguration
-                    {
-                        Culture = new CultureInfo("fr-FR"),
-                    };
-                    var rows = MiniExcel.Query<TestIssue316Dto>(path, configuration: config).ToList();
-
-                    Assert.Equal("2018-05-12 00:00:00", rows[0].CreateTime.ToString("yyyy-MM-dd HH:mm:ss"));
-                    Assert.Equal(123456.789m, rows[0].Amount);
-                }
+                Assert.Equal("2018-05-12 00:00:00", rows[0].CreateTime.ToString("yyyy-MM-dd HH:mm:ss"));
+                Assert.Equal(123456.789m, rows[0].Amount);
             }
         }
 
         // CSV
         {
+            using var file = AutoDeletingPath.Create(ExcelType.Csv);
+            var path = file.ToString();
+            var value = new[]
             {
-                using var file = AutoDeletingPath.Create(ExcelType.CSV);
-                var path = file.ToString();
-                var value = new[]
+                new { Amount = 123_456.789M, CreateTime = new DateTime(2018, 1, 31) }
+            };
+            
+            var config = new CsvConfiguration
+            {
+                Culture = new CultureInfo("fr-FR"),
+            };
+             _exporter.ExportCsv(path, value, configuration: config);
+
+            //Datetime error
+            Assert.Throws<MiniExcelInvalidCastException>(() =>
+            {
+                var conf = new CsvConfiguration
                 {
-                    new{ Amount=123_456.789M, CreateTime=DateTime.Parse("2018-01-31", CultureInfo.InvariantCulture)}
+                    Culture = new CultureInfo("en-US")
                 };
+                _ =  _importer.QueryCsv<TestIssue316Dto>(path, configuration: conf).ToList();
+            });
+
+            // dynamic
+            var rows =  _importer.QueryCsv(path, true).ToList();
+            Assert.Equal("123456,789", rows[0].Amount);
+            Assert.Equal("31/01/2018 00:00:00", rows[0].CreateTime);
+        }
+
+        // type
+        {
+            using var file = AutoDeletingPath.Create(ExcelType.Csv);
+            var path = file.ToString();
+            
+            var value = new[]
+            {
+                new{ Amount=123_456.789M, CreateTime=DateTime.Parse("2018-05-12", CultureInfo.InvariantCulture)}
+            };
+            {
                 var config = new CsvConfiguration
                 {
                     Culture = new CultureInfo("fr-FR"),
                 };
-                MiniExcel.SaveAs(path, value, configuration: config);
-
-                //Datetime error
-                {
-                    Assert.Throws<ExcelInvalidCastException>(() =>
-                    {
-                        var conf = new CsvConfiguration
-                        {
-                            Culture = new CultureInfo("en-US"),
-                        };
-                        _ = MiniExcel.Query<TestIssue316Dto>(path, configuration: conf).ToList();
-                    });
-                }
-
-                // dynamic
-                {
-                    var rows = MiniExcel.Query(path, true).ToList();
-                    Assert.Equal("123456,789", rows[0].Amount);
-                    Assert.Equal("31/01/2018 00:00:00", rows[0].CreateTime);
-                }
+                 _exporter.ExportCsv(path, value, configuration: config);
             }
 
-            // type
             {
-                var path = PathHelper.GetTempFilePath("csv");
-                var value = new[]
+                var rows =  _importer.QueryCsv(path, true).ToList();
+                Assert.Equal("123456,789", rows[0].Amount);
+                Assert.Equal("12/05/2018 00:00:00", rows[0].CreateTime);
+            }
+
+            {
+                var config = new CsvConfiguration
                 {
-                    new{ Amount=123_456.789M, CreateTime=DateTime.Parse("2018-05-12", CultureInfo.InvariantCulture)}
+                    Culture = new CultureInfo("en-US"),
                 };
+                var rows =  _importer.QueryCsv<TestIssue316Dto>(path, configuration: config).ToList();
+
+                Assert.Equal("2018-12-05 00:00:00", rows[0].CreateTime.ToString("yyyy-MM-dd HH:mm:ss"));
+                Assert.Equal(123456789m, rows[0].Amount);
+            }
+
+            {
+                var config = new CsvConfiguration
                 {
-                    var config = new CsvConfiguration
-                    {
-                        Culture = new CultureInfo("fr-FR"),
-                    };
-                    MiniExcel.SaveAs(path, value, configuration: config);
-                }
+                    Culture = new CultureInfo("fr-FR"),
+                };
+                var rows =  _importer.QueryCsv<TestIssue316Dto>(path, configuration: config).ToList();
 
-                {
-                    var rows = MiniExcel.Query(path, true).ToList();
-                    Assert.Equal("123456,789", rows[0].Amount);
-                    Assert.Equal("12/05/2018 00:00:00", rows[0].CreateTime);
-                }
-
-                {
-                    var config = new CsvConfiguration
-                    {
-                        Culture = new CultureInfo("en-US"),
-                    };
-                    var rows = MiniExcel.Query<TestIssue316Dto>(path, configuration: config).ToList();
-
-                    Assert.Equal("2018-12-05 00:00:00", rows[0].CreateTime.ToString("yyyy-MM-dd HH:mm:ss"));
-                    Assert.Equal(123456789m, rows[0].Amount);
-                }
-
-                {
-                    var config = new CsvConfiguration
-                    {
-                        Culture = new CultureInfo("fr-FR"),
-                    };
-                    var rows = MiniExcel.Query<TestIssue316Dto>(path, configuration: config).ToList();
-
-                    Assert.Equal("2018-05-12 00:00:00", rows[0].CreateTime.ToString("yyyy-MM-dd HH:mm:ss"));
-                    Assert.Equal(123456.789m, rows[0].Amount);
-                }
+                Assert.Equal("2018-05-12 00:00:00", rows[0].CreateTime.ToString("yyyy-MM-dd HH:mm:ss"));
+                Assert.Equal(123456.789m, rows[0].Amount);
             }
         }
     }
@@ -1156,7 +1151,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             { "sheet1",new[]{ new { id = 1, date = DateTime.Parse("2022-01-01") } }},
             { "sheet2",new[]{ new { id = 2, date = DateTime.Parse("2022-01-01") } }},
         };
-        MiniExcel.SaveAs(path.ToString(), value);
+         _exporter.ExportXlsx(path.ToString(), value);
 
         var xml = Helpers.GetZipFileContent(path.ToString(), "xl/worksheets/_rels/sheet2.xml.rels");
         var cnt = Regex.Matches(xml, "Id=\"drawing2\"").Count;
@@ -1178,30 +1173,30 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
                 new TestIssueI49RZHDto{ dd = DateTimeOffset.Parse("2022-01-22")},
                 new TestIssueI49RZHDto{ dd = null}
             };
-            MiniExcel.SaveAs(path.ToString(), value);
+             _exporter.ExportXlsx(path.ToString(), value);
 
-            var rows = MiniExcel.Query(path.ToString()).ToList();
+            var rows =  _importer.QueryXlsx(path.ToString()).ToList();
             Assert.Equal("2022-01-22", rows[1].A);
         }
 
         //TODO:CSV
         {
-            using var path = AutoDeletingPath.Create(ExcelType.CSV);
+            using var path = AutoDeletingPath.Create(ExcelType.Csv);
             var value = new[]
             {
                 new TestIssueI49RZHDto{ dd = DateTimeOffset.Parse("2022-01-22")},
                 new TestIssueI49RZHDto{ dd = null}
             };
-            MiniExcel.SaveAs(path.ToString(), value);
+             _exporter.ExportXlsx(path.ToString(), value);
 
-            var rows = MiniExcel.Query(path.ToString()).ToList();
+            var rows =  _importer.QueryXlsx(path.ToString()).ToList();
             Assert.Equal("2022-01-22", rows[1].A);
         }
     }
 
     private class TestIssueI49RZHDto
     {
-        [ExcelFormat("yyyy-MM-dd")]
+        [MiniExcelFormat("yyyy-MM-dd")]
         public DateTimeOffset? dd { get; set; }
     }
 
@@ -1219,30 +1214,30 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
                 new() { Value = 12345.6789},
                 new() { Value = null}
             ];
-            MiniExcel.SaveAs(path.ToString(), value);
+             _exporter.ExportXlsx(path.ToString(), value);
 
-            var rows = MiniExcel.Query(path.ToString()).ToList();
+            var rows =  _importer.QueryXlsx(path.ToString()).ToList();
             Assert.Equal("12,345.68", rows[1].A);
         }
 
         //TODO:CSV
         {
-            using var path = AutoDeletingPath.Create(ExcelType.CSV);
+            using var path = AutoDeletingPath.Create(ExcelType.Csv);
             TestIssue312Dto[] value =
             [
                 new() { Value = 12345.6789},
                 new() { Value = null}
             ];
-            MiniExcel.SaveAs(path.ToString(), value);
+             _exporter.ExportXlsx(path.ToString(), value);
 
-            var rows = MiniExcel.Query(path.ToString()).ToList();
+            var rows =  _importer.QueryXlsx(path.ToString()).ToList();
             Assert.Equal("12,345.68", rows[1].A);
         }
     }
 
     private class TestIssue312Dto
     {
-        [ExcelFormat("0,0.00")]
+        [MiniExcelFormat("0,0.00")]
         public double? Value { get; set; }
     }
 
@@ -1256,9 +1251,9 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         try
         {
             var path = PathHelper.GetFile("xlsx/TestIssue309.xlsx");
-            var rows = MiniExcel.Query<TestIssue209Dto>(path).ToList();
+            var rows =  _importer.QueryXlsx<TestIssue209Dto>(path).ToList();
         }
-        catch (ExcelInvalidCastException ex)
+        catch (MiniExcelInvalidCastException ex)
         {
             Assert.Equal("SEQ", ex.ColumnName);
             Assert.Equal(4, ex.Row);
@@ -1287,13 +1282,13 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         {
             new { Name="github", Image=imageByte},
         };
-        MiniExcel.SaveAs(path.ToString(), value);
+         _exporter.ExportXlsx(path.ToString(), value);
 
 
         // import to byte[]
         {
             const string expectedBase64 = "iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAIAAAD9b0jDAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAAEXRFWHRTb2Z0d2FyZQBTbmlwYXN0ZV0Xzt0AAALNSURBVEiJ7ZVLTBNBGMdndrfdIofy0ERbCgcFeYRuCy2JGOPNRA9qeIZS6YEEogQj0YMmGOqDSATxQaLRxKtRID4SgjGelUBpaQvGZ7kpII8aWtjd2dkdDxsJoS1pIh6M/k+z8833m/3+8+0OJISArRa15cT/0D8CZTYPe32+Zy+GxjzjMzOzAACDYafdZquqOG7hzJtkwUQthRC6cavv0eN+QRTBujUQQp1OV1dbffZMq1arTRaqKIok4eZTrSNjHqIo6gIIIQBgbQwpal+Z/f7dPo2GoaiNHtJut3vjPhBe7+kdfvW61Mq1nGyaX1xYjkRzsk2Z6Rm8IOTvzWs73SLwwqjHK4jCgf3lcV6VxGgiECji7AXm0gvtHYQQnue/zy8ghCRJWlxaWuV5Qsilq9cKzLYiiz04ORVLiHP6A4NPRQlhjLWsVpZlnU63Y3umRqNhGCYjPV3HsrIsMwyDsYQQejIwGEuIA/WMT1AAaDSahnoHTdPKL1vXPKVp2umoZVkWAOj1+ZOCzs7NKYTo9XqjYRcAgKIo9ZRUu9VxltGYZTQAAL5+m0kKijEmAPCrqyJCcRuOECKI4lL4ByEEYykpaE62iQIgurLi9wchhLIsry8fYwwh9PomwuEwACDbZEoKauHMgKJSU1PbOy6Hpqdpml5fPsMwn7+EOru6IYQAghKrJSloTVUFURSX02G3lRw+WulqbA4EJ9XQh4+f2s6dr65zhkLTEEIKwtqaylhCnG/fauFO1Nfde/Bw6Hm/0WiYevc+LU2vhlK2pQwNvwQAsCwrYexyOrji4lhCnOaXZRljXONoOHTk2Ju3I/5AcC3EC0JZ+cE9Bea8IqursUkUker4BsWBqpIk6aL7Sm4htzvfvByJqJORaDS3kMsvLuns6kYIJcpNCFU17pvouXlHEET1URDEnt7bo2OezbMS/vp+R3/PdfKPQ38Ccg0E/CDcpY8AAAAASUVORK5CYII=";
-            var rows = MiniExcel.Query(path.ToString(), true).ToList();
+            var rows =  _importer.QueryXlsx(path.ToString(), true).ToList();
             var actulBase64 = Convert.ToBase64String((byte[])rows[0].Image);
             Assert.Equal(expectedBase64, actulBase64);
         }
@@ -1301,7 +1296,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         // import to base64 string
         {
             var config = new OpenXmlConfiguration { EnableConvertByteArray = false };
-            var rows = MiniExcel.Query(path.ToString(), true, configuration: config).ToList();
+            var rows =  _importer.QueryXlsx(path.ToString(), true, configuration: config).ToList();
             var image = (string)rows[0].Image;
             Assert.StartsWith("@@@fileid@@@,xl/media/", image);
         }
@@ -1324,7 +1319,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             new { Name="reddit", Image=File.ReadAllBytes(PathHelper.GetFile("images/reddit_logo.png"))},
             new { Name="statck_overflow", Image=File.ReadAllBytes(PathHelper.GetFile("images/statck_overflow_logo.png"))},
         };
-        MiniExcel.SaveAs(path, value);
+         _exporter.ExportXlsx(path, value);
 
         Assert.Contains("/xl/media/", Helpers.GetZipFileContent(path, "xl/drawings/_rels/drawing1.xml.rels"));
         Assert.Contains("ext cx=\"609600\" cy=\"190500\"", Helpers.GetZipFileContent(path, "xl/drawings/drawing1.xml"));
@@ -1348,9 +1343,9 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         {
             { "Texts",reader}
         };
-        MiniExcel.SaveAsByTemplate(path.ToString(), templatePath, value);
+         _templater.ApplyXlsxTemplate(path.ToString(), templatePath, value);
 
-        var rows = MiniExcel.Query(path.ToString(), true).ToList();
+        var rows =  _importer.QueryXlsx(path.ToString(), true).ToList();
         Assert.Equal("Hello World1", rows[0].Text);
         Assert.Equal("Hello World2", rows[1].Text);
     }
@@ -1365,21 +1360,21 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         {
             using var path = AutoDeletingPath.Create();
             var value = new[] { new { Name = "   Jack" } };
-            MiniExcel.SaveAs(path.ToString(), value);
+             _exporter.ExportXlsx(path.ToString(), value);
             var sheetXml = Helpers.GetZipFileContent(path.ToString(), "xl/worksheets/sheet1.xml");
             Assert.Contains("xml:space=\"preserve\"", sheetXml);
         }
         {
             using var path = AutoDeletingPath.Create();
             var value = new[] { new { Name = "Ja ck" } };
-            MiniExcel.SaveAs(path.ToString(), value);
+             _exporter.ExportXlsx(path.ToString(), value);
             var sheetXml = Helpers.GetZipFileContent(path.ToString(), "xl/worksheets/sheet1.xml");
             Assert.DoesNotContain("xml:space=\"preserve\"", sheetXml);
         }
         {
             using var path = AutoDeletingPath.Create();
             var value = new[] { new { Name = "Jack   " } };
-            MiniExcel.SaveAs(path.ToString(), value);
+             _exporter.ExportXlsx(path.ToString(), value);
             var sheetXml = Helpers.GetZipFileContent(path.ToString(), "xl/worksheets/sheet1.xml");
             Assert.Contains("xml:space=\"preserve\"", sheetXml);
         }
@@ -1394,7 +1389,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     {
         var path = PathHelper.GetFile("/csv/TestIssue298.csv");
 #pragma warning disable CS0618 // Type or member is obsolete
-        var dt = MiniExcel.QueryAsDataTable(path);
+        var dt =  _importer.QueryCsvAsDataTable(path);
 #pragma warning restore CS0618
         Assert.Equal(["ID", "Name", "Age"], dt.Columns.Cast<DataColumn>().Select(x => x.ColumnName));
     }
@@ -1413,7 +1408,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             { "Title", "Hello & World < , > , \" , '" },
             { "Details", new[] { new { Value = "Hello & Value < , > , \" , '" } } },
         };
-        MiniExcel.SaveAsByTemplate(path.ToString(), templatePath, value);
+         _templater.ApplyXlsxTemplate(path.ToString(), templatePath, value);
 
         var sheetXml = Helpers.GetZipFileContent(path.ToString(), "xl/worksheets/sheet1.xml");
         Assert.Contains("<v>Hello &amp; World &lt; , &gt; , \" , '</v>", sheetXml);
@@ -1429,7 +1424,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         {
             using var path = AutoDeletingPath.Create();
             var value = new TestIssue190Dto[] { };
-            MiniExcel.SaveAs(path.ToString(), value, configuration: new OpenXmlConfiguration { AutoFilter = false });
+             _exporter.ExportXlsx(path.ToString(), value, configuration: new OpenXmlConfiguration { AutoFilter = false });
 
             var sheetXml = Helpers.GetZipFileContent(path.ToString(), "xl/worksheets/sheet1.xml");
             Assert.DoesNotContain("<x:autoFilter ref=\"A1:C1\" />", sheetXml);
@@ -1437,7 +1432,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         {
             using var path = AutoDeletingPath.Create();
             var value = new TestIssue190Dto[] { };
-            MiniExcel.SaveAs(path.ToString(), value);
+             _exporter.ExportXlsx(path.ToString(), value);
 
             var sheetXml = Helpers.GetZipFileContent(path.ToString(), "xl/worksheets/sheet1.xml");
             Assert.Contains("<x:autoFilter ref=\"A1:C1\" />", sheetXml);
@@ -1449,7 +1444,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
                 new() { ID = 1, Name = "Jack", Age = 32 },
                 new() { ID = 2, Name = "Lisa", Age = 45 }
             ];
-            MiniExcel.SaveAs(path.ToString(), value);
+             _exporter.ExportXlsx(path.ToString(), value);
 
             var sheetXml = Helpers.GetZipFileContent(path.ToString(), "xl/worksheets/sheet1.xml");
             Assert.Contains("<x:autoFilter ref=\"A1:C3\" />", sheetXml);
@@ -1471,10 +1466,10 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     {
         {
             var xlsxPath = PathHelper.GetFile("/xlsx/TestIssue292.xlsx");
-            using var path = AutoDeletingPath.Create(ExcelType.CSV);
-            MiniExcel.ConvertXlsxToCsv(xlsxPath, path.ToString());
+            using var csvPath = AutoDeletingPath.Create(ExcelType.Csv);
+             _exporter.ConvertXlsxToCsv(xlsxPath, csvPath.ToString(), false);
 
-            var actualCotent = File.ReadAllText(path.ToString());
+            var actualCotent = File.ReadAllText(csvPath.ToString());
             Assert.Equal(
                 """
                 Name,Age,Name,Age
@@ -1488,9 +1483,9 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         {
             var csvPath = PathHelper.GetFile("/csv/TestIssue292.csv");
             using var path = AutoDeletingPath.Create();
-            MiniExcel.ConvertCsvToXlsx(csvPath, path.ToString());
+             _exporter.ConvertCsvToXlsx(csvPath, path.ToString());
 
-            var rows = MiniExcel.Query(path.ToString()).ToList();
+            var rows =  _importer.QueryXlsx(path.ToString()).ToList();
             Assert.Equal(3, rows.Count);
             Assert.Equal("Name", rows[0].A);
             Assert.Equal("Age", rows[0].B);
@@ -1512,8 +1507,8 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         var path = PathHelper.GetFile("/csv/Test5x2.csv");
         using var tempPath = AutoDeletingPath.Create();
         using var csv = File.OpenRead(path);
-        var value = csv.Query(useHeaderRow: false, excelType: ExcelType.CSV);
-        MiniExcel.SaveAs(tempPath.ToString(), value, printHeader: false, excelType: ExcelType.XLSX);
+        var value =  _importer.QueryCsv(csv, useHeaderRow: false);
+         _exporter.ExportXlsx(tempPath.ToString(), value, printHeader: false);
     }
 
     [Fact]
@@ -1527,8 +1522,8 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             new() { Name="Lisa", UserType=null }
         ];
         using var path = AutoDeletingPath.Create();
-        MiniExcel.SaveAs(path.ToString(), values);
-        var rows = MiniExcel.Query(path.ToString(), true).ToList();
+         _exporter.ExportXlsx(path.ToString(), values);
+        var rows =  _importer.QueryXlsx(path.ToString(), true).ToList();
         Assert.Equal("GeneralUser", rows[0].UserType);
         Assert.Equal("SuperAdministrator", rows[1].UserType);
         Assert.Equal("GeneralAdministrator", rows[2].UserType);
@@ -1544,8 +1539,8 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             new() { E = TestIssue286Enum.VIP2 }
         ];
         using var path = AutoDeletingPath.Create();
-        MiniExcel.SaveAs(path.ToString(), values);
-        var rows = MiniExcel.Query(path.ToString(), true).ToList();
+         _exporter.ExportXlsx(path.ToString(), values);
+        var rows =  _importer.QueryXlsx(path.ToString(), true).ToList();
 
         Assert.Equal("VIP1", rows[0].E);
         Assert.Equal("VIP2", rows[1].E);
@@ -1586,11 +1581,11 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
                 { "sheet01", cn.ExecuteReader("select 'v1' col1") },
                 { "sheet02", cn.ExecuteReader("select 'v2' col1") }
             };
-            var rows = MiniExcel.SaveAs(path.ToString(), sheets);
+            var rows =  _exporter.ExportXlsx(path.ToString(), sheets);
             Assert.Equal(2, rows.Length);
         }
 
-        var sheetNames = MiniExcel.GetSheetNames(path.ToString());
+        var sheetNames =  _importer.GetSheetNames(path.ToString());
         Assert.Equal(["sheet01", "sheet02"], sheetNames);
     }
 
@@ -1602,25 +1597,25 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     {
         {
             var path = PathHelper.GetFile("/xlsx/TestIssueI40QA5_1.xlsx");
-            var rows = MiniExcel.Query<TestIssueI40QA5Dto>(path).ToList();
+            var rows =  _importer.QueryXlsx<TestIssueI40QA5Dto>(path).ToList();
             Assert.Equal("E001", rows[0].Empno);
             Assert.Equal("E002", rows[1].Empno);
         }
         {
             var path = PathHelper.GetFile("/xlsx/TestIssueI40QA5_2.xlsx");
-            var rows = MiniExcel.Query<TestIssueI40QA5Dto>(path).ToList();
+            var rows =  _importer.QueryXlsx<TestIssueI40QA5Dto>(path).ToList();
             Assert.Equal("E001", rows[0].Empno);
             Assert.Equal("E002", rows[1].Empno);
         }
         {
             var path = PathHelper.GetFile("/xlsx/TestIssueI40QA5_3.xlsx");
-            var rows = MiniExcel.Query<TestIssueI40QA5Dto>(path).ToList();
+            var rows =  _importer.QueryXlsx<TestIssueI40QA5Dto>(path).ToList();
             Assert.Equal("E001", rows[0].Empno);
             Assert.Equal("E002", rows[1].Empno);
         }
         {
             var path = PathHelper.GetFile("/xlsx/TestIssueI40QA5_4.xlsx");
-            var rows = MiniExcel.Query<TestIssueI40QA5Dto>(path).ToList();
+            var rows =  _importer.QueryXlsx<TestIssueI40QA5Dto>(path).ToList();
             Assert.Null(rows[0].Empno);
             Assert.Null(rows[1].Empno);
         }
@@ -1628,7 +1623,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
 
     private class TestIssueI40QA5Dto
     {
-        [ExcelColumnName(excelColumnName: "EmployeeNo", aliases: new[] { "EmpNo", "No" })]
+        [MiniExcelColumnName(excelColumnName: "EmployeeNo", aliases: new[] { "EmpNo", "No" })]
         public string Empno { get; set; }
         public string Name { get; set; }
     }
@@ -1642,8 +1637,8 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             var value = new DataTable();
             value.Columns.Add("Id");
             value.Columns.Add("Name");
-            MiniExcel.SaveAs(path.ToString(), value);
-            var rows = MiniExcel.Query(path.ToString()).ToList();
+             _exporter.ExportXlsx(path.ToString(), value);
+            var rows =  _importer.QueryXlsx(path.ToString()).ToList();
 
             Assert.Equal("Id", rows[0].A);
             Assert.Equal("Name", rows[0].B);
@@ -1655,8 +1650,8 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             using var path = AutoDeletingPath.Create();
 
             var value = Array.Empty<TestIssues133Dto>();
-            MiniExcel.SaveAs(path.ToString(), value);
-            var rows = MiniExcel.Query(path.ToString()).ToList();
+             _exporter.ExportXlsx(path.ToString(), value);
+            var rows =  _importer.QueryXlsx(path.ToString()).ToList();
 
             Assert.Equal("Id", rows[0].A);
             Assert.Equal("Name", rows[0].B);
@@ -1680,7 +1675,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         {
             var value = new[] { new Dictionary<string, object> { { "Col1&Col2", "V1&V2" } } };
             var path = PathHelper.GetTempPath();
-            MiniExcel.SaveAs(path, value);
+             _exporter.ExportXlsx(path, value);
             //System.Xml.XmlException : '<' is an unexpected token. The expected token is ';'.
             Helpers.GetZipFileContent(path, "xl/worksheets/sheet1.xml"); //check illegal format or not
         }
@@ -1690,7 +1685,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             dt.Columns.Add("Col1&Col2");
             dt.Rows.Add("V1&V2");
             var path = PathHelper.GetTempPath();
-            MiniExcel.SaveAs(path, dt);
+             _exporter.ExportXlsx(path, dt);
             //System.Xml.XmlException : '<' is an unexpected token. The expected token is ';'.
             Helpers.GetZipFileContent(path, "xl/worksheets/sheet1.xml"); //check illegal format or not
         }
@@ -1700,7 +1695,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     public void TestIssueI45TF5()
     {
         using var path = AutoDeletingPath.Create();
-        MiniExcel.SaveAs(path.ToString(), new[] { new { C1 = "1&2;3,4", C2 = "1&2;3,4" } });
+         _exporter.ExportXlsx(path.ToString(), new[] { new { C1 = "1&2;3,4", C2 = "1&2;3,4" } });
         var sheet1Xml = Helpers.GetZipFileContent(path.ToString(), "xl/worksheets/sheet1.xml");
         Assert.DoesNotContain("<x:cols>", sheet1Xml);
     }
@@ -1717,14 +1712,14 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             new() { ID = 2, Name = "Mike" }
         ];
         using var path = AutoDeletingPath.Create();
-        MiniExcel.SaveAs(path.ToString(), value);
+         _exporter.ExportXlsx(path.ToString(), value);
     }
 
     private class TestIssue280Dto
     {
-        [ExcelColumnWidth(20)]
+        [MiniExcelColumnWidth(20)]
         public int ID { get; set; }
-        [ExcelColumnWidth(15.50)]
+        [MiniExcelColumnWidth(15.50)]
         public string Name { get; set; }
     }
 
@@ -1736,7 +1731,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     {
         var path = PathHelper.GetFile("/csv/TestHeader.csv");
 #pragma warning disable CS0618 // Type or member is obsolete
-        using var dt = MiniExcel.QueryAsDataTable(path, true, null, ExcelType.CSV);
+        using var dt =  _importer.QueryCsvAsDataTable(path);
 #pragma warning restore CS0618
         Assert.Equal("A1", dt.Rows[0]["Column1"]);
         Assert.Equal("A2", dt.Rows[1]["Column1"]);
@@ -1751,7 +1746,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     public void TestIssue272()
     {
         var path = PathHelper.GetFile("/xlsx/TestIssue272.xlsx");
-        Assert.Throws<InvalidDataException>(() => MiniExcel.Query(path).ToList());
+        Assert.Throws<InvalidDataException>(() =>  _importer.QueryXlsx(path).ToList());
     }
 
     /// <summary>
@@ -1761,7 +1756,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     public void TestIssue267()
     {
         var path = PathHelper.GetFile("/xlsx/TestIssue267.xlsx");
-        var row = MiniExcel.Query(path).SingleOrDefault();
+        var row =  _importer.QueryXlsx(path).SingleOrDefault();
         Assert.Equal(10618, row!.A);
         Assert.Equal("2021-02-23", row.B);
         Assert.Equal(43.199999999999996, row.C);
@@ -1804,7 +1799,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         try
         {
             var path = PathHelper.GetFile("xlsx/TestIssueI3X2ZL_datetime_error.xlsx");
-            var rows = MiniExcel.Query<IssueI3X2ZLDTO>(path, startCell: "B3").ToList();
+            var rows =  _importer.QueryXlsx<IssueI3X2ZLDTO>(path, startCell: "B3").ToList();
         }
         catch (InvalidCastException ex)
         {
@@ -1817,7 +1812,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         try
         {
             var path = PathHelper.GetFile("xlsx/TestIssueI3X2ZL_int_error.xlsx");
-            var rows = MiniExcel.Query<IssueI3X2ZLDTO>(path).ToList();
+            var rows =  _importer.QueryXlsx<IssueI3X2ZLDTO>(path).ToList();
         }
         catch (InvalidCastException ex)
         {
@@ -1842,8 +1837,9 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     {
         var csvPath = PathHelper.GetFile("csv/TestCsvToXlsx.csv");
         using var path = AutoDeletingPath.Create();
-        CsvToXlsx(csvPath, path.ToString());
-        var rows = MiniExcel.Query(path.ToString()).ToList();
+        
+         _exporter.ConvertCsvToXlsx(csvPath, path.FilePath);
+        var rows =  _importer.QueryXlsx(path.ToString()).ToList();
 
         Assert.Equal("Name", rows[0].A);
         Assert.Equal("Jack", rows[1].A);
@@ -1855,12 +1851,6 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         Assert.Equal("26", rows[2].B);
         Assert.Null(rows[3].B);
         Assert.Null(rows[4].B);
-    }
-
-    private static void CsvToXlsx(string csvPath, string xlsxPath)
-    {
-        var value = MiniExcel.Query(csvPath, true);
-        MiniExcel.SaveAs(xlsxPath, value);
     }
 
     /// <summary>
@@ -1881,8 +1871,8 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
                     new Issue255DTO { Time = new DateTime(2021, 01, 01), Time2 = new DateTime(2021, 01, 01) }
                 }
             };
-            MiniExcel.SaveAsByTemplate(path.ToString(), templatePath, value);
-            var rows = MiniExcel.Query(path.ToString()).ToList();
+             _templater.ApplyXlsxTemplate(path.ToString(), templatePath, value);
+            var rows =  _importer.QueryXlsx(path.ToString()).ToList();
             Assert.Equal("2021", rows[1].A.ToString());
             Assert.Equal("2021", rows[1].B.ToString());
         }
@@ -1893,18 +1883,18 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             {
                 new Issue255DTO { Time = new DateTime(2021, 01, 01) }
             };
-            MiniExcel.SaveAs(path.ToString(), value);
-            var rows = MiniExcel.Query(path.ToString()).ToList();
+             _exporter.ExportXlsx(path.ToString(), value);
+            var rows =  _importer.QueryXlsx(path.ToString()).ToList();
             Assert.Equal("2021", rows[1].A.ToString());
         }
     }
 
     private class Issue255DTO
     {
-        [ExcelFormat("yyyy")]
+        [MiniExcelFormat("yyyy")]
         public DateTime Time { get; set; }
 
-        [ExcelColumn(Format = "yyyy")]
+        [MiniExcelColumn(Format = "yyyy")]
         public DateTime Time2 { get; set; }
     }
 
@@ -1916,7 +1906,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     public void Issue256()
     {
         var path = PathHelper.GetFile("xlsx/TestIssue256.xlsx");
-        var rows = MiniExcel.Query(path, false).ToList();
+        var rows =  _importer.QueryXlsx(path, false).ToList();
         Assert.Equal(new DateTime(2003, 4, 16), rows[1].A);
         Assert.Equal(new DateTime(2004, 4, 16), rows[1].B);
     }
@@ -1930,8 +1920,8 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     {
         {
             var value = new[] { new { col1 = "世界你好" } };
-            using var path = AutoDeletingPath.Create(ExcelType.CSV);
-            MiniExcel.SaveAs(path.ToString(), value);
+            using var path = AutoDeletingPath.Create(ExcelType.Csv);
+             _exporter.ExportCsv(path.ToString(), value);
             const string expected =
                 """
                 col1
@@ -1944,12 +1934,12 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
             var value = new[] { new { col1 = "世界你好" } };
-            using var path = AutoDeletingPath.Create(ExcelType.CSV);
+            using var path = AutoDeletingPath.Create(ExcelType.Csv);
             var config = new CsvConfiguration
             {
                 StreamWriterFunc = stream => new StreamWriter(stream, Encoding.GetEncoding("gb2312"))
             };
-            MiniExcel.SaveAs(path.ToString(), value, excelType: ExcelType.CSV, configuration: config);
+             _exporter.ExportCsv(path.ToString(), value, configuration: config);
             const string expected =
                 """
                 col1
@@ -1963,8 +1953,8 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
 
         {
             var value = cn.ExecuteReader("select '世界你好' col1");
-            using var path = AutoDeletingPath.Create(ExcelType.CSV);
-            MiniExcel.SaveAs(path.ToString(), value);
+            using var path = AutoDeletingPath.Create(ExcelType.Csv);
+             _exporter.ExportCsv(path.ToString(), value);
             const string expected =
                 """
                 col1
@@ -1983,8 +1973,8 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     {
         using var cn = Db.GetConnection();
         using var reader = cn.ExecuteReader(@"select '""<>+-*//}{\\n' a,1234567890 b union all select '<test>Hello World</test>',-1234567890");
-        using var path = AutoDeletingPath.Create(ExcelType.CSV);
-        MiniExcel.SaveAs(path.ToString(), reader);
+        using var path = AutoDeletingPath.Create(ExcelType.Csv);
+         _exporter.ExportCsv(path.ToString(), reader);
         const string expected =
             """"
             a,b
@@ -2003,10 +1993,10 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     public void Issue242()
     {
         var path = PathHelper.GetFile("xls/TestIssue242.xls");
-        Assert.Throws<NotSupportedException>(() => MiniExcel.Query(path).ToList());
+        Assert.Throws<InvalidDataException>(() =>  _importer.QueryXlsx(path).ToList());
 
         using var stream = File.OpenRead(path);
-        Assert.Throws<InvalidDataException>(() => stream.Query().ToList());
+        Assert.Throws<InvalidDataException>(() =>  _importer.QueryXlsx(stream).ToList());
     }
 
     /// <summary>
@@ -2015,15 +2005,15 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     [Fact]
     public void Issue243()
     {
-        using var path = AutoDeletingPath.Create(ExcelType.CSV);
+        using var path = AutoDeletingPath.Create(ExcelType.Csv);
         var value = new[]
         {
             new { Name = "Jack", Age = 25, InDate = new DateTime(2021,01,03) },
             new { Name = "Henry",  Age = 36, InDate = new DateTime(2020,05,03) },
         };
-        MiniExcel.SaveAs(path.ToString(), value);
+         _exporter.ExportXlsx(path.ToString(), value);
 
-        var rows = MiniExcel.Query<Issue243Dto>(path.ToString()).ToList();
+        var rows =  _importer.QueryXlsx<Issue243Dto>(path.ToString()).ToList();
         Assert.Equal("Jack", rows[0].Name);
         Assert.Equal(25, rows[0].Age);
         Assert.Equal(new DateTime(2021, 01, 03), rows[0].InDate);
@@ -2055,17 +2045,17 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
 
         // csv
         {
-            using var path = AutoDeletingPath.Create(ExcelType.CSV);
-            MiniExcel.SaveAs(path.ToString(), value);
+            using var path = AutoDeletingPath.Create(ExcelType.Csv);
+             _exporter.ExportXlsx(path.ToString(), value);
 
             {
-                var rows = MiniExcel.Query(path.ToString(), true).ToList();
+                var rows =  _importer.QueryXlsx(path.ToString(), true).ToList();
                 Assert.Equal(rows[0].InDate, "01 04, 2021");
                 Assert.Equal(rows[1].InDate, "04 05, 2020");
             }
 
             {
-                var rows = MiniExcel.Query<Issue241Dto>(path.ToString()).ToList();
+                var rows =  _importer.QueryXlsx<Issue241Dto>(path.ToString()).ToList();
                 Assert.Equal(rows[0].InDate, new DateTime(2021, 01, 04));
                 Assert.Equal(rows[1].InDate, new DateTime(2020, 04, 05));
             }
@@ -2074,16 +2064,16 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         // xlsx
         {
             using var path = AutoDeletingPath.Create();
-            MiniExcel.SaveAs(path.ToString(), value);
+             _exporter.ExportXlsx(path.ToString(), value);
 
             {
-                var rows = MiniExcel.Query(path.ToString(), true).ToList();
+                var rows =  _importer.QueryXlsx(path.ToString(), true).ToList();
                 Assert.Equal(rows[0].InDate, "01 04, 2021");
                 Assert.Equal(rows[1].InDate, "04 05, 2020");
             }
 
             {
-                var rows = MiniExcel.Query<Issue241Dto>(path.ToString()).ToList();
+                var rows =  _importer.QueryXlsx<Issue241Dto>(path.ToString()).ToList();
                 Assert.Equal(rows[0].InDate, new DateTime(2021, 01, 04));
                 Assert.Equal(rows[1].InDate, new DateTime(2020, 04, 05));
             }
@@ -2094,7 +2084,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     {
         public string Name { get; set; }
 
-        [ExcelFormat("MM dd, yyyy")]
+        [MiniExcelFormat("MM dd, yyyy")]
         public DateTime InDate { get; set; }
     }
 
@@ -2111,7 +2101,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
                 new { name = "Henry", Age = 36, InDate = new DateTime(2020,05,03)},
             };
 
-            MiniExcel.SaveAs(path.ToString(), value);
+             _exporter.ExportXlsx(path.ToString(), value);
         }
 
         {
@@ -2125,7 +2115,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             {
                 TableStyles = TableStyles.None
             };
-            MiniExcel.SaveAs(path.ToString(), value, configuration: config);
+             _exporter.ExportXlsx(path.ToString(), value, configuration: config);
         }
 
         {
@@ -2137,7 +2127,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
                     new { name = "Henry", Age = 36, InDate = new DateTime(2020,05,03)},
                 })
             );
-            MiniExcel.SaveAs(path.ToString(), value);
+             _exporter.ExportXlsx(path.ToString(), value);
         }
     }
 
@@ -2167,23 +2157,23 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         dataSet.Tables.Add(users);
         dataSet.Tables.Add(department);
 
-        var rowsWritten = MiniExcel.SaveAs(path.ToString(), dataSet);
+        var rowsWritten =  _exporter.ExportXlsx(path.ToString(), dataSet);
         Assert.Equal(2, rowsWritten.Length);
         Assert.Equal(2, rowsWritten[0]);
 
-        var sheetNames = MiniExcel.GetSheetNames(path.ToString());
+        var sheetNames =  _importer.GetSheetNames(path.ToString());
         Assert.Equal("users", sheetNames[0]);
         Assert.Equal("department", sheetNames[1]);
 
         {
-            var rows = MiniExcel.Query(path.ToString(), true, sheetName: "users").ToList();
+            var rows =  _importer.QueryXlsx(path.ToString(), true, sheetName: "users").ToList();
             Assert.Equal("Jack", rows[0].Name);
             Assert.Equal(25, rows[0].Age);
             Assert.Equal("Mike", rows[1].Name);
             Assert.Equal(44, rows[1].Age);
         }
         {
-            var rows = MiniExcel.Query(path.ToString(), true, sheetName: "department").ToList();
+            var rows =  _importer.QueryXlsx(path.ToString(), true, sheetName: "department").ToList();
             Assert.Equal("01", rows[0].ID);
             Assert.Equal("HR", rows[0].Name);
             Assert.Equal("02", rows[1].ID);
@@ -2199,7 +2189,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     {
         var path = PathHelper.GetFile("xlsx/TestIssue233.xlsx");
 #pragma warning disable CS0618 // Type or member is obsolete
-        var dt = MiniExcel.QueryAsDataTable(path);
+        var dt =  _importer.QueryXlsxAsDataTable(path);
 #pragma warning restore CS0618
         var rows = dt.Rows;
 
@@ -2219,10 +2209,10 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             new{ id="\"\"1,2,3\"\""},
             new{ id="1,2,3"},
         };
-        using var path = AutoDeletingPath.Create(ExcelType.CSV);
-        MiniExcel.SaveAs(path.ToString(), value);
+        using var path = AutoDeletingPath.Create(ExcelType.Csv);
+         _exporter.ExportXlsx(path.ToString(), value);
 
-        var rows = MiniExcel.Query(path.ToString(), true).ToList();
+        var rows =  _importer.QueryXlsx(path.ToString(), true).ToList();
 
         Assert.Equal("\"\"1,2,3\"\"", rows[0].id);
         Assert.Equal("1,2,3", rows[1].id);
@@ -2252,21 +2242,21 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             ["users"] = users,
             ["department"] = department
         };
-        MiniExcel.SaveAs(path, sheets);
+         _exporter.ExportXlsx(path, sheets);
 
-        var sheetNames = MiniExcel.GetSheetNames(path);
+        var sheetNames =  _importer.GetSheetNames(path);
         Assert.Equal("users", sheetNames[0]);
         Assert.Equal("department", sheetNames[1]);
 
         {
-            var rows = MiniExcel.Query(path, true, sheetName: "users").ToList();
+            var rows =  _importer.QueryXlsx(path, true, sheetName: "users").ToList();
             Assert.Equal("Jack", rows[0].Name);
             Assert.Equal(25, rows[0].Age);
             Assert.Equal("Mike", rows[1].Name);
             Assert.Equal(44, rows[1].Age);
         }
         {
-            var rows = MiniExcel.Query(path, true, sheetName: "department").ToList();
+            var rows =  _importer.QueryXlsx(path, true, sheetName: "department").ToList();
             Assert.Equal("01", rows[0].ID);
             Assert.Equal("HR", rows[0].Name);
             Assert.Equal("02", rows[1].ID);
@@ -2321,8 +2311,8 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         using (var reader = cmd3.ExecuteReader(CommandBehavior.CloseConnection))
         {
             using var path = AutoDeletingPath.Create();
-            MiniExcel.SaveAs(path.ToString(), reader, printHeader: true);
-            var rows = MiniExcel.Query(path.ToString(), true).ToList();
+             _exporter.ExportXlsx(path.ToString(), reader, printHeader: true);
+            var rows =  _importer.QueryXlsx(path.ToString(), true).ToList();
             Assert.Equal(1, rows[0].id);
             Assert.Equal(2, rows[1].id);
         }
@@ -2337,7 +2327,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     {
         var path = PathHelper.GetFile("xlsx/TestIssue229.xlsx");
 #pragma warning disable CS0618 // Type or member is obsolete
-        using var dt = MiniExcel.QueryAsDataTable(path);
+        using var dt =  _importer.QueryXlsxAsDataTable(path);
 #pragma warning restore CS0618
         foreach (DataColumn column in dt.Columns)
         {
@@ -2360,7 +2350,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         {
             var path = PathHelper.GetFile("xlsx/TestIssue122.xlsx");
             {
-                var rows = MiniExcel.Query(path, useHeaderRow: true, configuration: config).ToList();
+                var rows =  _importer.QueryXlsx(path, useHeaderRow: true, configuration: config).ToList();
                 Assert.Equal("HR", rows[0].Department);
                 Assert.Equal("HR", rows[1].Department);
                 Assert.Equal("HR", rows[2].Department);
@@ -2373,7 +2363,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         {
             var path = PathHelper.GetFile("xlsx/TestIssue122_2.xlsx");
             {
-                var rows = MiniExcel.Query(path, useHeaderRow: true, configuration: config).ToList();
+                var rows =  _importer.QueryXlsx(path, useHeaderRow: true, configuration: config).ToList();
                 Assert.Equal("V1", rows[2].Test1);
                 Assert.Equal("V2", rows[5].Test2);
                 Assert.Equal("V3", rows[1].Test3);
@@ -2393,14 +2383,14 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     {
         {
             var path = PathHelper.GetTempPath("xlsm");
-            Assert.Throws<NotSupportedException>(() => MiniExcel.SaveAs(path, new[] { new { V = "A1" }, new { V = "A2" } }));
+            Assert.Throws<NotSupportedException>(() =>  _exporter.ExportXlsx(path, new[] { new { V = "A1" }, new { V = "A2" } }));
             File.Delete(path);
         }
 
         {
             var path = PathHelper.GetFile("xlsx/TestIssue227.xlsm");
             {
-                var rows = MiniExcel.Query<UserAccount>(path).ToList();
+                var rows =  _importer.QueryXlsx<MiniExcelOpenXmlTests.UserAccount>(path).ToList();
                 Assert.Equal(100, rows.Count);
 
                 Assert.Equal(Guid.Parse("78DE23D2-DCB6-BD3D-EC67-C112BBC322A2"), rows[0].ID);
@@ -2413,7 +2403,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             }
             {
                 using var stream = File.OpenRead(path);
-                var rows = stream.Query<UserAccount>().ToList();
+                var rows =  _importer.QueryXlsx<MiniExcelOpenXmlTests.UserAccount>(stream).ToList();
                 Assert.Equal(100, rows.Count);
 
                 Assert.Equal(Guid.Parse("78DE23D2-DCB6-BD3D-EC67-C112BBC322A2"), rows[0].ID);
@@ -2438,7 +2428,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     {
         using var path = AutoDeletingPath.Create();
         var templatePath = PathHelper.GetFile("xlsx/TestIssue226.xlsx");
-        MiniExcel.SaveAsByTemplate(path.ToString(), templatePath, new { employees = new[] { new { name = "123" }, new { name = "123" } } });
+         _templater.ApplyXlsxTemplate(path.ToString(), templatePath, new { employees = new[] { new { name = "123" }, new { name = "123" } } });
         Assert.Equal("A1:A3", Helpers.GetFirstSheetDimensionRefValue(path.ToString()));
     }
 
@@ -2456,10 +2446,10 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             new() { { "A", Guid.NewGuid() }, { "B", "HelloWorld" } }
         ];
         using var path = AutoDeletingPath.Create();
-        MiniExcel.SaveAs(path.ToString(), value);
+         _exporter.ExportXlsx(path.ToString(), value);
 
 #pragma warning disable CS0618 // Type or member is obsolete
-        using var dt = MiniExcel.QueryAsDataTable(path.ToString());
+        using var dt =  _importer.QueryXlsxAsDataTable(path.ToString());
 #pragma warning restore CS0618
         var columns = dt.Columns;
         Assert.Equal(typeof(object), columns[0].DataType);
@@ -2477,7 +2467,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     public void Issue222()
     {
         var path = PathHelper.GetFile("xlsx/TestIssue222.xlsx");
-        var rows = MiniExcel.Query(path).ToList();
+        var rows =  _importer.QueryXlsx(path).ToList();
         Assert.Equal(typeof(DateTime), rows[1].A.GetType());
         Assert.Equal(new DateTime(2021, 4, 29), rows[1].A);
     }
@@ -2491,7 +2481,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     {
         {
             var path = PathHelper.GetFile("xlsx/TestIssue147.xlsx");
-            var rows = MiniExcel.Query(path, useHeaderRow: false, startCell: "C3", sheetName: "Sheet1").ToList();
+            var rows =  _importer.QueryXlsx(path, useHeaderRow: false, startCell: "C3", sheetName: "Sheet1").ToList();
 
             Assert.Equal(["C", "D", "E"], (rows[0] as IDictionary<string, object>)?.Keys);
             Assert.Equal(["Column1", "Column2", "Column3"], new[] { rows[0].C as string, rows[0].D as string, rows[0].E as string });
@@ -2505,13 +2495,13 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             Assert.Equal(11, rows.Count);
 
 
-            var columns = MiniExcel.GetColumns(path, startCell: "C3");
+            var columns =  _importer.GetXlsxColumns(path, startCell: "C3");
             Assert.Equal(["C", "D", "E"], columns);
         }
 
         {
             var path = PathHelper.GetFile("xlsx/TestIssue147.xlsx");
-            var rows = MiniExcel.Query(path, useHeaderRow: true, startCell: "C3", sheetName: "Sheet1").ToList();
+            var rows =  _importer.QueryXlsx(path, useHeaderRow: true, startCell: "C3", sheetName: "Sheet1").ToList();
 
             Assert.Equal(["Column1", "Column2", "Column3"], (rows[0] as IDictionary<string, object>)?.Keys);
             Assert.Equal(["C4", "D4", "E4"], new[] { rows[0].Column1 as string, rows[0].Column2 as string, rows[0].Column3 as string });
@@ -2523,7 +2513,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
 
             Assert.Equal(10, rows.Count);
 
-            var columns = MiniExcel.GetColumns(path, useHeaderRow: true, startCell: "C3");
+            var columns =  _importer.GetXlsxColumns(path, useHeaderRow: true, startCell: "C3");
             Assert.Equal(["Column1", "Column2", "Column3"], columns);
         }
     }
@@ -2542,8 +2532,8 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
 
         using var connection = new SQLiteConnection(connectionString);
         var reader = connection.ExecuteReader(@"select 1 Test1,2 Test2 union all select 3 , 4 union all select 5 ,6");
-        MiniExcel.SaveAs(path.ToString(), reader);
-        var rows = MiniExcel.Query(path.ToString(), true).ToList();
+         _exporter.ExportXlsx(path.ToString(), reader);
+        var rows =  _importer.QueryXlsx(path.ToString(), true).ToList();
 
         Assert.Equal(1.0, rows[0].Test1);
         Assert.Equal(2.0, rows[0].Test2);
@@ -2563,11 +2553,11 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             new { Test1 = "1", Test2 = 2 },
             new { Test1 = "3", Test2 = 4 }
         };
-        MiniExcel.SaveAs(path.ToString(), value);
+         _exporter.ExportXlsx(path.ToString(), value);
 
         {
 #pragma warning disable CS0618 // Type or member is obsolete
-            using var table = MiniExcel.QueryAsDataTable(path.ToString());
+            using var table =  _importer.QueryXlsxAsDataTable(path.ToString());
 #pragma warning restore CS0618
             Assert.Equal("Test1", table.Columns[0].ColumnName);
             Assert.Equal("Test2", table.Columns[1].ColumnName);
@@ -2579,7 +2569,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
 
         {
 #pragma warning disable CS0618 // Type or member is obsolete
-            using var dt = MiniExcel.QueryAsDataTable(path.ToString(), false);
+            using var dt =  _importer.QueryXlsxAsDataTable(path.ToString(), false);
 #pragma warning restore CS0618
             Assert.Equal("Test1", dt.Rows[0]["A"]);
             Assert.Equal("Test2", dt.Rows[0]["B"]);
@@ -2600,18 +2590,18 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         {
             using var path = AutoDeletingPath.Create();
             var value = new[] { new { Test = "12345678901234567890" } };
-            MiniExcel.SaveAs(path.ToString(), value);
+             _exporter.ExportXlsx(path.ToString(), value);
 
-            var A2 = MiniExcel.Query(path.ToString(), true).First().Test;
+            var A2 =  _importer.QueryXlsx(path.ToString(), true).First().Test;
             Assert.Equal("12345678901234567890", A2);
         }
 
         {
             using var path = AutoDeletingPath.Create();
             var value = new[] { new { Test = 123456.789 } };
-            MiniExcel.SaveAs(path.ToString(), value);
+             _exporter.ExportXlsx(path.ToString(), value);
 
-            var A2 = MiniExcel.Query(path.ToString(), true).First().Test;
+            var A2 =  _importer.QueryXlsx(path.ToString(), true).First().Test;
             Assert.Equal(123456.789, A2);
         }
     }
@@ -2625,7 +2615,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     public void Issue220()
     {
         var path = PathHelper.GetFile("xlsx/TestIssue220.xlsx");
-        var rows = MiniExcel.Query(path, useHeaderRow: true);
+        var rows =  _importer.QueryXlsx(path, useHeaderRow: true);
         var result = rows
             .GroupBy(s => s.PRT_ID)
             .Select(g => new
@@ -2649,8 +2639,8 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     public void Issue215()
     {
         using var stream = new MemoryStream();
-        stream.SaveAs(new[] { new { V = "test1" }, new { V = "test2" } });
-        var rows = stream.Query(true).ToList();
+         _exporter.ExportXlsx(stream, new[] { new { V = "test1" }, new { V = "test2" } });
+        var rows =  _importer.QueryXlsx(stream, true).ToList();
 
         Assert.Equal("test1", rows[0].V);
         Assert.Equal("test2", rows[1].V);
@@ -2666,7 +2656,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         //csv
         {
             const string text =
-                """
+               """
                State
                OnDuty
                Fired
@@ -2679,15 +2669,15 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             writer.Write(text);
             writer.Flush();
             stream.Position = 0;
-            var rows = stream.Query<Issue89VO>(excelType: ExcelType.CSV).ToList();
+            var rows =  _importer.QueryCsv(stream, useHeaderRow: true).ToList();
 
-            Assert.Equal(Issue89VO.WorkState.OnDuty, rows[0].State);
-            Assert.Equal(Issue89VO.WorkState.Fired, rows[1].State);
-            Assert.Equal(Issue89VO.WorkState.Leave, rows[2].State);
+            Assert.Equal(nameof(Issue89VO.WorkState.OnDuty), rows[0].State);
+            Assert.Equal(nameof(Issue89VO.WorkState.Fired), rows[1].State);
+            Assert.Equal(nameof(Issue89VO.WorkState.Leave), rows[2].State);
 
-            using var path = AutoDeletingPath.Create(ExcelType.CSV);
-            MiniExcel.SaveAs(path.ToString(), rows);
-            var rows2 = MiniExcel.Query<Issue89VO>(path.ToString()).ToList();
+            using var path = AutoDeletingPath.Create(ExcelType.Csv);
+             _exporter.ExportCsv(path.ToString(), rows);
+            var rows2 =  _importer.QueryCsv<Issue89VO>(path.ToString()).ToList();
 
             Assert.Equal(Issue89VO.WorkState.OnDuty, rows2[0].State);
             Assert.Equal(Issue89VO.WorkState.Fired, rows2[1].State);
@@ -2697,15 +2687,15 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         //xlsx
         {
             var path = PathHelper.GetFile("xlsx/TestIssue89.xlsx");
-            var rows = MiniExcel.Query<Issue89VO>(path).ToList();
+            var rows =  _importer.QueryXlsx<Issue89VO>(path).ToList();
 
             Assert.Equal(Issue89VO.WorkState.OnDuty, rows[0].State);
             Assert.Equal(Issue89VO.WorkState.Fired, rows[1].State);
             Assert.Equal(Issue89VO.WorkState.Leave, rows[2].State);
 
             using var xlsxPath = AutoDeletingPath.Create();
-            MiniExcel.SaveAs(xlsxPath.ToString(), rows);
-            var rows2 = MiniExcel.Query<Issue89VO>(xlsxPath.ToString()).ToList();
+             _exporter.ExportXlsx(xlsxPath.ToString(), rows);
+            var rows2 =  _importer.QueryXlsx<Issue89VO>(xlsxPath.ToString()).ToList();
 
             Assert.Equal(Issue89VO.WorkState.OnDuty, rows2[0].State);
             Assert.Equal(Issue89VO.WorkState.Fired, rows2[1].State);
@@ -2742,26 +2732,26 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         // openxml
         {
             using var path = AutoDeletingPath.Create();
-            MiniExcel.SaveAs(path.ToString(), table);
+             _exporter.ExportXlsx(path.ToString(), table);
 
-            var rows = MiniExcel.Query(path.ToString()).ToList();
+            var rows =  _importer.QueryXlsx(path.ToString()).ToList();
             Assert.Equal("Name", rows[0].B);
             Assert.Equal("Limit", rows[0].C);
         }
 
         // csv
         {
-            using var path = AutoDeletingPath.Create(ExcelType.CSV);
-            MiniExcel.SaveAs(path.ToString(), table);
+            using var path = AutoDeletingPath.Create(ExcelType.Csv);
+             _exporter.ExportXlsx(path.ToString(), table);
 
-            var rows = MiniExcel.Query(path.ToString()).ToList();
+            var rows =  _importer.QueryXlsx(path.ToString()).ToList();
             Assert.Equal("Name", rows[0].B);
             Assert.Equal("Limit", rows[0].C);
         }
     }
 
     /// <summary>
-    /// MiniExcel.SaveAs(path, table,sheetName:“Name”) ，the actual sheetName is Sheet1
+    /// _ _exporter.ExportXlsx(path, table,sheetName:“Name”) ，the actual sheetName is Sheet1
     /// https://github.com/mini-software/MiniExcel/issues/212
     /// </summary>
     [Fact]
@@ -2769,9 +2759,9 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     {
         const string sheetName = "Demo";
         using var path = AutoDeletingPath.Create();
-        MiniExcel.SaveAs(path.ToString(), new[] { new { x = 1, y = 2 } }, sheetName: sheetName);
+         _exporter.ExportXlsx(path.ToString(), new[] { new { x = 1, y = 2 } }, sheetName: sheetName);
 
-        var actualSheetName = MiniExcel.GetSheetNames(path.ToString()).ToList()[0];
+        var actualSheetName =  _importer.GetSheetNames(path.ToString()).ToList()[0];
         Assert.Equal(sheetName, actualSheetName);
     }
 
@@ -2797,8 +2787,8 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
                 }
             };
 
-            MiniExcel.SaveAsByTemplate(path, tempaltePath, value);
-            var rows = MiniExcel.Query(path).ToList();
+             _templater.ApplyXlsxTemplate(path, tempaltePath, value);
+            var rows =  _importer.QueryXlsx(path).ToList();
 
             Assert.Equal("項目1", rows[0].A);
             Assert.Equal("[]內容1,[]內容2,[]內容3,[]內容4,[]內容5", rows[0].B);
@@ -2841,8 +2831,8 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
                 }
             };
 
-            MiniExcel.SaveAsByTemplate(path, tempaltePath, value);
-            var rows = MiniExcel.Query(path).ToList();
+             _templater.ApplyXlsxTemplate(path, tempaltePath, value);
+            var rows =  _importer.QueryXlsx(path).ToList();
 
             Assert.Equal("項目1", rows[0].A);
             Assert.Equal("[]內容1,[]內容2,[]內容3,[]內容4,[]內容5", rows[0].C);
@@ -2870,8 +2860,8 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             Tests = Enumerable.Range(1, 5).Select((_, i) => new { test1 = i, test2 = i })
         };
 
-        var rows = MiniExcel.Query(templatePath).ToList();
-        MiniExcel.SaveAsByTemplate(path.ToString(), templatePath, value);
+        var rows =  _importer.QueryXlsx(templatePath).ToList();
+         _templater.ApplyXlsxTemplate(path.ToString(), templatePath, value);
     }
 
     /// <summary>
@@ -2881,7 +2871,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     public void Issue208()
     {
         const string path = "../../../../../samples/xlsx/TestIssue208.xlsx";
-        var columns = MiniExcel.GetColumns(path).ToList();
+        var columns =  _importer.GetXlsxColumns(path).ToList();
         Assert.Equal(16384, columns.Count);
         Assert.Equal("XFD", columns[16383]);
     }
@@ -2905,7 +2895,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             {
                 ["employees"] = dt
             };
-            MiniExcel.SaveAsByTemplate(path.ToString(), templatePath, value);
+             _templater.ApplyXlsxTemplate(path.ToString(), templatePath, value);
 
             var dimension = Helpers.GetFirstSheetDimensionRefValue(path.ToString());
             Assert.Equal("A1:B2", dimension);
@@ -2921,7 +2911,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             dt.Rows.Add("Jack", "HR");
 
             var value = new Dictionary<string, object> { ["employees"] = dt };
-            MiniExcel.SaveAsByTemplate(path.ToString(), templatePath, value);
+             _templater.ApplyXlsxTemplate(path.ToString(), templatePath, value);
 
             var dimension = Helpers.GetFirstSheetDimensionRefValue(path.ToString());
             Assert.Equal("A1:B2", dimension);
@@ -2957,11 +2947,11 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
                     new { name = "Keaton", department = "IT" }
                 }
             };
-            MiniExcel.SaveAsByTemplate(path, templatePath, value);
+             _templater.ApplyXlsxTemplate(path, templatePath, value);
 
-            foreach (var sheetName in MiniExcel.GetSheetNames(path))
+            foreach (var sheetName in  _importer.GetSheetNames(path))
             {
-                var rows = MiniExcel.Query(path, sheetName: sheetName).ToList();
+                var rows =  _importer.QueryXlsx(path, sheetName: sheetName).ToList();
                 Assert.Equal(9, rows.Count);
 
                 Assert.Equal("FooCompany", rows[0].A);
@@ -3008,8 +2998,8 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
                     new {name="Keaton",department="IT"}
                 }
             };
-            MiniExcel.SaveAsByTemplate(path.ToString(), templatePath, value);
-            var rows = MiniExcel.Query(path.ToString()).ToList();
+             _templater.ApplyXlsxTemplate(path.ToString(), templatePath, value);
+            var rows =  _importer.QueryXlsx(path.ToString()).ToList();
 
             Assert.Equal("FooCompany", rows[0].A);
             Assert.Equal("Jack", rows[2].B);
@@ -3047,12 +3037,12 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
                     MyProperty7 = "MyProperty7"
                 }
             ];
-            var rowsWritten = MiniExcel.SaveAs(path, values);
+            var rowsWritten =  _exporter.ExportXlsx(path, values);
             Assert.Single(rowsWritten);
             Assert.Equal(1, rowsWritten[0]);
 
             {
-                var rows = MiniExcel.Query(path).ToList();
+                var rows =  _importer.QueryXlsx(path).ToList();
 
                 Assert.Equal("MyProperty4", rows[0].A);
                 Assert.Equal("CustomColumnName", rows[0].B);
@@ -3072,7 +3062,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             }
 
             {
-                var rows = MiniExcel.Query<Issue142VO>(path).ToList();
+                var rows =  _importer.QueryXlsx<Issue142VO>(path).ToList();
 
                 Assert.Equal("MyProperty4", rows[0].MyProperty4);
                 Assert.Equal("MyProperty1", rows[0].MyProperty1);
@@ -3085,7 +3075,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         }
 
         {
-            using var file = AutoDeletingPath.Create(ExcelType.CSV);
+            using var file = AutoDeletingPath.Create(ExcelType.Csv);
             var path = file.ToString();
             Issue142VO[] values =
             [
@@ -3096,7 +3086,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
                     MyProperty7 = "MyProperty7"
                 }
             ];
-            var rowsWritten = MiniExcel.SaveAs(path, values);
+            var rowsWritten =  _exporter.ExportCsv(path, values);
             Assert.Single(rowsWritten);
             Assert.Equal(1, rowsWritten[0]);
 
@@ -3110,7 +3100,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             Assert.Equal(expected, File.ReadAllText(path));
 
             {
-                var rows = MiniExcel.Query<Issue142VO>(path).ToList();
+                var rows =  _importer.QueryCsv<Issue142VO>(path).ToList();
 
                 Assert.Equal("MyProperty4", rows[0].MyProperty4);
                 Assert.Equal("MyProperty1", rows[0].MyProperty1);
@@ -3123,12 +3113,12 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         }
 
         {
-            using var path = AutoDeletingPath.Create(ExcelType.CSV);
+            using var path = AutoDeletingPath.Create(ExcelType.Csv);
             Issue142VoDuplicateColumnName[] input =
             [
                 new() { MyProperty1 = 0, MyProperty2 = 0, MyProperty3 = 0, MyProperty4 = 0 }
             ];
-            Assert.Throws<InvalidOperationException>(() => MiniExcel.SaveAs(path.ToString(), input));
+            Assert.Throws<InvalidOperationException>(() =>  _exporter.ExportCsv(path.ToString(), input));
         }
     }
 
@@ -3138,13 +3128,13 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         const string path = "../../../../../samples/xlsx/TestIssue142.xlsx";
         const string csvPath = "../../../../../samples/csv/TestIssue142.csv";
         {
-            var rows = MiniExcel.Query<Issue142VoExcelColumnNameNotFound>(path).ToList();
+            var rows =  _importer.QueryXlsx<Issue142VoExcelColumnNameNotFound>(path).ToList();
             Assert.Equal(0, rows[0].MyProperty1);
         }
 
-        Assert.Throws<ArgumentException>(() => MiniExcel.Query<Issue142VoOverIndex>(path).ToList());
+        Assert.Throws<ArgumentException>(() =>  _importer.QueryXlsx<Issue142VoOverIndex>(path).ToList());
 
-        var rowsXlsx = MiniExcel.Query<Issue142VO>(path).ToList();
+        var rowsXlsx =  _importer.QueryXlsx<Issue142VO>(path).ToList();
         Assert.Equal("CustomColumnName", rowsXlsx[0].MyProperty1);
         Assert.Null(rowsXlsx[0].MyProperty7);
         Assert.Equal("MyProperty2", rowsXlsx[0].MyProperty2);
@@ -3153,7 +3143,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         Assert.Equal("MyProperty102", rowsXlsx[0].MyProperty5);
         Assert.Equal("MyProperty6", rowsXlsx[0].MyProperty6);
 
-        var rowsCsv = MiniExcel.Query<Issue142VO>(csvPath).ToList();
+        var rowsCsv =  _importer.QueryCsv<Issue142VO>(csvPath).ToList();
         Assert.Equal("CustomColumnName", rowsCsv[0].MyProperty1);
         Assert.Null(rowsCsv[0].MyProperty7);
         Assert.Equal("MyProperty2", rowsCsv[0].MyProperty2);
@@ -3165,41 +3155,41 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
 
     private class Issue142VO
     {
-        [ExcelColumnName("CustomColumnName")]
+        [MiniExcelColumnName("CustomColumnName")]
         public string MyProperty1 { get; set; }  //index = 1
-        [ExcelIgnore]
+        [MiniExcelIgnore]
         public string MyProperty7 { get; set; } //index = null
         public string MyProperty2 { get; set; } //index = 3
-        [ExcelColumnIndex(6)]
+        [MiniExcelColumnIndex(6)]
         public string MyProperty3 { get; set; } //index = 6
-        [ExcelColumnIndex("A")] // equal column index 0
+        [MiniExcelColumnIndex("A")] // equal column index 0
         public string MyProperty4 { get; set; }
-        [ExcelColumnIndex(2)]
+        [MiniExcelColumnIndex(2)]
         public string MyProperty5 { get; set; } //index = 2
         public string MyProperty6 { get; set; } //index = 4
     }
 
     private class Issue142VoDuplicateColumnName
     {
-        [ExcelColumnIndex("A")]
+        [MiniExcelColumnIndex("A")]
         public int MyProperty1 { get; set; }
-        [ExcelColumnIndex("A")]
+        [MiniExcelColumnIndex("A")]
         public int MyProperty2 { get; set; }
 
         public int MyProperty3 { get; set; }
-        [ExcelColumnIndex("B")]
+        [MiniExcelColumnIndex("B")]
         public int MyProperty4 { get; set; }
     }
 
     private class Issue142VoOverIndex
     {
-        [ExcelColumnIndex("Z")]
+        [MiniExcelColumnIndex("Z")]
         public int MyProperty1 { get; set; }
     }
 
     private class Issue142VoExcelColumnNameNotFound
     {
-        [ExcelColumnIndex("B")]
+        [MiniExcelColumnIndex("B")]
         public int MyProperty1 { get; set; }
     }
 
@@ -3211,19 +3201,19 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     {
         var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
 
-        Assert.Throws<NotSupportedException>(() => MiniExcel.SaveAs(path, new[] { 1, 2 }));
+        Assert.Throws<NotSupportedException>(() =>  _exporter.ExportXlsx(path, new[] { 1, 2 }));
         File.Delete(path);
 
-        Assert.Throws<NotSupportedException>(() => MiniExcel.SaveAs(path, new[] { "1", "2" }));
+        Assert.Throws<NotSupportedException>(() =>  _exporter.ExportXlsx(path, new[] { "1", "2" }));
         File.Delete(path);
 
-        Assert.Throws<NotSupportedException>(() => MiniExcel.SaveAs(path, new[] { '1', '2' }));
+        Assert.Throws<NotSupportedException>(() =>  _exporter.ExportXlsx(path, new[] { '1', '2' }));
         File.Delete(path);
 
-        Assert.Throws<NotSupportedException>(() => MiniExcel.SaveAs(path, new[] { DateTime.Now }));
+        Assert.Throws<NotSupportedException>(() =>  _exporter.ExportXlsx(path, new[] { DateTime.Now }));
         File.Delete(path);
 
-        Assert.Throws<NotSupportedException>(() => MiniExcel.SaveAs(path, new[] { Guid.NewGuid() }));
+        Assert.Throws<NotSupportedException>(() =>  _exporter.ExportXlsx(path, new[] { Guid.NewGuid() }));
         File.Delete(path);
     }
 
@@ -3238,7 +3228,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             var path = file.ToString();
             _output.WriteLine("==== SaveAs by strongly type ====");
 
-            var input = JsonConvert.DeserializeObject<IEnumerable<UserAccount>>(
+            var input = JsonConvert.DeserializeObject<IEnumerable<MiniExcelOpenXmlTests.UserAccount>>(
                 """
                 [
                   {
@@ -3273,11 +3263,11 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
                   }
                 ]
                 """);
-            MiniExcel.SaveAs(path, input);
+             _exporter.ExportXlsx(path, input);
 
-            var rows = MiniExcel.Query(path, sheetName: "Sheet1").ToList();
+            var rows =  _importer.QueryXlsx(path, sheetName: "Sheet1").ToList();
             Assert.Equal(6, rows.Count);
-            Assert.Equal("Sheet1", MiniExcel.GetSheetNames(path).First());
+            Assert.Equal("Sheet1",  _importer.GetSheetNames(path).First());
 
             using var p = new ExcelPackage(new FileInfo(path));
             var ws = p.Workbook.Worksheets.First();
@@ -3288,9 +3278,9 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             const string path = "../../../../../samples/xlsx/TestIssue157.xlsx";
 
             {
-                var rows = MiniExcel.Query(path, sheetName: "Sheet1").ToList();
+                var rows =  _importer.QueryXlsx(path, sheetName: "Sheet1").ToList();
                 Assert.Equal(6, rows.Count);
-                Assert.Equal("Sheet1", MiniExcel.GetSheetNames(path).First());
+                Assert.Equal("Sheet1",  _importer.GetSheetNames(path).First());
             }
             using (var p = new ExcelPackage(new FileInfo(path)))
             {
@@ -3300,7 +3290,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             }
 
             {
-                var rows = MiniExcel.Query<UserAccount>(path, sheetName: "Sheet1").ToList();
+                var rows =  _importer.QueryXlsx<MiniExcelOpenXmlTests.UserAccount>(path, sheetName: "Sheet1").ToList();
                 Assert.Equal(5, rows.Count);
 
                 Assert.Equal(Guid.Parse("78DE23D2-DCB6-BD3D-EC67-C112BBC322A2"), rows[0].ID);
@@ -3333,7 +3323,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
 
         {
             const string path = "../../../../../samples/xlsx/TestIssue149.xlsx";
-            var rows = MiniExcel.Query(path).Select(s => (string)s.A).ToList();
+            var rows =  _importer.QueryXlsx(path).Select(s => (string)s.A).ToList();
             for (int i = 0; i < chars.Length; i++)
             {
                 //output.WriteLine($"{i} , {chars[i]} , {rows[i]}");
@@ -3347,9 +3337,9 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         {
             using var path = AutoDeletingPath.Create();
             var input = chars.Select(s => new { Test = s.ToString() });
-            MiniExcel.SaveAs(path.ToString(), input);
+             _exporter.ExportXlsx(path.ToString(), input);
 
-            var rows = MiniExcel.Query(path.ToString(), true).Select(s => (string)s.Test).ToList();
+            var rows =  _importer.QueryXlsx(path.ToString(), true).Select(s => (string)s.Test).ToList();
             for (int i = 0; i < chars.Length; i++)
             {
                 _output.WriteLine($"{i}, {chars[i]}, {rows[i]}");
@@ -3363,9 +3353,9 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         {
             using var path = AutoDeletingPath.Create();
             var input = chars.Select(s => new { Test = s.ToString() });
-            MiniExcel.SaveAs(path.ToString(), input);
+             _exporter.ExportXlsx(path.ToString(), input);
 
-            var rows = MiniExcel.Query<Issue149VO>(path.ToString()).Select(s => s.Test).ToList();
+            var rows =  _importer.QueryXlsx<Issue149VO>(path.ToString()).Select(s => s.Test).ToList();
             for (int i = 0; i < chars.Length; i++)
             {
                 _output.WriteLine($"{i}, {chars[i]}, {rows[i]}");
@@ -3389,7 +3379,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     public void Issue153()
     {
         const string path = "../../../../../samples/xlsx/TestIssue153.xlsx";
-        var rows = MiniExcel.Query(path, true).First() as IDictionary<string, object>;
+        var rows =  _importer.QueryXlsx(path, true).First() as IDictionary<string, object>;
         Assert.Equal(
         [
             "序号", "代号", "新代号", "名称", "XXX", "部门名称", "单位", "ERP工时   (小时)A", "工时(秒) A/3600", "标准人工工时(秒)",
@@ -3406,7 +3396,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         const string path = "../../../../../samples/xlsx/TestIssue137.xlsx";
 
         {
-            var rows = MiniExcel.Query(path).ToList();
+            var rows =  _importer.QueryXlsx(path).ToList();
             var first = rows[0] as IDictionary<string, object>; // https://user-images.githubusercontent.com/12729184/113266322-ba06e400-9307-11eb-9521-d36abfda75cc.png
             Assert.Equal(["A", "B", "C", "D", "E", "F", "G", "H"], first?.Keys.ToArray());
             Assert.Equal(11, rows.Count);
@@ -3440,7 +3430,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
 
         // dynamic query with head
         {
-            var rows = MiniExcel.Query(path, true).ToList();
+            var rows =  _importer.QueryXlsx(path, true).ToList();
             var first = rows[0] as IDictionary<string, object>; //![image](https://user-images.githubusercontent.com/12729184/113266322-ba06e400-9307-11eb-9521-d36abfda75cc.png)
             Assert.Equal(["比例", "商品", "滿倉口數", "0", "1為港幣 0為台幣"], first?.Keys.ToArray());
             Assert.Equal(10, rows.Count);
@@ -3460,7 +3450,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         }
 
         {
-            var rows = MiniExcel.Query<Issue137ExcelRow>(path).ToList();
+            var rows =  _importer.QueryXlsx<Issue137ExcelRow>(path).ToList();
             Assert.Equal(10, rows.Count);
             {
                 var row = rows[0];
@@ -3492,7 +3482,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     {
         const string path = "../../../../../samples/xlsx/TestIssue138.xlsx";
         {
-            var rows = MiniExcel.Query(path, true).ToList();
+            var rows =  _importer.QueryXlsx(path, true).ToList();
             Assert.Equal(6, rows.Count);
 
             foreach (var index in new[] { 0, 2, 5 })
@@ -3517,7 +3507,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         }
         {
 
-            var rows = MiniExcel.Query<Issue138ExcelRow>(path).ToList();
+            var rows =  _importer.QueryXlsx<Issue138ExcelRow>(path).ToList();
             Assert.Equal(6, rows.Count);
             Assert.Equal(new DateTime(2021, 3, 1), rows[0].Date);
 
@@ -3583,7 +3573,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             ["A"] = list1,
             ["B"] = list2,
         };
-        MiniExcel.SaveAs(path, sheets);
+         _exporter.ExportXlsx(path, sheets);
 
         {
             Assert.Contains("/xl/media/", Helpers.GetZipFileContent(path, "xl/drawings/_rels/drawing1.xml.rels"));
@@ -3626,7 +3616,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
 
         var enumerableWithCount = new Issue422Enumerable(items);
         using var path = AutoDeletingPath.Create();
-        MiniExcel.SaveAs(path.ToString(), enumerableWithCount);
+         _exporter.ExportXlsx(path.ToString(), enumerableWithCount);
         Assert.Equal(1, enumerableWithCount.GetEnumeratorCount);
     }
 
@@ -3652,7 +3642,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             }
         };
 
-        ms.SaveAsByTemplate(template, values);
+         _templater.ApplyXlsxTemplate(ms, template, values);
     }
 
     [Fact]
@@ -3668,9 +3658,9 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         var template = PathHelper.GetFile("xlsx/Issue527Template.xlsx");
 
         using var path = AutoDeletingPath.Create();
-        MiniExcel.SaveAsByTemplate(path.FilePath, template, value);
+         _templater.ApplyXlsxTemplate(path.FilePath, template, value);
 
-        var rows = MiniExcel.Query(path.FilePath).ToList();
+        var rows =  _importer.QueryXlsx(path.FilePath).ToList();
         Assert.Equal("General User", rows[1].B);
         Assert.Equal("General Administrator", rows[2].B);
     }
@@ -3704,9 +3694,9 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         using var reader = cmd.ExecuteReader();
 
         using var path = AutoDeletingPath.Create();
-        MiniExcel.SaveAs(path.FilePath, reader, configuration: excelconfig, overwriteFile: true);
+         _exporter.ExportXlsx(path.FilePath, reader, configuration: excelconfig, overwriteFile: true);
 
-        var rows = MiniExcel.Query(path.FilePath).ToList();
+        var rows =  _importer.QueryXlsx(path.FilePath).ToList();
         Assert.All(rows, x => Assert.Single(x));
         Assert.Equal("Name", rows[0].A);
     }
@@ -3722,7 +3712,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     {
         public string Col1 { get; set; }
 
-        [ExcelColumnName("Col2")]
+        [MiniExcelColumnName("Col2")]
         public string Prop2 { get; set; }
 
         public string Col3 { get; set; }
@@ -3732,7 +3722,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     {
         public string Col1 { get; set; }
 
-        [ExcelColumnIndex("B")]
+        [MiniExcelColumnIndex("B")]
         public string Prop2 { get; set; }
 
         public string Col3 { get; set; }
@@ -3743,20 +3733,20 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     {
         const string path = "../../../../../samples/xlsx/TestIssue585.xlsx";
 
-        var items1 = MiniExcel.Query<Issue585VO1>(path);
+        var items1 =  _importer.QueryXlsx<Issue585VO1>(path);
         Assert.Equal(2, items1.Count());
 
-        var items2 = MiniExcel.Query<Issue585VO2>(path);
+        var items2 =  _importer.QueryXlsx<Issue585VO2>(path);
         Assert.Equal(2, items2.Count());
 
-        var items3 = MiniExcel.Query<Issue585VO3>(path);
+        var items3 =  _importer.QueryXlsx<Issue585VO3>(path);
         Assert.Equal(2, items3.Count());
     }
 
     private class Issue542
     {
-        [ExcelColumnIndex(0)] public Guid ID { get; set; }
-        [ExcelColumnIndex(1)] public string Name { get; set; }
+        [MiniExcelColumnIndex(0)] public Guid ID { get; set; }
+        [MiniExcelColumnIndex(1)] public string Name { get; set; }
     }
 
     [Fact]
@@ -3764,8 +3754,8 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     {
         const string path = "../../../../../samples/xlsx/TestIssue542.xlsx";
 
-        var resultWithoutFirstRow = MiniExcel.Query<Issue542>(path).ToList();
-        var resultWithFirstRow = MiniExcel.Query<Issue542>(path, hasHeader: false).ToList();
+        var resultWithoutFirstRow =  _importer.QueryXlsx<Issue542>(path).ToList();
+        var resultWithFirstRow =  _importer.QueryXlsx<Issue542>(path, treatHeaderAsData: true).ToList();
 
         Assert.Equal(15, resultWithoutFirstRow.Count);
         Assert.Equal(16, resultWithFirstRow.Count);
@@ -3812,11 +3802,11 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         // create
         using (var stream = File.Create(path))
         {
-            stream.SaveAs(values, excelType: ExcelType.CSV, configuration: config);
+             _exporter.ExportCsv(stream, values, configuration: config);
         }
 
         // read
-        var getRowsInfo = MiniExcel.Query<Issue507V01>(path, excelType: ExcelType.CSV, configuration: config).ToArray();
+        var getRowsInfo =  _importer.QueryCsv<Issue507V01>(path, configuration: config).ToArray();
 
         Assert.Equal(values.Length, getRowsInfo.Length);
 
@@ -3859,11 +3849,11 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         // create
         using (var stream = File.Create(path))
         {
-            stream.SaveAs(values, excelType: ExcelType.CSV, configuration: config);
+             _exporter.ExportCsv(stream, values, true, config);
         }
 
         // read
-        var getRowsInfo = MiniExcel.Query<Issue507V02>(path, excelType: ExcelType.CSV, configuration: config).ToArray();
+        var getRowsInfo =  _importer.QueryCsv<Issue507V02>(path, configuration: config).ToArray();
         Assert.Equal(values.Length, getRowsInfo.Length);
 
         File.Delete(path);
@@ -3885,7 +3875,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         using var stream = new MemoryStream(Encoding.UTF8.GetBytes("A,B,C\n\"r1a: no end quote,r1b,r1c"));
 
         // read
-        var getRowsInfo = stream.Query(excelType: ExcelType.CSV, configuration: config).ToArray();
+        var getRowsInfo =  _importer.QueryCsv(stream, configuration: config).ToArray();
         Assert.Equal(2, getRowsInfo.Length);
     }
 
@@ -3933,7 +3923,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         );
 
         const string templateFileName = "../../../../../samples/xlsx/TestIssue606_Template.xlsx";
-        MiniExcel.SaveAsByTemplate(path, Path.GetFullPath(templateFileName), value);
+         _templater.ApplyXlsxTemplate(path, Path.GetFullPath(templateFileName), value);
         File.Delete(path);
     }
 
@@ -3954,7 +3944,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
 
         using var path = AutoDeletingPath.Create();
         var value = new[] { new { long2 = "1550432695793487872" } };
-        var rowsWritten = MiniExcel.SaveAs(path.ToString(), value, configuration: config);
+        var rowsWritten =  _exporter.ExportXlsx(path.ToString(), value, configuration: config);
 
         Assert.Single(rowsWritten);
         Assert.Equal(1, rowsWritten[0]);
@@ -3990,7 +3980,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             string.Concat(nameof(MiniExcelIssueTests), "_", nameof(Issue632_1), ".xlsx")
         );
 
-        MiniExcel.SaveAs(path, values, excelType: ExcelType.XLSX, configuration: config, overwriteFile: true);
+         _exporter.ExportXlsx(path, values, configuration: config, overwriteFile: true);
         File.Delete(path);
     }
 
@@ -4015,7 +4005,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
 
         using var memoryStream = new MemoryStream();
         var testData = GetTestData();
-        var rowsWritten = memoryStream.SaveAs(testData, configuration: new OpenXmlConfiguration
+        var rowsWritten =  _exporter.ExportXlsx(memoryStream, testData, configuration: new OpenXmlConfiguration
         {
             FastMode = true
         });
@@ -4024,7 +4014,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
 
         memoryStream.Position = 0;
 
-        var queryData = memoryStream.Query<Issue658TestData>().ToList();
+        var queryData =  _importer.QueryXlsx<Issue658TestData>(memoryStream).ToList();
 
         Assert.Equal(testData.Count(), queryData.Count);
 
@@ -4053,14 +4043,14 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
 
         using var memoryStream = new MemoryStream();
         var testData = GetTestData();
-        await memoryStream.SaveAsAsync(testData, configuration: new OpenXmlConfiguration
+        await  _exporter.ExportXlsxAsync(memoryStream, testData, configuration: new OpenXmlConfiguration
         {
             FastMode = true,
         });
 
         memoryStream.Position = 0;
 
-        var queryData = (memoryStream.QueryAsync<Issue658TestData>().ToBlockingEnumerable()).ToList();
+        var queryData =  _importer.QueryXlsxAsync<Issue658TestData>(memoryStream).ToBlockingEnumerable().ToList();
 
         Assert.Equal(testData.Count(), queryData.Count);
 
@@ -4078,10 +4068,10 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     {
         var path = PathHelper.GetFile("xlsx/TestIssue686.xlsx");
         Assert.Throws<InvalidDataException>(() =>
-            MiniExcel.QueryRange(path, useHeaderRow: false, startCell: "ZZFF10", endCell: "ZZFF11").First());
+             _importer.QueryRangeXlsx(path, useHeaderRow: false, startCell: "ZZFF10", endCell: "ZZFF11").First());
 
         Assert.Throws<InvalidDataException>(() =>
-            MiniExcel.QueryRange(path, useHeaderRow: false, startCell: "ZZFF@@10", endCell: "ZZFF@@11").First());
+             _importer.QueryRangeXlsx(path, useHeaderRow: false, startCell: "ZZFF@@10", endCell: "ZZFF@@11").First());
     }
 
     [Fact]
@@ -4091,9 +4081,9 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         using var path2 = AutoDeletingPath.Create();
 
         List<Dictionary<string, object>> data = [new() { ["First"] = 1, ["Second"] = 2 }];
-        Assert.Throws<ArgumentException>(() => MiniExcel.SaveAs(path1.ToString(), data, sheetName: "Some Really Looooooooooong Sheet Name"));
-        MiniExcel.SaveAs(path2.ToString(), new List<Dictionary<string, object>>());
-        Assert.Throws<ArgumentException>(() => MiniExcel.Insert(path2.ToString(), data, sheetName: "Some Other Very Looooooong Sheet Name"));
+        Assert.Throws<ArgumentException>(() =>  _exporter.ExportXlsx(path1.ToString(), data, sheetName: "Some Really Looooooooooong Sheet Name"));
+         _exporter.ExportXlsx(path2.ToString(), new List<Dictionary<string, object>>());
+        Assert.Throws<ArgumentException>(() =>  _exporter.InsertXlsxSheet(path2.ToString(), data, sheetName: "Some Other Very Looooooong Sheet Name"));
     }
 
     private class Issue697
@@ -4107,8 +4097,8 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     public void Test_Issue_697_EmptyRowsStronglyTypedQuery()
     {
         const string path = "../../../../../samples/xlsx/TestIssue697.xlsx";
-        var rowsIgnoreEmpty = MiniExcel.Query<Issue697>(path, configuration: new OpenXmlConfiguration { IgnoreEmptyRows = true }).ToList();
-        var rowsCountEmpty = MiniExcel.Query<Issue697>(path).ToList();
+        var rowsIgnoreEmpty =  _importer.QueryXlsx<Issue697>(path, configuration: new OpenXmlConfiguration { IgnoreEmptyRows = true }).ToList();
+        var rowsCountEmpty =  _importer.QueryXlsx<Issue697>(path).ToList();
         Assert.Equal(4, rowsIgnoreEmpty.Count);
         Assert.Equal(5, rowsCountEmpty.Count);
     }
@@ -4118,13 +4108,13 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     {
         var values = new[] { new { Column1 = "MiniExcel", Column2 = 1, Column3 = "Test" } };
         using var memoryStream = new MemoryStream();
-        memoryStream.SaveAs(values, configuration: new OpenXmlConfiguration
+         _exporter.ExportXlsx(memoryStream, values, configuration: new OpenXmlConfiguration
         {
             FastMode = true
         });
 
         memoryStream.Position = 0;
-        using var dataReader = memoryStream.GetReader(useHeaderRow: false);
+        using var dataReader =  _importer.GetXlsxDataReader(memoryStream, useHeaderRow: false);
 
         dataReader.Read();
         for (int i = 0; i < dataReader.FieldCount; i++)
@@ -4143,9 +4133,9 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         const string path2 = "../../../../../samples/xlsx/TestIssue732_2.xlsx";
         const string path3 = "../../../../../samples/xlsx/TestIssue732_3.xlsx";
 
-        var info1 = MiniExcel.GetSheetInformations(path1);
-        var info2 = MiniExcel.GetSheetInformations(path2);
-        var info3 = MiniExcel.GetSheetInformations(path3);
+        var info1 =  _importer.GetSheetInformations(path1);
+        var info2 =  _importer.GetSheetInformations(path2);
+        var info3 =  _importer.GetSheetInformations(path3);
 
         Assert.Equal(0u, info1.SingleOrDefault(x => x.Active)?.Index); // first sheet is active
         Assert.Equal(1u, info2.SingleOrDefault(x => x.Active)?.Index); // second sheet is active
@@ -4164,9 +4154,9 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             ["list"] = Enumerable.Range(0, 10_000)
                 .Select(_ => new { value1 = Guid.NewGuid(), value2 = Guid.NewGuid(), })
         };
-        MiniExcel.SaveAsByTemplate(path.ToString(), templatePath, data);
+         _templater.ApplyXlsxTemplate(path.ToString(), templatePath, data);
 
-        var rows = MiniExcel.Query(path.ToString())
+        var rows =  _importer.QueryXlsx(path.ToString())
             .Skip(1453)
             .Take(2)
             .ToList();
@@ -4196,7 +4186,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         {
             ["list"] = list
         };
-        MiniExcel.SaveAsByTemplate(path.ToString(), templatePath, data);
+         _templater.ApplyXlsxTemplate(path.ToString(), templatePath, data);
 
         using var stream = File.OpenRead(path.ToString());
         using var workbook = new XSSFWorkbook(stream);
@@ -4225,7 +4215,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     public void TestIssue763()
     {
         var path = PathHelper.GetFile("xlsx/TestIssue763.xlsx");
-        var rows = MiniExcel.QueryRange(path, startCell: "A3", endCell: "J3").ToArray();
+        var rows =  _importer.QueryRangeXlsx(path, startCell: "A3", endCell: "J3").ToArray();
         Assert.Equal("A3", rows[0].A);
         Assert.Equal(null, rows[0].J);
     }
@@ -4254,8 +4244,8 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             ["list"] = list
         };
 
-        MiniExcel.SaveAsByTemplate(path.ToString(), templatePath, data);
-        var rows = MiniExcel.Query(path.ToString(), startCell: "A16").ToList();
+         _templater.ApplyXlsxTemplate(path.ToString(), templatePath, data);
+        var rows =  _importer.QueryXlsx(path.ToString(), startCell: "A16").ToList();
 
         Assert.Equal(list[0].value1.ToString(), rows[0].A.ToString());
         Assert.Equal(list[1].value1.ToString(), rows[1].A.ToString());
@@ -4290,7 +4280,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             }
         ];
 
-        MiniExcel.AddPicture(path.FilePath, images);
+         _exporter.AddPictureXlsx(path.FilePath, images);
     }
 
     /// <summary>
@@ -4318,8 +4308,8 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             list12 = GetEnumerable()
         };
 
-        MiniExcel.SaveAsByTemplate(path.FilePath, template, value);
-        var rows = MiniExcel.Query(path.FilePath).ToList();
+         _templater.ApplyXlsxTemplate(path.FilePath, template, value);
+        var rows =  _importer.QueryXlsx(path.FilePath).ToList();
 
         Assert.Equal("2025-1", rows[2].B);
         Assert.Equal(null, rows[3].B);
@@ -4337,7 +4327,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     public void TestIssue772()
     {
         var path = PathHelper.GetFile("xlsx/TestIssue772.xlsx");
-        var rows = MiniExcel.Query(path, sheetName: "Supply plan(daily)", startCell: "A1")
+        var rows =  _importer.QueryXlsx(path, sheetName: "Supply plan(daily)", startCell: "A1")
             .Cast<IDictionary<string, object>>()
             .ToArray();
 
@@ -4361,8 +4351,8 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         var fill = new { t = a };
         using var path = AutoDeletingPath.Create();
 
-        MiniExcel.SaveAsByTemplate(path.FilePath, templatePath, fill);
-        var rows = MiniExcel.Query(path.FilePath).ToList();
+         _templater.ApplyXlsxTemplate(path.FilePath, templatePath, fill);
+        var rows =  _importer.QueryXlsx(path.FilePath).ToList();
 
         Assert.Equal("H1", rows[4].AF);
         Assert.Equal("c3", rows[6].AA);
@@ -4381,7 +4371,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             new Dictionary<string, object> { {"no","2"} },
             new Dictionary<string, object> { {"no","3"} },
         };
-        MiniExcel.SaveAs(path, value);
+         _exporter.ExportXlsx(path, value);
 
         var xml = Helpers.GetZipFileContent(path.ToString(), "xl/worksheets/sheet1.xml");
 
@@ -4426,11 +4416,12 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
            }
         ];
 
-        MiniExcel.AddPicture(path.FilePath, images);
+         _exporter.AddPictureXlsx(path.FilePath, images);
 
         using var package = new ExcelPackage(new FileInfo(path.FilePath));
-		// Check picture in the first sheet (C3)  
-		var firstSheet = package.Workbook.Worksheets[0];
+
+        // Check picture in the first sheet (C3)  
+        var firstSheet = package.Workbook.Worksheets[0];
         var pictureInC3 = firstSheet.Drawings.OfType<OfficeOpenXml.Drawing.ExcelPicture>().FirstOrDefault(p => p.From.Column == 2 && p.From.Row == 2);
         Assert.NotNull(pictureInC3);
 
@@ -4478,10 +4469,9 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
                }
             ];
 
-            MiniExcel.AddPicture(path.FilePath, images);
-			//ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+             _exporter.AddPictureXlsx(path.FilePath, images);
 
-			using (var package = new ExcelPackage(new FileInfo(path.FilePath)))
+            using (var package = new ExcelPackage(new FileInfo(path.FilePath)))
             {
                 // Check picture in the first sheet (C3)  
                 var firstSheet = package.Workbook.Worksheets[0];
@@ -4538,10 +4528,9 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
                 }
             ];
 
-            MiniExcel.AddPicture(path.FilePath, images);
-			//ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+             _exporter.AddPictureXlsx(path.FilePath, images);
 
-			using var package = new ExcelPackage(new FileInfo(path.FilePath));
+            using var package = new ExcelPackage(new FileInfo(path.FilePath));
             
             // Check picture in the first sheet (C3)  
             var firstSheet = package.Workbook.Worksheets[0];
@@ -4591,7 +4580,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
                 }
             ];
 
-            MiniExcel.AddPicture(path.FilePath, images);
+             _exporter.AddPictureXlsx(path.FilePath, images);
 
             using var package = new ExcelPackage(new FileInfo(path.FilePath));
             // Check picture in the first sheet (C3)  
@@ -4640,7 +4629,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     public void TestIssue809()
     {
         var path = PathHelper.GetFile("xlsx/TestIssue809.xlsx");
-        var rows = MiniExcel.Query(path).ToList();
+        var rows =  _importer.QueryXlsx(path).ToList();
 
         Assert.Equal(3, rows.Count);
         Assert.Equal(null, rows[0].A);

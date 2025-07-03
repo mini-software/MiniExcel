@@ -4,7 +4,7 @@ using System.Xml;
 using System.Xml.Linq;
 using System.Xml.XPath;
 
-namespace MiniExcelLibs.Tests.Utils;
+namespace MiniExcelLib.Tests.Utils;
 
 internal static class Helpers
 {

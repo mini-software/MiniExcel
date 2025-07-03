@@ -7,6 +7,11 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <LangVersion>13</LangVersion>
     </PropertyGroup>
+    
+    <PropertyGroup>
+        <SignAssembly>True</SignAssembly>
+        <AssemblyOriginatorKeyFile>..\miniexcel.snk</AssemblyOriginatorKeyFile>
+    </PropertyGroup>
 
     <ItemGroup>
         <PackageReference Include="Zomp.SyncMethodGenerator" Version="1.4.30" PrivateAssets="all" IncludeAssets="runtime; build; native; contentfiles; analyzers; buildtransitive"/>
@@ -15,7 +20,7 @@
     <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
         <PackageReference Include="Microsoft.Bcl.Memory" Version="9.0.0"/>
         <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="9.0.0"/>
-        <PackageReference Include="System.IO.Compression" />
+        <PackageReference Include="System.IO.Compression" Version="4.3.0" />
     </ItemGroup>
 
     <ItemGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">

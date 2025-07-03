@@ -2,23 +2,25 @@
 using System.Data.SQLite;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
+using MiniExcelLib.Core;
 using MiniExcelLib.Core.OpenXml;
 using MiniExcelLib.Core.OpenXml.Models;
 using MiniExcelLib.Tests.Utils;
-using Exporter = MiniExcelLib.MiniExcel.Exporter;
 using Xunit;
 
 namespace MiniExcelLib.Tests;
 
 public class MiniExcelAutoAdjustWidthTests
 {
+    private readonly MiniExcelExporter _exporter = MiniExcel.GetExporter();
+    
     [Fact]
     public async Task AutoAdjustWidthThrowsExceptionWithoutFastMode_Async()
     {
         using var file = AutoDeletingPath.Create();
         var path = file.ToString();
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() => Exporter.ExportXlsxAsync(path, AutoAdjustTestParameters.GetDictionaryTestData(), configuration: new OpenXmlConfiguration
+        await Assert.ThrowsAsync<InvalidOperationException>(() => _exporter.ExportXlsxAsync(path, AutoAdjustTestParameters.GetDictionaryTestData(), configuration: new OpenXmlConfiguration
         {
             EnableAutoWidth = true,
         }));
@@ -30,7 +32,7 @@ public class MiniExcelAutoAdjustWidthTests
         using var file = AutoDeletingPath.Create();
         var path = file.ToString();
 
-        Assert.Throws<InvalidOperationException>(() => Exporter.ExportXlsx(path, AutoAdjustTestParameters.GetDictionaryTestData(), configuration: new OpenXmlConfiguration
+        Assert.Throws<InvalidOperationException>(() => _exporter.ExportXlsx(path, AutoAdjustTestParameters.GetDictionaryTestData(), configuration: new OpenXmlConfiguration
         {
             EnableAutoWidth = true,
         }));
@@ -43,7 +45,7 @@ public class MiniExcelAutoAdjustWidthTests
         var path = file.ToString();
 
         var configuration = AutoAdjustTestParameters.GetConfiguration();
-        await Exporter.ExportXlsxAsync(path, AutoAdjustTestParameters.GetDictionaryTestData(), configuration: configuration);
+        await _exporter.ExportXlsxAsync(path, AutoAdjustTestParameters.GetDictionaryTestData(), configuration: configuration);
 
         AssertExpectedWidth(path, configuration);
     }
@@ -55,7 +57,7 @@ public class MiniExcelAutoAdjustWidthTests
         var path = file.ToString();
 
         var configuration = AutoAdjustTestParameters.GetConfiguration();
-        Exporter.ExportXlsx(path, AutoAdjustTestParameters.GetDictionaryTestData(), configuration: configuration);
+        _exporter.ExportXlsx(path, AutoAdjustTestParameters.GetDictionaryTestData(), configuration: configuration);
 
         AssertExpectedWidth(path, configuration);
     }
@@ -73,7 +75,7 @@ public class MiniExcelAutoAdjustWidthTests
             await using var command = new SQLiteCommand(Db.GenerateDummyQuery(AutoAdjustTestParameters.GetDictionaryTestData()), connection);
             connection.Open();
             await using var reader = command.ExecuteReader();
-            await Exporter.ExportXlsxAsync(path, reader, configuration: configuration);
+            await _exporter.ExportXlsxAsync(path, reader, configuration: configuration);
         }
 
         AssertExpectedWidth(path, configuration);
@@ -92,7 +94,7 @@ public class MiniExcelAutoAdjustWidthTests
             using var command = new SQLiteCommand(Db.GenerateDummyQuery(AutoAdjustTestParameters.GetDictionaryTestData()), connection);
             connection.Open();
             using var reader = command.ExecuteReader();
-            Exporter.ExportXlsx(path, reader, configuration: configuration);
+            _exporter.ExportXlsx(path, reader, configuration: configuration);
         }
 
         AssertExpectedWidth(path, configuration);
@@ -117,7 +119,7 @@ public class MiniExcelAutoAdjustWidthTests
         }
 
         var configuration = AutoAdjustTestParameters.GetConfiguration();
-        await Exporter.ExportXlsxAsync(path, table, configuration: configuration);
+        await _exporter.ExportXlsxAsync(path, table, configuration: configuration);
 
         AssertExpectedWidth(path, configuration);
     }
@@ -140,7 +142,7 @@ public class MiniExcelAutoAdjustWidthTests
         }
 
         var configuration = AutoAdjustTestParameters.GetConfiguration();
-        Exporter.ExportXlsx(path, table, configuration: configuration);
+        _exporter.ExportXlsx(path, table, configuration: configuration);
 
         AssertExpectedWidth(path, configuration);
     }

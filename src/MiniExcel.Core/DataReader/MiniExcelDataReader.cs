@@ -3,6 +3,7 @@
 public class MiniExcelDataReader : MiniExcelDataReaderBase
 {
     private readonly IEnumerator<IDictionary<string, object?>> _source;
+    
     private readonly Stream _stream;
     private readonly List<string> _keys;
     private readonly int _fieldCount;
@@ -27,6 +28,7 @@ public class MiniExcelDataReader : MiniExcelDataReaderBase
 
     public static MiniExcelDataReader Create(Stream? stream, IEnumerable<IDictionary<string, object?>> values) => new(stream, values);
     
+
     /// <inheritdoc/>
     public override object? GetValue(int i)
     {
@@ -50,6 +52,7 @@ public class MiniExcelDataReader : MiniExcelDataReaderBase
             _isFirst = false;
             return true;
         }
+        
         return _source.MoveNext();
     }
 

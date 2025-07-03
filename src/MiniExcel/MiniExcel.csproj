@@ -2,8 +2,6 @@
 
   <PropertyGroup>
     <RootNamespace>MiniExcelLib</RootNamespace>
-    <SignAssembly>True</SignAssembly>
-    <AssemblyOriginatorKeyFile>..\miniexcel.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -34,8 +32,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\MiniExcelLib.Core\MiniExcelLib.Core.csproj" />
-    <ProjectReference Include="..\MiniExcelLib.Csv\MiniExcelLib.Csv.csproj" />
+    <ProjectReference Include="..\MiniExcel.Core\MiniExcel.Core.csproj" />
+    <ProjectReference Include="..\MiniExcel.Csv\MiniExcel.Csv.csproj" />
   </ItemGroup>
 
 </Project>

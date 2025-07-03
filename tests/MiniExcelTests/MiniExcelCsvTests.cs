@@ -2,18 +2,21 @@
 using System.Globalization;
 using System.Text;
 using CsvHelper;
+using MiniExcelLib.Core;
 using MiniExcelLib.Core.Attributes;
 using MiniExcelLib.Core.Exceptions;
 using MiniExcelLib.Csv;
+using MiniExcelLib.Csv.MiniExcelExtensions;
 using MiniExcelLib.Tests.Utils;
-using Importer = MiniExcelLib.MiniExcel.Importer;
-using Exporter = MiniExcelLib.MiniExcel.Exporter;
 using Xunit;
 
 namespace MiniExcelLib.Tests;
 
 public class MiniExcelCsvTests
 {
+    private readonly MiniExcelImporter _importer =  MiniExcel.GetImporter();
+    private readonly MiniExcelExporter _exporter =  MiniExcel.GetExporter();
+    
     [Fact]
     public void gb2312_Encoding_Read_Test()
     {
@@ -23,7 +26,7 @@ public class MiniExcelCsvTests
         {
             StreamReaderFunc = stream => new StreamReader(stream, encoding: Encoding.GetEncoding("gb2312"))
         };
-        var rows = Importer.QueryCsv(path, true, configuration: config).ToList();
+        var rows = _importer.QueryCsv(path, true, configuration: config).ToList();
         Assert.Equal("世界你好", rows[0].栏位1);
     }
 
@@ -51,7 +54,7 @@ public class MiniExcelCsvTests
                 { "d", new DateTime(2021, 1, 2) }
             }
         ];
-        var rowsWritten = Exporter.ExportCsv(path, values, configuration: new CsvConfiguration { Seperator = ';' });
+        var rowsWritten = _exporter.ExportCsv(path, values, configuration: new CsvConfiguration { Seperator = ';' });
         Assert.Equal(2, rowsWritten[0]);
             
         const string expected =
@@ -88,7 +91,7 @@ public class MiniExcelCsvTests
                 { "d", new DateTime(2021, 1, 2) }
             }
         ];
-        var rowsWritten = Exporter.ExportCsv(path, values, configuration: new CsvConfiguration { QuoteWhitespaces = false });
+        var rowsWritten = _exporter.ExportCsv(path, values, configuration: new CsvConfiguration { QuoteWhitespaces = false });
         Assert.Equal(2, rowsWritten[0]);
             
         const string expected =
@@ -125,7 +128,7 @@ public class MiniExcelCsvTests
             }
         ];
         
-        Exporter.ExportCsv(path, values, configuration: new CsvConfiguration { AlwaysQuote = true });
+        _exporter.ExportCsv(path, values, configuration: new CsvConfiguration { AlwaysQuote = true });
         const string expected = 
             """"
             "a","b","c","d"
@@ -153,7 +156,7 @@ public class MiniExcelCsvTests
             }
 
         ];
-        var rowsWritten = Exporter.ExportCsv(path, values, configuration: new CsvConfiguration());
+        var rowsWritten = _exporter.ExportCsv(path, values, configuration: new CsvConfiguration());
         Assert.Equal(1, rowsWritten[0]);
             
         const string expected = "a,b,c,d\r\n\"potato,banana\",\"text\ntest\",\"text\rpotato\",\"2021-01-01 00:00:00\"\r\n";
@@ -166,7 +169,7 @@ public class MiniExcelCsvTests
         {
             using var path = AutoDeletingPath.Create(ExcelType.Csv);
             var table = new List<Dictionary<string, object>>();
-            Exporter.ExportCsv(path.ToString(), table);
+            _exporter.ExportCsv(path.ToString(), table);
             Assert.Equal("\r\n", File.ReadAllText(path.ToString()));
         }
 
@@ -174,7 +177,7 @@ public class MiniExcelCsvTests
             using var path = AutoDeletingPath.Create(ExcelType.Csv);
 
             var table = new Dictionary<string, object>(); //TODO
-            Assert.Throws<NotSupportedException>(() => Exporter.ExportCsv(path.ToString(), table));
+            Assert.Throws<NotSupportedException>(() => _exporter.ExportCsv(path.ToString(), table));
         }
 
         {
@@ -198,7 +201,7 @@ public class MiniExcelCsvTests
                 }
             ];
             
-            var rowsWritten = Exporter.ExportCsv(path.ToString(), values);
+            var rowsWritten = _exporter.ExportCsv(path.ToString(), values);
             Assert.Equal(2, rowsWritten[0]);
 
             using var reader = new StreamReader(path.ToString());
@@ -235,7 +238,7 @@ public class MiniExcelCsvTests
                     { 4, new DateTime(2021, 1, 2) }
                 }
             ];
-            Exporter.ExportCsv(path.ToString(), values);
+            _exporter.ExportCsv(path.ToString(), values);
 
             using (var reader = new StreamReader(path.ToString()))
             using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
@@ -266,7 +269,7 @@ public class MiniExcelCsvTests
             using var path = AutoDeletingPath.Create(ExcelType.Csv);
             
             var table = new DataTable();
-            Exporter.ExportCsv(path.ToString(), table);
+            _exporter.ExportCsv(path.ToString(), table);
 
             var text = File.ReadAllText(path.ToString());
             Assert.Equal("\r\n", text);
@@ -285,7 +288,7 @@ public class MiniExcelCsvTests
                 table.Rows.Add("<test>Hello World</test>", -1234567890, false, new DateTime(2021, 1, 2));
             }
 
-            var rowsWritten = Exporter.ExportCsv(path.ToString(), table);
+            var rowsWritten = _exporter.ExportCsv(path.ToString(), table);
             Assert.Equal(2, rowsWritten[0]);
 
             using (var reader = new StreamReader(path.ToString()))
@@ -327,13 +330,13 @@ public class MiniExcelCsvTests
         var path = file.ToString();
             
         var input = new[] { new { A = "Test1", B = "Test2" } };
-        Exporter.ExportCsv(path, input);
+        _exporter.ExportCsv(path, input);
 
         var texts = File.ReadAllLines(path);
         Assert.Equal("A,B", texts[0]);
         Assert.Equal("Test1,Test2", texts[1]);
 
-        var rows = Importer.QueryCsv(path).ToList();
+        var rows = _importer.QueryCsv(path).ToList();
         Assert.Equal("A", rows[0].A);
         Assert.Equal("B", rows[0].B);
         Assert.Equal("Test1", rows[1].A);
@@ -352,7 +355,7 @@ public class MiniExcelCsvTests
         using var file = AutoDeletingPath.Create(ExcelType.Csv);
         var path = file.ToString();
 
-        Exporter.ExportCsv(path, new[] 
+        _exporter.ExportCsv(path, new[] 
         {
             new { c1 = "A1", c2 = "B1"},
             new { c1 = "A2", c2 = "B2"},
@@ -362,7 +365,7 @@ public class MiniExcelCsvTests
         
         using (var stream = File.OpenRead(path))
         {
-            var rows = Importer.QueryCsv(stream, useHeaderRow: true).ToList();
+            var rows = _importer.QueryCsv(stream, useHeaderRow: true).ToList();
             Assert.Equal("A1", rows[0].c1);
             Assert.Equal("B1", rows[0].c2);
             Assert.Equal("A2", rows[1].c1);
@@ -370,7 +373,7 @@ public class MiniExcelCsvTests
         }
 
         {
-            var rows = Importer.QueryCsv(path, useHeaderRow: true).ToList();
+            var rows = _importer.QueryCsv(path, useHeaderRow: true).ToList();
             Assert.Equal("A1", rows[0].c1);
             Assert.Equal("B1", rows[0].c2);
             Assert.Equal("A2", rows[1].c1);
@@ -384,7 +387,7 @@ public class MiniExcelCsvTests
         using var file = AutoDeletingPath.Create(ExcelType.Csv);
         var path = file.ToString();
 
-        Exporter.ExportCsv(path, new[] 
+        _exporter.ExportCsv(path, new[] 
         {
             new { c1 = "A1", c2 = "B1"},
             new { c1 = "A2", c2 = "B2"},
@@ -392,7 +395,7 @@ public class MiniExcelCsvTests
 
         using (var stream = File.OpenRead(path))
         {
-            var rows = Importer.QueryCsv<Test>(stream).ToList();
+            var rows = _importer.QueryCsv<Test>(stream).ToList();
             Assert.Equal("A1", rows[0].c1);
             Assert.Equal("B1", rows[0].c2);
             Assert.Equal("A2", rows[1].c1);
@@ -400,7 +403,7 @@ public class MiniExcelCsvTests
         }
 
         {
-            var rows = Importer.QueryCsv<Test>(path).ToList();
+            var rows = _importer.QueryCsv<Test>(path).ToList();
             Assert.Equal("A1", rows[0].c1);
             Assert.Equal("B1", rows[0].c2);
             Assert.Equal("A2", rows[1].c1);
@@ -418,7 +421,7 @@ public class MiniExcelCsvTests
 
         using (var stream = File.OpenRead(path))
         {
-            var exception = Assert.Throws<MiniExcelColumnNotFoundException>(() => Importer.QueryCsv<Test>(stream).ToList());
+            var exception = Assert.Throws<MiniExcelColumnNotFoundException>(() => _importer.QueryCsv<Test>(stream).ToList());
 
             Assert.Equal("c2", exception.ColumnName);
             Assert.Equal(2, exception.RowIndex);
@@ -428,7 +431,7 @@ public class MiniExcelCsvTests
         }
 
         {
-            var exception = Assert.Throws<MiniExcelColumnNotFoundException>(() => Importer.QueryCsv<Test>(path).ToList());
+            var exception = Assert.Throws<MiniExcelColumnNotFoundException>(() => _importer.QueryCsv<Test>(path).ToList());
 
             Assert.Equal("c2", exception.ColumnName);
             Assert.Equal(2, exception.RowIndex);
@@ -447,7 +450,7 @@ public class MiniExcelCsvTests
         File.WriteAllLines(path, ["col1,col2", "v1"]);
         using (var stream = File.OpenRead(path))
         {
-            var exception = Assert.Throws<MiniExcelColumnNotFoundException>(() => Importer.QueryCsv<TestWithAlias>(stream).ToList());
+            var exception = Assert.Throws<MiniExcelColumnNotFoundException>(() => _importer.QueryCsv<TestWithAlias>(stream).ToList());
 
             Assert.Equal("c2", exception.ColumnName);
             Assert.Equal(2, exception.RowIndex);
@@ -457,7 +460,7 @@ public class MiniExcelCsvTests
         }
 
         {
-            var exception = Assert.Throws<MiniExcelColumnNotFoundException>(() => Importer.QueryCsv<TestWithAlias>(path).ToList());
+            var exception = Assert.Throws<MiniExcelColumnNotFoundException>(() => _importer.QueryCsv<TestWithAlias>(path).ToList());
 
             Assert.Equal("c2", exception.ColumnName);
             Assert.Equal(2, exception.RowIndex);
@@ -504,7 +507,7 @@ public class MiniExcelCsvTests
         using (var stream = File.Create(path))
         {
             IEnumerable<object> records = [new { v1 = value, v2 = value }];
-            var rowsWritten = Exporter.ExportCsv(stream, records);
+            var rowsWritten = MiniExcel.GetExporter().ExportCsv(stream, records);
             Assert.Equal(1, rowsWritten[0]);
         }
 
@@ -525,7 +528,7 @@ public class MiniExcelCsvTests
                 new { ID=1,Name ="Jack",InDate=new DateTime(2021,01,03)},
                 new { ID=2,Name ="Henry",InDate=new DateTime(2020,05,03)},
             };
-            await Exporter.ExportCsvAsync(path, value);
+            await _exporter.ExportCsvAsync(path, value);
             var content = await File.ReadAllTextAsync(path);
             Assert.Equal(
                 """
@@ -537,7 +540,7 @@ public class MiniExcelCsvTests
         }
         {
             var value = new { ID = 3, Name = "Mike", InDate = new DateTime(2021, 04, 23) };
-            await Exporter.AppendToCsvAsync(path, value);
+            await _exporter.AppendToCsvAsync(path, value);
             var content = await File.ReadAllTextAsync(path);
             Assert.Equal(
                 """
@@ -555,7 +558,7 @@ public class MiniExcelCsvTests
                 new { ID=5,Name ="Gloria",InDate=new DateTime(2022,05,03)},
             };
 
-            await Exporter.AppendToCsvAsync(path, value);
+            await _exporter.AppendToCsvAsync(path, value);
             var content = await File.ReadAllTextAsync(path);
             Assert.Equal(
                 """

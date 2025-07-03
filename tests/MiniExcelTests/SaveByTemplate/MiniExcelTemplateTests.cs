@@ -1,19 +1,21 @@
 using System.Data;
 using System.IO.Compression;
 using Dapper;
+using MiniExcelLib.Core;
 using MiniExcelLib.Core.Enums;
 using MiniExcelLib.Core.OpenXml.Picture;
 using MiniExcelLib.Tests.Utils;
 using OfficeOpenXml;
 using OfficeOpenXml.Drawing;
-using Importer = MiniExcelLib.MiniExcel.Importer;
-using Templater = MiniExcelLib.MiniExcel.Templater;
 using Xunit;
 
 namespace MiniExcelLib.Tests.SaveByTemplate;
 
 public class MiniExcelTemplateTests
 {
+    private readonly MiniExcelTemplater _templater =  MiniExcel.GetTemplater();
+    private readonly MiniExcelImporter _importer =  MiniExcel.GetImporter();
+    
     [Fact]
     public void TestImageType()
     {
@@ -61,7 +63,7 @@ public class MiniExcelTemplateTests
             };
 
             // Act
-            MiniExcel.Exporter.AddPictureXlsx(path.ToString(), pictures);
+            MiniExcel.GetExporter().AddPictureXlsx(path.ToString(), pictures);
 
             // Assert
             using var zip = ZipFile.OpenRead(path.FilePath);
@@ -118,9 +120,9 @@ public class MiniExcelTemplateTests
                 ["managers"] = managers,
                 ["employees"] = employees
             };
-            Templater.ApplyXlsxTemplate(path.ToString(), templatePath, value);
+            _templater.ApplyXlsxTemplate(path.ToString(), templatePath, value);
             
-            var rows = Importer.QueryXlsx(path.ToString()).ToList();
+            var rows = _importer.QueryXlsx(path.ToString()).ToList();
             var dimension = Helpers.GetFirstSheetDimensionRefValue(path.ToString());
             Assert.Equal("A1:C5", dimension);
         }
@@ -143,9 +145,9 @@ public class MiniExcelTemplateTests
                 ["managers"] = managers,
                 ["employees"] = employees
             };
-            Templater.ApplyXlsxTemplate(path.ToString(), templatePath, value);
+            _templater.ApplyXlsxTemplate(path.ToString(), templatePath, value);
             
-            var rows = Importer.QueryXlsx(path.ToString()).ToList();
+            var rows = _importer.QueryXlsx(path.ToString()).ToList();
             var dimension = Helpers.GetFirstSheetDimensionRefValue(path.ToString());
             Assert.Equal("A1:C5", dimension);
         }
@@ -178,10 +180,10 @@ public class MiniExcelTemplateTests
             ["managers"] = managers,
             ["employees"] = employees
         };
-        Templater.ApplyXlsxTemplate(path, templatePath, value);
+        _templater.ApplyXlsxTemplate(path, templatePath, value);
 
         {
-            var rows = Importer.QueryXlsx(path).ToList();
+            var rows = _importer.QueryXlsx(path).ToList();
 
             var dimension = Helpers.GetFirstSheetDimensionRefValue(path);
             Assert.Equal("A1:C9", dimension);
@@ -206,7 +208,7 @@ public class MiniExcelTemplateTests
         }
 
         {
-            var rows = Importer.QueryXlsx(path, sheetName: "Sheet2").ToList();
+            var rows = _importer.QueryXlsx(path, sheetName: "Sheet2").ToList();
             Assert.Equal(9, rows.Count);
 
             Assert.Equal("FooCompany", rows[0].A);
@@ -245,10 +247,10 @@ public class MiniExcelTemplateTests
             ["managers"] = connection.Query("select 'Jack' name,'HR' department union all select 'Loan','IT'"),
             ["employees"] = connection.Query("select 'Wade' name,'HR' department union all select 'Felix','HR' union all select 'Eric','IT' union all select 'Keaton','IT'")
         };
-        Templater.ApplyXlsxTemplate(path, templatePath, value);
+        _templater.ApplyXlsxTemplate(path, templatePath, value);
 
         {
-            var rows = Importer.QueryXlsx(path).ToList();
+            var rows = _importer.QueryXlsx(path).ToList();
             Assert.Equal(9, rows.Count);
 
             Assert.Equal("FooCompany", rows[0].A);
@@ -272,7 +274,7 @@ public class MiniExcelTemplateTests
         }
 
         {
-            var rows = Importer.QueryXlsx(path, sheetName: "Sheet2").ToList();
+            var rows = _importer.QueryXlsx(path, sheetName: "Sheet2").ToList();
             Assert.Equal(9, rows.Count);
 
             Assert.Equal("FooCompany", rows[0].A);
@@ -320,10 +322,10 @@ public class MiniExcelTemplateTests
                 new Dictionary<string, object> { ["name"] = "Keaton", ["department"] = "IT" }
             }
         };
-        Templater.ApplyXlsxTemplate(path, templatePath, value);
+        _templater.ApplyXlsxTemplate(path, templatePath, value);
 
         {
-            var rows = Importer.QueryXlsx(path).ToList();
+            var rows = _importer.QueryXlsx(path).ToList();
             Assert.Equal(9, rows.Count);
 
             Assert.Equal("FooCompany", rows[0].A);
@@ -347,7 +349,7 @@ public class MiniExcelTemplateTests
         }
 
         {
-            var rows = Importer.QueryXlsx(path, sheetName: "Sheet2").ToList();
+            var rows = _importer.QueryXlsx(path, sheetName: "Sheet2").ToList();
             Assert.Equal(9, rows.Count);
 
             Assert.Equal("FooCompany", rows[0].A);
@@ -397,9 +399,9 @@ public class MiniExcelTemplateTests
                 new() { name = "Felix", department = "HR" }
             }
         };
-        Templater.ApplyXlsxTemplate(path, templatePath, value);
+        _templater.ApplyXlsxTemplate(path, templatePath, value);
 
-        var rows = Importer.QueryXlsx(path).ToList();
+        var rows = _importer.QueryXlsx(path).ToList();
         Assert.Equal(16, rows.Count);
 
         Assert.Equal("Jack", rows[1].A);
@@ -466,9 +468,9 @@ public class MiniExcelTemplateTests
             Projects = projects,
             TotalStar = projects.Sum(s => s.Star)
         };
-        Templater.ApplyXlsxTemplate(path.ToString(), templatePath, value);
+        _templater.ApplyXlsxTemplate(path.ToString(), templatePath, value);
 
-        var rows = Importer.QueryXlsx(path.ToString()).ToList();
+        var rows = _importer.QueryXlsx(path.ToString()).ToList();
         Assert.Equal("ITWeiHan Github Projects", rows[0].B);
         Assert.Equal("Total Star : 178", rows[8].C);
 
@@ -517,9 +519,9 @@ public class MiniExcelTemplateTests
                     poco
                 }
             };
-            Templater.ApplyXlsxTemplate(path.ToString(), templatePath, value);
+            _templater.ApplyXlsxTemplate(path.ToString(), templatePath, value);
 
-            var rows = Importer.QueryXlsx<TestIEnumerableTypePoco>(path.ToString()).ToList();
+            var rows = _importer.QueryXlsx<TestIEnumerableTypePoco>(path.ToString()).ToList();
             Assert.Equal(poco.@string, rows[0].@string);
             Assert.Equal(poco.@int, rows[0].@int);
             Assert.Equal(poco.@double, rows[0].@double);
@@ -585,9 +587,9 @@ public class MiniExcelTemplateTests
                 @bool = true, 
                 Guid = Guid.NewGuid()
             };
-            Templater.ApplyXlsxTemplate(path.ToString(), templatePath, value);
+            _templater.ApplyXlsxTemplate(path.ToString(), templatePath, value);
 
-            var rows = Importer.QueryXlsx<TestIEnumerableTypePoco>(path.ToString()).ToList();
+            var rows = _importer.QueryXlsx<TestIEnumerableTypePoco>(path.ToString()).ToList();
             Assert.Equal(value.@string, rows[0].@string);
             Assert.Equal(value.@int, rows[0].@int);
             Assert.Equal(value.@double, rows[0].@double);
@@ -610,7 +612,7 @@ public class MiniExcelTemplateTests
         {
             Tests = Enumerable.Range(1, 5).Select(i => new { test1 = i, test2 = i })
         };
-        Templater.ApplyXlsxTemplate(path.ToString(), templatePath, value);
+        _templater.ApplyXlsxTemplate(path.ToString(), templatePath, value);
     }
 
     [Fact]
@@ -628,9 +630,9 @@ public class MiniExcelTemplateTests
                 VIP = true,
                 Points = 123
             };
-            Templater.ApplyXlsxTemplate(path.ToString(), templatePath, value);
+            _templater.ApplyXlsxTemplate(path.ToString(), templatePath, value);
 
-            var rows = Importer.QueryXlsx(path.ToString()).ToList();
+            var rows = _importer.QueryXlsx(path.ToString()).ToList();
             Assert.Equal("Jack", rows[1].A);
             Assert.Equal("2021-01-01 00:00:00", rows[1].B);
             Assert.Equal(true, rows[1].C);
@@ -652,9 +654,9 @@ public class MiniExcelTemplateTests
                 VIP = true,
                 Points = 123
             };
-            Templater.ApplyXlsxTemplate(path.ToString(), templateBytes, value);
+            _templater.ApplyXlsxTemplate(path.ToString(), templateBytes, value);
 
-            var rows = Importer.QueryXlsx(path.ToString()).ToList();
+            var rows = _importer.QueryXlsx(path.ToString()).ToList();
             Assert.Equal("Jack", rows[1].A);
             Assert.Equal("2021-01-01 00:00:00", rows[1].B);
             Assert.Equal(true, rows[1].C);
@@ -679,10 +681,10 @@ public class MiniExcelTemplateTests
             };
             using (var stream = File.Create(path.ToString()))
             {
-                Templater.ApplyXlsxTemplate(stream, templateBytes, value);
+                _templater.ApplyXlsxTemplate(stream, templateBytes, value);
             }
 
-            var rows = Importer.QueryXlsx(path.ToString()).ToList();
+            var rows = _importer.QueryXlsx(path.ToString()).ToList();
             Assert.Equal("Jack", rows[1].A);
             Assert.Equal("2021-01-01 00:00:00", rows[1].B);
             Assert.Equal(true, rows[1].C);
@@ -704,9 +706,9 @@ public class MiniExcelTemplateTests
                 ["VIP"] = true,
                 ["Points"] = 123
             };
-            Templater.ApplyXlsxTemplate(path.ToString(), templatePath, value);
+            _templater.ApplyXlsxTemplate(path.ToString(), templatePath, value);
 
-            var rows = Importer.QueryXlsx(path.ToString()).ToList();
+            var rows = _importer.QueryXlsx(path.ToString()).ToList();
             Assert.Equal("Jack", rows[1].A);
             Assert.Equal("2021-01-01 00:00:00", rows[1].B);
             Assert.Equal(true, rows[1].C);
@@ -738,7 +740,7 @@ public class MiniExcelTemplateTests
                     new { name = "Loan", department = "IT" }
                 }
             };
-            Templater.ApplyXlsxTemplate(path.ToString(), templatePath, value);
+            _templater.ApplyXlsxTemplate(path.ToString(), templatePath, value);
 
             var dimension = Helpers.GetFirstSheetDimensionRefValue(path.ToString());
             Assert.Equal("A1:B7", dimension);
@@ -760,7 +762,7 @@ public class MiniExcelTemplateTests
                     new { name = "Loan", department = "IT" }
                 }
             };
-            Templater.ApplyXlsxTemplate(path.ToString(), templatePath, value);
+            _templater.ApplyXlsxTemplate(path.ToString(), templatePath, value);
 
             var dimension = Helpers.GetFirstSheetDimensionRefValue(path.ToString());
             Assert.Equal("A1:B7", dimension);
@@ -785,7 +787,7 @@ public class MiniExcelTemplateTests
             {
                 ["employees"] = dt
             };
-            Templater.ApplyXlsxTemplate(path.ToString(), templatePath, value);
+            _templater.ApplyXlsxTemplate(path.ToString(), templatePath, value);
 
             var dimension = Helpers.GetFirstSheetDimensionRefValue(path.ToString());
             Assert.Equal("A1:B7", dimension);
@@ -810,7 +812,7 @@ public class MiniExcelTemplateTests
                 new { name = "Joan", department = "IT", salary = 120000 }
             }
         };
-        Templater.ApplyXlsxTemplate(path.ToString(), templatePath, value);
+        _templater.ApplyXlsxTemplate(path.ToString(), templatePath, value);
 
         var dimension = Helpers.GetFirstSheetDimensionRefValue(path.ToString());
         Assert.Equal("A1:C13", dimension);
@@ -840,10 +842,10 @@ public class MiniExcelTemplateTests
                     new { name = "Keaton", department = "IT" }
                 }
             };
-            Templater.ApplyXlsxTemplate(path.ToString(), templatePath, value);
+            _templater.ApplyXlsxTemplate(path.ToString(), templatePath, value);
 
             {
-                var rows = Importer.QueryXlsx(path.ToString()).ToList();
+                var rows = _importer.QueryXlsx(path.ToString()).ToList();
 
                 Assert.Equal(9, rows.Count);
 
@@ -868,7 +870,7 @@ public class MiniExcelTemplateTests
             }
 
             {
-                var rows = Importer.QueryXlsx(path.ToString(), sheetName: "Sheet2").ToList();
+                var rows = _importer.QueryXlsx(path.ToString(), sheetName: "Sheet2").ToList();
 
                 Assert.Equal(9, rows.Count);
 
@@ -914,9 +916,9 @@ public class MiniExcelTemplateTests
                     new { name = "Keaton", department = "IT" }
                 }
             };
-            Templater.ApplyXlsxTemplate(path.ToString(), templatePath, value);
+            _templater.ApplyXlsxTemplate(path.ToString(), templatePath, value);
 
-            var rows = Importer.QueryXlsx(path.ToString()).ToList();
+            var rows = _importer.QueryXlsx(path.ToString()).ToList();
             Assert.Equal("FooCompany", rows[0].A);
             Assert.Equal("Jack", rows[2].B);
             Assert.Equal("HR", rows[2].C);
@@ -944,7 +946,7 @@ public class MiniExcelTemplateTests
         const string path = "../../../../../samples/xlsx/TestMergeWithTag.xlsx";
         using var mergedFilePath = AutoDeletingPath.Create();
 
-        Templater.MergeSameCells(mergedFilePath.ToString(), path);
+        _templater.MergeSameCells(mergedFilePath.ToString(), path);
         var mergedCells = Helpers.GetFirstSheetMergedCells(mergedFilePath.ToString());
 
         Assert.Equal("A2:A4", mergedCells[0]);
@@ -958,7 +960,7 @@ public class MiniExcelTemplateTests
         const string path = "../../../../../samples/xlsx/TestMergeWithLimitTag.xlsx";
         using var mergedFilePath = AutoDeletingPath.Create();
 
-        Templater.MergeSameCells(mergedFilePath.ToString(), path);
+        _templater.MergeSameCells(mergedFilePath.ToString(), path);
         var mergedCells = Helpers.GetFirstSheetMergedCells(mergedFilePath.ToString());
 
         Assert.Equal("A3:A4", mergedCells[0]);

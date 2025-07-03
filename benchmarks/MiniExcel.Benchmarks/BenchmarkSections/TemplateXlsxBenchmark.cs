@@ -1,12 +1,20 @@
 using BenchmarkDotNet.Attributes;
 using ClosedXML.Report;
 using MiniExcelLib.Benchmarks.Utils;
-using _templater = MiniExcelLib.MiniExcel.Templater;
+using MiniExcelLib.Core;
 
 namespace MiniExcelLib.Benchmarks.BenchmarkSections;
 
 public class TemplateXlsxBenchmark : BenchmarkBase
 {
+    private MiniExcelTemplater _templater;
+
+    [GlobalSetup]
+    public void Setup()
+    {
+        _templater = new MiniExcelTemplater();
+    }
+    
     [Benchmark(Description = "MiniExcel Template Generate")]
     public void MiniExcel_Template_Generate_Test()
     {

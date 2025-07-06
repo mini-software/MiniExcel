@@ -1,12 +1,3 @@
-using System.Runtime.CompilerServices;
-using System.Text.RegularExpressions;
-using MiniExcelLib.Core;
-using MiniExcelLib.Core.Abstractions;
-using MiniExcelLib.Core.Exceptions;
-using MiniExcelLib.Core.Helpers;
-using MiniExcelLib.Core.Reflection;
-using Zomp.SyncMethodGenerator;
-
 namespace MiniExcelLib.Csv;
 
 internal partial class CsvReader : IMiniExcelReader

@@ -1,8 +1,4 @@
-﻿using System.Text;
-using System.Text.RegularExpressions;
-using System.Xml;
-
-namespace MiniExcelLib.Core.Helpers;
+﻿namespace MiniExcelLib.Core.Helpers;
 
 /// <summary> XmlEncoder MIT Copyright ©2021 from https://github.com/ClosedXML </summary>
 internal static partial class XmlHelper

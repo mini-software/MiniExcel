@@ -1,12 +1,4 @@
-﻿using System.Data;
-using System.Globalization;
-using System.Text;
-using MiniExcelLib.Core;
-using MiniExcelLib.Csv;
-using MiniExcelLib.Csv.MiniExcelExtensions;
-using MiniExcelLib.Tests.Utils;
-using Xunit;
-using CsvReader = CsvHelper.CsvReader;
+﻿using CsvReader = CsvHelper.CsvReader;
 
 namespace MiniExcelLib.Tests;
 

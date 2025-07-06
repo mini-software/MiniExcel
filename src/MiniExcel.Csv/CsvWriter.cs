@@ -1,12 +1,4 @@
-﻿using System.Globalization;
-using System.Text;
-using MiniExcelLib.Core;
-using MiniExcelLib.Core.Abstractions;
-using MiniExcelLib.Core.Reflection;
-using MiniExcelLib.Core.WriteAdapters;
-using Zomp.SyncMethodGenerator;
-
-namespace MiniExcelLib.Csv;
+﻿namespace MiniExcelLib.Csv;
 
 internal partial class CsvWriter : IMiniExcelWriter, IDisposable
 {

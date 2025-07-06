@@ -1,7 +1,4 @@
-﻿using System.Globalization;
-using MiniExcelLib.Core.Attributes;
-
-namespace MiniExcelLib.Core;
+﻿namespace MiniExcelLib.Core;
 
 public interface IMiniExcelConfiguration;
 

@@ -1,6 +1,4 @@
-﻿using System.Data;
-
-namespace MiniExcelLib.Core.Helpers;
+﻿namespace MiniExcelLib.Core.Helpers;
 
 internal static class TypeHelper
 {

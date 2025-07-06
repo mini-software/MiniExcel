@@ -1,7 +1,4 @@
-﻿using System.Data;
-using MiniExcelLib.Core.Abstractions;
-
-namespace MiniExcelLib.Core.DataReader;
+﻿namespace MiniExcelLib.Core.DataReader;
 
 /// <summary>
 /// IMiniExcelDataReader Base Class

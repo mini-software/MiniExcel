@@ -1,7 +1,4 @@
-﻿using System.Collections;
-using System.Text;
-
-namespace MiniExcelLib.Core.OpenXml.Utils;
+﻿namespace MiniExcelLib.Core.OpenXml.Utils;
 
 internal class SharedStringsDiskCache : IDictionary<int, string>, IDisposable
 {

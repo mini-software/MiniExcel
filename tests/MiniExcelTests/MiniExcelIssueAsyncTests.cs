@@ -1,18 +1,4 @@
-﻿using System.Data;
-using System.Data.SQLite;
-using System.Globalization;
-using System.Text;
-using Dapper;
-using MiniExcelLib.Core;
-using MiniExcelLib.Core.Attributes;
-using MiniExcelLib.Core.OpenXml;
-using MiniExcelLib.Csv;
-using MiniExcelLib.Csv.MiniExcelExtensions;
-using MiniExcelLib.Tests.Utils;
-using Newtonsoft.Json;
-using OfficeOpenXml;
-using Xunit;
-using Xunit.Abstractions;
+﻿using Newtonsoft.Json;
 
 namespace MiniExcelLib.Tests;
 

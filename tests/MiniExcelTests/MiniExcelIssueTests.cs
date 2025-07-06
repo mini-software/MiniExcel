@@ -1,25 +1,10 @@
 ﻿using System.Collections;
 using System.ComponentModel;
-using System.Data;
-using System.Data.SQLite;
-using System.Globalization;
-using System.Text;
 using System.Text.RegularExpressions;
-using Dapper;
-using MiniExcelLib.Core;
-using MiniExcelLib.Core.Attributes;
 using MiniExcelLib.Core.Exceptions;
-using MiniExcelLib.Core.OpenXml;
-using MiniExcelLib.Core.OpenXml.Picture;
 using MiniExcelLib.Core.OpenXml.Utils;
-using MiniExcelLib.Csv;
-using MiniExcelLib.Csv.MiniExcelExtensions;
-using MiniExcelLib.Tests.Utils;
 using Newtonsoft.Json;
 using NPOI.XSSF.UserModel;
-using OfficeOpenXml;
-using Xunit;
-using Xunit.Abstractions;
 
 namespace MiniExcelLib.Tests;
 

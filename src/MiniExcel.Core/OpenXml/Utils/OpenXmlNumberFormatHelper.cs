@@ -1,7 +1,4 @@
-﻿using System.Globalization;
-using System.Text;
-
-namespace MiniExcelLib.Core.OpenXml.Utils;
+﻿namespace MiniExcelLib.Core.OpenXml.Utils;
 
 /// <summary>
 /// This code edit from https://github.com/andersnm/ExcelNumberFormat

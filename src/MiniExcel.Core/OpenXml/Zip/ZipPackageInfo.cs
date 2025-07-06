@@ -1,5 +1,3 @@
-using System.IO.Compression;
-
 namespace MiniExcelLib.Core.OpenXml.Zip;
 
 internal class ZipPackageInfo(ZipArchiveEntry zipArchiveEntry, string contentType)

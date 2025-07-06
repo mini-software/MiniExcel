@@ -1,12 +1,6 @@
-﻿using System.Data;
-using System.Data.SQLite;
-using DocumentFormat.OpenXml.Packaging;
+﻿using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
-using MiniExcelLib.Core;
-using MiniExcelLib.Core.OpenXml;
 using MiniExcelLib.Core.OpenXml.Models;
-using MiniExcelLib.Tests.Utils;
-using Xunit;
 
 namespace MiniExcelLib.Tests;
 

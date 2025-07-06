@@ -1,11 +1,3 @@
-using System.Data;
-using System.Dynamic;
-using System.Runtime.CompilerServices;
-using MiniExcelLib.Core;
-using MiniExcelLib.Core.DataReader;
-using MiniExcelLib.Core.Helpers;
-using Zomp.SyncMethodGenerator;
-
 namespace MiniExcelLib.Csv.MiniExcelExtensions;
 
 public static partial class Importer

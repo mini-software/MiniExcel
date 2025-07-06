@@ -1,6 +1,4 @@
-﻿using System.Globalization;
-
-namespace MiniExcelLib.Core.OpenXml.Utils;
+﻿namespace MiniExcelLib.Core.OpenXml.Utils;
 
 internal static class ReferenceHelper
 {

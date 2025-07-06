@@ -1,6 +1,4 @@
-﻿using Zomp.SyncMethodGenerator;
-
-namespace MiniExcelLib.Core.Abstractions;
+﻿namespace MiniExcelLib.Core.Abstractions;
 
 public partial interface IMiniExcelReader : IDisposable
 {

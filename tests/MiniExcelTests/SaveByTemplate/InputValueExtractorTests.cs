@@ -1,6 +1,4 @@
-using System.Data;
 using MiniExcelLib.Core.OpenXml.Templates;
-using Xunit;
 
 namespace MiniExcelLib.Tests.SaveByTemplate;
 

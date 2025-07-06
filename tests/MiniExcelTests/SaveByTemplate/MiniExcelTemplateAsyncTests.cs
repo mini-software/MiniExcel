@@ -1,10 +1,4 @@
-﻿using System.Data;
-using Dapper;
-using MiniExcelLib.Core;
-using MiniExcelLib.Tests.Utils;
-using Xunit;
-
-namespace MiniExcelLib.Tests.SaveByTemplate;
+﻿namespace MiniExcelLib.Tests.SaveByTemplate;
 
 public class MiniExcelTemplateAsyncTests
 {

@@ -1,18 +1,7 @@
-﻿using System.Data;
-using System.Data.SQLite;
-using System.Globalization;
-using System.IO.Packaging;
-using System.Text;
+﻿using System.IO.Packaging;
 using ClosedXML.Excel;
-using Dapper;
 using ExcelDataReader;
-using MiniExcelLib.Core;
 using MiniExcelLib.Core.Abstractions;
-using MiniExcelLib.Core.Attributes;
-using MiniExcelLib.Core.OpenXml;
-using MiniExcelLib.Tests.Utils;
-using OfficeOpenXml;
-using Xunit;
 
 namespace MiniExcelLib.Tests;
 

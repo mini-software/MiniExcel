@@ -1,6 +1,4 @@
-﻿using System.Data;
-
-namespace MiniExcelLib.Core.Abstractions;
+﻿namespace MiniExcelLib.Core.Abstractions;
 
 public interface IMiniExcelDataReader : IDataReader
 #if NET8_0_OR_GREATER

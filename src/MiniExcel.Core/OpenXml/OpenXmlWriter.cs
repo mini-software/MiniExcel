@@ -1,17 +1,6 @@
-using System.IO.Compression;
-using System.Text;
 using System.Xml.Linq;
-using MiniExcelLib.Core.Abstractions;
-using MiniExcelLib.Core.Helpers;
-using MiniExcelLib.Core.OpenXml.Constants;
-using MiniExcelLib.Core.OpenXml.Models;
 using MiniExcelLib.Core.OpenXml.Styles;
-using MiniExcelLib.Core.OpenXml.Utils;
-using MiniExcelLib.Core.OpenXml.Zip;
-using MiniExcelLib.Core.Reflection;
 using MiniExcelLib.Core.WriteAdapters;
-using Zomp.SyncMethodGenerator;
-using MiniExcelLib.Core.Helpers;
 
 namespace MiniExcelLib.Core.OpenXml;
 
@@ -215,13 +204,13 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
     }
 
     [CreateSyncVersion]
-    private static async Task WriteEmptySheetAsync(Helpers_SafeStreamWriter writer)
+    private static async Task WriteEmptySheetAsync(SafeStreamWriter writer)
     {
         await writer.WriteAsync(ExcelXml.EmptySheetXml).ConfigureAwait(false);
     }
 
     [CreateSyncVersion]
-    private static async Task<long> WriteDimensionPlaceholderAsync(Helpers_SafeStreamWriter writer)
+    private static async Task<long> WriteDimensionPlaceholderAsync(SafeStreamWriter writer)
     {
         var dimensionPlaceholderPostition = await writer.WriteAndFlushAsync(WorksheetXml.StartDimension).ConfigureAwait(false);
         await writer.WriteAsync(WorksheetXml.DimensionPlaceholder).ConfigureAwait(false); // end of code will be replaced
@@ -230,7 +219,7 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
     }
 
     [CreateSyncVersion]
-    private static async Task WriteDimensionAsync(Helpers_SafeStreamWriter writer, int maxRowIndex, int maxColumnIndex, long placeholderPosition)
+    private static async Task WriteDimensionAsync(SafeStreamWriter writer, int maxRowIndex, int maxColumnIndex, long placeholderPosition)
     {
         // Flush and save position so that we can get back again.
         var position = await writer.FlushAsync().ConfigureAwait(false);
@@ -242,7 +231,7 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
     }
 
     [CreateSyncVersion]
-    private async Task<int> WriteValuesAsync(Helpers_SafeStreamWriter writer, object values, CancellationToken cancellationToken)
+    private async Task<int> WriteValuesAsync(SafeStreamWriter writer, object values, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
@@ -375,7 +364,7 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
     }
 
     [CreateSyncVersion]
-    private static async Task<long> WriteColumnWidthPlaceholdersAsync(Helpers_SafeStreamWriter writer, int count, CancellationToken cancellationToken = default)
+    private static async Task<long> WriteColumnWidthPlaceholdersAsync(SafeStreamWriter writer, int count, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
@@ -385,7 +374,7 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
     }
 
     [CreateSyncVersion]
-    private static async Task OverwriteColumnWidthPlaceholdersAsync(Helpers_SafeStreamWriter writer, long placeholderPosition, IEnumerable<ExcelColumnWidth>? columnWidths, CancellationToken cancellationToken = default)
+    private static async Task OverwriteColumnWidthPlaceholdersAsync(SafeStreamWriter writer, long placeholderPosition, IEnumerable<ExcelColumnWidth>? columnWidths, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
@@ -399,7 +388,7 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
     }
 
     [CreateSyncVersion]
-    private static async Task WriteColumnsWidthsAsync(Helpers_SafeStreamWriter writer, IEnumerable<ExcelColumnWidth>? columnWidths, CancellationToken cancellationToken = default)
+    private static async Task WriteColumnsWidthsAsync(SafeStreamWriter writer, IEnumerable<ExcelColumnWidth>? columnWidths, CancellationToken cancellationToken = default)
     {
         var hasWrittenStart = false;
         
@@ -423,7 +412,7 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
     }
 
     [CreateSyncVersion]
-    private async Task PrintHeaderAsync(Helpers_SafeStreamWriter writer, List<MiniExcelColumnInfo?> props, CancellationToken cancellationToken = default)
+    private async Task PrintHeaderAsync(SafeStreamWriter writer, List<MiniExcelColumnInfo?> props, CancellationToken cancellationToken = default)
     {
         const int yIndex = 1;
         await writer.WriteAsync(WorksheetXml.StartRow(yIndex), cancellationToken).ConfigureAwait(false);
@@ -447,13 +436,13 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
     }
 
     [CreateSyncVersion]
-    private async Task WriteCellAsync(Helpers_SafeStreamWriter writer, string cellReference, string columnName)
+    private async Task WriteCellAsync(SafeStreamWriter writer, string cellReference, string columnName)
     {
         await writer.WriteAsync(WorksheetXml.Cell(cellReference, "str", GetCellXfId("1"), XmlHelper.EncodeXml(columnName))).ConfigureAwait(false);
     }
 
     [CreateSyncVersion]
-    private async Task WriteCellAsync(Helpers_SafeStreamWriter writer, int rowIndex, int cellIndex, object value, MiniExcelColumnInfo columnInfo, ExcelWidthCollection? widthCollection)
+    private async Task WriteCellAsync(SafeStreamWriter writer, int rowIndex, int cellIndex, object value, MiniExcelColumnInfo columnInfo, ExcelWidthCollection? widthCollection)
     {
         if (columnInfo?.CustomFormatter is not null)
         {
@@ -685,7 +674,7 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
 #else
         using (var zipStream = entry.Open())
 #endif
-        using (var writer = new Helpers_SafeStreamWriter(zipStream, Utf8WithBom, _configuration.BufferSize))
+        using (var writer = new SafeStreamWriter(zipStream, Utf8WithBom, _configuration.BufferSize))
             await writer.WriteAsync(content, cancellationToken).ConfigureAwait(false);
 
         if (!string.IsNullOrEmpty(contentType))

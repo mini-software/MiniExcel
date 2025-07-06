@@ -1,6 +1,3 @@
-using System.IO.Compression;
-using System.Text;
-
 namespace MiniExcelLib.Core.OpenXml.Zip;
 
 public class MiniExcelZipArchive(Stream stream, ZipArchiveMode mode, bool leaveOpen, Encoding entryNameEncoding)

@@ -1,5 +1,3 @@
-using MiniExcelLib.Core.OpenXml.Models;
-
 namespace MiniExcelLib.Core.OpenXml.Attributes;
 
 [AttributeUsage(AttributeTargets.Class)]

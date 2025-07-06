@@ -1,6 +1,4 @@
-﻿using System.Xml;
-
-namespace MiniExcelLib.Core.OpenXml.Styles;
+﻿namespace MiniExcelLib.Core.OpenXml.Styles;
 
 internal abstract partial class SheetStyleBuilderBase : ISheetStyleBuilder
 {

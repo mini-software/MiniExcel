@@ -44,11 +44,19 @@ MiniExcel简单、高效避免OOM的.NET处理Excel查、写、填充数据工�
 
 ```mermaid
 flowchart LR
-    A1["Excel 解析流程"] --> A2>"XLSX文件<br>解壓縮"] --> A3>"解析<br>OpenXML"] --> A4>"模型轉"] --> A5>"返回結果"]
+    A1(["Excel 解析流程"]) --> A2{{"XLSX文件<br>解壓縮"}} --> A3{{"解析<br>OpenXML"}} --> A4{{"模型轉"}} --> A5(["返回結果"])
 
-    B1["一般框架"] --> B2>"記憶體"] --> B3>"記憶體"] --> B4>"封裝類別"] --> B5>"全部資料"]
+    B1(["一般框架"]) --> B2{{"記憶體"}} --> B3{{"記憶體"}} --> B4{{"封裝類別"}} --> B5(["全部資料"])
 
-    C1["MiniExcel"] --> C2>"Stream流"] --> C3>"Stream流"] --> C4>"POCO<br>或 dynamic"] --> C5>"延遲查詢<br>一行一行返回"]
+    C1(["MiniExcel"]) --> C2{{"Stream流"}} --> C3{{"Stream流"}} --> C4{{"POCO<br>或 dynamic"}} --> C5(["延遲查詢<br>一行一行返回"])
+
+    classDef analysis fill:#D0E8FF,stroke:#1E88E5,color:#0D47A1,font-weight:bold;
+    classDef others fill:#FCE4EC,stroke:#EC407A,color:#880E4F,font-weight:bold;
+    classDef miniexcel fill:#E8F5E9,stroke:#388E3C,color:#1B5E20,font-weight:bold;
+
+    class A1,A2,A3,A4,A5 analysis;
+    class B1,B2,B3,B4,B5 others;
+    class C1,C2,C3,C4,C5 miniexcel;
 ```
 
 ### 特点

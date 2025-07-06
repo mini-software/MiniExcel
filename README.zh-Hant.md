@@ -41,7 +41,15 @@ MiniExcel 簡單、高效避免OOM的.NET處理Excel查、寫、填充工具。
 
 目前主流框架大多需要將資料全載入到記憶體方便操作，但這會導致記憶體消耗問題，MiniExcel 嘗試以 Stream 角度寫底層算法邏輯，能讓原本1000多MB占用降低到幾MB，避免記憶體不夠情況。
 
-![image](https://user-images.githubusercontent.com/12729184/113084691-1804d000-9211-11eb-9b08-cbb89d9ecdc2.png)
+```mermaid
+flowchart LR
+    A1["Excel 解析流程"] --> A2>"XLSX文件<br>解壓縮"] --> A3>"解析<br>OpenXML"] --> A4>"模型轉"] --> A5>"返回結果"]
+
+    B1["一般框架"] --> B2>"記憶體"] --> B3>"記憶體"] --> B4>"封裝類別"] --> B5>"全部資料"]
+
+    C1["MiniExcel"] --> C2>"Stream流"] --> C3>"Stream流"] --> C4>"POCO<br>或 dynamic"] --> C5>"延遲查詢<br>一行一行返回"]
+```
+
 
 ### 特點
 - 低記憶體耗用，避免OOM、頻繁 Full GC 情況

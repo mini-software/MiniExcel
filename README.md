@@ -37,8 +37,14 @@ MiniExcel is a simple and efficient Excel processing tool for .NET, specifically
 
 At present, most popular frameworks need to load all the data from an Excel document into memory to facilitate operations, but this may cause memory consumption problems. MiniExcel's approach is different: the data is processed row by row in a streaming manner, reducing the original consumption from potentially hundreds of megabytes to just a few megabytes, effectively preventing out-of-memory(OOM) issues.
 
-![Screenshot 2025-06-22 123525](https://github.com/user-attachments/assets/0b99a61e-8061-4604-8957-0b1f3ec74544)
+```mermaid
+flowchart LR
+    A1["Excel analysis<br>process"] --> A2>"Unzipping<br>XLSX file"] --> A3>"Parsing<br>OpenXML"] --> A4>"Model<br>conversion"] --> A5>"Output"]
 
+    B1["Other Excel<br>Frameworks"] --> B2>"Memory"] --> B3>"Memory"] --> B4>"Workbooks &<br>Worksheets"] --> B5>"All rows at<br>the same time"]
+
+    C1["MiniExcel"] --> C2>"Stream"] --> C3>"Stream"] --> C4>"POCO or dynamic"] --> C5>"Deferred execution<br>row by row"]
+```
 
 ### Features
 

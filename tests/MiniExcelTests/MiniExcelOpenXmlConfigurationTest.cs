@@ -1,4 +1,5 @@
-using MiniExcelLib.Core.Helpers;
+using MiniExcelLib.Attributes;
+using MiniExcelLib.Helpers;
 
 namespace MiniExcelLib.Tests;
 

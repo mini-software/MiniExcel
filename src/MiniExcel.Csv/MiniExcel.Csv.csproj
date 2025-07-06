@@ -5,7 +5,7 @@
     </PropertyGroup>
     
     <ItemGroup>
-      <ProjectReference Include="..\MiniExcel.Core\MiniExcel.Core.csproj" />
+      <ProjectReference Include="..\MiniExcel\MiniExcel.csproj" />
     </ItemGroup>
     
 </Project>

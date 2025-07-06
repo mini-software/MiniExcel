@@ -1,6 +1,5 @@
 ﻿using BenchmarkDotNet.Attributes;
 using MiniExcelLib.Benchmarks.Utils;
-using MiniExcelLib.Core;
 
 namespace MiniExcelLib.Benchmarks.BenchmarkSections;
 

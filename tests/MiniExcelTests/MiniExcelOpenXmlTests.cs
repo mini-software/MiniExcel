@@ -1,7 +1,8 @@
 ﻿using System.IO.Packaging;
 using ClosedXML.Excel;
 using ExcelDataReader;
-using MiniExcelLib.Core.OpenXml.Utils;
+using MiniExcelLib.Attributes;
+using MiniExcelLib.OpenXml.Utils;
 
 namespace MiniExcelLib.Tests;
 
@@ -463,7 +464,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
             var rowIndex = rows.IndexOf(row);
             foreach (var (key, value) in row)
             {
-                var eV = exceldatareaderResult.Tables[0].Rows[rowIndex][Helpers.GetColumnIndex(key)];
+                var eV = exceldatareaderResult.Tables[0].Rows[rowIndex][SheetHelper.GetColumnIndex(key)];
                 var v = value ?? DBNull.Value;
                 Assert.Equal(eV, v);
             }
@@ -548,10 +549,10 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
                 Assert.Equal("A", rows[0].A);
                 Assert.Equal("A", rows[1].A);
             }
-            Assert.Equal("A1:B3", Helpers.GetFirstSheetDimensionRefValue(path));
+            Assert.Equal("A1:B3", SheetHelper.GetFirstSheetDimensionRefValue(path));
 
              _exporter.ExportXlsx(path, values, false, overwriteFile: true);
-            Assert.Equal("A1:B2", Helpers.GetFirstSheetDimensionRefValue(path));
+            Assert.Equal("A1:B2", SheetHelper.GetFirstSheetDimensionRefValue(path));
         }
 
         //List<strongtype> empty
@@ -567,16 +568,16 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
                     var rows =  _importer.QueryXlsx(stream, useHeaderRow: false).ToList();
                     Assert.Empty(rows);
                 }
-                Assert.Equal("A1:B1", Helpers.GetFirstSheetDimensionRefValue(path));
+                Assert.Equal("A1:B1", SheetHelper.GetFirstSheetDimensionRefValue(path));
             }
 
-             _exporter.ExportXlsx(path, values, overwriteFile: true);
+            _exporter.ExportXlsx(path, values, overwriteFile: true);
             {
                 using var stream = File.OpenRead(path);
                 var rows =  _importer.QueryXlsx(stream, useHeaderRow: false).ToList();
                 Assert.Single(rows);
             }
-            Assert.Equal("A1:B1", Helpers.GetFirstSheetDimensionRefValue(path));
+            Assert.Equal("A1:B1", SheetHelper.GetFirstSheetDimensionRefValue(path));
         }
 
         //Array<anoymous>
@@ -606,10 +607,10 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
                     Assert.Equal("A", rows[1].A);
                 }
             }
-            Assert.Equal("A1:B3", Helpers.GetFirstSheetDimensionRefValue(path));
+            Assert.Equal("A1:B3", SheetHelper.GetFirstSheetDimensionRefValue(path));
 
              _exporter.ExportXlsx(path, values, false, overwriteFile: true);
-            Assert.Equal("A1:B2", Helpers.GetFirstSheetDimensionRefValue(path));
+            Assert.Equal("A1:B2", SheetHelper.GetFirstSheetDimensionRefValue(path));
         }
 
         // without properties
@@ -629,7 +630,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
 
             var table = new DataTable();
              _exporter.ExportXlsx(path, table);
-            Assert.Equal("A1", Helpers.GetFirstSheetDimensionRefValue(path));
+            Assert.Equal("A1", SheetHelper.GetFirstSheetDimensionRefValue(path));
             {
                 using var stream = File.OpenRead(path);
                 var rows =  _importer.QueryXlsx(stream).ToList();
@@ -637,7 +638,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
             }
 
              _exporter.ExportXlsx(path, table, printHeader: false, overwriteFile: true);
-            Assert.Equal("A1", Helpers.GetFirstSheetDimensionRefValue(path));
+            Assert.Equal("A1", SheetHelper.GetFirstSheetDimensionRefValue(path));
         }
 
         {
@@ -653,7 +654,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
             table.Rows.Add("<test>Hello World</test>", -1234567890, false, DateTime.Now);
 
              _exporter.ExportXlsx(path, table);
-            Assert.Equal("A1:D3", Helpers.GetFirstSheetDimensionRefValue(path));
+            Assert.Equal("A1:D3", SheetHelper.GetFirstSheetDimensionRefValue(path));
 
             using (var stream = File.OpenRead(path))
             {
@@ -676,7 +677,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
             }
 
              _exporter.ExportXlsx(path, table, printHeader: false, overwriteFile: true);
-            Assert.Equal("A1:D2", Helpers.GetFirstSheetDimensionRefValue(path));
+            Assert.Equal("A1:D2", SheetHelper.GetFirstSheetDimensionRefValue(path));
         }
 
         //TODO:StartCell
@@ -689,7 +690,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
             table.Rows.Add("B");
 
              _exporter.ExportXlsx(path.ToString(), table);
-            Assert.Equal("A1:A3", Helpers.GetFirstSheetDimensionRefValue(path.ToString()));
+            Assert.Equal("A1:A3", SheetHelper.GetFirstSheetDimensionRefValue(path.ToString()));
         }
     }
 
@@ -817,7 +818,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
                 Assert.Equal("success!",  _importer.GetSheetNames(stream)[1]);
             }
 
-            Assert.Equal("A1:B3", Helpers.GetFirstSheetDimensionRefValue(path));
+            Assert.Equal("A1:B3", SheetHelper.GetFirstSheetDimensionRefValue(path));
         }
 
         {
@@ -834,7 +835,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
                 Assert.Equal(3, rows.Count);
             }
 
-            Assert.Equal("A1:B3", Helpers.GetFirstSheetDimensionRefValue(path));
+            Assert.Equal("A1:B3", SheetHelper.GetFirstSheetDimensionRefValue(path));
         }
     }
 
@@ -869,7 +870,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
             Assert.Equal(2, rows[1].Column2);
         }
 
-        Assert.Equal("A1:B3", Helpers.GetFirstSheetDimensionRefValue(path.ToString()));
+        Assert.Equal("A1:B3", SheetHelper.GetFirstSheetDimensionRefValue(path.ToString()));
 
         // test table
         var table = new DataTable();
@@ -882,14 +883,14 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
 
         using var pathTable = AutoDeletingPath.Create();
          _exporter.ExportXlsx(pathTable.ToString(), table, configuration: config);
-        Assert.Equal("A1:D3", Helpers.GetFirstSheetDimensionRefValue(pathTable.ToString()));
+        Assert.Equal("A1:D3", SheetHelper.GetFirstSheetDimensionRefValue(pathTable.ToString()));
 
         // data reader
         var reader = table.CreateDataReader();
         using var pathReader = AutoDeletingPath.Create();
 
          _exporter.ExportXlsx(pathReader.ToString(), reader, configuration: config, overwriteFile: true);
-        Assert.Equal("A1:D3", Helpers.GetFirstSheetDimensionRefValue(pathTable.ToString())); //TODO: fix datareader not writing ref dimension (also in async version)
+        Assert.Equal("A1:D3", SheetHelper.GetFirstSheetDimensionRefValue(pathTable.ToString())); //TODO: fix datareader not writing ref dimension (also in async version)
     }
 
     [Fact]
@@ -905,7 +906,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
              _exporter.ExportXlsx(path, rows);
         }
 
-        Assert.Equal("A1:B3", Helpers.GetFirstSheetDimensionRefValue(path));
+        Assert.Equal("A1:B3", SheetHelper.GetFirstSheetDimensionRefValue(path));
 
         using (var stream = File.OpenRead(path))
         {
@@ -936,7 +937,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
             Assert.Empty(rows);
         }
 
-        Assert.Equal("A1", Helpers.GetFirstSheetDimensionRefValue(path));
+        Assert.Equal("A1", SheetHelper.GetFirstSheetDimensionRefValue(path));
 
         // ToList
         using (var connection = Db.GetConnection("Data Source=:memory:"))
@@ -945,7 +946,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
              _exporter.ExportXlsx(path, rows, overwriteFile: true);
         }
 
-        Assert.Equal("A1:B3", Helpers.GetFirstSheetDimensionRefValue(path));
+        Assert.Equal("A1:B3", SheetHelper.GetFirstSheetDimensionRefValue(path));
 
         using (var stream = File.OpenRead(path))
         {
@@ -1075,7 +1076,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
             Assert.Equal(2, rows[1].Column2);
         }
 
-        Assert.Equal("A1:B3", Helpers.GetFirstSheetDimensionRefValue(path.ToString()));
+        Assert.Equal("A1:B3", SheetHelper.GetFirstSheetDimensionRefValue(path.ToString()));
     }
 
     [Fact]

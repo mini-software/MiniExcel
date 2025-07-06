@@ -1,8 +1,10 @@
 ﻿using System.Collections;
 using System.ComponentModel;
 using System.Text.RegularExpressions;
-using MiniExcelLib.Core.Exceptions;
-using MiniExcelLib.Core.OpenXml.Utils;
+using MiniExcelLib.Attributes;
+using MiniExcelLib.Exceptions;
+using MiniExcelLib.OpenXml.Picture;
+using MiniExcelLib.OpenXml.Utils;
 using Newtonsoft.Json;
 using NPOI.XSSF.UserModel;
 
@@ -232,7 +234,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         using var reader = table.CreateDataReader();
         var config = new OpenXmlConfiguration { FastMode = true };
          _exporter.ExportXlsx(path.ToString(), reader, configuration: config);
-        var xml = Helpers.GetZipFileContent(path.ToString(), "xl/worksheets/sheet1.xml");
+        var xml = SheetHelper.GetZipFileContent(path.ToString(), "xl/worksheets/sheet1.xml");
 
         Assert.Contains("<x:autoFilter ref=\"A1:B3\" />", xml);
         Assert.Contains("<x:dimension ref=\"A1:B3\" />", xml);
@@ -273,7 +275,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         var value = new[] { new { id = 1, name = "test" } };
          _exporter.ExportXlsx(path.ToString(), value);
 
-        var xml = Helpers.GetZipFileContent(path.ToString(), "xl/sharedStrings.xml");
+        var xml = SheetHelper.GetZipFileContent(path.ToString(), "xl/sharedStrings.xml");
         Assert.StartsWith("<sst xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"", xml);
     }
 
@@ -432,7 +434,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             using var path = AutoDeletingPath.Create();
             var reader = table.CreateDataReader();
              _exporter.ExportXlsx(path.ToString(), reader);
-            var xml = Helpers.GetZipFileContent(path.ToString(), "xl/worksheets/sheet1.xml");
+            var xml = SheetHelper.GetZipFileContent(path.ToString(), "xl/worksheets/sheet1.xml");
             var cnt = Regex.Matches(xml, "<x:autoFilter ref=\"A1:B3\" />").Count;
         }
         {
@@ -445,7 +447,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             using var path = AutoDeletingPath.Create();
             var reader = table.CreateDataReader();
              _exporter.ExportXlsx(path.ToString(), reader, false);
-            var xml = Helpers.GetZipFileContent(path.ToString(), "xl/worksheets/sheet1.xml");
+            var xml = SheetHelper.GetZipFileContent(path.ToString(), "xl/worksheets/sheet1.xml");
             var cnt = Regex.Matches(xml, "<x:autoFilter ref=\"A1:B2\" />").Count;
         }
         {
@@ -456,7 +458,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             using var path = AutoDeletingPath.Create();
             var reader = table.CreateDataReader();
              _exporter.ExportXlsx(path.ToString(), reader);
-            var xml = Helpers.GetZipFileContent(path.ToString(), "xl/worksheets/sheet1.xml");
+            var xml = SheetHelper.GetZipFileContent(path.ToString(), "xl/worksheets/sheet1.xml");
             var cnt = Regex.Matches(xml, "<x:autoFilter ref=\"A1:B1\" />").Count;
         }
     }
@@ -481,7 +483,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             var config = new OpenXmlConfiguration { AutoFilter = autoFilter };
              _exporter.ExportXlsx(path.ToString(), reader, configuration: config);
 
-            var xml = Helpers.GetZipFileContent(path.ToString(), "xl/worksheets/sheet1.xml");
+            var xml = SheetHelper.GetZipFileContent(path.ToString(), "xl/worksheets/sheet1.xml");
             var cnt = Regex.Matches(xml, "<x:autoFilter ref=\"A1:B3\" />").Count;
             Assert.Equal(count, cnt);
         }
@@ -498,7 +500,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             var config = new OpenXmlConfiguration { AutoFilter = autoFilter };
              _exporter.ExportXlsx(path.ToString(), reader, false, configuration: config);
 
-            var xml = Helpers.GetZipFileContent(path.ToString(), "xl/worksheets/sheet1.xml");
+            var xml = SheetHelper.GetZipFileContent(path.ToString(), "xl/worksheets/sheet1.xml");
             var cnt = Regex.Matches(xml, "<x:autoFilter ref=\"A1:B2\" />").Count;
             Assert.Equal(count, cnt);
         }
@@ -513,7 +515,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             var config = new OpenXmlConfiguration { AutoFilter = autoFilter };
              _exporter.ExportXlsx(path.ToString(), reader, configuration: config);
 
-            var xml = Helpers.GetZipFileContent(path.ToString(), "xl/worksheets/sheet1.xml");
+            var xml = SheetHelper.GetZipFileContent(path.ToString(), "xl/worksheets/sheet1.xml");
             var cnt = Regex.Matches(xml, "<x:autoFilter ref=\"A1:B1\" />").Count;
             Assert.Equal(count, cnt);
         }
@@ -541,7 +543,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
                  _exporter.ExportXlsx(path.ToString(), reader, configuration: config);
             }
 
-            var xml = Helpers.GetZipFileContent(path.ToString(), "xl/worksheets/sheet1.xml");
+            var xml = SheetHelper.GetZipFileContent(path.ToString(), "xl/worksheets/sheet1.xml");
             var cnt = Regex.Matches(xml, "autoFilter").Count;
             Assert.Equal(count, cnt);
         }
@@ -583,7 +585,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
                  _exporter.ExportXlsx(path.ToString(), reader, configuration: config);
             }
 
-            var xml = Helpers.GetZipFileContent(path.ToString(), "xl/worksheets/sheet1.xml");
+            var xml = SheetHelper.GetZipFileContent(path.ToString(), "xl/worksheets/sheet1.xml");
             var cnt = Regex.Matches(xml, "autoFilter").Count;
             Assert.Equal(count, cnt);
         }
@@ -1138,7 +1140,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         };
          _exporter.ExportXlsx(path.ToString(), value);
 
-        var xml = Helpers.GetZipFileContent(path.ToString(), "xl/worksheets/_rels/sheet2.xml.rels");
+        var xml = SheetHelper.GetZipFileContent(path.ToString(), "xl/worksheets/_rels/sheet2.xml.rels");
         var cnt = Regex.Matches(xml, "Id=\"drawing2\"").Count;
         Assert.True(cnt == 1);
     }
@@ -1306,11 +1308,11 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         };
          _exporter.ExportXlsx(path, value);
 
-        Assert.Contains("/xl/media/", Helpers.GetZipFileContent(path, "xl/drawings/_rels/drawing1.xml.rels"));
-        Assert.Contains("ext cx=\"609600\" cy=\"190500\"", Helpers.GetZipFileContent(path, "xl/drawings/drawing1.xml"));
-        Assert.Contains("/xl/drawings/drawing1.xml", Helpers.GetZipFileContent(path, "[Content_Types].xml"));
-        Assert.Contains("drawing r:id=", Helpers.GetZipFileContent(path, "xl/worksheets/sheet1.xml"));
-        Assert.Contains("../drawings/drawing1.xml", Helpers.GetZipFileContent(path, "xl/worksheets/_rels/sheet1.xml.rels"));
+        Assert.Contains("/xl/media/", SheetHelper.GetZipFileContent(path, "xl/drawings/_rels/drawing1.xml.rels"));
+        Assert.Contains("ext cx=\"609600\" cy=\"190500\"", SheetHelper.GetZipFileContent(path, "xl/drawings/drawing1.xml"));
+        Assert.Contains("/xl/drawings/drawing1.xml", SheetHelper.GetZipFileContent(path, "[Content_Types].xml"));
+        Assert.Contains("drawing r:id=", SheetHelper.GetZipFileContent(path, "xl/worksheets/sheet1.xml"));
+        Assert.Contains("../drawings/drawing1.xml", SheetHelper.GetZipFileContent(path, "xl/worksheets/_rels/sheet1.xml.rels"));
     }
 
     /// <summary>
@@ -1346,21 +1348,21 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             using var path = AutoDeletingPath.Create();
             var value = new[] { new { Name = "   Jack" } };
              _exporter.ExportXlsx(path.ToString(), value);
-            var sheetXml = Helpers.GetZipFileContent(path.ToString(), "xl/worksheets/sheet1.xml");
+            var sheetXml = SheetHelper.GetZipFileContent(path.ToString(), "xl/worksheets/sheet1.xml");
             Assert.Contains("xml:space=\"preserve\"", sheetXml);
         }
         {
             using var path = AutoDeletingPath.Create();
             var value = new[] { new { Name = "Ja ck" } };
              _exporter.ExportXlsx(path.ToString(), value);
-            var sheetXml = Helpers.GetZipFileContent(path.ToString(), "xl/worksheets/sheet1.xml");
+            var sheetXml = SheetHelper.GetZipFileContent(path.ToString(), "xl/worksheets/sheet1.xml");
             Assert.DoesNotContain("xml:space=\"preserve\"", sheetXml);
         }
         {
             using var path = AutoDeletingPath.Create();
             var value = new[] { new { Name = "Jack   " } };
              _exporter.ExportXlsx(path.ToString(), value);
-            var sheetXml = Helpers.GetZipFileContent(path.ToString(), "xl/worksheets/sheet1.xml");
+            var sheetXml = SheetHelper.GetZipFileContent(path.ToString(), "xl/worksheets/sheet1.xml");
             Assert.Contains("xml:space=\"preserve\"", sheetXml);
         }
     }
@@ -1395,7 +1397,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         };
          _templater.ApplyXlsxTemplate(path.ToString(), templatePath, value);
 
-        var sheetXml = Helpers.GetZipFileContent(path.ToString(), "xl/worksheets/sheet1.xml");
+        var sheetXml = SheetHelper.GetZipFileContent(path.ToString(), "xl/worksheets/sheet1.xml");
         Assert.Contains("<v>Hello &amp; World &lt; , &gt; , \" , '</v>", sheetXml);
         Assert.Contains("<v>Hello &amp; Value &lt; , &gt; , \" , '</v>", sheetXml);
     }
@@ -1411,7 +1413,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             var value = new TestIssue190Dto[] { };
              _exporter.ExportXlsx(path.ToString(), value, configuration: new OpenXmlConfiguration { AutoFilter = false });
 
-            var sheetXml = Helpers.GetZipFileContent(path.ToString(), "xl/worksheets/sheet1.xml");
+            var sheetXml = SheetHelper.GetZipFileContent(path.ToString(), "xl/worksheets/sheet1.xml");
             Assert.DoesNotContain("<x:autoFilter ref=\"A1:C1\" />", sheetXml);
         }
         {
@@ -1419,7 +1421,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             var value = new TestIssue190Dto[] { };
              _exporter.ExportXlsx(path.ToString(), value);
 
-            var sheetXml = Helpers.GetZipFileContent(path.ToString(), "xl/worksheets/sheet1.xml");
+            var sheetXml = SheetHelper.GetZipFileContent(path.ToString(), "xl/worksheets/sheet1.xml");
             Assert.Contains("<x:autoFilter ref=\"A1:C1\" />", sheetXml);
         }
         {
@@ -1431,7 +1433,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             ];
              _exporter.ExportXlsx(path.ToString(), value);
 
-            var sheetXml = Helpers.GetZipFileContent(path.ToString(), "xl/worksheets/sheet1.xml");
+            var sheetXml = SheetHelper.GetZipFileContent(path.ToString(), "xl/worksheets/sheet1.xml");
             Assert.Contains("<x:autoFilter ref=\"A1:C3\" />", sheetXml);
         }
     }
@@ -1628,7 +1630,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             Assert.Equal("Id", rows[0].A);
             Assert.Equal("Name", rows[0].B);
             Assert.Single(rows);
-            Assert.Equal("A1:B1", Helpers.GetFirstSheetDimensionRefValue(path.ToString()));
+            Assert.Equal("A1:B1", SheetHelper.GetFirstSheetDimensionRefValue(path.ToString()));
         }
 
         {
@@ -1641,7 +1643,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             Assert.Equal("Id", rows[0].A);
             Assert.Equal("Name", rows[0].B);
             Assert.Single(rows);
-            Assert.Equal("A1:B1", Helpers.GetFirstSheetDimensionRefValue(path.ToString()));
+            Assert.Equal("A1:B1", SheetHelper.GetFirstSheetDimensionRefValue(path.ToString()));
         }
     }
 
@@ -1662,7 +1664,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             var path = PathHelper.GetTempPath();
              _exporter.ExportXlsx(path, value);
             //System.Xml.XmlException : '<' is an unexpected token. The expected token is ';'.
-            Helpers.GetZipFileContent(path, "xl/worksheets/sheet1.xml"); //check illegal format or not
+            SheetHelper.GetZipFileContent(path, "xl/worksheets/sheet1.xml"); //check illegal format or not
         }
 
         {
@@ -1672,7 +1674,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             var path = PathHelper.GetTempPath();
              _exporter.ExportXlsx(path, dt);
             //System.Xml.XmlException : '<' is an unexpected token. The expected token is ';'.
-            Helpers.GetZipFileContent(path, "xl/worksheets/sheet1.xml"); //check illegal format or not
+            SheetHelper.GetZipFileContent(path, "xl/worksheets/sheet1.xml"); //check illegal format or not
         }
     }
 
@@ -1681,7 +1683,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     {
         using var path = AutoDeletingPath.Create();
          _exporter.ExportXlsx(path.ToString(), new[] { new { C1 = "1&2;3,4", C2 = "1&2;3,4" } });
-        var sheet1Xml = Helpers.GetZipFileContent(path.ToString(), "xl/worksheets/sheet1.xml");
+        var sheet1Xml = SheetHelper.GetZipFileContent(path.ToString(), "xl/worksheets/sheet1.xml");
         Assert.DoesNotContain("<x:cols>", sheet1Xml);
     }
 
@@ -2414,7 +2416,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         using var path = AutoDeletingPath.Create();
         var templatePath = PathHelper.GetFile("xlsx/TestIssue226.xlsx");
          _templater.ApplyXlsxTemplate(path.ToString(), templatePath, new { employees = new[] { new { name = "123" }, new { name = "123" } } });
-        Assert.Equal("A1:A3", Helpers.GetFirstSheetDimensionRefValue(path.ToString()));
+        Assert.Equal("A1:A3", SheetHelper.GetFirstSheetDimensionRefValue(path.ToString()));
     }
 
     /// <summary>
@@ -2797,7 +2799,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             Assert.Equal("項目4", rows[15].A);
             Assert.Equal("[]內容1,[]內容2,[]內容3,[]內容4,[]內容5", rows[15].B);
 
-            var dimension = Helpers.GetFirstSheetDimensionRefValue(path);
+            var dimension = SheetHelper.GetFirstSheetDimensionRefValue(path);
             Assert.Equal("A1:C16", dimension);
         }
 
@@ -2827,7 +2829,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             Assert.Equal("[]內容1,[]內容2,[]內容3,[]內容4,[]內容5", rows[6].C);
             Assert.Equal("項目4", rows[9].A);
             Assert.Equal("[]內容1,[]內容2,[]內容3,[]內容4,[]內容5", rows[9].C);
-            var dimension = Helpers.GetFirstSheetDimensionRefValue(path);
+            var dimension = SheetHelper.GetFirstSheetDimensionRefValue(path);
             Assert.Equal("A1:E15", dimension);
         }
     }
@@ -2882,7 +2884,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             };
              _templater.ApplyXlsxTemplate(path.ToString(), templatePath, value);
 
-            var dimension = Helpers.GetFirstSheetDimensionRefValue(path.ToString());
+            var dimension = SheetHelper.GetFirstSheetDimensionRefValue(path.ToString());
             Assert.Equal("A1:B2", dimension);
         }
 
@@ -2898,7 +2900,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             var value = new Dictionary<string, object> { ["employees"] = dt };
              _templater.ApplyXlsxTemplate(path.ToString(), templatePath, value);
 
-            var dimension = Helpers.GetFirstSheetDimensionRefValue(path.ToString());
+            var dimension = SheetHelper.GetFirstSheetDimensionRefValue(path.ToString());
             Assert.Equal("A1:B2", dimension);
         }
     }
@@ -2955,7 +2957,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
                 Assert.Equal("Keaton", rows[8].B);
                 Assert.Equal("IT", rows[8].C);
 
-                var dimension = Helpers.GetFirstSheetDimensionRefValue(path);
+                var dimension = SheetHelper.GetFirstSheetDimensionRefValue(path);
                 Assert.Equal("A1:C9", dimension);
 
                 /*TODO:row can't contain xmlns*/
@@ -3002,7 +3004,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             Assert.Equal("Keaton", rows[8].B);
             Assert.Equal("IT", rows[8].C);
 
-            var dimension = Helpers.GetFirstSheetDimensionRefValue(path.ToString());
+            var dimension = SheetHelper.GetFirstSheetDimensionRefValue(path.ToString());
             Assert.Equal("A1:C9", dimension);
         }
     }
@@ -3561,17 +3563,17 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
          _exporter.ExportXlsx(path, sheets);
 
         {
-            Assert.Contains("/xl/media/", Helpers.GetZipFileContent(path, "xl/drawings/_rels/drawing1.xml.rels"));
-            Assert.Contains("ext cx=\"609600\" cy=\"190500\"", Helpers.GetZipFileContent(path, "xl/drawings/drawing1.xml"));
-            Assert.Contains("/xl/drawings/drawing1.xml", Helpers.GetZipFileContent(path, "[Content_Types].xml"));
-            Assert.Contains("drawing r:id=\"drawing1\"", Helpers.GetZipFileContent(path, "xl/worksheets/sheet1.xml"));
-            Assert.Contains("../drawings/drawing1.xml", Helpers.GetZipFileContent(path, "xl/worksheets/_rels/sheet1.xml.rels"));
+            Assert.Contains("/xl/media/", SheetHelper.GetZipFileContent(path, "xl/drawings/_rels/drawing1.xml.rels"));
+            Assert.Contains("ext cx=\"609600\" cy=\"190500\"", SheetHelper.GetZipFileContent(path, "xl/drawings/drawing1.xml"));
+            Assert.Contains("/xl/drawings/drawing1.xml", SheetHelper.GetZipFileContent(path, "[Content_Types].xml"));
+            Assert.Contains("drawing r:id=\"drawing1\"", SheetHelper.GetZipFileContent(path, "xl/worksheets/sheet1.xml"));
+            Assert.Contains("../drawings/drawing1.xml", SheetHelper.GetZipFileContent(path, "xl/worksheets/_rels/sheet1.xml.rels"));
 
-            Assert.Contains("/xl/media/", Helpers.GetZipFileContent(path, "xl/drawings/_rels/drawing2.xml.rels"));
-            Assert.Contains("ext cx=\"609600\" cy=\"190500\"", Helpers.GetZipFileContent(path, "xl/drawings/drawing2.xml"));
-            Assert.Contains("/xl/drawings/drawing1.xml", Helpers.GetZipFileContent(path, "[Content_Types].xml"));
-            Assert.Contains("drawing r:id=\"drawing2\"", Helpers.GetZipFileContent(path, "xl/worksheets/sheet2.xml"));
-            Assert.Contains("../drawings/drawing2.xml", Helpers.GetZipFileContent(path, "xl/worksheets/_rels/sheet2.xml.rels"));
+            Assert.Contains("/xl/media/", SheetHelper.GetZipFileContent(path, "xl/drawings/_rels/drawing2.xml.rels"));
+            Assert.Contains("ext cx=\"609600\" cy=\"190500\"", SheetHelper.GetZipFileContent(path, "xl/drawings/drawing2.xml"));
+            Assert.Contains("/xl/drawings/drawing1.xml", SheetHelper.GetZipFileContent(path, "[Content_Types].xml"));
+            Assert.Contains("drawing r:id=\"drawing2\"", SheetHelper.GetZipFileContent(path, "xl/worksheets/sheet2.xml"));
+            Assert.Contains("../drawings/drawing2.xml", SheetHelper.GetZipFileContent(path, "xl/worksheets/_rels/sheet2.xml.rels"));
         }
     }
 
@@ -4358,7 +4360,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         };
          _exporter.ExportXlsx(path, value);
 
-        var xml = Helpers.GetZipFileContent(path.ToString(), "xl/worksheets/sheet1.xml");
+        var xml = SheetHelper.GetZipFileContent(path.ToString(), "xl/worksheets/sheet1.xml");
 
         Assert.Contains("<x:autoFilter ref=\"A1:A4\" />", xml);
     }

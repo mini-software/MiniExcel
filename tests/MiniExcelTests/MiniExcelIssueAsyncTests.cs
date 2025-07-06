@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using MiniExcelLib.Attributes;
+using Newtonsoft.Json;
 
 namespace MiniExcelLib.Tests;
 
@@ -648,7 +649,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
         using var path = AutoDeletingPath.Create();
         var templatePath = PathHelper.GetFile("xlsx/TestIssue226.xlsx");
         await  _templater.ApplyXlsxTemplateAsync(path.ToString(), templatePath, new { employees = new[] { new { name = "123" }, new { name = "123" } } });
-        Assert.Equal("A1:A3", Helpers.GetFirstSheetDimensionRefValue(path.ToString()));
+        Assert.Equal("A1:A3", SheetHelper.GetFirstSheetDimensionRefValue(path.ToString()));
     }
 
     /// <summary>
@@ -1078,7 +1079,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
             Assert.Equal("項目4", rows[15].A);
             Assert.Equal("[]內容1,[]內容2,[]內容3,[]內容4,[]內容5", rows[15].B);
 
-            var demension = Helpers.GetFirstSheetDimensionRefValue(path);
+            var demension = SheetHelper.GetFirstSheetDimensionRefValue(path);
             Assert.Equal("A1:C16", demension);
         }
 
@@ -1111,7 +1112,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
             Assert.Equal("項目4", rows[9].A);
             Assert.Equal("[]內容1,[]內容2,[]內容3,[]內容4,[]內容5", rows[9].C);
             
-            var demension = Helpers.GetFirstSheetDimensionRefValue(path);
+            var demension = SheetHelper.GetFirstSheetDimensionRefValue(path);
             Assert.Equal("A1:E15", demension);
         }
     }
@@ -1157,7 +1158,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
             };
             await  _templater.ApplyXlsxTemplateAsync(path.ToString(), templatePath, value);
 
-            var dimension = Helpers.GetFirstSheetDimensionRefValue(path.ToString());
+            var dimension = SheetHelper.GetFirstSheetDimensionRefValue(path.ToString());
             Assert.Equal("A1:B2", dimension);
         }
 
@@ -1173,7 +1174,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
             var value = new Dictionary<string, object> { ["employees"] = dt };
             await  _templater.ApplyXlsxTemplateAsync(path.ToString(), templatePath, value);
 
-            var dimension = Helpers.GetFirstSheetDimensionRefValue(path.ToString());
+            var dimension = SheetHelper.GetFirstSheetDimensionRefValue(path.ToString());
             Assert.Equal("A1:B2", dimension);
         }
     }
@@ -1231,7 +1232,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
                 Assert.Equal("Keaton", rows[8].B);
                 Assert.Equal("IT", rows[8].C);
 
-                var demension = Helpers.GetFirstSheetDimensionRefValue(path);
+                var demension = SheetHelper.GetFirstSheetDimensionRefValue(path);
                 Assert.Equal("A1:C9", demension);
 
                 //TODO:row can't contain xmlns
@@ -1282,7 +1283,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
             Assert.Equal("Keaton", rows[8].B);
             Assert.Equal("IT", rows[8].C);
 
-            var demension = Helpers.GetFirstSheetDimensionRefValue(path);
+            var demension = SheetHelper.GetFirstSheetDimensionRefValue(path);
             Assert.Equal("A1:C9", demension);
         }
     }

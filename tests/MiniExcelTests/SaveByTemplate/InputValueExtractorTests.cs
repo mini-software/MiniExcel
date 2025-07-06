@@ -1,4 +1,4 @@
-using MiniExcelLib.Core.OpenXml.Templates;
+using MiniExcelLib.OpenXml.Templates;
 
 namespace MiniExcelLib.Tests.SaveByTemplate;
 

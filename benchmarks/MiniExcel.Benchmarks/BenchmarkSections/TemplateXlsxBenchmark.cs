@@ -1,7 +1,6 @@
 using BenchmarkDotNet.Attributes;
 using ClosedXML.Report;
 using MiniExcelLib.Benchmarks.Utils;
-using MiniExcelLib.Core;
 
 namespace MiniExcelLib.Benchmarks.BenchmarkSections;
 

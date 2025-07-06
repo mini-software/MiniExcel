@@ -1,4 +1,5 @@
-using MiniExcelLib.Core.Enums;
+using MiniExcelLib.Enums;
+using MiniExcelLib.OpenXml.Picture;
 using OfficeOpenXml.Drawing;
 
 namespace MiniExcelLib.Tests.SaveByTemplate;
@@ -115,7 +116,7 @@ public class MiniExcelTemplateTests
             _templater.ApplyXlsxTemplate(path.ToString(), templatePath, value);
             
             var rows = _importer.QueryXlsx(path.ToString()).ToList();
-            var dimension = Helpers.GetFirstSheetDimensionRefValue(path.ToString());
+            var dimension = SheetHelper.GetFirstSheetDimensionRefValue(path.ToString());
             Assert.Equal("A1:C5", dimension);
         }
         {
@@ -140,7 +141,7 @@ public class MiniExcelTemplateTests
             _templater.ApplyXlsxTemplate(path.ToString(), templatePath, value);
             
             var rows = _importer.QueryXlsx(path.ToString()).ToList();
-            var dimension = Helpers.GetFirstSheetDimensionRefValue(path.ToString());
+            var dimension = SheetHelper.GetFirstSheetDimensionRefValue(path.ToString());
             Assert.Equal("A1:C5", dimension);
         }
     }
@@ -177,7 +178,7 @@ public class MiniExcelTemplateTests
         {
             var rows = _importer.QueryXlsx(path).ToList();
 
-            var dimension = Helpers.GetFirstSheetDimensionRefValue(path);
+            var dimension = SheetHelper.GetFirstSheetDimensionRefValue(path);
             Assert.Equal("A1:C9", dimension);
 
             Assert.Equal(9, rows.Count);
@@ -219,7 +220,7 @@ public class MiniExcelTemplateTests
             Assert.Equal("Keaton", rows[8].B);
             Assert.Equal("IT", rows[8].C);
 
-            var dimension = Helpers.GetFirstSheetDimensionRefValue(path);
+            var dimension = SheetHelper.GetFirstSheetDimensionRefValue(path);
             Assert.Equal("A1:C9", dimension);
         }
     }
@@ -261,7 +262,7 @@ public class MiniExcelTemplateTests
             Assert.Equal("Keaton", rows[8].B);
             Assert.Equal("IT", rows[8].C);
 
-            var dimension = Helpers.GetFirstSheetDimensionRefValue(path);
+            var dimension = SheetHelper.GetFirstSheetDimensionRefValue(path);
             Assert.Equal("A1:C9", dimension);
         }
 
@@ -285,7 +286,7 @@ public class MiniExcelTemplateTests
             Assert.Equal("Keaton", rows[8].B);
             Assert.Equal("IT", rows[8].C);
 
-            var dimension = Helpers.GetFirstSheetDimensionRefValue(path);
+            var dimension = SheetHelper.GetFirstSheetDimensionRefValue(path);
             Assert.Equal("A1:C9", dimension);
         }
     }
@@ -336,7 +337,7 @@ public class MiniExcelTemplateTests
             Assert.Equal("Keaton", rows[8].B);
             Assert.Equal("IT", rows[8].C);
 
-            var dimension = Helpers.GetFirstSheetDimensionRefValue(path);
+            var dimension = SheetHelper.GetFirstSheetDimensionRefValue(path);
             Assert.Equal("A1:C9", dimension);
         }
 
@@ -360,7 +361,7 @@ public class MiniExcelTemplateTests
             Assert.Equal("Keaton", rows[8].B);
             Assert.Equal("IT", rows[8].C);
 
-            var dimension = Helpers.GetFirstSheetDimensionRefValue(path);
+            var dimension = SheetHelper.GetFirstSheetDimensionRefValue(path);
             Assert.Equal("A1:C9", dimension);
         }
     }
@@ -420,7 +421,7 @@ public class MiniExcelTemplateTests
         Assert.Equal("Felix", rows[12].A);
         Assert.Equal("HR", rows[12].B);
 
-        var dimension = Helpers.GetFirstSheetDimensionRefValue(path);
+        var dimension = SheetHelper.GetFirstSheetDimensionRefValue(path);
         Assert.Equal("A1:B20", dimension);
     }
 
@@ -466,7 +467,7 @@ public class MiniExcelTemplateTests
         Assert.Equal("ITWeiHan Github Projects", rows[0].B);
         Assert.Equal("Total Star : 178", rows[8].C);
 
-        var dimension = Helpers.GetFirstSheetDimensionRefValue(path.ToString());
+        var dimension = SheetHelper.GetFirstSheetDimensionRefValue(path.ToString());
         Assert.Equal("A1:D9", dimension);
     }
 
@@ -556,7 +557,7 @@ public class MiniExcelTemplateTests
             Assert.Equal(poco.datetime, rows[4].datetime);
             Assert.Equal(poco.Guid, rows[4].Guid);
 
-            var dimension = Helpers.GetFirstSheetDimensionRefValue(path.ToString());
+            var dimension = SheetHelper.GetFirstSheetDimensionRefValue(path.ToString());
             Assert.Equal("A1:G6", dimension);
         }
     }
@@ -590,7 +591,7 @@ public class MiniExcelTemplateTests
             Assert.Equal(value.datetime, rows[0].datetime);
             Assert.Equal(value.Guid, rows[0].Guid);
 
-            var dimension = Helpers.GetFirstSheetDimensionRefValue(path.ToString());
+            var dimension = SheetHelper.GetFirstSheetDimensionRefValue(path.ToString());
             Assert.Equal("A1:G2", dimension);
         }
     }
@@ -631,7 +632,7 @@ public class MiniExcelTemplateTests
             Assert.Equal(123, rows[1].D);
             Assert.Equal("Jack has 123 points", rows[1].E);
 
-            var dimension = Helpers.GetFirstSheetDimensionRefValue(path.ToString());
+            var dimension = SheetHelper.GetFirstSheetDimensionRefValue(path.ToString());
             Assert.Equal("A1:E2", dimension);
         }
 
@@ -655,7 +656,7 @@ public class MiniExcelTemplateTests
             Assert.Equal(123, rows[1].D);
             Assert.Equal("Jack has 123 points", rows[1].E);
 
-            var dimension = Helpers.GetFirstSheetDimensionRefValue(path.ToString());
+            var dimension = SheetHelper.GetFirstSheetDimensionRefValue(path.ToString());
             Assert.Equal("A1:E2", dimension);
         }
 
@@ -683,7 +684,7 @@ public class MiniExcelTemplateTests
             Assert.Equal(123, rows[1].D);
             Assert.Equal("Jack has 123 points", rows[1].E);
 
-            var dimension = Helpers.GetFirstSheetDimensionRefValue(path.ToString());
+            var dimension = SheetHelper.GetFirstSheetDimensionRefValue(path.ToString());
             Assert.Equal("A1:E2", dimension);
         }
 
@@ -707,7 +708,7 @@ public class MiniExcelTemplateTests
             Assert.Equal(123, rows[1].D);
             Assert.Equal("Jack has 123 points", rows[1].E);
 
-            var dimension = Helpers.GetFirstSheetDimensionRefValue(path.ToString());
+            var dimension = SheetHelper.GetFirstSheetDimensionRefValue(path.ToString());
             Assert.Equal("A1:E2", dimension);
         }
     }
@@ -734,7 +735,7 @@ public class MiniExcelTemplateTests
             };
             _templater.ApplyXlsxTemplate(path.ToString(), templatePath, value);
 
-            var dimension = Helpers.GetFirstSheetDimensionRefValue(path.ToString());
+            var dimension = SheetHelper.GetFirstSheetDimensionRefValue(path.ToString());
             Assert.Equal("A1:B7", dimension);
         }
 
@@ -756,7 +757,7 @@ public class MiniExcelTemplateTests
             };
             _templater.ApplyXlsxTemplate(path.ToString(), templatePath, value);
 
-            var dimension = Helpers.GetFirstSheetDimensionRefValue(path.ToString());
+            var dimension = SheetHelper.GetFirstSheetDimensionRefValue(path.ToString());
             Assert.Equal("A1:B7", dimension);
         }
 
@@ -781,7 +782,7 @@ public class MiniExcelTemplateTests
             };
             _templater.ApplyXlsxTemplate(path.ToString(), templatePath, value);
 
-            var dimension = Helpers.GetFirstSheetDimensionRefValue(path.ToString());
+            var dimension = SheetHelper.GetFirstSheetDimensionRefValue(path.ToString());
             Assert.Equal("A1:B7", dimension);
         }
     }
@@ -806,7 +807,7 @@ public class MiniExcelTemplateTests
         };
         _templater.ApplyXlsxTemplate(path.ToString(), templatePath, value);
 
-        var dimension = Helpers.GetFirstSheetDimensionRefValue(path.ToString());
+        var dimension = SheetHelper.GetFirstSheetDimensionRefValue(path.ToString());
         Assert.Equal("A1:C13", dimension);
     }
 
@@ -857,7 +858,7 @@ public class MiniExcelTemplateTests
                 Assert.Equal("Keaton", rows[8].B);
                 Assert.Equal("IT", rows[8].C);
 
-                var dimension = Helpers.GetFirstSheetDimensionRefValue(path.ToString());
+                var dimension = SheetHelper.GetFirstSheetDimensionRefValue(path.ToString());
                 Assert.Equal("A1:C9", dimension);
             }
 
@@ -882,7 +883,7 @@ public class MiniExcelTemplateTests
                 Assert.Equal("Keaton", rows[8].B);
                 Assert.Equal("IT", rows[8].C);
 
-                var dimension = Helpers.GetFirstSheetDimensionRefValue(path.ToString());
+                var dimension = SheetHelper.GetFirstSheetDimensionRefValue(path.ToString());
                 Assert.Equal("A1:C9", dimension);
             }
         }
@@ -927,7 +928,7 @@ public class MiniExcelTemplateTests
             Assert.Equal("Keaton", rows[8].B);
             Assert.Equal("IT", rows[8].C);
 
-            var dimension = Helpers.GetFirstSheetDimensionRefValue(path.ToString());
+            var dimension = SheetHelper.GetFirstSheetDimensionRefValue(path.ToString());
             Assert.Equal("A1:C9", dimension);
         }
     }
@@ -939,7 +940,7 @@ public class MiniExcelTemplateTests
         using var mergedFilePath = AutoDeletingPath.Create();
 
         _templater.MergeSameCells(mergedFilePath.ToString(), path);
-        var mergedCells = Helpers.GetFirstSheetMergedCells(mergedFilePath.ToString());
+        var mergedCells = SheetHelper.GetFirstSheetMergedCells(mergedFilePath.ToString());
 
         Assert.Equal("A2:A4", mergedCells[0]);
         Assert.Equal("C3:C4", mergedCells[1]);
@@ -953,7 +954,7 @@ public class MiniExcelTemplateTests
         using var mergedFilePath = AutoDeletingPath.Create();
 
         _templater.MergeSameCells(mergedFilePath.ToString(), path);
-        var mergedCells = Helpers.GetFirstSheetMergedCells(mergedFilePath.ToString());
+        var mergedCells = SheetHelper.GetFirstSheetMergedCells(mergedFilePath.ToString());
 
         Assert.Equal("A3:A4", mergedCells[0]);
         Assert.Equal("C3:C6", mergedCells[1]);

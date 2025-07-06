@@ -1,0 +1,10 @@
+﻿namespace MiniExcelLib.Abstractions;
+
+public partial interface IMiniExcelWriter
+{
+    [CreateSyncVersion]
+    Task<int[]> SaveAsAsync(CancellationToken cancellationToken = default);
+
+    [CreateSyncVersion]
+    Task<int> InsertAsync(bool overwriteSheet = false, CancellationToken cancellationToken = default);
+}

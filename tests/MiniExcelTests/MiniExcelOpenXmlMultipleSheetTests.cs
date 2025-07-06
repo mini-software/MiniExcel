@@ -1,5 +1,5 @@
-﻿using MiniExcelLib.Core.OpenXml.Attributes;
-using MiniExcelLib.Core.OpenXml.Models;
+﻿using MiniExcelLib.OpenXml.Attributes;
+using MiniExcelLib.OpenXml.Models;
 
 namespace MiniExcelLib.Tests;
 

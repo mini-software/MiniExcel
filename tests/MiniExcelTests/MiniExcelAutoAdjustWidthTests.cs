@@ -1,6 +1,6 @@
 ﻿using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
-using MiniExcelLib.Core.OpenXml.Models;
+using MiniExcelLib.OpenXml.Models;
 
 namespace MiniExcelLib.Tests;
 

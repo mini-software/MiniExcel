@@ -1,5 +1,6 @@
 ﻿using CsvHelper;
-using MiniExcelLib.Core.Exceptions;
+using MiniExcelLib.Attributes;
+using MiniExcelLib.Exceptions;
 
 namespace MiniExcelLib.Tests;
 

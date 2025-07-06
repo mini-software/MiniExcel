@@ -32,9 +32,8 @@
 	</ItemGroup>
 	
 	<ItemGroup>
-		<ProjectReference Include="..\..\src\MiniExcel.Core\MiniExcel.Core.csproj" />
-		<ProjectReference Include="..\..\src\MiniExcel.Csv\MiniExcel.Csv.csproj" />
 		<ProjectReference Include="..\..\src\MiniExcel\MiniExcel.csproj" />
+		<ProjectReference Include="..\..\src\MiniExcel.Csv\MiniExcel.Csv.csproj" />
 	</ItemGroup>
 	
 	<ItemGroup>

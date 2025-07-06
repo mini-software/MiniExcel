@@ -78,7 +78,11 @@ internal partial class ExcelOpenXmlSheetWriter : IExcelWriter
         }
         finally
         {
+#if NET10_0_OR_GREATER
+            await _archive.DisposeAsync().ConfigureAwait(false);
+#else
             _archive.Dispose();
+#endif
         }
     }
 
@@ -156,7 +160,11 @@ internal partial class ExcelOpenXmlSheetWriter : IExcelWriter
         }
         finally
         {
+#if NET10_0_OR_GREATER
+            await _archive.DisposeAsync().ConfigureAwait(false);
+#else
             _archive.Dispose();
+#endif
         }
     }
 
@@ -176,7 +184,11 @@ internal partial class ExcelOpenXmlSheetWriter : IExcelWriter
         var entry = _archive.CreateEntry(sheetPath, CompressionLevel.Fastest);
         var rowsWritten = 0;
 
+#if NET10_0_OR_GREATER
+        using var zipStream = await entry.OpenAsync(cancellationToken).ConfigureAwait(false);
+#else
         using var zipStream = entry.Open();
+#endif
         using var writer = new MiniExcelStreamWriter(zipStream, Utf8WithBom, _configuration.BufferSize);
         
         if (values is null)
@@ -597,7 +609,11 @@ internal partial class ExcelOpenXmlSheetWriter : IExcelWriter
         }
 #if NET5_0_OR_GREATER
 #pragma warning disable CA2007 // Consider calling ConfigureAwait on the awaited task
-        await using var stream = contentTypesZipEntry.Open();
+#if NET10_0_OR_GREATER
+            await using var stream = await contentTypesZipEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
+#else
+            await using var stream = contentTypesZipEntry.Open();
+#endif
 #pragma warning restore CA2007 // Consider calling ConfigureAwait on the awaited task
 #else
         using var stream = contentTypesZipEntry.Open();
@@ -645,7 +661,11 @@ internal partial class ExcelOpenXmlSheetWriter : IExcelWriter
 
 #if NET5_0_OR_GREATER
 #pragma warning disable CA2007 // Consider calling ConfigureAwait on the awaited task
+#if NET10_0_OR_GREATER
+        await using (var zipStream = await entry.OpenAsync(cancellationToken).ConfigureAwait(false))
+#else
         await using (var zipStream = entry.Open())
+#endif
 #pragma warning restore CA2007 // Consider calling ConfigureAwait on the awaited task
 #else
         using (var zipStream = entry.Open())
@@ -666,7 +686,11 @@ internal partial class ExcelOpenXmlSheetWriter : IExcelWriter
 
 #if NET5_0_OR_GREATER
 #pragma warning disable CA2007 // Consider calling ConfigureAwait on the awaited task
+#if NET10_0_OR_GREATER
+        await using var zipStream = await entry.OpenAsync(cancellationToken).ConfigureAwait(false);
+#else
         await using var zipStream = entry.Open();
+#endif
         await zipStream.WriteAsync(content, cancellationToken).ConfigureAwait(false);
 #pragma warning restore CA2007 // Consider calling ConfigureAwait on the awaited task
 #else

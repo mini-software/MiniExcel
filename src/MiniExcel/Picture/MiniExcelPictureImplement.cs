@@ -148,8 +148,17 @@ internal static partial class MiniExcelPictureImplement
 				var imageName = $"image{Guid.NewGuid():N}.png";
                 var imagePath = $"xl/media/{imageName}";
                 var imageEntry = archive.CreateEntry(imagePath);
-                    
-                using (var entryStream = imageEntry.Open())
+
+#if NET10_0_OR_GREATER
+                using var entryStream = await imageEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
+#else
+                using var entryStream = imageEntry.Open();
+#endif
+#if NET5_0_OR_GREATER
+                await entryStream.WriteAsync(imageBytes.AsMemory(), cancellationToken).ConfigureAwait(false);
+#else
+                await entryStream.WriteAsync(imageBytes, 0, imageBytes.Length, cancellationToken).ConfigureAwait(false);
+#endif
                 {
 #pragma warning disable CA1835
                     await entryStream.WriteAsync(imageBytes, 0, imageBytes.Length, CancellationToken.None).ConfigureAwait(false);

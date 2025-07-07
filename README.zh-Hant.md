@@ -41,7 +41,22 @@ MiniExcel 簡單、高效避免OOM的.NET處理Excel查、寫、填充工具。
 
 目前主流框架大多需要將資料全載入到記憶體方便操作，但這會導致記憶體消耗問題，MiniExcel 嘗試以 Stream 角度寫底層算法邏輯，能讓原本1000多MB占用降低到幾MB，避免記憶體不夠情況。
 
-![image](https://user-images.githubusercontent.com/12729184/113084691-1804d000-9211-11eb-9b08-cbb89d9ecdc2.png)
+```mermaid
+flowchart LR
+    A1(["Excel 解析流程"]) --> A2{{"XLSX文件<br>解壓縮"}} --> A3{{"解析<br>OpenXML"}} --> A4{{"模型轉"}} --> A5(["返回結果"])
+
+    B1(["一般框架"]) --> B2{{"記憶體"}} --> B3{{"記憶體"}} --> B4{{"封裝類別"}} --> B5(["全部資料"])
+
+    C1(["MiniExcel"]) --> C2{{"Stream流"}} --> C3{{"Stream流"}} --> C4{{"POCO<br>或 dynamic"}} --> C5(["延遲查詢<br>一行一行返回"])
+
+    classDef analysis fill:#D0E8FF,stroke:#1E88E5,color:#0D47A1,font-weight:bold;
+    classDef others fill:#FCE4EC,stroke:#EC407A,color:#880E4F,font-weight:bold;
+    classDef miniexcel fill:#E8F5E9,stroke:#388E3C,color:#1B5E20,font-weight:bold;
+
+    class A1,A2,A3,A4,A5 analysis;
+    class B1,B2,B3,B4,B5 others;
+    class C1,C2,C3,C4,C5 miniexcel;
+```
 
 ### 特點
 - 低記憶體耗用，避免OOM、頻繁 Full GC 情況
@@ -100,29 +115,29 @@ Benchmark History :  [Link](https://github.com/mini-software/MiniExcel/issues/27
 邏輯 : 以 [**Test1,000,000x10.xlsx**](benchmarks/MiniExcel.Benchmarks/Test1%2C000%2C000x10.xlsx) 做基準與主流框架做性能測試，總共 1,000,000 行 * 10 列筆 "HelloWorld"，文件大小 23 MB
 
 
-| Library      | Method                       | 最大記憶體耗用 |         平均時間 |
-| ---------------------------- | -------------: | ---------------: | ---------------: |
-| MiniExcel | 'MiniExcel QueryFirst'       |       0.109 MB | 0.0007264 sec |
-| ExcelDataReader | 'ExcelDataReader QueryFirst' |       15.24 MB | 10.66421 sec |
-| MiniExcel  | 'MiniExcel Query'            |        17.3 MB | 14.17933 sec |
-| ExcelDataReader | 'ExcelDataReader Query'      |        17.3 MB | 22.56508 sec |
-| Epplus    | 'Epplus QueryFirst'          |       1,452 MB | 18.19801 sec |
-| Epplus        | 'Epplus Query'               |       1,451 MB | 23.64747 sec |
-| OpenXmlSDK | 'OpenXmlSDK Query'           |       1,412 MB | 52.00327 sec |
-| OpenXmlSDK | 'OpenXmlSDK QueryFirst'      |       1,413 MB | 52.34865 sec |
-| ClosedXml | 'ClosedXml QueryFirst'       |       2,158 MB | 66.18897 sec |
-| ClosedXml  | 'ClosedXml Query'            |       2,184 MB | 191.43412 sec |
+| Library         |                       Method | 最大記憶體耗用 |      平均時間 |
+| --------------- | ---------------------------: | -------------: | ------------: |
+| MiniExcel       |       'MiniExcel QueryFirst' |       0.109 MB | 0.0007264 sec |
+| ExcelDataReader | 'ExcelDataReader QueryFirst' |       15.24 MB |  10.66421 sec |
+| MiniExcel       |            'MiniExcel Query' |        17.3 MB |  14.17933 sec |
+| ExcelDataReader |      'ExcelDataReader Query' |        17.3 MB |  22.56508 sec |
+| Epplus          |          'Epplus QueryFirst' |       1,452 MB |  18.19801 sec |
+| Epplus          |               'Epplus Query' |       1,451 MB |  23.64747 sec |
+| OpenXmlSDK      |           'OpenXmlSDK Query' |       1,412 MB |  52.00327 sec |
+| OpenXmlSDK      |      'OpenXmlSDK QueryFirst' |       1,413 MB |  52.34865 sec |
+| ClosedXml       |       'ClosedXml QueryFirst' |       2,158 MB |  66.18897 sec |
+| ClosedXml       |            'ClosedXml Query' |       2,184 MB | 191.43412 sec |
 
 #### 導出、創建 Excel 比較
 
 邏輯 : 創建1千萬筆 "HelloWorld"
 
-| Library            | Method                   | 最大記憶體耗用 |         平均時間 |
-| ------------------------ | -------------: | ---------------: | -----------: |
-| MiniExcel | 'MiniExcel Create Xlsx'  |          15 MB | 11.53181 sec |
-| Epplus | 'Epplus Create Xlsx'     |       1,204 MB | 22.50971 sec |
-| OpenXmlSdk | 'OpenXmlSdk Create Xlsx' |       2,621 MB | 42.47399 sec |
-| ClosedXml | 'ClosedXml Create Xlsx'  |       7,141 MB | 140.93992 sec |
+| Library    |                   Method | 最大記憶體耗用 |      平均時間 |
+| ---------- | -----------------------: | -------------: | ------------: |
+| MiniExcel  |  'MiniExcel Create Xlsx' |          15 MB |  11.53181 sec |
+| Epplus     |     'Epplus Create Xlsx' |       1,204 MB |  22.50971 sec |
+| OpenXmlSdk | 'OpenXmlSdk Create Xlsx' |       2,621 MB |  42.47399 sec |
+| ClosedXml  |  'ClosedXml Create Xlsx' |       7,141 MB | 140.93992 sec |
 
 
 
@@ -162,9 +177,9 @@ using (var stream = File.OpenRead(path))
 
 * Key 系統預設為 `A,B,C,D...Z`
 
-| MiniExcel     | 1     |
-| -------- | -------- |
-| Github     | 2     |
+| MiniExcel | 1   |
+| --------- | --- |
+| Github    | 2   |
 
 ```csharp
 
@@ -188,10 +203,10 @@ using (var stream = File.OpenRead(path))
 
 Input Excel :
 
-| Column1 | Column2 |
-| -------- | -------- |
-| MiniExcel     | 1     |
-| Github     | 2     |
+| Column1   | Column2 |
+| --------- | ------- |
+| MiniExcel | 1       |
+| Github    | 2       |
 
 
 ```csharp

@@ -1,6 +1,4 @@
-﻿using MiniExcelLib.Attributes;
-
-namespace MiniExcelLib;
+﻿namespace MiniExcelLib;
 
 public interface IMiniExcelConfiguration;
 

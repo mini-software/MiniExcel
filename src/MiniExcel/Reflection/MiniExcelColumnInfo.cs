@@ -1,5 +1,3 @@
-using MiniExcelLib.Attributes;
-
 namespace MiniExcelLib.Reflection;
 
 public class MiniExcelColumnInfo

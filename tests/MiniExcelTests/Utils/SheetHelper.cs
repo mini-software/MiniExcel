@@ -80,9 +80,9 @@ internal static class SheetHelper
 
         using var stream = File.OpenRead(path);
         using var archive = new ZipArchive(stream, ZipArchiveMode.Read, false, Encoding.UTF8);
-        var sheet = archive.Entries
-            .Single(w => w.FullName.StartsWith("xl/worksheets/sheet1", StringComparison.OrdinalIgnoreCase) ||
-                         w.FullName.StartsWith("/xl/worksheets/sheet1", StringComparison.OrdinalIgnoreCase));
+        var sheet = archive.Entries.Single(w => 
+            w.FullName.StartsWith("xl/worksheets/sheet1", StringComparison.OrdinalIgnoreCase) ||
+            w.FullName.StartsWith("/xl/worksheets/sheet1", StringComparison.OrdinalIgnoreCase));
             
         using var sheetStream = sheet.Open();
         var doc = XDocument.Load(sheetStream);
@@ -100,9 +100,9 @@ internal static class SheetHelper
         
         using var stream = File.OpenRead(path);
         using var archive = new ZipArchive(stream, ZipArchiveMode.Read, false, Encoding.UTF8);
-        var sheet = archive.Entries
-            .Single(w => w.FullName.StartsWith("xl/worksheets/sheet1", StringComparison.OrdinalIgnoreCase) ||
-                         w.FullName.StartsWith("/xl/worksheets/sheet1", StringComparison.OrdinalIgnoreCase));
+        var sheet = archive.Entries.Single(w => 
+            w.FullName.StartsWith("xl/worksheets/sheet1", StringComparison.OrdinalIgnoreCase) ||
+            w.FullName.StartsWith("/xl/worksheets/sheet1", StringComparison.OrdinalIgnoreCase));
 
         using var sheetStream = sheet.Open();
         var doc = new XmlDocument();

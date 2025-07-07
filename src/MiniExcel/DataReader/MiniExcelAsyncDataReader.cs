@@ -1,6 +1,6 @@
 namespace MiniExcelLib.DataReader;
 
-// todo: this is way improvable, let's try to merge the sync and async implementations 
+// todo: this is way improvable, ideally the sync and async implementations into a single datareader
 public class MiniExcelAsyncDataReader : MiniExcelDataReaderBase, IAsyncDisposable
 {
     private readonly IAsyncEnumerator<IDictionary<string, object?>> _source;

@@ -1,9 +1,4 @@
-﻿using MiniExcelLib.Abstractions;
-using MiniExcelLib.Reflection;
-using MiniExcelLib.WriteAdapters;
-using IMiniExcelWriter = MiniExcelLib.Abstractions.IMiniExcelWriter;
-
-namespace MiniExcelLib.Csv;
+﻿namespace MiniExcelLib.Csv;
 
 internal partial class CsvWriter : IMiniExcelWriter, IDisposable
 {

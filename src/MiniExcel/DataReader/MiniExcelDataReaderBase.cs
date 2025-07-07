@@ -1,6 +1,4 @@
-﻿using MiniExcelLib.Abstractions;
-
-namespace MiniExcelLib.DataReader;
+﻿namespace MiniExcelLib.DataReader;
 
 /// <summary>
 /// IMiniExcelDataReader Base Class

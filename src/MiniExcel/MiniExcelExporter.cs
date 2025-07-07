@@ -1,5 +1,4 @@
 using MiniExcelLib.OpenXml.Picture;
-using OpenXmlWriter = MiniExcelLib.OpenXml.OpenXmlWriter;
 
 namespace MiniExcelLib;
 

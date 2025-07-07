@@ -3,7 +3,6 @@ using System.Dynamic;
 using MiniExcelLib.DataReader;
 using MiniExcelLib.OpenXml.Models;
 using MiniExcelLib.OpenXml.Zip;
-using OpenXmlReader = MiniExcelLib.OpenXml.OpenXmlReader;
 
 namespace MiniExcelLib;
 

@@ -1,6 +1,4 @@
-﻿using MiniExcelLib.Helpers;
-
-namespace MiniExcelLib.Attributes;
+﻿namespace MiniExcelLib.Attributes;
 
 [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
 public class MiniExcelColumnAttribute : Attribute

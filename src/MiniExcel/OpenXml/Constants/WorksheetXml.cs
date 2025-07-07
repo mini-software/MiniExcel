@@ -1,6 +1,4 @@
-﻿using MiniExcelLib.Attributes;
-
-namespace MiniExcelLib.OpenXml.Constants;
+﻿namespace MiniExcelLib.OpenXml.Constants;
 
 internal static class WorksheetXml
 {

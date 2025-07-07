@@ -1,6 +1,4 @@
-﻿using MiniExcelLib.Reflection;
-
-namespace MiniExcelLib.Abstractions;
+﻿namespace MiniExcelLib.Abstractions;
 
 public interface IMiniExcelWriteAdapter
 {

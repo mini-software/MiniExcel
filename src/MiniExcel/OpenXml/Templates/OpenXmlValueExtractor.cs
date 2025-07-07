@@ -1,6 +1,3 @@
-using MiniExcelLib.Abstractions;
-using MiniExcelLib.Helpers;
-
 namespace MiniExcelLib.OpenXml.Templates;
 
 public class OpenXmlValueExtractor : IInputValueExtractor

@@ -1,8 +1,4 @@
-using MiniExcelLib.Attributes;
-using MiniExcelLib.Helpers;
 using MiniExcelLib.OpenXml.Constants;
-using MiniExcelLib.OpenXml.Utils;
-using MiniExcelLib.Reflection;
 
 namespace MiniExcelLib.OpenXml.Templates;
 
@@ -135,19 +131,19 @@ internal partial class OpenXmlTemplate
     private List<XMergeCell> _newXMergeCellInfos;
 
 #if NET7_0_OR_GREATER
-        [GeneratedRegex("([A-Z]+)([0-9]+)")] private static partial Regex CellRegexImpl();
-        private static readonly Regex CellRegex = CellRegexImpl();
-        [GeneratedRegex(@"\{\{(.*?)\}\}")] private static partial Regex TemplateRegexImpl();
-        private static readonly Regex TemplateRegex = TemplateRegexImpl();
-        [GeneratedRegex(@".*?\{\{.*?\}\}.*?")] private static partial Regex NonTemplateRegexImpl();
-        private static readonly Regex NonTemplateRegex = NonTemplateRegexImpl();
+    [GeneratedRegex("([A-Z]+)([0-9]+)")] private static partial Regex CellRegexImpl();
+    private static readonly Regex CellRegex = CellRegexImpl();
+    [GeneratedRegex(@"\{\{(.*?)\}\}")] private static partial Regex TemplateRegexImpl();
+    private static readonly Regex TemplateRegex = TemplateRegexImpl();
+    [GeneratedRegex(@".*?\{\{.*?\}\}.*?")] private static partial Regex NonTemplateRegexImpl();
+    private static readonly Regex NonTemplateRegex = NonTemplateRegexImpl();
 #else
     private static readonly Regex CellRegex = new("([A-Z]+)([0-9]+)", RegexOptions.Compiled);
     private static readonly Regex TemplateRegex = new(@"\{\{(.*?)\}\}", RegexOptions.Compiled);
     private static readonly Regex NonTemplateRegex = new(@".*?\{\{.*?\}\}.*?", RegexOptions.Compiled);
 #endif
 
-    [Zomp.SyncMethodGenerator.CreateSyncVersion]
+    [CreateSyncVersion]
     private async Task GenerateSheetXmlImplByUpdateModeAsync(ZipArchiveEntry sheetZipEntry, Stream stream, Stream sheetStream, IDictionary<string, object> inputMaps, IDictionary<int, string> sharedStrings, bool mergeCells = false, CancellationToken cancellationToken = default)
     {
         var doc = new XmlDocument();
@@ -271,7 +267,7 @@ internal partial class OpenXmlTemplate
         }
     }
 
-    [Zomp.SyncMethodGenerator.CreateSyncVersion]
+    [CreateSyncVersion]
     private async Task WriteSheetXmlAsync(Stream outputFileStream, XmlDocument doc, XmlNode sheetData, bool mergeCells = false, CancellationToken cancellationToken = default)
     {
         //Q.Why so complex?
@@ -586,7 +582,7 @@ internal partial class OpenXmlTemplate
     }
 
     //todo: refactor in a way that needs less parameters
-    [Zomp.SyncMethodGenerator.CreateSyncVersion]
+    [CreateSyncVersion]
     private async Task<GenerateCellValuesContext> GenerateCellValuesAsync(GenerateCellValuesContext generateCellValuesContext, string endPrefix, StreamWriter writer,
         StringBuilder rowXml, int mergeRowCount, bool isHeaderRow,
         XRowInfo rowInfo, XmlElement row, int groupingRowDiff,

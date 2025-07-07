@@ -540,7 +540,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
                     """;
 
                 using var reader = command.ExecuteReader();
-                 _exporter.ExportXlsx(path.ToString(), reader, configuration: config);
+                _exporter.ExportXlsx(path.ToString(), reader, configuration: config);
             }
 
             var xml = SheetHelper.GetZipFileContent(path.ToString(), "xl/worksheets/sheet1.xml");
@@ -582,7 +582,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
                 using var command = new SQLiteCommand("select * from T", connection);
                 connection.Open();
                 using var reader = command.ExecuteReader();
-                 _exporter.ExportXlsx(path.ToString(), reader, configuration: config);
+                _exporter.ExportXlsx(path.ToString(), reader, configuration: config);
             }
 
             var xml = SheetHelper.GetZipFileContent(path.ToString(), "xl/worksheets/sheet1.xml");

@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace MiniExcelLibs.OpenXml.Models;
+﻿namespace MiniExcelLib.OpenXml.Models;
 
 internal class FileDto
 {

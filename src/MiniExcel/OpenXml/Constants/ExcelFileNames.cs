@@ -1,4 +1,4 @@
-﻿namespace MiniExcelLibs.OpenXml.Constants;
+﻿namespace MiniExcelLib.OpenXml.Constants;
 
 internal static class ExcelFileNames
 {

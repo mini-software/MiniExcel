@@ -1,8 +1,8 @@
-using MiniExcelLibs.Attributes;
+using MiniExcelLib.OpenXml.Attributes;
 
-namespace MiniExcelLibs.OpenXml;
+namespace MiniExcelLib.OpenXml;
 
-public class OpenXmlConfiguration : MiniExcelConfiguration
+public class OpenXmlConfiguration : MiniExcelBaseConfiguration
 {
     internal static readonly OpenXmlConfiguration DefaultConfig = new();
     
@@ -29,4 +29,10 @@ public class OpenXmlConfiguration : MiniExcelConfiguration
     public bool EnableAutoWidth { get; set; }
     public double MinWidth { get; set; } = 9.28515625;
     public double MaxWidth { get; set; } = 200;
+}
+
+public enum TableStyles
+{
+    None,
+    Default
 }

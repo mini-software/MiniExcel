@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace MiniExcelLibs.OpenXml.Styles;
+﻿namespace MiniExcelLib.OpenXml.Styles;
 
 internal class SheetStyleBuildResult
 {

@@ -1,31 +1,21 @@
-﻿using MiniExcelLibs.Attributes;
-using MiniExcelLibs.OpenXml.Constants;
-using MiniExcelLibs.Zip;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.IO.Compression;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Xml;
+﻿using MiniExcelLib.OpenXml.Constants;
+using MiniExcelLib.OpenXml.Zip;
 
-namespace MiniExcelLibs.OpenXml.Styles;
+namespace MiniExcelLib.OpenXml.Styles;
 
 internal class SheetStyleBuildContext : IDisposable
 {
-    private static readonly string _emptyStylesXml = ExcelOpenXmlUtils.MinifyXml
-    (@"
-            <?xml version=""1.0"" encoding=""utf-8""?>
-            <x:styleSheet xmlns:x=""http://schemas.openxmlformats.org/spreadsheetml/2006/main"">                
-            </x:styleSheet>"
-    );
+    private static readonly string EmptyStylesXml = XmlHelper.MinifyXml(
+    """
+     <?xml version="1.0" encoding="utf-8"?>
+     <x:styleSheet xmlns:x="http://schemas.openxmlformats.org/spreadsheetml/2006/main">                
+     </x:styleSheet>
+     """);
 
     private readonly Dictionary<string, ZipPackageInfo> _zipDictionary;
     private readonly MiniExcelZipArchive _archive;
     private readonly Encoding _encoding;
-    private readonly ICollection<ExcelColumnAttribute> _columns;
+    private readonly ICollection<MiniExcelColumnAttribute> _columns;
 
     private StringReader _emptyStylesXmlStringReader;
     private ZipArchiveEntry? _oldStyleXmlZipEntry;
@@ -37,7 +27,7 @@ internal class SheetStyleBuildContext : IDisposable
     private bool _finalized;
     private bool _disposed;
 
-    public SheetStyleBuildContext(Dictionary<string, ZipPackageInfo> zipDictionary, MiniExcelZipArchive archive, Encoding encoding, ICollection<ExcelColumnAttribute> columns)
+    public SheetStyleBuildContext(Dictionary<string, ZipPackageInfo> zipDictionary, MiniExcelZipArchive archive, Encoding encoding, ICollection<MiniExcelColumnAttribute> columns)
     {
         _zipDictionary = zipDictionary;
         _archive = archive;
@@ -49,7 +39,7 @@ internal class SheetStyleBuildContext : IDisposable
     public XmlWriter NewXmlWriter { get; private set; }
     public SheetStyleElementInfos OldElementInfos { get; private set; }
     public SheetStyleElementInfos GenerateElementInfos { get; private set; }
-    public IEnumerable<ExcelColumnAttribute> ColumnsToApply { get; private set; }
+    public IEnumerable<MiniExcelColumnAttribute> ColumnsToApply { get; private set; }
     public int CustomFormatCount { get; private set; }
 
     public void Initialize(SheetStyleElementInfos generateElementInfos)
@@ -75,7 +65,7 @@ internal class SheetStyleBuildContext : IDisposable
         {
             OldElementInfos = new SheetStyleElementInfos();
 
-            _emptyStylesXmlStringReader = new StringReader(_emptyStylesXml);
+            _emptyStylesXmlStringReader = new StringReader(EmptyStylesXml);
             OldXmlReader = XmlReader.Create(_emptyStylesXmlStringReader, new XmlReaderSettings { IgnoreWhitespace = true });
 
             _newStyleXmlZipEntry = _archive.CreateEntry(ExcelFileNames.Styles, CompressionLevel.Fastest);
@@ -122,7 +112,7 @@ internal class SheetStyleBuildContext : IDisposable
         else
         {
             OldElementInfos = new SheetStyleElementInfos();
-            _emptyStylesXmlStringReader = new StringReader(_emptyStylesXml);
+            _emptyStylesXmlStringReader = new StringReader(EmptyStylesXml);
             OldXmlReader = XmlReader.Create(_emptyStylesXmlStringReader, new XmlReaderSettings { IgnoreWhitespace = true, Async = true });
 
             _newStyleXmlZipEntry = _archive.CreateEntry(ExcelFileNames.Styles, CompressionLevel.Fastest);

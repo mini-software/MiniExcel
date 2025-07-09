@@ -1,8 +1,6 @@
-using System;
 using System.Linq.Expressions;
-using System.Reflection;
 
-namespace MiniExcelLibs;
+namespace MiniExcelLib.Reflection;
 
 public class MemberSetter
 {

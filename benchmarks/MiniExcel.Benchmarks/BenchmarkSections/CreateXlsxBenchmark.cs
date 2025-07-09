@@ -4,26 +4,29 @@ using ClosedXML.Excel;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
-using MiniExcelLibs.Benchmarks.Utils;
+using MiniExcelLib.Benchmarks.Utils;
 using NPOI.XSSF.UserModel;
 using OfficeOpenXml;
 
-namespace MiniExcelLibs.Benchmarks.BenchmarkSections;
+namespace MiniExcelLib.Benchmarks.BenchmarkSections;
 
 public class CreateXlsxBenchmark : BenchmarkBase
 {
+    private MiniExcelExporter _exporter;
+        
     [GlobalSetup]
     public void SetUp()
     {
         ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+        _exporter = new MiniExcelExporter();
     }
 
     [Benchmark(Description = "MiniExcel Create Xlsx")]
     public void MiniExcelCreateTest()
     {
         using var path = AutoDeletingPath.Create();
-        MiniExcel.SaveAs(path.FilePath, GetValue());
+        _exporter.ExportXlsx(path.FilePath, GetValue());
     }
 
     [Benchmark(Description = "ClosedXml Create Xlsx")]
@@ -72,10 +75,9 @@ public class CreateXlsxBenchmark : BenchmarkBase
             row.CreateCell(9).SetCellValue(item.Column10);
             i++;
         }
-        using (var fs = File.Create(path.FilePath))
-        {
-            wb.Write(fs);
-        }
+
+        using var fs = File.Create(path.FilePath);
+        wb.Write(fs);
     }
 
     [Benchmark(Description = "OpenXmlSdk Create Xlsx by DOM mode")]

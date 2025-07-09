@@ -1,16 +1,16 @@
-﻿using MiniExcelLibs.OpenXml.Models;
+﻿using MiniExcelLib.OpenXml.Models;
 
-namespace MiniExcelLibs.OpenXml.Constants;
+namespace MiniExcelLib.OpenXml.Constants;
 
 internal static class ExcelXml
 {
     static ExcelXml()
     {
-        DefaultRels = ExcelOpenXmlUtils.MinifyXml(DefaultRels);
-        DefaultWorkbookXml = ExcelOpenXmlUtils.MinifyXml(DefaultWorkbookXml);
-        DefaultWorkbookXmlRels = ExcelOpenXmlUtils.MinifyXml(DefaultWorkbookXmlRels);
-        DefaultSheetRelXml = ExcelOpenXmlUtils.MinifyXml(DefaultSheetRelXml);
-        DefaultDrawing = ExcelOpenXmlUtils.MinifyXml(DefaultDrawing);
+        DefaultRels = XmlHelper.MinifyXml(DefaultRels);
+        DefaultWorkbookXml = XmlHelper.MinifyXml(DefaultWorkbookXml);
+        DefaultWorkbookXmlRels = XmlHelper.MinifyXml(DefaultWorkbookXmlRels);
+        DefaultSheetRelXml = XmlHelper.MinifyXml(DefaultSheetRelXml);
+        DefaultDrawing = XmlHelper.MinifyXml(DefaultDrawing);
     }
 
     internal const string EmptySheetXml = """<?xml version="1.0" encoding="utf-8"?><x:worksheet xmlns:x="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><x:dimension ref="A1"/><x:sheetData></x:sheetData></x:worksheet>""";
@@ -123,6 +123,6 @@ internal static class ExcelXml
             """;
 
     internal static string Sheet(SheetDto sheetDto, int sheetId)
-        => $"""<x:sheet name="{ExcelOpenXmlUtils.EncodeXml(sheetDto.Name)}" sheetId="{sheetId}"{(string.IsNullOrWhiteSpace(sheetDto.State) ? string.Empty : $" state=\"{sheetDto.State}\"")} r:id="{sheetDto.ID}" />""";
+        => $"""<x:sheet name="{XmlHelper.EncodeXml(sheetDto.Name)}" sheetId="{sheetId}"{(string.IsNullOrWhiteSpace(sheetDto.State) ? string.Empty : $" state=\"{sheetDto.State}\"")} r:id="{sheetDto.ID}" />""";
 
 }

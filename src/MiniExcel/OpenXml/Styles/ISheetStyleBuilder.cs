@@ -1,7 +1,4 @@
-﻿using System.Threading;
-using System.Threading.Tasks;
-
-namespace MiniExcelLibs.OpenXml.Styles;
+﻿namespace MiniExcelLib.OpenXml.Styles;
 
 internal partial interface ISheetStyleBuilder
 {

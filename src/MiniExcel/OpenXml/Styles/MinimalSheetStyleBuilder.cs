@@ -1,6 +1,4 @@
-﻿using System.Threading.Tasks;
-
-namespace MiniExcelLibs.OpenXml.Styles;
+﻿namespace MiniExcelLib.OpenXml.Styles;
 
 internal partial class MinimalSheetStyleBuilder : SheetStyleBuilderBase
 {

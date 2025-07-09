@@ -11,8 +11,6 @@ global using System.Text;
 global using Dapper;
 global using MiniExcelLib;
 global using MiniExcelLib.OpenXml;
-global using MiniExcelLib.Csv;
-global using MiniExcelLib.Csv.MiniExcelExtensions;
 global using MiniExcelLib.Tests.Utils;
 global using OfficeOpenXml;
 global using Xunit;

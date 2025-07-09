@@ -1,6 +1,6 @@
-﻿<Solution>
+<Solution>
   <Folder Name="/benchmarks/">
-    <Project Path="benchmarks\MiniExcel.Benchmarks\MiniExcel.Benchmarks.csproj" Type="Classic C#" />
+    <Project Path="benchmarks\MiniExcel.Benchmarks\MiniExcel.Benchmarks.csproj" />
   </Folder>
   <Folder Name="/Docs and setting/">
     <File Path=".gitattributes" />
@@ -22,10 +22,12 @@
     <File Path="docs\README.zh-Hant.md" />
   </Folder>
   <Folder Name="/src/">
-    <Project Path="src\MiniExcel.Csv\MiniExcel.Csv.csproj" Type="Classic C#" />
-    <Project Path="src\MiniExcel\MiniExcel.csproj" Type="Classic C#" />
+    <Project Path="src\MiniExcel.Csv\MiniExcel.Csv.csproj" />
+    <Project Path="src\MiniExcel\MiniExcel.csproj" />
   </Folder>
   <Folder Name="/tests/">
-    <Project Path="tests\MiniExcelTests\MiniExcelTests.csproj" Type="Classic C#" />
+    <Project Path="tests/MiniExcel.Csv.Tests/MiniExcel.Csv.Tests.csproj" Id="a9a9f703-f298-4cca-817c-79acaf007244" />
+    <Project Path="tests/MiniExcel.Tests.Common/MiniExcel.Tests.Common.csproj" Id="c91ede87-b478-4a84-ba41-3f63847d1392" />
+    <Project Path="tests\MiniExcelTests\MiniExcelTests.csproj" />
   </Folder>
 </Solution>

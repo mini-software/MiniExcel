@@ -1,4 +1,6 @@
-﻿namespace MiniExcelLib.Tests.SaveByTemplate;
+﻿using MiniExcelLib.Tests.Common.Utils;
+
+namespace MiniExcelLib.Tests.SaveByTemplate;
 
 public class MiniExcelTemplateAsyncTests
 {

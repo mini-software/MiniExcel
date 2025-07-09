@@ -1,5 +1,6 @@
 ﻿using MiniExcelLib.OpenXml.Attributes;
 using MiniExcelLib.OpenXml.Models;
+using MiniExcelLib.Tests.Common.Utils;
 
 namespace MiniExcelLib.Tests;
 

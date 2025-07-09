@@ -1,10 +1,13 @@
-﻿namespace MiniExcelLib.Tests.Utils;
+﻿using System.Data.SQLite;
+using System.Text;
 
-internal static class Db
+namespace MiniExcelLib.Tests.Common.Utils;
+
+public static class Db
 {
-    internal static SQLiteConnection GetConnection(string connectionString = "Data Source=:memory:") => new(connectionString);
+    public static SQLiteConnection GetConnection(string connectionString = "Data Source=:memory:") => new(connectionString);
 
-    internal static string GenerateDummyQuery(List<Dictionary<string, object>> data)
+    public static string GenerateDummyQuery(List<Dictionary<string, object>> data)
     {
         if (data is null or [])
             throw new ArgumentException("The data list cannot be null or empty.");

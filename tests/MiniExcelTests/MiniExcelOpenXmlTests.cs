@@ -1,6 +1,7 @@
 ﻿using System.IO.Packaging;
 using ClosedXML.Excel;
 using ExcelDataReader;
+using MiniExcelLib.Tests.Common.Utils;
 using MiniExcelLib.Attributes;
 using MiniExcelLib.OpenXml.Utils;
 

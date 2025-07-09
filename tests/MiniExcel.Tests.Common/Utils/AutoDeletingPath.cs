@@ -1,4 +1,4 @@
-namespace MiniExcelLib.Tests.Utils;
+namespace MiniExcelLib.Tests.Common.Utils;
 
 public class AutoDeletingPath : IDisposable
 {

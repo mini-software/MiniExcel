@@ -1,4 +1,6 @@
-﻿using CsvReader = CsvHelper.CsvReader;
+﻿using MiniExcelLib.Tests.Common.Utils;
+using System.Text;
+using CsvReader = CsvHelper.CsvReader;
 
 namespace MiniExcelLib.Tests;
 

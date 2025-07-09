@@ -1,6 +1,6 @@
-﻿namespace MiniExcelLib.Tests.Utils;
+﻿namespace MiniExcelLib.Tests.Common.Utils;
 
-internal static class PathHelper
+public static class PathHelper
 {
     public static string GetFile(string fileName) => $"../../../../../samples/{fileName}";
 

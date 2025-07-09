@@ -14,14 +14,11 @@
 	
 	<ItemGroup>
 		<PackageReference Include="ClosedXML" Version="0.105.0" />
-		<PackageReference Include="CsvHelper" Version="33.0.1" />
-		<PackageReference Include="Dapper" Version="2.1.66" />
 		<PackageReference Include="EPPlus" Version="7.7.2" />
 		<PackageReference Include="ExcelDataReader" Version="3.7.0" />
 		<PackageReference Include="ExcelDataReader.DataSet" Version="3.7.0" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
 		<PackageReference Include="NPOI" Version="2.7.3" />
-		<PackageReference Include="System.Data.SQLite.Core" Version="1.0.119" />
 
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.13.0" />
 		<PackageReference Include="xunit" Version="2.5.3" />
@@ -33,7 +30,7 @@
 	
 	<ItemGroup>
 		<ProjectReference Include="..\..\src\MiniExcel\MiniExcel.csproj" />
-		<ProjectReference Include="..\..\src\MiniExcel.Csv\MiniExcel.Csv.csproj" />
+		<ProjectReference Include="..\MiniExcel.Tests.Common\MiniExcel.Tests.Common.csproj" />
 	</ItemGroup>
 	
 	<ItemGroup>

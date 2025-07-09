@@ -26,8 +26,8 @@
     <Project Path="src\MiniExcel\MiniExcel.csproj" />
   </Folder>
   <Folder Name="/tests/">
-    <Project Path="tests/MiniExcel.Csv.Tests/MiniExcel.Csv.Tests.csproj" Id="a9a9f703-f298-4cca-817c-79acaf007244" />
-    <Project Path="tests/MiniExcel.Tests.Common/MiniExcel.Tests.Common.csproj" Id="c91ede87-b478-4a84-ba41-3f63847d1392" />
-    <Project Path="tests\MiniExcelTests\MiniExcelTests.csproj" />
+    <Project Path="tests/MiniExcel.Csv.Tests/MiniExcel.Csv.Tests.csproj" />
+    <Project Path="tests/MiniExcel.Tests.Common/MiniExcel.Tests.Common.csproj" />
+    <Project Path="tests\MiniExcel.Tests\MiniExcel.Tests.csproj" />
   </Folder>
 </Solution>

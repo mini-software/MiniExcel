@@ -7,7 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
-using MiniExcelLibs;
+using MiniExcelLib;
 using Microsoft.AspNetCore.Http;
 using System.Text.Json.Serialization;
 using Newtonsoft.Json;
@@ -43,16 +43,24 @@ public class ApiController : Controller
         {
             ContentType = "text/html",
             StatusCode = (int)HttpStatusCode.OK,
-            Content = @"<html><body>
-<a href='api/DownloadExcel'>DownloadExcel</a><br>
-<a href='api/DownloadExcelFromTemplatePath'>DownloadExcelFromTemplatePath</a><br>
-<a href='api/DownloadExcelFromTemplateBytes'>DownloadExcelFromTemplateBytes</a><br>
-<p>Upload Excel</p>
-<form method='post' enctype='multipart/form-data' action='/api/uploadexcel'>
-    <input type='file' name='excel'> <br>
-    <input type='submit' >
-</form>
-</body></html>"
+            Content = 
+            """
+            <html>
+            <body>
+                <a href='api/DownloadExcel'>DownloadExcel</a><br>
+                <a href='api/DownloadExcelFromTemplatePath'>DownloadExcelFromTemplatePath</a><br>
+                <a href='api/DownloadExcelFromTemplateBytes'>DownloadExcelFromTemplateBytes</a><br>
+
+                <p>Upload Excel</p>
+            
+                <form method='post' enctype='multipart/form-data' action='/api/uploadexcel'>
+                    <input type='file' name='excel' /><br />
+
+                    <input type='submit' />
+                </form>
+            </body>
+            </html>
+            """
         };
     }
 

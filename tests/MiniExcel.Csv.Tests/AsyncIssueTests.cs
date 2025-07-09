@@ -1,11 +1,9 @@
-﻿using MiniExcelLib.Tests.Common.Utils;
-
-namespace MiniExcel.Csv.Tests;
+﻿namespace MiniExcelLib.Csv.Tests;
 
 public class AsyncIssueTests
 {
-    private readonly MiniExcelExporter _exporter = MiniExcelLib.MiniExcel.GetExporter();
-    private readonly MiniExcelImporter _importer = MiniExcelLib.MiniExcel.GetImporter();
+    private readonly MiniExcelExporter _exporter = MiniExcel.GetExporter();
+    private readonly MiniExcelImporter _importer = MiniExcel.GetImporter();
 
     /// <summary>
     /// Csv SaveAs by datareader with encoding default show messy code #253

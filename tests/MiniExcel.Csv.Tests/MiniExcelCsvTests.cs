@@ -1,8 +1,4 @@
-﻿using MiniExcelLib.Tests.Common.Utils;
-using CsvReader = CsvHelper.CsvReader;
-using CsvWriter = CsvHelper.CsvWriter;
-
-namespace MiniExcelLib.Tests;
+﻿namespace MiniExcelLib.Csv.Tests;
 
 public class MiniExcelCsvTests
 {
@@ -197,7 +193,7 @@ public class MiniExcelCsvTests
             Assert.Equal(2, rowsWritten[0]);
 
             using var reader = new StreamReader(path.ToString());
-            using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
+            using var csv = new global::CsvHelper.CsvReader(reader, CultureInfo.InvariantCulture);
             
             var records = csv.GetRecords<dynamic>().ToList();
             Assert.Equal(@"""<>+-*//}{\\n", records[0].a);
@@ -233,7 +229,7 @@ public class MiniExcelCsvTests
             _exporter.ExportCsv(path.ToString(), values);
 
             using (var reader = new StreamReader(path.ToString()))
-            using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+            using (var csv = new global::CsvHelper.CsvReader(reader, CultureInfo.InvariantCulture))
             {
                 var records = csv.GetRecords<dynamic>().ToList();
                 {
@@ -284,7 +280,7 @@ public class MiniExcelCsvTests
             Assert.Equal(2, rowsWritten[0]);
 
             using (var reader = new StreamReader(path.ToString()))
-            using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+            using (var csv = new global::CsvHelper.CsvReader(reader, CultureInfo.InvariantCulture))
             {
                 var records = csv.GetRecords<dynamic>().ToList();
                 Assert.Equal(@"""<>+-*//}{\\n", records[0].a);
@@ -335,7 +331,7 @@ public class MiniExcelCsvTests
         Assert.Equal("Test2", rows[1].B);
 
         using var reader = new StreamReader(path);
-        using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
+        using var csv = new global::CsvHelper.CsvReader(reader, CultureInfo.InvariantCulture);
         var records = csv.GetRecords<dynamic>().ToList();
         Assert.Equal("Test1", records[0].A);
         Assert.Equal("Test2", records[0].B);
@@ -481,7 +477,7 @@ public class MiniExcelCsvTests
         var path = file.ToString();
 
         using (var writer = new StreamWriter(path))
-        using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
+        using (var csv = new global::CsvHelper.CsvWriter(writer, CultureInfo.InvariantCulture))
         {
             var records = Enumerable.Range(1, 1).Select(_ => new { v1 = value, v2 = value });
             csv.WriteRecords(records);

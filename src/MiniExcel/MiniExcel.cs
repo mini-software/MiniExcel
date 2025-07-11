@@ -226,6 +226,14 @@ public static partial class MiniExcel
             .SaveAsByTemplateAsync(templateBytes, value, cancellationToken)
             .ConfigureAwait(false);
     }
+    
+    [CreateSyncVersion]
+    public static async Task SaveAsByTemplateAsync(this Stream stream, Stream templateStream, object value, IMiniExcelConfiguration? configuration = null, CancellationToken cancellationToken = default)
+    {
+        await ExcelTemplateFactory.GetProvider(stream, configuration)
+            .SaveAsByTemplateAsync(templateStream, value, cancellationToken)
+            .ConfigureAwait(false);
+    }
 
     #region MergeCells
 

@@ -5,7 +5,7 @@ using Xunit;
 
 namespace MiniExcelLibs.Tests.SaveByTemplate;
 
-public class MiniExcelTemplateAsyncTests
+public class xMiniExcelTemplateAsyncTests
 {
     [Fact]
     public async Task DatatableTemptyRowTest()

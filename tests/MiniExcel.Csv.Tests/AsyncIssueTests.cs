@@ -2,9 +2,11 @@
 
 public class AsyncIssueTests
 {
-    private readonly MiniExcelExporter _exporter = MiniExcel.GetExporter();
-    private readonly MiniExcelImporter _importer = MiniExcel.GetImporter();
+    private readonly CsvExporter _csvExporter = MiniExcel.GetExporterProvider().GetCsvExporter();
+    private readonly CsvImporter _csvImporter = MiniExcel.GetImporterProvider().GetCsvImporter();
 
+    private readonly OpenXmlExporter _openXmlExporter = MiniExcel.GetExporterProvider().GetExcelExporter();
+    private readonly OpenXmlImporter _openXmlImporter = MiniExcel.GetImporterProvider().GetExcelImporter();
     /// <summary>
     /// Csv SaveAs by datareader with encoding default show messy code #253
     /// </summary>
@@ -15,7 +17,7 @@ public class AsyncIssueTests
             var value = new[] { new { col1 = "世界你好" } };
             using var path = AutoDeletingPath.Create(ExcelType.Csv);
 
-            await _exporter.ExportCsvAsync(path.ToString(), value);
+            await _csvExporter.ExportCsvAsync(path.ToString(), value);
             const string expected =
                 """
                 col1
@@ -36,7 +38,7 @@ public class AsyncIssueTests
                 StreamWriterFunc = stream => new StreamWriter(stream, Encoding.GetEncoding("gb2312"))
             };
 
-            await _exporter.ExportCsvAsync(path.ToString(), value, configuration: config);
+            await _csvExporter.ExportCsvAsync(path.ToString(), value, configuration: config);
             const string expected =
                 """
                 col1
@@ -52,7 +54,7 @@ public class AsyncIssueTests
         {
             var value = await cn.ExecuteReaderAsync("select '世界你好' col1");
             using var path = AutoDeletingPath.Create(ExcelType.Csv);
-            await _exporter.ExportCsvAsync(path.ToString(), value);
+            await _csvExporter.ExportCsvAsync(path.ToString(), value);
             const string expected =
                 """
                 col1
@@ -74,7 +76,7 @@ public class AsyncIssueTests
         var reader = await cn.ExecuteReaderAsync(@"select '""<>+-*//}{\\n' a,1234567890 b union all select '<test>Hello World</test>',-1234567890");
 
         using var path = AutoDeletingPath.Create(ExcelType.Csv);
-        var rowsWritten = await _exporter.ExportCsvAsync(path.ToString(), reader);
+        var rowsWritten = await _csvExporter.ExportCsvAsync(path.ToString(), reader);
 
         Assert.Single(rowsWritten);
         Assert.Equal(2, rowsWritten[0]);
@@ -125,7 +127,7 @@ public class AsyncIssueTests
             await writer.FlushAsync();
 
             stream.Position = 0;
-            var q = _importer.QueryCsvAsync<Issue89VO>(stream).ToBlockingEnumerable();
+            var q = _csvImporter.QueryCsvAsync<Issue89VO>(stream).ToBlockingEnumerable();
             var rows = q.ToList();
 
             Assert.Equal(Issue89VO.WorkState.OnDuty, rows[0].State);
@@ -133,11 +135,11 @@ public class AsyncIssueTests
             Assert.Equal(Issue89VO.WorkState.Leave, rows[2].State);
 
             var outputPath = PathHelper.GetTempPath("xlsx");
-            var rowsWritten = await _exporter.ExportXlsxAsync(outputPath, rows);
+            var rowsWritten = await _openXmlExporter.ExportExcelAsync(outputPath, rows);
             Assert.Single(rowsWritten);
             Assert.Equal(3, rowsWritten[0]);
 
-            var q2 = _importer.QueryXlsxAsync<Issue89VO>(outputPath).ToBlockingEnumerable();
+            var q2 = _openXmlImporter.QueryExcelAsync<Issue89VO>(outputPath).ToBlockingEnumerable();
             var rows2 = q2.ToList();
             Assert.Equal(Issue89VO.WorkState.OnDuty, rows2[0].State);
             Assert.Equal(Issue89VO.WorkState.Fired, rows2[1].State);
@@ -147,18 +149,18 @@ public class AsyncIssueTests
         //xlsx
         {
             var path = PathHelper.GetFile("xlsx/TestIssue89.xlsx");
-            var q = _importer.QueryXlsxAsync<Issue89VO>(path).ToBlockingEnumerable();
+            var q = _openXmlImporter.QueryExcelAsync<Issue89VO>(path).ToBlockingEnumerable();
             var rows = q.ToList();
             Assert.Equal(Issue89VO.WorkState.OnDuty, rows[0].State);
             Assert.Equal(Issue89VO.WorkState.Fired, rows[1].State);
             Assert.Equal(Issue89VO.WorkState.Leave, rows[2].State);
 
             var outputPath = PathHelper.GetTempPath();
-            var rowsWritten = await _exporter.ExportXlsxAsync(outputPath, rows);
+            var rowsWritten = await _openXmlExporter.ExportExcelAsync(outputPath, rows);
             Assert.Single(rowsWritten);
             Assert.Equal(3, rowsWritten[0]);
 
-            var q1 = _importer.QueryXlsxAsync<Issue89VO>(outputPath).ToBlockingEnumerable();
+            var q1 = _openXmlImporter.QueryExcelAsync<Issue89VO>(outputPath).ToBlockingEnumerable();
             var rows2 = q1.ToList();
             Assert.Equal(Issue89VO.WorkState.OnDuty, rows2[0].State);
             Assert.Equal(Issue89VO.WorkState.Fired, rows2[1].State);
@@ -184,10 +186,10 @@ public class AsyncIssueTests
         {
             using var file = AutoDeletingPath.Create();
             var path = file.ToString();
-            await _exporter.ExportXlsxAsync(path, new[] { new Issue142VO { MyProperty1 = "MyProperty1", MyProperty2 = "MyProperty2", MyProperty3 = "MyProperty3", MyProperty4 = "MyProperty4", MyProperty5 = "MyProperty5", MyProperty6 = "MyProperty6", MyProperty7 = "MyProperty7" } });
+            await _openXmlExporter.ExportExcelAsync(path, new[] { new Issue142VO { MyProperty1 = "MyProperty1", MyProperty2 = "MyProperty2", MyProperty3 = "MyProperty3", MyProperty4 = "MyProperty4", MyProperty5 = "MyProperty5", MyProperty6 = "MyProperty6", MyProperty7 = "MyProperty7" } });
 
             {
-                var q = _importer.QueryXlsxAsync(path).ToBlockingEnumerable();
+                var q = _openXmlImporter.QueryExcelAsync(path).ToBlockingEnumerable();
                 var rows = q.ToList();
                 Assert.Equal("MyProperty4", rows[0].A);
                 Assert.Equal("CustomColumnName", rows[0].B); //note
@@ -207,7 +209,7 @@ public class AsyncIssueTests
             }
 
             {
-                var q = _importer.QueryXlsxAsync<Issue142VO>(path).ToBlockingEnumerable();
+                var q = _openXmlImporter.QueryExcelAsync<Issue142VO>(path).ToBlockingEnumerable();
                 var rows = q.ToList();
 
                 Assert.Equal("MyProperty4", rows[0].MyProperty4);
@@ -223,7 +225,7 @@ public class AsyncIssueTests
         {
             using var file = AutoDeletingPath.Create(ExcelType.Csv);
             var path = file.ToString();
-            await _exporter.ExportCsvAsync(path, new[] { new Issue142VO { MyProperty1 = "MyProperty1", MyProperty2 = "MyProperty2", MyProperty3 = "MyProperty3", MyProperty4 = "MyProperty4", MyProperty5 = "MyProperty5", MyProperty6 = "MyProperty6", MyProperty7 = "MyProperty7" } });
+            await _csvExporter.ExportCsvAsync(path, new[] { new Issue142VO { MyProperty1 = "MyProperty1", MyProperty2 = "MyProperty2", MyProperty3 = "MyProperty3", MyProperty4 = "MyProperty4", MyProperty5 = "MyProperty5", MyProperty6 = "MyProperty6", MyProperty7 = "MyProperty7" } });
             const string expected =
                 """
                 MyProperty4,CustomColumnName,MyProperty5,MyProperty2,MyProperty6,,MyProperty3
@@ -233,7 +235,7 @@ public class AsyncIssueTests
             Assert.Equal(expected, await File.ReadAllTextAsync(path));
 
             {
-                var q = _importer.QueryCsvAsync<Issue142VO>(path).ToBlockingEnumerable();
+                var q = _csvImporter.QueryCsvAsync<Issue142VO>(path).ToBlockingEnumerable();
                 var rows = q.ToList();
 
                 Assert.Equal("MyProperty4", rows[0].MyProperty4);
@@ -249,7 +251,7 @@ public class AsyncIssueTests
         {
             using var path = AutoDeletingPath.Create();
             Issue142VoDuplicateColumnName[] input = [new() { MyProperty1 = 0, MyProperty2 = 0, MyProperty3 = 0, MyProperty4 = 0 }];
-            Assert.Throws<InvalidOperationException>(() => _exporter.ExportXlsx(path.ToString(), input));
+            Assert.Throws<InvalidOperationException>(() => _openXmlExporter.ExportExcel(path.ToString(), input));
         }
     }
 

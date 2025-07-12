@@ -9,28 +9,28 @@ using OfficeOpenXml;
 
 namespace MiniExcelLib.Benchmarks.BenchmarkSections;
 
-public class QueryXlsxBenchmark : BenchmarkBase
+public class QueryExcelBenchmark : BenchmarkBase
 {
-    private MiniExcelImporter _importer;
+    private OpenXmlImporter _importer;
     
     [GlobalSetup]
     public void SetUp()
     {
         ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-        _importer = new MiniExcelImporter();
+        _importer = new OpenXmlImporter();
     }
 
     [Benchmark(Description = "MiniExcel QueryFirst")]
     public void MiniExcel_QueryFirst_Test()
     {
-        _ = _importer.QueryXlsx(FilePath).First();
+        _ = _importer.QueryExcel(FilePath).First();
     }
 
     [Benchmark(Description = "MiniExcel Query")]
     public void MiniExcel_Query()
     {
-        foreach (var _ in _importer.QueryXlsx(FilePath)) { }
+        foreach (var _ in _importer.QueryExcel(FilePath)) { }
     }
 
     [Benchmark(Description = "ExcelDataReader QueryFirst")]

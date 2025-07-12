@@ -2,7 +2,7 @@ using MiniExcelLib.OpenXml.Templates;
 
 namespace MiniExcelLib;
 
-public sealed partial class MiniExcelTemplater
+public sealed partial class OpenXmlTemplater
 {
     [CreateSyncVersion]
     public async Task ApplyXlsxTemplateAsync(string path, string templatePath, object value,
@@ -63,7 +63,7 @@ public sealed partial class MiniExcelTemplater
     }
 
     
-    private OpenXmlTemplate GetOpenXmlTemplate(Stream stream, OpenXmlConfiguration? configuration)
+    private static OpenXmlTemplate GetOpenXmlTemplate(Stream stream, OpenXmlConfiguration? configuration)
     {
         var valueExtractor = new OpenXmlValueExtractor();
         return new OpenXmlTemplate(stream, configuration, valueExtractor);

@@ -4,8 +4,8 @@ namespace MiniExcelLib.Tests.SaveByTemplate;
 
 public class MiniExcelTemplateAsyncTests
 {
-    private readonly MiniExcelTemplater _templater =  MiniExcel.GetTemplater();
-    private readonly MiniExcelImporter _importer =  MiniExcel.GetImporter();
+    private readonly OpenXmlImporter _importer =  MiniExcel.GetImporterProvider().GetExcelImporter();
+    private readonly OpenXmlTemplater _templater =  MiniExcel.GetTemplaterProvider().GetExcelTemplater();
     
     [Fact]
     public async Task DatatableTemptyRowTest()
@@ -30,7 +30,7 @@ public class MiniExcelTemplateAsyncTests
                 ["employees"] = employees
             };
             await _templater.ApplyXlsxTemplateAsync(path.ToString(), templatePath, value);
-            var rows = _importer.QueryXlsxAsync(path.ToString()).ToBlockingEnumerable().ToList();
+            var rows = _importer.QueryExcelAsync(path.ToString()).ToBlockingEnumerable().ToList();
 
             var dimension = SheetHelper.GetFirstSheetDimensionRefValue(path.ToString());
             Assert.Equal("A1:C5", dimension);
@@ -55,7 +55,7 @@ public class MiniExcelTemplateAsyncTests
             };
             
             await _templater.ApplyXlsxTemplateAsync(path.ToString(), templatePath, value);
-            var rows = _importer.QueryXlsxAsync(path.ToString()).ToBlockingEnumerable().ToList();
+            var rows = _importer.QueryExcelAsync(path.ToString()).ToBlockingEnumerable().ToList();
 
             var dimension = SheetHelper.GetFirstSheetDimensionRefValue(path.ToString());
             Assert.Equal("A1:C5", dimension);
@@ -89,7 +89,7 @@ public class MiniExcelTemplateAsyncTests
             ["employees"] = employees
         };
         await _templater.ApplyXlsxTemplateAsync(path.ToString(), templatePath, value);
-        var rows = _importer.QueryXlsxAsync(path.ToString()).ToBlockingEnumerable().ToList();
+        var rows = _importer.QueryExcelAsync(path.ToString()).ToBlockingEnumerable().ToList();
 
         var dimension = SheetHelper.GetFirstSheetDimensionRefValue(path.ToString());
         Assert.Equal("A1:C9", dimension);
@@ -112,7 +112,7 @@ public class MiniExcelTemplateAsyncTests
         Assert.Equal("IT", rows[8].C);
 
         {
-            rows = _importer.QueryXlsxAsync(path.ToString(), sheetName: "Sheet2").ToBlockingEnumerable().ToList();
+            rows = _importer.QueryExcelAsync(path.ToString(), sheetName: "Sheet2").ToBlockingEnumerable().ToList();
             Assert.Equal(9, rows.Count);
 
             Assert.Equal("FooCompany", rows[0].A);
@@ -152,7 +152,7 @@ public class MiniExcelTemplateAsyncTests
         await _templater.ApplyXlsxTemplateAsync(path.ToString(), templatePath, value);
 
         {
-            var rows = _importer.QueryXlsxAsync(path.ToString()).ToBlockingEnumerable().ToList();
+            var rows = _importer.QueryExcelAsync(path.ToString()).ToBlockingEnumerable().ToList();
 
             Assert.Equal(9, rows.Count);
 
@@ -177,7 +177,7 @@ public class MiniExcelTemplateAsyncTests
         }
 
         {
-            var rows = _importer.QueryXlsxAsync(path.ToString(), sheetName: "Sheet2").ToBlockingEnumerable().ToList();
+            var rows = _importer.QueryExcelAsync(path.ToString(), sheetName: "Sheet2").ToBlockingEnumerable().ToList();
             Assert.Equal(9, rows.Count);
 
             Assert.Equal("FooCompany", rows[0].A);
@@ -226,7 +226,7 @@ public class MiniExcelTemplateAsyncTests
         await _templater.ApplyXlsxTemplateAsync(path, templatePath, value);
 
         {
-            var rows = _importer.QueryXlsx(path).ToList();
+            var rows = _importer.QueryExcel(path).ToList();
 
             Assert.Equal(9, rows.Count);
 
@@ -251,7 +251,7 @@ public class MiniExcelTemplateAsyncTests
         }
 
         {
-            var rows = _importer.QueryXlsx(path, sheetName: "Sheet2").ToList();
+            var rows = _importer.QueryExcel(path, sheetName: "Sheet2").ToList();
 
             Assert.Equal(9, rows.Count);
 
@@ -296,7 +296,7 @@ public class MiniExcelTemplateAsyncTests
         };
         await _templater.ApplyXlsxTemplateAsync(path.ToString(), templatePath, value);
 
-        var rows = _importer.QueryXlsxAsync(path.ToString()).ToBlockingEnumerable().ToList();
+        var rows = _importer.QueryExcelAsync(path.ToString()).ToBlockingEnumerable().ToList();
         Assert.Equal("ITWeiHan Github Projects", rows[0].B);
         Assert.Equal("Total Star : 178", rows[8].C);
 
@@ -344,7 +344,7 @@ public class MiniExcelTemplateAsyncTests
             };
             await _templater.ApplyXlsxTemplateAsync(path.ToString(), templatePath, value);
 
-            var rows = _importer.QueryXlsx<TestIEnumerableTypePoco>(path.ToString()).ToList();
+            var rows = _importer.QueryExcel<TestIEnumerableTypePoco>(path.ToString()).ToList();
             Assert.Equal(poco.@string, rows[0].@string);
             Assert.Equal(poco.@int, rows[0].@int);
             Assert.Equal(poco.@double, rows[0].@double);
@@ -409,7 +409,7 @@ public class MiniExcelTemplateAsyncTests
         };
         await _templater.ApplyXlsxTemplateAsync(path.ToString(), templatePath, value);
 
-        var rows = _importer.QueryXlsx<TestIEnumerableTypePoco>(path.ToString()).ToList();
+        var rows = _importer.QueryExcel<TestIEnumerableTypePoco>(path.ToString()).ToList();
         Assert.Equal(value.@string, rows[0].@string);
         Assert.Equal(value.@int, rows[0].@int);
         Assert.Equal(value.@double, rows[0].@double);
@@ -451,7 +451,7 @@ public class MiniExcelTemplateAsyncTests
             };
             await _templater.ApplyXlsxTemplateAsync(path.ToString(), templatePath, value);
 
-            var rows = _importer.QueryXlsxAsync(path.ToString()).ToBlockingEnumerable().ToList();
+            var rows = _importer.QueryExcelAsync(path.ToString()).ToBlockingEnumerable().ToList();
             Assert.Equal("Jack", rows[1].A);
             Assert.Equal("2021-01-01 00:00:00", rows[1].B);
             Assert.Equal(true, rows[1].C);
@@ -475,7 +475,7 @@ public class MiniExcelTemplateAsyncTests
             };
             await _templater.ApplyXlsxTemplateAsync(path, templateBytes, value);
 
-            var rows = (_importer.QueryXlsxAsync(path).ToBlockingEnumerable()).ToList();
+            var rows = (_importer.QueryExcelAsync(path).ToBlockingEnumerable()).ToList();
             Assert.Equal("Jack", rows[1].A);
             Assert.Equal("2021-01-01 00:00:00", rows[1].B);
             Assert.Equal(true, rows[1].C);
@@ -503,7 +503,7 @@ public class MiniExcelTemplateAsyncTests
                 await _templater.ApplyXlsxTemplateAsync(stream, templateBytes, value);
             }
 
-            var rows = _importer.QueryXlsxAsync(path.ToString()).ToBlockingEnumerable().ToList();
+            var rows = _importer.QueryExcelAsync(path.ToString()).ToBlockingEnumerable().ToList();
             Assert.Equal("Jack", rows[1].A);
             Assert.Equal("2021-01-01 00:00:00", rows[1].B);
             Assert.Equal(true, rows[1].C);
@@ -527,7 +527,7 @@ public class MiniExcelTemplateAsyncTests
             };
             await _templater.ApplyXlsxTemplateAsync(path.ToString(), templatePath, value);
 
-            var rows = _importer.QueryXlsxAsync(path.ToString()).ToBlockingEnumerable().ToList();
+            var rows = _importer.QueryExcelAsync(path.ToString()).ToBlockingEnumerable().ToList();
             Assert.Equal("Jack", rows[1].A);
             Assert.Equal("2021-01-01 00:00:00", rows[1].B);
             Assert.Equal(true, rows[1].C);
@@ -788,7 +788,7 @@ public class MiniExcelTemplateAsyncTests
             await _templater.ApplyXlsxTemplateAsync(path.ToString(), templatePath, value);
 
             {
-                var rows = _importer.QueryXlsxAsync(path.ToString()).ToBlockingEnumerable().ToList();
+                var rows = _importer.QueryExcelAsync(path.ToString()).ToBlockingEnumerable().ToList();
                 Assert.Equal(9, rows.Count);
 
                 Assert.Equal("FooCompany", rows[0].A);
@@ -812,7 +812,7 @@ public class MiniExcelTemplateAsyncTests
             }
 
             {
-                var rows = _importer.QueryXlsxAsync(path.ToString(), sheetName: "Sheet2").ToBlockingEnumerable().ToList();
+                var rows = _importer.QueryExcelAsync(path.ToString(), sheetName: "Sheet2").ToBlockingEnumerable().ToList();
                 Assert.Equal(9, rows.Count);
 
                 Assert.Equal("FooCompany", rows[0].A);
@@ -858,7 +858,7 @@ public class MiniExcelTemplateAsyncTests
             };
             await _templater.ApplyXlsxTemplateAsync(path.ToString(), templatePath, value);
 
-            var rows = _importer.QueryXlsxAsync(path.ToString()).ToBlockingEnumerable().ToList();
+            var rows = _importer.QueryExcelAsync(path.ToString()).ToBlockingEnumerable().ToList();
             Assert.Equal("FooCompany", rows[0].A);
             Assert.Equal("Jack", rows[2].B);
             Assert.Equal("HR", rows[2].C);

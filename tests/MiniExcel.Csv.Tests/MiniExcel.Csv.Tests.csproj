@@ -30,7 +30,6 @@
     <Using Include="Xunit" />
     <Using Include="MiniExcelLib.Csv" />
     <Using Include="MiniExcelLib.Tests.Common.Utils" />
-    <Using Include="MiniExcelLib.Csv.MiniExcelExtensions" />
     <Using Include="Dapper" />
     <Using Include="MiniExcelLib" />
     <Using Include="MiniExcelLib.Attributes" />

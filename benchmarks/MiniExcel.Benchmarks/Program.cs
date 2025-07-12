@@ -7,9 +7,9 @@ if (Environment.GetEnvironmentVariable("BenchmarkMode") == "Automatic")
     var section = Environment.GetEnvironmentVariable("BenchmarkSection");
     var benchmark = section?.ToLowerInvariant().Trim() switch
     {
-        "query" => typeof(QueryXlsxBenchmark),
-        "create" => typeof(CreateXlsxBenchmark),
-        "template" => typeof(TemplateXlsxBenchmark),
+        "query" => typeof(QueryExcelBenchmark),
+        "create" => typeof(CreateExcelBenchmark),
+        "template" => typeof(TemplateExcelBenchmark),
         _ => throw new ArgumentException($"Benchmark section {section} does not exist")
     };
     
@@ -20,9 +20,9 @@ else
     BenchmarkSwitcher
         .FromTypes(
         [
-            typeof(QueryXlsxBenchmark),
-            typeof(CreateXlsxBenchmark),
-            typeof(TemplateXlsxBenchmark)
+            typeof(QueryExcelBenchmark),
+            typeof(CreateExcelBenchmark),
+            typeof(TemplateExcelBenchmark)
         ])
         .Run(args, BenchmarkConfig.Default);
 }

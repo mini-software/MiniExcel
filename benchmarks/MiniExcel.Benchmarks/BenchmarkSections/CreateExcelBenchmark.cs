@@ -10,23 +10,23 @@ using OfficeOpenXml;
 
 namespace MiniExcelLib.Benchmarks.BenchmarkSections;
 
-public class CreateXlsxBenchmark : BenchmarkBase
+public class CreateExcelBenchmark : BenchmarkBase
 {
-    private MiniExcelExporter _exporter;
+    private OpenXmlExporter _exporter;
         
     [GlobalSetup]
     public void SetUp()
     {
         ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-        _exporter = new MiniExcelExporter();
+        _exporter = new OpenXmlExporter();
     }
 
     [Benchmark(Description = "MiniExcel Create Xlsx")]
     public void MiniExcelCreateTest()
     {
         using var path = AutoDeletingPath.Create();
-        _exporter.ExportXlsx(path.FilePath, GetValue());
+        _exporter.ExportExcel(path.FilePath, GetValue());
     }
 
     [Benchmark(Description = "ClosedXml Create Xlsx")]

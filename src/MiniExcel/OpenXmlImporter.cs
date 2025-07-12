@@ -6,18 +6,18 @@ using MiniExcelLib.OpenXml.Zip;
 
 namespace MiniExcelLib;
 
-public sealed partial class MiniExcelImporter
+public sealed partial class OpenXmlImporter
 {
     #region Query
 
     [CreateSyncVersion]
-    public async IAsyncEnumerable<T> QueryXlsxAsync<T>(string path, string? sheetName = null,
+    public async IAsyncEnumerable<T> QueryExcelAsync<T>(string path, string? sheetName = null,
         string startCell = "A1", bool treatHeaderAsData = false, OpenXmlConfiguration? configuration = null,
         [EnumeratorCancellation] CancellationToken cancellationToken = default) where T : class, new()
     {
         using var stream = FileHelper.OpenSharedRead(path);
 
-        var query = QueryXlsxAsync<T>(stream, sheetName, startCell, treatHeaderAsData, configuration, cancellationToken);
+        var query = QueryExcelAsync<T>(stream, sheetName, startCell, treatHeaderAsData, configuration, cancellationToken);
         
         //Foreach yield return twice reason : https://stackoverflow.com/questions/66791982/ienumerable-extract-code-lazy-loading-show-stream-was-not-readable
         await foreach (var item in query.ConfigureAwait(false))
@@ -26,7 +26,7 @@ public sealed partial class MiniExcelImporter
 
     [CreateSyncVersion]
     [SuppressMessage("Reliability", "CA2007:Do not directly await a Task")]
-    public async IAsyncEnumerable<T> QueryXlsxAsync<T>(Stream stream, string? sheetName = null,
+    public async IAsyncEnumerable<T> QueryExcelAsync<T>(Stream stream, string? sheetName = null,
         string startCell = "A1", bool treatHeaderAsData = false, OpenXmlConfiguration? configuration = null,
         [EnumeratorCancellation] CancellationToken cancellationToken = default) where T : class, new()
     {
@@ -36,18 +36,18 @@ public sealed partial class MiniExcelImporter
     }
 
     [CreateSyncVersion]
-    public async IAsyncEnumerable<dynamic> QueryXlsxAsync(string path, bool useHeaderRow = false,
+    public async IAsyncEnumerable<dynamic> QueryExcelAsync(string path, bool useHeaderRow = false,
         string? sheetName = null, string startCell = "A1", OpenXmlConfiguration? configuration = null,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         using var stream = FileHelper.OpenSharedRead(path);
-        await foreach (var item in QueryXlsxAsync(stream, useHeaderRow, sheetName, startCell, configuration, cancellationToken).ConfigureAwait(false))
+        await foreach (var item in QueryExcelAsync(stream, useHeaderRow, sheetName, startCell, configuration, cancellationToken).ConfigureAwait(false))
             yield return item;
     }
 
     [CreateSyncVersion]
     [SuppressMessage("Reliability", "CA2007:Do not directly await a Task")]
-    public async IAsyncEnumerable<dynamic> QueryXlsxAsync(Stream stream, bool useHeaderRow = false,
+    public async IAsyncEnumerable<dynamic> QueryExcelAsync(Stream stream, bool useHeaderRow = false,
         string? sheetName = null, string startCell = "A1", OpenXmlConfiguration? configuration = null,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
@@ -69,18 +69,18 @@ public sealed partial class MiniExcelImporter
     /// </summary>
     /// <returns></returns>
     [CreateSyncVersion]
-    public async IAsyncEnumerable<dynamic> QueryRangeXlsxAsync(string path, bool useHeaderRow = false,
+    public async IAsyncEnumerable<dynamic> QueryExcelRangeAsync(string path, bool useHeaderRow = false,
         string? sheetName = null, string startCell = "A1", string endCell = "", OpenXmlConfiguration? configuration = null,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         using var stream = FileHelper.OpenSharedRead(path);
-        await foreach (var item in QueryRangeXlsxAsync(stream, useHeaderRow, sheetName, startCell, endCell, configuration, cancellationToken).ConfigureAwait(false))
+        await foreach (var item in QueryExcelRangeAsync(stream, useHeaderRow, sheetName, startCell, endCell, configuration, cancellationToken).ConfigureAwait(false))
             yield return item;
     }
 
     [CreateSyncVersion]
     [SuppressMessage("Reliability", "CA2007:Do not directly await a Task")]
-    public async IAsyncEnumerable<dynamic> QueryRangeXlsxAsync(Stream stream, bool useHeaderRow = false,
+    public async IAsyncEnumerable<dynamic> QueryExcelRangeAsync(Stream stream, bool useHeaderRow = false,
         string? sheetName = null, string startCell = "A1", string endCell = "", OpenXmlConfiguration? configuration = null,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
@@ -90,19 +90,19 @@ public sealed partial class MiniExcelImporter
     }
 
     [CreateSyncVersion]
-    public async IAsyncEnumerable<dynamic> QueryRangeXlsxAsync(string path, bool useHeaderRow = false,
+    public async IAsyncEnumerable<dynamic> QueryExcelRangeAsync(string path, bool useHeaderRow = false,
         string? sheetName = null, int startRowIndex = 1, int startColumnIndex = 1, int? endRowIndex = null,
         int? endColumnIndex = null, OpenXmlConfiguration? configuration = null,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         using var stream = FileHelper.OpenSharedRead(path);
-        await foreach (var item in QueryRangeXlsxAsync(stream, useHeaderRow, sheetName, startRowIndex, startColumnIndex, endRowIndex, endColumnIndex, configuration, cancellationToken).ConfigureAwait(false))
+        await foreach (var item in QueryExcelRangeAsync(stream, useHeaderRow, sheetName, startRowIndex, startColumnIndex, endRowIndex, endColumnIndex, configuration, cancellationToken).ConfigureAwait(false))
             yield return item;
     }
 
     [CreateSyncVersion]
     [SuppressMessage("Reliability", "CA2007:Do not directly await a Task")]
-    public async IAsyncEnumerable<dynamic> QueryRangeXlsxAsync(Stream stream, bool useHeaderRow = false,
+    public async IAsyncEnumerable<dynamic> QueryExcelRangeAsync(Stream stream, bool useHeaderRow = false,
         string? sheetName = null, int startRowIndex = 1, int startColumnIndex = 1, int? endRowIndex = null,
         int? endColumnIndex = null, OpenXmlConfiguration? configuration = null,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
@@ -120,19 +120,19 @@ public sealed partial class MiniExcelImporter
     /// QueryAsDataTable is not recommended, because it'll load all data into memory.
     /// </summary>
     [CreateSyncVersion]
-    public async Task<DataTable> QueryXlsxAsDataTableAsync(string path, bool useHeaderRow = true,
+    public async Task<DataTable> QueryExcelAsDataTableAsync(string path, bool useHeaderRow = true,
         string? sheetName = null, string startCell = "A1", OpenXmlConfiguration? configuration = null,
         CancellationToken cancellationToken = default)
     {
         using var stream = FileHelper.OpenSharedRead(path);
-        return await QueryXlsxAsDataTableAsync(stream, useHeaderRow, sheetName, startCell, configuration, cancellationToken).ConfigureAwait(false);
+        return await QueryExcelAsDataTableAsync(stream, useHeaderRow, sheetName, startCell, configuration, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>
     /// QueryAsDataTable is not recommended, because it'll load all data into memory.
     /// </summary>
     [CreateSyncVersion]
-    public async Task<DataTable> QueryXlsxAsDataTableAsync(Stream stream, bool useHeaderRow = true,
+    public async Task<DataTable> QueryExcelAsDataTableAsync(Stream stream, bool useHeaderRow = true,
         string? sheetName = null, string startCell = "A1", OpenXmlConfiguration? configuration = null,
         CancellationToken cancellationToken = default)
     {
@@ -248,21 +248,21 @@ public sealed partial class MiniExcelImporter
     }
 
     [CreateSyncVersion]
-    public async Task<ICollection<string>> GetXlsxColumnsAsync(string path, bool useHeaderRow = false,
+    public async Task<ICollection<string>> GetExcelColumnsAsync(string path, bool useHeaderRow = false,
         string? sheetName = null, string startCell = "A1", OpenXmlConfiguration? configuration = null,
         CancellationToken cancellationToken = default)
     {
         using var stream = FileHelper.OpenSharedRead(path);
-        return await GetXlsxColumnsAsync(stream, useHeaderRow, sheetName, startCell, configuration, cancellationToken).ConfigureAwait(false);
+        return await GetExcelColumnsAsync(stream, useHeaderRow, sheetName, startCell, configuration, cancellationToken).ConfigureAwait(false);
     }
 
     [CreateSyncVersion]
-    public async Task<ICollection<string>> GetXlsxColumnsAsync(Stream stream, bool useHeaderRow = false,
+    public async Task<ICollection<string>> GetExcelColumnsAsync(Stream stream, bool useHeaderRow = false,
         string? sheetName = null, string startCell = "A1", OpenXmlConfiguration? configuration = null,
         CancellationToken cancellationToken = default)
     {
 #pragma warning disable CA2007 // Consider calling ConfigureAwait on the awaited task
-        await using var enumerator = QueryXlsxAsync(stream, useHeaderRow, sheetName, startCell, configuration, cancellationToken).GetAsyncEnumerator(cancellationToken);
+        await using var enumerator = QueryExcelAsync(stream, useHeaderRow, sheetName, startCell, configuration, cancellationToken).GetAsyncEnumerator(cancellationToken);
 #pragma warning restore CA2007 // Consider calling ConfigureAwait on the awaited task
 
         _ = enumerator.ConfigureAwait(false);
@@ -278,19 +278,19 @@ public sealed partial class MiniExcelImporter
 
     #region DataReader
 
-    public MiniExcelDataReader GetXlsxDataReader(string path, bool useHeaderRow = false,
+    public MiniExcelDataReader GetExcelDataReader(string path, bool useHeaderRow = false,
         string? sheetName = null, string startCell = "A1", OpenXmlConfiguration? configuration = null)
     {
         var stream = FileHelper.OpenSharedRead(path);
-        var values = Enumerable.Cast<IDictionary<string, object?>>(QueryXlsx(stream, useHeaderRow, sheetName, startCell, configuration));
+        var values = QueryExcel(stream, useHeaderRow, sheetName, startCell, configuration).Cast<IDictionary<string, object?>>();
 
         return MiniExcelDataReader.Create(stream, values);
     }
 
-    public MiniExcelDataReader GetXlsxDataReader(Stream stream, bool useHeaderRow = false,
+    public MiniExcelDataReader GetExcelDataReader(Stream stream, bool useHeaderRow = false,
         string? sheetName = null, string startCell = "A1", OpenXmlConfiguration? configuration = null)
     {
-        var values = Enumerable.Cast<IDictionary<string, object?>>(QueryXlsx(stream, useHeaderRow, sheetName, startCell, configuration));
+        var values = QueryExcel(stream, useHeaderRow, sheetName, startCell, configuration).Cast<IDictionary<string, object?>>();
         return MiniExcelDataReader.Create(stream, values);
     }
     
@@ -299,7 +299,7 @@ public sealed partial class MiniExcelImporter
         CancellationToken cancellationToken = default)
     {
         var stream = FileHelper.OpenSharedRead(path);
-        var values = QueryXlsxAsync(stream, useHeaderRow, sheetName, startCell, configuration, cancellationToken);
+        var values = QueryExcelAsync(stream, useHeaderRow, sheetName, startCell, configuration, cancellationToken);
         
         return await MiniExcelAsyncDataReader.CreateAsync(stream, CastAsync(values, cancellationToken)).ConfigureAwait(false);
     }
@@ -308,7 +308,7 @@ public sealed partial class MiniExcelImporter
         string? sheetName = null, string startCell = "A1", OpenXmlConfiguration? configuration = null,
         CancellationToken cancellationToken = default)
     {
-        var values = QueryXlsxAsync(stream, useHeaderRow, sheetName, startCell, configuration, cancellationToken);
+        var values = QueryExcelAsync(stream, useHeaderRow, sheetName, startCell, configuration, cancellationToken);
         return await MiniExcelAsyncDataReader.CreateAsync(stream, CastAsync(values, cancellationToken)).ConfigureAwait(false);
     }
 

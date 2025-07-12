@@ -4,14 +4,14 @@ using MiniExcelLib.Benchmarks.Utils;
 
 namespace MiniExcelLib.Benchmarks.BenchmarkSections;
 
-public class TemplateXlsxBenchmark : BenchmarkBase
+public class TemplateExcelBenchmark : BenchmarkBase
 {
-    private MiniExcelTemplater _templater;
+    private OpenXmlTemplater _templater;
 
     [GlobalSetup]
     public void Setup()
     {
-        _templater = new MiniExcelTemplater();
+        _templater = new OpenXmlTemplater();
     }
     
     [Benchmark(Description = "MiniExcel Template Generate")]

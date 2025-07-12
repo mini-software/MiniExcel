@@ -34,6 +34,23 @@
 	</ItemGroup>
 	
 	<ItemGroup>
+		<Using Include="System.Data" />
+		<Using Include="System.Data.SQLite" />
+		<Using Include="System.Diagnostics" />
+		<Using Include="System.Globalization" />
+		<Using Include="System.IO.Compression" />
+		<Using Include="System.Security.AccessControl" />
+		<Using Include="System.Security.Principal" />
+		<Using Include="System.Text" />
+		<Using Include="Dapper" />
+		<Using Include="MiniExcelLib.OpenXml" />
+		<Using Include="MiniExcelLib.Tests.Utils" />
+		<Using Include="OfficeOpenXml" />
+		<Using Include="Xunit" />
+		<Using Include="Xunit.Abstractions" />
+	</ItemGroup>
+	
+	<ItemGroup>
 	  <None Include="..\..\src\miniexcel.snk">
 	    <Link>miniexcel.snk</Link>
 	  </None>

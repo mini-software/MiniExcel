@@ -48,18 +48,18 @@ internal partial class ExcelOpenXmlTemplate : IExcelTemplate
     public async Task SaveAsByTemplateAsync(string templatePath, object value, CancellationToken cancellationToken = default)
     {
         using var stream = FileHelper.OpenSharedRead(templatePath);
-        await SaveAsByTemplateImplAsync(stream, value, cancellationToken).ConfigureAwait(false);
+        await SaveAsByTemplateAsync(stream, value, cancellationToken).ConfigureAwait(false);
     }
 
     [CreateSyncVersion]
     public async Task SaveAsByTemplateAsync(byte[] templateBytes, object value, CancellationToken cancellationToken = default)
     {
         using Stream stream = new MemoryStream(templateBytes);
-        await SaveAsByTemplateImplAsync(stream, value, cancellationToken).ConfigureAwait(false);
+        await SaveAsByTemplateAsync(stream, value, cancellationToken).ConfigureAwait(false);
     }
 
     [CreateSyncVersion]
-    internal async Task SaveAsByTemplateImplAsync(Stream templateStream, object value, CancellationToken cancellationToken = default)
+    public async Task SaveAsByTemplateAsync(Stream templateStream, object value, CancellationToken cancellationToken = default)
     {
         // foreach all templateStream and create file for _outputFileStream and not create sheet file
         templateStream.Position = 0;

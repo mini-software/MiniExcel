@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using Zomp.SyncMethodGenerator;
 
@@ -11,6 +12,9 @@ internal partial interface IExcelTemplate
     
     [CreateSyncVersion]
     Task SaveAsByTemplateAsync(byte[] templateBytes, object value, CancellationToken cancellationToken = default);
+    
+    [CreateSyncVersion]
+    Task SaveAsByTemplateAsync(Stream templateStream, object value, CancellationToken cancellationToken = default);
     
     [CreateSyncVersion]
     Task MergeSameCellsAsync(string path, CancellationToken cancellationToken = default);

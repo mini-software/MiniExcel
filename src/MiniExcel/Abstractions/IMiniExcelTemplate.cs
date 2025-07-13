@@ -9,6 +9,9 @@ public partial interface IMiniExcelTemplate
     Task SaveAsByTemplateAsync(byte[] templateBytes, object value, CancellationToken cancellationToken = default);
     
     [CreateSyncVersion]
+    Task SaveAsByTemplateAsync(Stream templateStream, object value, CancellationToken cancellationToken = default);
+    
+    [CreateSyncVersion]
     Task MergeSameCellsAsync(string path, CancellationToken cancellationToken = default);
     
     [CreateSyncVersion]

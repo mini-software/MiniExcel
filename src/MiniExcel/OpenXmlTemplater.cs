@@ -13,11 +13,28 @@ public sealed partial class OpenXmlTemplater
     }
 
     [CreateSyncVersion]
+    public async Task ApplyXlsxTemplateAsync(string path, Stream templateStream, object value,
+        OpenXmlConfiguration? configuration = null, CancellationToken cancellationToken = default)
+    {
+        using var stream = File.Create(path);
+        var template = GetOpenXmlTemplate(stream, configuration);
+        await template.SaveAsByTemplateAsync(templateStream, value, cancellationToken).ConfigureAwait(false);
+    }
+    
+    [CreateSyncVersion]
     public async Task ApplyXlsxTemplateAsync(Stream stream, string templatePath, object value,
         OpenXmlConfiguration? configuration = null, CancellationToken cancellationToken = default)
     {
         var template = GetOpenXmlTemplate(stream, configuration);
         await template.SaveAsByTemplateAsync(templatePath, value, cancellationToken).ConfigureAwait(false);
+    }
+    
+    [CreateSyncVersion]
+    public async Task ApplyXlsxTemplateAsync(Stream stream, Stream templateStream, object value,
+        OpenXmlConfiguration? configuration = null, CancellationToken cancellationToken = default)
+    {
+        var template = GetOpenXmlTemplate(stream, configuration);
+        await template.SaveAsByTemplateAsync(templateStream, value, cancellationToken).ConfigureAwait(false);
     }
     
     [CreateSyncVersion]

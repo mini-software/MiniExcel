@@ -36,18 +36,18 @@ internal partial class OpenXmlTemplate : IMiniExcelTemplate
     public async Task SaveAsByTemplateAsync(string templatePath, object value, CancellationToken cancellationToken = default)
     {
         using var stream = File.Open(templatePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-        await SaveAsByTemplateImplAsync(stream, value, cancellationToken).ConfigureAwait(false);
+        await SaveAsByTemplateAsync(stream, value, cancellationToken).ConfigureAwait(false);
     }
 
     [CreateSyncVersion]
     public async Task SaveAsByTemplateAsync(byte[] templateBytes, object value, CancellationToken cancellationToken = default)
     {
         using Stream stream = new MemoryStream(templateBytes);
-        await SaveAsByTemplateImplAsync(stream, value, cancellationToken).ConfigureAwait(false);
+        await SaveAsByTemplateAsync(stream, value, cancellationToken).ConfigureAwait(false);
     }
 
     [CreateSyncVersion]
-    internal async Task SaveAsByTemplateImplAsync(Stream templateStream, object value, CancellationToken cancellationToken = default)
+    public async Task SaveAsByTemplateAsync(Stream templateStream, object value, CancellationToken cancellationToken = default)
     {
         templateStream.Seek(0, SeekOrigin.Begin);
         using var templateReader = await OpenXmlReader.CreateAsync(templateStream, null, cancellationToken: cancellationToken).ConfigureAwait(false);

@@ -2,7 +2,7 @@ namespace MiniExcelLib;
 
 public static class MiniExcel
 {
-    public static MiniExcelExporterProvider GetExporterProvider() => new();
-    public static MiniExcelImporterProvider GetImporterProvider() => new();
-    public static MiniExcelTemplaterProvider GetTemplaterProvider() => new();
+    public static readonly MiniExcelExporterProvider Exporter = new();
+    public static readonly MiniExcelImporterProvider Importer = new();
+    public static readonly MiniExcelTemplaterProvider Templater = new();
 }

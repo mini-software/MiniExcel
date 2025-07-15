@@ -10,8 +10,8 @@ namespace MiniExcelLib.Tests;
 
 public class MiniExcelOpenXmlAsyncTests
 {
-    private readonly OpenXmlImporter _importer =  MiniExcel.GetImporterProvider().GetExcelImporter();
-    private readonly OpenXmlExporter _exporter =  MiniExcel.GetExporterProvider().GetExcelExporter();
+    private readonly OpenXmlImporter _importer =  MiniExcel.Importer.GetExcelImporter();
+    private readonly OpenXmlExporter _exporter =  MiniExcel.Exporter.GetExcelExporter();
    
     [Fact]
     public async Task SaveAsControlChracter()

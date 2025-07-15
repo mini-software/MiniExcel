@@ -24,7 +24,7 @@ internal partial class OpenXmlReader : IMiniExcelReader
     private OpenXmlReader(Stream stream, IMiniExcelConfiguration? configuration)
     {
         Archive = new OpenXmlZip(stream);
-        _config = (OpenXmlConfiguration?)configuration ?? OpenXmlConfiguration.DefaultConfig;
+        _config = (OpenXmlConfiguration?)configuration ?? OpenXmlConfiguration.Default;
     }
 
     [CreateSyncVersion]

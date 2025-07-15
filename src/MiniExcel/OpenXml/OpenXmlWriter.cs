@@ -31,7 +31,7 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
 
         // Why ZipArchiveMode.Update not ZipArchiveMode.Create?
         // R : Mode create - ZipArchiveEntry does not support seeking.'
-        _configuration = configuration as OpenXmlConfiguration ?? OpenXmlConfiguration.DefaultConfig;
+        _configuration = configuration as OpenXmlConfiguration ?? OpenXmlConfiguration.Default;
         if (_configuration is { EnableAutoWidth: true, FastMode: false })
             throw new InvalidOperationException("Auto width requires fast mode to be enabled");
 

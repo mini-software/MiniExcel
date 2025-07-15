@@ -12,7 +12,7 @@ internal partial class CsvWriter : IMiniExcelWriter, IDisposable
     // todo: should we add an explicit parameter to leave the stream open instead of the convoluted way to do it through a Func?
     internal CsvWriter(Stream stream, object? value, bool printHeader, IMiniExcelConfiguration? configuration)
     {
-        _configuration = configuration as CsvConfiguration ?? CsvConfiguration.DefaultConfiguration;
+        _configuration = configuration as CsvConfiguration ?? CsvConfiguration.Default;
         _writer = _configuration.StreamWriterFunc(stream);
         _printHeader = printHeader;
         _value = value;

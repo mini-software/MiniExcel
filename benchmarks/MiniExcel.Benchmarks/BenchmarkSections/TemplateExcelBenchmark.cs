@@ -11,7 +11,7 @@ public class TemplateExcelBenchmark : BenchmarkBase
     [GlobalSetup]
     public void Setup()
     {
-        _templater = new OpenXmlTemplater();
+        _templater = MiniExcel.Templater.GetExcelTemplater();
     }
     
     [Benchmark(Description = "MiniExcel Template Generate")]

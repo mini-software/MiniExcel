@@ -4,6 +4,9 @@ namespace MiniExcelLib;
 
 public sealed partial class OpenXmlTemplater
 {
+    internal OpenXmlTemplater() { }
+    
+    
     [CreateSyncVersion]
     public async Task ApplyXlsxTemplateAsync(string path, string templatePath, object value,
         OpenXmlConfiguration? configuration = null, CancellationToken cancellationToken = default)

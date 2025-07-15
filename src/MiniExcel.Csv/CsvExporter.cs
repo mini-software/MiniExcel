@@ -2,6 +2,9 @@ namespace MiniExcelLib.Csv;
 
 public partial class CsvExporter
 {
+    internal CsvExporter() { }
+    
+    
     #region Append / Export
     
     [CreateSyncVersion]
@@ -52,10 +55,10 @@ public partial class CsvExporter
     [CreateSyncVersion]
     public async Task ConvertCsvToXlsxAsync(Stream csv, Stream xlsx, bool csvHasHeader = false, CancellationToken cancellationToken = default)
     {
-        var value = new CsvImporter().
-            QueryCsvAsync(csv, useHeaderRow: csvHasHeader, cancellationToken: cancellationToken);
+        var value = new CsvImporter().QueryCsvAsync(csv, useHeaderRow: csvHasHeader, cancellationToken: cancellationToken);
         
-        await new OpenXmlExporter()
+        await MiniExcel.Exporter
+            .GetExcelExporter()
             .ExportExcelAsync(xlsx, value, printHeader: csvHasHeader, cancellationToken: cancellationToken)
             .ConfigureAwait(false);
     }
@@ -81,7 +84,11 @@ public partial class CsvExporter
     [CreateSyncVersion]
     public async Task ConvertXlsxToCsvAsync(Stream xlsx, Stream csv, bool xlsxHasHeader = true, CancellationToken cancellationToken = default)
     {
-        var value = new OpenXmlImporter().QueryExcelAsync(xlsx, useHeaderRow: xlsxHasHeader, cancellationToken: cancellationToken).ConfigureAwait(false);
+        var value = MiniExcel.Importer
+            .GetExcelImporter()
+            .QueryExcelAsync(xlsx, useHeaderRow: xlsxHasHeader, cancellationToken: cancellationToken)
+            .ConfigureAwait(false);
+        
         await ExportCsvAsync(csv, value, printHeader: xlsxHasHeader, cancellationToken: cancellationToken).ConfigureAwait(false);
     }
 

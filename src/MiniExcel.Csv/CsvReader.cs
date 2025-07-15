@@ -8,7 +8,7 @@ internal partial class CsvReader : IMiniExcelReader
     internal CsvReader(Stream stream, IMiniExcelConfiguration? configuration)
     {
         _stream = stream;
-        _config = configuration as CsvConfiguration ?? CsvConfiguration.DefaultConfiguration;
+        _config = configuration as CsvConfiguration ?? CsvConfiguration.Default;
     }
 
     [CreateSyncVersion]

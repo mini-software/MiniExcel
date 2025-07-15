@@ -4,6 +4,9 @@ namespace MiniExcelLib;
 
 public sealed partial class OpenXmlExporter
 {
+    internal OpenXmlExporter() { }
+    
+    
     [CreateSyncVersion]
     public async Task AddExcelPictureAsync(string path, CancellationToken cancellationToken = default, params MiniExcelPicture[] images)
     {
@@ -21,7 +24,7 @@ public sealed partial class OpenXmlExporter
     public async Task<int> InsertExcelSheetAsync(string path, object value, string? sheetName = "Sheet1", bool printHeader = true, bool overwriteSheet = false, OpenXmlConfiguration? configuration = null, CancellationToken cancellationToken = default)
     {
         if (Path.GetExtension(path).Equals(".xlsm", StringComparison.InvariantCultureIgnoreCase))
-            throw new NotSupportedException("MiniExcel's Insert does not support the .xlsm format");
+            throw new NotSupportedException("MiniExcel's InsertExcelSheet does not support the .xlsm format");
 
         if (!File.Exists(path))
         {
@@ -54,7 +57,7 @@ public sealed partial class OpenXmlExporter
         CancellationToken cancellationToken = default)
     {
         if (Path.GetExtension(path).Equals(".xlsm", StringComparison.InvariantCultureIgnoreCase))
-            throw new NotSupportedException("MiniExcel's SaveAs does not support the .xlsm format");
+            throw new NotSupportedException("MiniExcel's ExportExcel does not support the .xlsm format");
 
         using var stream = overwriteFile ? File.Create(path) : new FileStream(path, FileMode.CreateNew);
         return await ExportExcelAsync(stream, value, printHeader, sheetName, configuration, cancellationToken).ConfigureAwait(false);

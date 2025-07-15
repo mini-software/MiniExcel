@@ -2,7 +2,7 @@
   <Folder Name="/benchmarks/">
     <Project Path="benchmarks\MiniExcel.Benchmarks\MiniExcel.Benchmarks.csproj" />
   </Folder>
-  <Folder Name="/Docs and setting/">
+  <Folder Name="/Docs and settings/">
     <File Path=".gitattributes" />
     <File Path=".gitignore" />
     <File Path="appveyor.yml" />
@@ -14,7 +14,7 @@
     <File Path="README.zh-Hant.md" />
     <File Path=".github\workflows\benchmark.yml" />
     <File Path=".github\workflows\codeql-analysis.yml" />
-    <File Path="docs\core_logic_diagram.drawio" />
+    <File Path="src\Directory.Build.props" />
   </Folder>
   <Folder Name="/Releases/">
     <File Path="docs\README.md" />
@@ -23,6 +23,7 @@
   </Folder>
   <Folder Name="/src/">
     <Project Path="src\MiniExcel.Csv\MiniExcel.Csv.csproj" />
+    <Project Path="src\MiniExcel.Legacy\MiniExcel.Legacy.csproj" Type="Classic C#" />
     <Project Path="src\MiniExcel\MiniExcel.csproj" />
   </Folder>
   <Folder Name="/tests/">

@@ -4,7 +4,7 @@ namespace MiniExcelLib.OpenXml;
 
 public class OpenXmlConfiguration : MiniExcelBaseConfiguration
 {
-    internal static readonly OpenXmlConfiguration DefaultConfig = new();
+    internal static OpenXmlConfiguration Default => new();
     
     public bool FillMergedCells { get; set; }
     public TableStyles TableStyles { get; set; } = TableStyles.Default;

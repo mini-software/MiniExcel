@@ -28,7 +28,7 @@ internal partial class OpenXmlTemplate : IMiniExcelTemplate
     internal OpenXmlTemplate(Stream stream, IMiniExcelConfiguration? configuration, OpenXmlValueExtractor inputValueExtractor)
     {
         _outputFileStream = stream;
-        _configuration = (OpenXmlConfiguration?)configuration ?? OpenXmlConfiguration.DefaultConfig;
+        _configuration = (OpenXmlConfiguration?)configuration ?? OpenXmlConfiguration.Default;
         _inputValueExtractor = inputValueExtractor;
     }
 

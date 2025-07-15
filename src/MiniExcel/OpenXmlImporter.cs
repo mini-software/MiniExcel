@@ -8,6 +8,8 @@ namespace MiniExcelLib;
 
 public sealed partial class OpenXmlImporter
 {
+    internal OpenXmlImporter() { }
+    
     #region Query
 
     [CreateSyncVersion]
@@ -201,7 +203,7 @@ public sealed partial class OpenXmlImporter
     public async Task<List<string>> GetSheetNamesAsync(Stream stream, OpenXmlConfiguration? config = null,
         CancellationToken cancellationToken = default)
     {
-        config ??= OpenXmlConfiguration.DefaultConfig;
+        config ??= OpenXmlConfiguration.Default;
 
         // todo: figure out why adding using statement breaks the tests
 #pragma warning disable CA2000 // Dispose objects before losing scope
@@ -224,7 +226,7 @@ public sealed partial class OpenXmlImporter
     [CreateSyncVersion]
     public async Task<List<SheetInfo>> GetSheetInformationsAsync(Stream stream, OpenXmlConfiguration? config = null, CancellationToken cancellationToken = default)
     {
-        config ??= OpenXmlConfiguration.DefaultConfig;
+        config ??= OpenXmlConfiguration.Default;
 
         using var archive = new OpenXmlZip(stream);
         using var reader = await OpenXmlReader.CreateAsync(stream, config, cancellationToken: cancellationToken).ConfigureAwait(false);

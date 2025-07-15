@@ -4,11 +4,14 @@ namespace MiniExcelLib.Csv;
 
 public partial class CsvImporter
 {
+    internal CsvImporter() { }
+    
+    
     #region Query
 
     [CreateSyncVersion]
-    public async IAsyncEnumerable<T> QueryCsvAsync<T>(string path, CsvConfiguration? configuration = null,
-        bool treatHeaderAsData = false, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    public async IAsyncEnumerable<T> QueryCsvAsync<T>(string path, bool treatHeaderAsData = false,
+        CsvConfiguration? configuration = null, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         where T : class, new()
     {
         using var stream = FileHelper.OpenSharedRead(path);
@@ -22,8 +25,7 @@ public partial class CsvImporter
 
     [CreateSyncVersion]
     public async IAsyncEnumerable<T> QueryCsvAsync<T>(Stream stream, bool treatHeaderAsData = false, 
-        CsvConfiguration? configuration = null,
-        [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        CsvConfiguration? configuration = null, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         where T : class, new()
     {
         using var csv = new CsvReader(stream, configuration);
@@ -33,8 +35,7 @@ public partial class CsvImporter
 
     [CreateSyncVersion]
     public async IAsyncEnumerable<dynamic> QueryCsvAsync(string path, bool useHeaderRow = false, 
-        CsvConfiguration? configuration = null,
-        [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        CsvConfiguration? configuration = null, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         using var stream = FileHelper.OpenSharedRead(path);
         await foreach (var item in QueryCsvAsync(stream, useHeaderRow, configuration, cancellationToken).ConfigureAwait(false))
@@ -43,8 +44,7 @@ public partial class CsvImporter
 
     [CreateSyncVersion]
     public async IAsyncEnumerable<dynamic> QueryCsvAsync(Stream stream, bool useHeaderRow = false,
-        CsvConfiguration? configuration = null,
-        [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        CsvConfiguration? configuration = null, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
 #pragma warning disable CA2007
         using var excelReader = new CsvReader(stream, configuration);

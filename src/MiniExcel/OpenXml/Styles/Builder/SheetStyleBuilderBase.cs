@@ -1,8 +1,10 @@
-﻿namespace MiniExcelLib.OpenXml.Styles;
+﻿namespace MiniExcelLib.OpenXml.Styles.Builder;
 
-internal abstract partial class SheetStyleBuilderBase : ISheetStyleBuilder
+internal abstract partial class SheetStyleBuilderBase(SheetStyleBuildContext context) : ISheetStyleBuilder
 {
-    internal static readonly Dictionary<string, int> _allElements = new Dictionary<string, int>
+    private readonly SheetStyleBuildContext _context = context;
+    
+    internal static readonly Dictionary<string, int> AllElements = new()
     {
         ["numFmts"] = 0,
         ["fonts"] = 1,
@@ -16,15 +18,9 @@ internal abstract partial class SheetStyleBuilderBase : ISheetStyleBuilder
         ["extLst"] = 9
     };
 
-    private readonly SheetStyleBuildContext _context;
-
-    public SheetStyleBuilderBase(SheetStyleBuildContext context)
-    {
-        _context = context;
-    }
 
     // Todo: add CancellationToken to all methods called inside of BuildAsync
-    [Zomp.SyncMethodGenerator.CreateSyncVersion]
+    [CreateSyncVersion]
     public virtual async Task<SheetStyleBuildResult> BuildAsync(CancellationToken cancellationToken = default)
     {
         await _context.InitializeAsync(GetGenerateElementInfos(), cancellationToken).ConfigureAwait(false);
@@ -82,7 +78,7 @@ internal abstract partial class SheetStyleBuilderBase : ISheetStyleBuilder
 
     protected abstract SheetStyleElementInfos GetGenerateElementInfos();
 
-    [Zomp.SyncMethodGenerator.CreateSyncVersion]
+    [CreateSyncVersion]
     protected virtual async Task WriteAttributesAsync(string element, CancellationToken cancellationToken = default)
     {
         if (_context.OldXmlReader.NodeType is XmlNodeType.Element || _context.OldXmlReader.NodeType is XmlNodeType.XmlDeclaration)
@@ -145,49 +141,49 @@ internal abstract partial class SheetStyleBuilderBase : ISheetStyleBuilder
         }
     }
 
-    [Zomp.SyncMethodGenerator.CreateSyncVersion]
+    [CreateSyncVersion]
     protected virtual async Task GenerateElementBeforStartElementAsync()
     {
-        if (!_allElements.TryGetValue(_context.OldXmlReader.LocalName, out var elementIndex))
+        if (!AllElements.TryGetValue(_context.OldXmlReader.LocalName, out var elementIndex))
         {
             return;
         }
-        if (!_context.OldElementInfos.ExistsNumFmts && !_context.GenerateElementInfos.ExistsNumFmts && _allElements["numFmts"] < elementIndex)
+        if (!_context.OldElementInfos.ExistsNumFmts && !_context.GenerateElementInfos.ExistsNumFmts && AllElements["numFmts"] < elementIndex)
         {
             await GenerateNumFmtsAsync().ConfigureAwait(false);
             _context.GenerateElementInfos.ExistsNumFmts = true;
         }
-        else if (!_context.OldElementInfos.ExistsFonts && !_context.GenerateElementInfos.ExistsFonts && _allElements["fonts"] < elementIndex)
+        else if (!_context.OldElementInfos.ExistsFonts && !_context.GenerateElementInfos.ExistsFonts && AllElements["fonts"] < elementIndex)
         {
             await GenerateFontsAsync().ConfigureAwait(false);
             _context.GenerateElementInfos.ExistsFonts = true;
         }
-        else if (!_context.OldElementInfos.ExistsFills && !_context.GenerateElementInfos.ExistsFills && _allElements["fills"] < elementIndex)
+        else if (!_context.OldElementInfos.ExistsFills && !_context.GenerateElementInfos.ExistsFills && AllElements["fills"] < elementIndex)
         {
             await GenerateFillsAsync().ConfigureAwait(false);
             _context.GenerateElementInfos.ExistsFills = true;
         }
-        else if (!_context.OldElementInfos.ExistsBorders && !_context.GenerateElementInfos.ExistsBorders && _allElements["borders"] < elementIndex)
+        else if (!_context.OldElementInfos.ExistsBorders && !_context.GenerateElementInfos.ExistsBorders && AllElements["borders"] < elementIndex)
         {
             await GenerateBordersAsync().ConfigureAwait(false);
             _context.GenerateElementInfos.ExistsBorders = true;
         }
-        else if (!_context.OldElementInfos.ExistsCellStyleXfs && !_context.GenerateElementInfos.ExistsCellStyleXfs && _allElements["cellStyleXfs"] < elementIndex)
+        else if (!_context.OldElementInfos.ExistsCellStyleXfs && !_context.GenerateElementInfos.ExistsCellStyleXfs && AllElements["cellStyleXfs"] < elementIndex)
         {
             await GenerateCellStyleXfsAsync().ConfigureAwait(false);
             _context.GenerateElementInfos.ExistsCellStyleXfs = true;
         }
-        else if (!_context.OldElementInfos.ExistsCellXfs && !_context.GenerateElementInfos.ExistsCellXfs && _allElements["cellXfs"] < elementIndex)
+        else if (!_context.OldElementInfos.ExistsCellXfs && !_context.GenerateElementInfos.ExistsCellXfs && AllElements["cellXfs"] < elementIndex)
         {
             await GenerateCellXfsAsync().ConfigureAwait(false);
             _context.GenerateElementInfos.ExistsCellXfs = true;
         }
     }
 
-    [Zomp.SyncMethodGenerator.CreateSyncVersion]
+    [CreateSyncVersion]
     protected virtual async Task GenerateElementBeforEndElementAsync()
     {
-        switch (_context.OldXmlReader.LocalName)
+        switch (_context.OldXmlReader?.LocalName)
         {
             case "styleSheet" when !_context.OldElementInfos.ExistsNumFmts && !_context.GenerateElementInfos.ExistsNumFmts:
                 await GenerateNumFmtsAsync().ConfigureAwait(false);
@@ -213,7 +209,7 @@ internal abstract partial class SheetStyleBuilderBase : ISheetStyleBuilder
         }
     }
 
-    [Zomp.SyncMethodGenerator.CreateSyncVersion]
+    [CreateSyncVersion]
     protected virtual async Task GenerateNumFmtsAsync()
     {
         await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "numFmts", _context.OldXmlReader.NamespaceURI).ConfigureAwait(false);
@@ -227,10 +223,10 @@ internal abstract partial class SheetStyleBuilderBase : ISheetStyleBuilder
         }
     }
 
-    [Zomp.SyncMethodGenerator.CreateSyncVersion]
+    [CreateSyncVersion]
     protected abstract Task GenerateNumFmtAsync();
 
-    [Zomp.SyncMethodGenerator.CreateSyncVersion]
+    [CreateSyncVersion]
     protected virtual async Task GenerateFontsAsync()
     {
         await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "fonts", _context.OldXmlReader.NamespaceURI).ConfigureAwait(false);
@@ -244,10 +240,10 @@ internal abstract partial class SheetStyleBuilderBase : ISheetStyleBuilder
         }
     }
 
-    [Zomp.SyncMethodGenerator.CreateSyncVersion]
+    [CreateSyncVersion]
     protected abstract Task GenerateFontAsync();
 
-    [Zomp.SyncMethodGenerator.CreateSyncVersion]
+    [CreateSyncVersion]
     protected virtual async Task GenerateFillsAsync()
     {
         await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "fills", _context.OldXmlReader.NamespaceURI).ConfigureAwait(false);
@@ -261,10 +257,10 @@ internal abstract partial class SheetStyleBuilderBase : ISheetStyleBuilder
         }
     }
 
-    [Zomp.SyncMethodGenerator.CreateSyncVersion]
+    [CreateSyncVersion]
     protected abstract Task GenerateFillAsync();
 
-    [Zomp.SyncMethodGenerator.CreateSyncVersion]
+    [CreateSyncVersion]
     protected virtual async Task GenerateBordersAsync()
     {
         await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "borders", _context.OldXmlReader.NamespaceURI).ConfigureAwait(false);
@@ -278,10 +274,10 @@ internal abstract partial class SheetStyleBuilderBase : ISheetStyleBuilder
         }
     }
 
-    [Zomp.SyncMethodGenerator.CreateSyncVersion]
+    [CreateSyncVersion]
     protected abstract Task GenerateBorderAsync();
 
-    [Zomp.SyncMethodGenerator.CreateSyncVersion]
+    [CreateSyncVersion]
     protected virtual async Task GenerateCellStyleXfsAsync()
     {
         await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "cellStyleXfs", _context.OldXmlReader.NamespaceURI).ConfigureAwait(false);
@@ -295,10 +291,10 @@ internal abstract partial class SheetStyleBuilderBase : ISheetStyleBuilder
         }
     }
 
-    [Zomp.SyncMethodGenerator.CreateSyncVersion]
+    [CreateSyncVersion]
     protected abstract Task GenerateCellStyleXfAsync();
 
-    [Zomp.SyncMethodGenerator.CreateSyncVersion]
+    [CreateSyncVersion]
     protected virtual async Task GenerateCellXfsAsync()
     {
         await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "cellXfs", _context.OldXmlReader.NamespaceURI).ConfigureAwait(false);
@@ -307,7 +303,7 @@ internal abstract partial class SheetStyleBuilderBase : ISheetStyleBuilder
         await _context.NewXmlWriter.WriteFullEndElementAsync().ConfigureAwait(false);
     }
 
-    [Zomp.SyncMethodGenerator.CreateSyncVersion]
+    [CreateSyncVersion]
     protected abstract Task GenerateCellXfAsync();
 
     private Dictionary<string, string> GetCellXfIdMap()

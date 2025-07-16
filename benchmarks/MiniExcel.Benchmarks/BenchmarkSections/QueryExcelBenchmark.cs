@@ -4,6 +4,7 @@ using ClosedXML.Excel;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using ExcelDataReader;
+using MiniExcelLib.OpenXml.Api;
 using NPOI.XSSF.UserModel;
 using OfficeOpenXml;
 

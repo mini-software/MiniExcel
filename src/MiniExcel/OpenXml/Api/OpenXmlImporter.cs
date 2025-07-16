@@ -4,7 +4,7 @@ using MiniExcelLib.DataReader;
 using MiniExcelLib.OpenXml.Models;
 using MiniExcelLib.OpenXml.Zip;
 
-namespace MiniExcelLib;
+namespace MiniExcelLib.OpenXml.Api;
 
 public sealed partial class OpenXmlImporter
 {
@@ -284,7 +284,7 @@ public sealed partial class OpenXmlImporter
         string? sheetName = null, string startCell = "A1", OpenXmlConfiguration? configuration = null)
     {
         var stream = FileHelper.OpenSharedRead(path);
-        var values = QueryExcel(stream, useHeaderRow, sheetName, startCell, configuration).Cast<IDictionary<string, object?>>();
+        var values = Enumerable.Cast<IDictionary<string, object?>>(QueryExcel(stream, useHeaderRow, sheetName, startCell, configuration));
 
         return MiniExcelDataReader.Create(stream, values);
     }
@@ -292,7 +292,7 @@ public sealed partial class OpenXmlImporter
     public MiniExcelDataReader GetExcelDataReader(Stream stream, bool useHeaderRow = false,
         string? sheetName = null, string startCell = "A1", OpenXmlConfiguration? configuration = null)
     {
-        var values = QueryExcel(stream, useHeaderRow, sheetName, startCell, configuration).Cast<IDictionary<string, object?>>();
+        var values = Enumerable.Cast<IDictionary<string, object?>>(QueryExcel(stream, useHeaderRow, sheetName, startCell, configuration));
         return MiniExcelDataReader.Create(stream, values);
     }
     

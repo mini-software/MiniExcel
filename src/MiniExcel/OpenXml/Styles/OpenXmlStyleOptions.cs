@@ -1,4 +1,4 @@
-namespace MiniExcelLib.OpenXml;
+namespace MiniExcelLib.OpenXml.Styles;
 
 public class OpenXmlStyleOptions
 {

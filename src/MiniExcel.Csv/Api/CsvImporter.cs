@@ -1,6 +1,6 @@
 using MiniExcelLib.DataReader;
 
-namespace MiniExcelLib.Csv;
+namespace MiniExcelLib.Csv.Api;
 
 public partial class CsvImporter
 {
@@ -157,14 +157,14 @@ public partial class CsvImporter
     public MiniExcelDataReader GetCsvDataReader(string path, bool useHeaderRow = false, CsvConfiguration? configuration = null)
     {
         var stream = FileHelper.OpenSharedRead(path);
-        var values = QueryCsv(stream, useHeaderRow, configuration).Cast<IDictionary<string, object?>>();
+        var values = Enumerable.Cast<IDictionary<string, object?>>(QueryCsv(stream, useHeaderRow, configuration));
 
         return MiniExcelDataReader.Create(stream, values);
     }
 
     public MiniExcelDataReader GetCsvDataReader(Stream stream, bool useHeaderRow = false, CsvConfiguration? configuration = null)
     {
-        var values = QueryCsv(stream, useHeaderRow, configuration).Cast<IDictionary<string, object?>>();
+        var values = Enumerable.Cast<IDictionary<string, object?>>(QueryCsv(stream, useHeaderRow, configuration));
         return MiniExcelDataReader.Create(stream, values);
     }
 

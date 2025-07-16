@@ -1,4 +1,4 @@
-﻿namespace MiniExcelLib.OpenXml.Styles;
+﻿namespace MiniExcelLib.OpenXml.Styles.Builder;
 
 public static class SheetStyleBuilderHelper
 {
@@ -14,8 +14,10 @@ public static class SheetStyleBuilderHelper
         
         foreach (var g in cols) 
         {
-            foreach ( var col in g )
+            foreach (var col in g)
+            {
                 col.FormatId = startUpCellXfs + index;
+            }
 
             yield return g.First();
             index++;

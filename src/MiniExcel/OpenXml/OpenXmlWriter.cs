@@ -2,9 +2,13 @@ using System.Xml.Linq;
 using MiniExcelLib.OpenXml.Constants;
 using MiniExcelLib.OpenXml.Models;
 using MiniExcelLib.OpenXml.Styles;
+using MiniExcelLib.OpenXml.Styles.Builder;
 using MiniExcelLib.OpenXml.Zip;
 using MiniExcelLib.WriteAdapters;
+using DefaultSheetStyleBuilder = MiniExcelLib.OpenXml.Styles.Builder.DefaultSheetStyleBuilder;
 using IMiniExcelWriter = MiniExcelLib.Abstractions.IMiniExcelWriter;
+using ISheetStyleBuilder = MiniExcelLib.OpenXml.Styles.Builder.ISheetStyleBuilder;
+using MinimalSheetStyleBuilder = MiniExcelLib.OpenXml.Styles.Builder.MinimalSheetStyleBuilder;
 using SafeStreamWriter = MiniExcelLib.Helpers.SafeStreamWriter;
 
 namespace MiniExcelLib.OpenXml;

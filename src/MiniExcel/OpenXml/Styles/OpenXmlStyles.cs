@@ -1,7 +1,7 @@
 using MiniExcelLib.OpenXml.Constants;
 using MiniExcelLib.OpenXml.Zip;
 
-namespace MiniExcelLib.OpenXml;
+namespace MiniExcelLib.OpenXml.Styles;
 
 internal class OpenXmlStyles
 {

@@ -5,7 +5,12 @@ using MiniExcelLib.DataReader;
 using MiniExcelLib.OpenXml.Models;
 using MiniExcelLib.OpenXml.Picture;
 using Zomp.SyncMethodGenerator;
+using CsvExporter = MiniExcelLib.Csv.Api.CsvExporter;
+using CsvImporter = MiniExcelLib.Csv.Api.CsvImporter;
 using MiniExcelNew = MiniExcelLib.MiniExcel;
+using OpenXmlExporter = MiniExcelLib.OpenXml.Api.OpenXmlExporter;
+using OpenXmlImporter = MiniExcelLib.OpenXml.Api.OpenXmlImporter;
+using OpenXmlTemplater = MiniExcelLib.OpenXml.Api.OpenXmlTemplater;
 
 namespace MiniExcelLibs;
 

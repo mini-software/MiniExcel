@@ -1,4 +1,5 @@
 using MiniExcelLib.OpenXml.Attributes;
+using MiniExcelLib.OpenXml.Styles;
 
 namespace MiniExcelLib.OpenXml;
 

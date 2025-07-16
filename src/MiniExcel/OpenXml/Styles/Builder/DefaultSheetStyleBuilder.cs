@@ -1,8 +1,9 @@
-﻿namespace MiniExcelLib.OpenXml.Styles;
+﻿namespace MiniExcelLib.OpenXml.Styles.Builder;
 
-internal partial class DefaultSheetStyleBuilder : SheetStyleBuilderBase
+internal partial class DefaultSheetStyleBuilder(SheetStyleBuildContext context, OpenXmlStyleOptions styleOptions)
+    : SheetStyleBuilderBase(context)
 {
-    private static readonly SheetStyleElementInfos GenerateElementInfos = new SheetStyleElementInfos
+    private static readonly SheetStyleElementInfos GenerateElementInfos = new()
     {
         NumFmtCount = 0,//The default NumFmt number is 0, but there will be NumFmt dynamically generated based on ColumnsToApply
         FontCount = 2,
@@ -12,21 +13,15 @@ internal partial class DefaultSheetStyleBuilder : SheetStyleBuilderBase
         CellXfCount = 5
     };
 
-    private readonly SheetStyleBuildContext _context;
-    private OpenXmlStyleOptions _styleOptions;
-
-    public DefaultSheetStyleBuilder(SheetStyleBuildContext context, OpenXmlStyleOptions styleOptions) : base(context)
-    {
-        _context = context;
-        _styleOptions = styleOptions;
-    }
+    private readonly SheetStyleBuildContext _context = context;
+    private readonly OpenXmlStyleOptions _styleOptions = styleOptions;
 
     protected override SheetStyleElementInfos GetGenerateElementInfos()
     {
         return GenerateElementInfos;
     }
 
-    [Zomp.SyncMethodGenerator.CreateSyncVersion]
+    [CreateSyncVersion]
     protected override async Task GenerateNumFmtAsync()
     {
         const int numFmtIndex = 166;
@@ -45,7 +40,7 @@ internal partial class DefaultSheetStyleBuilder : SheetStyleBuilderBase
         }
     }
 
-    [Zomp.SyncMethodGenerator.CreateSyncVersion]
+    [CreateSyncVersion]
     protected override async Task GenerateFontAsync()
     {
         /*
@@ -103,7 +98,7 @@ internal partial class DefaultSheetStyleBuilder : SheetStyleBuilderBase
         await _context.NewXmlWriter.WriteEndElementAsync().ConfigureAwait(false);
     }
 
-    [Zomp.SyncMethodGenerator.CreateSyncVersion]
+    [CreateSyncVersion]
     protected override async Task GenerateFillAsync()
     {
         /*
@@ -145,7 +140,7 @@ internal partial class DefaultSheetStyleBuilder : SheetStyleBuilderBase
         await _context.NewXmlWriter.WriteEndElementAsync().ConfigureAwait(false);
     }
 
-    [Zomp.SyncMethodGenerator.CreateSyncVersion]
+    [CreateSyncVersion]
     protected override async Task GenerateBorderAsync()
     {
         /*
@@ -257,7 +252,7 @@ internal partial class DefaultSheetStyleBuilder : SheetStyleBuilderBase
         await _context.NewXmlWriter.WriteEndElementAsync().ConfigureAwait(false);
     }
 
-    [Zomp.SyncMethodGenerator.CreateSyncVersion]
+    [CreateSyncVersion]
     protected override async Task GenerateCellStyleXfAsync()
     {
         /*
@@ -324,7 +319,7 @@ internal partial class DefaultSheetStyleBuilder : SheetStyleBuilderBase
         await _context.NewXmlWriter.WriteEndElementAsync().ConfigureAwait(false);
     }
 
-    [Zomp.SyncMethodGenerator.CreateSyncVersion]
+    [CreateSyncVersion]
     protected override async Task GenerateCellXfAsync()
     {
         /*

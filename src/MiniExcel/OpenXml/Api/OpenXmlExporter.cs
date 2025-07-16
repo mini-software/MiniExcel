@@ -1,6 +1,6 @@
 using MiniExcelLib.OpenXml.Picture;
 
-namespace MiniExcelLib;
+namespace MiniExcelLib.OpenXml.Api;
 
 public sealed partial class OpenXmlExporter
 {

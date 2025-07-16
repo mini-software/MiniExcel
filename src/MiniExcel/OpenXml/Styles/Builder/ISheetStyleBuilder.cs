@@ -1,7 +1,7 @@
-﻿namespace MiniExcelLib.OpenXml.Styles;
+﻿namespace MiniExcelLib.OpenXml.Styles.Builder;
 
 internal partial interface ISheetStyleBuilder
 {
-    [Zomp.SyncMethodGenerator.CreateSyncVersion]
+    [CreateSyncVersion]
     Task<SheetStyleBuildResult> BuildAsync(CancellationToken cancellationToken = default);
 }

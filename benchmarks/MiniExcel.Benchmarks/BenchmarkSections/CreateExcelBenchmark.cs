@@ -5,6 +5,7 @@ using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using MiniExcelLib.Benchmarks.Utils;
+using MiniExcelLib.OpenXml.Api;
 using NPOI.XSSF.UserModel;
 using OfficeOpenXml;
 

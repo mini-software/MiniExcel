@@ -1,7 +1,7 @@
 ﻿using MiniExcelLib.OpenXml.Constants;
 using MiniExcelLib.OpenXml.Zip;
 
-namespace MiniExcelLib.OpenXml.Styles;
+namespace MiniExcelLib.OpenXml.Styles.Builder;
 
 internal class SheetStyleBuildContext : IDisposable
 {
@@ -17,11 +17,11 @@ internal class SheetStyleBuildContext : IDisposable
     private readonly Encoding _encoding;
     private readonly ICollection<MiniExcelColumnAttribute> _columns;
 
-    private StringReader _emptyStylesXmlStringReader;
+    private StringReader? _emptyStylesXmlStringReader;
     private ZipArchiveEntry? _oldStyleXmlZipEntry;
     private ZipArchiveEntry? _newStyleXmlZipEntry;
-    private Stream _oldXmlReaderStream;
-    private Stream _newXmlWriterStream;
+    private Stream? _oldXmlReaderStream;
+    private Stream? _newXmlWriterStream;
 
     private bool _initialized;
     private bool _finalized;
@@ -35,8 +35,8 @@ internal class SheetStyleBuildContext : IDisposable
         _columns = columns;
     }
 
-    public XmlReader OldXmlReader { get; private set; }
-    public XmlWriter NewXmlWriter { get; private set; }
+    public XmlReader? OldXmlReader { get; private set; }
+    public XmlWriter? NewXmlWriter { get; private set; }
     public SheetStyleElementInfos OldElementInfos { get; private set; }
     public SheetStyleElementInfos GenerateElementInfos { get; private set; }
     public IEnumerable<MiniExcelColumnAttribute> ColumnsToApply { get; private set; }
@@ -52,7 +52,7 @@ internal class SheetStyleBuildContext : IDisposable
         {
             using (var oldStyleXmlStream = _oldStyleXmlZipEntry.Open())
             {
-                using XmlReader reader = XmlReader.Create(oldStyleXmlStream, new XmlReaderSettings { IgnoreWhitespace = true });
+                using var reader = XmlReader.Create(oldStyleXmlStream, new XmlReaderSettings { IgnoreWhitespace = true });
                 OldElementInfos = ReadSheetStyleElementInfos(reader);
             }
 
@@ -143,7 +143,7 @@ internal class SheetStyleBuildContext : IDisposable
 
         try
         {
-            OldXmlReader.Dispose();
+            OldXmlReader?.Dispose();
             OldXmlReader = null;
             _oldXmlReaderStream?.Dispose();
             _oldXmlReaderStream = null;
@@ -151,12 +151,12 @@ internal class SheetStyleBuildContext : IDisposable
             _emptyStylesXmlStringReader?.Dispose();
             _emptyStylesXmlStringReader = null;
 
-            NewXmlWriter.Flush();
-            NewXmlWriter.Close();
-            NewXmlWriter.Dispose();
+            NewXmlWriter?.Flush();
+            NewXmlWriter?.Close();
+            NewXmlWriter?.Dispose();
             NewXmlWriter = null;
 
-            _newXmlWriterStream.Dispose();
+            _newXmlWriterStream?.Dispose();
             _newXmlWriterStream = null;
 
             if (_oldStyleXmlZipEntry is null)
@@ -201,7 +201,7 @@ internal class SheetStyleBuildContext : IDisposable
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            OldXmlReader.Dispose();
+            OldXmlReader?.Dispose();
             OldXmlReader = null;
 #if NET5_0_OR_GREATER
             if (_oldXmlReaderStream is not null)
@@ -209,7 +209,7 @@ internal class SheetStyleBuildContext : IDisposable
                 await _oldXmlReaderStream.DisposeAsync().ConfigureAwait(false);
             }
 #else
-                _oldXmlReaderStream?.Dispose();
+            _oldXmlReaderStream?.Dispose();
 #endif
             _oldXmlReaderStream = null;
 
@@ -223,7 +223,7 @@ internal class SheetStyleBuildContext : IDisposable
 #if NET5_0_OR_GREATER
             await NewXmlWriter.DisposeAsync().ConfigureAwait(false);
 #else
-                NewXmlWriter.Dispose();
+            NewXmlWriter.Dispose();
 #endif
 
             NewXmlWriter = null;
@@ -231,7 +231,7 @@ internal class SheetStyleBuildContext : IDisposable
 #if NET5_0_OR_GREATER
             await _newXmlWriterStream.DisposeAsync().ConfigureAwait(false);
 #else
-                _newXmlWriterStream.Dispose();
+            _newXmlWriterStream?.Dispose();
 #endif
             _newXmlWriterStream = null;
 

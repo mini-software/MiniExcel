@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using MiniExcelLib.OpenXml.Constants;
 using MiniExcelLib.OpenXml.Models;
+using MiniExcelLib.OpenXml.Styles;
 using MiniExcelLib.OpenXml.Zip;
 using IMiniExcelReader = MiniExcelLib.Abstractions.IMiniExcelReader;
 using MiniExcelMapper = MiniExcelLib.Reflection.MiniExcelMapper;

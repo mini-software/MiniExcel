@@ -173,6 +173,12 @@ namespace MiniExcelLibs
                 SaveAsByTemplate(stream, templatePath, value, configuration);
         }
 
+        public static void SaveAsByTemplate(string path, Stream templateStream, object value, IConfiguration configuration = null)
+        {
+            using (var stream = File.Create(path))
+                SaveAsByTemplate(stream, templateStream, value, configuration);
+        }
+
         public static void SaveAsByTemplate(string path, byte[] templateBytes, object value, IConfiguration configuration = null)
         {
             using (var stream = File.Create(path))
@@ -182,6 +188,11 @@ namespace MiniExcelLibs
         public static void SaveAsByTemplate(this Stream stream, string templatePath, object value, IConfiguration configuration = null)
         {
             ExcelTemplateFactory.GetProvider(stream, configuration).SaveAsByTemplate(templatePath, value);
+        }
+
+        public static void SaveAsByTemplate(this Stream stream, Stream templateStream, object value, IConfiguration configuration = null)
+        {
+            ExcelTemplateFactory.GetProvider(stream, configuration).SaveAsByTemplate(templateStream, value);
         }
 
         public static void SaveAsByTemplate(this Stream stream, byte[] templateBytes, object value, IConfiguration configuration = null)

@@ -1,10 +1,11 @@
-using MiniExcelLibs.Attributes;
+using MiniExcelLib.OpenXml.Attributes;
+using MiniExcelLib.OpenXml.Styles;
 
-namespace MiniExcelLibs.OpenXml;
+namespace MiniExcelLib.OpenXml;
 
-public class OpenXmlConfiguration : MiniExcelConfiguration
+public class OpenXmlConfiguration : MiniExcelBaseConfiguration
 {
-    internal static readonly OpenXmlConfiguration DefaultConfig = new();
+    internal static OpenXmlConfiguration Default => new();
     
     public bool FillMergedCells { get; set; }
     public TableStyles TableStyles { get; set; } = TableStyles.Default;
@@ -29,4 +30,10 @@ public class OpenXmlConfiguration : MiniExcelConfiguration
     public bool EnableAutoWidth { get; set; }
     public double MinWidth { get; set; } = 9.28515625;
     public double MaxWidth { get; set; } = 200;
+}
+
+public enum TableStyles
+{
+    None,
+    Default
 }

@@ -1,4 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
 using System.Dynamic;
 using MiniExcelLib.DataReader;
 using MiniExcelLib.OpenXml.Models;
@@ -27,7 +26,6 @@ public sealed partial class OpenXmlImporter
     }
 
     [CreateSyncVersion]
-    [SuppressMessage("Reliability", "CA2007:Do not directly await a Task")]
     public async IAsyncEnumerable<T> QueryExcelAsync<T>(Stream stream, string? sheetName = null,
         string startCell = "A1", bool treatHeaderAsData = false, OpenXmlConfiguration? configuration = null,
         [EnumeratorCancellation] CancellationToken cancellationToken = default) where T : class, new()
@@ -48,7 +46,6 @@ public sealed partial class OpenXmlImporter
     }
 
     [CreateSyncVersion]
-    [SuppressMessage("Reliability", "CA2007:Do not directly await a Task")]
     public async IAsyncEnumerable<dynamic> QueryExcelAsync(Stream stream, bool useHeaderRow = false,
         string? sheetName = null, string startCell = "A1", OpenXmlConfiguration? configuration = null,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
@@ -81,7 +78,6 @@ public sealed partial class OpenXmlImporter
     }
 
     [CreateSyncVersion]
-    [SuppressMessage("Reliability", "CA2007:Do not directly await a Task")]
     public async IAsyncEnumerable<dynamic> QueryExcelRangeAsync(Stream stream, bool useHeaderRow = false,
         string? sheetName = null, string startCell = "A1", string endCell = "", OpenXmlConfiguration? configuration = null,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
@@ -103,7 +99,6 @@ public sealed partial class OpenXmlImporter
     }
 
     [CreateSyncVersion]
-    [SuppressMessage("Reliability", "CA2007:Do not directly await a Task")]
     public async IAsyncEnumerable<dynamic> QueryExcelRangeAsync(Stream stream, bool useHeaderRow = false,
         string? sheetName = null, int startRowIndex = 1, int startColumnIndex = 1, int? endRowIndex = null,
         int? endColumnIndex = null, OpenXmlConfiguration? configuration = null,
@@ -147,9 +142,7 @@ public sealed partial class OpenXmlImporter
         var rows = reader.QueryAsync(false, sheetName, startCell, cancellationToken);
 
         var columnDict = new Dictionary<string, string>();
-#pragma warning disable CA2007
         await foreach (var row in rows.ConfigureAwait(false))
-#pragma warning restore CA2007
         {
             if (first)
             {
@@ -263,9 +256,9 @@ public sealed partial class OpenXmlImporter
         string? sheetName = null, string startCell = "A1", OpenXmlConfiguration? configuration = null,
         CancellationToken cancellationToken = default)
     {
-#pragma warning disable CA2007 // Consider calling ConfigureAwait on the awaited task
+#pragma warning disable CA2007 // We need to assign the AsyncEnumerator before we can call ConfigureAwait on it
         await using var enumerator = QueryExcelAsync(stream, useHeaderRow, sheetName, startCell, configuration, cancellationToken).GetAsyncEnumerator(cancellationToken);
-#pragma warning restore CA2007 // Consider calling ConfigureAwait on the awaited task
+#pragma warning restore CA2007
 
         _ = enumerator.ConfigureAwait(false);
         if (await enumerator.MoveNextAsync().ConfigureAwait(false))
@@ -284,7 +277,7 @@ public sealed partial class OpenXmlImporter
         string? sheetName = null, string startCell = "A1", OpenXmlConfiguration? configuration = null)
     {
         var stream = FileHelper.OpenSharedRead(path);
-        var values = Enumerable.Cast<IDictionary<string, object?>>(QueryExcel(stream, useHeaderRow, sheetName, startCell, configuration));
+        var values = QueryExcel(stream, useHeaderRow, sheetName, startCell, configuration).Cast<IDictionary<string, object?>>();
 
         return MiniExcelDataReader.Create(stream, values);
     }
@@ -292,7 +285,7 @@ public sealed partial class OpenXmlImporter
     public MiniExcelDataReader GetExcelDataReader(Stream stream, bool useHeaderRow = false,
         string? sheetName = null, string startCell = "A1", OpenXmlConfiguration? configuration = null)
     {
-        var values = Enumerable.Cast<IDictionary<string, object?>>(QueryExcel(stream, useHeaderRow, sheetName, startCell, configuration));
+        var values = QueryExcel(stream, useHeaderRow, sheetName, startCell, configuration).Cast<IDictionary<string, object?>>();
         return MiniExcelDataReader.Create(stream, values);
     }
     

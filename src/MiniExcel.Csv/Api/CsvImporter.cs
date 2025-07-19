@@ -46,11 +46,9 @@ public partial class CsvImporter
     public async IAsyncEnumerable<dynamic> QueryCsvAsync(Stream stream, bool useHeaderRow = false,
         CsvConfiguration? configuration = null, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-#pragma warning disable CA2007
         using var excelReader = new CsvReader(stream, configuration);
         await foreach (var item in excelReader.QueryAsync(useHeaderRow, null, "A1", cancellationToken).ConfigureAwait(false))
             yield return item.Aggregate(seed: GetNewExpandoObject(), func: AddPairToDict);
-#pragma warning restore CA2007
     }
 
     #endregion
@@ -81,9 +79,7 @@ public partial class CsvImporter
         var rows = reader.QueryAsync(false, null, "A1", cancellationToken);
 
         var columnDict = new Dictionary<string, string>();
-#pragma warning disable CA2007
         await foreach (var row in rows.ConfigureAwait(false))
-#pragma warning restore CA2007
         {
             if (first)
             {
@@ -137,9 +133,9 @@ public partial class CsvImporter
     public async Task<ICollection<string>> GetCsvColumnsAsync(Stream stream, bool useHeaderRow = false,
         CsvConfiguration? configuration = null, CancellationToken cancellationToken = default)
     {
-#pragma warning disable CA2007 // Consider calling ConfigureAwait on the awaited task
+#pragma warning disable CA2007 // We need to assign the AsyncEnumerator before we can call ConfigureAwait on it
         await using var enumerator = QueryCsvAsync(stream, useHeaderRow, configuration, cancellationToken).GetAsyncEnumerator(cancellationToken);
-#pragma warning restore CA2007 // Consider calling ConfigureAwait on the awaited task
+#pragma warning restore CA2007
 
         _ = enumerator.ConfigureAwait(false);
         if (await enumerator.MoveNextAsync().ConfigureAwait(false))
@@ -157,14 +153,14 @@ public partial class CsvImporter
     public MiniExcelDataReader GetCsvDataReader(string path, bool useHeaderRow = false, CsvConfiguration? configuration = null)
     {
         var stream = FileHelper.OpenSharedRead(path);
-        var values = Enumerable.Cast<IDictionary<string, object?>>(QueryCsv(stream, useHeaderRow, configuration));
+        var values = QueryCsv(stream, useHeaderRow, configuration).Cast<IDictionary<string, object?>>();
 
         return MiniExcelDataReader.Create(stream, values);
     }
 
     public MiniExcelDataReader GetCsvDataReader(Stream stream, bool useHeaderRow = false, CsvConfiguration? configuration = null)
     {
-        var values = Enumerable.Cast<IDictionary<string, object?>>(QueryCsv(stream, useHeaderRow, configuration));
+        var values = QueryCsv(stream, useHeaderRow, configuration).Cast<IDictionary<string, object?>>();
         return MiniExcelDataReader.Create(stream, values);
     }
 

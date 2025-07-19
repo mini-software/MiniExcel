@@ -49,6 +49,9 @@ internal partial class OpenXmlTemplate : IMiniExcelTemplate
     [CreateSyncVersion]
     public async Task SaveAsByTemplateAsync(Stream templateStream, object value, CancellationToken cancellationToken = default)
     {
+        if(!templateStream.CanSeek)
+            throw new ArgumentException("The template stream must be seekable");
+        
         templateStream.Seek(0, SeekOrigin.Begin);
         using var templateReader = await OpenXmlReader.CreateAsync(templateStream, null, cancellationToken: cancellationToken).ConfigureAwait(false);
         using var outputFileArchive = new OpenXmlZip(_outputFileStream, mode: ZipArchiveMode.Create, true, Encoding.UTF8, isUpdateMode: false);

@@ -2,7 +2,6 @@
 using MiniExcelLibs.Zip;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -58,7 +57,7 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
         public void SaveAsByTemplate(Stream templateStream, object value)
         {
             if (!templateStream.CanSeek)
-                throw new InvalidDataException("The template stream must be seekable.");
+                throw new ArgumentException("The template stream must be seekable.");
             
             templateStream.Seek(0, SeekOrigin.Begin);
             

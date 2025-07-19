@@ -117,8 +117,8 @@
             }, cancellationToken);
 
             return await tcs.Task;
-
         }
+        
         public static async Task SaveAsByTemplateAsync(this Stream stream, string templatePath, object value, IConfiguration configuration = null, CancellationToken cancellationToken = default)
         {
             await ExcelTemplateFactory.GetProvider(stream, configuration).SaveAsByTemplateAsync(templatePath, value, cancellationToken).ConfigureAwait(false);
@@ -129,9 +129,19 @@
             await ExcelTemplateFactory.GetProvider(stream, configuration).SaveAsByTemplateAsync(templateBytes, value, cancellationToken).ConfigureAwait(false);
         }
 
+        public static async Task SaveAsByTemplateAsync(this Stream stream, Stream templateStream, object value, IConfiguration configuration = null, CancellationToken cancellationToken = default)
+        {
+            await ExcelTemplateFactory.GetProvider(stream, configuration).SaveAsByTemplateAsync(templateStream, value, cancellationToken).ConfigureAwait(false);
+        }
+
         public static async Task SaveAsByTemplateAsync(string path, string templatePath, object value, IConfiguration configuration = null, CancellationToken cancellationToken = default)
         {
             await Task.Run(() => SaveAsByTemplate(path, templatePath, value, configuration), cancellationToken).ConfigureAwait(false);
+        }
+
+        public static async Task SaveAsByTemplateAsync(string path, Stream templateStream, object value, IConfiguration configuration = null, CancellationToken cancellationToken = default)
+        {
+            await Task.Run(() => SaveAsByTemplate(path, templateStream, value, configuration), cancellationToken).ConfigureAwait(false);
         }
 
         public static async Task SaveAsByTemplateAsync(string path, byte[] templateBytes, object value, IConfiguration configuration = null, CancellationToken cancellationToken = default)

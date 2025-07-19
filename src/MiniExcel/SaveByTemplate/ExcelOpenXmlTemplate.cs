@@ -46,22 +46,22 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
         public void SaveAsByTemplate(string templatePath, object value)
         {
             using (var stream = FileHelper.OpenSharedRead(templatePath))
-                SaveAsByTemplateImpl(stream, value);
+                SaveAsByTemplate(stream, value);
         }
 
         public void SaveAsByTemplate(byte[] templateBtyes, object value)
         {
             using (Stream stream = new MemoryStream(templateBtyes))
-                SaveAsByTemplateImpl(stream, value);
+                SaveAsByTemplate(stream, value);
         }
 
-        internal void SaveAsByTemplateImpl(Stream templateStream, object value)
+        public void SaveAsByTemplate(Stream templateStream, object value)
         {
-            //only support xlsx
-            //templateStream.CopyTo(_outputFileStream);
-
-            // foreach all templateStream and create file for _outputFileStream and not create sheet file
-            templateStream.Position = 0;
+            if (!templateStream.CanSeek)
+                throw new InvalidDataException("The template stream must be seekable.");
+            
+            templateStream.Seek(0, SeekOrigin.Begin);
+            
             var templateReader = new ExcelOpenXmlSheetReader(templateStream, null);
             var outputFileArchive = new ExcelOpenXmlZip(_outputFileStream, mode: ZipArchiveMode.Create, true, Encoding.UTF8, isUpdateMode: false);
             try
@@ -181,6 +181,11 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
         public Task SaveAsByTemplateAsync(byte[] templateBtyes, object value, CancellationToken cancellationToken = default)
         {
             return Task.Run(() => SaveAsByTemplate(templateBtyes, value), cancellationToken);
+        }
+
+        public Task SaveAsByTemplateAsync(Stream templateStream, object value, CancellationToken cancellationToken = default)
+        {
+            return Task.Run(() => SaveAsByTemplate(templateStream, value), cancellationToken);
         }
     }
 }

@@ -2,28 +2,28 @@
 
 public class MiniExcelOpenXmlMultipleSheetAsyncTests
 {
-    private readonly OpenXmlImporter _importer =  MiniExcel.Importer.GetExcelImporter();
+    private readonly OpenXmlImporter _excelImporter =  MiniExcel.Importer.GetExcelImporter();
     
     [Fact]
     public async Task SpecifySheetNameQueryTest()
     {
         const string path = "../../../../../samples/xlsx/TestMultiSheet.xlsx";
         {
-            var q =  _importer.QueryExcelAsync(path, sheetName: "Sheet3").ToBlockingEnumerable();
+            var q =  _excelImporter.QueryAsync(path, sheetName: "Sheet3").ToBlockingEnumerable();
             var rows = q.ToList();
             Assert.Equal(5, rows.Count);
             Assert.Equal(3, rows[0].A);
             Assert.Equal(3, rows[0].B);
         }
         {
-            var q =  _importer.QueryExcelAsync(path, sheetName: "Sheet2").ToBlockingEnumerable();
+            var q =  _excelImporter.QueryAsync(path, sheetName: "Sheet2").ToBlockingEnumerable();
             var rows = q.ToList();
             Assert.Equal(12, rows.Count);
             Assert.Equal(1, rows[0].A);
             Assert.Equal(1, rows[0].B);
         }
         {
-            var q =  _importer.QueryExcelAsync(path, sheetName: "Sheet1").ToBlockingEnumerable();
+            var q =  _excelImporter.QueryAsync(path, sheetName: "Sheet1").ToBlockingEnumerable();
             var rows = q.ToList();
             Assert.Equal(12, rows.Count);
             Assert.Equal(2, rows[0].A);
@@ -32,7 +32,7 @@ public class MiniExcelOpenXmlMultipleSheetAsyncTests
         {
             await Assert.ThrowsAsync<InvalidOperationException>(() =>
             {
-                _ =  _importer.QueryExcelAsync(path, sheetName: "xxxx").ToBlockingEnumerable().ToList();
+                _ =  _excelImporter.QueryAsync(path, sheetName: "xxxx").ToBlockingEnumerable().ToList();
                 return Task.CompletedTask;
             });
         }
@@ -40,25 +40,25 @@ public class MiniExcelOpenXmlMultipleSheetAsyncTests
         await using var stream = File.OpenRead(path);
         
         {
-            var rows =  _importer.QueryExcelAsync(stream, sheetName: "Sheet3").ToBlockingEnumerable().Cast<IDictionary<string, object>>().ToList();
+            var rows =  _excelImporter.QueryAsync(stream, sheetName: "Sheet3").ToBlockingEnumerable().Cast<IDictionary<string, object>>().ToList();
             Assert.Equal(5, rows.Count);
             Assert.Equal(3d, rows[0]["A"]);
             Assert.Equal(3d, rows[0]["B"]);
         }
         {
-            var rows =  _importer.QueryExcelAsync(stream, sheetName: "Sheet2").ToBlockingEnumerable().Cast<IDictionary<string, object>>().ToList();
+            var rows =  _excelImporter.QueryAsync(stream, sheetName: "Sheet2").ToBlockingEnumerable().Cast<IDictionary<string, object>>().ToList();
             Assert.Equal(12, rows.Count);
             Assert.Equal(1d, rows[0]["A"]);
             Assert.Equal(1d, rows[0]["B"]);
         }
         {
-            var rows =  _importer.QueryExcelAsync(stream, sheetName: "Sheet1").ToBlockingEnumerable().Cast<IDictionary<string, object>>().ToList();
+            var rows =  _excelImporter.QueryAsync(stream, sheetName: "Sheet1").ToBlockingEnumerable().Cast<IDictionary<string, object>>().ToList();
             Assert.Equal(12, rows.Count);
             Assert.Equal(2d, rows[0]["A"]);
             Assert.Equal(2d, rows[0]["B"]);
         }
         {
-            var rows =  _importer.QueryExcelAsync(stream, sheetName: "Sheet1").ToBlockingEnumerable().Cast<IDictionary<string, object>>().ToList();
+            var rows =  _excelImporter.QueryAsync(stream, sheetName: "Sheet1").ToBlockingEnumerable().Cast<IDictionary<string, object>>().ToList();
             Assert.Equal(12, rows.Count);
             Assert.Equal(2d, rows[0]["A"]);
             Assert.Equal(2d, rows[0]["B"]);
@@ -70,9 +70,9 @@ public class MiniExcelOpenXmlMultipleSheetAsyncTests
     {
         const string path = "../../../../../samples/xlsx/TestMultiSheet.xlsx";
         await using var stream = File.OpenRead(path);
-        _ =  _importer.QueryExcelAsync(stream, sheetName: "Sheet1").ToBlockingEnumerable();
-        _ =  _importer.QueryExcelAsync(stream, sheetName: "Sheet2").ToBlockingEnumerable();
-        _ =  _importer.QueryExcelAsync(stream, sheetName: "Sheet3").ToBlockingEnumerable();
+        _ =  _excelImporter.QueryAsync(stream, sheetName: "Sheet1").ToBlockingEnumerable();
+        _ =  _excelImporter.QueryAsync(stream, sheetName: "Sheet2").ToBlockingEnumerable();
+        _ =  _excelImporter.QueryAsync(stream, sheetName: "Sheet3").ToBlockingEnumerable();
     }
 
     [Fact]
@@ -80,21 +80,23 @@ public class MiniExcelOpenXmlMultipleSheetAsyncTests
     {
         const string path = "../../../../../samples/xlsx/TestMultiSheet.xlsx";
         {
-            var sheetNames = (await  _importer.GetSheetNamesAsync(path)).ToList();
+            var sheetNames = await  _excelImporter.GetSheetNamesAsync(path);
             foreach (var sheetName in sheetNames)
             {
-                _ =  _importer.QueryExcelAsync(path, sheetName: sheetName).ToBlockingEnumerable();
+                _ =  _excelImporter.QueryAsync(path, sheetName: sheetName).ToBlockingEnumerable();
             }
+            
             Assert.Equal(new[] { "Sheet1", "Sheet2", "Sheet3" }, sheetNames);
         }
 
         {
             await using var stream = File.OpenRead(path);
-            var sheetNames = (await  _importer.GetSheetNamesAsync(stream)).ToList();
+            var sheetNames = await  _excelImporter.GetSheetNamesAsync(stream);
+            
             Assert.Equal(new[] { "Sheet1", "Sheet2", "Sheet3" }, sheetNames);
             foreach (var sheetName in sheetNames)
             {
-                _ =  _importer.QueryExcelAsync(stream, sheetName: sheetName).ToBlockingEnumerable().ToList();
+                _ = _excelImporter.QueryAsync(stream, sheetName: sheetName).ToBlockingEnumerable().ToList();
             }
         }
     }

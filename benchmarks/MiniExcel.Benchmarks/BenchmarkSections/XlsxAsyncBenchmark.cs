@@ -22,7 +22,7 @@ public class XlsxAsyncBenchmark : BenchmarkBase
         using var path = AutoDeletingPath.Create();
         await using var stream = File.Create(path.FilePath);
 
-        await _exporter.ExportExcelAsync(stream, GetValue());
+        await _exporter.ExportAsync(stream, GetValue());
     }
 
     [Benchmark(Description = "MiniExcel Generate Template Async")]
@@ -41,6 +41,6 @@ public class XlsxAsyncBenchmark : BenchmarkBase
                 })
         };
      
-        await _templater.ApplyXlsxTemplateAsync(path.FilePath, templatePath, value);
+        await _templater.ApplyTemplateAsync(path.FilePath, templatePath, value);
     }
 }

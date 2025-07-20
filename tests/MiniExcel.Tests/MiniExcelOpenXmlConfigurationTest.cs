@@ -6,8 +6,8 @@ namespace MiniExcelLib.Tests;
 
 public class MiniExcelOpenXmlConfigurationTest
 {
-    private readonly OpenXmlImporter _importer =  MiniExcel.Importer.GetExcelImporter();
-    private readonly OpenXmlExporter _exporter =  MiniExcel.Exporter.GetExcelExporter();    
+    private readonly OpenXmlImporter _excelImporter =  MiniExcel.Importer.GetExcelImporter();
+    private readonly OpenXmlExporter _excelExporter =  MiniExcel.Exporter.GetExcelExporter();    
     [Fact]
     public async Task EnableWriteFilePathTest()
     {
@@ -23,10 +23,10 @@ public class MiniExcelOpenXmlConfigurationTest
         ];
 
         var path = PathHelper.GetFile("xlsx/Test_EnableWriteFilePath.xlsx");
-        await _exporter.ExportExcelAsync(path, value, configuration: new OpenXmlConfiguration { EnableWriteFilePath = false }, overwriteFile: true);
+        await _excelExporter.ExportAsync(path, value, configuration: new OpenXmlConfiguration { EnableWriteFilePath = false }, overwriteFile: true);
         Assert.True(File.Exists(path));
 
-        var rows = await _importer.QueryExcelAsync<ImgExportTestDto>(path).CreateListAsync();
+        var rows = await _excelImporter.QueryAsync<ImgExportTestDto>(path).CreateListAsync();
         Assert.True(rows.All(x => x.Img is null or []));
     }
     

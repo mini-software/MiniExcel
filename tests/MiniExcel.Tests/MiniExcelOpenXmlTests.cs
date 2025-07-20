@@ -11,8 +11,8 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
 {
     private readonly ITestOutputHelper _output = output;
     
-    private readonly OpenXmlImporter _importer =  MiniExcel.Importer.GetExcelImporter();
-    private readonly OpenXmlExporter _exporter =  MiniExcel.Exporter.GetExcelExporter();
+    private readonly OpenXmlImporter _excelImporter =  MiniExcel.Importer.GetExcelImporter();
+    private readonly OpenXmlExporter _excelExporter =  MiniExcel.Exporter.GetExcelExporter();
    
     [Fact]
     public void GetColumnsTest()
@@ -20,17 +20,17 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
         const string tmPath = "../../../../../samples/xlsx/TestTypeMapping.xlsx";
         const string tePath = "../../../../../samples/xlsx/TestEmpty.xlsx";
         {
-            var columns =  _importer.GetExcelColumns (tmPath);
+            var columns =  _excelImporter.GetColumnNames (tmPath);
             Assert.Equal(["A", "B", "C", "D", "E", "F", "G", "H"], columns);
         }
 
         {
-            var columns =  _importer.GetExcelColumns (tmPath);
+            var columns =  _excelImporter.GetColumnNames (tmPath);
             Assert.Equal(8, columns.Count);
         }
 
         {
-            var columns =  _importer.GetExcelColumns (tePath);
+            var columns =  _excelImporter.GetColumnNames (tePath);
             Assert.Empty(columns);
         }
     }
@@ -50,10 +50,10 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
             '\u0017','\u0018','\u0019','\u001A','\u001B','\u001C','\u001D','\u001E','\u001F','\u007F'
         ];
         var input = chars.Select(s => new { Test = s.ToString() });
-         _exporter.ExportExcel(path.ToString(), input);
+         _excelExporter.Export(path.ToString(), input);
 
-        var rows2 =  _importer.QueryExcel(path.ToString(), true).Select(s => s.Test).ToArray();
-        var rows1 =  _importer.QueryExcel<SaveAsControlChracterVO>(path.ToString()).Select(s => s.Test).ToArray();
+        var rows2 =  _excelImporter.Query(path.ToString(), true).Select(s => s.Test).ToArray();
+        var rows1 =  _excelImporter.Query<SaveAsControlChracterVO>(path.ToString()).Select(s => s.Test).ToArray();
     }
 
     private class SaveAsControlChracterVO
@@ -81,14 +81,14 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
     public void CustomAttributeWihoutVaildPropertiesTest()
     {
         const string path = "../../../../../samples/xlsx/TestCustomExcelColumnAttribute.xlsx";
-        Assert.Throws<InvalidOperationException>(() =>  _importer.QueryExcel<CustomAttributesWihoutVaildPropertiesTestPoco>(path).ToList());
+        Assert.Throws<InvalidOperationException>(() =>  _excelImporter.Query<CustomAttributesWihoutVaildPropertiesTestPoco>(path).ToList());
     }
 
     [Fact]
     public void QueryCustomAttributesTest()
     {
         const string path = "../../../../../samples/xlsx/TestCustomExcelColumnAttribute.xlsx";
-        var rows =  _importer.QueryExcel<ExcelAttributeDemo>(path).ToList();
+        var rows =  _excelImporter.Query<ExcelAttributeDemo>(path).ToList();
 
         Assert.Equal("Column1", rows[0].Test1);
         Assert.Equal("Column2", rows[0].Test2);
@@ -112,8 +112,8 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
                 Test4 = "Test4",
             });
 
-         _exporter.ExportExcel(path.ToString(), input);
-        var rows =  _importer.QueryExcel(path.ToString(), true).ToList();
+         _excelExporter.Export(path.ToString(), input);
+        var rows =  _excelImporter.Query(path.ToString(), true).ToList();
         var first = rows[0] as IDictionary<string, object>;
 
         Assert.Equal(3, rows.Count);
@@ -139,7 +139,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
     public void QueryCastToIDictionary()
     {
         const string path = "../../../../../samples/xlsx/TestCenterEmptyRow/TestCenterEmptyRow.xlsx";
-        foreach (IDictionary<string, object> row in  _importer.QueryExcel(path))
+        foreach (IDictionary<string, object> row in  _excelImporter.Query(path))
         {
             _ = row;
         }
@@ -150,7 +150,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
     {
         const string path = "../../../../../samples/xlsx/TestCenterEmptyRow/TestCenterEmptyRow.xlsx";
         // tips：Only uppercase letters are effective
-        var rows =  _importer.QueryExcelRange(path, startCell: "A2", endCell: "C7")
+        var rows =  _excelImporter.QueryRange(path, startCell: "A2", endCell: "C7")
             .Cast<IDictionary<string, object>>()
             .ToList();
 
@@ -161,7 +161,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
 
         var startCellXY = ReferenceHelper.ConvertCellToCoordinates("A2");
         var endCellXY = ReferenceHelper.ConvertCellToCoordinates("C7");
-        rows =  _importer.QueryExcelRange(path, startRowIndex: startCellXY.Item2, startColumnIndex: startCellXY.Item1, endRowIndex: endCellXY.Item2, endColumnIndex: endCellXY.Item1)
+        rows =  _excelImporter.QueryRange(path, startRowIndex: startCellXY.Item2, startColumnIndex: startCellXY.Item1, endRowIndex: endCellXY.Item2, endColumnIndex: endCellXY.Item1)
             .Cast<IDictionary<string, object>>()
             .ToList();
         Assert.Equal(5, rows.Count);
@@ -169,14 +169,14 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
         Assert.Equal(2d, rows[1]["B"]);
         Assert.Equal(null!, rows[2]["A"]);
 
-        rows =  _importer.QueryExcelRange(path, startRowIndex:2, startColumnIndex: 1, endRowIndex: 3)
+        rows =  _excelImporter.QueryRange(path, startRowIndex:2, startColumnIndex: 1, endRowIndex: 3)
           .Cast<IDictionary<string, object>>()
           .ToList();
         Assert.Equal(2, rows.Count);
         Assert.Equal(4, rows[0].Count);
         Assert.Equal(4d, rows[1]["D"]);
 
-        rows =  _importer.QueryExcelRange(path, startRowIndex: 2, startColumnIndex: 1, endColumnIndex: 3)
+        rows =  _excelImporter.QueryRange(path, startRowIndex: 2, startColumnIndex: 1, endColumnIndex: 3)
         .Cast<IDictionary<string, object>>()
         .ToList();
         Assert.Equal(5, rows.Count);
@@ -190,7 +190,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
         const string path = "../../../../../samples/xlsx/TestCenterEmptyRow/TestCenterEmptyRow.xlsx";
         using (var stream = File.OpenRead(path))
         {
-            var rows =  _importer.QueryExcel(stream).ToList();
+            var rows =  _excelImporter.Query(stream).ToList();
 
             Assert.Equal("a", rows[0].A);
             Assert.Equal("b", rows[0].B);
@@ -225,7 +225,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
 
         using (var stream = File.OpenRead(path))
         {
-            var rows =  _importer.QueryExcel(stream, useHeaderRow: true).ToList();
+            var rows =  _excelImporter.Query(stream, useHeaderRow: true).ToList();
 
             Assert.Equal(1, rows[0].a);
             Assert.Equal(null, rows[0].b);
@@ -259,7 +259,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
     {
         const string path = "../../../../../samples/xlsx/TestEmptySelfClosingRow.xlsx";
         using var stream = File.OpenRead(path);
-        var rows =  _importer.QueryExcel(stream).ToList();
+        var rows =  _excelImporter.Query(stream).ToList();
 
         Assert.Equal(null, rows[0].A);
         Assert.Equal(1, rows[1].A);
@@ -278,7 +278,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
     {
         const string path = "../../../../../samples/xlsx/TestDynamicQueryBasic_WithoutHead.xlsx";
         using var stream = File.OpenRead(path);
-        var rows =  _importer.QueryExcel(stream).ToList();
+        var rows =  _excelImporter.Query(stream).ToList();
 
         Assert.Equal("MiniExcel", rows[0].A);
         Assert.Equal(1, rows[0].B);
@@ -292,7 +292,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
         const string path = "../../../../../samples/xlsx/TestDynamicQueryBasic.xlsx";
         using (var stream = File.OpenRead(path))
         {
-            var rows =  _importer.QueryExcel(stream, useHeaderRow: true).ToList();
+            var rows =  _excelImporter.Query(stream, useHeaderRow: true).ToList();
 
             Assert.Equal("MiniExcel", rows[0].Column1);
             Assert.Equal(1, rows[0].Column2);
@@ -301,7 +301,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
         }
 
         {
-            var rows =  _importer.QueryExcel(path, useHeaderRow: true).ToList();
+            var rows =  _excelImporter.Query(path, useHeaderRow: true).ToList();
 
             Assert.Equal("MiniExcel", rows[0].Column1);
             Assert.Equal(1, rows[0].Column2);
@@ -332,7 +332,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
         const string path = "../../../../../samples/xlsx/TestTypeMapping.xlsx";
         using (var stream = File.OpenRead(path))
         {
-            var rows =  _importer.QueryExcel<UserAccount>(stream).ToList();
+            var rows =  _excelImporter.Query<UserAccount>(stream).ToList();
             Assert.Equal(100, rows.Count);
 
             Assert.Equal(Guid.Parse("78DE23D2-DCB6-BD3D-EC67-C112BBC322A2"), rows[0].ID);
@@ -345,7 +345,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
         }
 
         {
-            var rows =  _importer.QueryExcel<UserAccount>(path).ToList();
+            var rows =  _excelImporter.Query<UserAccount>(path).ToList();
             Assert.Equal(100, rows.Count);
 
             Assert.Equal(Guid.Parse("78DE23D2-DCB6-BD3D-EC67-C112BBC322A2"), rows[0].ID);
@@ -371,7 +371,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
     {
         const string path = "../../../../../samples/xlsx/TestTypeMapping_AutoCheckFormat.xlsx";
         using var stream = FileHelper.OpenRead(path);
-        var rows =  _importer.QueryExcel<AutoCheckType>(stream).ToList();
+        var rows =  _excelImporter.Query<AutoCheckType>(stream).ToList();
     }
 
     private class ExcelUriDemo
@@ -386,7 +386,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
     {
         const string path = "../../../../../samples/xlsx/TestUriMapping.xlsx";
         using var stream = File.OpenRead(path);
-        var rows =  _importer.QueryExcel<ExcelUriDemo>(stream).ToList();
+        var rows =  _excelImporter.Query<ExcelUriDemo>(stream).ToList();
 
         Assert.Equal("Felix", rows[1].Name);
         Assert.Equal(44, rows[1].Age);
@@ -404,7 +404,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
     public void TrimColumnNamesTest()
     {
         const string path = "../../../../../samples/xlsx/TestTrimColumnNames.xlsx";
-        var rows =  _importer.QueryExcel<SimpleAccount>(path).ToList();
+        var rows =  _excelImporter.Query<SimpleAccount>(path).ToList();
 
         Assert.Equal("Raymond", rows[4].Name);
         Assert.Equal(18, rows[4].Age);
@@ -418,7 +418,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
         const string path = "../../../../../samples/xlsx/TestDatetimeSpanFormat_ClosedXml.xlsx";
         using var stream = FileHelper.OpenRead(path);
 
-        var row =  _importer.QueryExcel(stream).First();
+        var row =  _excelImporter.Query(stream).First();
         var a = row.A;
         var b = row.B;
         Assert.Equal(DateTime.Parse("2021-03-20T23:39:42.3130000"), (DateTime)a);
@@ -431,13 +431,13 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
         const string path = "../../../../../benchmarks/MiniExcel.Benchmarks/Test1,000,000x10.xlsx";
         using (var stream = File.OpenRead(path))
         {
-            var rows =  _importer.QueryExcel<DemoPocoHelloWorld>(stream).Take(2).ToList();
+            var rows =  _excelImporter.Query<DemoPocoHelloWorld>(stream).Take(2).ToList();
 
             Assert.Equal("HelloWorld2", rows[0].HelloWorld1);
             Assert.Equal("HelloWorld3", rows[1].HelloWorld1);
         }
         {
-            var rows =  _importer.QueryExcel<DemoPocoHelloWorld>(path).Take(2).ToList();
+            var rows =  _excelImporter.Query<DemoPocoHelloWorld>(path).Take(2).ToList();
 
             Assert.Equal("HelloWorld2", rows[0].HelloWorld1);
             Assert.Equal("HelloWorld3", rows[1].HelloWorld1);
@@ -447,7 +447,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
     [Theory]
     [InlineData("../../../../../samples/xlsx/ExcelDataReaderCollections/TestChess.xlsx")]
     [InlineData("../../../../../samples/xlsx/TestCenterEmptyRow/TestCenterEmptyRow.xlsx")]
-    public void QueryExcelDataReaderCheckTest(string path)
+    public void QueryDataReaderCheckTest(string path)
     {
 #if NETCOREAPP3_1_OR_GREATER
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
@@ -457,7 +457,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
         var exceldatareaderResult = reader.AsDataSet();
 
         using var stream = File.OpenRead(path);
-        var rows =  _importer.QueryExcel(stream).ToList();
+        var rows =  _excelImporter.Query(stream).ToList();
         Assert.Equal(exceldatareaderResult.Tables[0].Rows.Count, rows.Count);
 
         foreach (IDictionary<string, object?> row in rows)
@@ -487,7 +487,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
     {
         const string path = "../../../../../samples/xlsx/TestWihoutRAttribute.xlsx";
         using var stream = File.OpenRead(path);
-        var rows =  _importer.QueryExcel(stream).ToList();
+        var rows =  _excelImporter.Query(stream).ToList();
         var keys = (rows.First() as IDictionary<string, object>)!.Keys;
 
         Assert.Equal(2, rows.Count);
@@ -509,7 +509,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
     {
         const string path = "../../../../../samples/xlsx/TestDimensionC3.xlsx";
         using var stream = File.OpenRead(path);
-        var rows =  _importer.QueryExcel(stream).ToList();
+        var rows =  _excelImporter.Query(stream).ToList();
         var keys = ((IDictionary<string, object>)rows.First()).Keys;
         Assert.Equal(3, keys.Count);
         Assert.Equal(2, rows.Count);
@@ -533,11 +533,11 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
                 new() { A = "A", B = "B" },
                 new() { A = "A", B = "B" }
             ];
-             _exporter.ExportExcel(path, values);
+             _excelExporter.Export(path, values);
 
             using (var stream = File.OpenRead(path))
             {
-                var rows =  _importer.QueryExcel(stream, useHeaderRow: false).ToList();
+                var rows =  _excelImporter.Query(stream, useHeaderRow: false).ToList();
                 Assert.Equal(3, rows.Count);
                 Assert.Equal("A", rows[0].A);
                 Assert.Equal("A", rows[1].A);
@@ -545,14 +545,14 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
             }
             using (var stream = File.OpenRead(path))
             {
-                var rows =  _importer.QueryExcel(stream, useHeaderRow: true).ToList();
+                var rows =  _excelImporter.Query(stream, useHeaderRow: true).ToList();
                 Assert.Equal(2, rows.Count);
                 Assert.Equal("A", rows[0].A);
                 Assert.Equal("A", rows[1].A);
             }
             Assert.Equal("A1:B3", SheetHelper.GetFirstSheetDimensionRefValue(path));
 
-             _exporter.ExportExcel(path, values, false, overwriteFile: true);
+             _excelExporter.Export(path, values, false, overwriteFile: true);
             Assert.Equal("A1:B2", SheetHelper.GetFirstSheetDimensionRefValue(path));
         }
 
@@ -562,20 +562,20 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
             var path = file.ToString();
             List<SaveAsFileWithDimensionByICollectionTestType> values = [];
 
-             _exporter.ExportExcel(path, values, false);
+             _excelExporter.Export(path, values, false);
             {
                 using (var stream = File.OpenRead(path))
                 {
-                    var rows =  _importer.QueryExcel(stream, useHeaderRow: false).ToList();
+                    var rows =  _excelImporter.Query(stream, useHeaderRow: false).ToList();
                     Assert.Empty(rows);
                 }
                 Assert.Equal("A1:B1", SheetHelper.GetFirstSheetDimensionRefValue(path));
             }
 
-            _exporter.ExportExcel(path, values, overwriteFile: true);
+            _excelExporter.Export(path, values, overwriteFile: true);
             {
                 using var stream = File.OpenRead(path);
-                var rows =  _importer.QueryExcel(stream, useHeaderRow: false).ToList();
+                var rows =  _excelImporter.Query(stream, useHeaderRow: false).ToList();
                 Assert.Single(rows);
             }
             Assert.Equal("A1:B1", SheetHelper.GetFirstSheetDimensionRefValue(path));
@@ -590,11 +590,11 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
                 new {A="A",B="B"},
                 new {A="A",B="B"},
             };
-             _exporter.ExportExcel(path, values);
+             _excelExporter.Export(path, values);
             {
                 using (var stream = File.OpenRead(path))
                 {
-                    var rows =  _importer.QueryExcel(stream, useHeaderRow: false).ToList();
+                    var rows =  _excelImporter.Query(stream, useHeaderRow: false).ToList();
                     Assert.Equal(3, rows.Count);
                     Assert.Equal("A", rows[0].A);
                     Assert.Equal("A", rows[1].A);
@@ -602,7 +602,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
                 }
                 using (var stream = File.OpenRead(path))
                 {
-                    var rows =  _importer.QueryExcel(stream, useHeaderRow: true).ToList();
+                    var rows =  _excelImporter.Query(stream, useHeaderRow: true).ToList();
                     Assert.Equal(2, rows.Count);
                     Assert.Equal("A", rows[0].A);
                     Assert.Equal("A", rows[1].A);
@@ -610,7 +610,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
             }
             Assert.Equal("A1:B3", SheetHelper.GetFirstSheetDimensionRefValue(path));
 
-             _exporter.ExportExcel(path, values, false, overwriteFile: true);
+             _excelExporter.Export(path, values, false, overwriteFile: true);
             Assert.Equal("A1:B2", SheetHelper.GetFirstSheetDimensionRefValue(path));
         }
 
@@ -618,7 +618,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
         {
             using var path = AutoDeletingPath.Create();
             var values = new List<int>();
-            Assert.Throws<NotSupportedException>(() =>  _exporter.ExportExcel(path.ToString(), values));
+            Assert.Throws<NotSupportedException>(() =>  _excelExporter.Export(path.ToString(), values));
         }
     }
 
@@ -630,15 +630,15 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
             var path = file.ToString();
 
             var table = new DataTable();
-             _exporter.ExportExcel(path, table);
+             _excelExporter.Export(path, table);
             Assert.Equal("A1", SheetHelper.GetFirstSheetDimensionRefValue(path));
             {
                 using var stream = File.OpenRead(path);
-                var rows =  _importer.QueryExcel(stream).ToList();
+                var rows =  _excelImporter.Query(stream).ToList();
                 Assert.Single(rows);
             }
 
-             _exporter.ExportExcel(path, table, printHeader: false, overwriteFile: true);
+             _excelExporter.Export(path, table, printHeader: false, overwriteFile: true);
             Assert.Equal("A1", SheetHelper.GetFirstSheetDimensionRefValue(path));
         }
 
@@ -654,12 +654,12 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
             table.Rows.Add(@"""<>+-*//}{\\n", 1234567890);
             table.Rows.Add("<test>Hello World</test>", -1234567890, false, DateTime.Now);
 
-             _exporter.ExportExcel(path, table);
+             _excelExporter.Export(path, table);
             Assert.Equal("A1:D3", SheetHelper.GetFirstSheetDimensionRefValue(path));
 
             using (var stream = File.OpenRead(path))
             {
-                var rows =  _importer.QueryExcel(stream, useHeaderRow: true).ToList();
+                var rows =  _excelImporter.Query(stream, useHeaderRow: true).ToList();
                 Assert.Equal(2, rows.Count);
                 Assert.Equal(@"""<>+-*//}{\\n", rows[0].a);
                 Assert.Equal(1234567890, rows[0].b);
@@ -669,7 +669,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
 
             using (var stream = File.OpenRead(path))
             {
-                var rows =  _importer.QueryExcel(stream).ToList();
+                var rows =  _excelImporter.Query(stream).ToList();
                 Assert.Equal(3, rows.Count);
                 Assert.Equal("a", rows[0].A);
                 Assert.Equal("b", rows[0].B);
@@ -677,7 +677,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
                 Assert.Equal("d", rows[0].D);
             }
 
-             _exporter.ExportExcel(path, table, printHeader: false, overwriteFile: true);
+             _excelExporter.Export(path, table, printHeader: false, overwriteFile: true);
             Assert.Equal("A1:D2", SheetHelper.GetFirstSheetDimensionRefValue(path));
         }
 
@@ -690,7 +690,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
             table.Rows.Add("A");
             table.Rows.Add("B");
 
-             _exporter.ExportExcel(path.ToString(), table);
+             _excelExporter.Export(path.ToString(), table);
             Assert.Equal("A1:A3", SheetHelper.GetFirstSheetDimensionRefValue(path.ToString()));
         }
     }
@@ -711,7 +711,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
             table.Rows.Add(@"""<>+-*//}{\\n", 1234567890, true, now);
             table.Rows.Add("<test>Hello World</test>", -1234567890, false, now.Date);
 
-             _exporter.ExportExcel(path, table, sheetName: "R&D");
+             _excelExporter.Export(path, table, sheetName: "R&D");
 
             using var p = new ExcelPackage(new FileInfo(path));
             var ws = p.Workbook.Worksheets.First();
@@ -736,7 +736,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
             table.Rows.Add("MiniExcel", 1);
             table.Rows.Add("Github", 2);
 
-             _exporter.ExportExcel(path.ToString(), table);
+             _excelExporter.Export(path.ToString(), table);
         }
     }
 
@@ -745,16 +745,16 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
     {
         const string path = "../../../../../benchmarks/MiniExcel.Benchmarks/Test1,000,000x10.xlsx";
 
-        var query1 =  _importer.QueryExcel(path).First();
+        var query1 =  _excelImporter.Query(path).First();
         Assert.Equal("HelloWorld1", query1.A);
 
         using (var stream = File.OpenRead(path))
         {
-            var query2 =  _importer.QueryExcel(stream).First();
+            var query2 =  _excelImporter.Query(stream).First();
             Assert.Equal("HelloWorld1", query2.A);
         }
 
-        var query3 =  _importer.QueryExcel(path).Take(10);
+        var query3 =  _excelImporter.Query(path).Take(10);
         Assert.Equal(10, query3.Count());
     }
 
@@ -765,11 +765,11 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
         using (var connection = Db.GetConnection("Data Source=:memory:"))
         {
             var rows = connection.Query("with cte as (select 1 id,2 val) select * from cte where 1=2");
-             _exporter.ExportExcel(path.ToString(), rows);
+             _excelExporter.Export(path.ToString(), rows);
         }
         using (var stream = File.OpenRead(path.ToString()))
         {
-            var rows =  _importer.QueryExcel(stream, useHeaderRow: true).ToList();
+            var rows =  _excelImporter.Query(stream, useHeaderRow: true).ToList();
             Assert.Empty(rows);
         }
     }
@@ -791,11 +791,11 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
                 ["R&D"] = values,
                 ["success!"] = values
             };
-             _exporter.ExportExcel(path, sheets);
+             _excelExporter.Export(path, sheets);
 
             using (var stream = File.OpenRead(path))
             {
-                var rows =  _importer.QueryExcel(stream, useHeaderRow: false).ToList();
+                var rows =  _excelImporter.Query(stream, useHeaderRow: false).ToList();
                 Assert.Equal("Column1", rows[0].A);
                 Assert.Equal("Column2", rows[0].B);
                 Assert.Equal("MiniExcel", rows[1].A);
@@ -803,12 +803,12 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
                 Assert.Equal("Github", rows[2].A);
                 Assert.Equal(2, rows[2].B);
 
-                Assert.Equal("R&D",  _importer.GetSheetNames(stream)[0]);
+                Assert.Equal("R&D",  _excelImporter.GetSheetNames(stream)[0]);
             }
 
             using (var stream = File.OpenRead(path))
             {
-                var rows =  _importer.QueryExcel(stream, useHeaderRow: true).ToList();
+                var rows =  _excelImporter.Query(stream, useHeaderRow: true).ToList();
 
                 Assert.Equal(2, rows.Count);
                 Assert.Equal("MiniExcel", rows[0].Column1);
@@ -816,7 +816,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
                 Assert.Equal("Github", rows[1].Column1);
                 Assert.Equal(2, rows[1].Column2);
 
-                Assert.Equal("success!",  _importer.GetSheetNames(stream)[1]);
+                Assert.Equal("success!",  _excelImporter.GetSheetNames(stream)[1]);
             }
 
             Assert.Equal("A1:B3", SheetHelper.GetFirstSheetDimensionRefValue(path));
@@ -828,11 +828,11 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
                 new() { { 1, "MiniExcel"}, { 2, 1 } },
                 new() { { 1, "Github" }, { 2, 2 } },
             };
-             _exporter.ExportExcel(path, values, overwriteFile: true);
+             _excelExporter.Export(path, values, overwriteFile: true);
 
             using (var stream = File.OpenRead(path))
             {
-                var rows =  _importer.QueryExcel(stream, useHeaderRow: false).ToList();
+                var rows =  _excelImporter.Query(stream, useHeaderRow: false).ToList();
                 Assert.Equal(3, rows.Count);
             }
 
@@ -851,7 +851,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
 
         // Test enumerable
         using var path = AutoDeletingPath.Create();
-         _exporter.ExportExcel(
+         _excelExporter.Export(
             path.ToString(),
             new[]
             {
@@ -863,7 +863,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
 
         using (var stream = File.OpenRead(path.ToString()))
         {
-            var rows =  _importer.QueryExcel(stream, useHeaderRow: true).ToList();
+            var rows =  _excelImporter.Query(stream, useHeaderRow: true).ToList();
 
             Assert.Equal("MiniExcel", rows[0].Column1);
             Assert.Equal(1, rows[0].Column2);
@@ -883,14 +883,14 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
         table.Rows.Add("<test>Hello World</test>", -1234567890, false, DateTime.Now.Date);
 
         using var pathTable = AutoDeletingPath.Create();
-         _exporter.ExportExcel(pathTable.ToString(), table, configuration: config);
+         _excelExporter.Export(pathTable.ToString(), table, configuration: config);
         Assert.Equal("A1:D3", SheetHelper.GetFirstSheetDimensionRefValue(pathTable.ToString()));
 
         // data reader
         var reader = table.CreateDataReader();
         using var pathReader = AutoDeletingPath.Create();
 
-         _exporter.ExportExcel(pathReader.ToString(), reader, configuration: config, overwriteFile: true);
+         _excelExporter.Export(pathReader.ToString(), reader, configuration: config, overwriteFile: true);
         Assert.Equal("A1:D3", SheetHelper.GetFirstSheetDimensionRefValue(pathTable.ToString())); //TODO: fix datareader not writing ref dimension (also in async version)
     }
 
@@ -904,14 +904,14 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
         using (var connection = Db.GetConnection("Data Source=:memory:"))
         {
             var rows = connection.Query("select 'MiniExcel' as Column1,1 as Column2 union all select 'Github',2");
-             _exporter.ExportExcel(path, rows);
+             _excelExporter.Export(path, rows);
         }
 
         Assert.Equal("A1:B3", SheetHelper.GetFirstSheetDimensionRefValue(path));
 
         using (var stream = File.OpenRead(path))
         {
-            var rows =  _importer.QueryExcel(stream, useHeaderRow: true).ToList();
+            var rows =  _excelImporter.Query(stream, useHeaderRow: true).ToList();
 
             Assert.Equal("MiniExcel", rows[0].Column1);
             Assert.Equal(1, rows[0].Column2);
@@ -923,18 +923,18 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
         using (var connection = Db.GetConnection("Data Source=:memory:"))
         {
             var rows = connection.Query("with cte as (select 'MiniExcel' as Column1,1 as Column2 union all select 'Github',2)select * from cte where 1=2").ToList();
-             _exporter.ExportExcel(path, rows, overwriteFile: true);
+             _excelExporter.Export(path, rows, overwriteFile: true);
         }
 
         using (var stream = File.OpenRead(path))
         {
-            var rows =  _importer.QueryExcel(stream, useHeaderRow: false).ToList();
+            var rows =  _excelImporter.Query(stream, useHeaderRow: false).ToList();
             Assert.Empty(rows);
         }
 
         using (var stream = File.OpenRead(path))
         {
-            var rows =  _importer.QueryExcel(stream, useHeaderRow: true).ToList();
+            var rows =  _excelImporter.Query(stream, useHeaderRow: true).ToList();
             Assert.Empty(rows);
         }
 
@@ -944,14 +944,14 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
         using (var connection = Db.GetConnection("Data Source=:memory:"))
         {
             var rows = connection.Query("select 'MiniExcel' as Column1,1 as Column2 union all select 'Github',2").ToList();
-             _exporter.ExportExcel(path, rows, overwriteFile: true);
+             _excelExporter.Export(path, rows, overwriteFile: true);
         }
 
         Assert.Equal("A1:B3", SheetHelper.GetFirstSheetDimensionRefValue(path));
 
         using (var stream = File.OpenRead(path))
         {
-            var rows =  _importer.QueryExcel(stream, useHeaderRow: false).ToList();
+            var rows =  _excelImporter.Query(stream, useHeaderRow: false).ToList();
 
             Assert.Equal("Column1", rows[0].A);
             Assert.Equal("Column2", rows[0].B);
@@ -963,7 +963,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
 
         using (var stream = File.OpenRead(path))
         {
-            var rows =  _importer.QueryExcel(stream, useHeaderRow: true).ToList();
+            var rows =  _excelImporter.Query(stream, useHeaderRow: true).ToList();
 
             Assert.Equal("MiniExcel", rows[0].Column1);
             Assert.Equal(1, rows[0].Column2);
@@ -986,10 +986,10 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
             new() { Column1 = "MiniExcel", Column2 = 1 },
             new() { Column1 = "Github", Column2 = 2 }
         ];
-         _exporter.ExportExcel(path.ToString(), values);
+         _excelExporter.Export(path.ToString(), values);
 
         using var stream = File.OpenRead(path.ToString());
-        var rows =  _importer.QueryExcel(stream, useHeaderRow: true).ToList();
+        var rows =  _excelImporter.Query(stream, useHeaderRow: true).ToList();
 
         Assert.Equal("MiniExcel", rows[0].Column1);
         Assert.Equal(1, rows[0].Column2);
@@ -1006,10 +1006,10 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
             new() { { "Column1", "MiniExcel" }, { "Column2", 1 } },
             new() { { "Column1", "Github" }, { "Column2", 2 } }
         ];
-         _exporter.ExportExcel(path.ToString(), values);
+         _excelExporter.Export(path.ToString(), values);
 
         using var stream = File.OpenRead(path.ToString());
-        var rows =  _importer.QueryExcel(stream, useHeaderRow: true).ToList();
+        var rows =  _excelImporter.Query(stream, useHeaderRow: true).ToList();
 
         Assert.Equal("MiniExcel", rows[0].Column1);
         Assert.Equal(1, rows[0].Column2);
@@ -1036,7 +1036,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
             using (var transaction = connection.BeginTransaction())
             using (var stream = File.OpenRead(path))
             {
-                var rows =  _importer.QueryExcel(stream);
+                var rows =  _excelImporter.Query(stream);
                 foreach (var row in rows)
                 {
                     _ = connection.Execute("insert into T (A,B) values (@A,@B)", new { row.A, row.B }, transaction: transaction);
@@ -1058,7 +1058,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
     {
         using var path = AutoDeletingPath.Create();
 
-        var rowsWritten =  _exporter.ExportExcel(path.ToString(), new[]
+        var rowsWritten =  _excelExporter.Export(path.ToString(), new[]
         {
             new { Column1 = "MiniExcel", Column2 = 1 },
             new { Column1 = "Github", Column2 = 2}
@@ -1069,7 +1069,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
 
         using (var stream = File.OpenRead(path.ToString()))
         {
-            var rows =  _importer.QueryExcel(stream, useHeaderRow: true).ToList();
+            var rows =  _excelImporter.Query(stream, useHeaderRow: true).ToList();
 
             Assert.Equal("MiniExcel", rows[0].Column1);
             Assert.Equal(1, rows[0].Column2);
@@ -1092,14 +1092,14 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
             };
             using (var stream = new FileStream(path.ToString(), FileMode.CreateNew))
             {
-                var rowsWritten =  _exporter.ExportExcel(stream, values);
+                var rowsWritten =  _excelExporter.Export(stream, values);
                 Assert.Single(rowsWritten);
                 Assert.Equal(2, rowsWritten[0]);
             }
 
             using (var stream = File.OpenRead(path.ToString()))
             {
-                var rows =  _importer.QueryExcel(stream, useHeaderRow: true).ToList();
+                var rows =  _excelImporter.Query(stream, useHeaderRow: true).ToList();
 
                 Assert.Equal("MiniExcel", rows[0].Column1);
                 Assert.Equal(1, rows[0].Column2);
@@ -1117,7 +1117,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
             using (var stream = new MemoryStream())
             using (var fileStream = new FileStream(path.ToString(), FileMode.Create))
             {
-                var rowsWritten =  _exporter.ExportExcel(stream, values);
+                var rowsWritten =  _excelExporter.Export(stream, values);
                 stream.Seek(0, SeekOrigin.Begin);
                 stream.CopyTo(fileStream);
                 Assert.Single(rowsWritten);
@@ -1126,7 +1126,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
 
             using (var stream = File.OpenRead(path.ToString()))
             {
-                var rows =  _importer.QueryExcel(stream, useHeaderRow: true).ToList();
+                var rows =  _excelImporter.Query(stream, useHeaderRow: true).ToList();
 
                 Assert.Equal("MiniExcel", rows[0].Column1);
                 Assert.Equal(1, rows[0].Column2);
@@ -1140,7 +1140,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
     public void SaveAsSpecialAndTypeCreateTest()
     {
         using var path = AutoDeletingPath.Create();
-        var rowsWritten =  _exporter.ExportExcel(path.ToString(), new[]
+        var rowsWritten =  _excelExporter.Export(path.ToString(), new[]
         {
             new { a = @"""<>+-*//}{\\n", b = 1234567890, c = true, d = DateTime.Now },
             new { a = "<test>Hello World</test>", b = -1234567890, c = false, d = DateTime.Now.Date }
@@ -1157,7 +1157,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
     {
         var now = DateTime.Now;
         using var path = AutoDeletingPath.Create();
-        var rowsWritten =  _exporter.ExportExcel(path.ToString(), new[]
+        var rowsWritten =  _excelExporter.Export(path.ToString(), new[]
         {
             new { a = @"""<>+-*//}{\\n", b = 1234567890, c = true, d = now},
             new { a = "<test>Hello World</test>", b = -1234567890, c = false, d = now.Date }
@@ -1184,7 +1184,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
     {
         var now = DateTime.Now;
         using var path = AutoDeletingPath.Create();
-        var rowsWritten =  _exporter.ExportExcel(path.ToString(), new[]
+        var rowsWritten =  _excelExporter.Export(path.ToString(), new[]
         {
             new { a = @"""<>+-*//}{\\n", b = 1234567890, c = true, d = now },
             new { a = "<test>Hello World</test>", b = -1234567890, c = false, d = now.Date }
@@ -1214,7 +1214,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
     {
         var now = DateTime.Now;
         using var path = AutoDeletingPath.Create();
-        var rowsWritten =  _exporter.ExportExcel(path.ToString(), new[]
+        var rowsWritten =  _excelExporter.Export(path.ToString(), new[]
         {
             new { a = @"""<>+-*//}{\\n", b = 1234567890, c = true, d= now },
             new { a = "<test>Hello World</test>", b = -1234567890, c = false, d = now.Date }
@@ -1238,10 +1238,10 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
     public void TestStirctOpenXml()
     {
         const string path = "../../../../../samples/xlsx/TestStrictOpenXml.xlsx";
-        var columns =  _importer.GetExcelColumns (path);
+        var columns =  _excelImporter.GetColumnNames (path);
         Assert.Equal(["A", "B", "C"], columns);
 
-        var rows =  _importer.QueryExcel(path).ToList();
+        var rows =  _excelImporter.Query(path).ToList();
         Assert.Equal(rows[0].A, "title1");
         Assert.Equal(rows[0].B, "title2");
         Assert.Equal(rows[0].C, "title3");
@@ -1256,7 +1256,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
         const string path = "../../../../../benchmarks/MiniExcel.Benchmarks/Test1,000,000x10_SharingStrings.xlsx";
 
         var ts = Stopwatch.GetTimestamp();
-        _ =  _importer.QueryExcel(path, configuration: new OpenXmlConfiguration { EnableSharedStringCache = true }).First();
+        _ =  _excelImporter.Query(path, configuration: new OpenXmlConfiguration { EnableSharedStringCache = true }).First();
         using var currentProcess = Process.GetCurrentProcess();
         var totalBytesOfMemoryUsed = currentProcess.WorkingSet64;
 
@@ -1270,7 +1270,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
         const string path = "../../../../../benchmarks/MiniExcel.Benchmarks/Test1,000,000x10_SharingStrings.xlsx";
 
         var ts = Stopwatch.GetTimestamp();
-        _ =  _importer.QueryExcel(path).First();
+        _ =  _excelImporter.Query(path).First();
         using var currentProcess = Process.GetCurrentProcess();
         var totalBytesOfMemoryUsed = currentProcess.WorkingSet64;
         _output.WriteLine("totalBytesOfMemoryUsed: " + totalBytesOfMemoryUsed);
@@ -1318,10 +1318,10 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
             ]
         };
         var reader = table.CreateDataReader();
-         _exporter.ExportExcel(path.ToString(), reader, configuration: configuration);
+         _excelExporter.Export(path.ToString(), reader, configuration: configuration);
 
         using var stream = File.OpenRead(path.ToString());
-        var rows =  _importer.QueryExcel(stream, useHeaderRow: true)
+        var rows =  _excelImporter.Query(stream, useHeaderRow: true)
             .Select(x => (IDictionary<string, object>)x)
             .ToList();
 
@@ -1384,10 +1384,10 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
                 }
             ]
         };
-         _exporter.ExportExcel(path.ToString(), table, configuration: configuration);
+         _excelExporter.Export(path.ToString(), table, configuration: configuration);
 
         using var stream = File.OpenRead(path.ToString());
-        var rows =  _importer.QueryExcel(stream, useHeaderRow: true)
+        var rows =  _excelImporter.Query(stream, useHeaderRow: true)
             .Select(x => (IDictionary<string, object>)x)
             .Select(x => (IDictionary<string, object>)x)
             .ToList();
@@ -1428,7 +1428,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
             table.Rows.Add(@"""<>+-*//}{\\n", 1234567890, true, now);
             table.Rows.Add("<test>Hello World</test>", -1234567890, false, now.Date);
 
-            var rowsWritten =  _exporter.InsertExcelSheet(path, table, sheetName: "Sheet1");
+            var rowsWritten =  _excelExporter.InsertSheet(path, table, sheetName: "Sheet1");
             Assert.Equal(2, rowsWritten);
 
             using var p = new ExcelPackage(new FileInfo(path));
@@ -1453,7 +1453,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
             table.Rows.Add("MiniExcel", 1);
             table.Rows.Add("Github", 2);
 
-            var rowsWritten =  _exporter.InsertExcelSheet(path, table, sheetName: "Sheet2");
+            var rowsWritten =  _excelExporter.InsertSheet(path, table, sheetName: "Sheet2");
             Assert.Equal(2, rowsWritten);
 
             using var p = new ExcelPackage(new FileInfo(path));
@@ -1476,7 +1476,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
             table.Columns.Add("Column2", typeof(DateTime));
             table.Rows.Add("Test", now);
 
-            var rowsWritten =  _exporter.InsertExcelSheet(path, table, sheetName: "Sheet2", printHeader: false, configuration: new OpenXmlConfiguration
+            var rowsWritten =  _excelExporter.InsertSheet(path, table, sheetName: "Sheet2", printHeader: false, configuration: new OpenXmlConfiguration
             {
                 FastMode = true,
                 AutoFilter = false,
@@ -1509,7 +1509,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
             table.Rows.Add("MiniExcel", now);
             table.Rows.Add("Github", now);
 
-            var rowsWritten =  _exporter.InsertExcelSheet(path, table, sheetName: "Sheet3", configuration: new OpenXmlConfiguration
+            var rowsWritten =  _excelExporter.InsertSheet(path, table, sheetName: "Sheet3", configuration: new OpenXmlConfiguration
             {
                 FastMode = true,
                 AutoFilter = false,
@@ -1552,7 +1552,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
     [Fact]
     public void DateOnlySupportTest()
     {
-        var query =  _importer.QueryExcel<DateOnlyTest>(PathHelper.GetFile("xlsx/TestDateOnlyMapping.xlsx")).ToList();
+        var query =  _excelImporter.Query<DateOnlyTest>(PathHelper.GetFile("xlsx/TestDateOnlyMapping.xlsx")).ToList();
 
         Assert.Equal(new DateOnly(2020, 9, 27), query[0].Date);
         Assert.Equal(new DateOnly(2020, 10, 25), query[1].Date);
@@ -1567,7 +1567,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
     public void SheetDimensionsTest()
     {
         var path1 = PathHelper.GetFile("xlsx/TestTypeMapping.xlsx");
-        var dim1 =  _importer.GetSheetDimensions(path1);
+        var dim1 =  _excelImporter.GetSheetDimensions(path1);
         Assert.Equal("A1", dim1[0].StartCell);
         Assert.Equal("H101", dim1[0].EndCell);
         Assert.Equal(101, dim1[0].Rows.Count);
@@ -1578,7 +1578,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
         Assert.Equal(8, dim1[0].Columns.EndIndex);
 
         var path2 = PathHelper.GetFile("xlsx/TestNoDimension.xlsx");
-        var dim2 =  _importer.GetSheetDimensions(path2);
+        var dim2 =  _excelImporter.GetSheetDimensions(path2);
         Assert.Equal(101, dim2[0].Rows.Count);
         Assert.Equal(7, dim2[0].Columns.Count);
         Assert.Equal(1, dim2[0].Rows.StartIndex);
@@ -1591,7 +1591,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
     public void SheetDimensionsTest_MultiSheet()
     {
         var path = PathHelper.GetFile("xlsx/TestMultiSheet.xlsx");
-        var dim =  _importer.GetSheetDimensions(path);
+        var dim =  _excelImporter.GetSheetDimensions(path);
 
         Assert.Equal("A1", dim[0].StartCell);
         Assert.Equal("D12", dim[0].EndCell);

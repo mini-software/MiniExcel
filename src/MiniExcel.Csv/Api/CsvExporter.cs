@@ -13,7 +13,7 @@ public partial class CsvExporter
     {
         if (!File.Exists(path))
         {
-            var rowsWritten = await ExportCsvAsync(path, value, printHeader, false, configuration, cancellationToken: cancellationToken).ConfigureAwait(false);
+            var rowsWritten = await ExportAsync(path, value, printHeader, false, configuration, cancellationToken: cancellationToken).ConfigureAwait(false);
             return rowsWritten.FirstOrDefault();
         }
 
@@ -33,15 +33,15 @@ public partial class CsvExporter
     }
 
     [CreateSyncVersion]
-    public async Task<int[]> ExportCsvAsync(string path, object value, bool printHeader = true, bool overwriteFile = false, 
+    public async Task<int[]> ExportAsync(string path, object value, bool printHeader = true, bool overwriteFile = false, 
         CsvConfiguration? configuration = null, CancellationToken cancellationToken = default)
     {
         using var stream = overwriteFile ? File.Create(path) : new FileStream(path, FileMode.CreateNew);
-        return await ExportCsvAsync(stream, value, printHeader, configuration, cancellationToken).ConfigureAwait(false);
+        return await ExportAsync(stream, value, printHeader, configuration, cancellationToken).ConfigureAwait(false);
     }
 
     [CreateSyncVersion]
-    public async Task<int[]> ExportCsvAsync(Stream stream, object value, bool printHeader = true, 
+    public async Task<int[]> ExportAsync(Stream stream, object value, bool printHeader = true, 
         CsvConfiguration? configuration = null, CancellationToken cancellationToken = default)
     {
         using var writer = new CsvWriter(stream, value, printHeader, configuration);
@@ -55,11 +55,11 @@ public partial class CsvExporter
     [CreateSyncVersion]
     public async Task ConvertCsvToXlsxAsync(Stream csv, Stream xlsx, bool csvHasHeader = false, CancellationToken cancellationToken = default)
     {
-        var value = new CsvImporter().QueryCsvAsync(csv, useHeaderRow: csvHasHeader, cancellationToken: cancellationToken);
+        var value = new CsvImporter().QueryAsync(csv, useHeaderRow: csvHasHeader, cancellationToken: cancellationToken);
         
         await MiniExcel.Exporter
             .GetExcelExporter()
-            .ExportExcelAsync(xlsx, value, printHeader: csvHasHeader, cancellationToken: cancellationToken)
+            .ExportAsync(xlsx, value, printHeader: csvHasHeader, cancellationToken: cancellationToken)
             .ConfigureAwait(false);
     }
 
@@ -86,10 +86,10 @@ public partial class CsvExporter
     {
         var value = MiniExcel.Importer
             .GetExcelImporter()
-            .QueryExcelAsync(xlsx, useHeaderRow: xlsxHasHeader, cancellationToken: cancellationToken)
+            .QueryAsync(xlsx, useHeaderRow: xlsxHasHeader, cancellationToken: cancellationToken)
             .ConfigureAwait(false);
         
-        await ExportCsvAsync(csv, value, printHeader: xlsxHasHeader, cancellationToken: cancellationToken).ConfigureAwait(false);
+        await ExportAsync(csv, value, printHeader: xlsxHasHeader, cancellationToken: cancellationToken).ConfigureAwait(false);
     }
 
     #endregion

@@ -2,8 +2,8 @@
 
 public class MiniExcelCsvAsycTests
 {
-    private readonly CsvExporter _exporter = MiniExcel.Exporter.GetCsvExporter();
-    private readonly CsvImporter _importer = MiniExcel.Importer.GetCsvImporter();
+    private readonly CsvExporter _csvExporter = MiniExcel.Exporter.GetCsvExporter();
+    private readonly CsvImporter _csvImporter = MiniExcel.Importer.GetCsvImporter();
     
     [Fact]
     public async Task Gb2312_Encoding_Read_Test()
@@ -14,7 +14,7 @@ public class MiniExcelCsvAsycTests
         {
             StreamReaderFunc = stream => new StreamReader(stream, encoding: Encoding.GetEncoding("gb2312"))
         };
-        var q = _importer.QueryCsvAsync(path, true, configuration: config).ToBlockingEnumerable();
+        var q = _csvImporter.QueryAsync(path, true, configuration: config).ToBlockingEnumerable();
         var rows = q.ToList();
         Assert.Equal("世界你好", rows[0].栏位1);
     }
@@ -44,7 +44,7 @@ public class MiniExcelCsvAsycTests
             }
         ];
             
-        var rowsWritten = await _exporter.ExportCsvAsync(path, values, configuration: new CsvConfiguration { Seperator = ';' });
+        var rowsWritten = await _csvExporter.ExportAsync(path, values, configuration: new CsvConfiguration { Seperator = ';' });
         Assert.Equal(2, rowsWritten[0]);
             
         const string expected =
@@ -66,7 +66,7 @@ public class MiniExcelCsvAsycTests
             var path = file.ToString();
 
             var table = new List<Dictionary<string, object>>();
-            await _exporter.ExportCsvAsync(path, table);
+            await _csvExporter.ExportAsync(path, table);
             Assert.Equal("\r\n", await File.ReadAllTextAsync(path));
         }
 
@@ -75,7 +75,7 @@ public class MiniExcelCsvAsycTests
             var path = file.ToString();
 
             var table = new Dictionary<string, object>(); //TODO
-            Assert.Throws<NotSupportedException>(() => _exporter.ExportCsv(path, table));
+            Assert.Throws<NotSupportedException>(() => _csvExporter.Export(path, table));
         }
 
         {
@@ -99,7 +99,7 @@ public class MiniExcelCsvAsycTests
                     { "d", new DateTime(2021, 1, 2) }
                 }
             ];
-            var rowsWritten = await _exporter.ExportCsvAsync(path, values);
+            var rowsWritten = await _csvExporter.ExportAsync(path, values);
             Assert.Equal(2, rowsWritten[0]);
 
             using var reader = new StreamReader(path);
@@ -140,7 +140,7 @@ public class MiniExcelCsvAsycTests
                 }
             ];
             
-            var rowsWritten = await _exporter.ExportCsvAsync(path, values);
+            var rowsWritten = await _csvExporter.ExportAsync(path, values);
             Assert.Equal(2, rowsWritten[0]);
 
             using var reader = new StreamReader(path);
@@ -168,7 +168,7 @@ public class MiniExcelCsvAsycTests
         var path1 = file1.ToString();
 
         var emptyTable = new DataTable();
-        await _exporter.ExportCsvAsync(path1, emptyTable);
+        await _csvExporter.ExportAsync(path1, emptyTable);
 
         var text = await File.ReadAllTextAsync(path1);
         Assert.Equal("\r\n", text);
@@ -185,7 +185,7 @@ public class MiniExcelCsvAsycTests
         table.Rows.Add(@"""<>+-*//}{\\n", 1234567890, true, new DateTime(2021, 1, 1));
         table.Rows.Add("<test>Hello World</test>", -1234567890, false, new DateTime(2021, 1, 2));
 
-        var rowsWritten = await _exporter.ExportCsvAsync(path2, table);
+        var rowsWritten = await _csvExporter.ExportAsync(path2, table);
         Assert.Equal(2, rowsWritten[0]);
 
         using var reader = new StreamReader(path2);
@@ -217,13 +217,13 @@ public class MiniExcelCsvAsycTests
         var path = file.ToString();
 
         var input = new[] { new { A = "Test1", B = "Test2" } };
-        await _exporter.ExportCsvAsync(path, input);
+        await _csvExporter.ExportAsync(path, input);
 
         var texts = await File.ReadAllLinesAsync(path);
         Assert.Equal("A,B", texts[0]);
         Assert.Equal("Test1,Test2", texts[1]);
 
-        var q = _importer.QueryCsvAsync(path).ToBlockingEnumerable();
+        var q = _csvImporter.QueryAsync(path).ToBlockingEnumerable();
         var rows1 = q.ToList();
 
         Assert.Equal("A", rows1[0].A);
@@ -245,7 +245,7 @@ public class MiniExcelCsvAsycTests
         using var file = AutoDeletingPath.Create(ExcelType.Csv);
         var path = file.ToString();
 
-        await _exporter.ExportCsvAsync(path, new[] 
+        await _csvExporter.ExportAsync(path, new[] 
         {
             new { c1 = "A1", c2 = "B1"},
             new { c1 = "A2", c2 = "B2"},
@@ -253,7 +253,7 @@ public class MiniExcelCsvAsycTests
 
         await using (var stream = File.OpenRead(path))
         {
-            var rows = _importer.QueryCsvAsync(stream, useHeaderRow: true).ToBlockingEnumerable().ToList();
+            var rows = _csvImporter.QueryAsync(stream, useHeaderRow: true).ToBlockingEnumerable().ToList();
             Assert.Equal("A1", rows[0].c1);
             Assert.Equal("B1", rows[0].c2);
             Assert.Equal("A2", rows[1].c1);
@@ -261,7 +261,7 @@ public class MiniExcelCsvAsycTests
         }
 
         {
-            var rows = _importer.QueryCsvAsync(path, useHeaderRow: true).ToBlockingEnumerable().ToList();
+            var rows = _csvImporter.QueryAsync(path, useHeaderRow: true).ToBlockingEnumerable().ToList();
             Assert.Equal("A1", rows[0].c1);
             Assert.Equal("B1", rows[0].c2);
             Assert.Equal("A2", rows[1].c1);
@@ -275,7 +275,7 @@ public class MiniExcelCsvAsycTests
         using var file = AutoDeletingPath.Create(ExcelType.Csv);
         var path = file.ToString();
 
-        await _exporter.ExportCsvAsync(path, new[] 
+        await _csvExporter.ExportAsync(path, new[] 
         {
             new { c1 = "A1", c2 = "B1"},
             new { c1 = "A2", c2 = "B2"}
@@ -283,7 +283,7 @@ public class MiniExcelCsvAsycTests
 
         await using (var stream = File.OpenRead(path))
         {
-            var rows = _importer.QueryCsv<Test>(stream).ToList();
+            var rows = _csvImporter.Query<Test>(stream).ToList();
             Assert.Equal("A1", rows[0].c1);
             Assert.Equal("B1", rows[0].c2);
             Assert.Equal("A2", rows[1].c1);
@@ -291,7 +291,7 @@ public class MiniExcelCsvAsycTests
         }
 
         {
-            var rows = _importer.QueryCsv<Test>(path).ToList();
+            var rows = _csvImporter.Query<Test>(path).ToList();
             Assert.Equal("A1", rows[0].c1);
             Assert.Equal("B1", rows[0].c2);
             Assert.Equal("A2", rows[1].c1);
@@ -305,7 +305,7 @@ public class MiniExcelCsvAsycTests
         using var file = AutoDeletingPath.Create(ExcelType.Csv);
         var path = file.ToString();
         
-        await _exporter.ExportCsvAsync(path, new[] 
+        await _csvExporter.ExportAsync(path, new[] 
         {
             new { c1 = (string?)"A1", c2 = (string?)null},
             new { c1 = (string?)null, c2 = (string?)null}
@@ -313,7 +313,7 @@ public class MiniExcelCsvAsycTests
 
         await using (var stream = File.OpenRead(path))
         {
-            var rows = _importer.QueryCsv<Test>(stream).ToList();
+            var rows = _csvImporter.Query<Test>(stream).ToList();
             Assert.Equal("A1", rows[0].c1);
             Assert.Equal(string.Empty, rows[0].c2);
             Assert.Equal(string.Empty, rows[1].c1);
@@ -321,7 +321,7 @@ public class MiniExcelCsvAsycTests
         }
 
         {
-            var rows = _importer.QueryCsv<Test>(path).ToList();
+            var rows = _csvImporter.Query<Test>(path).ToList();
             Assert.Equal("A1", rows[0].c1);
             Assert.Equal(string.Empty, rows[0].c2);
             Assert.Equal(string.Empty, rows[1].c1);
@@ -331,7 +331,7 @@ public class MiniExcelCsvAsycTests
         var config = new CsvConfiguration { ReadEmptyStringAsNull = true };
         await using (var stream = File.OpenRead(path))
         {
-            var rows = _importer.QueryCsv<Test>(stream, configuration: config).ToList();
+            var rows = _csvImporter.Query<Test>(stream, configuration: config).ToList();
             Assert.Equal("A1", rows[0].c1);
             Assert.Null(rows[0].c2);
             Assert.Null(rows[1].c1);
@@ -339,7 +339,7 @@ public class MiniExcelCsvAsycTests
         }
 
         {
-            var rows = _importer.QueryCsv<Test>(path, configuration: config).ToList();
+            var rows = _csvImporter.Query<Test>(path, configuration: config).ToList();
             Assert.Equal("A1", rows[0].c1);
             Assert.Null(rows[0].c2);
             Assert.Null(rows[1].c1);
@@ -361,10 +361,10 @@ public class MiniExcelCsvAsycTests
         }
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
 
-        var rowsWritten = await _exporter.ExportCsvAsync(path, GetValues());
+        var rowsWritten = await _csvExporter.ExportAsync(path, GetValues());
         Assert.Equal(2, rowsWritten[0]);
     
-        var results = _importer.QueryCsv<Test>(path).ToList();
+        var results = _csvImporter.Query<Test>(path).ToList();
         Assert.Equal(2, results.Count);
         Assert.Equal("A1", results[0].c1);
         Assert.Equal("B1", results[0].c2);

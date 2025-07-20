@@ -18,9 +18,34 @@ public class IssueTests
                 .Select(s => Regex.Replace(s.Replace("\"\"", "\""), "^\"|\"$", ""))
                 .ToArray()
         };
-        var rows = _csvImporter.QueryCsv(path, configuration: config).ToList();
+        var rows = _csvImporter.Query(path, configuration: config).ToList();
     }
 
+    /// <summary>
+    /// https://gitee.com/dotnetchina/MiniExcel/issues/I49RZH
+    /// https://github.com/mini-software/MiniExcel/issues/305
+    /// </summary>
+    [Fact]
+    public void TestIssueI49RZH()
+    {
+        using var path = AutoDeletingPath.Create(ExcelType.Csv);
+        var value = new[]
+        {
+            new TestIssueI49RZHDto{ dd = DateTimeOffset.Parse("2022-01-22")},
+            new TestIssueI49RZHDto{ dd = null}
+        };
+        _csvExporter.Export(path.ToString(), value);
+
+        var rows =  _csvImporter.Query(path.ToString()).ToList();
+        Assert.Equal("2022-01-22", rows[1].A);
+    }
+
+    private class TestIssueI49RZHDto
+    {
+        [MiniExcelFormat("yyyy-MM-dd")]
+        public DateTimeOffset? dd { get; set; }
+    }
+    
     /// <summary>
     /// https://gitee.com/dotnetchina/MiniExcel/issues/I4X92G
     /// </summary>
@@ -36,7 +61,7 @@ public class IssueTests
                 new { ID = 1, Name = "Jack", InDate = new DateTime(2021,01,03)},
                 new { ID = 2, Name = "Henry", InDate = new DateTime(2020,05,03)}
             };
-            _csvExporter.ExportCsv(path, value);
+            _csvExporter.Export(path, value);
             var content = File.ReadAllText(path);
             Assert.Equal(
                 """
@@ -104,7 +129,7 @@ public class IssueTests
         using var stream = new MemoryStream();
 
         var config = new CsvConfiguration { StreamWriterFunc = x => new StreamWriter(x, Encoding.Default, leaveOpen: true) };
-        _csvExporter.ExportCsv(stream, sheets, configuration: config);
+        _csvExporter.Export(stream, sheets, configuration: config);
         stream.Seek(0, SeekOrigin.Begin);
 
         // convert stream to string
@@ -115,12 +140,143 @@ public class IssueTests
     }
 
     [Fact]
+    public void Issue217()
+    {
+        using var table = new DataTable();
+        table.Columns.Add("CustomerID");
+        table.Columns.Add("CustomerName").Caption = "Name";
+        table.Columns.Add("CreditLimit").Caption = "Limit";
+        table.Rows.Add(1, "Jonathan", 23.44);
+        table.Rows.Add(2, "Bill", 56.87);
+
+        
+        
+        using var path = AutoDeletingPath.Create(ExcelType.Csv);
+        _csvExporter.Export(path.ToString(), table);
+
+        var rows =  _csvImporter.Query(path.ToString()).ToList();
+        Assert.Equal("Name", rows[0].B);
+        Assert.Equal("Limit", rows[0].C);
+    }
+    
+    /// <summary>
+    /// Csv Query split comma not correct #237
+    /// https://github.com/mini-software/MiniExcel/issues/237
+    /// </summary>
+    [Fact]
+    public void Issue237()
+    {
+        var value = new[]
+        {
+            new{ id = "\"\"1,2,3\"\"" },
+            new{ id = "1,2,3" }
+        };
+        
+        using var path = AutoDeletingPath.Create(ExcelType.Csv);
+        _csvExporter.Export(path.ToString(), value);
+
+        var rows =  _csvImporter.Query(path.ToString(), true).ToList();
+
+        Assert.Equal("\"\"1,2,3\"\"", rows[0].id);
+        Assert.Equal("1,2,3", rows[1].id);
+    }
+
+    /// <summary>
+    /// Support Custom Datetime format #241
+    /// </summary>
+    [Fact]
+    public void Issue241()
+    {
+        Issue241Dto[] value =
+        [
+            new() { Name = "Jack", InDate = new DateTime(2021, 01, 04) },
+            new() { Name = "Henry", InDate = new DateTime(2020, 04, 05) }
+        ];
+
+        using var path = AutoDeletingPath.Create(ExcelType.Csv);
+        _csvExporter.Export(path.ToString(), value);
+
+        var rows1 = _csvImporter.Query(path.ToString(), true).ToList();
+        Assert.Equal(rows1[0].InDate, "01 04, 2021");
+        Assert.Equal(rows1[1].InDate, "04 05, 2020");
+
+        var rows2 = _csvImporter.Query<Issue241Dto>(path.ToString()).ToList();
+        Assert.Equal(rows2[0].InDate, new DateTime(2021, 01, 04));
+        Assert.Equal(rows2[1].InDate, new DateTime(2020, 04, 05));
+    }
+    
+    private class Issue241Dto
+    {
+        public string Name { get; set; }
+
+        [MiniExcelFormat("MM dd, yyyy")]
+        public DateTime InDate { get; set; }
+    }
+    
+    
+    /// <summary>
+    /// Csv type mapping Query error "cannot be converted to xxx type" #243
+    /// </summary>
+    [Fact]
+    public void Issue243()
+    {
+        using var path = AutoDeletingPath.Create(ExcelType.Csv);
+        var value = new[]
+        {
+            new { Name = "Jack", Age = 25, InDate = new DateTime(2021,01,03) },
+            new { Name = "Henry",  Age = 36, InDate = new DateTime(2020,05,03) },
+        };
+        _csvExporter.Export(path.ToString(), value);
+
+        var rows =  _csvImporter.Query<Issue243Dto>(path.ToString()).ToList();
+        Assert.Equal("Jack", rows[0].Name);
+        Assert.Equal(25, rows[0].Age);
+        Assert.Equal(new DateTime(2021, 01, 03), rows[0].InDate);
+
+        Assert.Equal("Henry", rows[1].Name);
+        Assert.Equal(36, rows[1].Age);
+        Assert.Equal(new DateTime(2020, 05, 03), rows[1].InDate);
+    }
+
+    private class Issue243Dto
+    {
+        public string Name { get; set; }
+        public int Age { get; set; }
+        public DateTime InDate { get; set; }
+    }
+    
+    
+    /// <summary>
+    /// https://github.com/mini-software/MiniExcel/issues/312
+    /// </summary>
+    [Fact]
+    public void TestIssue312()
+    {
+        using var path = AutoDeletingPath.Create(ExcelType.Csv);
+        TestIssue312Dto[] value =
+        [
+            new() { Value = 12345.6789},
+            new() { Value = null}
+        ];
+        _csvExporter.Export(path.ToString(), value);
+
+        var rows =  _csvImporter.Query(path.ToString()).ToList();
+        Assert.Equal("12,345.68", rows[1].A);
+    }
+
+    private class TestIssue312Dto
+    {
+        [MiniExcelFormat("0,0.00")]
+        public double? Value { get; set; }
+    }
+    
+    [Fact]
     public async Task TestIssue338()
     {
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
         {
             var path = PathHelper.GetFile("csv/TestIssue338.csv");
-            var row = _csvImporter.QueryCsvAsync(path).ToBlockingEnumerable().FirstOrDefault();
+            var row = _csvImporter.QueryAsync(path).ToBlockingEnumerable().FirstOrDefault();
             Assert.Equal("���Ĳ�������", row!.A);
         }
         {
@@ -129,7 +285,7 @@ public class IssueTests
             {
                 StreamReaderFunc = stream => new StreamReader(stream, Encoding.GetEncoding("gb2312"))
             };
-            var row = _csvImporter.QueryCsvAsync(path, configuration: config).ToBlockingEnumerable().FirstOrDefault();
+            var row = _csvImporter.QueryAsync(path, configuration: config).ToBlockingEnumerable().FirstOrDefault();
             Assert.Equal("中文测试内容", row!.A);
         }
         {
@@ -140,7 +296,7 @@ public class IssueTests
             };
             await using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read))
             {
-                var row = _csvImporter.QueryCsvAsync(stream, configuration: config).ToBlockingEnumerable().FirstOrDefault();
+                var row = _csvImporter.QueryAsync(stream, configuration: config).ToBlockingEnumerable().FirstOrDefault();
                 Assert.Equal("中文测试内容", row!.A);
             }
         }
@@ -156,7 +312,7 @@ public class IssueTests
             value.Rows.Add("\"Jack\"");
         }
 
-        _csvExporter.ExportCsv(path.ToString(), value);
+        _csvExporter.Export(path.ToString(), value);
         Assert.Equal("\"\"\"name\"\"\"\r\n\"\"\"Jack\"\"\"\r\n", File.ReadAllText(path.ToString()));
     }
 
@@ -175,7 +331,7 @@ public class IssueTests
             {
                 Culture = new CultureInfo("fr-FR"),
             };
-            _openXmlExporter.ExportExcel(path, value, configuration: config);
+            _openXmlExporter.Export(path, value, configuration: config);
 
             //Datetime error
             Assert.Throws<MiniExcelInvalidCastException>(() =>
@@ -184,11 +340,11 @@ public class IssueTests
                 {
                     Culture = new CultureInfo("en-US"),
                 };
-                _ = _openXmlImporter.QueryExcel<TestIssue316Dto>(path, configuration: conf).ToList();
+                _ = _openXmlImporter.Query<TestIssue316Dto>(path, configuration: conf).ToList();
             });
 
             // dynamic
-            var rows = _openXmlImporter.QueryExcel(path, true).ToList();
+            var rows = _openXmlImporter.Query(path, true).ToList();
             Assert.Equal("123456,789", rows[0].Amount);
             Assert.Equal("31/01/2018 00:00:00", rows[0].CreateTime);
         }
@@ -206,11 +362,11 @@ public class IssueTests
                 {
                     Culture = new CultureInfo("fr-FR"),
                 };
-                _openXmlExporter.ExportExcel(path, value, configuration: config);
+                _openXmlExporter.Export(path, value, configuration: config);
             }
 
             {
-                var rows = _openXmlImporter.QueryExcel(path, true).ToList();
+                var rows = _openXmlImporter.Query(path, true).ToList();
                 Assert.Equal("123456,789", rows[0].Amount);
                 Assert.Equal("12/05/2018 00:00:00", rows[0].CreateTime);
             }
@@ -220,7 +376,7 @@ public class IssueTests
                 {
                     Culture = new CultureInfo("en-US"),
                 };
-                var rows = _openXmlImporter.QueryExcel<TestIssue316Dto>(path, configuration: config).ToList();
+                var rows = _openXmlImporter.Query<TestIssue316Dto>(path, configuration: config).ToList();
 
                 Assert.Equal("2018-12-05 00:00:00", rows[0].CreateTime.ToString("yyyy-MM-dd HH:mm:ss"));
                 Assert.Equal(123456789m, rows[0].Amount);
@@ -231,7 +387,7 @@ public class IssueTests
                 {
                     Culture = new CultureInfo("fr-FR"),
                 };
-                var rows = _openXmlImporter.QueryExcel<TestIssue316Dto>(path, configuration: config).ToList();
+                var rows = _openXmlImporter.Query<TestIssue316Dto>(path, configuration: config).ToList();
 
                 Assert.Equal("2018-05-12 00:00:00", rows[0].CreateTime.ToString("yyyy-MM-dd HH:mm:ss"));
                 Assert.Equal(123456.789m, rows[0].Amount);
@@ -251,7 +407,7 @@ public class IssueTests
             {
                 Culture = new CultureInfo("fr-FR"),
             };
-            _csvExporter.ExportCsv(path, value, configuration: config);
+            _csvExporter.Export(path, value, configuration: config);
 
             //Datetime error
             Assert.Throws<MiniExcelInvalidCastException>(() =>
@@ -260,11 +416,11 @@ public class IssueTests
                 {
                     Culture = new CultureInfo("en-US")
                 };
-                _ = _csvImporter.QueryCsv<TestIssue316Dto>(path, configuration: conf).ToList();
+                _ = _csvImporter.Query<TestIssue316Dto>(path, configuration: conf).ToList();
             });
 
             // dynamic
-            var rows = _csvImporter.QueryCsv(path, true).ToList();
+            var rows = _csvImporter.Query(path, true).ToList();
             Assert.Equal("123456,789", rows[0].Amount);
             Assert.Equal("31/01/2018 00:00:00", rows[0].CreateTime);
         }
@@ -283,11 +439,11 @@ public class IssueTests
                 {
                     Culture = new CultureInfo("fr-FR"),
                 };
-                _csvExporter.ExportCsv(path, value, configuration: config);
+                _csvExporter.Export(path, value, configuration: config);
             }
 
             {
-                var rows = _csvImporter.QueryCsv(path, true).ToList();
+                var rows = _csvImporter.Query(path, true).ToList();
                 Assert.Equal("123456,789", rows[0].Amount);
                 Assert.Equal("12/05/2018 00:00:00", rows[0].CreateTime);
             }
@@ -297,7 +453,7 @@ public class IssueTests
                 {
                     Culture = new CultureInfo("en-US"),
                 };
-                var rows = _csvImporter.QueryCsv<TestIssue316Dto>(path, configuration: config).ToList();
+                var rows = _csvImporter.Query<TestIssue316Dto>(path, configuration: config).ToList();
 
                 Assert.Equal("2018-12-05 00:00:00", rows[0].CreateTime.ToString("yyyy-MM-dd HH:mm:ss"));
                 Assert.Equal(123456789m, rows[0].Amount);
@@ -308,7 +464,7 @@ public class IssueTests
                 {
                     Culture = new CultureInfo("fr-FR"),
                 };
-                var rows = _csvImporter.QueryCsv<TestIssue316Dto>(path, configuration: config).ToList();
+                var rows = _csvImporter.Query<TestIssue316Dto>(path, configuration: config).ToList();
 
                 Assert.Equal("2018-05-12 00:00:00", rows[0].CreateTime.ToString("yyyy-MM-dd HH:mm:ss"));
                 Assert.Equal(123456.789m, rows[0].Amount);
@@ -325,7 +481,7 @@ public class IssueTests
     {
         var path = PathHelper.GetFile("/csv/TestIssue298.csv");
 #pragma warning disable CS0618 // Type or member is obsolete
-        var dt = _csvImporter.QueryCsvAsDataTable(path);
+        var dt = _csvImporter.QueryAsDataTable(path);
 #pragma warning restore CS0618
         Assert.Equal(["ID", "Name", "Age"], dt.Columns.Cast<DataColumn>().Select(x => x.ColumnName));
     }
@@ -356,7 +512,7 @@ public class IssueTests
             using var path = AutoDeletingPath.Create();
             _csvExporter.ConvertCsvToXlsx(csvPath, path.ToString());
 
-            var rows = _openXmlImporter.QueryExcel(path.ToString()).ToList();
+            var rows = _openXmlImporter.Query(path.ToString()).ToList();
             Assert.Equal(3, rows.Count);
             Assert.Equal("Name", rows[0].A);
             Assert.Equal("Age", rows[0].B);
@@ -378,8 +534,8 @@ public class IssueTests
         var path = PathHelper.GetFile("/csv/Test5x2.csv");
         using var tempPath = AutoDeletingPath.Create();
         using var csv = File.OpenRead(path);
-        var value = _csvImporter.QueryCsv(csv, useHeaderRow: false);
-        _openXmlExporter.ExportExcel(tempPath.ToString(), value, printHeader: false);
+        var value = _csvImporter.Query(csv, useHeaderRow: false);
+        _openXmlExporter.Export(tempPath.ToString(), value, printHeader: false);
     }
 
     /// <summary>
@@ -390,7 +546,7 @@ public class IssueTests
     {
         var path = PathHelper.GetFile("/csv/TestHeader.csv");
 #pragma warning disable CS0618 // Type or member is obsolete
-        using var dt = _csvImporter.QueryCsvAsDataTable(path);
+        using var dt = _csvImporter.QueryAsDataTable(path);
 #pragma warning restore CS0618
         Assert.Equal("A1", dt.Rows[0]["Column1"]);
         Assert.Equal("A2", dt.Rows[1]["Column1"]);
@@ -408,7 +564,7 @@ public class IssueTests
         using var path = AutoDeletingPath.Create();
 
         _csvExporter.ConvertCsvToXlsx(csvPath, path.FilePath);
-        var rows = _openXmlImporter.QueryExcel(path.ToString()).ToList();
+        var rows = _openXmlImporter.Query(path.ToString()).ToList();
 
         Assert.Equal("Name", rows[0].A);
         Assert.Equal("Jack", rows[1].A);
@@ -431,7 +587,7 @@ public class IssueTests
         {
             var value = new[] { new { col1 = "世界你好" } };
             using var path = AutoDeletingPath.Create(ExcelType.Csv);
-            _csvExporter.ExportCsv(path.ToString(), value);
+            _csvExporter.Export(path.ToString(), value);
             const string expected =
                 """
                 col1
@@ -449,7 +605,7 @@ public class IssueTests
             {
                 StreamWriterFunc = stream => new StreamWriter(stream, Encoding.GetEncoding("gb2312"))
             };
-            _csvExporter.ExportCsv(path.ToString(), value, configuration: config);
+            _csvExporter.Export(path.ToString(), value, configuration: config);
             const string expected =
                 """
                 col1
@@ -464,7 +620,7 @@ public class IssueTests
         {
             var value = cn.ExecuteReader("select '世界你好' col1");
             using var path = AutoDeletingPath.Create(ExcelType.Csv);
-            _csvExporter.ExportCsv(path.ToString(), value);
+            _csvExporter.Export(path.ToString(), value);
             const string expected =
                 """
                 col1
@@ -484,7 +640,7 @@ public class IssueTests
         using var cn = Db.GetConnection();
         using var reader = cn.ExecuteReader(@"select '""<>+-*//}{\\n' a,1234567890 b union all select '<test>Hello World</test>',-1234567890");
         using var path = AutoDeletingPath.Create(ExcelType.Csv);
-        _csvExporter.ExportCsv(path.ToString(), reader);
+        _csvExporter.Export(path.ToString(), reader);
         const string expected =
             """"
             a,b
@@ -531,15 +687,15 @@ public class IssueTests
             writer.Write(text);
             writer.Flush();
             stream.Position = 0;
-            var rows = _csvImporter.QueryCsv(stream, useHeaderRow: true).ToList();
+            var rows = _csvImporter.Query(stream, useHeaderRow: true).ToList();
 
             Assert.Equal(nameof(Issue89VO.WorkState.OnDuty), rows[0].State);
             Assert.Equal(nameof(Issue89VO.WorkState.Fired), rows[1].State);
             Assert.Equal(nameof(Issue89VO.WorkState.Leave), rows[2].State);
 
             using var path = AutoDeletingPath.Create(ExcelType.Csv);
-            _csvExporter.ExportCsv(path.ToString(), rows);
-            var rows2 = _csvImporter.QueryCsv<Issue89VO>(path.ToString()).ToList();
+            _csvExporter.Export(path.ToString(), rows);
+            var rows2 = _csvImporter.Query<Issue89VO>(path.ToString()).ToList();
 
             Assert.Equal(Issue89VO.WorkState.OnDuty, rows2[0].State);
             Assert.Equal(Issue89VO.WorkState.Fired, rows2[1].State);
@@ -549,15 +705,15 @@ public class IssueTests
         //xlsx
         {
             var path = PathHelper.GetFile("xlsx/TestIssue89.xlsx");
-            var rows = _openXmlImporter.QueryExcel<Issue89VO>(path).ToList();
+            var rows = _openXmlImporter.Query<Issue89VO>(path).ToList();
 
             Assert.Equal(Issue89VO.WorkState.OnDuty, rows[0].State);
             Assert.Equal(Issue89VO.WorkState.Fired, rows[1].State);
             Assert.Equal(Issue89VO.WorkState.Leave, rows[2].State);
 
             using var xlsxPath = AutoDeletingPath.Create();
-            _openXmlExporter.ExportExcel(xlsxPath.ToString(), rows);
-            var rows2 = _openXmlImporter.QueryExcel<Issue89VO>(xlsxPath.ToString()).ToList();
+            _openXmlExporter.Export(xlsxPath.ToString(), rows);
+            var rows2 = _openXmlImporter.Query<Issue89VO>(xlsxPath.ToString()).ToList();
 
             Assert.Equal(Issue89VO.WorkState.OnDuty, rows2[0].State);
             Assert.Equal(Issue89VO.WorkState.Fired, rows2[1].State);
@@ -608,12 +764,12 @@ public class IssueTests
                     MyProperty7 = "MyProperty7"
                 }
             ];
-            var rowsWritten = _openXmlExporter.ExportExcel(path, values);
+            var rowsWritten = _openXmlExporter.Export(path, values);
             Assert.Single(rowsWritten);
             Assert.Equal(1, rowsWritten[0]);
 
             {
-                var rows = _openXmlImporter.QueryExcel(path).ToList();
+                var rows = _openXmlImporter.Query(path).ToList();
 
                 Assert.Equal("MyProperty4", rows[0].A);
                 Assert.Equal("CustomColumnName", rows[0].B);
@@ -633,7 +789,7 @@ public class IssueTests
             }
 
             {
-                var rows = _openXmlImporter.QueryExcel<Issue142VO>(path).ToList();
+                var rows = _openXmlImporter.Query<Issue142VO>(path).ToList();
 
                 Assert.Equal("MyProperty4", rows[0].MyProperty4);
                 Assert.Equal("MyProperty1", rows[0].MyProperty1);
@@ -657,7 +813,7 @@ public class IssueTests
                     MyProperty7 = "MyProperty7"
                 }
             ];
-            var rowsWritten = _csvExporter.ExportCsv(path, values);
+            var rowsWritten = _csvExporter.Export(path, values);
             Assert.Single(rowsWritten);
             Assert.Equal(1, rowsWritten[0]);
 
@@ -671,7 +827,7 @@ public class IssueTests
             Assert.Equal(expected, File.ReadAllText(path));
 
             {
-                var rows = _csvImporter.QueryCsv<Issue142VO>(path).ToList();
+                var rows = _csvImporter.Query<Issue142VO>(path).ToList();
 
                 Assert.Equal("MyProperty4", rows[0].MyProperty4);
                 Assert.Equal("MyProperty1", rows[0].MyProperty1);
@@ -689,7 +845,7 @@ public class IssueTests
             [
                 new() { MyProperty1 = 0, MyProperty2 = 0, MyProperty3 = 0, MyProperty4 = 0 }
             ];
-            Assert.Throws<InvalidOperationException>(() => _csvExporter.ExportCsv(path.ToString(), input));
+            Assert.Throws<InvalidOperationException>(() => _csvExporter.Export(path.ToString(), input));
         }
     }
 
@@ -699,13 +855,13 @@ public class IssueTests
         const string path = "../../../../../samples/xlsx/TestIssue142.xlsx";
         const string csvPath = "../../../../../samples/csv/TestIssue142.csv";
         {
-            var rows = _openXmlImporter.QueryExcel<Issue142VoExcelColumnNameNotFound>(path).ToList();
+            var rows = _openXmlImporter.Query<Issue142VoExcelColumnNameNotFound>(path).ToList();
             Assert.Equal(0, rows[0].MyProperty1);
         }
 
-        Assert.Throws<ArgumentException>(() => _openXmlImporter.QueryExcel<Issue142VoOverIndex>(path).ToList());
+        Assert.Throws<ArgumentException>(() => _openXmlImporter.Query<Issue142VoOverIndex>(path).ToList());
 
-        var rowsXlsx = _openXmlImporter.QueryExcel<Issue142VO>(path).ToList();
+        var rowsXlsx = _openXmlImporter.Query<Issue142VO>(path).ToList();
         Assert.Equal("CustomColumnName", rowsXlsx[0].MyProperty1);
         Assert.Null(rowsXlsx[0].MyProperty7);
         Assert.Equal("MyProperty2", rowsXlsx[0].MyProperty2);
@@ -714,7 +870,7 @@ public class IssueTests
         Assert.Equal("MyProperty102", rowsXlsx[0].MyProperty5);
         Assert.Equal("MyProperty6", rowsXlsx[0].MyProperty6);
 
-        var rowsCsv = _csvImporter.QueryCsv<Issue142VO>(csvPath).ToList();
+        var rowsCsv = _csvImporter.Query<Issue142VO>(csvPath).ToList();
         Assert.Equal("CustomColumnName", rowsCsv[0].MyProperty1);
         Assert.Null(rowsCsv[0].MyProperty7);
         Assert.Equal("MyProperty2", rowsCsv[0].MyProperty2);
@@ -769,11 +925,11 @@ public class IssueTests
         // create
         using (var stream = File.Create(path))
         {
-            _csvExporter.ExportCsv(stream, values, configuration: config);
+            _csvExporter.Export(stream, values, configuration: config);
         }
 
         // read
-        var getRowsInfo = _csvImporter.QueryCsv<Issue507V01>(path, configuration: config).ToArray();
+        var getRowsInfo = _csvImporter.Query<Issue507V01>(path, configuration: config).ToArray();
 
         Assert.Equal(values.Length, getRowsInfo.Length);
 
@@ -822,11 +978,11 @@ public class IssueTests
         // create
         using (var stream = File.Create(path))
         {
-            _csvExporter.ExportCsv(stream, values, true, config);
+            _csvExporter.Export(stream, values, true, config);
         }
 
         // read
-        var getRowsInfo = _csvImporter.QueryCsv<Issue507V02>(path, configuration: config).ToArray();
+        var getRowsInfo = _csvImporter.Query<Issue507V02>(path, configuration: config).ToArray();
         Assert.Equal(values.Length, getRowsInfo.Length);
 
         File.Delete(path);
@@ -848,7 +1004,7 @@ public class IssueTests
         using var stream = new MemoryStream(Encoding.UTF8.GetBytes("A,B,C\n\"r1a: no end quote,r1b,r1c"));
 
         // read
-        var getRowsInfo = _csvImporter.QueryCsv(stream, configuration: config).ToArray();
+        var getRowsInfo = _csvImporter.Query(stream, configuration: config).ToArray();
         Assert.Equal(2, getRowsInfo.Length);
     }
 

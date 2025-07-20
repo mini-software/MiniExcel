@@ -8,15 +8,15 @@ public sealed partial class OpenXmlTemplater
     
     
     [CreateSyncVersion]
-    public async Task ApplyXlsxTemplateAsync(string path, string templatePath, object value,
+    public async Task ApplyTemplateAsync(string path, string templatePath, object value,
         OpenXmlConfiguration? configuration = null, CancellationToken cancellationToken = default)
     {
         using var stream = File.Create(path);
-        await ApplyXlsxTemplateAsync(stream, templatePath, value, configuration, cancellationToken).ConfigureAwait(false);
+        await ApplyTemplateAsync(stream, templatePath, value, configuration, cancellationToken).ConfigureAwait(false);
     }
 
     [CreateSyncVersion]
-    public async Task ApplyXlsxTemplateAsync(string path, Stream templateStream, object value,
+    public async Task ApplyTemplateAsync(string path, Stream templateStream, object value,
         OpenXmlConfiguration? configuration = null, CancellationToken cancellationToken = default)
     {
         using var stream = File.Create(path);
@@ -25,7 +25,7 @@ public sealed partial class OpenXmlTemplater
     }
     
     [CreateSyncVersion]
-    public async Task ApplyXlsxTemplateAsync(Stream stream, string templatePath, object value,
+    public async Task ApplyTemplateAsync(Stream stream, string templatePath, object value,
         OpenXmlConfiguration? configuration = null, CancellationToken cancellationToken = default)
     {
         var template = GetOpenXmlTemplate(stream, configuration);
@@ -33,7 +33,7 @@ public sealed partial class OpenXmlTemplater
     }
     
     [CreateSyncVersion]
-    public async Task ApplyXlsxTemplateAsync(Stream stream, Stream templateStream, object value,
+    public async Task ApplyTemplateAsync(Stream stream, Stream templateStream, object value,
         OpenXmlConfiguration? configuration = null, CancellationToken cancellationToken = default)
     {
         var template = GetOpenXmlTemplate(stream, configuration);
@@ -41,15 +41,15 @@ public sealed partial class OpenXmlTemplater
     }
     
     [CreateSyncVersion]
-    public async Task ApplyXlsxTemplateAsync(string path, byte[] templateBytes, object value,
+    public async Task ApplyTemplateAsync(string path, byte[] templateBytes, object value,
         OpenXmlConfiguration? configuration = null, CancellationToken cancellationToken = default)
     {
         using var stream = File.Create(path);
-        await ApplyXlsxTemplateAsync(stream, templateBytes, value, configuration, cancellationToken).ConfigureAwait(false);
+        await ApplyTemplateAsync(stream, templateBytes, value, configuration, cancellationToken).ConfigureAwait(false);
     }
 
     [CreateSyncVersion]
-    public async Task ApplyXlsxTemplateAsync(Stream stream, byte[] templateBytes, object value,
+    public async Task ApplyTemplateAsync(Stream stream, byte[] templateBytes, object value,
         OpenXmlConfiguration? configuration = null, CancellationToken cancellationToken = default)
     {
         var template = GetOpenXmlTemplate(stream, configuration);

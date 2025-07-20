@@ -28,7 +28,7 @@ public class CreateExcelBenchmark : BenchmarkBase
     public void MiniExcelCreateTest()
     {
         using var path = AutoDeletingPath.Create();
-        _exporter.ExportExcel(path.FilePath, GetValue());
+        _exporter.Export(path.FilePath, GetValue());
     }
 
     [Benchmark(Description = "ClosedXml Create Xlsx")]

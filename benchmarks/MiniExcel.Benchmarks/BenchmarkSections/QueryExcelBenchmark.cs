@@ -26,13 +26,13 @@ public class QueryExcelBenchmark : BenchmarkBase
     [Benchmark(Description = "MiniExcel QueryFirst")]
     public void MiniExcel_QueryFirst_Test()
     {
-        _ = _importer.QueryExcel(FilePath).First();
+        _ = _importer.Query(FilePath).First();
     }
 
     [Benchmark(Description = "MiniExcel Query")]
     public void MiniExcel_Query()
     {
-        foreach (var _ in _importer.QueryExcel(FilePath)) { }
+        foreach (var _ in _importer.Query(FilePath)) { }
     }
 
     [Benchmark(Description = "ExcelDataReader QueryFirst")]

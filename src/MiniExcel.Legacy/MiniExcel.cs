@@ -1,17 +1,15 @@
 ﻿using System.Data;
-using MiniExcelLib;
-using MiniExcelLib.Csv;
-using MiniExcelLib.Csv.Api;
+using MiniExcelLib.Csv.Providers;
 using MiniExcelLib.DataReader;
 using MiniExcelLib.OpenXml.Models;
 using MiniExcelLib.OpenXml.Picture;
 using Zomp.SyncMethodGenerator;
-using CsvExporter = MiniExcelLib.Csv.Api.CsvExporter;
-using CsvImporter = MiniExcelLib.Csv.Api.CsvImporter;
+using CsvExporter = MiniExcelLib.Csv.Providers.CsvExporter;
+using CsvImporter = MiniExcelLib.Csv.Providers.CsvImporter;
 using MiniExcelNew = MiniExcelLib.MiniExcel;
-using OpenXmlExporter = MiniExcelLib.OpenXml.Api.OpenXmlExporter;
-using OpenXmlImporter = MiniExcelLib.OpenXml.Api.OpenXmlImporter;
-using OpenXmlTemplater = MiniExcelLib.OpenXml.Api.OpenXmlTemplater;
+using OpenXmlExporter = MiniExcelLib.OpenXml.Providers.OpenXmlExporter;
+using OpenXmlImporter = MiniExcelLib.OpenXml.Providers.OpenXmlImporter;
+using OpenXmlTemplater = MiniExcelLib.OpenXml.Providers.OpenXmlTemplater;
 
 namespace MiniExcelLibs;
 

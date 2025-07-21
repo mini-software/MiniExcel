@@ -44,7 +44,7 @@
 		<Using Include="System.Text" />
 		<Using Include="Dapper" />
 		<Using Include="MiniExcelLib.OpenXml" />
-		<Using Include="MiniExcelLib.OpenXml.Api" />
+		<Using Include="MiniExcelLib.OpenXml.Providers" />
 		<Using Include="MiniExcelLib.Tests.Utils" />
 		<Using Include="OfficeOpenXml" />
 		<Using Include="Xunit" />

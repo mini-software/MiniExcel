@@ -35,8 +35,8 @@
     <Using Include="MiniExcelLib.Attributes" />
     <Using Include="MiniExcelLib.Exceptions" />
     <Using Include="MiniExcelLib.OpenXml" />
-    <Using Include="MiniExcelLib.OpenXml.Api" />
-    <Using Include="MiniExcelLib.Csv.Api" />
+    <Using Include="MiniExcelLib.OpenXml.Providers" />
+    <Using Include="MiniExcelLib.Csv.Providers" />
     <Using Include="System.Data" />
     <Using Include="System.Globalization" />
     <Using Include="System.Text" />

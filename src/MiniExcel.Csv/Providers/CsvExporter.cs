@@ -1,4 +1,4 @@
-namespace MiniExcelLib.Csv.Api;
+namespace MiniExcelLib.Csv.Providers;
 
 public partial class CsvExporter
 {

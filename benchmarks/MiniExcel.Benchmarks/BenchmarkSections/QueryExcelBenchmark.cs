@@ -4,7 +4,7 @@ using ClosedXML.Excel;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using ExcelDataReader;
-using MiniExcelLib.OpenXml.Providers;
+using MiniExcelLib.Core;
 using NPOI.XSSF.UserModel;
 using OfficeOpenXml;
 
@@ -20,7 +20,7 @@ public class QueryExcelBenchmark : BenchmarkBase
         ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
         
-        _importer = MiniExcel.Importer.GetExcelImporter();
+        _importer = MiniExcel.Importer.GetOpenXmlImporter();
     }
 
     [Benchmark(Description = "MiniExcel QueryFirst")]

@@ -5,8 +5,8 @@ public class AsyncIssueTests
     private readonly CsvExporter _csvExporter = MiniExcel.Exporter.GetCsvExporter();
     private readonly CsvImporter _csvImporter = MiniExcel.Importer.GetCsvImporter();
 
-    private readonly OpenXmlExporter _openXmlExporter = MiniExcel.Exporter.GetExcelExporter();
-    private readonly OpenXmlImporter _openXmlImporter = MiniExcel.Importer.GetExcelImporter();
+    private readonly OpenXmlExporter _openXmlExporter = MiniExcel.Exporter.GetOpenXmlExporter();
+    private readonly OpenXmlImporter _openXmlImporter = MiniExcel.Importer.GetOpenXmlImporter();
     /// <summary>
     /// Csv SaveAs by datareader with encoding default show messy code #253
     /// </summary>

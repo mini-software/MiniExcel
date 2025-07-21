@@ -1,6 +1,6 @@
 ﻿using BenchmarkDotNet.Attributes;
 using MiniExcelLib.Benchmarks.Utils;
-using MiniExcelLib.OpenXml.Providers;
+using MiniExcelLib.Core;
 
 namespace MiniExcelLib.Benchmarks.BenchmarkSections;
 
@@ -12,8 +12,8 @@ public class XlsxAsyncBenchmark : BenchmarkBase
     [GlobalSetup]
     public void Setup()
     {
-        _exporter = MiniExcel.Exporter.GetExcelExporter();
-        _templater = MiniExcel.Templater.GetExcelTemplater();
+        _exporter = MiniExcel.Exporter.GetOpenXmlExporter();
+        _templater = MiniExcel.Templater.GetOpenXmlTemplater();
     }
     
     [Benchmark(Description = "MiniExcel Create Xlsx Async")]

@@ -5,7 +5,7 @@ using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using MiniExcelLib.Benchmarks.Utils;
-using MiniExcelLib.OpenXml.Providers;
+using MiniExcelLib.Core;
 using NPOI.XSSF.UserModel;
 using OfficeOpenXml;
 
@@ -21,7 +21,7 @@ public class CreateExcelBenchmark : BenchmarkBase
         ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
         
-        _exporter = MiniExcel.Exporter.GetExcelExporter();
+        _exporter = MiniExcel.Exporter.GetOpenXmlExporter();
     }
 
     [Benchmark(Description = "MiniExcel Create Xlsx")]

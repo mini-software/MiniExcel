@@ -1,7 +1,7 @@
 using BenchmarkDotNet.Attributes;
 using ClosedXML.Report;
 using MiniExcelLib.Benchmarks.Utils;
-using MiniExcelLib.OpenXml.Providers;
+using MiniExcelLib.Core;
 
 namespace MiniExcelLib.Benchmarks.BenchmarkSections;
 
@@ -12,7 +12,7 @@ public class TemplateExcelBenchmark : BenchmarkBase
     [GlobalSetup]
     public void Setup()
     {
-        _templater = MiniExcel.Templater.GetExcelTemplater();
+        _templater = MiniExcel.Templater.GetOpenXmlTemplater();
     }
     
     [Benchmark(Description = "MiniExcel Template Generate")]

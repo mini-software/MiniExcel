@@ -1,3 +1,10 @@
+using MiniExcelLib.Core;
+using MiniExcelLib.Core.Exceptions;
+using MiniExcelLib.Core.Helpers;
+using MiniExcelLib.Core.Reflection;
+using IMiniExcelReader = MiniExcelLib.Core.Abstractions.IMiniExcelReader;
+using MiniExcelMapper = MiniExcelLib.Core.Reflection.MiniExcelMapper;
+
 namespace MiniExcelLib.Csv;
 
 internal partial class CsvReader : IMiniExcelReader

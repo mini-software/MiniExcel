@@ -27,21 +27,19 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Using Include="Xunit" />
-    <Using Include="MiniExcelLib.Csv" />
-    <Using Include="MiniExcelLib.Tests.Common.Utils" />
-    <Using Include="Dapper" />
-    <Using Include="MiniExcelLib" />
-    <Using Include="MiniExcelLib.Attributes" />
-    <Using Include="MiniExcelLib.Exceptions" />
-    <Using Include="MiniExcelLib.OpenXml" />
-    <Using Include="MiniExcelLib.OpenXml.Providers" />
-    <Using Include="MiniExcelLib.Csv.Providers" />
     <Using Include="System.Data" />
     <Using Include="System.Globalization" />
     <Using Include="System.Text" />
     <Using Include="System.Text.RegularExpressions" />
+    <Using Include="Dapper" />
     <Using Include="CsvHelper" />
+    <Using Include="Xunit" />
+    <Using Include="MiniExcelLib.Tests.Common.Utils" />
+    <Using Include="MiniExcelLib.Core" />
+    <Using Include="MiniExcelLib.Core.Attributes" />
+    <Using Include="MiniExcelLib.Core.Exceptions" />
+    <Using Include="MiniExcelLib.Core.OpenXml" />
+    <Using Include="MiniExcelLib.Csv" />
   </ItemGroup>
 
 </Project>

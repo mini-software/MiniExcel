@@ -403,3 +403,4 @@ FodyWeavers.xsd
 /TestTemplate
 /tests/MiniExcel.Tests/TemplateOptimization
 /samples/xlsx/Test_EnableWriteFilePath.xlsx
+/tests/MiniExcel.Core.Tests/TemplateOptimization/

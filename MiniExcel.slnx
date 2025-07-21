@@ -1,0 +1,37 @@
+<Solution>
+  <Folder Name="/benchmarks/">
+    <Project Path="benchmarks\MiniExcel.Benchmarks\MiniExcel.Benchmarks.csproj" />
+  </Folder>
+  <Folder Name="/Docs and settings/">
+    <File Path=".gitattributes" />
+    <File Path=".gitignore" />
+    <File Path="appveyor.yml" />
+    <File Path=".github\workflows\dotnet.yml" />
+    <File Path="LICENSE" />
+    <File Path="README-NuGet.md" />
+    <File Path="README.md" />
+    <File Path="README.zh-CN.md" />
+    <File Path="README.zh-Hant.md" />
+    <File Path=".github\workflows\benchmark.yml" />
+    <File Path=".github\workflows\codeql-analysis.yml" />
+    <File Path="src\Directory.Build.props" />
+    <File Path="src\Directory.Packages.props" />
+    <File Path="miniexcel.publickey" />
+    <File Path="src\icon.png" />
+  </Folder>
+  <Folder Name="/Releases/">
+    <File Path="docs\README.md" />
+    <File Path="docs\README.zh-CN.md" />
+    <File Path="docs\README.zh-Hant.md" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src\MiniExcel.Core\MiniExcel.Core.csproj" />
+    <Project Path="src\MiniExcel.Csv\MiniExcel.Csv.csproj" />
+    <Project Path="src\MiniExcel\MiniExcel.csproj" Type="Classic C#" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/MiniExcel.Csv.Tests/MiniExcel.Csv.Tests.csproj" />
+    <Project Path="tests/MiniExcel.Tests.Common/MiniExcel.Tests.Common.csproj" />
+    <Project Path="tests\MiniExcel.Core.Tests\MiniExcel.Core.Tests.csproj" />
+  </Folder>
+</Solution>

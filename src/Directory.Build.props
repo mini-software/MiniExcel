@@ -7,24 +7,37 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <LangVersion>13</LangVersion>
     </PropertyGroup>
+
+    <PropertyGroup>
+        <Title>MiniExcel</Title>
+        <Product>MiniExcel</Product>
+        <Company>Mini-Software</Company>
+        <PackageTags>excel;xlsx;csv;micro-helper;mini;openxml;helper;</PackageTags>
+        <Description>Fast, Low-Memory, Easy Excel .NET processing tool for importing, exporting and templating spreadsheets
+            Github : https://github.com/mini-software/MiniExcel
+            Gitee : https://gitee.com/dotnetchina/MiniExcel
+            Issues : https://github.com/mini-software/MiniExcel/issues
+            Todo : https://github.com/mini-software/MiniExcel/projects/1?fullscreen=true</Description>
+        <Authors>Wei Lin, Michele Bastione, PING-HSIU SHIH, Amos(izanhzh), eynarhaji, Mini-Software team</Authors>
+        <PackageId>MiniExcel</PackageId>
+        <Copyright>Wei Lin, 2021 onwards</Copyright>
+        <NeutralLanguage>en</NeutralLanguage>
+        <PackageLicenseUrl>https://raw.githubusercontent.com/mini-software/MiniExcel/master/LICENSE</PackageLicenseUrl>
+        <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+        <PackageProjectUrl>https://github.com/mini-software/MiniExcel</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/mini-software/MiniExcel</RepositoryUrl>
+        <RepositoryType>Github</RepositoryType>
+        <PackageIcon>icon.png</PackageIcon>
+        <PackageReleaseNotes>Please Check [Release Notes](https://github.com/mini-software/MiniExcel/tree/master/docs)</PackageReleaseNotes>
+        <PublishRepositoryUrl>true</PublishRepositoryUrl>
+        <IncludeSymbols>true</IncludeSymbols>
+        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+    </PropertyGroup>
     
     <PropertyGroup>
         <SignAssembly>True</SignAssembly>
         <AssemblyOriginatorKeyFile>..\miniexcel.snk</AssemblyOriginatorKeyFile>
     </PropertyGroup>
-
-    <ItemGroup>
-        <PackageReference Include="Zomp.SyncMethodGenerator" Version="1.6.2" PrivateAssets="all" IncludeAssets="runtime; build; native; contentfiles; analyzers; buildtransitive"/>
-    </ItemGroup>
-
-    <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
-        <PackageReference Include="Microsoft.Bcl.Memory" Version="9.0.0"/>
-        <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="9.0.0"/>
-        <PackageReference Include="System.IO.Compression" Version="4.3.0" />
-    </ItemGroup>
-
-    <ItemGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
-        <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All"/>
-    </ItemGroup>
 
 </Project>

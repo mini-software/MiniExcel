@@ -3,33 +3,6 @@
 	<PropertyGroup>
 		<RootNamespace>MiniExcelLib</RootNamespace>
 	</PropertyGroup>
-
-	<PropertyGroup>
-		<Title>MiniExcel</Title>
-		<Product>MiniExcel</Product>
-		<Company>Mini-Software</Company>
-		<PackageTags>excel;xlsx;csv;micro-helper;mini;openxml;helper;</PackageTags>
-		<Description>Fast, Low-Memory, Easy Excel .NET processing tool for importing, exporting and templating spreadsheets
-			Github : https://github.com/mini-software/MiniExcel
-			Gitee : https://gitee.com/dotnetchina/MiniExcel
-			Issues : https://github.com/mini-software/MiniExcel/issues
-			Todo : https://github.com/mini-software/MiniExcel/projects/1?fullscreen=true</Description>
-		<Authors>Wei Lin, Michele Bastione, PING-HSIU SHIH, Amos(izanhzh), eynarhaji, Mini-Software team</Authors>
-		<PackageId>MiniExcel</PackageId>
-		<Copyright>Wei Lin, 2021 onwards</Copyright>
-		<NeutralLanguage>en</NeutralLanguage>
-		<PackageLicenseUrl>https://raw.githubusercontent.com/mini-software/MiniExcel/master/LICENSE</PackageLicenseUrl>
-		<PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-		<PackageProjectUrl>https://github.com/mini-software/MiniExcel</PackageProjectUrl>
-		<RepositoryUrl>https://github.com/mini-software/MiniExcel</RepositoryUrl>
-		<RepositoryType>Github</RepositoryType>
-		<PackageIcon>icon.png</PackageIcon>
-		<PackageReleaseNotes>Please Check [Release Notes](https://github.com/mini-software/MiniExcel/tree/master/docs)</PackageReleaseNotes>
-		<PublishRepositoryUrl>true</PublishRepositoryUrl>
-		<IncludeSymbols>true</IncludeSymbols>
-		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
-		<PackageReadmeFile>README.md</PackageReadmeFile>
-	</PropertyGroup>
 	
 	<ItemGroup>
 		<InternalsVisibleTo Include="MiniExcel.Tests, PublicKey=002400000480000094000000060200000024000052534131000400000100010091c2c6c10d20b6c884dbc48892f91cc773d33c3a1f43ba3352700031d2d5f6a2b37cccd60469733a4597bdd94b54ee63f514dc487b21be797b1b63063941630b46ad090baabaf0650d05b9c590ea497644f0c296bb223e17dc785f0fbb255ef780905aabf4cf14ee5bca087cbd41d2231169a620529626035215604261b533c9"/>

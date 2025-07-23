@@ -3,7 +3,9 @@ using MiniExcelLibs.Attributes;
 using MiniExcelLibs.OpenXml;
 using MiniExcelLibs.Tests.Utils;
 using Newtonsoft.Json;
+using NPOI.HPSF;
 using OfficeOpenXml;
+using System;
 using System.Data;
 using System.Data.SQLite;
 using System.Globalization;
@@ -31,23 +33,23 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
             using var path = AutoDeletingPath.Create();
             var value = new
             {
-                Issue255DTO = new[] 
+                Issue255DTO = new[]
                 {
                     new Issue255DTO { Time = new DateTime(2021, 01, 01), Time2 = new DateTime(2021, 01, 01) }
                 }
             };
-            
+
             await MiniExcel.SaveAsByTemplateAsync(path.ToString(), templatePath, value);
             var q = MiniExcel.QueryAsync(path.ToString()).ToBlockingEnumerable();
             var rows = q.ToList();
-            
+
             Assert.Equal("2021", rows[1].A.ToString());
             Assert.Equal("2021", rows[1].B.ToString());
         }
         //saveas
         {
             using var path = AutoDeletingPath.Create();
-            var value = new[] 
+            var value = new[]
             {
                 new Issue255DTO
                 {
@@ -58,7 +60,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
             var rowsWritten = await MiniExcel.SaveAsAsync(path.ToString(), value);
             Assert.Single(rowsWritten);
             Assert.Equal(1, rowsWritten[0]);
-                
+
             var q = MiniExcel.QueryAsync(path.ToString()).ToBlockingEnumerable();
             var rows = q.ToList();
             Assert.Equal("2021", rows[1].A.ToString());
@@ -85,7 +87,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
         var path = PathHelper.GetFile("xlsx/TestIssue256.xlsx");
         var q = MiniExcel.QueryAsync(path, false).ToBlockingEnumerable();
         var rows = q.ToList();
-        
+
         Assert.Equal(new DateTime(2003, 4, 16), rows[1].A);
         Assert.Equal(new DateTime(2004, 4, 16), rows[1].B);
     }
@@ -102,13 +104,13 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
             using var path = AutoDeletingPath.Create(ExcelType.CSV);
 
             await MiniExcel.SaveAsAsync(path.ToString(), value);
-            const string expected = 
+            const string expected =
                 """
                 col1
                 世界你好
 
                 """;
-            
+
             Assert.Equal(expected, await File.ReadAllTextAsync(path.ToString()));
         }
 
@@ -123,29 +125,29 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
             };
 
             await MiniExcel.SaveAsAsync(path.ToString(), value, excelType: ExcelType.CSV, configuration: config);
-            const string expected = 
+            const string expected =
                 """
                 col1
                 �������
 
                 """;
-            
+
             Assert.Equal(expected, await File.ReadAllTextAsync(path.ToString()));
         }
 
         await using var cn = Db.GetConnection();
-        
+
         {
             var value = await cn.ExecuteReaderAsync("select '世界你好' col1");
             using var path = AutoDeletingPath.Create(ExcelType.CSV);
             await MiniExcel.SaveAsAsync(path.ToString(), value);
-            const string expected = 
+            const string expected =
                 """
                 col1
                 世界你好
 
                 """;
-            
+
             Assert.Equal(expected, await File.ReadAllTextAsync(path.ToString()));
         }
     }
@@ -158,21 +160,21 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
     {
         await using var cn = Db.GetConnection();
         var reader = await cn.ExecuteReaderAsync(@"select '""<>+-*//}{\\n' a,1234567890 b union all select '<test>Hello World</test>',-1234567890");
-        
+
         using var path = AutoDeletingPath.Create(ExcelType.CSV);
         var rowsWritten = await MiniExcel.SaveAsAsync(path.ToString(), reader);
 
         Assert.Single(rowsWritten);
         Assert.Equal(2, rowsWritten[0]);
-                
-        const string expected = 
+
+        const string expected =
             """"
             a,b
             """<>+-*//}{\\n",1234567890
             "<test>Hello World</test>",-1234567890
 
             """";
-        
+
         Assert.Equal(expected, await File.ReadAllTextAsync(path.ToString()));
     }
 
@@ -196,19 +198,19 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
     public async Task Issue243()
     {
         using var path = AutoDeletingPath.Create(ExcelType.CSV);
-        var value = new[] 
+        var value = new[]
         {
             new { Name ="Jack",Age=25,InDate=new DateTime(2021,01,03)},
             new { Name ="Henry",Age=36,InDate=new DateTime(2020,05,03)},
         };
-        
+
         var rowsWritten = await MiniExcel.SaveAsAsync(path.ToString(), value);
         Assert.Single(rowsWritten);
         Assert.Equal(2, rowsWritten[0]);
 
         var q = MiniExcel.QueryAsync<Issue243Dto>(path.ToString()).ToBlockingEnumerable();
         var rows = q.ToList();
-        
+
         Assert.Equal("Jack", rows[0].Name);
         Assert.Equal(25, rows[0].Age);
         Assert.Equal(new DateTime(2021, 01, 03), rows[0].InDate);
@@ -242,14 +244,14 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
             using var file = AutoDeletingPath.Create(ExcelType.CSV);
             var path = file.ToString();
             var rowsWritten = await MiniExcel.SaveAsAsync(path, value);
-            
+
             Assert.Single(rowsWritten);
             Assert.Equal(2, rowsWritten[0]);
 
             {
                 var q = MiniExcel.QueryAsync(path, true).ToBlockingEnumerable();
                 var rows = q.ToList();
-                
+
                 Assert.Equal(rows[0].InDate, "01 04, 2021");
                 Assert.Equal(rows[1].InDate, "04 05, 2020");
             }
@@ -257,7 +259,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
             {
                 var q = MiniExcel.QueryAsync<Issue241Dto>(path).ToBlockingEnumerable();
                 var rows = q.ToList();
-                
+
                 Assert.Equal(rows[0].InDate, new DateTime(2021, 01, 04));
                 Assert.Equal(rows[1].InDate, new DateTime(2020, 04, 05));
             }
@@ -268,14 +270,14 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
             using var file = AutoDeletingPath.Create();
             var path = file.ToString();
             var rowsWritten = await MiniExcel.SaveAsAsync(path, value);
-            
+
             Assert.Single(rowsWritten);
             Assert.Equal(2, rowsWritten[0]);
 
             {
                 var q = MiniExcel.QueryAsync(path, true).ToBlockingEnumerable();
                 var rows = q.ToList();
-                
+
                 Assert.Equal(rows[0].InDate, "01 04, 2021");
                 Assert.Equal(rows[1].InDate, "04 05, 2020");
             }
@@ -283,7 +285,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
             {
                 var q = MiniExcel.QueryAsync<Issue241Dto>(path).ToBlockingEnumerable();
                 var rows = q.ToList();
-                
+
                 Assert.Equal(rows[0].InDate, new DateTime(2021, 01, 04));
                 Assert.Equal(rows[1].InDate, new DateTime(2020, 04, 05));
             }
@@ -306,7 +308,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
     {
         {
             using var path = AutoDeletingPath.Create();
-            var value = new[] 
+            var value = new[]
             {
                 new { Name ="Jack", Age=25, InDate=new DateTime(2021,01,03)},
                 new { Name ="Henry", Age=36, InDate=new DateTime(2020,05,03)},
@@ -327,7 +329,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
                 TableStyles = TableStyles.None
             };
             var rowsWritten = await MiniExcel.SaveAsAsync(path.ToString(), value, configuration: config);
-            
+
             Assert.Single(rowsWritten);
             Assert.Equal(2, rowsWritten[0]);
         }
@@ -335,14 +337,14 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
         {
             using var path = AutoDeletingPath.Create();
             var value = JsonConvert.DeserializeObject<DataTable>(
-                JsonConvert.SerializeObject(new[] 
+                JsonConvert.SerializeObject(new[]
                 {
                     new { Name ="Jack", Age=25,InDate=new DateTime(2021,01,03)},
                     new { Name ="Henry", Age=36,InDate=new DateTime(2020,05,03)},
                 })
             );
             var rowsWritten = await MiniExcel.SaveAsAsync(path.ToString(), value);
-            
+
             Assert.Single(rowsWritten);
             Assert.Equal(2, rowsWritten[0]);
         }
@@ -361,7 +363,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
         var users = JsonConvert.DeserializeObject<DataTable>(JsonConvert.SerializeObject(new[] { new { Name = "Jack", Age = 25 }, new { Name = "Mike", Age = 44 } }));
         users.TableName = "users";
         sheets.Tables.Add(users);
-        
+
         var department = JsonConvert.DeserializeObject<DataTable>(JsonConvert.SerializeObject(new[] { new { ID = "01", Name = "HR" }, new { ID = "02", Name = "IT" } }));
         department.TableName = "department";
         sheets.Tables.Add(department);
@@ -399,13 +401,13 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
     public async Task Issue233()
     {
         var path = PathHelper.GetFile("xlsx/TestIssue233.xlsx");
-            
+
 #pragma warning disable CS0618 // Type or member is obsolete
         var dt = await MiniExcel.QueryAsDataTableAsync(path);
 #pragma warning restore CS0618 // Type or member is obsolete
-            
+
         var rows = dt.Rows;
-            
+
         Assert.Equal(0.55, rows[0]["Size"]);
         Assert.Equal("0.55/1.1", rows[1]["Size"]);
     }
@@ -440,7 +442,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
     {
         using var file = AutoDeletingPath.Create();
         var path = file.ToString();
-        
+
         var users = new[]
         {
             new { Name = "Jack", Age = 25 },
@@ -457,7 +459,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
             ["department"] = department
         };
         var rowsWritten = await MiniExcel.SaveAsAsync(path, sheets);
-        
+
         Assert.Equal(2, rowsWritten.Length);
         Assert.Equal(2, rowsWritten[0]);
 
@@ -469,7 +471,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
         {
             var q = MiniExcel.QueryAsync(path, true, sheetName: "users").ToBlockingEnumerable();
             var rows = q.ToList();
-            
+
             Assert.Equal("Jack", rows[0].Name);
             Assert.Equal(25, rows[0].Age);
             Assert.Equal("Mike", rows[1].Name);
@@ -478,7 +480,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
         {
             var q = MiniExcel.QueryAsync(path, true, sheetName: "department").ToBlockingEnumerable();
             var rows = q.ToList();
-            
+
             Assert.Equal("01", rows[0].ID);
             Assert.Equal("HR", rows[0].Name);
             Assert.Equal("02", rows[1].ID);
@@ -497,7 +499,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
         await conn.OpenAsync();
         await using var cmd = conn.CreateCommand();
         cmd.CommandText = "select 1 id union all select 2";
-        
+
         await using (var reader = await cmd.ExecuteReaderAsync(CommandBehavior.CloseConnection))
         {
             while (await reader.ReadAsync())
@@ -514,7 +516,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
         await conn2.OpenAsync();
         await using var cmd2 = conn2.CreateCommand();
         cmd2.CommandText = "select 1 id union all select 2";
-        
+
         await using (var reader = await cmd2.ExecuteReaderAsync(CommandBehavior.CloseConnection))
         {
             while (await reader.ReadAsync())
@@ -531,18 +533,18 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
         await conn3.OpenAsync();
         await using var cmd3 = conn3.CreateCommand();
         cmd3.CommandText = "select 1 id union all select 2";
-        
+
         await using (var reader = await cmd3.ExecuteReaderAsync(CommandBehavior.CloseConnection))
         {
             using var path = AutoDeletingPath.Create();
             var rowsWritten = await MiniExcel.SaveAsAsync(path.ToString(), reader, printHeader: true);
-            
+
             Assert.Single(rowsWritten);
             Assert.Equal(2, rowsWritten[0]);
-                
+
             var q = MiniExcel.QueryAsync(path.ToString(), true).ToBlockingEnumerable();
             var rows = q.ToList();
-            
+
             Assert.Equal(1, rows[0].id);
             Assert.Equal(2, rows[1].id);
         }
@@ -556,11 +558,11 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
     public async Task Issue229()
     {
         var path = PathHelper.GetFile("xlsx/TestIssue229.xlsx");
-            
+
 #pragma warning disable CS0618 // Type or member is obsolete
         var dt = await MiniExcel.QueryAsDataTableAsync(path);
 #pragma warning restore CS0618 // Type or member is obsolete
-            
+
         foreach (DataColumn column in dt.Columns)
         {
             var v = dt.Rows[3][column];
@@ -579,10 +581,10 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
         {
             FillMergedCells = true
         };
-            
+
         var path1 = PathHelper.GetFile("xlsx/TestIssue122.xlsx");
         var rows1 = MiniExcel.QueryAsync(path1, useHeaderRow: true, configuration: config).ToBlockingEnumerable().ToList();
-        
+
         Assert.Equal("HR", rows1[0].Department);
         Assert.Equal("HR", rows1[1].Department);
         Assert.Equal("HR", rows1[2].Department);
@@ -599,7 +601,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
         Assert.Equal("V4", rows2[2].Test4);
         Assert.Equal("V5", rows2[3].Test5);
         Assert.Equal("V6", rows2[5].Test5);
-        
+
         return Task.CompletedTask;
     }
 
@@ -715,14 +717,14 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
             var path = PathHelper.GetFile("xlsx/TestIssue147.xlsx");
             var q = MiniExcel.QueryAsync(path, useHeaderRow: false, startCell: "C3", sheetName: "Sheet1").ToBlockingEnumerable();
             var rows = q.ToList();
-            
+
             Assert.Equal(["C", "D", "E"], (rows[0] as IDictionary<string, object>)?.Keys);
             Assert.Equal(["Column1", "Column2", "Column3"], new[] { rows[0].C as string, rows[0].D as string, rows[0].E as string });
             Assert.Equal(["C4", "D4", "E4"], new[] { rows[1].C as string, rows[1].D as string, rows[1].E as string });
             Assert.Equal(["C9", "D9", "E9"], new[] { rows[6].C as string, rows[6].D as string, rows[6].E as string });
             Assert.Equal(["C12", "D12", "E12"], new[] { rows[9].C as string, rows[9].D as string, rows[9].E as string });
             Assert.Equal(["C13", "D13", "E13"], new[] { rows[10].C as string, rows[10].D as string, rows[10].E as string });
-            
+
             foreach (var i in new[] { 4, 5, 7, 8 })
             {
                 Assert.Equal([null, null, null], new[] { rows[i].C as string, rows[i].D as string, rows[i].E as string });
@@ -737,19 +739,19 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
             var path = PathHelper.GetFile("xlsx/TestIssue147.xlsx");
             var q = MiniExcel.QueryAsync(path, useHeaderRow: true, startCell: "C3", sheetName: "Sheet1").ToBlockingEnumerable();
             var rows = q.ToList();
-            
+
             Assert.Equal(["Column1", "Column2", "Column3"], (rows[0] as IDictionary<string, object>)?.Keys);
             Assert.Equal(["C4", "D4", "E4"], new[] { rows[0].Column1 as string, rows[0].Column2 as string, rows[0].Column3 as string });
             Assert.Equal(["C9", "D9", "E9"], new[] { rows[5].Column1 as string, rows[5].Column2 as string, rows[5].Column3 as string });
             Assert.Equal(["C12", "D12", "E12"], new[] { rows[8].Column1 as string, rows[8].Column2 as string, rows[8].Column3 as string });
             Assert.Equal(["C13", "D13", "E13"], new[] { rows[9].Column1 as string, rows[9].Column2 as string, rows[9].Column3 as string });
-            
+
             foreach (var i in new[] { 3, 4, 6, 7 })
             {
                 Assert.Equal([null, null, null], new[] { rows[i].Column1 as string, rows[i].Column2 as string, rows[i].Column3 as string });
             }
             Assert.Equal(10, rows.Count);
-                
+
             var columns = MiniExcel.GetColumns(path, useHeaderRow: true, startCell: "C3");
             Assert.Equal(["Column1", "Column2", "Column3"], columns);
         }
@@ -822,7 +824,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
 #pragma warning disable CS0618 // Type or member is obsolete
             var table = await MiniExcel.QueryAsDataTableAsync(path.ToString());
 #pragma warning restore CS0618 // Type or member is obsolete
-                
+
             Assert.Equal("Test1", table.Columns[0].ColumnName);
             Assert.Equal("Test2", table.Columns[1].ColumnName);
             Assert.Equal("1", table.Rows[0]["Test1"]);
@@ -835,7 +837,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
 #pragma warning disable CS0618 // Type or member is obsolete
             var dt = await MiniExcel.QueryAsDataTableAsync(path.ToString(), false);
 #pragma warning restore CS0618
-                
+
             Assert.Equal("Test1", dt.Rows[0]["A"]);
             Assert.Equal("Test2", dt.Rows[0]["B"]);
             Assert.Equal("1", dt.Rows[1]["A"]);
@@ -892,7 +894,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
                 Jun = g.Sum(d => (double?)d.Jun),
             })
             .ToList();
-        
+
         Assert.Equal(91843.25, result[0].Jun);
         Assert.Equal(50000.99, result[1].Jun);
     }
@@ -906,10 +908,10 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
     {
         await using var stream = new MemoryStream();
         await stream.SaveAsAsync(new[] { new { V = "test1" }, new { V = "test2" } });
-        
+
         var q = (stream.QueryAsync(true).ToBlockingEnumerable()).Cast<IDictionary<string, object>>();
         var rows = q.ToList();
-        
+
         Assert.Equal("test1", rows[0]["V"]);
         Assert.Equal("test2", rows[1]["V"]);
     }
@@ -923,7 +925,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
     {
         //csv
         {
-            const string text = 
+            const string text =
                 """
                 State
                 OnDuty
@@ -932,14 +934,14 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
                 """;
             await using var stream = new MemoryStream();
             await using var writer = new StreamWriter(stream);
-            
+
             await writer.WriteAsync(text);
             await writer.FlushAsync();
-            
+
             stream.Position = 0;
             var q = stream.QueryAsync<Issue89VO>(excelType: ExcelType.CSV).ToBlockingEnumerable();
             var rows = q.ToList();
-            
+
             Assert.Equal(Issue89VO.WorkState.OnDuty, rows[0].State);
             Assert.Equal(Issue89VO.WorkState.Fired, rows[1].State);
             Assert.Equal(Issue89VO.WorkState.Leave, rows[2].State);
@@ -948,7 +950,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
             var rowsWritten = await MiniExcel.SaveAsAsync(outputPath, rows);
             Assert.Single(rowsWritten);
             Assert.Equal(3, rowsWritten[0]);
-                
+
             var q2 = MiniExcel.QueryAsync<Issue89VO>(outputPath).ToBlockingEnumerable();
             var rows2 = q2.ToList();
             Assert.Equal(Issue89VO.WorkState.OnDuty, rows2[0].State);
@@ -969,7 +971,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
             var rowsWritten = await MiniExcel.SaveAsAsync(outputPath, rows);
             Assert.Single(rowsWritten);
             Assert.Equal(3, rowsWritten[0]);
-                
+
             var q1 = MiniExcel.QueryAsync<Issue89VO>(outputPath).ToBlockingEnumerable();
             var rows2 = q1.ToList();
             Assert.Equal(Issue89VO.WorkState.OnDuty, rows2[0].State);
@@ -1010,7 +1012,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
             var rowsWritten = await MiniExcel.SaveAsAsync(path.ToString(), table);
             Assert.Single(rowsWritten);
             Assert.Equal(2, rowsWritten[0]);
-                
+
             var q = MiniExcel.QueryAsync(path.ToString()).ToBlockingEnumerable();
             var rows = q.ToList();
             Assert.Equal("Name", rows[0].B);
@@ -1037,7 +1039,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
     public async Task Issue212()
     {
         const string sheetName = "Demo";
-        
+
         using var path = AutoDeletingPath.Create();
         await MiniExcel.SaveAsAsync(path.ToString(), new[] { new { x = 1, y = 2 } }, sheetName: sheetName);
 
@@ -1056,10 +1058,10 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
             const string templatePath = "../../../../../samples/xlsx/TestIssue207_2.xlsx";
             using var file = AutoDeletingPath.Create();
             var path = file.ToString();
-            
+
             var value = new
             {
-                project = new[] 
+                project = new[]
                 {
                     new {name = "項目1", content="[]內容1,[]內容2,[]內容3,[]內容4,[]內容5"},
                     new {name = "項目2", content="[]內容1,[]內容2,[]內容3,[]內容4,[]內容5"},
@@ -1102,10 +1104,10 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
             const string templatePath = "../../../../../samples/xlsx/TestIssue207_Template_Merge_row_list_rendering_without_merge/template.xlsx";
             using var file = AutoDeletingPath.Create();
             var path = file.ToString();
-            
+
             var value = new
             {
-                project = new[] 
+                project = new[]
                 {
                     new {name = "項目1", content="[]內容1,[]內容2,[]內容3,[]內容4,[]內容5"},
                     new {name = "項目2", content="[]內容1,[]內容2,[]內容3,[]內容4,[]內容5"},
@@ -1126,7 +1128,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
             Assert.Equal("[]內容1,[]內容2,[]內容3,[]內容4,[]內容5", rows[6].C);
             Assert.Equal("項目4", rows[9].A);
             Assert.Equal("[]內容1,[]內容2,[]內容3,[]內容4,[]內容5", rows[9].C);
-            
+
             var demension = Helpers.GetFirstSheetDimensionRefValue(path);
             Assert.Equal("A1:E15", demension);
         }
@@ -1210,12 +1212,12 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
             var value = new
             {
                 title = "FooCompany",
-                managers = new[] 
+                managers = new[]
                 {
                     new {name="Jack",department="HR"},
                     new {name="Loan",department="IT"}
                 },
-                employees = new[] 
+                employees = new[]
                 {
                     new {name="Wade",department="HR"},
                     new {name="Felix",department="HR"},
@@ -1265,12 +1267,12 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
             var value = new Dictionary<string, object>
             {
                 ["title"] = "FooCompany",
-                ["managers"] = new[] 
+                ["managers"] = new[]
                 {
                     new {name="Jack",department="HR"},
                     new {name="Loan",department="IT"}
                 },
-                ["employees"] = new[] 
+                ["employees"] = new[]
                 {
                     new {name="Wade",department="HR"},
                     new {name="Felix",department="HR"},
@@ -1348,8 +1350,8 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
         {
             using var file = AutoDeletingPath.Create(ExcelType.CSV);
             var path = file.ToString();
-            await MiniExcel.SaveAsAsync(path, new [] { new Issue142VO { MyProperty1 = "MyProperty1", MyProperty2 = "MyProperty2", MyProperty3 = "MyProperty3", MyProperty4 = "MyProperty4", MyProperty5 = "MyProperty5", MyProperty6 = "MyProperty6", MyProperty7 = "MyProperty7" } });
-            const string expected = 
+            await MiniExcel.SaveAsAsync(path, new[] { new Issue142VO { MyProperty1 = "MyProperty1", MyProperty2 = "MyProperty2", MyProperty3 = "MyProperty3", MyProperty4 = "MyProperty4", MyProperty5 = "MyProperty5", MyProperty6 = "MyProperty6", MyProperty7 = "MyProperty7" } });
+            const string expected =
                 """
                 MyProperty4,CustomColumnName,MyProperty5,MyProperty2,MyProperty6,,MyProperty3
                 MyProperty4,MyProperty1,MyProperty5,MyProperty2,MyProperty6,,MyProperty3
@@ -1373,7 +1375,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
 
         {
             using var path = AutoDeletingPath.Create();
-            Issue142VoDuplicateColumnName[] input = [ new() { MyProperty1 = 0, MyProperty2 = 0, MyProperty3 = 0, MyProperty4 = 0 } ];
+            Issue142VoDuplicateColumnName[] input = [new() { MyProperty1 = 0, MyProperty2 = 0, MyProperty3 = 0, MyProperty4 = 0 }];
             Assert.Throws<InvalidOperationException>(() => MiniExcel.SaveAs(path.ToString(), input));
         }
     }
@@ -1467,19 +1469,19 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
     public async Task Issue150()
     {
         var path = PathHelper.GetTempFilePath();
-    
+
         await Assert.ThrowsAnyAsync<NotSupportedException>(async () => await MiniExcel.SaveAsAsync(path, new[] { 1, 2 }));
         File.Delete(path);
-  
+
         await Assert.ThrowsAnyAsync<NotSupportedException>(async () => await MiniExcel.SaveAsAsync(path, new[] { "1", "2" }));
         File.Delete(path);
-        
+
         await Assert.ThrowsAnyAsync<NotSupportedException>(async () => await MiniExcel.SaveAsAsync(path, new[] { '1', '2' }));
         File.Delete(path);
-        
+
         await Assert.ThrowsAnyAsync<NotSupportedException>(async () => await MiniExcel.SaveAsAsync(path, new[] { DateTime.Now }));
         File.Delete(path);
-        
+
         await Assert.ThrowsAnyAsync<NotSupportedException>(async () => await MiniExcel.SaveAsAsync(path, new[] { Guid.NewGuid() }));
         File.Delete(path);
     }
@@ -1493,7 +1495,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
         {
             using var file = AutoDeletingPath.Create();
             var path = file.ToString();
-            
+
             _output.WriteLine("==== SaveAs by strongly type ====");
             var input = JsonConvert.DeserializeObject<IEnumerable<UserAccount>>(
                 """
@@ -1606,17 +1608,17 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
             '\u0017', '\u0018', '\u0019', '\u001A', '\u001B', '\u001C', '\u001D', '\u001E', '\u001F', '\u007F'
         ];
         var strings = chars.Select(s => s.ToString()).ToArray();
-        
+
         {
             const string path = "../../../../../samples/xlsx/TestIssue149.xlsx";
             var q = MiniExcel.QueryAsync(path).ToBlockingEnumerable();
             var rows = q.Select(s => (string)s.A).ToList();
-            
+
             for (int i = 0; i < chars.Length; i++)
             {
                 if (i == 13)
                     continue;
-                
+
                 Assert.Equal(strings[i], rows[i]);
             }
         }
@@ -1636,7 +1638,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
                 _output.WriteLine($"{i}, {chars[i]}, {rows[i]}");
                 if (i is 13 or 9 or 10)
                     continue;
-                
+
                 Assert.Equal(strings[i], rows[i]);
             }
         }
@@ -1650,13 +1652,13 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
 
             var q = MiniExcel.QueryAsync<Issue149VO>(path).ToBlockingEnumerable();
             var rows = q.Select(s => s.Test).ToList();
-            
+
             for (int i = 0; i < chars.Length; i++)
             {
                 _output.WriteLine($"{i}, {chars[i]}, {rows[i]}");
                 if (i is 13 or 9 or 10)
                     continue;
-                
+
                 Assert.Equal(strings[i], rows[i]);
             }
         }
@@ -1734,7 +1736,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
             var first = rows[0] as IDictionary<string, object>; // https://user-images.githubusercontent.com/12729184/113266322-ba06e400-9307-11eb-9521-d36abfda75cc.png
             Assert.Equal(["比例", "商品", "滿倉口數", "0", "1為港幣 0為台幣"], first?.Keys.ToArray());
             Assert.Equal(10, rows.Count);
-            
+
             {
                 var row = rows[0] as IDictionary<string, object>;
                 Assert.Equal(1.0, row!["比例"]);
@@ -1754,7 +1756,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
             var q = MiniExcel.QueryAsync<Issue137ExcelRow>(path).ToBlockingEnumerable();
             var rows = q.ToList();
             Assert.Equal(10, rows.Count);
-            
+
             {
                 var row = rows[0];
                 Assert.Equal(1, row.比例);
@@ -1837,6 +1839,48 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
             }
         }
     }
+
+    /// <summary>
+    /// https://github.com/mini-software/MiniExcel/issues/153
+    /// </summary>
+    [Fact]
+    public async Task Issue200()
+    {
+        // 2. 准备数据容器
+        var excelDataList = new List<Dictionary<string, object>>();
+
+        // 为当前班级生成指定数量的学生
+        for (int i = 0; i < 100; i++)
+        {
+            // 创建用户数据字典
+            var userData = new Dictionary<string, object>
+            {
+                ["长字符"] = Guid.NewGuid().ToString("N"),
+                ["测试测试超长标题顶顶顶顶顶顶顶"] = "sdfsdf撒旦发射点快捷方式对抗肌肤的使得开发商空军的飞机肯定是" + DateTime.Now.ToLongTimeString()
+            };
+
+            excelDataList.Add(userData);
+        }
+
+        var path = AppContext.BaseDirectory + $"{DateTime.Now.ToFileTimeUtc()}.xlsx";
+
+        // 4. 保存到Excel
+        await MiniExcel.SaveAsAsync(path, excelDataList, configuration: new OpenXmlConfiguration
+        {
+            AutoFilter = true,
+            StyleOptions = new OpenXmlStyleOptions
+            {
+                //WrapCellContents
+                ColumnStyle = new OpenXmlColumnStyle()
+                {
+                    Horizontal = OpenXml.Enums.CellHorizontalType.center,
+                    Vertical = OpenXml.Enums.CellVerticalType.center,
+                    WrapText = true
+                }
+            }
+        });
+    }
+
 
     private class Issue138ExcelRow
     {

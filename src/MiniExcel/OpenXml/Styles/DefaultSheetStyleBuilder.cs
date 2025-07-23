@@ -141,10 +141,12 @@ internal partial class DefaultSheetStyleBuilder : SheetStyleBuilderBase
         await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "patternFill", _context.OldXmlReader.NamespaceURI).ConfigureAwait(false);
         await _context.NewXmlWriter.WriteAttributeStringAsync(null, "patternType", null, "solid").ConfigureAwait(false);
         await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "fgColor", _context.OldXmlReader.NamespaceURI).ConfigureAwait(false);
-        await _context.NewXmlWriter.WriteAttributeStringAsync(null, "rgb", null, "284472C4").ConfigureAwait(false);
+        await _context.NewXmlWriter.WriteAttributeStringAsync(null, "rgb", null, _styleOptions?.ColumnStyle?.FilterBackgroundColor ?? "284472C4").ConfigureAwait(false);
+
         await _context.NewXmlWriter.WriteEndElementAsync().ConfigureAwait(false);
         await _context.NewXmlWriter.WriteEndElementAsync().ConfigureAwait(false);
         await _context.NewXmlWriter.WriteEndElementAsync().ConfigureAwait(false);
+
     }
 
     [Zomp.SyncMethodGenerator.CreateSyncVersion]
@@ -353,10 +355,10 @@ internal partial class DefaultSheetStyleBuilder : SheetStyleBuilderBase
         await _context.NewXmlWriter.WriteAttributeStringAsync(null, "applyAlignment", null, "1").ConfigureAwait(false);
         await _context.NewXmlWriter.WriteAttributeStringAsync(null, "applyProtection", null, "1").ConfigureAwait(false);
         await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "alignment", _context.OldXmlReader.NamespaceURI).ConfigureAwait(false);
-        await _context.NewXmlWriter.WriteAttributeStringAsync(null, "horizontal", null, "left").ConfigureAwait(false);
-        await _context.NewXmlWriter.WriteAttributeStringAsync(null, "vertical", null, "bottom").ConfigureAwait(false);
+        await _context.NewXmlWriter.WriteAttributeStringAsync(null, "horizontal", null, _styleOptions?.ColumnStyle?.Horizontal.ToString() ?? "left").ConfigureAwait(false);
+        await _context.NewXmlWriter.WriteAttributeStringAsync(null, "vertical", null, _styleOptions?.ColumnStyle?.Vertical.ToString() ?? "bottom").ConfigureAwait(false);
         await _context.NewXmlWriter.WriteAttributeStringAsync(null, "textRotation", null, "0").ConfigureAwait(false);
-        await _context.NewXmlWriter.WriteAttributeStringAsync(null, "wrapText", null, "0").ConfigureAwait(false);
+        await _context.NewXmlWriter.WriteAttributeStringAsync(null, "wrapText", null, _styleOptions?.ColumnStyle?.WrapText ?? false ? "1" : "0").ConfigureAwait(false);
         await _context.NewXmlWriter.WriteAttributeStringAsync(null, "indent", null, "0").ConfigureAwait(false);
         await _context.NewXmlWriter.WriteAttributeStringAsync(null, "relativeIndent", null, "0").ConfigureAwait(false);
         await _context.NewXmlWriter.WriteAttributeStringAsync(null, "justifyLastLine", null, "0").ConfigureAwait(false);

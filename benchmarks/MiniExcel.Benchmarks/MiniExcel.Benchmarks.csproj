@@ -6,7 +6,7 @@
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<LangVersion>latest</LangVersion>
-		<RootNamespace>MiniExcelLibs.Benchmarks</RootNamespace>
+		<RootNamespace>MiniExcelLib.Benchmarks</RootNamespace>
 		<NoWarn>$(NoWarn);CA2000;CA2007</NoWarn>
 	</PropertyGroup>
 
@@ -35,7 +35,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\..\src\MiniExcel\MiniExcelLibs.csproj" />
+	  <ProjectReference Include="..\..\src\MiniExcel.Core\MiniExcel.Core.csproj" />
 	</ItemGroup>
 
 </Project>

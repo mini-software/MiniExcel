@@ -1,4 +1,4 @@
-using MiniExcelLib.Core.OpenXml.Attributes;
+using MiniExcelLib.Core.Attributes;
 using MiniExcelLib.Core.OpenXml.Models;
 
 namespace MiniExcelLib.Core.OpenXml.Utils;
@@ -16,7 +16,7 @@ internal static class ExcelPropertyHelper
         };
 
         // options from ExcelSheetAttribute
-        if (type.GetCustomAttribute(typeof(ExcelSheetAttribute)) is ExcelSheetAttribute excelSheetAttr)
+        if (type.GetCustomAttribute(typeof(MiniExcelSheetAttribute)) is MiniExcelSheetAttribute excelSheetAttr)
         {
             sheetInfo.ExcelSheetName = excelSheetAttr.Name ?? type.Name;
             sheetInfo.ExcelSheetState = excelSheetAttr.State;

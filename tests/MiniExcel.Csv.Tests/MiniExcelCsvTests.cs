@@ -305,9 +305,9 @@ public class MiniExcelCsvTests
 
     private class TestWithAlias
     {
-        [MiniExcelColumnName(excelColumnName: "c1", aliases: ["column1", "col1"])]
+        [MiniExcelColumnName(columnName: "c1", aliases: ["column1", "col1"])]
         public string c1 { get; set; }
-        [MiniExcelColumnName(excelColumnName: "c2", aliases: ["column2", "col2"])]
+        [MiniExcelColumnName(columnName: "c2", aliases: ["column2", "col2"])]
         public string c2 { get; set; }
     }
 

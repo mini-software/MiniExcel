@@ -1,5 +1,4 @@
-﻿using MiniExcelLib.Core.OpenXml.Attributes;
-using MiniExcelLib.Core.OpenXml.Models;
+﻿using MiniExcelLib.Core.OpenXml.Models;
 using MiniExcelLib.Tests.Common.Utils;
 
 namespace MiniExcelLib.Tests;
@@ -97,14 +96,14 @@ public class MiniExcelOpenXmlMultipleSheetTests
         }
     }
 
-    [ExcelSheet(Name = "Users")]
+    [MiniExcelSheet(Name = "Users")]
     private class UserDto
     {
         public string Name { get; set; }
         public int Age { get; set; }
     }
 
-    [ExcelSheet(Name = "Departments", State = SheetState.Hidden)]
+    [MiniExcelSheet(Name = "Departments", State = SheetState.Hidden)]
     private class DepartmentDto
     {
         public string ID { get; set; }
@@ -144,8 +143,8 @@ public class MiniExcelOpenXmlMultipleSheetTests
         {
             DynamicSheets =
             [
-                new DynamicExcelSheet("usersSheet") { Name = "Users" },
-                new DynamicExcelSheet("departmentSheet") { Name = "Departments" }
+                new DynamicExcelSheetAttribute("usersSheet") { Name = "Users" },
+                new DynamicExcelSheetAttribute("departmentSheet") { Name = "Departments" }
             ]
         };
 
@@ -231,12 +230,12 @@ public class MiniExcelOpenXmlMultipleSheetTests
         {
             DynamicSheets =
             [
-                new DynamicExcelSheet("usersSheet")
+                new DynamicExcelSheetAttribute("usersSheet")
                 {
                     Name = "Users",
                     State = SheetState.Visible
                 },
-                new DynamicExcelSheet("departmentSheet")
+                new DynamicExcelSheetAttribute("departmentSheet")
                 {
                     Name = "Departments",
                     State = SheetState.Hidden

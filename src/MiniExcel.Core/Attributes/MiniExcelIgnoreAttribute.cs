@@ -1,7 +1,7 @@
 ﻿namespace MiniExcelLib.Core.Attributes;
 
 [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
-public class MiniExcelIgnoreAttribute(bool excelIgnore = true) : Attribute
+public class MiniExcelIgnoreAttribute(bool ignore = true) : Attribute
 {
-    public bool ExcelIgnore { get; set; } = excelIgnore;
+    public bool Ignore { get; set; } = ignore;
 }

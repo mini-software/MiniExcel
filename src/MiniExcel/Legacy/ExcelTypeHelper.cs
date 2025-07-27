@@ -1,4 +1,5 @@
-namespace MiniExcelLib.Legacy;
+// ReSharper disable CheckNamespace
+namespace MiniExcelLibs;
 
 internal static class ExcelTypeHelper
 {

@@ -1,4 +1,4 @@
-using MiniExcelLib.Core.OpenXml.Attributes;
+using MiniExcelLib.Core.Attributes;
 using MiniExcelLib.Core.OpenXml.Styles;
 
 namespace MiniExcelLib.Core.OpenXml;
@@ -21,7 +21,7 @@ public class OpenXmlConfiguration : MiniExcelBaseConfiguration
     public bool EnableSharedStringCache { get; set; } = true;
     public long SharedStringCacheSize { get; set; } = 5 * 1024 * 1024;
     public OpenXmlStyleOptions StyleOptions { get; set; } = new();
-    public DynamicExcelSheet[]? DynamicSheets { get; set; }
+    public DynamicExcelSheetAttribute[]? DynamicSheets { get; set; }
     public bool EnableWriteFilePath{ get; set; } = true;
     
     /// <summary>

@@ -1206,7 +1206,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
 
     private class TestIssueI40QA5Dto
     {
-        [MiniExcelColumnName(excelColumnName: "EmployeeNo", aliases: new[] { "EmpNo", "No" })]
+        [MiniExcelColumnName(columnName: "EmployeeNo", aliases: new[] { "EmpNo", "No" })]
         public string Empno { get; set; }
         public string Name { get; set; }
     }

@@ -1,15 +1,15 @@
 using MiniExcelLib.Core.OpenXml.Models;
 
-namespace MiniExcelLib.Core.OpenXml.Attributes;
+namespace MiniExcelLib.Core.Attributes;
 
 [AttributeUsage(AttributeTargets.Class)]
-public class ExcelSheetAttribute : Attribute
+public class MiniExcelSheetAttribute : Attribute
 {
     public string? Name { get; set; }
     public SheetState State { get; set; } = SheetState.Visible;
 }
 
-public class DynamicExcelSheet(string key) : ExcelSheetAttribute
+public class DynamicExcelSheetAttribute(string key) : MiniExcelSheetAttribute
 {
     public string Key { get; set; } = key;
 }

@@ -97,7 +97,7 @@ public static class CustomPropertyHelper
         const BindingFlags flags = BindingFlags.SetProperty | BindingFlags.Public | BindingFlags.Instance;
         var props = GetExcelPropertyInfo(type, flags, configuration)
             .Where(prop => prop?.Property.Info.GetSetMethod() is not null // why not .Property.CanWrite? because it will use private setter
-                           && !prop.Property.Info.GetAttributeValue((MiniExcelIgnoreAttribute x) => x.ExcelIgnore)
+                           && !prop.Property.Info.GetAttributeValue((MiniExcelIgnoreAttribute x) => x.Ignore)
                            && !prop.Property.Info.GetAttributeValue((MiniExcelColumnAttribute x) => x.Ignore))
             .ToList() /*ignore without set*/;
 
@@ -145,7 +145,7 @@ public static class CustomPropertyHelper
             if (dynamicColumn is not null)
                 excelColumn = dynamicColumn;
 
-            var ignore = p.GetAttributeValue((MiniExcelIgnoreAttribute x) => x.ExcelIgnore) ||
+            var ignore = p.GetAttributeValue((MiniExcelIgnoreAttribute x) => x.Ignore) ||
                          p.GetAttributeValue((MiniExcelColumnAttribute x) => x.Ignore) ||
                          (excelColumn?.Ignore ?? false);
             if (ignore)

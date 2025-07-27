@@ -7,7 +7,7 @@ namespace MiniExcelLib.Tests;
 
 public class MiniExcelAutoAdjustWidthTests
 {
-    private readonly OpenXmlExporter _excelExporter =  MiniExcel.Exporter.GetOpenXmlExporter();
+    private readonly OpenXmlExporter _excelExporter =  MiniExcel.Exporters.GetOpenXmlExporter();
     
     [Fact]
     public async Task AutoAdjustWidthThrowsExceptionWithoutFastMode_Async()

@@ -12,9 +12,9 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
 {
     private readonly ITestOutputHelper _output = output;
     
-    private readonly OpenXmlImporter _excelImporter =  MiniExcel.Importer.GetOpenXmlImporter();
-    private readonly OpenXmlExporter _excelExporter =  MiniExcel.Exporter.GetOpenXmlExporter();
-    private readonly OpenXmlTemplater _excelTemplater =  MiniExcel.Templater.GetOpenXmlTemplater();
+    private readonly OpenXmlImporter _excelImporter =  MiniExcel.Importers.GetOpenXmlImporter();
+    private readonly OpenXmlExporter _excelExporter =  MiniExcel.Exporters.GetOpenXmlExporter();
+    private readonly OpenXmlTemplater _excelTemplater =  MiniExcel.Templaters.GetOpenXmlTemplater();
 
     // private readonly OpenXmlImporter _csvImporter =  MiniExcel.Importer.GetCsvImporter();
     // private readonly OpenXmlExporter _csvExporter =  MiniExcel.Exporter.GetCsvExporter();
@@ -773,7 +773,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
          _excelExporter.Export(path.ToString(), value);
 
         var rowIndx = 0;
-        using var reader =  _excelImporter.GetExcelDataReader(path.ToString(), true);
+        using var reader =  _excelImporter.GetDataReader(path.ToString(), true);
 
         Assert.Equal("id", reader.GetName(0));
         Assert.Equal("name", reader.GetName(1));
@@ -3126,13 +3126,13 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     {
         var values = new[] { new { Column1 = "MiniExcel", Column2 = 1, Column3 = "Test" } };
         using var memoryStream = new MemoryStream();
-         _excelExporter.Export(memoryStream, values, configuration: new OpenXmlConfiguration
+        _excelExporter.Export(memoryStream, values, configuration: new OpenXmlConfiguration
         {
             FastMode = true
         });
 
         memoryStream.Position = 0;
-        using var dataReader =  _excelImporter.GetExcelDataReader(memoryStream, useHeaderRow: false);
+        using var dataReader =  _excelImporter.GetDataReader(memoryStream, useHeaderRow: false);
 
         dataReader.Read();
         for (int i = 0; i < dataReader.FieldCount; i++)

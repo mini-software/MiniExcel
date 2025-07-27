@@ -5,8 +5,8 @@ namespace MiniExcelLib.Tests;
 
 public class MiniExcelOpenXmlConfigurationTest
 {
-    private readonly OpenXmlImporter _excelImporter =  MiniExcel.Importer.GetOpenXmlImporter();
-    private readonly OpenXmlExporter _excelExporter =  MiniExcel.Exporter.GetOpenXmlExporter();    
+    private readonly OpenXmlImporter _excelImporter =  MiniExcel.Importers.GetOpenXmlImporter();
+    private readonly OpenXmlExporter _excelExporter =  MiniExcel.Exporters.GetOpenXmlExporter();    
     [Fact]
     public async Task EnableWriteFilePathTest()
     {

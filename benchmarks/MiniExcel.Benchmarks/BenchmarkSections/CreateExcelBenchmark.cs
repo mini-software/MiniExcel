@@ -21,7 +21,7 @@ public class CreateExcelBenchmark : BenchmarkBase
         ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
         
-        _exporter = MiniExcel.Exporter.GetOpenXmlExporter();
+        _exporter = MiniExcel.Exporters.GetOpenXmlExporter();
     }
 
     [Benchmark(Description = "MiniExcel Create Xlsx")]

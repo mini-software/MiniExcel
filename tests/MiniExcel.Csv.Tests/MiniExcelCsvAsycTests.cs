@@ -2,8 +2,8 @@
 
 public class MiniExcelCsvAsycTests
 {
-    private readonly CsvExporter _csvExporter = MiniExcel.Exporter.GetCsvExporter();
-    private readonly CsvImporter _csvImporter = MiniExcel.Importer.GetCsvImporter();
+    private readonly CsvExporter _csvExporter = MiniExcel.Exporters.GetCsvExporter();
+    private readonly CsvImporter _csvImporter = MiniExcel.Importers.GetCsvImporter();
     
     [Fact]
     public async Task Gb2312_Encoding_Read_Test()

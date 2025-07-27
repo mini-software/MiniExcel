@@ -12,7 +12,7 @@ public class TemplateExcelBenchmark : BenchmarkBase
     [GlobalSetup]
     public void Setup()
     {
-        _templater = MiniExcel.Templater.GetOpenXmlTemplater();
+        _templater = MiniExcel.Templaters.GetOpenXmlTemplater();
     }
     
     [Benchmark(Description = "MiniExcel Template Generate")]

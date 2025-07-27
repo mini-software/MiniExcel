@@ -6,9 +6,9 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
 {
     private readonly ITestOutputHelper _output = output;
     
-    private readonly OpenXmlImporter _excelImporter =  MiniExcel.Importer.GetOpenXmlImporter();
-    private readonly OpenXmlExporter _excelExporter =  MiniExcel.Exporter.GetOpenXmlExporter();
-    private readonly OpenXmlTemplater _excelTemplater =  MiniExcel.Templater.GetOpenXmlTemplater();
+    private readonly OpenXmlImporter _excelImporter =  MiniExcel.Importers.GetOpenXmlImporter();
+    private readonly OpenXmlExporter _excelExporter =  MiniExcel.Exporters.GetOpenXmlExporter();
+    private readonly OpenXmlTemplater _excelTemplater =  MiniExcel.Templaters.GetOpenXmlTemplater();
     
     /// <summary>
     /// [SaveAsByTemplate support DateTime custom format · Issue #255 · mini-software/MiniExcel]

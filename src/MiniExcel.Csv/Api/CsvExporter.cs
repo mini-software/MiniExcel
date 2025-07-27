@@ -11,7 +11,7 @@ public partial class CsvExporter
     #region Append / Export
     
     [CreateSyncVersion]
-    public async Task<int> AppendToCsvAsync(string path, object value, bool printHeader = true, 
+    public async Task<int> AppendAsync(string path, object value, bool printHeader = true, 
         CsvConfiguration? configuration = null, CancellationToken cancellationToken = default)
     {
         if (!File.Exists(path))
@@ -21,11 +21,11 @@ public partial class CsvExporter
         }
 
         using var stream = new FileStream(path, FileMode.Append, FileAccess.Write, FileShare.Read, 4096, FileOptions.SequentialScan);
-        return await AppendToCsvAsync(stream, value, configuration, cancellationToken).ConfigureAwait(false);
+        return await AppendAsync(stream, value, configuration, cancellationToken).ConfigureAwait(false);
     }
 
     [CreateSyncVersion]
-    public async Task<int> AppendToCsvAsync(Stream stream, object value, CsvConfiguration? configuration = null, CancellationToken cancellationToken = default)
+    public async Task<int> AppendAsync(Stream stream, object value, CsvConfiguration? configuration = null, CancellationToken cancellationToken = default)
     {
         stream.Seek(0, SeekOrigin.End);
 
@@ -60,7 +60,7 @@ public partial class CsvExporter
     {
         var value = new CsvImporter().QueryAsync(csv, useHeaderRow: csvHasHeader, cancellationToken: cancellationToken);
         
-        await MiniExcel.Exporter
+        await MiniExcel.Exporters
             .GetOpenXmlExporter()
             .ExportAsync(xlsx, value, printHeader: csvHasHeader, cancellationToken: cancellationToken)
             .ConfigureAwait(false);
@@ -87,7 +87,7 @@ public partial class CsvExporter
     [CreateSyncVersion]
     public async Task ConvertXlsxToCsvAsync(Stream xlsx, Stream csv, bool xlsxHasHeader = true, CancellationToken cancellationToken = default)
     {
-        var value = MiniExcel.Importer
+        var value = MiniExcel.Importers
             .GetOpenXmlImporter()
             .QueryAsync(xlsx, useHeaderRow: xlsxHasHeader, cancellationToken: cancellationToken)
             .ConfigureAwait(false);

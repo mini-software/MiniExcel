@@ -2,11 +2,11 @@
 
 public class IssueTests
 {
-    private readonly CsvExporter _csvExporter = MiniExcel.Exporter.GetCsvExporter();
-    private readonly CsvImporter _csvImporter = MiniExcel.Importer.GetCsvImporter();
+    private readonly CsvExporter _csvExporter = MiniExcel.Exporters.GetCsvExporter();
+    private readonly CsvImporter _csvImporter = MiniExcel.Importers.GetCsvImporter();
 
-    private readonly OpenXmlExporter _openXmlExporter = MiniExcel.Exporter.GetOpenXmlExporter();
-    private readonly OpenXmlImporter _openXmlImporter = MiniExcel.Importer.GetOpenXmlImporter();
+    private readonly OpenXmlExporter _openXmlExporter = MiniExcel.Exporters.GetOpenXmlExporter();
+    private readonly OpenXmlImporter _openXmlImporter = MiniExcel.Importers.GetOpenXmlImporter();
 
     [Fact]
     public void TestPR10()
@@ -74,7 +74,7 @@ public class IssueTests
         }
         {
             var value = new { ID = 3, Name = "Mike", InDate = new DateTime(2021, 04, 23) };
-            var rowsWritten = _csvExporter.AppendToCsv(path, value);
+            var rowsWritten = _csvExporter.Append(path, value);
             Assert.Equal(1, rowsWritten);
 
             var content = File.ReadAllText(path);
@@ -94,7 +94,7 @@ public class IssueTests
                 new { ID=4,Name ="Frank",InDate=new DateTime(2021,06,07)},
                 new { ID=5,Name ="Gloria",InDate=new DateTime(2022,05,03)},
             };
-            var rowsWritten = _csvExporter.AppendToCsv(path, value);
+            var rowsWritten = _csvExporter.Append(path, value);
             Assert.Equal(2, rowsWritten);
 
             var content = File.ReadAllText(path);

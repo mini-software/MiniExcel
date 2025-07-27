@@ -6,8 +6,8 @@ namespace MiniExcelLib.Tests;
 
 public class MiniExcelOpenXmlAsyncTests
 {
-    private readonly OpenXmlImporter _excelImporter =  MiniExcel.Importer.GetOpenXmlImporter();
-    private readonly OpenXmlExporter _excelExporter =  MiniExcel.Exporter.GetOpenXmlExporter();
+    private readonly OpenXmlImporter _excelImporter =  MiniExcel.Importers.GetOpenXmlImporter();
+    private readonly OpenXmlExporter _excelExporter =  MiniExcel.Exporters.GetOpenXmlExporter();
    
     [Fact]
     public async Task SaveAsControlChracter()
@@ -1400,18 +1400,17 @@ public class MiniExcelOpenXmlAsyncTests
         };
         await  _excelExporter.ExportAsync(path1.ToString(), values);
 
-        await using (IMiniExcelDataReader? reader =  _excelImporter.GetExcelDataReader(path1.ToString(), true))
-        {
-            using var path2 = AutoDeletingPath.Create();
-            await  _excelExporter.ExportAsync(path2.ToString(), reader);
-            var results =  _excelImporter.QueryAsync<Demo>(path2.ToString()).ToBlockingEnumerable().ToList();
+        using var path2 = AutoDeletingPath.Create();
+        await using IMiniExcelDataReader? reader =  _excelImporter.GetDataReader(path1.ToString(), true);
+        
+        await  _excelExporter.ExportAsync(path2.ToString(), reader);
+        var results =  _excelImporter.QueryAsync<Demo>(path2.ToString()).ToBlockingEnumerable().ToList();
 
-            Assert.True(results.Count == 2);
-            Assert.True(results.First().Column1 == "MiniExcel");
-            Assert.True(results.First().Column2 == 1);
-            Assert.True(results.Last().Column1 == "Github");
-            Assert.True(results.Last().Column2 == 2);
-        }
+        Assert.True(results.Count == 2);
+        Assert.True(results.First().Column1 == "MiniExcel");
+        Assert.True(results.First().Column2 == 1);
+        Assert.True(results.Last().Column1 == "Github");
+        Assert.True(results.Last().Column2 == 2);
     }
 
     [Fact]

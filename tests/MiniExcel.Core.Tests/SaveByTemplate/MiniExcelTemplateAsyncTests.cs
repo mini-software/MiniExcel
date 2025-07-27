@@ -4,8 +4,8 @@ namespace MiniExcelLib.Tests.SaveByTemplate;
 
 public class MiniExcelTemplateAsyncTests
 {
-    private readonly OpenXmlImporter _excelImporter =  MiniExcel.Importer.GetOpenXmlImporter();
-    private readonly OpenXmlTemplater _excelTemplater =  MiniExcel.Templater.GetOpenXmlTemplater();
+    private readonly OpenXmlImporter _excelImporter =  MiniExcel.Importers.GetOpenXmlImporter();
+    private readonly OpenXmlTemplater _excelTemplater =  MiniExcel.Templaters.GetOpenXmlTemplater();
     
     [Fact]
     public async Task DatatableTemptyRowTest()

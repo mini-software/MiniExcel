@@ -269,23 +269,23 @@ public sealed partial class OpenXmlImporter
 
     #region DataReader
 
-    public MiniExcelDataReader GetExcelDataReader(string path, bool useHeaderRow = false,
+    public MiniExcelDataReader GetDataReader(string path, bool useHeaderRow = false,
         string? sheetName = null, string startCell = "A1", OpenXmlConfiguration? configuration = null)
     {
         var stream = FileHelper.OpenSharedRead(path);
-        var values = Enumerable.Cast<IDictionary<string, object?>>(Query(stream, useHeaderRow, sheetName, startCell, configuration));
+        var values = Query(stream, useHeaderRow, sheetName, startCell, configuration).Cast<IDictionary<string, object?>>();
 
         return MiniExcelDataReader.Create(stream, values);
     }
 
-    public MiniExcelDataReader GetExcelDataReader(Stream stream, bool useHeaderRow = false,
+    public MiniExcelDataReader GetDataReader(Stream stream, bool useHeaderRow = false,
         string? sheetName = null, string startCell = "A1", OpenXmlConfiguration? configuration = null)
     {
-        var values = Enumerable.Cast<IDictionary<string, object?>>(Query(stream, useHeaderRow, sheetName, startCell, configuration));
+        var values = Query(stream, useHeaderRow, sheetName, startCell, configuration).Cast<IDictionary<string, object?>>();
         return MiniExcelDataReader.Create(stream, values);
     }
     
-    public async Task<MiniExcelAsyncDataReader> GetAsyncXlsxDataReader(string path, bool useHeaderRow = false,
+    public async Task<MiniExcelAsyncDataReader> GetAsyncDataReader(string path, bool useHeaderRow = false,
         string? sheetName = null, string startCell = "A1", OpenXmlConfiguration? configuration = null, 
         CancellationToken cancellationToken = default)
     {
@@ -295,7 +295,7 @@ public sealed partial class OpenXmlImporter
         return await MiniExcelAsyncDataReader.CreateAsync(stream, CastAsync(values, cancellationToken)).ConfigureAwait(false);
     }
 
-    public async Task<MiniExcelAsyncDataReader> GetAsyncXlsxDataReader(Stream stream, bool useHeaderRow = false,
+    public async Task<MiniExcelAsyncDataReader> GetAsyncDataReader(Stream stream, bool useHeaderRow = false,
         string? sheetName = null, string startCell = "A1", OpenXmlConfiguration? configuration = null,
         CancellationToken cancellationToken = default)
     {

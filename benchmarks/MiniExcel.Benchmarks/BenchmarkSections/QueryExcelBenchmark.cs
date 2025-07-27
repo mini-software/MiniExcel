@@ -20,7 +20,7 @@ public class QueryExcelBenchmark : BenchmarkBase
         ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
         
-        _importer = MiniExcel.Importer.GetOpenXmlImporter();
+        _importer = MiniExcel.Importers.GetOpenXmlImporter();
     }
 
     [Benchmark(Description = "MiniExcel QueryFirst")]

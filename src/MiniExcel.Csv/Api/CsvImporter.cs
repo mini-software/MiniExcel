@@ -155,18 +155,18 @@ public partial class CsvImporter
     public MiniExcelDataReader GetDataReader(string path, bool useHeaderRow = false, CsvConfiguration? configuration = null)
     {
         var stream = FileHelper.OpenSharedRead(path);
-        var values = Enumerable.Cast<IDictionary<string, object?>>(Query(stream, useHeaderRow, configuration));
+        var values = Query(stream, useHeaderRow, configuration).Cast<IDictionary<string, object?>>();
 
         return MiniExcelDataReader.Create(stream, values);
     }
 
     public MiniExcelDataReader GetDataReader(Stream stream, bool useHeaderRow = false, CsvConfiguration? configuration = null)
     {
-        var values = Enumerable.Cast<IDictionary<string, object?>>(Query(stream, useHeaderRow, configuration));
+        var values = Query(stream, useHeaderRow, configuration).Cast<IDictionary<string, object?>>();
         return MiniExcelDataReader.Create(stream, values);
     }
 
-    public async Task<MiniExcelAsyncDataReader> GetAsyncCsvDataReader(string path, bool useHeaderRow = false,
+    public async Task<MiniExcelAsyncDataReader> GetAsyncDataReader(string path, bool useHeaderRow = false,
         string? sheetName = null, string startCell = "A1", CsvConfiguration? configuration = null, 
         CancellationToken cancellationToken = default)
     {
@@ -176,7 +176,7 @@ public partial class CsvImporter
         return await MiniExcelAsyncDataReader.CreateAsync(stream, CastAsync(values, cancellationToken)).ConfigureAwait(false);
     }
 
-    public async Task<MiniExcelAsyncDataReader> GetAsyncCsvDataReader(Stream stream, bool useHeaderRow = false,
+    public async Task<MiniExcelAsyncDataReader> GetAsyncDataReader(Stream stream, bool useHeaderRow = false,
         string? sheetName = null, string startCell = "A1", CsvConfiguration? configuration = null,
         CancellationToken cancellationToken = default)
     {

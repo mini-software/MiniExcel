@@ -9,8 +9,8 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
 {
     private readonly ITestOutputHelper _output = output;
     
-    private readonly OpenXmlImporter _excelImporter =  MiniExcel.Importer.GetOpenXmlImporter();
-    private readonly OpenXmlExporter _excelExporter =  MiniExcel.Exporter.GetOpenXmlExporter();
+    private readonly OpenXmlImporter _excelImporter =  MiniExcel.Importers.GetOpenXmlImporter();
+    private readonly OpenXmlExporter _excelExporter =  MiniExcel.Exporters.GetOpenXmlExporter();
    
     [Fact]
     public void GetColumnsTest()

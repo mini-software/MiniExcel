@@ -7,9 +7,9 @@ namespace MiniExcelLib.Tests.SaveByTemplate;
 
 public class MiniExcelTemplateTests
 {
-    private readonly OpenXmlImporter _excelImporter =  MiniExcel.Importer.GetOpenXmlImporter();
-    private readonly OpenXmlExporter _excelExporter =  MiniExcel.Exporter.GetOpenXmlExporter();
-    private readonly OpenXmlTemplater _excelTemplater =  MiniExcel.Templater.GetOpenXmlTemplater();
+    private readonly OpenXmlImporter _excelImporter =  MiniExcel.Importers.GetOpenXmlImporter();
+    private readonly OpenXmlExporter _excelExporter =  MiniExcel.Exporters.GetOpenXmlExporter();
+    private readonly OpenXmlTemplater _excelTemplater =  MiniExcel.Templaters.GetOpenXmlTemplater();
     
     [Fact]
     public void TestImageType()

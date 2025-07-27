@@ -7,17 +7,9 @@ internal static class ListHelper
         if (value is [])
             return true;
 
-        var b = span.Take(value.Count);
-        var bCount = b.Count();
-        if (bCount != value.Count)
+        if (span.Count < value.Count)
             return false;
 
-        for (int i = 0; i < bCount; i++)
-        {
-            if (!span[i].Equals(value[i]))
-                return false;
-        }
-
-        return true;
+        return span.Take(value.Count).SequenceEqual(value);
     }
 }

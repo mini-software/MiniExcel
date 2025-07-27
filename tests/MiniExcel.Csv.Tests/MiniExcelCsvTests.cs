@@ -2,8 +2,8 @@
 
 public class MiniExcelCsvTests
 {
-    private readonly CsvExporter _csvExporter = MiniExcel.Exporter.GetCsvExporter();
-    private readonly CsvImporter _csvImporter = MiniExcel.Importer.GetCsvImporter();
+    private readonly CsvExporter _csvExporter = MiniExcel.Exporters.GetCsvExporter();
+    private readonly CsvImporter _csvImporter = MiniExcel.Importers.GetCsvImporter();
     
     [Fact]
     public void gb2312_Encoding_Read_Test()
@@ -495,7 +495,7 @@ public class MiniExcelCsvTests
         using (var stream = File.Create(path))
         {
             IEnumerable<object> records = [new { v1 = value, v2 = value }];
-            var rowsWritten = MiniExcel.Exporter.GetCsvExporter().Export(stream, records);
+            var rowsWritten = MiniExcel.Exporters.GetCsvExporter().Export(stream, records);
             Assert.Equal(1, rowsWritten[0]);
         }
 
@@ -528,7 +528,7 @@ public class MiniExcelCsvTests
         }
         {
             var value = new { ID = 3, Name = "Mike", InDate = new DateTime(2021, 04, 23) };
-            await _csvExporter.AppendToCsvAsync(path, value);
+            await _csvExporter.AppendAsync(path, value);
             var content = await File.ReadAllTextAsync(path);
             Assert.Equal(
                 """
@@ -546,7 +546,7 @@ public class MiniExcelCsvTests
                 new { ID=5,Name ="Gloria",InDate=new DateTime(2022,05,03)},
             };
 
-            await _csvExporter.AppendToCsvAsync(path, value);
+            await _csvExporter.AppendAsync(path, value);
             var content = await File.ReadAllTextAsync(path);
             Assert.Equal(
                 """

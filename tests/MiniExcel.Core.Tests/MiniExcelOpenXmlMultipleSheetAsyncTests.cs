@@ -2,7 +2,7 @@
 
 public class MiniExcelOpenXmlMultipleSheetAsyncTests
 {
-    private readonly OpenXmlImporter _excelImporter =  MiniExcel.Importer.GetOpenXmlImporter();
+    private readonly OpenXmlImporter _excelImporter =  MiniExcel.Importers.GetOpenXmlImporter();
     
     [Fact]
     public async Task SpecifySheetNameQueryTest()

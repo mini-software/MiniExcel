@@ -1,17 +1,28 @@
 ﻿using BenchmarkDotNet.Attributes;
-using MiniExcelLibs.Benchmarks.Utils;
+using MiniExcelLib.Benchmarks.Utils;
+using MiniExcelLib.Core;
 
-namespace MiniExcelLibs.Benchmarks.BenchmarkSections;
+namespace MiniExcelLib.Benchmarks.BenchmarkSections;
 
 public class XlsxAsyncBenchmark : BenchmarkBase
 {
+    private OpenXmlExporter _exporter;
+    private OpenXmlTemplater _templater;
+    
+    [GlobalSetup]
+    public void Setup()
+    {
+        _exporter = MiniExcel.Exporters.GetOpenXmlExporter();
+        _templater = MiniExcel.Templaters.GetOpenXmlTemplater();
+    }
+    
     [Benchmark(Description = "MiniExcel Create Xlsx Async")]
     public async Task MiniExcelCreateAsyncTest()
     {
         using var path = AutoDeletingPath.Create();
-        using var stream = File.Create(path.FilePath);
+        await using var stream = File.Create(path.FilePath);
 
-        await stream.SaveAsAsync(GetValue());
+        await _exporter.ExportAsync(stream, GetValue());
     }
 
     [Benchmark(Description = "MiniExcel Generate Template Async")]
@@ -30,6 +41,6 @@ public class XlsxAsyncBenchmark : BenchmarkBase
                 })
         };
      
-        await MiniExcel.SaveAsByTemplateAsync(path.FilePath, templatePath, value);
+        await _templater.ApplyTemplateAsync(path.FilePath, templatePath, value);
     }
 }

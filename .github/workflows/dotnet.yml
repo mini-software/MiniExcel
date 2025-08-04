@@ -3,8 +3,7 @@ name: .NET
 on:
   pull_request:
   push:
-    branches:
-    - master
+    branches: [master, v1.x-maintenance]
 
 jobs:
   build:

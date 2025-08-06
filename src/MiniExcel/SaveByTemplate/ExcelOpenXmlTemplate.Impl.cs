@@ -546,7 +546,6 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
         {
             // Just need to remove space string one time https://github.com/mini-software/MiniExcel/issues/751
             var cleanOuterXmlOpen = CleanXml(outerXmlOpen, endPrefix);
-            var cleanInnerXml = CleanXml(innerXml, endPrefix);
 
             // https://github.com/mini-software/MiniExcel/issues/771 Saving by template introduces unintended value replication in each row #771
             var notFirstRowElement = rowElement.Clone();
@@ -556,7 +555,6 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                 if (v != null && !_nonTemplateRegex.IsMatch(v.InnerText))
                     v.InnerText = string.Empty;
             }
-            var cleanNotFirstRowInnerXml = CleanXml(notFirstRowElement.InnerXml, endPrefix);
 
             foreach (var item in rowInfo.CellIEnumerableValues)
             {
@@ -564,7 +562,7 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                 rowXml.Clear()
                     .Append(cleanOuterXmlOpen)
                     .AppendFormat(@" r=""{0}"">", newRowIndex)
-                    .Append(cleanInnerXml)
+                    .Append(innerXml)
                     .Replace("{{$rowindex}}", newRowIndex.ToString())
                     .AppendFormat("</{0}>", row.Name);
 
@@ -739,7 +737,7 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                 if (isFirst)
                 {
                     // https://github.com/mini-software/MiniExcel/issues/771 Saving by template introduces unintended value replication in each row #771
-                    cleanInnerXml = cleanNotFirstRowInnerXml;
+                    innerXml = notFirstRowElement.InnerXml;
                     isFirst = false;
                 }
 
@@ -748,7 +746,7 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
 
                 // replace formulas
                 ProcessFormulas(rowXml, newRowIndex);
-                writer.Write(rowXml);
+                writer.Write(CleanXml(rowXml, endPrefix));
 
                 //mergecells
                 if (rowInfo.RowMercells == null)

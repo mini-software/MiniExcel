@@ -599,11 +599,7 @@ internal partial class OpenXmlTemplate
         var isFirst = generateCellValuesContext.isFirst;
         var iEnumerableIndex = generateCellValuesContext.iEnumerableIndex;
         var currentHeader = generateCellValuesContext.currentHeader;
-
-        // Just need to remove space string one time https://github.com/mini-software/MiniExcel/issues/751
-        var cleanOuterXmlOpen = CleanXml(outerXmlOpen, endPrefix);
-        var cleanInnerXml = CleanXml(innerXml, endPrefix);
-
+        
         // https://github.com/mini-software/MiniExcel/issues/771 Saving by template introduces unintended value replication in each row #771
         var notFirstRowElement = rowElement.Clone();
         foreach (XmlElement c in notFirstRowElement.SelectNodes("x:c", Ns))
@@ -612,15 +608,14 @@ internal partial class OpenXmlTemplate
             if (v is not null && !NonTemplateRegex.IsMatch(v.InnerText))
                 v.InnerText = string.Empty;
         }
-        var cleanNotFirstRowInnerXml = CleanXml(notFirstRowElement.InnerXml, endPrefix);
 
         foreach (var item in rowInfo.CellIEnumerableValues)
         {
             iEnumerableIndex++;
             rowXml.Clear()
-                .Append(cleanOuterXmlOpen)
+                .Append(outerXmlOpen)
                 .AppendFormat(@" r=""{0}"">", newRowIndex)
-                .Append(cleanInnerXml)
+                .Append(innerXml)
                 .Replace("{{$rowindex}}", newRowIndex.ToString())
                 .AppendFormat("</{0}>", row.Name);
 
@@ -795,7 +790,7 @@ internal partial class OpenXmlTemplate
             if (isFirst)
             {
                 // https://github.com/mini-software/MiniExcel/issues/771 Saving by template introduces unintended value replication in each row #771
-                cleanInnerXml = cleanNotFirstRowInnerXml;
+                innerXml = notFirstRowElement.InnerXml;
                 isFirst = false;
             }
 
@@ -804,9 +799,9 @@ internal partial class OpenXmlTemplate
 
             // replace formulas
             ProcessFormulas(rowXml, newRowIndex);
-            await writer.WriteAsync(rowXml.ToString()
+            await writer.WriteAsync(CleanXml(rowXml, endPrefix).ToString()
 #if NET7_0_OR_GREATER
-                    .AsMemory(), cancellationToken
+                .AsMemory(), cancellationToken
 #endif
             ).ConfigureAwait(false);
 

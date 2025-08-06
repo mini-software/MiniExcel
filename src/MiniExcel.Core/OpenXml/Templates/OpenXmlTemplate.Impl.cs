@@ -599,10 +599,7 @@ internal partial class OpenXmlTemplate
         var isFirst = generateCellValuesContext.isFirst;
         var iEnumerableIndex = generateCellValuesContext.iEnumerableIndex;
         var currentHeader = generateCellValuesContext.currentHeader;
-
-        // Just need to remove space string one time https://github.com/mini-software/MiniExcel/issues/751
-        var cleanOuterXmlOpen = CleanXml(outerXmlOpen, endPrefix);
-
+        
         // https://github.com/mini-software/MiniExcel/issues/771 Saving by template introduces unintended value replication in each row #771
         var notFirstRowElement = rowElement.Clone();
         foreach (XmlElement c in notFirstRowElement.SelectNodes("x:c", Ns))
@@ -616,7 +613,7 @@ internal partial class OpenXmlTemplate
         {
             iEnumerableIndex++;
             rowXml.Clear()
-                .Append(cleanOuterXmlOpen)
+                .Append(outerXmlOpen)
                 .AppendFormat(@" r=""{0}"">", newRowIndex)
                 .Append(innerXml)
                 .Replace("{{$rowindex}}", newRowIndex.ToString())

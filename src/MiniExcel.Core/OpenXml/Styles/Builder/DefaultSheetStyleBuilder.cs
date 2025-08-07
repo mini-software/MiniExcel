@@ -1,4 +1,7 @@
-﻿namespace MiniExcelLib.Core.OpenXml.Styles.Builder;
+﻿using System.Drawing;
+using MiniExcelLib.Core.Enums;
+
+namespace MiniExcelLib.Core.OpenXml.Styles.Builder;
 
 internal partial class DefaultSheetStyleBuilder(SheetStyleBuildContext context, OpenXmlStyleOptions styleOptions)
     : SheetStyleBuilderBase(context)
@@ -13,6 +16,10 @@ internal partial class DefaultSheetStyleBuilder(SheetStyleBuildContext context, 
         CellXfCount = 5
     };
 
+    private static readonly Color DefaultBackgroundColor = Color.FromArgb(0x284472C4);
+    private const HorizontalCellAlignment DefaultHorizontalAlignment = HorizontalCellAlignment.Left;
+    private const VerticalCellAlignment DefaultVerticalAlignment = VerticalCellAlignment.Bottom;
+    
     private readonly SheetStyleBuildContext _context = context;
     private readonly OpenXmlStyleOptions _styleOptions = styleOptions;
 
@@ -134,7 +141,11 @@ internal partial class DefaultSheetStyleBuilder(SheetStyleBuildContext context, 
         await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "patternFill", _context.OldXmlReader.NamespaceURI).ConfigureAwait(false);
         await _context.NewXmlWriter.WriteAttributeStringAsync(null, "patternType", null, "solid").ConfigureAwait(false);
         await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "fgColor", _context.OldXmlReader.NamespaceURI).ConfigureAwait(false);
-        await _context.NewXmlWriter.WriteAttributeStringAsync(null, "rgb", null, "284472C4").ConfigureAwait(false);
+
+        var bgColor = _styleOptions.HeaderStyle?.BackgroundColor ?? DefaultBackgroundColor;
+        var hexBgColor = $"{bgColor.A:X2}{bgColor.R:X2}{bgColor.G:X2}{bgColor.B:X2}";
+        await _context.NewXmlWriter.WriteAttributeStringAsync(null, "rgb", null, hexBgColor).ConfigureAwait(false);
+        
         await _context.NewXmlWriter.WriteEndElementAsync().ConfigureAwait(false);
         await _context.NewXmlWriter.WriteEndElementAsync().ConfigureAwait(false);
         await _context.NewXmlWriter.WriteEndElementAsync().ConfigureAwait(false);
@@ -346,10 +357,20 @@ internal partial class DefaultSheetStyleBuilder(SheetStyleBuildContext context, 
         await _context.NewXmlWriter.WriteAttributeStringAsync(null, "applyAlignment", null, "1").ConfigureAwait(false);
         await _context.NewXmlWriter.WriteAttributeStringAsync(null, "applyProtection", null, "1").ConfigureAwait(false);
         await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "alignment", _context.OldXmlReader.NamespaceURI).ConfigureAwait(false);
-        await _context.NewXmlWriter.WriteAttributeStringAsync(null, "horizontal", null, "left").ConfigureAwait(false);
-        await _context.NewXmlWriter.WriteAttributeStringAsync(null, "vertical", null, "bottom").ConfigureAwait(false);
+        
+        var horizontalAlignment = _styleOptions.HeaderStyle?.HorizontalAlignment ?? DefaultHorizontalAlignment;
+        var horizontalAlignmentStr = horizontalAlignment.ToString().ToLowerInvariant();
+        await _context.NewXmlWriter.WriteAttributeStringAsync(null, "horizontal", null, horizontalAlignmentStr).ConfigureAwait(false);
+        
+        var verticalAlignment = _styleOptions.HeaderStyle?.VerticalAlignment ?? DefaultVerticalAlignment;
+        var verticalAlignmentStr = verticalAlignment.ToString().ToLowerInvariant();
+        await _context.NewXmlWriter.WriteAttributeStringAsync(null, "vertical", null, verticalAlignmentStr).ConfigureAwait(false);
+        
         await _context.NewXmlWriter.WriteAttributeStringAsync(null, "textRotation", null, "0").ConfigureAwait(false);
-        await _context.NewXmlWriter.WriteAttributeStringAsync(null, "wrapText", null, "0").ConfigureAwait(false);
+
+        var wrapHeader = (_styleOptions.HeaderStyle?.WrapText ?? false) ? "1" : "0";
+        await _context.NewXmlWriter.WriteAttributeStringAsync(null, "wrapText", null, wrapHeader).ConfigureAwait(false);
+        
         await _context.NewXmlWriter.WriteAttributeStringAsync(null, "indent", null, "0").ConfigureAwait(false);
         await _context.NewXmlWriter.WriteAttributeStringAsync(null, "relativeIndent", null, "0").ConfigureAwait(false);
         await _context.NewXmlWriter.WriteAttributeStringAsync(null, "justifyLastLine", null, "0").ConfigureAwait(false);
@@ -383,7 +404,10 @@ internal partial class DefaultSheetStyleBuilder(SheetStyleBuildContext context, 
         await _context.NewXmlWriter.WriteAttributeStringAsync(null, "horizontal", null, "general").ConfigureAwait(false);
         await _context.NewXmlWriter.WriteAttributeStringAsync(null, "vertical", null, "bottom").ConfigureAwait(false);
         await _context.NewXmlWriter.WriteAttributeStringAsync(null, "textRotation", null, "0").ConfigureAwait(false);
-        await _context.NewXmlWriter.WriteAttributeStringAsync(null, "wrapText", null, _styleOptions.WrapCellContents ? "1" : "0").ConfigureAwait(false);
+        
+        var wrapContent = _styleOptions.WrapCellContents ? "1" : "0";
+        await _context.NewXmlWriter.WriteAttributeStringAsync(null, "wrapText", null, wrapContent).ConfigureAwait(false);
+        
         await _context.NewXmlWriter.WriteAttributeStringAsync(null, "indent", null, "0").ConfigureAwait(false);
         await _context.NewXmlWriter.WriteAttributeStringAsync(null, "relativeIndent", null, "0").ConfigureAwait(false);
         await _context.NewXmlWriter.WriteAttributeStringAsync(null, "justifyLastLine", null, "0").ConfigureAwait(false);

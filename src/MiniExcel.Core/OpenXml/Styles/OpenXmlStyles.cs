@@ -14,7 +14,9 @@ internal class OpenXmlStyles
 
     public OpenXmlStyles(OpenXmlZip zip)
     {
-        using var reader = zip.GetXmlReader("xl/styles.xml")!; //todo: maybe throw a custom exception like MalformedOpenXmlException?
+        using var reader = zip.GetXmlReader("xl/styles.xml");
+        if (reader is null)
+            throw new InvalidDataException("The OpenXml styles could not be found, the file might be malformed.");
                 
         if (!XmlReaderHelper.IsStartElement(reader, "styleSheet", Ns))
             return;

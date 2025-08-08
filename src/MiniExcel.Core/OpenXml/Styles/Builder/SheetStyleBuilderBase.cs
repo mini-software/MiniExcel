@@ -4,6 +4,10 @@ internal abstract partial class SheetStyleBuilderBase(SheetStyleBuildContext con
 {
     private readonly SheetStyleBuildContext _context = context;
     
+    //todo: these may actually be null if used when the context is not initialized
+    private XmlReader OldReader => _context.OldXmlReader!;
+    private XmlWriter NewWriter => _context.NewXmlWriter!;
+    
     internal static readonly Dictionary<string, int> AllElements = new()
     {
         ["numFmts"] = 0,
@@ -25,48 +29,47 @@ internal abstract partial class SheetStyleBuilderBase(SheetStyleBuildContext con
     {
         await _context.InitializeAsync(GetGenerateElementInfos(), cancellationToken).ConfigureAwait(false);
 
-        while (await _context.OldXmlReader.ReadAsync().ConfigureAwait(false))
+        while (await OldReader.ReadAsync().ConfigureAwait(false))
         {
             cancellationToken.ThrowIfCancellationRequested();
-
-            switch (_context.OldXmlReader.NodeType)
+            switch (OldReader.NodeType)
             {
                 case XmlNodeType.Element:
                     await GenerateElementBeforStartElementAsync().ConfigureAwait(false);
-                    await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, _context.OldXmlReader.LocalName, _context.OldXmlReader.NamespaceURI).ConfigureAwait(false);
-                    await WriteAttributesAsync(_context.OldXmlReader.LocalName, cancellationToken).ConfigureAwait(false);
-                    if (_context.OldXmlReader.IsEmptyElement)
+                    await NewWriter.WriteStartElementAsync(OldReader.Prefix, OldReader.LocalName, OldReader.NamespaceURI).ConfigureAwait(false);
+                    await WriteAttributesAsync(OldReader.LocalName, cancellationToken).ConfigureAwait(false);
+                    if (OldReader.IsEmptyElement)
                     {
                         await GenerateElementBeforEndElementAsync().ConfigureAwait(false);
-                        await _context.NewXmlWriter.WriteEndElementAsync().ConfigureAwait(false);
+                        await NewWriter.WriteEndElementAsync().ConfigureAwait(false);
                     }
                     break;
                 case XmlNodeType.Text:
-                    await _context.NewXmlWriter.WriteStringAsync(_context.OldXmlReader.Value).ConfigureAwait(false);
+                    await NewWriter.WriteStringAsync(OldReader.Value).ConfigureAwait(false);
                     break;
                 case XmlNodeType.Whitespace:
                 case XmlNodeType.SignificantWhitespace:
-                    await _context.NewXmlWriter.WriteWhitespaceAsync(_context.OldXmlReader.Value).ConfigureAwait(false);
+                    await NewWriter.WriteWhitespaceAsync(OldReader.Value).ConfigureAwait(false);
                     break;
                 case XmlNodeType.CDATA:
-                    await _context.NewXmlWriter.WriteCDataAsync(_context.OldXmlReader.Value).ConfigureAwait(false);
+                    await NewWriter.WriteCDataAsync(OldReader.Value).ConfigureAwait(false);
                     break;
                 case XmlNodeType.EntityReference:
-                    await _context.NewXmlWriter.WriteEntityRefAsync(_context.OldXmlReader.Name).ConfigureAwait(false);
+                    await NewWriter.WriteEntityRefAsync(OldReader.Name).ConfigureAwait(false);
                     break;
                 case XmlNodeType.XmlDeclaration:
                 case XmlNodeType.ProcessingInstruction:
-                    await _context.NewXmlWriter.WriteProcessingInstructionAsync(_context.OldXmlReader.Name, _context.OldXmlReader.Value).ConfigureAwait(false);
+                    await NewWriter.WriteProcessingInstructionAsync(OldReader.Name, OldReader.Value).ConfigureAwait(false);
                     break;
                 case XmlNodeType.DocumentType:
-                    await _context.NewXmlWriter.WriteDocTypeAsync(_context.OldXmlReader.Name, _context.OldXmlReader.GetAttribute("PUBLIC"), _context.OldXmlReader.GetAttribute("SYSTEM"), _context.OldXmlReader.Value).ConfigureAwait(false);
+                    await NewWriter.WriteDocTypeAsync(OldReader.Name, OldReader.GetAttribute("PUBLIC"), OldReader.GetAttribute("SYSTEM"), OldReader.Value).ConfigureAwait(false);
                     break;
                 case XmlNodeType.Comment:
-                    await _context.NewXmlWriter.WriteCommentAsync(_context.OldXmlReader.Value).ConfigureAwait(false);
+                    await NewWriter.WriteCommentAsync(OldReader.Value).ConfigureAwait(false);
                     break;
                 case XmlNodeType.EndElement:
                     await GenerateElementBeforEndElementAsync().ConfigureAwait(false);
-                    await _context.NewXmlWriter.WriteFullEndElementAsync().ConfigureAwait(false);
+                    await NewWriter.WriteFullEndElementAsync().ConfigureAwait(false);
                     break;
             }
         }
@@ -81,73 +84,59 @@ internal abstract partial class SheetStyleBuilderBase(SheetStyleBuildContext con
     [CreateSyncVersion]
     protected virtual async Task WriteAttributesAsync(string element, CancellationToken cancellationToken = default)
     {
-        if (_context.OldXmlReader.NodeType is XmlNodeType.Element || _context.OldXmlReader.NodeType is XmlNodeType.XmlDeclaration)
+        if (OldReader.NodeType is XmlNodeType.Element or XmlNodeType.XmlDeclaration)
         {
-            if (_context.OldXmlReader.MoveToFirstAttribute())
+            if (OldReader.MoveToFirstAttribute())
             {
                 await WriteAttributesAsync(element, cancellationToken).ConfigureAwait(false);
-                _context.OldXmlReader.MoveToElement();
+                OldReader.MoveToElement();
             }
         }
-        else if (_context.OldXmlReader.NodeType == XmlNodeType.Attribute)
+        else if (OldReader.NodeType == XmlNodeType.Attribute)
         {
             do
             {
-                _context.NewXmlWriter.WriteStartAttribute(_context.OldXmlReader.Prefix, _context.OldXmlReader.LocalName, _context.OldXmlReader.NamespaceURI);
-                var currentAttribute = _context.OldXmlReader.LocalName;
-                while (_context.OldXmlReader.ReadAttributeValue())
+                NewWriter.WriteStartAttribute(OldReader.Prefix, OldReader.LocalName, OldReader.NamespaceURI);
+                var currentAttribute = OldReader.LocalName;
+                while (OldReader.ReadAttributeValue())
                 {
                     cancellationToken.ThrowIfCancellationRequested();
                         
-                    if (_context.OldXmlReader.NodeType == XmlNodeType.EntityReference)
+                    if (OldReader.NodeType == XmlNodeType.EntityReference)
                     {
-                        await _context.NewXmlWriter.WriteEntityRefAsync(_context.OldXmlReader.Name).ConfigureAwait(false);
+                        await NewWriter.WriteEntityRefAsync(OldReader.Name).ConfigureAwait(false);
                     }
                     else if (currentAttribute == "count")
                     {
-                        switch (element)
+                        var value = element switch
                         {
-                            case "numFmts":
-                                await _context.NewXmlWriter.WriteStringAsync((_context.OldElementInfos.NumFmtCount + _context.GenerateElementInfos.NumFmtCount + _context.CustomFormatCount).ToString()).ConfigureAwait(false);
-                                break;
-                            case "fonts":
-                                await _context.NewXmlWriter.WriteStringAsync((_context.OldElementInfos.FontCount + _context.GenerateElementInfos.FontCount).ToString()).ConfigureAwait(false);
-                                break;
-                            case "fills":
-                                await _context.NewXmlWriter.WriteStringAsync((_context.OldElementInfos.FillCount + _context.GenerateElementInfos.FillCount).ToString()).ConfigureAwait(false);
-                                break;
-                            case "borders":
-                                await _context.NewXmlWriter.WriteStringAsync((_context.OldElementInfos.BorderCount + _context.GenerateElementInfos.BorderCount).ToString()).ConfigureAwait(false);
-                                break;
-                            case "cellStyleXfs":
-                                await _context.NewXmlWriter.WriteStringAsync((_context.OldElementInfos.CellStyleXfCount + _context.GenerateElementInfos.CellStyleXfCount).ToString()).ConfigureAwait(false);
-                                break;
-                            case "cellXfs":
-                                await _context.NewXmlWriter.WriteStringAsync((_context.OldElementInfos.CellXfCount + _context.GenerateElementInfos.CellXfCount + _context.CustomFormatCount).ToString()).ConfigureAwait(false);
-                                break;
-                            default:
-                                await _context.NewXmlWriter.WriteStringAsync(_context.OldXmlReader.Value).ConfigureAwait(false);
-                                break;
-                        }
+                            "numFmts" => (_context.OldElementInfos.NumFmtCount + _context.GenerateElementInfos.NumFmtCount + _context.CustomFormatCount).ToString(),
+                            "fonts" => (_context.OldElementInfos.FontCount + _context.GenerateElementInfos.FontCount).ToString(),
+                            "fills" => (_context.OldElementInfos.FillCount + _context.GenerateElementInfos.FillCount).ToString(),
+                            "borders" => (_context.OldElementInfos.BorderCount + _context.GenerateElementInfos.BorderCount).ToString(),
+                            "cellStyleXfs" => (_context.OldElementInfos.CellStyleXfCount + _context.GenerateElementInfos.CellStyleXfCount).ToString(),
+                            "cellXfs" => (_context.OldElementInfos.CellXfCount + _context.GenerateElementInfos.CellXfCount + _context.CustomFormatCount).ToString(),
+                            _ => OldReader.Value
+                        };
+                        await NewWriter.WriteStringAsync(value).ConfigureAwait(false);
                     }
                     else
                     {
-                        await _context.NewXmlWriter.WriteStringAsync(_context.OldXmlReader.Value).ConfigureAwait(false);
+                        await NewWriter.WriteStringAsync(OldReader.Value).ConfigureAwait(false);
                     }
                 }
-                _context.NewXmlWriter.WriteEndAttribute();
+                NewWriter.WriteEndAttribute();
             }
-            while (_context.OldXmlReader.MoveToNextAttribute());
+            while (OldReader.MoveToNextAttribute());
         }
     }
 
     [CreateSyncVersion]
     protected virtual async Task GenerateElementBeforStartElementAsync()
     {
-        if (!AllElements.TryGetValue(_context.OldXmlReader.LocalName, out var elementIndex))
-        {
+        if (!AllElements.TryGetValue(OldReader.LocalName, out var elementIndex))
             return;
-        }
+        
         if (!_context.OldElementInfos.ExistsNumFmts && !_context.GenerateElementInfos.ExistsNumFmts && AllElements["numFmts"] < elementIndex)
         {
             await GenerateNumFmtsAsync().ConfigureAwait(false);
@@ -183,7 +172,7 @@ internal abstract partial class SheetStyleBuilderBase(SheetStyleBuildContext con
     [CreateSyncVersion]
     protected virtual async Task GenerateElementBeforEndElementAsync()
     {
-        switch (_context.OldXmlReader?.LocalName)
+        switch (OldReader.LocalName)
         {
             case "styleSheet" when !_context.OldElementInfos.ExistsNumFmts && !_context.GenerateElementInfos.ExistsNumFmts:
                 await GenerateNumFmtsAsync().ConfigureAwait(false);
@@ -212,10 +201,10 @@ internal abstract partial class SheetStyleBuilderBase(SheetStyleBuildContext con
     [CreateSyncVersion]
     protected virtual async Task GenerateNumFmtsAsync()
     {
-        await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "numFmts", _context.OldXmlReader.NamespaceURI).ConfigureAwait(false);
-        await _context.NewXmlWriter.WriteAttributeStringAsync(null, "count", null, (_context.OldElementInfos.NumFmtCount + _context.GenerateElementInfos.NumFmtCount + _context.CustomFormatCount).ToString()).ConfigureAwait(false);
+        await NewWriter.WriteStartElementAsync(OldReader.Prefix, "numFmts", OldReader.NamespaceURI).ConfigureAwait(false);
+        await NewWriter.WriteAttributeStringAsync(null, "count", null, (_context.OldElementInfos.NumFmtCount + _context.GenerateElementInfos.NumFmtCount + _context.CustomFormatCount).ToString()).ConfigureAwait(false);
         await GenerateNumFmtAsync().ConfigureAwait(false);
-        await _context.NewXmlWriter.WriteFullEndElementAsync().ConfigureAwait(false);
+        await NewWriter.WriteFullEndElementAsync().ConfigureAwait(false);
 
         if (!_context.OldElementInfos.ExistsFonts)
         {
@@ -229,10 +218,10 @@ internal abstract partial class SheetStyleBuilderBase(SheetStyleBuildContext con
     [CreateSyncVersion]
     protected virtual async Task GenerateFontsAsync()
     {
-        await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "fonts", _context.OldXmlReader.NamespaceURI).ConfigureAwait(false);
-        await _context.NewXmlWriter.WriteAttributeStringAsync(null, "count", null, (_context.OldElementInfos.FontCount + _context.GenerateElementInfos.FontCount).ToString()).ConfigureAwait(false);
+        await NewWriter.WriteStartElementAsync(OldReader.Prefix, "fonts", OldReader.NamespaceURI).ConfigureAwait(false);
+        await NewWriter.WriteAttributeStringAsync(null, "count", null, (_context.OldElementInfos.FontCount + _context.GenerateElementInfos.FontCount).ToString()).ConfigureAwait(false);
         await GenerateFontAsync().ConfigureAwait(false);
-        await _context.NewXmlWriter.WriteFullEndElementAsync().ConfigureAwait(false);
+        await NewWriter.WriteFullEndElementAsync().ConfigureAwait(false);
 
         if (!_context.OldElementInfos.ExistsFills)
         {
@@ -246,10 +235,10 @@ internal abstract partial class SheetStyleBuilderBase(SheetStyleBuildContext con
     [CreateSyncVersion]
     protected virtual async Task GenerateFillsAsync()
     {
-        await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "fills", _context.OldXmlReader.NamespaceURI).ConfigureAwait(false);
-        await _context.NewXmlWriter.WriteAttributeStringAsync(null, "count", null, (_context.OldElementInfos.FillCount + _context.GenerateElementInfos.FillCount).ToString()).ConfigureAwait(false);
+        await NewWriter.WriteStartElementAsync(OldReader.Prefix, "fills", OldReader.NamespaceURI).ConfigureAwait(false);
+        await NewWriter.WriteAttributeStringAsync(null, "count", null, (_context.OldElementInfos.FillCount + _context.GenerateElementInfos.FillCount).ToString()).ConfigureAwait(false);
         await GenerateFillAsync().ConfigureAwait(false);
-        await _context.NewXmlWriter.WriteFullEndElementAsync().ConfigureAwait(false);
+        await NewWriter.WriteFullEndElementAsync().ConfigureAwait(false);
 
         if (!_context.OldElementInfos.ExistsBorders)
         {
@@ -263,10 +252,10 @@ internal abstract partial class SheetStyleBuilderBase(SheetStyleBuildContext con
     [CreateSyncVersion]
     protected virtual async Task GenerateBordersAsync()
     {
-        await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "borders", _context.OldXmlReader.NamespaceURI).ConfigureAwait(false);
-        await _context.NewXmlWriter.WriteAttributeStringAsync(null, "count", null, (_context.OldElementInfos.BorderCount + _context.GenerateElementInfos.BorderCount).ToString()).ConfigureAwait(false);
+        await NewWriter.WriteStartElementAsync(OldReader.Prefix, "borders", OldReader.NamespaceURI).ConfigureAwait(false);
+        await NewWriter.WriteAttributeStringAsync(null, "count", null, (_context.OldElementInfos.BorderCount + _context.GenerateElementInfos.BorderCount).ToString()).ConfigureAwait(false);
         await GenerateBorderAsync().ConfigureAwait(false);
-        await _context.NewXmlWriter.WriteFullEndElementAsync().ConfigureAwait(false);
+        await NewWriter.WriteFullEndElementAsync().ConfigureAwait(false);
 
         if (!_context.OldElementInfos.ExistsCellStyleXfs)
         {
@@ -280,10 +269,10 @@ internal abstract partial class SheetStyleBuilderBase(SheetStyleBuildContext con
     [CreateSyncVersion]
     protected virtual async Task GenerateCellStyleXfsAsync()
     {
-        await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "cellStyleXfs", _context.OldXmlReader.NamespaceURI).ConfigureAwait(false);
-        await _context.NewXmlWriter.WriteAttributeStringAsync(null, "count", null, (_context.OldElementInfos.CellStyleXfCount + _context.GenerateElementInfos.CellStyleXfCount).ToString()).ConfigureAwait(false);
+        await NewWriter.WriteStartElementAsync(OldReader.Prefix, "cellStyleXfs", OldReader.NamespaceURI).ConfigureAwait(false);
+        await NewWriter.WriteAttributeStringAsync(null, "count", null, (_context.OldElementInfos.CellStyleXfCount + _context.GenerateElementInfos.CellStyleXfCount).ToString()).ConfigureAwait(false);
         await GenerateCellStyleXfAsync().ConfigureAwait(false);
-        await _context.NewXmlWriter.WriteFullEndElementAsync().ConfigureAwait(false);
+        await NewWriter.WriteFullEndElementAsync().ConfigureAwait(false);
 
         if (!_context.OldElementInfos.ExistsCellXfs)
         {
@@ -297,10 +286,10 @@ internal abstract partial class SheetStyleBuilderBase(SheetStyleBuildContext con
     [CreateSyncVersion]
     protected virtual async Task GenerateCellXfsAsync()
     {
-        await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "cellXfs", _context.OldXmlReader.NamespaceURI).ConfigureAwait(false);
-        await _context.NewXmlWriter.WriteAttributeStringAsync(null, "count", null, (_context.OldElementInfos.CellXfCount + _context.GenerateElementInfos.CellXfCount + _context.CustomFormatCount).ToString()).ConfigureAwait(false);
+        await NewWriter.WriteStartElementAsync(OldReader.Prefix, "cellXfs", OldReader.NamespaceURI).ConfigureAwait(false);
+        await NewWriter.WriteAttributeStringAsync(null, "count", null, (_context.OldElementInfos.CellXfCount + _context.GenerateElementInfos.CellXfCount + _context.CustomFormatCount).ToString()).ConfigureAwait(false);
         await GenerateCellXfAsync().ConfigureAwait(false);
-        await _context.NewXmlWriter.WriteFullEndElementAsync().ConfigureAwait(false);
+        await NewWriter.WriteFullEndElementAsync().ConfigureAwait(false);
     }
 
     [CreateSyncVersion]

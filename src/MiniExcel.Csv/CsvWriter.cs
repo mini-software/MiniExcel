@@ -1,6 +1,4 @@
 ﻿using MiniExcelLib.Core;
-using MiniExcelLib.Core.Abstractions;
-using MiniExcelLib.Core.Reflection;
 using MiniExcelLib.Core.WriteAdapters;
 using IMiniExcelWriter = MiniExcelLib.Core.Abstractions.IMiniExcelWriter;
 
@@ -49,13 +47,12 @@ internal partial class CsvWriter : IMiniExcelWriter, IDisposable
             writeAdapter = MiniExcelWriteAdapterFactory.GetWriteAdapter(values, _configuration);
         }
         
-        List<MiniExcelColumnInfo>? props;
 #if SYNC_ONLY
-        props = writeAdapter?.GetColumns();
+        var props = writeAdapter?.GetColumns();
 #else
-        props = writeAdapter is not null 
+        var props = writeAdapter is not null 
             ? writeAdapter.GetColumns() 
-            : await asyncWriteAdapter.GetColumnsAsync().ConfigureAwait(false);
+            : await asyncWriteAdapter!.GetColumnsAsync().ConfigureAwait(false);
 #endif
 
         if (props is null)
@@ -119,8 +116,7 @@ internal partial class CsvWriter : IMiniExcelWriter, IDisposable
         else
         {
 #if !SYNC_ONLY
-#pragma warning disable CA2007
-            await foreach (var row in asyncWriteAdapter.GetRowsAsync(props, cancellationToken).ConfigureAwait(false))
+            await foreach (var row in asyncWriteAdapter!.GetRowsAsync(props, cancellationToken).ConfigureAwait(false))
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 rowBuilder.Clear();
@@ -129,7 +125,6 @@ internal partial class CsvWriter : IMiniExcelWriter, IDisposable
                 {
                     AppendColumn(rowBuilder, column);
                 }
-#pragma warning restore CA2007
 
                 RemoveTrailingSeparator(rowBuilder);
                 await _writer.WriteAsync(rowBuilder.ToString()

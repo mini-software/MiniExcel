@@ -1,5 +1,4 @@
 ﻿using MiniExcelLib.Core.Attributes;
-using MiniExcelLib.Core.Helpers;
 using MiniExcelLib.Core.OpenXml.Constants;
 using MiniExcelLib.Core.OpenXml.Zip;
 
@@ -39,9 +38,9 @@ internal class SheetStyleBuildContext : IDisposable
 
     public XmlReader? OldXmlReader { get; private set; }
     public XmlWriter? NewXmlWriter { get; private set; }
-    public SheetStyleElementInfos OldElementInfos { get; private set; }
-    public SheetStyleElementInfos GenerateElementInfos { get; private set; }
-    public IEnumerable<MiniExcelColumnAttribute> ColumnsToApply { get; private set; }
+    public SheetStyleElementInfos OldElementInfos { get; private set; } = null!;
+    public SheetStyleElementInfos GenerateElementInfos { get; private set; } = null!;
+    public MiniExcelColumnAttribute[] ColumnsToApply { get; private set; } = [];
     public int CustomFormatCount { get; private set; }
 
     public void Initialize(SheetStyleElementInfos generateElementInfos)
@@ -77,8 +76,8 @@ internal class SheetStyleBuildContext : IDisposable
         NewXmlWriter = XmlWriter.Create(_newXmlWriterStream, new XmlWriterSettings { Indent = true, Encoding = _encoding });
 
         GenerateElementInfos = generateElementInfos;
-        ColumnsToApply = SheetStyleBuilderHelper.GenerateStyleIds(OldElementInfos.CellXfCount + generateElementInfos.CellXfCount, _columns).ToArray();//这里暂时加ToArray，避免多次计算，如果有性能问题再考虑优化
-        CustomFormatCount = ColumnsToApply.Count();
+        ColumnsToApply = SheetStyleBuilderHelper.GenerateStyleIds(OldElementInfos.CellXfCount + generateElementInfos.CellXfCount, _columns).ToArray();
+        CustomFormatCount = ColumnsToApply.Length;
 
         _initialized = true;
     }
@@ -128,8 +127,8 @@ internal class SheetStyleBuildContext : IDisposable
         NewXmlWriter = XmlWriter.Create(_newXmlWriterStream, new XmlWriterSettings { Indent = true, Encoding = _encoding, Async = true });
 
         GenerateElementInfos = generateElementInfos;
-        ColumnsToApply = SheetStyleBuilderHelper.GenerateStyleIds(OldElementInfos.CellXfCount + generateElementInfos.CellXfCount, _columns).ToArray();//ToArray to avoid multiple calculations, if there is a performance problem then consider optimizing the
-        CustomFormatCount = ColumnsToApply.Count();
+        ColumnsToApply = SheetStyleBuilderHelper.GenerateStyleIds(OldElementInfos.CellXfCount + generateElementInfos.CellXfCount, _columns).ToArray();
+        CustomFormatCount = ColumnsToApply.Length;
 
         _initialized = true;
     }
@@ -163,7 +162,7 @@ internal class SheetStyleBuildContext : IDisposable
 
             if (_oldStyleXmlZipEntry is null)
             {
-                _zipDictionary.Add(ExcelFileNames.Styles, new ZipPackageInfo(_newStyleXmlZipEntry, ExcelContentTypes.Styles));
+                _zipDictionary.Add(ExcelFileNames.Styles, new ZipPackageInfo(_newStyleXmlZipEntry!, ExcelContentTypes.Styles));
             }
             else
             {
@@ -171,7 +170,7 @@ internal class SheetStyleBuildContext : IDisposable
                 _oldStyleXmlZipEntry = null;
                 var finalStyleXmlZipEntry = _archive.CreateEntry(ExcelFileNames.Styles, CompressionLevel.Fastest);
 
-                using (var tempStream = _newStyleXmlZipEntry.Open())
+                using (var tempStream = _newStyleXmlZipEntry!.Open())
                 using (var newStream = finalStyleXmlZipEntry.Open())
                 {
                     tempStream.CopyTo(newStream);
@@ -218,7 +217,7 @@ internal class SheetStyleBuildContext : IDisposable
             _emptyStylesXmlStringReader?.Dispose();
             _emptyStylesXmlStringReader = null;
 
-            await NewXmlWriter.FlushAsync().ConfigureAwait(false);
+            await NewXmlWriter!.FlushAsync().ConfigureAwait(false);
             NewXmlWriter.Close();
             //NewXmlWriter.Dispose();
 
@@ -231,7 +230,7 @@ internal class SheetStyleBuildContext : IDisposable
             NewXmlWriter = null;
 
 #if NET5_0_OR_GREATER
-            await _newXmlWriterStream.DisposeAsync().ConfigureAwait(false);
+            await _newXmlWriterStream!.DisposeAsync().ConfigureAwait(false);
 #else
             _newXmlWriterStream?.Dispose();
 #endif
@@ -239,7 +238,7 @@ internal class SheetStyleBuildContext : IDisposable
 
             if (_oldStyleXmlZipEntry is null)
             {
-                _zipDictionary.Add(ExcelFileNames.Styles, new ZipPackageInfo(_newStyleXmlZipEntry, ExcelContentTypes.Styles));
+                _zipDictionary.Add(ExcelFileNames.Styles, new ZipPackageInfo(_newStyleXmlZipEntry!, ExcelContentTypes.Styles));
             }
             else
             {
@@ -248,9 +247,9 @@ internal class SheetStyleBuildContext : IDisposable
                 var finalStyleXmlZipEntry = _archive.CreateEntry(ExcelFileNames.Styles, CompressionLevel.Fastest);
 
 #if NET10_0_OR_GREATER
-                using (var tempStream = await _newStyleXmlZipEntry.OpenAsync(cancellationToken).ConfigureAwait(false))
+                using (var tempStream = await _newStyleXmlZipEntry!.OpenAsync(cancellationToken).ConfigureAwait(false))
 #else
-                using (var tempStream = _newStyleXmlZipEntry.Open())
+                using (var tempStream = _newStyleXmlZipEntry!.Open())
 #endif
 #if NET10_0_OR_GREATER
                 using (var newStream = await finalStyleXmlZipEntry.OpenAsync(cancellationToken).ConfigureAwait(false))

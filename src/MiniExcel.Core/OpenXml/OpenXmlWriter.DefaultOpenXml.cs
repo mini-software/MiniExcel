@@ -1,14 +1,11 @@
-using MiniExcelLib.Core.Helpers;
 using MiniExcelLib.Core.OpenXml.Constants;
 using MiniExcelLib.Core.OpenXml.Models;
-using MiniExcelLib.Core.OpenXml.Utils;
 using MiniExcelLib.Core.OpenXml.Zip;
-using MiniExcelLib.Core.Reflection;
 using static MiniExcelLib.Core.Helpers.ImageHelper;
 
 namespace MiniExcelLib.Core.OpenXml;
 
-internal partial class OpenXmlWriter : Abstractions.IMiniExcelWriter
+internal partial class OpenXmlWriter : IMiniExcelWriter
 {
     private readonly Dictionary<string, ZipPackageInfo> _zipDictionary = [];
     private Dictionary<string, string> _cellXfIdMap;
@@ -202,12 +199,11 @@ internal partial class OpenXmlWriter : Abstractions.IMiniExcelWriter
 
         if (type == typeof(byte[]) && _configuration.EnableConvertByteArray)
         {
+            if (!_configuration.EnableWriteFilePath) 
+                return Tuple.Create("4", "str", "");
+            
             var base64 = GetFileValue(rowIndex, cellIndex, value);
-            if (_configuration.EnableWriteFilePath)
-            {
-                return Tuple.Create("4", "str", XmlHelper.EncodeXml(base64));
-            }
-            return Tuple.Create("4", "str", "");  
+            return Tuple.Create("4", "str", XmlHelper.EncodeXml(base64));  
         }
 
         return Tuple.Create("2", "str", XmlHelper.EncodeXml(value.ToString()));
@@ -260,7 +256,7 @@ internal partial class OpenXmlWriter : Abstractions.IMiniExcelWriter
         if (type.IsAssignableFrom(typeof(float)))
             return ((float)value).ToString(_configuration.Culture);
 
-        return (decimal.Parse(value.ToString())).ToString(_configuration.Culture);
+        return decimal.Parse(value.ToString()).ToString(_configuration.Culture);
     }
 
     private string GetFileValue(int rowIndex, int cellIndex, object value)
@@ -272,7 +268,7 @@ internal partial class OpenXmlWriter : Abstractions.IMiniExcelWriter
         //it can't insert to zip first to avoid cache image to memory
         //because sheet xml is opening.. https://github.com/mini-software/MiniExcel/issues/304#issuecomment-1017031691
         //int rowIndex, int cellIndex
-        var file = new FileDto()
+        var file = new FileDto
         {
             Byte = bytes,
             RowIndex = rowIndex,
@@ -280,7 +276,7 @@ internal partial class OpenXmlWriter : Abstractions.IMiniExcelWriter
             SheetId = _currentSheetIndex
         };
 
-        if (format != ImageHelper.ImageFormat.Unknown)
+        if (format != ImageFormat.Unknown)
         {
             file.Extension = format.ToString();
             file.IsImage = true;
@@ -331,18 +327,13 @@ internal partial class OpenXmlWriter : Abstractions.IMiniExcelWriter
 
     private static string GetDimensionRef(int maxRowIndex, int maxColumnIndex)
     {
-        string dimensionRef;
-        if (maxRowIndex == 0 && maxColumnIndex == 0)
-            dimensionRef = "A1";
-        else if (maxRowIndex <= 1 && maxColumnIndex == 0)
-            dimensionRef = "A1";
-        else if (maxColumnIndex <= 1)
-            dimensionRef = $"A1:A{maxRowIndex}";
-        else if (maxRowIndex == 0)
-            dimensionRef = $"A1:{ColumnHelper.GetAlphabetColumnName(maxColumnIndex - 1)}1";
-        else
-            dimensionRef = $"A1:{ColumnHelper.GetAlphabetColumnName(maxColumnIndex - 1)}{maxRowIndex}";
-        return dimensionRef;
+        return (maxRowIndex, maxColumnIndex) switch
+        {
+            (<= 1, 0) => "A1",
+            (_, <= 1) => $"A1:A{maxRowIndex}",
+            (0, _) => $"A1:{ColumnHelper.GetAlphabetColumnName(maxColumnIndex - 1)}1",
+            _ => $"A1:{ColumnHelper.GetAlphabetColumnName(maxColumnIndex - 1)}{maxRowIndex}"
+        };
     }
 
     private string GetDrawingRelationshipXml(int sheetIndex)

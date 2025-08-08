@@ -1,7 +1,5 @@
 using MiniExcelLib.Core;
 using MiniExcelLib.Core.Exceptions;
-using MiniExcelLib.Core.Helpers;
-using MiniExcelLib.Core.Reflection;
 using IMiniExcelReader = MiniExcelLib.Core.Abstractions.IMiniExcelReader;
 using MiniExcelMapper = MiniExcelLib.Core.Reflection.MiniExcelMapper;
 
@@ -54,9 +52,8 @@ internal partial class CsvReader : IMiniExcelReader
                     ).ConfigureAwait(false);
                     
                     if (nextPart is null)
-                    {
                         break;
-                    }
+                    
                     finalRow = string.Concat(finalRow, _config.NewLine, nextPart);
                 }
             }
@@ -106,7 +103,7 @@ internal partial class CsvReader : IMiniExcelReader
             if (_config.ReadEmptyStringAsNull)
             {
                 for (int i = 0; i <= read.Length - 1; i++)
-                    cell[ColumnHelper.GetAlphabetColumnName(i)] = read[i]?.Length == 0 ? null : read[i];
+                    cell[ColumnHelper.GetAlphabetColumnName(i)] = read[i] is "" ? null : read[i];
             }
             else
             {
@@ -178,6 +175,6 @@ internal partial class CsvReader : IMiniExcelReader
 
     public void Dispose()
     {
-        _stream?.Dispose();
+        ((Stream?)_stream)?.Dispose();
     }
 }

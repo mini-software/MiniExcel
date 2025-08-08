@@ -31,7 +31,7 @@ public class MiniExcelOpenXmlConfigurationTest
     
     private class ImgExportTestDto
     {
-        public string Name { get; set; }
+        public string? Name { get; set; }
 
         [MiniExcelColumn(Name = "图片", Width = 100)]
         public byte[]? Img { get; set; }

@@ -1,8 +1,5 @@
-using MiniExcelLib.Core.Abstractions;
 using MiniExcelLib.Core.OpenXml.Constants;
 using MiniExcelLib.Core.OpenXml.Zip;
-using CalcChainHelper = MiniExcelLib.Core.OpenXml.Utils.CalcChainHelper;
-using IMiniExcelTemplate = MiniExcelLib.Core.Abstractions.IMiniExcelTemplate;
 
 namespace MiniExcelLib.Core.OpenXml.Templates;
 
@@ -143,7 +140,7 @@ internal partial class OpenXmlTemplate : IMiniExcelTemplate
 #else
             using var outputZipSheetEntryStream = outputZipEntry.Open();
 #endif
-            GenerateSheetXmlImplByCreateMode(templateSheet, outputZipSheetEntryStream, templateSheetStream, inputValues, templateSharedStrings, false);
+            GenerateSheetXmlImplByCreateMode(templateSheet, outputZipSheetEntryStream, templateSheetStream, inputValues, templateSharedStrings);
             //doc.Save(zipStream); //don't do it because: https://user-images.githubusercontent.com/12729184/114361127-61a5d100-9ba8-11eb-9bb9-34f076ee28a2.png
             // disposing writer disposes streams as well. read and parse calc functions before that
             

@@ -6,7 +6,7 @@ public class MiniExcelCsvAsycTests
     private readonly CsvImporter _csvImporter = MiniExcel.Importers.GetCsvImporter();
     
     [Fact]
-    public async Task Gb2312_Encoding_Read_Test()
+    public void Gb2312_Encoding_Read_Test()
     {
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
         var path = PathHelper.GetFile("csv/gb2312_Encoding_Read_Test.csv");
@@ -14,8 +14,7 @@ public class MiniExcelCsvAsycTests
         {
             StreamReaderFunc = stream => new StreamReader(stream, encoding: Encoding.GetEncoding("gb2312"))
         };
-        var q = _csvImporter.QueryAsync(path, true, configuration: config).ToBlockingEnumerable();
-        var rows = q.ToList();
+        var rows = _csvImporter.QueryAsync(path, true, configuration: config).ToBlockingEnumerable().ToList();
         Assert.Equal("世界你好", rows[0].栏位1);
     }
 
@@ -206,8 +205,8 @@ public class MiniExcelCsvAsycTests
 
     private class Test
     {
-        public string? c1 { get; set; }
-        public string? c2 { get; set; }
+        public string? C1 { get; set; }
+        public string? C2 { get; set; }
     }
 
     [Fact]
@@ -247,25 +246,25 @@ public class MiniExcelCsvAsycTests
 
         await _csvExporter.ExportAsync(path, new[] 
         {
-            new { c1 = "A1", c2 = "B1"},
-            new { c1 = "A2", c2 = "B2"},
+            new { C1 = "A1", C2 = "B1"},
+            new { C1 = "A2", C2 = "B2"},
         });
 
         await using (var stream = File.OpenRead(path))
         {
             var rows = _csvImporter.QueryAsync(stream, useHeaderRow: true).ToBlockingEnumerable().ToList();
-            Assert.Equal("A1", rows[0].c1);
-            Assert.Equal("B1", rows[0].c2);
-            Assert.Equal("A2", rows[1].c1);
-            Assert.Equal("B2", rows[1].c2);
+            Assert.Equal("A1", rows[0].C1);
+            Assert.Equal("B1", rows[0].C2);
+            Assert.Equal("A2", rows[1].C1);
+            Assert.Equal("B2", rows[1].C2);
         }
 
         {
             var rows = _csvImporter.QueryAsync(path, useHeaderRow: true).ToBlockingEnumerable().ToList();
-            Assert.Equal("A1", rows[0].c1);
-            Assert.Equal("B1", rows[0].c2);
-            Assert.Equal("A2", rows[1].c1);
-            Assert.Equal("B2", rows[1].c2);
+            Assert.Equal("A1", rows[0].C1);
+            Assert.Equal("B1", rows[0].C2);
+            Assert.Equal("A2", rows[1].C1);
+            Assert.Equal("B2", rows[1].C2);
         }
     }
 
@@ -277,25 +276,25 @@ public class MiniExcelCsvAsycTests
 
         await _csvExporter.ExportAsync(path, new[] 
         {
-            new { c1 = "A1", c2 = "B1"},
-            new { c1 = "A2", c2 = "B2"}
+            new { C1 = "A1", C2 = "B1"},
+            new { C1 = "A2", C2 = "B2"}
         });
 
         await using (var stream = File.OpenRead(path))
         {
             var rows = _csvImporter.Query<Test>(stream).ToList();
-            Assert.Equal("A1", rows[0].c1);
-            Assert.Equal("B1", rows[0].c2);
-            Assert.Equal("A2", rows[1].c1);
-            Assert.Equal("B2", rows[1].c2);
+            Assert.Equal("A1", rows[0].C1);
+            Assert.Equal("B1", rows[0].C2);
+            Assert.Equal("A2", rows[1].C1);
+            Assert.Equal("B2", rows[1].C2);
         }
 
         {
             var rows = _csvImporter.Query<Test>(path).ToList();
-            Assert.Equal("A1", rows[0].c1);
-            Assert.Equal("B1", rows[0].c2);
-            Assert.Equal("A2", rows[1].c1);
-            Assert.Equal("B2", rows[1].c2);
+            Assert.Equal("A1", rows[0].C1);
+            Assert.Equal("B1", rows[0].C2);
+            Assert.Equal("A2", rows[1].C1);
+            Assert.Equal("B2", rows[1].C2);
         }
     }
 
@@ -307,43 +306,43 @@ public class MiniExcelCsvAsycTests
         
         await _csvExporter.ExportAsync(path, new[] 
         {
-            new { c1 = (string?)"A1", c2 = (string?)null},
-            new { c1 = (string?)null, c2 = (string?)null}
+            new { C1 = (string?)"A1", C2 = (string?)null},
+            new { C1 = (string?)null, C2 = (string?)null}
         });
 
         await using (var stream = File.OpenRead(path))
         {
             var rows = _csvImporter.Query<Test>(stream).ToList();
-            Assert.Equal("A1", rows[0].c1);
-            Assert.Equal(string.Empty, rows[0].c2);
-            Assert.Equal(string.Empty, rows[1].c1);
-            Assert.Equal(string.Empty, rows[1].c2);
+            Assert.Equal("A1", rows[0].C1);
+            Assert.Equal(string.Empty, rows[0].C2);
+            Assert.Equal(string.Empty, rows[1].C1);
+            Assert.Equal(string.Empty, rows[1].C2);
         }
 
         {
             var rows = _csvImporter.Query<Test>(path).ToList();
-            Assert.Equal("A1", rows[0].c1);
-            Assert.Equal(string.Empty, rows[0].c2);
-            Assert.Equal(string.Empty, rows[1].c1);
-            Assert.Equal(string.Empty, rows[1].c2);
+            Assert.Equal("A1", rows[0].C1);
+            Assert.Equal(string.Empty, rows[0].C2);
+            Assert.Equal(string.Empty, rows[1].C1);
+            Assert.Equal(string.Empty, rows[1].C2);
         }
 
         var config = new CsvConfiguration { ReadEmptyStringAsNull = true };
         await using (var stream = File.OpenRead(path))
         {
             var rows = _csvImporter.Query<Test>(stream, configuration: config).ToList();
-            Assert.Equal("A1", rows[0].c1);
-            Assert.Null(rows[0].c2);
-            Assert.Null(rows[1].c1);
-            Assert.Null(rows[1].c2);
+            Assert.Equal("A1", rows[0].C1);
+            Assert.Null(rows[0].C2);
+            Assert.Null(rows[1].C1);
+            Assert.Null(rows[1].C2);
         }
 
         {
             var rows = _csvImporter.Query<Test>(path, configuration: config).ToList();
-            Assert.Equal("A1", rows[0].c1);
-            Assert.Null(rows[0].c2);
-            Assert.Null(rows[1].c1);
-            Assert.Null(rows[1].c2);
+            Assert.Equal("A1", rows[0].C1);
+            Assert.Null(rows[0].C2);
+            Assert.Null(rows[1].C1);
+            Assert.Null(rows[1].C2);
         }
     }
 
@@ -356,8 +355,8 @@ public class MiniExcelCsvAsycTests
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
         static async IAsyncEnumerable<Test> GetValues()
         {
-            yield return new Test { c1 = "A1", c2 = "B1" };
-            yield return new Test { c1 = "A2", c2 = "B2" };
+            yield return new Test { C1 = "A1", C2 = "B1" };
+            yield return new Test { C1 = "A2", C2 = "B2" };
         }
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
 
@@ -366,9 +365,9 @@ public class MiniExcelCsvAsycTests
     
         var results = _csvImporter.Query<Test>(path).ToList();
         Assert.Equal(2, results.Count);
-        Assert.Equal("A1", results[0].c1);
-        Assert.Equal("B1", results[0].c2);
-        Assert.Equal("A2", results[1].c1);
-        Assert.Equal("B2", results[1].c2);
+        Assert.Equal("A1", results[0].C1);
+        Assert.Equal("B1", results[0].C2);
+        Assert.Equal("A2", results[1].C1);
+        Assert.Equal("B2", results[1].C2);
     }
 }

@@ -1,17 +1,14 @@
 using System.Collections.ObjectModel;
-using MiniExcelLib.Core.Helpers;
 using MiniExcelLib.Core.OpenXml.Constants;
 using MiniExcelLib.Core.OpenXml.Models;
 using MiniExcelLib.Core.OpenXml.Styles;
-using MiniExcelLib.Core.OpenXml.Utils;
 using MiniExcelLib.Core.OpenXml.Zip;
-using MiniExcelLib.Core.Reflection;
 using MiniExcelMapper = MiniExcelLib.Core.Reflection.MiniExcelMapper;
 using XmlReaderHelper = MiniExcelLib.Core.OpenXml.Utils.XmlReaderHelper;
 
 namespace MiniExcelLib.Core.OpenXml;
 
-internal partial class OpenXmlReader : Abstractions.IMiniExcelReader
+internal partial class OpenXmlReader : IMiniExcelReader
 {
     private static readonly string[] Ns = [Schemas.SpreadsheetmlXmlns, Schemas.SpreadsheetmlXmlStrictns];
     private static readonly string[] RelationshiopNs = [Schemas.SpreadsheetmlXmlRelationshipns, Schemas.SpreadsheetmlXmlStrictRelationshipns];
@@ -22,7 +19,7 @@ internal partial class OpenXmlReader : Abstractions.IMiniExcelReader
     private bool _disposed;
     
     internal readonly OpenXmlZip Archive;
-    internal IDictionary<int, string>? SharedStrings;
+    internal IDictionary<int, string> SharedStrings = new Dictionary<int, string>();
     
     private OpenXmlReader(Stream stream, IMiniExcelConfiguration? configuration)
     {
@@ -217,10 +214,8 @@ internal partial class OpenXmlReader : Abstractions.IMiniExcelReader
 
                         await foreach (var row in QueryRowAsync(reader, isFirstRow, startRowIndex, nextRowIndex,
                                                rowIndex, startColumnIndex, endColumnIndex, maxColumnIndex,
-                                               withoutCr,
-                                               useHeaderRow, headRows, mergeCellsContext.MergeCells,
-                                               cancellationToken)
-                                           .ConfigureAwait(false))
+                                               withoutCr, useHeaderRow, headRows, mergeCellsContext.MergeCells,
+                                               cancellationToken).ConfigureAwait(false))
                         {
                             if (isFirstRow)
                             {
@@ -232,8 +227,7 @@ internal partial class OpenXmlReader : Abstractions.IMiniExcelReader
                             yield return row;
                         }
                     }
-                    else if (!await XmlReaderHelper.SkipContentAsync(reader, cancellationToken)
-                                 .ConfigureAwait(false))
+                    else if (!await XmlReaderHelper.SkipContentAsync(reader, cancellationToken).ConfigureAwait(false))
                     {
                         break;
                     }
@@ -385,7 +379,7 @@ internal partial class OpenXmlReader : Abstractions.IMiniExcelReader
             : CustomPropertyHelper.GetEmptyExpandoObject(maxColumnIndex, startColumnIndex);
     }
 
-    private static void SetCellsValueAndHeaders(object? cellValue, bool useHeaderRow, Dictionary<int, string?> headRows, bool isFirstRow, IDictionary<string, object?> cell, int columnIndex)
+    private static void SetCellsValueAndHeaders(object? cellValue, bool useHeaderRow, Dictionary<int, string> headRows, bool isFirstRow, IDictionary<string, object?> cell, int columnIndex)
     {
         if (!useHeaderRow)
         {
@@ -411,7 +405,7 @@ internal partial class OpenXmlReader : Abstractions.IMiniExcelReader
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        if (SharedStrings is not null)
+        if (SharedStrings is { Count: > 0 })
             return;
         
         var sharedStringsEntry = Archive.GetEntry("xl/sharedStrings.xml");
@@ -432,7 +426,7 @@ internal partial class OpenXmlReader : Abstractions.IMiniExcelReader
                 SharedStrings[idx++] = sharedString;
             }
         }
-        else if (SharedStrings is null)
+        else if (SharedStrings is { Count: 0 })
         {
             var list = await XmlReaderHelper.GetSharedStringsAsync(stream, cancellationToken, Ns)
                 .CreateListAsync(cancellationToken)
@@ -672,7 +666,8 @@ internal partial class OpenXmlReader : Abstractions.IMiniExcelReader
     {
         const NumberStyles style = NumberStyles.Any;
         var invariantCulture = CultureInfo.InvariantCulture;
-
+        value = null;
+        
         switch (aT)
         {
             case "s":
@@ -680,22 +675,20 @@ internal partial class OpenXmlReader : Abstractions.IMiniExcelReader
                 {
                     if (sstIndex >= 0 && sstIndex < SharedStrings?.Count)
                     {
-                        //value = Helpers.ConvertEscapeChars(_SharedStrings[sstIndex]);
                         value = XmlHelper.DecodeString(SharedStrings[sstIndex]);
-                        return;
                     }
                 }
-                value = null;
-                return;
+                break;
 
             case "inlineStr":
             case "str":
                 //TODO: it will unbox,box
                 var v = XmlHelper.DecodeString(rawValue);
+                value = v;
                 if (_config.EnableConvertByteArray)
                 {
                     //if str start with "data:image/png;base64," then convert to byte[] https://github.com/mini-software/MiniExcel/issues/318
-                    if (v is not null && v.StartsWith("@@@fileid@@@,", StringComparison.Ordinal))
+                    if (v?.StartsWith("@@@fileid@@@,", StringComparison.Ordinal) ?? false)
                     {
                         var path = v[13..];
                         var entry = Archive.GetEntry(path);
@@ -708,29 +701,17 @@ internal partial class OpenXmlReader : Abstractions.IMiniExcelReader
                         }
                         value = bytes;
                     }
-                    else
-                    {
-                        value = v;
-                    }
                 }
-                else
-                {
-                    value = v;
-                }
-                return;
+                break;
 
             case "b":
                 value = rawValue == "1";
                 return;
 
             case "d":
-                if (DateTime.TryParseExact(rawValue, "yyyy-MM-dd", invariantCulture, DateTimeStyles.AllowLeadingWhite | DateTimeStyles.AllowTrailingWhite, out var date))
-                {
-                    value = date;
-                    return;
-                }
-
-                value = rawValue;
+                value = DateTime.TryParseExact(rawValue, "yyyy-MM-dd", invariantCulture, DateTimeStyles.AllowLeadingWhite | DateTimeStyles.AllowTrailingWhite, out var date)
+                    ? date
+                    : rawValue;
                 return;
 
             case "e":
@@ -738,13 +719,7 @@ internal partial class OpenXmlReader : Abstractions.IMiniExcelReader
                 return;
 
             default:
-                if (double.TryParse(rawValue, style, invariantCulture, out var n))
-                {
-                    value = n;
-                    return;
-                }
-
-                value = rawValue;
+                value = double.TryParse(rawValue, style, invariantCulture, out var n) ? n : rawValue;
                 return;
         }
     }

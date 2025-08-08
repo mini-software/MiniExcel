@@ -299,16 +299,17 @@ public class MiniExcelCsvTests
 
     private class Test
     {
-        public string c1 { get; set; }
-        public string c2 { get; set; }
+        public string? C1 { get; set; }
+        public string? C2 { get; set; }
     }
 
     private class TestWithAlias
     {
         [MiniExcelColumnName(columnName: "c1", aliases: ["column1", "col1"])]
-        public string c1 { get; set; }
+        public string? C1 { get; set; }
+        
         [MiniExcelColumnName(columnName: "c2", aliases: ["column2", "col2"])]
-        public string c2 { get; set; }
+        public string? C2 { get; set; }
     }
 
     [Fact]
@@ -345,27 +346,25 @@ public class MiniExcelCsvTests
 
         _csvExporter.Export(path, new[] 
         {
-            new { c1 = "A1", c2 = "B1"},
-            new { c1 = "A2", c2 = "B2"},
+            new { C1 = "A1", C2 = "B1"},
+            new { C1 = "A2", C2 = "B2"},
         });
 
-        var txt = File.ReadAllText(path);
-        
         using (var stream = File.OpenRead(path))
         {
             var rows = _csvImporter.Query(stream, useHeaderRow: true).ToList();
-            Assert.Equal("A1", rows[0].c1);
-            Assert.Equal("B1", rows[0].c2);
-            Assert.Equal("A2", rows[1].c1);
-            Assert.Equal("B2", rows[1].c2);
+            Assert.Equal("A1", rows[0].C1);
+            Assert.Equal("B1", rows[0].C2);
+            Assert.Equal("A2", rows[1].C1);
+            Assert.Equal("B2", rows[1].C2);
         }
 
         {
             var rows = _csvImporter.Query(path, useHeaderRow: true).ToList();
-            Assert.Equal("A1", rows[0].c1);
-            Assert.Equal("B1", rows[0].c2);
-            Assert.Equal("A2", rows[1].c1);
-            Assert.Equal("B2", rows[1].c2);
+            Assert.Equal("A1", rows[0].C1);
+            Assert.Equal("B1", rows[0].C2);
+            Assert.Equal("A2", rows[1].C1);
+            Assert.Equal("B2", rows[1].C2);
         }
     }
 
@@ -377,25 +376,25 @@ public class MiniExcelCsvTests
 
         _csvExporter.Export(path, new[] 
         {
-            new { c1 = "A1", c2 = "B1"},
-            new { c1 = "A2", c2 = "B2"},
+            new { C1 = "A1", C2 = "B1"},
+            new { C1 = "A2", C2 = "B2"},
         });
 
         using (var stream = File.OpenRead(path))
         {
             var rows = _csvImporter.Query<Test>(stream).ToList();
-            Assert.Equal("A1", rows[0].c1);
-            Assert.Equal("B1", rows[0].c2);
-            Assert.Equal("A2", rows[1].c1);
-            Assert.Equal("B2", rows[1].c2);
+            Assert.Equal("A1", rows[0].C1);
+            Assert.Equal("B1", rows[0].C2);
+            Assert.Equal("A2", rows[1].C1);
+            Assert.Equal("B2", rows[1].C2);
         }
 
         {
             var rows = _csvImporter.Query<Test>(path).ToList();
-            Assert.Equal("A1", rows[0].c1);
-            Assert.Equal("B1", rows[0].c2);
-            Assert.Equal("A2", rows[1].c1);
-            Assert.Equal("B2", rows[1].c2);
+            Assert.Equal("A1", rows[0].C1);
+            Assert.Equal("B1", rows[0].C2);
+            Assert.Equal("A2", rows[1].C1);
+            Assert.Equal("B2", rows[1].C2);
         }
     }
 

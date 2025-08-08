@@ -1,5 +1,8 @@
-﻿using ClosedXML.Excel;
+﻿using System.Drawing;
+using ClosedXML.Excel;
 using ExcelDataReader;
+using MiniExcelLib.Core.Enums;
+using MiniExcelLib.Core.OpenXml.Styles;
 using MiniExcelLib.Core.OpenXml.Utils;
 using MiniExcelLib.Tests.Common.Utils;
 

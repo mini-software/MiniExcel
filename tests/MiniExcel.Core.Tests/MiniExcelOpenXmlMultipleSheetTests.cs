@@ -78,7 +78,8 @@ public class MiniExcelOpenXmlMultipleSheetTests
             var sheetNames =  _excelImporter.GetSheetNames(path).ToList();
             foreach (var sheetName in sheetNames)
             {
-                var rows =  _excelImporter.Query(path, sheetName: sheetName).ToList();
+                var rows = _excelImporter.Query(path, sheetName: sheetName).ToList();
+                Assert.NotEmpty(rows);
             }
 
             Assert.Equal(new[] { "Sheet1", "Sheet2", "Sheet3" }, sheetNames);
@@ -92,6 +93,7 @@ public class MiniExcelOpenXmlMultipleSheetTests
             foreach (var sheetName in sheetNames)
             {
                 var rows =  _excelImporter.Query(stream, sheetName: sheetName).ToList();
+                Assert.NotEmpty(rows);
             }
         }
     }
@@ -99,15 +101,15 @@ public class MiniExcelOpenXmlMultipleSheetTests
     [MiniExcelSheet(Name = "Users")]
     private class UserDto
     {
-        public string Name { get; set; }
+        public string? Name { get; set; }
         public int Age { get; set; }
     }
 
     [MiniExcelSheet(Name = "Departments", State = SheetState.Hidden)]
     private class DepartmentDto
     {
-        public string ID { get; set; }
-        public string Name { get; set; }
+        public string? ID { get; set; }
+        public string? Name { get; set; }
     }
 
     [Fact]
@@ -279,6 +281,7 @@ public class MiniExcelOpenXmlMultipleSheetTests
         foreach (var sheetName in sheetInfos.Select(s => s.Name))
         {
             var rows =  _excelImporter.Query(path, sheetName: sheetName).ToList();
+            Assert.NotEmpty(rows);
         }
     }
 }

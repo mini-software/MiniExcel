@@ -5,7 +5,7 @@ public static class DateTimeHelper
     /// <summary>
     /// NumberFormat from NuGet ExcelNumberFormat MIT@License
     /// </summary>
-    public static bool IsDateTimeFormat(string formatCode) => new OpenXmlNumberFormatHelper(formatCode).IsDateTimeFormat;
+    public static bool IsDateTimeFormat(string? formatCode) => new OpenXmlNumberFormatHelper(formatCode ?? "").IsDateTimeFormat;
 
     /**Below Code from ExcelDataReader @MIT License**/
     // All OA dates must be strictly in between OADateMinAsDouble and OADateMaxAsDouble

@@ -9,7 +9,7 @@ public class IssueTests
     private readonly OpenXmlImporter _openXmlImporter = MiniExcel.Importers.GetOpenXmlImporter();
 
     [Fact]
-    public void TestPR10()
+    public void TestPullRequest10()
     {
         var path = PathHelper.GetFile("csv/TestIssue142.csv");
         var config = new CsvConfiguration
@@ -18,7 +18,10 @@ public class IssueTests
                 .Select(s => Regex.Replace(s.Replace("\"\"", "\""), "^\"|\"$", ""))
                 .ToArray()
         };
+        
         var rows = _csvImporter.Query(path, configuration: config).ToList();
+        Assert.Equal(2, rows.Count);
+        Assert.Equal(15, ((IDictionary<string, object>)rows[0]).Count);
     }
 
     /// <summary>
@@ -26,13 +29,13 @@ public class IssueTests
     /// https://github.com/mini-software/MiniExcel/issues/305
     /// </summary>
     [Fact]
-    public void TestIssueI49RZH()
+    public void TestIssue305()
     {
         using var path = AutoDeletingPath.Create(ExcelType.Csv);
         var value = new[]
         {
-            new TestIssueI49RZHDto{ dd = DateTimeOffset.Parse("2022-01-22")},
-            new TestIssueI49RZHDto{ dd = null}
+            new TestIssue305Dto{ Dt = DateTimeOffset.Parse("2022-01-22")},
+            new TestIssue305Dto{ Dt = null}
         };
         _csvExporter.Export(path.ToString(), value);
 
@@ -40,10 +43,10 @@ public class IssueTests
         Assert.Equal("2022-01-22", rows[1].A);
     }
 
-    private class TestIssueI49RZHDto
+    private class TestIssue305Dto
     {
         [MiniExcelFormat("yyyy-MM-dd")]
-        public DateTimeOffset? dd { get; set; }
+        public DateTimeOffset? Dt { get; set; }
     }
     
     /// <summary>
@@ -123,7 +126,7 @@ public class IssueTests
     /// https://gitee.com/dotnetchina/MiniExcel/issues/I57WMM
     /// </summary>
     [Fact]
-    public void TestIssueI57WMM()
+    public void TestIssueGiteeI57Dto()
     {
         Dictionary<string, object>[] sheets = [new() { ["ID"] = "0001", ["Name"] = "Jack" }];
         using var stream = new MemoryStream();
@@ -207,7 +210,7 @@ public class IssueTests
     
     private class Issue241Dto
     {
-        public string Name { get; set; }
+        public string? Name { get; set; }
 
         [MiniExcelFormat("MM dd, yyyy")]
         public DateTime InDate { get; set; }
@@ -240,7 +243,7 @@ public class IssueTests
 
     private class Issue243Dto
     {
-        public string Name { get; set; }
+        public string? Name { get; set; }
         public int Age { get; set; }
         public DateTime InDate { get; set; }
     }
@@ -303,7 +306,7 @@ public class IssueTests
     }
 
     [Fact]
-    public void TestIssueI4WDA9()
+    public void TestIssueI4Wda9()
     {
         using var path = AutoDeletingPath.Create(ExcelType.Csv);
         var value = new DataTable();
@@ -652,7 +655,7 @@ public class IssueTests
         Assert.Equal(expected, File.ReadAllText(path.ToString()));
     }
 
-    public class Issue89VO
+    public class Issue89Model
     {
         public WorkState State { get; set; }
 
@@ -689,35 +692,35 @@ public class IssueTests
             stream.Position = 0;
             var rows = _csvImporter.Query(stream, useHeaderRow: true).ToList();
 
-            Assert.Equal(nameof(Issue89VO.WorkState.OnDuty), rows[0].State);
-            Assert.Equal(nameof(Issue89VO.WorkState.Fired), rows[1].State);
-            Assert.Equal(nameof(Issue89VO.WorkState.Leave), rows[2].State);
+            Assert.Equal(nameof(Issue89Model.WorkState.OnDuty), rows[0].State);
+            Assert.Equal(nameof(Issue89Model.WorkState.Fired), rows[1].State);
+            Assert.Equal(nameof(Issue89Model.WorkState.Leave), rows[2].State);
 
             using var path = AutoDeletingPath.Create(ExcelType.Csv);
             _csvExporter.Export(path.ToString(), rows);
-            var rows2 = _csvImporter.Query<Issue89VO>(path.ToString()).ToList();
+            var rows2 = _csvImporter.Query<Issue89Model>(path.ToString()).ToList();
 
-            Assert.Equal(Issue89VO.WorkState.OnDuty, rows2[0].State);
-            Assert.Equal(Issue89VO.WorkState.Fired, rows2[1].State);
-            Assert.Equal(Issue89VO.WorkState.Leave, rows2[2].State);
+            Assert.Equal(Issue89Model.WorkState.OnDuty, rows2[0].State);
+            Assert.Equal(Issue89Model.WorkState.Fired, rows2[1].State);
+            Assert.Equal(Issue89Model.WorkState.Leave, rows2[2].State);
         }
 
         //xlsx
         {
             var path = PathHelper.GetFile("xlsx/TestIssue89.xlsx");
-            var rows = _openXmlImporter.Query<Issue89VO>(path).ToList();
+            var rows = _openXmlImporter.Query<Issue89Model>(path).ToList();
 
-            Assert.Equal(Issue89VO.WorkState.OnDuty, rows[0].State);
-            Assert.Equal(Issue89VO.WorkState.Fired, rows[1].State);
-            Assert.Equal(Issue89VO.WorkState.Leave, rows[2].State);
+            Assert.Equal(Issue89Model.WorkState.OnDuty, rows[0].State);
+            Assert.Equal(Issue89Model.WorkState.Fired, rows[1].State);
+            Assert.Equal(Issue89Model.WorkState.Leave, rows[2].State);
 
             using var xlsxPath = AutoDeletingPath.Create();
             _openXmlExporter.Export(xlsxPath.ToString(), rows);
-            var rows2 = _openXmlImporter.Query<Issue89VO>(xlsxPath.ToString()).ToList();
+            var rows2 = _openXmlImporter.Query<Issue89Model>(xlsxPath.ToString()).ToList();
 
-            Assert.Equal(Issue89VO.WorkState.OnDuty, rows2[0].State);
-            Assert.Equal(Issue89VO.WorkState.Fired, rows2[1].State);
-            Assert.Equal(Issue89VO.WorkState.Leave, rows2[2].State);
+            Assert.Equal(Issue89Model.WorkState.OnDuty, rows2[0].State);
+            Assert.Equal(Issue89Model.WorkState.Fired, rows2[1].State);
+            Assert.Equal(Issue89Model.WorkState.Leave, rows2[2].State);
         }
     }
 
@@ -733,20 +736,20 @@ public class IssueTests
         public int MyProperty4 { get; set; }
     }
 
-    private class Issue142VO
+    private class Issue142Model
     {
         [MiniExcelColumnName("CustomColumnName")]
-        public string MyProperty1 { get; set; }  //index = 1
+        public string? MyProperty1 { get; set; }  //index = 1
         [MiniExcelIgnore]
-        public string MyProperty7 { get; set; } //index = null
-        public string MyProperty2 { get; set; } //index = 3
+        public string? MyProperty7 { get; set; } //index = null
+        public string? MyProperty2 { get; set; } //index = 3
         [MiniExcelColumnIndex(6)]
-        public string MyProperty3 { get; set; } //index = 6
+        public string? MyProperty3 { get; set; } //index = 6
         [MiniExcelColumnIndex("A")] // equal column index 0
-        public string MyProperty4 { get; set; }
+        public string? MyProperty4 { get; set; }
         [MiniExcelColumnIndex(2)]
-        public string MyProperty5 { get; set; } //index = 2
-        public string MyProperty6 { get; set; } //index = 4
+        public string? MyProperty5 { get; set; } //index = 2
+        public string? MyProperty6 { get; set; } //index = 4
     }
 
     [Fact]
@@ -755,7 +758,7 @@ public class IssueTests
         {
             using var file = AutoDeletingPath.Create();
             var path = file.ToString();
-            Issue142VO[] values =
+            Issue142Model[] values =
             [
                 new()
                 {
@@ -789,7 +792,7 @@ public class IssueTests
             }
 
             {
-                var rows = _openXmlImporter.Query<Issue142VO>(path).ToList();
+                var rows = _openXmlImporter.Query<Issue142Model>(path).ToList();
 
                 Assert.Equal("MyProperty4", rows[0].MyProperty4);
                 Assert.Equal("MyProperty1", rows[0].MyProperty1);
@@ -804,7 +807,7 @@ public class IssueTests
         {
             using var file = AutoDeletingPath.Create(ExcelType.Csv);
             var path = file.ToString();
-            Issue142VO[] values =
+            Issue142Model[] values =
             [
                 new()
                 {
@@ -827,7 +830,7 @@ public class IssueTests
             Assert.Equal(expected, File.ReadAllText(path));
 
             {
-                var rows = _csvImporter.Query<Issue142VO>(path).ToList();
+                var rows = _csvImporter.Query<Issue142Model>(path).ToList();
 
                 Assert.Equal("MyProperty4", rows[0].MyProperty4);
                 Assert.Equal("MyProperty1", rows[0].MyProperty1);
@@ -854,14 +857,12 @@ public class IssueTests
     {
         const string path = "../../../../../samples/xlsx/TestIssue142.xlsx";
         const string csvPath = "../../../../../samples/csv/TestIssue142.csv";
-        {
-            var rows = _openXmlImporter.Query<Issue142VoExcelColumnNameNotFound>(path).ToList();
-            Assert.Equal(0, rows[0].MyProperty1);
-        }
-
+        
+        var rows = _openXmlImporter.Query<Issue142VoExcelColumnNameNotFound>(path).ToList();
+        Assert.Equal(0, rows[0].MyProperty1);
         Assert.Throws<ArgumentException>(() => _openXmlImporter.Query<Issue142VoOverIndex>(path).ToList());
 
-        var rowsXlsx = _openXmlImporter.Query<Issue142VO>(path).ToList();
+        var rowsXlsx = _openXmlImporter.Query<Issue142Model>(path).ToList();
         Assert.Equal("CustomColumnName", rowsXlsx[0].MyProperty1);
         Assert.Null(rowsXlsx[0].MyProperty7);
         Assert.Equal("MyProperty2", rowsXlsx[0].MyProperty2);
@@ -870,7 +871,7 @@ public class IssueTests
         Assert.Equal("MyProperty102", rowsXlsx[0].MyProperty5);
         Assert.Equal("MyProperty6", rowsXlsx[0].MyProperty6);
 
-        var rowsCsv = _csvImporter.Query<Issue142VO>(csvPath).ToList();
+        var rowsCsv = _csvImporter.Query<Issue142Model>(csvPath).ToList();
         Assert.Equal("CustomColumnName", rowsCsv[0].MyProperty1);
         Assert.Null(rowsCsv[0].MyProperty7);
         Assert.Equal("MyProperty2", rowsCsv[0].MyProperty2);
@@ -894,9 +895,9 @@ public class IssueTests
 
     private class Issue507V01
     {
-        public string A { get; set; }
+        public string? A { get; set; }
         public DateTime B { get; set; }
-        public string C { get; set; }
+        public string? C { get; set; }
         public int D { get; set; }
     }
 

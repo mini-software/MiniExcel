@@ -92,7 +92,7 @@ public class AsyncIssueTests
         Assert.Equal(expected, await File.ReadAllTextAsync(path.ToString()));
     }
 
-    private class Issue89VO
+    private class Issue89Dto
     {
         public WorkState State { get; set; }
 
@@ -126,44 +126,44 @@ public class AsyncIssueTests
             await writer.FlushAsync();
 
             stream.Position = 0;
-            var q = _csvImporter.QueryAsync<Issue89VO>(stream).ToBlockingEnumerable();
+            var q = _csvImporter.QueryAsync<Issue89Dto>(stream).ToBlockingEnumerable();
             var rows = q.ToList();
 
-            Assert.Equal(Issue89VO.WorkState.OnDuty, rows[0].State);
-            Assert.Equal(Issue89VO.WorkState.Fired, rows[1].State);
-            Assert.Equal(Issue89VO.WorkState.Leave, rows[2].State);
-
-            var outputPath = PathHelper.GetTempPath("xlsx");
-            var rowsWritten = await _openXmlExporter.ExportAsync(outputPath, rows);
-            Assert.Single(rowsWritten);
-            Assert.Equal(3, rowsWritten[0]);
-
-            var q2 = _openXmlImporter.QueryAsync<Issue89VO>(outputPath).ToBlockingEnumerable();
-            var rows2 = q2.ToList();
-            Assert.Equal(Issue89VO.WorkState.OnDuty, rows2[0].State);
-            Assert.Equal(Issue89VO.WorkState.Fired, rows2[1].State);
-            Assert.Equal(Issue89VO.WorkState.Leave, rows2[2].State);
-        }
-
-        //xlsx
-        {
-            var path = PathHelper.GetFile("xlsx/TestIssue89.xlsx");
-            var q = _openXmlImporter.QueryAsync<Issue89VO>(path).ToBlockingEnumerable();
-            var rows = q.ToList();
-            Assert.Equal(Issue89VO.WorkState.OnDuty, rows[0].State);
-            Assert.Equal(Issue89VO.WorkState.Fired, rows[1].State);
-            Assert.Equal(Issue89VO.WorkState.Leave, rows[2].State);
+            Assert.Equal(Issue89Dto.WorkState.OnDuty, rows[0].State);
+            Assert.Equal(Issue89Dto.WorkState.Fired, rows[1].State);
+            Assert.Equal(Issue89Dto.WorkState.Leave, rows[2].State);
 
             var outputPath = PathHelper.GetTempPath();
             var rowsWritten = await _openXmlExporter.ExportAsync(outputPath, rows);
             Assert.Single(rowsWritten);
             Assert.Equal(3, rowsWritten[0]);
 
-            var q1 = _openXmlImporter.QueryAsync<Issue89VO>(outputPath).ToBlockingEnumerable();
+            var q2 = _openXmlImporter.QueryAsync<Issue89Dto>(outputPath).ToBlockingEnumerable();
+            var rows2 = q2.ToList();
+            Assert.Equal(Issue89Dto.WorkState.OnDuty, rows2[0].State);
+            Assert.Equal(Issue89Dto.WorkState.Fired, rows2[1].State);
+            Assert.Equal(Issue89Dto.WorkState.Leave, rows2[2].State);
+        }
+
+        //xlsx
+        {
+            var path = PathHelper.GetFile("xlsx/TestIssue89.xlsx");
+            var q = _openXmlImporter.QueryAsync<Issue89Dto>(path).ToBlockingEnumerable();
+            var rows = q.ToList();
+            Assert.Equal(Issue89Dto.WorkState.OnDuty, rows[0].State);
+            Assert.Equal(Issue89Dto.WorkState.Fired, rows[1].State);
+            Assert.Equal(Issue89Dto.WorkState.Leave, rows[2].State);
+
+            var outputPath = PathHelper.GetTempPath();
+            var rowsWritten = await _openXmlExporter.ExportAsync(outputPath, rows);
+            Assert.Single(rowsWritten);
+            Assert.Equal(3, rowsWritten[0]);
+
+            var q1 = _openXmlImporter.QueryAsync<Issue89Dto>(outputPath).ToBlockingEnumerable();
             var rows2 = q1.ToList();
-            Assert.Equal(Issue89VO.WorkState.OnDuty, rows2[0].State);
-            Assert.Equal(Issue89VO.WorkState.Fired, rows2[1].State);
-            Assert.Equal(Issue89VO.WorkState.Leave, rows2[2].State);
+            Assert.Equal(Issue89Dto.WorkState.OnDuty, rows2[0].State);
+            Assert.Equal(Issue89Dto.WorkState.Fired, rows2[1].State);
+            Assert.Equal(Issue89Dto.WorkState.Leave, rows2[2].State);
         }
     }
 
@@ -171,11 +171,13 @@ public class AsyncIssueTests
     {
         [MiniExcelColumnIndex("A")]
         public int MyProperty1 { get; set; }
+        
         [MiniExcelColumnIndex("A")]
         public int MyProperty2 { get; set; }
 
         public int MyProperty3 { get; set; }
         [MiniExcelColumnIndex("B")]
+        
         public int MyProperty4 { get; set; }
     }
 
@@ -185,7 +187,7 @@ public class AsyncIssueTests
         {
             using var file = AutoDeletingPath.Create();
             var path = file.ToString();
-            await _openXmlExporter.ExportAsync(path, new[] { new Issue142VO { MyProperty1 = "MyProperty1", MyProperty2 = "MyProperty2", MyProperty3 = "MyProperty3", MyProperty4 = "MyProperty4", MyProperty5 = "MyProperty5", MyProperty6 = "MyProperty6", MyProperty7 = "MyProperty7" } });
+            await _openXmlExporter.ExportAsync(path, new[] { new Issue142Dto { MyProperty1 = "MyProperty1", MyProperty2 = "MyProperty2", MyProperty3 = "MyProperty3", MyProperty4 = "MyProperty4", MyProperty5 = "MyProperty5", MyProperty6 = "MyProperty6", MyProperty7 = "MyProperty7" } });
 
             {
                 var q = _openXmlImporter.QueryAsync(path).ToBlockingEnumerable();
@@ -208,7 +210,7 @@ public class AsyncIssueTests
             }
 
             {
-                var q = _openXmlImporter.QueryAsync<Issue142VO>(path).ToBlockingEnumerable();
+                var q = _openXmlImporter.QueryAsync<Issue142Dto>(path).ToBlockingEnumerable();
                 var rows = q.ToList();
 
                 Assert.Equal("MyProperty4", rows[0].MyProperty4);
@@ -224,7 +226,7 @@ public class AsyncIssueTests
         {
             using var file = AutoDeletingPath.Create(ExcelType.Csv);
             var path = file.ToString();
-            await _csvExporter.ExportAsync(path, new[] { new Issue142VO { MyProperty1 = "MyProperty1", MyProperty2 = "MyProperty2", MyProperty3 = "MyProperty3", MyProperty4 = "MyProperty4", MyProperty5 = "MyProperty5", MyProperty6 = "MyProperty6", MyProperty7 = "MyProperty7" } });
+            await _csvExporter.ExportAsync(path, new[] { new Issue142Dto { MyProperty1 = "MyProperty1", MyProperty2 = "MyProperty2", MyProperty3 = "MyProperty3", MyProperty4 = "MyProperty4", MyProperty5 = "MyProperty5", MyProperty6 = "MyProperty6", MyProperty7 = "MyProperty7" } });
             const string expected =
                 """
                 MyProperty4,CustomColumnName,MyProperty5,MyProperty2,MyProperty6,,MyProperty3
@@ -234,7 +236,7 @@ public class AsyncIssueTests
             Assert.Equal(expected, await File.ReadAllTextAsync(path));
 
             {
-                var q = _csvImporter.QueryAsync<Issue142VO>(path).ToBlockingEnumerable();
+                var q = _csvImporter.QueryAsync<Issue142Dto>(path).ToBlockingEnumerable();
                 var rows = q.ToList();
 
                 Assert.Equal("MyProperty4", rows[0].MyProperty4);
@@ -362,25 +364,25 @@ public class AsyncIssueTests
     }
 
     #region Duplicated
-    private class Issue142VO
+    private class Issue142Dto
     {
         [MiniExcelColumnName("CustomColumnName")]
-        public string MyProperty1 { get; set; }  //index = 1
+        public string? MyProperty1 { get; set; }  //index = 1
         [MiniExcelIgnore]
-        public string MyProperty7 { get; set; } //index = null
-        public string MyProperty2 { get; set; } //index = 3
+        public string? MyProperty7 { get; set; } //index = null
+        public string? MyProperty2 { get; set; } //index = 3
         [MiniExcelColumnIndex(6)]
-        public string MyProperty3 { get; set; } //index = 6
+        public string? MyProperty3 { get; set; } //index = 6
         [MiniExcelColumnIndex("A")] // equal column index 0
-        public string MyProperty4 { get; set; }
+        public string? MyProperty4 { get; set; }
         [MiniExcelColumnIndex(2)]
-        public string MyProperty5 { get; set; } //index = 2
-        public string MyProperty6 { get; set; } //index = 4
+        public string? MyProperty5 { get; set; } //index = 2
+        public string? MyProperty6 { get; set; } //index = 4
     }
     
     private class Issue241Dto
     {
-        public string Name { get; set; }
+        public string? Name { get; set; }
 
         [MiniExcelFormat("MM dd, yyyy")]
         public DateTime InDate { get; set; }
@@ -388,10 +390,9 @@ public class AsyncIssueTests
     
     private class Issue243Dto
     {
-        public string Name { get; set; }
+        public string? Name { get; set; }
         public int Age { get; set; }
         public DateTime InDate { get; set; }
     }
     #endregion
-
 }

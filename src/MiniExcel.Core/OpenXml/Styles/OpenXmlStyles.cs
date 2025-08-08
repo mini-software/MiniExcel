@@ -1,5 +1,4 @@
 using MiniExcelLib.Core.OpenXml.Constants;
-using MiniExcelLib.Core.OpenXml.Utils;
 using MiniExcelLib.Core.OpenXml.Zip;
 using XmlReaderHelper = MiniExcelLib.Core.OpenXml.Utils.XmlReaderHelper;
 
@@ -16,7 +15,9 @@ internal class OpenXmlStyles
     public OpenXmlStyles(OpenXmlZip zip)
     {
         using var reader = zip.GetXmlReader("xl/styles.xml");
-        
+        if (reader is null)
+            throw new InvalidDataException("The OpenXml styles could not be found, the file might be malformed.");
+                
         if (!XmlReaderHelper.IsStartElement(reader, "styleSheet", Ns))
             return;
         if (!XmlReaderHelper.ReadFirstContent(reader))
@@ -76,7 +77,7 @@ internal class OpenXmlStyles
                 {
                     if (XmlReaderHelper.IsStartElement(reader, "numFmt", Ns))
                     {
-                        int.TryParse(reader.GetAttribute("numFmtId"), out var numFmtId);
+                        _ = int.TryParse(reader.GetAttribute("numFmtId"), out var numFmtId);
                         var formatCode = reader.GetAttribute("formatCode");
                                 
                         //TODO: determine the type according to the format
@@ -86,8 +87,12 @@ internal class OpenXmlStyles
                             type = typeof(DateTime?);
                         }
 
+#if NETCOREAPP2_0_OR_GREATER
+                        _customFormats.TryAdd(numFmtId, new NumberFormatString(formatCode, type));
+#else
                         if (!_customFormats.ContainsKey(numFmtId))
                             _customFormats.Add(numFmtId, new NumberFormatString(formatCode, type));
+#endif
                         reader.Skip();
                     }
                     else if (!XmlReaderHelper.SkipContent(reader))
@@ -111,10 +116,7 @@ internal class OpenXmlStyles
         if (Formats.TryGetValue(styleRecord.NumFmtId, out var numberFormat))
             return numberFormat;
 
-        if (_customFormats.TryGetValue(styleRecord.NumFmtId, out var customNumberFormat))
-            return customNumberFormat;
-            
-        return null;
+        return _customFormats.TryGetValue(styleRecord.NumFmtId, out var customNumberFormat) ? customNumberFormat : null;
     }
 
     public object? ConvertValueByStyleFormat(int index, object? value)
@@ -180,9 +182,9 @@ internal class OpenXmlStyles
     };
 }
 
-internal class NumberFormatString(string formatCode, Type type, bool needConvertToString = false)
+internal class NumberFormatString(string? formatCode, Type type, bool needConvertToString = false)
 {
-    public string FormatCode { get; } = formatCode;
+    public string? FormatCode { get; } = formatCode;
     public Type Type { get; set; } = type;
     public bool NeedConvertToString { get; } = needConvertToString;
 }

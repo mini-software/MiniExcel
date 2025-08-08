@@ -1,8 +1,5 @@
 using MiniExcelLib.Core.Attributes;
-using MiniExcelLib.Core.Helpers;
 using MiniExcelLib.Core.OpenXml.Constants;
-using MiniExcelLib.Core.OpenXml.Utils;
-using MiniExcelLib.Core.Reflection;
 
 namespace MiniExcelLib.Core.OpenXml.Templates;
 
@@ -172,7 +169,7 @@ internal partial class OpenXmlTemplate
         await WriteSheetXmlAsync(stream, doc, sheetData, mergeCells, cancellationToken).ConfigureAwait(false);
     }
     
-    private void GenerateSheetXmlImplByCreateMode(ZipArchiveEntry templateSheetZipEntry, Stream outputZipSheetEntryStream, Stream outputSheetStream, IDictionary<string, object> inputMaps, IDictionary<int, string> sharedStrings, bool mergeCells = false)
+    private void GenerateSheetXmlImplByCreateMode(ZipArchiveEntry templateSheetZipEntry, Stream outputZipSheetEntryStream, Stream outputSheetStream, IDictionary<string, object?> inputMaps, IDictionary<int, string> sharedStrings, bool mergeCells = false)
     {
         var doc = new XmlDocument();
         using (var newTemplateStream = templateSheetZipEntry.Open())
@@ -1072,7 +1069,7 @@ internal partial class OpenXmlTemplate
         }
     }
 
-    private void UpdateDimensionAndGetRowsInfo(IDictionary<string, object> inputMaps, XmlDocument doc, XmlNodeList rows, bool changeRowIndex = true)
+    private void UpdateDimensionAndGetRowsInfo(IDictionary<string, object?> inputMaps, XmlDocument doc, XmlNodeList rows, bool changeRowIndex = true)
     {
         string[] refs;
         if (doc.SelectSingleNode("/x:worksheet/x:dimension", Ns) is XmlElement dimension)
@@ -1086,10 +1083,10 @@ internal partial class OpenXmlTemplate
             var firstRow = rows[0].SelectNodes("x:c", Ns);
             var lastRow = rows[^1].SelectNodes("x:c", Ns);
 
-            var dimStart = ((XmlElement)firstRow?[0])?.GetAttribute("r");
-            var dimEnd = ((XmlElement)lastRow?[lastRow.Count - 1])?.GetAttribute("r");
+            var dimStart = ((XmlElement?)firstRow?[0])?.GetAttribute("r") ?? "";
+            var dimEnd = ((XmlElement?)lastRow?[^1])?.GetAttribute("r") ?? "";
 
-            refs = new[] { dimStart, dimEnd };
+            refs = [dimStart, dimEnd];
 
             dimension = (XmlElement)doc.CreateNode(XmlNodeType.Element, "dimension", null);
             var worksheet = doc.SelectSingleNode("/x:worksheet", Ns);
@@ -1111,8 +1108,7 @@ internal partial class OpenXmlTemplate
                 // ==== mergecells ====
                 if (_xMergeCellInfos.TryGetValue(r, out var merCell))
                 {
-                    if (xRowInfo.RowMercells is null)
-                        xRowInfo.RowMercells = new List<XMergeCell>();
+                    xRowInfo.RowMercells ??= [];
                     xRowInfo.RowMercells.Add(merCell);
                 }
 
@@ -1152,7 +1148,7 @@ internal partial class OpenXmlTemplate
                     }
 
                     //cellValue = inputMaps[propNames[0]] - 1. From left to right, only the first set is used as the basis for the list
-                    if (cellValue is IEnumerable value && !(cellValue is string))
+                    if (cellValue is IEnumerable value and not string)
                     {
                         if (xRowInfo.IEnumerableMercell is null && _xMergeCellInfos.TryGetValue(r, out var info))
                         {

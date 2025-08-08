@@ -1,6 +1,5 @@
 using System.Drawing;
 using MiniExcelLib.Core.Enums;
-using MiniExcelLib.Core.OpenXml.Utils;
 
 namespace MiniExcelLib.Core.OpenXml.Picture;
 

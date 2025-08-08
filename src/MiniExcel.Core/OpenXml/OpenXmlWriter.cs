@@ -1,21 +1,15 @@
+using System.ComponentModel;
 using System.Xml.Linq;
-using MiniExcelLib.Core.Abstractions;
-using MiniExcelLib.Core.Helpers;
 using MiniExcelLib.Core.OpenXml.Constants;
 using MiniExcelLib.Core.OpenXml.Models;
 using MiniExcelLib.Core.OpenXml.Styles.Builder;
-using MiniExcelLib.Core.OpenXml.Utils;
 using MiniExcelLib.Core.OpenXml.Zip;
-using MiniExcelLib.Core.Reflection;
 using MiniExcelLib.Core.WriteAdapters;
-using DefaultSheetStyleBuilder = MiniExcelLib.Core.OpenXml.Styles.Builder.DefaultSheetStyleBuilder;
-using ISheetStyleBuilder = MiniExcelLib.Core.OpenXml.Styles.Builder.ISheetStyleBuilder;
-using MinimalSheetStyleBuilder = MiniExcelLib.Core.OpenXml.Styles.Builder.MinimalSheetStyleBuilder;
 using SafeStreamWriter = MiniExcelLib.Core.Helpers.SafeStreamWriter;
 
 namespace MiniExcelLib.Core.OpenXml;
 
-internal partial class OpenXmlWriter : Abstractions.IMiniExcelWriter
+internal partial class OpenXmlWriter : IMiniExcelWriter
 {
     private static readonly UTF8Encoding Utf8WithBom = new(true);
         
@@ -35,8 +29,8 @@ internal partial class OpenXmlWriter : Abstractions.IMiniExcelWriter
     {
         _stream = stream;
 
-        // Why ZipArchiveMode.Update not ZipArchiveMode.Create?
-        // R : Mode create - ZipArchiveEntry does not support seeking.'
+        // A. Why ZipArchiveMode.Update and not ZipArchiveMode.Create?
+        // R. ZipArchiveEntry does not support seeking when Mode is Create.
         _configuration = configuration as OpenXmlConfiguration ?? OpenXmlConfiguration.Default;
         if (_configuration is { EnableAutoWidth: true, FastMode: false })
             throw new InvalidOperationException("Auto width requires fast mode to be enabled");
@@ -255,13 +249,12 @@ internal partial class OpenXmlWriter : Abstractions.IMiniExcelWriter
         var count = 0;
         var isKnownCount = writeAdapter is not null && writeAdapter.TryGetKnownCount(out count);
         
-        List<MiniExcelColumnInfo> props;
 #if SYNC_ONLY
-        props = writeAdapter?.GetColumns();
+        var props = writeAdapter?.GetColumns();
 #else
-        props = writeAdapter is not null 
-            ? writeAdapter?.GetColumns() 
-            : await asyncWriteAdapter.GetColumnsAsync().ConfigureAwait(false);
+        var props = writeAdapter is not null 
+            ? writeAdapter.GetColumns()
+            : await (asyncWriteAdapter?.GetColumnsAsync() ?? Task.FromResult<List<MiniExcelColumnInfo>?>(null)).ConfigureAwait(false);
 #endif
         
         if (props is null)
@@ -309,7 +302,7 @@ internal partial class OpenXmlWriter : Abstractions.IMiniExcelWriter
         var currentRowIndex = 0;
         if (_printHeader)
         {
-            await PrintHeaderAsync(writer, props, cancellationToken).ConfigureAwait(false);
+            await PrintHeaderAsync(writer, props!, cancellationToken).ConfigureAwait(false);
             currentRowIndex++;
         }
 
@@ -331,8 +324,6 @@ internal partial class OpenXmlWriter : Abstractions.IMiniExcelWriter
         else
         {
 #if !SYNC_ONLY
-#pragma warning disable CA2007
-            //todo: why does this throw compiler error even if ConfigureAwait(false) is present?
             await foreach (var row in asyncWriteAdapter.GetRowsAsync(props, cancellationToken).ConfigureAwait(false))
             {
                 cancellationToken.ThrowIfCancellationRequested();
@@ -344,7 +335,6 @@ internal partial class OpenXmlWriter : Abstractions.IMiniExcelWriter
                 }
                 await writer.WriteAsync(WorksheetXml.EndRow, cancellationToken).ConfigureAwait(false);
             }
-#pragma warning restore CA2007
 #endif
         }
         maxRowIndex = currentRowIndex;
@@ -518,12 +508,12 @@ internal partial class OpenXmlWriter : Abstractions.IMiniExcelWriter
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        using var context = new SheetStyleBuildContext(_zipDictionary, _archive, Utf8WithBom, _configuration.DynamicColumns);
-        ISheetStyleBuilder? builder = _configuration.TableStyles switch
+        using var context = new SheetStyleBuildContext(_zipDictionary, _archive, Utf8WithBom, _configuration.DynamicColumns ?? []);
+        ISheetStyleBuilder builder = _configuration.TableStyles switch
         {
             TableStyles.None => new MinimalSheetStyleBuilder(context),
             TableStyles.Default => new DefaultSheetStyleBuilder(context, _configuration.StyleOptions),
-            _ => null!
+            _ => throw new InvalidEnumArgumentException(nameof(_configuration.TableStyles), (int)_configuration.TableStyles, typeof(TableStyles))
         };
 
         var result = await builder.BuildAsync(cancellationToken).ConfigureAwait(false);

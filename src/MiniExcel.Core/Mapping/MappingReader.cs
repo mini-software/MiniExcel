@@ -612,7 +612,7 @@ internal static partial class MappingReader<T> where T : class, new()
                                                 _ when targetType == typeof(float) => Convert.ToSingle(value),
                                                 _ when targetType == typeof(bool) => Convert.ToBoolean(value),
                                                 _ when targetType == typeof(DateTime) => Convert.ToDateTime(value),
-                                                _ => value
+                                                _ => Convert.ChangeType(value, targetType)
                                             };
                                         }
                                         catch
@@ -630,7 +630,7 @@ internal static partial class MappingReader<T> where T : class, new()
                                                     _ when targetType == typeof(float) && float.TryParse(str, out var f) => f,
                                                     _ when targetType == typeof(bool) && bool.TryParse(str, out var b) => b,
                                                     _ when targetType == typeof(DateTime) && DateTime.TryParse(str, out var dt) => dt,
-                                                    _ => value
+                                                    _ => Convert.ChangeType(value, targetType)
                                                 };
                                             }
                                         }
@@ -698,7 +698,7 @@ internal static partial class MappingReader<T> where T : class, new()
                                                 _ when targetType == typeof(float) => Convert.ToSingle(value),
                                                 _ when targetType == typeof(bool) => Convert.ToBoolean(value),
                                                 _ when targetType == typeof(DateTime) => Convert.ToDateTime(value),
-                                                _ => value
+                                                _ => Convert.ChangeType(value, targetType)
                                             };
                                         }
                                         catch
@@ -716,7 +716,7 @@ internal static partial class MappingReader<T> where T : class, new()
                                                     _ when targetType == typeof(float) && float.TryParse(str, out var f) => f,
                                                     _ when targetType == typeof(bool) && bool.TryParse(str, out var b) => b,
                                                     _ when targetType == typeof(DateTime) && DateTime.TryParse(str, out var dt) => dt,
-                                                    _ => value
+                                                    _ => Convert.ChangeType(value, targetType)
                                                 };
                                             }
                                         }
@@ -848,84 +848,16 @@ internal static partial class MappingReader<T> where T : class, new()
             collection[handler.CollectionItemOffset] = item;
         }
         
-        // Set the property on the complex object
-        if (!string.IsNullOrEmpty(handler.PropertyName))
+        // The ValueSetter must be pre-compiled during optimization
+        if (handler.ValueSetter == null)
         {
-            // Find the property setter from the nested mapping
-            var nestedMappingType = nestedMapping.GetType();
-            var propsProperty = nestedMappingType.GetProperty("Properties");
-            if (propsProperty != null)
-            {
-                var properties = propsProperty.GetValue(nestedMapping) as IEnumerable;
-                if (properties != null)
-                {
-                    foreach (var prop in properties)
-                    {
-                        var propType = prop.GetType();
-                        var nameProperty = propType.GetProperty("PropertyName");
-                        var setterProperty = propType.GetProperty("Setter");
-                        
-                        if (nameProperty != null && setterProperty != null)
-                        {
-                            var name = nameProperty.GetValue(prop) as string;
-                            if (name == handler.PropertyName)
-                            {
-                                var setter = setterProperty.GetValue(prop) as Action<object, object?>;
-                                if (setter != null)
-                                {
-                                    // Apply type conversion if needed
-                                    var propTypeProperty = propType.GetProperty("PropertyType");
-                                    if (propTypeProperty != null)
-                                    {
-                                        var targetType = propTypeProperty.GetValue(prop) as Type;
-                                        if (targetType != null && value != null && value.GetType() != targetType)
-                                        {
-                                            // Pre-compiled conversion logic - same as in MappingCompiler
-                                            try
-                                            {
-                                                value = targetType switch
-                                                {
-                                                    _ when targetType == typeof(string) => value.ToString(),
-                                                    _ when targetType == typeof(int) => Convert.ToInt32(value),
-                                                    _ when targetType == typeof(long) => Convert.ToInt64(value),
-                                                    _ when targetType == typeof(decimal) => Convert.ToDecimal(value),
-                                                    _ when targetType == typeof(double) => Convert.ToDouble(value),
-                                                    _ when targetType == typeof(float) => Convert.ToSingle(value),
-                                                    _ when targetType == typeof(bool) => Convert.ToBoolean(value),
-                                                    _ when targetType == typeof(DateTime) => Convert.ToDateTime(value),
-                                                    _ => value
-                                                };
-                                            }
-                                            catch
-                                            {
-                                                // Fallback to string parsing
-                                                var str = value.ToString();
-                                                if (!string.IsNullOrEmpty(str))
-                                                {
-                                                    value = targetType switch
-                                                    {
-                                                        _ when targetType == typeof(int) && int.TryParse(str, out var i) => i,
-                                                        _ when targetType == typeof(long) && long.TryParse(str, out var l) => l,
-                                                        _ when targetType == typeof(decimal) && decimal.TryParse(str, out var d) => d,
-                                                        _ when targetType == typeof(double) && double.TryParse(str, out var db) => db,
-                                                        _ when targetType == typeof(float) && float.TryParse(str, out var f) => f,
-                                                        _ when targetType == typeof(bool) && bool.TryParse(str, out var b) => b,
-                                                        _ when targetType == typeof(DateTime) && DateTime.TryParse(str, out var dt) => dt,
-                                                        _ => value
-                                                    };
-                                                }
-                                            }
-                                        }
-                                    }
-                                    setter.Invoke(item, value);
-                                }
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
+            throw new InvalidOperationException(
+                $"ValueSetter is null for complex collection item handler at property '{handler.PropertyName}'. " +
+                "This indicates the mapping was not properly optimized. Ensure the type was mapped in the MappingRegistry.");
         }
+        
+        // Use the pre-compiled setter with built-in type conversion
+        handler.ValueSetter(item, value);
     }
     
     private static void FinalizeCollections(T item, CompiledMapping<T> mapping, Dictionary<int, IList> collections)

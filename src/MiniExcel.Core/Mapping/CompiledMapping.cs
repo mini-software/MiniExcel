@@ -1,6 +1,6 @@
 namespace MiniExcelLib.Core.Mapping;
 
-public class CompiledMapping<T>
+internal class CompiledMapping<T>
 {
     public string WorksheetName { get; set; } = "Sheet1";
     public IReadOnlyList<CompiledPropertyMapping> Properties { get; set; } = new List<CompiledPropertyMapping>();
@@ -41,7 +41,7 @@ public class CompiledMapping<T>
 /// <summary>
 /// Pre-compiled helpers for collection handling
 /// </summary>
-public class OptimizedCollectionHelper
+internal class OptimizedCollectionHelper
 {
     public Func<System.Collections.IList> Factory { get; set; } = null!;
     public Func<System.Collections.IList, object> Finalizer { get; set; } = null!;
@@ -49,7 +49,7 @@ public class OptimizedCollectionHelper
     public bool IsArray { get; set; }
 }
 
-public class CompiledPropertyMapping
+internal class CompiledPropertyMapping
 {
     public Func<object, object> Getter { get; set; } = null!;
     public string CellAddress { get; set; } = null!;
@@ -62,7 +62,7 @@ public class CompiledPropertyMapping
     public Action<object, object?>? Setter { get; set; }
 }
 
-public class CompiledCollectionMapping
+internal class CompiledCollectionMapping
 {
     public Func<object, IEnumerable> Getter { get; set; } = null!;
     public string StartCell { get; set; } = null!;
@@ -80,25 +80,17 @@ public class CompiledCollectionMapping
 /// <summary>
 /// Defines the layout direction for collections in Excel mappings.
 /// </summary>
-public enum CollectionLayout
+internal enum CollectionLayout
 {
     /// <summary>Collections expand vertically (downward in rows)</summary>
     Vertical = 0,
-    
-    /// <summary>Collections expand horizontally (rightward in columns) - DEPRECATED</summary>
-    [Obsolete("Horizontal collections are no longer supported. Use Vertical layout instead.")]
-    Horizontal = 1,
-    
-    /// <summary>Collections expand in a grid pattern - DEPRECATED</summary>
-    [Obsolete("Grid collections are no longer supported. Use Vertical layout instead.")]
-    Grid = 2
 }
 
 
 /// <summary>
 /// Represents the type of data a cell contains in the mapping
 /// </summary>
-public enum CellHandlerType
+internal enum CellHandlerType
 {
     /// <summary>Cell is empty/unused</summary>
     Empty,
@@ -114,7 +106,7 @@ public enum CellHandlerType
 /// Pre-compiled handler for a specific cell in the mapping grid.
 /// Contains all information needed to extract/set values for that cell without runtime parsing.
 /// </summary>
-public class OptimizedCellHandler
+internal class OptimizedCellHandler
 {
     /// <summary>Type of data this cell contains</summary>
     public CellHandlerType Type { get; set; } = CellHandlerType.Empty;
@@ -177,7 +169,7 @@ public class OptimizedCellHandler
 /// <summary>
 /// Optimized mapping boundaries and metadata
 /// </summary>
-public class OptimizedMappingBoundaries
+internal class OptimizedMappingBoundaries
 {
     /// <summary>Minimum row used by any mapping (1-based)</summary>
     public int MinRow { get; set; } = int.MaxValue;
@@ -220,7 +212,7 @@ public class OptimizedMappingBoundaries
 /// <summary>
 /// Collection expansion strategy - how to handle collections with unknown sizes
 /// </summary>
-public class CollectionExpansionInfo
+internal class CollectionExpansionInfo
 {
     /// <summary>Starting row for expansion</summary>
     public int StartRow { get; set; }

@@ -6,7 +6,7 @@ namespace MiniExcelLib.Core.Mapping;
 /// Optimized executor that uses pre-calculated handler arrays for maximum performance.
 /// Zero allocations, zero lookups, just direct array access.
 /// </summary>
-public sealed class OptimizedMappingExecutor<T>
+internal sealed class OptimizedMappingExecutor<T>
 {
     // Pre-calculated array of value extractors indexed by column (0-based)
     private readonly Func<T, object?>[] _columnGetters;

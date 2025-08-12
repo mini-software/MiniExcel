@@ -149,8 +149,11 @@ namespace MiniExcelLib.Tests
 
             // Act
             var importer = MiniExcel.Importers.GetMappingImporter(registry);
-            var results = await importer.QueryAsync<TestModel>(stream);
-            var resultList = results.ToList();
+            var resultList = new List<TestModel>();
+            await foreach (var item in importer.QueryAsync<TestModel>(stream))
+            {
+                resultList.Add(item);
+            }
 
             // Assert
             Assert.Single(resultList);
@@ -265,8 +268,7 @@ namespace MiniExcelLib.Tests
 
             var mapping = registry.GetMapping<Product>();
             
-            // Verify universal optimization is applied
-            Assert.True(mapping.IsUniversallyOptimized);
+            // Verify optimization is applied
             Assert.NotNull(mapping.OptimizedBoundaries);
             Assert.NotNull(mapping.OptimizedCellGrid);
         }
@@ -287,8 +289,7 @@ namespace MiniExcelLib.Tests
 
             var mapping = registry.GetMapping<Product>();
             
-            // Verify universal optimization is used
-            Assert.True(mapping.IsUniversallyOptimized);
+            // Verify optimization is used
             Assert.NotNull(mapping.OptimizedCellGrid);
             Assert.NotNull(mapping.OptimizedBoundaries);
         }
@@ -962,8 +963,6 @@ namespace MiniExcelLib.Tests
             });
 
             var mapping = registry.GetMapping<Product>();
-            
-            Assert.True(mapping.IsUniversallyOptimized);
             Assert.NotNull(mapping.OptimizedCellGrid);
             Assert.NotNull(mapping.OptimizedBoundaries);
             

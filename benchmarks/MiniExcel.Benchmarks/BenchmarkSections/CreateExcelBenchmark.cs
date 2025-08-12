@@ -6,6 +6,7 @@ using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using MiniExcelLib.Benchmarks.Utils;
 using MiniExcelLib.Core;
+using MiniExcelLib.Core.Mapping;
 using NPOI.XSSF.UserModel;
 using OfficeOpenXml;
 
@@ -14,6 +15,7 @@ namespace MiniExcelLib.Benchmarks.BenchmarkSections;
 public class CreateExcelBenchmark : BenchmarkBase
 {
     private OpenXmlExporter _exporter;
+    private MappingExporter _simpleMappingExporter;
         
     [GlobalSetup]
     public void SetUp()
@@ -22,6 +24,22 @@ public class CreateExcelBenchmark : BenchmarkBase
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
         
         _exporter = MiniExcel.Exporters.GetOpenXmlExporter();
+        
+        var simpleRegistry = new MappingRegistry();
+        simpleRegistry.Configure<DemoDto>(config =>
+        {
+            config.Property(x => x.Column1).ToCell("A1");
+            config.Property(x => x.Column2).ToCell("B1");
+            config.Property(x => x.Column3).ToCell("C1");
+            config.Property(x => x.Column4).ToCell("D1");
+            config.Property(x => x.Column5).ToCell("E1");
+            config.Property(x => x.Column6).ToCell("F1");
+            config.Property(x => x.Column7).ToCell("G1");
+            config.Property(x => x.Column8).ToCell("H1");
+            config.Property(x => x.Column9).ToCell("I1");
+            config.Property(x => x.Column10).ToCell("J1");
+        });
+        _simpleMappingExporter = MiniExcel.Exporters.GetMappingExporter(simpleRegistry);
     }
 
     [Benchmark(Description = "MiniExcel Create Xlsx")]
@@ -29,6 +47,14 @@ public class CreateExcelBenchmark : BenchmarkBase
     {
         using var path = AutoDeletingPath.Create();
         _exporter.Export(path.FilePath, GetValue());
+    }
+
+    [Benchmark(Description = "MiniExcel Create Xlsx with Simple Mapping")]
+    public void MiniExcelCreateWithSimpleMappingTest()
+    {
+        using var path = AutoDeletingPath.Create();
+        using var stream = File.Create(path.FilePath);
+        _simpleMappingExporter.SaveAs(stream, GetValue());
     }
 
     [Benchmark(Description = "ClosedXml Create Xlsx")]

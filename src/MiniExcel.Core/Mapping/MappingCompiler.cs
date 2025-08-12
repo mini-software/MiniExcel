@@ -584,7 +584,7 @@ internal static class MappingCompiler
                     _ when targetType == typeof(float) => Convert.ToSingle(value),
                     _ when targetType == typeof(bool) => Convert.ToBoolean(value),
                     _ when targetType == typeof(DateTime) => Convert.ToDateTime(value),
-                    _ => value
+                    _ => Convert.ChangeType(value, targetType)
                 };
             }
             
@@ -783,7 +783,7 @@ internal static class MappingCompiler
                     _ when targetType == typeof(float) => Convert.ToSingle(value),
                     _ when targetType == typeof(bool) => Convert.ToBoolean(value),
                     _ when targetType == typeof(DateTime) => Convert.ToDateTime(value),
-                    _ => value
+                    _ => Convert.ChangeType(value, targetType)
                 };
             }
             catch
@@ -801,7 +801,7 @@ internal static class MappingCompiler
                     _ when targetType == typeof(float) && float.TryParse(str, out var f) => f,
                     _ when targetType == typeof(bool) && bool.TryParse(str, out var b) => b,
                     _ when targetType == typeof(DateTime) && DateTime.TryParse(str, out var dt) => dt,
-                    _ => value
+                    _ => Convert.ChangeType(value, targetType)
                 };
             }
         };

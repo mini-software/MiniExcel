@@ -66,6 +66,6 @@ internal class CollectionMapping : PropertyMapping
     public string? StartCell { get; set; }
     public CollectionLayout Layout { get; set; } = CollectionLayout.Vertical;
     public int RowSpacing { get; set; }
-    public MappingConfiguration<object>? ItemConfiguration { get; set; }
+    public object? ItemConfiguration { get; set; }
     public Type? ItemType { get; set; }
 }

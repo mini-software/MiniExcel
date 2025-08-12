@@ -40,7 +40,7 @@ internal class CollectionMappingBuilder<T, TCollection> : ICollectionMappingBuil
             
         var itemConfig = new MappingConfiguration<TItem>();
         configure(itemConfig);
-        _mapping.ItemConfiguration = itemConfig as MappingConfiguration<object>;
+        _mapping.ItemConfiguration = itemConfig;
         _mapping.ItemType = typeof(TItem);
         return this;
     }

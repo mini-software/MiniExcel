@@ -22,7 +22,7 @@ public sealed class MappingRegistry
         }
     }
     
-    public CompiledMapping<T> GetMapping<T>()
+    internal CompiledMapping<T> GetMapping<T>()
     {
         lock (_lock)
         {
@@ -43,7 +43,7 @@ public sealed class MappingRegistry
         }
     }
     
-    public CompiledMapping<T>? GetCompiledMapping<T>()
+    internal CompiledMapping<T>? GetCompiledMapping<T>()
     {
         lock (_lock)
         {

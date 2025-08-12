@@ -4,14 +4,14 @@ namespace MiniExcelLib.Core.Mapping.Configuration;
 
 internal class MappingConfiguration<T> : IMappingConfiguration<T>
 {
-    internal readonly List<PropertyMapping> PropertyMappings = new();
-    internal readonly List<CollectionMapping> CollectionMappings = new();
+    internal readonly List<PropertyMapping> PropertyMappings = [];
+    internal readonly List<CollectionMapping> CollectionMappings = [];
     internal string? WorksheetName { get; private set; }
     
     public IPropertyMappingBuilder<T, TProperty> Property<TProperty>(
         Expression<Func<T, TProperty>> property)
     {
-        if (property == null)
+        if (property is null)
             throw new ArgumentNullException(nameof(property));
             
         var mapping = new PropertyMapping
@@ -20,14 +20,14 @@ internal class MappingConfiguration<T> : IMappingConfiguration<T>
             PropertyType = typeof(TProperty)
         };
         PropertyMappings.Add(mapping);
-        
+
         return new PropertyMappingBuilder<T, TProperty>(mapping);
     }
     
     public ICollectionMappingBuilder<T, TCollection> Collection<TCollection>(
         Expression<Func<T, TCollection>> collection) where TCollection : IEnumerable
     {
-        if (collection == null)
+        if (collection is null)
             throw new ArgumentNullException(nameof(collection));
             
         var mapping = new CollectionMapping

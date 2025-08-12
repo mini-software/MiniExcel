@@ -1,7 +1,14 @@
 namespace MiniExcelLib.Core.Mapping.Configuration;
 
-internal class CollectionMappingBuilder<T, TCollection> : ICollectionMappingBuilder<T, TCollection> where TCollection : IEnumerable
+internal partial class CollectionMappingBuilder<T, TCollection> : ICollectionMappingBuilder<T, TCollection> where TCollection : IEnumerable
 {
+#if NET7_0_OR_GREATER
+    [GeneratedRegex("^[A-Z]+[0-9]+$")] private static partial Regex CellAddressRegexImpl();
+    private static readonly Regex CellAddressRegex = CellAddressRegexImpl();
+#else
+    private static readonly Regex CellAddressRegex = new("^[A-Z]+[0-9]+$",  RegexOptions.Compiled);
+#endif
+
     private readonly CollectionMapping _mapping;
     
     internal CollectionMappingBuilder(CollectionMapping mapping)
@@ -17,7 +24,7 @@ internal class CollectionMappingBuilder<T, TCollection> : ICollectionMappingBuil
             throw new ArgumentException("Cell address cannot be null or empty", nameof(cellAddress));
         
         // Basic validation for cell address format
-        if (!Regex.IsMatch(cellAddress, @"^[A-Z]+[0-9]+$"))
+        if (!CellAddressRegex.IsMatch(cellAddress))
             throw new ArgumentException($"Invalid cell address format: {cellAddress}. Expected format like A1, B2, AA10, etc.", nameof(cellAddress));
             
         _mapping.StartCell = cellAddress;
@@ -35,13 +42,15 @@ internal class CollectionMappingBuilder<T, TCollection> : ICollectionMappingBuil
     
     public ICollectionMappingBuilder<T, TCollection> WithItemMapping<TItem>(Action<IMappingConfiguration<TItem>> configure)
     {
-        if (configure == null)
+        if (configure is null)
             throw new ArgumentNullException(nameof(configure));
             
         var itemConfig = new MappingConfiguration<TItem>();
         configure(itemConfig);
+        
         _mapping.ItemConfiguration = itemConfig;
         _mapping.ItemType = typeof(TItem);
+ 
         return this;
     }
 }

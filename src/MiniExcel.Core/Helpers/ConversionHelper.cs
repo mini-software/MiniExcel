@@ -48,9 +48,7 @@ internal static class ConversionHelper
         
         // Special case for string source (most common in Excel)
         if (sourceType == typeof(string))
-        {
             return CreateStringConverter(underlyingType, targetType != underlyingType);
-        }
         
         // Try to create expression-based converter
         try
@@ -78,12 +76,15 @@ internal static class ConversionHelper
         // Optimized converters for common types from string
         if (targetType == typeof(int))
         {
-            return value => 
+            return value =>
             {
-                var str = (string)value;
+                var str = value as string;
                 if (string.IsNullOrWhiteSpace(str))
                     return isNullable ? null : 0;
-                return int.TryParse(str, out var result) ? result : (isNullable ? null : 0);
+
+                return int.TryParse(str, out var result) 
+                    ? result 
+                    : isNullable ? null : 0;
             };
         }
         
@@ -91,10 +92,13 @@ internal static class ConversionHelper
         {
             return value =>
             {
-                var str = (string)value;
+                var str = value as string;
                 if (string.IsNullOrWhiteSpace(str))
                     return isNullable ? null : 0L;
-                return long.TryParse(str, out var result) ? result : (isNullable ? null : 0L);
+                
+                return long.TryParse(str, out var result) 
+                    ? result 
+                    : isNullable ? null : 0L;
             };
         }
         
@@ -102,11 +106,13 @@ internal static class ConversionHelper
         {
             return value =>
             {
-                var str = (string)value;
+                var str = value as string;
                 if (string.IsNullOrWhiteSpace(str))
-                    return isNullable ? null : 0.0;
+                    return isNullable ? null : 0D;
+
                 return double.TryParse(str, NumberStyles.Any, CultureInfo.InvariantCulture, out var result) 
-                    ? result : (isNullable ? null : 0.0);
+                    ? result 
+                    : isNullable ? null : 0D;
             };
         }
         
@@ -114,11 +120,13 @@ internal static class ConversionHelper
         {
             return value =>
             {
-                var str = (string)value;
+                var str = value as string;
                 if (string.IsNullOrWhiteSpace(str))
-                    return isNullable ? null : 0m;
+                    return isNullable ? null : 0M;
+                
                 return decimal.TryParse(str, NumberStyles.Any, CultureInfo.InvariantCulture, out var result) 
-                    ? result : (isNullable ? null : 0m);
+                    ? result 
+                    : isNullable ? null : 0M;
             };
         }
         
@@ -126,10 +134,13 @@ internal static class ConversionHelper
         {
             return value =>
             {
-                var str = (string)value;
+                var str = value as string;
                 if (string.IsNullOrWhiteSpace(str))
                     return isNullable ? null : false;
-                return bool.TryParse(str, out var result) ? result : (isNullable ? null : false);
+                
+                return bool.TryParse(str, out var result) 
+                    ? result 
+                    : isNullable ? null : false;
             };
         }
         
@@ -137,11 +148,27 @@ internal static class ConversionHelper
         {
             return value =>
             {
-                var str = (string)value;
+                var str = value as string;
                 if (string.IsNullOrWhiteSpace(str))
                     return isNullable ? null : DateTime.MinValue;
+                
                 return DateTime.TryParse(str, CultureInfo.InvariantCulture, DateTimeStyles.None, out var result) 
-                    ? result : (isNullable ? null : DateTime.MinValue);
+                    ? result 
+                    : isNullable ? null : DateTime.MinValue;
+            };
+        }
+        
+        if (targetType == typeof(TimeSpan))
+        {
+            return value =>
+            {
+                var str = value as string;
+                if (string.IsNullOrWhiteSpace(str))
+                    return isNullable ? null : TimeSpan.MinValue;
+                
+                return TimeSpan.TryParse(str, CultureInfo.InvariantCulture, out var result) 
+                    ? result 
+                    : isNullable ? null : TimeSpan.MinValue;
             };
         }
         
@@ -149,28 +176,30 @@ internal static class ConversionHelper
         {
             return value =>
             {
-                var str = (string)value;
+                var str = value as string;
                 if (string.IsNullOrWhiteSpace(str))
                     return isNullable ? null : Guid.Empty;
-                return Guid.TryParse(str, out var result) ? result : (isNullable ? null : Guid.Empty);
+                
+                return Guid.TryParse(str, out var result) 
+                    ? result 
+                    : isNullable ? null : Guid.Empty;
             };
         }
         
         // Default converter using Convert.ChangeType
-        return value => ConvertValueFallback(value, isNullable ? typeof(Nullable<>).MakeGenericType(targetType) : targetType);
+        var newType = isNullable ? typeof(Nullable<>).MakeGenericType(targetType) : targetType;
+        return value => ConvertValueFallback(value, newType);
     }
     
-    private static object? ConvertValueFallback(object value, Type targetType)
+    private static object? ConvertValueFallback(object? value, Type targetType)
     {
         try
         {
-            var underlyingType = Nullable.GetUnderlyingType(targetType);
-            if (underlyingType != null)
+            if (Nullable.GetUnderlyingType(targetType) is { } underlyingType)
             {
-                if (value is string str && string.IsNullOrWhiteSpace(str))
-                    return null;
-                    
-                return Convert.ChangeType(value, underlyingType, CultureInfo.InvariantCulture);
+                return value is not (null or "" or " ") 
+                    ? Convert.ChangeType(value, underlyingType, CultureInfo.InvariantCulture) 
+                    : null;
             }
             
             return Convert.ChangeType(value, targetType, CultureInfo.InvariantCulture);

@@ -5,11 +5,16 @@ namespace MiniExcelLib.Core.Mapping;
 public sealed class MappingRegistry
 {
     private readonly Dictionary<Type, object> _compiledMappings = new();
+
+#if NET9_0_OR_GREATER
+    private readonly Lock _lock = new();
+#else
     private readonly object _lock = new();
-    
-    public void Configure<T>(Action<IMappingConfiguration<T>> configure)
+#endif
+
+    public void Configure<T>(Action<IMappingConfiguration<T>>? configure)
     {
-        if (configure == null)
+        if (configure is null)
             throw new ArgumentNullException(nameof(configure));
             
         lock (_lock)
@@ -26,12 +31,9 @@ public sealed class MappingRegistry
     {
         lock (_lock)
         {
-            if (_compiledMappings.TryGetValue(typeof(T), out var mapping))
-            {
-                return (CompiledMapping<T>)mapping;
-            }
-            
-            throw new InvalidOperationException($"No mapping configured for type {typeof(T).Name}. Call Configure<{typeof(T).Name}>() first.");
+            return _compiledMappings.TryGetValue(typeof(T), out var mapping)
+                ? (CompiledMapping<T>)mapping
+                : throw new InvalidOperationException($"No mapping configured for type {typeof(T).Name}. Call Configure<{typeof(T).Name}>() first.");
         }
     }
     
@@ -47,12 +49,9 @@ public sealed class MappingRegistry
     {
         lock (_lock)
         {
-            if (_compiledMappings.TryGetValue(typeof(T), out var mapping))
-            {
-                return (CompiledMapping<T>)mapping;
-            }
-            
-            return null;
+            return _compiledMappings.TryGetValue(typeof(T), out var mapping) 
+                ? (CompiledMapping<T>)mapping 
+                : null;
         }
     }
     
@@ -60,11 +59,9 @@ public sealed class MappingRegistry
     {
         lock (_lock)
         {
-            if (_compiledMappings.TryGetValue(type, out var mapping))
-            {
-                return mapping;
-            }
-            return null;
+            return _compiledMappings.TryGetValue(type, out var mapping) 
+                ? mapping 
+                : null;
         }
     }
 }

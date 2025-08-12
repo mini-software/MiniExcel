@@ -49,8 +49,7 @@ namespace MiniExcelLib.Tests
             // Act
             var mapping = registry.GetMapping<SimpleEntity>();
 
-            // Assert - verify universal optimization is applied
-            Assert.True(mapping.IsUniversallyOptimized);
+            // Assert - verify optimization is applied
             Assert.NotNull(mapping.OptimizedBoundaries);
             Assert.NotNull(mapping.OptimizedCellGrid);
             Assert.Equal(3, mapping.Properties.Count);
@@ -77,7 +76,6 @@ namespace MiniExcelLib.Tests
             var mapping = registry.GetMapping<SimpleEntity>();
 
             // Assert - verify optimization is applied
-            Assert.True(mapping.IsUniversallyOptimized);
             Assert.NotNull(mapping.OptimizedBoundaries);
             Assert.NotNull(mapping.OptimizedCellGrid);
         }
@@ -200,7 +198,6 @@ namespace MiniExcelLib.Tests
 
             // Assert
             Assert.Equal(2, mapping.Collections.Count);
-            Assert.True(mapping.IsUniversallyOptimized);
         }
 
         #endregion

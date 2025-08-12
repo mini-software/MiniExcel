@@ -6,7 +6,7 @@ internal class CompiledMapping<T>
     public IReadOnlyList<CompiledPropertyMapping> Properties { get; set; } = new List<CompiledPropertyMapping>();
     public IReadOnlyList<CompiledCollectionMapping> Collections { get; set; } = new List<CompiledCollectionMapping>();
     
-    // Universal optimization structures
+    // Optimization structures
     /// <summary>
     /// Pre-calculated cell grid for fast mapping. 
     /// Indexed as [row-relative][column-relative] where indices are relative to MinRow/MinColumn
@@ -23,19 +23,15 @@ internal class CompiledMapping<T>
     public OptimizedCellHandler[]? OptimizedColumnHandlers { get; set; }
     
     /// <summary>
-    /// Collection expansion strategies for handling dynamic collections
-    /// </summary>
-    public IReadOnlyList<CollectionExpansionInfo>? CollectionExpansions { get; set; }
-    
-    /// <summary>
-    /// Whether this mapping has been optimized with the universal optimization system
-    /// </summary>
-    public bool IsUniversallyOptimized => OptimizedCellGrid != null && OptimizedBoundaries != null;
-    
-    /// <summary>
     /// Pre-compiled collection helpers for fast collection handling
     /// </summary>
     public IReadOnlyList<OptimizedCollectionHelper>? OptimizedCollectionHelpers { get; set; }
+    
+    /// <summary>
+    /// Pre-compiled nested mapping information for complex collection types.
+    /// Indexed by collection index to provide fast access to nested property info.
+    /// </summary>
+    public IReadOnlyDictionary<int, NestedMappingInfo>? NestedMappings { get; set; }
 }
 
 /// <summary>
@@ -43,10 +39,15 @@ internal class CompiledMapping<T>
 /// </summary>
 internal class OptimizedCollectionHelper
 {
-    public Func<System.Collections.IList> Factory { get; set; } = null!;
-    public Func<System.Collections.IList, object> Finalizer { get; set; } = null!;
+    public Func<IList> Factory { get; set; } = null!;
+    public Func<IList, object> Finalizer { get; set; } = null!;
     public Action<object, object?>? Setter { get; set; }
     public bool IsArray { get; set; }
+    public Func<object?> DefaultItemFactory { get; set; } = null!;
+    public Type ItemType { get; set; } = null!;
+    public bool IsItemValueType { get; set; }
+    public bool IsItemPrimitive { get; set; }
+    public object? DefaultValue { get; set; }
 }
 
 internal class CompiledPropertyMapping
@@ -65,12 +66,10 @@ internal class CompiledPropertyMapping
 internal class CompiledCollectionMapping
 {
     public Func<object, IEnumerable> Getter { get; set; } = null!;
-    public string StartCell { get; set; } = null!;
     public int StartCellColumn { get; set; }  // Pre-parsed column index
     public int StartCellRow { get; set; }     // Pre-parsed row index
     public CollectionLayout Layout { get; set; }
     public int RowSpacing { get; set; } = 0;
-    public object? ItemMapping { get; set; } // CompiledMapping<TItem>
     public Type? ItemType { get; set; }
     public string PropertyName { get; set; } = null!;
     public Action<object, object?>? Setter { get; set; }
@@ -124,7 +123,7 @@ internal class OptimizedCellHandler
     public int CollectionIndex { get; set; } = -1;
     
     /// <summary>For collection items: offset within collection</summary>
-    public int CollectionItemOffset { get; set; } = 0;
+    public int CollectionItemOffset { get; set; }
     
     /// <summary>For formulas: the formula text</summary>
     public string? Formula { get; set; }
@@ -138,20 +137,11 @@ internal class OptimizedCellHandler
     /// <summary>For collection items: pre-compiled converter from cell value to collection item type</summary>
     public Func<object?, object?>? CollectionItemConverter { get; set; }
     
-    /// <summary>For collections: pre-compiled factory to create the collection instance</summary>
-    public Func<System.Collections.IList>? CollectionFactory { get; set; }
-    
-    /// <summary>For collections: pre-compiled converter from list to final type (e.g., array)</summary>
-    public Func<System.Collections.IList, object>? CollectionFinalizer { get; set; }
-    
-    /// <summary>For collections: whether the target type is an array (vs list)</summary>
-    public bool IsArrayTarget { get; set; }
-    
     /// <summary>
     /// For multiple items scenario: which item (0, 1, 2...) this handler belongs to.
     /// -1 means this handler applies to all items (unbounded collection).
     /// </summary>
-    public int ItemIndex { get; set; } = 0;
+    public int ItemIndex { get; set; }
     
     /// <summary>
     /// For collection handlers: the row where this collection stops reading (exclusive).
@@ -175,22 +165,19 @@ internal class OptimizedMappingBoundaries
     public int MinRow { get; set; } = int.MaxValue;
     
     /// <summary>Maximum row used by any mapping (1-based)</summary>
-    public int MaxRow { get; set; } = 0;
+    public int MaxRow { get; set; }
     
     /// <summary>Minimum column used by any mapping (1-based)</summary>
     public int MinColumn { get; set; } = int.MaxValue;
     
     /// <summary>Maximum column used by any mapping (1-based)</summary>
-    public int MaxColumn { get; set; } = 0;
+    public int MaxColumn { get; set; }
     
     /// <summary>Width of the cell grid (MaxColumn - MinColumn + 1)</summary>
     public int GridWidth => MaxColumn > 0 ? MaxColumn - MinColumn + 1 : 0;
     
     /// <summary>Height of the cell grid (MaxRow - MinRow + 1)</summary>
     public int GridHeight => MaxRow > 0 ? MaxRow - MinRow + 1 : 0;
-    
-    /// <summary>Total number of items this mapping can handle (based on collection layouts)</summary>
-    public int MaxItemCapacity { get; set; } = 1;
     
     /// <summary>Whether this mapping has collections that can expand dynamically</summary>
     public bool HasDynamicCollections { get; set; }
@@ -200,32 +187,11 @@ internal class OptimizedMappingBoundaries
     /// This is the distance from one item's properties to the next item's properties.
     /// 0 means no repeating pattern (single item or no collections).
     /// </summary>
-    public int PatternHeight { get; set; } = 0;
+    public int PatternHeight { get; set; }
     
     /// <summary>
     /// For multiple items: whether this mapping supports multiple items with collections.
     /// When true, the grid pattern repeats every PatternHeight rows.
     /// </summary>
-    public bool IsMultiItemPattern { get; set; } = false;
-}
-
-/// <summary>
-/// Collection expansion strategy - how to handle collections with unknown sizes
-/// </summary>
-internal class CollectionExpansionInfo
-{
-    /// <summary>Starting row for expansion</summary>
-    public int StartRow { get; set; }
-    
-    /// <summary>Starting column for expansion</summary>
-    public int StartColumn { get; set; }
-    
-    /// <summary>Layout direction for expansion</summary>
-    public CollectionLayout Layout { get; set; }
-    
-    /// <summary>Row spacing between items</summary>
-    public int RowSpacing { get; set; }
-    
-    /// <summary>Collection mapping this expansion belongs to</summary>
-    public CompiledCollectionMapping CollectionMapping { get; set; } = null!;
+    public bool IsMultiItemPattern { get; set; }
 }

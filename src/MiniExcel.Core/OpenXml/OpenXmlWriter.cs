@@ -5,7 +5,6 @@ using MiniExcelLib.Core.OpenXml.Models;
 using MiniExcelLib.Core.OpenXml.Styles.Builder;
 using MiniExcelLib.Core.OpenXml.Zip;
 using MiniExcelLib.Core.WriteAdapters;
-using SafeStreamWriter = MiniExcelLib.Core.Helpers.SafeStreamWriter;
 
 namespace MiniExcelLib.Core.OpenXml;
 

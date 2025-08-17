@@ -22,7 +22,7 @@ internal static partial class MiniExcelPictureImplement
         var xpath = $"/x:Relationships/x:Relationship[@Id='{id}' and @Type='{type}' and @Target='{target}']";
         var node = doc.SelectSingleNode(xpath, namespaceManager);
 
-        return node != null;
+        return node is not null;
     }
 
     //todo: why does the sync version break everything?

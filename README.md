@@ -1,9 +1,26 @@
 <div align="center">
-<p><a href="https://www.nuget.org/packages/MiniExcel"><img src="https://img.shields.io/nuget/v/MiniExcel.svg" alt="NuGet"></a>  <a href="https://www.nuget.org/packages/MiniExcel"><img src="https://img.shields.io/nuget/dt/MiniExcel.svg" alt=""></a>
-<a href="https://ci.appveyor.com/project/mini-software/miniexcel/branch/master"><img src="https://ci.appveyor.com/api/projects/status/b2vustrwsuqx45f4/branch/master?svg=true" alt="Build status"></a>
-<a href="https://gitee.com/dotnetchina/MiniExcel"><img src="https://gitee.com/dotnetchina/MiniExcel/badge/star.svg" alt="star"></a> <a href="https://github.com/mini-software/MiniExcel" rel="nofollow"><img src="https://img.shields.io/github/stars/mini-software/MiniExcel?logo=github" alt="GitHub stars"></a>
-<a href="https://www.nuget.org/packages/MiniExcel"><img src="https://img.shields.io/badge/.NET-%3E%3D%204.5-red.svg" alt="version"></a>
-<a href="https://deepwiki.com/mini-software/MiniExcel"><img src="https://deepwiki.com/badge.svg" alt="Ask DeepWiki"></a>
+<p>
+    <a href="https://www.nuget.org/packages/MiniExcel">
+        <img src="https://img.shields.io/nuget/v/MiniExcel.svg" alt="NuGet">
+    </a>
+    <a href="https://www.nuget.org/packages/MiniExcel">
+        <img src="https://img.shields.io/nuget/dt/MiniExcel.svg" alt="">
+    </a>
+    <a href="https://ci.appveyor.com/project/mini-software/miniexcel/branch/master">
+        <img src="https://ci.appveyor.com/api/projects/status/b2vustrwsuqx45f4/branch/master?svg=true" alt="Build status">
+    </a>
+    <a href="https://gitee.com/dotnetchina/MiniExcel">
+        <img src="https://gitee.com/dotnetchina/MiniExcel/badge/star.svg" alt="star">
+    </a>
+    <a href="https://github.com/mini-software/MiniExcel" rel="nofollow">
+        <img src="https://img.shields.io/github/stars/mini-software/MiniExcel?logo=github" alt="GitHub stars">
+    </a>
+    <a href="https://www.nuget.org/packages/MiniExcel">
+        <img src="https://img.shields.io/badge/.NET-%3E%3D%204.5-red.svg" alt="version">
+    </a>
+    <a href="https://deepwiki.com/mini-software/MiniExcel">
+        <img src="https://deepwiki.com/badge.svg" alt="Ask DeepWiki">
+    </a>
 </p>
 </div>
 
@@ -12,26 +29,44 @@
 [<img align="right" src="https://github.com/dotnet-foundation/swag/blob/main/logo/dotnetfoundation_v4.png?raw=true" width="100" />](https://www.dotnetfoundation.org/)
 
 <div align="center">
-<p>This project is part of the <a href="https://www.dotnetfoundation.org/">.NET Foundation</a> and operates under their <a href="https://www.dotnetfoundation.org/code-of-conduct">code of conduct</a>. </p>
+    <p>This project is part of the <a href="https://www.dotnetfoundation.org/">.NET Foundation</a> and operates under their <a href="https://www.dotnetfoundation.org/code-of-conduct">code of conduct</a>. </p>
 </div>
 
 ---
 
 <div align="center">
-<p><strong><a href="README.md">English</a> | <a href="README.zh-CN.md">简体中文</a> | <a href="README.zh-Hant.md">繁體中文</a> | <a href="https://openaitx.github.io/view.html?user=mini-software&amp;project=MiniExcel&amp;lang=ja">日本語</a> | <a href="https://openaitx.github.io/view.html?user=mini-software&amp;project=MiniExcel&amp;lang=ko">한국어</a> | <a href="https://openaitx.github.io/view.html?user=mini-software&amp;project=MiniExcel&amp;lang=hi">हिन्दी</a> | <a href="https://openaitx.github.io/view.html?user=mini-software&amp;project=MiniExcel&amp;lang=th">ไทย</a> | <a href="https://openaitx.github.io/view.html?user=mini-software&amp;project=MiniExcel&amp;lang=fr">Français</a> | <a href="https://openaitx.github.io/view.html?user=mini-software&amp;project=MiniExcel&amp;lang=de">Deutsch</a> | <a href="https://openaitx.github.io/view.html?user=mini-software&amp;project=MiniExcel&amp;lang=es">Español</a> | <a href="https://openaitx.github.io/view.html?user=mini-software&amp;project=MiniExcel&amp;lang=it">Italiano</a> | <a href="https://openaitx.github.io/view.html?user=mini-software&amp;project=MiniExcel&amp;lang=ru">Русский</a> | <a href="https://openaitx.github.io/view.html?user=mini-software&amp;project=MiniExcel&amp;lang=pt">Português</a> | <a href="https://openaitx.github.io/view.html?user=mini-software&amp;project=MiniExcel&amp;lang=nl">Nederlands</a> | <a href="https://openaitx.github.io/view.html?user=mini-software&amp;project=MiniExcel&amp;lang=pl">Polski</a> | <a href="https://openaitx.github.io/view.html?user=mini-software&amp;project=MiniExcel&amp;lang=ar">العربية</a> | <a href="https://openaitx.github.io/view.html?user=mini-software&amp;project=MiniExcel&amp;lang=fa">فارسی</a> | <a href="https://openaitx.github.io/view.html?user=mini-software&amp;project=MiniExcel&amp;lang=tr">Türkçe</a> | <a href="https://openaitx.github.io/view.html?user=mini-software&amp;project=MiniExcel&amp;lang=vi">Tiếng Việt</a> | <a href="https://openaitx.github.io/view.html?user=mini-software&amp;project=MiniExcel&amp;lang=id">Bahasa Indonesia</a><p></p>
-</strong></p>
+    <p><strong>
+        <a href="README.md">English</a> | 
+        <a href="README.zh-CN.md">简体中文</a> | 
+        <a href="README.zh-Hant.md">繁體中文</a> | 
+        <a href="https://openaitx.github.io/view.html?user=mini-software&amp;project=MiniExcel&amp;lang=ja">日本語</a> | 
+        <a href="https://openaitx.github.io/view.html?user=mini-software&amp;project=MiniExcel&amp;lang=ko">한국어</a> | 
+        <a href="https://openaitx.github.io/view.html?user=mini-software&amp;project=MiniExcel&amp;lang=hi">हिन्दी</a> | 
+        <a href="https://openaitx.github.io/view.html?user=mini-software&amp;project=MiniExcel&amp;lang=th">ไทย</a> | 
+        <a href="https://openaitx.github.io/view.html?user=mini-software&amp;project=MiniExcel&amp;lang=fr">Français</a> | 
+        <a href="https://openaitx.github.io/view.html?user=mini-software&amp;project=MiniExcel&amp;lang=de">Deutsch</a> | 
+        <a href="https://openaitx.github.io/view.html?user=mini-software&amp;project=MiniExcel&amp;lang=es">Español</a> | 
+        <a href="https://openaitx.github.io/view.html?user=mini-software&amp;project=MiniExcel&amp;lang=it">Italiano</a> | 
+        <a href="https://openaitx.github.io/view.html?user=mini-software&amp;project=MiniExcel&amp;lang=ru">Русский</a> | 
+        <a href="https://openaitx.github.io/view.html?user=mini-software&amp;project=MiniExcel&amp;lang=pt">Português</a> | 
+        <a href="https://openaitx.github.io/view.html?user=mini-software&amp;project=MiniExcel&amp;lang=nl">Nederlands</a> | 
+        <a href="https://openaitx.github.io/view.html?user=mini-software&amp;project=MiniExcel&amp;lang=pl">Polski</a> | 
+        <a href="https://openaitx.github.io/view.html?user=mini-software&amp;project=MiniExcel&amp;lang=ar">العربية</a> | 
+        <a href="https://openaitx.github.io/view.html?user=mini-software&amp;project=MiniExcel&amp;lang=fa">فارسی</a> | 
+        <a href="https://openaitx.github.io/view.html?user=mini-software&amp;project=MiniExcel&amp;lang=tr">Türkçe</a> | 
+        <a href="https://openaitx.github.io/view.html?user=mini-software&amp;project=MiniExcel&amp;lang=vi">Tiếng Việt</a> | 
+        <a href="https://openaitx.github.io/view.html?user=mini-software&amp;project=MiniExcel&amp;lang=id">Bahasa Indonesia</a>
+    </strong></p>
 </div>
 
 
 ---
 
 <div align="center">
- Your <a href="https://github.com/mini-software/MiniExcel">Stars</a> or <a href="https://miniexcel.github.io">Donations</a> can make MiniExcel better
+    If MiniExcel was useful to you please <a href="https://github.com/mini-software/MiniExcel">star</a> the project and consider <a href="https://miniexcel.github.io">donating</a>. A small gesture can make a big difference in improving the library!
 </div>
 
 ---
-
-## Introduction
 
 MiniExcel is a simple and efficient Excel processing tool for .NET, specifically designed to minimize memory usage.
 
@@ -54,17 +89,118 @@ flowchart LR
     class C1,C2,C3,C4,C5 miniexcel;
 ```
 
-## Features
+### Features
 
 - Minimizes memory consumption, preventing out-of-memory (OOM) errors and avoiding full garbage collections
 - Enables real-time, row-level data operations for better performance on large datasets
 - Supports LINQ with deferred execution, allowing for fast, memory-efficient paging and complex queries
-- Lightweight, without the need for Microsoft Office or COM+ components, and a DLL size under 500KB
+- Lightweight, without the need for Microsoft Office or COM+ components, and a DLL size under 600KB
 - Simple and intuitive API to read, write, and fill Excel documents
+
+
+## Usage
+### Installation
+
+You can download the full package from [NuGet](https://www.nuget.org/packages/MiniExcel):
+
+```bash
+dotnet add package MiniExcel
+```
+
+This package will contain the assemblies with both Excel and Csv functionalities, along with the deprecated `v1.x` methods' signatures.
+If you don't care for those you can also install the Excel and Csv packages separately:
+
+```bash
+dotnet add package MiniExcel.Core
+```
+
+```bash
+dotnet add package MiniExcel.Csv
+```
+
+### Quickstart
+
+#### Importing
+
+Firstly, you have to get an importer. The available ones are the `OpenXmlImporter` and the `CsvImporter`:
+```csharp
+var importer = MiniExcel.Importers.GetOpenXmlImporter();
+
+// or
+
+var importer = MiniExcel.Importers.GetCsvImporter();
+```
+
+You can then use it to query Excel or csv documents as dynamic objects, or map them directly to a suitable strong type:
+```csharp
+var query = importer.Query(excelPath);
+
+// or 
+
+var query = importer.Query<YourStrongType>(csvPath);
+```
+
+Finally, you can materialize the results or enumerate them and perform some custom logic:
+```csharp
+var rows = query.ToList();
+
+// or 
+
+foreach (var row in query)
+{
+    // your logic here 
+}
+```
+
+MiniExcel also fully supports `IAsyncEnumerable`, allowing you to perform all sorts of asynchronous operations:
+```csharp
+var query = importer.QueryAsync(inputPath);
+await foreach (var row in query)
+{
+    // your asynchronous logic here 
+}
+```
+
+#### Exporting
+
+Similarly to what was described before, the first thing you need to do is getting an exporter:
+```csharp
+var exporter = MiniExcel.Exporters.GetOpenXmlExporter();
+
+// or
+
+var exporter = MiniExcel.Exporters.GetCsvExporter();
+```
+
+You can then use it to create an Excel or csv document from a `IEnumerable` whose generic type can be some strong type, anonymous type or even a `IDictionary<string, object>`:
+```csharp
+var values = new[] // can also be a strong type 
+{
+    new { Column1 = "MiniExcel", Column2 = 1 },
+    new { Column1 = "Github", Column2 = 2 }
+}
+exporter.Export(outputPath, values);
+
+// or
+
+List<Dictionary<string, object>>() values =
+[
+    new() { { "Column1", "MiniExcel" }, { "Column2", 1 } },
+    new() { { "Column1", "Github" }, { "Column2", 2 } }
+];
+exporter.Export(outputPath, values);
+```
+
+The exporters also fully support asynchronous operations: 
+```csharp
+await exporter.ExportAsync(outputPath, values);
+```
 
 ### Release Notes
 
-You can check the release notes [here](docs).
+If you're migrating from a `1.x` version, please check the [upgrade notes](V2-upgrade-notes.md).
+
+You can check the full release notes [here](docs).
 
 ### TODO
 
@@ -85,39 +221,21 @@ dotnet run -project .\benchmarks\MiniExcel.Benchmarks -c Release -f net9.0 -filt
 You can find the benchmarks' results for the latest release [here](benchmarks/results).
 
 
-## Get Started
+## Documentation
 
-- [Import/Query Excel](#getstarted1)
-- [Export/Create Excel](#getstarted2)
-- [Excel Template](#getstarted3)
-- [Excel Column Name/Index/Ignore Attribute](#getstarted4)
-- [Examples](#getstarted5)
-
-
-### Installation
-
-You can download the full package from [NuGet](https://www.nuget.org/packages/MiniExcel):
-
-```bash
-dotnet add package MiniExcel
-```
-
-This package will contain the assemblies containing both Excel and Csv functionalities, along with the deprecated `v1.x` methods' signatures.
-If you don't care for those you can also install the Excel and Csv assemblies separately:
+- [Query/Import](#docs-import)
+- [Create/Export](#docs-export)
+- [Excel Template](#docs-template)
+- [Attributes and configuration](#docs-attributes)
+- [CSV specifics](#docs-csv)
+- [Other functionalities](#docs-other)
+- [FAQ](#docs-faq)
+- [Limitations](#docs-limitations)
 
 
-```bash
-dotnet add package MiniExcel.Core
-```
+### Query/Import  <a name="docs-import" />
 
-```bash
-dotnet add package MiniExcel.Csv
-```
-
-
-### Excel Query/Import  <a name="getstarted1"></a>
-
-#### 1. Execute a query and map the results to a strongly typed IEnumerable [[Try it]](https://dotnetfiddle.net/w5WD1J)
+#### 1. Execute a query and map the results to a strongly typed IEnumerable
 
 ```csharp
 public class UserAccount
@@ -130,18 +248,18 @@ public class UserAccount
     public decimal Points { get; set; }
 }
 
-var excelImporter = MiniExcel.Importers.GetOpenXmlImporter();
-var rows = excelImporter.Query<UserAccount>(path);
+var importer = MiniExcel.Importers.GetOpenXmlImporter();
+var rows = importer.Query<UserAccount>(path);
 
 // or 
 
 using var stream = File.OpenRead(path);
-var rows = excelImporter.Query<UserAccount>(stream);
+var rows = importer.Query<UserAccount>(stream);
 ```
 
 #### 2. Execute a query and map it to a list of dynamic objects
 
-* By default no header will be used and the dynamic keys will be `.A`, `.B`, `.C`, etc... [[Try it]](https://dotnetfiddle.net/w5WD1J)
+By default no header will be used and the dynamic keys will be `.A`, `.B`, `.C`, etc..:
 
 | MiniExcel | 1 |
 |-----------|---|
@@ -157,7 +275,7 @@ var rows = excelImporter.MiniExcel.Query(path).ToList();
 // rows[1].B = 2
 ```
 
-* You can also specify that a header must be used, in which case the dynamic keys will be mapped to it. [[Try it]](https://dotnetfiddle.net/w5WD1J)
+You can also specify that a header must be used, in which case the dynamic keys will be mapped to it:
 
 | Name      | Value |
 |-----------|-------|
@@ -298,11 +416,11 @@ importer.Query(path, configuration: config)
 ```
 
 
-### Create/Export Excel  <a name="getstarted2"></a>
+### Create/Export Excel  <a name="docs-export" />
 
 There are various ways to export data to an Excel document using MiniExcel.
 
-#### 1. From anonymous or strongly typed collections [[Try it]](https://dotnetfiddle.net/w5WD1J)
+#### 1. From anonymous or strongly typed collections
 
 When using an anonymous type:
 
@@ -448,8 +566,21 @@ exporter.Export(path, sheets);
 
 ![image](https://user-images.githubusercontent.com/12729184/118130875-6e7c4580-b430-11eb-9b82-22f02716bd63.png)
 
+#### 7. Inserting sheets
 
-#### 7. Save to Stream  [[Try it]](https://dotnetfiddle.net/JOen0e)
+MiniExcel supports the functionality of inserting a new sheet into an existing Excel workbook:
+
+```csharp
+var config = new OpenXmlConfiguration { FastMode = true };    
+var value = new { ID = 3, Name = "Mike", InDate = new DateTime(2021, 04, 23) };
+
+var exporter = MiniExcel.Exporters.GetOpenXmlExporter()
+exporter.InsertSheet(path, table, sheetName: "Sheet2", configuration: config);
+```
+> **Note**: In order to insert worksheets FastMode must be enabled!
+
+
+#### 8. Save to Stream
 
 You can export data directly to a `MemoryStream`, `FileStream`, and generally any stream that supports seeking:
 
@@ -460,7 +591,7 @@ using var stream = new MemoryStream();
 exporter.Export(stream, values);
 ```
 
-#### 8. TableStyles Options
+#### 9. TableStyles Options
 
 Default style
 
@@ -482,7 +613,7 @@ exporter.Export(path, value, configuration: config);
 ![image](https://user-images.githubusercontent.com/12729184/118784917-f3e57700-b8c2-11eb-8718-8d955b1bc197.png)
 
 
-#### 9. AutoFilter
+#### 10. AutoFilter
 
 By default, autofilter is enabled on the headers of exported Excel documents.
 You can disable this by setting the `AutoFilter` property of the configuration to `false`:
@@ -493,7 +624,7 @@ var config = new OpenXmlConfiguration { AutoFilter = false };
 exporter.Export(path, value, configuration: config);
 ```
 
-#### 10. Creating images
+#### 11. Creating images
 
 ```csharp
 var exporter = MiniExcel.Exporters.GetExcelExporter();
@@ -601,18 +732,16 @@ exporter.Export("Book1.xlsx", dt, configuration: config);
 ![image](docs/images/freeze-pane-1.png)
 
 
-### Fill Data To Excel Template <a name="getstarted3"></a>
+### Fill Data To Excel Template <a name="docs-template" />
 
-- The declarations are similar to Vue templates `{{variable_name}}` and collection renderings `{{collection_name.field_name}}`
-- Collection rendering supports `IEnumerable`, `DataTable` and `DapperRow`
+The declarations are similar to Vue templates `{{variable_name}}` and collection renderings `{{collection_name.field_name}}`.
+
+Collection renderings support `IEnumerable`, `DataTable` and `DapperRow`.
 
 #### 1. Basic Fill
 
 Template:
 ![image](https://user-images.githubusercontent.com/12729184/114537556-ed8d2b00-9c84-11eb-8303-a69f62c41e5b.png)
-
-Result:
-![image](https://user-images.githubusercontent.com/12729184/114537490-d8180100-9c84-11eb-8c69-db58692f3a85.png)
 
 Code:
 ```csharp
@@ -638,10 +767,13 @@ var value = new Dictionary<string, object>()
 MiniExcel.SaveAsByTemplate(path, templatePath, value);
 ```
 
+Result:
+![image](https://user-images.githubusercontent.com/12729184/114537490-d8180100-9c84-11eb-8c69-db58692f3a85.png)
+
 
 #### 2. IEnumerable Data Fill
 
-> Note: Use the first IEnumerable of the same column as the basis for filling list
+> Note: The first IEnumerable of the same column is the basis for filling the template
 
 Template:
 
@@ -798,16 +930,11 @@ Result:
 ![image](https://user-images.githubusercontent.com/12729184/114802419-43221e80-9dd0-11eb-9ffe-a2ce34fe7076.png)
 
 
-#### 5. Example :  List Github Projects
+#### 5. Example: List Github Projects
 
 Template
 
 ![image](https://user-images.githubusercontent.com/12729184/115068623-12073280-9f25-11eb-9124-f4b3efcdb2a7.png)
-
-
-Result
-
-![image](https://user-images.githubusercontent.com/12729184/115068639-1a5f6d80-9f25-11eb-9f45-27c434d19a78.png)
 
 Code
 
@@ -829,6 +956,11 @@ var value = new
 var templater = MiniExcel.Templaters.GetOpenXmlTemplater();
 templater.ApplyTemplate(path, templatePath, value);
 ```
+
+Result:
+
+![image](https://user-images.githubusercontent.com/12729184/115068639-1a5f6d80-9f25-11eb-9f45-27c434d19a78.png)
+
 
 #### 6. Grouped Data Fill
 
@@ -887,7 +1019,7 @@ Rules:
 3. Each statement should be on a new line.
 4. A single space should be added before and after operators.
 5. There shouldn't be any new lines inside of a statement.
-6. Cells should be in the exact format as below.
+6. Cells should be in the exact format as below:
 
 ```csharp
 @if(name == Jack)
@@ -964,7 +1096,7 @@ templater.ApplyTemplate(path, templatePath, value, config)
 
 
 
-### MiniExcel Attributes <a name="getstarted4"></a>
+### Attributes and configuration <a name="docs-attributes" />
 
 #### 1. Specify the column name, column index, or ignore the column entirely
 
@@ -1058,7 +1190,7 @@ public class Dto
 
 #### 5. System.ComponentModel.DisplayNameAttribute
 
-The `DisplayNameAttribute` has the same effect as the `MiniExcelColumnNameAttribute`
+The `DisplayNameAttribute` has the same effect as the `MiniExcelColumnNameAttribute`:
 
 ```C#
 public class Dto
@@ -1075,7 +1207,7 @@ public class Dto
 }
 ```
 
-#### 6. ExcelColumnAttribute
+#### 6. MiniExcelColumnAttribute
 
 Multiple attributes can be simplified using the `MiniExcelColumnAttribute`:
 
@@ -1159,81 +1291,91 @@ var exporter = MiniExcel.Exporters.GetOpenXmlExporter();
 exporter.Export(path, sheets, configuration: configuration);
 ```
 
-## CSV
+### CSV <a name="docs-csv" />
 
-#### Note
-
-- Default return `string` type, and value will not be converted to numbers or datetime, unless the type is defined by strong typing generic.
+> Unlike Excel queries, csv always maps values to `string` by default, unless you are querying to a strongly defined type.
 
 #### Custom separator
 
-The default is `,` as the separator, you can modify the `Seperator` property for customization
+The default separator is the comma (`,`), but you can customize it using the `CsvConfiguration.Seperator` property:
 
 ```csharp
-var config = new MiniExcelLibs.Csv.CsvConfiguration()
+var config = new CsvConfiguration
 {
     Seperator=';'
 };
-MiniExcel.SaveAs(path, values,configuration: config);
+
+var exporter = MiniExcel.Exporters.GetCsvExporter();
+exporter.Export(path, values, configuration: config);
 ```
 
-Since V1.30.1 support function to custom separator (thanks @hyzx86)
+You also have the option to define a more complex separator:
 
 ```csharp
-var config = new CsvConfiguration()
+var config = new CsvConfiguration
 {
-    SplitFn = (row) => Regex.Split(row, $"[\t,](?=(?:[^\"]|\"[^\"]*\")*$)")
-        .Select(s => Regex.Replace(s.Replace("\"\"", "\""), "^\"|\"$", "")).ToArray()
+    SplitFn = row => Regex
+        .Split(row, $"[\t,](?=(?:[^\"]|\"[^\"]*\")*$)")
+        .Select(str => Regex.Replace(str.Replace("\"\"", "\""), "^\"|\"$", ""))
+        .ToArray()
 };
-var rows = MiniExcel.Query(path, configuration: config).ToList();
+
+var importer = MiniExcel.Exporters.GetCsvImporter();
+var rows = importer.Query(path, configuration: config).ToList();
 ```
 
 #### Custom line break
 
-The default is `\r\n` as the newline character, you can modify the `NewLine` property for customization
+The default line break is `\r\n`, but you can customize it using the `CsvConfiguration.NewLine`:
 
 ```csharp
-var config = new MiniExcelLibs.Csv.CsvConfiguration()
+var config = new CsvConfiguration
 {
     NewLine='\n'
 };
-MiniExcel.SaveAs(path, values,configuration: config);
+
+var exporter = MiniExcel.Exporters.GetCsvExporter();
+exporter.Export(path, values,configuration: config);
 ```
 
 #### Custom encoding
 
-- The default encoding is "Detect Encoding From Byte Order Marks"  (detectEncodingFromByteOrderMarks: true)
-- If you have custom encoding requirements, please modify the StreamReaderFunc / StreamWriterFunc  property
+The default encoding is UTF8 with BOM. If you have custom encoding requirements you can modify the `StreamReaderFunc` and `StreamWriterFunc` properties:
 
 ```csharp
 // Read
-var config = new MiniExcelLibs.Csv.CsvConfiguration()
+var config = new CsvConfiguration
 {
-    StreamReaderFunc = (stream) => new StreamReader(stream,Encoding.GetEncoding("gb2312"))
+    StreamReaderFunc = stream => new StreamReader(stream,Encoding.GetEncoding("gb2312"))
 };
-var rows = MiniExcel.Query(path, true,excelType:ExcelType.CSV,configuration: config);
+
+var importer = MiniExcel.Importers.GetCsvImporter();
+var rows = importer.Query(path, useHeaderRow: true, configuration: config);
 
 // Write
-var config = new MiniExcelLibs.Csv.CsvConfiguration()
+var config = new CsvConfiguration
 {
-    StreamWriterFunc = (stream) => new StreamWriter(stream, Encoding.GetEncoding("gb2312"))
+    StreamWriterFunc = stream => new StreamWriter(stream, Encoding.GetEncoding("gb2312"))
 };
-MiniExcel.SaveAs(path, value,excelType:ExcelType.CSV, configuration: config);
+
+var exporter = MiniExcel.Exporters.GetCsvExporter();
+exporter.Export(path, value, configuration: config);
 ```
 
 #### Read empty string as null
 
-By default, empty values are mapped to string.Empty. You can modify this behavior
+By default, empty values are mapped to `string.Empty`. 
+You can modify this behavior and map them to `null` using the `CsvConfiguration.ReadEmptyStringAsNull` property:
 
 ```csharp
-var config = new MiniExcelLibs.Csv.CsvConfiguration()
+var config = new CsvConfiguration
 {
    ReadEmptyStringAsNull = true
 };
 ```
 
 
-### DataReader
+#### DataReader
 
 There is support for reading one cell at a time using a custom `IDataReader`:
 
@@ -1244,7 +1386,7 @@ using var reader = importer.GetDataReader(path, useHeaderRow: true);
 // or
 
 var importer = MiniExcel.Importers.GetCsvImporter();
-using var reader = MiniExcel.GetDataReader(path, useHeaderRow: true);
+using var reader = importer.GetDataReader(path, useHeaderRow: true);
 
 
 while (reader.Read())
@@ -1256,13 +1398,8 @@ while (reader.Read())
 }
 ```
 
-###  Async
 
-
-
-### Add, Delete, Update
-
-#### Add
+#### Add records
 
 It is possible to append an arbitrary number of rows to a csv document: 
 
@@ -1276,28 +1413,13 @@ exporter.Append(path, value);
 // Insert N rows after last
 var value = new[] 
 {
-    new { ID = 4, Name = "Frank", InDate = new DateTime(2021, 06, 07)},
-    new { ID = 5, Name = "Gloria", InDate = new DateTime(2022, 05, 03)},
+    new { ID = 4, Name = "Frank", InDate = new DateTime(2021, 06, 07) },
+    new { ID = 5, Name = "Gloria", InDate = new DateTime(2022, 05, 03) },
 };
 exporter.AppendToCsv(path, value);
 ```
 
-There is also support to insert a new sheet into an existing Excel workbook:
-
-```csharp
-var exporter = MiniExcel.Exporters.GetOpenXmlExporter()
-    
-    var config = new OpenXmlConfiguration { FastMode = true };    
-var value = new { ID = 3, Name = "Mike", InDate = new DateTime(2021, 04, 23) };
-exporter.InsertSheet(path, table, sheetName: "Sheet2", configuration: config);
-```
-> **Note**: In order to insert worksheets FastMode must be enabled!
-
-#### Delete (work in progress)
-
-#### Update (work in progress)
-
-### Others
+### Other functionalities <a name="docs-other" />
 
 #### 1. Enums
 
@@ -1326,8 +1448,8 @@ public enum UserTypeEnum
 #### 2. Convert Csv to Xlsx or vice-versa
 
 ```csharp
-MiniExcel.Exporetr.GetCsvExporter().ConvertXlsxToCsv(xlsxPath, csvPath);
-MiniExcel.Exporetr.GetCsvExporter().ConvertCsvToXlsx(csvPath, xlsxPath);
+MiniExcel.Exporters.GetCsvExporter().ConvertXlsxToCsv(xlsxPath, csvPath);
+MiniExcel.Exporters.GetCsvExporter().ConvertCsvToXlsx(csvPath, xlsxPath);
 
 // or 
 
@@ -1351,16 +1473,18 @@ var config = new CsvConfiguration
 
 #### 4. Custom Buffer Size
 
+The default buffer size is 5MB, but you can easily customize it:
 ```csharp
-var conf = new OpenXmlConfiguration { BufferSize = 1024 * 10 };
+var conf = new OpenXmlConfiguration { BufferSize = 1024 * 1024 * 10 };
 ```
 
 #### 5. FastMode
 
-You can set the configuration property `FastMode` to achieve faster saving speeds, but this will make the memory consumption much higher:
+You can set the configuration property `FastMode` to achieve faster saving speeds, but this will make the memory consumption much higher, so it's not recommended:
 
 ```csharp
 var config = new OpenXmlConfiguration { FastMode = true };
+
 var exporter = MiniExcel.Exporters.GetOpenXmlExporter();
 exporter.Export(path, reader, configuration: config);
 ```
@@ -1370,15 +1494,15 @@ exporter.Export(path, reader, configuration: config);
 Please add pictures before batch generating the rows' data or a large amount of memory will be used when calling `AddPicture`:
 
 ```csharp
-var images = new[]
-{
-    new MiniExcelPicture
+MiniExcelPicture[] images =
+[
+    new()
     {
         ImageBytes = File.ReadAllBytes(PathHelper.GetFile("images/github_logo.png")),
         SheetName = null, // when null it will default to the first sheet
         CellAddress = "C3", // required
     },
-    new MiniExcelPicture
+    new()
     {
         ImageBytes = File.ReadAllBytes(PathHelper.GetFile("images/google_logo.png")),
         PictureType = "image/png", // image/png is the default picture type
@@ -1387,8 +1511,10 @@ var images = new[]
         WidthPx = 100,
         HeightPx = 100,
     },
-};
-MiniExcel.AddPicture(path, images);
+];
+
+var exporter = MiniExcel.Exporters.GetOpenXmlExporter();
+exporter.AddPicture(path, images);
 ```
 ![Image](https://github.com/user-attachments/assets/19c4d241-9753-4ede-96c8-f810c1a22247)
 
@@ -1401,7 +1527,7 @@ var importer = MiniExcel.Importers.GetOpenXmlImporter();
 var dim = importer.GetSheetDimensions(path);
 ```
 
-### FAQ
+### FAQ <a name="docs-faq" />
 
 #### Q: Excel header title is not equal to my DTO class property name, how do I map it?
 
@@ -1420,13 +1546,13 @@ class Dto
 A. You can retrieve the sheet names with the `GetSheetNames` method and then Query them using the `sheetName` parameter:
 
 ```csharp
-var excelImporter = MiniExcel.Importers.GetOpenXmlImporter();
-var sheetNames = excelImporter.GetSheetNames(path);
+var importer = MiniExcel.Importers.GetOpenXmlImporter();
+var sheetNames = importer.GetSheetNames(path);
 
 var rows = new Dictionary<string, List<dynamic>>();
 foreach (var sheet in sheetNames)
 {
-    rows[sheet] = excelImporter.Query(path, sheetName: sheet).ToList();
+    rows[sheet] = importer.Query(path, sheetName: sheet).ToList();
 }
 ```
 
@@ -1435,8 +1561,8 @@ foreach (var sheet in sheetNames)
 A. You can use the `GetSheetInformations` method:
 
 ```csharp
-var excelImporter = MiniExcel.Importers.GetOpenXmlImporter();
-var sheets = excelImporter.GetSheetInformations(path);
+var importer = MiniExcel.Importers.GetOpenXmlImporter();
+var sheets = importer.GetSheetInformations(path);
 
 foreach (var sheetInfo in sheets)
 {
@@ -1466,21 +1592,25 @@ If you want to switch to a numeric index you can copy the following method for c
 ```csharp
 IEnumerable<Dictionary<int, object>> ConvertToIntIndexRows(IEnumerable<object> rows)
 {
-    ICollection<string> keys = null;
     var isFirst = true;
-    foreach (IDictionary<string,object> r in rows)
+    ICollection<string> keys = [];
+    foreach (IDictionary<string,object> row in rows)
     {
         if(isFirst)
         {
-            keys = r.Keys;
+            keys = row.Keys;
             isFirst = false;
         }
 
-        var dic = new Dictionary<int, object>();
+        var dict = new Dictionary<int, object>();
+        
         var index = 0;
         foreach (var key in keys)
-            dic[index++] = r[key];
-        yield return dic;
+        {
+            dict[index++] = row[key];
+        }
+        
+        yield return dict;
     }
 }
 ```
@@ -1519,7 +1649,7 @@ excelExporter.Export(stream,value);
 ```
 
 
-### Limitations and caveats
+### Limitations and caveats <a name="docs-limitations" />
 
 - There is currently no support for the `.xls` legacy Excel format or for encrypted files
 - There is only basic query support for the `.xlsm` Excel format
@@ -1532,12 +1662,19 @@ excelExporter.Export(stream,value);
 
 ### Thanks
 
-####  [Jetbrains](https://www.jetbrains.com/)
+####  Jetbrains
 
 ![jetbrains-variant-2](https://user-images.githubusercontent.com/12729184/123997015-8456c180-da02-11eb-829a-aec476fe8e94.png)
 
-Thanks for providing a free All product IDE for this project ([License](https://user-images.githubusercontent.com/12729184/123988233-6ab17c00-d9fa-11eb-8739-2a08c6a4a263.png))
+Thanks to [**Jetbrains**](https://www.jetbrains.com/) for providing a free All product IDE for this project ([License](https://user-images.githubusercontent.com/12729184/123988233-6ab17c00-d9fa-11eb-8739-2a08c6a4a263.png))
 
+####  Zomp
+
+![](https://avatars.githubusercontent.com/u/63680941?s=200&v=4)
+
+Thanks to [**Zomp**](https://github.com/zompinc) and [@virzak](https://github.com/virzak) for helping us implement a new asynchronous API
+and for their [sync-method-generator](https://github.com/zompinc/sync-method-generator), a great source generator 
+for automating the creation of synchronous functions based on asynchronous ones.
 
 ### Donations sharing
 [Link](https://github.com/orgs/mini-software/discussions/754)

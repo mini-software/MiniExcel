@@ -437,16 +437,23 @@ internal static class MappingCompiler
             .ThenBy(x => x.Collection.StartCellColumn)
             .ToList();
             
-        foreach (var item in sortedCollections)
+        for (int i = 0; i < sortedCollections.Count; i++)
         {
-            MarkCollectionCells(grid, item.Collection, item.Index, boundaries);
+            var item = sortedCollections[i];
+            // Find the next collection's start row to use as boundary
+            int? nextCollectionStartRow = null;
+            if (i + 1 < sortedCollections.Count)
+            {
+                nextCollectionStartRow = sortedCollections[i + 1].Collection.StartCellRow;
+            }
+            MarkCollectionCells(grid, item.Collection, item.Index, boundaries, nextCollectionStartRow);
         }
 
         return grid;
     }
 
     private static void MarkCollectionCells(OptimizedCellHandler[,] grid, CompiledCollectionMapping collection, 
-        int collectionIndex, OptimizedMappingBoundaries boundaries)
+        int collectionIndex, OptimizedMappingBoundaries boundaries, int? nextCollectionStartRow = null)
     {
         var startRow = collection.StartCellRow;
         var startCol = collection.StartCellColumn;
@@ -456,13 +463,13 @@ internal static class MappingCompiler
         if (collection.Layout == CollectionLayout.Vertical)
         {
             // Mark vertical range - we'll handle dynamic expansion during runtime
-            MarkVerticalCollectionCells(grid, collection, collectionIndex, boundaries, startRow, startCol);
+            MarkVerticalCollectionCells(grid, collection, collectionIndex, boundaries, startRow, startCol, nextCollectionStartRow);
         }
     }
 
 
     private static void MarkVerticalCollectionCells(OptimizedCellHandler[,] grid, CompiledCollectionMapping collection,
-        int collectionIndex, OptimizedMappingBoundaries boundaries, int startRow, int startCol)
+        int collectionIndex, OptimizedMappingBoundaries boundaries, int startRow, int startCol, int? nextCollectionStartRow = null)
     {
         var relativeCol = startCol - boundaries.MinColumn;
         if (relativeCol < 0 || relativeCol >= grid.GetLength(1)) return;
@@ -474,7 +481,7 @@ internal static class MappingCompiler
         if (nestedMapping != null && itemType != typeof(string) && !itemType.IsValueType && !itemType.IsPrimitive)
         {
             // Complex type with mapping - expand each item across multiple columns
-            MarkVerticalComplexCollectionCells(grid, collection, collectionIndex, boundaries, startRow, nestedMapping);
+            MarkVerticalComplexCollectionCells(grid, collection, collectionIndex, boundaries, startRow, nestedMapping, nextCollectionStartRow);
         }
         else
         {
@@ -624,7 +631,7 @@ internal static class MappingCompiler
     }
     
     private static void MarkVerticalComplexCollectionCells(OptimizedCellHandler[,] grid, CompiledCollectionMapping collection,
-        int collectionIndex, OptimizedMappingBoundaries boundaries, int startRow, object nestedMapping)
+        int collectionIndex, OptimizedMappingBoundaries boundaries, int startRow, object nestedMapping, int? nextCollectionStartRow = null)
     {
         // Extract pre-compiled nested mapping info without reflection
         var nestedInfo = ExtractNestedMappingInfo(nestedMapping, collection.ItemType ?? typeof(object));
@@ -635,10 +642,24 @@ internal static class MappingCompiler
         var startRelativeRow = startRow - boundaries.MinRow;
         var rowSpacing = collection.RowSpacing;
         
-        for (int itemIndex = 0; itemIndex < 20; itemIndex++) // Conservative estimate of collection size
+        // Calculate the maximum number of items we can mark
+        var maxItems = 20; // Conservative default
+        if (nextCollectionStartRow.HasValue)
+        {
+            // Limit to the rows before the next collection starts
+            var availableRows = nextCollectionStartRow.Value - startRow;
+            maxItems = Math.Min(maxItems, Math.Max(0, availableRows / (1 + rowSpacing)));
+        }
+        
+        for (int itemIndex = 0; itemIndex < maxItems; itemIndex++)
         {
             var r = startRelativeRow + itemIndex * (1 + rowSpacing);
             if (r < 0 || r >= maxRows || r >= grid.GetLength(0)) continue;
+            
+            // Additional check: don't go past the next collection's start
+            var absoluteRow = r + boundaries.MinRow;
+            if (nextCollectionStartRow.HasValue && absoluteRow >= nextCollectionStartRow.Value)
+                break;
             
             foreach (var prop in nestedInfo.Properties)
             {
@@ -679,7 +700,7 @@ internal static class MappingCompiler
                     if (offset < list.Count && list[offset] != null)
                     {
                         // Extract the property from the nested object
-                        return propertyGetter(list[offset]);
+                        return propertyGetter(list[offset]!);
                     }
 
                     break;
@@ -750,7 +771,7 @@ internal static class MappingCompiler
             if (nameProperty == null || columnProperty == null || getterProperty == null) continue;
             
             var name = nameProperty.GetValue(prop) as string;
-            var column = (int)columnProperty.GetValue(prop);
+            var column = (int)columnProperty.GetValue(prop)!;
             var getter = getterProperty.GetValue(prop) as Func<object, object?>;
             var setter = setterProperty?.GetValue(prop) as Action<object, object?>;
             var propTypeValue = typeProperty?.GetValue(prop) as Type;

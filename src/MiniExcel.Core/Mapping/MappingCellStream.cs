@@ -27,6 +27,7 @@ internal struct MappingCellEnumerator<T>
     private readonly object _emptyCell;
     private int _maxCollectionRows;
     private int _currentCollectionRow;
+    private object?[][]? _currentCollectionArrays;
 
     public MappingCellEnumerator(IEnumerator<T> itemEnumerator, CompiledMapping<T> mapping, string[] columnLetters)
     {
@@ -44,6 +45,7 @@ internal struct MappingCellEnumerator<T>
         _emptyCell = string.Empty;
         _maxCollectionRows = 0;
         _currentCollectionRow = 0;
+        _currentCollectionArrays = null;
         
         Current = default;
     }
@@ -99,23 +101,34 @@ internal struct MappingCellEnumerator<T>
         // Process current item's cells
         if (_currentItem != null)
         {
-            // Calculate max collection rows when we start processing an item
-            if (_currentColumnIndex == 0 && _currentCollectionRow == 0)
+            // Cache collections as arrays when we start processing an item
+            if (_currentColumnIndex == 0 && _currentCollectionRow == 0 && _mapping.Collections.Count > 0)
             {
                 _maxCollectionRows = 0;
-                foreach (var coll in _mapping.Collections)
+                _currentCollectionArrays = new object?[_mapping.Collections.Count][];
+                
+                for (var i = 0; i < _mapping.Collections.Count; i++)
                 {
+                    var coll = _mapping.Collections[i];
                     var collectionData = coll.Getter(_currentItem);
                     if (collectionData != null)
                     {
-                        var count = 0;
-                        foreach (var _ in collectionData)
-                            count++;
+                        // Convert to array once - this is the only enumeration
+                        var items = new List<object?>();
+                        foreach (var item in collectionData)
+                        {
+                            items.Add(item);
+                        }
+                        _currentCollectionArrays[i] = items.ToArray();
                         
                         // For vertical collections, we need rows from StartCellRow
-                        var neededRows = coll.StartCellRow + count - _currentRowIndex;
+                        var neededRows = coll.StartCellRow + items.Count - _currentRowIndex;
                         if (neededRows > _maxCollectionRows)
                             _maxCollectionRows = neededRows;
+                    }
+                    else
+                    {
+                        _currentCollectionArrays[i] = [];
                     }
                 }
             }
@@ -142,15 +155,14 @@ internal struct MappingCellEnumerator<T>
                             cellValue = formattable.ToString(prop.Format, null);
                         }
 
-                        if (cellValue == null)
-                            cellValue = _emptyCell;
+                        cellValue ??= _emptyCell;
 
                         break;
                     }
                 }
                 
                 // Then check collections
-                if (cellValue == _emptyCell)
+                if (cellValue == _emptyCell && _currentCollectionArrays != null)
                 {
                     for (var collIndex = 0; collIndex < _mapping.Collections.Count; collIndex++)
                     {
@@ -161,19 +173,10 @@ internal struct MappingCellEnumerator<T>
                             var collectionRowOffset = _currentRowIndex - coll.StartCellRow;
                             if (collectionRowOffset >= 0)
                             {
-                                var collectionData = coll.Getter(_currentItem);
-                                if (collectionData != null)
+                                var collectionArray = _currentCollectionArrays[collIndex];
+                                if (collectionRowOffset < collectionArray.Length)
                                 {
-                                    var itemIndex = 0;
-                                    foreach (var item in collectionData)
-                                    {
-                                        if (itemIndex == collectionRowOffset)
-                                        {
-                                            cellValue = item ?? _emptyCell;
-                                            break;
-                                        }
-                                        itemIndex++;
-                                    }
+                                    cellValue = collectionArray[collectionRowOffset] ?? _emptyCell;
                                 }
                             }
                             break;
@@ -223,16 +226,9 @@ internal struct MappingCellEnumerator<T>
     }
 }
 
-internal readonly struct MappingCell
+internal readonly struct MappingCell(string columnLetter, int rowIndex, object? value)
 {
-    public readonly string ColumnLetter;
-    public readonly int RowIndex;
-    public readonly object? Value;
-
-    public MappingCell(string columnLetter, int rowIndex, object? value)
-    {
-        ColumnLetter = columnLetter;
-        RowIndex = rowIndex;
-        Value = value;
-    }
+    public readonly string ColumnLetter = columnLetter;
+    public readonly int RowIndex = rowIndex;
+    public readonly object? Value = value;
 }

@@ -23,11 +23,11 @@ internal static partial class MappingReader<T> where T : class, new()
         var boundaries = mapping.OptimizedBoundaries!;
         var cellGrid = mapping.OptimizedCellGrid!;
         
-        // Read the Excel file using OpenXmlReader
+        // Read the Excel file using OpenXmlReader's direct mapping path
         using var reader = await OpenXmlReader.CreateAsync(stream, new OpenXmlConfiguration
         {
             FillMergedCells = false,
-            FastMode = true
+            FastMode = false
         }, cancellationToken).ConfigureAwait(false);
         
         // If we have collections, we need to handle multiple items with collections
@@ -38,14 +38,11 @@ internal static partial class MappingReader<T> where T : class, new()
             
             T? currentItem = null;
             Dictionary<int, IList>? currentCollections = null;
-            int currentItemIndex = -1;
-            
-            int currentRowIndex = 0;
-            await foreach (var row in reader.QueryAsync(false, mapping.WorksheetName, "A1", cancellationToken).ConfigureAwait(false))
+            var currentItemIndex = -1;
+
+            await foreach (var mappedRow in reader.QueryMappedAsync(mapping.WorksheetName, cancellationToken).ConfigureAwait(false))
             {
-                currentRowIndex++;
-                if (row == null) continue;
-                var rowDict = row as IDictionary<string, object>;
+                var currentRowIndex = mappedRow.RowIndex + 1;
 
 
                 // Use our own row counter since OpenXmlReader doesn't provide row numbers
@@ -89,32 +86,27 @@ internal static partial class MappingReader<T> where T : class, new()
                 if (gridRow < 0 || gridRow >= cellGrid.GetLength(0)) continue;
                 
                 // Process each cell in the row using the pre-calculated grid
-                foreach (var kvp in rowDict)
+                for (int col = boundaries.MinColumn; col <= boundaries.MaxColumn; col++)
                 {
-                    if (kvp.Key.StartsWith("__")) continue; // Skip metadata keys
+                    var cellValue = mappedRow.GetCell(col - 1); // Convert to 0-based for MappedRow
                     
-                    // Convert column letter to index
-                    if (!TryParseColumnIndex(kvp.Key, out int columnIndex))
-                        continue;
-                    
-                    var relativeCol = columnIndex - boundaries.MinColumn;
+                    var relativeCol = col - boundaries.MinColumn;
                     if (relativeCol < 0 || relativeCol >= cellGrid.GetLength(1))
                         continue;
                     
                     var handler = cellGrid[gridRow, relativeCol];
-                    ProcessCellValue(handler, kvp.Value, currentItem, currentCollections, mapping);
+                    ProcessCellValue(handler, cellValue, currentItem, currentCollections, mapping);
                 }
             }
             
             // Finalize the last item if we have one
-            if (currentItem != null && currentCollections != null)
+            if (currentItem == null || currentCollections == null) 
+                yield break;
+            
+            FinalizeCollections(currentItem, mapping, currentCollections);
+            if (HasAnyData(currentItem, mapping))
             {
-                FinalizeCollections(currentItem, mapping, currentCollections);
-                
-                if (HasAnyData(currentItem, mapping))
-                {
-                    yield return currentItem;
-                }
+                yield return currentItem;
             }
         }
         else
@@ -127,13 +119,10 @@ internal static partial class MappingReader<T> where T : class, new()
             {
                 // Column layout mode - all rows form a single object
                 var item = new T();
-                int currentRowIndex = 0;
-                
-                await foreach (var row in reader.QueryAsync(false, mapping.WorksheetName, "A1", cancellationToken).ConfigureAwait(false))
+
+                await foreach (var mappedRow in reader.QueryMappedAsync(mapping.WorksheetName, cancellationToken).ConfigureAwait(false))
                 {
-                    currentRowIndex++;
-                    if (row == null) continue;
-                    var rowDict = row as IDictionary<string, object>;
+                    var currentRowIndex = mappedRow.RowIndex + 1;
 
                     int rowNumber = currentRowIndex;
                     
@@ -142,13 +131,12 @@ internal static partial class MappingReader<T> where T : class, new()
                     {
                         if (prop.CellRow == rowNumber)
                         {
-                            var columnLetter = ReferenceHelper.GetCellLetter(
-                                ReferenceHelper.ConvertCoordinatesToCell(prop.CellColumn, 1));
+                            var cellValue = mappedRow.GetCell(prop.CellColumn - 1); // Convert to 0-based
                             
-                            if (rowDict.TryGetValue(columnLetter, out var value) && value != null)
+                            if (cellValue != null)
                             {
                                 // Trust the precompiled setter to handle conversion
-                                prop.Setter?.Invoke(item, value);
+                                prop.Setter?.Invoke(item, cellValue);
                             }
                         }
                     }
@@ -162,12 +150,9 @@ internal static partial class MappingReader<T> where T : class, new()
             else
             {
                 // Row layout mode - each row is a separate item
-                int currentRowIndex = 0;
-                await foreach (var row in reader.QueryAsync(false, mapping.WorksheetName, "A1", cancellationToken).ConfigureAwait(false))
+                await foreach (var mappedRow in reader.QueryMappedAsync(mapping.WorksheetName, cancellationToken).ConfigureAwait(false))
                 {
-                    currentRowIndex++;
-                    if (row == null) continue;
-                    var rowDict = row as IDictionary<string, object>;
+                    var currentRowIndex = mappedRow.RowIndex + 1;
 
                     // Use our own row counter since OpenXmlReader doesn't provide row numbers
                     int rowNumber = currentRowIndex;
@@ -185,14 +170,12 @@ internal static partial class MappingReader<T> where T : class, new()
                         // For cell-specific mapping, only read from the specific row
                         if (!allOnRow1 && prop.CellRow != rowNumber) continue;
                         
-                        var columnLetter = ReferenceHelper.GetCellLetter(
-                            ReferenceHelper.ConvertCoordinatesToCell(prop.CellColumn, 1));
-
-                        if (!rowDict.TryGetValue(columnLetter, out var value) || value == null) continue;
+                        var cellValue = mappedRow.GetCell(prop.CellColumn - 1); // Convert to 0-based
+                        if (cellValue == null) continue;
                         
                         // Trust the precompiled setter to handle conversion
                         if (prop.Setter == null) continue;
-                        prop.Setter.Invoke(item, value);
+                        prop.Setter.Invoke(item, cellValue);
                     }
                     
                     if (HasAnyData(item, mapping))
@@ -230,6 +213,10 @@ internal static partial class MappingReader<T> where T : class, new()
     private static void ProcessCellValue(OptimizedCellHandler handler, object value, T item, 
         Dictionary<int, IList>? collections, CompiledMapping<T> mapping)
     {
+        // Skip empty handlers
+        if (handler.Type == CellHandlerType.Empty)
+            return;
+            
         switch (handler.Type)
         {
             case CellHandlerType.Property:
@@ -438,6 +425,7 @@ internal static partial class MappingReader<T> where T : class, new()
         }
     }
     
+    
     private static bool HasAnyData(T item, CompiledMapping<T> mapping)
     {
         // Check if any properties have non-default values
@@ -454,9 +442,15 @@ internal static partial class MappingReader<T> where T : class, new()
         foreach (var coll in mapping.Collections)
         {
             var collection = coll.Getter(item);
-            if (collection != null && collection.Cast<object>().Any())
+            if (collection != null)
             {
-                return true;
+                // Avoid Cast<object>().Any() which causes boxing
+                var enumerator = collection.GetEnumerator();
+                using var disposableEnumerator = enumerator as IDisposable;
+                if (enumerator.MoveNext())
+                {
+                    return true;
+                }
             }
         }
         
@@ -477,22 +471,5 @@ internal static partial class MappingReader<T> where T : class, new()
             DateTime dt => dt == default,
             _ => false
         };
-    }
-    
-    private static bool TryParseColumnIndex(string columnLetter, out int columnIndex)
-    {
-        columnIndex = 0;
-        if (string.IsNullOrEmpty(columnLetter)) return false;
-        
-        // Convert column letter (A, B, AA, etc.) to index
-        columnLetter = columnLetter.ToUpperInvariant();
-        for (int i = 0; i < columnLetter.Length; i++)
-        {
-            char c = columnLetter[i];
-            if (c < 'A' || c > 'Z') return false;
-            columnIndex = columnIndex * 26 + (c - 'A' + 1);
-        }
-        
-        return columnIndex > 0;
     }
 }

@@ -45,6 +45,34 @@ internal static class ReferenceHelper
         return $"{columnName}{y}";
     }
 
+    /// <summary>
+    /// Try to parse cell reference (e.g., "A1") into column and row numbers.
+    /// </summary>
+    /// <param name="cellRef">The cell reference (e.g., "A1", "B2", "AA10")</param>
+    /// <param name="column">The column number (1-based)</param>
+    /// <param name="row">The row number (1-based)</param>
+    /// <returns>True if successfully parsed, false otherwise</returns>
+    public static bool TryParseCellReference(string cellRef, out int column, out int row)
+    {
+        column = 0;
+        row = 0;
+        
+        if (string.IsNullOrEmpty(cellRef))
+            return false;
+        
+        try
+        {
+            var coords = ConvertCellToCoordinates(cellRef);
+            column = coords.Item1;
+            row = coords.Item2;
+            return column > 0 && row > 0;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+    
     /**The code below was copied and modified from ExcelDataReader - @MIT License**/
     /// <summary>
     /// Logic for the Excel dimensions. Ex: A15

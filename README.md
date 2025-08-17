@@ -183,7 +183,7 @@ exporter.Export(outputPath, values);
 
 // or
 
-List<Dictionary<string, object>>() values =
+List<Dictionary<string, object>> values =
 [
     new() { { "Column1", "MiniExcel" }, { "Column2", 1 } },
     new() { { "Column1", "Github" }, { "Column2", 2 } }
@@ -266,8 +266,8 @@ By default no header will be used and the dynamic keys will be `.A`, `.B`, `.C`,
 | Github    | 2 |
 
 ```csharp
-var excelImporter = MiniExcel.Importers.GetOpenXmlImporter();
-var rows = excelImporter.MiniExcel.Query(path).ToList();
+var importer = MiniExcel.Importers.GetOpenXmlImporter();
+var rows = importer.Query(path).ToList();
 
 // rows[0].A = "MiniExcel"
 // rows[0].B = 1
@@ -284,8 +284,8 @@ You can also specify that a header must be used, in which case the dynamic keys 
 
 
 ```csharp
-var excelImporter = MiniExcel.Importers.GetOpenXmlImporter();
-var rows = excelImporter.MiniExcel.Query(path, useHeaderRow: true).ToList();
+var importer = MiniExcel.Importers.GetOpenXmlImporter();
+var rows = importer.Query(path, useHeaderRow: true).ToList();
 
 // rows[0].Name = "MiniExcel"
 // rows[0].Value = 1
@@ -298,8 +298,8 @@ var rows = excelImporter.MiniExcel.Query(path, useHeaderRow: true).ToList();
 e.g: Query the tenth row by skipping the first 9 and taking the first
 
 ```csharp
-var excelImporter = MiniExcel.Importers.GetOpenXmlImporter();
-var tenthRow = excelImporter.Query(path).Skip(9).First();
+var importer = MiniExcel.Importers.GetOpenXmlImporter();
+var tenthRow = importer.Query(path).Skip(9).First();
 ```
 
 #### 4. Specify the Excel sheet to query from
@@ -371,8 +371,8 @@ var config = new OpenXmlConfiguration
     FillMergedCells = true
 };
 
-var excelImporter = MiniExcel.Importers.GetOpenXmlImporter();
-var rows = MiniExcel.Query(path, configuration: config);
+var importer = MiniExcel.Importers.GetOpenXmlImporter();
+var rows = importer.Query(path, configuration: config);
 ```
 
 ![image](https://user-images.githubusercontent.com/12729184/117973630-3527d500-b35f-11eb-95c3-bde255f8114e.png)
@@ -521,7 +521,7 @@ var cmd = new CommandDefinition(
 var rows = connection.Query(cmd);
 
 var exporter = MiniExcel.Exporters.GetOpenXmlExporter();
-exporter.Export("dapper_test.xslx", rows);
+exporter.Export("dapper_test.xlsx", rows);
 ```
 > **WARNING**: If you simply use `var rows = connection.Query(sql)` all data will be loaded into memory instead!
 
@@ -550,7 +550,7 @@ var sheets = new Dictionary<string, object>
     ["department"] = department
 };
 
-var excelExporter = MiniExcel.Exporters.GetOpenXmlExporter();
+var exporter = MiniExcel.Exporters.GetOpenXmlExporter();
 exporter.Export(path, sheets);
 ```
 
@@ -574,8 +574,8 @@ MiniExcel supports the functionality of inserting a new sheet into an existing E
 var config = new OpenXmlConfiguration { FastMode = true };    
 var value = new { ID = 3, Name = "Mike", InDate = new DateTime(2021, 04, 23) };
 
-var exporter = MiniExcel.Exporters.GetOpenXmlExporter()
-exporter.InsertSheet(path, table, sheetName: "Sheet2", configuration: config);
+var exporter = MiniExcel.Exporters.GetOpenXmlExporter();
+exporter.InsertSheet(path, value, sheetName: "Sheet2", configuration: config);
 ```
 > **Note**: In order to insert worksheets FastMode must be enabled!
 
@@ -627,7 +627,7 @@ exporter.Export(path, value, configuration: config);
 #### 11. Creating images
 
 ```csharp
-var exporter = MiniExcel.Exporters.GetExcelExporter();
+var exporter = MiniExcel.Exporters.GetOpenXmlExporter();
 var value = new[] 
 {
     new { Name = "github", Image = File.ReadAllBytes("images/github_logo.png") },
@@ -683,7 +683,8 @@ Dictionary<string, object?>[] value =
     }
 ];
 
-_exporter.Export("test.xlsx", value, configuration: config);
+var exporter = MiniExcel.Exporters.GetOpenXmlExporter();
+exporter.Export("test.xlsx", value, configuration: config);
 ```
 
 ![image](https://user-images.githubusercontent.com/31481586/241419455-3c0aec8a-4e5f-4d83-b7ec-6572124c165d.png)
@@ -696,7 +697,8 @@ var config = new OpenXmlConfiguration
     EnableWriteNullValueCell = false // Default value is true
 };
 
-exporter.Export("test.xlsx", dt, configuration: config);
+var exporter = MiniExcel.Exporters.GetOpenXmlExporter();
+exporter.Export("test.xlsx", value, configuration: config);
 ```
 
 ![image](https://user-images.githubusercontent.com/31481586/241419441-c4f27e8f-3f87-46db-a10f-08665864c874.png)
@@ -709,7 +711,8 @@ var config = new OpenXmlConfiguration
     WriteEmptyStringAsNull = true // Default value is false
 };
 
-exporter.Export("test.xlsx", dt, configuration: config);
+var exporter = MiniExcel.Exporters.GetOpenXmlExporter();
+exporter.Export("test.xlsx", value, configuration: config);
 ```
 
 Both properties work with `null` and `DBNull` values.

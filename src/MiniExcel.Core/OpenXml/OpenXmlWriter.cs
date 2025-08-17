@@ -474,7 +474,7 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
         var columnType = columnInfo.ExcelColumnType;
 
         /*Prefix and suffix blank space will lost after SaveAs #294*/
-        var preserveSpace = cellValue is " " or [' ', .., ' '];
+        var preserveSpace = cellValue is [' ', ..] or [.., ' '];
 
         await writer.WriteAsync(WorksheetXml.Cell(columnReference, dataType, GetCellXfId(styleIndex), cellValue, preserveSpace: preserveSpace, columnType: columnType)).ConfigureAwait(false);
         widthCollection?.AdjustWidth(cellIndex, cellValue);

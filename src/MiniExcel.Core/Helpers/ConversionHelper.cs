@@ -183,6 +183,101 @@ internal static class ConversionHelper
     }
     
     /// <summary>
+    /// Creates a compiled setter expression for the specified target type with proper conversion handling.
+    /// This consolidates type conversion logic from various parts of the codebase.
+    /// </summary>
+    /// <param name="targetType">The target property type</param>
+    /// <param name="valueParameter">The parameter expression for the input value</param>
+    /// <returns>A compiled expression that converts and assigns values</returns>
+    private static Expression CreateTypedConversionExpression(Type targetType, ParameterExpression valueParameter)
+    {
+        // Handle nullable types
+        var underlyingType = Nullable.GetUnderlyingType(targetType);
+        var isNullable = underlyingType != null;
+        var effectiveType = underlyingType ?? targetType;
+        
+        Expression convertExpression;
+        
+        // Create conversion expression based on effective type
+        if (effectiveType == typeof(int))
+        {
+            var convertMethod = typeof(Convert).GetMethod("ToInt32", [typeof(object)]);
+            convertExpression = Expression.Call(convertMethod!, valueParameter);
+        }
+        else if (effectiveType == typeof(decimal))
+        {
+            var convertMethod = typeof(Convert).GetMethod("ToDecimal", [typeof(object)]);
+            convertExpression = Expression.Call(convertMethod!, valueParameter);
+        }
+        else if (effectiveType == typeof(long))
+        {
+            var convertMethod = typeof(Convert).GetMethod("ToInt64", [typeof(object)]);
+            convertExpression = Expression.Call(convertMethod!, valueParameter);
+        }
+        else if (effectiveType == typeof(float))
+        {
+            var convertMethod = typeof(Convert).GetMethod("ToSingle", [typeof(object)]);
+            convertExpression = Expression.Call(convertMethod!, valueParameter);
+        }
+        else if (effectiveType == typeof(double))
+        {
+            var convertMethod = typeof(Convert).GetMethod("ToDouble", [typeof(object)]);
+            convertExpression = Expression.Call(convertMethod!, valueParameter);
+        }
+        else if (effectiveType == typeof(DateTime))
+        {
+            var convertMethod = typeof(Convert).GetMethod("ToDateTime", [typeof(object)]);
+            convertExpression = Expression.Call(convertMethod!, valueParameter);
+        }
+        else if (effectiveType == typeof(bool))
+        {
+            var convertMethod = typeof(Convert).GetMethod("ToBoolean", [typeof(object)]);
+            convertExpression = Expression.Call(convertMethod!, valueParameter);
+        }
+        else if (effectiveType == typeof(string))
+        {
+            var convertMethod = typeof(Convert).GetMethod("ToString", [typeof(object)]);
+            convertExpression = Expression.Call(convertMethod!, valueParameter);
+        }
+        else
+        {
+            // Default: direct cast for other types
+            convertExpression = Expression.Convert(valueParameter, effectiveType);
+        }
+        
+        // If the target type is nullable, convert the result to nullable
+        if (isNullable)
+        {
+            convertExpression = Expression.Convert(convertExpression, targetType);
+        }
+        
+        return convertExpression;
+    }
+
+    /// <summary>
+    /// Creates a compiled property setter with type conversion for the specified property.
+    /// </summary>
+    /// <typeparam name="T">The containing type</typeparam>
+    /// <param name="propertyInfo">The property to create a setter for</param>
+    /// <returns>A compiled setter action or null if the property is not settable</returns>
+    public static Action<object, object?>? CreateTypedPropertySetter<T>(PropertyInfo propertyInfo)
+    {
+        if (!propertyInfo.CanWrite)
+            return null;
+            
+        var setterParam = Expression.Parameter(typeof(object), "obj");
+        var valueParam = Expression.Parameter(typeof(object), "value");
+        var castObj = Expression.Convert(setterParam, typeof(T));
+        
+        // Use the centralized conversion logic
+        var convertedValue = CreateTypedConversionExpression(propertyInfo.PropertyType, valueParam);
+        
+        var assign = Expression.Assign(Expression.Property(castObj, propertyInfo), convertedValue);
+        var setterLambda = Expression.Lambda<Action<object, object?>>(assign, setterParam, valueParam);
+        return setterLambda.Compile();
+    }
+
+    /// <summary>
     /// Clear the conversion cache (useful for testing or memory management)
     /// </summary>
     public static void ClearCache()

@@ -183,51 +183,31 @@ internal partial struct MappingTemplateProcessor<T>(CompiledMapping<T> mapping)
                             
                             bool cellHandled = false;
                             
-                            // Check if we have an optimized grid and this cell is within bounds
-                            if (mapping.OptimizedCellGrid != null && mapping.OptimizedBoundaries != null)
+                            // Check if we have a handler for this cell
+                            if (mapping.TryGetHandler(row, col, out var handler))
                             {
-                                var relRow = row - mapping.OptimizedBoundaries.MinRow;
-                                var relCol = col - mapping.OptimizedBoundaries.MinColumn;
-                                
-                                
-                                if (relRow >= 0 && relRow < mapping.OptimizedBoundaries.GridHeight &&
-                                    relCol >= 0 && relCol < mapping.OptimizedBoundaries.GridWidth)
+                                // Use the pre-calculated handler to extract the value
+                                if (mapping.TryGetValue(handler, currentItem, out var value))
                                 {
-                                    var handler = mapping.OptimizedCellGrid[relRow, relCol];
-                                    
-                                    
-                                    if (handler.Type != CellHandlerType.Empty)
+                                    // Special handling for collection items
+                                    if (handler.Type == CellHandlerType.CollectionItem && value == null)
                                     {
-                                        // Use the pre-calculated handler to extract the value
-                                        object? value = null;
-                                        bool skipCell = false;
-                                        
-                                        if (handler.Type == CellHandlerType.Property && handler.ValueExtractor != null)
-                                        {
-                                            value = currentItem != null ? handler.ValueExtractor(currentItem, 0) : null;
-                                        }
-                                        else if (handler.Type == CellHandlerType.CollectionItem && handler.ValueExtractor != null)
-                                        {
-                                            // For collections, the ValueExtractor is pre-configured with the right offset
-                                            // Just pass the parent object that contains the collection
-                                            value = currentItem != null ? handler.ValueExtractor(currentItem, 0) : null;
-                                            
-                                            // IMPORTANT: If collection item is null (beyond collection bounds),
-                                            // preserve template content instead of overwriting with null
-                                            if (value == null)
-                                            {
-                                                skipCell = true;
-                                            }
-                                        }
-                                        
-                                        
-                                        // Only write if we have a value to write
-                                        if (!skipCell)
-                                        {
-                                            await WriteMappedCellAsync(reader, writer, value).ConfigureAwait(false);
-                                            cellHandled = true;
-                                        }
+                                        // IMPORTANT: If collection item is null (beyond collection bounds),
+                                        // preserve template content instead of overwriting with null
+                                        // Skip this cell to preserve template content
                                     }
+                                    else
+                                    {
+                                        // Write the mapped value using centralized helper
+                                        await XmlCellWriter.WriteMappedCellAsync(reader, writer, value).ConfigureAwait(false);
+                                        cellHandled = true;
+                                    }
+                                }
+                                else if (handler.Type == CellHandlerType.Property)
+                                {
+                                    // Property with no value - write null using centralized helper
+                                    await XmlCellWriter.WriteMappedCellAsync(reader, writer, null).ConfigureAwait(false);
+                                    cellHandled = true;
                                 }
                             }
                             
@@ -291,19 +271,15 @@ internal partial struct MappingTemplateProcessor<T>(CompiledMapping<T> mapping)
             bool hasValue = false;
             for (int relCol = 0; relCol < mapping.OptimizedBoundaries.GridWidth; relCol++)
             {
-                var handler = mapping.OptimizedCellGrid[relRow, relCol];
-                if (handler.Type != CellHandlerType.Empty)
+                var actualCol = relCol + mapping.OptimizedBoundaries.MinColumn;
+                if (mapping.TryGetHandler(actualRow, actualCol, out var handler))
                 {
                     hasMapping = true;
                     // Check if there's an actual value to write
-                    if (handler.ValueExtractor != null && currentItem != null)
+                    if (mapping.TryGetValue(handler, currentItem, out var value) && value != null)
                     {
-                        var value = handler.ValueExtractor(currentItem, 0);
-                        if (value != null)
-                        {
-                            hasValue = true;
-                            break;
-                        }
+                        hasValue = true;
+                        break;
                     }
                 }
             }
@@ -327,34 +303,19 @@ internal partial struct MappingTemplateProcessor<T>(CompiledMapping<T> mapping)
         await writer.WriteAttributeStringAsync("", "r", "", rowNumber.ToString()).ConfigureAwait(false);
         
         // Check each column in this row for mapped cells
-        if (mapping.OptimizedCellGrid != null && mapping.OptimizedBoundaries != null)
+        if (mapping.OptimizedBoundaries != null)
         {
-            var relRow = rowNumber - mapping.OptimizedBoundaries.MinRow;
-            
-            if (relRow >= 0 && relRow < mapping.OptimizedBoundaries.GridHeight)
+            for (int col = mapping.OptimizedBoundaries.MinColumn; col <= mapping.OptimizedBoundaries.MaxColumn; col++)
             {
-                for (int relCol = 0; relCol < mapping.OptimizedBoundaries.GridWidth; relCol++)
+                // Check if we have a handler for this cell
+                if (mapping.TryGetHandler(rowNumber, col, out var handler))
                 {
-                    var handler = mapping.OptimizedCellGrid[relRow, relCol];
-                    if (handler.Type == CellHandlerType.Empty) continue;
-                    
-                    // Extract the value
-                    object? value = null;
-                    
-                    if (handler.Type == CellHandlerType.Property && handler.ValueExtractor != null)
+                    // Try to get the value
+                    if (mapping.TryGetValue(handler, currentItem, out var value) && value != null)
                     {
-                        value = currentItem != null ? handler.ValueExtractor(currentItem, 0) : null;
+                        var cellRef = ReferenceHelper.ConvertCoordinatesToCell(col, rowNumber);
+                        await XmlCellWriter.WriteNewCellAsync(writer, cellRef, value).ConfigureAwait(false);
                     }
-                    else if (handler.Type == CellHandlerType.CollectionItem && handler.ValueExtractor != null)
-                    {
-                        value = currentItem != null ? handler.ValueExtractor(currentItem, 0) : null;
-                    }
-
-                    if (value == null) continue;
-                    
-                    var actualCol = relCol + mapping.OptimizedBoundaries.MinColumn;
-                    var cellRef = ReferenceHelper.ConvertCoordinatesToCell(actualCol, rowNumber);
-                    await WriteNewCellAsync(writer, cellRef, value).ConfigureAwait(false);
                 }
             }
         }
@@ -371,225 +332,35 @@ internal partial struct MappingTemplateProcessor<T>(CompiledMapping<T> mapping)
     {
         
         // Check if we have an optimized grid with mappings for this row
-        if (mapping.OptimizedCellGrid != null && mapping.OptimizedBoundaries != null)
+        if (mapping.OptimizedBoundaries != null)
         {
-            var relRow = rowNumber - mapping.OptimizedBoundaries.MinRow;
-            
-            if (relRow >= 0 && relRow < mapping.OptimizedBoundaries.GridHeight)
+            // Check each column in the grid for this row
+            for (int col = mapping.OptimizedBoundaries.MinColumn; col <= mapping.OptimizedBoundaries.MaxColumn; col++)
             {
-                // Check each column in the grid for this row
-                for (int relCol = 0; relCol < mapping.OptimizedBoundaries.GridWidth; relCol++)
+                // Skip if we already wrote this column
+                if (writtenColumns.Contains(col))
+                    continue;
+                
+                // Check if we have a handler for this cell
+                if (mapping.TryGetHandler(rowNumber, col, out var handler))
                 {
-                    var actualCol = relCol + mapping.OptimizedBoundaries.MinColumn;
-                    
-                    // Skip if we already wrote this column
-                    if (writtenColumns.Contains(actualCol))
-                        continue;
-                    
-                    var handler = mapping.OptimizedCellGrid[relRow, relCol];
-                    if (handler.Type == CellHandlerType.Empty) continue;
-                    
                     // We have a mapping for this cell but it wasn't in the template
-                    // Create a new cell for it
-                    object? value = null;
-                        
-                    if (handler.Type == CellHandlerType.Property && handler.ValueExtractor != null)
-                    {
-                        value = currentItem != null ? handler.ValueExtractor(currentItem, 0) : null;
-                    }
-                    else if (handler.Type == CellHandlerType.CollectionItem && handler.ValueExtractor != null)
-                    {
-                        value = currentItem != null ? handler.ValueExtractor(currentItem, 0) : null;
-                    }
-                        
-                    if (value != null)
+                    // Try to get the value
+                    if (mapping.TryGetValue(handler, currentItem, out var value) && value != null)
                     {
                         // Create cell reference
-                        var cellRef = ReferenceHelper.ConvertCoordinatesToCell(actualCol, rowNumber);
-                            
-                            
-                        // Write the cell
-                        await WriteNewCellAsync(writer, cellRef, value).ConfigureAwait(false);
+                        var cellRef = ReferenceHelper.ConvertCoordinatesToCell(col, rowNumber);
+                        
+                        // Write the cell using centralized helper
+                        await XmlCellWriter.WriteNewCellAsync(writer, cellRef, value).ConfigureAwait(false);
                     }
                 }
             }
         }
     }
     
-    [CreateSyncVersion]
-    private async Task WriteNewCellAsync(
-        XmlWriter writer,
-        string cellRef,
-        object? value)
-    {
-        // Determine cell type and formatted value
-        var (cellValue, cellType) = FormatCellValue(value);
-        
-        if (string.IsNullOrEmpty(cellValue) && string.IsNullOrEmpty(cellType))
-            return; // Don't write empty cells
-        
-        // Write cell element
-        await writer.WriteStartElementAsync("", "c", "").ConfigureAwait(false);
-        await writer.WriteAttributeStringAsync("", "r", "", cellRef).ConfigureAwait(false);
-        
-        if (!string.IsNullOrEmpty(cellType))
-        {
-            await writer.WriteAttributeStringAsync("", "t", "", cellType).ConfigureAwait(false);
-        }
-        
-        // Write the value
-        if (cellType == "inlineStr" && !string.IsNullOrEmpty(cellValue))
-        {
-            // Write inline string
-            await writer.WriteStartElementAsync("", "is", "").ConfigureAwait(false);
-            await writer.WriteStartElementAsync("", "t", "").ConfigureAwait(false);
-            await writer.WriteStringAsync(cellValue).ConfigureAwait(false);
-            await writer.WriteEndElementAsync().ConfigureAwait(false); // </t>
-            await writer.WriteEndElementAsync().ConfigureAwait(false); // </is>
-        }
-        else if (!string.IsNullOrEmpty(cellValue))
-        {
-            // Write value element
-            await writer.WriteStartElementAsync("", "v", "").ConfigureAwait(false);
-            await writer.WriteStringAsync(cellValue).ConfigureAwait(false);
-            await writer.WriteEndElementAsync().ConfigureAwait(false); // </v>
-        }
-        
-        await writer.WriteEndElementAsync().ConfigureAwait(false); // </c>
-    }
     
-    [CreateSyncVersion]
-    private static async Task WriteMappedCellAsync(
-        XmlReader reader,
-        XmlWriter writer,
-        object? value)
-    {
-        // Determine cell type and formatted value
-        var (cellValue, cellType) = FormatCellValue(value);
-        
-        // Write cell start tag
-        await writer.WriteStartElementAsync(reader.Prefix, "c", reader.NamespaceURI).ConfigureAwait(false);
-        
-        // Copy attributes, potentially updating type
-        if (reader.HasAttributes)
-        {
-            while (reader.MoveToNextAttribute())
-            {
-                if (reader.LocalName == "t")
-                {
-                    // Write our type instead
-                    if (!string.IsNullOrEmpty(cellType))
-                    {
-                        await writer.WriteAttributeStringAsync("", "t", "", cellType).ConfigureAwait(false);
-                    }
-                }
-                else if (reader.LocalName == "s")
-                {
-                    // Skip style if we're writing inline string
-                    if (cellType != "inlineStr")
-                    {
-                        await writer.WriteAttributeStringAsync(
-                            reader.Prefix,
-                            reader.LocalName,
-                            reader.NamespaceURI,
-                            reader.Value).ConfigureAwait(false);
-                    }
-                }
-                else
-                {
-                    // Copy other attributes
-                    await writer.WriteAttributeStringAsync(
-                        reader.Prefix,
-                        reader.LocalName,
-                        reader.NamespaceURI,
-                        reader.Value).ConfigureAwait(false);
-                }
-            }
-            reader.MoveToElement();
-        }
-        
-        // If we didn't have a type attribute but need one, add it
-        if (!string.IsNullOrEmpty(cellType) && reader.GetAttribute("t") == null)
-        {
-            await writer.WriteAttributeStringAsync("", "t", "", cellType).ConfigureAwait(false);
-        }
-        
-        // Write the value
-        if (cellType == "inlineStr" && !string.IsNullOrEmpty(cellValue))
-        {
-            // Write inline string
-            await writer.WriteStartElementAsync("", "is", reader.NamespaceURI).ConfigureAwait(false);
-            await writer.WriteStartElementAsync("", "t", reader.NamespaceURI).ConfigureAwait(false);
-            await writer.WriteStringAsync(cellValue).ConfigureAwait(false);
-            await writer.WriteEndElementAsync().ConfigureAwait(false); // </t>
-            await writer.WriteEndElementAsync().ConfigureAwait(false); // </is>
-        }
-        else if (!string.IsNullOrEmpty(cellValue))
-        {
-            // Write value element
-            await writer.WriteStartElementAsync("", "v", reader.NamespaceURI).ConfigureAwait(false);
-            await writer.WriteStringAsync(cellValue).ConfigureAwait(false);
-            await writer.WriteEndElementAsync().ConfigureAwait(false); // </v>
-        }
-        
-        // Skip original cell content
-        var isEmpty = reader.IsEmptyElement;
-        if (!isEmpty)
-        {
-            var depth = reader.Depth;
-            while (await reader.ReadAsync().ConfigureAwait(false))
-            {
-                if (reader.NodeType == XmlNodeType.EndElement && reader.Depth == depth)
-                {
-                    break;
-                }
-            }
-        }
-        
-        await writer.WriteEndElementAsync().ConfigureAwait(false); // </c>
-    }
     
-    private static (string? value, string? type) FormatCellValue(object? value)
-    {
-        if (value == null)
-            return (null, null);
-        
-        switch (value)
-        {
-            case string s:
-                // Use inline string to avoid shared string table
-                return (s, "inlineStr");
-                
-            case DateTime dt:
-                // Excel stores dates as numbers
-                var excelDate = (dt - new DateTime(1899, 12, 30)).TotalDays;
-                return (excelDate.ToString(CultureInfo.InvariantCulture), null);
-                
-            case DateTimeOffset dto:
-                var excelDateOffset = (dto.DateTime - new DateTime(1899, 12, 30)).TotalDays;
-                return (excelDateOffset.ToString(CultureInfo.InvariantCulture), null);
-                
-            case bool b:
-                return (b ? "1" : "0", "b");
-                
-            case byte:
-            case sbyte:
-            case short:
-            case ushort:
-            case int:
-            case uint:
-            case long:
-            case ulong:
-            case float:
-            case double:
-            case decimal:
-                return (Convert.ToString(value, CultureInfo.InvariantCulture), null);
-                
-            default:
-                // Convert to string
-                return (value.ToString(), "inlineStr");
-        }
-    }
     
     [CreateSyncVersion]
     private static async Task CopyElementAsync(XmlReader reader, XmlWriter writer)

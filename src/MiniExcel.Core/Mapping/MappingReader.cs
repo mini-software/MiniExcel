@@ -90,12 +90,10 @@ internal static partial class MappingReader<T> where T : class, new()
                 {
                     var cellValue = mappedRow.GetCell(col - 1); // Convert to 0-based for MappedRow
                     
-                    var relativeCol = col - boundaries.MinColumn;
-                    if (relativeCol < 0 || relativeCol >= cellGrid.GetLength(1))
-                        continue;
-                    
-                    var handler = cellGrid[gridRow, relativeCol];
-                    ProcessCellValue(handler, cellValue, currentItem, currentCollections, mapping);
+                    if (mapping.TryGetHandler(rowNumber, col, out var handler))
+                    {
+                        ProcessCellValue(handler, cellValue, currentItem, currentCollections, mapping);
+                    }
                 }
             }
             
@@ -136,7 +134,7 @@ internal static partial class MappingReader<T> where T : class, new()
                             if (cellValue != null)
                             {
                                 // Trust the precompiled setter to handle conversion
-                                prop.Setter?.Invoke(item, cellValue);
+                                mapping.TrySetPropertyValue(prop, item, cellValue);
                             }
                         }
                     }
@@ -210,7 +208,7 @@ internal static partial class MappingReader<T> where T : class, new()
         return collections;
     }
     
-    private static void ProcessCellValue(OptimizedCellHandler handler, object value, T item, 
+    private static void ProcessCellValue(OptimizedCellHandler handler, object? value, T item, 
         Dictionary<int, IList>? collections, CompiledMapping<T> mapping)
     {
         // Skip empty handlers
@@ -221,7 +219,7 @@ internal static partial class MappingReader<T> where T : class, new()
         {
             case CellHandlerType.Property:
                 // Direct property - use pre-compiled setter
-                handler.ValueSetter?.Invoke(item, value);
+                mapping.TrySetValue(handler, item, value);
                 break;
                 
             case CellHandlerType.CollectionItem:
@@ -300,7 +298,7 @@ internal static partial class MappingReader<T> where T : class, new()
     }
     
     private static void ProcessComplexCollectionItem(IList collection, OptimizedCellHandler handler, 
-        object value, CompiledMapping<T> mapping)
+        object? value, CompiledMapping<T> mapping)
     {
         // Ensure the collection has enough items
         while (collection.Count <= handler.CollectionItemOffset)
@@ -338,8 +336,8 @@ internal static partial class MappingReader<T> where T : class, new()
             collection[handler.CollectionItemOffset] = item;
         }
         
-        // The ValueSetter must be pre-compiled during optimization
-        if (handler.ValueSetter == null)
+        // Try to set the value using the handler
+        if (!mapping.TrySetValue(handler, item!, value))
         {
             // For nested mappings, we need to look up the pre-compiled setter
             if (mapping.NestedMappings != null && 
@@ -358,10 +356,6 @@ internal static partial class MappingReader<T> where T : class, new()
                 $"ValueSetter is null for complex collection item handler at property '{handler.PropertyName}'. " +
                 "This indicates the mapping was not properly optimized. Ensure the type was mapped in the MappingRegistry.");
         }
-        
-        // Use the pre-compiled setter with built-in type conversion
-        if (item != null) 
-            handler.ValueSetter(item, value);
     }
     
     private static void FinalizeCollections(T item, CompiledMapping<T> mapping, Dictionary<int, IList> collections)
@@ -369,59 +363,60 @@ internal static partial class MappingReader<T> where T : class, new()
         for (int i = 0; i < mapping.Collections.Count; i++)
         {
             var collectionMapping = mapping.Collections[i];
-            if (collections.TryGetValue(i, out var list))
+            if (!collections.TryGetValue(i, out var list)) 
+                continue;
+            
+            // Get the default value using precompiled factory if available
+            object? defaultValue = null;
+            if (mapping.OptimizedCollectionHelpers != null && i < mapping.OptimizedCollectionHelpers.Count)
             {
-                // Get the default value using precompiled factory if available
-                object? defaultValue = null;
-                if (mapping.OptimizedCollectionHelpers != null && i < mapping.OptimizedCollectionHelpers.Count)
+                var helper = mapping.OptimizedCollectionHelpers[i];
+                // Use pre-compiled type metadata instead of runtime check
+                if (helper.IsItemValueType)
                 {
-                    var helper = mapping.OptimizedCollectionHelpers[i];
-                    // Use pre-compiled type metadata instead of runtime check
-                    if (helper.IsItemValueType)
-                    {
-                        defaultValue = helper.DefaultValue ?? helper.DefaultItemFactory.Invoke();
-                    }
+                    defaultValue = helper.DefaultValue ?? helper.DefaultItemFactory.Invoke();
+                }
+            }
+            else
+            {
+                // This should never happen with properly optimized mappings  
+                throw new InvalidOperationException(
+                    $"No OptimizedCollectionHelper found for collection at index {i}. " +
+                    "Ensure the mapping was properly compiled and optimized.");
+            }
+
+            while (list.Count > 0)
+            {
+                var lastItem = list[^1];
+                // Use pre-compiled type metadata from helper
+                var listHelper = mapping.OptimizedCollectionHelpers?[i];
+                bool isDefault = lastItem == null ||
+                                 (listHelper != null && listHelper.IsItemValueType &&
+                                  lastItem.Equals(defaultValue));
+                if (isDefault)
+                {
+                    list.RemoveAt(list.Count - 1);
                 }
                 else
                 {
-                    // This should never happen with properly optimized mappings  
-                    throw new InvalidOperationException(
-                        $"No OptimizedCollectionHelper found for collection at index {i}. " +
-                        "Ensure the mapping was properly compiled and optimized.");
-                }
-                
-                while (list.Count > 0)
-                {
-                    var lastItem = list[^1];
-                    // Use pre-compiled type metadata from helper
-                    var listHelper = mapping.OptimizedCollectionHelpers?[i];
-                    bool isDefault = lastItem == null || 
-                                   (listHelper != null && listHelper.IsItemValueType && lastItem.Equals(defaultValue));
-                    if (isDefault)
-                    {
-                        list.RemoveAt(list.Count - 1);
-                    }
-                    else
-                    {
-                        break; // Stop when we find a non-default value
-                    }
-                }
-                
-                // Convert to final type if needed
-                object finalValue = list;
-                
-                if (collectionMapping.Setter != null)
-                {
-                    // Use precompiled collection helper to convert to final type
-                    if (mapping.OptimizedCollectionHelpers != null && i < mapping.OptimizedCollectionHelpers.Count)
-                    {
-                        var helper = mapping.OptimizedCollectionHelpers[i];
-                        finalValue = helper.Finalizer(list);
-                    }
-                    
-                    collectionMapping.Setter(item, finalValue);
+                    break; // Stop when we find a non-default value
                 }
             }
+
+            // Convert to final type if needed
+            object finalValue = list;
+
+            if (collectionMapping.Setter == null) 
+                continue;
+
+            // Use precompiled collection helper to convert to final type
+            if (mapping.OptimizedCollectionHelpers != null && i < mapping.OptimizedCollectionHelpers.Count)
+            {
+                var helper = mapping.OptimizedCollectionHelpers[i];
+                finalValue = helper.Finalizer(list);
+            }
+
+            mapping.TrySetCollectionValue(collectionMapping, item, finalValue);
         }
     }
     
@@ -432,7 +427,7 @@ internal static partial class MappingReader<T> where T : class, new()
         foreach (var prop in mapping.Properties)
         {
             var value = prop.Getter(item);
-            if (value != null && !IsDefaultValue(value))
+            if (!IsDefaultValue(value))
             {
                 return true;
             }
@@ -442,18 +437,14 @@ internal static partial class MappingReader<T> where T : class, new()
         foreach (var coll in mapping.Collections)
         {
             var collection = coll.Getter(item);
-            if (collection != null)
+            var enumerator = collection.GetEnumerator();
+            using var disposableEnumerator = enumerator as IDisposable;
+            if (enumerator.MoveNext())
             {
-                // Avoid Cast<object>().Any() which causes boxing
-                var enumerator = collection.GetEnumerator();
-                using var disposableEnumerator = enumerator as IDisposable;
-                if (enumerator.MoveNext())
-                {
-                    return true;
-                }
+                return true;
             }
         }
-        
+
         return false;
     }
     

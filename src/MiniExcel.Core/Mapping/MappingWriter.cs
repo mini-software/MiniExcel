@@ -1,6 +1,7 @@
 namespace MiniExcelLib.Core.Mapping;
 
 internal static partial class MappingWriter<T>
+    where T : class
 {
     [CreateSyncVersion]
     public static async Task<int[]> SaveAsAsync(Stream stream, IEnumerable<T> value, CompiledMapping<T> mapping, CancellationToken cancellationToken = default)

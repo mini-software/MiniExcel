@@ -1,6 +1,7 @@
 namespace MiniExcelLib.Core.WriteAdapters;
 
 internal class MappingCellStreamAdapter<T> : IMiniExcelWriteAdapter
+    where T : class
 {
     private readonly MappingCellStream<T> _cellStream;
     private readonly string[] _columnLetters;

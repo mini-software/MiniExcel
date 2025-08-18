@@ -42,73 +42,11 @@ internal static class MappingCompiler
             var lambda = Expression.Lambda<Func<object, object>>(convertToObject, parameter);
             var compiled = lambda.Compile();
             
-            // Create setter with proper type conversion
+            // Create setter with proper type conversion using centralized logic
             Action<object, object?>? setter = null;
             if (prop.Expression.Body is MemberExpression memberExpr && memberExpr.Member is PropertyInfo propInfo)
             {
-                var setterParam = Expression.Parameter(typeof(object), "obj");
-                var valueParam = Expression.Parameter(typeof(object), "value");
-                var castObj = Expression.Convert(setterParam, typeof(T));
-                
-                // Build conversion expression based on target type
-                Expression convertedValue;
-                if (prop.PropertyType == typeof(int))
-                {
-                    // For int properties, handle double -> int conversion from Excel
-                    var convertMethod = typeof(Convert).GetMethod("ToInt32", new[] { typeof(object) });
-                    convertedValue = Expression.Call(convertMethod!, valueParam);
-                }
-                else if (prop.PropertyType == typeof(decimal))
-                {
-                    // For decimal properties
-                    var convertMethod = typeof(Convert).GetMethod("ToDecimal", new[] { typeof(object) });
-                    convertedValue = Expression.Call(convertMethod!, valueParam);
-                }
-                else if (prop.PropertyType == typeof(long))
-                {
-                    // For long properties
-                    var convertMethod = typeof(Convert).GetMethod("ToInt64", new[] { typeof(object) });
-                    convertedValue = Expression.Call(convertMethod!, valueParam);
-                }
-                else if (prop.PropertyType == typeof(float))
-                {
-                    // For float properties
-                    var convertMethod = typeof(Convert).GetMethod("ToSingle", new[] { typeof(object) });
-                    convertedValue = Expression.Call(convertMethod!, valueParam);
-                }
-                else if (prop.PropertyType == typeof(double))
-                {
-                    // For double properties
-                    var convertMethod = typeof(Convert).GetMethod("ToDouble", new[] { typeof(object) });
-                    convertedValue = Expression.Call(convertMethod!, valueParam);
-                }
-                else if (prop.PropertyType == typeof(DateTime))
-                {
-                    // For DateTime properties
-                    var convertMethod = typeof(Convert).GetMethod("ToDateTime", new[] { typeof(object) });
-                    convertedValue = Expression.Call(convertMethod!, valueParam);
-                }
-                else if (prop.PropertyType == typeof(bool))
-                {
-                    // For bool properties
-                    var convertMethod = typeof(Convert).GetMethod("ToBoolean", new[] { typeof(object) });
-                    convertedValue = Expression.Call(convertMethod!, valueParam);
-                }
-                else if (prop.PropertyType == typeof(string))
-                {
-                    // For string properties
-                    var convertMethod = typeof(Convert).GetMethod("ToString", new[] { typeof(object) });
-                    convertedValue = Expression.Call(convertMethod!, valueParam);
-                }
-                else
-                {
-                    // Default: direct cast for other types
-                    convertedValue = Expression.Convert(valueParam, prop.PropertyType);
-                }
-                
-                var assign = Expression.Assign(Expression.Property(castObj, propInfo), convertedValue);
-                var setterLambda = Expression.Lambda<Action<object, object?>>(assign, setterParam, valueParam);
-                setter = setterLambda.Compile();
+                setter = ConversionHelper.CreateTypedPropertySetter<T>(propInfo);
             }
             
             // Pre-parse cell coordinates for runtime performance
@@ -146,34 +84,16 @@ internal static class MappingCompiler
             // Extract property name from expression
             var collectionPropertyName = GetPropertyName(coll.Expression);
             
-            // Determine the item type
+            // Determine the item type using centralized logic
             var collectionType = coll.PropertyType;
-            Type? itemType = null;
-            
-            if (collectionType.IsArray)
-            {
-                itemType = collectionType.GetElementType();
-            }
-            else if (collectionType.IsGenericType)
-            {
-                var genericArgs = collectionType.GetGenericArguments();
-                if (genericArgs.Length > 0)
-                {
-                    itemType = genericArgs[0];
-                }
-            }
+            Type? itemType = CollectionAccessor.GetItemType(collectionType);
             
             // Create setter for collection
             Action<object, object?>? collectionSetter = null;
             if (coll.Expression.Body is MemberExpression collMemberExpr && collMemberExpr.Member is PropertyInfo collPropInfo)
             {
-                var setterParam = Expression.Parameter(typeof(object), "obj");
-                var valueParam = Expression.Parameter(typeof(object), "value");
-                var castObj = Expression.Convert(setterParam, typeof(T));
-                var castValue = Expression.Convert(valueParam, collPropInfo.PropertyType);
-                var assign = Expression.Assign(Expression.Property(castObj, collPropInfo), castValue);
-                var setterLambda = Expression.Lambda<Action<object, object?>>(assign, setterParam, valueParam);
-                collectionSetter = setterLambda.Compile();
+                var memberSetter = new MemberSetter(collPropInfo);
+                collectionSetter = memberSetter.Invoke;
             }
             
             // Pre-parse start cell coordinates
@@ -371,12 +291,11 @@ internal static class MappingCompiler
                     return (startRow, startRow + verticalHeight, startCol, maxCol);
                 
                 var nestedMapping = collection.Registry.GetCompiledMapping(collection.ItemType);
-                if (nestedMapping == null || collection.ItemType == typeof(string) ||
-                    collection.ItemType.IsValueType ||
-                    collection.ItemType.IsPrimitive) return (startRow, startRow + verticalHeight, startCol, maxCol);
+                if (nestedMapping == null || !MappingMetadataExtractor.IsComplexType(collection.ItemType)) 
+                    return (startRow, startRow + verticalHeight, startCol, maxCol);
                 
                 // Extract nested mapping info to get max column
-                var nestedInfo = ExtractNestedMappingInfo(nestedMapping, collection.ItemType);
+                var nestedInfo = MappingMetadataExtractor.ExtractNestedMappingInfo(nestedMapping, collection.ItemType);
                 if (nestedInfo != null && nestedInfo.Properties.Count > 0)
                 {
                     maxCol = nestedInfo.Properties.Max(p => p.ColumnIndex);
@@ -478,7 +397,7 @@ internal static class MappingCompiler
         var itemType = collection.ItemType ?? typeof(object);
         var nestedMapping = collection.Registry?.GetCompiledMapping(itemType);
         
-        if (nestedMapping != null && itemType != typeof(string) && !itemType.IsValueType && !itemType.IsPrimitive)
+        if (nestedMapping != null && MappingMetadataExtractor.IsComplexType(itemType))
         {
             // Complex type with mapping - expand each item across multiple columns
             MarkVerticalComplexCollectionCells(grid, collection, collectionIndex, boundaries, startRow, nestedMapping, nextCollectionStartRow);
@@ -560,12 +479,7 @@ internal static class MappingCompiler
         return (obj, _) =>
         {
             var enumerable = getter(obj);
-            return enumerable switch
-            {
-                null => null,
-                IList list => offset < list.Count ? list[offset] : null,
-                _ => enumerable.Cast<object>().Skip(offset).FirstOrDefault()
-            };
+            return CollectionAccessor.GetItemAt(enumerable, offset);
         };
     }
     
@@ -582,21 +496,18 @@ internal static class MappingCompiler
             var collection = mapping.Collections[i];
             var helper = new OptimizedCollectionHelper();
             
-            // Get the actual property info
-            var propInfo = typeof(T).GetProperty(collection.PropertyName);
+            // Get the actual property info using centralized helper
+            var propInfo = MappingMetadataExtractor.GetPropertyByName(typeof(T), collection.PropertyName);
             if (propInfo == null) continue;
             
             var propertyType = propInfo.PropertyType;
             var itemType = collection.ItemType ?? typeof(object);
             helper.ItemType = itemType;
             
-            // Create simple factory functions
-            var listType = typeof(List<>).MakeGenericType(itemType);
-            helper.Factory = () => (IList)Activator.CreateInstance(listType)!;
-            helper.DefaultItemFactory = () => itemType.IsValueType ? Activator.CreateInstance(itemType) : null;
-            helper.Finalizer = propertyType.IsArray 
-                ? list => { var array = Array.CreateInstance(itemType, list.Count); list.CopyTo(array, 0); return array; }
-                : list => list;
+            // Create simple factory functions using centralized logic
+            helper.Factory = () => CollectionAccessor.CreateTypedList(itemType);
+            helper.DefaultItemFactory = CollectionAccessor.CreateItemFactory(itemType);
+            helper.Finalizer = list => CollectionAccessor.FinalizeCollection(list, propertyType, itemType);
             helper.IsArray = propertyType.IsArray;
             helper.Setter = collection.Setter;
             
@@ -608,13 +519,12 @@ internal static class MappingCompiler
             helpers.Add(helper);
             
             // Pre-compile nested mapping info if it's a complex type
-            if (collection.Registry != null && itemType != typeof(string) && 
-                !itemType.IsValueType && !itemType.IsPrimitive)
+            if (collection.Registry != null && MappingMetadataExtractor.IsComplexType(itemType))
             {
                 var nestedMapping = collection.Registry.GetCompiledMapping(itemType);
                 if (nestedMapping != null)
                 {
-                    var nestedInfo = ExtractNestedMappingInfo(nestedMapping, itemType);
+                    var nestedInfo = MappingMetadataExtractor.ExtractNestedMappingInfo(nestedMapping, itemType);
                     if (nestedInfo != null)
                     {
                         nestedMappings[i] = nestedInfo;
@@ -634,7 +544,7 @@ internal static class MappingCompiler
         int collectionIndex, OptimizedMappingBoundaries boundaries, int startRow, object nestedMapping, int? nextCollectionStartRow = null)
     {
         // Extract pre-compiled nested mapping info without reflection
-        var nestedInfo = ExtractNestedMappingInfo(nestedMapping, collection.ItemType ?? typeof(object));
+        var nestedInfo = MappingMetadataExtractor.ExtractNestedMappingInfo(nestedMapping, collection.ItemType ?? typeof(object));
         if (nestedInfo == null) return;
         
         // Now mark cells for each property of each collection item
@@ -691,105 +601,15 @@ internal static class MappingCompiler
         return (obj, _) =>
         {
             var enumerable = collectionGetter(obj);
-            switch (enumerable)
-            {
-                case null:
-                    break;
-                case IList list:
-                {
-                    if (offset < list.Count && list[offset] != null)
-                    {
-                        // Extract the property from the nested object
-                        return propertyGetter(list[offset]!);
-                    }
-
-                    break;
-                }
-                default:
-                {
-                    // Fall back to enumeration (slower but works)
-                    var items = enumerable.Cast<object>().Skip(offset).Take(1).ToArray();
-                    if (items.Length > 0 && items[0] != null)
-                    {
-                        return propertyGetter(items[0]);
-                    }
-
-                    break;
-                }
-            }
-
-            return null;
+            var item = CollectionAccessor.GetItemAt(enumerable, offset);
+            
+            return item != null ? propertyGetter(item) : null;
         };
     }
     
     private static Func<object?, object?> CreatePreCompiledItemConverter(Type targetType)
     {
-        // Simple converter that handles common type conversions
-        return value =>
-        {
-            if (value == null) return null;
-            if (value.GetType() == targetType) return value;
-            
-            try
-            {
-                return Convert.ChangeType(value, targetType);
-            }
-            catch
-            {
-                return targetType.IsValueType ? Activator.CreateInstance(targetType) : null;
-            }
-        };
+        return value => ConversionHelper.ConvertValue(value, targetType);
     }
     
-    private static NestedMappingInfo? ExtractNestedMappingInfo(object nestedMapping, Type itemType)
-    {
-        // Use reflection minimally to extract properties from the nested mapping
-        // This is done once at compile time, not at runtime
-        var nestedMappingType = nestedMapping.GetType();
-        var propsProperty = nestedMappingType.GetProperty("Properties");
-        if (propsProperty == null) return null;
-        
-        var properties = propsProperty.GetValue(nestedMapping) as IEnumerable;
-        if (properties == null) return null;
-        
-        var nestedInfo = new NestedMappingInfo
-        {
-            ItemType = itemType,
-            ItemFactory = () => itemType.IsValueType ? Activator.CreateInstance(itemType) : null
-        };
-        
-        var propertyList = new List<NestedPropertyInfo>();
-        foreach (var prop in properties)
-        {
-            var propType = prop.GetType();
-            var nameProperty = propType.GetProperty("PropertyName");
-            var columnProperty = propType.GetProperty("CellColumn");
-            var getterProperty = propType.GetProperty("Getter");
-            var setterProperty = propType.GetProperty("Setter");
-            var typeProperty = propType.GetProperty("PropertyType");
-
-            if (nameProperty == null || columnProperty == null || getterProperty == null) continue;
-            
-            var name = nameProperty.GetValue(prop) as string;
-            var column = (int)columnProperty.GetValue(prop)!;
-            var getter = getterProperty.GetValue(prop) as Func<object, object?>;
-            var setter = setterProperty?.GetValue(prop) as Action<object, object?>;
-            var propTypeValue = typeProperty?.GetValue(prop) as Type;
-                
-            if (name != null && getter != null)
-            {
-                propertyList.Add(new NestedPropertyInfo
-                {
-                    PropertyName = name,
-                    ColumnIndex = column,
-                    Getter = getter,
-                    Setter = setter ?? ((_, _) => { }),
-                    PropertyType = propTypeValue ?? typeof(object)
-                });
-            }
-        }
-        
-        nestedInfo.Properties = propertyList;
-        return nestedInfo;
-    }
 }

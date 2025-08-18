@@ -16,6 +16,7 @@ public partial class MappingExporter
 
     [CreateSyncVersion]
     public async Task SaveAsAsync<T>(Stream stream, IEnumerable<T> values, CancellationToken cancellationToken = default)
+        where T : class
     {
         if (stream == null)
             throw new ArgumentNullException(nameof(stream));

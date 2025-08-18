@@ -3,6 +3,7 @@ using MiniExcelLib.Core.WriteAdapters;
 namespace MiniExcelLib.Core.Mapping;
 
 internal readonly struct MappingCellStream<T>(IEnumerable<T> items, CompiledMapping<T> mapping, string[] columnLetters) : IMappingCellStream
+    where T : class
 {
     public MappingCellEnumerator<T> GetEnumerator() 
         => new(items.GetEnumerator(), mapping, columnLetters);
@@ -12,6 +13,7 @@ internal readonly struct MappingCellStream<T>(IEnumerable<T> items, CompiledMapp
 }
 
 internal struct MappingCellEnumerator<T>
+    where T : class
 {
     private readonly IEnumerator<T> _itemEnumerator;
     private readonly CompiledMapping<T> _mapping;
@@ -141,29 +143,23 @@ internal struct MappingCellEnumerator<T>
                 
                 object? cellValue = _emptyCell;
 
-                // First check properties
-                for (var index = 0; index < _mapping.Properties.Count; index++)
+                // Use the optimized grid for fast lookup
+                if (_mapping.TryGetCellValue(_currentRowIndex, columnNumber, _currentItem, out var value))
                 {
-                    var prop = _mapping.Properties[index];
-                    if (prop.CellColumn == columnNumber && prop.CellRow == _currentRowIndex)
+                    cellValue = value ?? _emptyCell;
+                    
+                    // Apply formatting if needed
+                    if (value is IFormattable formattable && 
+                        _mapping.TryGetHandler(_currentRowIndex, columnNumber, out var handler) &&
+                        !string.IsNullOrEmpty(handler.Format))
                     {
-                        cellValue = prop.Getter(_currentItem);
-
-                        // Apply formatting if specified
-                        if (!string.IsNullOrEmpty(prop.Format) && cellValue is IFormattable formattable)
-                        {
-                            cellValue = formattable.ToString(prop.Format, null);
-                        }
-
-                        cellValue ??= _emptyCell;
-
-                        break;
+                        cellValue = formattable.ToString(handler.Format, null);
                     }
                 }
-                
-                // Then check collections
-                if (cellValue == _emptyCell && _currentCollectionArrays != null)
+                else if (_currentCollectionArrays != null)
                 {
+                    // Fallback for collections that might not be in the grid yet
+                    // This handles dynamic collection expansion
                     for (var collIndex = 0; collIndex < _mapping.Collections.Count; collIndex++)
                     {
                         var coll = _mapping.Collections[collIndex];

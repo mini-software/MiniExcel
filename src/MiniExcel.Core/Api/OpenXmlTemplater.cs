@@ -1,3 +1,4 @@
+using MiniExcelLib.Core.OpenXml.Picture;
 using MiniExcelLib.Core.OpenXml.Templates;
 
 // ReSharper disable once CheckNamespace
@@ -7,7 +8,19 @@ public sealed partial class OpenXmlTemplater
 {
     internal OpenXmlTemplater() { }
     
-    
+    [CreateSyncVersion]
+    public async Task AddPictureAsync(string path, CancellationToken cancellationToken = default, params MiniExcelPicture[] images)
+    {
+        using var stream = File.Open(path, FileMode.OpenOrCreate);
+        await MiniExcelPictureImplement.AddPictureAsync(stream, cancellationToken, images).ConfigureAwait(false);
+    }
+
+    [CreateSyncVersion]
+    public async Task AddPictureAsync(Stream excelStream, CancellationToken cancellationToken = default, params MiniExcelPicture[] images)
+    {
+        await MiniExcelPictureImplement.AddPictureAsync(excelStream, cancellationToken, images).ConfigureAwait(false);
+    }
+
     [CreateSyncVersion]
     public async Task ApplyTemplateAsync(string path, string templatePath, object value,
         OpenXmlConfiguration? configuration = null, CancellationToken cancellationToken = default)

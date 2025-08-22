@@ -8,7 +8,6 @@ namespace MiniExcelLib.Tests.SaveByTemplate;
 public class MiniExcelTemplateTests
 {
     private readonly OpenXmlImporter _excelImporter =  MiniExcel.Importers.GetOpenXmlImporter();
-    private readonly OpenXmlExporter _excelExporter =  MiniExcel.Exporters.GetOpenXmlExporter();
     private readonly OpenXmlTemplater _excelTemplater =  MiniExcel.Templaters.GetOpenXmlTemplater();
     
     [Fact]
@@ -58,7 +57,7 @@ public class MiniExcelTemplateTests
             };
 
             // Act
-            _excelExporter.AddPicture(path.ToString(), pictures);
+            _excelTemplater.AddPicture(path.ToString(), pictures);
 
             // Assert
             using var zip = ZipFile.OpenRead(path.FilePath);

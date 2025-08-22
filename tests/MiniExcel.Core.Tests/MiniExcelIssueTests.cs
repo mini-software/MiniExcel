@@ -3298,7 +3298,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             }
         ];
 
-         _excelExporter.AddPicture(path.FilePath, images);
+         _excelTemplater.AddPicture(path.FilePath, images);
     }
 
     /// <summary>
@@ -3434,7 +3434,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
            }
         ];
 
-         _excelExporter.AddPicture(path.FilePath, images);
+         _excelTemplater.AddPicture(path.FilePath, images);
 
         using var package = new ExcelPackage(new FileInfo(path.FilePath));
 
@@ -3487,7 +3487,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
                }
             ];
 
-             _excelExporter.AddPicture(path.FilePath, images);
+             _excelTemplater.AddPicture(path.FilePath, images);
 
             using (var package = new ExcelPackage(new FileInfo(path.FilePath)))
             {
@@ -3546,7 +3546,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
                 }
             ];
 
-             _excelExporter.AddPicture(path.FilePath, images);
+             _excelTemplater.AddPicture(path.FilePath, images);
 
             using var package = new ExcelPackage(new FileInfo(path.FilePath));
             
@@ -3598,7 +3598,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
                 }
             ];
 
-             _excelExporter.AddPicture(path.FilePath, images);
+             _excelTemplater.AddPicture(path.FilePath, images);
 
             using var package = new ExcelPackage(new FileInfo(path.FilePath));
             // Check picture in the first sheet (C3)  

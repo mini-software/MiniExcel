@@ -11,6 +11,7 @@ using OpenXmlExporter = MiniExcelLib.Core.OpenXmlExporter;
 using OpenXmlImporter = MiniExcelLib.Core.OpenXmlImporter;
 using OpenXmlTemplater = MiniExcelLib.Core.OpenXmlTemplater;
 
+// ReSharper disable once CheckNamespace
 namespace MiniExcelLibs;
 
 public static partial class MiniExcel
@@ -24,16 +25,13 @@ public static partial class MiniExcel
 
     
     [CreateSyncVersion]
-    [Obsolete("This is a legacy method signature that will be removed in a future version. Please use the methods from one of the providers in MiniExcelLib.Core.MiniExcel.Exporter instead.")]
     public static async Task AddPictureAsync(string path, CancellationToken cancellationToken = default, params MiniExcelPicture[] images) 
-        => await ExcelExporter.AddPictureAsync(path, cancellationToken, images).ConfigureAwait(false);
+        => await ExcelTemplater.AddPictureAsync(path, cancellationToken, images).ConfigureAwait(false);
     
     [CreateSyncVersion]
-    [Obsolete("This is a legacy method signature that will be removed in a future version. Please use the methods from one of the providers in MiniExcelLib.Core.MiniExcel.Exporter instead.")]
     public static async Task AddPictureAsync(Stream excelStream, CancellationToken cancellationToken = default, params MiniExcelPicture[] images) 
-        =>  await ExcelExporter.AddPictureAsync(excelStream, cancellationToken, images).ConfigureAwait(false);
-
-    [Obsolete("This is a legacy method signature that will be removed in a future version. Please use the methods from one of the providers in MiniExcelLib.Core.MiniExcel.Importer instead.")]
+        =>  await ExcelTemplater.AddPictureAsync(excelStream, cancellationToken, images).ConfigureAwait(false);
+    
     public static MiniExcelDataReader GetReader(string path, bool useHeaderRow = false, string? sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration? configuration = null)
     {
         var type = path.GetExcelType(excelType);
@@ -44,8 +42,7 @@ public static partial class MiniExcel
             _ => throw new NotSupportedException($"Excel type {type} is not a valid Excel type")
         };
     }
-
-    [Obsolete("This is a legacy method signature that will be removed in a future version. Please use the methods from one of the providers in MiniExcelLib.Core.MiniExcel.Importer instead.")]
+    
     public static MiniExcelDataReader GetReader(this Stream stream, bool useHeaderRow = false, string? sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration? configuration = null)
     {
         var type = stream.GetExcelType(excelType);
@@ -58,7 +55,6 @@ public static partial class MiniExcel
     }
 
     [CreateSyncVersion]
-    [Obsolete("This is a legacy method signature that will be removed in a future version. Please use the methods from one of the providers in MiniExcelLib.Core.MiniExcel.Exporter instead.")]
     public static async Task<int> InsertAsync(string path, object value, string sheetName = "Sheet1", ExcelType excelType = ExcelType.UNKNOWN, IConfiguration? configuration = null, bool printHeader = true, bool overwriteSheet = false, CancellationToken cancellationToken = default)
     {
         var type = path.GetExcelType(excelType);
@@ -71,7 +67,6 @@ public static partial class MiniExcel
     }
 
     [CreateSyncVersion]
-    [Obsolete("This is a legacy method signature that will be removed in a future version. Please use the methods from one of the providers in MiniExcelLib.Core.MiniExcel.Exporter instead.")]
     public static async Task<int> InsertAsync(this Stream stream, object value, string sheetName = "Sheet1", ExcelType excelType = ExcelType.XLSX, IConfiguration? configuration = null, bool printHeader = true, bool overwriteSheet = false, CancellationToken cancellationToken = default)
     {
         var type = stream.GetExcelType(excelType);
@@ -84,7 +79,6 @@ public static partial class MiniExcel
     }
 
     [CreateSyncVersion]
-    [Obsolete("This is a legacy method signature that will be removed in a future version. Please use the methods from one of the providers in MiniExcelLib.Core.MiniExcel.Exporter instead.")]
     public static async Task<int[]> SaveAsAsync(string path, object value, bool printHeader = true, string sheetName = "Sheet1", ExcelType excelType = ExcelType.UNKNOWN, IConfiguration? configuration = null, bool overwriteFile = false, CancellationToken cancellationToken = default)
     {
         var type = path.GetExcelType(excelType);
@@ -97,7 +91,6 @@ public static partial class MiniExcel
     }
 
     [CreateSyncVersion]
-    [Obsolete("This is a legacy method signature that will be removed in a future version. Please use the methods from one of the providers in MiniExcelLib.Core.MiniExcel.Exporter instead.")]
     public static async Task<int[]> SaveAsAsync(this Stream stream, object value, bool printHeader = true, string sheetName = "Sheet1", ExcelType excelType = ExcelType.XLSX, IConfiguration? configuration = null, CancellationToken  cancellationToken = default)
     {
         var type = stream.GetExcelType(excelType);
@@ -110,7 +103,6 @@ public static partial class MiniExcel
     }
 
     [CreateSyncVersion]
-    [Obsolete("This is a legacy method signature that will be removed in a future version. Please use the methods from one of the providers in MiniExcelLib.Core.MiniExcel.Importer instead.")]
     public static IAsyncEnumerable<T> QueryAsync<T>(string path, string? sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration? configuration = null, bool hasHeader = true, CancellationToken cancellationToken = default) where T : class, new()
     {
         var type = path.GetExcelType(excelType);
@@ -123,7 +115,6 @@ public static partial class MiniExcel
     }
 
     [CreateSyncVersion]
-    [Obsolete("This is a legacy method signature that will be removed in a future version. Please use the methods from one of the providers in MiniExcelLib.Core.MiniExcel.Importer instead.")]
     public static IAsyncEnumerable<T> QueryAsync<T>(this Stream stream, string? sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration? configuration = null, bool hasHeader = true, CancellationToken cancellationToken = default) where T : class, new()
     {
         var type = stream.GetExcelType(excelType);
@@ -136,7 +127,6 @@ public static partial class MiniExcel
     }
    
     [CreateSyncVersion]
-    [Obsolete("This is a legacy method signature that will be removed in a future version. Please use the methods from one of the providers in MiniExcelLib.Core.MiniExcel.Importer instead.")]
     public static IAsyncEnumerable<dynamic> QueryAsync(string path, bool useHeaderRow = false, string? sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration? configuration = null, CancellationToken cancellationToken = default)
     {
         var type = path.GetExcelType(excelType);
@@ -149,7 +139,6 @@ public static partial class MiniExcel
     }
     
     [CreateSyncVersion]
-    [Obsolete("This is a legacy method signature that will be removed in a future version. Please use the methods from one of the providers in MiniExcelLib.Core.MiniExcel.Importer instead.")]
     public static IAsyncEnumerable<dynamic> QueryAsync(this Stream stream, bool useHeaderRow = false, string? sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration? configuration = null, CancellationToken cancellationToken = default)
     {
         var type = stream.GetExcelType(excelType);
@@ -171,7 +160,6 @@ public static partial class MiniExcel
     ///     If you don't want to restrict rows, just don't include numbers
     /// </summary>
     [CreateSyncVersion]
-    [Obsolete("This is a legacy method signature that will be removed in a future version. Please use the methods from one of the providers in MiniExcelLib.Core.MiniExcel.Importer instead.")]
     public static IAsyncEnumerable<dynamic> QueryRangeAsync(string path, bool useHeaderRow = false, string? sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", string endCell = "", IConfiguration? configuration = null, CancellationToken cancellationToken = default)
     {
         var type = path.GetExcelType(excelType);
@@ -184,7 +172,6 @@ public static partial class MiniExcel
     }
 
     [CreateSyncVersion]
-    [Obsolete("This is a legacy method signature that will be removed in a future version. Please use the methods from one of the providers in MiniExcelLib.Core.MiniExcel.Importer instead.")]
     public static IAsyncEnumerable<dynamic> QueryRangeAsync(this Stream stream, bool useHeaderRow = false, string? sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", string endCell = "", IConfiguration? configuration = null, CancellationToken cancellationToken = default)
     {
         var type = stream.GetExcelType(excelType);
@@ -197,7 +184,6 @@ public static partial class MiniExcel
     }
 
     [CreateSyncVersion]
-    [Obsolete("This is a legacy method signature that will be removed in a future version. Please use the methods from one of the providers in MiniExcelLib.Core.MiniExcel.Importer instead.")]
     public static IAsyncEnumerable<dynamic> QueryRangeAsync(string path, bool useHeaderRow = false, string? sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, int startRowIndex = 1, int startColumnIndex = 1, int? endRowIndex = null, int? endColumnIndex = null, IConfiguration? configuration = null, CancellationToken cancellationToken = default)
     {
         var type = path.GetExcelType(excelType);
@@ -210,7 +196,6 @@ public static partial class MiniExcel
     }
     
     [CreateSyncVersion]
-    [Obsolete("This is a legacy method signature that will be removed in a future version. Please use the methods from one of the providers in MiniExcelLib.Core.MiniExcel.Importer instead.")]
     public static IAsyncEnumerable<dynamic> QueryRangeAsync(this Stream stream, bool useHeaderRow = false, string? sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, int startRowIndex = 1, int startColumnIndex = 1, int? endRowIndex = null, int? endColumnIndex = null, IConfiguration? configuration = null, CancellationToken cancellationToken = default)
     {
         var type = stream.GetExcelType(excelType);
@@ -225,39 +210,32 @@ public static partial class MiniExcel
     #endregion QueryRange
 
     [CreateSyncVersion]
-    [Obsolete("This is a legacy method signature that will be removed in a future version. Please use the methods from one of the providers in MiniExcelLib.Core.MiniExcel.Exporter instead.")]
     public static async Task SaveAsByTemplateAsync(string path, string templatePath, object value, IConfiguration? configuration = null, CancellationToken cancellationToken = default) 
         => await ExcelTemplater.ApplyTemplateAsync(path, templatePath, value, configuration as OpenXmlConfiguration, cancellationToken).ConfigureAwait(false);
 
     [CreateSyncVersion]
-    [Obsolete("This is a legacy method signature that will be removed in a future version. Please use the methods from one of the providers in MiniExcelLib.Core.MiniExcel.Templater instead.")]
     public static async Task SaveAsByTemplateAsync(string path, byte[] templateBytes, object value, IConfiguration? configuration = null)
         => await ExcelTemplater.ApplyTemplateAsync(path, templateBytes, value, configuration as OpenXmlConfiguration).ConfigureAwait(false);
     
     [CreateSyncVersion]
-    [Obsolete("This is a legacy method signature that will be removed in a future version. Please use the methods from one of the providers in MiniExcelLib.Core.MiniExcel.Templater instead.")]
     public static async Task SaveAsByTemplateAsync(this Stream stream, string templatePath, object value, IConfiguration? configuration = null)
         => await ExcelTemplater.ApplyTemplateAsync(stream, templatePath, value, configuration as OpenXmlConfiguration).ConfigureAwait(false);
 
     [CreateSyncVersion]
-    [Obsolete("This is a legacy method signature that will be removed in a future version. Please use the methods from one of the providers in MiniExcelLib.Core.MiniExcel.Templater instead.")]
     public static async Task SaveAsByTemplateAsync(this Stream stream, byte[] templateBytes, object value, IConfiguration? configuration = null)
         => await ExcelTemplater.ApplyTemplateAsync(stream, templateBytes, value, configuration as OpenXmlConfiguration).ConfigureAwait(false);
     
     [CreateSyncVersion]
-    [Obsolete("This is a legacy method signature that will be removed in a future version. Please use the methods from one of the providers in MiniExcelLib.Core.MiniExcel.Templater instead.")]
     public static async Task SaveAsByTemplateAsync(string path, Stream templateStream, object value, IConfiguration? configuration = null)
         => await ExcelTemplater.ApplyTemplateAsync(path, templateStream, value, configuration as OpenXmlConfiguration).ConfigureAwait(false);
 
     [CreateSyncVersion]
-    [Obsolete("This is a legacy method signature that will be removed in a future version. Please use the methods from one of the providers in MiniExcelLib.Core.MiniExcel.Templater instead.")]
     public static async Task SaveAsByTemplateAsync(this Stream stream, Stream templateStream, object value, IConfiguration? configuration = null)
         => await ExcelTemplater.ApplyTemplateAsync(stream, templateStream, value, configuration as OpenXmlConfiguration).ConfigureAwait(false);
 
     #region MergeCells
 
     [CreateSyncVersion]
-    [Obsolete("This is a legacy method signature that will be removed in a future version. Please use the methods from one of the providers in MiniExcelLib.Core.MiniExcel.Templater instead.")]
     public static async Task MergeSameCellsAsync(string mergedFilePath, string path, ExcelType excelType = ExcelType.XLSX, IConfiguration? configuration = null, CancellationToken cancellationToken = default)
     {
         if (excelType != ExcelType.XLSX) 
@@ -267,7 +245,6 @@ public static partial class MiniExcel
     }
 
     [CreateSyncVersion]
-    [Obsolete("This is a legacy method signature that will be removed in a future version. Please use the methods from one of the providers in MiniExcelLib.Core.MiniExcel.Templater instead.")]
     public static async Task MergeSameCellsAsync(this Stream stream, string path, ExcelType excelType = ExcelType.XLSX, IConfiguration? configuration = null, CancellationToken cancellationToken = default)
     {
         if (excelType != ExcelType.XLSX) 
@@ -277,7 +254,6 @@ public static partial class MiniExcel
     }
 
     [CreateSyncVersion]
-    [Obsolete("This is a legacy method signature that will be removed in a future version. Please use the methods from one of the providers in MiniExcelLib.Core.MiniExcel.Templater instead.")]
     public static async Task MergeSameCellsAsync(this Stream stream, byte[] filePath, ExcelType excelType = ExcelType.XLSX, IConfiguration? configuration = null, CancellationToken cancellationToken = default)
     {
         if (excelType != ExcelType.XLSX) 
@@ -288,11 +264,8 @@ public static partial class MiniExcel
 
     #endregion
 
-    /// <summary>
-    /// The use of QueryAsDataTable is not recommended, because it'll load all data into memory.
-    /// </summary>
     [CreateSyncVersion]
-    [Obsolete("This is a legacy method signature that will be removed in a future version. Please use the methods from one of the providers in MiniExcelLib.Core.MiniExcel.Importer instead.")]
+    [Obsolete("The use of QueryAsDataTable is not recommended, because it'll load all data into memory.")]
     public static async Task<DataTable> QueryAsDataTableAsync(string path, bool useHeaderRow = true, string? sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration? configuration = null, CancellationToken cancellationToken = default)
     {
         var type = path.GetExcelType(excelType);
@@ -304,11 +277,8 @@ public static partial class MiniExcel
         };
     }
 
-    /// <summary>
-    /// The use of QueryAsDataTable is not recommended, because it'll load all data into memory.
-    /// </summary>
     [CreateSyncVersion]
-    [Obsolete("This is a legacy method signature that will be removed in a future version. Please use the methods from one of the providers in MiniExcelLib.Core.MiniExcel.Importer instead.")]
+    [Obsolete("The use of QueryAsDataTable is not recommended, because it'll load all data into memory.")]
     public static async Task<DataTable> QueryAsDataTableAsync(this Stream stream, bool useHeaderRow = true, string? sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration? configuration = null, CancellationToken cancellationToken = default)
     {
         var type = stream.GetExcelType(excelType);
@@ -320,28 +290,23 @@ public static partial class MiniExcel
         };
     }
 
-    [CreateSyncVersion] 
-    [Obsolete("This is a legacy method signature that will be removed in a future version. Please use the methods from one of the providers in MiniExcelLib.Core.MiniExcel.Importer instead.")]
+    [CreateSyncVersion]
     public static async Task<List<string>> GetSheetNamesAsync(string path, OpenXmlConfiguration? config = null, CancellationToken cancellationToken = default)
         => await ExcelImporter.GetSheetNamesAsync(path, config, cancellationToken).ConfigureAwait(false);
     
-    [CreateSyncVersion] 
-    [Obsolete("This is a legacy method signature that will be removed in a future version. Please use the methods from one of the providers in MiniExcelLib.Core.MiniExcel.Importer instead.")]
+    [CreateSyncVersion]
     public static async Task<List<string>> GetSheetNamesAsync(this Stream stream, OpenXmlConfiguration? config = null, CancellationToken cancellationToken = default)
         => await ExcelImporter.GetSheetNamesAsync(stream, config, cancellationToken).ConfigureAwait(false);
 
-    [CreateSyncVersion] 
-    [Obsolete("This is a legacy method signature that will be removed in a future version. Please use the methods from one of the providers in MiniExcelLib.Core.MiniExcel.Importer instead.")]
+    [CreateSyncVersion]
     public static async Task<List<SheetInfo>> GetSheetInformationsAsync(string path, OpenXmlConfiguration? config = null, CancellationToken cancellationToken = default)
         => await ExcelImporter.GetSheetInformationsAsync(path, config, cancellationToken).ConfigureAwait(false);
     
-    [CreateSyncVersion] 
-    [Obsolete("This is a legacy method signature that will be removed in a future version. Please use the methods from one of the providers in MiniExcelLib.Core.MiniExcel.Importer instead.")]
+    [CreateSyncVersion]
     public static async Task<List<SheetInfo>> GetSheetInformationsAsync(this Stream stream, OpenXmlConfiguration? config = null, CancellationToken cancellationToken = default)
         => await ExcelImporter.GetSheetInformationsAsync(stream, config, cancellationToken).ConfigureAwait(false);
 
     [CreateSyncVersion]
-    [Obsolete("This is a legacy method signature that will be removed in a future version. Please use the methods from one of the providers in MiniExcelLib.Core.MiniExcel.Importer instead.")]
     public static async Task<ICollection<string>> GetColumnsAsync(string path, bool useHeaderRow = false, string? sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration? configuration = null, CancellationToken cancellationToken = default)
     {
         var type = path.GetExcelType(excelType);
@@ -354,7 +319,6 @@ public static partial class MiniExcel
     }
 
     [CreateSyncVersion]
-    [Obsolete("This is a legacy method signature that will be removed in a future version. Please use the methods from one of the providers in MiniExcelLib.Core.MiniExcel.Importer instead.")]
     public static async Task<ICollection<string>> GetColumnsAsync(this Stream stream, bool useHeaderRow = false, string? sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration? configuration = null, CancellationToken cancellationToken = default)
     {
         var type = stream.GetExcelType(excelType);
@@ -367,33 +331,26 @@ public static partial class MiniExcel
     }
 
     [CreateSyncVersion]
-    [Obsolete("This is a legacy method signature that will be removed in a future version. Please use the methods from one of the providers in MiniExcelLib.Core.MiniExcel.Importer instead.")]
     public static async Task<IList<ExcelRange>> GetSheetDimensionsAsync(string path, CancellationToken cancellationToken = default) 
         => await ExcelImporter.GetSheetDimensionsAsync(path, cancellationToken).ConfigureAwait(false);
     
     [CreateSyncVersion]
-    [Obsolete("This is a legacy method signature that will be removed in a future version. Please use the methods from one of the providers in MiniExcelLib.Core.MiniExcel.Importer instead.")]
     public static async Task<IList<ExcelRange>> GetSheetDimensionsAsync(this Stream stream, CancellationToken cancellationToken = default) 
         => await ExcelImporter.GetSheetDimensionsAsync(stream, cancellationToken).ConfigureAwait(false);
 
     [CreateSyncVersion]
-    [Obsolete("This is a legacy method signature that will be removed in a future version. Please use the methods from one of the providers in MiniExcelLib.Core.MiniExcel.Exporter instead.")]
     public static async Task ConvertCsvToXlsxAsync(string csv, string xlsx, CancellationToken cancellationToken = default)
         => await CsvExporter.ConvertCsvToXlsxAsync(csv, xlsx, cancellationToken: cancellationToken).ConfigureAwait(false);
     
     [CreateSyncVersion]
-    [Obsolete("This is a legacy method signature that will be removed in a future version. Please use the methods from one of the providers in MiniExcelLib.Core.MiniExcel.Exporter instead.")]
     public static async Task ConvertCsvToXlsxAsync(Stream csv, Stream xlsx, CancellationToken cancellationToken = default)
         => await CsvExporter.ConvertCsvToXlsxAsync(csv, xlsx, cancellationToken: cancellationToken).ConfigureAwait(false);
 
     [CreateSyncVersion]
-    [Obsolete("This is a legacy method signature that will be removed in a future version. Please use the methods from one of the providers in MiniExcelLib.Core.MiniExcel.Exporter instead.")]
     public static async Task ConvertXlsxToCsvAsync(string xlsx, string csv, CancellationToken cancellationToken = default)
         => await CsvExporter.ConvertXlsxToCsvAsync(xlsx, csv, cancellationToken: cancellationToken).ConfigureAwait(false);
     
     [CreateSyncVersion]
-    [Obsolete("This is a legacy method signature that will be removed in a future version. Please use the methods from one of the providers in MiniExcelLib.Core.MiniExcel.Exporter instead.")]
     public static async Task ConvertXlsxToCsvAsync(Stream xlsx, Stream csv, CancellationToken cancellationToken = default)
         => await CsvExporter.ConvertXlsxToCsvAsync(xlsx, csv, cancellationToken: cancellationToken).ConfigureAwait(false);
-
 }

@@ -1516,8 +1516,8 @@ MiniExcelPicture[] images =
     },
 ];
 
-var exporter = MiniExcel.Exporters.GetOpenXmlExporter();
-exporter.AddPicture(path, images);
+var templater = MiniExcel.Exporters.GetOpenXmlExporter();
+templater.AddPicture(path, images);
 ```
 ![Image](https://github.com/user-attachments/assets/19c4d241-9753-4ede-96c8-f810c1a22247)
 

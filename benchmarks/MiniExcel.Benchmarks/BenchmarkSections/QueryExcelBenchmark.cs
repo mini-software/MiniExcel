@@ -5,6 +5,7 @@ using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using ExcelDataReader;
 using MiniExcelLib.Core;
+using MiniExcelLib.Core.Mapping;
 using NPOI.XSSF.UserModel;
 using OfficeOpenXml;
 
@@ -13,6 +14,7 @@ namespace MiniExcelLib.Benchmarks.BenchmarkSections;
 public class QueryExcelBenchmark : BenchmarkBase
 {
     private OpenXmlImporter _importer;
+    private MappingImporter _mappingImporter;
     
     [GlobalSetup]
     public void SetUp()
@@ -21,6 +23,23 @@ public class QueryExcelBenchmark : BenchmarkBase
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
         
         _importer = MiniExcel.Importers.GetOpenXmlImporter();
+        
+        // Setup mapping for query (matches CreateExcelBenchmark mapping)
+        var registry = new MappingRegistry();
+        registry.Configure<DemoDto>(config =>
+        {
+            config.Property(x => x.Column1).ToCell("A1");
+            config.Property(x => x.Column2).ToCell("B1");
+            config.Property(x => x.Column3).ToCell("C1");
+            config.Property(x => x.Column4).ToCell("D1");
+            config.Property(x => x.Column5).ToCell("E1");
+            config.Property(x => x.Column6).ToCell("F1");
+            config.Property(x => x.Column7).ToCell("G1");
+            config.Property(x => x.Column8).ToCell("H1");
+            config.Property(x => x.Column9).ToCell("I1");
+            config.Property(x => x.Column10).ToCell("J1");
+        });
+        _mappingImporter = MiniExcel.Importers.GetMappingImporter(registry);
     }
 
     [Benchmark(Description = "MiniExcel QueryFirst")]
@@ -33,6 +52,18 @@ public class QueryExcelBenchmark : BenchmarkBase
     public void MiniExcel_Query()
     {
         foreach (var _ in _importer.Query(FilePath)) { }
+    }
+
+    [Benchmark(Description = "MiniExcel QueryFirst with Mapping")]
+    public void MiniExcel_QueryFirst_Mapping_Test()
+    {
+        _ = _mappingImporter.Query<DemoDto>(FilePath).First();
+    }
+
+    [Benchmark(Description = "MiniExcel Query with Mapping")]
+    public void MiniExcel_Query_Mapping()
+    {
+        foreach (var _ in _mappingImporter.Query<DemoDto>(FilePath)) { }
     }
 
     [Benchmark(Description = "ExcelDataReader QueryFirst")]

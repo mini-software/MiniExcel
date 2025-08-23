@@ -25,6 +25,7 @@ public static class MiniExcelWriteAdapterFactory
     {
         return values switch
         {
+            IMappingCellStream mappingStream => mappingStream.CreateAdapter(),
             IDataReader dataReader => new DataReaderWriteAdapter(dataReader, configuration),
             IEnumerable enumerable => new EnumerableWriteAdapter(enumerable, configuration),
             DataTable dataTable => new DataTableWriteAdapter(dataTable, configuration),

@@ -5,7 +5,6 @@ using MiniExcelLib.Core.OpenXml.Models;
 using MiniExcelLib.Core.OpenXml.Styles.Builder;
 using MiniExcelLib.Core.OpenXml.Zip;
 using MiniExcelLib.Core.WriteAdapters;
-using SafeStreamWriter = MiniExcelLib.Core.Helpers.SafeStreamWriter;
 
 namespace MiniExcelLib.Core.OpenXml;
 
@@ -103,7 +102,7 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
             cancellationToken.ThrowIfCancellationRequested();
 
             using var reader = await OpenXmlReader.CreateAsync(_stream, _configuration, cancellationToken: cancellationToken).ConfigureAwait(false);
-            var sheetRecords = (await reader.GetWorkbookRelsAsync(_archive.Entries, cancellationToken).ConfigureAwait(false)).ToArray();
+            var sheetRecords = (await reader.GetWorkbookRelsAsync(_archive.Entries, cancellationToken).ConfigureAwait(false))?.ToArray() ?? [];
             foreach (var sheetRecord in sheetRecords.OrderBy(o => o.Id))
             {
                 cancellationToken.ThrowIfCancellationRequested();
@@ -443,7 +442,7 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
     }
 
     [CreateSyncVersion]
-    private async Task WriteCellAsync(SafeStreamWriter writer, int rowIndex, int cellIndex, object value, MiniExcelColumnInfo columnInfo, ExcelWidthCollection? widthCollection)
+    private async Task WriteCellAsync(SafeStreamWriter writer, int rowIndex, int cellIndex, object? value, MiniExcelColumnInfo columnInfo, ExcelWidthCollection? widthCollection)
     {
         if (columnInfo?.CustomFormatter is not null)
         {
@@ -458,9 +457,7 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
         }
 
         var columnReference = ReferenceHelper.ConvertCoordinatesToCell(cellIndex, rowIndex);
-        var valueIsNull = value is null ||
-                          value is DBNull ||
-                          (_configuration.WriteEmptyStringAsNull && value is string vs && vs == string.Empty);
+        var valueIsNull = value is null or DBNull || (_configuration.WriteEmptyStringAsNull && value is "");
 
         if (_configuration.EnableWriteNullValueCell && valueIsNull)
         {
@@ -476,8 +473,7 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
         var columnType = columnInfo.ExcelColumnType;
 
         /*Prefix and suffix blank space will lost after SaveAs #294*/
-        var preserveSpace = cellValue is not null && (
-            cellValue.StartsWith(" ") || cellValue.EndsWith(" "));
+        var preserveSpace = cellValue is [' ', ..] or [.., ' '];
 
         await writer.WriteAsync(WorksheetXml.Cell(columnReference, dataType, GetCellXfId(styleIndex), cellValue, preserveSpace: preserveSpace, columnType: columnType)).ConfigureAwait(false);
         widthCollection?.AdjustWidth(cellIndex, cellValue);
@@ -632,7 +628,8 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
         var typesElement = doc.Descendants(ns + "Types").Single();
 
         var partNames = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
-        foreach (var partName in typesElement.Elements(ns + "Override").Select(s => s.Attribute("PartName").Value))
+        var attrNames = typesElement.Elements(ns + "Override").Select(s => s.Attribute("PartName")?.Value);
+        foreach (var partName in attrNames.OfType<string>())
         {
             partNames.Add(partName);
         }

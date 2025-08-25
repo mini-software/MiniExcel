@@ -17,5 +17,5 @@ public class MiniExcelColumnInfo
     public bool ExcelIgnore { get; internal set; }
     public int ExcelFormatId { get; internal set; }
     public ColumnType ExcelColumnType { get; internal set; }
-    public Func<object, object>? CustomFormatter { get; set; }
+    public Func<object?, object?>? CustomFormatter { get; set; }
 }

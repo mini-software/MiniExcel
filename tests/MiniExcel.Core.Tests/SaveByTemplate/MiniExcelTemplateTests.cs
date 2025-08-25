@@ -65,31 +65,35 @@ public class MiniExcelTemplateTests
             Assert.Equal(pictures.Length, mediaEntries.Count);
 
             // Assert (use EPPlus to verify that images are inserted correctly)
-            using (var package = new ExcelPackage(new FileInfo(path.FilePath)))
-            {
-                var sheet = package.Workbook.Worksheets[0];
-                var picB2 = sheet.Drawings.OfType<ExcelPicture>()
-                    .FirstOrDefault(p => p.EditAs == eEditAs.Absolute);
+            using var package = new ExcelPackage(new FileInfo(path.FilePath));
+            
+            var sheet = package.Workbook.Worksheets[0];
+            var picB2 = sheet.Drawings
+                .OfType<ExcelPicture>()
+                .FirstOrDefault(p => p.EditAs == eEditAs.Absolute);
 
-                Assert.NotNull(picB2);
-                Assert.Equal(1920 * 9525, picB2.Size.Width);
-                Assert.Equal(1032 * 9525, picB2.Size.Height);
-                //Console.WriteLine("✅ AbsoluteAnchor image exists and the size is as expected (1920x1032)");
+            Assert.NotNull(picB2);
+            Assert.Equal(1920 * 9525, picB2.Size.Width);
+            Assert.Equal(1032 * 9525, picB2.Size.Height);
+            //Console.WriteLine("✅ AbsoluteAnchor image exists and the size is as expected (1920x1032)");
 
-                //Console.WriteLine("✅ Image inserted successfully (B2 - AbsoluteAnchor)");
+            //Console.WriteLine("✅ Image inserted successfully (B2 - AbsoluteAnchor)");
 
-                // Validate image at D4 (ImgType.TwoCellAnchor)
-                var picD4 = sheet.Drawings.OfType<ExcelPicture>()
-                    .FirstOrDefault(p => p.EditAs == eEditAs.TwoCell && p.From != null && p.From.Column == 3 && p.From.Row == 3);
-                Assert.NotNull(picD4);
-                //Console.WriteLine("✅ Image inserted successfully (D4 - TwoCellAnchor)");
+            // Validate image at D4 (ImgType.TwoCellAnchor)
+            var picD4 = sheet.Drawings
+                .OfType<ExcelPicture>()
+                .FirstOrDefault(p => p is { EditAs: eEditAs.TwoCell, From: { Column: 3, Row: 3 } });
+                
+            Assert.NotNull(picD4);
+            //Console.WriteLine("✅ Image inserted successfully (D4 - TwoCellAnchor)");
 
-                // Validate image at F6 (ImgType.OneCellAnchor)
-                var picF6 = sheet.Drawings.OfType<ExcelPicture>()
-                    .FirstOrDefault(p => p.EditAs == eEditAs.OneCell && p.From != null && p.From.Column == 5 && p.From.Row == 5);
-                Assert.NotNull(picF6);
-                //Console.WriteLine("✅ Image inserted successfully (F6 - OneCellAnchor)");
-            }
+            // Validate image at F6 (ImgType.OneCellAnchor)
+            var picF6 = sheet.Drawings
+                .OfType<ExcelPicture>()
+                .FirstOrDefault(p => p is { EditAs: eEditAs.OneCell, From: { Column: 5, Row: 5 } });
+
+            Assert.NotNull(picF6);
+            //Console.WriteLine("✅ Image inserted successfully (F6 - OneCellAnchor)");
         }
     }
     
@@ -108,7 +112,7 @@ public class MiniExcelTemplateTests
             employees.Columns.Add("name");
             employees.Columns.Add("department");
             
-            var value = new Dictionary<string, object>()
+            var value = new Dictionary<string, object>
             {
                 ["title"] = "FooCompany",
                 ["managers"] = managers,

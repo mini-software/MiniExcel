@@ -62,6 +62,15 @@ flowchart LR
 - Lightweight, without the need for Microsoft Office or COM+ components, and a DLL size under 500KB
 - Simple and intuitive API style to read/write/fill excel
 
+### Version 2.0 preview
+
+We are working on a future MiniExcel version, with a new modular and focused API, 
+separate nuget packages for Core and Csv funcionalities, full support for asynchronously streamed queries through `IAsyncEnumerable`,
+and more to come soon! The packages are gonna be available in pre-release, so feel free to check them out and give us some feedback!
+
+If you do, make sure to also check out the [new docs](README-V2.md) and the [upgrade notes](V2-Upgrade-Notes.md).
+
+
 ### Get Started
 
 - [Import/Query Excel](#getstart1)
@@ -73,7 +82,6 @@ flowchart LR
 - [Excel Column Name/Index/Ignore Attribute](#getstart4)
 
 - [Examples](#getstart5)
-
 
 
 ### Installation

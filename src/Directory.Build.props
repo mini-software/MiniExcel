@@ -1,7 +1,7 @@
 <Project>
     
     <PropertyGroup>
-        <TargetFrameworks>netstandard2.0;net8.0;net10.0</TargetFrameworks>
+        <TargetFrameworks>netstandard2.0;net8.0</TargetFrameworks>
         <Version>2.0.0-preview.1</Version>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
@@ -18,9 +18,8 @@
             Issues : https://github.com/mini-software/MiniExcel/issues
             Todo : https://github.com/mini-software/MiniExcel/projects/1?fullscreen=true</Description>
         <Authors>Wei Lin, Michele Bastione, PING-HSIU SHIH, Amos(izanhzh), eynarhaji, Mini-Software team</Authors>
-        <Copyright>Wei Lin, 2021 onwards</Copyright>
+        <Copyright>Mini-Software, 2021 onwards</Copyright>
         <NeutralLanguage>en</NeutralLanguage>
-        <PackageLicenseUrl>https://raw.githubusercontent.com/mini-software/MiniExcel/master/LICENSE</PackageLicenseUrl>
         <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
         <PackageProjectUrl>https://github.com/mini-software/MiniExcel</PackageProjectUrl>
         <RepositoryUrl>https://github.com/mini-software/MiniExcel</RepositoryUrl>
@@ -37,5 +36,10 @@
         <SignAssembly>True</SignAssembly>
         <AssemblyOriginatorKeyFile>..\miniexcel.snk</AssemblyOriginatorKeyFile>
     </PropertyGroup>
+
+    <ItemGroup>
+        <None Include="../icon.png" Pack="true" PackagePath="\" />
+        <None Include="../README.md" Pack="true" PackagePath="\" />
+    </ItemGroup>
 
 </Project>

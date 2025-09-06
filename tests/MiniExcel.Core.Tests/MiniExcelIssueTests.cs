@@ -24,8 +24,8 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     [InlineData("DateTimeNotMidnight", DateOnlyConversionMode.None, true)]
     [InlineData("DateTimeMidnight", DateOnlyConversionMode.EnforceMidnight, false)]
     [InlineData("DateTimeNotMidnight", DateOnlyConversionMode.EnforceMidnight, true)]
-    [InlineData("DateTimeMidnight", DateOnlyConversionMode.IgnoreTimePart, true)]
-    [InlineData("DateTimeNotMidnight", DateOnlyConversionMode.IgnoreTimePart, true)]
+    [InlineData("DateTimeMidnight", DateOnlyConversionMode.IgnoreTimePart, false)]
+    [InlineData("DateTimeNotMidnight", DateOnlyConversionMode.IgnoreTimePart, false)]
     public void TestIssue869(string fileName, DateOnlyConversionMode mode, bool throwsException)
     {
         var path = PathHelper.GetFile($"xlsx/TestIssue869/{fileName}.xlsx");

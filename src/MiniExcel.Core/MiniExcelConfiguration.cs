@@ -39,7 +39,7 @@ public enum DateOnlyConversionMode
     EnforceMidnight,
 
     /// <summary>
-    /// Converts DateOnly to DateTime by ignoring the time part completely, assuming the time component is not critical.
+    /// Converts DateTime to DateOnly by ignoring the time part completely, assuming the time component is not critical.
     /// </summary>
     IgnoreTimePart
 }

@@ -19,6 +19,41 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     // private readonly OpenXmlImporter _csvImporter =  MiniExcel.Importer.GetCsvImporter();
     // private readonly OpenXmlExporter _csvExporter =  MiniExcel.Exporter.GetCsvExporter();
     
+    [Theory]
+    [InlineData("DateTimeMidnight", DateOnlyConversionMode.None, true)]
+    [InlineData("DateTimeNotMidnight", DateOnlyConversionMode.None, true)]
+    [InlineData("DateTimeMidnight", DateOnlyConversionMode.EnforceMidnight, false)]
+    [InlineData("DateTimeNotMidnight", DateOnlyConversionMode.EnforceMidnight, true)]
+    [InlineData("DateTimeMidnight", DateOnlyConversionMode.IgnoreTimePart, true)]
+    [InlineData("DateTimeNotMidnight", DateOnlyConversionMode.IgnoreTimePart, true)]
+    public void TestIssue869(string fileName, DateOnlyConversionMode mode, bool throwsException)
+    {
+        var path = PathHelper.GetFile($"xlsx/TestIssue869/{fileName}.xlsx");
+        var config = new OpenXmlConfiguration { DateOnlyConversionMode = mode };
+        var testFn = () => _excelImporter.Query<DateTimeSheet>(path, configuration: config).ToList();
+        if (throwsException)
+        {
+            Assert.Throws<MiniExcelInvalidCastException>(testFn);
+        }
+        else
+        {
+            try
+            {
+                _ = testFn();
+            }
+            catch (Exception ex)
+            {
+                Assert.Fail($"No exception should be thrown, but still one was thrown: {ex.Message}.");
+            }
+        }
+    }
+
+    private class DateTimeSheet
+    {
+        public string? Name { get; set; }
+        public DateOnly? Date { get; set; }
+    }
+    
     /// <summary>
     /// https://github.com/mini-software/MiniExcel/issues/549
     /// </summary>

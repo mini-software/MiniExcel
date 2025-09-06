@@ -150,6 +150,20 @@ public static partial class MiniExcelMapper
                     return newValue;
                 }
 
+                if (itemValue is DateTime dateTimeValue && config.DateOnlyConversionMode != DateOnlyConversionMode.None)
+                {
+                    if (config.DateOnlyConversionMode == DateOnlyConversionMode.EnforceMidnight)
+                    {
+                        if (dateTimeValue.Hour != 0 || dateTimeValue.Minute != 0 || dateTimeValue.Second != 0 ||
+                            dateTimeValue.Millisecond != 0)
+                        {
+                            throw new InvalidCastException(
+                                $"Could not convert cell of type DateTime to DateOnly, because DateTime was not at midnight, but at {dateTimeValue:HH:mm:ss}.");
+                        }
+                        return DateOnly.FromDateTime(dateTimeValue);
+                    }
+                }
+
                 var vs = itemValue?.ToString();
                 if (pInfo.ExcelFormat is not null)
                 {

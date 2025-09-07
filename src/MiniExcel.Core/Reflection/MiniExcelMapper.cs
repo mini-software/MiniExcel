@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using MiniExcelLib.Core.Enums;
 using MiniExcelLib.Core.Exceptions;
 
 namespace MiniExcelLib.Core.Reflection;
@@ -150,15 +151,11 @@ public static partial class MiniExcelMapper
                     return newValue;
                 }
 
-                if (itemValue is DateTime dateTimeValue &&
-                    config.DateOnlyConversionMode is DateOnlyConversionMode.EnforceMidnight
-                        or DateOnlyConversionMode.IgnoreTimePart)
+                if (itemValue is DateTime dateTimeValue && config.DateOnlyConversionMode is not DateOnlyConversionMode.None)
                 {
-                    if (config.DateOnlyConversionMode == DateOnlyConversionMode.EnforceMidnight && dateTimeValue.TimeOfDay != TimeSpan.Zero)
-                    {
-                        throw new InvalidCastException(
-                            $"Could not convert cell of type DateTime to DateOnly, because DateTime was not at midnight, but at {dateTimeValue:HH:mm:ss}.");
-                    }
+                    if (config.DateOnlyConversionMode == DateOnlyConversionMode.RequireMidnight && dateTimeValue.TimeOfDay != TimeSpan.Zero)
+                        throw new InvalidCastException($"Could not convert cell of type DateTime to DateOnly, because DateTime was not at midnight, but at {dateTimeValue:HH:mm:ss}.");
+
                     return DateOnly.FromDateTime(dateTimeValue);
                 }
 

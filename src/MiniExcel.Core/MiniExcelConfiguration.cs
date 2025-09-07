@@ -1,4 +1,5 @@
 ﻿using MiniExcelLib.Core.Attributes;
+using MiniExcelLib.Core.Enums;
 
 namespace MiniExcelLib.Core;
 
@@ -15,4 +16,9 @@ public abstract class MiniExcelBaseConfiguration : IMiniExcelConfiguration
     /// When exporting using DataReader, the data not in DynamicColumn will be filtered.
     /// </summary>
     public bool DynamicColumnFirst { get; set; } = false;
+
+    /// <summary>
+    /// Specifies when and how DateTime values are converted to DateOnly values.
+    /// </summary>
+    public DateOnlyConversionMode DateOnlyConversionMode { get; set; }
 }

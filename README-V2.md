@@ -63,7 +63,7 @@
 ---
 
 <div align="center">
-    If MiniExcel was useful to you please <a href="https://github.com/mini-software/MiniExcel">star</a> the project and consider <a href="https://miniexcel.github.io">donating</a>. A small gesture can make a big difference in improving the library!
+    If MiniExcel was useful to you please consider <a href="https://miniexcel.github.io">donating</a>, or simply <a href="https://github.com/mini-software/MiniExcel">starring</a> the prohect. A small gesture can make a big difference in improving the library!
 </div>
 
 ---
@@ -108,7 +108,8 @@ dotnet add package MiniExcel
 ```
 
 This package will contain the assemblies with both Excel and Csv functionalities, along with the original `v1.x` methods' signatures.
-If you don't care for those you can also install the Excel and Csv packages separately:
+~~If you don't care for those you can also install the Excel and Csv packages separately:~~
+We're still pondering whether this is the best way to move forward with the library, and if we do this is how you'll be able to add the separate packages:
 
 ```bash
 dotnet add package MiniExcel.Core

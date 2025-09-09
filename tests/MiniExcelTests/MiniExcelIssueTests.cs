@@ -4661,4 +4661,41 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         Assert.Equal(null, rows[0].A);
         Assert.Equal(2, rows[2].B);
     }
+    
+    
+    private class Issue869
+    {
+        public string? Name { get; set; }
+        public DateOnly? Date { get; set; }
+    }
+
+    [Theory]
+    [InlineData("DateTimeMidnight", DateOnlyConversionMode.None, true)]
+    [InlineData("DateTimeNotMidnight", DateOnlyConversionMode.None, true)]
+    [InlineData("DateTimeMidnight", DateOnlyConversionMode.RequireMidnight, false)]
+    [InlineData("DateTimeNotMidnight", DateOnlyConversionMode.RequireMidnight, true)]
+    [InlineData("DateTimeMidnight", DateOnlyConversionMode.IgnoreTimePart, false)]
+    [InlineData("DateTimeNotMidnight", DateOnlyConversionMode.IgnoreTimePart, false)]
+    public void TestIssue869(string fileName, DateOnlyConversionMode mode, bool throwsException)
+    {
+        var path = PathHelper.GetFile($"xlsx/TestIssue869/{fileName}.xlsx");
+        var config = new OpenXmlConfiguration { DateOnlyConversionMode = mode };
+
+        var testFn = () => MiniExcel.Query<Issue869>(path, configuration: config).ToList();
+        if (throwsException)
+        {
+            Assert.Throws<ExcelInvalidCastException>(testFn);
+        }
+        else
+        {
+            try
+            {
+                _ = testFn();
+            }
+            catch (Exception ex)
+            {
+                Assert.Fail($"No exception should be thrown, but one was still thrown: {ex}.");
+            }
+        }
+    }
 }

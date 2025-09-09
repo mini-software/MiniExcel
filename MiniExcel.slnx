@@ -11,7 +11,6 @@
     <File Path="README-NuGet.md" />
     <File Path="README.md" />
     <File Path="README.zh-CN.md" />
-    <File Path="README.zh-Hant.md" />
     <File Path=".github\workflows\benchmark.yml" />
     <File Path=".github\workflows\codeql-analysis.yml" />
     <File Path="src\Directory.Build.props" />

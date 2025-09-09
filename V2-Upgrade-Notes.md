@@ -6,7 +6,8 @@
 `MiniExcel.Importers`, `MiniExcel.Exporters` and `MiniExcel.Templaters` will give you access to, respectively, the `MiniExcelImporterProvider`, `MiniExcelExporterProvider` and `MiniExcelTemplaterProvider`.
 - This way Excel and Csv query methods are split between the `OpenXmlImporter` and the `CsvImporter`, accessible from the `MiniExcelImporterProvider`.
 - The same structure was adopted for export methods through `OpenXmlExporter` and `CsvExporter`, while template methods are instead currently only found in `OpenXmlTemplater`.
-- Csv methods are only available if the MiniExcel.Csv package is installed, which is pulled down automatically when the full MiniExcel package is downloaded.
+- ~~Csv methods are only available if the MiniExcel.Csv package is installed, which is pulled down automatically when the full MiniExcel package is downloaded.~~ 
+We're still pondering whether this is the best way to move forward with the library, currently only the full MiniExcel package is available.
 - If the full MiniExcel package is downloaded, the previous namespace will coexist along the new one, containing the original static methods' signatures, which have become a facade for the aferomentioned providers.
 - `IConfiguration` is now `IMiniExcelConfiguration`, but most methods now require the proper implementation (`OpenXmlConfiguration` or `CsvConfiguration`) to be provided rather than the interface
 - MiniExcel now fully supports asynchronous streaming the queries, 

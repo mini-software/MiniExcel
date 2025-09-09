@@ -63,7 +63,7 @@
 ---
 
 <div align="center">
-    If MiniExcel was useful to you please consider <a href="https://miniexcel.github.io">donating</a>, or simply <a href="https://github.com/mini-software/MiniExcel">starring</a> the prohect. A small gesture can make a big difference in improving the library!
+    If MiniExcel was useful to you please consider <a href="https://miniexcel.github.io">donating</a>, or simply <a href="https://github.com/mini-software/MiniExcel">starring</a> the project. A small gesture can make a big difference in improving the library!
 </div>
 
 ---

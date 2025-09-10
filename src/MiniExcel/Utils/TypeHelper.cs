@@ -142,6 +142,16 @@ namespace MiniExcelLibs.Utils
                     pInfo.Property.SetValue(v, newValue);
                     return newValue;
                 }
+                
+                if (itemValue is DateTime dateTimeValue && config.DateOnlyConversionMode != DateOnlyConversionMode.None)
+                {
+                    if (config.DateOnlyConversionMode == DateOnlyConversionMode.RequireMidnight && dateTimeValue.TimeOfDay != TimeSpan.Zero)
+                        throw new InvalidCastException($"Could not convert cell of type DateTime to DateOnly, because DateTime was not at midnight, but at {dateTimeValue:HH:mm:ss}.");
+
+                    newValue = DateOnly.FromDateTime(dateTimeValue);
+                    pInfo.Property.SetValue(v, newValue);
+                    return newValue;
+                }
 
                 var vs = itemValue?.ToString();
                 if (pInfo.ExcelFormat != null)

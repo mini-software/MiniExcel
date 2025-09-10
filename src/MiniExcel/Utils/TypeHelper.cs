@@ -149,6 +149,7 @@ namespace MiniExcelLibs.Utils
                         throw new InvalidCastException($"Could not convert cell of type DateTime to DateOnly, because DateTime was not at midnight, but at {dateTimeValue:HH:mm:ss}.");
 
                     newValue = DateOnly.FromDateTime(dateTimeValue);
+                    pInfo.Property.SetValue(v, newValue);
                     return newValue;
                 }
 

@@ -3681,7 +3681,8 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         {
             try
             {
-                _ = testFn();
+                var result = testFn();
+                Assert.Equal(new DateOnly(2025, 1, 1), result[0].Date);
             }
             catch (Exception ex)
             {

@@ -156,7 +156,9 @@ public static partial class MiniExcelMapper
                     if (config.DateOnlyConversionMode == DateOnlyConversionMode.RequireMidnight && dateTimeValue.TimeOfDay != TimeSpan.Zero)
                         throw new InvalidCastException($"Could not convert cell of type DateTime to DateOnly, because DateTime was not at midnight, but at {dateTimeValue:HH:mm:ss}.");
 
-                    return DateOnly.FromDateTime(dateTimeValue);
+                    newValue = DateOnly.FromDateTime(dateTimeValue);
+                    pInfo.Property.SetValue(v, newValue);
+                    return newValue;
                 }
 
                 var vs = itemValue?.ToString();

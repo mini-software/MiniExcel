@@ -148,7 +148,8 @@ namespace MiniExcelLibs.Utils
                     if (config.DateOnlyConversionMode == DateOnlyConversionMode.RequireMidnight && dateTimeValue.TimeOfDay != TimeSpan.Zero)
                         throw new InvalidCastException($"Could not convert cell of type DateTime to DateOnly, because DateTime was not at midnight, but at {dateTimeValue:HH:mm:ss}.");
 
-                    return DateOnly.FromDateTime(dateTimeValue);
+                    newValue = DateOnly.FromDateTime(dateTimeValue);
+                    return newValue;
                 }
 
                 var vs = itemValue?.ToString();

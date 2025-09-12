@@ -9,6 +9,7 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
 {
     private readonly Dictionary<string, ZipPackageInfo> _zipDictionary = [];
     private Dictionary<string, string> _cellXfIdMap;
+    private const int MaxCharactersSheetName = 31;
     
     private IEnumerable<Tuple<SheetDto, object?>> GetSheets()
     {
@@ -44,6 +45,11 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
 
     private ExcellSheetInfo GetSheetInfos(string sheetName)
     {
+        if (_configuration.TrimSheetNames)
+        {
+            sheetName = sheetName[..Math.Min(sheetName.Length, MaxCharactersSheetName)];
+        }
+        
         var info = new ExcellSheetInfo
         {
             ExcelSheetName = sheetName,

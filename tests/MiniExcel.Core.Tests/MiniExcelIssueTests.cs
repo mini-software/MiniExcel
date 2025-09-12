@@ -3690,4 +3690,31 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             }
         }
     }
+    
+    [Theory(DisplayName = "#876: Enabling trimming only trims too long values when enabled")]
+    [InlineData("ShortName", false, "ShortName")]
+    [InlineData("SomeVeryLongNameWithMoreThan32Characters", false, "SomeVeryLongNameWithMoreThan32Characters")]
+    [InlineData("ShortName", true, "ShortName")]
+    [InlineData("SomeVeryLongNameWithMoreThan32Characters", true, "SomeVeryLongNameWithMoreThan32C")] // Trimmed to 31 chars
+    public async Task TestIssue876(string sheetName, bool trimSheetName, string sheetNameToReadWith)
+    {
+        // Arrange
+        var exporter = MiniExcel.Exporters.GetOpenXmlExporter();
+        var someTable = new[] 
+        {
+            new { Name = "Jack", Age = 25 }, 
+        };
+        var sheets = new Dictionary<string, object>
+        {
+            [sheetName] = someTable
+        };
+        var outputPath = PathHelper.GetTempFilePath();
+        
+        // Act
+        await exporter.ExportAsync(outputPath, sheets, configuration: new OpenXmlConfiguration{ TrimSheetNames = trimSheetName});
+        
+        // Assert
+        var resultsFromTrimmedSheet = MiniExcel.Importers.GetOpenXmlImporter().Query(outputPath, sheetName: sheetNameToReadWith);
+        Assert.Equal(2, resultsFromTrimmedSheet.Count()); // 2, header and one record
+    }
 }

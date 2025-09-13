@@ -26,6 +26,9 @@ namespace MiniExcelLibs.OpenXml
             {
                 foreach (var sheet in dictionary)
                 {
+                    if (sheet.Key.Length > 31)
+                        throw new ArgumentException("Sheet names must be less than 31 characters");
+                    
                     sheetId++;
                     var sheetInfos = GetSheetInfos(sheet.Key);
                     yield return Tuple.Create(sheetInfos.ToDto(sheetId), sheet.Value);

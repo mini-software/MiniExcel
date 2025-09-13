@@ -45,10 +45,7 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
     [CreateSyncVersion]
     internal static Task<OpenXmlWriter> CreateAsync(Stream stream, object? value, string? sheetName,  bool printHeader, IMiniExcelConfiguration? configuration, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrEmpty(sheetName))
-            throw new ArgumentException("Sheet names cannot be empty or null", nameof(sheetName));
-        if (sheetName?.Length > 31)
-            throw new ArgumentException("Sheet names must be less than 31 characters", nameof(sheetName));
+        ThrowHelper.ThrowIfInvalidSheetName(sheetName);
         
         var writer = new OpenXmlWriter(stream, value, sheetName, configuration, printHeader);
         return Task.FromResult(writer);

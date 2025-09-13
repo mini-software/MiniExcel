@@ -4699,4 +4699,24 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             }
         }
     }
+    
+    [Fact]
+    public void TestIssue876()
+    {
+        var someTable = new[] 
+        {
+            new { Name = "Jack", Age = 25 }, 
+        };
+
+        var sheets = new Dictionary<string, object>
+        {
+            ["SomeVeryLongNameWithMoreThan31Characters"] = someTable
+        };
+
+        Assert.Throws<ArgumentException>(() =>
+        {
+            using var outputPath = AutoDeletingPath.Create();
+            MiniExcel.SaveAs(outputPath.ToString(), sheets);
+        });
+    }
 }

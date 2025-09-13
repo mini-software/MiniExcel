@@ -17,6 +17,8 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
         {
             foreach (var sheet in dictionary)
             {
+                ThrowHelper.ThrowIfInvalidSheetName(sheet.Key);
+                
                 sheetId++;
                 var sheetInfos = GetSheetInfos(sheet.Key);
                 yield return Tuple.Create(sheetInfos.ToDto(sheetId), sheet.Value);

@@ -1206,7 +1206,7 @@ internal partial class OpenXmlReader : IMiniExcelReader
                 var cellValue = cellAndColumn.CellValue;
                 columnIndex = cellAndColumn.ColumnIndex;
 
-                if (_config.FillMergedCells && mergeCells != null)
+                if (_config.FillMergedCells && mergeCells is not null)
                 {
                     if (mergeCells.MergesValues.ContainsKey(aR))
                     {

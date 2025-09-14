@@ -222,7 +222,7 @@ internal static class ConversionHelper
     {
         // Handle nullable types
         var underlyingType = Nullable.GetUnderlyingType(targetType);
-        var isNullable = underlyingType != null;
+        var isNullable = underlyingType is not null;
         var effectiveType = underlyingType ?? targetType;
         
         Expression convertExpression;

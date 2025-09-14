@@ -19,10 +19,9 @@ internal static class MappingMetadataExtractor
         // This is done once at compile time, not at runtime
         var nestedMappingType = nestedMapping.GetType();
         var propsProperty = nestedMappingType.GetProperty("Properties");
-        if (propsProperty == null) return null;
-        
-        var properties = propsProperty.GetValue(nestedMapping) as IEnumerable;
-        if (properties == null) return null;
+
+        if (propsProperty?.GetValue(nestedMapping) is not IEnumerable properties)
+            return null;
         
         var nestedInfo = new NestedMappingInfo
         {
@@ -54,7 +53,8 @@ internal static class MappingMetadataExtractor
             var setterProperty = propType.GetProperty("Setter");
             var typeProperty = propType.GetProperty("PropertyType");
 
-            if (nameProperty == null || columnProperty == null || getterProperty == null) continue;
+            if (nameProperty is null || columnProperty is null || getterProperty is null) 
+                continue;
             
             var name = nameProperty.GetValue(prop) as string;
             var column = (int)columnProperty.GetValue(prop)!;
@@ -62,7 +62,7 @@ internal static class MappingMetadataExtractor
             var setter = setterProperty?.GetValue(prop) as Action<object, object?>;
             var propTypeValue = typeProperty?.GetValue(prop) as Type;
                 
-            if (name != null && getter != null)
+            if (name is not null && getter is not null)
             {
                 propertyList.Add(new NestedPropertyInfo
                 {

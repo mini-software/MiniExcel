@@ -44,7 +44,7 @@ internal class CompiledMapping<T>
     {
         handler = default!;
         
-        if (OptimizedCellGrid == null || OptimizedBoundaries == null)
+        if (OptimizedCellGrid is null || OptimizedBoundaries is null)
             return false;
         
         var relRow = absoluteRow - OptimizedBoundaries.MinRow;
@@ -70,7 +70,7 @@ internal class CompiledMapping<T>
     {
         value = null;
         
-        if (item == null || handler.ValueExtractor == null)
+        if (item is null || handler.ValueExtractor is null)
             return false;
         
         value = handler.ValueExtractor(item, 0);
@@ -87,7 +87,7 @@ internal class CompiledMapping<T>
     /// <returns>True if the value was successfully set</returns>
     public bool TrySetValue<TItem>(OptimizedCellHandler handler, TItem? item, object? value) where TItem : class
     {
-        if (item == null || handler.ValueSetter == null)
+        if (item is null || handler.ValueSetter is null)
             return false;
         
         handler.ValueSetter(item, value);
@@ -107,10 +107,8 @@ internal class CompiledMapping<T>
     {
         value = null;
         
-        if (!TryGetHandler(row, col, out var handler))
-            return false;
-        
-        return TryGetValue(handler, item, out value);
+        return TryGetHandler(row, col, out var handler) && 
+               TryGetValue(handler, item, out value);
     }
     
     /// <summary>
@@ -124,10 +122,8 @@ internal class CompiledMapping<T>
     /// <returns>True if the value was successfully set</returns>
     public bool TrySetCellValue<TItem>(int row, int col, TItem item, object? value) where TItem : class
     {
-        if (!TryGetHandler(row, col, out var handler))
-            return false;
-        
-        return TrySetValue(handler, item, value);
+        return TryGetHandler(row, col, out var handler) &&
+               TrySetValue(handler, item, value);
     }
     
     /// <summary>
@@ -140,7 +136,7 @@ internal class CompiledMapping<T>
     /// <returns>True if the value was successfully set</returns>
     public bool TrySetPropertyValue<TItem>(CompiledPropertyMapping property, TItem item, object? value) where TItem : class
     {
-        if (property.Setter == null)
+        if (property.Setter is null)
             return false;
         
         property.Setter(item, value);
@@ -157,7 +153,7 @@ internal class CompiledMapping<T>
     /// <returns>True if the collection was successfully set</returns>
     public bool TrySetCollectionValue<TItem>(CompiledCollectionMapping collection, TItem item, object? value) where TItem : class
     {
-        if (collection.Setter == null)
+        if (collection.Setter is null)
             return false;
         
         collection.Setter(item, value);

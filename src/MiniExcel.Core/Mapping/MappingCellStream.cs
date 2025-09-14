@@ -101,7 +101,7 @@ internal struct MappingCellEnumerator<T>
         }
 
         // Process current item's cells
-        if (_currentItem != null)
+        if (_currentItem is not null)
         {
             // Cache collections as arrays when we start processing an item
             if (_currentColumnIndex == 0 && _currentCollectionRow == 0 && _mapping.Collections.Count > 0)
@@ -113,14 +113,10 @@ internal struct MappingCellEnumerator<T>
                 {
                     var coll = _mapping.Collections[i];
                     var collectionData = coll.Getter(_currentItem);
-                    if (collectionData != null)
+                    if (collectionData is not null)
                     {
                         // Convert to array once - this is the only enumeration
-                        var items = new List<object?>();
-                        foreach (var item in collectionData)
-                        {
-                            items.Add(item);
-                        }
+                        var items = collectionData.Cast<object?>().ToList();
                         _currentCollectionArrays[i] = items.ToArray();
                         
                         // For vertical collections, we need rows from StartCellRow
@@ -156,7 +152,7 @@ internal struct MappingCellEnumerator<T>
                         cellValue = formattable.ToString(handler.Format, null);
                     }
                 }
-                else if (_currentCollectionArrays != null)
+                else if (_currentCollectionArrays is not null)
                 {
                     // Fallback for collections that might not be in the grid yet
                     // This handles dynamic collection expansion

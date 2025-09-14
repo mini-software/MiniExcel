@@ -18,9 +18,9 @@ internal static class MappingCompiler
     /// <summary>
     /// Compiles a mapping configuration into an optimized runtime representation.
     /// </summary>
-    public static CompiledMapping<T> Compile<T>(MappingConfiguration<T> configuration, MappingRegistry? registry = null)
+    public static CompiledMapping<T> Compile<T>(MappingConfiguration<T>? configuration, MappingRegistry? registry = null)
     {
-        if (configuration == null)
+        if (configuration is null)
             throw new ArgumentNullException(nameof(configuration));
 
         var properties = new List<CompiledPropertyMapping>();
@@ -44,13 +44,14 @@ internal static class MappingCompiler
             
             // Create setter with proper type conversion using centralized logic
             Action<object, object?>? setter = null;
-            if (prop.Expression.Body is MemberExpression memberExpr && memberExpr.Member is PropertyInfo propInfo)
+            if (prop.Expression.Body is MemberExpression { Member: PropertyInfo propInfo })
             {
                 setter = ConversionHelper.CreateTypedPropertySetter<T>(propInfo);
             }
             
             // Pre-parse cell coordinates for runtime performance
-            if (prop.CellAddress == null) continue;
+            if (prop.CellAddress is null) 
+                continue;
             
             ReferenceHelper.ParseReference(prop.CellAddress, out int cellCol, out int cellRow);
 
@@ -90,14 +91,15 @@ internal static class MappingCompiler
             
             // Create setter for collection
             Action<object, object?>? collectionSetter = null;
-            if (coll.Expression.Body is MemberExpression collMemberExpr && collMemberExpr.Member is PropertyInfo collPropInfo)
+            if (coll.Expression.Body is MemberExpression { Member: PropertyInfo collPropInfo })
             {
                 var memberSetter = new MemberSetter(collPropInfo);
                 collectionSetter = memberSetter.Invoke;
             }
             
             // Pre-parse start cell coordinates
-            if (coll.StartCell == null) continue;
+            if (coll.StartCell is null) 
+                continue;
 
             ReferenceHelper.ParseReference(coll.StartCell, out int startCol, out int startRow);
 
@@ -125,36 +127,30 @@ internal static class MappingCompiler
         };
         
         OptimizeMapping(compiledMapping);
-        
         return compiledMapping;
     }
     
     private static string GetPropertyName(LambdaExpression expression)
     {
-        if (expression.Body is MemberExpression memberExpr)
+        return expression.Body switch
         {
-            return memberExpr.Member.Name;
-        }
-        
-        if (expression.Body is UnaryExpression unaryExpr && unaryExpr.Operand is MemberExpression unaryMemberExpr)
-        {
-            return unaryMemberExpr.Member.Name;
-        }
-        
-        throw new InvalidOperationException($"Cannot extract property name from expression: {expression}");
+            MemberExpression memberExpr => memberExpr.Member.Name,
+            UnaryExpression { Operand: MemberExpression unaryMemberExpr } => unaryMemberExpr.Member.Name,
+            _ => throw new InvalidOperationException($"Cannot extract property name from expression: {expression}")
+        };
     }
     
     /// <summary>
     /// Optimizes a compiled mapping for runtime performance by pre-calculating cell positions
     /// and building optimized data structures for fast lookup and processing.
     /// </summary>
-    private static void OptimizeMapping<T>(CompiledMapping<T> mapping)
+    private static void OptimizeMapping<T>(CompiledMapping<T>? mapping)
     {
-        if (mapping == null)
+        if (mapping is null)
             throw new ArgumentNullException(nameof(mapping));
 
         // If already optimized, skip
-        if (mapping.OptimizedCellGrid != null && mapping.OptimizedBoundaries != null)
+        if (mapping is { OptimizedCellGrid: not null, OptimizedBoundaries: not null })
             return;
 
         // Step 1: Calculate mapping boundaries
@@ -208,19 +204,20 @@ internal static class MappingCompiler
         // that belong directly to the root item. Nested collections (like Departments in a Company)
         // should NOT trigger multi-item pattern detection.
         // For now, we'll be conservative and only enable multi-item pattern for specific scenarios
-        if (mapping.Collections.Any() && mapping.Properties.Any())
+        if (mapping is { Collections.Count: > 0, Properties.Count: > 0 })
         {
             // Check if any collection has nested mapping (complex types)
             bool hasNestedCollections = false;
             foreach (var coll in mapping.Collections)
             {
                 // Check if the collection's item type has a mapping (complex type)
-                if (coll.ItemType != null && coll.Registry != null)
+                if (coll is { ItemType: not null, Registry: not null})
                 {
                     // Try to get the nested mapping - if it exists, it's a complex type
                     var nestedMapping = coll.Registry.GetCompiledMapping(coll.ItemType);
-                    if (nestedMapping != null && coll.ItemType != typeof(string) && 
-                        !coll.ItemType.IsValueType && !coll.ItemType.IsPrimitive)
+                    if (nestedMapping is not null && 
+                        coll.ItemType != typeof(string) && 
+                        coll.ItemType is { IsValueType: false, IsPrimitive: false }) 
                     {
                         hasNestedCollections = true;
                         break;
@@ -254,7 +251,7 @@ internal static class MappingCompiler
                 
                 // If we have a reasonable pattern height, mark this as a multi-item pattern
                 // This allows the grid to repeat for multiple items
-                if (boundaries.PatternHeight > 0 && boundaries.PatternHeight < MaxPatternHeight)
+                if (boundaries.PatternHeight is > 0 and < MaxPatternHeight)
                 {
                     boundaries.IsMultiItemPattern = true;
                 }
@@ -287,16 +284,16 @@ internal static class MappingCompiler
                 
                 // Check if this is a complex type with nested mapping
                 var maxCol = startCol;
-                if (collection.ItemType == null || collection.Registry == null)
+                if (collection.ItemType is null || collection.Registry is null)
                     return (startRow, startRow + verticalHeight, startCol, maxCol);
                 
                 var nestedMapping = collection.Registry.GetCompiledMapping(collection.ItemType);
-                if (nestedMapping == null || !MappingMetadataExtractor.IsComplexType(collection.ItemType)) 
+                if (nestedMapping is null || !MappingMetadataExtractor.IsComplexType(collection.ItemType)) 
                     return (startRow, startRow + verticalHeight, startCol, maxCol);
                 
                 // Extract nested mapping info to get max column
                 var nestedInfo = MappingMetadataExtractor.ExtractNestedMappingInfo(nestedMapping, collection.ItemType);
-                if (nestedInfo != null && nestedInfo.Properties.Count > 0)
+                if (nestedInfo is { Properties.Count: > 0 })
                 {
                     maxCol = nestedInfo.Properties.Max(p => p.ColumnIndex);
                 }
@@ -325,9 +322,8 @@ internal static class MappingCompiler
         }
 
         // Process simple properties
-        for (int i = 0; i < mapping.Properties.Count; i++)
+        foreach (var prop in mapping.Properties)
         {
-            var prop = mapping.Properties[i];
             var relativeRow = prop.CellRow - boundaries.MinRow;
             var relativeCol = prop.CellColumn - boundaries.MinColumn;
 
@@ -391,13 +387,14 @@ internal static class MappingCompiler
         int collectionIndex, OptimizedMappingBoundaries boundaries, int startRow, int startCol, int? nextCollectionStartRow = null)
     {
         var relativeCol = startCol - boundaries.MinColumn;
-        if (relativeCol < 0 || relativeCol >= grid.GetLength(1)) return;
+        if (relativeCol < 0 || relativeCol >= grid.GetLength(1)) 
+            return;
 
         // Check if the collection's item type has a mapping (complex type)
         var itemType = collection.ItemType ?? typeof(object);
         var nestedMapping = collection.Registry?.GetCompiledMapping(itemType);
         
-        if (nestedMapping != null && MappingMetadataExtractor.IsComplexType(itemType))
+        if (nestedMapping is not null && MappingMetadataExtractor.IsComplexType(itemType))
         {
             // Complex type with mapping - expand each item across multiple columns
             MarkVerticalComplexCollectionCells(grid, collection, collectionIndex, boundaries, startRow, nestedMapping, nextCollectionStartRow);
@@ -485,7 +482,8 @@ internal static class MappingCompiler
     
     private static void PreCompileCollectionHelpers<T>(CompiledMapping<T> mapping)
     {
-        if (!mapping.Collections.Any()) return;
+        if (!mapping.Collections.Any()) 
+            return;
         
         // Store pre-compiled helpers for each collection
         var helpers = new List<OptimizedCollectionHelper>();
@@ -498,7 +496,8 @@ internal static class MappingCompiler
             
             // Get the actual property info using centralized helper
             var propInfo = MappingMetadataExtractor.GetPropertyByName(typeof(T), collection.PropertyName);
-            if (propInfo == null) continue;
+            if (propInfo is null)
+                continue;
             
             var propertyType = propInfo.PropertyType;
             var itemType = collection.ItemType ?? typeof(object);
@@ -519,13 +518,13 @@ internal static class MappingCompiler
             helpers.Add(helper);
             
             // Pre-compile nested mapping info if it's a complex type
-            if (collection.Registry != null && MappingMetadataExtractor.IsComplexType(itemType))
+            if (collection.Registry is not null && MappingMetadataExtractor.IsComplexType(itemType))
             {
                 var nestedMapping = collection.Registry.GetCompiledMapping(itemType);
-                if (nestedMapping != null)
+                if (nestedMapping is not null)
                 {
                     var nestedInfo = MappingMetadataExtractor.ExtractNestedMappingInfo(nestedMapping, itemType);
-                    if (nestedInfo != null)
+                    if (nestedInfo is not null)
                     {
                         nestedMappings[i] = nestedInfo;
                     }
@@ -545,7 +544,8 @@ internal static class MappingCompiler
     {
         // Extract pre-compiled nested mapping info without reflection
         var nestedInfo = MappingMetadataExtractor.ExtractNestedMappingInfo(nestedMapping, collection.ItemType ?? typeof(object));
-        if (nestedInfo == null) return;
+        if (nestedInfo is null) 
+            return;
         
         // Now mark cells for each property of each collection item
         var maxRows = Math.Min(100, grid.GetLength(0)); // Conservative range
@@ -564,11 +564,12 @@ internal static class MappingCompiler
         for (int itemIndex = 0; itemIndex < maxItems; itemIndex++)
         {
             var r = startRelativeRow + itemIndex * (1 + rowSpacing);
-            if (r < 0 || r >= maxRows || r >= grid.GetLength(0)) continue;
+            if (r < 0 || r >= maxRows || r >= grid.GetLength(0))
+                continue;
             
             // Additional check: don't go past the next collection's start
             var absoluteRow = r + boundaries.MinRow;
-            if (nextCollectionStartRow.HasValue && absoluteRow >= nextCollectionStartRow.Value)
+            if (absoluteRow >= nextCollectionStartRow)
                 break;
             
             foreach (var prop in nestedInfo.Properties)
@@ -603,7 +604,7 @@ internal static class MappingCompiler
             var enumerable = collectionGetter(obj);
             var item = CollectionAccessor.GetItemAt(enumerable, offset);
             
-            return item != null ? propertyGetter(item) : null;
+            return item is not null ? propertyGetter(item) : null;
         };
     }
     
@@ -611,5 +612,4 @@ internal static class MappingCompiler
     {
         return value => ConversionHelper.ConvertValue(value, targetType);
     }
-    
 }

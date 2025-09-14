@@ -1,14 +1,6 @@
-using MiniExcelLib.Core;
 using MiniExcelLib.Core.Mapping;
-using MiniExcelLib.Core.Mapping.Configuration;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using Xunit;
 
-namespace MiniExcelLib.Tests
+namespace MiniExcelLib.Tests.FluentMapping
 {
     public class MiniExcelMappingTests
     {
@@ -44,8 +36,8 @@ namespace MiniExcelLib.Tests
             public bool IsEnabled { get; set; }
             public string? Description { get; set; }
             public decimal Amount { get; set; }
-            public List<string> Tags { get; set; } = new();
-            public int[] Numbers { get; set; } = Array.Empty<int>();
+            public List<string> Tags { get; set; } = [];
+            public int[] Numbers { get; set; } = [];
         }
 
         public class ComplexModel
@@ -54,23 +46,23 @@ namespace MiniExcelLib.Tests
             public string Title { get; set; } = "";
             public DateTimeOffset CreatedAt { get; set; }
             public TimeSpan Duration { get; set; }
-            public byte[] BinaryData { get; set; } = Array.Empty<byte>();
+            public byte[] BinaryData { get; set; } = [];
             public Uri? Website { get; set; }
         }
 
         public class Department
         {
             public string Name { get; set; } = "";
-            public List<Person> Employees { get; set; } = new();
-            public List<string> PhoneNumbers { get; set; } = new();
-            public string[] Tags { get; set; } = Array.Empty<string>();
-            public IEnumerable<Project> Projects { get; set; } = Enumerable.Empty<Project>();
+            public List<Person> Employees { get; set; } = [];
+            public List<string> PhoneNumbers { get; set; } = [];
+            public string[] Tags { get; set; } = [];
+            public IEnumerable<Project> Projects { get; set; } = [];
         }
 
         public class Company
         {
             public string Name { get; set; } = "";
-            public List<Department> Departments { get; set; } = new();
+            public List<Department> Departments { get; set; } = [];
         }
 
         public class TestModel
@@ -84,7 +76,7 @@ namespace MiniExcelLib.Tests
             public string Name { get; set; } = "";
             public string Position { get; set; } = "";
             public decimal Salary { get; set; }
-            public List<string> Skills { get; set; } = new();
+            public List<string> Skills { get; set; } = [];
         }
 
         public class Project
@@ -93,7 +85,7 @@ namespace MiniExcelLib.Tests
             public string Title { get; set; } = "";
             public DateTime StartDate { get; set; }
             public decimal Budget { get; set; }
-            public List<ProjectTask> Tasks { get; set; } = new();
+            public List<ProjectTask> Tasks { get; set; } = [];
         }
 
         public class ProjectTask
@@ -107,7 +99,7 @@ namespace MiniExcelLib.Tests
         {
             public string Title { get; set; } = "";
             public DateTime GeneratedAt { get; set; }
-            public List<int> Numbers { get; set; } = new();
+            public List<int> Numbers { get; set; } = [];
             public Dictionary<string, decimal> Metrics { get; set; } = new();
         }
 
@@ -316,7 +308,7 @@ namespace MiniExcelLib.Tests
                 { 
                     Id = 1, 
                     Name = "Test", 
-                    Tags = new List<string> { "Tag1", "Tag2", "Tag3" }
+                    Tags = ["Tag1", "Tag2", "Tag3"]
                 }
             };
 
@@ -343,12 +335,12 @@ namespace MiniExcelLib.Tests
                 new Department
                 {
                     Name = "Engineering",
-                    Employees = new List<Person>
-                    {
+                    Employees =
+                    [
                         new Person { Name = "Alice", Age = 35, Email = "alice@example.com", Salary = 95000 },
                         new Person { Name = "Bob", Age = 28, Email = "bob@example.com", Salary = 75000 },
                         new Person { Name = "Charlie", Age = 24, Email = "charlie@example.com", Salary = 55000 }
-                    }
+                    ]
                 }
             };
 
@@ -386,12 +378,12 @@ namespace MiniExcelLib.Tests
                             Title = "New Feature",
                             StartDate = new DateTime(2024, 1, 1),
                             Budget = 100000,
-                            Tasks = new List<ProjectTask>
-                            {
+                            Tasks =
+                            [
                                 new ProjectTask { Name = "Design", EstimatedHours = 40, IsCompleted = true },
                                 new ProjectTask { Name = "Implementation", EstimatedHours = 120, IsCompleted = false },
                                 new ProjectTask { Name = "Testing", EstimatedHours = 60, IsCompleted = false }
-                            }
+                            ]
                         }
                     }
                 }
@@ -441,12 +433,12 @@ namespace MiniExcelLib.Tests
             var department = new Department
             {
                 Name = "Mixed Department",
-                PhoneNumbers = new List<string> { "555-1111", "555-2222" },
-                Employees = new List<Person>
-                {
+                PhoneNumbers = ["555-1111", "555-2222"],
+                Employees =
+                [
                     new Person { Name = "Dave", Age = 35, Email = "dave@example.com", Salary = 85000 },
                     new Person { Name = "Eve", Age = 29, Email = "eve@example.com", Salary = 75000 }
-                }
+                ]
             };
 
             var departments = new[] { department };
@@ -686,7 +678,7 @@ namespace MiniExcelLib.Tests
                     Title = "Complex Item",
                     CreatedAt = DateTimeOffset.Now,
                     Duration = TimeSpan.FromHours(2.5),
-                    BinaryData = new byte[] { 1, 2, 3, 4, 5 },
+                    BinaryData = [1, 2, 3, 4, 5],
                     Website = new Uri("https://example.com")
                 }
             };
@@ -909,7 +901,7 @@ namespace MiniExcelLib.Tests
 
             var testData = new[]
             {
-                new ComplexEntity { Id = 1, Tags = new List<string>() } // Empty collection
+                new ComplexEntity { Id = 1, Tags = [] } // Empty collection
             };
 
             var exporter = MiniExcel.Exporters.GetMappingExporter(registry);

@@ -148,7 +148,7 @@ internal static partial class XmlCellWriter
         }
         
         // If we didn't have a type attribute but need one, add it
-        if (!string.IsNullOrEmpty(newCellType) && reader.GetAttribute("t") == null)
+        if (!string.IsNullOrEmpty(newCellType) && reader.GetAttribute("t") is null)
         {
             await writer.WriteAttributeStringAsync("", "t", "", newCellType).ConfigureAwait(false);
         }

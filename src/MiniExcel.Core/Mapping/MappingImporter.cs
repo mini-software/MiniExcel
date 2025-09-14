@@ -23,13 +23,12 @@ public partial class MappingImporter
     }
 
     [CreateSyncVersion]
-    public async IAsyncEnumerable<T> QueryAsync<T>(Stream stream, [EnumeratorCancellation] CancellationToken cancellationToken = default) where T : class, new()
+    public async IAsyncEnumerable<T> QueryAsync<T>(Stream? stream, [EnumeratorCancellation] CancellationToken cancellationToken = default) where T : class, new()
     {
-        if (stream == null)
+        if (stream is null)
             throw new ArgumentNullException(nameof(stream));
 
-        var mapping = _registry.GetCompiledMapping<T>();
-        if (mapping == null)
+        if (_registry.GetCompiledMapping<T>() is not { } mapping)
             throw new InvalidOperationException($"No mapping configuration found for type {typeof(T).Name}. Configure the mapping using MappingRegistry.Configure<{typeof(T).Name}>().");
 
         await foreach (var item in MappingReader<T>.QueryAsync(stream, mapping, cancellationToken).ConfigureAwait(false))
@@ -44,13 +43,12 @@ public partial class MappingImporter
     }
 
     [CreateSyncVersion]
-    private async Task<T> QuerySingleAsync<T>(Stream stream, CancellationToken cancellationToken = default) where T : class, new()
+    private async Task<T> QuerySingleAsync<T>(Stream? stream, CancellationToken cancellationToken = default) where T : class, new()
     {
-        if (stream == null)
+        if (stream is null)
             throw new ArgumentNullException(nameof(stream));
 
-        var mapping = _registry.GetCompiledMapping<T>();
-        if (mapping == null)
+        if (_registry.GetCompiledMapping<T>() is not { }  mapping)
             throw new InvalidOperationException($"No mapping configuration found for type {typeof(T).Name}. Configure the mapping using MappingRegistry.Configure<{typeof(T).Name}>().");
 
         await foreach (var item in MappingReader<T>.QueryAsync(stream, mapping, cancellationToken).ConfigureAwait(false))

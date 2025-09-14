@@ -1,7 +1,6 @@
 namespace MiniExcelLib.Core.Mapping;
 
-internal partial struct MappingTemplateProcessor<T>(CompiledMapping<T> mapping)
-    where T : class
+internal partial struct MappingTemplateProcessor<T>(CompiledMapping<T> mapping) where T : class
 {
     [CreateSyncVersion]
     public async Task ProcessSheetAsync(
@@ -31,7 +30,7 @@ internal partial struct MappingTemplateProcessor<T>(CompiledMapping<T> mapping)
         
         // Get first data item
         var currentItem = dataEnumerator.MoveNext() ? dataEnumerator.Current : null;
-        var currentItemIndex = currentItem != null ? 0 : -1;
+        var currentItemIndex = currentItem is not null ? 0 : -1;
         
         
         // Track which rows have been written from the template
@@ -55,9 +54,7 @@ internal partial struct MappingTemplateProcessor<T>(CompiledMapping<T> mapping)
                         writtenRows.Add(rowNumber);
                         
                         // Check if we need to advance to next item
-                        if (mapping.OptimizedBoundaries != null && 
-                            mapping.OptimizedBoundaries.IsMultiItemPattern &&
-                            mapping.OptimizedBoundaries.PatternHeight > 0)
+                        if (mapping.OptimizedBoundaries is { IsMultiItemPattern: true, PatternHeight: > 0 })
                         {
                             var relativeRow = rowNumber - mapping.OptimizedBoundaries.MinRow;
                             var itemIndex = relativeRow / mapping.OptimizedBoundaries.PatternHeight;
@@ -71,11 +68,9 @@ internal partial struct MappingTemplateProcessor<T>(CompiledMapping<T> mapping)
                         }
                         
                         // Process the row
-                        await ProcessRowAsync(
-                            reader, writer, rowNumber, 
-                            currentItem).ConfigureAwait(false);
+                        await ProcessRowAsync(reader, writer, rowNumber, currentItem).ConfigureAwait(false);
                     }
-                    else if (reader.LocalName == "worksheet" || reader.LocalName == "sheetData")
+                    else if (reader.LocalName is "worksheet" or "sheetData")
                     {
                         // For worksheet and sheetData elements, we need to process their content manually
                         // Copy start tag with attributes
@@ -167,11 +162,10 @@ internal partial struct MappingTemplateProcessor<T>(CompiledMapping<T> mapping)
             // Process cells in the row
             while (await reader.ReadAsync().ConfigureAwait(false))
             {
-                if (reader.NodeType == XmlNodeType.Element && reader.LocalName == "c")
+                if (reader is { NodeType: XmlNodeType.Element, LocalName: "c" })
                 {
                     // Get cell reference
                     var cellRef = reader.GetAttribute("r");
-                    
                     
                     if (!string.IsNullOrEmpty(cellRef))
                     {
@@ -190,7 +184,7 @@ internal partial struct MappingTemplateProcessor<T>(CompiledMapping<T> mapping)
                                 if (mapping.TryGetValue(handler, currentItem, out var value))
                                 {
                                     // Special handling for collection items
-                                    if (handler.Type == CellHandlerType.CollectionItem && value == null)
+                                    if (handler.Type == CellHandlerType.CollectionItem && value is null)
                                     {
                                         // IMPORTANT: If collection item is null (beyond collection bounds),
                                         // preserve template content instead of overwriting with null
@@ -229,7 +223,7 @@ internal partial struct MappingTemplateProcessor<T>(CompiledMapping<T> mapping)
                         await CopyElementAsync(reader, writer).ConfigureAwait(false);
                     }
                 }
-                else if (reader.NodeType == XmlNodeType.EndElement && reader.LocalName == "row")
+                else if (reader is { NodeType: XmlNodeType.EndElement, LocalName: "row" })
                 {
                     break;
                 }
@@ -253,7 +247,7 @@ internal partial struct MappingTemplateProcessor<T>(CompiledMapping<T> mapping)
         HashSet<int> writtenRows)
     {
         // Check if we have an optimized grid with mappings
-        if (mapping.OptimizedCellGrid == null || mapping.OptimizedBoundaries == null)
+        if (mapping.OptimizedCellGrid is null || mapping.OptimizedBoundaries is null)
             return;
         
         
@@ -276,7 +270,7 @@ internal partial struct MappingTemplateProcessor<T>(CompiledMapping<T> mapping)
                 {
                     hasMapping = true;
                     // Check if there's an actual value to write
-                    if (mapping.TryGetValue(handler, currentItem, out var value) && value != null)
+                    if (mapping.TryGetValue(handler, currentItem, out var value) && value is not null)
                     {
                         hasValue = true;
                         break;
@@ -303,7 +297,7 @@ internal partial struct MappingTemplateProcessor<T>(CompiledMapping<T> mapping)
         await writer.WriteAttributeStringAsync("", "r", "", rowNumber.ToString()).ConfigureAwait(false);
         
         // Check each column in this row for mapped cells
-        if (mapping.OptimizedBoundaries != null)
+        if (mapping.OptimizedBoundaries is not null)
         {
             for (int col = mapping.OptimizedBoundaries.MinColumn; col <= mapping.OptimizedBoundaries.MaxColumn; col++)
             {
@@ -311,7 +305,7 @@ internal partial struct MappingTemplateProcessor<T>(CompiledMapping<T> mapping)
                 if (mapping.TryGetHandler(rowNumber, col, out var handler))
                 {
                     // Try to get the value
-                    if (mapping.TryGetValue(handler, currentItem, out var value) && value != null)
+                    if (mapping.TryGetValue(handler, currentItem, out var value) && value is not null)
                     {
                         var cellRef = ReferenceHelper.ConvertCoordinatesToCell(col, rowNumber);
                         await XmlCellWriter.WriteNewCellAsync(writer, cellRef, value).ConfigureAwait(false);
@@ -332,7 +326,7 @@ internal partial struct MappingTemplateProcessor<T>(CompiledMapping<T> mapping)
     {
         
         // Check if we have an optimized grid with mappings for this row
-        if (mapping.OptimizedBoundaries != null)
+        if (mapping.OptimizedBoundaries is not null)
         {
             // Check each column in the grid for this row
             for (int col = mapping.OptimizedBoundaries.MinColumn; col <= mapping.OptimizedBoundaries.MaxColumn; col++)
@@ -346,7 +340,7 @@ internal partial struct MappingTemplateProcessor<T>(CompiledMapping<T> mapping)
                 {
                     // We have a mapping for this cell but it wasn't in the template
                     // Try to get the value
-                    if (mapping.TryGetValue(handler, currentItem, out var value) && value != null)
+                    if (mapping.TryGetValue(handler, currentItem, out var value) && value is not null)
                     {
                         // Create cell reference
                         var cellRef = ReferenceHelper.ConvertCoordinatesToCell(col, rowNumber);
@@ -451,5 +445,4 @@ internal partial struct MappingTemplateProcessor<T>(CompiledMapping<T> mapping)
                 break;
         }
     }
-    
 }

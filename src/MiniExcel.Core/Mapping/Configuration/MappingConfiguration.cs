@@ -25,7 +25,7 @@ internal class MappingConfiguration<T> : IMappingConfiguration<T>
     }
     
     public ICollectionMappingBuilder<T, TCollection> Collection<TCollection>(
-        Expression<Func<T, TCollection>> collection) where TCollection : IEnumerable
+        Expression<Func<T, TCollection>>? collection) where TCollection : IEnumerable
     {
         if (collection is null)
             throw new ArgumentNullException(nameof(collection));

@@ -1,11 +1,6 @@
 using MiniExcelLib.Core.Mapping;
-using MiniExcelLib.Core.Mapping.Configuration;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using Xunit;
 
-namespace MiniExcelLib.Tests
+namespace MiniExcelLib.Tests.FluentMapping
 {
     /// <summary>
     /// Tests for the mapping compiler and optimization system.
@@ -15,14 +10,14 @@ namespace MiniExcelLib.Tests
     {
         #region Test Models
 
-        public class SimpleEntity
+        private class SimpleEntity
         {
             public int Id { get; set; }
             public string Name { get; set; } = "";
             public decimal Value { get; set; }
         }
 
-        public class ComplexEntity
+        private class ComplexEntity
         {
             public int Id { get; set; }
             public string Title { get; set; } = "";

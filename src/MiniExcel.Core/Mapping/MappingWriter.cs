@@ -6,11 +6,11 @@ internal static partial class MappingWriter<T>
     [CreateSyncVersion]
     public static async Task<int[]> SaveAsAsync(Stream stream, IEnumerable<T> value, CompiledMapping<T> mapping, CancellationToken cancellationToken = default)
     {
-        if (stream == null)
+        if (stream is null)
             throw new ArgumentNullException(nameof(stream));
-        if (value == null)
+        if (value is null)
             throw new ArgumentNullException(nameof(value));
-        if (mapping == null)
+        if (mapping is null)
             throw new ArgumentNullException(nameof(mapping));
 
         return await SaveAsOptimizedAsync(stream, value, mapping, cancellationToken).ConfigureAwait(false);
@@ -19,7 +19,7 @@ internal static partial class MappingWriter<T>
     [CreateSyncVersion]
     private static async Task<int[]> SaveAsOptimizedAsync(Stream stream, IEnumerable<T> value, CompiledMapping<T> mapping, CancellationToken cancellationToken = default)
     {
-        if (mapping.OptimizedCellGrid == null || mapping.OptimizedBoundaries == null)
+        if (mapping.OptimizedCellGrid is null || mapping.OptimizedBoundaries is null)
             throw new InvalidOperationException("SaveAsOptimizedAsync requires an optimized mapping");
 
         var configuration = new OpenXmlConfiguration { FastMode = false };

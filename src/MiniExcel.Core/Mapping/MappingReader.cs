@@ -5,9 +5,9 @@ internal static partial class MappingReader<T> where T : class, new()
     [CreateSyncVersion]
     public static async IAsyncEnumerable<T> QueryAsync(Stream stream, CompiledMapping<T> mapping, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        if (stream == null)
+        if (stream is null)
             throw new ArgumentNullException(nameof(stream));
-        if (mapping == null)
+        if (mapping is null)
             throw new ArgumentNullException(nameof(mapping));
 
         await foreach (var item in QueryOptimizedAsync(stream, mapping, cancellationToken).ConfigureAwait(false))
@@ -17,7 +17,7 @@ internal static partial class MappingReader<T> where T : class, new()
     [CreateSyncVersion]
     private static async IAsyncEnumerable<T> QueryOptimizedAsync(Stream stream, CompiledMapping<T> mapping, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        if (mapping.OptimizedCellGrid == null || mapping.OptimizedBoundaries == null)
+        if (mapping.OptimizedCellGrid is null || mapping.OptimizedBoundaries is null)
             throw new InvalidOperationException("QueryOptimizedAsync requires an optimized mapping");
 
         var boundaries = mapping.OptimizedBoundaries!;
@@ -34,7 +34,7 @@ internal static partial class MappingReader<T> where T : class, new()
         if (mapping.Collections.Any())
         {
             // Check if this is a multi-item pattern
-            bool isMultiItemPattern = boundaries.IsMultiItemPattern && boundaries.PatternHeight > 0;
+            bool isMultiItemPattern = boundaries is { IsMultiItemPattern: true, PatternHeight: > 0 };
             
             T? currentItem = null;
             Dictionary<int, IList>? currentCollections = null;
@@ -44,10 +44,10 @@ internal static partial class MappingReader<T> where T : class, new()
             {
                 var currentRowIndex = mappedRow.RowIndex + 1;
 
-
                 // Use our own row counter since OpenXmlReader doesn't provide row numbers
                 int rowNumber = currentRowIndex;
-                if (rowNumber < boundaries.MinRow) continue;
+                if (rowNumber < boundaries.MinRow)
+                    continue;
                 
                 // Calculate which item this row belongs to based on the pattern
                 var relativeRow = rowNumber - boundaries.MinRow;
@@ -65,7 +65,7 @@ internal static partial class MappingReader<T> where T : class, new()
                 if (itemIndex != currentItemIndex)
                 {
                     // Save the previous item if we have one
-                    if (currentItem != null && currentCollections != null)
+                    if (currentItem is not null && currentCollections is not null)
                     {
                         FinalizeCollections(currentItem, mapping, currentCollections);
                         if (HasAnyData(currentItem, mapping))
@@ -81,9 +81,11 @@ internal static partial class MappingReader<T> where T : class, new()
                 }
                 
                 // If we don't have a current item yet, skip this row
-                if (currentItem == null) continue;
+                if (currentItem is null) 
+                    continue;
                 
-                if (gridRow < 0 || gridRow >= cellGrid.GetLength(0)) continue;
+                if (gridRow < 0 || gridRow >= cellGrid.GetLength(0)) 
+                    continue;
                 
                 // Process each cell in the row using the pre-calculated grid
                 for (int col = boundaries.MinColumn; col <= boundaries.MaxColumn; col++)
@@ -98,7 +100,7 @@ internal static partial class MappingReader<T> where T : class, new()
             }
             
             // Finalize the last item if we have one
-            if (currentItem == null || currentCollections == null) 
+            if (currentItem is null || currentCollections is null) 
                 yield break;
             
             FinalizeCollections(currentItem, mapping, currentCollections);
@@ -131,7 +133,7 @@ internal static partial class MappingReader<T> where T : class, new()
                         {
                             var cellValue = mappedRow.GetCell(prop.CellColumn - 1); // Convert to 0-based
                             
-                            if (cellValue != null)
+                            if (cellValue is not null)
                             {
                                 // Trust the precompiled setter to handle conversion
                                 mapping.TrySetPropertyValue(prop, item, cellValue);
@@ -150,11 +152,10 @@ internal static partial class MappingReader<T> where T : class, new()
                 // Row layout mode - each row is a separate item
                 await foreach (var mappedRow in reader.QueryMappedAsync(mapping.WorksheetName, cancellationToken).ConfigureAwait(false))
                 {
-                    var currentRowIndex = mappedRow.RowIndex + 1;
-
                     // Use our own row counter since OpenXmlReader doesn't provide row numbers
-                    int rowNumber = currentRowIndex;
-                    if (rowNumber < boundaries.MinRow) continue;
+                    var currentRowIndex = mappedRow.RowIndex + 1;
+                    if (currentRowIndex < boundaries.MinRow) 
+                        continue;
                     
                     var item = new T();
                     
@@ -166,14 +167,15 @@ internal static partial class MappingReader<T> where T : class, new()
                     {
                         // For table pattern (all on row 1), properties define columns
                         // For cell-specific mapping, only read from the specific row
-                        if (!allOnRow1 && prop.CellRow != rowNumber) continue;
+                        if (!allOnRow1 && prop.CellRow != currentRowIndex) 
+                            continue;
                         
                         var cellValue = mappedRow.GetCell(prop.CellColumn - 1); // Convert to 0-based
-                        if (cellValue == null) continue;
-                        
-                        // Trust the precompiled setter to handle conversion
-                        if (prop.Setter == null) continue;
-                        prop.Setter.Invoke(item, cellValue);
+                        if (cellValue is not null)
+                        {
+                            // Trust the precompiled setter to handle conversion
+                            prop.Setter?.Invoke(item, cellValue);
+                        }
                     }
                     
                     if (HasAnyData(item, mapping))
@@ -190,7 +192,7 @@ internal static partial class MappingReader<T> where T : class, new()
         var collections = new Dictionary<int, IList>();
         
         // Use precompiled collection helpers if available
-        if (mapping.OptimizedCollectionHelpers != null)
+        if (mapping.OptimizedCollectionHelpers is not null)
         {
             for (int i = 0; i < mapping.OptimizedCollectionHelpers.Count && i < mapping.Collections.Count; i++)
             {
@@ -224,7 +226,7 @@ internal static partial class MappingReader<T> where T : class, new()
                 
             case CellHandlerType.CollectionItem:
                 if (handler.CollectionIndex >= 0 
-                    && collections != null 
+                    && collections is not null 
                     && collections.TryGetValue(handler.CollectionIndex, out var collection))
                 {
                     var collectionMapping = handler.CollectionMapping!;
@@ -232,9 +234,13 @@ internal static partial class MappingReader<T> where T : class, new()
                     
                     // Check if this is a complex type with nested properties
                     var nestedMapping = collectionMapping.Registry?.GetCompiledMapping(itemType);
+                    
                     // Use pre-compiled type metadata from the helper instead of runtime reflection
                     var typeHelper = mapping.OptimizedCollectionHelpers?[handler.CollectionIndex];
-                    if (nestedMapping != null && itemType != typeof(string) && typeHelper != null && !typeHelper.IsItemValueType && !typeHelper.IsItemPrimitive)
+                    
+                    if (nestedMapping is not null && 
+                        itemType != typeof(string) && 
+                        typeHelper is { IsItemValueType: false, IsItemPrimitive: false })
                     {
                         // Complex type - we need to build/update the object
                         ProcessComplexCollectionItem(collection, handler, value, mapping);
@@ -246,7 +252,7 @@ internal static partial class MappingReader<T> where T : class, new()
                         {
                             // Use precompiled default factory if available
                             object? defaultValue;
-                            if (mapping.OptimizedCollectionHelpers != null && 
+                            if (mapping.OptimizedCollectionHelpers is not null && 
                                 handler.CollectionIndex >= 0 && 
                                 handler.CollectionIndex < mapping.OptimizedCollectionHelpers.Count)
                             {
@@ -269,7 +275,7 @@ internal static partial class MappingReader<T> where T : class, new()
                             // Don't add empty values to value type collections
                             // Use pre-compiled type metadata from the helper
                             var itemHelper = mapping.OptimizedCollectionHelpers?[handler.CollectionIndex];
-                            if (itemHelper != null && !itemHelper.IsItemValueType)
+                            if (itemHelper is { IsItemValueType: false })
                             {
                                 // Only set null if the collection has the item already
                                 if (handler.CollectionItemOffset < collection.Count)
@@ -282,14 +288,11 @@ internal static partial class MappingReader<T> where T : class, new()
                         else
                         {
                             // Use pre-compiled converter if available
-                            if (handler.CollectionItemConverter != null)
-                            {
-                                collection[handler.CollectionItemOffset] = handler.CollectionItemConverter(value);
-                            }
-                            else
-                            {
-                                collection[handler.CollectionItemOffset] = value;
-                            }
+                            var convertedValue = handler.CollectionItemConverter is not null
+                                ? handler.CollectionItemConverter(value)
+                                : value;
+
+                            collection[handler.CollectionItemOffset] = convertedValue;
                         }
                     }
                 }
@@ -304,7 +307,7 @@ internal static partial class MappingReader<T> where T : class, new()
         while (collection.Count <= handler.CollectionItemOffset)
         {
             // Use precompiled default factory
-            if (mapping.OptimizedCollectionHelpers == null || 
+            if (mapping.OptimizedCollectionHelpers is null || 
                 handler.CollectionIndex < 0 || 
                 handler.CollectionIndex >= mapping.OptimizedCollectionHelpers.Count)
             {
@@ -319,10 +322,10 @@ internal static partial class MappingReader<T> where T : class, new()
         }
         
         var item = collection[handler.CollectionItemOffset];
-        if (item == null)
+        if (item is null)
         {
             // Use precompiled factory for creating the item
-            if (mapping.OptimizedCollectionHelpers == null || 
+            if (mapping.OptimizedCollectionHelpers is null || 
                 handler.CollectionIndex < 0 || 
                 handler.CollectionIndex >= mapping.OptimizedCollectionHelpers.Count)
             {
@@ -340,12 +343,12 @@ internal static partial class MappingReader<T> where T : class, new()
         if (!mapping.TrySetValue(handler, item!, value))
         {
             // For nested mappings, we need to look up the pre-compiled setter
-            if (mapping.NestedMappings != null && 
+            if (mapping.NestedMappings is not null && 
                 mapping.NestedMappings.TryGetValue(handler.CollectionIndex, out var nestedInfo))
             {
                 // Find the matching property setter in the nested mapping
                 var nestedProp = nestedInfo.Properties.FirstOrDefault(p => p.PropertyName == handler.PropertyName);
-                if (nestedProp?.Setter != null && item != null)
+                if (nestedProp?.Setter is not null && item is not null)
                 {
                     nestedProp.Setter(item, value);
                     return;
@@ -368,7 +371,7 @@ internal static partial class MappingReader<T> where T : class, new()
             
             // Get the default value using precompiled factory if available
             object? defaultValue = null;
-            if (mapping.OptimizedCollectionHelpers != null && i < mapping.OptimizedCollectionHelpers.Count)
+            if (mapping.OptimizedCollectionHelpers is not null && i < mapping.OptimizedCollectionHelpers.Count)
             {
                 var helper = mapping.OptimizedCollectionHelpers[i];
                 // Use pre-compiled type metadata instead of runtime check
@@ -390,8 +393,8 @@ internal static partial class MappingReader<T> where T : class, new()
                 var lastItem = list[^1];
                 // Use pre-compiled type metadata from helper
                 var listHelper = mapping.OptimizedCollectionHelpers?[i];
-                bool isDefault = lastItem == null ||
-                                 (listHelper != null && listHelper.IsItemValueType &&
+                bool isDefault = lastItem is null ||
+                                 (listHelper is { IsItemValueType: true } &&
                                   lastItem.Equals(defaultValue));
                 if (isDefault)
                 {
@@ -406,11 +409,11 @@ internal static partial class MappingReader<T> where T : class, new()
             // Convert to final type if needed
             object finalValue = list;
 
-            if (collectionMapping.Setter == null) 
+            if (collectionMapping.Setter is null) 
                 continue;
 
             // Use precompiled collection helper to convert to final type
-            if (mapping.OptimizedCollectionHelpers != null && i < mapping.OptimizedCollectionHelpers.Count)
+            if (mapping.OptimizedCollectionHelpers is not null && i < mapping.OptimizedCollectionHelpers.Count)
             {
                 var helper = mapping.OptimizedCollectionHelpers[i];
                 finalValue = helper.Finalizer(list);

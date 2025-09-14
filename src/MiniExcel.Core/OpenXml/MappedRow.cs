@@ -9,16 +9,13 @@ internal struct MappedRow(int rowIndex)
 
     public void SetCell(int columnIndex, object? value)
     {
-        if (value == null)
+        if (value is null)
             return;
             
         // Lazy initialize cells array
-        if (_cells == null)
-        {
-            _cells = new object?[MaxColumns];
-        }
+        _cells ??= new object?[MaxColumns];
         
-        if (columnIndex >= 0 && columnIndex < MaxColumns)
+        if (columnIndex is >= 0 and < MaxColumns)
         {
             _cells[columnIndex] = value;
         }
@@ -26,11 +23,11 @@ internal struct MappedRow(int rowIndex)
     
     public object? GetCell(int columnIndex)
     {
-        if (_cells == null || columnIndex < 0 || columnIndex >= MaxColumns)
+        if (_cells is null || (columnIndex is < 0 or >= MaxColumns))
             return null;
             
         return _cells[columnIndex];
     }
     
-    public bool HasData => _cells != null;
+    public bool HasData => _cells is not null;
 }

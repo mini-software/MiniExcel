@@ -19,7 +19,7 @@ internal static class CellFormatter
     /// <returns>A tuple containing the formatted value and the Excel cell type</returns>
     public static (string? value, string? type) FormatCellValue(object? value)
     {
-        if (value == null)
+        if (value is null)
             return (null, null);
         
         switch (value)

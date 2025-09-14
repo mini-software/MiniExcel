@@ -10,13 +10,13 @@ internal static partial class MappingTemplateApplicator<T> where T : class
         CompiledMapping<T> mapping,
         CancellationToken cancellationToken = default)
     {
-        if (outputStream == null)
+        if (outputStream is null)
             throw new ArgumentNullException(nameof(outputStream));
-        if (templateStream == null)
+        if (templateStream is null)
             throw new ArgumentNullException(nameof(templateStream));
-        if (values == null)
+        if (values is null)
             throw new ArgumentNullException(nameof(values));
-        if (mapping == null)
+        if (mapping is null)
             throw new ArgumentNullException(nameof(mapping));
         
         // Ensure we can seek the template stream
@@ -52,7 +52,7 @@ internal static partial class MappingTemplateApplicator<T> where T : class
                 var worksheetName = GetWorksheetName(entry.FullName);
                 
                 // Check if this worksheet matches the mapping's worksheet
-                if (mapping.WorksheetName == null || 
+                if (mapping.WorksheetName is null || 
                     string.Equals(worksheetName, mapping.WorksheetName, StringComparison.OrdinalIgnoreCase) ||
                     (mapping.WorksheetName == "Sheet1" && worksheetName == "sheet1"))
                 {

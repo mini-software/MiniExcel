@@ -1,7 +1,7 @@
 using MiniExcelLib.Core.Mapping;
 using MiniExcelLib.Tests.Common.Utils;
 
-namespace MiniExcelLib.Tests;
+namespace MiniExcelLib.Tests.FluentMapping;
 
 public class MiniExcelMappingTemplateTests
 {
@@ -10,29 +10,30 @@ public class MiniExcelMappingTemplateTests
     
     private static DateTime ParseDateValue(object? value)
     {
-        if (value is double serialDate)
-            return DateTime.FromOADate(serialDate);
-        if (value is DateTime dt)
-            return dt;
-        return DateTime.Parse(value?.ToString() ?? "");
+        return value switch
+        {
+            double serialDate => DateTime.FromOADate(serialDate),
+            DateTime dt => dt,
+            _ => DateTime.Parse(value?.ToString() ?? "")
+        };
     }
-    
-    public class TestEntity
+
+    private class TestEntity
     {
         public string Name { get; set; } = "";
         public DateTime CreateDate { get; set; }
         public bool VIP { get; set; }
         public int Points { get; set; }
     }
-    
-    public class Department
+
+    private class Department
     {
         public string Title { get; set; } = "";
-        public List<Person> Managers { get; set; } = new();
-        public List<Person> Employees { get; set; } = new();
+        public List<Person> Managers { get; set; } = [];
+        public List<Person> Employees { get; set; } = [];
     }
-    
-    public class Person
+
+    private class Person
     {
         public string Name { get; set; } = "";
         public string Department { get; set; } = "";

@@ -81,6 +81,8 @@ If you do, make sure to also check out the [new docs](README-V2.md) and the [upg
 
 - [Excel Column Name/Index/Ignore Attribute](#getstart4)
 
+- [Fluent Cell Mapping](#getstart4.5)
+
 - [Examples](#getstart5)
 
 
@@ -1102,6 +1104,141 @@ public class Dto
     public string Empno { get; set; }
     public string Name { get; set; }
 }
+```
+
+
+
+### Fluent Cell Mapping <a name="getstart4.5"></a>
+
+Since v2.0.0, MiniExcel supports a fluent API for precise cell-by-cell mapping, giving you complete control over Excel layout without relying on conventions or attributes.
+
+**⚠️ Important: Compile mappings once during application startup**
+
+Mapping compilation is a one-time operation that generates optimized runtime code. Create a single `MappingRegistry` instance and configure all your mappings at startup. Reuse this registry throughout your application for optimal performance.
+
+#### 1. Basic Property Mapping
+
+Map properties to specific cells using the fluent configuration API:
+
+```csharp
+// Configure once at application startup
+var registry = new MappingRegistry();
+registry.Configure<Person>(cfg =>
+{
+    cfg.Property(p => p.Name).ToCell("A1");
+    cfg.Property(p => p.Age).ToCell("B1");
+    cfg.Property(p => p.Email).ToCell("C1");
+    cfg.Property(p => p.Salary).ToCell("D1").WithFormat("#,##0.00");
+    cfg.Property(p => p.BirthDate).ToCell("E1").WithFormat("yyyy-MM-dd");
+    cfg.ToWorksheet("Employees");
+});
+
+var exporter = MiniExcel.Exporters.GetMappingExporter(registry);
+await exporter.SaveAsAsync(stream, people);
+```
+
+#### 2. Reading with Fluent Mappings
+
+```csharp
+// Configure once at startup
+var registry = new MappingRegistry();
+registry.Configure<Person>(cfg =>
+{
+    cfg.Property(p => p.Name).ToCell("A2");
+    cfg.Property(p => p.Age).ToCell("B2");
+    cfg.Property(p => p.Email).ToCell("C2");
+});
+
+// Read data using the mapping
+var importer = MiniExcel.Importers.GetMappingImporter(registry);
+var people = importer.Query<Person>(stream).ToList();
+```
+
+#### 3. Collection Mapping
+
+Map collections to specific cell ranges (collections are laid out vertically by default):
+
+```csharp
+registry.Configure<Department>(cfg =>
+{
+    cfg.Property(d => d.Name).ToCell("A1");
+
+    // Simple collections (strings, numbers, etc.) - starts at A3 and goes down
+    cfg.Collection(d => d.PhoneNumbers).StartAt("A3");
+
+    // Complex object collections - starts at C3 and goes down
+    cfg.Collection(d => d.Employees).StartAt("C3");
+});
+```
+
+You can optionally add spacing between collection items:
+
+```csharp
+registry.Configure<Employee>(cfg =>
+{
+    cfg.Property(e => e.Name).ToCell("A1");
+    cfg.Collection(e => e.Skills).StartAt("B1").WithSpacing(1); // 1 row spacing between items
+});
+```
+
+#### 4. Formulas and Formatting
+
+```csharp
+registry.Configure<Product>(cfg =>
+{
+    cfg.Property(p => p.Price).ToCell("B1");
+    cfg.Property(p => p.Stock).ToCell("C1");
+
+    // Add a formula for calculated values
+    cfg.Property(p => p.Price).ToCell("D1").WithFormula("=B1*C1");
+
+    // Apply custom number formatting
+    cfg.Property(p => p.Price).ToCell("E1").WithFormat("$#,##0.00");
+});
+```
+
+#### 5. Template Support
+
+Apply mappings to existing Excel templates:
+
+```csharp
+registry.Configure<TestEntity>(cfg =>
+{
+    cfg.Property(x => x.Name).ToCell("A3");
+    cfg.Property(x => x.CreateDate).ToCell("B3");
+    cfg.Property(x => x.VIP).ToCell("C3");
+    cfg.Property(x => x.Points).ToCell("D3");
+});
+
+var data = new TestEntity
+{
+    Name = "Jack",
+    CreateDate = new DateTime(2021, 01, 01),
+    VIP = true,
+    Points = 123
+};
+
+var exporter = MiniExcel.Exporters.GetMappingExporter(registry);
+await exporter.ApplyTemplateAsync(outputPath, templatePath, new[] { data });
+```
+
+#### 6. Advanced: Nested Collections with Item Mapping
+
+Configure how items within a collection should be mapped:
+
+```csharp
+registry.Configure<Company>(cfg =>
+{
+    cfg.Property(c => c.Name).ToCell("A1");
+
+    cfg.Collection(c => c.Departments)
+        .StartAt("A3")
+        .WithItemMapping<Department>(deptCfg =>
+        {
+            deptCfg.Property(d => d.Name).ToCell("A3");
+            deptCfg.Collection(d => d.Employees).StartAt("B3");
+        });
+});
 ```
 
 

@@ -54,7 +54,7 @@ public class CreateExcelBenchmark : BenchmarkBase
     {
         using var path = AutoDeletingPath.Create();
         using var stream = File.Create(path.FilePath);
-        _simpleMappingExporter.SaveAs(stream, GetValue());
+        _simpleMappingExporter.Export(stream, GetValue());
     }
 
     [Benchmark(Description = "ClosedXml Create Xlsx")]

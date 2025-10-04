@@ -10,7 +10,7 @@ public sealed partial class OpenXmlExporter
     public async Task<int> InsertSheetAsync(string path, object value, string? sheetName = "Sheet1", bool printHeader = true, bool overwriteSheet = false, OpenXmlConfiguration? configuration = null, CancellationToken cancellationToken = default)
     {
         if (Path.GetExtension(path).Equals(".xlsm", StringComparison.InvariantCultureIgnoreCase))
-            throw new NotSupportedException("MiniExcel's InsertExcelSheet does not support the .xlsm format");
+            throw new NotSupportedException("MiniExcel's InsertSheet does not support the .xlsm format");
 
         if (!File.Exists(path))
         {
@@ -43,7 +43,7 @@ public sealed partial class OpenXmlExporter
         CancellationToken cancellationToken = default)
     {
         if (Path.GetExtension(path).Equals(".xlsm", StringComparison.InvariantCultureIgnoreCase))
-            throw new NotSupportedException("MiniExcel's ExportExcel does not support the .xlsm format");
+            throw new NotSupportedException("MiniExcel's Export does not support the .xlsm format");
         
         var filePath = path.EndsWith(".xlsx",  StringComparison.InvariantCultureIgnoreCase) ? path : $"{path}.xlsx" ;
         

@@ -9,7 +9,7 @@ namespace MiniExcelLib.Benchmarks.BenchmarkSections;
 public class TemplateExcelBenchmark : BenchmarkBase
 {
     private OpenXmlTemplater _templater;
-    private MappingExporter _mappingExporter;
+    private MappingTemplater _mappingTemplater;
     private OpenXmlExporter _exporter;
 
     public class Employee
@@ -30,7 +30,7 @@ public class TemplateExcelBenchmark : BenchmarkBase
             config.Property(x => x.Name).ToCell("A2");
             config.Property(x => x.Department).ToCell("B2");
         });
-        _mappingExporter = MiniExcel.Exporters.GetMappingExporter(registry);
+        _mappingTemplater = MiniExcel.Templaters.GetMappingTemplater(registry);
     }
     
     [Benchmark(Description = "MiniExcel Template Generate")]
@@ -94,6 +94,6 @@ public class TemplateExcelBenchmark : BenchmarkBase
                 Department = "HR"
             });
 
-        _mappingExporter.ApplyTemplate(outputPath.FilePath, templatePath.FilePath, employees);
+        _mappingTemplater.ApplyTemplate(outputPath.FilePath, templatePath.FilePath, employees);
     }
 }

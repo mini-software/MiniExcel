@@ -136,7 +136,7 @@ namespace MiniExcelLib.Tests.FluentMapping
             using var stream = new MemoryStream();
             
             var exporter = MiniExcel.Exporters.GetMappingExporter(registry);
-            await exporter.SaveAsAsync(stream, testData);
+            await exporter.ExportAsync(stream, testData);
             stream.Position = 0;
 
             // Act
@@ -175,7 +175,7 @@ namespace MiniExcelLib.Tests.FluentMapping
 
             // Act & Assert
             using var stream = new MemoryStream();
-            await exporter.SaveAsAsync(stream, people);
+            await exporter.ExportAsync(stream, people);
             Assert.True(stream.Length > 0);
         }
 
@@ -201,7 +201,7 @@ namespace MiniExcelLib.Tests.FluentMapping
 
             // Act & Assert
             using var stream = new MemoryStream();
-            exporter.SaveAs(stream, people);
+            exporter.Export(stream, people);
             Assert.True(stream.Length > 0);
         }
 
@@ -230,7 +230,7 @@ namespace MiniExcelLib.Tests.FluentMapping
 
             // Act
             using var stream = new MemoryStream();
-            await exporter.SaveAsAsync(stream, testData);
+            await exporter.ExportAsync(stream, testData);
             
             stream.Position = 0;
             var results = importer.Query<Person>(stream).ToList();
@@ -316,7 +316,7 @@ namespace MiniExcelLib.Tests.FluentMapping
             var importer = MiniExcel.Importers.GetMappingImporter(registry);
 
             using var stream = new MemoryStream();
-            await exporter.SaveAsAsync(stream, testData);
+            await exporter.ExportAsync(stream, testData);
             
             stream.Position = 0;
             var results = importer.Query<ComplexEntity>(stream).ToList();
@@ -355,7 +355,7 @@ namespace MiniExcelLib.Tests.FluentMapping
 
             // Act
             using var stream = new MemoryStream();
-            await exporter.SaveAsAsync(stream, departments);
+            await exporter.ExportAsync(stream, departments);
             
             // Assert
             Assert.True(stream.Length > 0);
@@ -400,7 +400,7 @@ namespace MiniExcelLib.Tests.FluentMapping
 
             // Act
             using var stream = new MemoryStream();
-            await exporter.SaveAsAsync(stream, departments);
+            await exporter.ExportAsync(stream, departments);
             
             // Assert
             Assert.True(stream.Length > 0);
@@ -455,7 +455,7 @@ namespace MiniExcelLib.Tests.FluentMapping
 
             // Act
             using var stream = new MemoryStream();
-            await exporter.SaveAsAsync(stream, departments);
+            await exporter.ExportAsync(stream, departments);
             
             // Assert
             Assert.True(stream.Length > 0);
@@ -486,7 +486,7 @@ namespace MiniExcelLib.Tests.FluentMapping
             var exporter = MiniExcel.Exporters.GetMappingExporter(registry);
             
             using var stream = new MemoryStream();
-            await exporter.SaveAsAsync(stream, testData);
+            await exporter.ExportAsync(stream, testData);
             Assert.True(stream.Length > 0);
         }
 
@@ -515,7 +515,7 @@ namespace MiniExcelLib.Tests.FluentMapping
             var exporter = MiniExcel.Exporters.GetMappingExporter(registry);
             
             using var stream = new MemoryStream();
-            await exporter.SaveAsAsync(stream, testData);
+            await exporter.ExportAsync(stream, testData);
             Assert.True(stream.Length > 0);
         }
 
@@ -544,7 +544,7 @@ namespace MiniExcelLib.Tests.FluentMapping
 
             var exporter = MiniExcel.Exporters.GetMappingExporter(registry);
             using var stream = new MemoryStream();
-            await exporter.SaveAsAsync(stream, products);
+            await exporter.ExportAsync(stream, products);
             
             // Verify the file was created
             Assert.True(stream.Length > 0);
@@ -582,7 +582,7 @@ namespace MiniExcelLib.Tests.FluentMapping
 
             var exporter = MiniExcel.Exporters.GetMappingExporter(registry);
             using var stream = new MemoryStream();
-            await exporter.SaveAsAsync(stream, products);
+            await exporter.ExportAsync(stream, products);
             
             Assert.True(stream.Length > 0);
         }
@@ -611,7 +611,7 @@ namespace MiniExcelLib.Tests.FluentMapping
 
             var exporter = MiniExcel.Exporters.GetMappingExporter(registry);
             using var stream = new MemoryStream();
-            await exporter.SaveAsAsync(stream, products);
+            await exporter.ExportAsync(stream, products);
             
             Assert.True(stream.Length > 0);
         }
@@ -635,7 +635,7 @@ namespace MiniExcelLib.Tests.FluentMapping
 
             var exporter = MiniExcel.Exporters.GetMappingExporter(registry);
             using var stream = new MemoryStream();
-            await exporter.SaveAsAsync(stream, products);
+            await exporter.ExportAsync(stream, products);
             
             Assert.True(stream.Length > 0);
         }
@@ -661,7 +661,7 @@ namespace MiniExcelLib.Tests.FluentMapping
 
             var exporter = MiniExcel.Exporters.GetMappingExporter(registry);
             using var stream = new MemoryStream();
-            await exporter.SaveAsAsync(stream, products);
+            await exporter.ExportAsync(stream, products);
             
             // The file should contain only the last item's data
             Assert.True(stream.Length > 0);
@@ -696,7 +696,7 @@ namespace MiniExcelLib.Tests.FluentMapping
 
             var exporter = MiniExcel.Exporters.GetMappingExporter(registry);
             using var stream = new MemoryStream();
-            await exporter.SaveAsAsync(stream, items);
+            await exporter.ExportAsync(stream, items);
             
             Assert.True(stream.Length > 0);
         }
@@ -729,7 +729,7 @@ namespace MiniExcelLib.Tests.FluentMapping
 
             var exporter = MiniExcel.Exporters.GetMappingExporter(registry);
             using var stream = new MemoryStream();
-            await exporter.SaveAsAsync(stream, products);
+            await exporter.ExportAsync(stream, products);
             
             Assert.True(stream.Length > 0);
         }
@@ -772,7 +772,7 @@ namespace MiniExcelLib.Tests.FluentMapping
             var array = new[] { new Product { Name = "Array", Price = 10 } };
             using (var stream = new MemoryStream())
             {
-                await exporter.SaveAsAsync(stream, array);
+                await exporter.ExportAsync(stream, array);
                 Assert.True(stream.Length > 0);
             }
             
@@ -780,7 +780,7 @@ namespace MiniExcelLib.Tests.FluentMapping
             var list = new List<Product> { new Product { Name = "List", Price = 20 } };
             using (var stream = new MemoryStream())
             {
-                await exporter.SaveAsAsync(stream, list);
+                await exporter.ExportAsync(stream, list);
                 Assert.True(stream.Length > 0);
             }
             
@@ -788,7 +788,7 @@ namespace MiniExcelLib.Tests.FluentMapping
             IEnumerable<Product> enumerable = list;
             using (var stream = new MemoryStream())
             {
-                await exporter.SaveAsAsync(stream, enumerable);
+                await exporter.ExportAsync(stream, enumerable);
                 Assert.True(stream.Length > 0);
             }
         }
@@ -855,7 +855,7 @@ namespace MiniExcelLib.Tests.FluentMapping
             {
                 using (var stream = File.Create(filePath))
                 {
-                    await exporter.SaveAsAsync(stream, products);
+                    await exporter.ExportAsync(stream, products);
                 }
                 
                 // Verify file exists and has content
@@ -907,7 +907,7 @@ namespace MiniExcelLib.Tests.FluentMapping
             var exporter = MiniExcel.Exporters.GetMappingExporter(registry);
             
             using var stream = new MemoryStream();
-            await exporter.SaveAsAsync(stream, testData);
+            await exporter.ExportAsync(stream, testData);
             Assert.True(stream.Length > 0);
         }
 
@@ -935,7 +935,7 @@ namespace MiniExcelLib.Tests.FluentMapping
             var exporter = MiniExcel.Exporters.GetMappingExporter(registry);
             
             using var stream = new MemoryStream();
-            await exporter.SaveAsAsync(stream, testData);
+            await exporter.ExportAsync(stream, testData);
             Assert.True(stream.Length > 0);
         }
 
@@ -988,7 +988,7 @@ namespace MiniExcelLib.Tests.FluentMapping
             var exporter = MiniExcel.Exporters.GetMappingExporter(registry);
             
             using var stream = new MemoryStream();
-            await exporter.SaveAsAsync(stream, testData);
+            await exporter.ExportAsync(stream, testData);
             
             // Should complete without OutOfMemory
             Assert.True(stream.Length > 0);

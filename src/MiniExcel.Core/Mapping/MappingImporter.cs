@@ -1,15 +1,10 @@
 namespace MiniExcelLib.Core.Mapping;
 
-public partial class MappingImporter
+public sealed partial class MappingImporter()
 {
-    private readonly MappingRegistry _registry;
+    private readonly MappingRegistry _registry = new();
 
-    public MappingImporter() 
-    {
-        _registry = new MappingRegistry();
-    }
-
-    public MappingImporter(MappingRegistry registry)
+    public MappingImporter(MappingRegistry registry) : this()
     {
         _registry = registry ?? throw new ArgumentNullException(nameof(registry));
     }

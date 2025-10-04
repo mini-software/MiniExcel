@@ -23,4 +23,5 @@ public sealed class MiniExcelTemplaterProvider
     internal MiniExcelTemplaterProvider() { }
 
     public OpenXmlTemplater GetOpenXmlTemplater() => new();
+    public MappingTemplater GetMappingTemplater(MappingRegistry registry) =>  new(registry);
 }

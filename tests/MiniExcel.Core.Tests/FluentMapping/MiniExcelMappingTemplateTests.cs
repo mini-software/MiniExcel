@@ -69,8 +69,8 @@ public class MiniExcelMappingTemplateTests
         };
         
         using var outputPath = AutoDeletingPath.Create();
-        var exporter = MiniExcel.Exporters.GetMappingExporter(registry);
-        await exporter.ApplyTemplateAsync(outputPath.ToString(), templatePath.ToString(), [data]);
+        var templater = MiniExcel.Templaters.GetMappingTemplater(registry);
+        await templater.ApplyTemplateAsync(outputPath.ToString(), templatePath.ToString(), [data]);
         
         var rows = _importer.Query(outputPath.ToString(), useHeaderRow: false).ToList();
         
@@ -128,8 +128,8 @@ public class MiniExcelMappingTemplateTests
         using (var outputStream = File.Create(outputPath.ToString()))
         using (var templateStream = File.OpenRead(templatePath.ToString()))
         {
-            var exporter = MiniExcel.Exporters.GetMappingExporter(registry);
-            await exporter.ApplyTemplateAsync(outputStream, templateStream, [data]);
+            var templater = MiniExcel.Templaters.GetMappingTemplater(registry);
+            await templater.ApplyTemplateAsync(outputStream, templateStream, [data]);
         }
         
         var rows = _importer.Query(outputPath.ToString(), useHeaderRow: false).ToList();
@@ -169,8 +169,8 @@ public class MiniExcelMappingTemplateTests
         using var outputPath = AutoDeletingPath.Create();
         using (var outputStream = File.Create(outputPath.ToString()))
         {
-            var exporter = MiniExcel.Exporters.GetMappingExporter(registry);
-            await exporter.ApplyTemplateAsync(outputStream, templateBytes, [data]);
+            var templater = MiniExcel.Templaters.GetMappingTemplater(registry);
+            await templater.ApplyTemplateAsync(outputStream, templateBytes, [data]);
         }
         
         var rows = _importer.Query(outputPath.ToString(), useHeaderRow: false).ToList();
@@ -234,8 +234,8 @@ public class MiniExcelMappingTemplateTests
         };
         
         using var outputPath = AutoDeletingPath.Create();
-        var exporter = MiniExcel.Exporters.GetMappingExporter(registry);
-        await exporter.ApplyTemplateAsync(outputPath.ToString(), templatePath.ToString(), [dept]);
+        var templater = MiniExcel.Templaters.GetMappingTemplater(registry);
+        await templater.ApplyTemplateAsync(outputPath.ToString(), templatePath.ToString(), [dept]);
         
         var rows = _importer.Query(outputPath.ToString(), useHeaderRow: false).ToList();
         
@@ -282,8 +282,8 @@ public class MiniExcelMappingTemplateTests
         });
         
         using var outputPath = AutoDeletingPath.Create();
-        var exporter = MiniExcel.Exporters.GetMappingExporter(registry);
-        await exporter.ApplyTemplateAsync(outputPath.ToString(), templatePath.ToString(), Array.Empty<TestEntity>());
+        var templater = MiniExcel.Templaters.GetMappingTemplater(registry);
+        await templater.ApplyTemplateAsync(outputPath.ToString(), templatePath.ToString(), Array.Empty<TestEntity>());
         
         var rows = _importer.Query(outputPath.ToString(), useHeaderRow: false).ToList();
         Assert.Equal(3, rows.Count); // Column headers + our headers + empty data row
@@ -326,8 +326,8 @@ public class MiniExcelMappingTemplateTests
         
         // Apply template
         using var outputPath = AutoDeletingPath.Create();
-        var exporter = MiniExcel.Exporters.GetMappingExporter(registry);
-        await exporter.ApplyTemplateAsync(outputPath.ToString(), templatePath.ToString(), [data]);
+        var templater = MiniExcel.Templaters.GetMappingTemplater(registry);
+        await templater.ApplyTemplateAsync(outputPath.ToString(), templatePath.ToString(), [data]);
         
         // Verify null handling
         // Verify - use useHeaderRow=false since we want to see all rows
@@ -371,8 +371,8 @@ public class MiniExcelMappingTemplateTests
         
         // Apply template
         using var outputPath = AutoDeletingPath.Create();
-        var exporter = MiniExcel.Exporters.GetMappingExporter(registry);
-        await exporter.ApplyTemplateAsync(outputPath.ToString(), templatePath.ToString(), data);
+        var templater = MiniExcel.Templaters.GetMappingTemplater(registry);
+        await templater.ApplyTemplateAsync(outputPath.ToString(), templatePath.ToString(), data);
         
         // Verify - should only update first item since mapping is for specific cells
         // Verify - use useHeaderRow=false since we want to see all rows

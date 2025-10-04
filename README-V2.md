@@ -1327,7 +1327,7 @@ registry.Configure<Person>(cfg =>
 });
 
 var exporter = MiniExcel.Exporters.GetMappingExporter(registry);
-await exporter.SaveAsAsync(stream, people);
+await exporter.ExportAsync(stream, people);
 ```
 
 #### 2. Reading with Fluent Mappings
@@ -1411,8 +1411,8 @@ var data = new TestEntity
     Points = 123
 };
 
-var exporter = MiniExcel.Exporters.GetMappingExporter(registry);
-await exporter.ApplyTemplateAsync(outputPath, templatePath, new[] { data });
+var termplater = MiniExcel.Templaters.GetMappingExporter(registry);
+await termplater.ApplyTemplateAsync(outputPath, templatePath, new[] { data });
 ```
 
 #### 6. Advanced: Nested Collections with Item Mapping

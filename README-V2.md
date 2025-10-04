@@ -230,6 +230,7 @@ You can find the benchmarks' results for the latest release [here](benchmarks/re
 - [Attributes and configuration](#docs-attributes)
 - [CSV specifics](#docs-csv)
 - [Other functionalities](#docs-other)
+- [Fluent Cell Mapping](#docs-mapping)
 - [FAQ](#docs-faq)
 - [Limitations](#docs-limitations)
 
@@ -647,29 +648,8 @@ When queried, the resource will be converted back to `byte[]`. If you don't need
 
 ![image](https://user-images.githubusercontent.com/12729184/153702334-c3b834f4-6ae4-4ddf-bd4e-e5005d5d8c6a.png)
 
-#### 12. Merge same cells vertically
 
-This functionality merges cells vertically between the tags `@merge` and `@endmerge`.
-You can use `@mergelimit` to limit boundaries of merging cells vertically.
-
-```csharp
-var templater = MiniExcel.Templaters.GetOpenXmlTemplater();
-templater.MergeSameCells(mergedFilePath, templatePath);
-```
-
-File content before and after merge without merge limit:
-
-<img width="318" alt="Screenshot 2023-08-07 at 11 59 24" src="https://github.com/mini-software/MiniExcel/assets/38832863/49cc96b9-6c35-4bf3-8d43-a9752a15b22e">
-
-<img width="318" alt="Screenshot 2023-08-07 at 11 59 57" src="https://github.com/mini-software/MiniExcel/assets/38832863/3fbd529b-3ae6-4bbe-b4d8-2793a5a58010">
-
-File content before and after merge with merge limit:
-
-<img width="346" alt="Screenshot 2023-08-08 at 18 21 00" src="https://github.com/mini-software/MiniExcel/assets/38832863/04049d28-84d5-4c2a-bcff-5847547df5e1">
-
-<img width="346" alt="Screenshot 2023-08-08 at 18 21 40" src="https://github.com/mini-software/MiniExcel/assets/38832863/f5cf8957-b0b0-4831-b8fc-8556299235c2">
-
-#### 13. Null values handling
+#### 12. Null values handling
 
 By default, null values will be treated as empty strings when exporting:
 
@@ -718,7 +698,7 @@ exporter.Export("test.xlsx", value, configuration: config);
 
 Both properties work with `null` and `DBNull` values.
 
-#### 14. Freeze Panes
+#### 13. Freeze Panes
 
 MiniExcel allows you to freeze both rows and columns in place:
 
@@ -985,26 +965,6 @@ var value = new Dictionary<string, object>()
 var templater = MiniExcel.Templaters.GetOpenXmlTemplater();
 templater.ApplyTemplate(path, templatePath, value);
 ```
-- With `@group` tag and with `@header` tag 
-
-Before:
-
-![before_with_header](https://user-images.githubusercontent.com/38832863/218646717-21b9d57a-2be2-4e9a-801b-ae212231d2b4.PNG)
-
-After:
-
-![after_with_header](https://user-images.githubusercontent.com/38832863/218646721-58a7a340-7004-4bc2-af24-cffcb2c20737.PNG)
-
-- With `@group` tag and without `@header` tag
-
-Before:
-
-![before_without_header](https://user-images.githubusercontent.com/38832863/218646873-b12417fa-801b-4890-8e96-669ed3b43902.PNG)
-
-After;
-
-![after_without_header](https://user-images.githubusercontent.com/38832863/218646872-622461ba-342e-49ee-834f-b91ad9c2dac3.PNG)
-
 - Without `@group` tag
 
 Before:
@@ -1014,6 +974,26 @@ Before:
 After:
 
 ![without_group_after](https://user-images.githubusercontent.com/38832863/218646974-4a3c0e07-7c66-4088-ad07-b4ad3695b7e1.PNG)
+
+- With `@group` tag and without `@header` tag
+
+Before:
+
+![before_without_header](https://user-images.githubusercontent.com/38832863/218646873-b12417fa-801b-4890-8e96-669ed3b43902.PNG)
+
+After:
+
+![after_without_header](https://user-images.githubusercontent.com/38832863/218646872-622461ba-342e-49ee-834f-b91ad9c2dac3.PNG)
+
+- With both `@group` and `@header` tags
+
+Before:
+
+![before_with_header](https://user-images.githubusercontent.com/38832863/218646717-21b9d57a-2be2-4e9a-801b-ae212231d2b4.PNG)
+
+After:
+
+![after_with_header](https://user-images.githubusercontent.com/38832863/218646721-58a7a340-7004-4bc2-af24-cffcb2c20737.PNG)
 
 #### 7. If/ElseIf/Else Statements inside cell
 
@@ -1043,7 +1023,31 @@ After:
 
 ![if_after](https://user-images.githubusercontent.com/38832863/235360609-869bb960-d63d-45ae-8d64-9e8b0d0ab658.PNG)
 
-#### 8. DataTable as parameter
+
+#### 8. Merge same cells vertically
+
+This functionality merges cells vertically between the tags `@merge` and `@endmerge`.
+You can use `@mergelimit` to limit boundaries of merging cells vertically.
+
+```csharp
+var templater = MiniExcel.Templaters.GetOpenXmlTemplater();
+templater.MergeSameCells(mergedFilePath, templatePath);
+```
+
+File content before and after merge without merge limit:
+
+<img width="318" alt="Screenshot 2023-08-07 at 11 59 24" src="https://github.com/mini-software/MiniExcel/assets/38832863/49cc96b9-6c35-4bf3-8d43-a9752a15b22e">
+
+<img width="318" alt="Screenshot 2023-08-07 at 11 59 57" src="https://github.com/mini-software/MiniExcel/assets/38832863/3fbd529b-3ae6-4bbe-b4d8-2793a5a58010">
+
+File content before and after merge with merge limit:
+
+<img width="346" alt="Screenshot 2023-08-08 at 18 21 00" src="https://github.com/mini-software/MiniExcel/assets/38832863/04049d28-84d5-4c2a-bcff-5847547df5e1">
+
+<img width="346" alt="Screenshot 2023-08-08 at 18 21 40" src="https://github.com/mini-software/MiniExcel/assets/38832863/f5cf8957-b0b0-4831-b8fc-8556299235c2">
+
+
+#### 9. DataTable as parameter
 
 ```csharp
 var managers = new DataTable();
@@ -1063,7 +1067,8 @@ var value = new Dictionary<string, object>()
 var templater = MiniExcel.Templaters.GetOpenXmlTemplater();
 templater.ApplyTemplate(path, templatePath, value);
 ```
-#### 9. Formulas
+
+#### 10. Formulas
 Prefix your formula with `$` and use `$enumrowstart` and `$enumrowend` to mark references to the enumerable start and end rows:
 
 ![image](docs/images/template-formulas-1.png)
@@ -1081,7 +1086,7 @@ _Other examples_:
 | Range   | `$=MAX(C{{$enumrowstart}}:C{{$enumrowend}}) - MIN(C{{$enumrowstart}}:C{{$enumrowend}})`        |
 
 
-#### 10. Checking template parameter key
+#### 11. Checking template parameter key
 
 When a parameter key is missing it will be replaced with an empty string by default.
 You can change this behaviour to throw an exception by setting the `IgnoreTemplateParameterMissing` configuration property:
@@ -1295,7 +1300,142 @@ var exporter = MiniExcel.Exporters.GetOpenXmlExporter();
 exporter.Export(path, sheets, configuration: configuration);
 ```
 
-### CSV <a name="docs-csv" />
+
+### Fluent Cell Mapping <a name="docs-mapping" />
+
+Since v2.0.0, MiniExcel supports a fluent API for precise cell-by-cell mapping, giving you complete control over Excel layout without relying on conventions or attributes.
+
+>⚠️ **Important:** Compile mappings only once during application startup!
+
+Mapping compilation is a one-time operation that generates optimized runtime code. Create a single `MappingRegistry` instance and configure all your mappings at startup. Reuse this registry throughout your application for optimal performance.
+
+#### 1. Basic Property Mapping
+
+Map properties to specific cells using the fluent configuration API:
+
+```csharp
+// Configure once at application startup
+var registry = new MappingRegistry();
+registry.Configure<Person>(cfg =>
+{
+    cfg.Property(p => p.Name).ToCell("A1");
+    cfg.Property(p => p.Age).ToCell("B1");
+    cfg.Property(p => p.Email).ToCell("C1");
+    cfg.Property(p => p.Salary).ToCell("D1").WithFormat("#,##0.00");
+    cfg.Property(p => p.BirthDate).ToCell("E1").WithFormat("yyyy-MM-dd");
+    cfg.ToWorksheet("Employees");
+});
+
+var exporter = MiniExcel.Exporters.GetMappingExporter(registry);
+await exporter.SaveAsAsync(stream, people);
+```
+
+#### 2. Reading with Fluent Mappings
+
+```csharp
+// Configure once at startup
+var registry = new MappingRegistry();
+registry.Configure<Person>(cfg =>
+{
+    cfg.Property(p => p.Name).ToCell("A2");
+    cfg.Property(p => p.Age).ToCell("B2");
+    cfg.Property(p => p.Email).ToCell("C2");
+});
+
+// Read data using the mapping
+var importer = MiniExcel.Importers.GetMappingImporter(registry);
+var people = importer.Query<Person>(stream).ToList();
+```
+
+#### 3. Collection Mapping
+
+Map collections to specific cell ranges (collections are laid out vertically by default):
+
+```csharp
+registry.Configure<Department>(cfg =>
+{
+    cfg.Property(d => d.Name).ToCell("A1");
+
+    // Simple collections (strings, numbers, etc.) - starts at A3 and goes down
+    cfg.Collection(d => d.PhoneNumbers).StartAt("A3");
+
+    // Complex object collections - starts at C3 and goes down
+    cfg.Collection(d => d.Employees).StartAt("C3");
+});
+```
+
+You can optionally add spacing between collection items:
+
+```csharp
+registry.Configure<Employee>(cfg =>
+{
+    cfg.Property(e => e.Name).ToCell("A1");
+    cfg.Collection(e => e.Skills).StartAt("B1").WithSpacing(1); // 1 row spacing between items
+});
+```
+
+#### 4. Formulas and Formatting
+
+```csharp
+registry.Configure<Product>(cfg =>
+{
+    cfg.Property(p => p.Price).ToCell("B1");
+    cfg.Property(p => p.Stock).ToCell("C1");
+
+    // Add a formula for calculated values
+    cfg.Property(p => p.Price).ToCell("D1").WithFormula("=B1*C1");
+
+    // Apply custom number formatting
+    cfg.Property(p => p.Price).ToCell("E1").WithFormat("$#,##0.00");
+});
+```
+
+#### 5. Template Support
+
+Apply mappings to existing Excel templates:
+
+```csharp
+registry.Configure<TestEntity>(cfg =>
+{
+    cfg.Property(x => x.Name).ToCell("A3");
+    cfg.Property(x => x.CreateDate).ToCell("B3");
+    cfg.Property(x => x.VIP).ToCell("C3");
+    cfg.Property(x => x.Points).ToCell("D3");
+});
+
+var data = new TestEntity
+{
+    Name = "Jack",
+    CreateDate = new DateTime(2021, 01, 01),
+    VIP = true,
+    Points = 123
+};
+
+var exporter = MiniExcel.Exporters.GetMappingExporter(registry);
+await exporter.ApplyTemplateAsync(outputPath, templatePath, new[] { data });
+```
+
+#### 6. Advanced: Nested Collections with Item Mapping
+
+Configure how items within a collection should be mapped:
+
+```csharp
+registry.Configure<Company>(cfg =>
+{
+    cfg.Property(c => c.Name).ToCell("A1");
+
+    cfg.Collection(c => c.Departments)
+        .StartAt("A3")
+        .WithItemMapping<Department>(deptCfg =>
+        {
+            deptCfg.Property(d => d.Name).ToCell("A3");
+            deptCfg.Collection(d => d.Employees).StartAt("B3");
+        });
+});
+```
+
+
+### CSV Specifics <a name="docs-csv" />
 
 > Unlike Excel queries, csv always maps values to `string` by default, unless you are querying to a strongly defined type.
 

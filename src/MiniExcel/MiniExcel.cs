@@ -79,25 +79,25 @@ public static partial class MiniExcel
     }
 
     [CreateSyncVersion]
-    public static async Task<int[]> SaveAsAsync(string path, object value, bool printHeader = true, string sheetName = "Sheet1", ExcelType excelType = ExcelType.UNKNOWN, IConfiguration? configuration = null, bool overwriteFile = false, CancellationToken cancellationToken = default)
+    public static async Task<int[]> SaveAsAsync(string path, object value, bool printHeader = true, string sheetName = "Sheet1", ExcelType excelType = ExcelType.UNKNOWN, IConfiguration? configuration = null, bool overwriteFile = false, CancellationToken cancellationToken = default, IProgress<int>? progress = null)
     {
         var type = path.GetExcelType(excelType);
         return type switch
         {
-            ExcelType.XLSX => await ExcelExporter.ExportAsync(path, value, printHeader, sheetName, printHeader, configuration as OpenXmlConfiguration, cancellationToken).ConfigureAwait(false),
-            ExcelType.CSV => await CsvExporter.ExportAsync(path, value, printHeader, overwriteFile, configuration as Csv.CsvConfiguration, cancellationToken).ConfigureAwait(false),
+            ExcelType.XLSX => await ExcelExporter.ExportAsync(path, value, printHeader, sheetName, printHeader, configuration as OpenXmlConfiguration, cancellationToken, progress).ConfigureAwait(false),
+            ExcelType.CSV => await CsvExporter.ExportAsync(path, value, printHeader, overwriteFile, configuration as Csv.CsvConfiguration, cancellationToken, progress).ConfigureAwait(false),
             _ => throw new InvalidDataException($"Excel type {type} is not a valid Excel type")
         };
     }
 
     [CreateSyncVersion]
-    public static async Task<int[]> SaveAsAsync(this Stream stream, object value, bool printHeader = true, string sheetName = "Sheet1", ExcelType excelType = ExcelType.XLSX, IConfiguration? configuration = null, CancellationToken  cancellationToken = default)
+    public static async Task<int[]> SaveAsAsync(this Stream stream, object value, bool printHeader = true, string sheetName = "Sheet1", ExcelType excelType = ExcelType.XLSX, IConfiguration? configuration = null, CancellationToken  cancellationToken = default, IProgress<int>? progress = null)
     {
         var type = stream.GetExcelType(excelType);
         return type switch
         {
-            ExcelType.XLSX => await ExcelExporter.ExportAsync(stream, value, printHeader, sheetName, configuration as OpenXmlConfiguration, cancellationToken).ConfigureAwait(false),
-            ExcelType.CSV => await CsvExporter.ExportAsync(stream, value, printHeader, configuration as Csv.CsvConfiguration, cancellationToken).ConfigureAwait(false),
+            ExcelType.XLSX => await ExcelExporter.ExportAsync(stream, value, printHeader, sheetName, configuration as OpenXmlConfiguration, cancellationToken, progress).ConfigureAwait(false),
+            ExcelType.CSV => await CsvExporter.ExportAsync(stream, value, printHeader, configuration as Csv.CsvConfiguration, cancellationToken, progress).ConfigureAwait(false),
             _ => throw new InvalidDataException($"Excel type {type} is not a valid Excel type")
         };
     }

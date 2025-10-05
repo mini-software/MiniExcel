@@ -48,7 +48,7 @@ public sealed partial class OpenXmlExporter
         var filePath = path.EndsWith(".xlsx",  StringComparison.InvariantCultureIgnoreCase) ? path : $"{path}.xlsx" ;
         
         using var stream = overwriteFile ? File.Create(filePath) : new FileStream(filePath, FileMode.CreateNew);
-        return await ExportAsync(stream, value, printHeader, sheetName, configuration, cancellationToken).ConfigureAwait(false);
+        return await ExportAsync(stream, value, printHeader, sheetName, configuration, cancellationToken, progress).ConfigureAwait(false);
     }
 
     [CreateSyncVersion]

@@ -1,3 +1,5 @@
+using MiniExcelLib.Core.Exceptions;
+
 namespace MiniExcelLib.Core.Reflection;
 
 public abstract class Member;
@@ -11,6 +13,12 @@ public class MiniExcelProperty : Member
     {
         Name = property.Name;
         Info = property;
+
+        if (property.GetIndexParameters().Length != 0)
+        {
+            const string msg = "Types containing indexers cannot be serialized. Please remove them or decorate them with MiniExcelIgnoreAttribute.";
+            throw new MiniExcelNotSerializableException(msg, property);
+        }
 
         if (property.CanRead)
         {

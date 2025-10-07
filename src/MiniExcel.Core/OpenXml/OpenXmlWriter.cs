@@ -52,7 +52,7 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
     }
     
     [CreateSyncVersion]
-    public async Task<int[]> SaveAsAsync(CancellationToken cancellationToken = default)
+    public async Task<int[]> SaveAsAsync(CancellationToken cancellationToken = default, IProgress<int>? progress = null)
     {
         try
         {
@@ -69,7 +69,7 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
 
                 _sheets.Add(sheet.Item1); //TODO:remove
                 _currentSheetIndex = sheet.Item1.SheetIdx;
-                var rows = await CreateSheetXmlAsync(sheet.Item2, sheet.Item1.Path, cancellationToken).ConfigureAwait(false);
+                var rows = await CreateSheetXmlAsync(sheet.Item2, sheet.Item1.Path, cancellationToken, progress).ConfigureAwait(false);
                 rowsWritten.Add(rows);
             }
 
@@ -177,7 +177,7 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
     }
 
     [CreateSyncVersion]
-    private async Task<int> CreateSheetXmlAsync(object? values, string sheetPath, CancellationToken cancellationToken)
+    private async Task<int> CreateSheetXmlAsync(object? values, string sheetPath, CancellationToken cancellationToken, IProgress<int>? progress = null)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
@@ -197,7 +197,7 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
         }
         else
         {
-            rowsWritten = await WriteValuesAsync(writer, values, cancellationToken).ConfigureAwait(false);
+            rowsWritten = await WriteValuesAsync(writer, values, cancellationToken, progress).ConfigureAwait(false);
         }
 
         _zipDictionary.Add(sheetPath, new ZipPackageInfo(entry, ExcelContentTypes.Worksheet));
@@ -232,7 +232,7 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
     }
 
     [CreateSyncVersion]
-    private async Task<int> WriteValuesAsync(SafeStreamWriter writer, object values, CancellationToken cancellationToken)
+    private async Task<int> WriteValuesAsync(SafeStreamWriter writer, object values, CancellationToken cancellationToken, IProgress<int>? progress = null)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
@@ -313,6 +313,7 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
                 {
                     cancellationToken.ThrowIfCancellationRequested();
                     await WriteCellAsync(writer, currentRowIndex, cellValue.CellIndex, cellValue.Value, cellValue.Prop, widths).ConfigureAwait(false);
+                    progress?.Report(1);
                 }
                 await writer.WriteAsync(WorksheetXml.EndRow, cancellationToken).ConfigureAwait(false);
             }
@@ -328,6 +329,7 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
                 await foreach (var cellValue in row.ConfigureAwait(false).WithCancellation(cancellationToken))
                 {
                     await WriteCellAsync(writer, currentRowIndex, cellValue.CellIndex, cellValue.Value, cellValue.Prop, widths).ConfigureAwait(false);
+                    progress?.Report(1);
                 }
                 await writer.WriteAsync(WorksheetXml.EndRow, cancellationToken).ConfigureAwait(false);
             }

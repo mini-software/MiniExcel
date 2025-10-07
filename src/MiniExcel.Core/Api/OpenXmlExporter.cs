@@ -40,7 +40,7 @@ public sealed partial class OpenXmlExporter
     [CreateSyncVersion]
     public async Task<int[]> ExportAsync(string path, object value, bool printHeader = true, 
         string? sheetName = "Sheet1", bool overwriteFile = false, OpenXmlConfiguration? configuration = null, 
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default, IProgress<int>? progress = null)
     {
         if (Path.GetExtension(path).Equals(".xlsm", StringComparison.InvariantCultureIgnoreCase))
             throw new NotSupportedException("MiniExcel's ExportExcel does not support the .xlsm format");
@@ -48,17 +48,17 @@ public sealed partial class OpenXmlExporter
         var filePath = path.EndsWith(".xlsx",  StringComparison.InvariantCultureIgnoreCase) ? path : $"{path}.xlsx" ;
         
         using var stream = overwriteFile ? File.Create(filePath) : new FileStream(filePath, FileMode.CreateNew);
-        return await ExportAsync(stream, value, printHeader, sheetName, configuration, cancellationToken).ConfigureAwait(false);
+        return await ExportAsync(stream, value, printHeader, sheetName, configuration, cancellationToken, progress).ConfigureAwait(false);
     }
 
     [CreateSyncVersion]
     public async Task<int[]> ExportAsync(Stream stream, object value, bool printHeader = true, string? sheetName = "Sheet1", 
-        OpenXmlConfiguration? configuration = null, CancellationToken cancellationToken = default)
+        OpenXmlConfiguration? configuration = null, CancellationToken cancellationToken = default, IProgress<int>? progress = null)
     {
         var writer = await OpenXmlWriter
             .CreateAsync(stream, value, sheetName, printHeader, configuration, cancellationToken)
             .ConfigureAwait(false);
         
-        return await writer.SaveAsAsync(cancellationToken).ConfigureAwait(false);
+        return await writer.SaveAsAsync(cancellationToken, progress).ConfigureAwait(false);
     }
 }

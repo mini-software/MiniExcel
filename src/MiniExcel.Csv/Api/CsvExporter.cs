@@ -37,18 +37,18 @@ public partial class CsvExporter
 
     [CreateSyncVersion]
     public async Task<int[]> ExportAsync(string path, object value, bool printHeader = true, bool overwriteFile = false, 
-        CsvConfiguration? configuration = null, CancellationToken cancellationToken = default)
+        CsvConfiguration? configuration = null, CancellationToken cancellationToken = default, IProgress<int>? progress = null)
     {
         using var stream = overwriteFile ? File.Create(path) : new FileStream(path, FileMode.CreateNew);
-        return await ExportAsync(stream, value, printHeader, configuration, cancellationToken).ConfigureAwait(false);
+        return await ExportAsync(stream, value, printHeader, configuration, cancellationToken, progress).ConfigureAwait(false);
     }
 
     [CreateSyncVersion]
     public async Task<int[]> ExportAsync(Stream stream, object value, bool printHeader = true, 
-        CsvConfiguration? configuration = null, CancellationToken cancellationToken = default)
+        CsvConfiguration? configuration = null, CancellationToken cancellationToken = default, IProgress<int>? progress = null)
     {
         using var writer = new CsvWriter(stream, value, printHeader, configuration);
-        return await writer.SaveAsAsync(cancellationToken).ConfigureAwait(false);
+        return await writer.SaveAsAsync(cancellationToken, progress).ConfigureAwait(false);
     }
 
     #endregion

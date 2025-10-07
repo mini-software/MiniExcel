@@ -4719,4 +4719,22 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             MiniExcel.SaveAs(outputPath.ToString(), sheets);
         });
     }
+    
+    private class Issue880
+    {
+        public string Test { get; set; }
+        public string this[int i] => "";
+    }
+    
+    [Fact]
+    public void TestIssue880_ShouldThrowNotSerializableException()
+    {
+        Issue880[] toExport = [new() { Test = "test" }];
+        
+        Assert.Throws<MiniExcelNotSerializableException>(() =>
+        {
+            using var ms = new MemoryStream();
+            ms.SaveAs(toExport);
+        });
+    }
 }

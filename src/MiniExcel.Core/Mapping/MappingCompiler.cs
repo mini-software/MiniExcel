@@ -295,7 +295,7 @@ internal static class MappingCompiler
                 var nestedInfo = MappingMetadataExtractor.ExtractNestedMappingInfo(nestedMapping, collection.ItemType);
                 if (nestedInfo is { Properties.Count: > 0 })
                 {
-                    maxCol = nestedInfo.Properties.Max(p => p.ColumnIndex);
+                    maxCol = GetMaxColumnIndex(nestedInfo, maxCol);
                 }
 
                 return (startRow, startRow + verticalHeight, startCol, maxCol);
@@ -577,6 +577,8 @@ internal static class MappingCompiler
                 var c = prop.ColumnIndex - boundaries.MinColumn;
                 if (c >= 0 && c < grid.GetLength(1))
                 {
+                    if (prop.Setter is null)
+                        throw new InvalidOperationException($"Nested property '{prop.PropertyName}' is missing a setter. Ensure the mapping for '{collection.ItemType?.Name}' is configured correctly.");
                     // Only mark if not already occupied
                     if (grid[r, c].Type == CellHandlerType.Empty)
                     {
@@ -584,11 +586,68 @@ internal static class MappingCompiler
                         {
                             Type = CellHandlerType.CollectionItem,
                             ValueExtractor = CreateNestedPropertyExtractor(collection, itemIndex, prop.Getter),
+                            ValueSetter = prop.Setter,
                             CollectionIndex = collectionIndex,
                             CollectionItemOffset = itemIndex,
                             PropertyName = prop.PropertyName,
                             CollectionMapping = collection,
                             CollectionItemConverter = null // No conversion needed, property getter handles it
+                        };
+                    }
+                }
+            }
+
+            if (nestedInfo.Collections.Count <= 0) 
+                continue;
+            
+            foreach (var nestedCollection in nestedInfo.Collections.Values)
+            {
+                if (nestedCollection.Layout != CollectionLayout.Vertical)
+                    continue;
+
+                var nestedMappingInfo = nestedCollection.NestedMapping;
+                if (nestedMappingInfo is null || nestedMappingInfo.Properties.Count == 0)
+                    continue;
+
+                var nestedMaxItems = 20;
+                for (int nestedIndex = 0; nestedIndex < nestedMaxItems; nestedIndex++)
+                {
+                    var nestedAbsoluteRow = nestedCollection.StartRow + nestedIndex * (1 + nestedCollection.RowSpacing);
+                    // Offset by the parent item index so nested items follow the parent row pattern
+                    nestedAbsoluteRow += itemIndex * (1 + rowSpacing);
+                    if (nextCollectionStartRow.HasValue && nestedAbsoluteRow >= nextCollectionStartRow.Value)
+                    {
+                        break;
+                    }
+
+                    var nestedRelativeRow = nestedAbsoluteRow - boundaries.MinRow;
+                    if (nestedRelativeRow < 0 || nestedRelativeRow >= maxRows || nestedRelativeRow >= grid.GetLength(0))
+                        continue;
+
+                    foreach (var nestedProp in nestedMappingInfo.Properties)
+                    {
+                        if (nestedProp.Setter is null)
+                            throw new InvalidOperationException($"Nested property '{nestedProp.PropertyName}' is missing a setter. Ensure the mapping for '{nestedCollection.ItemType.Name}' is configured correctly.");
+
+                        var columnIndex = nestedProp.ColumnIndex - boundaries.MinColumn;
+                        if (columnIndex < 0 || columnIndex >= grid.GetLength(1))
+                            continue;
+
+                        if (grid[nestedRelativeRow, columnIndex].Type != CellHandlerType.Empty)
+                        {
+                            continue;
+                        }
+
+                        grid[nestedRelativeRow, columnIndex] = new OptimizedCellHandler
+                        {
+                            Type = CellHandlerType.CollectionItem,
+                            ValueExtractor = CreateNestedCollectionPropertyExtractor(collection, itemIndex, nestedCollection, nestedIndex, nestedProp.Getter),
+                            ValueSetter = CreateNestedCollectionPropertySetter(nestedCollection, nestedIndex, nestedProp.Setter),
+                            CollectionIndex = collectionIndex,
+                            CollectionItemOffset = itemIndex,
+                            PropertyName = nestedProp.PropertyName,
+                            CollectionMapping = collection,
+                            CollectionItemConverter = null
                         };
                     }
                 }
@@ -607,9 +666,115 @@ internal static class MappingCompiler
             return item is not null ? propertyGetter(item) : null;
         };
     }
+
+    private static Func<object, int, object?> CreateNestedCollectionPropertyExtractor(
+        CompiledCollectionMapping parentCollection,
+        int parentOffset,
+        NestedCollectionInfo nestedCollection,
+        int nestedOffset,
+        Func<object, object?> propertyGetter)
+    {
+        var parentGetter = parentCollection.Getter;
+        return (obj, _) =>
+        {
+            var parents = parentGetter(obj);
+            var parentItem = CollectionAccessor.GetItemAt(parents, parentOffset);
+            if (parentItem is null)
+                return null;
+
+            var nestedEnumerable = nestedCollection.Getter(parentItem);
+            var nestedItem = CollectionAccessor.GetItemAt(nestedEnumerable, nestedOffset);
+
+            return nestedItem is not null ? propertyGetter(nestedItem) : null;
+        };
+    }
+
+    private static Action<object, object?> CreateNestedCollectionPropertySetter(
+        NestedCollectionInfo collectionInfo,
+        int nestedOffset,
+        Action<object, object?> setter)
+    {
+        return (parent, value) =>
+        {
+            if (parent is null)
+                return;
+
+            var collection = collectionInfo.Getter(parent);
+            IList list;
+
+            if (collection is IList existingList)
+            {
+                list = existingList;
+            }
+            else if (collection is IEnumerable enumerable)
+            {
+                list = collectionInfo.ListFactory();
+                foreach (var item in enumerable)
+                {
+                    list.Add(item);
+                }
+
+                if (collectionInfo.Setter is null)
+                    throw new InvalidOperationException($"Collection property '{collectionInfo.PropertyName}' must be writable to capture nested values.");
+
+                collectionInfo.Setter(parent, list);
+            }
+            else
+            {
+                if (collectionInfo.Setter is null)
+                    throw new InvalidOperationException($"Collection property '{collectionInfo.PropertyName}' must be writable to capture nested values.");
+
+                list = collectionInfo.ListFactory();
+                collectionInfo.Setter(parent, list);
+            }
+
+            while (list.Count <= nestedOffset)
+            {
+                var newItem = collectionInfo.ItemFactory();
+                if (newItem is null)
+                    throw new InvalidOperationException($"Collection item factory returned null for type '{collectionInfo.ItemType}'. Ensure it has an accessible parameterless constructor.");
+
+                list.Add(newItem);
+            }
+
+            var nestedItem = list[nestedOffset];
+            if (nestedItem is null)
+            {
+                nestedItem = collectionInfo.ItemFactory();
+                if (nestedItem is null)
+                    throw new InvalidOperationException($"Collection item factory returned null for type '{collectionInfo.ItemType}'. Ensure it has an accessible parameterless constructor.");
+
+                list[nestedOffset] = nestedItem;
+            }
+
+            setter(nestedItem, value);
+        };
+    }
     
     private static Func<object?, object?> CreatePreCompiledItemConverter(Type targetType)
     {
         return value => ConversionHelper.ConvertValue(value, targetType);
+    }
+
+    private static int GetMaxColumnIndex(NestedMappingInfo nestedInfo, int currentMax)
+    {
+        if (nestedInfo.Properties.Count > 0)
+        {
+            currentMax = Math.Max(currentMax, nestedInfo.Properties.Max(p => p.ColumnIndex));
+        }
+
+        if (nestedInfo.Collections.Count > 0)
+        {
+            foreach (var collectionInfo in nestedInfo.Collections.Values)
+            {
+                currentMax = Math.Max(currentMax, collectionInfo.StartColumn);
+                if (collectionInfo.NestedMapping is not null)
+                {
+                    currentMax = GetMaxColumnIndex(collectionInfo.NestedMapping, currentMax);
+                }
+            }
+        }
+
+        return currentMax;
     }
 }

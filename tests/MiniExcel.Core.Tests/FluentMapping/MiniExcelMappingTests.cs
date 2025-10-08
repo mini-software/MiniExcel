@@ -1,3 +1,4 @@
+using System.Reflection;
 using MiniExcelLib.Core.Mapping;
 
 namespace MiniExcelLib.Tests.FluentMapping
@@ -11,6 +12,7 @@ namespace MiniExcelLib.Tests.FluentMapping
             public string Name { get; set; } = "";
             public int Age { get; set; }
             public string Email { get; set; } = "";
+            public string Department { get; set; } = "";
             public DateTime BirthDate { get; set; }
             public decimal Salary { get; set; }
         }
@@ -53,6 +55,7 @@ namespace MiniExcelLib.Tests.FluentMapping
         public class Department
         {
             public string Name { get; set; } = "";
+            public List<Person> Managers { get; set; } = [];
             public List<Person> Employees { get; set; } = [];
             public List<string> PhoneNumbers { get; set; } = [];
             public string[] Tags { get; set; } = [];
@@ -348,17 +351,200 @@ namespace MiniExcelLib.Tests.FluentMapping
             registry.Configure<Department>(cfg =>
             {
                 cfg.Property(d => d.Name).ToCell("A1");
-                cfg.Collection(d => d.Employees).StartAt("A3");
+                cfg.Collection(d => d.Employees)
+                    .StartAt("A3")
+                    .WithItemMapping<Person>(empCfg =>
+                    {
+                        empCfg.Property(p => p.Name).ToCell("A3");
+                        empCfg.Property(p => p.Age).ToCell("B3");
+                        empCfg.Property(p => p.Email).ToCell("C3");
+                    });
             });
 
             var exporter = MiniExcel.Exporters.GetMappingExporter(registry);
+            var importer = MiniExcel.Importers.GetMappingImporter(registry);
+
+            var compiled = registry.GetMapping<Department>();
+            var boundaries = compiled.OptimizedBoundaries!;
+            var grid = compiled.OptimizedCellGrid!;
+            for (var r = 0; r < grid.GetLength(0); r++)
+            {
+                for (var c = 0; c < grid.GetLength(1); c++)
+                {
+                    var handler = grid[r, c];
+                    if (handler.Type != CellHandlerType.Empty)
+                    {
+                    }
+                }
+            }
 
             // Act
             using var stream = new MemoryStream();
             await exporter.ExportAsync(stream, departments);
-            
+            stream.Position = 0;
+
+            var results = importer.Query<Department>(stream).ToList();
+
             // Assert
-            Assert.True(stream.Length > 0);
+            Assert.Single(results);
+            var department = results[0];
+            Assert.Equal("Engineering", department.Name);
+            Assert.Equal(3, department.Employees.Count);
+            Assert.Equal("Alice", department.Employees[0].Name);
+            Assert.Equal(35, department.Employees[0].Age);
+            Assert.Equal("alice@example.com", department.Employees[0].Email);
+        }
+
+        [Fact]
+        public async Task Collection_WithItemMappingOnly_ShouldWriteAndReadCorrectly()
+        {
+            var departments = new[]
+            {
+                new Department
+                {
+                    Name = "Operations",
+                    Managers =
+                    [
+                        new Person { Name = "Ellen", Department = "Ops" },
+                        new Person { Name = "Scott", Department = "Ops" }
+                    ]
+                }
+            };
+
+            var registry = new MappingRegistry();
+            registry.Configure<Department>(cfg =>
+            {
+                cfg.Property(d => d.Name).ToCell("A1");
+                cfg.Collection(d => d.Managers)
+                    .StartAt("A3")
+                    .WithItemMapping<Person>(managerCfg =>
+                    {
+                        managerCfg.Property(p => p.Name).ToCell("A3");
+                        managerCfg.Property(p => p.Department).ToCell("B3");
+                    });
+            });
+
+            var exporter = MiniExcel.Exporters.GetMappingExporter(registry);
+            var importer = MiniExcel.Importers.GetMappingImporter(registry);
+
+            using var stream = new MemoryStream();
+            await exporter.ExportAsync(stream, departments);
+            stream.Position = 0;
+
+            Assert.True(registry.HasMapping<Person>());
+
+            var compiledMappingsField = typeof(MappingRegistry).GetField("_compiledMappings", BindingFlags.NonPublic | BindingFlags.Instance);
+            var compiledMappings = (Dictionary<Type, object>)compiledMappingsField!.GetValue(registry)!;
+            var departmentMapping = compiledMappings[typeof(Department)];
+            var nestedMappingsProp = departmentMapping.GetType().GetProperty("NestedMappings", BindingFlags.Instance | BindingFlags.Public);
+            var nestedMappingsObj = nestedMappingsProp?.GetValue(departmentMapping);
+            Assert.NotNull(nestedMappingsObj);
+            var countProp = nestedMappingsObj!.GetType().GetProperty("Count");
+            var nestedCount = (int)(countProp?.GetValue(nestedMappingsObj) ?? 0);
+            Assert.True(nestedCount > 0);
+
+            var getEnumerator = nestedMappingsObj.GetType().GetMethod("GetEnumerator");
+            var enumerator = (System.Collections.IEnumerator)getEnumerator!.Invoke(nestedMappingsObj, null)!;
+            Assert.True(enumerator.MoveNext());
+            var entry = enumerator.Current;
+            var valueProp = entry!.GetType().GetProperty("Value");
+            var nestedInfo = valueProp!.GetValue(entry);
+            var propertiesProp = nestedInfo!.GetType().GetProperty("Properties", BindingFlags.Instance | BindingFlags.Public);
+            var nestedProperties = (System.Collections.IEnumerable?)propertiesProp?.GetValue(nestedInfo);
+            Assert.NotNull(nestedProperties);
+
+            var firstProperty = nestedProperties!.Cast<object>().FirstOrDefault();
+            Assert.NotNull(firstProperty);
+            var setterProp = firstProperty!.GetType().GetProperty("Setter", BindingFlags.Instance | BindingFlags.Public);
+            var setter = setterProp?.GetValue(firstProperty);
+            Assert.NotNull(setter);
+
+            var gridProp = departmentMapping.GetType().GetProperty("OptimizedCellGrid", BindingFlags.Instance | BindingFlags.Public);
+            var grid = gridProp?.GetValue(departmentMapping) as Array;
+            Assert.NotNull(grid);
+            var handlerType = typeof(MappingRegistry).Assembly.GetType("MiniExcelLib.Core.Mapping.OptimizedCellHandler");
+            Assert.NotNull(handlerType);
+            var valueSetterProperty = handlerType!.GetProperty("ValueSetter", BindingFlags.Instance | BindingFlags.Public);
+            var propertyNameProperty = handlerType.GetProperty("PropertyName", BindingFlags.Instance | BindingFlags.Public);
+            var collectionIndexProperty = handlerType.GetProperty("CollectionIndex", BindingFlags.Instance | BindingFlags.Public);
+
+            var hasSetter = false;
+            for (int r = 0; r < grid!.GetLength(0); r++)
+            {
+                for (int c = 0; c < grid.GetLength(1); c++)
+                {
+                    if (grid.GetValue(r, c) is { } handler)
+                    {
+                        var propertyName = propertyNameProperty?.GetValue(handler) as string;
+                        var collectionIndex = (int)(collectionIndexProperty?.GetValue(handler) ?? -1);
+                        if (string.Equals(propertyName, "Name", StringComparison.Ordinal) && collectionIndex == 0)
+                        {
+                            var valueSetter = valueSetterProperty?.GetValue(handler);
+                            if (valueSetter is not null)
+                            {
+                                hasSetter = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+                if (hasSetter)
+                {
+                    break;
+                }
+            }
+
+            Assert.True(hasSetter);
+
+            var boundariesProp = departmentMapping.GetType().GetProperty("OptimizedBoundaries", BindingFlags.Instance | BindingFlags.Public);
+            var boundaries = boundariesProp?.GetValue(departmentMapping);
+            Assert.NotNull(boundaries);
+            var minRowProp = boundaries!.GetType().GetProperty("MinRow", BindingFlags.Instance | BindingFlags.Public);
+            var maxRowProp = boundaries.GetType().GetProperty("MaxRow", BindingFlags.Instance | BindingFlags.Public);
+            var minColProp = boundaries.GetType().GetProperty("MinColumn", BindingFlags.Instance | BindingFlags.Public);
+            var maxColProp = boundaries.GetType().GetProperty("MaxColumn", BindingFlags.Instance | BindingFlags.Public);
+            var minRow = (int)(minRowProp?.GetValue(boundaries) ?? 0);
+            var maxRow = (int)(maxRowProp?.GetValue(boundaries) ?? 0);
+            var minCol = (int)(minColProp?.GetValue(boundaries) ?? 0);
+            var maxCol = (int)(maxColProp?.GetValue(boundaries) ?? 0);
+
+            var tryGetHandlerMethod = departmentMapping.GetType().GetMethod("TryGetHandler", BindingFlags.Instance | BindingFlags.Public);
+            Assert.NotNull(tryGetHandlerMethod);
+
+            var setterFoundViaTryGet = false;
+            for (var row = minRow; row <= maxRow && !setterFoundViaTryGet; row++)
+            {
+                for (var col = minCol; col <= maxCol && !setterFoundViaTryGet; col++)
+                {
+                    var parameters = new object?[] { row, col, null };
+                    var success = (bool)tryGetHandlerMethod!.Invoke(departmentMapping, parameters)!;
+                    if (!success)
+                        continue;
+
+                    if (parameters[2] is { } handlerInstance)
+                    {
+                        var propertyName = propertyNameProperty?.GetValue(handlerInstance) as string;
+                        var collectionIndex = (int)(collectionIndexProperty?.GetValue(handlerInstance) ?? -1);
+                        if (collectionIndex == 0 && string.Equals(propertyName, "Name", StringComparison.Ordinal))
+                        {
+                            var valueSetter = valueSetterProperty?.GetValue(handlerInstance);
+                            if (valueSetter is not null)
+                            {
+                                setterFoundViaTryGet = true;
+                            }
+                        }
+                    }
+                }
+            }
+            Assert.True(setterFoundViaTryGet);
+
+            var results = importer.Query<Department>(stream).ToList();
+
+            Assert.Single(results);
+            var managers = results[0].Managers;
+            Assert.Equal(2, managers.Count);
+            Assert.Equal("Ellen", managers[0].Name);
+            Assert.Equal("Scott", managers[1].Name);
         }
 
         [Fact]
@@ -393,17 +579,50 @@ namespace MiniExcelLib.Tests.FluentMapping
             registry.Configure<Department>(cfg =>
             {
                 cfg.Property(d => d.Name).ToCell("A1");
-                cfg.Collection(d => d.Projects).StartAt("A3");
+                cfg.Collection(d => d.Projects)
+                    .StartAt("A3")
+                    .WithItemMapping<Project>(projectCfg =>
+                    {
+                        projectCfg.Property(p => p.Code).ToCell("A3");
+                        projectCfg.Property(p => p.Title).ToCell("B3");
+                        projectCfg.Property(p => p.StartDate).ToCell("C3");
+                        projectCfg.Collection(p => p.Tasks)
+                            .StartAt("D3")
+                            .WithItemMapping<ProjectTask>(taskCfg =>
+                            {
+                                taskCfg.Property(t => t.Name).ToCell("D3");
+                                taskCfg.Property(t => t.EstimatedHours).ToCell("E3");
+                                taskCfg.Property(t => t.IsCompleted).ToCell("F3");
+                            });
+                    });
             });
 
             var exporter = MiniExcel.Exporters.GetMappingExporter(registry);
+            var importer = MiniExcel.Importers.GetMappingImporter(registry);
 
             // Act
             using var stream = new MemoryStream();
             await exporter.ExportAsync(stream, departments);
-            
+            stream.Position = 0;
+
+            var results = importer.Query<Department>(stream).ToList();
+
             // Assert
-            Assert.True(stream.Length > 0);
+            Assert.Single(results);
+            var department = results[0];
+            Assert.Equal("Product Development", department.Name);
+
+            var projects = department.Projects.ToList();
+            Assert.Single(projects);
+
+            var project = projects[0];
+            Assert.Equal("PROJ-001", project.Code);
+            Assert.Equal("New Feature", project.Title);
+
+            Assert.Equal(3, project.Tasks.Count);
+            Assert.Equal("Design", project.Tasks[0].Name);
+            Assert.True(project.Tasks[0].IsCompleted);
+            Assert.Equal(120, project.Tasks[1].EstimatedHours);
         }
 
         [Fact]

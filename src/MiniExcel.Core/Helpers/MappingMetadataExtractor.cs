@@ -29,8 +29,51 @@ internal static class MappingMetadataExtractor
             ItemFactory = CollectionAccessor.CreateItemFactory(itemType)
         };
         
-        var propertyList = ExtractPropertyList(properties);
+        var propertyList = ExtractPropertyList(properties, itemType);
         nestedInfo.Properties = propertyList;
+
+        var collectionsProperty = nestedMappingType.GetProperty("Collections");
+        if (collectionsProperty?.GetValue(nestedMapping) is IEnumerable collectionMappings)
+        {
+            var nestedCollections = new Dictionary<string, NestedCollectionInfo>(StringComparer.Ordinal);
+
+            foreach (var collection in collectionMappings)
+            {
+                if (collection is not CompiledCollectionMapping compiledCollection)
+                    continue;
+
+                var nestedItemType = compiledCollection.ItemType ?? typeof(object);
+                var collectionInfo = new NestedCollectionInfo
+                {
+                    PropertyName = compiledCollection.PropertyName,
+                    StartColumn = compiledCollection.StartCellColumn,
+                    StartRow = compiledCollection.StartCellRow,
+                    Layout = compiledCollection.Layout,
+                    RowSpacing = compiledCollection.RowSpacing,
+                    ItemType = nestedItemType,
+                    Getter = compiledCollection.Getter,
+                    Setter = compiledCollection.Setter,
+                    ListFactory = () => CollectionAccessor.CreateTypedList(nestedItemType),
+                    ItemFactory = CollectionAccessor.CreateItemFactory(nestedItemType)
+                };
+
+                if (compiledCollection.Registry is not null && nestedItemType != typeof(object))
+                {
+                    var childMapping = compiledCollection.Registry.GetCompiledMapping(nestedItemType);
+                    if (childMapping is not null)
+                    {
+                        collectionInfo.NestedMapping = ExtractNestedMappingInfo(childMapping, nestedItemType);
+                    }
+                }
+
+                nestedCollections[collectionInfo.PropertyName] = collectionInfo;
+            }
+
+            if (nestedCollections.Count > 0)
+            {
+                nestedInfo.Collections = nestedCollections;
+            }
+        }
         
         return nestedInfo;
     }
@@ -40,7 +83,11 @@ internal static class MappingMetadataExtractor
     /// </summary>
     /// <param name="properties">The collection of property mappings</param>
     /// <returns>A list of nested property information</returns>
-    private static List<NestedPropertyInfo> ExtractPropertyList(IEnumerable properties)
+    private static readonly MethodInfo? CreateTypedSetterMethod = typeof(ConversionHelper)
+        .GetMethods(BindingFlags.Public | BindingFlags.Static)
+        .FirstOrDefault(m => m.Name == nameof(ConversionHelper.CreateTypedPropertySetter) && m.IsGenericMethodDefinition);
+
+    private static List<NestedPropertyInfo> ExtractPropertyList(IEnumerable properties, Type itemType)
     {
         var propertyList = new List<NestedPropertyInfo>();
         
@@ -61,6 +108,18 @@ internal static class MappingMetadataExtractor
             var getter = getterProperty.GetValue(prop) as Func<object, object?>;
             var setter = setterProperty?.GetValue(prop) as Action<object, object?>;
             var propTypeValue = typeProperty?.GetValue(prop) as Type;
+
+            if (setter is null && name is not null)
+            {
+                var propertyInfo = itemType.GetProperty(name, BindingFlags.Public | BindingFlags.Instance);
+                if (propertyInfo?.CanWrite == true)
+                {
+                    setter = CreateSetterWithConversion(itemType, propertyInfo)
+                             ?? CreateFallbackSetter(propertyInfo);
+                }
+            }
+
+            setter ??= (_, _) => { };
                 
             if (name is not null && getter is not null)
             {
@@ -69,13 +128,42 @@ internal static class MappingMetadataExtractor
                     PropertyName = name,
                     ColumnIndex = column,
                     Getter = getter,
-                    Setter = setter ?? ((_, _) => { }),
+                    Setter = setter,
                     PropertyType = propTypeValue ?? typeof(object)
                 });
             }
         }
         
         return propertyList;
+    }
+
+    private static Action<object, object?>? CreateSetterWithConversion(Type itemType, PropertyInfo propertyInfo)
+    {
+        if (CreateTypedSetterMethod is null)
+            return null;
+
+        try
+        {
+            var generic = CreateTypedSetterMethod.MakeGenericMethod(itemType);
+            return generic.Invoke(null, new object[] { propertyInfo }) as Action<object, object?>;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static Action<object, object?>? CreateFallbackSetter(PropertyInfo propertyInfo)
+    {
+        try
+        {
+            var memberSetter = new MemberSetter(propertyInfo);
+            return memberSetter.Invoke;
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     /// <summary>

@@ -12,6 +12,11 @@ internal class NestedMappingInfo
     public IReadOnlyList<NestedPropertyInfo> Properties { get; set; } = new List<NestedPropertyInfo>();
     
     /// <summary>
+    /// Pre-compiled nested collection accessors keyed by property name.
+    /// </summary>
+    public IReadOnlyDictionary<string, NestedCollectionInfo> Collections { get; set; } = new Dictionary<string, NestedCollectionInfo>();
+
+    /// <summary>
     /// The type of items in the collection.
     /// </summary>
     public Type ItemType { get; set; } = null!;
@@ -51,4 +56,22 @@ internal class NestedPropertyInfo
     /// The type of the property.
     /// </summary>
     public Type PropertyType { get; set; } = null!;
+}
+
+/// <summary>
+/// Pre-compiled information about a nested collection within a complex type.
+/// </summary>
+internal class NestedCollectionInfo
+{
+    public string PropertyName { get; set; } = null!;
+    public int StartColumn { get; set; }
+    public int StartRow { get; set; }
+    public CollectionLayout Layout { get; set; }
+    public int RowSpacing { get; set; }
+    public Type ItemType { get; set; } = typeof(object);
+    public Func<object, IEnumerable> Getter { get; set; } = null!;
+    public Action<object, object?>? Setter { get; set; }
+    public Func<IList> ListFactory { get; set; } = null!;
+    public Func<object?> ItemFactory { get; set; } = null!;
+    public NestedMappingInfo? NestedMapping { get; set; }
 }

@@ -1,3 +1,5 @@
+using System.Linq.Expressions;
+
 namespace MiniExcelLib.Core.Helpers;
 
 /// <summary>
@@ -58,7 +60,24 @@ internal static class CollectionAccessor
     /// <returns>A factory function that creates new instances</returns>
     public static Func<object?> CreateItemFactory(Type itemType)
     {
-        return () => itemType.IsValueType ? Activator.CreateInstance(itemType) : null;
+        // Value types can always be created via Activator.CreateInstance
+        if (itemType.IsValueType)
+        {
+            return () => Activator.CreateInstance(itemType);
+        }
+
+        // For reference types, prefer a compiled parameterless constructor if available
+        var ctor = itemType.GetConstructor(Type.EmptyTypes);
+        if (ctor is null)
+        {
+            // No default constructor - unable to materialize items automatically
+            return () => null;
+        }
+
+        var newExpression = Expression.New(ctor);
+        var lambda = Expression.Lambda<Func<object?>>(Expression.Convert(newExpression, typeof(object)));
+        var factory = lambda.Compile();
+        return factory;
     }
 
     /// <summary>

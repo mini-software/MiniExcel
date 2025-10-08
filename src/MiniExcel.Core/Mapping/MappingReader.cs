@@ -303,6 +303,11 @@ internal static partial class MappingReader<T> where T : class, new()
     private static void ProcessComplexCollectionItem(IList collection, OptimizedCellHandler handler, 
         object? value, CompiledMapping<T> mapping)
     {
+        if (collection.Count <= handler.CollectionItemOffset && !HasMeaningfulValue(value))
+        {
+            return;
+        }
+
         // Ensure the collection has enough items
         while (collection.Count <= handler.CollectionItemOffset)
         {
@@ -324,19 +329,20 @@ internal static partial class MappingReader<T> where T : class, new()
         var item = collection[handler.CollectionItemOffset];
         if (item is null)
         {
-            // Use precompiled factory for creating the item
-            if (mapping.OptimizedCollectionHelpers is null || 
-                handler.CollectionIndex < 0 || 
+            if (mapping.OptimizedCollectionHelpers is null ||
+                handler.CollectionIndex < 0 ||
                 handler.CollectionIndex >= mapping.OptimizedCollectionHelpers.Count)
             {
                 throw new InvalidOperationException(
                     $"No OptimizedCollectionHelper found for collection at index {handler.CollectionIndex}. " +
                     "Ensure the mapping was properly compiled and optimized.");
             }
-            
+
             var helper = mapping.OptimizedCollectionHelpers[handler.CollectionIndex];
             item = helper.DefaultItemFactory.Invoke();
-            collection[handler.CollectionItemOffset] = item;
+
+            collection[handler.CollectionItemOffset] = item ?? throw new InvalidOperationException(
+                $"Collection item factory returned null for type '{helper.ItemType}'. Ensure it has an accessible parameterless constructor.");
         }
         
         // Try to set the value using the handler
@@ -348,8 +354,9 @@ internal static partial class MappingReader<T> where T : class, new()
             {
                 // Find the matching property setter in the nested mapping
                 var nestedProp = nestedInfo.Properties.FirstOrDefault(p => p.PropertyName == handler.PropertyName);
-                if (nestedProp?.Setter is not null && item is not null)
+                if (nestedProp?.Setter is not null)
                 {
+                    handler.ValueSetter = nestedProp.Setter;
                     nestedProp.Setter(item, value);
                     return;
                 }
@@ -359,6 +366,17 @@ internal static partial class MappingReader<T> where T : class, new()
                 $"ValueSetter is null for complex collection item handler at property '{handler.PropertyName}'. " +
                 "This indicates the mapping was not properly optimized. Ensure the type was mapped in the MappingRegistry.");
         }
+    }
+
+    private static bool HasMeaningfulValue(object? value)
+    {
+        if (value is null)
+            return false;
+
+        if (value is string str)
+            return !string.IsNullOrWhiteSpace(str);
+
+        return true;
     }
     
     private static void FinalizeCollections(T item, CompiledMapping<T> mapping, Dictionary<int, IList> collections)

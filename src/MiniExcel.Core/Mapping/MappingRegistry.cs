@@ -22,6 +22,8 @@ public sealed class MappingRegistry
             var config = new MappingConfiguration<T>();
             configure(config);
             
+            CompileNestedMappings(config);
+            
             var compiledMapping = MappingCompiler.Compile(config, this);
             _compiledMappings[typeof(T)] = compiledMapping;
         }
@@ -63,5 +65,36 @@ public sealed class MappingRegistry
                 ? mapping 
                 : null;
         }
+    }
+
+    private void CompileNestedMappings<T>(MappingConfiguration<T> configuration)
+    {
+        foreach (var collection in configuration.CollectionMappings)
+        {
+            if (collection.ItemConfiguration is null || collection.ItemType is null)
+                continue;
+
+            CompileNestedMappingInternal(collection.ItemType, collection.ItemConfiguration);
+        }
+    }
+
+    private void CompileNestedMappingInternal(Type itemType, object itemConfiguration)
+    {
+        var method = typeof(MappingRegistry)
+            .GetMethod(nameof(CompileNestedMapping), BindingFlags.Instance | BindingFlags.NonPublic)?
+            .MakeGenericMethod(itemType);
+
+        method?.Invoke(this, new[] { itemConfiguration });
+    }
+
+    private void CompileNestedMapping<TItem>(MappingConfiguration<TItem> configuration)
+    {
+        CompileNestedMappings(configuration);
+
+        if (_compiledMappings.ContainsKey(typeof(TItem)))
+            return;
+
+        var compiled = MappingCompiler.Compile(configuration, this);
+        _compiledMappings[typeof(TItem)] = compiled;
     }
 }

@@ -29,7 +29,6 @@ internal struct MappingCellEnumerator<T>
     private readonly object _emptyCell;
     private int _maxCollectionRows;
     private int _currentCollectionRow;
-    private object?[][]? _currentCollectionArrays;
 
     public MappingCellEnumerator(IEnumerator<T> itemEnumerator, CompiledMapping<T> mapping, string[] columnLetters)
     {
@@ -47,7 +46,6 @@ internal struct MappingCellEnumerator<T>
         _emptyCell = string.Empty;
         _maxCollectionRows = 0;
         _currentCollectionRow = 0;
-        _currentCollectionArrays = null;
         
         Current = default;
     }
@@ -103,11 +101,10 @@ internal struct MappingCellEnumerator<T>
         // Process current item's cells
         if (_currentItem is not null)
         {
-            // Cache collections as arrays when we start processing an item
+            // Cache collection metrics when we start processing an item
             if (_currentColumnIndex == 0 && _currentCollectionRow == 0 && _mapping.Collections.Count > 0)
             {
                 _maxCollectionRows = 0;
-                _currentCollectionArrays = new object?[_mapping.Collections.Count][];
                 
                 for (var i = 0; i < _mapping.Collections.Count; i++)
                 {
@@ -115,18 +112,61 @@ internal struct MappingCellEnumerator<T>
                     var collectionData = coll.Getter(_currentItem);
                     if (collectionData is not null)
                     {
-                        // Convert to array once - this is the only enumeration
+                        // Convert to a list once - this is the only enumeration
                         var items = collectionData.Cast<object?>().ToList();
-                        _currentCollectionArrays[i] = items.ToArray();
-                        
-                        // For vertical collections, we need rows from StartCellRow
-                        var neededRows = coll.StartCellRow + items.Count - _currentRowIndex;
+
+                        // Resolve nested mapping info if available
+                        NestedMappingInfo? nestedInfo = null;
+                        nestedInfo = _mapping.NestedMappings is not null && _mapping.NestedMappings.TryGetValue(i, out var precompiledNested)
+                            ? precompiledNested
+                            : null;
+
+                        // Calculate the furthest row this collection (including nested collections) needs
+                        var collectionMaxRow = coll.StartCellRow - 1;
+
+                        for (var itemIndex = 0; itemIndex < items.Count; itemIndex++)
+                        {
+                            var item = items[itemIndex];
+                            if (item is null)
+                                continue;
+
+                            var itemRow = coll.StartCellRow + itemIndex * (1 + coll.RowSpacing);
+                            if (itemRow > collectionMaxRow)
+                                collectionMaxRow = itemRow;
+
+                            if (nestedInfo?.Collections is null || nestedInfo.Collections.Count == 0)
+                                continue;
+
+                            foreach (var nested in nestedInfo.Collections.Values)
+                            {
+                                var nestedData = nested.Getter(item);
+                                if (nestedData is not IEnumerable nestedEnumerable)
+                                    continue;
+
+                                var nestedIndex = 0;
+                                foreach (var _ in nestedEnumerable)
+                                {
+                                    var nestedRow = nested.StartRow +
+                                                    itemIndex * (1 + coll.RowSpacing) +
+                                                    nestedIndex * (1 + nested.RowSpacing);
+
+                                    if (nestedRow > collectionMaxRow)
+                                        collectionMaxRow = nestedRow;
+
+                                    nestedIndex++;
+                                }
+                            }
+                        }
+
+                        var neededRows = collectionMaxRow - _currentRowIndex + 1;
                         if (neededRows > _maxCollectionRows)
+                        {
                             _maxCollectionRows = neededRows;
+                        }
                     }
                     else
                     {
-                        _currentCollectionArrays[i] = [];
+                        continue;
                     }
                 }
             }
@@ -140,38 +180,15 @@ internal struct MappingCellEnumerator<T>
                 object? cellValue = _emptyCell;
 
                 // Use the optimized grid for fast lookup
-                if (_mapping.TryGetCellValue(_currentRowIndex, columnNumber, _currentItem, out var value))
+                if (_mapping.TryGetHandler(_currentRowIndex, columnNumber, out var handler))
                 {
-                    cellValue = value ?? _emptyCell;
-                    
-                    // Apply formatting if needed
-                    if (value is IFormattable formattable && 
-                        _mapping.TryGetHandler(_currentRowIndex, columnNumber, out var handler) &&
-                        !string.IsNullOrEmpty(handler.Format))
+                    if (_mapping.TryGetValue(handler, _currentItem, out var value))
                     {
-                        cellValue = formattable.ToString(handler.Format, null);
-                    }
-                }
-                else if (_currentCollectionArrays is not null)
-                {
-                    // Fallback for collections that might not be in the grid yet
-                    // This handles dynamic collection expansion
-                    for (var collIndex = 0; collIndex < _mapping.Collections.Count; collIndex++)
-                    {
-                        var coll = _mapping.Collections[collIndex];
-                        if (coll.StartCellColumn == columnNumber)
+                        cellValue = value ?? _emptyCell;
+                        
+                        if (value is IFormattable formattable && !string.IsNullOrEmpty(handler.Format))
                         {
-                            // This is a collection column - check if this row has a collection item
-                            var collectionRowOffset = _currentRowIndex - coll.StartCellRow;
-                            if (collectionRowOffset >= 0)
-                            {
-                                var collectionArray = _currentCollectionArrays[collIndex];
-                                if (collectionRowOffset < collectionArray.Length)
-                                {
-                                    cellValue = collectionArray[collectionRowOffset] ?? _emptyCell;
-                                }
-                            }
-                            break;
+                            cellValue = formattable.ToString(handler.Format, null);
                         }
                     }
                 }

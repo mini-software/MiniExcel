@@ -30,7 +30,7 @@ internal static class MappingCompiler
         foreach (var prop in configuration.PropertyMappings)
         {
             if (string.IsNullOrEmpty(prop.CellAddress))
-                throw new InvalidOperationException($"Property mapping must specify a cell address using ToCell()");
+                throw new InvalidOperationException("Property mapping must specify a cell address using ToCell()");
 
             var propertyName = GetPropertyName(prop.Expression);
             
@@ -73,7 +73,7 @@ internal static class MappingCompiler
         foreach (var coll in configuration.CollectionMappings)
         {
             if (string.IsNullOrEmpty(coll.StartCell))
-                throw new InvalidOperationException($"Collection mapping must specify a start cell using StartAt()");
+                throw new InvalidOperationException("Collection mapping must specify a start cell using StartAt()");
 
             var parameter = Expression.Parameter(typeof(object), "obj");
             var cast = Expression.Convert(parameter, typeof(T));
@@ -204,57 +204,58 @@ internal static class MappingCompiler
         // that belong directly to the root item. Nested collections (like Departments in a Company)
         // should NOT trigger multi-item pattern detection.
         // For now, we'll be conservative and only enable multi-item pattern for specific scenarios
-        if (mapping is { Collections.Count: > 0, Properties.Count: > 0 })
+        if (mapping is not { Collections.Count: > 0, Properties.Count: > 0 }) 
+            return boundaries;
+        
+        // Check if any collection has nested mapping (complex types)
+        bool hasNestedCollections = false;
+        foreach (var coll in mapping.Collections)
         {
-            // Check if any collection has nested mapping (complex types)
-            bool hasNestedCollections = false;
-            foreach (var coll in mapping.Collections)
+            // Check if the collection's item type has a mapping (complex type)
+            if (coll is { ItemType: not null, Registry: not null})
             {
-                // Check if the collection's item type has a mapping (complex type)
-                if (coll is { ItemType: not null, Registry: not null})
+                // Try to get the nested mapping - if it exists, it's a complex type
+                var nestedMapping = coll.Registry.GetCompiledMapping(coll.ItemType);
+                var isComplexType = coll.ItemType != typeof(string) && 
+                                    coll.ItemType is { IsValueType: false, IsPrimitive: false };
+
+                if (nestedMapping is not null && isComplexType) 
                 {
-                    // Try to get the nested mapping - if it exists, it's a complex type
-                    var nestedMapping = coll.Registry.GetCompiledMapping(coll.ItemType);
-                    if (nestedMapping is not null && 
-                        coll.ItemType != typeof(string) && 
-                        coll.ItemType is { IsValueType: false, IsPrimitive: false }) 
-                    {
-                        hasNestedCollections = true;
-                        break;
-                    }
+                    hasNestedCollections = true;
+                    break;
                 }
             }
+        }
             
-            // Only enable multi-item pattern for simple collections (not nested)
-            // This is a heuristic - nested collections typically mean a single root item
-            // with complex child items, not multiple root items
-            if (!hasNestedCollections)
+        // Only enable multi-item pattern for simple collections (not nested)
+        // This is a heuristic - nested collections typically mean a single root item
+        // with complex child items, not multiple root items
+        if (!hasNestedCollections)
+        {
+            // Calculate pattern height for multiple items with collections
+            var firstPropRow = mapping.Properties.Min(p => p.CellRow);
+                
+            // Find the actual last row of mapped elements (not the conservative bounds)
+            var lastMappedRow = firstPropRow;
+                
+            // Check actual collection start positions
+            foreach (var coll in mapping.Collections)
             {
-                // Calculate pattern height for multiple items with collections
-                var firstPropRow = mapping.Properties.Min(p => p.CellRow);
+                // For vertical collections, we need a reasonable estimate
+                // Use startRow + a small number of items (not the full 100 conservative limit)
+                var estimatedEndRow = coll.StartCellRow + MinItemsForPatternCalc;
+                lastMappedRow = Math.Max(lastMappedRow, estimatedEndRow);
+            }
                 
-                // Find the actual last row of mapped elements (not the conservative bounds)
-                var lastMappedRow = firstPropRow;
+            // The pattern height is the total height needed for one complete item
+            // including its properties and collections
+            boundaries.PatternHeight = lastMappedRow - firstPropRow + 1;
                 
-                // Check actual collection start positions
-                foreach (var coll in mapping.Collections)
-                {
-                    // For vertical collections, we need a reasonable estimate
-                    // Use startRow + a small number of items (not the full 100 conservative limit)
-                    var estimatedEndRow = coll.StartCellRow + MinItemsForPatternCalc;
-                    lastMappedRow = Math.Max(lastMappedRow, estimatedEndRow);
-                }
-                
-                // The pattern height is the total height needed for one complete item
-                // including its properties and collections
-                boundaries.PatternHeight = lastMappedRow - firstPropRow + 1;
-                
-                // If we have a reasonable pattern height, mark this as a multi-item pattern
-                // This allows the grid to repeat for multiple items
-                if (boundaries.PatternHeight is > 0 and < MaxPatternHeight)
-                {
-                    boundaries.IsMultiItemPattern = true;
-                }
+            // If we have a reasonable pattern height, mark this as a multi-item pattern
+            // This allows the grid to repeat for multiple items
+            if (boundaries.PatternHeight is > 0 and < MaxPatternHeight)
+            {
+                boundaries.IsMultiItemPattern = true;
             }
         }
 
@@ -277,19 +278,19 @@ internal static class MappingCompiler
         // Calculate bounds based on layout
         switch (collection.Layout)
         {
+            // Vertical collections: grow downward
             case CollectionLayout.Vertical:
-                // Vertical collections: grow downward
                 // Use conservative estimate for initial bounds  
-                var verticalHeight = DefaultCollectionHeight;
-                
+                var totalHeight = startRow + DefaultCollectionHeight;
+
                 // Check if this is a complex type with nested mapping
                 var maxCol = startCol;
                 if (collection.ItemType is null || collection.Registry is null)
-                    return (startRow, startRow + verticalHeight, startCol, maxCol);
+                    return (startRow, totalHeight, startCol, maxCol);
                 
                 var nestedMapping = collection.Registry.GetCompiledMapping(collection.ItemType);
                 if (nestedMapping is null || !MappingMetadataExtractor.IsComplexType(collection.ItemType)) 
-                    return (startRow, startRow + verticalHeight, startCol, maxCol);
+                    return (startRow, totalHeight, startCol, maxCol);
                 
                 // Extract nested mapping info to get max column
                 var nestedInfo = MappingMetadataExtractor.ExtractNestedMappingInfo(nestedMapping, collection.ItemType);
@@ -298,7 +299,7 @@ internal static class MappingCompiler
                     maxCol = GetMaxColumnIndex(nestedInfo, maxCol);
                 }
 
-                return (startRow, startRow + verticalHeight, startCol, maxCol);
+                return (startRow, totalHeight, startCol, maxCol);
         }
 
         // Default fallback
@@ -313,11 +314,11 @@ internal static class MappingCompiler
         var grid = new OptimizedCellHandler[height, width];
 
         // Initialize all cells as empty
-        for (int r = 0; r < height; r++)
+        for (int row = 0; row < height; row++)
         {
-            for (int c = 0; c < width; c++)
+            for (int col = 0; col < width; col++)
             {
-                grid[r, c] = new OptimizedCellHandler { Type = CellHandlerType.Empty };
+                grid[row, col] = new OptimizedCellHandler { Type = CellHandlerType.Empty };
             }
         }
 
@@ -482,7 +483,7 @@ internal static class MappingCompiler
     
     private static void PreCompileCollectionHelpers<T>(CompiledMapping<T> mapping)
     {
-        if (!mapping.Collections.Any()) 
+        if (mapping.Collections.Count == 0) 
             return;
         
         // Store pre-compiled helpers for each collection
@@ -579,6 +580,7 @@ internal static class MappingCompiler
                 {
                     if (prop.Setter is null)
                         throw new InvalidOperationException($"Nested property '{prop.PropertyName}' is missing a setter. Ensure the mapping for '{collection.ItemType?.Name}' is configured correctly.");
+                    
                     // Only mark if not already occupied
                     if (grid[r, c].Type == CellHandlerType.Empty)
                     {
@@ -609,16 +611,14 @@ internal static class MappingCompiler
                 if (nestedMappingInfo is null || nestedMappingInfo.Properties.Count == 0)
                     continue;
 
-                var nestedMaxItems = 20;
+                const int nestedMaxItems = 20;
                 for (int nestedIndex = 0; nestedIndex < nestedMaxItems; nestedIndex++)
                 {
                     var nestedAbsoluteRow = nestedCollection.StartRow + nestedIndex * (1 + nestedCollection.RowSpacing);
                     // Offset by the parent item index so nested items follow the parent row pattern
                     nestedAbsoluteRow += itemIndex * (1 + rowSpacing);
-                    if (nextCollectionStartRow.HasValue && nestedAbsoluteRow >= nextCollectionStartRow.Value)
-                    {
+                    if (nestedAbsoluteRow >= nextCollectionStartRow)
                         break;
-                    }
 
                     var nestedRelativeRow = nestedAbsoluteRow - boundaries.MinRow;
                     if (nestedRelativeRow < 0 || nestedRelativeRow >= maxRows || nestedRelativeRow >= grid.GetLength(0))
@@ -634,9 +634,7 @@ internal static class MappingCompiler
                             continue;
 
                         if (grid[nestedRelativeRow, columnIndex].Type != CellHandlerType.Empty)
-                        {
                             continue;
-                        }
 
                         grid[nestedRelativeRow, columnIndex] = new OptimizedCellHandler
                         {
@@ -699,17 +697,16 @@ internal static class MappingCompiler
             if (parent is null)
                 return;
 
-            var collection = collectionInfo.Getter(parent);
             IList list;
-
+            var collection = collectionInfo.Getter(parent);
             if (collection is IList existingList)
             {
                 list = existingList;
             }
-            else if (collection is IEnumerable enumerable)
+            else if (collection is not null)
             {
                 list = collectionInfo.ListFactory();
-                foreach (var item in enumerable)
+                foreach (var item in collection)
                 {
                     list.Add(item);
                 }
@@ -741,10 +738,8 @@ internal static class MappingCompiler
             if (nestedItem is null)
             {
                 nestedItem = collectionInfo.ItemFactory();
-                if (nestedItem is null)
-                    throw new InvalidOperationException($"Collection item factory returned null for type '{collectionInfo.ItemType}'. Ensure it has an accessible parameterless constructor.");
-
-                list[nestedOffset] = nestedItem;
+                list[nestedOffset] = nestedItem ?? throw new InvalidOperationException(
+                    $"Collection item factory returned null for type '{collectionInfo.ItemType}'. Ensure it has an accessible parameterless constructor.");
             }
 
             setter(nestedItem, value);

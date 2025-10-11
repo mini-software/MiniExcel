@@ -300,13 +300,10 @@ internal static partial class MappingReader<T> where T : class, new()
         }
     }
     
-    private static void ProcessComplexCollectionItem(IList collection, OptimizedCellHandler handler, 
-        object? value, CompiledMapping<T> mapping)
+    private static void ProcessComplexCollectionItem(IList collection, OptimizedCellHandler handler, object? value, CompiledMapping<T> mapping)
     {
         if (collection.Count <= handler.CollectionItemOffset && !HasMeaningfulValue(value))
-        {
             return;
-        }
 
         // Ensure the collection has enough items
         while (collection.Count <= handler.CollectionItemOffset)
@@ -346,11 +343,10 @@ internal static partial class MappingReader<T> where T : class, new()
         }
         
         // Try to set the value using the handler
-        if (!mapping.TrySetValue(handler, item!, value))
+        if (!mapping.TrySetValue(handler, item, value))
         {
             // For nested mappings, we need to look up the pre-compiled setter
-            if (mapping.NestedMappings is not null && 
-                mapping.NestedMappings.TryGetValue(handler.CollectionIndex, out var nestedInfo))
+            if (mapping.NestedMappings?.TryGetValue(handler.CollectionIndex, out var nestedInfo) is true)
             {
                 // Find the matching property setter in the nested mapping
                 var nestedProp = nestedInfo.Properties.FirstOrDefault(p => p.PropertyName == handler.PropertyName);
@@ -368,17 +364,13 @@ internal static partial class MappingReader<T> where T : class, new()
         }
     }
 
-    private static bool HasMeaningfulValue(object? value)
+    private static bool HasMeaningfulValue(object? value) => value switch
     {
-        if (value is null)
-            return false;
+        null => false,
+        string str => !string.IsNullOrWhiteSpace(str),
+        _ => true
+    };
 
-        if (value is string str)
-            return !string.IsNullOrWhiteSpace(str);
-
-        return true;
-    }
-    
     private static void FinalizeCollections(T item, CompiledMapping<T> mapping, Dictionary<int, IList> collections)
     {
         for (int i = 0; i < mapping.Collections.Count; i++)
@@ -412,8 +404,7 @@ internal static partial class MappingReader<T> where T : class, new()
                 // Use pre-compiled type metadata from helper
                 var listHelper = mapping.OptimizedCollectionHelpers?[i];
                 bool isDefault = lastItem is null ||
-                                 (listHelper is { IsItemValueType: true } &&
-                                  lastItem.Equals(defaultValue));
+                                 (lastItem.Equals(defaultValue) && listHelper is { IsItemValueType: true });
                 if (isDefault)
                 {
                     list.RemoveAt(list.Count - 1);
@@ -445,19 +436,16 @@ internal static partial class MappingReader<T> where T : class, new()
     private static bool HasAnyData(T item, CompiledMapping<T> mapping)
     {
         // Check if any properties have non-default values
-        foreach (var prop in mapping.Properties)
+        var values = mapping.Properties.Select(prop => prop.Getter(item));
+        if (values.Any(v => !IsDefaultValue(v)))
         {
-            var value = prop.Getter(item);
-            if (!IsDefaultValue(value))
-            {
-                return true;
-            }
+            return true;
         }
-        
+
         // Check if any collections have items
-        foreach (var coll in mapping.Collections)
+        foreach (var collMap in mapping.Collections)
         {
-            var collection = coll.Getter(item);
+            var collection = collMap.Getter(item);
             var enumerator = collection.GetEnumerator();
             using var disposableEnumerator = enumerator as IDisposable;
             if (enumerator.MoveNext())
@@ -469,19 +457,16 @@ internal static partial class MappingReader<T> where T : class, new()
         return false;
     }
     
-    private static bool IsDefaultValue(object value)
+    private static bool IsDefaultValue(object value) => value switch
     {
-        return value switch
-        {
-            string s => string.IsNullOrEmpty(s),
-            int i => i == 0,
-            long l => l == 0,
-            decimal d => d == 0,
-            double d => d == 0,
-            float f => f == 0,
-            bool b => !b,
-            DateTime dt => dt == default,
-            _ => false
-        };
-    }
+        string s => string.IsNullOrEmpty(s),
+        DateTime dt => dt == default,
+        int i => i == 0,
+        long l => l == 0L,
+        decimal m => m == 0M,
+        double d => d == 0D,
+        float f => f == 0F,
+        bool b => !b,
+        _ => false
+    };
 }

@@ -67,14 +67,14 @@ public sealed class MappingRegistry
         }
     }
 
-    private void CompileNestedMappings<T>(MappingConfiguration<T> configuration)
+    private void CompileNestedMappings<T>(MappingConfiguration<T> mappingConfiguration)
     {
-        foreach (var collection in configuration.CollectionMappings)
+        foreach (var collection in mappingConfiguration.CollectionMappings)
         {
-            if (collection.ItemConfiguration is null || collection.ItemType is null)
-                continue;
-
-            CompileNestedMappingInternal(collection.ItemType, collection.ItemConfiguration);
+            if (collection is { ItemConfiguration: { } configuration, ItemType: { } type })
+            {
+                CompileNestedMappingInternal(type, configuration);
+            }
         }
     }
 
@@ -84,17 +84,20 @@ public sealed class MappingRegistry
             .GetMethod(nameof(CompileNestedMapping), BindingFlags.Instance | BindingFlags.NonPublic)?
             .MakeGenericMethod(itemType);
 
-        method?.Invoke(this, new[] { itemConfiguration });
+        method?.Invoke(this, [itemConfiguration]);
     }
 
     private void CompileNestedMapping<TItem>(MappingConfiguration<TItem> configuration)
     {
         CompileNestedMappings(configuration);
 
-        if (_compiledMappings.ContainsKey(typeof(TItem)))
-            return;
+        lock (_lock)
+        {
+            if (_compiledMappings.ContainsKey(typeof(TItem)))
+                return;
 
-        var compiled = MappingCompiler.Compile(configuration, this);
-        _compiledMappings[typeof(TItem)] = compiled;
+            var compiled = MappingCompiler.Compile(configuration, this);
+            _compiledMappings[typeof(TItem)] = compiled;
+        }
     }
 }

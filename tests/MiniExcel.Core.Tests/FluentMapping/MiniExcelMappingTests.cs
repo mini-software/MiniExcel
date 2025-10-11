@@ -74,14 +74,6 @@ namespace MiniExcelLib.Tests.FluentMapping
             public int Value { get; set; }
         }
 
-        public class Employee
-        {
-            public string Name { get; set; } = "";
-            public string Position { get; set; } = "";
-            public decimal Salary { get; set; }
-            public List<string> Skills { get; set; } = [];
-        }
-
         public class Project
         {
             public string Code { get; set; } = "";
@@ -374,6 +366,7 @@ namespace MiniExcelLib.Tests.FluentMapping
                     var handler = grid[r, c];
                     if (handler.Type != CellHandlerType.Empty)
                     {
+                        
                     }
                 }
             }
@@ -603,6 +596,7 @@ namespace MiniExcelLib.Tests.FluentMapping
             // Act
             using var stream = new MemoryStream();
             await exporter.ExportAsync(stream, departments);
+
             stream.Position = 0;
 
             var results = importer.Query<Department>(stream).ToList();
@@ -638,8 +632,6 @@ namespace MiniExcelLib.Tests.FluentMapping
                 {
                     cfg.Collection(d => d.PhoneNumbers); // Missing StartAt()
                 });
-                
-                var mapping = registry.GetMapping<Department>();
             });
             
             Assert.Contains("start cell", exception.Message, StringComparison.OrdinalIgnoreCase);
@@ -667,17 +659,41 @@ namespace MiniExcelLib.Tests.FluentMapping
             {
                 cfg.Property(d => d.Name).ToCell("A1");
                 cfg.Collection(d => d.PhoneNumbers).StartAt("A3");
-                cfg.Collection(d => d.Employees).StartAt("C3");
+                cfg.Collection(d => d.Employees)
+                    .StartAt("C3")
+                    .WithItemMapping<Person>(x =>
+                    {
+                        x.Property(e => e.Name).ToCell("C3");
+                        x.Property(e => e.Age).ToCell("D3");
+                        x.Property(e => e.Salary).ToCell("E3");
+                        x.Property(e => e.Email).ToCell("F3");
+                    });
             });
 
             var exporter = MiniExcel.Exporters.GetMappingExporter(registry);
+            var importer = MiniExcel.Importers.GetMappingImporter(registry);
 
             // Act
             using var stream = new MemoryStream();
             await exporter.ExportAsync(stream, departments);
+            stream.Seek(0, SeekOrigin.Begin);
             
             // Assert
-            Assert.True(stream.Length > 0);
+            var results = importer.Query<Department>(stream).ToList();
+            var first = results[0];
+            
+            Assert.Equal("555-1111", first.PhoneNumbers[0]);
+            Assert.Equal("555-2222", first.PhoneNumbers[1]);
+            
+            Assert.Equal("Dave", first.Employees[0].Name);
+            Assert.Equal(35, first.Employees[0].Age);
+            Assert.Equal(85000, first.Employees[0].Salary);
+            Assert.Equal("dave@example.com", first.Employees[0].Email);
+            
+            Assert.Equal("Eve", first.Employees[1].Name);
+            Assert.Equal(29, first.Employees[1].Age);
+            Assert.Equal(75000, first.Employees[1].Salary);
+            Assert.Equal("eve@example.com", first.Employees[1].Email);
         }
 
         #endregion

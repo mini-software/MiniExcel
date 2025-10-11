@@ -6,6 +6,12 @@ namespace MiniExcelLib.Core.Helpers;
 /// </summary>
 internal static class MappingMetadataExtractor
 {
+    private static readonly MethodInfo? CreateTypedSetterMethod = typeof(ConversionHelper)
+        .GetMethods(BindingFlags.Public | BindingFlags.Static)
+        .FirstOrDefault(m => m is { Name: nameof(ConversionHelper.CreateTypedPropertySetter), IsGenericMethodDefinition: true });
+
+    private static readonly Action<object, object?> DefaultNestedPropertySetter = (_, _) => { };
+
     /// <summary>
     /// Extracts nested mapping information from a compiled mapping object.
     /// This method minimizes reflection by extracting properties once at compile time.
@@ -33,48 +39,47 @@ internal static class MappingMetadataExtractor
         nestedInfo.Properties = propertyList;
 
         var collectionsProperty = nestedMappingType.GetProperty("Collections");
-        if (collectionsProperty?.GetValue(nestedMapping) is IEnumerable collectionMappings)
-        {
-            var nestedCollections = new Dictionary<string, NestedCollectionInfo>(StringComparer.Ordinal);
-
-            foreach (var collection in collectionMappings)
-            {
-                if (collection is not CompiledCollectionMapping compiledCollection)
-                    continue;
-
-                var nestedItemType = compiledCollection.ItemType ?? typeof(object);
-                var collectionInfo = new NestedCollectionInfo
-                {
-                    PropertyName = compiledCollection.PropertyName,
-                    StartColumn = compiledCollection.StartCellColumn,
-                    StartRow = compiledCollection.StartCellRow,
-                    Layout = compiledCollection.Layout,
-                    RowSpacing = compiledCollection.RowSpacing,
-                    ItemType = nestedItemType,
-                    Getter = compiledCollection.Getter,
-                    Setter = compiledCollection.Setter,
-                    ListFactory = () => CollectionAccessor.CreateTypedList(nestedItemType),
-                    ItemFactory = CollectionAccessor.CreateItemFactory(nestedItemType)
-                };
-
-                if (compiledCollection.Registry is not null && nestedItemType != typeof(object))
-                {
-                    var childMapping = compiledCollection.Registry.GetCompiledMapping(nestedItemType);
-                    if (childMapping is not null)
-                    {
-                        collectionInfo.NestedMapping = ExtractNestedMappingInfo(childMapping, nestedItemType);
-                    }
-                }
-
-                nestedCollections[collectionInfo.PropertyName] = collectionInfo;
-            }
-
-            if (nestedCollections.Count > 0)
-            {
-                nestedInfo.Collections = nestedCollections;
-            }
-        }
+        if (collectionsProperty?.GetValue(nestedMapping) is not IEnumerable collectionMappings) 
+            return nestedInfo;
         
+        var nestedCollections = new Dictionary<string, NestedCollectionInfo>(StringComparer.Ordinal);
+        foreach (var collection in collectionMappings)
+        {
+            if (collection is not CompiledCollectionMapping compiledCollection)
+                continue;
+
+            var nestedItemType = compiledCollection.ItemType ?? typeof(object);
+            var collectionInfo = new NestedCollectionInfo
+            {
+                PropertyName = compiledCollection.PropertyName,
+                StartColumn = compiledCollection.StartCellColumn,
+                StartRow = compiledCollection.StartCellRow,
+                Layout = compiledCollection.Layout,
+                RowSpacing = compiledCollection.RowSpacing,
+                ItemType = nestedItemType,
+                Getter = compiledCollection.Getter,
+                Setter = compiledCollection.Setter,
+                ListFactory = () => CollectionAccessor.CreateTypedList(nestedItemType),
+                ItemFactory = CollectionAccessor.CreateItemFactory(nestedItemType)
+            };
+
+            if (compiledCollection.Registry is not null && nestedItemType != typeof(object))
+            {
+                var childMapping = compiledCollection.Registry.GetCompiledMapping(nestedItemType);
+                if (childMapping is not null)
+                {
+                    collectionInfo.NestedMapping = ExtractNestedMappingInfo(childMapping, nestedItemType);
+                }
+            }
+
+            nestedCollections[collectionInfo.PropertyName] = collectionInfo;
+        }
+
+        if (nestedCollections.Count > 0)
+        {
+            nestedInfo.Collections = nestedCollections;
+        }
+
         return nestedInfo;
     }
 
@@ -83,10 +88,6 @@ internal static class MappingMetadataExtractor
     /// </summary>
     /// <param name="properties">The collection of property mappings</param>
     /// <returns>A list of nested property information</returns>
-    private static readonly MethodInfo? CreateTypedSetterMethod = typeof(ConversionHelper)
-        .GetMethods(BindingFlags.Public | BindingFlags.Static)
-        .FirstOrDefault(m => m.Name == nameof(ConversionHelper.CreateTypedPropertySetter) && m.IsGenericMethodDefinition);
-
     private static List<NestedPropertyInfo> ExtractPropertyList(IEnumerable properties, Type itemType)
     {
         var propertyList = new List<NestedPropertyInfo>();
@@ -119,7 +120,7 @@ internal static class MappingMetadataExtractor
                 }
             }
 
-            setter ??= (_, _) => { };
+            setter ??= DefaultNestedPropertySetter;
                 
             if (name is not null && getter is not null)
             {
@@ -145,7 +146,7 @@ internal static class MappingMetadataExtractor
         try
         {
             var generic = CreateTypedSetterMethod.MakeGenericMethod(itemType);
-            return generic.Invoke(null, new object[] { propertyInfo }) as Action<object, object?>;
+            return generic.Invoke(null, [propertyInfo]) as Action<object, object?>;
         }
         catch
         {
@@ -179,7 +180,9 @@ internal static class MappingMetadataExtractor
 
     private static bool IsSimpleType(Type type)
     {
-        return type == typeof(string) || type.IsValueType || type.IsPrimitive;
+        return type == typeof(string) || 
+               type.IsValueType || 
+               type.IsPrimitive;
     }
 
     /// <summary>

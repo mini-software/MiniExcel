@@ -3,8 +3,8 @@
 public partial interface IMiniExcelWriter
 {
     [CreateSyncVersion]
-    Task<int[]> SaveAsAsync(CancellationToken cancellationToken = default, IProgress<int>? progress = null);
+    Task<int[]> SaveAsAsync(IProgress<int>? progress = null, CancellationToken cancellationToken = default);
 
     [CreateSyncVersion]
-    Task<int> InsertAsync(bool overwriteSheet = false, CancellationToken cancellationToken = default);
+    Task<int> InsertAsync(bool overwriteSheet = false, IProgress<int>? progress = null, CancellationToken cancellationToken = default);
 }

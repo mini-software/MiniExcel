@@ -52,7 +52,7 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
     }
     
     [CreateSyncVersion]
-    public async Task<int[]> SaveAsAsync(CancellationToken cancellationToken = default, IProgress<int>? progress = null)
+    public async Task<int[]> SaveAsAsync(IProgress<int>? progress = null, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -69,7 +69,7 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
 
                 _sheets.Add(sheet.Item1); //TODO:remove
                 _currentSheetIndex = sheet.Item1.SheetIdx;
-                var rows = await CreateSheetXmlAsync(sheet.Item2, sheet.Item1.Path, cancellationToken, progress).ConfigureAwait(false);
+                var rows = await CreateSheetXmlAsync(sheet.Item2, sheet.Item1.Path, progress, cancellationToken).ConfigureAwait(false);
                 rowsWritten.Add(rows);
             }
 
@@ -87,7 +87,7 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
     }
 
     [CreateSyncVersion]
-    public async Task<int> InsertAsync(bool overwriteSheet = false, CancellationToken cancellationToken = default)
+    public async Task<int> InsertAsync(bool overwriteSheet = false, IProgress<int>? progress = null, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -123,13 +123,13 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
                 var insertSheetInfo = GetSheetInfos(_defaultSheetName);
                 var insertSheetDto = insertSheetInfo.ToDto(_currentSheetIndex);
                 _sheets.Add(insertSheetDto);
-                rowsWritten = await CreateSheetXmlAsync(_value, insertSheetDto.Path, cancellationToken).ConfigureAwait(false);
+                rowsWritten = await CreateSheetXmlAsync(_value, insertSheetDto.Path, progress, cancellationToken).ConfigureAwait(false);
             }
             else
             {
                 _currentSheetIndex = existSheetDto.SheetIdx;
                 _archive.Entries.Single(s => s.FullName == existSheetDto.Path).Delete();
-                rowsWritten = await CreateSheetXmlAsync(_value, existSheetDto.Path, cancellationToken).ConfigureAwait(false);
+                rowsWritten = await CreateSheetXmlAsync(_value, existSheetDto.Path, progress, cancellationToken).ConfigureAwait(false);
             }
 
             await AddFilesToZipAsync(cancellationToken).ConfigureAwait(false);
@@ -177,7 +177,7 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
     }
 
     [CreateSyncVersion]
-    private async Task<int> CreateSheetXmlAsync(object? values, string sheetPath, CancellationToken cancellationToken, IProgress<int>? progress = null)
+    private async Task<int> CreateSheetXmlAsync(object? values, string sheetPath, IProgress<int>? progress, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
 

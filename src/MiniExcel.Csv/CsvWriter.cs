@@ -37,7 +37,8 @@ internal partial class CsvWriter : IMiniExcelWriter, IDisposable
     }
 
     [CreateSyncVersion]
-    private async Task<int> WriteValuesAsync(StreamWriter writer, object values, string separator, string newLine, CancellationToken cancellationToken = default, IProgress<int>? progress = null)
+    private async Task<int> WriteValuesAsync(StreamWriter writer, object values, string separator, string newLine,
+        IProgress<int>? progress = null, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
@@ -148,7 +149,7 @@ internal partial class CsvWriter : IMiniExcelWriter, IDisposable
     }
 
     [CreateSyncVersion]
-    public async Task<int[]> SaveAsAsync(CancellationToken cancellationToken = default, IProgress<int>? progress = null)
+    public async Task<int[]> SaveAsAsync(IProgress<int>? progress = null, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
@@ -170,7 +171,7 @@ internal partial class CsvWriter : IMiniExcelWriter, IDisposable
             return [];
         }
 
-        var rowsWritten = await WriteValuesAsync(_writer, _value, seperator, newLine, cancellationToken, progress).ConfigureAwait(false);
+        var rowsWritten = await WriteValuesAsync(_writer, _value, seperator, newLine, progress, cancellationToken).ConfigureAwait(false);
         await _writer.FlushAsync(
 #if NET5_0_OR_GREATER
             cancellationToken
@@ -181,9 +182,9 @@ internal partial class CsvWriter : IMiniExcelWriter, IDisposable
     }
 
     [CreateSyncVersion]
-    public async Task<int> InsertAsync(bool overwriteSheet = false, CancellationToken cancellationToken = default)
+    public async Task<int> InsertAsync(bool overwriteSheet = false, IProgress<int>? progress = null, CancellationToken cancellationToken = default)
     {
-        var rowsWritten = await SaveAsAsync(cancellationToken).ConfigureAwait(false);
+        var rowsWritten = await SaveAsAsync(progress, cancellationToken).ConfigureAwait(false);
         return rowsWritten.FirstOrDefault();
     }
 

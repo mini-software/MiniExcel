@@ -41,6 +41,6 @@ internal static partial class MappingWriter<T>
             .CreateAsync(stream, cellStream, mapping.WorksheetName, false, configuration, cancellationToken)
             .ConfigureAwait(false);
         
-        return await writer.SaveAsAsync(cancellationToken).ConfigureAwait(false);
+        return await writer.SaveAsAsync(null, cancellationToken).ConfigureAwait(false);
     }
 }

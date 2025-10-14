@@ -1,3 +1,5 @@
+using MiniExcelLib.Core.FluentMapping;
+
 namespace MiniExcelLib.Core.Helpers;
 
 /// <summary>

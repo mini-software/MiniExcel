@@ -1,4 +1,4 @@
-namespace MiniExcelLib.Core.Mapping.Configuration;
+namespace MiniExcelLib.Core.FluentMapping.Configuration;
 
 public interface ICollectionMappingBuilder<T, TCollection> where TCollection : IEnumerable
 {

@@ -1,6 +1,6 @@
 using System.Linq.Expressions;
 
-namespace MiniExcelLib.Core.Mapping.Configuration;
+namespace MiniExcelLib.Core.FluentMapping.Configuration;
 
 public interface IMappingConfiguration<T>
 {

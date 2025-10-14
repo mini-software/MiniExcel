@@ -1,4 +1,4 @@
-namespace MiniExcelLib.Core.Mapping;
+namespace MiniExcelLib.Core.FluentMapping;
 
 /// <summary>
 /// Stores pre-compiled information about nested properties in collection mappings.

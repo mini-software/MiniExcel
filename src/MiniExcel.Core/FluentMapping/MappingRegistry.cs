@@ -1,6 +1,6 @@
-using MiniExcelLib.Core.Mapping.Configuration;
+using MiniExcelLib.Core.FluentMapping.Configuration;
 
-namespace MiniExcelLib.Core.Mapping;
+namespace MiniExcelLib.Core.FluentMapping;
 
 public sealed class MappingRegistry
 {

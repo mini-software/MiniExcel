@@ -1,7 +1,7 @@
 using System.Linq.Expressions;
-using MiniExcelLib.Core.Mapping.Configuration;
+using MiniExcelLib.Core.FluentMapping.Configuration;
 
-namespace MiniExcelLib.Core.Mapping;
+namespace MiniExcelLib.Core.FluentMapping;
 
 /// <summary>
 /// Compiles mapping configurations into optimized runtime representations for efficient Excel read/write operations.

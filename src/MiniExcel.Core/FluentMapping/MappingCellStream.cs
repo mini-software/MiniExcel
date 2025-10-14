@@ -1,6 +1,11 @@
 using MiniExcelLib.Core.WriteAdapters;
 
-namespace MiniExcelLib.Core.Mapping;
+namespace MiniExcelLib.Core.FluentMapping;
+
+internal interface IMappingCellStream
+{
+    IMiniExcelWriteAdapter CreateAdapter();
+}
 
 internal readonly struct MappingCellStream<T>(IEnumerable<T> items, CompiledMapping<T> mapping, string[] columnLetters) : IMappingCellStream
     where T : class

@@ -1,4 +1,6 @@
-﻿namespace MiniExcelLib.Core.WriteAdapters;
+﻿using MiniExcelLib.Core.FluentMapping;
+
+namespace MiniExcelLib.Core.WriteAdapters;
 
 public static class MiniExcelWriteAdapterFactory
 {

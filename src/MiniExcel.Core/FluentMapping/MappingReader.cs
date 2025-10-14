@@ -1,4 +1,4 @@
-namespace MiniExcelLib.Core.Mapping;
+namespace MiniExcelLib.Core.FluentMapping;
 
 internal static partial class MappingReader<T> where T : class, new()
 {

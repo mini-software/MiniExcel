@@ -2,7 +2,7 @@ using BenchmarkDotNet.Attributes;
 using ClosedXML.Report;
 using MiniExcelLib.Benchmarks.Utils;
 using MiniExcelLib.Core;
-using MiniExcelLib.Core.Mapping;
+using MiniExcelLib.Core.FluentMapping;
 
 namespace MiniExcelLib.Benchmarks.BenchmarkSections;
 

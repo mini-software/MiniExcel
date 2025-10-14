@@ -1,3 +1,8 @@
+using MiniExcelLib.Core.FluentMapping;
+using MappingExporter = MiniExcelLib.Core.FluentMapping.MappingExporter;
+using MappingImporter = MiniExcelLib.Core.FluentMapping.MappingImporter;
+using MappingTemplater = MiniExcelLib.Core.FluentMapping.MappingTemplater;
+
 namespace MiniExcelLib.Core;
 
 public sealed class MiniExcelImporterProvider
@@ -5,8 +10,6 @@ public sealed class MiniExcelImporterProvider
     internal MiniExcelImporterProvider() { }
     
     public OpenXmlImporter GetOpenXmlImporter() => new();
-    public MappingImporter GetMappingImporter() => new();
-    public MappingImporter GetMappingImporter(MappingRegistry registry) => new(registry);
 }
 
 public sealed class MiniExcelExporterProvider
@@ -14,8 +17,6 @@ public sealed class MiniExcelExporterProvider
     internal MiniExcelExporterProvider() { }
 
     public OpenXmlExporter GetOpenXmlExporter() => new();
-    public MappingExporter GetMappingExporter() => new();
-    public MappingExporter GetMappingExporter(MappingRegistry registry) => new(registry);
 }
 
 public sealed class MiniExcelTemplaterProvider
@@ -23,5 +24,4 @@ public sealed class MiniExcelTemplaterProvider
     internal MiniExcelTemplaterProvider() { }
 
     public OpenXmlTemplater GetOpenXmlTemplater() => new();
-    public MappingTemplater GetMappingTemplater(MappingRegistry registry) =>  new(registry);
 }

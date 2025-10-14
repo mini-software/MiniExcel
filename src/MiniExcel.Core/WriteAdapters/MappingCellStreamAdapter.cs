@@ -1,3 +1,5 @@
+using MiniExcelLib.Core.FluentMapping;
+
 namespace MiniExcelLib.Core.WriteAdapters;
 
 internal class MappingCellStreamAdapter<T> : IMiniExcelWriteAdapter

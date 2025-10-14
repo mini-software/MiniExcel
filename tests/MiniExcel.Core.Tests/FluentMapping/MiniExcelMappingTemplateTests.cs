@@ -1,4 +1,4 @@
-using MiniExcelLib.Core.Mapping;
+using MiniExcelLib.Core.FluentMapping;
 using MiniExcelLib.Tests.Common.Utils;
 
 namespace MiniExcelLib.Tests.FluentMapping;

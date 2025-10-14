@@ -1,4 +1,4 @@
-namespace MiniExcelLib.Core.Mapping;
+namespace MiniExcelLib.Core.FluentMapping;
 
 public sealed partial class MappingExporter
 {

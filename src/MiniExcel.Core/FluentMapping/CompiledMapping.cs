@@ -1,4 +1,4 @@
-namespace MiniExcelLib.Core.Mapping;
+namespace MiniExcelLib.Core.FluentMapping;
 
 internal class CompiledMapping<T>
 {

@@ -1,5 +1,5 @@
 using System.Reflection;
-using MiniExcelLib.Core.Mapping;
+using MiniExcelLib.Core.FluentMapping;
 
 namespace MiniExcelLib.Tests.FluentMapping
 {
@@ -455,7 +455,7 @@ namespace MiniExcelLib.Tests.FluentMapping
             var gridProp = departmentMapping.GetType().GetProperty("OptimizedCellGrid", BindingFlags.Instance | BindingFlags.Public);
             var grid = gridProp?.GetValue(departmentMapping) as Array;
             Assert.NotNull(grid);
-            var handlerType = typeof(MappingRegistry).Assembly.GetType("MiniExcelLib.Core.Mapping.OptimizedCellHandler");
+            var handlerType = typeof(MappingRegistry).Assembly.GetType("MiniExcelLib.Core.FluentMapping.OptimizedCellHandler");
             Assert.NotNull(handlerType);
             var valueSetterProperty = handlerType!.GetProperty("ValueSetter", BindingFlags.Instance | BindingFlags.Public);
             var propertyNameProperty = handlerType.GetProperty("PropertyName", BindingFlags.Instance | BindingFlags.Public);

@@ -1,4 +1,4 @@
-namespace MiniExcelLib.Core.Mapping;
+namespace MiniExcelLib.Core.FluentMapping;
 
 internal partial struct MappingTemplateProcessor<T>(CompiledMapping<T> mapping) where T : class
 {

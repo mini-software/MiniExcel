@@ -1,4 +1,4 @@
-namespace MiniExcelLib.Core.Mapping.Configuration;
+namespace MiniExcelLib.Core.FluentMapping.Configuration;
 
 internal partial class PropertyMappingBuilder<T, TProperty> : IPropertyMappingBuilder<T, TProperty>
 {

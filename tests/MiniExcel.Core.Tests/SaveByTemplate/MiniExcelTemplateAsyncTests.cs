@@ -317,78 +317,78 @@ public class MiniExcelTemplateAsyncTests
     [Fact]
     public async Task TestIEnumerableType()
     {
+        const string templatePath = "../../../../../samples/xlsx/TestIEnumerableType.xlsx";
+        using var path = AutoDeletingPath.Create();
+
+        var poco = new TestIEnumerableTypePoco
         {
-            const string templatePath = "../../../../../samples/xlsx/TestIEnumerableType.xlsx";
-            using var path = AutoDeletingPath.Create();
-
-            var poco = new TestIEnumerableTypePoco
-            {
-                @string = "string",
-                @int = 123, 
-                @decimal = 123.45m,
-                @double = 123.33,
-                datetime = new DateTime(2021, 4, 1), 
-                @bool = true,
-                Guid = Guid.NewGuid()
-            };
+            @string = "string",
+            @int = 123, 
+            @decimal = 123.45m,
+            @double = 123.33,
+            datetime = new DateTime(2021, 4, 1), 
+            @bool = true,
+            Guid = Guid.NewGuid()
+        };
             
-            var value = new
-            {
-                Ts = new[] {
-                    poco,
-                    new TestIEnumerableTypePoco(),
-                    null,
-                    new TestIEnumerableTypePoco(),
-                    poco
-                }
-            };
-            await _excelTemplater.ApplyTemplateAsync(path.ToString(), templatePath, value);
+        var value = new
+        {
+            Ts = new[] {
+                poco,
+                new TestIEnumerableTypePoco(),
+                null,
+                new TestIEnumerableTypePoco(),
+                poco
+            }
+        };
+        await _excelTemplater.ApplyTemplateAsync(path.ToString(), templatePath, value);
 
-            var rows = _excelImporter.Query<TestIEnumerableTypePoco>(path.ToString()).ToList();
-            Assert.Equal(poco.@string, rows[0].@string);
-            Assert.Equal(poco.@int, rows[0].@int);
-            Assert.Equal(poco.@double, rows[0].@double);
-            Assert.Equal(poco.@decimal, rows[0].@decimal);
-            Assert.Equal(poco.@bool, rows[0].@bool);
-            Assert.Equal(poco.datetime, rows[0].datetime);
-            Assert.Equal(poco.Guid, rows[0].Guid);
+        var config = new OpenXmlConfiguration { Culture = new CultureInfo("it") };
+        
+        var rows = _excelImporter.Query<TestIEnumerableTypePoco>(path.ToString(), configuration: config).ToList();
+        Assert.Equal(poco.@string, rows[0].@string);
+        Assert.Equal(poco.@int, rows[0].@int);
+        Assert.Equal(poco.@double, rows[0].@double);
+        Assert.Equal(poco.@decimal, rows[0].@decimal);
+        Assert.Equal(poco.@bool, rows[0].@bool);
+        Assert.Equal(poco.datetime, rows[0].datetime);
+        Assert.Equal(poco.Guid, rows[0].Guid);
 
-            Assert.Null(rows[1].@string);
-            Assert.Null(rows[1].@int);
-            Assert.Null(rows[1].@double);
-            Assert.Null(rows[1].@decimal);
-            Assert.Null(rows[1].@bool);
-            Assert.Null(rows[1].datetime);
-            Assert.Null(rows[1].Guid);
+        Assert.Null(rows[1].@string);
+        Assert.Null(rows[1].@int);
+        Assert.Null(rows[1].@double);
+        Assert.Null(rows[1].@decimal);
+        Assert.Null(rows[1].@bool);
+        Assert.Null(rows[1].datetime);
+        Assert.Null(rows[1].Guid);
 
-            // special input null but query is empty vo
-            Assert.Null(rows[2].@string);
-            Assert.Null(rows[2].@int);
-            Assert.Null(rows[2].@double);
-            Assert.Null(rows[2].@decimal);
-            Assert.Null(rows[2].@bool);
-            Assert.Null(rows[2].datetime);
-            Assert.Null(rows[2].Guid);
+        // special input null but query is empty vo
+        Assert.Null(rows[2].@string);
+        Assert.Null(rows[2].@int);
+        Assert.Null(rows[2].@double);
+        Assert.Null(rows[2].@decimal);
+        Assert.Null(rows[2].@bool);
+        Assert.Null(rows[2].datetime);
+        Assert.Null(rows[2].Guid);
 
-            Assert.Null(rows[3].@string);
-            Assert.Null(rows[3].@int);
-            Assert.Null(rows[3].@double);
-            Assert.Null(rows[3].@decimal);
-            Assert.Null(rows[3].@bool);
-            Assert.Null(rows[3].datetime);
-            Assert.Null(rows[3].Guid);
+        Assert.Null(rows[3].@string);
+        Assert.Null(rows[3].@int);
+        Assert.Null(rows[3].@double);
+        Assert.Null(rows[3].@decimal);
+        Assert.Null(rows[3].@bool);
+        Assert.Null(rows[3].datetime);
+        Assert.Null(rows[3].Guid);
 
-            Assert.Equal(poco.@string, rows[4].@string);
-            Assert.Equal(poco.@int, rows[4].@int);
-            Assert.Equal(poco.@double, rows[4].@double);
-            Assert.Equal(poco.@decimal, rows[4].@decimal);
-            Assert.Equal(poco.@bool, rows[4].@bool);
-            Assert.Equal(poco.datetime, rows[4].datetime);
-            Assert.Equal(poco.Guid, rows[4].Guid);
+        Assert.Equal(poco.@string, rows[4].@string);
+        Assert.Equal(poco.@int, rows[4].@int);
+        Assert.Equal(poco.@double, rows[4].@double);
+        Assert.Equal(poco.@decimal, rows[4].@decimal);
+        Assert.Equal(poco.@bool, rows[4].@bool);
+        Assert.Equal(poco.datetime, rows[4].datetime);
+        Assert.Equal(poco.Guid, rows[4].Guid);
 
-            var dimension = SheetHelper.GetFirstSheetDimensionRefValue(path.ToString());
-            Assert.Equal("A1:G6", dimension);
-        }
+        var dimension = SheetHelper.GetFirstSheetDimensionRefValue(path.ToString());
+        Assert.Equal("A1:G6", dimension);
     }
 
     [Fact]
@@ -409,7 +409,9 @@ public class MiniExcelTemplateAsyncTests
         };
         await _excelTemplater.ApplyTemplateAsync(path.ToString(), templatePath, value);
 
-        var rows = _excelImporter.Query<TestIEnumerableTypePoco>(path.ToString()).ToList();
+        var config = new OpenXmlConfiguration { Culture = new CultureInfo("it") };
+
+        var rows = _excelImporter.Query<TestIEnumerableTypePoco>(path.ToString(), configuration: config).ToList();
         Assert.Equal(value.@string, rows[0].@string);
         Assert.Equal(value.@int, rows[0].@int);
         Assert.Equal(value.@double, rows[0].@double);

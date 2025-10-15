@@ -84,13 +84,17 @@ public static partial class MiniExcelMapper
         try
         {
             object? newValue = null;
+            
             if (pInfo.Nullable && string.IsNullOrWhiteSpace(itemValue?.ToString()))
             {
+                // value is null, no transformation required
             }
+            
             else if (pInfo.ExcludeNullableType == typeof(Guid))
             {
                 newValue = Guid.Parse(itemValue?.ToString() ?? Guid.Empty.ToString());
             }
+            
             else if (pInfo.ExcludeNullableType == typeof(DateTimeOffset))
             {
                 var vs = itemValue?.ToString();
@@ -110,6 +114,7 @@ public static partial class MiniExcelMapper
                     throw new InvalidCastException($"{vs} cannot be cast to DateTime");
                 }
             }
+            
             else if (pInfo.ExcludeNullableType == typeof(DateTime))
             {
                 // fix issue 257 https://github.com/mini-software/MiniExcel/issues/257
@@ -141,7 +146,8 @@ public static partial class MiniExcelMapper
                 else
                     throw new InvalidCastException($"{vs} cannot be cast to DateTime");
             }
-    #if NET6_0_OR_GREATER
+            
+#if NET6_0_OR_GREATER
             else if (pInfo.ExcludeNullableType == typeof(DateOnly))
             {
                 if (itemValue is DateOnly)
@@ -178,7 +184,8 @@ public static partial class MiniExcelMapper
                 else
                     throw new InvalidCastException($"{vs} cannot be cast to DateOnly");                
             }
-    #endif
+#endif
+
             else if (pInfo.ExcludeNullableType == typeof(TimeSpan))
             {
                 if (itemValue is TimeSpan)
@@ -205,11 +212,22 @@ public static partial class MiniExcelMapper
                 else
                     throw new InvalidCastException($"{vs} cannot be cast to TimeSpan");
             }
-            else if (pInfo.ExcludeNullableType == typeof(double)) // && (!Regex.IsMatch(itemValue.ToString(), @"^-?\d+(\.\d+)?([eE][-+]?\d+)?$") || itemValue.ToString().Trim().Equals("NaN")))
+            
+            else if (pInfo.ExcludeNullableType == typeof(double))
             {
-                var invariantString = Convert.ToString(itemValue, CultureInfo.InvariantCulture);
-                newValue = double.TryParse(invariantString, NumberStyles.Any, CultureInfo.InvariantCulture, out var value) ? value : double.NaN;
+                if (double.TryParse(itemValue?.ToString(), NumberStyles.Any, config.Culture, out var doubleValue))
+                {
+                    newValue = doubleValue;
+                }
+                else
+                {
+                    var invariantString = Convert.ToString(itemValue, CultureInfo.InvariantCulture);
+                    newValue = double.TryParse(invariantString, NumberStyles.Any, CultureInfo.InvariantCulture, out var value) 
+                        ? value 
+                        : throw new InvalidCastException();
+                }
             }
+            
             else if (pInfo.ExcludeNullableType == typeof(bool))
             {
                 var vs = itemValue?.ToString();
@@ -220,16 +238,19 @@ public static partial class MiniExcelMapper
                     _ => bool.TryParse(vs, out var parsed) ? parsed : null
                 };
             }
+            
             else if (pInfo.Property.Info.PropertyType == typeof(string))
             {
                 newValue = XmlHelper.DecodeString(itemValue?.ToString());
             }
+            
             else if (pInfo.ExcludeNullableType.IsEnum)
             {
                 var fieldInfo = pInfo.ExcludeNullableType.GetFields().FirstOrDefault(e => e.GetCustomAttribute<DescriptionAttribute>(false)?.Description == itemValue?.ToString());
                 var value = fieldInfo?.Name ?? itemValue?.ToString() ?? "";
                 newValue = Enum.Parse(pInfo.ExcludeNullableType, value, true);
             }
+
             else if (pInfo.ExcludeNullableType == typeof(Uri))
             {
                 var rawValue = itemValue?.ToString();
@@ -237,6 +258,7 @@ public static partial class MiniExcelMapper
                     throw new InvalidCastException($"Value \"{rawValue}\" cannot be converted to Uri");
                 newValue = uri;
             }
+
             else
             {
                 // Use pInfo.ExcludeNullableType to resolve : https://github.com/mini-software/MiniExcel/issues/138

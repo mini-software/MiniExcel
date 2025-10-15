@@ -2527,9 +2527,10 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     public void Issue137()
     {
         const string path = "../../../../../samples/xlsx/TestIssue137.xlsx";
+        var config = new OpenXmlConfiguration { Culture = new CultureInfo("it") };
 
         {
-            var rows =  _excelImporter.Query(path).ToList();
+            var rows =  _excelImporter.Query(path, configuration: config).ToList();
             var first = rows[0] as IDictionary<string, object>; // https://user-images.githubusercontent.com/12729184/113266322-ba06e400-9307-11eb-9521-d36abfda75cc.png
             Assert.Equal(["A", "B", "C", "D", "E", "F", "G", "H"], first?.Keys.ToArray());
             Assert.Equal(11, rows.Count);
@@ -2563,7 +2564,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
 
         // dynamic query with head
         {
-            var rows =  _excelImporter.Query(path, true).ToList();
+            var rows =  _excelImporter.Query(path, true, configuration: config).ToList();
             var first = rows[0] as IDictionary<string, object>; //![image](https://user-images.githubusercontent.com/12729184/113266322-ba06e400-9307-11eb-9521-d36abfda75cc.png)
             Assert.Equal(["比例", "商品", "滿倉口數", "0", "1為港幣 0為台幣"], first?.Keys.ToArray());
             Assert.Equal(10, rows.Count);
@@ -2583,7 +2584,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         }
 
         {
-            var rows =  _excelImporter.Query<Issue137ExcelRow>(path).ToList();
+            var rows =  _excelImporter.Query<Issue137ExcelRow>(path, configuration: config).ToList();
             Assert.Equal(10, rows.Count);
             {
                 var row = rows[0];
@@ -2614,8 +2615,11 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     public void Issue138()
     {
         const string path = "../../../../../samples/xlsx/TestIssue138.xlsx";
+        var config = new OpenXmlConfiguration { Culture = new CultureInfo("zh") };
+        config.Culture.NumberFormat.NumberDecimalSeparator = ",";
+
         {
-            var rows =  _excelImporter.Query(path, true).ToList();
+            var rows =  _excelImporter.Query(path, true, configuration: config).ToList();
             Assert.Equal(6, rows.Count);
 
             foreach (var index in new[] { 0, 2, 5 })
@@ -2640,7 +2644,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         }
         {
 
-            var rows =  _excelImporter.Query<Issue138ExcelRow>(path).ToList();
+            var rows =  _excelImporter.Query<Issue138ExcelRow>(path, configuration: config).ToList();
             Assert.Equal(6, rows.Count);
             Assert.Equal(new DateTime(2021, 3, 1), rows[0].Date);
 
@@ -2722,6 +2726,30 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             Assert.Contains("../drawings/drawing2.xml", SheetHelper.GetZipFileContent(path, "xl/worksheets/_rels/sheet2.xml.rels"));
         }
     }
+
+    private class Issues409_881
+    {
+        public string Units { get; set; }
+        public double Quantity { get; set; }
+    }
+    
+    [Fact]
+    public void TestIssue409()
+    {
+        var path = PathHelper.GetFile("xlsx/TestIssue409.xlsx");
+        var config = new OpenXmlConfiguration { Culture = new CultureInfo("ru") };
+        config.Culture.NumberFormat.NumberDecimalSeparator = ",";
+        
+        var query = _excelImporter.Query<Issues409_881>(path, configuration: config).ToList();
+
+        Assert.Equal(0.002886, query[0].Quantity);
+        Assert.Equal(4.1E-05, query[1].Quantity);
+        Assert.Equal(0.02586, query[2].Quantity);
+        Assert.Equal(0.000217, query[3].Quantity);
+        Assert.Equal(17.4024812, query[4].Quantity);
+        Assert.Equal(1.43E-06, query[5].Quantity);
+        Assert.Equal(9.9E-06, query[6].Quantity);
+    }  
 
     private class Issue422Enumerable(IEnumerable inner) : IEnumerable
     {
@@ -3726,6 +3754,15 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         {
             using var ms = new MemoryStream();
             _excelExporter.Export(ms, toExport);
+        });
+    }
+    
+    [Fact]
+    public void TestIssue881()
+    {
+        Assert.Throws<MiniExcelInvalidCastException>(() =>
+        {
+            _ = _excelImporter.Query<Issues409_881>(PathHelper.GetFile("xlsx/TestIssue881.xlsx")).ToList();
         });
     }
 }

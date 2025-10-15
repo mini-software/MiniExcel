@@ -1326,12 +1326,13 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
     /// https://github.com/mini-software/MiniExcel/issues/137
     /// </summary>
     [Fact]
-    public async Task Issue137()
+    public void Issue137()
     {
-        var path = "../../../../../samples/xlsx/TestIssue137.xlsx";
-
+        const string path = "../../../../../samples/xlsx/TestIssue137.xlsx";
+        var config = new OpenXmlConfiguration { Culture = new CultureInfo("it")};
+        
         {
-            var q =  _excelImporter.QueryAsync(path).ToBlockingEnumerable();
+            var q =  _excelImporter.QueryAsync(path, configuration: config).ToBlockingEnumerable();
             var rows = q.ToList();
             var first = rows[0] as IDictionary<string, object>; // https://user-images.githubusercontent.com/12729184/113266322-ba06e400-9307-11eb-9521-d36abfda75cc.png
             Assert.Equal(["A", "B", "C", "D", "E", "F", "G", "H"], first?.Keys.ToArray());
@@ -1367,7 +1368,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
 
         // dynamic query with head
         {
-            var q =  _excelImporter.QueryAsync(path, true).ToBlockingEnumerable();
+            var q =  _excelImporter.QueryAsync(path, true, configuration: config).ToBlockingEnumerable();
             var rows = q.ToList();
             var first = rows[0] as IDictionary<string, object>; // https://user-images.githubusercontent.com/12729184/113266322-ba06e400-9307-11eb-9521-d36abfda75cc.png
             Assert.Equal(["比例", "商品", "滿倉口數", "0", "1為港幣 0為台幣"], first?.Keys.ToArray());
@@ -1389,7 +1390,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
         }
 
         {
-            var q =  _excelImporter.QueryAsync<Issue137ExcelRow>(path).ToBlockingEnumerable();
+            var q =  _excelImporter.QueryAsync<Issue137ExcelRow>(path, configuration: config).ToBlockingEnumerable();
             var rows = q.ToList();
             Assert.Equal(10, rows.Count);
             
@@ -1419,11 +1420,13 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
     /// https://github.com/mini-software/MiniExcel/issues/138
     /// </summary>
     [Fact]
-    public async Task Issue138()
+    public void Issue138()
     {
         const string path = "../../../../../samples/xlsx/TestIssue138.xlsx";
+        var config = new OpenXmlConfiguration { Culture = new CultureInfo("it") };
+
         {
-            var q =  _excelImporter.QueryAsync(path, true).ToBlockingEnumerable();
+            var q =  _excelImporter.QueryAsync(path, true, configuration: config).ToBlockingEnumerable();
             var rows = q.ToList();
             Assert.Equal(6, rows.Count);
 
@@ -1449,7 +1452,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
         }
         {
 
-            var q =  _excelImporter.QueryAsync<Issue138ExcelRow>(path).ToBlockingEnumerable();
+            var q =  _excelImporter.QueryAsync<Issue138ExcelRow>(path, configuration: config).ToBlockingEnumerable();
             var rows = q.ToList();
             Assert.Equal(6, rows.Count);
             Assert.Equal(new DateTime(2021, 3, 1), rows[0].Date);

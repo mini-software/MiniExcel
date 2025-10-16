@@ -1411,7 +1411,7 @@ var data = new TestEntity
     Points = 123
 };
 
-var termplater = MiniExcel.Templaters.GetMappingExporter(registry);
+var termplater = MiniExcel.Templaters.GetMappingTemplater(registry);
 await termplater.ApplyTemplateAsync(outputPath, templatePath, new[] { data });
 ```
 

@@ -215,7 +215,7 @@ public static partial class MiniExcelMapper
             
             else if (pInfo.ExcludeNullableType == typeof(double))
             {
-                if (double.TryParse(itemValue?.ToString(), NumberStyles.Any, config.Culture, out var doubleValue))
+                if (double.TryParse(Convert.ToString(itemValue, config.Culture), NumberStyles.Any, config.Culture, out var doubleValue))
                 {
                     newValue = doubleValue;
                 }

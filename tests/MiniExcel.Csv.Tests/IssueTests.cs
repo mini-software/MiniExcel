@@ -1008,5 +1008,4 @@ public class IssueTests
         var getRowsInfo = _csvImporter.Query(stream, configuration: config).ToArray();
         Assert.Equal(2, getRowsInfo.Length);
     }
-
 }

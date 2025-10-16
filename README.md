@@ -81,6 +81,8 @@ If you do, make sure to also check out the [new docs](README-V2.md) and the [upg
 
 - [Excel Column Name/Index/Ignore Attribute](#getstart4)
 
+- [Fluent Cell Mapping](#getstart4.5)
+
 - [Examples](#getstart5)
 
 
@@ -1103,7 +1105,6 @@ public class Dto
     public string Name { get; set; }
 }
 ```
-
 
 
 #### 5. System.ComponentModel.DisplayNameAttribute = ExcelColumnName.excelColumnNameAttribute

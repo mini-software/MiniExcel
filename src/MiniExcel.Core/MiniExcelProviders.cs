@@ -1,3 +1,8 @@
+using MiniExcelLib.Core.FluentMapping;
+using MappingExporter = MiniExcelLib.Core.FluentMapping.MappingExporter;
+using MappingImporter = MiniExcelLib.Core.FluentMapping.MappingImporter;
+using MappingTemplater = MiniExcelLib.Core.FluentMapping.MappingTemplater;
+
 namespace MiniExcelLib.Core;
 
 public sealed class MiniExcelImporterProvider

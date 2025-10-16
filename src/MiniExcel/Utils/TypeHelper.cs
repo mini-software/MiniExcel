@@ -199,8 +199,17 @@ namespace MiniExcelLibs.Utils
             }
             else if (pInfo.ExcludeNullableType == typeof(double)) // && (!Regex.IsMatch(itemValue.ToString(), @"^-?\d+(\.\d+)?([eE][-+]?\d+)?$") || itemValue.ToString().Trim().Equals("NaN")))
             {
-                var invariantString = Convert.ToString(itemValue, CultureInfo.InvariantCulture);
-                newValue = double.TryParse(invariantString, NumberStyles.Any, CultureInfo.InvariantCulture, out var value) ? value : double.NaN;
+                if (double.TryParse(Convert.ToString(itemValue, config.Culture), NumberStyles.Any, config.Culture, out var doubleValue))
+                {
+                    newValue = doubleValue;
+                }
+                else
+                {
+                    var invariantString = Convert.ToString(itemValue, CultureInfo.InvariantCulture);
+                    newValue = double.TryParse(invariantString, NumberStyles.Any, CultureInfo.InvariantCulture, out var value) 
+                        ? value 
+                        : throw new InvalidCastException($"Value \"{itemValue}\" cannot be cast to double");
+                }
             }
             else if (pInfo.ExcludeNullableType == typeof(bool))
             {

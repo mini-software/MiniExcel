@@ -183,8 +183,11 @@ namespace MiniExcelLibs.OpenXml
 
                                 if (rowIndex < startRowIndex)
                                 {
-                                    XmlReaderHelper.ReadFirstContent(reader);
-                                    XmlReaderHelper.SkipToNextSameLevelDom(reader);
+                                    if (XmlReaderHelper.ReadFirstContent(reader))
+                                    {
+                                        XmlReaderHelper.SkipToNextSameLevelDom(reader);
+                                    }
+                                    
                                     continue;
                                 }
                                 if (endRowIndex.HasValue && rowIndex > endRowIndex.Value)

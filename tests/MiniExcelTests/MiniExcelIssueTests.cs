@@ -4737,4 +4737,22 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             ms.SaveAs(toExport);
         });
     }
+
+    public record ExcelDataRow(string Key, string Value)
+    {
+        public ExcelDataRow() : this("", "") { }
+    }
+    
+    [Fact]
+    public void TestIssue888_ShouldIgnoreFrame()
+    {
+        const string xlsxPath = "../../../../../samples/xlsx/Issue888_DataWithFrame.xlsx";
+        using var stream = File.OpenRead(xlsxPath);
+        var data = stream.Query<ExcelDataRow>("Sheet1", startCell: "A2").ToList();
+        
+        Assert.Equal([
+            new("Key1", "Value1"),
+            new("Key2", "Value2")
+        ], data);
+    }
 }

@@ -4737,4 +4737,29 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             ms.SaveAs(toExport);
         });
     }
+
+    private record ExcelDataRow(string Key, string Value)
+    {
+        public ExcelDataRow() : this("", "") { }
+    }
+    
+    /// <summary>
+    /// https://github.com/mini-software/MiniExcel/issues/888
+    /// </summary>
+    [Fact]
+    public void TestIssue888_ShouldIgnoreFrame()
+    {
+        var xlsxPath = PathHelper.GetFile("xlsx/Issue888_DataWithFrame.xlsx");
+        ExcelDataRow[] dataInSheet = [
+            new("Key1", "Value1"),
+            new("Key2", "Value2")
+        ];
+        
+        using var stream = File.OpenRead(xlsxPath);
+        
+        // Act
+        var dataRead = stream.Query<ExcelDataRow>(startCell: "A2").ToArray();
+
+        Assert.Equal(dataInSheet, dataRead);
+    }
 }

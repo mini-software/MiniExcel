@@ -343,9 +343,7 @@ public class MiniExcelTemplateAsyncTests
         };
         await _excelTemplater.ApplyTemplateAsync(path.ToString(), templatePath, value);
 
-        var config = new OpenXmlConfiguration { Culture = new CultureInfo("it") };
-        
-        var rows = _excelImporter.Query<TestIEnumerableTypePoco>(path.ToString(), configuration: config).ToList();
+        var rows = _excelImporter.Query<TestIEnumerableTypePoco>(path.ToString()).ToList();
         Assert.Equal(poco.@string, rows[0].@string);
         Assert.Equal(poco.@int, rows[0].@int);
         Assert.Equal(poco.@double, rows[0].@double);
@@ -409,9 +407,7 @@ public class MiniExcelTemplateAsyncTests
         };
         await _excelTemplater.ApplyTemplateAsync(path.ToString(), templatePath, value);
 
-        var config = new OpenXmlConfiguration { Culture = new CultureInfo("it") };
-
-        var rows = _excelImporter.Query<TestIEnumerableTypePoco>(path.ToString(), configuration: config).ToList();
+        var rows = _excelImporter.Query<TestIEnumerableTypePoco>(path.ToString()).ToList();
         Assert.Equal(value.@string, rows[0].@string);
         Assert.Equal(value.@int, rows[0].@int);
         Assert.Equal(value.@double, rows[0].@double);

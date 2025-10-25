@@ -2527,10 +2527,8 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     public void Issue137()
     {
         const string path = "../../../../../samples/xlsx/TestIssue137.xlsx";
-        var config = new OpenXmlConfiguration { Culture = new CultureInfo("it") };
-
         {
-            var rows =  _excelImporter.Query(path, configuration: config).ToList();
+            var rows =  _excelImporter.Query(path).ToList();
             var first = rows[0] as IDictionary<string, object>; // https://user-images.githubusercontent.com/12729184/113266322-ba06e400-9307-11eb-9521-d36abfda75cc.png
             Assert.Equal(["A", "B", "C", "D", "E", "F", "G", "H"], first?.Keys.ToArray());
             Assert.Equal(11, rows.Count);
@@ -2564,7 +2562,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
 
         // dynamic query with head
         {
-            var rows =  _excelImporter.Query(path, true, configuration: config).ToList();
+            var rows =  _excelImporter.Query(path, true).ToList();
             var first = rows[0] as IDictionary<string, object>; //![image](https://user-images.githubusercontent.com/12729184/113266322-ba06e400-9307-11eb-9521-d36abfda75cc.png)
             Assert.Equal(["比例", "商品", "滿倉口數", "0", "1為港幣 0為台幣"], first?.Keys.ToArray());
             Assert.Equal(10, rows.Count);
@@ -2584,7 +2582,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         }
 
         {
-            var rows =  _excelImporter.Query<Issue137ExcelRow>(path, configuration: config).ToList();
+            var rows =  _excelImporter.Query<Issue137ExcelRow>(path).ToList();
             Assert.Equal(10, rows.Count);
             {
                 var row = rows[0];
@@ -2615,11 +2613,8 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     public void Issue138()
     {
         const string path = "../../../../../samples/xlsx/TestIssue138.xlsx";
-        var config = new OpenXmlConfiguration { Culture = new CultureInfo("zh") };
-        config.Culture.NumberFormat.NumberDecimalSeparator = ",";
-
         {
-            var rows =  _excelImporter.Query(path, true, configuration: config).ToList();
+            var rows =  _excelImporter.Query(path, true).ToList();
             Assert.Equal(6, rows.Count);
 
             foreach (var index in new[] { 0, 2, 5 })
@@ -2644,7 +2639,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         }
         {
 
-            var rows =  _excelImporter.Query<Issue138ExcelRow>(path, configuration: config).ToList();
+            var rows =  _excelImporter.Query<Issue138ExcelRow>(path).ToList();
             Assert.Equal(6, rows.Count);
             Assert.Equal(new DateTime(2021, 3, 1), rows[0].Date);
 
@@ -2774,10 +2769,11 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             new { Row1 = "1", Row2 = "2" },
             new { Row1 = "3", Row2 = "4" }
         };
-
         var enumerableWithCount = new Issue422Enumerable(items);
+
         using var path = AutoDeletingPath.Create();
-         _excelExporter.Export(path.ToString(), enumerableWithCount);
+        _excelExporter.Export(path.ToString(), enumerableWithCount);
+
         Assert.Equal(1, enumerableWithCount.GetEnumeratorCount);
     }
 
@@ -2855,7 +2851,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         using var reader = cmd.ExecuteReader();
 
         using var path = AutoDeletingPath.Create();
-         _excelExporter.Export(path.FilePath, reader, configuration: excelconfig, overwriteFile: true);
+        _excelExporter.Export(path.FilePath, reader, configuration: excelconfig, overwriteFile: true);
 
         var rows =  _excelImporter.Query(path.FilePath).ToList();
         Assert.All(rows, x => Assert.Single(x));

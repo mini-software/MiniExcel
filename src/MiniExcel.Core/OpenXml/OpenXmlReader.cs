@@ -200,10 +200,10 @@ internal partial class OpenXmlReader : IMiniExcelReader
 
                         if (rowIndex < startRowIndex)
                         {
-                            await XmlReaderHelper.ReadFirstContentAsync(reader, cancellationToken)
-                                .ConfigureAwait(false);
-                            await XmlReaderHelper.SkipToNextSameLevelDomAsync(reader, cancellationToken)
-                                .ConfigureAwait(false);
+                            if (await XmlReaderHelper.ReadFirstContentAsync(reader, cancellationToken).ConfigureAwait(false))
+                            {
+                                await XmlReaderHelper.SkipToNextSameLevelDomAsync(reader, cancellationToken).ConfigureAwait(false);
+                            }
                             continue;
                         }
 

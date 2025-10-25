@@ -3761,4 +3761,30 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             _ = _excelImporter.Query<Issues409_881>(PathHelper.GetFile("xlsx/TestIssue881.xlsx")).ToList();
         });
     }
+
+    private record ExcelDataRow(string Key, string Value)
+    {
+        public ExcelDataRow() : this("", "") { }
+    }
+    
+    /// <summary>
+    /// https://github.com/mini-software/MiniExcel/issues/888
+    /// </summary>
+    [Fact]
+    public void TestIssue888_ShouldIgnoreFrame()
+    {
+        var xlsxPath = PathHelper.GetFile("xlsx/Issue888_DataWithFrame.xlsx");
+        ExcelDataRow[] dataInSheet = 
+        [
+            new("Key1", "Value1"),
+            new("Key2", "Value2")
+        ];
+        
+        // Act
+        using var stream = File.OpenRead(xlsxPath);
+        var dataRead = _excelImporter.Query<ExcelDataRow>(stream, startCell: "A2").ToArray();
+
+        Assert.Equal(dataInSheet, dataRead);
+    }
+
 }

@@ -2,17 +2,17 @@
 
 internal class SharedStringsDiskCache : IDictionary<int, string>, IDisposable
 {
+    private const int ExcelCellMaxLength = 32767;
     private static readonly Encoding Encoding = new UTF8Encoding(true);
         
     private readonly FileStream _positionFs;
     private readonly FileStream _lengthFs;
     private readonly FileStream _valueFs;
     
-    private long _maxIndx = -1;
-        
+    private long _maxIndex = -1;
     private bool _disposedValue;
     
-    public int Count => checked((int)(_maxIndx + 1));
+    public int Count => checked((int)(_maxIndex + 1));
 
     public string this[int key]
     {
@@ -20,25 +20,27 @@ internal class SharedStringsDiskCache : IDictionary<int, string>, IDisposable
         set => Add(key, value);
     }
     
-    public bool ContainsKey(int key) => key <= _maxIndx;
+    public bool ContainsKey(int key) => key <= _maxIndex;
 
-    public SharedStringsDiskCache()
+    public SharedStringsDiskCache(string sharedStringsCacheDir)
     {
-        var path = $"{Guid.NewGuid().ToString()}_miniexcelcache";
-        
-        _positionFs = new FileStream($"{path}_position", FileMode.OpenOrCreate);
-        _lengthFs = new FileStream($"{path}_length", FileMode.OpenOrCreate);
-        _valueFs = new FileStream($"{path}_data", FileMode.OpenOrCreate);
+        if (string.IsNullOrWhiteSpace(sharedStringsCacheDir) || !Directory.Exists(sharedStringsCacheDir))
+            throw new DirectoryNotFoundException($"\"{sharedStringsCacheDir}\" is not a valid directory for the shared strings cache.");
+
+        var prefix = $"{Path.GetRandomFileName()}_miniexcel";
+        _positionFs = new FileStream(Path.Combine(sharedStringsCacheDir, $"{prefix}_position"), FileMode.OpenOrCreate);
+        _lengthFs = new FileStream(Path.Combine(sharedStringsCacheDir, $"{prefix}_length"), FileMode.OpenOrCreate);
+        _valueFs = new FileStream(Path.Combine(sharedStringsCacheDir, $"{prefix}_data"), FileMode.OpenOrCreate);
     }
 
     // index must start with 0-N
-    internal void Add(int index, string value)
+    private void Add(int index, string value)
     {
-        if (index > _maxIndx)
-            _maxIndx = index;
+        if (index > _maxIndex)
+            _maxIndex = index;
             
         var valueBs = Encoding.GetBytes(value);
-        if (value.Length > 32767) //check info length, becasue cell string max length is 47483647
+        if (value.Length > ExcelCellMaxLength) //check info length, becasue cell string max length is 47483647
             throw new ArgumentOutOfRangeException("", "Excel one cell max length is 32,767 characters");
             
         _positionFs.Write(BitConverter.GetBytes(_valueFs.Position), 0, 4);
@@ -105,13 +107,13 @@ internal class SharedStringsDiskCache : IDictionary<int, string>, IDisposable
 
     public IEnumerator<KeyValuePair<int, string>> GetEnumerator()
     {
-        for (int i = 0; i < _maxIndx; i++)
+        for (int i = 0; i <= _maxIndex; i++)
             yield return new KeyValuePair<int, string>(i, this[i]);
     }
 
     IEnumerator IEnumerable.GetEnumerator()
     {
-        for (int i = 0; i < _maxIndx; i++)
+        for (int i = 0; i <= _maxIndex; i++)
             yield return this[i];
     }
 

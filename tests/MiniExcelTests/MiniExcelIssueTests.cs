@@ -413,7 +413,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     public void TestIssue117()
     {
         {
-            var cache = new SharedStringsDiskCache();
+            var cache = new SharedStringsDiskCache(Path.GetTempPath());
             for (int i = 0; i < 100; i++)
             {
                 cache[i] = i.ToString();
@@ -425,7 +425,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             Assert.Equal(100, cache.Count);
         }
         {
-            var cache = new SharedStringsDiskCache();
+            var cache = new SharedStringsDiskCache(Path.GetTempPath());
             Assert.Empty(cache);
         }
     }

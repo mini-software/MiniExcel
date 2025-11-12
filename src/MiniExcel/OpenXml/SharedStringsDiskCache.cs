@@ -23,12 +23,15 @@ namespace MiniExcelLibs.OpenXml
             return key <= _maxIndx;
         }
 
-        public SharedStringsDiskCache()
+        public SharedStringsDiskCache(string sharedStringsCacheDir)
         {
-            var path = $"{Guid.NewGuid().ToString()}_miniexcelcache";
-            _positionFs = new FileStream($"{path}_position", FileMode.OpenOrCreate);
-            _lengthFs = new FileStream($"{path}_length", FileMode.OpenOrCreate);
-            _valueFs = new FileStream($"{path}_data", FileMode.OpenOrCreate);
+            if (string.IsNullOrWhiteSpace(sharedStringsCacheDir) || !Directory.Exists(sharedStringsCacheDir))
+                throw new DirectoryNotFoundException($"\"{sharedStringsCacheDir}\" is not a valid directory for the shared strings cache.");
+
+            var prefix = $"{Path.GetRandomFileName()}_miniexcel";
+            _positionFs = new FileStream(Path.Combine(sharedStringsCacheDir, $"{prefix}_position"), FileMode.OpenOrCreate);
+            _lengthFs = new FileStream(Path.Combine(sharedStringsCacheDir, $"{prefix}_length"), FileMode.OpenOrCreate);
+            _valueFs = new FileStream(Path.Combine(sharedStringsCacheDir, $"{prefix}_data"), FileMode.OpenOrCreate);
         }
 
         // index must start with 0-N
@@ -140,13 +143,13 @@ namespace MiniExcelLibs.OpenXml
 
         public IEnumerator<KeyValuePair<int, string>> GetEnumerator()
         {
-            for (int i = 0; i < _maxIndx; i++)
+            for (int i = 0; i <= _maxIndx; i++)
                 yield return new KeyValuePair<int, string>(i, this[i]);
         }
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            for (int i = 0; i < _maxIndx; i++)
+            for (int i = 0; i <= _maxIndx; i++)
                 yield return this[i];
         }
 

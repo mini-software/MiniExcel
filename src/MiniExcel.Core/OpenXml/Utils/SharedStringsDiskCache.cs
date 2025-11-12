@@ -22,16 +22,15 @@ internal class SharedStringsDiskCache : IDictionary<int, string>, IDisposable
     
     public bool ContainsKey(int key) => key <= _maxIndex;
 
-    public SharedStringsDiskCache(string sharedStringsCachePath)
+    public SharedStringsDiskCache(string sharedStringsCacheDir)
     {
-        var dir = Path.GetDirectoryName(sharedStringsCachePath);
-        if (!Directory.Exists(dir))
-            throw new DirectoryNotFoundException($"\"{dir}\" is not a valid path for the shared strings cache.");
+        if (string.IsNullOrWhiteSpace(sharedStringsCacheDir) || !Directory.Exists(sharedStringsCacheDir))
+            throw new DirectoryNotFoundException($"\"{sharedStringsCacheDir}\" is not a valid directory for the shared strings cache.");
 
         var prefix = $"{Path.GetRandomFileName()}_miniexcel";
-        _positionFs = new FileStream(Path.Combine(dir, $"{prefix}_position"), FileMode.OpenOrCreate);
-        _lengthFs = new FileStream(Path.Combine(dir, $"{prefix}_length"), FileMode.OpenOrCreate);
-        _valueFs = new FileStream(Path.Combine(dir, $"{prefix}_data"), FileMode.OpenOrCreate);
+        _positionFs = new FileStream(Path.Combine(sharedStringsCacheDir, $"{prefix}_position"), FileMode.OpenOrCreate);
+        _lengthFs = new FileStream(Path.Combine(sharedStringsCacheDir, $"{prefix}_length"), FileMode.OpenOrCreate);
+        _valueFs = new FileStream(Path.Combine(sharedStringsCacheDir, $"{prefix}_data"), FileMode.OpenOrCreate);
     }
 
     // index must start with 0-N
@@ -108,13 +107,13 @@ internal class SharedStringsDiskCache : IDictionary<int, string>, IDisposable
 
     public IEnumerator<KeyValuePair<int, string>> GetEnumerator()
     {
-        for (int i = 0; i < _maxIndex; i++)
+        for (int i = 0; i <= _maxIndex; i++)
             yield return new KeyValuePair<int, string>(i, this[i]);
     }
 
     IEnumerator IEnumerable.GetEnumerator()
     {
-        for (int i = 0; i < _maxIndex; i++)
+        for (int i = 0; i <= _maxIndex; i++)
             yield return this[i];
     }
 

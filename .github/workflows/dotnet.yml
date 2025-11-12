@@ -4,7 +4,7 @@ on:
   pull_request:
   push:
     branches:
-    - master
+    - v1.x-maintenance
 
 jobs:
   build:
@@ -21,6 +21,10 @@ jobs:
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 9.0.x
+    - name: Setup .NET 10
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 10.0.x
     - name: Restore dependencies
       run: dotnet restore
       env:

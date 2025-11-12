@@ -1,0 +1,29 @@
+<Solution>
+  <Folder Name="/benchmarks/">
+    <Project Path="benchmarks/MiniExcel.Benchmarks/MiniExcel.Benchmarks.csproj" />
+  </Folder>
+  <Folder Name="/Docs and setting/">
+    <File Path=".gitattributes" />
+    <File Path=".github/workflows/benchmark.yml" />
+    <File Path=".github/workflows/codeql-analysis.yml" />
+    <File Path=".github/workflows/dotnet.yml" />
+    <File Path=".gitignore" />
+    <File Path="appveyor.yml" />
+    <File Path="LICENSE" />
+    <File Path="README-NuGet.md" />
+    <File Path="README.md" />
+    <File Path="README.zh-CN.md" />
+    <File Path="README.zh-Hant.md" />
+  </Folder>
+  <Folder Name="/Releases/">
+    <File Path="docs/README.md" />
+    <File Path="docs/README.zh-CN.md" />
+    <File Path="docs/README.zh-Hant.md" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/MiniExcel/MiniExcelLibs.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/MiniExcelTests/MiniExcelTests.csproj" />
+  </Folder>
+</Solution>

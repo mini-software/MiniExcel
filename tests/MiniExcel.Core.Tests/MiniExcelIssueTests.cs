@@ -303,22 +303,19 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     [Fact]
     public void TestIssue117()
     {
+        var cacheFull = new SharedStringsDiskCache(Path.GetTempPath());
+        for (int i = 0; i < 100; i++)
         {
-            var cache = new SharedStringsDiskCache();
-            for (int i = 0; i < 100; i++)
-            {
-                cache[i] = i.ToString();
-            }
-            for (int i = 0; i < 100; i++)
-            {
-                Assert.Equal(i.ToString(), cache[i]);
-            }
-            Assert.Equal(100, cache.Count);
+            cacheFull[i] = i.ToString();
         }
+        for (int i = 0; i < 100; i++)
         {
-            var cache = new SharedStringsDiskCache();
-            Assert.Empty(cache);
+            Assert.Equal(i.ToString(), cacheFull[i]);
         }
+        Assert.Equal(100, cacheFull.Count);
+
+        var cacheEmpty = new SharedStringsDiskCache(Path.GetTempPath());
+        Assert.Empty(cacheEmpty);
     }
 
     [Fact]

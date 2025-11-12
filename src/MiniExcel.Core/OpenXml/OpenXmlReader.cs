@@ -420,7 +420,7 @@ internal partial class OpenXmlReader : IMiniExcelReader
 #endif
         if (_config.EnableSharedStringCache && sharedStringsEntry.Length >= _config.SharedStringCacheSize)
         {
-            SharedStrings = new SharedStringsDiskCache();
+            SharedStrings = new SharedStringsDiskCache(_config.SharedStringCachePath);
             await foreach (var sharedString in XmlReaderHelper.GetSharedStringsAsync(stream, cancellationToken, Ns).ConfigureAwait(false))
             {
                 SharedStrings[idx++] = sharedString;

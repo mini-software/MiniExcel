@@ -449,7 +449,7 @@ namespace MiniExcelLibs.OpenXml
                 var idx = 0;
                 if (_config.EnableSharedStringCache && sharedStringsEntry.Length >= _config.SharedStringCacheSize)
                 {
-                    _sharedStrings = new SharedStringsDiskCache();
+                    _sharedStrings = new SharedStringsDiskCache(_config.SharedStringCachePath);
                     foreach (var sharedString in XmlReaderHelper.GetSharedStrings(stream, _ns))
                         _sharedStrings[idx++] = sharedString;
                 }

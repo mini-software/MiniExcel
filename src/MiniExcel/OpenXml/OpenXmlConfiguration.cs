@@ -1,3 +1,4 @@
+using System.IO;
 using MiniExcelLibs.Attributes;
 
 namespace MiniExcelLibs.OpenXml
@@ -18,6 +19,13 @@ namespace MiniExcelLibs.OpenXml
         public bool IgnoreEmptyRows { get; set; } = false;
         public bool EnableSharedStringCache { get; set; } = true;
         public long SharedStringCacheSize { get; set; } = 5 * 1024 * 1024;
+
+        /// <summary>
+        /// The directory where the shared strings cache files are stored.
+        /// It defaults to the system's temporary folder.
+        /// </summary>
+        public string SharedStringCachePath { get; set; } = Path.GetTempPath();
+
         public OpenXmlStyleOptions StyleOptions { get; set; } = new OpenXmlStyleOptions();
         public DynamicExcelSheet[] DynamicSheets { get; set; }
         public bool EnableWriteFilePath{ get; set; } = true;

@@ -68,7 +68,7 @@ jobs:
     #    uses a compiled language
 
     - name: Manual build
-      run: dotnet build MiniExcel.slnx --no-restore -c Release -f net10.0
+      run: dotnet build MiniExcel.slnx -c Release -f net10.0
       
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3

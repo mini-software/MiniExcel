@@ -72,7 +72,7 @@ public class MiniExcelOpenXmlAsyncTests
     [Fact]
     public async Task CustomAttributeWihoutVaildPropertiesTest()
     {
-        const string path = "../../../../../samples/xlsx/TestCustomExcelColumnAttribute.xlsx";
+        var path = PathHelper.GetFile("xlsx/TestCustomExcelColumnAttribute.xlsx");
         await Assert.ThrowsAsync<InvalidOperationException>(async () =>
         {
             _ =  _excelImporter.QueryAsync<CustomAttributesWihoutVaildPropertiesTestPoco>(path).ToBlockingEnumerable().ToList();
@@ -82,7 +82,7 @@ public class MiniExcelOpenXmlAsyncTests
     [Fact]
     public async Task QueryCustomAttributesTest()
     {
-        const string path = "../../../../../samples/xlsx/TestCustomExcelColumnAttribute.xlsx";
+        var path = PathHelper.GetFile("xlsx/TestCustomExcelColumnAttribute.xlsx");
         var rows =  _excelImporter.QueryAsync<ExcelAttributeDemo>(path).ToBlockingEnumerable().ToList();
 
         Assert.Equal("Column1", rows[0].Test1);
@@ -97,7 +97,7 @@ public class MiniExcelOpenXmlAsyncTests
     [Fact]
     public async Task QueryCustomAttributes2Test()
     {
-        const string path = "../../../../../samples/xlsx/TestCustomExcelColumnAttribute.xlsx";
+        var path = PathHelper.GetFile("xlsx/TestCustomExcelColumnAttribute.xlsx");
         var rows =  _excelImporter.QueryAsync<ExcelAttributeDemo2>(path).ToBlockingEnumerable().ToList();
 
         Assert.Equal("Column1", rows[0].Test1);
@@ -174,7 +174,7 @@ public class MiniExcelOpenXmlAsyncTests
     [Fact]
     public async Task QueryCastToIDictionary()
     {
-        const string path = "../../../../../samples/xlsx/TestCenterEmptyRow/TestCenterEmptyRow.xlsx";
+        var path = PathHelper.GetFile("xlsx/TestCenterEmptyRow/TestCenterEmptyRow.xlsx");
         foreach (IDictionary<string, object> row in  _excelImporter.QueryAsync(path).ToBlockingEnumerable())
         {
             _ = row;
@@ -184,7 +184,7 @@ public class MiniExcelOpenXmlAsyncTests
     [Fact]
     public async Task CenterEmptyRowsQueryTest()
     {
-        const string path = "../../../../../samples/xlsx/TestCenterEmptyRow/TestCenterEmptyRow.xlsx";
+        var path = PathHelper.GetFile("xlsx/TestCenterEmptyRow/TestCenterEmptyRow.xlsx");
         await using (var stream = File.OpenRead(path))
         {
             var d =  _excelImporter.QueryAsync(stream).ToBlockingEnumerable().Cast<IDictionary<string, object>>();
@@ -255,7 +255,7 @@ public class MiniExcelOpenXmlAsyncTests
     [Fact]
     public async Task TestDynamicQueryBasic_WithoutHead()
     {
-        const string path = "../../../../../samples/xlsx/TestDynamicQueryBasic_WithoutHead.xlsx";
+        var path = PathHelper.GetFile("xlsx/TestDynamicQueryBasic_WithoutHead.xlsx");
         await using var stream = File.OpenRead(path);
         var d =  _excelImporter.QueryAsync(stream).ToBlockingEnumerable().Cast<IDictionary<string, object>>();
         var rows = d.ToList();
@@ -269,7 +269,7 @@ public class MiniExcelOpenXmlAsyncTests
     [Fact]
     public async Task TestDynamicQueryBasic_useHeaderRow()
     {
-        const string path = "../../../../../samples/xlsx/TestDynamicQueryBasic.xlsx";
+        var path = PathHelper.GetFile("xlsx/TestDynamicQueryBasic.xlsx");
         await using (var stream = File.OpenRead(path))
         {
             var d =  _excelImporter.QueryAsync(stream, useHeaderRow: true).ToBlockingEnumerable().Cast<IDictionary<string, object>>();
@@ -309,7 +309,7 @@ public class MiniExcelOpenXmlAsyncTests
     [Fact]
     public async Task QueryStrongTypeMapping_Test()
     {
-        const string path = "../../../../../samples/xlsx/TestTypeMapping.xlsx";
+        var path = PathHelper.GetFile("xlsx/TestTypeMapping.xlsx");
         await using (var stream = File.OpenRead(path))
         {
             var d =  _excelImporter.QueryAsync<UserAccount>(stream);
@@ -351,7 +351,7 @@ public class MiniExcelOpenXmlAsyncTests
     [Fact]
     public async Task AutoCheckTypeTest()
     {
-        const string path = "../../../../../samples/xlsx/TestTypeMapping_AutoCheckFormat.xlsx";
+        var path = PathHelper.GetFile("xlsx/TestTypeMapping_AutoCheckFormat.xlsx");
         await using var stream = FileHelper.OpenRead(path);
         _ =  _excelImporter.QueryAsync<AutoCheckType>(stream).ToBlockingEnumerable().ToList();
     }
@@ -359,7 +359,7 @@ public class MiniExcelOpenXmlAsyncTests
     [Fact]
     public async Task TestDatetimeSpanFormat_ClosedXml()
     {
-        const string path = "../../../../../samples/xlsx/TestDatetimeSpanFormat_ClosedXml.xlsx";
+        var path = PathHelper.GetFile("xlsx/TestDatetimeSpanFormat_ClosedXml.xlsx");
         await using var stream = FileHelper.OpenRead(path);
 
         var d =  _excelImporter.QueryAsync(stream).ToBlockingEnumerable().Cast<IDictionary<string, object>>();
@@ -391,8 +391,8 @@ public class MiniExcelOpenXmlAsyncTests
     }
 
     [Theory]
-    [InlineData("../../../../../samples/xlsx/ExcelDataReaderCollections/TestChess.xlsx")]
-    [InlineData("../../../../../samples/xlsx/TestCenterEmptyRow/TestCenterEmptyRow.xlsx")]
+    [InlineData("../../../../data/xlsx/ExcelDataReaderCollections/TestChess.xlsx")]
+    [InlineData("../../../../data/xlsx/TestCenterEmptyRow/TestCenterEmptyRow.xlsx")]
     public async Task QueryExcelDataReaderCheckTest(string path)
     {
 #if NETCOREAPP3_1_OR_GREATER
@@ -423,7 +423,7 @@ public class MiniExcelOpenXmlAsyncTests
     [Fact]
     public async Task QuerySheetWithoutRAttribute()
     {
-        const string path = "../../../../../samples/xlsx/TestWihoutRAttribute.xlsx";
+        var path = PathHelper.GetFile("xlsx/TestWihoutRAttribute.xlsx");
         await using var stream = File.OpenRead(path);
 
         var d =  _excelImporter.QueryAsync(stream).ToBlockingEnumerable().Cast<IDictionary<string, object>>();
@@ -447,7 +447,7 @@ public class MiniExcelOpenXmlAsyncTests
     [Fact]
     public async Task FixDimensionJustOneColumnParsingError_Test()
     {
-        const string path = "../../../../../samples/xlsx/TestDimensionC3.xlsx";
+        var path = PathHelper.GetFile("xlsx/TestDimensionC3.xlsx");
         await using var stream = File.OpenRead(path);
         var d =  _excelImporter.QueryAsync(stream).ToBlockingEnumerable();
         var rows = d.ToList();
@@ -1019,7 +1019,7 @@ public class MiniExcelOpenXmlAsyncTests
     public async Task SQLiteInsertTest()
     {
         // Async Task SQL Insert Large Size Xlsx OOM
-        const string path = "../../../../../samples/xlsx/Test5x2.xlsx";
+        var path = PathHelper.GetFile("xlsx/Test5x2.xlsx");
         using var tempSqlitePath = AutoDeletingPath.Create(Path.GetTempPath(), $"{Guid.NewGuid()}.db");
         var connectionString = $"Data Source={tempSqlitePath};Version=3;";
 
@@ -1222,7 +1222,7 @@ public class MiniExcelOpenXmlAsyncTests
     {
         await Assert.ThrowsAsync<OperationCanceledException>(async () =>
         {
-            const string path = "../../../../../samples/xlsx/bigExcel.xlsx";
+            var path = PathHelper.GetFile("xlsx/bigExcel.xlsx");
             using var cts = new CancellationTokenSource();
 
             await cts.CancelAsync();
@@ -1237,7 +1237,7 @@ public class MiniExcelOpenXmlAsyncTests
     {
         await Assert.ThrowsAsync<OperationCanceledException>(async () =>
         {
-            const string path = "../../../../../samples/xlsx/bigExcel.xlsx";
+            var path = PathHelper.GetFile("xlsx/bigExcel.xlsx");
             var cts = new CancellationTokenSource();
 
             var cancelTask = Task.Run(async () =>

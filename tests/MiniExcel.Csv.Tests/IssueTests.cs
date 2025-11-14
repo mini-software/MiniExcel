@@ -855,8 +855,8 @@ public class IssueTests
     [Fact]
     public void Issue142_Query()
     {
-        const string path = "../../../../../samples/xlsx/TestIssue142.xlsx";
-        const string csvPath = "../../../../../samples/csv/TestIssue142.csv";
+        var path = PathHelper.GetFile("xlsx/TestIssue142.xlsx");
+        var csvPath = PathHelper.GetFile("csv/TestIssue142.csv");
         
         var rows = _openXmlImporter.Query<Issue142VoExcelColumnNameNotFound>(path).ToList();
         Assert.Equal(0, rows[0].MyProperty1);

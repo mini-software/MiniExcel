@@ -15,8 +15,8 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
     [Fact]
     public void GetColumnsTest()
     {
-        const string tmPath = "../../../../../samples/xlsx/TestTypeMapping.xlsx";
-        const string tePath = "../../../../../samples/xlsx/TestEmpty.xlsx";
+        var tmPath = PathHelper.GetFile("xlsx/TestTypeMapping.xlsx");
+        var tePath = PathHelper.GetFile("xlsx/TestEmpty.xlsx");
         {
             var columns =  _excelImporter.GetColumnNames (tmPath);
             Assert.Equal(["A", "B", "C", "D", "E", "F", "G", "H"], columns);
@@ -78,14 +78,14 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
     [Fact]
     public void CustomAttributeWihoutVaildPropertiesTest()
     {
-        const string path = "../../../../../samples/xlsx/TestCustomExcelColumnAttribute.xlsx";
+        var path = PathHelper.GetFile("xlsx/TestCustomExcelColumnAttribute.xlsx");
         Assert.Throws<InvalidOperationException>(() =>  _excelImporter.Query<CustomAttributesWihoutVaildPropertiesTestPoco>(path).ToList());
     }
 
     [Fact]
     public void QueryCustomAttributesTest()
     {
-        const string path = "../../../../../samples/xlsx/TestCustomExcelColumnAttribute.xlsx";
+        var path = PathHelper.GetFile("xlsx/TestCustomExcelColumnAttribute.xlsx");
         var rows =  _excelImporter.Query<ExcelAttributeDemo>(path).ToList();
 
         Assert.Equal("Column1", rows[0].Test1);
@@ -136,7 +136,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
     [Fact]
     public void QueryCastToIDictionary()
     {
-        const string path = "../../../../../samples/xlsx/TestCenterEmptyRow/TestCenterEmptyRow.xlsx";
+        var path = PathHelper.GetFile("xlsx/TestCenterEmptyRow/TestCenterEmptyRow.xlsx");
         foreach (IDictionary<string, object> row in  _excelImporter.Query(path))
         {
             _ = row;
@@ -146,7 +146,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
     [Fact]
     public void QueryRangeToIDictionary()
     {
-        const string path = "../../../../../samples/xlsx/TestCenterEmptyRow/TestCenterEmptyRow.xlsx";
+        var path = PathHelper.GetFile("xlsx/TestCenterEmptyRow/TestCenterEmptyRow.xlsx");
         // tips：Only uppercase letters are effective
         var rows =  _excelImporter.QueryRange(path, startCell: "A2", endCell: "C7")
             .Cast<IDictionary<string, object>>()
@@ -185,7 +185,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
     [Fact]
     public void CenterEmptyRowsQueryTest()
     {
-        const string path = "../../../../../samples/xlsx/TestCenterEmptyRow/TestCenterEmptyRow.xlsx";
+        var path = PathHelper.GetFile("xlsx/TestCenterEmptyRow/TestCenterEmptyRow.xlsx");
         using (var stream = File.OpenRead(path))
         {
             var rows =  _excelImporter.Query(stream).ToList();
@@ -255,7 +255,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
     [Fact]
     public void TestEmptyRowsQuerySelfClosingTag()
     {
-        const string path = "../../../../../samples/xlsx/TestEmptySelfClosingRow.xlsx";
+        var path = PathHelper.GetFile("xlsx/TestEmptySelfClosingRow.xlsx");
         using var stream = File.OpenRead(path);
         var rows =  _excelImporter.Query(stream).ToList();
 
@@ -274,7 +274,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
     [Fact]
     public void TestDynamicQueryBasic_WithoutHead()
     {
-        const string path = "../../../../../samples/xlsx/TestDynamicQueryBasic_WithoutHead.xlsx";
+        var path = PathHelper.GetFile("xlsx/TestDynamicQueryBasic_WithoutHead.xlsx");
         using var stream = File.OpenRead(path);
         var rows =  _excelImporter.Query(stream).ToList();
 
@@ -287,7 +287,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
     [Fact]
     public void TestDynamicQueryBasic_useHeaderRow()
     {
-        const string path = "../../../../../samples/xlsx/TestDynamicQueryBasic.xlsx";
+        var path = PathHelper.GetFile("xlsx/TestDynamicQueryBasic.xlsx");
         using (var stream = File.OpenRead(path))
         {
             var rows =  _excelImporter.Query(stream, useHeaderRow: true).ToList();
@@ -327,7 +327,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
     [Fact]
     public void QueryStrongTypeMapping_Test()
     {
-        const string path = "../../../../../samples/xlsx/TestTypeMapping.xlsx";
+        var path = PathHelper.GetFile("xlsx/TestTypeMapping.xlsx");
         using (var stream = File.OpenRead(path))
         {
             var rows =  _excelImporter.Query<UserAccount>(stream).ToList();
@@ -367,7 +367,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
     [Fact]
     public void AutoCheckTypeTest()
     {
-        const string path = "../../../../../samples/xlsx/TestTypeMapping_AutoCheckFormat.xlsx";
+        var path = PathHelper.GetFile("xlsx/TestTypeMapping_AutoCheckFormat.xlsx");
         using var stream = FileHelper.OpenRead(path);
         var rows =  _excelImporter.Query<AutoCheckType>(stream).ToList();
     }
@@ -382,7 +382,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
     [Fact]
     public void UriMappingTest()
     {
-        const string path = "../../../../../samples/xlsx/TestUriMapping.xlsx";
+        var path = PathHelper.GetFile("xlsx/TestUriMapping.xlsx");
         using var stream = File.OpenRead(path);
         var rows =  _excelImporter.Query<ExcelUriDemo>(stream).ToList();
 
@@ -401,7 +401,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
     [Fact]
     public void TrimColumnNamesTest()
     {
-        const string path = "../../../../../samples/xlsx/TestTrimColumnNames.xlsx";
+        var path = PathHelper.GetFile("xlsx/TestTrimColumnNames.xlsx");
         var rows =  _excelImporter.Query<SimpleAccount>(path).ToList();
 
         Assert.Equal("Raymond", rows[4].Name);
@@ -413,7 +413,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
     [Fact]
     public void TestDatetimeSpanFormat_ClosedXml()
     {
-        const string path = "../../../../../samples/xlsx/TestDatetimeSpanFormat_ClosedXml.xlsx";
+        var path = PathHelper.GetFile("xlsx/TestDatetimeSpanFormat_ClosedXml.xlsx");
         using var stream = FileHelper.OpenRead(path);
 
         var row =  _excelImporter.Query(stream).First();
@@ -443,8 +443,8 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
     }
 
     [Theory]
-    [InlineData("../../../../../samples/xlsx/ExcelDataReaderCollections/TestChess.xlsx")]
-    [InlineData("../../../../../samples/xlsx/TestCenterEmptyRow/TestCenterEmptyRow.xlsx")]
+    [InlineData("../../../../data/xlsx/ExcelDataReaderCollections/TestChess.xlsx")]
+    [InlineData("../../../../data/xlsx/TestCenterEmptyRow/TestCenterEmptyRow.xlsx")]
     public void QueryDataReaderCheckTest(string path)
     {
 #if NETCOREAPP3_1_OR_GREATER
@@ -473,7 +473,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
     [Fact]
     public void QueryCustomStyle()
     {
-        const string path = "../../../../../samples/xlsx/TestWihoutRAttribute.xlsx";
+        var path = PathHelper.GetFile("xlsx/TestWihoutRAttribute.xlsx");
         using (var stream = File.OpenRead(path))
         {
             // TODO: does this need filling? 
@@ -483,7 +483,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
     [Fact]
     public void QuerySheetWithoutRAttribute()
     {
-        const string path = "../../../../../samples/xlsx/TestWihoutRAttribute.xlsx";
+        var path = PathHelper.GetFile("xlsx/TestWihoutRAttribute.xlsx");
         using var stream = File.OpenRead(path);
         var rows =  _excelImporter.Query(stream).ToList();
         var keys = (rows.First() as IDictionary<string, object>)!.Keys;
@@ -505,7 +505,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
     [Fact]
     public void FixDimensionJustOneColumnParsingError_Test()
     {
-        const string path = "../../../../../samples/xlsx/TestDimensionC3.xlsx";
+        var path = PathHelper.GetFile("xlsx/TestDimensionC3.xlsx");
         using var stream = File.OpenRead(path);
         var rows =  _excelImporter.Query(stream).ToList();
         var keys = ((IDictionary<string, object>)rows.First()).Keys;
@@ -1019,7 +1019,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
     public void SQLiteInsertTest()
     {
         // Avoid SQL Insert Large Size Xlsx OOM
-        const string path = "../../../../../samples/xlsx/Test5x2.xlsx";
+        var path = PathHelper.GetFile("xlsx/Test5x2.xlsx");
         var tempSqlitePath = AutoDeletingPath.Create(Path.GetTempPath(), $"{Guid.NewGuid()}.db");
         var connectionString = $"Data Source={tempSqlitePath};Version=3;";
 
@@ -1235,7 +1235,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
     [Fact]
     public void TestStirctOpenXml()
     {
-        const string path = "../../../../../samples/xlsx/TestStrictOpenXml.xlsx";
+        var path = PathHelper.GetFile("xlsx/TestStrictOpenXml.xlsx");
         var columns =  _excelImporter.GetColumnNames (path);
         Assert.Equal(["A", "B", "C"], columns);
 

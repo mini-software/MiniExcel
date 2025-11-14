@@ -2,7 +2,7 @@
 
 public static class PathHelper
 {
-    public static string GetFile(string fileName) => $"../../../../../samples/{fileName}";
+    public static string GetFile(string fileName) => $"../../../../data/{fileName}";
 
     public static string GetTempPath(string extension = "xlsx")
     {

@@ -69,7 +69,7 @@ public class MiniExcelAutoAdjustWidthTests
         {
             await using var command = new SQLiteCommand(Db.GenerateDummyQuery(AutoAdjustTestParameters.GetDictionaryTestData()), connection);
             connection.Open();
-            await using var reader = command.ExecuteReader();
+            await using var reader = await command.ExecuteReaderAsync();
             await _excelExporter.ExportAsync(path, reader, configuration: configuration);
         }
 

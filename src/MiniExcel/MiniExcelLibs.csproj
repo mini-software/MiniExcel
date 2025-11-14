@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFrameworks>net45;netstandard2.0;net8.0;net9.0</TargetFrameworks>
+		<TargetFrameworks>net45;netstandard2.0;net8.0;net9.0;net10.0</TargetFrameworks>
 		<Version>1.41.4</Version>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
@@ -50,9 +50,9 @@ Todo : https://github.com/mini-software/MiniExcel/projects/1?fullscreen=true</De
 		<None Include="..\..\README-NuGet.md" Link="README.md" Pack="true" PackagePath="README.md" />
 	</ItemGroup>
 	<ItemGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
-		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
+		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
 	</ItemGroup>
 	<ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
-	  <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="9.0.0" />
+	  <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="10.0.0" />
 	</ItemGroup>
 </Project>

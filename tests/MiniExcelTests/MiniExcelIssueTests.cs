@@ -3067,7 +3067,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
                 Assert.Equal("MyProperty5", rows[0].C);
                 Assert.Equal("MyProperty2", rows[0].D);
                 Assert.Equal("MyProperty6", rows[0].E);
-                Assert.Equal(null, rows[0].F);
+                Assert.Null(rows[0].F);
                 Assert.Equal("MyProperty3", rows[0].G);
 
                 Assert.Equal("MyProperty4", rows[0].A);
@@ -3075,7 +3075,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
                 Assert.Equal("MyProperty5", rows[0].C);
                 Assert.Equal("MyProperty2", rows[0].D);
                 Assert.Equal("MyProperty6", rows[0].E);
-                Assert.Equal(null, rows[0].F);
+                Assert.Null(rows[0].F);
                 Assert.Equal("MyProperty3", rows[0].G);
             }
 
@@ -4235,7 +4235,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         var path = PathHelper.GetFile("xlsx/TestIssue763.xlsx");
         var rows = MiniExcel.QueryRange(path, startCell: "A3", endCell: "J3").ToArray();
         Assert.Equal("A3", rows[0].A);
-        Assert.Equal(null, rows[0].J);
+        Assert.Null(rows[0].J);
     }
 
     /// <summary>
@@ -4330,8 +4330,8 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         var rows = MiniExcel.Query(path.FilePath).ToList();
 
         Assert.Equal("2025-1", rows[2].B);
-        Assert.Equal(null, rows[3].B);
-        Assert.Equal(null, rows[4].B);
+        Assert.Null(rows[3].B);
+        Assert.Null(rows[4].B);
         Assert.Equal("2025-2", rows[5].B);
         return;
 
@@ -4658,7 +4658,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         var rows = MiniExcel.Query(path).ToList();
 
         Assert.Equal(3, rows.Count);
-        Assert.Equal(null, rows[0].A);
+        Assert.Null(rows[0].A);
         Assert.Equal(2, rows[2].B);
     }
     

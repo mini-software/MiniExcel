@@ -779,7 +779,7 @@ public class IssueTests
                 Assert.Equal("MyProperty5", rows[0].C);
                 Assert.Equal("MyProperty2", rows[0].D);
                 Assert.Equal("MyProperty6", rows[0].E);
-                Assert.Equal(null, rows[0].F);
+                Assert.Null(rows[0].F);
                 Assert.Equal("MyProperty3", rows[0].G);
 
                 Assert.Equal("MyProperty4", rows[0].A);
@@ -787,7 +787,7 @@ public class IssueTests
                 Assert.Equal("MyProperty5", rows[0].C);
                 Assert.Equal("MyProperty2", rows[0].D);
                 Assert.Equal("MyProperty6", rows[0].E);
-                Assert.Equal(null, rows[0].F);
+                Assert.Null(rows[0].F);
                 Assert.Equal("MyProperty3", rows[0].G);
             }
 

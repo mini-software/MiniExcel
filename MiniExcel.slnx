@@ -3,6 +3,7 @@
     <Project Path="benchmarks\MiniExcel.Benchmarks\MiniExcel.Benchmarks.csproj" />
   </Folder>
   <Folder Name="/Docs and settings/">
+    <File Path=".editorconfig" />
     <File Path=".gitattributes" />
     <File Path=".gitignore" />
     <File Path="appveyor.yml" />
@@ -13,9 +14,7 @@
     <File Path="README.zh-CN.md" />
     <File Path=".github\workflows\benchmark.yml" />
     <File Path=".github\workflows\codeql-analysis.yml" />
-    <File Path="src\Directory.Build.props" />
     <File Path="README-V2.md" />
-    <File Path="src\Directory.Packages.props" />
     <File Path="miniexcel.publickey" />
     <File Path="src\icon.png" />
     <File Path="V2-Upgrade-Notes.md" />
@@ -26,9 +25,11 @@
     <File Path="docs\README.zh-Hant.md" />
   </Folder>
   <Folder Name="/src/">
+    <File Path="src\Directory.Build.props" />
+    <File Path="src\Directory.Packages.props" />
     <Project Path="src\MiniExcel.Core\MiniExcel.Core.csproj" />
     <Project Path="src\MiniExcel.Csv\MiniExcel.Csv.csproj" />
-    <Project Path="src\MiniExcel\MiniExcel.csproj" Type="Classic C#" />
+    <Project Path="src\MiniExcel\MiniExcel.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/MiniExcel.Csv.Tests/MiniExcel.Csv.Tests.csproj" />

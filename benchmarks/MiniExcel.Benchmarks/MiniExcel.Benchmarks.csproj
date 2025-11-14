@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
-		<TargetFrameworks>net8.0;net9.0</TargetFrameworks>
+		<TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<LangVersion>latest</LangVersion>
@@ -16,7 +16,7 @@
 		<PackageReference Include="DocumentFormat.OpenXml" Version="3.3.0" />
 		<PackageReference Include="EPPlus" Version="7.7.2" />
 		<PackageReference Include="ExcelDataReader" Version="3.7.0" />
-		<PackageReference Include="NPOI" Version="2.7.3" />
+		<PackageReference Include="NPOI" Version="2.7.5" />
 	</ItemGroup>
 
 	<ItemGroup>

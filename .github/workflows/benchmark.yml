@@ -17,7 +17,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 9.0.x
+          dotnet-version: 10.0.x
       - name: Restore dependencies
         run: dotnet restore
         working-directory: ./benchmarks/MiniExcel.Benchmarks
@@ -25,7 +25,7 @@ jobs:
         run: dotnet build --no-restore
         working-directory: ./benchmarks/MiniExcel.Benchmarks
       - name: Benchmark
-        run: dotnet run -c Release -f net9.0
+        run: dotnet run -c Release -f net10.0
         working-directory: ./benchmarks/MiniExcel.Benchmarks
         env:
           BenchmarkMode: Automatic
@@ -47,7 +47,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 9.0.x
+          dotnet-version: 10.0.x
       - name: Restore dependencies
         run: dotnet restore
         working-directory: ./benchmarks/MiniExcel.Benchmarks
@@ -55,7 +55,7 @@ jobs:
         run: dotnet build --no-restore
         working-directory: ./benchmarks/MiniExcel.Benchmarks
       - name: Benchmark
-        run: dotnet run -c Release -f net9.0
+        run: dotnet run -c Release -f net10.0
         working-directory: ./benchmarks/MiniExcel.Benchmarks
         env:
           BenchmarkMode: Automatic
@@ -77,7 +77,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 9.0.x
+          dotnet-version: 10.0.x
       - name: Restore dependencies
         run: dotnet restore
         working-directory: ./benchmarks/MiniExcel.Benchmarks
@@ -85,7 +85,7 @@ jobs:
         run: dotnet build --no-restore
         working-directory: ./benchmarks/MiniExcel.Benchmarks
       - name: Benchmark
-        run: dotnet run -c Release -f net9.0
+        run: dotnet run -c Release -f net10.0
         working-directory: ./benchmarks/MiniExcel.Benchmarks
         env:
           BenchmarkMode: Automatic

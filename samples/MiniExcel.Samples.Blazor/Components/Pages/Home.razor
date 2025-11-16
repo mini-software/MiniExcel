@@ -33,7 +33,7 @@
                 <InputText ValueExpression="@(() => p.Name)" Value="@p.Name" ValueChanged="@(n => p.Name = n)" />
             </td>
             <td>
-                <InputText ValueExpression="@(() => p.Surname)" Value="@p.Surname" ValueChanged="@(s => p.Name = s)" />
+                <InputText ValueExpression="@(() => p.Surname)" Value="@p.Surname" ValueChanged="@(s => p.Surname = s)" />
             </td>
             <td>
                 <InputNumber TValue="int" min="0" ValueExpression="@(() => p.Age)" Value="p.Age" ValueChanged="@(a => p.Age = a)" />

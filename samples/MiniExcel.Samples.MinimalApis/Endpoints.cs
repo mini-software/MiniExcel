@@ -18,7 +18,7 @@ internal static class Endpoints
         group.MapExportExcel();
         group.MapApplyExcelTemplate();
 
-        return group;
+        return group.DisableAntiforgery();
     }
 
     private static RouteHandlerBuilder MapExportExcel(this IEndpointRouteBuilder builder)
@@ -72,7 +72,7 @@ internal static class Endpoints
 
     private static RouteHandlerBuilder MapImportExcel(this IEndpointRouteBuilder builder)
     {
-        return builder.MapPost("import", async ([FromBody] IFormFile file) =>
+        return builder.MapPost("import", async (IFormFile file) =>
         {
             var stream = new MemoryStream();
             await file.CopyToAsync(stream);

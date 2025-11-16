@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <Reference Include="MiniExcel">
+        <HintPath>..\..\src\MiniExcel\bin\Release\net10.0\MiniExcel.dll</HintPath>
+      </Reference>
+      <Reference Include="MiniExcel.Core">
+        <HintPath>..\..\src\MiniExcel\bin\Release\net10.0\MiniExcel.Core.dll</HintPath>
+      </Reference>
+      <Reference Include="MiniExcel.Csv">
+        <HintPath>..\..\src\MiniExcel\bin\Release\net10.0\MiniExcel.Csv.dll</HintPath>
+      </Reference>
+    </ItemGroup>
+    
+</Project>

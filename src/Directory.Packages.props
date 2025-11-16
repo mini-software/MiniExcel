@@ -7,7 +7,6 @@
     <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
         <PackageReference Include="Microsoft.Bcl.Memory" Version="10.0.0"/>
         <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="10.0.0"/>
-        <PackageReference Include="System.IO.Compression" Version="4.3.0"/>
     </ItemGroup>
 
     <ItemGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">

@@ -1,0 +1,75 @@
+﻿@using MiniExcelLib.Core
+
+@inject IJSRuntime Js
+
+@page "/"
+<PageTitle>Home</PageTitle>
+
+<div class="mb-3">
+    <h4>Welcome to this MiniExcel Blazor demo!</h4>
+    <span>Edit the rows and download the Excel document.</span>
+</div>
+
+<table>
+    <thead>
+    <tr>
+        <th />
+        <th>Name</th>
+        <th>Surname</th>
+        <th>Age</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    @for (var i = 0; i < _people.Count; i++)
+    {
+        var p = _people[i];
+
+        <tr @key="@i">
+            <td>
+                <b>@i)</b>
+            </td>
+            <td>
+                <InputText ValueExpression="@(() => p.Name)" Value="@p.Name" ValueChanged="@(n => p.Name = n)" />
+            </td>
+            <td>
+                <InputText ValueExpression="@(() => p.Surname)" Value="@p.Surname" ValueChanged="@(s => p.Name = s)" />
+            </td>
+            <td>
+                <InputNumber TValue="int" min="0" ValueExpression="@(() => p.Age)" Value="p.Age" ValueChanged="@(a => p.Age = a)" />
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>
+
+<button class="btn btn-primary mt-3 me-2" @onclick="@DownloadExcel">Download Excel</button>
+
+@code{
+    static readonly OpenXmlExporter Exporter = MiniExcel.Exporters.GetOpenXmlExporter();
+
+    readonly List<Person> _people =
+    [
+        new("John", "Smith", 31),
+        new("Jane", "Doe", 25),
+        new("James", "Brown", 46)
+    ];
+
+    class Person(string name, string surname, int age)
+    {
+        public string Name { get; set; } = name;
+        public string Surname { get; set; } = surname;
+        public int Age { get; set; } = age;
+    }
+
+    public async Task DownloadExcel()
+    {
+        using var ms = new MemoryStream(50 * 1024);
+        await Exporter.ExportAsync(ms, _people);
+        ms.Seek(0, SeekOrigin.Begin);
+
+        using var streamRef = new DotNetStreamReference(stream: ms);
+        // Note: the downloadFileFromStream function is defined in the App.razor file
+        await Js.InvokeVoidAsync("downloadFileFromStream", "people.xlsx", streamRef);
+    }
+}

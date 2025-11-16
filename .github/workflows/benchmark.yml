@@ -119,4 +119,4 @@ jobs:
           git config user.email github-actions@github.com
           git add ./*.md
           git commit -am "Automated benchmark report - ${{ github.ref_name }}"
-          git push origin master --force-with-lease
+          git push origin v1.x-maintenance --force-with-lease

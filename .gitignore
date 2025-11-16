@@ -399,8 +399,6 @@ FodyWeavers.xsd
 *.sln.iml
 
 /BenchmarkDotNet.Artifacts
-/tests/MiniExcel.Tests.AspNetMvc/packages
 /TestTemplate
 /tests/MiniExcel.Tests/TemplateOptimization
-/samples/xlsx/Test_EnableWriteFilePath.xlsx
-/tests/MiniExcel.Core.Tests/TemplateOptimization/
+/tests/data/xlsx/Test_EnableWriteFilePath.xlsx

@@ -7,8 +7,9 @@ public class MiniExcelOpenXmlConfigurationTest
 {
     private readonly OpenXmlImporter _excelImporter =  MiniExcel.Importers.GetOpenXmlImporter();
     private readonly OpenXmlExporter _excelExporter =  MiniExcel.Exporters.GetOpenXmlExporter();    
+    
     [Fact]
-    public async Task EnableWriteFilePathTest()
+    public async Task DisableWriteFilePathTest()
     {
         var img = await new HttpClient().GetByteArrayAsync("https://user-images.githubusercontent.com/12729184/150462383-ad9931b3-ed8d-4221-a1d6-66f799743433.png");
         ImgExportTestDto[] value =

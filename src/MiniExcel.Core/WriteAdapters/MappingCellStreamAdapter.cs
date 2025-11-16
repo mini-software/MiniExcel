@@ -2,17 +2,12 @@ using MiniExcelLib.Core.FluentMapping;
 
 namespace MiniExcelLib.Core.WriteAdapters;
 
-internal class MappingCellStreamAdapter<T> : IMiniExcelWriteAdapter
+internal class MappingCellStreamAdapter<T>(MappingCellStream<T> cellStream, string[] columnLetters)
+    : IMiniExcelWriteAdapter
     where T : class
 {
-    private readonly MappingCellStream<T> _cellStream;
-    private readonly string[] _columnLetters;
-
-    public MappingCellStreamAdapter(MappingCellStream<T> cellStream, string[] columnLetters)
-    {
-        _cellStream = cellStream;
-        _columnLetters = columnLetters;
-    }
+    private readonly MappingCellStream<T> _cellStream = cellStream;
+    private readonly string[] _columnLetters = columnLetters;
 
     public bool TryGetKnownCount(out int count)
     {

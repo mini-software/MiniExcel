@@ -1,4 +1,6 @@
-﻿namespace MiniExcelLib.Tests;
+﻿using MiniExcelLib.Tests.Common.Utils;
+
+namespace MiniExcelLib.Tests;
 
 public class MiniExcelOpenXmlMultipleSheetAsyncTests
 {
@@ -7,7 +9,7 @@ public class MiniExcelOpenXmlMultipleSheetAsyncTests
     [Fact]
     public async Task SpecifySheetNameQueryTest()
     {
-        const string path = "../../../../../samples/xlsx/TestMultiSheet.xlsx";
+        var path = PathHelper.GetFile("xlsx/TestMultiSheet.xlsx");
         {
             var q =  _excelImporter.QueryAsync(path, sheetName: "Sheet3").ToBlockingEnumerable();
             var rows = q.ToList();
@@ -68,7 +70,7 @@ public class MiniExcelOpenXmlMultipleSheetAsyncTests
     [Fact]
     public async Task MultiSheetsQueryBasicTest()
     {
-        const string path = "../../../../../samples/xlsx/TestMultiSheet.xlsx";
+        var path = PathHelper.GetFile("xlsx/TestMultiSheet.xlsx");
         await using var stream = File.OpenRead(path);
         _ =  _excelImporter.QueryAsync(stream, sheetName: "Sheet1").ToBlockingEnumerable();
         _ =  _excelImporter.QueryAsync(stream, sheetName: "Sheet2").ToBlockingEnumerable();
@@ -78,7 +80,7 @@ public class MiniExcelOpenXmlMultipleSheetAsyncTests
     [Fact]
     public async Task MultiSheetsQueryTest()
     {
-        const string path = "../../../../../samples/xlsx/TestMultiSheet.xlsx";
+        var path = PathHelper.GetFile("xlsx/TestMultiSheet.xlsx");
         {
             var sheetNames = await  _excelImporter.GetSheetNamesAsync(path);
             foreach (var sheetName in sheetNames)

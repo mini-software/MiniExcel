@@ -1,0 +1,88 @@
+﻿@using MiniExcelLib.Core
+
+@page "/upload"
+<PageTitle>Upload</PageTitle>
+
+<div class="mb-3">
+    <h4>Welcome to this MiniExcel Blazor demo!</h4>
+    <span>Upload an Excel file and see its contents.</span>
+</div>
+
+<InputFile OnChange="@LoadFile"/>
+
+@if (_items.Count != 0)
+{
+    var rows = _items.Cast<IDictionary<string, object>>().ToList();
+
+    <table class="table mt-3">
+        <thead>
+        <tr>
+            @foreach (var key in rows[0].Keys)
+            {
+                <th>@key</th>
+            }
+        </tr>
+        </thead>
+
+        <tbody>
+        @foreach (var row in rows)
+        {
+            <tr>
+                @foreach (var value in row.Values)
+                {
+                    <td>@value</td>
+                }
+            </tr>
+        }
+        </tbody>
+    </table>
+}
+
+@if (_error)
+{
+    <div class="error-container">@_errMsg</div>
+}
+
+
+@code {
+    static readonly OpenXmlImporter Importer = MiniExcel.Importers.GetOpenXmlImporter();
+
+    bool _error;
+    string? _errMsg;
+
+    List<dynamic> _items = [];
+
+    private async Task LoadFile(InputFileChangeEventArgs e)
+    {
+        try
+        {
+            await using var stream = e.File.OpenReadStream();
+            await using var ms = new MemoryStream();
+            await stream.CopyToAsync(ms);
+            
+            _items = await Importer.QueryAsync(ms, true).ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            _error = true;
+            _errMsg = ex.Message;
+            await Task.Delay(5000);
+            _error = false;
+        }
+    }
+}
+
+
+<style>
+    .error-container {
+        min-height: 30px;
+        min-width: 100px;
+        padding: 8px;
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        color: white;
+        background-color: indianred;
+        border-radius: 6px;
+    }
+</style>

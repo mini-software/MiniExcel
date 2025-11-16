@@ -10,7 +10,7 @@ public class MiniExcelOpenXmlMultipleSheetTests
     [Fact]
     public void SpecifySheetNameQueryTest()
     {
-        const string path = "../../../../../samples/xlsx/TestMultiSheet.xlsx";
+        var path = PathHelper.GetFile("xlsx/TestMultiSheet.xlsx");
         {
             var rows =  _excelImporter.Query(path, sheetName: "Sheet3").ToList();
             Assert.Equal(5, rows.Count);
@@ -62,7 +62,7 @@ public class MiniExcelOpenXmlMultipleSheetTests
     [Fact]
     public void MultiSheetsQueryBasicTest()
     {
-        const string path = "../../../../../samples/xlsx/TestMultiSheet.xlsx";
+        var path = PathHelper.GetFile("xlsx/TestMultiSheet.xlsx");
         using var stream = File.OpenRead(path);
         
         _ =  _excelImporter.Query(stream, sheetName: "Sheet1");
@@ -73,7 +73,7 @@ public class MiniExcelOpenXmlMultipleSheetTests
     [Fact]
     public void MultiSheetsQueryTest()
     {
-        const string path = "../../../../../samples/xlsx/TestMultiSheet.xlsx";
+        var path = PathHelper.GetFile("xlsx/TestMultiSheet.xlsx");
         {
             var sheetNames =  _excelImporter.GetSheetNames(path).ToList();
             foreach (var sheetName in sheetNames)
@@ -115,7 +115,7 @@ public class MiniExcelOpenXmlMultipleSheetTests
     [Fact]
     public void ExcelSheetAttributeIsUsedWhenReadExcel()
     {
-        const string path = "../../../../../samples/xlsx/TestDynamicSheet.xlsx";
+        var path = PathHelper.GetFile("xlsx/TestDynamicSheet.xlsx");
         using (var stream = File.OpenRead(path))
         {
             var users =  _excelImporter.Query<UserDto>(stream).ToList();
@@ -150,7 +150,7 @@ public class MiniExcelOpenXmlMultipleSheetTests
             ]
         };
 
-        const string path = "../../../../../samples/xlsx/TestDynamicSheet.xlsx";
+        var path = PathHelper.GetFile("xlsx/TestDynamicSheet.xlsx");
         using (var stream = File.OpenRead(path))
         {
             // take first sheet as default
@@ -190,7 +190,7 @@ public class MiniExcelOpenXmlMultipleSheetTests
     [Fact]
     public void ReadSheetVisibilityStateTest()
     {
-        const string path = "../../../../../samples/xlsx/TestMultiSheetWithHiddenSheet.xlsx";
+        var path = PathHelper.GetFile("xlsx/TestMultiSheetWithHiddenSheet.xlsx");
         {
             var sheetInfos =  _excelImporter.GetSheetInformations(path).ToList();
             Assert.Collection(sheetInfos,

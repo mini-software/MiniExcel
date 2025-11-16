@@ -787,8 +787,8 @@ namespace MiniExcelLib.Tests.FluentMapping
             // Read back and verify
             stream.Position = 0;
             var importer = MiniExcel.Importers.GetOpenXmlImporter();
-            var data = importer.Query(stream);
-            var firstRow = data.FirstOrDefault();
+            var data = importer.QueryAsync(stream);
+            var firstRow = await data.FirstOrDefaultAsync();
             Assert.NotNull(firstRow);
         }
 

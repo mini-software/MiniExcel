@@ -1,0 +1,37 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <base href="/"/>
+    <ResourcePreloader/>
+    <link rel="stylesheet" href="@Assets["lib/bootstrap/bootstrap.min.css"]"/>
+    <link rel="stylesheet" href="@Assets["app.css"]"/>
+    <link rel="stylesheet" href="@Assets["MiniExcel.Samples.Blazor.styles.css"]"/>
+    <ImportMap/>
+    <link rel="icon" type="image/png" href="favicon.png"/>
+    <HeadOutlet @rendermode="InteractiveServer"/>
+</head>
+
+<body>
+<Routes @rendermode="InteractiveServer"/>
+<ReconnectModal/>
+<script src="@Assets["_framework/blazor.web.js"]"></script>
+
+<script>
+    downloadFileFromStream = async (fileName, contentStreamReference) => {
+        const arrayBuffer = await contentStreamReference.arrayBuffer();
+        const blob = new Blob([arrayBuffer]);
+        const url = URL.createObjectURL(blob);
+        const anchorElement = document.createElement('a');
+        anchorElement.href = url;
+        anchorElement.download = fileName ?? '';
+        anchorElement.click();
+        anchorElement.remove();
+        URL.revokeObjectURL(url);
+    }
+</script>
+</body>
+
+</html>

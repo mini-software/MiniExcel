@@ -778,7 +778,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
     public async Task Issue207()
     {
         {
-            const string templatePath = "../../../../../samples/xlsx/TestIssue207_2.xlsx";
+            var templatePath = PathHelper.GetFile("xlsx/TestIssue207_2.xlsx");
             using var file = AutoDeletingPath.Create();
             var path = file.ToString();
             
@@ -824,7 +824,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
         }
 
         {
-            const string templatePath = "../../../../../samples/xlsx/TestIssue207_Template_Merge_row_list_rendering_without_merge/template.xlsx";
+            var templatePath = PathHelper.GetFile("xlsx/TestIssue207_Template_Merge_row_list_rendering_without_merge/template.xlsx");
             using var file = AutoDeletingPath.Create();
             var path = file.ToString();
             
@@ -863,7 +863,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
     [Fact]
     public async Task Issue87()
     {
-        const string templatePath = "../../../../../samples/xlsx/TestTemplateCenterEmpty.xlsx";
+        var templatePath = PathHelper.GetFile("xlsx/TestTemplateCenterEmpty.xlsx");
         using var path = AutoDeletingPath.Create();
         var value = new
         {
@@ -883,7 +883,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
     [Fact]
     public async Task Issue206()
     {
-        const string templatePath = "../../../../../samples/xlsx/TestTemplateBasicIEmumerableFill.xlsx";
+        var templatePath = PathHelper.GetFile("xlsx/TestTemplateBasicIEmumerableFill.xlsx");
         {
             using var path = AutoDeletingPath.Create();
 
@@ -927,7 +927,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
     public async Task Issue193()
     {
         {
-            const string templatePath = "../../../../../samples/xlsx/TestTemplateComplexWithNamespacePrefix.xlsx";
+            var templatePath = PathHelper.GetFile("xlsx/TestTemplateComplexWithNamespacePrefix.xlsx");
             using var file = AutoDeletingPath.Create();
             var path = file.ToString();
 
@@ -982,7 +982,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
         }
 
         {
-            const string templatePath = "../../../../../samples/xlsx/TestTemplateComplex.xlsx";
+            var templatePath = PathHelper.GetFile("xlsx/TestTemplateComplex.xlsx");
             using var file = AutoDeletingPath.Create();
             var path = file.ToString();
 
@@ -1031,8 +1031,8 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
     [Fact]
     public async Task Issue142_Query()
     {
-        const string path = "../../../../../samples/xlsx/TestIssue142.xlsx";
-        const string pathCsv = "../../../../../samples/xlsx/TestIssue142.csv";
+        var path = PathHelper.GetFile("xlsx/TestIssue142.xlsx");
+        var pathCsv = PathHelper.GetFile("xlsx/TestIssue142.csv");
         {
             var rows =  _excelImporter.QueryAsync<Issue142VoExcelColumnNameNotFound>(path).ToBlockingEnumerable().ToList();
             Assert.Equal(0, rows[0].MyProperty1);
@@ -1198,7 +1198,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
             Assert.Equal("Sheet1", p.Workbook.Worksheets["Sheet1"].Name);
         }
         {
-            const string path = "../../../../../samples/xlsx/TestIssue157.xlsx";
+            var path = PathHelper.GetFile("xlsx/TestIssue157.xlsx");
             {
                 var q =  _excelImporter.QueryAsync(path, sheetName: "Sheet1").ToBlockingEnumerable();
                 var rows = q.ToList();
@@ -1246,7 +1246,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
         var strings = chars.Select(s => s.ToString()).ToArray();
         
         {
-            const string path = "../../../../../samples/xlsx/TestIssue149.xlsx";
+            var path = PathHelper.GetFile("xlsx/TestIssue149.xlsx");
             var q =  _excelImporter.QueryAsync(path).ToBlockingEnumerable();
             var rows = q.Select(s => (string)s.A).ToList();
             
@@ -1311,7 +1311,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
     [Fact]
     public async Task Issue153()
     {
-        const string path = "../../../../../samples/xlsx/TestIssue153.xlsx";
+        var path = PathHelper.GetFile("xlsx/TestIssue153.xlsx");
         var q =  _excelImporter.QueryAsync(path, true).ToBlockingEnumerable();
         var rows = q.First() as IDictionary<string, object>;
 
@@ -1328,7 +1328,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
     [Fact]
     public void Issue137()
     {
-        const string path = "../../../../../samples/xlsx/TestIssue137.xlsx";
+        var path = PathHelper.GetFile("xlsx/TestIssue137.xlsx");
         {
             var q =  _excelImporter.QueryAsync(path).ToBlockingEnumerable();
             var rows = q.ToList();
@@ -1420,7 +1420,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
     [Fact]
     public void Issue138()
     {
-        const string path = "../../../../../samples/xlsx/TestIssue138.xlsx";
+        var path = PathHelper.GetFile("xlsx/TestIssue138.xlsx");
         {
             var q =  _excelImporter.QueryAsync(path, true).ToBlockingEnumerable();
             var rows = q.ToList();

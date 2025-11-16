@@ -10,7 +10,7 @@ public class MiniExcelTemplateAsyncTests
     [Fact]
     public async Task DatatableTemptyRowTest()
     {
-        const string templatePath = "../../../../../samples/xlsx/TestTemplateComplex.xlsx";
+        var templatePath = PathHelper.GetFile("xlsx/TestTemplateComplex.xlsx");
         {
             using var path = AutoDeletingPath.Create();
             var managers = new DataTable();
@@ -65,7 +65,7 @@ public class MiniExcelTemplateAsyncTests
     [Fact]
     public async Task DatatableTest()
     {
-        const string templatePath = "../../../../../samples/xlsx/TestTemplateComplex.xlsx";
+        var templatePath = PathHelper.GetFile("xlsx/TestTemplateComplex.xlsx");
         var path = AutoDeletingPath.Create();
         
         var managers = new DataTable();
@@ -139,7 +139,7 @@ public class MiniExcelTemplateAsyncTests
     [Fact]
     public async Task DapperTemplateTest()
     {
-        const string templatePath = "../../../../../samples/xlsx/TestTemplateComplex.xlsx";
+        var templatePath = PathHelper.GetFile("xlsx/TestTemplateComplex.xlsx");
         using var path = AutoDeletingPath.Create();
 
         var connection = Db.GetConnection("Data Source=:memory:");
@@ -204,7 +204,7 @@ public class MiniExcelTemplateAsyncTests
     [Fact]
     public async Task DictionaryTemplateTest()
     {
-        const string templatePath = "../../../../../samples/xlsx/TestTemplateComplex.xlsx";
+        var templatePath = PathHelper.GetFile("xlsx/TestTemplateComplex.xlsx");
         var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
 
         var value = new Dictionary<string, object>
@@ -279,7 +279,7 @@ public class MiniExcelTemplateAsyncTests
     [Fact]
     public async Task TestGithubProject()
     {
-        const string templatePath = "../../../../../samples/xlsx/TestTemplateGithubProjects.xlsx";
+        var templatePath = PathHelper.GetFile("xlsx/TestTemplateGithubProjects.xlsx");
         using var path = AutoDeletingPath.Create();
         
         var projects = new[]
@@ -317,7 +317,7 @@ public class MiniExcelTemplateAsyncTests
     [Fact]
     public async Task TestIEnumerableType()
     {
-        const string templatePath = "../../../../../samples/xlsx/TestIEnumerableType.xlsx";
+        var templatePath = PathHelper.GetFile("xlsx/TestIEnumerableType.xlsx");
         using var path = AutoDeletingPath.Create();
 
         var poco = new TestIEnumerableTypePoco
@@ -392,7 +392,7 @@ public class MiniExcelTemplateAsyncTests
     [Fact]
     public async Task TestTemplateTypeMapping()
     {
-        const string templatePath = "../../../../../samples/xlsx/TestITemplateTypeAutoMapping.xlsx";
+        var templatePath = PathHelper.GetFile("xlsx/TestITemplateTypeAutoMapping.xlsx");
         using var path = AutoDeletingPath.Create();
 
         var value = new TestIEnumerableTypePoco
@@ -423,7 +423,7 @@ public class MiniExcelTemplateAsyncTests
     [Fact]
     public async Task TemplateCenterEmptyTest()
     {
-        const string templatePath = "../../../../../samples/xlsx/TestTemplateCenterEmpty.xlsx";
+        var templatePath = PathHelper.GetFile("xlsx/TestTemplateCenterEmpty.xlsx");
         using var path = AutoDeletingPath.Create();
         var value = new
         {
@@ -435,7 +435,7 @@ public class MiniExcelTemplateAsyncTests
     [Fact]
     public async Task TemplateAsyncBasiTest()
     {
-        const string templatePath = "../../../../../samples/xlsx/TestTemplateEasyFill.xlsx";
+        var templatePath = PathHelper.GetFile("xlsx/TestTemplateEasyFill.xlsx");
         {
             using var path = AutoDeletingPath.Create();
             
@@ -540,7 +540,7 @@ public class MiniExcelTemplateAsyncTests
     [Fact]
     public async Task TestIEnumerable()
     {
-        const string templatePath = "../../../../../samples/xlsx/TestTemplateBasicIEmumerableFill.xlsx";
+        var templatePath = PathHelper.GetFile("xlsx/TestTemplateBasicIEmumerableFill.xlsx");
         {
             using var path = AutoDeletingPath.Create();
 
@@ -614,7 +614,7 @@ public class MiniExcelTemplateAsyncTests
     [Fact]
     public async Task TestIEnumerableGrouped()
     {
-        const string templatePath = "../../../../../samples/xlsx/TestTemplateBasicIEmumerableFillGroup.xlsx";
+        var templatePath = PathHelper.GetFile("xlsx/TestTemplateBasicIEmumerableFillGroup.xlsx");
         {
             using var path = AutoDeletingPath.Create();
 
@@ -688,7 +688,7 @@ public class MiniExcelTemplateAsyncTests
     [Fact]
     public async Task TestIEnumerableConditional()
     {
-        const string templatePath = "../../../../../samples/xlsx/TestTemplateBasicIEmumerableFillConditional.xlsx";
+        var templatePath = PathHelper.GetFile("xlsx/TestTemplateBasicIEmumerableFillConditional.xlsx");
         {
             using var path = AutoDeletingPath.Create();
 
@@ -762,7 +762,7 @@ public class MiniExcelTemplateAsyncTests
     [Fact]
     public async Task TemplateTest()
     {
-        const string templatePath = "../../../../../samples/xlsx/TestTemplateComplex.xlsx";
+        var templatePath = PathHelper.GetFile("xlsx/TestTemplateComplex.xlsx");
         {
             var path = AutoDeletingPath.Create();
 
@@ -881,7 +881,7 @@ public class MiniExcelTemplateAsyncTests
     [Fact]
     public async Task SaveAsByTemplateAsync_TakeCancel_Throws_TaskCanceledException()
     {
-        const string templatePath = "../../../../../samples/xlsx/TestTemplateEasyFill.xlsx";
+        var templatePath = PathHelper.GetFile("xlsx/TestTemplateEasyFill.xlsx");
         await Assert.ThrowsAsync<OperationCanceledException>(async () =>
         {
             using var cts = new CancellationTokenSource();

@@ -13,16 +13,16 @@ public class MiniExcelTemplateTests
     [Fact]
     public void TestImageType()
     {
-        const string templatePath = "../../../../../samples/xlsx/TestImageType.xlsx";
+        var templatePath = PathHelper.GetFile("xlsx/TestImageType.xlsx");
         {
             string absolutePath = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, templatePath));
 
             using var path = AutoDeletingPath.Create();
             File.Copy(absolutePath, path.FilePath, overwrite: true); // Copy the template file
 
-            var img1Bytes = File.ReadAllBytes("../../../../../samples/images/TestIssue327.png");  // Use your local image
-            var img2Bytes = File.ReadAllBytes("../../../../../samples/images/TestIssue327.png");  // Use your local image
-            var img3Bytes = File.ReadAllBytes("../../../../../samples/images/TestIssue327.png");  // Use your local image
+            var img1Bytes= File.ReadAllBytes(PathHelper.GetFile("images/TestIssue327.png"));  // Use your local imag)e
+            var img2Bytes= File.ReadAllBytes(PathHelper.GetFile("images/TestIssue327.png"));  // Use your local imag)e
+            var img3Bytes= File.ReadAllBytes(PathHelper.GetFile("images/TestIssue327.png"));  // Use your local imag)e
 
             var pictures = new[]
             {
@@ -100,7 +100,7 @@ public class MiniExcelTemplateTests
     [Fact]
     public void DatatableTemptyRowTest()
     {
-        const string templatePath = "../../../../../samples/xlsx/TestTemplateComplex.xlsx";
+        var templatePath = PathHelper.GetFile("xlsx/TestTemplateComplex.xlsx");
         {
             using var path = AutoDeletingPath.Create();
 
@@ -154,7 +154,7 @@ public class MiniExcelTemplateTests
     [Fact]
     public void DatatableTest()
     {
-        const string templatePath = "../../../../../samples/xlsx/TestTemplateComplex.xlsx";
+        var templatePath = PathHelper.GetFile("xlsx/TestTemplateComplex.xlsx");
         using var file = AutoDeletingPath.Create();
         var path = file.ToString();
 
@@ -234,7 +234,7 @@ public class MiniExcelTemplateTests
     [Fact]
     public void DapperTemplateTest()
     {
-        const string templatePath = "../../../../../samples/xlsx/TestTemplateComplex.xlsx";
+        var templatePath = PathHelper.GetFile("xlsx/TestTemplateComplex.xlsx");
         using var file = AutoDeletingPath.Create();
         var path = file.ToString();
 
@@ -300,7 +300,7 @@ public class MiniExcelTemplateTests
     [Fact]
     public void DictionaryTemplateTest()
     {
-        const string templatePath = "../../../../../samples/xlsx/TestTemplateComplex.xlsx";
+        var templatePath = PathHelper.GetFile("xlsx/TestTemplateComplex.xlsx");
         using var file = AutoDeletingPath.Create();
         var path = file.ToString();
 
@@ -380,7 +380,7 @@ public class MiniExcelTemplateTests
     [Fact]
     public void GroupTemplateTest()
     {
-        const string templatePath = "../../../../../samples/xlsx/TestTemplateBasicIEmumerableFillGroup.xlsx";
+        var templatePath = PathHelper.GetFile("xlsx/TestTemplateBasicIEmumerableFillGroup.xlsx");
         var file = AutoDeletingPath.Create();
         var path = file.ToString();
 
@@ -433,7 +433,7 @@ public class MiniExcelTemplateTests
     [Fact]
     public void TestGithubProject()
     {
-        const string templatePath = "../../../../../samples/xlsx/TestTemplateGithubProjects.xlsx";
+        var templatePath = PathHelper.GetFile("xlsx/TestTemplateGithubProjects.xlsx");
         var path = AutoDeletingPath.Create();
 
         var projects = new[]
@@ -491,7 +491,7 @@ public class MiniExcelTemplateTests
     public void TestIEnumerableType()
     {
         {
-            const string templatePath = "../../../../../samples/xlsx/TestIEnumerableType.xlsx";
+            var templatePath = PathHelper.GetFile("xlsx/TestIEnumerableType.xlsx");
             using var path = AutoDeletingPath.Create();
 
             //1. By POCO
@@ -571,7 +571,7 @@ public class MiniExcelTemplateTests
     public void TestTemplateTypeMapping()
     {
         {
-            const string templatePath = "../../../../../samples/xlsx/TestITemplateTypeAutoMapping.xlsx";
+            var templatePath = PathHelper.GetFile("xlsx/TestITemplateTypeAutoMapping.xlsx");
             using var path = AutoDeletingPath.Create();
 
             //1. By POCO
@@ -604,7 +604,7 @@ public class MiniExcelTemplateTests
     [Fact]
     public void TemplateCenterEmptyTest()
     {
-        const string templatePath = "../../../../../samples/xlsx/TestTemplateCenterEmpty.xlsx";
+        var templatePath = PathHelper.GetFile("xlsx/TestTemplateCenterEmpty.xlsx");
         using var path = AutoDeletingPath.Create();
         var value = new
         {
@@ -616,7 +616,7 @@ public class MiniExcelTemplateTests
     [Fact]
     public void TemplateBasicTest()
     {
-        const string templatePath = "../../../../../samples/xlsx/TestTemplateEasyFill.xlsx";
+        var templatePath = PathHelper.GetFile("xlsx/TestTemplateEasyFill.xlsx");
         {
             using var path = AutoDeletingPath.Create();
             
@@ -721,7 +721,7 @@ public class MiniExcelTemplateTests
     [Fact]
     public void TestIEnumerable()
     {
-        const string templatePath = "../../../../../samples/xlsx/TestTemplateBasicIEmumerableFill.xlsx";
+        var templatePath = PathHelper.GetFile("xlsx/TestTemplateBasicIEmumerableFill.xlsx");
         {
             using var path = AutoDeletingPath.Create();
 
@@ -795,7 +795,7 @@ public class MiniExcelTemplateTests
     [Fact]
     public void TestIEnumerableWithFormulas()
     {
-        const string templatePath = "../../../../../samples/xlsx/TestTemplateBasicIEnumerableFillWithFormulas.xlsx";
+        var templatePath = PathHelper.GetFile("xlsx/TestTemplateBasicIEnumerableFillWithFormulas.xlsx");
         using var path = AutoDeletingPath.Create();
 
         var value = new
@@ -819,7 +819,7 @@ public class MiniExcelTemplateTests
     [Fact]
     public void TemplateTest()
     {
-        const string templatePath = "../../../../../samples/xlsx/TestTemplateComplex.xlsx";
+        var templatePath = PathHelper.GetFile("xlsx/TestTemplateComplex.xlsx");
         {
             using var path = AutoDeletingPath.Create();
 
@@ -941,7 +941,7 @@ public class MiniExcelTemplateTests
     [Fact]
     public void MergeSameCellsWithTagTest()
     {
-        const string path = "../../../../../samples/xlsx/TestMergeWithTag.xlsx";
+        var path = PathHelper.GetFile("xlsx/TestMergeWithTag.xlsx");
         using var mergedFilePath = AutoDeletingPath.Create();
 
         _excelTemplater.MergeSameCells(mergedFilePath.ToString(), path);
@@ -955,7 +955,7 @@ public class MiniExcelTemplateTests
     [Fact]
     public void MergeSameCellsWithLimitTagTest()
     {
-        const string path = "../../../../../samples/xlsx/TestMergeWithLimitTag.xlsx";
+        var path = PathHelper.GetFile("xlsx/TestMergeWithLimitTag.xlsx");
         using var mergedFilePath = AutoDeletingPath.Create();
 
         _excelTemplater.MergeSameCells(mergedFilePath.ToString(), path);

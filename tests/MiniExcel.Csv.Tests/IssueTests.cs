@@ -779,7 +779,7 @@ public class IssueTests
                 Assert.Equal("MyProperty5", rows[0].C);
                 Assert.Equal("MyProperty2", rows[0].D);
                 Assert.Equal("MyProperty6", rows[0].E);
-                Assert.Equal(null, rows[0].F);
+                Assert.Null(rows[0].F);
                 Assert.Equal("MyProperty3", rows[0].G);
 
                 Assert.Equal("MyProperty4", rows[0].A);
@@ -787,7 +787,7 @@ public class IssueTests
                 Assert.Equal("MyProperty5", rows[0].C);
                 Assert.Equal("MyProperty2", rows[0].D);
                 Assert.Equal("MyProperty6", rows[0].E);
-                Assert.Equal(null, rows[0].F);
+                Assert.Null(rows[0].F);
                 Assert.Equal("MyProperty3", rows[0].G);
             }
 
@@ -855,8 +855,8 @@ public class IssueTests
     [Fact]
     public void Issue142_Query()
     {
-        const string path = "../../../../../samples/xlsx/TestIssue142.xlsx";
-        const string csvPath = "../../../../../samples/csv/TestIssue142.csv";
+        var path = PathHelper.GetFile("xlsx/TestIssue142.xlsx");
+        var csvPath = PathHelper.GetFile("csv/TestIssue142.csv");
         
         var rows = _openXmlImporter.Query<Issue142VoExcelColumnNameNotFound>(path).ToList();
         Assert.Equal(0, rows[0].MyProperty1);

@@ -446,7 +446,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         }
 
         {
-            const string xlsxPath = "../../../../../samples/xlsx/Test5x2.xlsx";
+            var xlsxPath = PathHelper.GetFile("xlsx/Test5x2.xlsx");
             using var tempSqlitePath = AutoDeletingPath.Create(Path.GetTempPath(), $"{Guid.NewGuid()}.db");
             var connectionString = $"Data Source={tempSqlitePath};Version=3;";
 
@@ -2074,7 +2074,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     public void Issue207()
     {
         {
-            const string tempaltePath = "../../../../../samples/xlsx/TestIssue207_2.xlsx";
+            var tempaltePath = PathHelper.GetFile("xlsx/TestIssue207_2.xlsx");
             using var file = AutoDeletingPath.Create();
             var path = file.ToString();
 
@@ -2118,7 +2118,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         }
 
         {
-            const string tempaltePath = "../../../../../samples/xlsx/TestIssue207_Template_Merge_row_list_rendering_without_merge/template.xlsx";
+            var tempaltePath = PathHelper.GetFile("xlsx/TestIssue207_Template_Merge_row_list_rendering_without_merge/template.xlsx");
             using var file = AutoDeletingPath.Create();
             var path = file.ToString();
 
@@ -2154,7 +2154,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     [Fact]
     public void Issue87()
     {
-        const string templatePath = "../../../../../samples/xlsx/TestTemplateCenterEmpty.xlsx";
+        var templatePath = PathHelper.GetFile("xlsx/TestTemplateCenterEmpty.xlsx");
         using var path = AutoDeletingPath.Create();
         var value = new
         {
@@ -2171,7 +2171,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     [Fact]
     public void Issue208()
     {
-        const string path = "../../../../../samples/xlsx/TestIssue208.xlsx";
+        var path = PathHelper.GetFile("xlsx/TestIssue208.xlsx");
         var columns =  _excelImporter.GetColumnNames(path).ToList();
         Assert.Equal(16384, columns.Count);
         Assert.Equal("XFD", columns[16383]);
@@ -2184,7 +2184,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     public void Issue206()
     {
         {
-            const string templatePath = "../../../../../samples/xlsx/TestTemplateBasicIEmumerableFill.xlsx";
+            var templatePath = PathHelper.GetFile("xlsx/TestTemplateBasicIEmumerableFill.xlsx");
             using var path = AutoDeletingPath.Create();
 
             var dt = new DataTable();
@@ -2203,7 +2203,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         }
 
         {
-            const string templatePath = "../../../../../samples/xlsx/TestTemplateBasicIEmumerableFill.xlsx";
+            var templatePath = PathHelper.GetFile("xlsx/TestTemplateBasicIEmumerableFill.xlsx");
             using var path = AutoDeletingPath.Create();
 
             using var dt = new DataTable();
@@ -2227,7 +2227,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     public void Issue193()
     {
         {
-            const string templatePath = "../../../../../samples/xlsx/TestTemplateComplexWithNamespacePrefix.xlsx";
+            var templatePath = PathHelper.GetFile("xlsx/TestTemplateComplexWithNamespacePrefix.xlsx");
             using var file = AutoDeletingPath.Create();
             var path = file.ToString();
 
@@ -2281,7 +2281,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         }
 
         {
-            const string templatePath = "../../../../../samples/xlsx/TestTemplateComplex.xlsx";
+            var templatePath = PathHelper.GetFile("xlsx/TestTemplateComplex.xlsx");
             using var path = AutoDeletingPath.Create();
 
             // 2. By Dictionary
@@ -2405,7 +2405,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             Assert.Equal("Sheet1", p.Workbook.Worksheets["Sheet1"].Name);
         }
         {
-            const string path = "../../../../../samples/xlsx/TestIssue157.xlsx";
+            var path = PathHelper.GetFile("xlsx/TestIssue157.xlsx");
 
             {
                 var rows =  _excelImporter.Query(path, sheetName: "Sheet1").ToList();
@@ -2452,7 +2452,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         var strings = chars.Select(s => s.ToString()).ToArray();
 
         {
-            const string path = "../../../../../samples/xlsx/TestIssue149.xlsx";
+            var path = PathHelper.GetFile("xlsx/TestIssue149.xlsx");
             var rows =  _excelImporter.Query(path).Select(s => (string)s.A).ToList();
             for (int i = 0; i < chars.Length; i++)
             {
@@ -2508,7 +2508,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     [Fact]
     public void Issue153()
     {
-        const string path = "../../../../../samples/xlsx/TestIssue153.xlsx";
+        var path = PathHelper.GetFile("xlsx/TestIssue153.xlsx");
         var rows =  _excelImporter.Query(path, true).First() as IDictionary<string, object>;
         Assert.Equal(
         [
@@ -2523,7 +2523,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     [Fact]
     public void Issue137()
     {
-        const string path = "../../../../../samples/xlsx/TestIssue137.xlsx";
+        var path = PathHelper.GetFile("xlsx/TestIssue137.xlsx");
         {
             var rows =  _excelImporter.Query(path).ToList();
             var first = rows[0] as IDictionary<string, object>; // https://user-images.githubusercontent.com/12729184/113266322-ba06e400-9307-11eb-9521-d36abfda75cc.png
@@ -2609,7 +2609,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     [Fact]
     public void Issue138()
     {
-        const string path = "../../../../../samples/xlsx/TestIssue138.xlsx";
+        var path = PathHelper.GetFile("xlsx/TestIssue138.xlsx");
         {
             var rows =  _excelImporter.Query(path, true).ToList();
             Assert.Equal(6, rows.Count);
@@ -2885,7 +2885,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     [Fact]
     public void Issue585()
     {
-        const string path = "../../../../../samples/xlsx/TestIssue585.xlsx";
+        var path = PathHelper.GetFile("xlsx/TestIssue585.xlsx");
 
         var items1 =  _excelImporter.Query<Issue585VO1>(path);
         Assert.Equal(2, items1.Count());
@@ -2906,7 +2906,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     [Fact]
     public void Issue_542()
     {
-        const string path = "../../../../../samples/xlsx/TestIssue542.xlsx";
+        var path = PathHelper.GetFile("xlsx/TestIssue542.xlsx");
 
         var resultWithoutFirstRow =  _excelImporter.Query<Issue542>(path).ToList();
         var resultWithFirstRow =  _excelImporter.Query<Issue542>(path, treatHeaderAsData: true).ToList();
@@ -2960,7 +2960,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             string.Concat(nameof(MiniExcelIssueTests), "_", nameof(Issue606_1), ".xlsx")
         );
 
-        const string templateFileName = "../../../../../samples/xlsx/TestIssue606_Template.xlsx";
+        var templateFileName = PathHelper.GetFile("xlsx/TestIssue606_Template.xlsx");
          _excelTemplater.ApplyTemplate(path, Path.GetFullPath(templateFileName), value);
         File.Delete(path);
     }
@@ -3134,7 +3134,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     [Fact]
     public void Test_Issue_697_EmptyRowsStronglyTypedQuery()
     {
-        const string path = "../../../../../samples/xlsx/TestIssue697.xlsx";
+        var path = PathHelper.GetFile("xlsx/TestIssue697.xlsx");
         var rowsIgnoreEmpty =  _excelImporter.Query<Issue697>(path, configuration: new OpenXmlConfiguration { IgnoreEmptyRows = true }).ToList();
         var rowsCountEmpty =  _excelImporter.Query<Issue697>(path).ToList();
         Assert.Equal(4, rowsIgnoreEmpty.Count);
@@ -3167,9 +3167,9 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     [Fact]
     public void Issue_732_First_Sheet_Active()
     {
-        const string path1 = "../../../../../samples/xlsx/TestIssue732_1.xlsx";
-        const string path2 = "../../../../../samples/xlsx/TestIssue732_2.xlsx";
-        const string path3 = "../../../../../samples/xlsx/TestIssue732_3.xlsx";
+        var path1 = PathHelper.GetFile("xlsx/TestIssue732_1.xlsx");
+        var path2 = PathHelper.GetFile("xlsx/TestIssue732_2.xlsx");
+        var path3 = PathHelper.GetFile("xlsx/TestIssue732_3.xlsx");
 
         var info1 =  _excelImporter.GetSheetInformations(path1);
         var info2 =  _excelImporter.GetSheetInformations(path2);
@@ -3255,7 +3255,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         var path = PathHelper.GetFile("xlsx/TestIssue763.xlsx");
         var rows =  _excelImporter.QueryRange(path, startCell: "A3", endCell: "J3").ToArray();
         Assert.Equal("A3", rows[0].A);
-        Assert.Equal(null, rows[0].J);
+        Assert.Null(rows[0].J);
     }
 
     /// <summary>
@@ -3350,8 +3350,8 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         var rows =  _excelImporter.Query(path.FilePath).ToList();
 
         Assert.Equal("2025-1", rows[2].B);
-        Assert.Equal(null, rows[3].B);
-        Assert.Equal(null, rows[4].B);
+        Assert.Null(rows[3].B);
+        Assert.Null(rows[4].B);
         Assert.Equal("2025-2", rows[5].B);
         return;
 
@@ -3670,7 +3670,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         var rows =  _excelImporter.Query(path).ToList();
 
         Assert.Equal(3, rows.Count);
-        Assert.Equal(null, rows[0].A);
+        Assert.Null(rows[0].A);
         Assert.Equal(2, rows[2].B);
     }
     

@@ -1,45 +1,48 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-    <NoWarn>$(NoWarn);IDE0017;IDE0034;IDE0037;IDE0039;IDE0042;IDE0044;IDE0051;IDE0052;IDE0059;IDE0060;IDE0063;IDE1006;xUnit1004;CA1806;CA1816;CA1822;CA1825;CA1849;CA2000;CA2007;CA2208</NoWarn>
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <NoWarn>$(NoWarn);IDE0017;IDE0034;IDE0037;IDE0039;IDE0042;IDE0044;IDE0051;IDE0052;IDE0059;IDE0060;IDE0063;IDE1006;xUnit1004;CA1806;CA1816;CA1822;CA1825;CA1849;CA2000;CA2007;CA2208</NoWarn>
 
-    <IsPackable>false</IsPackable>
-    <IsTestProject>true</IsTestProject>
-    <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>..\..\src\miniexcel.snk</AssemblyOriginatorKeyFile>
-    <RootNamespace>MiniExcelLib.Csv.Tests</RootNamespace>
-  </PropertyGroup>
+        <IsPackable>false</IsPackable>
+        <IsTestProject>true</IsTestProject>
+        <SignAssembly>true</SignAssembly>
+        <AssemblyOriginatorKeyFile>..\..\src\miniexcel.snk</AssemblyOriginatorKeyFile>
+        <RootNamespace>MiniExcelLib.Csv.Tests</RootNamespace>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="coverlet.collector" Version="6.0.0" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
-    <PackageReference Include="xunit" Version="2.5.3" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="2.5.3" />
-    <PackageReference Include="CsvHelper" Version="33.0.1" />
-  </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="CsvHelper" Version="33.0.1"/>
+        
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.1"/>
+        <PackageReference Include="xunit" Version="2.9.3"/>
+        <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+    </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\src\MiniExcel.Csv\MiniExcel.Csv.csproj" />
-    <ProjectReference Include="..\MiniExcel.Tests.Common\MiniExcel.Tests.Common.csproj" />
-  </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\..\src\MiniExcel.Csv\MiniExcel.Csv.csproj"/>
+        <ProjectReference Include="..\MiniExcel.Tests.Common\MiniExcel.Tests.Common.csproj"/>
+    </ItemGroup>
 
-  <ItemGroup>
-    <Using Include="System.Data" />
-    <Using Include="System.Globalization" />
-    <Using Include="System.Text" />
-    <Using Include="System.Text.RegularExpressions" />
-    <Using Include="Dapper" />
-    <Using Include="CsvHelper" />
-    <Using Include="Xunit" />
-    <Using Include="MiniExcelLib.Tests.Common.Utils" />
-    <Using Include="MiniExcelLib.Core" />
-    <Using Include="MiniExcelLib.Core.Attributes" />
-    <Using Include="MiniExcelLib.Core.Exceptions" />
-    <Using Include="MiniExcelLib.Core.OpenXml" />
-    <Using Include="MiniExcelLib.Csv" />
-  </ItemGroup>
+    <ItemGroup>
+        <Using Include="System.Data"/>
+        <Using Include="System.Globalization"/>
+        <Using Include="System.Text"/>
+        <Using Include="System.Text.RegularExpressions"/>
+        <Using Include="Dapper"/>
+        <Using Include="CsvHelper"/>
+        <Using Include="Xunit"/>
+        <Using Include="MiniExcelLib.Tests.Common.Utils"/>
+        <Using Include="MiniExcelLib.Core"/>
+        <Using Include="MiniExcelLib.Core.Attributes"/>
+        <Using Include="MiniExcelLib.Core.Exceptions"/>
+        <Using Include="MiniExcelLib.Core.OpenXml"/>
+        <Using Include="MiniExcelLib.Csv"/>
+    </ItemGroup>
 
 </Project>

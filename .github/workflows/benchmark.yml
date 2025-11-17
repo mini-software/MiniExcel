@@ -32,7 +32,7 @@ jobs:
           BenchmarkMode: Automatic
           BenchmarkSection: query
       - name: Renaming result file
-        run: mv MiniExcelLib.Benchmarks.BenchmarkSections.QueryXlsxBenchmark-report-github.md query-benchmark.md
+        run: mv MiniExcelLib.Benchmarks.BenchmarkSections.QueryExcelBenchmark-report-github.md query-benchmark.md
         working-directory: ./benchmarks/MiniExcel.Benchmarks/BenchmarkDotNet.Artifacts/results
       - name: Save benchmark results
         uses: actions/upload-artifact@v4
@@ -62,7 +62,7 @@ jobs:
           BenchmarkMode: Automatic
           BenchmarkSection: create
       - name: Renaming result file
-        run: mv MiniExcelLib.Benchmarks.BenchmarkSections.CreateXlsxBenchmark-report-github.md create-benchmark.md
+        run: mv MiniExcelLib.Benchmarks.BenchmarkSections.CreateExcelBenchmark-report-github.md create-benchmark.md
         working-directory: ./benchmarks/MiniExcel.Benchmarks/BenchmarkDotNet.Artifacts/results
       - name: Save benchmark results
         uses: actions/upload-artifact@v4
@@ -92,7 +92,7 @@ jobs:
           BenchmarkMode: Automatic
           BenchmarkSection: template
       - name: Renaming result file
-        run: mv MiniExcelLib.Benchmarks.BenchmarkSections.TemplateXlsxBenchmark-report-github.md template-benchmark.md
+        run: mv MiniExcelLib.Benchmarks.BenchmarkSections.TemplateExcelBenchmark-report-github.md template-benchmark.md
         working-directory: ./benchmarks/MiniExcel.Benchmarks/BenchmarkDotNet.Artifacts/results
       - name: Save benchmark results
         uses: actions/upload-artifact@v4

@@ -1,18 +1,15 @@
 ```
 
-BenchmarkDotNet v0.15.0, Linux Ubuntu 24.04.2 LTS (Noble Numbat)
-AMD EPYC 7763, 1 CPU, 4 logical and 2 physical cores
-.NET SDK 9.0.300
-  [Host]   : .NET 9.0.5 (9.0.525.21509), X64 RyuJIT AVX2
-  ShortRun : .NET 9.0.5 (9.0.525.21509), X64 RyuJIT AVX2
+BenchmarkDotNet v0.15.6, Linux Ubuntu 24.04.3 LTS (Noble Numbat)
+Intel Xeon Platinum 8370C CPU 2.80GHz (Max: 3.36GHz), 1 CPU, 4 logical and 2 physical cores
+.NET SDK 10.0.100
+  [Host]   : .NET 10.0.0 (10.0.0, 10.0.25.52411), X64 RyuJIT x86-64-v4
+  ShortRun : .NET 10.0.0 (10.0.0, 10.0.25.52411), X64 RyuJIT x86-64-v4
 
-MiniExcel 1.41.2
-OpenXmlSdk 3.3.0
-ClosedXml 0.105.0
-Epplus 7.7.2
 
 ```
-| Method                                       | *Highest  Point Memory |     Mean |   StdDev |    Error |         Gen0 |        Gen1 |      Gen2 | Allocated |
-| -------------------------------------------- | ---------------------- | -------: | -------: | -------: | -----------: | ----------: | --------: | --------: |
-| &#39;MiniExcel Template Generate&#39;        | 24 MB                  |  3.340 s | 0.0235 s | 0.4295 s |  220166.6667 |   1000.0000 |         - |   3.43 GB |
-| &#39;ClosedXml.Report Template Generate&#39; | 3156 MB                | 70.884 s | 0.4144 s | 7.5599 s | 1584833.3333 | 508500.0000 | 6500.0000 |  26.34 GB |
+| Method                                | Mean          | StdDev        | Error          | Gen0         | Gen1        | Gen2      | Allocated   |
+|-------------------------------------- |--------------:|--------------:|---------------:|-------------:|------------:|----------:|------------:|
+| &#39;MiniExcel Mapping Template Generate&#39; |      2.941 ms |     0.0528 ms |      0.9636 ms |    2312.5000 |   2302.0833 | 2302.0833 |    15.28 MB |
+| &#39;MiniExcel Template Generate&#39;         |  3,234.435 ms |    15.5778 ms |    284.1962 ms |  217833.3333 |   1166.6667 |  166.6667 |  5212.93 MB |
+| &#39;ClosedXml.Report Template Generate&#39;  | 62,563.080 ms | 1,186.0532 ms | 21,638.0257 ms | 1034333.3333 | 377500.0000 | 6333.3333 | 26397.81 MB |

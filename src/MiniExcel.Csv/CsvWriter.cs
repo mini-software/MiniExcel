@@ -47,105 +47,117 @@ internal partial class CsvWriter : IMiniExcelWriter, IDisposable
         {
             writeAdapter = MiniExcelWriteAdapterFactory.GetWriteAdapter(values, _configuration);
         }
-        
+
+        try
+        {
 #if SYNC_ONLY
-        var props = writeAdapter?.GetColumns();
+            var props = writeAdapter?.GetColumns();
 #else
-        var props = writeAdapter is not null 
-            ? writeAdapter.GetColumns() 
-            : await asyncWriteAdapter!.GetColumnsAsync().ConfigureAwait(false);
+            var props = writeAdapter is not null 
+                ? writeAdapter.GetColumns() 
+                : await asyncWriteAdapter!.GetColumnsAsync().ConfigureAwait(false);
 #endif
-
-        if (props is null)
-        {
-            await _writer.WriteAsync(_configuration.NewLine
-#if NET5_0_OR_GREATER
-                .AsMemory(), cancellationToken
-#endif
-            ).ConfigureAwait(false);
-            await _writer.FlushAsync(
-#if NET8_0_OR_GREATER
-                cancellationToken
-#endif
-            ).ConfigureAwait(false);
-            return 0;
-        }
-
-        if (_printHeader)
-        {
-            await _writer.WriteAsync(GetHeader(props)
-#if NET5_0_OR_GREATER
-                .AsMemory(), cancellationToken
-#endif
-            ).ConfigureAwait(false);
-            await _writer.WriteAsync(newLine
-#if NET5_0_OR_GREATER
-                .AsMemory(), cancellationToken
-#endif
-            ).ConfigureAwait(false);
-        }
-        
-        var rowBuilder = new StringBuilder();
-        var rowsWritten = 0;
-
-        if (writeAdapter is not null)
-        {
-            foreach (var row in writeAdapter.GetRows(props, cancellationToken))
+    
+            if (props is null)
             {
-                rowBuilder.Clear();
-                foreach (var column in row)
+                await _writer.WriteAsync(_configuration.NewLine
+#if NET5_0_OR_GREATER
+                    .AsMemory(), cancellationToken
+#endif
+                ).ConfigureAwait(false);
+                await _writer.FlushAsync(
+#if NET8_0_OR_GREATER
+                    cancellationToken
+#endif
+                ).ConfigureAwait(false);
+                return 0;
+            }
+    
+            if (_printHeader)
+            {
+                await _writer.WriteAsync(GetHeader(props)
+#if NET5_0_OR_GREATER
+                    .AsMemory(), cancellationToken
+#endif
+                ).ConfigureAwait(false);
+                await _writer.WriteAsync(newLine
+#if NET5_0_OR_GREATER
+                    .AsMemory(), cancellationToken
+#endif
+                ).ConfigureAwait(false);
+            }
+            
+            var rowBuilder = new StringBuilder();
+            var rowsWritten = 0;
+    
+            if (writeAdapter is not null)
+            {
+                foreach (var row in writeAdapter.GetRows(props, cancellationToken))
+                {
+                    rowBuilder.Clear();
+                    foreach (var column in row)
+                    {
+                        cancellationToken.ThrowIfCancellationRequested();
+                        AppendColumn(rowBuilder, column);
+                        progress?.Report(1);
+                    }
+    
+                    RemoveTrailingSeparator(rowBuilder);
+                    await _writer.WriteAsync(rowBuilder.ToString()
+#if NET5_0_OR_GREATER
+                        .AsMemory(), cancellationToken
+#endif
+                    ).ConfigureAwait(false);
+                    await _writer.WriteAsync(newLine
+#if NET5_0_OR_GREATER
+                        .AsMemory(), cancellationToken
+#endif
+                    ).ConfigureAwait(false);
+    
+                    rowsWritten++;
+                }
+            }
+            else
+            {
+#if !SYNC_ONLY
+                await foreach (var row in asyncWriteAdapter!.GetRowsAsync(props, cancellationToken).ConfigureAwait(false))
                 {
                     cancellationToken.ThrowIfCancellationRequested();
-                    AppendColumn(rowBuilder, column);
-                    progress?.Report(1);
+                    rowBuilder.Clear();
+    
+                    await foreach (var column in row.WithCancellation(cancellationToken).ConfigureAwait(false))
+                    {
+                        AppendColumn(rowBuilder, column);
+                        progress?.Report(1);
+                    }
+    
+                    RemoveTrailingSeparator(rowBuilder);
+                    await _writer.WriteAsync(rowBuilder.ToString()
+#if NET5_0_OR_GREATER
+                        .AsMemory(), cancellationToken
+#endif
+                    ).ConfigureAwait(false);
+                    await _writer.WriteAsync(newLine
+#if NET5_0_OR_GREATER
+                        .AsMemory(), cancellationToken
+#endif
+                    ).ConfigureAwait(false);
+    
+                    rowsWritten++;
                 }
-
-                RemoveTrailingSeparator(rowBuilder);
-                await _writer.WriteAsync(rowBuilder.ToString()
-#if NET5_0_OR_GREATER
-                    .AsMemory(), cancellationToken
 #endif
-                ).ConfigureAwait(false);
-                await _writer.WriteAsync(newLine
-#if NET5_0_OR_GREATER
-                    .AsMemory(), cancellationToken
-#endif
-                ).ConfigureAwait(false);
-
-                rowsWritten++;
             }
+            return rowsWritten;
         }
-        else
+        finally
         {
 #if !SYNC_ONLY
-            await foreach (var row in asyncWriteAdapter!.GetRowsAsync(props, cancellationToken).ConfigureAwait(false))
+            if (asyncWriteAdapter is IAsyncDisposable asyncDisposable)
             {
-                cancellationToken.ThrowIfCancellationRequested();
-                rowBuilder.Clear();
-
-                await foreach (var column in row.WithCancellation(cancellationToken).ConfigureAwait(false))
-                {
-                    AppendColumn(rowBuilder, column);
-                    progress?.Report(1);
-                }
-
-                RemoveTrailingSeparator(rowBuilder);
-                await _writer.WriteAsync(rowBuilder.ToString()
-#if NET5_0_OR_GREATER
-                    .AsMemory(), cancellationToken
-#endif
-                ).ConfigureAwait(false);
-                await _writer.WriteAsync(newLine
-#if NET5_0_OR_GREATER
-                    .AsMemory(), cancellationToken
-#endif
-                ).ConfigureAwait(false);
-
-                rowsWritten++;
+                await asyncDisposable.DisposeAsync().ConfigureAwait(false);
             }
 #endif
         }
-        return rowsWritten;
     }
 
     [CreateSyncVersion]

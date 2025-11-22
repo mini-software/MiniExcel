@@ -401,4 +401,5 @@ FodyWeavers.xsd
 /BenchmarkDotNet.Artifacts
 /TestTemplate
 /tests/MiniExcel.Tests/TemplateOptimization
-/tests/data/xlsx/Test_EnableWriteFilePath.xlsx
+/tests/data
+samples/xlsx/Test_EnableWriteFilePath.xlsx

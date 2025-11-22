@@ -1,12 +1,15 @@
 ﻿namespace MiniExcelLib.Core.WriteAdapters;
 
-internal class AsyncEnumerableWriteAdapter<T>(IAsyncEnumerable<T> values, MiniExcelBaseConfiguration configuration) : IMiniExcelWriteAdapterAsync
+internal sealed class AsyncEnumerableWriteAdapter<T>(IAsyncEnumerable<T> values, MiniExcelBaseConfiguration configuration) : IMiniExcelWriteAdapterAsync, IAsyncDisposable
 {
     private readonly IAsyncEnumerable<T> _values = values;
     private readonly MiniExcelBaseConfiguration _configuration = configuration;
+    
     private IAsyncEnumerator<T>? _enumerator;
     private bool _empty;
+    private bool _disposed = false;
 
+    
     public async Task<List<MiniExcelColumnInfo>?> GetColumnsAsync()
     {
         if (CustomPropertyHelper.TryGetTypeColumnInfo(typeof(T), _configuration, out var props))
@@ -20,6 +23,7 @@ internal class AsyncEnumerableWriteAdapter<T>(IAsyncEnumerable<T> values, MiniEx
             _empty = true;
             return null;
         }
+
         return CustomPropertyHelper.GetColumnInfoFromValue(_enumerator.Current, _configuration);
     }
 
@@ -43,22 +47,21 @@ internal class AsyncEnumerableWriteAdapter<T>(IAsyncEnumerable<T> values, MiniEx
         {
             cancellationToken.ThrowIfCancellationRequested();
             yield return GetRowValuesAsync(_enumerator.Current, props);
-
-        } while (await _enumerator.MoveNextAsync().ConfigureAwait(false));
+        }
+        while (await _enumerator.MoveNextAsync().ConfigureAwait(false));
     }
 
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
-    public static async IAsyncEnumerable<CellWriteInfo> GetRowValuesAsync(T currentValue, List<MiniExcelColumnInfo> props)
-#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
+    private static async IAsyncEnumerable<CellWriteInfo> GetRowValuesAsync(T currentValue, List<MiniExcelColumnInfo> props)
+#pragma warning restore CS1998
     {
-        var column = 1;
+        var column = 0;
         foreach (var prop in props)
         {
+            column++;
+            
             if (prop is null)
-            {
-                column++;
                 continue;
-            }
 
             yield return currentValue switch
             {
@@ -66,8 +69,18 @@ internal class AsyncEnumerableWriteAdapter<T>(IAsyncEnumerable<T> values, MiniEx
                 IDictionary dictionary => new CellWriteInfo(dictionary[prop.Key], column, prop),
                 _ => new CellWriteInfo(prop.Property.GetValue(currentValue), column, prop)
             };
+        }
+    }
 
-            column++;
+    public async ValueTask DisposeAsync()
+    {
+        if (!_disposed)
+        {
+            if (_enumerator is not null)
+            {
+                await _enumerator.DisposeAsync().ConfigureAwait(false);
+            }
+            _disposed = true;
         }
     }
 }

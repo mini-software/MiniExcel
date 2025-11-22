@@ -109,74 +109,92 @@ namespace MiniExcelLibs.Csv
         {
             cancellationToken.ThrowIfCancellationRequested();
             
-#if NETSTANDARD2_0_OR_GREATER || NET
             IMiniExcelWriteAdapter writeAdapter = null;
-            if (!MiniExcelWriteAdapterFactory.TryGetAsyncWriteAdapter(values, _configuration, out var asyncWriteAdapter))
+#if NETSTANDARD2_0_OR_GREATER || NET
+            IAsyncMiniExcelWriteAdapter asyncWriteAdapter = null;
+#endif
+            try
             {
-                writeAdapter = MiniExcelWriteAdapterFactory.GetWriteAdapter(values, _configuration);
-            }
-            var props = writeAdapter != null ? writeAdapter.GetColumns() : await asyncWriteAdapter.GetColumnsAsync();
+#if NETSTANDARD2_0_OR_GREATER || NET
+                if (!MiniExcelWriteAdapterFactory.TryGetAsyncWriteAdapter(values, _configuration, out asyncWriteAdapter))
+                {
+                    writeAdapter = MiniExcelWriteAdapterFactory.GetWriteAdapter(values, _configuration);
+                }
+
+                var props = writeAdapter != null
+                    ? writeAdapter.GetColumns()
+                    : await asyncWriteAdapter.GetColumnsAsync();
 #else
-            IMiniExcelWriteAdapter writeAdapter =  MiniExcelWriteAdapterFactory.GetWriteAdapter(values, _configuration);
+            writeAdapter = MiniExcelWriteAdapterFactory.GetWriteAdapter(values, _configuration);
             var props = writeAdapter.GetColumns();
 #endif
-            if (props == null)
-            {
-                await _writer.WriteAsync(_configuration.NewLine);
-                await _writer.FlushAsync();
-                return 0;
-            }
-            
-            if (_printHeader)
-            {
-                await _writer.WriteAsync(GetHeader(props));
-                await _writer.WriteAsync(newLine);
-            }
-            
-            var rowBuilder = new StringBuilder();
-            var rowsWritten = 0;
-            
-            if (writeAdapter != null)
-            {
-                foreach (var row in writeAdapter.GetRows(props, cancellationToken))
+                if (props == null)
                 {
-                    rowBuilder.Clear();
-                    foreach (var column in row)
-                    {
-                        cancellationToken.ThrowIfCancellationRequested();
-                        AppendColumn(rowBuilder, column);
-                    }
-                    
-                    RemoveTrailingSeparator(rowBuilder);
-                    await _writer.WriteAsync(rowBuilder.ToString());
-                    await _writer.WriteAsync(newLine);
-                    
-                    rowsWritten++;
+                    await _writer.WriteAsync(_configuration.NewLine);
+                    await _writer.FlushAsync();
+                    return 0;
                 }
-            }
+
+                if (_printHeader)
+                {
+                    await _writer.WriteAsync(GetHeader(props));
+                    await _writer.WriteAsync(newLine);
+                }
+
+                var rowBuilder = new StringBuilder();
+                var rowsWritten = 0;
+
+                if (writeAdapter != null)
+                {
+                    foreach (var row in writeAdapter.GetRows(props, cancellationToken))
+                    {
+                        rowBuilder.Clear();
+                        foreach (var column in row)
+                        {
+                            cancellationToken.ThrowIfCancellationRequested();
+                            AppendColumn(rowBuilder, column);
+                        }
+
+                        RemoveTrailingSeparator(rowBuilder);
+                        await _writer.WriteAsync(rowBuilder.ToString());
+                        await _writer.WriteAsync(newLine);
+
+                        rowsWritten++;
+                    }
+                }
 #if NETSTANDARD2_0_OR_GREATER || NET
-            else
-            {
-                await foreach (var row in asyncWriteAdapter.GetRowsAsync(props, cancellationToken))
+                else
                 {
-                    cancellationToken.ThrowIfCancellationRequested();
-                    rowBuilder.Clear();
-                    
-                    await foreach (var column in row)
+                    await foreach (var row in asyncWriteAdapter.GetRowsAsync(props, cancellationToken))
                     {
                         cancellationToken.ThrowIfCancellationRequested();
-                        AppendColumn(rowBuilder, column);
+                        rowBuilder.Clear();
+
+                        await foreach (var column in row)
+                        {
+                            cancellationToken.ThrowIfCancellationRequested();
+                            AppendColumn(rowBuilder, column);
+                        }
+
+                        RemoveTrailingSeparator(rowBuilder);
+                        await _writer.WriteAsync(rowBuilder.ToString());
+                        await _writer.WriteAsync(newLine);
+
+                        rowsWritten++;
                     }
-                    
-                    RemoveTrailingSeparator(rowBuilder);
-                    await _writer.WriteAsync(rowBuilder.ToString());
-                    await _writer.WriteAsync(newLine);
-                    
-                    rowsWritten++;
                 }
-            }
 #endif
-            return rowsWritten;
+                return rowsWritten;
+            }
+            finally
+            {
+#if NETSTANDARD2_0_OR_GREATER || NET   
+                if (asyncWriteAdapter is IAsyncDisposable asyncDisposable)
+                {
+                    await asyncDisposable.DisposeAsync().ConfigureAwait(false);
+                }
+#endif
+            }
         }
 
         public async Task<int[]> SaveAsAsync(CancellationToken cancellationToken = default)

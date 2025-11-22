@@ -7,7 +7,7 @@ public static class MiniExcelWriteAdapterFactory
     public static bool TryGetAsyncWriteAdapter(object values, MiniExcelBaseConfiguration configuration, out IMiniExcelWriteAdapterAsync? writeAdapter)
     {
         writeAdapter = null;
-        if (values.GetType().IsAsyncEnumerable(out var genericArgument) && genericArgument != null)
+        if (values.GetType().IsAsyncEnumerable(out var genericArgument))
         {
             var writeAdapterType = typeof(AsyncEnumerableWriteAdapter<>).MakeGenericType(genericArgument!);
             writeAdapter = Activator.CreateInstance(writeAdapterType, values, configuration) as IMiniExcelWriteAdapterAsync;

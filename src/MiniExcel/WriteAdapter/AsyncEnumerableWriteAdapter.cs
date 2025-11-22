@@ -1,4 +1,5 @@
-﻿using MiniExcelLibs.Utils;
+﻿using System;
+using MiniExcelLibs.Utils;
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
@@ -8,12 +9,14 @@ using System.Threading.Tasks;
 #if NETSTANDARD2_0_OR_GREATER || NET
 namespace MiniExcelLibs.WriteAdapter
 {
-    internal class AsyncEnumerableWriteAdapter<T> : IAsyncMiniExcelWriteAdapter
+    internal class AsyncEnumerableWriteAdapter<T> : IAsyncMiniExcelWriteAdapter, IAsyncDisposable
     {
         private readonly IAsyncEnumerable<T> _values;
         private readonly Configuration _configuration;
+        
         private IAsyncEnumerator<T> _enumerator;
         private bool _empty;
+        private bool _disposed;
 
         public AsyncEnumerableWriteAdapter(IAsyncEnumerable<T> values, Configuration configuration)
         {
@@ -46,7 +49,7 @@ namespace MiniExcelLibs.WriteAdapter
 
             if (_enumerator is null)
             {
-                _enumerator = _values.GetAsyncEnumerator();
+                _enumerator = _values.GetAsyncEnumerator(cancellationToken);
                 if (!await _enumerator.MoveNextAsync())
                 {
                     yield break;
@@ -58,36 +61,40 @@ namespace MiniExcelLibs.WriteAdapter
                 cancellationToken.ThrowIfCancellationRequested();
                 yield return GetRowValuesAsync(_enumerator.Current, props);
 
-            } while (await _enumerator.MoveNextAsync());
+            }
+            while (await _enumerator.MoveNextAsync());
         }
 
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
-        public async static IAsyncEnumerable<CellWriteInfo> GetRowValuesAsync(T currentValue, List<ExcelColumnInfo> props)
-#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
+        private static async IAsyncEnumerable<CellWriteInfo> GetRowValuesAsync(T currentValue, List<ExcelColumnInfo> props)
+#pragma warning restore CS1998
         {
-            var column = 1;
+            var column = 0;
             foreach (var prop in props)
             {
-                if (prop == null)
-                {
-                    column++;
-                    continue;
-                }
-
-                switch (currentValue)
-                {
-                    case IDictionary<string, object> genericDictionary:
-                        yield return new CellWriteInfo(genericDictionary[prop.Key.ToString()], column, prop);
-                        break;
-                    case IDictionary dictionary:
-                        yield return new CellWriteInfo(dictionary[prop.Key], column, prop);
-                        break;
-                    default:
-                        yield return new CellWriteInfo(prop.Property.GetValue(currentValue), column, prop);
-                        break;
-                }
-
                 column++;
+            
+                if (prop is null)
+                    continue;
+
+                yield return currentValue switch
+                {
+                    IDictionary<string, object> genericDictionary => new CellWriteInfo(genericDictionary[prop.Key.ToString()], column, prop),
+                    IDictionary dictionary => new CellWriteInfo(dictionary[prop.Key], column, prop),
+                    _ => new CellWriteInfo(prop.Property.GetValue(currentValue), column, prop)
+                };
+            }
+        }
+
+        public async ValueTask DisposeAsync()
+        {
+            if (!_disposed)
+            {
+                if (_enumerator != null)
+                {
+                    await _enumerator.DisposeAsync().ConfigureAwait(false);
+                }
+                _disposed = true;
             }
         }
     }

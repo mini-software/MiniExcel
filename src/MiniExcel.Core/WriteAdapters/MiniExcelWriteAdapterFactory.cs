@@ -7,13 +7,13 @@ public static class MiniExcelWriteAdapterFactory
     public static bool TryGetAsyncWriteAdapter(object values, MiniExcelBaseConfiguration configuration, out IMiniExcelWriteAdapterAsync? writeAdapter)
     {
         writeAdapter = null;
-        if (values.GetType().IsAsyncEnumerable(out var genericArgument))
+        if (values.GetType().IsAsyncEnumerable(out var genericArgument) && genericArgument != null)
         {
-            var writeAdapterType = typeof(AsyncEnumerableWriteAdapter<>).MakeGenericType(genericArgument);
-            writeAdapter = (IMiniExcelWriteAdapterAsync)Activator.CreateInstance(writeAdapterType, values, configuration);
+            var writeAdapterType = typeof(AsyncEnumerableWriteAdapter<>).MakeGenericType(genericArgument!);
+            writeAdapter = Activator.CreateInstance(writeAdapterType, values, configuration) as IMiniExcelWriteAdapterAsync;
             return true;
         }
-        
+
         if (values is IMiniExcelDataReader miniExcelDataReader)
         {
             writeAdapter = new MiniExcelDataReaderWriteAdapter(miniExcelDataReader, configuration);

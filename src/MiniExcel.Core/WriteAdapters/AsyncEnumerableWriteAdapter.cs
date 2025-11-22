@@ -1,7 +1,8 @@
 ﻿namespace MiniExcelLib.Core.WriteAdapters;
 
-internal class AsyncEnumerableWriteAdapter<T>(IAsyncEnumerable<T> values, MiniExcelBaseConfiguration configuration) : IMiniExcelWriteAdapterAsync
+internal class AsyncEnumerableWriteAdapter<T>(IAsyncEnumerable<T> values, MiniExcelBaseConfiguration configuration) : IMiniExcelWriteAdapterAsync, IAsyncDisposable
 {
+    private bool _disposed = false;
     private readonly IAsyncEnumerable<T> _values = values;
     private readonly MiniExcelBaseConfiguration _configuration = configuration;
     private IAsyncEnumerator<T>? _enumerator;
@@ -70,4 +71,22 @@ internal class AsyncEnumerableWriteAdapter<T>(IAsyncEnumerable<T> values, MiniEx
             column++;
         }
     }
+
+    public async ValueTask DisposeAsync()
+    {
+        await DisposeAsyncCore().ConfigureAwait(false);
+    }
+
+    protected virtual async ValueTask DisposeAsyncCore()
+    {
+        if (!_disposed)
+        {
+            if (_enumerator != null)
+            {
+                await _enumerator.DisposeAsync().ConfigureAwait(false);
+            }
+            _disposed = true;
+        }
+    }
+
 }

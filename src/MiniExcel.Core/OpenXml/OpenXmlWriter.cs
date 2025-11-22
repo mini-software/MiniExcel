@@ -1,23 +1,23 @@
-using System.ComponentModel;
-using System.Xml.Linq;
 using MiniExcelLib.Core.OpenXml.Constants;
 using MiniExcelLib.Core.OpenXml.Models;
 using MiniExcelLib.Core.OpenXml.Styles.Builder;
 using MiniExcelLib.Core.OpenXml.Zip;
 using MiniExcelLib.Core.WriteAdapters;
+using System.ComponentModel;
+using System.Xml.Linq;
 
 namespace MiniExcelLib.Core.OpenXml;
 
 internal partial class OpenXmlWriter : IMiniExcelWriter
 {
     private static readonly UTF8Encoding Utf8WithBom = new(true);
-        
+
     private readonly MiniExcelZipArchive _archive;
     private readonly OpenXmlConfiguration _configuration;
     private readonly Stream _stream;
     private readonly List<SheetDto> _sheets = [];
     private readonly List<FileDto> _files = [];
-        
+
     private readonly string? _defaultSheetName;
     private readonly bool _printHeader;
     private readonly object? _value;
@@ -41,16 +41,16 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
         _printHeader = printHeader;
         _defaultSheetName = sheetName;
     }
-    
+
     [CreateSyncVersion]
-    internal static Task<OpenXmlWriter> CreateAsync(Stream stream, object? value, string? sheetName,  bool printHeader, IMiniExcelConfiguration? configuration, CancellationToken cancellationToken = default)
+    internal static Task<OpenXmlWriter> CreateAsync(Stream stream, object? value, string? sheetName, bool printHeader, IMiniExcelConfiguration? configuration, CancellationToken cancellationToken = default)
     {
         ThrowHelper.ThrowIfInvalidSheetName(sheetName);
-        
+
         var writer = new OpenXmlWriter(stream, value, sheetName, configuration, printHeader);
         return Task.FromResult(writer);
     }
-    
+
     [CreateSyncVersion]
     public async Task<int[]> SaveAsAsync(IProgress<int>? progress = null, CancellationToken cancellationToken = default)
     {
@@ -190,7 +190,7 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
         using var zipStream = entry.Open();
 #endif
         using var writer = new SafeStreamWriter(zipStream, Utf8WithBom, _configuration.BufferSize);
-        
+
         if (values is null)
         {
             await WriteEmptySheetAsync(writer).ConfigureAwait(false);
@@ -241,125 +241,136 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
         {
             writeAdapter = MiniExcelWriteAdapterFactory.GetWriteAdapter(values, _configuration);
         }
+        try
+        {
+            var count = 0;
+            var isKnownCount = writeAdapter is not null && writeAdapter.TryGetKnownCount(out count);
 
-        var count = 0;
-        var isKnownCount = writeAdapter is not null && writeAdapter.TryGetKnownCount(out count);
-        
 #if SYNC_ONLY
         var props = writeAdapter?.GetColumns();
 #else
-        var props = writeAdapter is not null 
-            ? writeAdapter.GetColumns()
-            : await (asyncWriteAdapter?.GetColumnsAsync() ?? Task.FromResult<List<MiniExcelColumnInfo>?>(null)).ConfigureAwait(false);
+            var props = writeAdapter is not null
+                ? writeAdapter.GetColumns()
+                : await (asyncWriteAdapter?.GetColumnsAsync() ?? Task.FromResult<List<MiniExcelColumnInfo>?>(null)).ConfigureAwait(false);
 #endif
-        
-        if (props is null)
-        {
-            await WriteEmptySheetAsync(writer).ConfigureAwait(false);
-            return 0;
-        }
-        
-        int maxRowIndex;
-        var maxColumnIndex = props.Count(x => x is { ExcelIgnore: false });
 
-        await writer.WriteAsync(WorksheetXml.StartWorksheetWithRelationship, cancellationToken).ConfigureAwait(false);
-
-        long dimensionPlaceholderPostition = 0;
-
-        // We can write the dimensions directly if the row count is known
-        if (isKnownCount)
-        {
-            maxRowIndex = _printHeader ? count + 1 : count;
-            await writer.WriteAsync(WorksheetXml.Dimension(GetDimensionRef(maxRowIndex, props.Count)), cancellationToken).ConfigureAwait(false);
-        }
-        else if (_configuration.FastMode)
-        {
-            dimensionPlaceholderPostition = await WriteDimensionPlaceholderAsync(writer).ConfigureAwait(false);
-        }
-
-        //sheet view
-        await writer.WriteAsync(GetSheetViews(), cancellationToken).ConfigureAwait(false);
-
-        //cols:width
-        ExcelWidthCollection? widths = null;
-        long columnWidthsPlaceholderPosition = 0;
-        if (_configuration.EnableAutoWidth)
-        {
-            columnWidthsPlaceholderPosition = await WriteColumnWidthPlaceholdersAsync(writer, maxColumnIndex, cancellationToken).ConfigureAwait(false);
-            widths = new ExcelWidthCollection(_configuration.MinWidth, _configuration.MaxWidth, props);
-        }
-        else
-        {
-            await WriteColumnsWidthsAsync(writer, ExcelColumnWidth.FromProps(props), cancellationToken).ConfigureAwait(false);
-        }
-
-        //header
-        await writer.WriteAsync(WorksheetXml.StartSheetData, cancellationToken).ConfigureAwait(false);
-        var currentRowIndex = 0;
-        if (_printHeader)
-        {
-            await PrintHeaderAsync(writer, props!, cancellationToken).ConfigureAwait(false);
-            currentRowIndex++;
-        }
-
-        if (writeAdapter is not null)
-        {
-            foreach (var row in writeAdapter.GetRows(props, cancellationToken))
+            if (props is null)
             {
-                cancellationToken.ThrowIfCancellationRequested();
+                await WriteEmptySheetAsync(writer).ConfigureAwait(false);
+                return 0;
+            }
 
-                await writer.WriteAsync(WorksheetXml.StartRow(++currentRowIndex), cancellationToken).ConfigureAwait(false);
-                foreach (var cellValue in row)
+            int maxRowIndex;
+            var maxColumnIndex = props.Count(x => x is { ExcelIgnore: false });
+
+            await writer.WriteAsync(WorksheetXml.StartWorksheetWithRelationship, cancellationToken).ConfigureAwait(false);
+
+            long dimensionPlaceholderPostition = 0;
+
+            // We can write the dimensions directly if the row count is known
+            if (isKnownCount)
+            {
+                maxRowIndex = _printHeader ? count + 1 : count;
+                await writer.WriteAsync(WorksheetXml.Dimension(GetDimensionRef(maxRowIndex, props.Count)), cancellationToken).ConfigureAwait(false);
+            }
+            else if (_configuration.FastMode)
+            {
+                dimensionPlaceholderPostition = await WriteDimensionPlaceholderAsync(writer).ConfigureAwait(false);
+            }
+
+            //sheet view
+            await writer.WriteAsync(GetSheetViews(), cancellationToken).ConfigureAwait(false);
+
+            //cols:width
+            ExcelWidthCollection? widths = null;
+            long columnWidthsPlaceholderPosition = 0;
+            if (_configuration.EnableAutoWidth)
+            {
+                columnWidthsPlaceholderPosition = await WriteColumnWidthPlaceholdersAsync(writer, maxColumnIndex, cancellationToken).ConfigureAwait(false);
+                widths = new ExcelWidthCollection(_configuration.MinWidth, _configuration.MaxWidth, props);
+            }
+            else
+            {
+                await WriteColumnsWidthsAsync(writer, ExcelColumnWidth.FromProps(props), cancellationToken).ConfigureAwait(false);
+            }
+
+            //header
+            await writer.WriteAsync(WorksheetXml.StartSheetData, cancellationToken).ConfigureAwait(false);
+            var currentRowIndex = 0;
+            if (_printHeader)
+            {
+                await PrintHeaderAsync(writer, props!, cancellationToken).ConfigureAwait(false);
+                currentRowIndex++;
+            }
+
+            if (writeAdapter is not null)
+            {
+                foreach (var row in writeAdapter.GetRows(props, cancellationToken))
                 {
                     cancellationToken.ThrowIfCancellationRequested();
-                    await WriteCellAsync(writer, currentRowIndex, cellValue.CellIndex, cellValue.Value, cellValue.Prop, widths).ConfigureAwait(false);
-                    progress?.Report(1);
+
+                    await writer.WriteAsync(WorksheetXml.StartRow(++currentRowIndex), cancellationToken).ConfigureAwait(false);
+                    foreach (var cellValue in row)
+                    {
+                        cancellationToken.ThrowIfCancellationRequested();
+                        await WriteCellAsync(writer, currentRowIndex, cellValue.CellIndex, cellValue.Value, cellValue.Prop, widths).ConfigureAwait(false);
+                        progress?.Report(1);
+                    }
+                    await writer.WriteAsync(WorksheetXml.EndRow, cancellationToken).ConfigureAwait(false);
                 }
-                await writer.WriteAsync(WorksheetXml.EndRow, cancellationToken).ConfigureAwait(false);
             }
+            else
+            {
+#if !SYNC_ONLY
+                await foreach (var row in asyncWriteAdapter!.GetRowsAsync(props, cancellationToken).ConfigureAwait(false))
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    await writer.WriteAsync(WorksheetXml.StartRow(++currentRowIndex), cancellationToken).ConfigureAwait(false);
+
+                    await foreach (var cellValue in row.ConfigureAwait(false).WithCancellation(cancellationToken))
+                    {
+                        await WriteCellAsync(writer, currentRowIndex, cellValue.CellIndex, cellValue.Value, cellValue.Prop, widths).ConfigureAwait(false);
+                        progress?.Report(1);
+                    }
+                    await writer.WriteAsync(WorksheetXml.EndRow, cancellationToken).ConfigureAwait(false);
+                }
+#endif
+            }
+            maxRowIndex = currentRowIndex;
+
+            await writer.WriteAsync(WorksheetXml.EndSheetData, cancellationToken).ConfigureAwait(false);
+
+            if (_configuration.AutoFilter)
+            {
+                await writer.WriteAsync(WorksheetXml.Autofilter(GetDimensionRef(maxRowIndex, maxColumnIndex)), cancellationToken).ConfigureAwait(false);
+            }
+
+            await writer.WriteAsync(WorksheetXml.Drawing(_currentSheetIndex), cancellationToken).ConfigureAwait(false);
+            await writer.WriteAsync(WorksheetXml.EndWorksheet, cancellationToken).ConfigureAwait(false);
+
+            if (_configuration.FastMode && dimensionPlaceholderPostition != 0)
+            {
+                await WriteDimensionAsync(writer, maxRowIndex, maxColumnIndex, dimensionPlaceholderPostition).ConfigureAwait(false);
+            }
+            if (_configuration.EnableAutoWidth)
+            {
+                await OverwriteColumnWidthPlaceholdersAsync(writer, columnWidthsPlaceholderPosition, widths?.Columns, cancellationToken).ConfigureAwait(false);
+            }
+
+            if (_printHeader)
+                maxRowIndex--;
+
+            return maxRowIndex;
         }
-        else
+        finally
         {
 #if !SYNC_ONLY
-            await foreach (var row in asyncWriteAdapter.GetRowsAsync(props, cancellationToken).ConfigureAwait(false))
+            if (asyncWriteAdapter is IAsyncDisposable asyncDisposable)
             {
-                cancellationToken.ThrowIfCancellationRequested();
-                await writer.WriteAsync(WorksheetXml.StartRow(++currentRowIndex), cancellationToken).ConfigureAwait(false);
-
-                await foreach (var cellValue in row.ConfigureAwait(false).WithCancellation(cancellationToken))
-                {
-                    await WriteCellAsync(writer, currentRowIndex, cellValue.CellIndex, cellValue.Value, cellValue.Prop, widths).ConfigureAwait(false);
-                    progress?.Report(1);
-                }
-                await writer.WriteAsync(WorksheetXml.EndRow, cancellationToken).ConfigureAwait(false);
+                await asyncDisposable.DisposeAsync().ConfigureAwait(false);
             }
 #endif
         }
-        maxRowIndex = currentRowIndex;
-
-        await writer.WriteAsync(WorksheetXml.EndSheetData, cancellationToken).ConfigureAwait(false);
-
-        if (_configuration.AutoFilter)
-        {
-            await writer.WriteAsync(WorksheetXml.Autofilter(GetDimensionRef(maxRowIndex, maxColumnIndex)), cancellationToken).ConfigureAwait(false);
-        }
-
-        await writer.WriteAsync(WorksheetXml.Drawing(_currentSheetIndex), cancellationToken).ConfigureAwait(false);
-        await writer.WriteAsync(WorksheetXml.EndWorksheet, cancellationToken).ConfigureAwait(false);
-
-        if (_configuration.FastMode && dimensionPlaceholderPostition != 0)
-        {
-            await WriteDimensionAsync(writer, maxRowIndex, maxColumnIndex, dimensionPlaceholderPostition).ConfigureAwait(false);
-        }
-        if (_configuration.EnableAutoWidth)
-        {
-            await OverwriteColumnWidthPlaceholdersAsync(writer, columnWidthsPlaceholderPosition, widths?.Columns, cancellationToken).ConfigureAwait(false);
-        }
-
-        if (_printHeader)
-            maxRowIndex--;
-
-        return maxRowIndex;
     }
 
     [CreateSyncVersion]
@@ -390,7 +401,7 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
     private static async Task WriteColumnsWidthsAsync(SafeStreamWriter writer, IEnumerable<ExcelColumnWidth>? columnWidths, CancellationToken cancellationToken = default)
     {
         var hasWrittenStart = false;
-        
+
         columnWidths ??= [];
         foreach (var column in columnWidths)
         {
@@ -610,9 +621,9 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
 #if NET5_0_OR_GREATER
 #pragma warning disable CA2007 // Consider calling ConfigureAwait on the awaited task
 #if NET10_0_OR_GREATER
-            await using var stream = await contentTypesZipEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
+        await using var stream = await contentTypesZipEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
 #else
-            await using var stream = contentTypesZipEntry.Open();
+        await using var stream = contentTypesZipEntry.Open();
 #endif
 #pragma warning restore CA2007 // Consider calling ConfigureAwait on the awaited task
 #else

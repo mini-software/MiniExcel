@@ -14,7 +14,7 @@ namespace MiniExcelLibs.WriteAdapter
             if (values.GetType().IsAsyncEnumerable(out var genericArgument))
             {
                 var writeAdapterType = typeof(AsyncEnumerableWriteAdapter<>).MakeGenericType(genericArgument);
-                writeAdapter = (IAsyncMiniExcelWriteAdapter)Activator.CreateInstance(writeAdapterType, values, configuration);
+                writeAdapter = Activator.CreateInstance(writeAdapterType, values, configuration) as IAsyncMiniExcelWriteAdapter;
                 return true;
             }
             if (values is IMiniExcelDataReader miniExcelDataReader)

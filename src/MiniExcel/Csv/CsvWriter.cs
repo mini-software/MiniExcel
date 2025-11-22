@@ -116,8 +116,7 @@ namespace MiniExcelLibs.Csv
             try
             {
 #if NETSTANDARD2_0_OR_GREATER || NET
-                if (!MiniExcelWriteAdapterFactory.TryGetAsyncWriteAdapter(values, _configuration,
-                        out asyncWriteAdapter))
+                if (!MiniExcelWriteAdapterFactory.TryGetAsyncWriteAdapter(values, _configuration, out asyncWriteAdapter))
                 {
                     writeAdapter = MiniExcelWriteAdapterFactory.GetWriteAdapter(values, _configuration);
                 }

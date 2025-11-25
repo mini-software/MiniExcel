@@ -1,29 +1,31 @@
 ---
-name: Feature request
-about: Suggest an idea for this project
-title: ''
-labels: ''
-assignees: ''
-
+name: Feature Request
+about: Suggest an idea or improvement for this project
+title: "[Feature] - [Title of the request]"
+labels: enhancement
+assignees: ""
 ---
 
-### Excel Type
+## Feature Summary
+A clear and concise description of what the feature is about.
+Please write in English for the sake of our international contributors!
+
+## Document Formats
+What document formats will benefit from this new functionality?
 
 - [ ] XLSX
-- [ ] XLSM
 - [ ] CSV
-- [ ] OTHER
+- [ ] XLSM
+- [ ] Other 
 
-### Upload Excel File
+## Motivation
+How does the need for this feature arise? What problem does it solve?
 
-Please attach your issue file by dragging or droppng, selecting or pasting them.
+## Proposed Solution
+Describe how you envision this feature working. Be as detailed as you can.
 
-e.g : [https://github.com/shps951023/MiniExcel/files/6538107/demo.xlsx](https://github.com/shps951023/MiniExcel/files/6538107/demo.xlsx)
+## Alternatives Considered
+Have you considered any alternative solutions or workarounds?
 
-
-
-### MiniExcel Version
-
-
-
-### Description
+## Additional Context
+Include any extra info, screenshots, diagrams, or links.

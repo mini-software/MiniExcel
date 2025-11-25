@@ -15,7 +15,7 @@ Please write in English for the sake of our international contributors!
 A brief description of what you expected to happen.
 
 ## Actual Behavior
-A bried description of what actually happened.
+A brief description of what actually happened.
 
 ## Workarounds
 Please share what adjacent solutions you've found for the issue, if any.

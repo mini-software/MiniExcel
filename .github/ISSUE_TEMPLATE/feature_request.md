@@ -16,7 +16,7 @@ What document formats will benefit from this new functionality?
 - [ ] XLSX
 - [ ] CSV
 - [ ] XLSM
-- [ ] Other 
+- [ ] Other
 
 ## Motivation
 How does the need for this feature arise? What problem does it solve?

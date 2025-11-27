@@ -1,29 +1,35 @@
 ---
-name: Bug report
-about: Create a report to help us improve
-title: ''
-labels: ''
+name: Bug Report
+about: Create a report to help us improve the project
+title: "[BUG] - [Short description of the issue]"
+labels: bug
 assignees: ''
-
 ---
 
-### Excel Type
+## Description
+A clear and concise description of what the bug is about.
+Include a minimum reproducible sample of the code and, if applicable, the exception message and its stack trace.
+Please write in English for the sake of our international contributors!
 
-- [ ] XLSX
-- [ ] XLSM
-- [ ] CSV
-- [ ] OTHER
+## Expected Behavior
+A brief description of what you expected to happen.
 
-### Upload Excel File
+## Actual Behavior
+A brief description of what actually happened.
 
-Please attach your issue file by dragging or droppng, selecting or pasting them.
+## Workarounds
+Please share what adjacent solutions you've found for the issue, if any.
 
-e.g : [https://github.com/shps951023/MiniExcel/files/6538107/demo.xlsx](https://github.com/shps951023/MiniExcel/files/6538107/demo.xlsx)
+## Environment (please fill the following information):
+- MiniExcel Version: [e.g. 1.42.0, 1.41.4, 2.0.0-preview.2]
+- .NET Version: [e.g. net10.0, net481]
+- OS: [e.g. Windows, macOS, Linux]
 
+## Files and/or Screenshots
+If applicable, please upload:
+- The document you're trying to query, or a mock if not available
+- The malformed result of the document you're tying to generate
+- The template document you're trying to fill
 
-
-### MiniExcel Version
-
-
-
-### Description
+## Additional Context
+Include here any extra info, diagrams, or links.

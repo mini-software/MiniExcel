@@ -1685,6 +1685,35 @@ class Dto
 }
 ```
 
+#### Q. How do I fill data horizontally (left-to-right) with templates?
+
+A. MiniExcel template collections currently expand vertically (top-to-bottom). Horizontal (left-to-right) fill isn't supported yet (see https://github.com/mini-software/MiniExcel/issues/619).
+
+If you just need the final layout, transpose your data into a matrix and export it with `printHeader: false`:
+
+```csharp
+var employees = new[]
+{
+    new { Name = "Name1", Department = "Department1", City = "City1", Country = "Country1" },
+    new { Name = "Name2", Department = "Department2", City = "City2", Country = "Country2" },
+    new { Name = "Name3", Department = "Department3", City = "City3", Country = "Country3" },
+};
+
+var table = new DataTable();
+table.Columns.Add("A");
+for (var i = 0; i < employees.Length; i++)
+    table.Columns.Add($"B{i + 1}");
+
+table.Rows.Add(new object[] { "Name" }.Concat(employees.Select(e => (object)e.Name)).ToArray());
+table.Rows.Add(new object[] { "Department" }.Concat(employees.Select(e => (object)e.Department)).ToArray());
+table.Rows.Add(new object[] { "City" }.Concat(employees.Select(e => (object)e.City)).ToArray());
+table.Rows.Add(new object[] { "Country" }.Concat(employees.Select(e => (object)e.Country)).ToArray());
+
+MiniExcel.SaveAs(path, table, printHeader: false);
+```
+
+If you need template styling, one workaround is to use scalar placeholders (e.g. `{{Name_1}}`, `{{Name_2}}` ...) and fill a dictionary (requires a fixed maximum number of columns).
+
 #### Q. How do I query multiple sheets of an Excel file?
 
 A. You can retrieve the sheet names with the `GetSheetNames` method and then Query them using the `sheetName` parameter:

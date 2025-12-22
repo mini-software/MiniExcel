@@ -737,8 +737,6 @@ var value = new Dictionary<string, object>()
 MiniExcel.SaveAsByTemplate(path, templatePath, value);
 ```
 
-
-
 #### 3. 复杂数据填充
 
 > Note: 支持多 sheet 填充,并共用同一组参数
@@ -1700,6 +1698,35 @@ foreach (var sheet in sheets)
 
 ![image](https://user-images.githubusercontent.com/12729184/116199841-2a1f5300-a76a-11eb-90a3-6710561cf6db.png)
 
+#### Q. 模板能否横向（从左到右）填充集合数据？
+
+A. MiniExcel 模板的集合渲染目前只支持纵向（从上到下）扩展，不支持横向（从左到右）扩展（见 https://github.com/mini-software/MiniExcel/issues/619）。
+
+如果只需要最终布局，可以先把数据转置成一个矩阵，再用 `printHeader: false` 导出：
+
+```csharp
+var employees = new[]
+{
+    new { Name = "Name1", Department = "Department1", City = "City1", Country = "Country1" },
+    new { Name = "Name2", Department = "Department2", City = "City2", Country = "Country2" },
+    new { Name = "Name3", Department = "Department3", City = "City3", Country = "Country3" },
+};
+
+var table = new DataTable();
+table.Columns.Add("A");
+for (var i = 0; i < employees.Length; i++)
+    table.Columns.Add($"B{i + 1}");
+
+table.Rows.Add(new object[] { "Name" }.Concat(employees.Select(e => (object)e.Name)).ToArray());
+table.Rows.Add(new object[] { "Department" }.Concat(employees.Select(e => (object)e.Department)).ToArray());
+table.Rows.Add(new object[] { "City" }.Concat(employees.Select(e => (object)e.City)).ToArray());
+table.Rows.Add(new object[] { "Country" }.Concat(employees.Select(e => (object)e.Country)).ToArray());
+
+MiniExcel.SaveAs(path, table, printHeader: false);
+```
+
+如果必须使用模板以保留样式，一种方式是在模板里使用标量占位符（例如 `{{Name_1}}`、`{{Name_2}}` …）并用 Dictionary 填充；这种方式需要预先确定最大列数。
+
 
 
 #### Q. 是否使用 Count 会载入全部数据到内存
@@ -1882,4 +1909,3 @@ Link https://github.com/orgs/mini-software/discussions/754
 ### Contributors
 
 ![](https://contrib.rocks/image?repo=mini-software/MiniExcel)
-

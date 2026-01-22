@@ -24,7 +24,7 @@ internal partial class CsvWriter : IMiniExcelWriter, IDisposable
     
     private void AppendColumn(StringBuilder rowBuilder, CellWriteInfo column)
     {
-        rowBuilder.Append(CsvHelper.ConvertToCsvValue(ToCsvString(column.Value, column.Prop), _configuration));
+        rowBuilder.Append(CsvSanitizer.SanitizeCsvField(ToCsvString(column.Value, column.Prop), _configuration));
         rowBuilder.Append(_configuration.Seperator);
     }
 
@@ -223,25 +223,21 @@ internal partial class CsvWriter : IMiniExcelWriter, IDisposable
     
     private string GetHeader(List<MiniExcelColumnInfo> props) => string.Join(
         _configuration.Seperator.ToString(),
-        props.Select(s => CsvHelper.ConvertToCsvValue(s?.ExcelColumnName, _configuration)));
+        props.Select(s => CsvSanitizer.SanitizeCsvField(s?.ExcelColumnName, _configuration)));
     
-    protected virtual void Dispose(bool disposing)
+    private void Dispose(bool disposing)
     {
         if (!_disposed)
         {
             if (disposing)
             {
                 _writer.Dispose();
-                // TODO: dispose managed state (managed objects)
             }
 
-            // TODO: free unmanaged resources (unmanaged objects) and override finalizer
-            // TODO: set large fields to null
             _disposed = true;
         }
     }
 
-    // // TODO: override finalizer only if 'Dispose(bool disposing)' has code to free unmanaged resources
     ~CsvWriter()
     {
         // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method

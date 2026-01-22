@@ -1,4 +1,6 @@
-﻿namespace MiniExcelLib.Csv.Tests;
+﻿using MiniExcelLib.OpenXml.Api;
+
+namespace MiniExcelLib.Csv.Tests;
 
 public class AsyncIssueTests
 {

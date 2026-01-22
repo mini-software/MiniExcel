@@ -6,7 +6,7 @@ namespace MiniExcelLib.Core.Helpers;
 /// Optimized collection access utilities to reduce code duplication across mapping components.
 /// Provides consistent handling of IList vs IEnumerable patterns.
 /// </summary>
-internal static class CollectionAccessor
+public static class CollectionAccessor
 {
     /// <summary>
     /// Gets an item at the specified offset from a collection, with optimized handling for IList.

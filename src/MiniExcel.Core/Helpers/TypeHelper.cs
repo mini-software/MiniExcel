@@ -1,8 +1,8 @@
 ﻿namespace MiniExcelLib.Core.Helpers;
 
-internal static class TypeHelper
+public static class TypeHelper
 {
-    public static IEnumerable<IDictionary<string, object>> ConvertToEnumerableDictionary(IDataReader reader)
+    public static IEnumerable<IDictionary<string, object>> ToEnumerableDictionaries(this IDataReader reader)
     {
         while (reader.Read())
         {
@@ -15,7 +15,7 @@ internal static class TypeHelper
     /// <summary>
     /// From : https://stackoverflow.com/questions/906499/getting-type-t-from-ienumerablet
     /// </summary>
-    public static IEnumerable<Type?> GetGenericIEnumerables(object o)
+    internal static IEnumerable<Type?> GetGenericIEnumerables(object o)
     {
         return o.GetType()
             .GetInterfaces()
@@ -32,7 +32,7 @@ internal static class TypeHelper
         return Type.GetTypeCode(type) is >= TypeCode.Int16 and <= TypeCode.Decimal;
     }
 
-    public static bool IsAsyncEnumerable(this Type type, out Type? genericArgument)
+    internal static bool IsAsyncEnumerable(this Type type, out Type? genericArgument)
     {
         var asyncEnumrableInterfaceType = type
             .GetInterfaces()

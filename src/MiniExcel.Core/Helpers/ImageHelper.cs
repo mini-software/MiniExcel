@@ -1,6 +1,6 @@
 ﻿namespace MiniExcelLib.Core.Helpers;
 
-internal static class ImageHelper
+public static class ImageHelper
 {
     private static readonly byte[] Bmp = [(byte)'B', (byte)'M'];
     private static readonly byte[] Gif = [(byte)'G', (byte)'I', (byte)'F'];

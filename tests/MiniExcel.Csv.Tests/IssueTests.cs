@@ -1,4 +1,6 @@
-﻿namespace MiniExcelLib.Csv.Tests;
+﻿using MiniExcelLib.OpenXml.Api;
+
+namespace MiniExcelLib.Csv.Tests;
 
 public class IssueTests
 {
@@ -497,9 +499,9 @@ public class IssueTests
         {
             var xlsxPath = PathHelper.GetFile("/xlsx/TestIssue292.xlsx");
             using var csvPath = AutoDeletingPath.Create(ExcelType.Csv);
-            _csvExporter.ConvertXlsxToCsv(xlsxPath, csvPath.ToString(), false);
+            MiniExcelConverter.ConvertXlsxToCsv(xlsxPath, csvPath.ToString(), false);
 
-            var actualCotent = File.ReadAllText(csvPath.ToString());
+            var actualContent = File.ReadAllText(csvPath.ToString());
             Assert.Equal(
                 """
                 Name,Age,Name,Age
@@ -507,13 +509,13 @@ public class IssueTests
                 Henry,44,Jerry,44
 
                 """,
-                actualCotent);
+                actualContent);
         }
 
         {
             var csvPath = PathHelper.GetFile("/csv/TestIssue292.csv");
             using var path = AutoDeletingPath.Create();
-            _csvExporter.ConvertCsvToXlsx(csvPath, path.ToString());
+            MiniExcelConverter.ConvertCsvToXlsx(csvPath, path.ToString());
 
             var rows = _openXmlImporter.Query(path.ToString()).ToList();
             Assert.Equal(3, rows.Count);
@@ -566,7 +568,7 @@ public class IssueTests
         var csvPath = PathHelper.GetFile("csv/TestCsvToXlsx.csv");
         using var path = AutoDeletingPath.Create();
 
-        _csvExporter.ConvertCsvToXlsx(csvPath, path.FilePath);
+        MiniExcelConverter.ConvertCsvToXlsx(csvPath, path.FilePath);
         var rows = _openXmlImporter.Query(path.ToString()).ToList();
 
         Assert.Equal("Name", rows[0].A);

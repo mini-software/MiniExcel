@@ -7,7 +7,7 @@ namespace MiniExcelLib.Core.Reflection;
 public static partial class MiniExcelMapper
 {
     [CreateSyncVersion]
-    public static async IAsyncEnumerable<T> MapQueryAsync<T>(IAsyncEnumerable<IDictionary<string, object?>> values, string startCell, bool mapHeaderAsData, bool trimColumnNames, MiniExcelBaseConfiguration configuration, [EnumeratorCancellation] CancellationToken cancellationToken = default) where T : class, new()
+    public static async IAsyncEnumerable<T> MapQueryAsync<T>(IAsyncEnumerable<IDictionary<string, object?>> values, int rowOffset, bool mapHeaderAsData, bool trimColumnNames, MiniExcelBaseConfiguration configuration, Func<string?, string?>? stringDecoderFunc = null, [EnumeratorCancellation] CancellationToken cancellationToken = default) where T : class, new()
     {
         cancellationToken.ThrowIfCancellationRequested();
 
@@ -50,7 +50,7 @@ public static partial class MiniExcelMapper
 
                             if (aliasItemValue is not null)
                             {
-                                var newAliasValue = MapValue(v, pInfo, aliasItemValue, rowIndex, startCell, configuration);
+                                var newAliasValue = MapValue(v, pInfo, aliasItemValue, rowIndex + rowOffset, configuration, stringDecoderFunc);
                             }
                         }
                     }
@@ -70,7 +70,7 @@ public static partial class MiniExcelMapper
 
                 if (itemValue is not null)
                 {
-                    var newValue = MapValue(v, pInfo, itemValue, rowIndex, startCell, configuration);
+                    var newValue = MapValue(v, pInfo, itemValue, rowIndex + rowOffset, configuration, stringDecoderFunc);
                 }
             }
             
@@ -79,7 +79,7 @@ public static partial class MiniExcelMapper
         }
     }
     
-    internal static object? MapValue<T>(T v, MiniExcelColumnInfo pInfo, object itemValue, int rowIndex, string startCell, MiniExcelBaseConfiguration config) where T : class, new()
+    public static object? MapValue<T>(T v, MiniExcelColumnInfo pInfo, object itemValue, int rowIndex, MiniExcelBaseConfiguration config, Func<string?, string?>? stringDecoderFunc = null) where T : class, new()
     {
         try
         {
@@ -241,7 +241,8 @@ public static partial class MiniExcelMapper
             
             else if (pInfo.Property.Info.PropertyType == typeof(string))
             {
-                newValue = XmlHelper.DecodeString(itemValue?.ToString());
+                var strValue = itemValue?.ToString();
+                newValue = stringDecoderFunc?.Invoke(strValue) ?? strValue;
             }
             
             else if (pInfo.ExcludeNullableType.IsEnum)
@@ -271,9 +272,8 @@ public static partial class MiniExcelMapper
         catch (Exception ex) when (ex is InvalidCastException or FormatException)
         {
             var columnName = pInfo.ExcelColumnName ?? pInfo.Property.Name;
-            var startRowIndex = ReferenceHelper.ConvertCellToCoordinates(startCell).Item2;
-            var errorRow = startRowIndex + rowIndex + 1;
-                
+            var errorRow = rowIndex + 1;
+            
             var msg = $"ColumnName: {columnName}, CellRow: {errorRow}, Value: {itemValue}. The value cannot be cast to type {pInfo.Property.Info.PropertyType.Name}.";
             throw new MiniExcelInvalidCastException(columnName, errorRow, itemValue, pInfo.Property.Info.PropertyType, msg);
         }

@@ -1589,18 +1589,20 @@ public enum UserTypeEnum
 ![image](https://user-images.githubusercontent.com/12729184/133116630-27cc7161-099a-48b8-9784-cd1e443af3d1.png)
 
 
-#### 2. Convert Csv to Xlsx or vice-versa
+#### 2. Convert Csv to Xlsx and vice-versa
+
+You can use the `MiniExcelConverter` utility class to convert a file from Csv to Xlsx and vice-versa: 
 
 ```csharp
-MiniExcel.Exporters.GetCsvExporter().ConvertXlsxToCsv(xlsxPath, csvPath);
-MiniExcel.Exporters.GetCsvExporter().ConvertCsvToXlsx(csvPath, xlsxPath);
+MiniExcelConverter.ConvertXlsxToCsv(xlsxPath, csvPath);
+MiniExcelConverter.ConvertCsvToXlsx(csvPath, xlsxPath);
 
 // or 
 
 using (var excelStream = new FileStream(path: filePath, FileMode.Open, FileAccess.Read))
 using (var csvStream = new MemoryStream())
 {
-   MiniExcel.ConvertXlsxToCsv(excelStream, csvStream);
+   MiniExcelConverter.ConvertXlsxToCsv(excelStream, csvStream);
 }
 ```
 

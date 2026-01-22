@@ -1,6 +1,5 @@
 using MiniExcelLib.Core;
 
-
 namespace MiniExcelLibs
 {
     public interface IConfiguration : IMiniExcelConfiguration;
@@ -8,7 +7,7 @@ namespace MiniExcelLibs
 
 namespace MiniExcelLibs.OpenXml
 {
-    public sealed class OpenXmlConfiguration : MiniExcelLib.Core.OpenXml.OpenXmlConfiguration, IConfiguration;
+    public sealed class OpenXmlConfiguration : MiniExcelLib.OpenXml.OpenXmlConfiguration, IConfiguration;
 }
 
 namespace MiniExcelLibs.Csv

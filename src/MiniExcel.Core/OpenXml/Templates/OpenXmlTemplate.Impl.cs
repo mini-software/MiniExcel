@@ -1177,7 +1177,7 @@ internal partial class OpenXmlTemplate
             if (isNode != null)
             {
                 var tNode = isNode.SelectSingleNode("x:t", Ns);
-                var text = tNode?.InnerText;
+                var text = tNode?.InnerText ?? string.Empty;
                 c.RemoveChild(isNode);
                 var v = string.IsNullOrEmpty(prefix)
                     ? c.OwnerDocument.CreateElement("v", Schemas.SpreadsheetmlXmlns)

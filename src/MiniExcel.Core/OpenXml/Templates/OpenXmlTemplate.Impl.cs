@@ -138,10 +138,13 @@ internal partial class OpenXmlTemplate
     private static readonly Regex TemplateRegex = TemplateRegexImpl();
     [GeneratedRegex(@".*?\{\{.*?\}\}.*?")] private static partial Regex NonTemplateRegexImpl();
     private static readonly Regex NonTemplateRegex = NonTemplateRegexImpl();
+    [GeneratedRegex(@"<(?:x:)?v>\s*</(?:x:)?v>")] private static partial Regex EmptyVTagRegexImpl();
+    private static readonly Regex EmptyVTagRegex = EmptyVTagRegexImpl();
 #else
     private static readonly Regex CellRegex = new("([A-Z]+)([0-9]+)", RegexOptions.Compiled);
     private static readonly Regex TemplateRegex = new(@"\{\{(.*?)\}\}", RegexOptions.Compiled);
     private static readonly Regex NonTemplateRegex = new(@".*?\{\{.*?\}\}.*?", RegexOptions.Compiled);
+    private static readonly Regex EmptyVTagRegex = new(@"<(?:x:)?v>\s*</(?:x:)?v>", RegexOptions.Compiled);
 #endif
 
     [CreateSyncVersion]
@@ -540,7 +543,7 @@ internal partial class OpenXmlTemplate
         {
             await writer.WriteAsync(CleanXml(autoFilterXml, endPrefix)
 #if NET7_0_OR_GREATER
-                    .AsMemory(), cancellationToken
+                .AsMemory(), cancellationToken
 #endif
             ).ConfigureAwait(false);
         }
@@ -550,7 +553,7 @@ internal partial class OpenXmlTemplate
         {
             await writer.WriteAsync($"<{prefix}mergeCells count=\"{_newXMergeCellInfos.Count}\">"
 #if NET7_0_OR_GREATER
-                    .AsMemory(), cancellationToken
+                .AsMemory(), cancellationToken
 #endif
             ).ConfigureAwait(false);
             foreach (var cell in _newXMergeCellInfos)
@@ -563,7 +566,7 @@ internal partial class OpenXmlTemplate
             }
             await writer.WriteLineAsync($"</{prefix}mergeCells>"
 #if NET7_0_OR_GREATER
-                    .AsMemory(), cancellationToken
+                .AsMemory(), cancellationToken
 #endif
             ).ConfigureAwait(false);
         }
@@ -573,7 +576,7 @@ internal partial class OpenXmlTemplate
         {
             await writer.WriteAsync(CleanXml(phoneticPrXml, endPrefix)
 #if NET7_0_OR_GREATER
-                    .AsMemory(), cancellationToken
+                .AsMemory(), cancellationToken
 #endif
             ).ConfigureAwait(false);
         }
@@ -583,7 +586,7 @@ internal partial class OpenXmlTemplate
         {
             await writer.WriteAsync(CleanXml(string.Join(string.Empty, newConditionalFormatRanges.Select(cf => cf.Node.OuterXml)), endPrefix)
 #if NET7_0_OR_GREATER
-                    .AsMemory(), cancellationToken
+                .AsMemory(), cancellationToken
 #endif
             ).ConfigureAwait(false);
         }
@@ -626,10 +629,11 @@ internal partial class OpenXmlTemplate
         foreach (XmlElement c in notFirstRowElement.SelectNodes("x:c", Ns))
         {
             // Try <v> first (for t="n"/t="b" cells), then <is><t> (for t="inlineStr" cells)
-            var v = c.SelectSingleNode("x:v", Ns);
-            if (v is not null && !NonTemplateRegex.IsMatch(v.InnerText))
+            var vTag = c.SelectSingleNode("x:v", Ns);
+            if (vTag is not null)
             {
-                v.InnerText = string.Empty;
+                if (!NonTemplateRegex.IsMatch(vTag.InnerText))
+                    vTag.InnerText = string.Empty;
             }
             else
             {
@@ -729,7 +733,7 @@ internal partial class OpenXmlTemplate
             {
                 var replacements = new Dictionary<string, string>();
 #if NETCOREAPP3_0_OR_GREATER
-                    string MatchDelegate(Match x) => CollectionExtensions.GetValueOrDefault(replacements, x.Groups[1].Value, "");
+                string MatchDelegate(Match x) => CollectionExtensions.GetValueOrDefault(replacements, x.Groups[1].Value, "");
 #else
                 string MatchDelegate(Match x) => replacements.TryGetValue(x.Groups[1].Value, out var repl) ? repl : "";
 #endif
@@ -798,8 +802,7 @@ internal partial class OpenXmlTemplate
                 substXmlRow = TemplateRegex.Replace(substXmlRow, MatchDelegate);
                 
                 // Cleanup empty <v> tags which defaults to invalid XML
-                substXmlRow = Regex.Replace(substXmlRow, @"<v>\s*</v>", "");
-                substXmlRow = Regex.Replace(substXmlRow, @"<x:v>\s*</x:v>", ""); 
+                substXmlRow = EmptyVTagRegex.Replace(substXmlRow, "");
             }
 
             rowXml.Clear();
@@ -1169,9 +1172,9 @@ internal partial class OpenXmlTemplate
             // For numbers/booleans, we remove 't' attribute to let it be default (number) 
             // or we could set it to 'n' explicitly, but removing is safer for general number types
             if (type == "b")
-                 c.SetAttribute("t", "b");
+                c.SetAttribute("t", "b");
             else
-                 c.RemoveAttribute("t"); 
+                c.RemoveAttribute("t"); 
 
             var isNode = c.SelectSingleNode("x:is", Ns);
             if (isNode != null)

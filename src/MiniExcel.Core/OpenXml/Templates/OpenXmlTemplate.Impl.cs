@@ -625,9 +625,19 @@ internal partial class OpenXmlTemplate
         var notFirstRowElement = rowElement.Clone();
         foreach (XmlElement c in notFirstRowElement.SelectNodes("x:c", Ns))
         {
+            // Try <v> first (for t="n"/t="b" cells), then <is><t> (for t="inlineStr" cells)
             var v = c.SelectSingleNode("x:v", Ns);
             if (v is not null && !NonTemplateRegex.IsMatch(v.InnerText))
+            {
                 v.InnerText = string.Empty;
+            }
+            else
+            {
+                // Handle inline string cells
+                var t = c.SelectSingleNode("x:is/x:t", Ns);
+                if (t is not null && !NonTemplateRegex.IsMatch(t.InnerText))
+                    t.InnerText = string.Empty;
+            }
         }
 
         foreach (var item in rowInfo.CellIEnumerableValues)
@@ -1095,9 +1105,15 @@ internal partial class OpenXmlTemplate
                     continue;
 
                 // change type = inlineStr and replace its value
+                // Use the same prefix as the source element to handle namespaced documents (e.g., x:v -> x:is, x:t)
+                var prefix = v.Prefix;
                 c.RemoveChild(v);
-                var isNode = c.OwnerDocument.CreateElement("is", Schemas.SpreadsheetmlXmlns);
-                var tNode = c.OwnerDocument.CreateElement("t", Schemas.SpreadsheetmlXmlns);
+                var isNode = string.IsNullOrEmpty(prefix)
+                    ? c.OwnerDocument.CreateElement("is", Schemas.SpreadsheetmlXmlns)
+                    : c.OwnerDocument.CreateElement(prefix, "is", Schemas.SpreadsheetmlXmlns);
+                var tNode = string.IsNullOrEmpty(prefix)
+                    ? c.OwnerDocument.CreateElement("t", Schemas.SpreadsheetmlXmlns)
+                    : c.OwnerDocument.CreateElement(prefix, "t", Schemas.SpreadsheetmlXmlns);
                 tNode.InnerText = shared;
                 isNode.AppendChild(tNode);
                 c.AppendChild(isNode);
@@ -1112,6 +1128,9 @@ internal partial class OpenXmlTemplate
     {
         if (type == "str") type = "inlineStr"; // Force inlineStr for strings
 
+        // Determine the prefix used in this document (e.g., "x" for x:c, x:v, etc.)
+        var prefix = c.Prefix;
+
         if (type == "inlineStr")
         {
             // Ensure <is><t>...</t></is>
@@ -1121,8 +1140,12 @@ internal partial class OpenXmlTemplate
             {
                 var text = v.InnerText;
                 c.RemoveChild(v);
-                var isNode = c.OwnerDocument.CreateElement("is", Schemas.SpreadsheetmlXmlns);
-                var tNode = c.OwnerDocument.CreateElement("t", Schemas.SpreadsheetmlXmlns);
+                var isNode = string.IsNullOrEmpty(prefix)
+                    ? c.OwnerDocument.CreateElement("is", Schemas.SpreadsheetmlXmlns)
+                    : c.OwnerDocument.CreateElement(prefix, "is", Schemas.SpreadsheetmlXmlns);
+                var tNode = string.IsNullOrEmpty(prefix)
+                    ? c.OwnerDocument.CreateElement("t", Schemas.SpreadsheetmlXmlns)
+                    : c.OwnerDocument.CreateElement(prefix, "t", Schemas.SpreadsheetmlXmlns);
                 tNode.InnerText = text;
                 isNode.AppendChild(tNode);
                 c.AppendChild(isNode);
@@ -1130,8 +1153,12 @@ internal partial class OpenXmlTemplate
             else if (c.SelectSingleNode("x:is", Ns) == null)
             {
                 // Create empty <is><t></t></is> if neither <v> nor <is> exists
-                var isNode = c.OwnerDocument.CreateElement("is", Schemas.SpreadsheetmlXmlns);
-                var tNode = c.OwnerDocument.CreateElement("t", Schemas.SpreadsheetmlXmlns);
+                var isNode = string.IsNullOrEmpty(prefix)
+                    ? c.OwnerDocument.CreateElement("is", Schemas.SpreadsheetmlXmlns)
+                    : c.OwnerDocument.CreateElement(prefix, "is", Schemas.SpreadsheetmlXmlns);
+                var tNode = string.IsNullOrEmpty(prefix)
+                    ? c.OwnerDocument.CreateElement("t", Schemas.SpreadsheetmlXmlns)
+                    : c.OwnerDocument.CreateElement(prefix, "t", Schemas.SpreadsheetmlXmlns);
                 isNode.AppendChild(tNode);
                 c.AppendChild(isNode);
             }
@@ -1152,7 +1179,9 @@ internal partial class OpenXmlTemplate
                 var tNode = isNode.SelectSingleNode("x:t", Ns);
                 var text = tNode?.InnerText;
                 c.RemoveChild(isNode);
-                var v = c.OwnerDocument.CreateElement("v", Schemas.SpreadsheetmlXmlns);
+                var v = string.IsNullOrEmpty(prefix)
+                    ? c.OwnerDocument.CreateElement("v", Schemas.SpreadsheetmlXmlns)
+                    : c.OwnerDocument.CreateElement(prefix, "v", Schemas.SpreadsheetmlXmlns);
                 v.InnerText = text;
                 c.AppendChild(v);
             }
@@ -1423,9 +1452,10 @@ internal partial class OpenXmlTemplate
                         if (string.IsNullOrEmpty(cellValueStr) && string.IsNullOrEmpty(c.GetAttribute("t")))
                         {
                             SetCellType(c, "str");
-                            v = c.SelectSingleNode("x:v", Ns) ?? c.SelectSingleNode("x:is/x:t", Ns);
                         }
 
+                        // Re-acquire v after SetCellType may have changed DOM structure
+                        v = c.SelectSingleNode("x:v", Ns) ?? c.SelectSingleNode("x:is/x:t", Ns);
                         v.InnerText = v.InnerText.Replace($"{{{{{propNames[0]}}}}}", cellValueStr); //TODO: auto check type and set value
                     }
                 }

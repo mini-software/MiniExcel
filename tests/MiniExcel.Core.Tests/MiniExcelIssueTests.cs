@@ -1042,8 +1042,9 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
          _excelTemplater.ApplyTemplate(path.ToString(), templatePath, value);
 
         var sheetXml = SheetHelper.GetZipFileContent(path.ToString(), "xl/worksheets/sheet1.xml");
-        Assert.Contains("<v>Hello &amp; World &lt; , &gt; , \" , '</v>", sheetXml);
-        Assert.Contains("<v>Hello &amp; Value &lt; , &gt; , \" , '</v>", sheetXml);
+        // Template now uses inlineStr format (<is><t>...</t></is>) instead of SharedStrings (<v>...</v>)
+        Assert.Contains("<t>Hello &amp; World &lt; , &gt; , \" , '</t>", sheetXml);
+        Assert.Contains("<t>Hello &amp; Value &lt; , &gt; , \" , '</t>", sheetXml);
     }
 
     /// <summary>

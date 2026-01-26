@@ -7,7 +7,7 @@ using XmlReaderHelper = MiniExcelLib.OpenXml.Utils.XmlReaderHelper;
 
 namespace MiniExcelLib.OpenXml;
 
-public partial class OpenXmlReader : IMiniExcelReader
+internal partial class OpenXmlReader : IMiniExcelReader
 {
     private static readonly string[] Ns = [Schemas.SpreadsheetmlXmlns, Schemas.SpreadsheetmlXmlStrictns];
     private static readonly string[] RelationshiopNs = [Schemas.SpreadsheetmlXmlRelationshipns, Schemas.SpreadsheetmlXmlStrictRelationshipns];
@@ -27,7 +27,7 @@ public partial class OpenXmlReader : IMiniExcelReader
     }
 
     [CreateSyncVersion]
-    public static async Task<OpenXmlReader> CreateAsync(Stream stream, IMiniExcelConfiguration? configuration, CancellationToken cancellationToken = default)
+    internal static async Task<OpenXmlReader> CreateAsync(Stream stream, IMiniExcelConfiguration? configuration, CancellationToken cancellationToken = default)
     {
         ThrowHelper.ThrowIfInvalidOpenXml(stream);
         
@@ -1113,7 +1113,7 @@ public partial class OpenXmlReader : IMiniExcelReader
     /// Direct mapped query that bypasses dictionary creation for better performance
     /// </summary>
     [CreateSyncVersion]
-    public async IAsyncEnumerable<MappedRow> QueryMappedAsync(
+    internal async IAsyncEnumerable<MappedRow> QueryMappedAsync(
         string? sheetName,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
@@ -1256,7 +1256,7 @@ public partial class OpenXmlReader : IMiniExcelReader
         GC.SuppressFinalize(this);
     }
 
-    private void Dispose(bool disposing)
+    protected void Dispose(bool disposing)
     {
         if (!_disposed)
         {

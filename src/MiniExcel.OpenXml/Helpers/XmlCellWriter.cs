@@ -4,7 +4,7 @@ namespace MiniExcelLib.OpenXml.Helpers;
 /// Helper class for writing Excel cell XML with consistent formatting.
 /// Consolidates XML cell writing patterns to reduce duplication.
 /// </summary>
-public static partial class XmlCellWriter
+internal static partial class XmlCellWriter
 {
     /// <summary>
     /// Writes a new cell element with the specified reference and value.

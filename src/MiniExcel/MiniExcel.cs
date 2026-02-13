@@ -1,13 +1,15 @@
 ﻿using System.Data;
+using MiniExcelLib;
 using MiniExcelLib.Core.DataReader;
-using MiniExcelLib.Core.OpenXml.Models;
-using MiniExcelLib.Core.OpenXml.Picture;
 using MiniExcelLib.Csv;
+using MiniExcelLib.OpenXml.Api;
+using MiniExcelLib.OpenXml.Models;
+using MiniExcelLib.OpenXml.Picture;
 using MiniExcelLibs.OpenXml;
 using Zomp.SyncMethodGenerator;
 
 using NewMiniExcel = MiniExcelLib.Core.MiniExcel;
-using OpenXmlExporter = MiniExcelLib.Core.OpenXmlExporter;
+using OpenXmlExporter = MiniExcelLib.OpenXml.Api.OpenXmlExporter;
 using OpenXmlImporter = MiniExcelLib.Core.OpenXmlImporter;
 using OpenXmlTemplater = MiniExcelLib.Core.OpenXmlTemplater;
 
@@ -30,7 +32,7 @@ public static partial class MiniExcel
     
     [CreateSyncVersion]
     public static async Task AddPictureAsync(Stream excelStream, CancellationToken cancellationToken = default, params MiniExcelPicture[] images) 
-        =>  await ExcelTemplater.AddPictureAsync(excelStream, cancellationToken, images).ConfigureAwait(false);
+        => await ExcelTemplater.AddPictureAsync(excelStream, cancellationToken, images).ConfigureAwait(false);
     
     public static MiniExcelDataReader GetReader(string path, bool useHeaderRow = false, string? sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration? configuration = null)
     {
@@ -348,17 +350,17 @@ public static partial class MiniExcel
 
     [CreateSyncVersion]
     public static async Task ConvertCsvToXlsxAsync(string csv, string xlsx, CancellationToken cancellationToken = default)
-        => await CsvExporter.ConvertCsvToXlsxAsync(csv, xlsx, cancellationToken: cancellationToken).ConfigureAwait(false);
+        => await MiniExcelConverter.ConvertCsvToXlsxAsync(csv, xlsx, cancellationToken: cancellationToken).ConfigureAwait(false);
     
     [CreateSyncVersion]
     public static async Task ConvertCsvToXlsxAsync(Stream csv, Stream xlsx, CancellationToken cancellationToken = default)
-        => await CsvExporter.ConvertCsvToXlsxAsync(csv, xlsx, cancellationToken: cancellationToken).ConfigureAwait(false);
+        => await MiniExcelConverter.ConvertCsvToXlsxAsync(csv, xlsx, cancellationToken: cancellationToken).ConfigureAwait(false);
 
     [CreateSyncVersion]
     public static async Task ConvertXlsxToCsvAsync(string xlsx, string csv, CancellationToken cancellationToken = default)
-        => await CsvExporter.ConvertXlsxToCsvAsync(xlsx, csv, cancellationToken: cancellationToken).ConfigureAwait(false);
+        => await MiniExcelConverter.ConvertXlsxToCsvAsync(xlsx, csv, cancellationToken: cancellationToken).ConfigureAwait(false);
     
     [CreateSyncVersion]
     public static async Task ConvertXlsxToCsvAsync(Stream xlsx, Stream csv, CancellationToken cancellationToken = default)
-        => await CsvExporter.ConvertXlsxToCsvAsync(xlsx, csv, cancellationToken: cancellationToken).ConfigureAwait(false);
+        => await MiniExcelConverter.ConvertXlsxToCsvAsync(xlsx, csv, cancellationToken: cancellationToken).ConfigureAwait(false);
 }

@@ -25,7 +25,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\src\MiniExcel.Csv\MiniExcel.Csv.csproj"/>
+        <ProjectReference Include="..\..\src\MiniExcel\MiniExcel.csproj"/>
         <ProjectReference Include="..\MiniExcel.Tests.Common\MiniExcel.Tests.Common.csproj"/>
     </ItemGroup>
 
@@ -41,7 +41,7 @@
         <Using Include="MiniExcelLib.Core"/>
         <Using Include="MiniExcelLib.Core.Attributes"/>
         <Using Include="MiniExcelLib.Core.Exceptions"/>
-        <Using Include="MiniExcelLib.Core.OpenXml"/>
+        <Using Include="MiniExcelLib.OpenXml"/>
         <Using Include="MiniExcelLib.Csv"/>
     </ItemGroup>
 

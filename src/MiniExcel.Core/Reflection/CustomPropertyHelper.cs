@@ -10,7 +10,7 @@ public static class CustomPropertyHelper
         var cell = new Dictionary<string, object?>();
         for (int i = startCellIndex; i <= maxColumnIndex; i++)
         {
-            var key = ColumnHelper.GetAlphabetColumnName(i);
+            var key = CellReferenceConverter.GetAlphabeticalIndex(i);
 #if NETCOREAPP2_0_OR_GREATER
             cell.TryAdd(key, null);
 #else
@@ -108,7 +108,7 @@ public static class CustomPropertyHelper
             throw new InvalidOperationException("Duplicate column name");
             
         var maxkey = keys.Last();
-        var maxIndex = ColumnHelper.GetColumnIndex(maxkey);
+        var maxIndex = CellReferenceConverter.GetNumericalIndex(maxkey);
         foreach (var p in props)
         {
             if (p?.ExcelColumnIndex is null)
@@ -122,7 +122,7 @@ public static class CustomPropertyHelper
         return props;
     }
 
-    internal static string? DescriptionAttr(Type type, object? source)
+    public static string? GetDescriptionAttribute(Type type, object? source)
     {
         var name = source?.ToString();
         return type.GetField(name) //For some database dirty data, there may be no way to change to the correct enumeration, will return NULL
@@ -130,9 +130,9 @@ public static class CustomPropertyHelper
                ?? name;
     }
 
-    private static IEnumerable<MiniExcelColumnInfo?> ConvertToExcelCustomPropertyInfo(PropertyInfo[] props, MiniExcelBaseConfiguration configuration)
+    private static IEnumerable<MiniExcelColumnInfo?> GetExcelPropertyInfo(Type type, BindingFlags bindingFlags, MiniExcelBaseConfiguration configuration)
     {
-        // solve : https://github.com/mini-software/MiniExcel/issues/138
+        var props = type.GetProperties(bindingFlags);
         var columnInfos = props.Select(p =>
         {
             var gt = Nullable.GetUnderlyingType(p.PropertyType);
@@ -170,12 +170,6 @@ public static class CustomPropertyHelper
         }); 
             
         return columnInfos.Where(x => x is not null);
-    }
-
-    private static IEnumerable<MiniExcelColumnInfo?> GetExcelPropertyInfo(Type type, BindingFlags bindingFlags, MiniExcelBaseConfiguration configuration)
-    {
-        //TODO:assign column index
-        return ConvertToExcelCustomPropertyInfo(type.GetProperties(bindingFlags), configuration);
     }
 
     private static List<MiniExcelColumnInfo> GetDictionaryColumnInfo(IDictionary<string, object?>? dicString, IDictionary? dic, MiniExcelBaseConfiguration configuration)
@@ -257,14 +251,15 @@ public static class CustomPropertyHelper
             return false;
         }
 
-        props = GetSaveAsProperties(type, configuration);
+        props = type.GetSaveAsProperties(configuration);
         return true;
     }
+    
     internal static List<MiniExcelColumnInfo> GetColumnInfoFromValue(object value, MiniExcelBaseConfiguration configuration) => value switch
     {
         IDictionary<string, object?> genericDictionary => GetDictionaryColumnInfo(genericDictionary, null, configuration),
         IDictionary dictionary => GetDictionaryColumnInfo(null, dictionary, configuration),
-        _ => GetSaveAsProperties(value.GetType(), configuration)
+        _ => value.GetType().GetSaveAsProperties(configuration)
     };
 
     private static bool ValueIsNeededToDetermineProperties(Type type) => 
@@ -330,17 +325,15 @@ public static class CustomPropertyHelper
             .GroupBy(x => x.Name)
             .SelectMany(GroupToNameWithIndex)
             .ToDictionary(kv => trimNames ? kv.Name.Trim() : kv.Name, kv => kv.Index);
-    }
-
-    private static IEnumerable<NameIndexPair> DictToNameWithIndex(IDictionary<string, object?> dict)
-    {
-        return dict.Values.Select((obj, idx) => new NameIndexPair(idx, obj?.ToString() ?? ""));
-    }
         
-    private static IEnumerable<NameIndexPair> GroupToNameWithIndex(IGrouping<string, NameIndexPair> group)
-    {
-        return group.Select((grp, idx) =>
-            new NameIndexPair(grp.Index, idx == 0 ? grp.Name : $"{grp.Name}_____{idx + 1}"));
+        static IEnumerable<NameIndexPair> DictToNameWithIndex(IDictionary<string, object?> dict)
+            => dict.Values.Select((obj, idx) => 
+                new NameIndexPair(idx, obj?.ToString() ?? ""));
+        
+        static IEnumerable<NameIndexPair> GroupToNameWithIndex(IGrouping<string, NameIndexPair> group)
+            => group.Select((grp, idx) =>
+                new NameIndexPair(grp.Index, idx == 0 ? grp.Name : $"{grp.Name}_____{idx + 1}")
+            );
     }
         
     private class NameIndexPair(int index, string name)

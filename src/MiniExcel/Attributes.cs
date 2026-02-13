@@ -1,4 +1,5 @@
 using MiniExcelLib.Core.Attributes;
+using MiniExcelLib.OpenXml;
 
 // ReSharper disable CheckNamespace
 namespace MiniExcelLibs.Attributes;
@@ -22,4 +23,4 @@ public sealed class ExcelIgnoreAttribute(bool excelIgnore = true) : MiniExcelIgn
 
 public sealed class ExcelSheetAttribute : MiniExcelSheetAttribute;
 
-public sealed class DynamicExcelSheetAttribute(string key) : MiniExcelLib.Core.Attributes.DynamicExcelSheetAttribute(key);
+public sealed class DynamicExcelSheetAttribute(string key) : MiniExcelLib.OpenXml.DynamicExcelSheetAttribute(key);

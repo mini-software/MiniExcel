@@ -52,48 +52,4 @@ public partial class CsvExporter
     }
 
     #endregion
-    
-    #region Convert
-
-    [CreateSyncVersion]
-    public async Task ConvertCsvToXlsxAsync(Stream csv, Stream xlsx, bool csvHasHeader = false, CancellationToken cancellationToken = default)
-    {
-        var value = new CsvImporter().QueryAsync(csv, useHeaderRow: csvHasHeader, cancellationToken: cancellationToken);
-        
-        await MiniExcel.Exporters
-            .GetOpenXmlExporter()
-            .ExportAsync(xlsx, value, printHeader: csvHasHeader, cancellationToken: cancellationToken)
-            .ConfigureAwait(false);
-    }
-
-    [CreateSyncVersion]
-    public async Task ConvertCsvToXlsxAsync(string csvPath, string xlsx, bool csvHasHeader = false, CancellationToken cancellationToken = default)
-    {
-        using var csvStream = FileHelper.OpenSharedRead(csvPath);
-        using var xlsxStream = new FileStream(xlsx, FileMode.CreateNew);
-
-        await ConvertCsvToXlsxAsync(csvStream, xlsxStream, csvHasHeader, cancellationToken).ConfigureAwait(false);
-    }
-
-    [CreateSyncVersion]
-    public async Task ConvertXlsxToCsvAsync(string xlsx, string csvPath, bool xlsxHasHeader = true, CancellationToken cancellationToken = default)
-    {
-        using var xlsxStream = FileHelper.OpenSharedRead(xlsx);
-        using var csvStream = new FileStream(csvPath, FileMode.CreateNew);
-
-        await ConvertXlsxToCsvAsync(xlsxStream, csvStream, xlsxHasHeader, cancellationToken).ConfigureAwait(false);
-    }
-
-    [CreateSyncVersion]
-    public async Task ConvertXlsxToCsvAsync(Stream xlsx, Stream csv, bool xlsxHasHeader = true, CancellationToken cancellationToken = default)
-    {
-        var value = MiniExcel.Importers
-            .GetOpenXmlImporter()
-            .QueryAsync(xlsx, useHeaderRow: xlsxHasHeader, cancellationToken: cancellationToken)
-            .ConfigureAwait(false);
-        
-        await ExportAsync(csv, value, printHeader: xlsxHasHeader, cancellationToken: cancellationToken).ConfigureAwait(false);
-    }
-
-    #endregion
 }

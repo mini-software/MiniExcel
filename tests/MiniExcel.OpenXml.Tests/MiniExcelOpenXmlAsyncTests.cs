@@ -1,0 +1,1600 @@
+﻿using ClosedXML.Excel;
+using ExcelDataReader;
+using MiniExcelLib.OpenXml.Tests.Utils;
+using MiniExcelLib.Tests.Common.Utils;
+
+namespace MiniExcelLib.OpenXml.Tests;
+
+public class MiniExcelOpenXmlAsyncTests
+{
+    private readonly OpenXmlImporter _excelImporter =  MiniExcel.Importers.GetOpenXmlImporter();
+    private readonly OpenXmlExporter _excelExporter =  MiniExcel.Exporters.GetOpenXmlExporter();
+   
+    [Fact]
+    public async Task SaveAsControlChracter()
+    {
+        using var file = AutoDeletingPath.Create();
+        var path = file.ToString();
+
+        char[] chars =
+        [
+            '\u0000','\u0001','\u0002','\u0003','\u0004','\u0005','\u0006','\u0007','\u0008',
+            '\u0009', //<HT>
+            '\u000A', //<LF>
+            '\u000B','\u000C',
+            '\u000D', //<CR>
+            '\u000E','\u000F','\u0010','\u0011','\u0012','\u0013','\u0014','\u0015','\u0016',
+            '\u0017','\u0018','\u0019','\u001A','\u001B','\u001C','\u001D','\u001E','\u001F','\u007F'
+        ];
+        var input = chars.Select(s => new { Test = s.ToString() });
+        await  _excelExporter.ExportAsync(path, input);
+
+        var rows2 =  _excelImporter.QueryAsync(path, true).ToBlockingEnumerable().ToArray();
+        var rows1 =  _excelImporter.QueryAsync<SaveAsControlChracterVO>(path).ToBlockingEnumerable().ToArray();
+    }
+
+    private class SaveAsControlChracterVO
+    {
+        public string Test { get; set; }
+    }
+
+    private class ExcelAttributeDemo
+    {
+        [MiniExcelColumnName("Column1")]
+        public string Test1 { get; set; }
+        [MiniExcelColumnName("Column2")]
+        public string Test2 { get; set; }
+        [MiniExcelIgnore]
+        public string Test3 { get; set; }
+        [MiniExcelColumnIndex("I")] // system will convert "I" to 8 index
+        public string Test4 { get; set; }
+        public string Test5 { get; } //wihout set will ignore
+        public string Test6 { get; private set; } //un-public set will ignore
+        [MiniExcelColumnIndex(3)] // start with 0
+        public string Test7 { get; set; }
+    }
+
+    private class ExcelAttributeDemo2
+    {
+        [MiniExcelColumn(Name = "Column1")]
+        public string Test1 { get; set; }
+        [MiniExcelColumn(Name = "Column2")]
+        public string Test2 { get; set; }
+        [MiniExcelColumn(Ignore = true)]
+        public string Test3 { get; set; }
+        [MiniExcelColumn(IndexName = "I")] // system will convert "I" to 8 index
+        public string Test4 { get; set; }
+        public string Test5 { get; } //wihout set will ignore
+        public string Test6 { get; private set; } //un-public set will ignore
+        [MiniExcelColumn(Index = 3)] // start with 0
+        public string Test7 { get; set; }
+    }
+
+    [Fact]
+    public async Task CustomAttributeWihoutVaildPropertiesTest()
+    {
+        var path = PathHelper.GetFile("xlsx/TestCustomExcelColumnAttribute.xlsx");
+        await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+        {
+            _ =  _excelImporter.QueryAsync<CustomAttributesWihoutVaildPropertiesTestPoco>(path).ToBlockingEnumerable().ToList();
+        });
+    }
+
+    [Fact]
+    public async Task QueryCustomAttributesTest()
+    {
+        var path = PathHelper.GetFile("xlsx/TestCustomExcelColumnAttribute.xlsx");
+        var rows =  _excelImporter.QueryAsync<ExcelAttributeDemo>(path).ToBlockingEnumerable().ToList();
+
+        Assert.Equal("Column1", rows[0].Test1);
+        Assert.Equal("Column2", rows[0].Test2);
+        Assert.Null(rows[0].Test3);
+        Assert.Equal("Test7", rows[0].Test4);
+        Assert.Null(rows[0].Test5);
+        Assert.Null(rows[0].Test6);
+        Assert.Equal("Test4", rows[0].Test7);
+    }
+
+    [Fact]
+    public async Task QueryCustomAttributes2Test()
+    {
+        var path = PathHelper.GetFile("xlsx/TestCustomExcelColumnAttribute.xlsx");
+        var rows =  _excelImporter.QueryAsync<ExcelAttributeDemo2>(path).ToBlockingEnumerable().ToList();
+
+        Assert.Equal("Column1", rows[0].Test1);
+        Assert.Equal("Column2", rows[0].Test2);
+        Assert.Null(rows[0].Test3);
+        Assert.Equal("Test7", rows[0].Test4);
+        Assert.Null(rows[0].Test5);
+        Assert.Null(rows[0].Test6);
+        Assert.Equal("Test4", rows[0].Test7);
+    }
+
+    [Fact]
+    public async Task SaveAsCustomAttributesTest()
+    {
+        using var path = AutoDeletingPath.Create();
+        var input = Enumerable.Range(1, 3)
+            .Select(_ => new ExcelAttributeDemo
+            {
+                Test1 = "Test1",
+                Test2 = "Test2",
+                Test3 = "Test3",
+                Test4 = "Test4",
+            });
+
+        await  _excelExporter.ExportAsync(path.ToString(), input);
+        var d =  _excelImporter.QueryAsync(path.ToString(), true).ToBlockingEnumerable();
+        var rows = d.ToList();
+        var first = rows[0] as IDictionary<string, object>;
+
+        Assert.Equal(3, rows.Count);
+        Assert.Equal(["Column1", "Column2", "Test5", "Test7", "Test6", "Test4"], first?.Keys);
+        Assert.Equal("Test1", rows[0].Column1);
+        Assert.Equal("Test2", rows[0].Column2);
+        Assert.Equal("Test4", rows[0].Test4);
+        Assert.Null(rows[0].Test5);
+        Assert.Null(rows[0].Test6);
+    }
+
+    [Fact]
+    public async Task SaveAsCustomAttributes2Test()
+    {
+        using var path = AutoDeletingPath.Create();
+        var input = Enumerable.Range(1, 3)
+            .Select(_ => new ExcelAttributeDemo2
+            {
+                Test1 = "Test1",
+                Test2 = "Test2",
+                Test3 = "Test3",
+                Test4 = "Test4",
+            });
+
+        await  _excelExporter.ExportAsync(path.ToString(), input);
+        var d =  _excelImporter.QueryAsync(path.ToString(), true).ToBlockingEnumerable();
+        var rows = d.ToList();
+        var first = rows[0] as IDictionary<string, object>;
+
+        Assert.Equal(3, rows.Count);
+        Assert.Equal(["Column1", "Column2", "Test5", "Test7", "Test6", "Test4"], first?.Keys);
+        Assert.Equal("Test1", rows[0].Column1);
+        Assert.Equal("Test2", rows[0].Column2);
+        Assert.Equal("Test4", rows[0].Test4);
+        Assert.Null(rows[0].Test5);
+        Assert.Null(rows[0].Test6);
+    }
+
+    private class CustomAttributesWihoutVaildPropertiesTestPoco
+    {
+        [MiniExcelIgnore]
+        public string Test3 { get; set; }
+        public string Test5 { get; }
+        public string Test6 { get; private set; }
+    }
+
+    [Fact]
+    public async Task QueryCastToIDictionary()
+    {
+        var path = PathHelper.GetFile("xlsx/TestCenterEmptyRow/TestCenterEmptyRow.xlsx");
+        foreach (IDictionary<string, object> row in  _excelImporter.QueryAsync(path).ToBlockingEnumerable())
+        {
+            _ = row;
+        }
+    }
+
+    [Fact]
+    public async Task CenterEmptyRowsQueryTest()
+    {
+        var path = PathHelper.GetFile("xlsx/TestCenterEmptyRow/TestCenterEmptyRow.xlsx");
+        await using (var stream = File.OpenRead(path))
+        {
+            var d =  _excelImporter.QueryAsync(stream).ToBlockingEnumerable().Cast<IDictionary<string, object>>();
+            var rows = d.ToList();
+            Assert.Equal("a", rows[0]["A"]);
+            Assert.Equal("b", rows[0]["B"]);
+            Assert.Equal("c", rows[0]["C"]);
+            Assert.Equal("d", rows[0]["D"]);
+
+            Assert.Equal(1d, rows[1]["A"]);
+            Assert.Null(rows[1]["B"]);
+            Assert.Equal(3d, rows[1]["C"]);
+            Assert.Null(rows[1]["D"]);
+
+            Assert.Null(rows[2]["A"]);
+            Assert.Equal(2d, rows[2]["B"]);
+            Assert.Null(rows[2]["C"]);
+            Assert.Equal(4d, rows[2]["D"]);
+
+            Assert.Null(rows[3]["A"]);
+            Assert.Null(rows[3]["B"]);
+            Assert.Null(rows[3]["C"]);
+            Assert.Null(rows[3]["D"]);
+
+            Assert.Equal(1d, rows[4]["A"]);
+            Assert.Null(rows[4]["B"]);
+            Assert.Equal(3d, rows[4]["C"]);
+            Assert.Null(rows[4]["D"]);
+
+            Assert.Null(rows[5]["A"]);
+            Assert.Equal(2d, rows[5]["B"]);
+            Assert.Null(rows[5]["C"]);
+            Assert.Equal(4d, rows[5]["D"]);
+
+        }
+
+        await using (var stream = File.OpenRead(path))
+        {
+            var d =  _excelImporter.QueryAsync(stream, useHeaderRow: true).ToBlockingEnumerable().Cast<IDictionary<string, object>>();
+            var rows = d.ToList();
+            Assert.Equal(1d, rows[0]["a"]);
+            Assert.Null(rows[0]["b"]);
+            Assert.Equal(3d, rows[0]["c"]);
+            Assert.Null(rows[0]["d"]);
+
+            Assert.Null(rows[1]["a"]);
+            Assert.Equal(2d, rows[1]["b"]);
+            Assert.Null(rows[1]["c"]);
+            Assert.Equal(4d, rows[1]["d"]);
+
+            Assert.Null(rows[2]["a"]);
+            Assert.Null(rows[2]["b"]);
+            Assert.Null(rows[2]["c"]);
+            Assert.Null(rows[2]["d"]);
+
+            Assert.Equal(1d, rows[3]["a"]);
+            Assert.Null(rows[3]["b"]);
+            Assert.Equal(3d, rows[3]["c"]);
+            Assert.Null(rows[3]["d"]);
+
+            Assert.Null(rows[4]["a"]);
+            Assert.Equal(2d, rows[4]["b"]);
+            Assert.Null(rows[4]["c"]);
+            Assert.Equal(4d, rows[4]["d"]);
+        }
+    }
+
+    [Fact]
+    public async Task TestDynamicQueryBasic_WithoutHead()
+    {
+        var path = PathHelper.GetFile("xlsx/TestDynamicQueryBasic_WithoutHead.xlsx");
+        await using var stream = File.OpenRead(path);
+        var d =  _excelImporter.QueryAsync(stream).ToBlockingEnumerable().Cast<IDictionary<string, object>>();
+        var rows = d.ToList();
+
+        Assert.Equal("MiniExcel", rows[0]["A"]);
+        Assert.Equal(1d, rows[0]["B"]);
+        Assert.Equal("Github", rows[1]["A"]);
+        Assert.Equal(2d, rows[1]["B"]);
+    }
+
+    [Fact]
+    public async Task TestDynamicQueryBasic_useHeaderRow()
+    {
+        var path = PathHelper.GetFile("xlsx/TestDynamicQueryBasic.xlsx");
+        await using (var stream = File.OpenRead(path))
+        {
+            var d =  _excelImporter.QueryAsync(stream, useHeaderRow: true).ToBlockingEnumerable().Cast<IDictionary<string, object>>();
+            var rows = d.ToList();
+            Assert.Equal("MiniExcel", rows[0]["Column1"]);
+            Assert.Equal(1d, rows[0]["Column2"]);
+            Assert.Equal("Github", rows[1]["Column1"]);
+            Assert.Equal(2d, rows[1]["Column2"]);
+        }
+
+        {
+            var d =  _excelImporter.QueryAsync(path, useHeaderRow: true).ToBlockingEnumerable();
+            var rows = d.ToList();
+            Assert.Equal("MiniExcel", rows[0].Column1);
+            Assert.Equal(1d, rows[0].Column2);
+            Assert.Equal("Github", rows[1].Column1);
+            Assert.Equal(2d, rows[1].Column2);
+        }
+    }
+
+    private class DemoPocoHelloWorld
+    {
+        public string HelloWorld1 { get; set; }
+    }
+
+    private class UserAccount
+    {
+        public Guid ID { get; set; }
+        public string Name { get; set; }
+        public DateTime BoD { get; set; }
+        public int Age { get; set; }
+        public bool VIP { get; set; }
+        public decimal Points { get; set; }
+        public int IgnoredProperty => 1;
+    }
+
+    [Fact]
+    public async Task QueryStrongTypeMapping_Test()
+    {
+        var path = PathHelper.GetFile("xlsx/TestTypeMapping.xlsx");
+        await using (var stream = File.OpenRead(path))
+        {
+            var d =  _excelImporter.QueryAsync<UserAccount>(stream);
+            var rows = d.ToBlockingEnumerable().ToList();
+            Assert.Equal(100, rows.Count);
+
+            Assert.Equal(Guid.Parse("78DE23D2-DCB6-BD3D-EC67-C112BBC322A2"), rows[0].ID);
+            Assert.Equal("Wade", rows[0].Name);
+            Assert.Equal(DateTime.ParseExact("27/09/2020", "dd/MM/yyyy", CultureInfo.InvariantCulture), rows[0].BoD);
+            Assert.Equal(36, rows[0].Age);
+            Assert.False(rows[0].VIP);
+            Assert.Equal(5019.12m, rows[0].Points);
+            Assert.Equal(1, rows[0].IgnoredProperty);
+        }
+
+        {
+            var rows =  _excelImporter.Query(path, useHeaderRow: true).ToList();
+            Assert.Equal(100, rows.Count);
+
+            Assert.Equal("78DE23D2-DCB6-BD3D-EC67-C112BBC322A2", rows[0].ID);
+            Assert.Equal("Wade", rows[0].Name);
+            Assert.Equal("27/09/2020", rows[0].BoD);
+            Assert.Equal(36, rows[0].Age);
+            Assert.Equal(bool.FalseString, rows[0].VIP);
+            Assert.Equal(5019.12d, rows[0].Points);
+            Assert.Null(rows[0].IgnoredProperty);
+        }
+    }
+
+
+    private class AutoCheckType
+    {
+        public Guid? @guid { get; set; }
+        public bool? @bool { get; set; }
+        public DateTime? datetime { get; set; }
+        public string @string { get; set; }
+    }
+
+    [Fact]
+    public async Task AutoCheckTypeTest()
+    {
+        var path = PathHelper.GetFile("xlsx/TestTypeMapping_AutoCheckFormat.xlsx");
+        await using var stream = FileHelper.OpenRead(path);
+        _ =  _excelImporter.QueryAsync<AutoCheckType>(stream).ToBlockingEnumerable().ToList();
+    }
+
+    [Fact]
+    public async Task TestDatetimeSpanFormat_ClosedXml()
+    {
+        var path = PathHelper.GetFile("xlsx/TestDatetimeSpanFormat_ClosedXml.xlsx");
+        await using var stream = FileHelper.OpenRead(path);
+
+        var d =  _excelImporter.QueryAsync(stream).ToBlockingEnumerable().Cast<IDictionary<string, object>>();
+        var row = d.First();
+        var a = row["A"];
+        var b = row["B"];
+
+        Assert.Equal(DateTime.Parse("2021-03-20T23:39:42.3130000"), (DateTime)a);
+        Assert.Equal(TimeSpan.FromHours(10), (TimeSpan)b);
+    }
+
+    [Fact]
+    public async Task LargeFileQueryStrongTypeMapping_Test()
+    {
+        const string path = "../../../../../benchmarks/MiniExcel.Benchmarks/Test1,000,000x10.xlsx";
+        await using (var stream = File.OpenRead(path))
+        {
+            var d =  _excelImporter.QueryAsync<DemoPocoHelloWorld>(stream).ToBlockingEnumerable();
+            var rows = d.Take(2).ToList();
+            Assert.Equal("HelloWorld2", rows[0].HelloWorld1);
+            Assert.Equal("HelloWorld3", rows[1].HelloWorld1);
+        }
+        {
+            var d =  _excelImporter.QueryAsync<DemoPocoHelloWorld>(path).ToBlockingEnumerable();
+            var rows = d.Take(2).ToList();
+            Assert.Equal("HelloWorld2", rows[0].HelloWorld1);
+            Assert.Equal("HelloWorld3", rows[1].HelloWorld1);
+        }
+    }
+
+    [Theory]
+    [InlineData("../../../../data/xlsx/ExcelDataReaderCollections/TestChess.xlsx")]
+    [InlineData("../../../../data/xlsx/TestCenterEmptyRow/TestCenterEmptyRow.xlsx")]
+    public async Task QueryExcelDataReaderCheckTest(string path)
+    {
+#if NETCOREAPP3_1_OR_GREATER
+        Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+#endif
+
+        await using var fs = File.OpenRead(path);
+        using var reader = ExcelReaderFactory.CreateReader(fs);
+        var exceldatareaderResult = reader.AsDataSet();
+        await using var stream = File.OpenRead(path);
+
+        var d =  _excelImporter.QueryAsync(stream).ToBlockingEnumerable();
+        var rows = d.ToList();
+        Assert.Equal(exceldatareaderResult.Tables[0].Rows.Count, rows.Count);
+
+        foreach (IDictionary<string, object?> row in rows)
+        {
+            var rowIndex = rows.IndexOf(row);
+            foreach (var (key, value) in row)
+            {
+                var eV = exceldatareaderResult.Tables[0].Rows[rowIndex][SheetHelper.GetColumnIndex(key)];
+                var v = value ?? DBNull.Value;
+                Assert.Equal(eV, v);
+            }
+        }
+    }
+
+    [Fact]
+    public async Task QuerySheetWithoutRAttribute()
+    {
+        var path = PathHelper.GetFile("xlsx/TestWihoutRAttribute.xlsx");
+        await using var stream = File.OpenRead(path);
+
+        var d =  _excelImporter.QueryAsync(stream).ToBlockingEnumerable().Cast<IDictionary<string, object>>();
+        var rows = d.ToList();
+        var keys = rows.First().Keys;
+
+        Assert.Equal(2, rows.Count);
+        Assert.Equal(5, keys.Count);
+
+        Assert.Equal(1d, rows[0]["A"]);
+        Assert.Null(rows[0]["C"]);
+        Assert.Null(rows[0]["D"]);
+        Assert.Null(rows[0]["E"]);
+
+        Assert.Equal(1d, rows[1]["A"]);
+        Assert.Equal("\"<>+}{\\nHello World", rows[1]["B"]);
+        Assert.Equal(true, rows[1]["C"]);
+        Assert.Equal("2021-03-16T19:10:21", rows[1]["D"]);
+    }
+
+    [Fact]
+    public async Task FixDimensionJustOneColumnParsingError_Test()
+    {
+        var path = PathHelper.GetFile("xlsx/TestDimensionC3.xlsx");
+        await using var stream = File.OpenRead(path);
+        var d =  _excelImporter.QueryAsync(stream).ToBlockingEnumerable();
+        var rows = d.ToList();
+        var keys = (rows.First() as IDictionary<string, object>)?.Keys;
+        Assert.Equal(3, keys?.Count);
+        Assert.Equal(2, rows.Count);
+    }
+
+    private class SaveAsFileWithDimensionByICollectionTestType
+    {
+        public string A { get; set; }
+        public string B { get; set; }
+    }
+    [Fact]
+    public async Task SaveAsFileWithDimensionByICollection()
+    {
+        //List<strongtype>
+        {
+            List<SaveAsFileWithDimensionByICollectionTestType> values =
+            [
+                new() { A = "A", B = "B" },
+                new() { A = "A", B = "B" }
+            ];
+
+            using (var file = AutoDeletingPath.Create())
+            {
+                var path = file.ToString();
+                await  _excelExporter.ExportAsync(path, values);
+                await using (var stream = File.OpenRead(path))
+                {
+                    var d =  _excelImporter.QueryAsync(stream, useHeaderRow: false).ToBlockingEnumerable().Cast<IDictionary<string, object>>();
+                    var rows = d.ToList();
+                    Assert.Equal(3, rows.Count);
+                    Assert.Equal("A", rows[0]["A"]);
+                    Assert.Equal("A", rows[1]["A"]);
+                    Assert.Equal("A", rows[2]["A"]);
+                }
+
+                await using (var stream = File.OpenRead(path))
+                {
+                    var d =  _excelImporter.QueryAsync(stream, useHeaderRow: true).ToBlockingEnumerable().Cast<IDictionary<string, object>>();
+                    var rows = d.ToList();
+                    Assert.Equal(2, rows.Count);
+                    Assert.Equal("A", rows[0]["A"]);
+                    Assert.Equal("A", rows[1]["A"]);
+                }
+
+                Assert.Equal("A1:B3", SheetHelper.GetFirstSheetDimensionRefValue(path));
+            }
+
+            using var newPath = AutoDeletingPath.Create();
+            await  _excelExporter.ExportAsync(newPath.ToString(), values, false);
+            Assert.Equal("A1:B2", SheetHelper.GetFirstSheetDimensionRefValue(newPath.ToString()));
+        }
+
+        //List<strongtype> empty
+        {
+            List<SaveAsFileWithDimensionByICollectionTestType> values = [];
+            using (var file = AutoDeletingPath.Create())
+            {
+                var path = file.ToString();
+                await  _excelExporter.ExportAsync(path, values, false);
+                await using (var stream = File.OpenRead(path))
+                {
+                    var d =  _excelImporter.QueryAsync(stream, useHeaderRow: false).ToBlockingEnumerable();
+                    var rows = d.ToList();
+                    Assert.Empty(rows);
+                }
+
+                Assert.Equal("A1:B1", SheetHelper.GetFirstSheetDimensionRefValue(path));
+            }
+
+            using (var file = AutoDeletingPath.Create())
+            {
+                var path = file.ToString();
+                await  _excelExporter.ExportAsync(path, values);
+                {
+                    await using var stream = File.OpenRead(path);
+                    var d =  _excelImporter.QueryAsync(stream, useHeaderRow: false).ToBlockingEnumerable();
+                    var rows = d.ToList();
+                    Assert.Single(rows);
+                }
+                Assert.Equal("A1:B1", SheetHelper.GetFirstSheetDimensionRefValue(path));
+            }
+        }
+
+        //Array<anoymous>
+        {
+            var values = new[]
+            {
+                new { A = "A", B = "B" },
+                new { A = "A", B = "B" },
+            };
+
+            using (var file = AutoDeletingPath.Create())
+            {
+                var path = file.ToString();
+                await  _excelExporter.ExportAsync(path, values);
+
+                await using (var stream = File.OpenRead(path))
+                {
+                    var d =  _excelImporter.QueryAsync(stream, useHeaderRow: false).ToBlockingEnumerable().Cast<IDictionary<string, object>>();
+                    var rows = d.ToList();
+                    Assert.Equal(3, rows.Count);
+                    Assert.Equal("A", rows[0]["A"]);
+                    Assert.Equal("A", rows[1]["A"]);
+                    Assert.Equal("A", rows[2]["A"]);
+                }
+
+                await using (var stream = File.OpenRead(path))
+                {
+                    var d =  _excelImporter.QueryAsync(stream, useHeaderRow: true).ToBlockingEnumerable().Cast<IDictionary<string, object>>();
+                    var rows = d.ToList();
+                    Assert.Equal(2, rows.Count);
+                    Assert.Equal("A", rows[0]["A"]);
+                    Assert.Equal("A", rows[1]["A"]);
+                }
+
+                Assert.Equal("A1:B3", SheetHelper.GetFirstSheetDimensionRefValue(path));
+            }
+
+            using (var path = AutoDeletingPath.Create())
+            {
+                await  _excelExporter.ExportAsync(path.ToString(), values, false);
+                Assert.Equal("A1:B2", SheetHelper.GetFirstSheetDimensionRefValue(path.ToString()));
+            }
+        }
+
+        // without properties
+        {
+            using var path = AutoDeletingPath.Create();
+            var values = new List<int>();
+            await Assert.ThrowsAsync<NotSupportedException>(() =>  _excelExporter.ExportAsync(path.ToString(), values));
+        }
+    }
+
+    [Fact]
+    public async Task SaveAsFileWithDimension()
+    {
+        {
+            using var file = AutoDeletingPath.Create();
+            var path = file.ToString();
+
+            using var table = new DataTable();
+            await  _excelExporter.ExportAsync(path, table);
+            Assert.Equal("A1", SheetHelper.GetFirstSheetDimensionRefValue(path));
+            {
+                await using var stream = File.OpenRead(path);
+                var d =  _excelImporter.QueryAsync(stream).ToBlockingEnumerable();
+                var rows = d.ToList();
+                Assert.Single(rows);
+            }
+            await  _excelExporter.ExportAsync(path, table, printHeader: false, overwriteFile: true);
+            Assert.Equal("A1", SheetHelper.GetFirstSheetDimensionRefValue(path));
+        }
+        {
+            using var file = AutoDeletingPath.Create();
+            var path = file.ToString();
+            using var table = new DataTable();
+
+            table.Columns.Add("a", typeof(string));
+            table.Columns.Add("b", typeof(decimal));
+            table.Columns.Add("c", typeof(bool));
+            table.Columns.Add("d", typeof(DateTime));
+            table.Rows.Add(@"""<>+-*//}{\\n", 1234567890);
+            table.Rows.Add("<test>Hello World</test>", -1234567890, false, DateTime.Now);
+
+            await  _excelExporter.ExportAsync(path, table);
+            Assert.Equal("A1:D3", SheetHelper.GetFirstSheetDimensionRefValue(path));
+
+            await using (var stream = File.OpenRead(path))
+            {
+                var d =  _excelImporter.QueryAsync(stream, useHeaderRow: true).ToBlockingEnumerable().Cast<IDictionary<string, object>>();
+                var rows = d.ToList();
+                Assert.Equal(2, rows.Count);
+                Assert.Equal(@"""<>+-*//}{\\n", rows[0]["a"]);
+                Assert.Equal(1234567890d, rows[0]["b"]);
+                Assert.Null(rows[0]["c"]);
+                Assert.Null(rows[0]["d"]);
+            }
+
+            await using (var stream = File.OpenRead(path))
+            {
+                var d =  _excelImporter.QueryAsync(stream).ToBlockingEnumerable().Cast<IDictionary<string, object>>();
+                var rows = d.ToList();
+                Assert.Equal(3, rows.Count);
+                Assert.Equal("a", rows[0]["A"]);
+                Assert.Equal("b", rows[0]["B"]);
+                Assert.Equal("c", rows[0]["C"]);
+                Assert.Equal("d", rows[0]["D"]);
+            }
+
+            await  _excelExporter.ExportAsync(path, table, printHeader: false, overwriteFile: true);
+            Assert.Equal("A1:D2", SheetHelper.GetFirstSheetDimensionRefValue(path));
+        }
+
+        {
+            using var path = AutoDeletingPath.Create();
+            using var table = new DataTable();
+            table.Columns.Add("a", typeof(string));
+            table.Rows.Add("A");
+            table.Rows.Add("B");
+
+            await  _excelExporter.ExportAsync(path.ToString(), table);
+            Assert.Equal("A1:A3", SheetHelper.GetFirstSheetDimensionRefValue(path.ToString()));
+        }
+    }
+
+    [Fact]
+    public async Task SaveAsByDataTableTest()
+    {
+        {
+            using var file = AutoDeletingPath.Create();
+            var path = file.ToString();
+
+            var now = DateTime.Now;
+
+            using var table = new DataTable();
+            table.Columns.Add("a", typeof(string));
+            table.Columns.Add("b", typeof(decimal));
+            table.Columns.Add("c", typeof(bool));
+            table.Columns.Add("d", typeof(DateTime));
+            table.Rows.Add(@"""<>+-*//}{\\n", 1234567890, true, now);
+            table.Rows.Add("<test>Hello World</test>", -1234567890, false, now.Date);
+
+            await  _excelExporter.ExportAsync(path, table);
+
+            using var p = new ExcelPackage(new FileInfo(path));
+            var ws = p.Workbook.Worksheets.First();
+
+            Assert.True(ws.Cells["A1"].Value.ToString() == "a");
+            Assert.True(ws.Cells["B1"].Value.ToString() == "b");
+            Assert.True(ws.Cells["C1"].Value.ToString() == "c");
+            Assert.True(ws.Cells["D1"].Value.ToString() == "d");
+
+            Assert.True(ws.Cells["A2"].Value.ToString() == @"""<>+-*//}{\\n");
+            Assert.True(ws.Cells["B2"].Value.ToString() == @"1234567890");
+            Assert.True(ws.Cells["C2"].Value.ToString() == true.ToString());
+            Assert.True(ws.Cells["D2"].Value.ToString() == now.ToString());
+        }
+        {
+            using var path = AutoDeletingPath.Create();
+            using var table = new DataTable();
+            table.Columns.Add("Column1", typeof(string));
+            table.Columns.Add("Column2", typeof(int));
+            table.Rows.Add("MiniExcel", 1);
+            table.Rows.Add("Github", 2);
+
+            await  _excelExporter.ExportAsync(path.ToString(), table);
+        }
+    }
+
+    [Fact]
+    public async Task QueryByLINQExtensionsVoidTaskLargeFileOOMTest()
+    {
+        const string path = "../../../../../benchmarks/MiniExcel.Benchmarks/Test1,000,000x10.xlsx";
+
+        {
+            var row =  _excelImporter.QueryAsync(path).ToBlockingEnumerable().First();
+            Assert.Equal("HelloWorld1", row.A);
+        }
+
+        await using (var stream = File.OpenRead(path))
+        {
+            var d =  _excelImporter.QueryAsync(stream).ToBlockingEnumerable().Cast<IDictionary<string, object>>();
+            var row = d.First();
+            Assert.Equal("HelloWorld1", row["A"]);
+        }
+
+        {
+            var d =  _excelImporter.QueryAsync(path).ToBlockingEnumerable().Cast<IDictionary<string, object>>();
+            var rows = d.Take(10);
+            Assert.Equal(10, rows.Count());
+        }
+    }
+
+    [Fact]
+    public async Task EmptyTest()
+    {
+        using var path = AutoDeletingPath.Create();
+
+        await using (var connection = Db.GetConnection("Data Source=:memory:"))
+        {
+            var rows = await connection.QueryAsync("with cte as (select 1 id,2 val) select * from cte where 1=2");
+            await  _excelExporter.ExportAsync(path.ToString(), rows);
+        }
+
+        await using (var stream = File.OpenRead(path.ToString()))
+        {
+            var row =  _excelImporter.QueryAsync(stream, useHeaderRow: true).ToBlockingEnumerable();
+            Assert.Empty(row);
+        }
+    }
+
+    [Fact]
+    public async Task SaveAsByIEnumerableIDictionary()
+    {
+
+        {
+            using var file = AutoDeletingPath.Create();
+            var path = file.ToString();
+            List<Dictionary<string, object>> values =
+            [
+                new() { { "Column1", "MiniExcel" }, { "Column2", 1 } },
+                new() { { "Column1", "Github" }, { "Column2", 2 } }
+            ];
+            await  _excelExporter.ExportAsync(path, values);
+
+            await using (var stream = File.OpenRead(path))
+            {
+                var d =  _excelImporter.QueryAsync(stream, useHeaderRow: false).ToBlockingEnumerable().Cast<IDictionary<string, object>>();
+                var rows = d.ToList();
+                Assert.Equal("Column1", rows[0]["A"]);
+                Assert.Equal("Column2", rows[0]["B"]);
+                Assert.Equal("MiniExcel", rows[1]["A"]);
+                Assert.Equal(1d, rows[1]["B"]);
+                Assert.Equal("Github", rows[2]["A"]);
+                Assert.Equal(2d, rows[2]["B"]);
+            }
+
+            await using (var stream = File.OpenRead(path))
+            {
+                var d =  _excelImporter.QueryAsync(stream, useHeaderRow: true).ToBlockingEnumerable().Cast<IDictionary<string, object>>();
+                var rows = d.ToList();
+                Assert.Equal(2, rows.Count);
+                Assert.Equal("MiniExcel", rows[0]["Column1"]);
+                Assert.Equal(1d, rows[0]["Column2"]);
+                Assert.Equal("Github", rows[1]["Column1"]);
+                Assert.Equal(2d, rows[1]["Column2"]);
+            }
+
+            Assert.Equal("A1:B3", SheetHelper.GetFirstSheetDimensionRefValue(path));
+        }
+
+        {
+            using var file = AutoDeletingPath.Create();
+            var path = file.ToString();
+
+            List<Dictionary<int, object>> values =
+            [
+                new() { { 1, "MiniExcel" }, { 2, 1 } },
+                new() { { 1, "Github" }, { 2, 2 } }
+            ];
+            await  _excelExporter.ExportAsync(path, values);
+
+            await using (var stream = File.OpenRead(path))
+            {
+                var d =  _excelImporter.QueryAsync(stream, useHeaderRow: false).ToBlockingEnumerable();
+                var rows = d.ToList();
+                Assert.Equal(3, rows.Count);
+            }
+            Assert.Equal("A1:B3", SheetHelper.GetFirstSheetDimensionRefValue(path));
+        }
+    }
+
+    [Fact]
+    public async Task SaveAsByIEnumerableIDictionaryWithDynamicConfiguration()
+    {
+        using var file = AutoDeletingPath.Create();
+        var path = file.ToString();
+
+        var dynamicColumns = new[]
+        {
+            new DynamicExcelColumn("Column1") { Name = "Name Column" },
+            new DynamicExcelColumn("Column2") { Name = "Value Column" }
+        };
+        var config = new OpenXmlConfiguration
+        {
+            DynamicColumns = dynamicColumns
+        };
+        List<Dictionary<string, object>> values =
+        [
+            new() { { "Column1", "MiniExcel" }, { "Column2", 1 } },
+            new() { { "Column1", "Github" }, { "Column2", 2 } }
+        ];
+        await  _excelExporter.ExportAsync(path, values, configuration: config);
+
+        await using (var stream = File.OpenRead(path))
+        {
+            var d =  _excelImporter.QueryAsync(stream, useHeaderRow: true).ToBlockingEnumerable().Cast<IDictionary<string, object>>();
+            var rows = d.ToList();
+            Assert.Equal(2, rows.Count);
+            Assert.Equal("Name Column", rows[0].Keys.ElementAt(0));
+            Assert.Equal("Value Column", rows[0].Keys.ElementAt(1));
+            Assert.Equal("MiniExcel", rows[0].Values.ElementAt(0));
+            Assert.Equal(1d, rows[0].Values.ElementAt(1));
+            Assert.Equal("Github", rows[1].Values.ElementAt(0));
+            Assert.Equal(2d, rows[1].Values.ElementAt(1));
+        }
+        Assert.Equal("A1:B3", SheetHelper.GetFirstSheetDimensionRefValue(path));
+    }
+
+
+    [Fact]
+    public async Task SaveAsFrozenRowsAndColumnsTest()
+    {
+        var config = new OpenXmlConfiguration
+        {
+            FreezeRowCount = 1,
+            FreezeColumnCount = 2
+        };
+
+        // Test enumerable
+        using var file = AutoDeletingPath.Create();
+        var path = file.ToString();
+
+        await  _excelExporter.ExportAsync(
+            path,
+            new[]
+            {
+                new { Column1 = "MiniExcel", Column2 = 1 },
+                new { Column1 = "Github", Column2 = 2}
+            },
+            configuration: config
+        );
+
+        await using (var stream = File.OpenRead(path))
+        {
+            var rows =  _excelImporter.QueryAsync(stream, useHeaderRow: true).ToBlockingEnumerable().ToList();
+
+            Assert.Equal("MiniExcel", rows[0].Column1);
+            Assert.Equal(1, rows[0].Column2);
+            Assert.Equal("Github", rows[1].Column1);
+            Assert.Equal(2, rows[1].Column2);
+        }
+        Assert.Equal("A1:B3", SheetHelper.GetFirstSheetDimensionRefValue(path));
+
+        // test table
+        var table = new DataTable();
+        table.Columns.Add("a", typeof(string));
+        table.Columns.Add("b", typeof(decimal));
+        table.Columns.Add("c", typeof(bool));
+        table.Columns.Add("d", typeof(DateTime));
+        table.Rows.Add("some text", 1234567890, true, DateTime.Now);
+        table.Rows.Add("<test>Hello World</test>", -1234567890, false, DateTime.Now.Date);
+
+        using var pathTable = AutoDeletingPath.Create();
+        await  _excelExporter.ExportAsync(pathTable.ToString(), table, configuration: config);
+        Assert.Equal("A1:D3", SheetHelper.GetFirstSheetDimensionRefValue(pathTable.ToString()));
+
+        // data reader
+        await using var reader = table.CreateDataReader();
+        using var pathReader = AutoDeletingPath.Create();
+        await  _excelExporter.ExportAsync(pathReader.ToString(), reader, configuration: config);
+        Assert.Equal("A1:D3", SheetHelper.GetFirstSheetDimensionRefValue(pathTable.ToString()));
+    }
+
+    [Fact]
+    public async Task SaveAsByDapperRows()
+    {
+        using var file = AutoDeletingPath.Create();
+        var path = file.ToString();
+
+        // Dapper Query
+        await using (var connection = Db.GetConnection("Data Source=:memory:"))
+        {
+            var rows = await connection.QueryAsync("select 'MiniExcel' as Column1,1 as Column2 union all select 'Github',2");
+            await  _excelExporter.ExportAsync(path, rows);
+        }
+        Assert.Equal("A1:B3", SheetHelper.GetFirstSheetDimensionRefValue(path));
+
+        await using (var stream = File.OpenRead(path))
+        {
+            var rows =  _excelImporter.QueryAsync(stream, useHeaderRow: true).ToBlockingEnumerable().Cast<IDictionary<string, object>>().ToList();
+            Assert.Equal("MiniExcel", rows[0]["Column1"]);
+            Assert.Equal(1d, rows[0]["Column2"]);
+            Assert.Equal("Github", rows[1]["Column1"]);
+            Assert.Equal(2d, rows[1]["Column2"]);
+        }
+
+        // Empty
+        await using (var connection = Db.GetConnection("Data Source=:memory:"))
+        {
+            var rows = (await connection.QueryAsync("with cte as (select 'MiniExcel' as Column1,1 as Column2 union all select 'Github',2)select * from cte where 1=2")).ToList();
+            await  _excelExporter.ExportAsync(path, rows, overwriteFile: true);
+        }
+
+        await using (var stream = File.OpenRead(path))
+        {
+            var rows =  _excelImporter.QueryAsync(stream, useHeaderRow: false).ToBlockingEnumerable().ToList();
+            Assert.Empty(rows);
+        }
+
+        await using (var stream = File.OpenRead(path))
+        {
+            var rows =  _excelImporter.QueryAsync(stream, useHeaderRow: true).ToBlockingEnumerable().ToList();
+            Assert.Empty(rows);
+        }
+        Assert.Equal("A1", SheetHelper.GetFirstSheetDimensionRefValue(path));
+
+        // ToList
+        await using (var connection = Db.GetConnection("Data Source=:memory:"))
+        {
+            var rows = (await connection.QueryAsync("select 'MiniExcel' as Column1,1 as Column2 union all select 'Github',2")).ToList();
+            await  _excelExporter.ExportAsync(path, rows, overwriteFile: true);
+        }
+        Assert.Equal("A1:B3", SheetHelper.GetFirstSheetDimensionRefValue(path));
+
+        await using (var stream = File.OpenRead(path))
+        {
+            var rows =  _excelImporter.QueryAsync(stream, useHeaderRow: false).ToBlockingEnumerable().Cast<IDictionary<string, object>>().ToList();
+            Assert.Equal("Column1", rows[0]["A"]);
+            Assert.Equal("Column2", rows[0]["B"]);
+            Assert.Equal("MiniExcel", rows[1]["A"]);
+            Assert.Equal(1d, rows[1]["B"]);
+            Assert.Equal("Github", rows[2]["A"]);
+            Assert.Equal(2d, rows[2]["B"]);
+        }
+
+        await using (var stream = File.OpenRead(path))
+        {
+            var rows =  _excelImporter.QueryAsync(stream, useHeaderRow: true).ToBlockingEnumerable().Cast<IDictionary<string, object>>().ToList();
+            Assert.Equal("MiniExcel", rows[0]["Column1"]);
+            Assert.Equal(1d, rows[0]["Column2"]);
+            Assert.Equal("Github", rows[1]["Column1"]);
+            Assert.Equal(2d, rows[1]["Column2"]);
+        }
+    }
+
+
+    private class Demo
+    {
+        public string Column1 { get; set; }
+        public decimal Column2 { get; set; }
+    }
+    [Fact]
+    public async Task QueryByStrongTypeParameterTest()
+    {
+        using var file = AutoDeletingPath.Create();
+        var path = file.ToString();
+        List<Demo> values =
+        [
+            new() { Column1 = "MiniExcel", Column2 = 1 },
+            new() { Column1 = "Github", Column2 = 2 }
+        ];
+        await  _excelExporter.ExportAsync(path, values);
+
+        await using var stream = File.OpenRead(path);
+        var rows =  _excelImporter.QueryAsync(stream, useHeaderRow: true).ToBlockingEnumerable().Cast<IDictionary<string, object>>().ToList();
+
+        Assert.Equal("MiniExcel", rows[0]["Column1"]);
+        Assert.Equal(1d, rows[0]["Column2"]);
+        Assert.Equal("Github", rows[1]["Column1"]);
+        Assert.Equal(2d, rows[1]["Column2"]);
+    }
+
+    [Fact]
+    public async Task QueryByDictionaryStringAndObjectParameterTest()
+    {
+        using var file = AutoDeletingPath.Create();
+        var path = file.ToString();
+        List<Dictionary<string, object>> values =
+        [
+            new() { { "Column1", "MiniExcel" }, { "Column2", 1 } },
+            new() { { "Column1", "Github" }, { "Column2", 2 } }
+        ];
+        await  _excelExporter.ExportAsync(path, values);
+
+        await using var stream = File.OpenRead(path);
+        var rows =  _excelImporter.QueryAsync(stream, useHeaderRow: true).ToBlockingEnumerable().Cast<IDictionary<string, object>>().ToList();
+
+        Assert.Equal("MiniExcel", rows[0]["Column1"]);
+        Assert.Equal(1d, rows[0]["Column2"]);
+        Assert.Equal("Github", rows[1]["Column1"]);
+        Assert.Equal(2d, rows[1]["Column2"]);
+    }
+
+    [Fact]
+    public async Task SQLiteInsertTest()
+    {
+        // Async Task SQL Insert Large Size Xlsx OOM
+        var path = PathHelper.GetFile("xlsx/Test5x2.xlsx");
+        using var tempSqlitePath = AutoDeletingPath.Create(Path.GetTempPath(), $"{Guid.NewGuid()}.db");
+        var connectionString = $"Data Source={tempSqlitePath};Version=3;";
+
+        await using (var connection = new SQLiteConnection(connectionString))
+        {
+            await connection.ExecuteAsync("create table T (A varchar(20),B varchar(20));");
+        }
+
+        await using (var connection = new SQLiteConnection(connectionString))
+        {
+            await connection.OpenAsync();
+            await using (var transaction = connection.BeginTransaction())
+            await using (var stream = File.OpenRead(path))
+            {
+                var rows =  _excelImporter.QueryAsync(stream).ToBlockingEnumerable().Cast<IDictionary<string, object>>();
+                foreach (var row in rows)
+                    await connection.ExecuteAsync(
+                        "insert into T (A,B) values (@A,@B)",
+                        new { A = row["A"], B = row["B"] },
+                        transaction: transaction
+                    );
+
+                await transaction.CommitAsync();
+            }
+        }
+
+        await using (var connection = new SQLiteConnection(connectionString))
+        {
+            var result = await connection.QueryAsync("select * from T");
+            Assert.Equal(5, result.Count());
+        }
+    }
+
+    [Fact]
+    public async Task SaveAsBasicCreateTest()
+    {
+        using var file = AutoDeletingPath.Create();
+        var path = file.ToString();
+
+        await  _excelExporter.ExportAsync(path, new[]
+        {
+            new { Column1 = "MiniExcel", Column2 = 1 },
+            new { Column1 = "Github", Column2 = 2}
+        });
+
+        await using (var stream = File.OpenRead(path))
+        {
+            var d =  _excelImporter.QueryAsync(stream, useHeaderRow: true).ToBlockingEnumerable().Cast<IDictionary<string, object>>();
+            var rows = d.ToList();
+            Assert.Equal("MiniExcel", rows[0]["Column1"]);
+            Assert.Equal(1d, rows[0]["Column2"]);
+            Assert.Equal("Github", rows[1]["Column1"]);
+            Assert.Equal(2d, rows[1]["Column2"]);
+        }
+        Assert.Equal("A1:B3", SheetHelper.GetFirstSheetDimensionRefValue(path));
+    }
+
+    [Fact]
+    public async Task SaveAsBasicStreamTest()
+    {
+        {
+            using var file = AutoDeletingPath.Create();
+            var path = file.ToString();
+
+            var values = new[]
+            {
+                new { Column1 = "MiniExcel", Column2 = 1 },
+                new { Column1 = "Github", Column2 = 2}
+            };
+            await using (var stream = new FileStream(path, FileMode.CreateNew))
+            {
+                await  _excelExporter.ExportAsync(stream, values);
+            }
+
+            await using (var stream = File.OpenRead(path))
+            {
+                var rows =  _excelImporter.QueryAsync(stream, useHeaderRow: true).ToBlockingEnumerable().Cast<IDictionary<string, object>>().ToList();
+                Assert.Equal("MiniExcel", rows[0]["Column1"]);
+                Assert.Equal(1d, rows[0]["Column2"]);
+                Assert.Equal("Github", rows[1]["Column1"]);
+                Assert.Equal(2d, rows[1]["Column2"]);
+            }
+        }
+        {
+            using var file = AutoDeletingPath.Create();
+            var path = file.ToString();
+            var values = new[]
+            {
+                new { Column1 = "MiniExcel", Column2 = 1 },
+                new { Column1 = "Github", Column2 = 2}
+            };
+            await using (var stream = new MemoryStream())
+            await using (var fileStream = new FileStream(path, FileMode.Create))
+            {
+                await  _excelExporter.ExportAsync(stream, values);
+                stream.Seek(0, SeekOrigin.Begin);
+                await stream.CopyToAsync(fileStream);
+            }
+
+            await using (var stream = File.OpenRead(path))
+            {
+                var rows =  _excelImporter.QueryAsync(stream, useHeaderRow: true).ToBlockingEnumerable().Cast<IDictionary<string, object>>().ToList();
+                Assert.Equal("MiniExcel", rows[0]["Column1"]);
+                Assert.Equal(1d, rows[0]["Column2"]);
+                Assert.Equal("Github", rows[1]["Column1"]);
+                Assert.Equal(2d, rows[1]["Column2"]);
+            }
+        }
+    }
+
+    [Fact]
+    public async Task SaveAsSpecialAndTypeCreateTest()
+    {
+        using var path = AutoDeletingPath.Create();
+        await  _excelExporter.ExportAsync(path.ToString(), new[]
+        {
+            new { a = @"""<>+-*//}{\\n", b = 1234567890, c = true, d = DateTime.Now },
+            new { a = "<test>Hello World</test>", b = -1234567890, c = false, d = DateTime.Now.Date}
+        });
+        var info = new FileInfo(path.ToString());
+        Assert.True(info.FullName == path.ToString());
+    }
+
+    [Fact]
+    public async Task SaveAsFileEpplusCanReadTest()
+    {
+        using var path = AutoDeletingPath.Create();
+        var now = DateTime.Now;
+
+        await  _excelExporter.ExportAsync(path.ToString(), new[]
+        {
+            new { a = @"""<>+-*//}{\\n", b = 1234567890, c = true, d = now},
+            new { a = "<test>Hello World</test>", b = -1234567890, c = false, d = now.Date}
+        });
+
+        using var p = new ExcelPackage(new FileInfo(path.ToString()));
+        var ws = p.Workbook.Worksheets.First();
+
+        Assert.True(ws.Cells["A1"].Value.ToString() == "a");
+        Assert.True(ws.Cells["B1"].Value.ToString() == "b");
+        Assert.True(ws.Cells["C1"].Value.ToString() == "c");
+        Assert.True(ws.Cells["D1"].Value.ToString() == "d");
+
+        Assert.True(ws.Cells["A2"].Value.ToString() == @"""<>+-*//}{\\n");
+        Assert.True(ws.Cells["B2"].Value.ToString() == "1234567890");
+        Assert.True(ws.Cells["C2"].Value.ToString() == true.ToString());
+        Assert.True(ws.Cells["D2"].Value.ToString() == now.ToString());
+    }
+
+    [Fact]
+    public async Task SavaAsClosedXmlCanReadTest()
+    {
+        var now = DateTime.Now;
+        using var path = AutoDeletingPath.Create();
+
+        await  _excelExporter.ExportAsync(path.ToString(), new[]
+        {
+            new { a = @"""<>+-*//}{\\n", b = 1234567890, c = true, d = now},
+            new { a = "<test>Hello World</test>", b = -1234567890, c = false, d = now.Date}
+        });
+        using var workbook = new XLWorkbook(path.ToString());
+        var ws = workbook.Worksheets.First();
+
+        Assert.True(ws.Cell("A1").Value.ToString() == "a");
+        Assert.True(ws.Cell("D1").Value.ToString() == "d");
+        Assert.True(ws.Cell("B1").Value.ToString() == "b");
+        Assert.True(ws.Cell("C1").Value.ToString() == "c");
+
+        Assert.True(ws.Cell("A2").Value.ToString() == @"""<>+-*//}{\\n");
+        Assert.True(ws.Cell("B2").Value.ToString() == "1234567890");
+        Assert.Equal(bool.TrueString,  ws.Cell("C2").Value.ToString(), ignoreCase: true);
+        Assert.True(ws.Cell("D2").Value.ToString() == now.ToString());
+    }
+
+    [Fact]
+    public async Task ContentTypeUriContentTypeReadCheckTest()
+    {
+        var now = DateTime.Now;
+        using var path = AutoDeletingPath.Create();
+
+        await  _excelExporter.ExportAsync(path.ToString(), new[]
+        {
+            new { a = @"""<>+-*//}{\\n", b = 1234567890, c = true, d = now},
+            new { a = "<test>Hello World</test>", b = -1234567890, c = false, d = now.Date}
+        });
+        using var zip = Package.Open(path.ToString(), FileMode.Open);
+        var allParts = zip.GetParts()
+            .Select(s => new { s.CompressionOption, s.ContentType, s.Uri, s.Package.GetType().Name })
+            .ToDictionary(s => s.Uri.ToString(), s => s);
+
+        Assert.True(allParts["/xl/styles.xml"].ContentType == "application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml");
+        Assert.True(allParts["/xl/workbook.xml"].ContentType == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml");
+        Assert.True(allParts["/xl/worksheets/sheet1.xml"].ContentType == "application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml");
+        Assert.True(allParts["/xl/_rels/workbook.xml.rels"].ContentType == "application/vnd.openxmlformats-package.relationships+xml");
+        Assert.True(allParts["/_rels/.rels"].ContentType == "application/vnd.openxmlformats-package.relationships+xml");
+    }
+
+    [Fact]
+    public async Task ReadBigExcel_TakeCancel_Throws_TaskCanceledException()
+    {
+        await Assert.ThrowsAsync<OperationCanceledException>(async () =>
+        {
+            var path = PathHelper.GetFile("xlsx/bigExcel.xlsx");
+            using var cts = new CancellationTokenSource();
+
+            await cts.CancelAsync();
+
+            await using var stream = FileHelper.OpenRead(path);
+            var rows =  _excelImporter.QueryAsync(stream, cancellationToken: cts.Token).ToBlockingEnumerable(cts.Token).ToList();
+        });
+    }
+
+    [Fact]
+    public async Task ReadBigExcel_Prcoessing_TakeCancel_Throws_TaskCanceledException()
+    {
+        await Assert.ThrowsAsync<OperationCanceledException>(async () =>
+        {
+            var path = PathHelper.GetFile("xlsx/bigExcel.xlsx");
+            var cts = new CancellationTokenSource();
+
+            var cancelTask = Task.Run(async () =>
+            {
+                await Task.Delay(2000, cts.Token);
+                await cts.CancelAsync();
+                cts.Token.ThrowIfCancellationRequested();
+            });
+
+            await using var stream = FileHelper.OpenRead(path);
+            var d =  _excelImporter.QueryAsync(stream, cancellationToken: cts.Token).ToBlockingEnumerable(cts.Token);
+            await cancelTask;
+            _ = d.ToList();
+        });
+    }
+
+    [Fact]
+    public async Task DynamicColumnsConfigurationIsUsedWhenCreatingExcelUsingIDataReader()
+    {
+        using var path = AutoDeletingPath.Create();
+        var dateTime = DateTime.Now;
+        var onlyDate = DateOnly.FromDateTime(dateTime);
+
+        using var table = new DataTable();
+        table.Columns.Add("Column1", typeof(string));
+        table.Columns.Add("Column2", typeof(int));
+        table.Columns.Add("Column3", typeof(DateTime));
+        table.Columns.Add("Column4", typeof(DateOnly));
+        table.Rows.Add("MiniExcel", 1, dateTime, onlyDate);
+        table.Rows.Add("Github", 2, dateTime, onlyDate);
+
+        var configuration = new OpenXmlConfiguration
+        {
+            DynamicColumns =
+            [
+                new DynamicExcelColumn("Column1")
+                {
+                    Name = "Name of something",
+                    Index = 0,
+                    Width = 150
+                },
+                new DynamicExcelColumn("Column2")
+                {
+                    Name = "Its value",
+                    Index = 1,
+                    Width = 150
+                },
+                new DynamicExcelColumn("Column3")
+                {
+                    Name = "Its Date",
+                    Index = 2,
+                    Width = 150,
+                    Format = "dd.mm.yyyy hh:mm:ss",
+                }
+
+            ]
+        };
+        await using var reader = table.CreateDataReader();
+        await  _excelExporter.ExportAsync(path.ToString(), reader, configuration: configuration);
+
+        await using var stream = File.OpenRead(path.ToString());
+        var rows =  _excelImporter.QueryAsync(stream, useHeaderRow: true).ToBlockingEnumerable()
+            .Cast<IDictionary<string, object>>()
+            .ToList();
+
+        Assert.Contains("Name of something", rows[0]);
+        Assert.Contains("Its value", rows[0]);
+        Assert.Contains("Its Date", rows[0]);
+        Assert.Contains("Column4", rows[0]);
+        Assert.Contains("Name of something", rows[1]);
+        Assert.Contains("Its value", rows[1]);
+        Assert.Contains("Its Date", rows[1]);
+        Assert.Contains("Column4", rows[1]);
+
+        Assert.Equal("MiniExcel", rows[0]["Name of something"]);
+        Assert.Equal(1D, rows[0]["Its value"]);
+        Assert.Equal(dateTime, (DateTime)rows[0]["Its Date"], TimeSpan.FromMilliseconds(10d));
+        Assert.Equal(onlyDate.ToDateTime(TimeOnly.MinValue), (DateTime)rows[0]["Column4"]);
+        Assert.Equal("Github", rows[1]["Name of something"]);
+        Assert.Equal(2D, rows[1]["Its value"]);
+        Assert.Equal(dateTime, (DateTime)rows[1]["Its Date"], TimeSpan.FromMilliseconds(10d));
+        Assert.Equal(onlyDate.ToDateTime(TimeOnly.MinValue), (DateTime)rows[1]["Column4"]);
+    }
+
+    [Fact]
+    public async Task DynamicColumnsConfigurationIsUsedWhenCreatingExcelUsingDataTable()
+    {
+        using var path = AutoDeletingPath.Create();
+        var dateTime = DateTime.Now;
+        var onlyDate = DateOnly.FromDateTime(dateTime);
+
+        using var table = new DataTable();
+        table.Columns.Add("Column1", typeof(string));
+        table.Columns.Add("Column2", typeof(int));
+        table.Columns.Add("Column3", typeof(DateTime));
+        table.Columns.Add("Column4", typeof(DateOnly));
+        table.Rows.Add("MiniExcel", 1, dateTime, onlyDate);
+        table.Rows.Add("Github", 2, dateTime, onlyDate);
+
+        var configuration = new OpenXmlConfiguration
+        {
+            DynamicColumns =
+            [
+                new DynamicExcelColumn("Column1")
+                {
+                    Name = "Name of something",
+                    Index = 0,
+                    Width = 150
+                },
+                new DynamicExcelColumn("Column2")
+                {
+                    Name = "Its value",
+                    Index = 1,
+                    Width = 150
+                },
+                new DynamicExcelColumn("Column3")
+                {
+                    Name = "Its Date",
+                    Index = 2,
+                    Width = 150,
+                    Format = "dd.mm.yyyy hh:mm:ss"
+                }
+            ]
+        };
+        await  _excelExporter.ExportAsync(path.ToString(), table, configuration: configuration);
+
+        await using var stream = File.OpenRead(path.ToString());
+        var rows =  _excelImporter.QueryAsync(stream, useHeaderRow: true).ToBlockingEnumerable()
+            .Cast<IDictionary<string, object>>()
+            .ToList();
+
+        Assert.Contains("Name of something", rows[0]);
+        Assert.Contains("Its value", rows[0]);
+        Assert.Contains("Its Date", rows[0]);
+        Assert.Contains("Column4", rows[0]);
+        Assert.Contains("Name of something", rows[1]);
+        Assert.Contains("Its value", rows[1]);
+        Assert.Contains("Its Date", rows[1]);
+        Assert.Contains("Column4", rows[1]);
+
+
+        Assert.Equal("MiniExcel", rows[0]["Name of something"]);
+        Assert.Equal(1D, rows[0]["Its value"]);
+        Assert.Equal(dateTime, (DateTime)rows[0]["Its Date"], TimeSpan.FromMilliseconds(10d));
+        Assert.Equal(onlyDate.ToDateTime(TimeOnly.MinValue), (DateTime)rows[0]["Column4"]);
+        Assert.Equal("Github", rows[1]["Name of something"]);
+        Assert.Equal(2D, rows[1]["Its value"]);
+        Assert.Equal(dateTime, (DateTime)rows[1]["Its Date"], TimeSpan.FromMilliseconds(10d));
+        Assert.Equal(onlyDate.ToDateTime(TimeOnly.MinValue), (DateTime)rows[1]["Column4"]);
+    }
+
+    [Fact]
+    public async Task SaveAsByMiniExcelDataReader()
+    {
+        using var path1 = AutoDeletingPath.Create();
+        var values = new List<Demo>
+        {
+            new() { Column1= "MiniExcel" ,Column2 = 1 },
+            new() { Column1 = "Github", Column2 = 2 }
+        };
+        await  _excelExporter.ExportAsync(path1.ToString(), values);
+
+        using var path2 = AutoDeletingPath.Create();
+        await using IMiniExcelDataReader? reader =  _excelImporter.GetDataReader(path1.ToString(), true);
+        
+        await  _excelExporter.ExportAsync(path2.ToString(), reader);
+        var results =  _excelImporter.QueryAsync<Demo>(path2.ToString()).ToBlockingEnumerable().ToList();
+
+        Assert.True(results.Count == 2);
+        Assert.True(results.First().Column1 == "MiniExcel");
+        Assert.True(results.First().Column2 == 1);
+        Assert.True(results.Last().Column1 == "Github");
+        Assert.True(results.Last().Column2 == 2);
+    }
+
+    [Fact]
+    public async Task InsertSheetTest()
+    {
+        var now = DateTime.Now;
+        using var file = AutoDeletingPath.Create();
+        var path = file.ToString();
+
+        {
+            using var table = new DataTable();
+            table.Columns.Add("a", typeof(string));
+            table.Columns.Add("b", typeof(decimal));
+            table.Columns.Add("c", typeof(bool));
+            table.Columns.Add("d", typeof(DateTime));
+            table.Rows.Add(@"""<>+-*//}{\\n", 1234567890, true, now);
+            table.Rows.Add("<test>Hello World</test>", -1234567890, false, now.Date);
+
+            await  _excelExporter.InsertSheetAsync(path, table, sheetName: "Sheet1");
+            using var p = new ExcelPackage(new FileInfo(path));
+            var sheet1 = p.Workbook.Worksheets[0];
+
+            Assert.True(sheet1.Cells["A1"].Value.ToString() == "a");
+            Assert.True(sheet1.Cells["B1"].Value.ToString() == "b");
+            Assert.True(sheet1.Cells["C1"].Value.ToString() == "c");
+            Assert.True(sheet1.Cells["D1"].Value.ToString() == "d");
+
+            Assert.True(sheet1.Cells["A2"].Value.ToString() == @"""<>+-*//}{\\n");
+            Assert.True(sheet1.Cells["B2"].Value.ToString() == "1234567890");
+            Assert.True(sheet1.Cells["C2"].Value.ToString() == true.ToString());
+            Assert.True(sheet1.Cells["D2"].Value.ToString() == now.ToString());
+
+            Assert.True(sheet1.Name == "Sheet1");
+        }
+        {
+            using var table = new DataTable();
+            table.Columns.Add("Column1", typeof(string));
+            table.Columns.Add("Column2", typeof(int));
+            table.Rows.Add("MiniExcel", 1);
+            table.Rows.Add("Github", 2);
+
+            await  _excelExporter.InsertSheetAsync(path, table, sheetName: "Sheet2");
+            using var p = new ExcelPackage(new FileInfo(path));
+            var sheet2 = p.Workbook.Worksheets[1];
+
+            Assert.True(sheet2.Cells["A1"].Value.ToString() == "Column1");
+            Assert.True(sheet2.Cells["B1"].Value.ToString() == "Column2");
+
+            Assert.True(sheet2.Cells["A2"].Value.ToString() == "MiniExcel");
+            Assert.True(sheet2.Cells["B2"].Value.ToString() == "1");
+
+            Assert.True(sheet2.Cells["A3"].Value.ToString() == "Github");
+            Assert.True(sheet2.Cells["B3"].Value.ToString() == "2");
+
+            Assert.True(sheet2.Name == "Sheet2");
+        }
+        {
+            using var table = new DataTable();
+            table.Columns.Add("Column1", typeof(string));
+            table.Columns.Add("Column2", typeof(DateTime));
+            table.Rows.Add("Test", now);
+
+            await  _excelExporter.InsertSheetAsync(path, table, sheetName: "Sheet2", printHeader: false, configuration: new OpenXmlConfiguration
+            {
+                FastMode = true,
+                AutoFilter = false,
+                TableStyles = TableStyles.None,
+                DynamicColumns =
+                [
+                    new DynamicExcelColumn("Column2")
+                    {
+                        Name = "Its Date",
+                        Index = 1,
+                        Width = 150,
+                        Format = "dd.mm.yyyy hh:mm:ss",
+                    }
+                ]
+            }, overwriteSheet: true);
+
+            using var p = new ExcelPackage(new FileInfo(path));
+            var sheet2 = p.Workbook.Worksheets[1];
+
+            Assert.True(sheet2.Cells["A1"].Value.ToString() == "Test");
+            Assert.True(sheet2.Cells["B1"].Text == now.ToString("dd.MM.yyyy HH:mm:ss"));
+            Assert.True(sheet2.Name == "Sheet2");
+        }
+        {
+            using var table = new DataTable();
+            table.Columns.Add("Column1", typeof(string));
+            table.Columns.Add("Column2", typeof(DateTime));
+            table.Rows.Add("MiniExcel", now);
+            table.Rows.Add("Github", now);
+
+            await  _excelExporter.InsertSheetAsync(path, table, sheetName: "Sheet3", configuration: new OpenXmlConfiguration
+            {
+                FastMode = true,
+                AutoFilter = false,
+                TableStyles = TableStyles.None,
+                DynamicColumns =
+                [
+                    new DynamicExcelColumn("Column2")
+                    {
+                        Name = "Its Date",
+                        Index = 1,
+                        Width = 150,
+                        Format = "dd.mm.yyyy hh:mm:ss",
+                    }
+                ]
+            });
+
+            using var p = new ExcelPackage(new FileInfo(path));
+            var sheet3 = p.Workbook.Worksheets[2];
+
+            Assert.True(sheet3.Cells["A1"].Value.ToString() == "Column1");
+            Assert.True(sheet3.Cells["B1"].Value.ToString() == "Its Date");
+
+            Assert.True(sheet3.Cells["A2"].Value.ToString() == "MiniExcel");
+            Assert.True(sheet3.Cells["B2"].Text == now.ToString("dd.MM.yyyy HH:mm:ss"));
+
+            Assert.True(sheet3.Cells["A3"].Value.ToString() == "Github");
+            Assert.True(sheet3.Cells["B3"].Text == now.ToString("dd.MM.yyyy HH:mm:ss"));
+
+            Assert.True(sheet3.Name == "Sheet3");
+        }
+    }
+
+    [Fact]
+    public async Task SaveAsByAsyncEnumerable()
+    {
+        using var path = AutoDeletingPath.Create();
+
+#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
+        static async IAsyncEnumerable<Demo> GetValues()
+        {
+            yield return new Demo { Column1 = "MiniExcel", Column2 = 1 };
+            yield return new Demo { Column1 = "Github", Column2 = 2 };
+        }
+#pragma warning restore CS1998
+
+        await  _excelExporter.ExportAsync(path.ToString(), GetValues());
+        var results =  _excelImporter.Query(path.ToString(), useHeaderRow: true).ToList();
+
+        Assert.Equal(2, results.Count);
+        Assert.Equal("MiniExcel", results[0].Column1);
+        Assert.Equal(1, results[0].Column2);
+        Assert.Equal("Github", results[^1].Column1);
+        Assert.Equal(2, results[^1].Column2);
+    }
+    
+    [Fact]
+    public async Task ExportDataTableWithProgressTest()
+    {
+        var dataTable = new DataTable();
+        dataTable.Columns.Add("Id", typeof(int));
+        dataTable.Columns.Add("Name", typeof(string));
+        dataTable.Columns.Add("Date", typeof(DateTime));
+        dataTable.Rows.Add(1, "Alice", DateTime.Now);
+        dataTable.Rows.Add(2, DBNull.Value, DateTime.UtcNow);
+        dataTable.Rows.Add(3, "Alice", DateTime.Now.Date);
+
+        var progress = new SimpleProgress();
+        using var ms = new MemoryStream();
+        var rowCounts = await _excelExporter.ExportAsync(ms, dataTable, progress: progress);
+        Assert.Single(rowCounts);
+        Assert.Equal(3, rowCounts.First());
+
+        //Confirm the progress report is correct
+        var cellCount = dataTable.Columns.Count * dataTable.Rows.Count;
+        Assert.Equal(cellCount, progress.Value);
+
+        ms.Seek(0, SeekOrigin.Begin);
+        var resultDataTable = await _excelImporter.QueryAsDataTableAsync(ms);
+
+        //Confirm the data is correct
+        Assert.Equal(dataTable.Rows.Count, resultDataTable.Rows.Count);
+        Assert.Equal(dataTable.Columns.Count, resultDataTable.Columns.Count);
+        for (var i = 0; i < dataTable.Rows.Count; i++)
+        {
+            for (var j = 0; j < dataTable.Columns.Count; j++)
+            {
+                //We compare string values because types change after writing and reading them back (e.g. int becomes double)
+                Assert.Equal(dataTable.Rows[i][j].ToString(), resultDataTable.Rows[i][j].ToString());
+            }
+        }
+    }
+}

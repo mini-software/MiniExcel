@@ -103,12 +103,12 @@ internal partial class CsvReader : IMiniExcelReader
             if (_config.ReadEmptyStringAsNull)
             {
                 for (int i = 0; i <= read.Length - 1; i++)
-                    cell[ColumnHelper.GetAlphabetColumnName(i)] = read[i] is "" ? null : read[i];
+                    cell[CellReferenceConverter.GetAlphabeticalIndex(i)] = read[i] is var value and not "" ? value : null;
             }
             else
             {
                 for (int i = 0; i <= read.Length - 1; i++)
-                    cell[ColumnHelper.GetAlphabetColumnName(i)] = read[i];
+                    cell[CellReferenceConverter.GetAlphabeticalIndex(i)] = read[i];
             }
 
             yield return cell;
@@ -118,34 +118,35 @@ internal partial class CsvReader : IMiniExcelReader
     [CreateSyncVersion]
     public IAsyncEnumerable<T> QueryAsync<T>(string? sheetName, string startCell, bool mapHeaderAsData, CancellationToken cancellationToken = default) where T : class, new()
     {
+        const int rowOffset = 0; // ranged queries are not supported for csv
         var records = QueryAsync(false, sheetName, startCell, cancellationToken);
-        return MiniExcelMapper.MapQueryAsync<T>(records, startCell, mapHeaderAsData, false, _config, cancellationToken);
+        return MiniExcelMapper.MapQueryAsync<T>(records, 0, mapHeaderAsData, false, _config, null, cancellationToken);
     }
 
     [CreateSyncVersion]
     public IAsyncEnumerable<IDictionary<string, object?>> QueryRangeAsync(bool useHeaderRow, string? sheetName, string startCell, string endCell, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException("CSV does not implement QueryRange");
+        throw new NotSupportedException("Ranged queries are not supported for csv file");
     }
 
     [CreateSyncVersion]
     public IAsyncEnumerable<T> QueryRangeAsync<T>(string? sheetName, string startCell, string endCell, bool treatHeaderAsData, CancellationToken cancellationToken = default) where T : class, new()
     {
         var dynamicRecords = QueryRangeAsync(false, sheetName, startCell, endCell, cancellationToken);
-        return MiniExcelMapper.MapQueryAsync<T>(dynamicRecords, startCell, treatHeaderAsData, false, _config, cancellationToken);
+        return MiniExcelMapper.MapQueryAsync<T>(dynamicRecords, 0, treatHeaderAsData, false, _config, null, cancellationToken);
     }
 
     [CreateSyncVersion]
     public IAsyncEnumerable<IDictionary<string, object?>> QueryRangeAsync(bool useHeaderRow, string? sheetName, int startRowIndex, int startColumnIndex, int? endRowIndex, int? endColumnIndex, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException("CSV does not implement QueryRange");
+        throw new NotSupportedException("Ranged queries are not supported for csv file");
     }
 
     [CreateSyncVersion]
     public IAsyncEnumerable<T> QueryRangeAsync<T>(string? sheetName, int startRowIndex, int startColumnIndex, int? endRowIndex, int? endColumnIndex, bool treatHeaderAsData, CancellationToken cancellationToken = default) where T : class, new()
     {
         var dynamicRecords = QueryRangeAsync(false, sheetName, startRowIndex, startColumnIndex, endRowIndex, endColumnIndex, cancellationToken);
-        return MiniExcelMapper.MapQueryAsync<T>(dynamicRecords, ConvertXyToCell(startRowIndex, startColumnIndex), treatHeaderAsData, false, _config, cancellationToken);
+        return MiniExcelMapper.MapQueryAsync<T>(dynamicRecords, 0, treatHeaderAsData, false, _config, null, cancellationToken);
     }
 
     private static string ConvertXyToCell(int x, int y)

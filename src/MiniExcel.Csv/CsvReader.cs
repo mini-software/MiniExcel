@@ -39,6 +39,9 @@ internal partial class CsvReader : IMiniExcelReader
             ).ConfigureAwait(false) is { } row)
         {
             rowIndex++;
+            if (string.IsNullOrWhiteSpace(row))
+                continue;
+                    
             string finalRow = row;
             
             if (_config.ReadLineBreaksWithinQuotes)

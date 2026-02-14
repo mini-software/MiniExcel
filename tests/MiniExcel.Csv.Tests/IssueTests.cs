@@ -1010,4 +1010,33 @@ public class IssueTests
         var getRowsInfo = _csvImporter.Query(stream, configuration: config).ToArray();
         Assert.Equal(2, getRowsInfo.Length);
     }
+
+    class NameAgeTuple
+    {
+        public string? Name { get; set; }
+        public int Age { get; set; }
+    }
+    
+    [Fact]
+    public void Issue914()
+    {
+        var csv =
+            """
+            Name,Age
+            Jack,22
+            
+            
+            Sam,33
+             
+            Henry,44
+            
+            """u8;
+
+        using var ms = new MemoryStream([..csv]);
+        var result = _csvImporter.Query<NameAgeTuple>(ms).ToList();
+        
+        Assert.Equal(3, result.Count);
+        Assert.Equal("Sam", result[1].Name);
+        Assert.Equal(44, result[2].Age);
+    }
 }

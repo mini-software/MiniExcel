@@ -3784,4 +3784,27 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         Assert.Equal(dataInSheet, dataRead);
     }
 
+    [Fact]
+    public void TestIssue915()
+    {
+        var templatePath = PathHelper.GetFile("xlsx/TestIssue915.xlsx");
+        var value = new Dictionary<string,object>
+        {
+            ["Data"] = new[] 
+            { 
+                new { Name = "Hill", Altitude = 6m }, 
+                new { Name = "Mount", Altitude = 7.4m }, 
+                new { Name = "Peak", Altitude = 8.6m } 
+            }
+        };
+        
+        using var path = AutoDeletingPath.Create();
+        _excelTemplater.ApplyTemplate(path.ToString(), templatePath, value);
+
+        var result = _excelImporter.Query(path.ToString(), true).ToList();
+        
+        Assert.Equal(6, result[0].Altitude);
+        Assert.Equal(7.4, result[1].Altitude);
+        Assert.Equal(8.6, result[2].Altitude);
+    }
 }

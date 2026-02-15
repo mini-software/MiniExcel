@@ -799,7 +799,7 @@ internal partial class OpenXmlTemplate
                     else
                     {
                         cellValueStr = XmlHelper.EncodeXml(cellValue?.ToString());
-                        if (!isDictOrTable && TypeHelper.IsNumericType(type))
+                        if (TypeHelper.IsNumericType(type))
                         {
                             if (decimal.TryParse(cellValueStr, out var decimalValue))
                                 cellValueStr = decimalValue.ToString(CultureInfo.InvariantCulture);

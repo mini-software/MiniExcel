@@ -113,10 +113,10 @@ internal partial class OpenXmlTemplate : IMiniExcelTemplate
         templateStream.Position = 0;
 
         //read all xlsx sheets
-        var templateSheets = Enumerable
-            .Where<ZipArchiveEntry>(templateReader.Archive.ZipFile.Entries, w =>
-                w.FullName.StartsWith("xl/worksheets/sheet", StringComparison.OrdinalIgnoreCase) ||
-                w.FullName.StartsWith("/xl/worksheets/sheet", StringComparison.OrdinalIgnoreCase));
+        var templateSheets = templateReader.Archive.ZipFile.Entries
+            .Where<ZipArchiveEntry>(entry =>
+                entry.FullName.StartsWith("xl/worksheets/sheet", StringComparison.OrdinalIgnoreCase) ||
+                entry.FullName.StartsWith("/xl/worksheets/sheet", StringComparison.OrdinalIgnoreCase));
 
         int sheetIdx = 0;
         foreach (var templateSheet in templateSheets)
@@ -141,7 +141,7 @@ internal partial class OpenXmlTemplate : IMiniExcelTemplate
 #else
             using var outputZipSheetEntryStream = outputZipEntry.Open();
 #endif
-            GenerateSheetXmlImplByCreateMode(templateSheet, outputZipSheetEntryStream, templateSheetStream, inputValues, templateSharedStrings);
+            await GenerateSheetXmlImplByCreateModeAsync(templateSheet, outputZipSheetEntryStream, inputValues, templateSharedStrings).ConfigureAwait(false);
             //doc.Save(zipStream); //don't do it because: https://user-images.githubusercontent.com/12729184/114361127-61a5d100-9ba8-11eb-9bb9-34f076ee28a2.png
             // disposing writer disposes streams as well. read and parse calc functions before that
             

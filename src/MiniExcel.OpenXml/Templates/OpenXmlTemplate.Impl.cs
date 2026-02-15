@@ -175,19 +175,30 @@ internal partial class OpenXmlTemplate
     [CreateSyncVersion]
     private async Task GenerateSheetXmlImplByCreateModeAsync(ZipArchiveEntry templateSheetZipEntry, Stream outputZipSheetEntryStream, IDictionary<string, object?> inputMaps, IDictionary<int, string> sharedStrings, bool mergeCells = false)
     {
-        var doc = new XmlDocument();
+        Stream? newTemplateStream = null;
+        var doc = new XmlDocument
+        {
+            XmlResolver = null
+        };
+        
+        try
+        {
 #if NET10_0_OR_GREATER
-        var newTemplateStream = await templateSheetZipEntry.OpenAsync().ConfigureAwait(false);
+            newTemplateStream = await templateSheetZipEntry.OpenAsync().ConfigureAwait(false);
 #else
-        var newTemplateStream = templateSheetZipEntry.Open();
+            newTemplateStream = templateSheetZipEntry.Open();
 #endif
-        doc.Load(newTemplateStream);
-
+            doc.Load(newTemplateStream);
+        }
+        finally
+        {
 #if NET5_0_OR_GREATER
-        await newTemplateStream.DisposeAsync().ConfigureAwait(false);
+            if (newTemplateStream is not null)
+                await newTemplateStream.DisposeAsync().ConfigureAwait(false);
 #else
-        newTemplateStream.Dispose();
+            newTemplateStream?.Dispose();
 #endif
+        }
 
         var worksheet = doc.SelectSingleNode("/x:worksheet", Ns);
         var sheetData = doc.SelectSingleNode("/x:worksheet/x:sheetData", Ns);

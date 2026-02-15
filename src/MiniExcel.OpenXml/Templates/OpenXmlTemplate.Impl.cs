@@ -813,8 +813,14 @@ internal partial class OpenXmlTemplate
                         }
                     }
 
-                    replacements[key] = cellValueStr;
-                    rowXml.Replace($"@header{{{{{key}}}}}", cellValueStr ?? "");
+                    // escaping formulas
+                    var tempReplacement = cellValueStr ?? "";
+                    var replacementValue = tempReplacement.StartsWith("$=") || tempReplacement.StartsWith("=")
+                        ? $"&apos;{tempReplacement}" 
+                        : tempReplacement;
+                    
+                    replacements[key] = replacementValue;
+                    rowXml.Replace($"@header{{{{{key}}}}}", replacementValue);
 
                     if (isHeaderRow && row.InnerText.Contains(key))
                     {

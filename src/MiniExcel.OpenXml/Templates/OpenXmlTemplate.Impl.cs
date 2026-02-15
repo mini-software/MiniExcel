@@ -153,7 +153,7 @@ internal partial class OpenXmlTemplate
         var doc = new XmlDocument();
         doc.Load(sheetStream);
 #if NET5_0_OR_GREATER
-            await sheetStream.DisposeAsync().ConfigureAwait(false);
+        await sheetStream.DisposeAsync().ConfigureAwait(false);
 #else
         sheetStream.Dispose();
 #endif
@@ -172,16 +172,33 @@ internal partial class OpenXmlTemplate
         await WriteSheetXmlAsync(stream, doc, sheetData, mergeCells, cancellationToken).ConfigureAwait(false);
     }
     
-    private void GenerateSheetXmlImplByCreateMode(ZipArchiveEntry templateSheetZipEntry, Stream outputZipSheetEntryStream, Stream outputSheetStream, IDictionary<string, object?> inputMaps, IDictionary<int, string> sharedStrings, bool mergeCells = false)
+    [CreateSyncVersion]
+    private async Task GenerateSheetXmlImplByCreateModeAsync(ZipArchiveEntry templateSheetZipEntry, Stream outputZipSheetEntryStream, IDictionary<string, object?> inputMaps, IDictionary<int, string> sharedStrings, bool mergeCells = false)
     {
-        var doc = new XmlDocument();
-        using (var newTemplateStream = templateSheetZipEntry.Open())
+        Stream? newTemplateStream = null;
+        var doc = new XmlDocument
         {
+            XmlResolver = null
+        };
+        
+        try
+        {
+#if NET10_0_OR_GREATER
+            newTemplateStream = await templateSheetZipEntry.OpenAsync().ConfigureAwait(false);
+#else
+            newTemplateStream = templateSheetZipEntry.Open();
+#endif
             doc.Load(newTemplateStream);
         }
-
-        //outputSheetStream.Dispose();
-        //sheetZipEntry.Delete(); // ZipArchiveEntry can't update directly, so need to delete then create logic
+        finally
+        {
+#if NET5_0_OR_GREATER
+            if (newTemplateStream is not null)
+                await newTemplateStream.DisposeAsync().ConfigureAwait(false);
+#else
+            newTemplateStream?.Dispose();
+#endif
+        }
 
         var worksheet = doc.SelectSingleNode("/x:worksheet", Ns);
         var sheetData = doc.SelectSingleNode("/x:worksheet/x:sheetData", Ns);
@@ -192,7 +209,7 @@ internal partial class OpenXmlTemplate
         GetMergeCells(doc, worksheet);
         UpdateDimensionAndGetRowsInfo(inputMaps, doc, rows, !mergeCells);
 
-        WriteSheetXml(outputZipSheetEntryStream, doc, sheetData, mergeCells);
+        await WriteSheetXmlAsync(outputZipSheetEntryStream, doc, sheetData, mergeCells).ConfigureAwait(false);
     }
 
     private void GetMergeCells(XmlDocument doc, XmlNode worksheet)

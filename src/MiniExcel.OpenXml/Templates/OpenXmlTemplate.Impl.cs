@@ -1074,8 +1074,8 @@ internal partial class OpenXmlTemplate
                  <c r="C8" s="3">
                     <f>SUM(C2:C7)</f>
                 </c>
-                 */
-            var vs = c.SelectNodes("x:v", Ns);
+            */
+            var vs = c.SelectNodes("x:is", Ns);
             foreach (XmlElement v in vs)
             {
                 if (!v.InnerText.StartsWith("$="))

@@ -526,7 +526,7 @@ internal partial class OpenXmlTemplate
                 ProcessFormulas(rowXml, newRowIndex);
                 await writer.WriteAsync(CleanXml(rowXml, endPrefix).ToString()
 #if NET5_0_OR_GREATER
-                            .AsMemory(), cancellationToken
+                    .AsMemory(), cancellationToken
 #endif
                 ).ConfigureAwait(false);
 
@@ -549,7 +549,7 @@ internal partial class OpenXmlTemplate
 
         await writer.WriteAsync($"</{prefix}sheetData>"
 #if NET7_0_OR_GREATER
-                    .AsMemory(), cancellationToken
+            .AsMemory(), cancellationToken
 #endif
         ).ConfigureAwait(false);
 
@@ -628,10 +628,20 @@ internal partial class OpenXmlTemplate
 
     //todo: refactor in a way that needs less parameters
     [CreateSyncVersion]
-    private async Task<GenerateCellValuesContext> GenerateCellValuesAsync(GenerateCellValuesContext generateCellValuesContext, string endPrefix, StreamWriter writer,
-        StringBuilder rowXml, int mergeRowCount, bool isHeaderRow,
-        XRowInfo rowInfo, XmlElement row, int groupingRowDiff,
-        string innerXml, StringBuilder outerXmlOpen, XmlElement rowElement, CancellationToken cancellationToken = default)
+    private async Task<GenerateCellValuesContext> GenerateCellValuesAsync(
+        GenerateCellValuesContext generateCellValuesContext, 
+        string endPrefix, 
+        StreamWriter writer,
+        StringBuilder rowXml, 
+        int mergeRowCount, 
+        bool isHeaderRow, 
+        XRowInfo rowInfo, 
+        XmlElement row, 
+        int groupingRowDiff,
+        string innerXml, 
+        StringBuilder outerXmlOpen, 
+        XmlElement rowElement, 
+        CancellationToken cancellationToken = default)
     {
         var rowIndexDiff = generateCellValuesContext.rowIndexDiff;
         var headerDiff = generateCellValuesContext.headerDiff;
@@ -698,27 +708,24 @@ internal partial class OpenXmlTemplate
                         .Replace(")", "")
                         .Split(' ');
 
-                    object value;
+                    object? value;
                     if (rowInfo.IsDictionary)
                     {
-                        value = dict[newLines[0]];
+                        value = dict![newLines[0]];
                     }
                     else if (rowInfo.IsDataTable)
                     {
-                        value = dataRow[newLines[0]];
+                        value = dataRow![newLines[0]];
                     }
                     else
                     {
-                        value = string.Empty;
                         var prop = rowInfo.PropsMap[newLines[0]];
-                        if (prop.PropertyInfoOrFieldInfo == PropertyInfoOrFieldInfo.PropertyInfo)
+                        value = prop.PropertyInfoOrFieldInfo switch
                         {
-                            value = prop.PropertyInfo.GetValue(item);
-                        }
-                        else if (prop.PropertyInfoOrFieldInfo == PropertyInfoOrFieldInfo.FieldInfo)
-                        {
-                            value = prop.FieldInfo.GetValue(item);
-                        }
+                            PropertyInfoOrFieldInfo.PropertyInfo => prop.PropertyInfo.GetValue(item),
+                            PropertyInfoOrFieldInfo.FieldInfo => prop.FieldInfo.GetValue(item),
+                            _ => string.Empty
+                        };
                     }
 
                     var evaluation = EvaluateStatement(value, newLines[1], newLines[2]);
@@ -750,7 +757,7 @@ internal partial class OpenXmlTemplate
             {
                 var replacements = new Dictionary<string, string>();
 #if NETCOREAPP3_0_OR_GREATER
-                string MatchDelegate(Match x) => CollectionExtensions.GetValueOrDefault(replacements, x.Groups[1].Value, "");
+                string MatchDelegate(Match x) => replacements.GetValueOrDefault(x.Groups[1].Value, "");
 #else
                 string MatchDelegate(Match x) => replacements.TryGetValue(x.Groups[1].Value, out var repl) ? repl : "";
 #endif
@@ -763,12 +770,12 @@ internal partial class OpenXmlTemplate
                     object? cellValue;
                     if (rowInfo.IsDictionary)
                     {
-                        if (!dict.TryGetValue(prop.Key, out cellValue))
+                        if (!dict!.TryGetValue(prop.Key, out cellValue))
                             continue;
                     }
                     else if (rowInfo.IsDataTable)
                     {
-                        cellValue = dataRow[prop.Key];
+                        cellValue = dataRow![prop.Key];
                     }
                     else
                     {
@@ -782,7 +789,7 @@ internal partial class OpenXmlTemplate
                         ? prop.Value.UnderlyingTypePropType
                         : Nullable.GetUnderlyingType(propInfo.PropertyType) ?? propInfo.PropertyType;
 
-                    string cellValueStr;
+                    string? cellValueStr;
                     if (type == typeof(bool))
                     {
                         cellValueStr = (bool)cellValue ? "1" : "0";
@@ -791,7 +798,7 @@ internal partial class OpenXmlTemplate
                     {
                         cellValueStr = ConvertToDateTimeString(propInfo, cellValue);
                     }
-                    else if (type?.IsEnum ?? false)
+                    else if (type?.IsEnum is true)
                     {
                         var description = CustomPropertyHelper.GetDescriptionAttribute(type, cellValue);
                         cellValueStr = XmlHelper.EncodeXml(description);
@@ -807,7 +814,7 @@ internal partial class OpenXmlTemplate
                     }
 
                     replacements[key] = cellValueStr;
-                    rowXml.Replace($"@header{{{{{key}}}}}", cellValueStr);
+                    rowXml.Replace($"@header{{{{{key}}}}}", cellValueStr ?? "");
 
                     if (isHeaderRow && row.InnerText.Contains(key))
                     {
@@ -915,7 +922,7 @@ internal partial class OpenXmlTemplate
             }
         }
 
-        return new GenerateCellValuesContext()
+        return new GenerateCellValuesContext
         {
             currentHeader = currentHeader,
             headerDiff = headerDiff,

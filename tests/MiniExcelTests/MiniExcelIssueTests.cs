@@ -1416,9 +1416,8 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         MiniExcel.SaveAsByTemplate(path.ToString(), templatePath, value);
 
         var sheetXml = Helpers.GetZipFileContent(path.ToString(), "xl/worksheets/sheet1.xml");
-        Assert.Contains("<v>Hello &amp; World &lt; , &gt; , \" , '</v>", sheetXml);
-        Assert.Contains("<v>Hello &amp; Value &lt; , &gt; , \" , '</v>", sheetXml);
-    }
+        Assert.Contains("<t>Hello &amp; World &lt; , &gt; , \" , '</t>", sheetXml);
+        Assert.Contains("<t>Hello &amp; Value &lt; , &gt; , \" , '</t>", sheetXml);    }
 
     /// <summary>
     /// [SaveAs default theme support filter mode · Issue #190 · mini-software/MiniExcel](https://github.com/mini-software/MiniExcel/issues/190)
@@ -4761,5 +4760,58 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         var dataRead = stream.Query<ExcelDataRow>(startCell: "A2").ToArray();
 
         Assert.Equal(dataInSheet, dataRead);
+    }
+    
+    class NameAgeTuple
+    {
+        public string? Name { get; set; }
+        public int Age { get; set; }
+    }
+    
+    [Fact]
+    public void Issue914()
+    {
+        var csv =
+            """
+            Name,Age
+            Jack,22
+
+
+            Sam,33
+             
+            Henry,44
+
+            """u8;
+
+        using var ms = new MemoryStream([..csv]);
+        var result = ms.Query<NameAgeTuple>(excelType: ExcelType.CSV).ToList();
+        
+        Assert.Equal(3, result.Count);
+        Assert.Equal("Sam", result[1].Name);
+        Assert.Equal(44, result[2].Age);
+    }
+
+    [Fact]
+    public void TestIssue915()
+    {
+        var templatePath = PathHelper.GetFile("xlsx/TestIssue915.xlsx");
+        var value = new Dictionary<string, object>
+        {
+            ["Data"] = new[]
+            {
+                new { Name = "Hill", Altitude = 6m },
+                new { Name = "Mount", Altitude = 7.4m },
+                new { Name = "Peak", Altitude = 8.6m }
+            }
+        };
+
+        using var path = AutoDeletingPath.Create();
+        MiniExcel.SaveAsByTemplate(path.ToString(), templatePath, value);
+
+        var result = MiniExcel.Query(path.ToString(), true).ToList();
+
+        Assert.Equal(6, result[0].Altitude);
+        Assert.Equal(7.4, result[1].Altitude);
+        Assert.Equal(8.6, result[2].Altitude);
     }
 }

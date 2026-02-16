@@ -37,6 +37,9 @@ namespace MiniExcelLibs.Csv
             string row;
             for (var rowIndex = 1; (row = reader.ReadLine()) != null; rowIndex++)
             {
+                if (string.IsNullOrWhiteSpace(row))
+                    continue;
+                
                 string finalRow = row;
                 if (_config.ReadLineBreaksWithinQuotes)
                 {

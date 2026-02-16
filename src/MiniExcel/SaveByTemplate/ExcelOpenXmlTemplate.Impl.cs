@@ -140,10 +140,13 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
         private static readonly Regex _templateRegex = TemplateRegex();
         [GeneratedRegex(@".*?\{\{.*?\}\}.*?")] private static partial Regex NonTemplateRegex();
         private static readonly Regex _nonTemplateRegex = TemplateRegex();
+        [GeneratedRegex(@"<(?:x:)?v>\s*</(?:x:)?v>")] private static partial Regex EmptyVTagRegexImpl();
+        private static readonly Regex _emptyVTagRegex = EmptyVTagRegexImpl();
 #else
         private static readonly Regex _cellRegex = new Regex("([A-Z]+)([0-9]+)", RegexOptions.Compiled);
         private static readonly Regex _templateRegex = new Regex(@"\{\{(.*?)\}\}", RegexOptions.Compiled);
         private static readonly Regex _nonTemplateRegex = new Regex(@".*?\{\{.*?\}\}.*?", RegexOptions.Compiled);
+        private static readonly Regex _emptyVTagRegex = new Regex(@"<(?:x:)?v>\s*</(?:x:)?v>", RegexOptions.Compiled);
 #endif
 
         private void GenerateSheetXmlImplByUpdateMode(ZipArchiveEntry sheetZipEntry, Stream stream, Stream sheetStream, IDictionary<string, object> inputMaps, IDictionary<int, string> sharedStrings, bool mergeCells = false)
@@ -324,6 +327,15 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                 phoneticPr.ParentNode.RemoveChild(phoneticPr);
             }
 
+            // Extract autoFilter - must be written before mergeCells and phoneticPr per ECMA-376
+            var autoFilter = doc.SelectSingleNode("/x:worksheet/x:autoFilter", _ns);
+            var autoFilterXml = string.Empty;
+            if (autoFilter != null)
+            {
+                autoFilterXml = autoFilter.OuterXml;
+                autoFilter.ParentNode.RemoveChild(autoFilter);
+            }
+            
             var contents = doc.InnerXml.Split(new[] { $"<{prefix}sheetData>{{{{{{{{{{{{split}}}}}}}}}}}}</{prefix}sheetData>" }, StringSplitOptions.None);
 
             using (var writer = new StreamWriter(outputFileStream, Encoding.UTF8))
@@ -514,6 +526,15 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
 
                 writer.Write($"</{prefix}sheetData>");
 
+                // ECMA-376 element order: sheetData → autoFilter → mergeCells → phoneticPr → conditionalFormatting
+        
+                // 1. autoFilter (must come before mergeCells)
+                if (!string.IsNullOrEmpty(autoFilterXml))
+                {
+                    writer.Write(CleanXml(autoFilterXml, endPrefix));
+                }
+
+                // 2. mergeCells
                 if (_newXMergeCellInfos.Count != 0)
                 {
                     writer.Write($"<{prefix}mergeCells count=\"{_newXMergeCellInfos.Count}\">");
@@ -524,14 +545,16 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                     writer.Write($"</{prefix}mergeCells>");
                 }
 
+                // 3. PhoneticPr
                 if (!string.IsNullOrEmpty(phoneticPrXml))
                 {
-                    writer.Write(phoneticPrXml);
+                    writer.Write(CleanXml(phoneticPrXml, endPrefix));
                 }
 
+                // 4. conditionalFormatting
                 if (newConditionalFormatRanges.Count != 0)
                 {
-                    writer.Write(string.Join(string.Empty, newConditionalFormatRanges.Select(cf => cf.Node.OuterXml)));
+                    writer.Write(CleanXml(string.Join(string.Empty, newConditionalFormatRanges.Select(cf => cf.Node.OuterXml)), endPrefix));
                 }
 
                 writer.Write(contents[1]);
@@ -548,12 +571,23 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
             var cleanOuterXmlOpen = CleanXml(outerXmlOpen, endPrefix);
 
             // https://github.com/mini-software/MiniExcel/issues/771 Saving by template introduces unintended value replication in each row #771
-            var notFirstRowElement = rowElement.Clone();
+            var notFirstRowElement = rowElement.Clone(); 
             foreach (XmlElement c in notFirstRowElement.SelectNodes("x:c", _ns))
             {
-                var v = c.SelectSingleNode("x:v", _ns);
-                if (v != null && !_nonTemplateRegex.IsMatch(v.InnerText))
-                    v.InnerText = string.Empty;
+                // Try <v> first (for t="n"/t="b" cells), then <is><t> (for t="inlineStr" cells)
+                var vTag = c.SelectSingleNode("x:v", _ns);
+                if (vTag != null)
+                {
+                    if (!_nonTemplateRegex.IsMatch(vTag.InnerText)) 
+                        vTag.InnerText = string.Empty;
+                }
+                else
+                {
+                    // Handle inline string cells
+                    var t = c.SelectSingleNode("x:is/x:t", _ns);
+                    if (t != null && !_nonTemplateRegex.IsMatch(t.InnerText))
+                        t.InnerText = string.Empty;
+                }
             }
 
             foreach (var item in rowInfo.CellIEnumerableValues)
@@ -712,6 +746,9 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
 
                     substXmlRow = rowXml.ToString();
                     substXmlRow = _templateRegex.Replace(substXmlRow, MatchDelegate);
+                    
+                    // Cleanup empty <v> tags which defaults to invalid XML
+                    substXmlRow = _emptyVTagRegex.Replace(substXmlRow, "");
                 }
 
                 rowXml.Clear();
@@ -744,9 +781,14 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                 var mergeBaseRowIndex = newRowIndex;
                 newRowIndex += rowInfo.IEnumerableMercell?.Height ?? 1;
 
+                // Replace {{$rowindex}} in the already-built substXmlRow
+                rowXml.Replace("{{$rowindex}}", mergeBaseRowIndex.ToString());
+                
                 // replace formulas
                 ProcessFormulas(rowXml, newRowIndex);
-                writer.Write(CleanXml(rowXml, endPrefix));
+
+                var finalXml = CleanXml(rowXml, endPrefix).ToString();
+                writer.Write(finalXml);
 
                 //mergecells
                 if (rowInfo.RowMercells == null)
@@ -936,11 +978,11 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                         continue;
 
                     /* Target:
-                     <c r="C8" s="3">
-                        <f>SUM(C2:C7)</f>
-                    </c>
+                         <c r="C8" s="3">
+                            <is><t>SUM(C2:C7)</t></is>
+                        </c>
                      */
-                    var vs = c.SelectNodes("x:v", _ns);
+                    var vs = c.SelectNodes("x:is", _ns);
                     foreach (XmlElement v in vs)
                     {
                         if (!v.InnerText.StartsWith("$="))
@@ -975,7 +1017,8 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
         private static string CleanXml(string xml, string endPrefix) => CleanXml(new StringBuilder(xml), endPrefix).ToString();
         private static StringBuilder CleanXml(StringBuilder xml, string endPrefix) => xml
             .Replace("xmlns:x14ac=\"http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac\"", "")
-            .Replace($"xmlns{endPrefix}=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"", "");
+            .Replace($"xmlns{endPrefix}=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"", "")
+            .Replace("xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"", "");
 
         private static void ReplaceSharedStringsToStr(IDictionary<int, string> sharedStrings, XmlNodeList rows)
         {
@@ -996,14 +1039,100 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                     if (sharedStrings == null || !sharedStrings.TryGetValue(int.Parse(v.InnerText), out var shared))
                         continue;
 
-                    // change type = str and replace its value
-                    //TODO: remove sharedstring?
-                    v.InnerText = shared;
-                    c.SetAttribute("t", "str");
-                }
+                    // change type = inlineStr and replace its value
+                    // Use the same prefix as the source element to handle namespaced documents (e.g., x:v -> x:is, x:t)
+                    var prefix = v.Prefix;
+                    c.RemoveChild(v);
+                    
+                    var isNode = string.IsNullOrEmpty(prefix)
+                        ? c.OwnerDocument.CreateElement("is", Config.SpreadsheetmlXmlns)
+                        : c.OwnerDocument.CreateElement(prefix, "is", Config.SpreadsheetmlXmlns);
+                    
+                    var tNode = string.IsNullOrEmpty(prefix)
+                        ? c.OwnerDocument.CreateElement("t", Config.SpreadsheetmlXmlns)
+                        : c.OwnerDocument.CreateElement(prefix, "t", Config.SpreadsheetmlXmlns);
+                    
+                    tNode.InnerText = shared;
+                    isNode.AppendChild(tNode);
+                    c.AppendChild(isNode);
+
+                    c.RemoveAttribute("t");
+                    c.SetAttribute("t", "inlineStr");                }
             }
         }
 
+        private static void SetCellType(XmlElement c, string type)
+        {
+            if (type == "str") type = "inlineStr"; // Force inlineStr for strings
+
+            // Determine the prefix used in this document (e.g., "x" for x:c, x:v, etc.)
+            var prefix = c.Prefix;
+
+            if (type == "inlineStr")
+            {
+                // Ensure <is><t>...</t></is>
+                c.SetAttribute("t", "inlineStr");
+                var v = c.SelectSingleNode("x:v", _ns);
+                
+                if (v != null)
+                {
+                    var text = v.InnerText;
+                    c.RemoveChild(v);
+
+                    var isNode = string.IsNullOrEmpty(prefix)
+                        ? c.OwnerDocument.CreateElement("is", Config.SpreadsheetmlXmlns)
+                        : c.OwnerDocument.CreateElement(prefix, "is", Config.SpreadsheetmlXmlns);
+                    
+                    var tNode = string.IsNullOrEmpty(prefix)
+                        ? c.OwnerDocument.CreateElement("t", Config.SpreadsheetmlXmlns)
+                        : c.OwnerDocument.CreateElement(prefix, "t", Config.SpreadsheetmlXmlns);
+                    
+                    tNode.InnerText = text;
+                    isNode.AppendChild(tNode);
+                    c.AppendChild(isNode);
+                }
+                else if (c.SelectSingleNode("x:is", _ns) == null)
+                {
+                    // Create empty <is><t></t></is> if neither <v> nor <is> exists
+                    var isNode = string.IsNullOrEmpty(prefix)
+                        ? c.OwnerDocument.CreateElement("is", Config.SpreadsheetmlXmlns)
+                        : c.OwnerDocument.CreateElement(prefix, "is", Config.SpreadsheetmlXmlns);
+                    
+                    var tNode = string.IsNullOrEmpty(prefix)
+                        ? c.OwnerDocument.CreateElement("t", Config.SpreadsheetmlXmlns)
+                        : c.OwnerDocument.CreateElement(prefix, "t", Config.SpreadsheetmlXmlns);
+                    
+                    isNode.AppendChild(tNode);
+                    c.AppendChild(isNode);
+                }
+            }
+            else
+            {
+                // Ensure <v>...</v>
+                // For numbers/booleans, we remove 't' attribute to let it be default (number) 
+                // or we could set it to 'n' explicitly, but removing is safer for general number types
+                if (type == "b")
+                    c.SetAttribute("t", "b");
+                else
+                    c.RemoveAttribute("t"); 
+
+                var isNode = c.SelectSingleNode("x:is", _ns);
+                if (isNode != null)
+                {
+                    var tNode = isNode.SelectSingleNode("x:t", _ns);
+                    var text = tNode?.InnerText ?? string.Empty;
+                    c.RemoveChild(isNode);
+                    
+                    var v = string.IsNullOrEmpty(prefix)
+                        ? c.OwnerDocument.CreateElement("v", Config.SpreadsheetmlXmlns)
+                        : c.OwnerDocument.CreateElement(prefix, "v", Config.SpreadsheetmlXmlns);
+                    
+                    v.InnerText = text;
+                    c.AppendChild(v);
+                }
+            }
+        }
+        
         private void UpdateDimensionAndGetRowsInfo(IDictionary<string, object> inputMaps, XmlDocument doc, XmlNodeList rows, bool changeRowIndex = true)
         {
             string[] refs;
@@ -1053,7 +1182,7 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                         c.SetAttribute("r", $"{StringHelper.GetLetters(r)}{{{{$rowindex}}}}");
                     }
 
-                    var v = c.SelectSingleNode("x:v", _ns);
+                    var v = c.SelectSingleNode("x:v", _ns) ?? c.SelectSingleNode("x:is/x:t", _ns);
                     if (v?.InnerText == null)
                         continue;
 
@@ -1176,19 +1305,19 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
 
                             if (isMultiMatch)
                             {
-                                c.SetAttribute("t", "str");
+                                SetCellType(c, "str");
                             }
                             else if (TypeHelper.IsNumericType(type) && !type.IsEnum)
                             {
-                                c.SetAttribute("t", "n");
+                                SetCellType(c, "n");
                             }
                             else if (Type.GetTypeCode(type) == TypeCode.Boolean)
                             {
-                                c.SetAttribute("t", "b");
+                                SetCellType(c, "b");
                             }
                             else if (Type.GetTypeCode(type) == TypeCode.DateTime)
                             {
-                                c.SetAttribute("t", "str");
+                                SetCellType(c, "str");
                             }
 
                             break;
@@ -1228,19 +1357,19 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
 
                             if (isMultiMatch)
                             {
-                                c.SetAttribute("t", "str");
+                                SetCellType(c, "str");
                             }
                             else if (TypeHelper.IsNumericType(type) && !type.IsEnum)
                             {
-                                c.SetAttribute("t", "n");
+                                SetCellType(c, "n");
                             }
                             else if (Type.GetTypeCode(type) == TypeCode.Boolean)
                             {
-                                c.SetAttribute("t", "b");
+                                SetCellType(c, "b");
                             }
                             else if (Type.GetTypeCode(type) == TypeCode.DateTime)
                             {
-                                c.SetAttribute("t", "str");
+                                SetCellType(c, "str");
                             }
                         }
                         else
@@ -1248,16 +1377,16 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                             var cellValueStr = cellValue?.ToString(); // value did encodexml, so don't duplicate encode value (https://gitee.com/dotnetchina/MiniExcel/issues/I4DQUN)
                             if (isMultiMatch || cellValue is string) // if matchs count over 1 need to set type=str (https://user-images.githubusercontent.com/12729184/114530109-39d46d00-9c7d-11eb-8f6b-52ad8600aca3.png)
                             {
-                                c.SetAttribute("t", "str");
+                                SetCellType(c, "str");
                             }
                             else if (decimal.TryParse(cellValueStr, out var outV))
                             {
-                                c.SetAttribute("t", "n");
+                                SetCellType(c, "n");
                                 cellValueStr = outV.ToString(CultureInfo.InvariantCulture);
                             }
                             else if (cellValue is bool b)
                             {
-                                c.SetAttribute("t", "b");
+                                SetCellType(c, "b");
                                 cellValueStr = b ? "1" : "0";
                             }
                             else if (cellValue is DateTime timestamp)
@@ -1266,6 +1395,13 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                                 cellValueStr = timestamp.ToString("yyyy-MM-dd HH:mm:ss");
                             }
 
+                            if (string.IsNullOrEmpty(cellValueStr) && string.IsNullOrEmpty(c.GetAttribute("t")))
+                            {
+                                SetCellType(c, "str");
+                            }
+
+                            // Re-acquire v after SetCellType may have changed DOM structure
+                            v = c.SelectSingleNode("x:v", _ns) ?? c.SelectSingleNode("x:is/x:t", _ns);
                             v.InnerText = v.InnerText.Replace($"{{{{{propNames[0]}}}}}", cellValueStr); //TODO: auto check type and set value
                         }
                     }

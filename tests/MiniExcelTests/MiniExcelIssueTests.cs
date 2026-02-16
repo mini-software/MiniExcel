@@ -1416,9 +1416,8 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         MiniExcel.SaveAsByTemplate(path.ToString(), templatePath, value);
 
         var sheetXml = Helpers.GetZipFileContent(path.ToString(), "xl/worksheets/sheet1.xml");
-        Assert.Contains("<v>Hello &amp; World &lt; , &gt; , \" , '</v>", sheetXml);
-        Assert.Contains("<v>Hello &amp; Value &lt; , &gt; , \" , '</v>", sheetXml);
-    }
+        Assert.Contains("<t>Hello &amp; World &lt; , &gt; , \" , '</t>", sheetXml);
+        Assert.Contains("<t>Hello &amp; Value &lt; , &gt; , \" , '</t>", sheetXml);    }
 
     /// <summary>
     /// [SaveAs default theme support filter mode · Issue #190 · mini-software/MiniExcel](https://github.com/mini-software/MiniExcel/issues/190)

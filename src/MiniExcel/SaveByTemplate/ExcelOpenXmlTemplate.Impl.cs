@@ -728,7 +728,7 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                         else
                         {
                             cellValueStr = ExcelOpenXmlUtils.EncodeXML(cellValue?.ToString());
-                            if (!isDictOrTable && TypeHelper.IsNumericType(type))
+                            if (TypeHelper.IsNumericType(type))
                             {
                                 if (decimal.TryParse(cellValueStr, out var decimalValue))
                                     cellValueStr = decimalValue.ToString(CultureInfo.InvariantCulture);

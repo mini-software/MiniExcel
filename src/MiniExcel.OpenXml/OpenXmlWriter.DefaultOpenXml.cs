@@ -68,14 +68,14 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
     private string GetSheetViews()
     {
         // exit early if no style to write
-        if (_configuration is { FreezeRowCount: <= 0, FreezeColumnCount: <= 0 })
+        if (_configuration is { FreezeRowCount: <= 0, FreezeColumnCount: <= 0, RighToLeft: false })
             return string.Empty;
 
         var sb = new StringBuilder();
 
         // start sheetViews
         sb.Append(WorksheetXml.StartSheetViews);
-        sb.Append(WorksheetXml.StartSheetView());
+        sb.Append(WorksheetXml.StartSheetView(rightToLeft: _configuration.RighToLeft));
 
         // Write panes
         sb.Append(GetPanes());

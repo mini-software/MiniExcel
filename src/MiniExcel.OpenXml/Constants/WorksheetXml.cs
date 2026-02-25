@@ -15,7 +15,8 @@ internal static class WorksheetXml
     internal const string StartSheetViews = "<x:sheetViews>";
     internal const string EndSheetViews = "</x:sheetViews>";
 
-    internal static string StartSheetView( int tabSelected=0, int workbookViewId=0 ) => $"<x:sheetView tabSelected=\"{tabSelected}\" workbookViewId=\"{workbookViewId}\">";
+    internal static string StartSheetView( int tabSelected = 0, int workbookViewId = 0, bool rightToLeft = false)
+        => $"<x:sheetView tabSelected=\"{tabSelected}\" workbookViewId=\"{workbookViewId}\" rightToLeft=\"{Convert.ToInt32(rightToLeft)}\">";
     internal const string EndSheetView = "</x:sheetView>";
 
     internal const string StartSheetData = "<x:sheetData>";

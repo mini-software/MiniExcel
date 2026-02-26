@@ -385,7 +385,7 @@ internal partial class OpenXmlTemplate
                     "@group" => "group",
                     "@endgroup" => "endgroup",
                     "@merge" or "@endmerge" => "merge",
-                    ['@','h','e','a','d','e','r', ..] => "header",
+                    var s when s.StartsWith("@header") => "header",
                     _ => ""
                 };
 

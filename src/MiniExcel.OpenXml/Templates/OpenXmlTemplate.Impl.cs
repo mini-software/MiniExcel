@@ -377,7 +377,23 @@ internal partial class OpenXmlTemplate
             var rowInfo = _xRowInfos[rowNo];
             var row = rowInfo.Row;
 
-            if (row.InnerText.Contains("@group"))
+            string specialCellType = "";
+            foreach (XmlNode c in row.GetElementsByTagName("c"))
+            {
+                specialCellType = c.InnerText switch
+                {
+                    "@group" => "group",
+                    "@endgroup" => "endgroup",
+                    "@merge" or "@endmerge" => "merge",
+                    var s when s.StartsWith("@header") => "header",
+                    _ => ""
+                };
+
+                if (!string.IsNullOrEmpty(specialCellType))
+                    break;
+            }
+            
+            if (specialCellType == "group")
             {
                 groupingStarted = true;
                 hasEverGroupStarted = true;
@@ -386,7 +402,7 @@ internal partial class OpenXmlTemplate
                 prevHeader = "";
                 continue;
             }
-            else if (row.InnerText.Contains("@endgroup"))
+            else if (specialCellType == "endgroup")
             {
                 if (cellIEnumerableValuesIndex >= cellIEnumerableValues.Count - 1)
                 {
@@ -403,13 +419,13 @@ internal partial class OpenXmlTemplate
                 isFirstRound = false;
                 continue;
             }
-            else if (row.InnerText.Contains("@header"))
+            else if (specialCellType == "header")
             {
                 isHeaderRow = true;
             }
             else if (mergeCells)
             {
-                if (row.InnerText.Contains("@merge") || row.InnerText.Contains("@endmerge"))
+                if (specialCellType == "merge")
                 {
                     mergeRowCount++;
                     continue;
@@ -418,8 +434,7 @@ internal partial class OpenXmlTemplate
 
             if (groupingStarted && !isCellIEnumerableValuesSet)
             {
-                cellIEnumerableValues = rowInfo.CellIlListValues
-                                        ?? rowInfo.CellIEnumerableValues.Cast<object>().ToList();
+                cellIEnumerableValues = rowInfo.CellIlListValues ?? rowInfo.CellIEnumerableValues.Cast<object>().ToList();
                 isCellIEnumerableValuesSet = true;
             }
 

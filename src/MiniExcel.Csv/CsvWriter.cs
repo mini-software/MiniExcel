@@ -125,7 +125,7 @@ internal partial class CsvWriter : IMiniExcelWriter, IDisposable
                     cancellationToken.ThrowIfCancellationRequested();
                     rowBuilder.Clear();
     
-                    await foreach (var column in row.WithCancellation(cancellationToken).ConfigureAwait(false))
+                    foreach (var column in row)
                     {
                         AppendColumn(rowBuilder, column);
                         progress?.Report(1);

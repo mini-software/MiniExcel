@@ -27,12 +27,10 @@ internal sealed class AsyncEnumerableWriteAdapter<T>(IAsyncEnumerable<T> values,
         return CustomPropertyHelper.GetColumnInfoFromValue(_enumerator.Current, _configuration);
     }
 
-    public async IAsyncEnumerable<IAsyncEnumerable<CellWriteInfo>> GetRowsAsync(List<MiniExcelColumnInfo> props, [EnumeratorCancellation] CancellationToken cancellationToken)
+    public async IAsyncEnumerable<CellWriteInfo[]> GetRowsAsync(List<MiniExcelColumnInfo> props, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         if (_empty)
-        {
             yield break;
-        }
 
         if (_enumerator is null)
         {
@@ -46,16 +44,16 @@ internal sealed class AsyncEnumerableWriteAdapter<T>(IAsyncEnumerable<T> values,
         do
         {
             cancellationToken.ThrowIfCancellationRequested();
-            yield return GetRowValuesAsync(_enumerator.Current, props);
+            yield return GetRowValues(_enumerator.Current, props);
         }
         while (await _enumerator.MoveNextAsync().ConfigureAwait(false));
     }
 
-#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
-    private static async IAsyncEnumerable<CellWriteInfo> GetRowValuesAsync(T currentValue, List<MiniExcelColumnInfo> props)
-#pragma warning restore CS1998
+    private static CellWriteInfo[] GetRowValues(T currentValue, List<MiniExcelColumnInfo> props)
     {
         var column = 0;
+        var result = new List<CellWriteInfo>();
+        
         foreach (var prop in props)
         {
             column++;
@@ -63,13 +61,16 @@ internal sealed class AsyncEnumerableWriteAdapter<T>(IAsyncEnumerable<T> values,
             if (prop is null)
                 continue;
 
-            yield return currentValue switch
+            var info = currentValue switch
             {
                 IDictionary<string, object> genericDictionary => new CellWriteInfo(genericDictionary[prop.Key.ToString()], column, prop),
                 IDictionary dictionary => new CellWriteInfo(dictionary[prop.Key], column, prop),
                 _ => new CellWriteInfo(prop.Property.GetValue(currentValue), column, prop)
             };
+            result.Add(info);
         }
+        
+        return result.ToArray();
     }
 
     public async ValueTask DisposeAsync()

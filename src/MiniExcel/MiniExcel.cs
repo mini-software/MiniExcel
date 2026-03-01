@@ -1,6 +1,6 @@
 ﻿using System.Data;
 using MiniExcelLib;
-using MiniExcelLib.Core.DataReader;
+using MiniExcelLib.Core;
 using MiniExcelLib.Csv;
 using MiniExcelLib.OpenXml.Api;
 using MiniExcelLib.OpenXml.Models;
@@ -40,7 +40,7 @@ public static partial class MiniExcel
         return type switch
         {
             ExcelType.XLSX => ExcelImporter.GetDataReader(path, useHeaderRow, sheetName, startCell, configuration as OpenXmlConfiguration),
-            ExcelType.CSV => CsvImporter.GetDataReader(path, useHeaderRow, configuration as Csv.CsvConfiguration),
+            ExcelType.CSV => CsvImporter.GetDataReader(path, useHeaderRow),
             _ => throw new NotSupportedException($"Type {type} is not a valid Excel type")
         };
     }
@@ -51,7 +51,7 @@ public static partial class MiniExcel
         return type switch
         {
             ExcelType.XLSX => ExcelImporter.GetDataReader(stream, useHeaderRow, sheetName, startCell, configuration as OpenXmlConfiguration),
-            ExcelType.CSV => CsvImporter.GetDataReader(stream, useHeaderRow, configuration as Csv.CsvConfiguration),
+            ExcelType.CSV => CsvImporter.GetDataReader(stream, useHeaderRow),
             _ => throw new NotSupportedException($"Type {type} is not a valid Excel type")
         };
     }

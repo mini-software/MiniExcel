@@ -157,10 +157,10 @@ public partial class CsvImporter
     /// <exception cref="InvalidOperationException">
     /// Asynchronous reads are not allowed when creating the data reader from this overload and will result in an exception.
     /// </exception>
-    public MiniExcelDataReader GetDataReader(string path, bool useHeaderRow = false)
+    public MiniExcelDataReader GetDataReader(string path, bool useHeaderRow = false, CsvConfiguration? configuration = null)
     {
         var stream = FileHelper.OpenSharedRead(path);
-        var values = Query(stream, useHeaderRow).Cast<IDictionary<string, object?>>();
+        var values = Query(stream, useHeaderRow, configuration).Cast<IDictionary<string, object?>>();
 
         return MiniExcelDataReader.Create(stream, values);
     }
@@ -171,9 +171,9 @@ public partial class CsvImporter
     /// <exception cref="InvalidOperationException">
     /// Asynchronous reads are not allowed when creating the data reader from this overload and will result in an exception.
     /// </exception>
-    public MiniExcelDataReader GetDataReader(Stream stream, bool useHeaderRow = false)
+    public MiniExcelDataReader GetDataReader(Stream stream, bool useHeaderRow = false, CsvConfiguration ? configuration = null)
     {
-        var values = Query(stream, useHeaderRow).Cast<IDictionary<string, object?>>();
+        var values = Query(stream, useHeaderRow, configuration).Cast<IDictionary<string, object?>>();
         return MiniExcelDataReader.Create(stream, values);
     }
 
@@ -181,10 +181,11 @@ public partial class CsvImporter
     /// Gets an <see cref="IDataReader" /> for the Csv document at the specific path.
     /// When created from this overload, the resulting data reader is supposed to be advanced asynchronously.
     /// </summary>
-    public async Task<MiniExcelDataReader> GetAsyncDataReader(string path, bool useHeaderRow = false, CancellationToken cancellationToken = default)
+    public async Task<MiniExcelDataReader> GetAsyncDataReader(string path, bool useHeaderRow = false, 
+        CsvConfiguration? configuration = null, CancellationToken cancellationToken = default)
     {
         var stream = FileHelper.OpenSharedRead(path);
-        var values = QueryAsync(stream, useHeaderRow, cancellationToken: cancellationToken);
+        var values = QueryAsync(stream, useHeaderRow, configuration, cancellationToken);
         
         return await MiniExcelDataReader.CreateAsync(stream, CastAsync(values, cancellationToken)).ConfigureAwait(false);
     }
@@ -193,9 +194,10 @@ public partial class CsvImporter
     /// Gets an <see cref="IDataReader" /> for the Csv document at the specific path.
     /// When created from this overload, the resulting data reader is supposed to be advanced asynchronously.
     /// </summary>
-    public async Task<MiniExcelDataReader> GetAsyncDataReader(Stream stream, bool useHeaderRow = false, CancellationToken cancellationToken = default)
+    public async Task<MiniExcelDataReader> GetAsyncDataReader(Stream stream, bool useHeaderRow = false,
+        CsvConfiguration? configuration = null, CancellationToken cancellationToken = default)
     {
-        var values = QueryAsync(stream, useHeaderRow, cancellationToken: cancellationToken);
+        var values = QueryAsync(stream, useHeaderRow, configuration, cancellationToken);
         return await MiniExcelDataReader.CreateAsync(stream, CastAsync(values, cancellationToken)).ConfigureAwait(false);
     }
     

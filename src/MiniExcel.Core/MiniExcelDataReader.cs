@@ -6,6 +6,7 @@ public sealed class MiniExcelDataReader : IMiniExcelDataReader
     private readonly IAsyncEnumerator<IDictionary<string, object?>>? _asyncSource;
     private readonly Stream _stream;
 
+    private bool _isEmpty;
     private List<string> _columns = [];
     private DataTable? _schema;
 
@@ -37,8 +38,12 @@ public sealed class MiniExcelDataReader : IMiniExcelDataReader
         {
             reader._columns = reader._source.Current?.Keys.ToList() ?? [];
             reader.FieldCount = reader._columns.Count;
-            reader.Depth++;
         }
+        else
+        {
+            reader._isEmpty = true;
+        }
+        
         return reader;
     }
 
@@ -56,8 +61,12 @@ public sealed class MiniExcelDataReader : IMiniExcelDataReader
         {
             reader._columns = reader._asyncSource.Current.Keys.ToList();
             reader.FieldCount = reader._columns.Count;
-            reader.Depth++;
         }
+        else
+        {
+            reader._isEmpty = true;
+        }
+        
         return reader;
     }
 
@@ -73,7 +82,7 @@ public sealed class MiniExcelDataReader : IMiniExcelDataReader
         if (_isFirst)
         {
             _isFirst = false;
-            return true;
+            return !_isEmpty;
         }
 
         return _source!.MoveNext();
@@ -81,17 +90,17 @@ public sealed class MiniExcelDataReader : IMiniExcelDataReader
 
     public async Task<bool> ReadAsync(CancellationToken cancellationToken = default)
     {
-        if (!_isAsyncSource)
-            return await Task.FromResult(Read()).ConfigureAwait(false);
-
         if (IsClosed)
             throw new InvalidOperationException("The data reader has been closed");
+
+        if (!_isAsyncSource)
+            return await Task.FromResult(Read()).ConfigureAwait(false);
 
         Depth++;
         if (_isFirst)
         {
             _isFirst = false;
-            return true;
+            return !_isEmpty;
         }
         
         return await _asyncSource!.MoveNextAsync().ConfigureAwait(false);
@@ -114,12 +123,14 @@ public sealed class MiniExcelDataReader : IMiniExcelDataReader
 
     public long GetChars(int i, long fieldoffset, char[]? buffer, int bufferoffset, int length)
     {
-        var s = GetString(i).Substring((int)fieldoffset, length);
+        var s = GetString(i);
+        var len = Math.Min(length, s.Length - (int)fieldoffset);
+        var subs = s.Substring((int)fieldoffset, len);
 
-        for (int j = bufferoffset; j < s.Length; j++)
-            buffer.AsSpan()[j] = s.AsSpan()[j];
-        
-        return s.Length;
+        if (buffer is not null)
+            subs.AsSpan().CopyTo(buffer.AsSpan(bufferoffset));
+
+        return subs.Length;
     }
     
     public bool GetBoolean(int i) => GetValue(i) switch
@@ -220,7 +231,7 @@ public sealed class MiniExcelDataReader : IMiniExcelDataReader
     {
         var count = Math.Min(values.Length, FieldCount);
 
-        for (int i = 0; i < values.Length; i++) 
+        for (int i = 0; i < count; i++) 
             values[i] = GetValue(i);
 
         return count;

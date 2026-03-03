@@ -2022,7 +2022,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     public void Issue215()
     {
         using var stream = new MemoryStream();
-         _excelExporter.Export(stream, new[] { new { V = "test1" }, new { V = "test2" } });
+        _excelExporter.Export(stream, new[] { new { V = "test1" }, new { V = "test2" } });
         var rows =  _excelImporter.Query(stream, true).ToList();
 
         Assert.Equal("test1", rows[0].V);
@@ -2719,6 +2719,23 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         }
     }
 
+    [Fact]
+    public void TestIssue408()
+    {
+        using var reader = _excelImporter.GetDataReader(PathHelper.GetFile("xlsx/TestTypeMapping.xlsx"), true);
+        
+        var dt = new DataTable();
+        dt.Load(reader);
+        
+        Assert.Equal(100, dt.Rows.Count);
+        Assert.Equal("78DE23D2-DCB6-BD3D-EC67-C112BBC322A2", dt.Rows[0]["ID"]);
+        Assert.Equal("Wade", dt.Rows[0]["Name"]);
+        Assert.Equal("27/09/2020", dt.Rows[0]["BoD"]);
+        Assert.Equal(36d, dt.Rows[0]["Age"]);
+        Assert.False(Convert.ToBoolean(dt.Rows[0]["VIP"]));
+        Assert.Equal(5019.12, dt.Rows[0]["Points"]);
+    }
+    
     private class Issues409_881
     {
         public string Units { get; set; }

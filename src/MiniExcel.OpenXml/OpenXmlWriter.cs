@@ -312,7 +312,7 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
                     foreach (var cellValue in row)
                     {
                         cancellationToken.ThrowIfCancellationRequested();
-                        await WriteCellAsync(writer, currentRowIndex, cellValue.CellIndex, cellValue.Value, cellValue.Prop, widths).ConfigureAwait(false);
+                        await WriteCellAsync(writer, currentRowIndex, cellValue.CellIndex, cellValue.Value, cellValue.Prop, widths, cancellationToken).ConfigureAwait(false);
                         progress?.Report(1);
                     }
                     await writer.WriteAsync(WorksheetXml.EndRow, cancellationToken).ConfigureAwait(false);
@@ -326,9 +326,9 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
                     cancellationToken.ThrowIfCancellationRequested();
                     await writer.WriteAsync(WorksheetXml.StartRow(++currentRowIndex), cancellationToken).ConfigureAwait(false);
 
-                    await foreach (var cellValue in row.ConfigureAwait(false).WithCancellation(cancellationToken))
+                    foreach (var cellValue in row)
                     {
-                        await WriteCellAsync(writer, currentRowIndex, cellValue.CellIndex, cellValue.Value, cellValue.Prop, widths).ConfigureAwait(false);
+                        await WriteCellAsync(writer, currentRowIndex, cellValue.CellIndex, cellValue.Value, cellValue.Prop, widths, cancellationToken).ConfigureAwait(false);
                         progress?.Report(1);
                     }
                     await writer.WriteAsync(WorksheetXml.EndRow, cancellationToken).ConfigureAwait(false);
@@ -451,7 +451,7 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
     }
 
     [CreateSyncVersion]
-    private async Task WriteCellAsync(EnhancedStreamWriter writer, int rowIndex, int cellIndex, object? value, MiniExcelColumnInfo columnInfo, ExcelWidthCollection? widthCollection)
+    private async Task WriteCellAsync(EnhancedStreamWriter writer, int rowIndex, int cellIndex, object? value, MiniExcelColumnInfo columnInfo, ExcelWidthCollection? widthCollection, CancellationToken cancellationToken = default)
     {
         if (columnInfo?.CustomFormatter is not null)
         {
@@ -470,7 +470,7 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
 
         if (_configuration.EnableWriteNullValueCell && valueIsNull)
         {
-            await writer.WriteAsync(WorksheetXml.EmptyCell(columnReference, GetCellXfId("2"))).ConfigureAwait(false);
+            await writer.WriteAsync(WorksheetXml.EmptyCell(columnReference, GetCellXfId("2")), cancellationToken).ConfigureAwait(false);
             return;
         }
 
@@ -484,7 +484,7 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
         /*Prefix and suffix blank space will lost after SaveAs #294*/
         var preserveSpace = cellValue is [' ', ..] or [.., ' '];
 
-        await writer.WriteAsync(WorksheetXml.Cell(columnReference, dataType, GetCellXfId(styleIndex), cellValue, preserveSpace: preserveSpace, columnType: columnType)).ConfigureAwait(false);
+        await writer.WriteAsync(WorksheetXml.Cell(columnReference, dataType, GetCellXfId(styleIndex), cellValue, preserveSpace: preserveSpace, columnType: columnType), cancellationToken).ConfigureAwait(false);
         widthCollection?.AdjustWidth(cellIndex, cellValue);
     }
 

@@ -3,5 +3,5 @@
 public interface IMiniExcelWriteAdapterAsync 
 {
     Task<List<MiniExcelColumnInfo>?> GetColumnsAsync();
-    IAsyncEnumerable<IAsyncEnumerable<CellWriteInfo>> GetRowsAsync(List<MiniExcelColumnInfo> props, CancellationToken cancellationToken);
+    IAsyncEnumerable<CellWriteInfo[]> GetRowsAsync(List<MiniExcelColumnInfo> props, CancellationToken cancellationToken);
 }

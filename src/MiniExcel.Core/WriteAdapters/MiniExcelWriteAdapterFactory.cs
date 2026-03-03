@@ -11,13 +11,6 @@ public static class MiniExcelWriteAdapterFactory
             writeAdapter = Activator.CreateInstance(writeAdapterType, values, configuration) as IMiniExcelWriteAdapterAsync;
             return true;
         }
-
-        if (values is IMiniExcelDataReader miniExcelDataReader)
-        {
-            writeAdapter = new MiniExcelDataReaderWriteAdapter(miniExcelDataReader, configuration);
-            return true;
-        }
-
         return false;
     }
 

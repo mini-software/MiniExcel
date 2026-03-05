@@ -254,7 +254,7 @@ public class AsyncIssueTests
         {
             using var path = AutoDeletingPath.Create();
             Issue142VoDuplicateColumnName[] input = [new() { MyProperty1 = 0, MyProperty2 = 0, MyProperty3 = 0, MyProperty4 = 0 }];
-            Assert.Throws<InvalidOperationException>(() => _openXmlExporter.Export(path.ToString(), input));
+            Assert.Throws<InvalidMappingException>(() => _openXmlExporter.Export(path.ToString(), input));
         }
     }
     

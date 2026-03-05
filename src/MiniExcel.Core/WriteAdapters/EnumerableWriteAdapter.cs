@@ -21,14 +21,14 @@ internal class EnumerableWriteAdapter(IEnumerable values, MiniExcelBaseConfigura
         return false;
     }
 
-    public List<MiniExcelColumnInfo>? GetColumns()
+    public List<MiniExcelColumnMapping>? GetColumns()
     {
-        if (CustomPropertyHelper.TryGetTypeColumnInfo(_genericType, _configuration, out var props))
+        if (ColumnMappingsProvider.TryGetColumnMappings(_genericType, _configuration, out var props))
             return props;
 
         _enumerator = _values.GetEnumerator();
         if (_enumerator.MoveNext())
-            return CustomPropertyHelper.GetColumnInfoFromValue(_enumerator.Current, _configuration);
+            return ColumnMappingsProvider.GetColumnMappingFromValue(_enumerator.Current, _configuration);
             
         try
         {
@@ -42,7 +42,7 @@ internal class EnumerableWriteAdapter(IEnumerable values, MiniExcelBaseConfigura
         }
     }
 
-    public IEnumerable<IEnumerable<CellWriteInfo>> GetRows(List<MiniExcelColumnInfo> props, CancellationToken cancellationToken = default)
+    public IEnumerable<IEnumerable<CellWriteInfo>> GetRows(List<MiniExcelColumnMapping> props, CancellationToken cancellationToken = default)
     {
         if (_empty)
             yield break;
@@ -70,7 +70,7 @@ internal class EnumerableWriteAdapter(IEnumerable values, MiniExcelBaseConfigura
         }
     }
         
-    public static IEnumerable<CellWriteInfo> GetRowValues(object currentValue, List<MiniExcelColumnInfo> props)
+    public static IEnumerable<CellWriteInfo> GetRowValues(object currentValue, List<MiniExcelColumnMapping> props)
     {
         var column = 1;
         foreach (var prop in props)
@@ -90,7 +90,7 @@ internal class EnumerableWriteAdapter(IEnumerable values, MiniExcelBaseConfigura
             }
             else 
             {
-                cellValue = prop.Property.GetValue(currentValue);
+                cellValue = prop.MemberAccessor.GetValue(currentValue);
             }
                 
             yield return new CellWriteInfo(cellValue, column, prop);

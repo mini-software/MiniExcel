@@ -71,7 +71,7 @@ internal partial class CsvReader : IMiniExcelReader
                     .Select((x, i) => new KeyValuePair<string, object>(headRows[i], x))
                     .ToDictionary(x => x.Key, x => x.Value);
 
-                throw new MiniExcelColumnNotFoundException(columnIndex: null, headRows[colIndex], [], rowIndex, headers, rowValues, $"Csv read error: Column {colIndex} not found in Row {rowIndex}");
+                throw new ColumnNotFoundException(columnIndex: null, headRows[colIndex], [], rowIndex, headers, rowValues, $"Csv read error: Column {colIndex} not found in Row {rowIndex}");
             }
 
             //header
@@ -85,7 +85,7 @@ internal partial class CsvReader : IMiniExcelReader
                     continue;
                 }
 
-                var headCell = CustomPropertyHelper.GetEmptyExpandoObject(headRows);
+                var headCell = ExpandoHelper.CreateEmptyByHeaders(headRows);
                 for (int i = 0; i <= read.Length - 1; i++)
                     headCell[headRows[i]] = read[i];
 
@@ -102,7 +102,7 @@ internal partial class CsvReader : IMiniExcelReader
             }
 
             // todo: can we find a way to remove the redundant cell conversions for CSV?
-            var cell = CustomPropertyHelper.GetEmptyExpandoObject(read.Length - 1, 0);
+            var cell = ExpandoHelper.CreateEmptyByIndices(read.Length - 1, 0);
             if (_config.ReadEmptyStringAsNull)
             {
                 for (int i = 0; i <= read.Length - 1; i++)
@@ -152,20 +152,6 @@ internal partial class CsvReader : IMiniExcelReader
         return MiniExcelMapper.MapQueryAsync<T>(dynamicRecords, 0, treatHeaderAsData, false, _config, null, cancellationToken);
     }
 
-    private static string ConvertXyToCell(int x, int y)
-    {
-        int dividend = x;
-        string columnName = string.Empty;
-
-        while (dividend > 0)
-        {
-            var modulo = (dividend - 1) % 26;
-            columnName = Convert.ToChar(65 + modulo) + columnName;
-            dividend = (dividend - modulo) / 26;
-        }
-        return $"{columnName}{y}";
-    }
-    
     private string[] Split(string row)
     {
         if (_config.SplitFn is not null)

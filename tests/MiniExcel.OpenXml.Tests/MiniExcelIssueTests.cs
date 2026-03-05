@@ -896,13 +896,13 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             var path = PathHelper.GetFile("xlsx/TestIssue309.xlsx");
             var rows =  _excelImporter.Query<TestIssue209Dto>(path).ToList();
         }
-        catch (MiniExcelInvalidCastException ex)
+        catch (ValueNotAssignableException ex)
         {
             Assert.Equal("SEQ", ex.ColumnName);
             Assert.Equal(4, ex.Row);
             Assert.Equal("Error", ex.Value);
-            Assert.Equal(typeof(int), ex.InvalidCastType);
-            Assert.Equal("ColumnName: SEQ, CellRow: 4, Value: Error. The value cannot be cast to type Int32.", ex.Message);
+            Assert.Equal(typeof(int), ex.ColumnType);
+            Assert.Equal("The value Error cannot be assigned to type Int32.", ex.Message);
         }
     }
 
@@ -1367,7 +1367,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         catch (InvalidCastException ex)
         {
             Assert.Equal(
-                "ColumnName: Col2, CellRow: 6, Value: error. The value cannot be cast to type DateTime.",
+                "The value error cannot be assigned to type DateTime.",
                 ex.Message
             );
         }
@@ -1380,7 +1380,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         catch (InvalidCastException ex)
         {
             Assert.Equal(
-                "ColumnName: Col1, CellRow: 3, Value: error. The value cannot be cast to type Int32.",
+                "The value error cannot be assigned to type Int32.",
                 ex.Message
             );
         }
@@ -3713,7 +3713,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         var testFn = () => _excelImporter.Query<Issue869>(path, configuration: config).ToList();
         if (throwsException)
         {
-            Assert.Throws<MiniExcelInvalidCastException>(testFn);
+            Assert.Throws<ValueNotAssignableException>(testFn);
         }
         else
         {
@@ -3760,7 +3760,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     {
         Issue880[] toExport = [new() { Test = "test" }];
         
-        Assert.Throws<MiniExcelNotSerializableException>(() =>
+        Assert.Throws<MemberNotSerializableException>(() =>
         {
             using var ms = new MemoryStream();
             _excelExporter.Export(ms, toExport);
@@ -3770,7 +3770,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     [Fact]
     public void TestIssue881()
     {
-        Assert.Throws<MiniExcelInvalidCastException>(() =>
+        Assert.Throws<ValueNotAssignableException>(() =>
         {
             _ = _excelImporter.Query<Issues409_881>(PathHelper.GetFile("xlsx/TestIssue881.xlsx")).ToList();
         });

@@ -10,11 +10,11 @@ internal sealed class AsyncEnumerableWriteAdapter<T>(IAsyncEnumerable<T> values,
     private bool _disposed = false;
 
     
-    public async Task<List<MiniExcelColumnInfo>?> GetColumnsAsync()
+    public async Task<List<MiniExcelColumnMapping>?> GetColumnsAsync()
     {
-        if (CustomPropertyHelper.TryGetTypeColumnInfo(typeof(T), _configuration, out var props))
+        if (ColumnMappingsProvider.TryGetColumnMappings(typeof(T), _configuration, out var mappings))
         {
-            return props;
+            return mappings;
         }
 
         _enumerator = _values.GetAsyncEnumerator();
@@ -24,10 +24,10 @@ internal sealed class AsyncEnumerableWriteAdapter<T>(IAsyncEnumerable<T> values,
             return null;
         }
 
-        return CustomPropertyHelper.GetColumnInfoFromValue(_enumerator.Current, _configuration);
+        return ColumnMappingsProvider.GetColumnMappingFromValue(_enumerator.Current, _configuration);
     }
 
-    public async IAsyncEnumerable<CellWriteInfo[]> GetRowsAsync(List<MiniExcelColumnInfo> props, [EnumeratorCancellation] CancellationToken cancellationToken)
+    public async IAsyncEnumerable<CellWriteInfo[]> GetRowsAsync(List<MiniExcelColumnMapping> props, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         if (_empty)
             yield break;
@@ -49,7 +49,7 @@ internal sealed class AsyncEnumerableWriteAdapter<T>(IAsyncEnumerable<T> values,
         while (await _enumerator.MoveNextAsync().ConfigureAwait(false));
     }
 
-    private static CellWriteInfo[] GetRowValues(T currentValue, List<MiniExcelColumnInfo> props)
+    private static CellWriteInfo[] GetRowValues(T currentValue, List<MiniExcelColumnMapping> props)
     {
         var column = 0;
         var result = new List<CellWriteInfo>();
@@ -65,7 +65,7 @@ internal sealed class AsyncEnumerableWriteAdapter<T>(IAsyncEnumerable<T> values,
             {
                 IDictionary<string, object> genericDictionary => new CellWriteInfo(genericDictionary[prop.Key.ToString()], column, prop),
                 IDictionary dictionary => new CellWriteInfo(dictionary[prop.Key], column, prop),
-                _ => new CellWriteInfo(prop.Property.GetValue(currentValue), column, prop)
+                _ => new CellWriteInfo(prop.MemberAccessor.GetValue(currentValue), column, prop)
             };
             result.Add(info);
         }

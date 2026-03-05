@@ -1,5 +1,6 @@
 ﻿using ClosedXML.Excel;
 using ExcelDataReader;
+using MiniExcelLib.Core.Exceptions;
 using MiniExcelLib.OpenXml.Tests.Utils;
 using MiniExcelLib.Tests.Common.Utils;
 
@@ -74,7 +75,7 @@ public class MiniExcelOpenXmlAsyncTests
     public async Task CustomAttributeWihoutVaildPropertiesTest()
     {
         var path = PathHelper.GetFile("xlsx/TestCustomExcelColumnAttribute.xlsx");
-        await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+        await Assert.ThrowsAsync<InvalidMappingException>(async () =>
         {
             _ =  _excelImporter.QueryAsync<CustomAttributesWihoutVaildPropertiesTestPoco>(path).ToBlockingEnumerable().ToList();
         });

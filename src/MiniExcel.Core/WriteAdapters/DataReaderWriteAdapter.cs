@@ -11,23 +11,23 @@ internal class DataReaderWriteAdapter(IDataReader reader, MiniExcelBaseConfigura
         return false;
     }
 
-    public List<MiniExcelColumnInfo> GetColumns()
+    public List<MiniExcelColumnMapping> GetColumns()
     {
-        var props = new List<MiniExcelColumnInfo>();
+        var props = new List<MiniExcelColumnMapping>();
         for (var i = 0; i < _reader.FieldCount; i++)
         {
             var columnName = _reader.GetName(i);
             if (!_configuration.DynamicColumnFirst || 
                 _configuration.DynamicColumns.Any(d => string.Equals(d.Key, columnName, StringComparison.OrdinalIgnoreCase)))
             {
-                var prop = CustomPropertyHelper.GetColumnInfosFromDynamicConfiguration(columnName, _configuration);
+                var prop = ColumnMappingsProvider.GetColumnMappingFromDynamicConfiguration(columnName, _configuration);
                 props.Add(prop);
             }
         }
         return props;
     }
 
-    public IEnumerable<IEnumerable<CellWriteInfo>> GetRows(List<MiniExcelColumnInfo> props, CancellationToken cancellationToken = default)
+    public IEnumerable<IEnumerable<CellWriteInfo>> GetRows(List<MiniExcelColumnMapping> props, CancellationToken cancellationToken = default)
     {
         while (_reader.Read())
         {
@@ -36,7 +36,7 @@ internal class DataReaderWriteAdapter(IDataReader reader, MiniExcelBaseConfigura
         }
     }
 
-    private IEnumerable<CellWriteInfo> GetRowValues(List<MiniExcelColumnInfo> props)
+    private IEnumerable<CellWriteInfo> GetRowValues(List<MiniExcelColumnMapping> props)
     {
         var column = 1;
         for (int i = 0; i < _reader.FieldCount; i++)

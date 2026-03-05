@@ -1,4 +1,5 @@
-﻿using MiniExcelLib.OpenXml.Tests.Utils;
+﻿using MiniExcelLib.Core.Exceptions;
+using MiniExcelLib.OpenXml.Tests.Utils;
 using MiniExcelLib.Tests.Common.Utils;
 
 namespace MiniExcelLib.OpenXml.Tests;
@@ -1040,7 +1041,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
         }
 
         {
-            await Assert.ThrowsAsync<ArgumentException>(async () =>
+            await Assert.ThrowsAsync<InvalidMappingException>(async () =>
             {
                 var q =  _excelImporter.QueryAsync<Issue142VoOverIndex>(path).ToBlockingEnumerable().ToList();
             });

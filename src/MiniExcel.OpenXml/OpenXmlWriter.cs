@@ -250,7 +250,7 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
 #else
             var props = writeAdapter is not null
                 ? writeAdapter.GetColumns()
-                : await (asyncWriteAdapter?.GetColumnsAsync() ?? Task.FromResult<List<MiniExcelColumnInfo>?>(null)).ConfigureAwait(false);
+                : await (asyncWriteAdapter?.GetColumnsAsync() ?? Task.FromResult<List<MiniExcelColumnMapping>?>(null)).ConfigureAwait(false);
 #endif
 
             if (props is null)
@@ -422,7 +422,7 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
     }
 
     [CreateSyncVersion]
-    private async Task PrintHeaderAsync(EnhancedStreamWriter writer, List<MiniExcelColumnInfo?> props, CancellationToken cancellationToken = default)
+    private async Task PrintHeaderAsync(EnhancedStreamWriter writer, List<MiniExcelColumnMapping?> props, CancellationToken cancellationToken = default)
     {
         const int yIndex = 1;
         await writer.WriteAsync(WorksheetXml.StartRow(yIndex), cancellationToken).ConfigureAwait(false);
@@ -452,7 +452,7 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
     }
 
     [CreateSyncVersion]
-    private async Task WriteCellAsync(EnhancedStreamWriter writer, int rowIndex, int cellIndex, object? value, MiniExcelColumnInfo columnInfo, ExcelColumnWidthCollection? widthCollection, CancellationToken cancellationToken = default)
+    private async Task WriteCellAsync(EnhancedStreamWriter writer, int rowIndex, int cellIndex, object? value, MiniExcelColumnMapping columnInfo, ExcelColumnWidthCollection? widthCollection, CancellationToken cancellationToken = default)
     {
         if (columnInfo?.CustomFormatter is not null)
         {

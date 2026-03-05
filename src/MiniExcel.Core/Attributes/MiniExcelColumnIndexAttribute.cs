@@ -1,7 +1,6 @@
 ﻿namespace MiniExcelLib.Core.Attributes;
 
-[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
-public class MiniExcelColumnIndexAttribute : Attribute
+public class MiniExcelColumnIndexAttribute : MiniExcelAttributeBase
 {
     public int ExcelColumnIndex { get; set; }
     internal string? ExcelXName { get; set; }

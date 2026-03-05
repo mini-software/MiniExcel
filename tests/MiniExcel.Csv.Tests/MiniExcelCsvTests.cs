@@ -193,7 +193,7 @@ public class MiniExcelCsvTests
             Assert.Equal(2, rowsWritten[0]);
 
             using var reader = new StreamReader(path.ToString());
-            using var csv = new global::CsvHelper.CsvReader(reader, CultureInfo.InvariantCulture);
+            using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
             
             var records = csv.GetRecords<dynamic>().ToList();
             Assert.Equal(@"""<>+-*//}{\\n", records[0].a);
@@ -229,7 +229,7 @@ public class MiniExcelCsvTests
             _csvExporter.Export(path.ToString(), values);
 
             using (var reader = new StreamReader(path.ToString()))
-            using (var csv = new global::CsvHelper.CsvReader(reader, CultureInfo.InvariantCulture))
+            using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
             {
                 var records = csv.GetRecords<dynamic>().ToList();
                 {
@@ -280,7 +280,7 @@ public class MiniExcelCsvTests
             Assert.Equal(2, rowsWritten[0]);
 
             using (var reader = new StreamReader(path.ToString()))
-            using (var csv = new global::CsvHelper.CsvReader(reader, CultureInfo.InvariantCulture))
+            using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
             {
                 var records = csv.GetRecords<dynamic>().ToList();
                 Assert.Equal(@"""<>+-*//}{\\n", records[0].a);
@@ -332,7 +332,7 @@ public class MiniExcelCsvTests
         Assert.Equal("Test2", rows[1].B);
 
         using var reader = new StreamReader(path);
-        using var csv = new global::CsvHelper.CsvReader(reader, CultureInfo.InvariantCulture);
+        using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
         var records = csv.GetRecords<dynamic>().ToList();
         Assert.Equal("Test1", records[0].A);
         Assert.Equal("Test2", records[0].B);
@@ -408,7 +408,7 @@ public class MiniExcelCsvTests
 
         using (var stream = File.OpenRead(path))
         {
-            var exception = Assert.Throws<MiniExcelColumnNotFoundException>(() => _csvImporter.Query<Test>(stream).ToList());
+            var exception = Assert.Throws<ColumnNotFoundException>(() => _csvImporter.Query<Test>(stream).ToList());
 
             Assert.Equal("c2", exception.ColumnName);
             Assert.Equal(2, exception.RowIndex);
@@ -418,7 +418,7 @@ public class MiniExcelCsvTests
         }
 
         {
-            var exception = Assert.Throws<MiniExcelColumnNotFoundException>(() => _csvImporter.Query<Test>(path).ToList());
+            var exception = Assert.Throws<ColumnNotFoundException>(() => _csvImporter.Query<Test>(path).ToList());
 
             Assert.Equal("c2", exception.ColumnName);
             Assert.Equal(2, exception.RowIndex);
@@ -437,7 +437,7 @@ public class MiniExcelCsvTests
         File.WriteAllLines(path, ["col1,col2", "v1"]);
         using (var stream = File.OpenRead(path))
         {
-            var exception = Assert.Throws<MiniExcelColumnNotFoundException>(() => _csvImporter.Query<TestWithAlias>(stream).ToList());
+            var exception = Assert.Throws<ColumnNotFoundException>(() => _csvImporter.Query<TestWithAlias>(stream).ToList());
 
             Assert.Equal("c2", exception.ColumnName);
             Assert.Equal(2, exception.RowIndex);
@@ -447,7 +447,7 @@ public class MiniExcelCsvTests
         }
 
         {
-            var exception = Assert.Throws<MiniExcelColumnNotFoundException>(() => _csvImporter.Query<TestWithAlias>(path).ToList());
+            var exception = Assert.Throws<ColumnNotFoundException>(() => _csvImporter.Query<TestWithAlias>(path).ToList());
 
             Assert.Equal("c2", exception.ColumnName);
             Assert.Equal(2, exception.RowIndex);

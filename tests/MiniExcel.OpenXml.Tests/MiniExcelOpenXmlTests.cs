@@ -1,8 +1,10 @@
 ﻿using ClosedXML.Excel;
 using ExcelDataReader;
+using MiniExcelLib.Core.Exceptions;
 using MiniExcelLib.OpenXml.Tests.Utils;
 using MiniExcelLib.Tests.Common.Utils;
 using FileHelper = MiniExcelLib.OpenXml.Tests.Utils.FileHelper;
+using Path = System.IO.Path;
 
 namespace MiniExcelLib.OpenXml.Tests;
 
@@ -18,18 +20,19 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
     {
         var tmPath = PathHelper.GetFile("xlsx/TestTypeMapping.xlsx");
         var tePath = PathHelper.GetFile("xlsx/TestEmpty.xlsx");
+        
         {
             var columns =  _excelImporter.GetColumnNames (tmPath);
             Assert.Equal(["A", "B", "C", "D", "E", "F", "G", "H"], columns);
         }
 
         {
-            var columns =  _excelImporter.GetColumnNames (tmPath);
+            var columns = _excelImporter.GetColumnNames(tmPath);
             Assert.Equal(8, columns.Count);
         }
 
         {
-            var columns =  _excelImporter.GetColumnNames (tePath);
+            var columns = _excelImporter.GetColumnNames(tePath);
             Assert.Empty(columns);
         }
     }
@@ -80,7 +83,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
     public void CustomAttributeWihoutVaildPropertiesTest()
     {
         var path = PathHelper.GetFile("xlsx/TestCustomExcelColumnAttribute.xlsx");
-        Assert.Throws<InvalidOperationException>(() =>  _excelImporter.Query<CustomAttributesWihoutVaildPropertiesTestPoco>(path).ToList());
+        Assert.Throws<InvalidMappingException>(() =>  _excelImporter.Query<CustomAttributesWihoutVaildPropertiesTestPoco>(path).ToList());
     }
 
     [Fact]
@@ -330,7 +333,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
         var path = PathHelper.GetFile("xlsx/TestTypeMapping.xlsx");
         using (var stream = File.OpenRead(path))
         {
-            var rows =  _excelImporter.Query<UserAccount>(stream).ToList();
+            var rows = _excelImporter.Query<UserAccount>(stream).ToList();
             Assert.Equal(100, rows.Count);
 
             Assert.Equal(Guid.Parse("78DE23D2-DCB6-BD3D-EC67-C112BBC322A2"), rows[0].ID);
@@ -1386,7 +1389,6 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
 
         using var stream = File.OpenRead(path.ToString());
         var rows =  _excelImporter.Query(stream, useHeaderRow: true)
-            .Select(x => (IDictionary<string, object>)x)
             .Select(x => (IDictionary<string, object>)x)
             .ToList();
 

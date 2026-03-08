@@ -52,7 +52,8 @@ public class MiniExcelAutoAdjustWidthTests
         var path = file.ToString();
 
         var configuration = AutoAdjustTestParameters.GetConfiguration();
-        _excelExporter.Export(path, AutoAdjustTestParameters.GetDictionaryTestData(), configuration: configuration);
+        var data = AutoAdjustTestParameters.GetDictionaryTestData();
+        _excelExporter.Export(path, data, configuration: configuration);
 
         AssertExpectedWidth(path, configuration);
     }
@@ -70,7 +71,7 @@ public class MiniExcelAutoAdjustWidthTests
             await using var command = new SQLiteCommand(Db.GenerateDummyQuery(AutoAdjustTestParameters.GetDictionaryTestData()), connection);
             connection.Open();
             await using var reader = await command.ExecuteReaderAsync();
-            await _excelExporter.ExportAsync(path, reader, configuration: configuration);
+            await _excelExporter.ExportAsync(path, reader, configuration: configuration, overwriteFile: true);
         }
 
         AssertExpectedWidth(path, configuration);
@@ -149,43 +150,41 @@ public class MiniExcelAutoAdjustWidthTests
 
         var columns = worksheetPart?.Worksheet.GetFirstChild<Columns>();
         Assert.False(columns is null, "No column width information was written.");
+        
         foreach (var column in columns.Elements<Column>())
         {
             var expectedWidth = column.Min?.Value switch
             {
-                1 => ExcelWidthCollection.GetApproximateTextWidth(AutoAdjustTestParameters.Column1MaxStringLength),
-                2 => ExcelWidthCollection.GetApproximateTextWidth(AutoAdjustTestParameters.Column2MaxStringLength),
+                1 => AutoAdjustTestParameters.Column1MaLen,
+                2 => AutoAdjustTestParameters.Column2MaxLen,
                 3 => configuration.MinWidth,
                 4 => configuration.MaxWidth,
-                _ => throw new Exception("Unexpected column"),
+                _ => throw new UnreachableException()
             };
-
-            Assert.Equal(expectedWidth, column.Width?.Value);
+            Assert.Equal(ExcelColumnWidth.GetWidthFromTextLength(expectedWidth), Math.Round(column.Width!.Value, 8));
         }
     }
 
     private static class AutoAdjustTestParameters
     {
-        public const int Column1MaxStringLength = 32;
-        public const int Column2MaxStringLength = 16;
-        public const int Column3MaxStringLength = 2;
-        public const int Column4MaxStringLength = 100;
-        public const int MinStringLength = 8;
-        public const int MaxStringLength = 50;
+        internal const int Column1MaLen = 32;
+        internal const int Column2MaxLen = 16;
+        private const int Column3MaxLen = 2;
+        private const int Column4MaxLen = 100;
 
-        public static List<string[]> GetTestData() =>
+        public static List<string[]> GetTestData() => [
         [
-            new string[]
-            {
-                new('1', Column1MaxStringLength), new('2', Column2MaxStringLength / 2),
-                new('3', Column3MaxStringLength / 2), new('4', Column1MaxStringLength)
-            },
-            new string[]
-            {
-                new('1', Column1MaxStringLength / 2), new('2', Column2MaxStringLength),
-                new('3', Column3MaxStringLength), new('4', Column4MaxStringLength)
-            }
-        ];
+            new('1', Column1MaLen), 
+            new('2', Column2MaxLen / 2),
+            new('3', Column3MaxLen / 2),
+            new('4', Column4MaxLen)
+        ],
+        [
+            new('1', Column1MaLen / 2), 
+            new('2', Column2MaxLen),
+            new('3', Column3MaxLen), 
+            new('4', Column4MaxLen)
+        ] ];
 
         public static List<Dictionary<string, object>> GetDictionaryTestData() => GetTestData()
             .Select(row => row
@@ -197,8 +196,7 @@ public class MiniExcelAutoAdjustWidthTests
         {
             EnableAutoWidth = true,
             FastMode = true,
-            MinWidth = ExcelWidthCollection.GetApproximateTextWidth(MinStringLength),
-            MaxWidth = ExcelWidthCollection.GetApproximateTextWidth(MaxStringLength)
+            MaxWidth = 50
         };
     }
 }

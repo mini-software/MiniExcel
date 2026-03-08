@@ -281,16 +281,17 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
             await writer.WriteAsync(GetSheetViews(), cancellationToken).ConfigureAwait(false);
 
             //cols:width
-            ExcelWidthCollection? widths = null;
+            ExcelColumnWidthCollection? widths = null;
             long columnWidthsPlaceholderPosition = 0;
             if (_configuration.EnableAutoWidth)
             {
                 columnWidthsPlaceholderPosition = await WriteColumnWidthPlaceholdersAsync(writer, maxColumnIndex, cancellationToken).ConfigureAwait(false);
-                widths = new ExcelWidthCollection(_configuration.MinWidth, _configuration.MaxWidth, props);
+                widths = ExcelColumnWidthCollection.GetFromMappings(props, _configuration.MinWidth, _configuration.MaxWidth);
             }
             else
             {
-                await WriteColumnsWidthsAsync(writer, ExcelColumnWidth.FromProps(props), cancellationToken).ConfigureAwait(false);
+                var colWidths = ExcelColumnWidthCollection.GetFromMappings(props);
+                await WriteColumnsWidthsAsync(writer, colWidths.Columns, cancellationToken).ConfigureAwait(false);
             }
 
             //header
@@ -451,7 +452,7 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
     }
 
     [CreateSyncVersion]
-    private async Task WriteCellAsync(EnhancedStreamWriter writer, int rowIndex, int cellIndex, object? value, MiniExcelColumnInfo columnInfo, ExcelWidthCollection? widthCollection, CancellationToken cancellationToken = default)
+    private async Task WriteCellAsync(EnhancedStreamWriter writer, int rowIndex, int cellIndex, object? value, MiniExcelColumnInfo columnInfo, ExcelColumnWidthCollection? widthCollection, CancellationToken cancellationToken = default)
     {
         if (columnInfo?.CustomFormatter is not null)
         {
@@ -482,7 +483,7 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
         var columnType = columnInfo.ExcelColumnType;
 
         /*Prefix and suffix blank space will lost after SaveAs #294*/
-        var preserveSpace = cellValue is [' ', ..] or [.., ' '];
+        var preserveSpace = cellValue.StartsWith(" ") || cellValue.EndsWith(" ");
 
         await writer.WriteAsync(WorksheetXml.Cell(columnReference, dataType, GetCellXfId(styleIndex), cellValue, preserveSpace: preserveSpace, columnType: columnType), cancellationToken).ConfigureAwait(false);
         widthCollection?.AdjustWidth(cellIndex, cellValue);

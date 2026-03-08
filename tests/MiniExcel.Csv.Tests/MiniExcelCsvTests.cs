@@ -560,4 +560,105 @@ public class MiniExcelCsvTests
         }
     }
 
+    private class CsvFieldMappingTest
+    {
+        [MiniExcelColumnName("Column1")]
+        public string Test1;
+
+        [MiniExcelColumnName("Column2")]
+        public int Test2;
+
+        [MiniExcelColumnIndex(0)]
+        public decimal Test;
+    }
+
+    [Fact]
+    public void ExportAndQueryFieldsStrongMappingTest()
+    {
+        using var file = AutoDeletingPath.Create(ExcelType.Csv);
+        var path = file.ToString();
+
+        var input = Enumerable.Range(1, 3)
+            .Select(i => new CsvFieldMappingTest { Test1 = $"T{i}", Test2 = i, Test = i + (decimal)i/10 });
+
+        _csvExporter.Export(path, input);
+
+        var rows = _csvImporter.Query<CsvFieldMappingTest>(path).ToList();
+        Assert.Equal(3, rows.Count);
+        Assert.Equal("T1", rows[0].Test1);
+        Assert.Equal(1, rows[0].Test2);
+        Assert.Equal(1.1m, rows[0].Test);
+    }
+
+    [Fact]
+    public void QueryFieldsAsDynamicTest()
+    {
+        using var file = AutoDeletingPath.Create(ExcelType.Csv);
+        var path = file.ToString();
+
+        var input = new[] { new CsvFieldMappingTest { Test1 = "X1", Test2 = 5, Test = 2.3m } };
+        _csvExporter.Export(path, input);
+
+        using var reader = new StreamReader(path);
+        using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
+        var records = csv.GetRecords<dynamic>().ToList();
+        var first = records[0] as IDictionary<string, object>;
+
+        Assert.Contains("Column1", first!.Keys);
+        Assert.Contains("Column2", first.Keys);
+        Assert.Contains("Test", first.Keys);
+    }
+
+    private class MixedFieldPropertyTest
+    {
+        [MiniExcelColumnName("F1")]
+        public string Field1;
+
+        [MiniExcelColumnName("P1")]
+        public string Prop1 { get; set; }
+    }
+
+    [Fact]
+    public void ExportAndQueryMixedFieldAndPropertyTest()
+    {
+        using var file = AutoDeletingPath.Create(ExcelType.Csv);
+        var path = file.ToString();
+
+        var input = new[] { new MixedFieldPropertyTest { Field1 = "F", Prop1 = "P" } };
+        _csvExporter.Export(path, input);
+
+        using var reader = new StreamReader(path);
+        using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
+        var records = csv.GetRecords<dynamic>().ToList();
+        var first = records[0] as IDictionary<string, object>;
+
+        Assert.Contains("F1", first.Keys);
+        Assert.Contains("P1", first.Keys);
+    }
+
+    private class CsvFieldsWithoutAttributeDemo
+    {
+        public string NotMappedField;
+
+        [MiniExcelColumnName("Mapped")]
+        public string MappedField;
+    }
+
+    [Fact]
+    public void ExportAndQueryFieldsWithoutAttributeTest()
+    {
+        using var file = AutoDeletingPath.Create(ExcelType.Csv);
+        var path = file.ToString();
+
+        var input = new[] { new CsvFieldsWithoutAttributeDemo { NotMappedField = "NO", MappedField = "YES" } };
+        _csvExporter.Export(path, input);
+
+        using var reader = new StreamReader(path);
+        using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
+        var records = csv.GetRecords<dynamic>().ToList();
+        var first = records[0] as IDictionary<string, object>;
+
+        Assert.Contains("Mapped", first.Keys);
+        Assert.DoesNotContain("NotMappedField", first.Keys);
+    }
 }

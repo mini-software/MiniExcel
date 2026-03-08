@@ -259,6 +259,30 @@ using var stream = File.OpenRead(path);
 var rows = importer.Query<UserAccount>(stream);
 ```
 
+Only public properties get mapped by default, but public fields can also be mapped if decorated with `MiniExcelColumnAttribute` or any of the other MiniExcel attributes:   
+```csharp
+public class UserAccount
+{
+    [MiniExcelColumn]
+    public Guid ID;
+    
+    public string Name { get; set; }
+    
+    [MiniExcelFormat("dd/MM/yyyy")]
+    public DateTime BoD;
+    
+    public int Age { get; set; }
+    
+    [MiniExcelColumnIndex(2)]
+    public bool VIP;
+    
+    public decimal Points { get; set; }
+}
+
+var importer = MiniExcel.Importers.GetOpenXmlImporter();
+var rows = importer.Query<UserAccount>(path);
+```
+
 #### 2. Execute a query and map it to a list of dynamic objects
 
 By default no header will be used and the dynamic keys will be `.A`, `.B`, `.C`, etc..:

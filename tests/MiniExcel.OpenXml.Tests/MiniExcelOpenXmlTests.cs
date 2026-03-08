@@ -1620,4 +1620,102 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
         Assert.Equal(1, dim[2].Columns.StartIndex);
         Assert.Equal(2, dim[2].Columns.EndIndex);
     }
+    
+    // todo: add more tests for fields mapping
+    private class ExcelFieldMappingTest
+    {
+        [MiniExcelColumnName("Column1")]
+        public string Test1;
+
+        [MiniExcelColumnName("Column2")]
+        public int Test2;
+
+        [MiniExcelColumnIndex(0)]
+        public decimal Test;
+    }
+
+    [Fact]
+    public void ExportAndQueryFieldsStrongMappingTest()
+    {
+        using var path = AutoDeletingPath.Create();
+        var input = Enumerable.Range(1, 3)
+            .Select(i => new ExcelFieldMappingTest
+            {
+                Test1 = $"T{i}",
+                Test2 = i,
+                Test = i + (decimal)i / 10
+            });
+
+        _excelExporter.Export(path.ToString(), input);
+
+        var rows =  _excelImporter.Query<ExcelFieldMappingTest>(path.ToString()).ToList();
+        Assert.Equal(3, rows.Count);
+        Assert.Equal("T1", rows[0].Test1);
+        Assert.Equal(1, rows[0].Test2);
+        Assert.Equal(1.1m, rows[0].Test);
+    }
+
+    [Fact]
+    public void QueryFieldsAsDynamicTest()
+    {
+        using var path = AutoDeletingPath.Create();
+        ExcelFieldMappingTest[] input = [new() { Test1 = "X1", Test2 = 5, Test = 7.3m }];
+        
+        _excelExporter.Export(path.ToString(), input);
+
+        var rows =  _excelImporter.Query(path.ToString(), true).ToList();
+        var first = rows[0] as IDictionary<string, object>;
+
+        // Column headers should include the column names from field attributes 
+        Assert.Contains("Column1", first!.Keys);
+        Assert.Contains("Column2", first.Keys);
+    }
+
+    private class MixedFieldPropertyTest
+    {
+        [MiniExcelColumnName("F1")]
+        public string Field1;
+
+        [MiniExcelColumnName("P1")]
+        public string Prop1 { get; set; }
+    }
+
+    [Fact]
+    public void ExportAndQueryMixedFieldAndPropertyTest()
+    {
+        using var path = AutoDeletingPath.Create();
+        var input = new[] { new MixedFieldPropertyTest { Field1 = "F", Prop1 = "P" } };
+
+         _excelExporter.Export(path.ToString(), input);
+
+        var rows =  _excelImporter.Query(path.ToString(), true).ToList();
+        var first = rows[0] as IDictionary<string, object>;
+
+        Assert.Contains("F1", first!.Keys);
+        Assert.Contains("P1", first.Keys);
+    }
+
+    private class FieldsWithoutAttributeTest
+    {
+        // field without attribute should not be included for export
+        public string NotMappedField;
+
+        [MiniExcelColumnName("Mapped")]
+        public string MappedField;
+    }
+
+    [Fact]
+    public void ExportAndQueryFieldsWithoutAttributeTest()
+    {
+        using var path = AutoDeletingPath.Create();
+        var input = new[] { new FieldsWithoutAttributeTest { NotMappedField = "NO", MappedField = "YES" } };
+
+         _excelExporter.Export(path.ToString(), input);
+
+        var rows =  _excelImporter.Query(path.ToString(), true).ToList();
+        var first = rows[0] as IDictionary<string, object>;
+
+        Assert.Contains("Mapped", first?.Keys);
+        Assert.DoesNotContain("NotMappedField", first?.Keys);
+    }
 }

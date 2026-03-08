@@ -1,6 +1,0 @@
-﻿namespace MiniExcelLib.OpenXml.Models;
-
-internal class DrawingDto
-{
-    internal string ID { get; set; } = $"R{Guid.NewGuid():N}";
-}

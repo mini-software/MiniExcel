@@ -12,7 +12,7 @@ public class MiniExcelColumnAttribute : Attribute
      public bool Ignore { get; set; }
     
     internal int FormatId { get; private set; } = -1;
-    public double Width { get; set; } = 9.28515625;
+    public double Width { get; set; } = 8.42857143;
     public ColumnType Type { get; set; } = ColumnType.Value;
 
     public int Index

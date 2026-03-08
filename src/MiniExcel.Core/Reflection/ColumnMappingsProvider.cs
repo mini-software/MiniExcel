@@ -72,7 +72,10 @@ internal static class ColumnMappingsProvider
             .FirstOrDefault(g => g.Count() > 1);
 
         if (firstDuplicateIndexGroup?.FirstOrDefault() is { } duplicate)
-            throw new InvalidMappingException($"Duplicate column name in type {duplicate.MemberAccessor}: {duplicate?.ExcelColumnIndex}", null, duplicate.MemberAccessor.MemberInfo);
+        {
+            var type = duplicate.MemberAccessor.MemberInfo.DeclaringType;
+            throw new InvalidMappingException($"Duplicate column index in type {type?.Name}: {duplicate.ExcelColumnIndex}", type, duplicate.MemberAccessor.MemberInfo);
+        }
 
         var maxColumnIndex = mappings.Count - 1;
         if (explicitIndexMappings.Count != 0)

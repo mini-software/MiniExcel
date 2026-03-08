@@ -90,9 +90,12 @@ public static partial class MiniExcelMapper
             
             else if (map.ExcludeNullableType == typeof(Guid))
             {
-                newValue = itemValue is string str 
-                    ? Guid.Parse(str) 
-                    : Guid.Empty.ToString();
+                newValue = itemValue switch
+                {
+                    Guid g => g, 
+                    string str => Guid.Parse(str),
+                    _ => Guid.Empty.ToString()
+                };
             }
             
             else if (map.ExcludeNullableType == typeof(DateTimeOffset))
@@ -128,11 +131,7 @@ public static partial class MiniExcelMapper
                 var vs = itemValue?.ToString();
                 if (map.ExcelFormat is not null)
                 {
-                    if (map.ExcludeNullableType == typeof(DateTimeOffset) && DateTimeOffset.TryParseExact(vs, map.ExcelFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out var offsetValue))
-                    {
-                        newValue = offsetValue;
-                    }
-                    else if (DateTime.TryParseExact(vs, map.ExcelFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out var value))
+                    if (DateTime.TryParseExact(vs, map.ExcelFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out var value))
                     {
                         newValue = value;
                     }

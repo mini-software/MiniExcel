@@ -200,7 +200,7 @@ internal partial class CsvWriter : IMiniExcelWriter, IDisposable
         return rowsWritten.FirstOrDefault();
     }
 
-    public string ToCsvString(object? value, MiniExcelColumnInfo? p)
+    public string ToCsvString(object? value, MiniExcelColumnMapping? p)
     {
         if (value is null)
             return "";
@@ -221,7 +221,7 @@ internal partial class CsvWriter : IMiniExcelWriter, IDisposable
         return Convert.ToString(value, _configuration.Culture) ?? "";
     }
     
-    private string GetHeader(List<MiniExcelColumnInfo> props) => string.Join(
+    private string GetHeader(List<MiniExcelColumnMapping> props) => string.Join(
         _configuration.Seperator.ToString(),
         props.Select(s => CsvSanitizer.SanitizeCsvField(s?.ExcelColumnName, _configuration)));
     

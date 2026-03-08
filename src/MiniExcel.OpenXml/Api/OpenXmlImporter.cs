@@ -52,7 +52,7 @@ public sealed partial class OpenXmlImporter
     {
         using var excelReader = await OpenXmlReader.CreateAsync(stream, configuration, cancellationToken).ConfigureAwait(false);
         await foreach (var item in excelReader.QueryAsync(useHeaderRow, sheetName, startCell, cancellationToken).ConfigureAwait(false))
-            yield return item.Aggregate(seed: GetNewExpandoObject(), func: AddPairToDict);
+            yield return item;
     }
 
     #endregion
@@ -84,7 +84,7 @@ public sealed partial class OpenXmlImporter
     {
         using var excelReader = await OpenXmlReader.CreateAsync(stream, configuration, cancellationToken).ConfigureAwait(false);
         await foreach (var item in excelReader.QueryRangeAsync(useHeaderRow, sheetName, startCell, endCell, cancellationToken).ConfigureAwait(false))
-            yield return item.Aggregate(seed: GetNewExpandoObject(), func: AddPairToDict);
+            yield return item;
     }
 
     [CreateSyncVersion]
@@ -106,7 +106,7 @@ public sealed partial class OpenXmlImporter
     {
         using var excelReader = await OpenXmlReader.CreateAsync(stream, configuration, cancellationToken).ConfigureAwait(false);
         await foreach (var item in excelReader.QueryRangeAsync(useHeaderRow, sheetName, startRowIndex, startColumnIndex, endRowIndex, endColumnIndex, cancellationToken).ConfigureAwait(false))
-            yield return item.Aggregate(seed: GetNewExpandoObject(), func: AddPairToDict);
+            yield return item;
     }
 
     #endregion
@@ -307,7 +307,7 @@ public sealed partial class OpenXmlImporter
         var stream = FileHelper.OpenSharedRead(path);
         var values = QueryAsync(stream, useHeaderRow, sheetName, startCell, configuration, cancellationToken);
         
-        return await MiniExcelDataReader.CreateAsync(stream, CastAsync(values, cancellationToken)).ConfigureAwait(false);
+        return await MiniExcelDataReader.CreateAsync(stream, values.CastToDictionary(cancellationToken)).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -319,24 +319,8 @@ public sealed partial class OpenXmlImporter
         CancellationToken cancellationToken = default)
     {
         var values = QueryAsync(stream, useHeaderRow, sheetName, startCell, configuration, cancellationToken);
-        return await MiniExcelDataReader.CreateAsync(stream, CastAsync(values, cancellationToken)).ConfigureAwait(false);
+        return await MiniExcelDataReader.CreateAsync(stream, values.CastToDictionary(cancellationToken)).ConfigureAwait(false);
     }
 
     #endregion
-    
-    private static IDictionary<string, object?> GetNewExpandoObject() => new ExpandoObject();
-    private static IDictionary<string, object?> AddPairToDict(IDictionary<string, object?> dict, KeyValuePair<string, object?> pair)
-    {
-        dict.Add(pair);
-        return dict; 
-    }
-
-    private static async IAsyncEnumerable<IDictionary<string, object?>> CastAsync(IAsyncEnumerable<dynamic> enumerable, CancellationToken cancellationToken = default)
-    {
-        await foreach (var item in enumerable.WithCancellation(cancellationToken).ConfigureAwait(false))
-        {
-            if (item is IDictionary<string, object?> dict)
-                yield return dict;
-        }
-    }
 }

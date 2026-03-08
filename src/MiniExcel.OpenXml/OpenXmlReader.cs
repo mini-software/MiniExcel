@@ -386,8 +386,8 @@ internal partial class OpenXmlReader : IMiniExcelReader
     private static IDictionary<string, object?> GetCell(bool useHeaderRow, int maxColumnIndex, Dictionary<int, string> headRows, int startColumnIndex)
     {
         return useHeaderRow 
-            ? CustomPropertyHelper.GetEmptyExpandoObject(headRows) 
-            : CustomPropertyHelper.GetEmptyExpandoObject(maxColumnIndex, startColumnIndex);
+            ? ExpandoHelper.CreateEmptyByHeaders(headRows) 
+            : ExpandoHelper.CreateEmptyByIndices(maxColumnIndex, startColumnIndex);
     }
 
     private static void SetCellsValueAndHeaders(object? cellValue, bool useHeaderRow, Dictionary<int, string> headRows, bool isFirstRow, IDictionary<string, object?> cell, int columnIndex)

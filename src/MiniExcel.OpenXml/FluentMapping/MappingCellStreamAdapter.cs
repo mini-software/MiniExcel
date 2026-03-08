@@ -16,13 +16,13 @@ internal class MappingCellStreamAdapter<T>(MappingCellStream<T> cellStream, stri
         return false;
     }
 
-    public List<MiniExcelColumnInfo> GetColumns()
+    public List<MiniExcelColumnMapping> GetColumns()
     {
-        var props = new List<MiniExcelColumnInfo>();
+        var props = new List<MiniExcelColumnMapping>();
         
         for (int i = 0; i < _columnLetters.Length; i++)
         {
-            props.Add(new MiniExcelColumnInfo
+            props.Add(new MiniExcelColumnMapping
             {
                 Key = _columnLetters[i],
                 ExcelColumnName = _columnLetters[i],
@@ -33,7 +33,7 @@ internal class MappingCellStreamAdapter<T>(MappingCellStream<T> cellStream, stri
         return props;
     }
 
-    public IEnumerable<IEnumerable<CellWriteInfo>> GetRows(List<MiniExcelColumnInfo> props, CancellationToken cancellationToken = default)
+    public IEnumerable<IEnumerable<CellWriteInfo>> GetRows(List<MiniExcelColumnMapping> props, CancellationToken cancellationToken = default)
     {
         var currentRow = new Dictionary<string, object?>();
         var currentRowIndex = 0;
@@ -67,7 +67,7 @@ internal class MappingCellStreamAdapter<T>(MappingCellStream<T> cellStream, stri
         }
     }
 
-    private static IEnumerable<CellWriteInfo> ConvertRowToCellWriteInfos(Dictionary<string, object?> row, List<MiniExcelColumnInfo> props)
+    private static IEnumerable<CellWriteInfo> ConvertRowToCellWriteInfos(Dictionary<string, object?> row, List<MiniExcelColumnMapping> props)
     {
         var columnIndex = 1;
         foreach (var prop in props)

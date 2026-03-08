@@ -1,6 +1,6 @@
 ﻿namespace MiniExcelLib.Core.Helpers;
 
-internal static class ListHelper
+internal static class ListExtensions
 {
     internal static bool StartsWith<T>(this IList<T> span, IList<T> value) where T : IEquatable<T>
     {

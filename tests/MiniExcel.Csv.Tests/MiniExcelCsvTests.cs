@@ -193,7 +193,7 @@ public class MiniExcelCsvTests
             Assert.Equal(2, rowsWritten[0]);
 
             using var reader = new StreamReader(path.ToString());
-            using var csv = new global::CsvHelper.CsvReader(reader, CultureInfo.InvariantCulture);
+            using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
             
             var records = csv.GetRecords<dynamic>().ToList();
             Assert.Equal(@"""<>+-*//}{\\n", records[0].a);
@@ -229,7 +229,7 @@ public class MiniExcelCsvTests
             _csvExporter.Export(path.ToString(), values);
 
             using (var reader = new StreamReader(path.ToString()))
-            using (var csv = new global::CsvHelper.CsvReader(reader, CultureInfo.InvariantCulture))
+            using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
             {
                 var records = csv.GetRecords<dynamic>().ToList();
                 {
@@ -280,7 +280,7 @@ public class MiniExcelCsvTests
             Assert.Equal(2, rowsWritten[0]);
 
             using (var reader = new StreamReader(path.ToString()))
-            using (var csv = new global::CsvHelper.CsvReader(reader, CultureInfo.InvariantCulture))
+            using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
             {
                 var records = csv.GetRecords<dynamic>().ToList();
                 Assert.Equal(@"""<>+-*//}{\\n", records[0].a);
@@ -332,7 +332,7 @@ public class MiniExcelCsvTests
         Assert.Equal("Test2", rows[1].B);
 
         using var reader = new StreamReader(path);
-        using var csv = new global::CsvHelper.CsvReader(reader, CultureInfo.InvariantCulture);
+        using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
         var records = csv.GetRecords<dynamic>().ToList();
         Assert.Equal("Test1", records[0].A);
         Assert.Equal("Test2", records[0].B);
@@ -408,7 +408,7 @@ public class MiniExcelCsvTests
 
         using (var stream = File.OpenRead(path))
         {
-            var exception = Assert.Throws<MiniExcelColumnNotFoundException>(() => _csvImporter.Query<Test>(stream).ToList());
+            var exception = Assert.Throws<ColumnNotFoundException>(() => _csvImporter.Query<Test>(stream).ToList());
 
             Assert.Equal("c2", exception.ColumnName);
             Assert.Equal(2, exception.RowIndex);
@@ -418,7 +418,7 @@ public class MiniExcelCsvTests
         }
 
         {
-            var exception = Assert.Throws<MiniExcelColumnNotFoundException>(() => _csvImporter.Query<Test>(path).ToList());
+            var exception = Assert.Throws<ColumnNotFoundException>(() => _csvImporter.Query<Test>(path).ToList());
 
             Assert.Equal("c2", exception.ColumnName);
             Assert.Equal(2, exception.RowIndex);
@@ -437,7 +437,7 @@ public class MiniExcelCsvTests
         File.WriteAllLines(path, ["col1,col2", "v1"]);
         using (var stream = File.OpenRead(path))
         {
-            var exception = Assert.Throws<MiniExcelColumnNotFoundException>(() => _csvImporter.Query<TestWithAlias>(stream).ToList());
+            var exception = Assert.Throws<ColumnNotFoundException>(() => _csvImporter.Query<TestWithAlias>(stream).ToList());
 
             Assert.Equal("c2", exception.ColumnName);
             Assert.Equal(2, exception.RowIndex);
@@ -447,7 +447,7 @@ public class MiniExcelCsvTests
         }
 
         {
-            var exception = Assert.Throws<MiniExcelColumnNotFoundException>(() => _csvImporter.Query<TestWithAlias>(path).ToList());
+            var exception = Assert.Throws<ColumnNotFoundException>(() => _csvImporter.Query<TestWithAlias>(path).ToList());
 
             Assert.Equal("c2", exception.ColumnName);
             Assert.Equal(2, exception.RowIndex);
@@ -560,4 +560,105 @@ public class MiniExcelCsvTests
         }
     }
 
+    private class CsvFieldMappingTest
+    {
+        [MiniExcelColumnName("Column1")]
+        public string Test1;
+
+        [MiniExcelColumnName("Column2")]
+        public int Test2;
+
+        [MiniExcelColumnIndex(0)]
+        public decimal Test;
+    }
+
+    [Fact]
+    public void ExportAndQueryFieldsStrongMappingTest()
+    {
+        using var file = AutoDeletingPath.Create(ExcelType.Csv);
+        var path = file.ToString();
+
+        var input = Enumerable.Range(1, 3)
+            .Select(i => new CsvFieldMappingTest { Test1 = $"T{i}", Test2 = i, Test = i + (decimal)i/10 });
+
+        _csvExporter.Export(path, input);
+
+        var rows = _csvImporter.Query<CsvFieldMappingTest>(path).ToList();
+        Assert.Equal(3, rows.Count);
+        Assert.Equal("T1", rows[0].Test1);
+        Assert.Equal(1, rows[0].Test2);
+        Assert.Equal(1.1m, rows[0].Test);
+    }
+
+    [Fact]
+    public void QueryFieldsAsDynamicTest()
+    {
+        using var file = AutoDeletingPath.Create(ExcelType.Csv);
+        var path = file.ToString();
+
+        var input = new[] { new CsvFieldMappingTest { Test1 = "X1", Test2 = 5, Test = 2.3m } };
+        _csvExporter.Export(path, input);
+
+        using var reader = new StreamReader(path);
+        using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
+        var records = csv.GetRecords<dynamic>().ToList();
+        var first = records[0] as IDictionary<string, object>;
+
+        Assert.Contains("Column1", first!.Keys);
+        Assert.Contains("Column2", first.Keys);
+        Assert.Contains("Test", first.Keys);
+    }
+
+    private class MixedFieldPropertyTest
+    {
+        [MiniExcelColumnName("F1")]
+        public string Field1;
+
+        [MiniExcelColumnName("P1")]
+        public string Prop1 { get; set; }
+    }
+
+    [Fact]
+    public void ExportAndQueryMixedFieldAndPropertyTest()
+    {
+        using var file = AutoDeletingPath.Create(ExcelType.Csv);
+        var path = file.ToString();
+
+        var input = new[] { new MixedFieldPropertyTest { Field1 = "F", Prop1 = "P" } };
+        _csvExporter.Export(path, input);
+
+        using var reader = new StreamReader(path);
+        using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
+        var records = csv.GetRecords<dynamic>().ToList();
+        var first = records[0] as IDictionary<string, object>;
+
+        Assert.Contains("F1", first.Keys);
+        Assert.Contains("P1", first.Keys);
+    }
+
+    private class CsvFieldsWithoutAttributeDemo
+    {
+        public string NotMappedField;
+
+        [MiniExcelColumnName("Mapped")]
+        public string MappedField;
+    }
+
+    [Fact]
+    public void ExportAndQueryFieldsWithoutAttributeTest()
+    {
+        using var file = AutoDeletingPath.Create(ExcelType.Csv);
+        var path = file.ToString();
+
+        var input = new[] { new CsvFieldsWithoutAttributeDemo { NotMappedField = "NO", MappedField = "YES" } };
+        _csvExporter.Export(path, input);
+
+        using var reader = new StreamReader(path);
+        using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
+        var records = csv.GetRecords<dynamic>().ToList();
+        var first = records[0] as IDictionary<string, object>;
+
+        Assert.Contains("Mapped", first.Keys);
+        Assert.DoesNotContain("NotMappedField", first.Keys);
+    }
 }

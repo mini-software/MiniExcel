@@ -1,4 +1,5 @@
 using MiniExcelLib.OpenXml.Constants;
+using System.ComponentModel;
 using static MiniExcelLib.Core.Helpers.ImageHelper;
 
 namespace MiniExcelLib.OpenXml;
@@ -152,7 +153,7 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
         return sb.ToString();
     }
 
-    private Tuple<string, string, string> GetCellValue(int rowIndex, int cellIndex, object value, MiniExcelColumnInfo? columnInfo, bool valueIsNull)
+    private Tuple<string, string, string> GetCellValue(int rowIndex, int cellIndex, object value, MiniExcelColumnMapping? columnInfo, bool valueIsNull)
     {
         if (valueIsNull)
             return Tuple.Create("2", "str", string.Empty);
@@ -177,8 +178,12 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
 #endif
         if (type.IsEnum)
         {
-            var description = CustomPropertyHelper.GetDescriptionAttribute(type, value);
-            return Tuple.Create("2", "str", description ?? value.ToString());
+            var name = Enum.GetName(type, value) ?? "";
+            var description = type.GetField(name)
+                ?.GetCustomAttribute<DescriptionAttribute>()
+                ?.Description ?? name;
+
+            return Tuple.Create("2", "str", description);
         }
 
         if (TypeHelper.IsNumericType(type))
@@ -209,7 +214,7 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
         return Tuple.Create("2", "str", XmlHelper.EncodeXml(value.ToString()));
     }
 
-    private static Type? GetValueType(object value, MiniExcelColumnInfo? columnInfo)
+    private static Type? GetValueType(object value, MiniExcelColumnMapping? columnInfo)
     {
         Type type;
         if (columnInfo is not { Key: null })
@@ -293,7 +298,7 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
         return base64;
     }
 
-    private Tuple<string, string?, string> GetDateTimeValue(DateTime value, MiniExcelColumnInfo columnInfo)
+    private Tuple<string, string?, string> GetDateTimeValue(DateTime value, MiniExcelColumnMapping columnInfo)
     {
         string? cellValue;
         if (!ReferenceEquals(_configuration.Culture, CultureInfo.InvariantCulture))

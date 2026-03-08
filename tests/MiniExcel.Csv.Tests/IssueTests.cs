@@ -339,7 +339,7 @@ public class IssueTests
             _openXmlExporter.Export(path, value, configuration: config);
 
             //Datetime error
-            Assert.Throws<MiniExcelInvalidCastException>(() =>
+            Assert.Throws<ValueNotAssignableException>(() =>
             {
                 var conf = new OpenXmlConfiguration
                 {
@@ -415,7 +415,7 @@ public class IssueTests
             _csvExporter.Export(path, value, configuration: config);
 
             //Datetime error
-            Assert.Throws<MiniExcelInvalidCastException>(() =>
+            Assert.Throws<ValueNotAssignableException>(() =>
             {
                 var conf = new CsvConfiguration
                 {
@@ -850,7 +850,7 @@ public class IssueTests
             [
                 new() { MyProperty1 = 0, MyProperty2 = 0, MyProperty3 = 0, MyProperty4 = 0 }
             ];
-            Assert.Throws<InvalidOperationException>(() => _csvExporter.Export(path.ToString(), input));
+            Assert.Throws<InvalidMappingException>(() => _csvExporter.Export(path.ToString(), input));
         }
     }
 
@@ -862,7 +862,7 @@ public class IssueTests
         
         var rows = _openXmlImporter.Query<Issue142VoExcelColumnNameNotFound>(path).ToList();
         Assert.Equal(0, rows[0].MyProperty1);
-        Assert.Throws<ArgumentException>(() => _openXmlImporter.Query<Issue142VoOverIndex>(path).ToList());
+        Assert.Throws<InvalidMappingException>(() => _openXmlImporter.Query<Issue142VoOverIndex>(path).ToList());
 
         var rowsXlsx = _openXmlImporter.Query<Issue142Model>(path).ToList();
         Assert.Equal("CustomColumnName", rowsXlsx[0].MyProperty1);

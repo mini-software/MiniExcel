@@ -1,16 +1,15 @@
 namespace MiniExcelLib.Core.Attributes;
 
-[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
-public class MiniExcelColumnAttribute : Attribute
+public class MiniExcelColumnAttribute : MiniExcelAttributeBase
 {
     private int _index = -1;
     private string? _xName;
 
     public string? Name { get; set; }
-     public string[]? Aliases { get; set; } = [];
-     public string? Format { get; set; }
-     public bool Ignore { get; set; }
-    
+    public string[]? Aliases { get; set; } = [];
+    public string? Format { get; set; }
+    public bool Ignore { get; set; }
+
     internal int FormatId { get; private set; } = -1;
     public double Width { get; set; } = 8.42857143;
     public ColumnType Type { get; set; } = ColumnType.Value;
@@ -35,19 +34,19 @@ public class MiniExcelColumnAttribute : Attribute
         _index = index;
         _xName ??= columnName ?? CellReferenceConverter.GetAlphabeticalIndex(index);
     }
-    
-    public void SetFormatId(int formatId) =>  FormatId = formatId;
-}
 
-public enum ColumnType { Value, Formula }
+    public void SetFormatId(int formatId) => FormatId = formatId;
+}
 
 public class DynamicExcelColumn : MiniExcelColumnAttribute
 {
     public string Key { get; set; }
-    public Func<object, object>? CustomFormatter { get; set; }
+    public Func<object?, object?>? CustomFormatter { get; set; }
 
     public DynamicExcelColumn(string key)
     {
         Key = key;
     }
 }
+
+public enum ColumnType { Value, Formula }

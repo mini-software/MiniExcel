@@ -14,7 +14,7 @@ public static partial class MiniExcelMapper
         var type = typeof(T);
 
         //TODO:need to optimize
-        List<MiniExcelColumnInfo> props = [];
+        List<MiniExcelColumnMapping> mappings = [];
         Dictionary<string, int> headersDic = [];
         string[] keys = [];
         var first = true;
@@ -25,10 +25,8 @@ public static partial class MiniExcelMapper
             if (first)
             {
                 keys = item.Keys.ToArray();
-                headersDic = CustomPropertyHelper.GetHeaders(item, trimColumnNames);
-
-                //TODO: alert don't duplicate column name
-                props = CustomPropertyHelper.GetExcelCustomPropertyInfos(type, keys, configuration);
+                headersDic = ColumnMappingsProvider.GetHeaders(item, trimColumnNames);
+                mappings = ColumnMappingsProvider.GetMappingsForImport(type, keys, configuration);
                 first = false;
 
                 // if we treat the header as data we move forwards with the mapping otherwise we jump to the next iteration
@@ -37,20 +35,20 @@ public static partial class MiniExcelMapper
             }
 
             var v = new T();
-            foreach (var pInfo in props)
+            foreach (var map in mappings)
             {
-                if (pInfo.ExcelColumnAliases is not null)
+                if (map.ExcelColumnAliases is not null)
                 {
-                    foreach (var alias in pInfo.ExcelColumnAliases)
+                    foreach (var alias in map.ExcelColumnAliases)
                     {
-                        if (headersDic?.TryGetValue(alias, out var columnId) ?? false)
+                        if (headersDic?.TryGetValue(alias, out var columnId) is true)
                         {
                             var columnName = keys[columnId];
                             item.TryGetValue(columnName, out var aliasItemValue);
 
                             if (aliasItemValue is not null)
                             {
-                                var newAliasValue = MapValue(v, pInfo, aliasItemValue, rowIndex + rowOffset, configuration, stringDecoderFunc);
+                                var newAliasValue = MapValue(v, map, aliasItemValue, rowIndex + rowOffset, configuration, stringDecoderFunc);
                             }
                         }
                     }
@@ -58,11 +56,11 @@ public static partial class MiniExcelMapper
 
                 //Q: Why need to check every time? A: it needs to check everytime, because it's dictionary
                 object? itemValue = null;
-                if (pInfo.ExcelIndexName is not null && (keys?.Contains(pInfo.ExcelIndexName) ?? false))
+                if (map.ExcelIndexName is not null && (keys?.Contains(map.ExcelIndexName) is true))
                 {
-                    item.TryGetValue(pInfo.ExcelIndexName, out itemValue);
+                    item.TryGetValue(map.ExcelIndexName, out itemValue);
                 }
-                else if (pInfo.ExcelColumnName is not null && (headersDic?.TryGetValue(pInfo.ExcelColumnName, out var columnId) ?? false))
+                else if (map.ExcelColumnName is not null && (headersDic?.TryGetValue(map.ExcelColumnName, out var columnId) is true))
                 {
                     var columnName = keys[columnId];
                     item.TryGetValue(columnName, out itemValue);
@@ -70,7 +68,7 @@ public static partial class MiniExcelMapper
 
                 if (itemValue is not null)
                 {
-                    var newValue = MapValue(v, pInfo, itemValue, rowIndex + rowOffset, configuration, stringDecoderFunc);
+                    var newValue = MapValue(v, map, itemValue, rowIndex + rowOffset, configuration, stringDecoderFunc);
                 }
             }
             
@@ -79,28 +77,33 @@ public static partial class MiniExcelMapper
         }
     }
     
-    public static object? MapValue<T>(T v, MiniExcelColumnInfo pInfo, object itemValue, int rowIndex, MiniExcelBaseConfiguration config, Func<string?, string?>? stringDecoderFunc = null) where T : class, new()
+    public static object? MapValue<T>(T v, MiniExcelColumnMapping map, object itemValue, int rowIndex, MiniExcelBaseConfiguration config, Func<string?, string?>? stringDecoderFunc = null) where T : class, new()
     {
         try
         {
             object? newValue = null;
             
-            if (pInfo.Nullable && string.IsNullOrWhiteSpace(itemValue?.ToString()))
+            if (map.Nullable && string.IsNullOrWhiteSpace(itemValue?.ToString()))
             {
                 // value is null, no transformation required
             }
             
-            else if (pInfo.ExcludeNullableType == typeof(Guid))
+            else if (map.ExcludeNullableType == typeof(Guid))
             {
-                newValue = Guid.Parse(itemValue?.ToString() ?? Guid.Empty.ToString());
+                newValue = itemValue switch
+                {
+                    Guid g => g, 
+                    string str => Guid.Parse(str),
+                    _ => Guid.Empty.ToString()
+                };
             }
             
-            else if (pInfo.ExcludeNullableType == typeof(DateTimeOffset))
+            else if (map.ExcludeNullableType == typeof(DateTimeOffset))
             {
                 var vs = itemValue?.ToString();
-                if (pInfo.ExcelFormat is not null)
+                if (map.ExcelFormat is not null)
                 {
-                    if (DateTimeOffset.TryParseExact(vs, pInfo.ExcelFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out var value))
+                    if (DateTimeOffset.TryParseExact(vs, map.ExcelFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out var value))
                     {
                         newValue = value;
                     }
@@ -115,24 +118,20 @@ public static partial class MiniExcelMapper
                 }
             }
             
-            else if (pInfo.ExcludeNullableType == typeof(DateTime))
+            else if (map.ExcludeNullableType == typeof(DateTime))
             {
                 // fix issue 257 https://github.com/mini-software/MiniExcel/issues/257
                 if (itemValue is DateTime)
                 {
                     newValue = itemValue;
-                    pInfo.Property.SetValue(v, newValue);
+                    map.MemberAccessor.SetValue(v, newValue);
                     return newValue;
                 }
 
                 var vs = itemValue?.ToString();
-                if (pInfo.ExcelFormat is not null)
+                if (map.ExcelFormat is not null)
                 {
-                    if (pInfo.Property.Info.PropertyType == typeof(DateTimeOffset) && DateTimeOffset.TryParseExact(vs, pInfo.ExcelFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out var offsetValue))
-                    {
-                        newValue = offsetValue;
-                    }
-                    else if (DateTime.TryParseExact(vs, pInfo.ExcelFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out var value))
+                    if (DateTime.TryParseExact(vs, map.ExcelFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out var value))
                     {
                         newValue = value;
                     }
@@ -148,12 +147,12 @@ public static partial class MiniExcelMapper
             }
             
 #if NET6_0_OR_GREATER
-            else if (pInfo.ExcludeNullableType == typeof(DateOnly))
+            else if (map.ExcludeNullableType == typeof(DateOnly))
             {
                 if (itemValue is DateOnly)
                 {
                     newValue = itemValue;
-                    pInfo.Property.SetValue(v, newValue);
+                    map.MemberAccessor.SetValue(v, newValue);
                     return newValue;
                 }
 
@@ -163,14 +162,14 @@ public static partial class MiniExcelMapper
                         throw new InvalidCastException($"Could not convert cell of type DateTime to DateOnly, because DateTime was not at midnight, but at {dateTimeValue:HH:mm:ss}.");
 
                     newValue = DateOnly.FromDateTime(dateTimeValue);
-                    pInfo.Property.SetValue(v, newValue);
+                    map.MemberAccessor.SetValue(v, newValue);
                     return newValue;
                 }
 
                 var vs = itemValue?.ToString();
-                if (pInfo.ExcelFormat is not null)
+                if (map.ExcelFormat is not null)
                 {
-                    if (DateOnly.TryParseExact(vs, pInfo.ExcelFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out var dateOnlyCustom))
+                    if (DateOnly.TryParseExact(vs, map.ExcelFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out var dateOnlyCustom))
                     {
                         newValue = dateOnlyCustom;
                     }
@@ -186,19 +185,19 @@ public static partial class MiniExcelMapper
             }
 #endif
 
-            else if (pInfo.ExcludeNullableType == typeof(TimeSpan))
+            else if (map.ExcludeNullableType == typeof(TimeSpan))
             {
                 if (itemValue is TimeSpan)
                 {
                     newValue = itemValue;
-                    pInfo.Property.SetValue(v, newValue);
+                    map.MemberAccessor.SetValue(v, newValue);
                     return newValue;
                 }
 
                 var vs = itemValue?.ToString();
-                if (pInfo.ExcelFormat is not null)
+                if (map.ExcelFormat is not null)
                 {
-                    if (TimeSpan.TryParseExact(vs, pInfo.ExcelFormat, CultureInfo.InvariantCulture, out var value))
+                    if (TimeSpan.TryParseExact(vs, map.ExcelFormat, CultureInfo.InvariantCulture, out var value))
                     {
                         newValue = value;
                     }
@@ -213,7 +212,7 @@ public static partial class MiniExcelMapper
                     throw new InvalidCastException($"{vs} cannot be cast to TimeSpan");
             }
             
-            else if (pInfo.ExcludeNullableType == typeof(double))
+            else if (map.ExcludeNullableType == typeof(double))
             {
                 if (double.TryParse(Convert.ToString(itemValue, config.Culture), NumberStyles.Any, config.Culture, out var doubleValue))
                 {
@@ -228,7 +227,7 @@ public static partial class MiniExcelMapper
                 }
             }
             
-            else if (pInfo.ExcludeNullableType == typeof(bool))
+            else if (map.ExcludeNullableType == typeof(bool))
             {
                 var vs = itemValue?.ToString();
                 newValue = vs switch
@@ -239,20 +238,20 @@ public static partial class MiniExcelMapper
                 };
             }
             
-            else if (pInfo.Property.Info.PropertyType == typeof(string))
+            else if (map.ExcludeNullableType == typeof(string))
             {
                 var strValue = itemValue?.ToString();
                 newValue = stringDecoderFunc?.Invoke(strValue) ?? strValue;
             }
             
-            else if (pInfo.ExcludeNullableType.IsEnum)
+            else if (map.ExcludeNullableType.IsEnum)
             {
-                var fieldInfo = pInfo.ExcludeNullableType.GetFields().FirstOrDefault(e => e.GetCustomAttribute<DescriptionAttribute>(false)?.Description == itemValue?.ToString());
+                var fieldInfo = map.ExcludeNullableType.GetFields().FirstOrDefault(e => e.GetCustomAttribute<DescriptionAttribute>(false)?.Description == itemValue?.ToString());
                 var value = fieldInfo?.Name ?? itemValue?.ToString() ?? "";
-                newValue = Enum.Parse(pInfo.ExcludeNullableType, value, true);
+                newValue = Enum.Parse(map.ExcludeNullableType, value, true);
             }
 
-            else if (pInfo.ExcludeNullableType == typeof(Uri))
+            else if (map.ExcludeNullableType == typeof(Uri))
             {
                 var rawValue = itemValue?.ToString();
                 if (!Uri.TryCreate(rawValue, UriKind.RelativeOrAbsolute, out var uri))
@@ -262,20 +261,25 @@ public static partial class MiniExcelMapper
 
             else
             {
-                // Use pInfo.ExcludeNullableType to resolve : https://github.com/mini-software/MiniExcel/issues/138
-                newValue = Convert.ChangeType(itemValue, pInfo.ExcludeNullableType, config.Culture);
+                // Use map.ExcludeNullableType to resolve : https://github.com/mini-software/MiniExcel/issues/138
+                newValue = Convert.ChangeType(itemValue, map.ExcludeNullableType, config.Culture);
             }
 
-            pInfo.Property.SetValue(v, newValue);
+            map.MemberAccessor.SetValue(v, newValue);
             return newValue;
         }
         catch (Exception ex) when (ex is InvalidCastException or FormatException)
         {
-            var columnName = pInfo.ExcelColumnName ?? pInfo.Property.Name;
+            var columnName = map.ExcelColumnName ?? map.MemberAccessor.Name;
             var errorRow = rowIndex + 1;
             
-            var msg = $"ColumnName: {columnName}, CellRow: {errorRow}, Value: {itemValue}. The value cannot be cast to type {pInfo.Property.Info.PropertyType.Name}.";
-            throw new MiniExcelInvalidCastException(columnName, errorRow, itemValue, pInfo.Property.Info.PropertyType, msg);
+            throw new ValueNotAssignableException(
+                columnName: columnName, 
+                row: errorRow, 
+                value: itemValue, 
+                columnType: map.ExcludeNullableType,
+                message: $"The value {itemValue} cannot be assigned to type {map.ExcludeNullableType.Name}."
+            );
         }
     }
 }

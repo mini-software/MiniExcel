@@ -49,7 +49,8 @@ public partial class CsvImporter
     {
         using var excelReader = new CsvReader(stream, configuration);
         await foreach (var item in excelReader.QueryAsync(useHeaderRow, null, "A1", cancellationToken).ConfigureAwait(false))
-            yield return item.Aggregate(seed: GetNewExpandoObject(), func: AddPairToDict);
+            yield return item;
+            //yield return item.ToDynamicObject();
     }
 
     #endregion
@@ -187,7 +188,7 @@ public partial class CsvImporter
         var stream = FileHelper.OpenSharedRead(path);
         var values = QueryAsync(stream, useHeaderRow, configuration, cancellationToken);
         
-        return await MiniExcelDataReader.CreateAsync(stream, CastAsync(values, cancellationToken)).ConfigureAwait(false);
+        return await MiniExcelDataReader.CreateAsync(stream, values.CastToDictionary(cancellationToken)).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -198,24 +199,8 @@ public partial class CsvImporter
         CsvConfiguration? configuration = null, CancellationToken cancellationToken = default)
     {
         var values = QueryAsync(stream, useHeaderRow, configuration, cancellationToken);
-        return await MiniExcelDataReader.CreateAsync(stream, CastAsync(values, cancellationToken)).ConfigureAwait(false);
+        return await MiniExcelDataReader.CreateAsync(stream, values.CastToDictionary(cancellationToken)).ConfigureAwait(false);
     }
     
     #endregion
-    
-    private static IDictionary<string, object?> GetNewExpandoObject() => new ExpandoObject();
-    private static IDictionary<string, object?> AddPairToDict(IDictionary<string, object?> dict, KeyValuePair<string, object?> pair)
-    {
-        dict.Add(pair);
-        return dict; 
-    }
-    
-    private static async IAsyncEnumerable<IDictionary<string, object?>> CastAsync(IAsyncEnumerable<dynamic> enumerable, CancellationToken cancellationToken = default)
-    {
-        await foreach (var item in enumerable.WithCancellation(cancellationToken).ConfigureAwait(false))
-        {
-            if (item is IDictionary<string, object?> dict)
-                yield return dict;
-        }
-    }
 }

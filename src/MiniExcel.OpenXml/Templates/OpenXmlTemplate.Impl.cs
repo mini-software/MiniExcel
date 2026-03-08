@@ -1,5 +1,6 @@
 using MiniExcelLib.Core.Attributes;
 using MiniExcelLib.OpenXml.Constants;
+using System.ComponentModel;
 
 namespace MiniExcelLib.OpenXml.Templates;
 
@@ -815,7 +816,11 @@ internal partial class OpenXmlTemplate
                     }
                     else if (type?.IsEnum is true)
                     {
-                        var description = CustomPropertyHelper.GetDescriptionAttribute(type, cellValue);
+                        var stringValue = Enum.GetName(type, cellValue) ?? "";
+
+                        var attr = type.GetField(stringValue)?.GetCustomAttribute<DescriptionAttribute>();
+                        var description = attr?.Description ?? stringValue;
+
                         cellValueStr = XmlHelper.EncodeXml(description);
                     }
                     else

@@ -30,7 +30,7 @@ public sealed class ExcelColumnWidthCollection : IReadOnlyCollection<ExcelColumn
         _columnWidths = columnWidths.ToDictionary(x => x.Index);
     }
 
-    internal static ExcelColumnWidthCollection GetFromMappings(ICollection<MiniExcelColumnInfo?> mappings, double? minWidth = null, double maxWidth = 200)
+    internal static ExcelColumnWidthCollection GetFromMappings(ICollection<MiniExcelColumnMapping?> mappings, double? minWidth = null, double maxWidth = 200)
     {
         var i = 1;
         List<ExcelColumnWidth> columnWidths = [];

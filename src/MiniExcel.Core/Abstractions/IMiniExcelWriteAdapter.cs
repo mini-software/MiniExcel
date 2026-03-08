@@ -3,13 +3,13 @@
 public interface IMiniExcelWriteAdapter
 {
     bool TryGetKnownCount(out int count);
-    List<MiniExcelColumnInfo>? GetColumns();
-    IEnumerable<IEnumerable<CellWriteInfo>> GetRows(List<MiniExcelColumnInfo> props, CancellationToken cancellationToken = default);
+    List<MiniExcelColumnMapping>? GetColumns();
+    IEnumerable<IEnumerable<CellWriteInfo>> GetRows(List<MiniExcelColumnMapping> props, CancellationToken cancellationToken = default);
 }
 
-public readonly struct CellWriteInfo(object? value, int cellIndex, MiniExcelColumnInfo prop)
+public readonly struct CellWriteInfo(object? value, int cellIndex, MiniExcelColumnMapping prop)
 {
     public object? Value { get; } = value;
     public int CellIndex { get; } = cellIndex;
-    public MiniExcelColumnInfo Prop { get; } = prop;
+    public MiniExcelColumnMapping Prop { get; } = prop;
 }

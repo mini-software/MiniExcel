@@ -1,6 +1,6 @@
 ﻿namespace MiniExcelLib.Core.Exceptions;
 
-public class MiniExcelColumnNotFoundException(
+public class ColumnNotFoundException(
     string? columnIndex,
     string? columnName,
     string[] columnAliases,

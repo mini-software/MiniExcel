@@ -1209,6 +1209,18 @@ public class Dto
 }
 ```
 
+#### 4. Set Column Visibility
+
+```csharp
+public class Dto
+{
+    public string Name { get; set; }
+
+    [MiniExcelHidden]
+    public int SecretPoints { get; set; }    
+}
+```
+
 #### 4. Multiple column names mapping to the same property.
 
 ```csharp
@@ -1247,11 +1259,14 @@ Multiple attributes can be simplified using the `MiniExcelColumnAttribute`:
 ```csharp
 public class Dto
 {
-    [MiniExcelColumn(Name = "ID",Index =0)]
+    [MiniExcelColumn(Name = "ID", Index = 0)]
     public string MyProperty { get; set; }
     
     [MiniExcelColumn(Name = "CreateDate", Index = 1, Format = "yyyy-MM", Width = 100)]
     public DateTime MyProperty2 { get; set; }
+    
+    [MiniExcelColumn(Name = "SecretColumn", Hidden = true)]
+    public int MyProperty3 { get; set; }
 }
 ```
 

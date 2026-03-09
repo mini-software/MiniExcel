@@ -14,7 +14,8 @@ public class MiniExcelColumnMapping
     public string? ExcelFormat { get; internal set; }
     public double? ExcelColumnWidth { get; internal set; }
     public string? ExcelIndexName { get; internal set; }
-    public bool ExcelIgnore { get; internal set; }
+    public bool ExcelHiddenColumn { get; internal set; }
+    public bool ExcelIgnoreColumn { get; internal set; }
     public int ExcelFormatId { get; internal set; }
     public ColumnType ExcelColumnType { get; internal set; }
     public Func<object?, object?>? CustomFormatter { get; set; }

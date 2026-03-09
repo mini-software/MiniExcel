@@ -143,6 +143,7 @@ internal static class ColumnMappingsProvider
                 ExcelColumnIndex = m.GetAttribute<MiniExcelColumnIndexAttribute>()?.ExcelColumnIndex ?? excelColumnIndex,
                 ExcelIndexName = m.GetAttribute<MiniExcelColumnIndexAttribute>()?.ExcelXName ?? excelColumn?.IndexName,
                 ExcelColumnWidth = m.GetAttribute<MiniExcelColumnWidthAttribute>()?.ExcelColumnWidth ?? excelColumn?.Width,
+                ExcelHiddenColumn = m.GetAttribute<MiniExcelHiddenAttribute>()?.Hidden ?? excelColumn?.Hidden ?? false,
                 ExcelFormat = excelFormat ?? excelColumn?.Format,
                 ExcelFormatId = excelColumn?.FormatId ?? -1,
                 ExcelColumnType = excelColumn?.Type ?? ColumnType.Value,
@@ -201,9 +202,9 @@ internal static class ColumnMappingsProvider
                 if (dynamicColumn.Name is { } colName)
                     mapping.ExcelColumnName = colName;
 
-
                 mapping.ExcelColumnIndex = dynamicColumn.Index;
                 mapping.ExcelColumnWidth = dynamicColumn.Width;
+                mapping.ExcelHiddenColumn = dynamicColumn.Hidden;
                 mapping.ExcelColumnType = dynamicColumn.Type;
                 mapping.CustomFormatter = dynamicColumn.CustomFormatter;
                 
@@ -263,7 +264,8 @@ internal static class ColumnMappingsProvider
             return member;
 
         member.Nullable = true;
-        member.ExcelIgnore = dynamicColumn.Ignore;
+        member.ExcelIgnoreColumn = dynamicColumn.Ignore;
+        member.ExcelHiddenColumn = dynamicColumn.Hidden;
         member.ExcelColumnType = dynamicColumn.Type;
         member.ExcelColumnWidth = dynamicColumn.Width;
         member.CustomFormatter = dynamicColumn.CustomFormatter;

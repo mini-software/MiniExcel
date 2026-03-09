@@ -42,10 +42,10 @@ internal static class WorksheetXml
     internal const string EndRow = "</x:row>";
     internal const string StartCols = "<x:cols>";
         
-    internal static string Column(int colIndex, double columnWidth)
-        => $"""<x:col min="{colIndex}" max="{colIndex}" width="{columnWidth.ToString(CultureInfo.InvariantCulture)}" customWidth="1" />""";
+    internal static string Column(int colIndex, double columnWidth, bool hidden = false)
+        => $"""<x:col min="{colIndex}" max="{colIndex}" width="{columnWidth.ToString(CultureInfo.InvariantCulture)}" hidden="{(hidden ? 1 : 0)}" customWidth="1" />""";
         
-    private static readonly int MaxColumnLength = Column(int.MaxValue, double.MaxValue).Length;
+    private static readonly int MaxColumnLength = Column(int.MaxValue, double.MaxValue, true).Length;
 
     public static int GetColumnPlaceholderLength(int columnCount) => StartCols.Length + MaxColumnLength * columnCount + EndCols.Length;
 

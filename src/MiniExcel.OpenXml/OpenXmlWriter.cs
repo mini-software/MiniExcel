@@ -260,7 +260,7 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
             }
 
             int maxRowIndex;
-            var maxColumnIndex = props.Count(x => x is { ExcelIgnore: false });
+            var maxColumnIndex = props.Count(x => x is { ExcelIgnoreColumn: false });
 
             await writer.WriteAsync(WorksheetXml.StartWorksheetWithRelationship, cancellationToken).ConfigureAwait(false);
 
@@ -412,7 +412,7 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
                 await writer.WriteAsync(WorksheetXml.StartCols, cancellationToken).ConfigureAwait(false);
                 hasWrittenStart = true;
             }
-            await writer.WriteAsync(WorksheetXml.Column(column.Index, column.Width), cancellationToken).ConfigureAwait(false);
+            await writer.WriteAsync(WorksheetXml.Column(column.Index, column.Width, column.Hidden), cancellationToken).ConfigureAwait(false);
         }
 
         if (!hasWrittenStart)
@@ -433,7 +433,7 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
             //reason : https://github.com/mini-software/MiniExcel/issues/142
             if (p is not null)
             {
-                if (p.ExcelIgnore)
+                if (p.ExcelIgnoreColumn)
                     continue;
 
                 var r = CellReferenceConverter.GetCellFromCoordinates(xIndex, yIndex);

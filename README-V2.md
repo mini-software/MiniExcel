@@ -1209,7 +1209,19 @@ public class Dto
 }
 ```
 
-#### 4. Multiple column names mapping to the same property.
+#### 4. Set Column Visibility
+
+```csharp
+public class Dto
+{
+    public string Name { get; set; }
+
+    [MiniExcelHidden]
+    public int SecretPoints { get; set; }    
+}
+```
+
+#### 5. Multiple column names mapping to the same property.
 
 ```csharp
 public class Dto
@@ -1221,7 +1233,7 @@ public class Dto
 }
 ```
 
-#### 5. System.ComponentModel.DisplayNameAttribute
+#### 6. System.ComponentModel.DisplayNameAttribute
 
 The `DisplayNameAttribute` has the same effect as the `MiniExcelColumnNameAttribute`:
 
@@ -1240,22 +1252,25 @@ public class Dto
 }
 ```
 
-#### 6. MiniExcelColumnAttribute
+#### 7. MiniExcelColumnAttribute
 
 Multiple attributes can be simplified using the `MiniExcelColumnAttribute`:
 
 ```csharp
 public class Dto
 {
-    [MiniExcelColumn(Name = "ID",Index =0)]
+    [MiniExcelColumn(Name = "ID", Index = 0)]
     public string MyProperty { get; set; }
     
     [MiniExcelColumn(Name = "CreateDate", Index = 1, Format = "yyyy-MM", Width = 100)]
     public DateTime MyProperty2 { get; set; }
+    
+    [MiniExcelColumn(Name = "SecretColumn", Hidden = true)]
+    public int MyProperty3 { get; set; }
 }
 ```
 
-#### 7. DynamicColumnAttribute
+#### 8. DynamicColumnAttribute
 
 Attributes can also be set on columns dynamically:
 ```csharp
@@ -1276,7 +1291,7 @@ var exporter = MiniExcel.Exporters.GetOpenXmlExporter();
 exporter.Export(path, value, configuration: config);
 ```
 
-#### 8. MiniExcelSheetAttribute
+#### 9. MiniExcelSheetAttribute
 
 It is possible to define the name and visibility of a sheet through the `MiniExcelSheetAttribute`:
 

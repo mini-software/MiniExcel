@@ -42,7 +42,7 @@ internal class DataReaderWriteAdapter(IDataReader reader, MiniExcelBaseConfigura
         for (int i = 0; i < _reader.FieldCount; i++)
         {
             var prop = props[i];
-            if (prop is { ExcelIgnore: false })
+            if (prop is { ExcelIgnoreColumn: false })
             {
                 var columnIndex = _configuration.DynamicColumnFirst 
                     ? _reader.GetOrdinal(prop.Key.ToString())

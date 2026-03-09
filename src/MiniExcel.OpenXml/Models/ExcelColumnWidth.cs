@@ -1,6 +1,6 @@
 namespace MiniExcelLib.OpenXml.Models;
 
-public sealed class ExcelColumnWidth(int index, double width)
+public sealed class ExcelColumnWidth(int index, double width, bool hidden = false)
 {
     // Aptos is the default font for Office 2023 and onwards, over which the width of cells are calculated at the size of 11pt.
     // Priorly it was Calibri, which had very similar parameters, so no visual differences should be noticed.
@@ -11,6 +11,7 @@ public sealed class ExcelColumnWidth(int index, double width)
 
     public int Index { get; } = index;
     public double Width { get; set; } = width;
+    public bool Hidden { get; set; } = hidden;
 
     public static double GetWidthFromTextLength(double characters)
         => Math.Round(characters + Aptos11Padding, 8);
@@ -37,12 +38,13 @@ public sealed class ExcelColumnWidthCollection : IReadOnlyCollection<ExcelColumn
 
         foreach (var map in mappings)
         {
-            if (map?.ExcelColumnWidth is not null || minWidth is not null)
+            if (map is { ExcelHiddenColumn: true } or { ExcelColumnWidth: not null } || minWidth is not null)
             {
                 var colIndex = map?.ExcelColumnIndex + 1 ?? i;
-                var width = map?.ExcelColumnWidth ?? minWidth!.Value;
+                var hidden = map?.ExcelHiddenColumn ?? false;
+                var width = map?.ExcelColumnWidth ?? minWidth ?? OpenXmlConfiguration.Default.MinWidth;
 
-                columnWidths.Add(new ExcelColumnWidth(colIndex, width + ExcelColumnWidth.Aptos11Padding));
+                columnWidths.Add(new ExcelColumnWidth(colIndex, width + ExcelColumnWidth.Aptos11Padding, hidden));
             }
 
             i++;

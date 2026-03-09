@@ -8,6 +8,7 @@ public class MiniExcelColumnAttribute : MiniExcelAttributeBase
     public string? Name { get; set; }
     public string[]? Aliases { get; set; } = [];
     public string? Format { get; set; }
+    public bool Hidden { get; set; }
     public bool Ignore { get; set; }
 
     internal int FormatId { get; private set; } = -1;

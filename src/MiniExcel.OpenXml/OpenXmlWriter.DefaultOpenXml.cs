@@ -178,11 +178,16 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
 #endif
         if (type.IsEnum)
         {
-            var name = Enum.GetName(type, value) ?? "";
-            var description = type.GetField(name)
-                ?.GetCustomAttribute<DescriptionAttribute>()
-                ?.Description ?? name;
+            string? description = null;
+            var name = Enum.GetName(type, value);
 
+            if (!string.IsNullOrEmpty(name))
+            {
+                var descAttr = type.GetField(name)?.GetCustomAttribute<DescriptionAttribute>();
+                description = descAttr?.Description ?? name;
+            }
+
+            description ??= value.ToString();
             return Tuple.Create("2", "str", description);
         }
 

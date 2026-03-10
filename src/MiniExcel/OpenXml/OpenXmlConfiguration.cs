@@ -9,6 +9,7 @@ namespace MiniExcelLibs.OpenXml
         public bool FillMergedCells { get; set; }
         public TableStyles TableStyles { get; set; } = TableStyles.Default;
         public bool AutoFilter { get; set; } = true;
+        public bool RightToLeft { get; set; } = false;
         public int FreezeRowCount { get; set; } = 1;
         public int FreezeColumnCount { get; set; } = 0;
         public bool EnableConvertByteArray { get; set; } = true;

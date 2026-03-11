@@ -1073,7 +1073,18 @@ public class Dto
 }
 ```
 
-#### 4. Multiple column names mapping to the same property.
+#### 4. Set Column Visibility(MiniExcelHiddenAttribute)
+```csharp
+public class Dto
+{
+    public string Name { get; set; }
+
+    [MiniExcelHidden]
+    public int SecretPoints { get; set; }    
+}
+```
+
+#### 5. Multiple column names mapping to the same property.
 
 ```csharp
 public class Dto
@@ -1084,9 +1095,7 @@ public class Dto
 }
 ```
 
-
-
-#### 5. System.ComponentModel.DisplayNameAttribute = ExcelColumnName.excelColumnNameAttribute
+#### 6. System.ComponentModel.DisplayNameAttribute = ExcelColumnName.excelColumnNameAttribute
 
 Since 1.24.0, system supports System.ComponentModel.DisplayNameAttribute = ExcelColumnName.excelColumnNameAttribute
 
@@ -1102,9 +1111,7 @@ public class TestIssueI4TXGTDto
 }
 ```
 
-
-
-#### 6. ExcelColumnAttribute
+#### 7. ExcelColumnAttribute
 
 Since V1.26.0, multiple attributes can be simplified like :
 ```csharp
@@ -1114,12 +1121,12 @@ Since V1.26.0, multiple attributes can be simplified like :
             public string MyProperty { get; set; }
             [ExcelColumn(Name = "CreateDate", Index = 1,Format ="yyyy-MM",Width =100)]
             public DateTime MyProperty2 { get; set; }
+            [ExcelColumn(Name = "SecretColumn", Hidden = true)]
+            public int MyProperty3 { get; set; }
         }
 ```
 
-
-
-#### 7. DynamicColumnAttribute
+#### 8. DynamicColumnAttribute
 
 Since V1.26.0, we can set the attributes of Column dynamically
 ```csharp
@@ -1138,7 +1145,7 @@ Since V1.26.0, we can set the attributes of Column dynamically
 ```
 ![image](https://user-images.githubusercontent.com/12729184/164510353-5aecbc4e-c3ce-41e8-b6cf-afd55eb23b68.png)
 
-#### 8. DynamicSheetAttribute
+#### 9. DynamicSheetAttribute
 
 Since V1.31.4 we can set the attributes of Sheet dynamically. We can set sheet name and state (visibility).
 ```csharp

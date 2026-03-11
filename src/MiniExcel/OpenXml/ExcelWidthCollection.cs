@@ -2,6 +2,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 namespace MiniExcelLibs.OpenXml
@@ -16,6 +17,7 @@ namespace MiniExcelLibs.OpenXml
         
         public int Index { get; set; }
         public double Width { get; set; }
+        public bool Hidden { get; set; }
         
         public static double GetWidthFromTextLength(double characters)
             => Math.Round(characters + Aptos11Padding, 8);
@@ -41,12 +43,13 @@ namespace MiniExcelLibs.OpenXml
 
             foreach (var map in mappings)
             {
-                if (map?.ExcelColumnWidth != null || minWidth != null)
+                if ((map?.ExcelHidden ?? false) || map?.ExcelColumnWidth != null || minWidth != null)
                 {
                     var colIndex = map?.ExcelColumnIndex + 1 ?? i;
-                    var width = map?.ExcelColumnWidth ?? minWidth.Value;
+                    var hidden = map?.ExcelHidden ?? false;
+                    var width = map?.ExcelColumnWidth ?? minWidth ?? 8.42857143;
 
-                    columnWidths.Add(new ExcelColumnWidth { Index = colIndex, Width = width + ExcelColumnWidth.Aptos11Padding });
+                    columnWidths.Add(new ExcelColumnWidth { Index = colIndex, Width = width + ExcelColumnWidth.Aptos11Padding, Hidden = hidden});
                 }
 
                 i++;

@@ -299,7 +299,7 @@ namespace MiniExcelLibs.OpenXml
                     writer.Write(WorksheetXml.StartCols);
                     hasWrittenStart = true;
                 }
-                writer.Write(WorksheetXml.Column(column.Index, column.Width));
+                writer.Write(WorksheetXml.Column(column.Index, column.Width, column.Hidden));
             }
 
             if (hasWrittenStart)

@@ -221,11 +221,11 @@ namespace MiniExcelLibs.OpenXml
             if (_configuration.EnableAutoWidth)
             {
                 columnWidthsPlaceholderPosition = WriteColumnWidthPlaceholders(writer, maxColumnIndex);
-                widths = new ExcelWidthCollection(_configuration.MinWidth, _configuration.MaxWidth, props);
+                widths = ExcelWidthCollection.FromProps(props, _configuration.MinWidth, _configuration.MaxWidth);
             }
             else
             {
-                WriteColumnsWidths(writer, ExcelColumnWidth.FromProps(props));
+                WriteColumnsWidths(writer, ExcelWidthCollection.FromProps(props));
             }
 
             //header
@@ -299,7 +299,7 @@ namespace MiniExcelLibs.OpenXml
                     writer.Write(WorksheetXml.StartCols);
                     hasWrittenStart = true;
                 }
-                writer.Write(WorksheetXml.Column(column.Index, column.Width));
+                writer.Write(WorksheetXml.Column(column.Index, column.Width, column.Hidden));
             }
 
             if (hasWrittenStart)

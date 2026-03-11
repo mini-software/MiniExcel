@@ -106,6 +106,8 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
             => $"<{prefix}mergeCell ref=\"{ColumnHelper.GetAlphabetColumnName(X1)}{Y1}:{ColumnHelper.GetAlphabetColumnName(X2)}{Y2}\"/>";
     }
 
+    internal enum SpecialCellType { None, Group, Endgroup, Merge, Header }
+    
     internal class MergeCellIndex
     {
         public int RowStart { get; set; }
@@ -378,7 +380,31 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                     var rowInfo = _xRowInfos[rowNo];
                     var row = rowInfo.Row;
 
-                    if (row.InnerText.Contains("@group"))
+                    SpecialCellType specialCellType = SpecialCellType.None;
+                    foreach (XmlNode c in row.GetElementsByTagName("c"))
+                    {
+                        switch (c.InnerText)
+                        {
+                            case "@group":
+                                specialCellType = SpecialCellType.Group;
+                                break;
+                            case "@endgroup":
+                                specialCellType = SpecialCellType.Endgroup;
+                                break;
+                            case "@merge":
+                            case "@endmerge":
+                                specialCellType = SpecialCellType.Merge;
+                                break;
+                            case var s when s.StartsWith("@header"):
+                                specialCellType = SpecialCellType.Header;
+                                break;
+                        }
+
+                        if (specialCellType != SpecialCellType.None)
+                            break;
+                    }
+                    
+                    if (specialCellType == SpecialCellType.Group)
                     {
                         groupingStarted = true;
                         hasEverGroupStarted = true;
@@ -387,7 +413,7 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                         prevHeader = "";
                         continue;
                     }
-                    else if (row.InnerText.Contains("@endgroup"))
+                    else if (specialCellType == SpecialCellType.Endgroup)
                     {
                         if (cellIEnumerableValuesIndex >= cellIEnumerableValues.Count - 1)
                         {
@@ -404,23 +430,19 @@ namespace MiniExcelLibs.OpenXml.SaveByTemplate
                         isFirstRound = false;
                         continue;
                     }
-                    else if (row.InnerText.Contains("@header"))
+                    else if (specialCellType == SpecialCellType.Header)
                     {
                         isHeaderRow = true;
                     }
-                    else if (mergeCells)
+                    else if (specialCellType == SpecialCellType.Merge)
                     {
-                        if (row.InnerText.Contains("@merge") || row.InnerText.Contains("@endmerge"))
-                        {
-                            mergeRowCount++;
-                            continue;
-                        }
+                        mergeRowCount++;
+                        continue;
                     }
 
                     if (groupingStarted && !isCellIEnumerableValuesSet)
                     {
-                        cellIEnumerableValues = rowInfo.CellIlListValues
-                            ?? rowInfo.CellIEnumerableValues.Cast<object>().ToList();
+                        cellIEnumerableValues = rowInfo.CellIlListValues ?? rowInfo.CellIEnumerableValues.Cast<object>().ToList();
                         isCellIEnumerableValuesSet = true;
                     }
 

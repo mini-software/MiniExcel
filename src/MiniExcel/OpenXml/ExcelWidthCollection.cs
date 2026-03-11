@@ -28,7 +28,12 @@ namespace MiniExcelLibs.OpenXml
         private readonly Dictionary<int, ExcelColumnWidth> _columnWidths;
         private readonly double _maxWidth;
 
-        public IReadOnlyCollection<ExcelColumnWidth> Columns => _columnWidths.Values.ToList();
+        public IReadOnlyCollection<ExcelColumnWidth> Columns
+#if NET45
+            => _columnWidths.Values.ToList();
+#else
+            => _columnWidths.Values;
+#endif
 
         private ExcelWidthCollection(ICollection<ExcelColumnWidth> columnWidths, double maxWidth)
         {

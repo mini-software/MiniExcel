@@ -1079,7 +1079,7 @@ public class Dto
 {
     public string Name { get; set; }
 
-    [MiniExcelHidden]
+    [ExcelHidden]
     public int SecretPoints { get; set; }    
 }
 ```

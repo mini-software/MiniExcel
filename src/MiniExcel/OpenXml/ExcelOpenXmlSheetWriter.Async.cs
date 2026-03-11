@@ -351,7 +351,7 @@ namespace MiniExcelLibs.OpenXml
                     await writer.WriteAsync(WorksheetXml.StartCols);
                     hasWrittenStart = true;
                 }
-                await writer.WriteAsync(WorksheetXml.Column(column.Index, column.Width));
+                await writer.WriteAsync(WorksheetXml.Column(column.Index, column.Width, column.Hidden));
             }
             
             if (!hasWrittenStart)

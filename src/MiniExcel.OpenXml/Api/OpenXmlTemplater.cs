@@ -24,18 +24,18 @@ public sealed partial class OpenXmlTemplater
     }
 
     [CreateSyncVersion]
-    public async Task ApplyTemplateAsync(string path, string templatePath, object value,
+    public async Task ApplyTemplateAsync(string path, string templatePath, object value, bool overwriteFile = false,
         OpenXmlConfiguration? configuration = null, CancellationToken cancellationToken = default)
     {
-        using var stream = File.Create(path);
+        using var stream = overwriteFile ? File.Create(path) : File.Open(path, FileMode.CreateNew);
         await ApplyTemplateAsync(stream, templatePath, value, configuration, cancellationToken).ConfigureAwait(false);
     }
 
     [CreateSyncVersion]
-    public async Task ApplyTemplateAsync(string path, Stream templateStream, object value,
+    public async Task ApplyTemplateAsync(string path, Stream templateStream, object value, bool  overwriteFile = false,
         OpenXmlConfiguration? configuration = null, CancellationToken cancellationToken = default)
     {
-        using var stream = File.Create(path);
+        using var stream = overwriteFile ? File.Create(path) : File.Open(path, FileMode.CreateNew);
         var template = GetOpenXmlTemplate(stream, configuration);
         await template.SaveAsByTemplateAsync(templateStream, value, cancellationToken).ConfigureAwait(false);
     }
@@ -57,10 +57,10 @@ public sealed partial class OpenXmlTemplater
     }
     
     [CreateSyncVersion]
-    public async Task ApplyTemplateAsync(string path, byte[] templateBytes, object value,
+    public async Task ApplyTemplateAsync(string path, byte[] templateBytes, object value, bool overwriteFile = false,
         OpenXmlConfiguration? configuration = null, CancellationToken cancellationToken = default)
     {
-        using var stream = File.Create(path);
+        using var stream = overwriteFile ? File.Create(path) :  File.Open(path, FileMode.CreateNew);
         await ApplyTemplateAsync(stream, templateBytes, value, configuration, cancellationToken).ConfigureAwait(false);
     }
 

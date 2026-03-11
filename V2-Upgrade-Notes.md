@@ -12,3 +12,4 @@
 - `IConfiguration` is now `IMiniExcelConfiguration`, but most methods now require the proper implementation (`OpenXmlConfiguration` or `CsvConfiguration`) to be provided rather than the interface
 - MiniExcel now fully supports asynchronous streaming the queries, 
 so the return type for `OpenXmlImporter.QueryAsync` is `IAsyncEnumerable<T>` instead of `Task<IEnumerable<T>>`
+- When applying a template, unlike version 1.x, the flag for overwriting an already existing file must be provided explicitly. 

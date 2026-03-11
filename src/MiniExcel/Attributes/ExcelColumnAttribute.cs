@@ -13,7 +13,7 @@ namespace MiniExcelLibs.Attributes
 
         public string Name { get; set; }
         public string[] Aliases { get; set; }
-        public double Width { get; set; } = 9.28515625;
+        public double Width { get; set; } = 8.42857143;
         public string Format { get; set; }
         public bool Ignore { get; set; }
         public ColumnType Type { get; set; } = ColumnType.Value;

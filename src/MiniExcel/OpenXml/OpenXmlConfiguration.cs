@@ -35,7 +35,7 @@ namespace MiniExcelLibs.OpenXml
         /// </summary>
         public bool EnableAutoWidth { get; set; }
 
-        public double MinWidth { get; set; } = 9.28515625;
+        public double MinWidth { get; set; } = 8.42857143;
 
         public double MaxWidth { get; set; } = 200;
     }

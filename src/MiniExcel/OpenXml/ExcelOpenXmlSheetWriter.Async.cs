@@ -229,11 +229,11 @@ namespace MiniExcelLibs.OpenXml
                 if (_configuration.EnableAutoWidth)
                 {
                     columnWidthsPlaceholderPosition = await WriteColumnWidthPlaceholdersAsync(writer, props);
-                    widths = new ExcelWidthCollection(_configuration.MinWidth, _configuration.MaxWidth, props);
+                    widths = ExcelWidthCollection.FromProps(props, _configuration.MinWidth, _configuration.MaxWidth);
                 }
                 else
                 {
-                    await WriteColumnsWidthsAsync(writer, ExcelColumnWidth.FromProps(props), cancellationToken);
+                    await WriteColumnsWidthsAsync(writer, ExcelWidthCollection.FromProps(props), cancellationToken);
                 }
 
                 //header

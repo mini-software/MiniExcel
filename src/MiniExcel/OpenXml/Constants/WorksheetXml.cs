@@ -16,8 +16,8 @@ namespace MiniExcelLibs.OpenXml.Constants
         internal const string StartSheetViews = "<x:sheetViews>";
         internal const string EndSheetViews = "</x:sheetViews>";
 
-        internal static string StartSheetView( int tabSelected=0, int workbookViewId=0 )
-            => $"<x:sheetView tabSelected=\"{tabSelected}\" workbookViewId=\"{workbookViewId}\">";
+        internal static string StartSheetView(int tabSelected = 0, int workbookViewId = 0, bool rightToLeft = false)
+            => $"<x:sheetView tabSelected=\"{tabSelected}\" workbookViewId=\"{workbookViewId}\" rightToLeft=\"{(rightToLeft ? 1 : 0)}\">";
         internal const string EndSheetView = "</x:sheetView>";
 
         internal const string StartSheetData = "<x:sheetData>";
@@ -45,10 +45,10 @@ namespace MiniExcelLibs.OpenXml.Constants
         internal const string EndRow = "</x:row>";
         internal const string StartCols = "<x:cols>";
         
-        internal static string Column(int colIndex, double columnWidth)
-            => $@"<x:col min=""{colIndex}"" max=""{colIndex}"" width=""{columnWidth.ToString(CultureInfo.InvariantCulture)}"" customWidth=""1"" />";
+        internal static string Column(int colIndex, double columnWidth, bool hidden = false)
+            => $@"<x:col min=""{colIndex}"" max=""{colIndex}"" width=""{columnWidth.ToString(CultureInfo.InvariantCulture)}"" hidden=""{(hidden ? 1 : 0)}"" customWidth=""1"" />";
         
-        private static readonly int _maxColumnLength = Column(int.MaxValue, double.MaxValue).Length;
+        private static readonly int _maxColumnLength = Column(int.MaxValue, double.MaxValue, true).Length;
 
         public static int GetColumnPlaceholderLength(int columnCount) 
             => StartCols.Length + (_maxColumnLength * columnCount) + EndCols.Length;

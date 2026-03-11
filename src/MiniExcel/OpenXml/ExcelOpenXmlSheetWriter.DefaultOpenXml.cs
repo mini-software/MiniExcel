@@ -80,14 +80,14 @@ namespace MiniExcelLibs.OpenXml
         private string GetSheetViews()
         {
             // exit early if no style to write
-            if (_configuration.FreezeRowCount <= 0 && _configuration.FreezeColumnCount <= 0)
+            if (_configuration.FreezeRowCount <= 0 && _configuration.FreezeColumnCount <= 0 && !_configuration.RightToLeft)
                 return string.Empty;
 
             var sb = new StringBuilder();
 
             // start sheetViews
             sb.Append(WorksheetXml.StartSheetViews);
-            sb.Append(WorksheetXml.StartSheetView());
+            sb.Append(WorksheetXml.StartSheetView(rightToLeft: _configuration.RightToLeft));
 
             // Write panes
             sb.Append(GetPanes());

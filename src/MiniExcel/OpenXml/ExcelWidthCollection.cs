@@ -1,71 +1,81 @@
 ﻿using MiniExcelLibs.Utils;
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 namespace MiniExcelLibs.OpenXml
 {
     public sealed class ExcelColumnWidth
     {
+        // Aptos is the default font for Office 2023 and onwards, over which the width of cells are calculated at the size of 11pt.
+        // Priorly it was Calibri, which had very similar parameters, so no visual differences should be noticed.
+        private const double DefaultCellPadding = 5;
+        private const double Aptos11MaxDigitWidth = 7;
+        public const double Aptos11Padding = DefaultCellPadding /  Aptos11MaxDigitWidth;
+        
         public int Index { get; set; }
         public double Width { get; set; }
-
-        internal static IEnumerable<ExcelColumnWidth> FromProps(ICollection<ExcelColumnInfo> props, double? minWidth = null)
-        {
-            var i = 1;
-            foreach (var p in props)
-            {
-                if (p?.ExcelColumnWidth != null || minWidth != null)
-                {
-                    var colIndex = p?.ExcelColumnIndex + 1;
-                    yield return new ExcelColumnWidth
-                    {
-                        Index = colIndex ?? i,
-                        Width = p?.ExcelColumnWidth ?? minWidth.Value
-                    };
-                }
-
-                i++;
-            }
-        }
+        public bool Hidden { get; set; }
+        
+        public static double GetWidthFromTextLength(double characters)
+            => Math.Round(characters + Aptos11Padding, 8);
     }
 
-    public sealed class ExcelWidthCollection
+    public sealed class ExcelWidthCollection : IReadOnlyCollection<ExcelColumnWidth>
     {
         private readonly Dictionary<int, ExcelColumnWidth> _columnWidths;
         private readonly double _maxWidth;
 
-        public IEnumerable<ExcelColumnWidth> Columns => _columnWidths.Values;
+        public IReadOnlyCollection<ExcelColumnWidth> Columns
+#if NET45
+            => _columnWidths.Values.ToList();
+#else
+            => _columnWidths.Values;
+#endif
 
-        internal ExcelWidthCollection(double minWidth, double maxWidth, ICollection<ExcelColumnInfo> props)
+        private ExcelWidthCollection(ICollection<ExcelColumnWidth> columnWidths, double maxWidth)
         {
-            _maxWidth = maxWidth;
-            _columnWidths = ExcelColumnWidth.FromProps(props, minWidth).ToDictionary(x => x.Index);
+            _maxWidth = ExcelColumnWidth.GetWidthFromTextLength(maxWidth);
+            _columnWidths = columnWidths.ToDictionary(x => x.Index);
         }
 
-        public void AdjustWidth(int columnIndex, string columnValue)
+        internal static ExcelWidthCollection FromProps(ICollection<ExcelColumnInfo> mappings, double? minWidth = null, double maxWidth = 200)
         {
-            if (!string.IsNullOrEmpty(columnValue) 
-                && _columnWidths.TryGetValue(columnIndex, out var currentWidth))
+            var i = 1;
+            var columnWidths = new List<ExcelColumnWidth>();
+
+            foreach (var map in mappings)
             {
-                var adjustedWidth = Math.Max(currentWidth.Width, GetApproximateTextWidth(columnValue.Length));
+                if ((map?.ExcelHidden ?? false) || map?.ExcelColumnWidth != null || minWidth != null)
+                {
+                    var colIndex = map?.ExcelColumnIndex + 1 ?? i;
+                    var hidden = map?.ExcelHidden ?? false;
+                    var width = map?.ExcelColumnWidth ?? minWidth ?? 8.42857143;
+
+                    columnWidths.Add(new ExcelColumnWidth { Index = colIndex, Width = width + ExcelColumnWidth.Aptos11Padding, Hidden = hidden});
+                }
+
+                i++;
+            }
+
+            return new ExcelWidthCollection(columnWidths, maxWidth);
+        }
+
+        internal void AdjustWidth(int columnIndex, string columnValue)
+        {
+            if (!string.IsNullOrEmpty(columnValue) && _columnWidths.TryGetValue(columnIndex, out var currentWidth))
+            {
+                var desiredWidth = ExcelColumnWidth.GetWidthFromTextLength(columnValue.Length);
+                var adjustedWidth = Math.Max(currentWidth.Width, desiredWidth);
                 currentWidth.Width = Math.Min(_maxWidth, adjustedWidth);
             }
         }
 
-        /// <summary>
-        /// Get the approximate width of the given text for Calibri 11pt
-        /// </summary>
-        /// <remarks>
-        /// Rounds the result to 2 decimal places.
-        /// </remarks>
-        public static double GetApproximateTextWidth(int textLength)
-        {
-            const double characterWidthFactor = 1.2;  // Estimated factor for Calibri, 11pt
-            const double padding = 2;  // Add some padding for extra spacing
+        public IEnumerator<ExcelColumnWidth> GetEnumerator() => _columnWidths.Values.GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
-            var excelColumnWidth = (textLength * characterWidthFactor) + padding;
-            return Math.Round(excelColumnWidth, 2);
-        }
+        public int Count =>  _columnWidths.Count;
     }
 }

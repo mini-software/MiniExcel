@@ -22,6 +22,7 @@ namespace MiniExcelLibs.Utils
         public string ExcelFormat { get; internal set; }
         public double? ExcelColumnWidth { get; internal set; }
         public string ExcelIndexName { get; internal set; }
+        public bool ExcelHidden { get; internal set; }
         public bool ExcelIgnore { get; internal set; }
         public int ExcelFormatId { get; internal set; }
         public ColumnType ExcelColumnType { get; internal set; }
@@ -192,6 +193,7 @@ namespace MiniExcelLibs.Utils
                     ExcelColumnIndex = p.GetAttribute<ExcelColumnIndexAttribute>()?.ExcelColumnIndex ?? excelColumnIndex,
                     ExcelIndexName = p.GetAttribute<ExcelColumnIndexAttribute>()?.ExcelXName ?? excelColumn?.IndexName,
                     ExcelColumnWidth = p.GetAttribute<ExcelColumnWidthAttribute>()?.ExcelColumnWidth ?? excelColumn?.Width,
+                    ExcelHidden = p.GetAttribute<ExcelHiddenAttribute>()?.ExcelHidden ?? excelColumn?.Hidden ?? false,
                     ExcelFormat = excelFormat ?? excelColumn?.Format,
                     ExcelFormatId = excelColumn?.FormatId ?? -1,
                     ExcelColumnType = excelColumn?.Type ?? ColumnType.Value,
@@ -285,6 +287,7 @@ namespace MiniExcelLibs.Utils
                     if (dynamicColumn.Name != null)
                         p.ExcelColumnName = dynamicColumn.Name;
                     isIgnore = dynamicColumn.Ignore;
+                    p.ExcelHidden = dynamicColumn.Hidden;
                     p.ExcelColumnWidth = dynamicColumn.Width;
                     p.ExcelColumnType = dynamicColumn.Type;
                     p.CustomFormatter = dynamicColumn.CustomFormatter;
@@ -352,6 +355,7 @@ namespace MiniExcelLibs.Utils
 
             prop.Nullable = true;
             prop.ExcelIgnore = dynamicColumn.Ignore;
+            prop.ExcelHidden = dynamicColumn.Hidden;
             prop.ExcelColumnType = dynamicColumn.Type;
             prop.ExcelColumnWidth = dynamicColumn.Width;
             prop.CustomFormatter = dynamicColumn.CustomFormatter;

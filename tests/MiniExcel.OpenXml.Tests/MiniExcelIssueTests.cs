@@ -754,14 +754,14 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
                 id=1,
                 name="Jack",
                 indate=new DateTime(2022,5,13),
-                file = File.ReadAllBytes(PathHelper.GetFile("images/TestIssue327.png"))
+                file = File.ReadAllBytes(PathHelper.GetFile("xlsx/Issue327/TestIssue327.png"))
             },
             new
             {
                 id=2,
                 name="Henry",
                 indate=new DateTime(2022,4,10),
-                file = File.ReadAllBytes(PathHelper.GetFile("other/TestIssue327.txt"))
+                file = File.ReadAllBytes(PathHelper.GetFile("xlsx/Issue327/TestIssue327.txt"))
             },
         };
         _excelExporter.Export(path.ToString(), value);
@@ -782,11 +782,11 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
                 if (rowIndx == 0 && i == 0) Assert.Equal(1.0, v);
                 if (rowIndx == 0 && i == 1) Assert.Equal("Jack", v);
                 if (rowIndx == 0 && i == 2) Assert.Equal(new DateTime(2022, 5, 13), v);
-                if (rowIndx == 0 && i == 3) Assert.Equal(File.ReadAllBytes(PathHelper.GetFile("images/TestIssue327.png")), v);
+                if (rowIndx == 0 && i == 3) Assert.Equal(File.ReadAllBytes(PathHelper.GetFile("xlsx/Issue327/TestIssue327.png")), v);
                 if (rowIndx == 1 && i == 0) Assert.Equal(2.0, v);
                 if (rowIndx == 1 && i == 1) Assert.Equal("Henry", v);
                 if (rowIndx == 1 && i == 2) Assert.Equal(new DateTime(2022, 4, 10), v);
-                if (rowIndx == 1 && i == 3) Assert.Equal(File.ReadAllBytes(PathHelper.GetFile("other/TestIssue327.txt")), v);
+                if (rowIndx == 1 && i == 3) Assert.Equal(File.ReadAllBytes(PathHelper.GetFile("xlsx/Issue327/TestIssue327.txt")), v);
             }
             rowIndx++;
         }
@@ -800,9 +800,9 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         using var path = AutoDeletingPath.Create();
         var value = new[]
         {
-            new { id = 1, file = File.ReadAllBytes(PathHelper.GetFile("images/TestIssue327.png")) },
-            new { id = 2, file = File.ReadAllBytes(PathHelper.GetFile("other/TestIssue327.txt")) },
-            new { id = 3, file = File.ReadAllBytes(PathHelper.GetFile("other/TestIssue327.html")) },
+            new { id = 1, file = File.ReadAllBytes(PathHelper.GetFile("xlsx/Issue327/TestIssue327.png")) },
+            new { id = 2, file = File.ReadAllBytes(PathHelper.GetFile("xlsx/Issue327/TestIssue327.txt")) },
+            new { id = 3, file = File.ReadAllBytes(PathHelper.GetFile("xlsx/Issue327/TestIssue327.html")) },
         };
         _excelExporter.Export(path.ToString(), value);
         var rows = _excelImporter.Query(path.ToString(), true).ToList();
@@ -959,7 +959,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             new { Name="google", Image=File.ReadAllBytes(PathHelper.GetFile("images/google_logo.png"))},
             new { Name="microsoft", Image=File.ReadAllBytes(PathHelper.GetFile("images/microsoft_logo.png"))},
             new { Name="reddit", Image=File.ReadAllBytes(PathHelper.GetFile("images/reddit_logo.png"))},
-            new { Name="statck_overflow", Image=File.ReadAllBytes(PathHelper.GetFile("images/statck_overflow_logo.png"))},
+            new { Name="stackoverflow", Image=File.ReadAllBytes(PathHelper.GetFile("images/stackoverflow_logo.png"))},
         };
         _excelExporter.Export(path, value);
 
@@ -2687,7 +2687,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             new { Name = "google", Image = File.ReadAllBytes(PathHelper.GetFile("images/google_logo.png")) },
             new { Name = "microsoft", Image = File.ReadAllBytes(PathHelper.GetFile("images/microsoft_logo.png")) },
             new { Name = "reddit", Image = File.ReadAllBytes(PathHelper.GetFile("images/reddit_logo.png")) },
-            new { Name = "statck_overflow", Image = File.ReadAllBytes(PathHelper.GetFile("images/statck_overflow_logo.png")) }
+            new { Name = "stackoverflow", Image = File.ReadAllBytes(PathHelper.GetFile("images/stackoverflow_logo.png")) }
         ];
 
         List<dynamic> list2 =

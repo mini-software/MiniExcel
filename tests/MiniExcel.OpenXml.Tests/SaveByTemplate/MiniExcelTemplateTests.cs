@@ -15,87 +15,85 @@ public class MiniExcelTemplateTests
     public void TestImageType()
     {
         var templatePath = PathHelper.GetFile("xlsx/TestImageType.xlsx");
+        string absolutePath = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, templatePath));
+
+        using var path = AutoDeletingPath.Create();
+        File.Copy(absolutePath, path.FilePath, overwrite: true); // Copy the template file
+
+        var img1Bytes= File.ReadAllBytes(PathHelper.GetFile("xlsx/Issue327/TestIssue327.png"));
+        var img2Bytes= File.ReadAllBytes(PathHelper.GetFile("xlsx/Issue327/TestIssue327.png"));
+        var img3Bytes= File.ReadAllBytes(PathHelper.GetFile("xlsx/Issue327/TestIssue327.png"));
+
+        var pictures = new[]
         {
-            string absolutePath = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, templatePath));
-
-            using var path = AutoDeletingPath.Create();
-            File.Copy(absolutePath, path.FilePath, overwrite: true); // Copy the template file
-
-            var img1Bytes= File.ReadAllBytes(PathHelper.GetFile("images/TestIssue327.png"));  // Use your local imag)e
-            var img2Bytes= File.ReadAllBytes(PathHelper.GetFile("images/TestIssue327.png"));  // Use your local imag)e
-            var img3Bytes= File.ReadAllBytes(PathHelper.GetFile("images/TestIssue327.png"));  // Use your local imag)e
-
-            var pictures = new[]
+            new MiniExcelPicture
             {
-                new MiniExcelPicture
-                {
-                    CellAddress = "B2",
-                    ImageBytes = img1Bytes,
-                    PictureType = "png",
-                    ImgType = XlsxImgType.AbsoluteAnchor,
-                    Location = new System.Drawing.Point(255,255),
-                    WidthPx = 1920,
-                    HeightPx = 1032
-                },
-                new MiniExcelPicture
-                {
-                    CellAddress = "D4",
-                    ImageBytes = img2Bytes,
-                    PictureType = "png",
-                    ImgType = XlsxImgType.TwoCellAnchor,
-                    WidthPx = 1920,
-                    HeightPx = 1032
-                },
-                new MiniExcelPicture
-                {
-                    CellAddress = "F6",
-                    ImageBytes = img3Bytes,
-                    PictureType = "png",
-                    ImgType = XlsxImgType.OneCellAnchor,
-                    WidthPx = 1920,
-                    HeightPx = 1032
-                }
-            };
+                CellAddress = "B2",
+                ImageBytes = img1Bytes,
+                PictureType = "png",
+                ImgType = XlsxImgType.AbsoluteAnchor,
+                Location = new System.Drawing.Point(255,255),
+                WidthPx = 1920,
+                HeightPx = 1032
+            },
+            new MiniExcelPicture
+            {
+                CellAddress = "D4",
+                ImageBytes = img2Bytes,
+                PictureType = "png",
+                ImgType = XlsxImgType.TwoCellAnchor,
+                WidthPx = 28,
+                HeightPx = 28
+            },
+            new MiniExcelPicture
+            {
+                CellAddress = "F6",
+                ImageBytes = img3Bytes,
+                PictureType = "png",
+                ImgType = XlsxImgType.OneCellAnchor,
+                WidthPx = 1920,
+                HeightPx = 1032
+            }
+        };
 
-            // Act
-            _excelTemplater.AddPicture(path.ToString(), pictures);
+        // Act
+        _excelTemplater.AddPicture(path.ToString(), pictures);
 
-            // Assert
-            using var zip = ZipFile.OpenRead(path.FilePath);
-            var mediaEntries = zip.Entries.Where(x => x.FullName.StartsWith("xl/media/")).ToList();
-            Assert.Equal(pictures.Length, mediaEntries.Count);
+        // Assert
+        using var zip = ZipFile.OpenRead(path.FilePath);
+        var mediaEntries = zip.Entries.Where(x => x.FullName.StartsWith("xl/media/")).ToList();
+        Assert.Equal(pictures.Length, mediaEntries.Count);
 
-            // Assert (use EPPlus to verify that images are inserted correctly)
-            using var package = new ExcelPackage(new FileInfo(path.FilePath));
+        // Assert (use EPPlus to verify that images are inserted correctly)
+        using var package = new ExcelPackage(new FileInfo(path.FilePath));
             
-            var sheet = package.Workbook.Worksheets[0];
-            var picB2 = sheet.Drawings
-                .OfType<ExcelPicture>()
-                .FirstOrDefault(p => p.EditAs == eEditAs.Absolute);
+        var sheet = package.Workbook.Worksheets[0];
+        var picB2 = sheet.Drawings
+            .OfType<ExcelPicture>()
+            .FirstOrDefault(p => p.EditAs == eEditAs.Absolute);
 
-            Assert.NotNull(picB2);
-            Assert.Equal(1920 * 9525, picB2.Size.Width);
-            Assert.Equal(1032 * 9525, picB2.Size.Height);
-            //Console.WriteLine("✅ AbsoluteAnchor image exists and the size is as expected (1920x1032)");
+        Assert.NotNull(picB2);
+        Assert.Equal(1920 * 9525, picB2.Size.Width);
+        Assert.Equal(1032 * 9525, picB2.Size.Height);
+        //Console.WriteLine("✅ AbsoluteAnchor image exists and the size is as expected (1920x1032)");
 
-            //Console.WriteLine("✅ Image inserted successfully (B2 - AbsoluteAnchor)");
+        //Console.WriteLine("✅ Image inserted successfully (B2 - AbsoluteAnchor)");
 
-            // Validate image at D4 (ImgType.TwoCellAnchor)
-            var picD4 = sheet.Drawings
-                .OfType<ExcelPicture>()
-                .FirstOrDefault(p => p is { EditAs: eEditAs.TwoCell, From: { Column: 3, Row: 3 } });
+        // Validate image at D4 (ImgType.TwoCellAnchor)
+        var picD4 = sheet.Drawings
+            .OfType<ExcelPicture>()
+            .FirstOrDefault(p => p is { EditAs: eEditAs.TwoCell, From: { Column: 3, Row: 3 } });
                 
-            Assert.NotNull(picD4);
-            //Console.WriteLine("✅ Image inserted successfully (D4 - TwoCellAnchor)");
+        Assert.NotNull(picD4);
+        //Console.WriteLine("✅ Image inserted successfully (D4 - TwoCellAnchor)");
 
-            // Validate image at F6 (ImgType.OneCellAnchor)
-            var picF6 = sheet.Drawings
-                .OfType<ExcelPicture>()
-                .FirstOrDefault(p => p is { EditAs: eEditAs.OneCell, From: { Column: 5, Row: 5 } });
+        // Validate image at F6 (ImgType.OneCellAnchor)
+        var picF6 = sheet.Drawings
+            .OfType<ExcelPicture>()
+            .FirstOrDefault(p => p is { EditAs: eEditAs.OneCell, From: { Column: 5, Row: 5 } });
 
-            Assert.NotNull(picF6);
-            //Console.WriteLine("✅ Image inserted successfully (F6 - OneCellAnchor)");
-        }
+        Assert.NotNull(picF6);
+        //Console.WriteLine("✅ Image inserted successfully (F6 - OneCellAnchor)");
     }
     
     [Fact]

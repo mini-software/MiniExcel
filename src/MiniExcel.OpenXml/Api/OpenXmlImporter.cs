@@ -251,15 +251,11 @@ public sealed partial class OpenXmlImporter
         string? sheetName = null, string startCell = "A1", OpenXmlConfiguration? configuration = null,
         CancellationToken cancellationToken = default)
     {
-#pragma warning disable CA2007 // We need to assign the AsyncEnumerator before we can call ConfigureAwait on it
-        await using var enumerator = QueryAsync(stream, useHeaderRow, sheetName, startCell, configuration, cancellationToken).GetAsyncEnumerator(cancellationToken);
-#pragma warning restore CA2007
+        var enumerator = QueryAsync(stream, useHeaderRow, sheetName, startCell, configuration, cancellationToken).GetAsyncEnumerator(cancellationToken);
+        await using var disposableEnumerator = enumerator.ConfigureAwait(false);
 
-        _ = enumerator.ConfigureAwait(false);
         if (await enumerator.MoveNextAsync().ConfigureAwait(false))
-        {
             return (enumerator.Current as IDictionary<string, object?>)?.Keys ?? [];
-        }
 
         return [];
     }

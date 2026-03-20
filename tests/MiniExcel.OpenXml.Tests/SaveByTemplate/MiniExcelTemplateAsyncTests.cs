@@ -30,7 +30,7 @@ public class MiniExcelTemplateAsyncTests
                 ["managers"] = managers,
                 ["employees"] = employees
             };
-            await _excelTemplater.ApplyTemplateAsync(path.ToString(), templatePath, value);
+            await _excelTemplater.FillTemplateAsync(path.ToString(), templatePath, value);
             var rows = _excelImporter.QueryAsync(path.ToString()).ToBlockingEnumerable().ToList();
 
             var dimension = SheetHelper.GetFirstSheetDimensionRefValue(path.ToString());
@@ -55,7 +55,7 @@ public class MiniExcelTemplateAsyncTests
                 ["employees"] = employees
             };
             
-            await _excelTemplater.ApplyTemplateAsync(path.ToString(), templatePath, value);
+            await _excelTemplater.FillTemplateAsync(path.ToString(), templatePath, value);
             var rows = _excelImporter.QueryAsync(path.ToString()).ToBlockingEnumerable().ToList();
 
             var dimension = SheetHelper.GetFirstSheetDimensionRefValue(path.ToString());
@@ -89,7 +89,7 @@ public class MiniExcelTemplateAsyncTests
             ["managers"] = managers,
             ["employees"] = employees
         };
-        await _excelTemplater.ApplyTemplateAsync(path.ToString(), templatePath, value);
+        await _excelTemplater.FillTemplateAsync(path.ToString(), templatePath, value);
         var rows = _excelImporter.QueryAsync(path.ToString()).ToBlockingEnumerable().ToList();
 
         var dimension = SheetHelper.GetFirstSheetDimensionRefValue(path.ToString());
@@ -150,7 +150,7 @@ public class MiniExcelTemplateAsyncTests
             ["managers"] = connection.Query("select 'Jack' name,'HR' department union all select 'Loan','IT'"),
             ["employees"] = connection.Query(@"select 'Wade' name,'HR' department union all select 'Felix','HR' union all select 'Eric','IT' union all select 'Keaton','IT'")
         };
-        await _excelTemplater.ApplyTemplateAsync(path.ToString(), templatePath, value);
+        await _excelTemplater.FillTemplateAsync(path.ToString(), templatePath, value);
 
         {
             var rows = _excelImporter.QueryAsync(path.ToString()).ToBlockingEnumerable().ToList();
@@ -224,7 +224,7 @@ public class MiniExcelTemplateAsyncTests
                 new Dictionary<string, object>{["name"]="Keaton",["department"]="IT"}
             }
         };
-        await _excelTemplater.ApplyTemplateAsync(path, templatePath, value);
+        await _excelTemplater.FillTemplateAsync(path, templatePath, value);
 
         {
             var rows = _excelImporter.Query(path).ToList();
@@ -295,7 +295,7 @@ public class MiniExcelTemplateAsyncTests
             Projects = projects,
             TotalStar = projects.Sum(s => s.Star)
         };
-        await _excelTemplater.ApplyTemplateAsync(path.ToString(), templatePath, value);
+        await _excelTemplater.FillTemplateAsync(path.ToString(), templatePath, value);
 
         var rows = _excelImporter.QueryAsync(path.ToString()).ToBlockingEnumerable().ToList();
         Assert.Equal("ITWeiHan Github Projects", rows[0].B);
@@ -342,7 +342,7 @@ public class MiniExcelTemplateAsyncTests
                 poco
             }
         };
-        await _excelTemplater.ApplyTemplateAsync(path.ToString(), templatePath, value);
+        await _excelTemplater.FillTemplateAsync(path.ToString(), templatePath, value);
 
         var rows = _excelImporter.Query<TestIEnumerableTypePoco>(path.ToString()).ToList();
         Assert.Equal(poco.@string, rows[0].@string);
@@ -406,7 +406,7 @@ public class MiniExcelTemplateAsyncTests
             @bool = true,
             Guid = Guid.NewGuid()
         };
-        await _excelTemplater.ApplyTemplateAsync(path.ToString(), templatePath, value);
+        await _excelTemplater.FillTemplateAsync(path.ToString(), templatePath, value);
 
         var rows = _excelImporter.Query<TestIEnumerableTypePoco>(path.ToString()).ToList();
         Assert.Equal(value.@string, rows[0].@string);
@@ -430,7 +430,7 @@ public class MiniExcelTemplateAsyncTests
         {
             Tests = Enumerable.Range(1, 5).Select(i => new { test1 = i, test2 = i })
         };
-        await _excelTemplater.ApplyTemplateAsync(path.ToString(), templatePath, value);
+        await _excelTemplater.FillTemplateAsync(path.ToString(), templatePath, value);
     }
 
     [Fact]
@@ -448,7 +448,7 @@ public class MiniExcelTemplateAsyncTests
                 VIP = true,
                 Points = 123
             };
-            await _excelTemplater.ApplyTemplateAsync(path.ToString(), templatePath, value);
+            await _excelTemplater.FillTemplateAsync(path.ToString(), templatePath, value);
 
             var rows = _excelImporter.QueryAsync(path.ToString()).ToBlockingEnumerable().ToList();
             Assert.Equal("Jack", rows[1].A);
@@ -472,7 +472,7 @@ public class MiniExcelTemplateAsyncTests
                 VIP = true,
                 Points = 123
             };
-            await _excelTemplater.ApplyTemplateAsync(path, templateBytes, value);
+            await _excelTemplater.FillTemplateAsync(path, templateBytes, value);
 
             var rows = (_excelImporter.QueryAsync(path).ToBlockingEnumerable()).ToList();
             Assert.Equal("Jack", rows[1].A);
@@ -499,7 +499,7 @@ public class MiniExcelTemplateAsyncTests
             };
             await using (var stream = File.Create(path.ToString()))
             {
-                await _excelTemplater.ApplyTemplateAsync(stream, templateBytes, value);
+                await _excelTemplater.FillTemplateAsync(stream, templateBytes, value);
             }
 
             var rows = _excelImporter.QueryAsync(path.ToString()).ToBlockingEnumerable().ToList();
@@ -524,7 +524,7 @@ public class MiniExcelTemplateAsyncTests
                 ["VIP"] = true,
                 ["Points"] = 123
             };
-            await _excelTemplater.ApplyTemplateAsync(path.ToString(), templatePath, value);
+            await _excelTemplater.FillTemplateAsync(path.ToString(), templatePath, value);
 
             var rows = _excelImporter.QueryAsync(path.ToString()).ToBlockingEnumerable().ToList();
             Assert.Equal("Jack", rows[1].A);
@@ -558,7 +558,7 @@ public class MiniExcelTemplateAsyncTests
                     new { name = "Loan", department = "IT "}
                 }
             };
-            await _excelTemplater.ApplyTemplateAsync(path.ToString(), templatePath, value);
+            await _excelTemplater.FillTemplateAsync(path.ToString(), templatePath, value);
 
             var dimension = SheetHelper.GetFirstSheetDimensionRefValue(path.ToString());
             Assert.Equal("A1:B7", dimension);
@@ -580,7 +580,7 @@ public class MiniExcelTemplateAsyncTests
                     new { name = "Loan", department = "IT "}
                 }
             };
-            await _excelTemplater.ApplyTemplateAsync(path.ToString(), templatePath, value);
+            await _excelTemplater.FillTemplateAsync(path.ToString(), templatePath, value);
 
             var dimension = SheetHelper.GetFirstSheetDimensionRefValue(path.ToString());
             Assert.Equal("A1:B7", dimension);
@@ -605,7 +605,7 @@ public class MiniExcelTemplateAsyncTests
             {
                 ["employees"] = dt
             };
-            await _excelTemplater.ApplyTemplateAsync(path.ToString(), templatePath, value);
+            await _excelTemplater.FillTemplateAsync(path.ToString(), templatePath, value);
 
             var dimension = SheetHelper.GetFirstSheetDimensionRefValue(path.ToString());
             Assert.Equal("A1:B7", dimension);
@@ -632,7 +632,7 @@ public class MiniExcelTemplateAsyncTests
                     new { name = "Loan", department = "IT" }
                 }
             };
-            await _excelTemplater.ApplyTemplateAsync(path.ToString(), templatePath, value);
+            await _excelTemplater.FillTemplateAsync(path.ToString(), templatePath, value);
 
             var dimension = SheetHelper.GetFirstSheetDimensionRefValue(path.ToString());
             Assert.Equal("A1:B18", dimension);
@@ -654,7 +654,7 @@ public class MiniExcelTemplateAsyncTests
                     new { name = "Loan", department = "IT "}
                 }
             };
-            await _excelTemplater.ApplyTemplateAsync(path.ToString(), templatePath, value);
+            await _excelTemplater.FillTemplateAsync(path.ToString(), templatePath, value);
 
             var dimension = SheetHelper.GetFirstSheetDimensionRefValue(path.ToString());
             Assert.Equal("A1:B18", dimension);
@@ -679,7 +679,7 @@ public class MiniExcelTemplateAsyncTests
             {
                 ["employees"] = dt
             };
-            await _excelTemplater.ApplyTemplateAsync(path.ToString(), templatePath, value);
+            await _excelTemplater.FillTemplateAsync(path.ToString(), templatePath, value);
 
             var dimension = SheetHelper.GetFirstSheetDimensionRefValue(path.ToString());
             Assert.Equal("A1:B18", dimension);
@@ -706,7 +706,7 @@ public class MiniExcelTemplateAsyncTests
                     new { name = "Loan", department = "IT "}
                 }
             };
-            await _excelTemplater.ApplyTemplateAsync(path.ToString(), templatePath, value);
+            await _excelTemplater.FillTemplateAsync(path.ToString(), templatePath, value);
 
             var dimension = SheetHelper.GetFirstSheetDimensionRefValue(path.ToString());
             Assert.Equal("A1:B18", dimension);
@@ -728,7 +728,7 @@ public class MiniExcelTemplateAsyncTests
                     new { name = "Loan", department = "IT" }
                 }
             };
-            await _excelTemplater.ApplyTemplateAsync(path.ToString(), templatePath, value);
+            await _excelTemplater.FillTemplateAsync(path.ToString(), templatePath, value);
 
             var dimension = SheetHelper.GetFirstSheetDimensionRefValue(path.ToString());
             Assert.Equal("A1:B18", dimension);
@@ -753,7 +753,7 @@ public class MiniExcelTemplateAsyncTests
             {
                 ["employees"] = dt
             };
-            await _excelTemplater.ApplyTemplateAsync(path.ToString(), templatePath, value);
+            await _excelTemplater.FillTemplateAsync(path.ToString(), templatePath, value);
 
             var dimension = SheetHelper.GetFirstSheetDimensionRefValue(path.ToString());
             Assert.Equal("A1:B18", dimension);
@@ -784,7 +784,7 @@ public class MiniExcelTemplateAsyncTests
                     new { name = "Keaton", department = "IT" }
                 }
             };
-            await _excelTemplater.ApplyTemplateAsync(path.ToString(), templatePath, value);
+            await _excelTemplater.FillTemplateAsync(path.ToString(), templatePath, value);
 
             {
                 var rows = _excelImporter.QueryAsync(path.ToString()).ToBlockingEnumerable().ToList();
@@ -855,7 +855,7 @@ public class MiniExcelTemplateAsyncTests
                     new { name = "Keaton", department = "IT" }
                 }
             };
-            await _excelTemplater.ApplyTemplateAsync(path.ToString(), templatePath, value);
+            await _excelTemplater.FillTemplateAsync(path.ToString(), templatePath, value);
 
             var rows = _excelImporter.QueryAsync(path.ToString()).ToBlockingEnumerable().ToList();
             Assert.Equal("FooCompany", rows[0].A);
@@ -897,7 +897,7 @@ public class MiniExcelTemplateAsyncTests
             };
 
             await cts.CancelAsync();
-            await _excelTemplater.ApplyTemplateAsync(path.ToString(), templatePath, value, cancellationToken: cts.Token);
+            await _excelTemplater.FillTemplateAsync(path.ToString(), templatePath, value, cancellationToken: cts.Token);
         });
     }
 }

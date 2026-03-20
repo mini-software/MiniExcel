@@ -117,7 +117,7 @@ public class MiniExcelTemplateTests
                 ["managers"] = managers,
                 ["employees"] = employees
             };
-            _excelTemplater.ApplyTemplate(path.ToString(), templatePath, value);
+            _excelTemplater.FillTemplate(path.ToString(), templatePath, value);
             
             var rows = _excelImporter.Query(path.ToString()).ToList();
             var dimension = SheetHelper.GetFirstSheetDimensionRefValue(path.ToString());
@@ -142,7 +142,7 @@ public class MiniExcelTemplateTests
                 ["managers"] = managers,
                 ["employees"] = employees
             };
-            _excelTemplater.ApplyTemplate(path.ToString(), templatePath, value);
+            _excelTemplater.FillTemplate(path.ToString(), templatePath, value);
             
             var rows = _excelImporter.Query(path.ToString()).ToList();
             var dimension = SheetHelper.GetFirstSheetDimensionRefValue(path.ToString());
@@ -177,7 +177,7 @@ public class MiniExcelTemplateTests
             ["managers"] = managers,
             ["employees"] = employees
         };
-        _excelTemplater.ApplyTemplate(path, templatePath, value);
+        _excelTemplater.FillTemplate(path, templatePath, value);
 
         {
             var rows = _excelImporter.Query(path).ToList();
@@ -244,7 +244,7 @@ public class MiniExcelTemplateTests
             ["managers"] = connection.Query("select 'Jack' name,'HR' department union all select 'Loan','IT'"),
             ["employees"] = connection.Query("select 'Wade' name,'HR' department union all select 'Felix','HR' union all select 'Eric','IT' union all select 'Keaton','IT'")
         };
-        _excelTemplater.ApplyTemplate(path, templatePath, value);
+        _excelTemplater.FillTemplate(path, templatePath, value);
 
         {
             var rows = _excelImporter.Query(path).ToList();
@@ -319,7 +319,7 @@ public class MiniExcelTemplateTests
                 new Dictionary<string, object> { ["name"] = "Keaton", ["department"] = "IT" }
             }
         };
-        _excelTemplater.ApplyTemplate(path, templatePath, value);
+        _excelTemplater.FillTemplate(path, templatePath, value);
 
         {
             var rows = _excelImporter.Query(path).ToList();
@@ -396,7 +396,7 @@ public class MiniExcelTemplateTests
                 new() { name = "Felix", department = "HR" }
             }
         };
-        _excelTemplater.ApplyTemplate(path, templatePath, value);
+        _excelTemplater.FillTemplate(path, templatePath, value);
 
         var rows = _excelImporter.Query(path).ToList();
         Assert.Equal(16, rows.Count);
@@ -465,7 +465,7 @@ public class MiniExcelTemplateTests
             Projects = projects,
             TotalStar = projects.Sum(s => s.Star)
         };
-        _excelTemplater.ApplyTemplate(path.ToString(), templatePath, value);
+        _excelTemplater.FillTemplate(path.ToString(), templatePath, value);
 
         var rows = _excelImporter.Query(path.ToString()).ToList();
         Assert.Equal("ITWeiHan Github Projects", rows[0].B);
@@ -516,7 +516,7 @@ public class MiniExcelTemplateTests
                     poco
                 }
             };
-            _excelTemplater.ApplyTemplate(path.ToString(), templatePath, value);
+            _excelTemplater.FillTemplate(path.ToString(), templatePath, value);
 
             var rows = _excelImporter.Query<TestIEnumerableTypePoco>(path.ToString()).ToList();
             Assert.Equal(poco.@string, rows[0].@string);
@@ -584,7 +584,7 @@ public class MiniExcelTemplateTests
                 @bool = true, 
                 Guid = Guid.NewGuid()
             };
-            _excelTemplater.ApplyTemplate(path.ToString(), templatePath, value);
+            _excelTemplater.FillTemplate(path.ToString(), templatePath, value);
 
             var rows = _excelImporter.Query<TestIEnumerableTypePoco>(path.ToString()).ToList();
             Assert.Equal(value.@string, rows[0].@string);
@@ -609,7 +609,7 @@ public class MiniExcelTemplateTests
         {
             Tests = Enumerable.Range(1, 5).Select(i => new { test1 = i, test2 = i })
         };
-        _excelTemplater.ApplyTemplate(path.ToString(), templatePath, value);
+        _excelTemplater.FillTemplate(path.ToString(), templatePath, value);
     }
 
     [Fact]
@@ -627,7 +627,7 @@ public class MiniExcelTemplateTests
                 VIP = true,
                 Points = 123
             };
-            _excelTemplater.ApplyTemplate(path.ToString(), templatePath, value);
+            _excelTemplater.FillTemplate(path.ToString(), templatePath, value);
 
             var rows = _excelImporter.Query(path.ToString()).ToList();
             Assert.Equal("Jack", rows[1].A);
@@ -651,7 +651,7 @@ public class MiniExcelTemplateTests
                 VIP = true,
                 Points = 123
             };
-            _excelTemplater.ApplyTemplate(path.ToString(), templateBytes, value);
+            _excelTemplater.FillTemplate(path.ToString(), templateBytes, value);
 
             var rows = _excelImporter.Query(path.ToString()).ToList();
             Assert.Equal("Jack", rows[1].A);
@@ -678,7 +678,7 @@ public class MiniExcelTemplateTests
             };
             using (var stream = File.Create(path.ToString()))
             {
-                _excelTemplater.ApplyTemplate(stream, templateBytes, value);
+                _excelTemplater.FillTemplate(stream, templateBytes, value);
             }
 
             var rows = _excelImporter.Query(path.ToString()).ToList();
@@ -703,7 +703,7 @@ public class MiniExcelTemplateTests
                 ["VIP"] = true,
                 ["Points"] = 123
             };
-            _excelTemplater.ApplyTemplate(path.ToString(), templatePath, value);
+            _excelTemplater.FillTemplate(path.ToString(), templatePath, value);
 
             var rows = _excelImporter.Query(path.ToString()).ToList();
             Assert.Equal("Jack", rows[1].A);
@@ -737,7 +737,7 @@ public class MiniExcelTemplateTests
                     new { name = "Loan", department = "IT" }
                 }
             };
-            _excelTemplater.ApplyTemplate(path.ToString(), templatePath, value);
+            _excelTemplater.FillTemplate(path.ToString(), templatePath, value);
 
             var dimension = SheetHelper.GetFirstSheetDimensionRefValue(path.ToString());
             Assert.Equal("A1:B7", dimension);
@@ -759,7 +759,7 @@ public class MiniExcelTemplateTests
                     new { name = "Loan", department = "IT" }
                 }
             };
-            _excelTemplater.ApplyTemplate(path.ToString(), templatePath, value);
+            _excelTemplater.FillTemplate(path.ToString(), templatePath, value);
 
             var dimension = SheetHelper.GetFirstSheetDimensionRefValue(path.ToString());
             Assert.Equal("A1:B7", dimension);
@@ -784,7 +784,7 @@ public class MiniExcelTemplateTests
             {
                 ["employees"] = dt
             };
-            _excelTemplater.ApplyTemplate(path.ToString(), templatePath, value);
+            _excelTemplater.FillTemplate(path.ToString(), templatePath, value);
 
             var dimension = SheetHelper.GetFirstSheetDimensionRefValue(path.ToString());
             Assert.Equal("A1:B7", dimension);
@@ -809,7 +809,7 @@ public class MiniExcelTemplateTests
                 new { name = "Joan", department = "IT", salary = 120000 }
             }
         };
-        _excelTemplater.ApplyTemplate(path.ToString(), templatePath, value);
+        _excelTemplater.FillTemplate(path.ToString(), templatePath, value);
 
         var dimension = SheetHelper.GetFirstSheetDimensionRefValue(path.ToString());
         Assert.Equal("A1:C13", dimension);
@@ -839,7 +839,7 @@ public class MiniExcelTemplateTests
                     new { name = "Keaton", department = "IT" }
                 }
             };
-            _excelTemplater.ApplyTemplate(path.ToString(), templatePath, value);
+            _excelTemplater.FillTemplate(path.ToString(), templatePath, value);
 
             {
                 var rows = _excelImporter.Query(path.ToString()).ToList();
@@ -913,7 +913,7 @@ public class MiniExcelTemplateTests
                     new { name = "Keaton", department = "IT" }
                 }
             };
-            _excelTemplater.ApplyTemplate(path.ToString(), templatePath, value);
+            _excelTemplater.FillTemplate(path.ToString(), templatePath, value);
 
             var rows = _excelImporter.Query(path.ToString()).ToList();
             Assert.Equal("FooCompany", rows[0].A);

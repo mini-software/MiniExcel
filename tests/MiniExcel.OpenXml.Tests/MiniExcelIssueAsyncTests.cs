@@ -31,7 +31,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
                 }
             };
             
-            await  _excelTemplater.ApplyTemplateAsync(path.ToString(), templatePath, value);
+            await  _excelTemplater.FillTemplateAsync(path.ToString(), templatePath, value);
             var q =  _excelImporter.QueryAsync(path.ToString()).ToBlockingEnumerable();
             var rows = q.ToList();
             
@@ -480,7 +480,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
     {
         using var path = AutoDeletingPath.Create();
         var templatePath = PathHelper.GetFile("xlsx/TestIssue226.xlsx");
-        await  _excelTemplater.ApplyTemplateAsync(path.ToString(), templatePath, new { employees = new[] { new { name = "123" }, new { name = "123" } } });
+        await  _excelTemplater.FillTemplateAsync(path.ToString(), templatePath, new { employees = new[] { new { name = "123" }, new { name = "123" } } });
         Assert.Equal("A1:A3", SheetHelper.GetFirstSheetDimensionRefValue(path.ToString()));
     }
 
@@ -795,7 +795,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
                 }
             };
 
-            await  _excelTemplater.ApplyTemplateAsync(path, templatePath, value);
+            await  _excelTemplater.FillTemplateAsync(path, templatePath, value);
             var q =  _excelImporter.QueryAsync(path).ToBlockingEnumerable();
             var rows = q.ToList();
 
@@ -841,7 +841,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
                 }
             };
 
-            await  _excelTemplater.ApplyTemplateAsync(path, templatePath, value);
+            await  _excelTemplater.FillTemplateAsync(path, templatePath, value);
 
             var q =  _excelImporter.QueryAsync(path).ToBlockingEnumerable();
             var rows = q.ToList();
@@ -876,7 +876,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
         var q =  _excelImporter.QueryAsync(templatePath).ToBlockingEnumerable();
         var rows = q.ToList();
 
-        await  _excelTemplater.ApplyTemplateAsync(path.ToString(), templatePath, value);
+        await  _excelTemplater.FillTemplateAsync(path.ToString(), templatePath, value);
     }
 
     /// <summary>
@@ -898,7 +898,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
             {
                 ["employees"] = dt
             };
-            await  _excelTemplater.ApplyTemplateAsync(path.ToString(), templatePath, value);
+            await  _excelTemplater.FillTemplateAsync(path.ToString(), templatePath, value);
 
             var dimension = SheetHelper.GetFirstSheetDimensionRefValue(path.ToString());
             Assert.Equal("A1:B2", dimension);
@@ -914,7 +914,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
                 dt.Rows.Add("Jack", "HR");
             }
             var value = new Dictionary<string, object> { ["employees"] = dt };
-            await  _excelTemplater.ApplyTemplateAsync(path.ToString(), templatePath, value);
+            await  _excelTemplater.FillTemplateAsync(path.ToString(), templatePath, value);
 
             var dimension = SheetHelper.GetFirstSheetDimensionRefValue(path.ToString());
             Assert.Equal("A1:B2", dimension);
@@ -950,7 +950,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
                     new {name="Keaton",department="IT"}
                 }
             };
-            await  _excelTemplater.ApplyTemplateAsync(path, templatePath, value);
+            await  _excelTemplater.FillTemplateAsync(path, templatePath, value);
 
             foreach (var sheetName in  _excelImporter.GetSheetNames(path))
             {
@@ -1005,7 +1005,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
                     new {name="Keaton",department="IT"}
                 }
             };
-            await  _excelTemplater.ApplyTemplateAsync(path, templatePath, value);
+            await  _excelTemplater.FillTemplateAsync(path, templatePath, value);
 
             var q =  _excelImporter.QueryAsync(path).ToBlockingEnumerable();
             var rows = q.ToList();

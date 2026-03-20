@@ -221,27 +221,27 @@ public static partial class MiniExcel
 
     [CreateSyncVersion]
     public static async Task SaveAsByTemplateAsync(string path, string templatePath, object value, IConfiguration? configuration = null, CancellationToken cancellationToken = default) 
-        => await ExcelTemplater.ApplyTemplateAsync(path, templatePath, value, true, configuration as OpenXmlConfiguration, cancellationToken).ConfigureAwait(false);
+        => await ExcelTemplater.FillTemplateAsync(path, templatePath, value, true, configuration as OpenXmlConfiguration, cancellationToken).ConfigureAwait(false);
 
     [CreateSyncVersion]
     public static async Task SaveAsByTemplateAsync(string path, byte[] templateBytes, object value, IConfiguration? configuration = null)
-        => await ExcelTemplater.ApplyTemplateAsync(path, templateBytes, value, true, configuration as OpenXmlConfiguration).ConfigureAwait(false);
+        => await ExcelTemplater.FillTemplateAsync(path, templateBytes, value, true, configuration as OpenXmlConfiguration).ConfigureAwait(false);
     
     [CreateSyncVersion]
     public static async Task SaveAsByTemplateAsync(this Stream stream, string templatePath, object value, IConfiguration? configuration = null)
-        => await ExcelTemplater.ApplyTemplateAsync(stream, templatePath, value, configuration as OpenXmlConfiguration).ConfigureAwait(false);
+        => await ExcelTemplater.FillTemplateAsync(stream, templatePath, value, configuration as OpenXmlConfiguration).ConfigureAwait(false);
 
     [CreateSyncVersion]
     public static async Task SaveAsByTemplateAsync(this Stream stream, byte[] templateBytes, object value, IConfiguration? configuration = null)
-        => await ExcelTemplater.ApplyTemplateAsync(stream, templateBytes, value, configuration as OpenXmlConfiguration).ConfigureAwait(false);
+        => await ExcelTemplater.FillTemplateAsync(stream, templateBytes, value, configuration as OpenXmlConfiguration).ConfigureAwait(false);
     
     [CreateSyncVersion]
     public static async Task SaveAsByTemplateAsync(string path, Stream templateStream, object value, IConfiguration? configuration = null)
-        => await ExcelTemplater.ApplyTemplateAsync(path, templateStream, value, true, configuration as OpenXmlConfiguration).ConfigureAwait(false);
+        => await ExcelTemplater.FillTemplateAsync(path, templateStream, value, true, configuration as OpenXmlConfiguration).ConfigureAwait(false);
 
     [CreateSyncVersion]
     public static async Task SaveAsByTemplateAsync(this Stream stream, Stream templateStream, object value, IConfiguration? configuration = null)
-        => await ExcelTemplater.ApplyTemplateAsync(stream, templateStream, value, configuration as OpenXmlConfiguration).ConfigureAwait(false);
+        => await ExcelTemplater.FillTemplateAsync(stream, templateStream, value, configuration as OpenXmlConfiguration).ConfigureAwait(false);
 
     #region MergeCells
 

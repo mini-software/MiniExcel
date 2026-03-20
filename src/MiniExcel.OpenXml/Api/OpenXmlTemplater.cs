@@ -24,15 +24,15 @@ public sealed partial class OpenXmlTemplater
     }
 
     [CreateSyncVersion]
-    public async Task ApplyTemplateAsync(string path, string templatePath, object value, bool overwriteFile = false,
+    public async Task FillTemplateAsync(string path, string templatePath, object value, bool overwriteFile = false,
         OpenXmlConfiguration? configuration = null, CancellationToken cancellationToken = default)
     {
         using var stream = overwriteFile ? File.Create(path) : File.Open(path, FileMode.CreateNew);
-        await ApplyTemplateAsync(stream, templatePath, value, configuration, cancellationToken).ConfigureAwait(false);
+        await FillTemplateAsync(stream, templatePath, value, configuration, cancellationToken).ConfigureAwait(false);
     }
 
     [CreateSyncVersion]
-    public async Task ApplyTemplateAsync(string path, Stream templateStream, object value, bool  overwriteFile = false,
+    public async Task FillTemplateAsync(string path, Stream templateStream, object value, bool  overwriteFile = false,
         OpenXmlConfiguration? configuration = null, CancellationToken cancellationToken = default)
     {
         using var stream = overwriteFile ? File.Create(path) : File.Open(path, FileMode.CreateNew);
@@ -41,7 +41,7 @@ public sealed partial class OpenXmlTemplater
     }
     
     [CreateSyncVersion]
-    public async Task ApplyTemplateAsync(Stream stream, string templatePath, object value,
+    public async Task FillTemplateAsync(Stream stream, string templatePath, object value,
         OpenXmlConfiguration? configuration = null, CancellationToken cancellationToken = default)
     {
         var template = GetOpenXmlTemplate(stream, configuration);
@@ -49,7 +49,7 @@ public sealed partial class OpenXmlTemplater
     }
     
     [CreateSyncVersion]
-    public async Task ApplyTemplateAsync(Stream stream, Stream templateStream, object value,
+    public async Task FillTemplateAsync(Stream stream, Stream templateStream, object value,
         OpenXmlConfiguration? configuration = null, CancellationToken cancellationToken = default)
     {
         var template = GetOpenXmlTemplate(stream, configuration);
@@ -57,15 +57,15 @@ public sealed partial class OpenXmlTemplater
     }
     
     [CreateSyncVersion]
-    public async Task ApplyTemplateAsync(string path, byte[] templateBytes, object value, bool overwriteFile = false,
+    public async Task FillTemplateAsync(string path, byte[] templateBytes, object value, bool overwriteFile = false,
         OpenXmlConfiguration? configuration = null, CancellationToken cancellationToken = default)
     {
         using var stream = overwriteFile ? File.Create(path) :  File.Open(path, FileMode.CreateNew);
-        await ApplyTemplateAsync(stream, templateBytes, value, configuration, cancellationToken).ConfigureAwait(false);
+        await FillTemplateAsync(stream, templateBytes, value, configuration, cancellationToken).ConfigureAwait(false);
     }
 
     [CreateSyncVersion]
-    public async Task ApplyTemplateAsync(Stream stream, byte[] templateBytes, object value,
+    public async Task FillTemplateAsync(Stream stream, byte[] templateBytes, object value,
         OpenXmlConfiguration? configuration = null, CancellationToken cancellationToken = default)
     {
         var template = GetOpenXmlTemplate(stream, configuration);

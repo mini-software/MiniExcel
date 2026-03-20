@@ -184,7 +184,8 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
         var rowsWritten = 0;
 
 #if NET10_0_OR_GREATER
-        using var zipStream = await entry.OpenAsync(cancellationToken).ConfigureAwait(false);
+        var zipStream = await entry.OpenAsync(cancellationToken).ConfigureAwait(false);
+        await using var disposableZipStream = zipStream.ConfigureAwait(false);
 #else
         using var zipStream = entry.Open();
 #endif
@@ -618,17 +619,18 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
             await GenerateContentTypesXmlAsync(cancellationToken).ConfigureAwait(false);
             return;
         }
+
 #if NET5_0_OR_GREATER
-#pragma warning disable CA2007 // Consider calling ConfigureAwait on the awaited task
 #if NET10_0_OR_GREATER
-        await using var stream = await contentTypesZipEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
+        var stream = await contentTypesZipEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
 #else
-        await using var stream = contentTypesZipEntry.Open();
+        var stream = contentTypesZipEntry.Open();
 #endif
-#pragma warning restore CA2007 // Consider calling ConfigureAwait on the awaited task
+        await using var disposableStream = stream.ConfigureAwait(false);
 #else
         using var stream = contentTypesZipEntry.Open();
 #endif
+
 #if NETCOREAPP2_0_OR_GREATER
         var doc = await XDocument.LoadAsync(stream, LoadOptions.None, cancellationToken).ConfigureAwait(false);
 #else
@@ -672,18 +674,17 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
         var entry = _archive.CreateEntry(path, CompressionLevel.Fastest);
 
 #if NET5_0_OR_GREATER
-#pragma warning disable CA2007 // Consider calling ConfigureAwait on the awaited task
 #if NET10_0_OR_GREATER
-        await using (var zipStream = await entry.OpenAsync(cancellationToken).ConfigureAwait(false))
+        var zipStream = await entry.OpenAsync(cancellationToken).ConfigureAwait(false);
 #else
-        await using (var zipStream = entry.Open())
+        var zipStream = entry.Open();
 #endif
-#pragma warning restore CA2007 // Consider calling ConfigureAwait on the awaited task
+        await using var disposableZipStream = zipStream.ConfigureAwait(false);
 #else
-        using (var zipStream = entry.Open())
+        using var zipStream = entry.Open();
 #endif
-        using (var writer = new EnhancedStreamWriter(zipStream, Utf8WithBom, _configuration.BufferSize))
-            await writer.WriteAsync(content, cancellationToken).ConfigureAwait(false);
+        using var writer = new EnhancedStreamWriter(zipStream, Utf8WithBom, _configuration.BufferSize);
+        await writer.WriteAsync(content, cancellationToken).ConfigureAwait(false);
 
         if (!string.IsNullOrEmpty(contentType))
             _zipDictionary.Add(path, new ZipPackageInfo(entry, contentType));
@@ -697,14 +698,13 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
         var entry = _archive.CreateEntry(path, CompressionLevel.Fastest);
 
 #if NET5_0_OR_GREATER
-#pragma warning disable CA2007 // Consider calling ConfigureAwait on the awaited task
 #if NET10_0_OR_GREATER
-        await using var zipStream = await entry.OpenAsync(cancellationToken).ConfigureAwait(false);
+        var zipStream = await entry.OpenAsync(cancellationToken).ConfigureAwait(false);
 #else
-        await using var zipStream = entry.Open();
+        var zipStream = entry.Open();
 #endif
+        await using var  disposableZipStream = zipStream.ConfigureAwait(false);
         await zipStream.WriteAsync(content, cancellationToken).ConfigureAwait(false);
-#pragma warning restore CA2007 // Consider calling ConfigureAwait on the awaited task
 #else
         using var zipStream = entry.Open();
         await zipStream.WriteAsync(content, 0, content.Length, cancellationToken).ConfigureAwait(false);

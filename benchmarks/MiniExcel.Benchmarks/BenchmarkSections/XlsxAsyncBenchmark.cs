@@ -42,6 +42,6 @@ public class XlsxAsyncBenchmark : BenchmarkBase
                 })
         };
      
-        await _templater.ApplyTemplateAsync(path.FilePath, templatePath, value);
+        await _templater.FillTemplateAsync(path.FilePath, templatePath, value);
     }
 }

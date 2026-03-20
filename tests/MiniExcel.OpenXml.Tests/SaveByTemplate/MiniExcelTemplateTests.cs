@@ -15,87 +15,85 @@ public class MiniExcelTemplateTests
     public void TestImageType()
     {
         var templatePath = PathHelper.GetFile("xlsx/TestImageType.xlsx");
+        string absolutePath = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, templatePath));
+
+        using var path = AutoDeletingPath.Create();
+        File.Copy(absolutePath, path.FilePath, overwrite: true); // Copy the template file
+
+        var img1Bytes= File.ReadAllBytes(PathHelper.GetFile("xlsx/Issue327/TestIssue327.png"));
+        var img2Bytes= File.ReadAllBytes(PathHelper.GetFile("xlsx/Issue327/TestIssue327.png"));
+        var img3Bytes= File.ReadAllBytes(PathHelper.GetFile("xlsx/Issue327/TestIssue327.png"));
+
+        var pictures = new[]
         {
-            string absolutePath = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, templatePath));
-
-            using var path = AutoDeletingPath.Create();
-            File.Copy(absolutePath, path.FilePath, overwrite: true); // Copy the template file
-
-            var img1Bytes= File.ReadAllBytes(PathHelper.GetFile("images/TestIssue327.png"));  // Use your local imag)e
-            var img2Bytes= File.ReadAllBytes(PathHelper.GetFile("images/TestIssue327.png"));  // Use your local imag)e
-            var img3Bytes= File.ReadAllBytes(PathHelper.GetFile("images/TestIssue327.png"));  // Use your local imag)e
-
-            var pictures = new[]
+            new MiniExcelPicture
             {
-                new MiniExcelPicture
-                {
-                    CellAddress = "B2",
-                    ImageBytes = img1Bytes,
-                    PictureType = "png",
-                    ImgType = XlsxImgType.AbsoluteAnchor,
-                    Location = new System.Drawing.Point(255,255),
-                    WidthPx = 1920,
-                    HeightPx = 1032
-                },
-                new MiniExcelPicture
-                {
-                    CellAddress = "D4",
-                    ImageBytes = img2Bytes,
-                    PictureType = "png",
-                    ImgType = XlsxImgType.TwoCellAnchor,
-                    WidthPx = 1920,
-                    HeightPx = 1032
-                },
-                new MiniExcelPicture
-                {
-                    CellAddress = "F6",
-                    ImageBytes = img3Bytes,
-                    PictureType = "png",
-                    ImgType = XlsxImgType.OneCellAnchor,
-                    WidthPx = 1920,
-                    HeightPx = 1032
-                }
-            };
+                CellAddress = "B2",
+                ImageBytes = img1Bytes,
+                PictureType = "png",
+                ImgType = XlsxImgType.AbsoluteAnchor,
+                Location = new System.Drawing.Point(255,255),
+                WidthPx = 1920,
+                HeightPx = 1032
+            },
+            new MiniExcelPicture
+            {
+                CellAddress = "D4",
+                ImageBytes = img2Bytes,
+                PictureType = "png",
+                ImgType = XlsxImgType.TwoCellAnchor,
+                WidthPx = 28,
+                HeightPx = 28
+            },
+            new MiniExcelPicture
+            {
+                CellAddress = "F6",
+                ImageBytes = img3Bytes,
+                PictureType = "png",
+                ImgType = XlsxImgType.OneCellAnchor,
+                WidthPx = 1920,
+                HeightPx = 1032
+            }
+        };
 
-            // Act
-            _excelTemplater.AddPicture(path.ToString(), pictures);
+        // Act
+        _excelTemplater.AddPicture(path.ToString(), pictures);
 
-            // Assert
-            using var zip = ZipFile.OpenRead(path.FilePath);
-            var mediaEntries = zip.Entries.Where(x => x.FullName.StartsWith("xl/media/")).ToList();
-            Assert.Equal(pictures.Length, mediaEntries.Count);
+        // Assert
+        using var zip = ZipFile.OpenRead(path.FilePath);
+        var mediaEntries = zip.Entries.Where(x => x.FullName.StartsWith("xl/media/")).ToList();
+        Assert.Equal(pictures.Length, mediaEntries.Count);
 
-            // Assert (use EPPlus to verify that images are inserted correctly)
-            using var package = new ExcelPackage(new FileInfo(path.FilePath));
+        // Assert (use EPPlus to verify that images are inserted correctly)
+        using var package = new ExcelPackage(new FileInfo(path.FilePath));
             
-            var sheet = package.Workbook.Worksheets[0];
-            var picB2 = sheet.Drawings
-                .OfType<ExcelPicture>()
-                .FirstOrDefault(p => p.EditAs == eEditAs.Absolute);
+        var sheet = package.Workbook.Worksheets[0];
+        var picB2 = sheet.Drawings
+            .OfType<ExcelPicture>()
+            .FirstOrDefault(p => p.EditAs == eEditAs.Absolute);
 
-            Assert.NotNull(picB2);
-            Assert.Equal(1920 * 9525, picB2.Size.Width);
-            Assert.Equal(1032 * 9525, picB2.Size.Height);
-            //Console.WriteLine("✅ AbsoluteAnchor image exists and the size is as expected (1920x1032)");
+        Assert.NotNull(picB2);
+        Assert.Equal(1920 * 9525, picB2.Size.Width);
+        Assert.Equal(1032 * 9525, picB2.Size.Height);
+        //Console.WriteLine("✅ AbsoluteAnchor image exists and the size is as expected (1920x1032)");
 
-            //Console.WriteLine("✅ Image inserted successfully (B2 - AbsoluteAnchor)");
+        //Console.WriteLine("✅ Image inserted successfully (B2 - AbsoluteAnchor)");
 
-            // Validate image at D4 (ImgType.TwoCellAnchor)
-            var picD4 = sheet.Drawings
-                .OfType<ExcelPicture>()
-                .FirstOrDefault(p => p is { EditAs: eEditAs.TwoCell, From: { Column: 3, Row: 3 } });
+        // Validate image at D4 (ImgType.TwoCellAnchor)
+        var picD4 = sheet.Drawings
+            .OfType<ExcelPicture>()
+            .FirstOrDefault(p => p is { EditAs: eEditAs.TwoCell, From: { Column: 3, Row: 3 } });
                 
-            Assert.NotNull(picD4);
-            //Console.WriteLine("✅ Image inserted successfully (D4 - TwoCellAnchor)");
+        Assert.NotNull(picD4);
+        //Console.WriteLine("✅ Image inserted successfully (D4 - TwoCellAnchor)");
 
-            // Validate image at F6 (ImgType.OneCellAnchor)
-            var picF6 = sheet.Drawings
-                .OfType<ExcelPicture>()
-                .FirstOrDefault(p => p is { EditAs: eEditAs.OneCell, From: { Column: 5, Row: 5 } });
+        // Validate image at F6 (ImgType.OneCellAnchor)
+        var picF6 = sheet.Drawings
+            .OfType<ExcelPicture>()
+            .FirstOrDefault(p => p is { EditAs: eEditAs.OneCell, From: { Column: 5, Row: 5 } });
 
-            Assert.NotNull(picF6);
-            //Console.WriteLine("✅ Image inserted successfully (F6 - OneCellAnchor)");
-        }
+        Assert.NotNull(picF6);
+        //Console.WriteLine("✅ Image inserted successfully (F6 - OneCellAnchor)");
     }
     
     [Fact]
@@ -119,7 +117,7 @@ public class MiniExcelTemplateTests
                 ["managers"] = managers,
                 ["employees"] = employees
             };
-            _excelTemplater.ApplyTemplate(path.ToString(), templatePath, value);
+            _excelTemplater.FillTemplate(path.ToString(), templatePath, value);
             
             var rows = _excelImporter.Query(path.ToString()).ToList();
             var dimension = SheetHelper.GetFirstSheetDimensionRefValue(path.ToString());
@@ -144,7 +142,7 @@ public class MiniExcelTemplateTests
                 ["managers"] = managers,
                 ["employees"] = employees
             };
-            _excelTemplater.ApplyTemplate(path.ToString(), templatePath, value);
+            _excelTemplater.FillTemplate(path.ToString(), templatePath, value);
             
             var rows = _excelImporter.Query(path.ToString()).ToList();
             var dimension = SheetHelper.GetFirstSheetDimensionRefValue(path.ToString());
@@ -179,7 +177,7 @@ public class MiniExcelTemplateTests
             ["managers"] = managers,
             ["employees"] = employees
         };
-        _excelTemplater.ApplyTemplate(path, templatePath, value);
+        _excelTemplater.FillTemplate(path, templatePath, value);
 
         {
             var rows = _excelImporter.Query(path).ToList();
@@ -246,7 +244,7 @@ public class MiniExcelTemplateTests
             ["managers"] = connection.Query("select 'Jack' name,'HR' department union all select 'Loan','IT'"),
             ["employees"] = connection.Query("select 'Wade' name,'HR' department union all select 'Felix','HR' union all select 'Eric','IT' union all select 'Keaton','IT'")
         };
-        _excelTemplater.ApplyTemplate(path, templatePath, value);
+        _excelTemplater.FillTemplate(path, templatePath, value);
 
         {
             var rows = _excelImporter.Query(path).ToList();
@@ -321,7 +319,7 @@ public class MiniExcelTemplateTests
                 new Dictionary<string, object> { ["name"] = "Keaton", ["department"] = "IT" }
             }
         };
-        _excelTemplater.ApplyTemplate(path, templatePath, value);
+        _excelTemplater.FillTemplate(path, templatePath, value);
 
         {
             var rows = _excelImporter.Query(path).ToList();
@@ -398,7 +396,7 @@ public class MiniExcelTemplateTests
                 new() { name = "Felix", department = "HR" }
             }
         };
-        _excelTemplater.ApplyTemplate(path, templatePath, value);
+        _excelTemplater.FillTemplate(path, templatePath, value);
 
         var rows = _excelImporter.Query(path).ToList();
         Assert.Equal(16, rows.Count);
@@ -467,7 +465,7 @@ public class MiniExcelTemplateTests
             Projects = projects,
             TotalStar = projects.Sum(s => s.Star)
         };
-        _excelTemplater.ApplyTemplate(path.ToString(), templatePath, value);
+        _excelTemplater.FillTemplate(path.ToString(), templatePath, value);
 
         var rows = _excelImporter.Query(path.ToString()).ToList();
         Assert.Equal("ITWeiHan Github Projects", rows[0].B);
@@ -518,7 +516,7 @@ public class MiniExcelTemplateTests
                     poco
                 }
             };
-            _excelTemplater.ApplyTemplate(path.ToString(), templatePath, value);
+            _excelTemplater.FillTemplate(path.ToString(), templatePath, value);
 
             var rows = _excelImporter.Query<TestIEnumerableTypePoco>(path.ToString()).ToList();
             Assert.Equal(poco.@string, rows[0].@string);
@@ -586,7 +584,7 @@ public class MiniExcelTemplateTests
                 @bool = true, 
                 Guid = Guid.NewGuid()
             };
-            _excelTemplater.ApplyTemplate(path.ToString(), templatePath, value);
+            _excelTemplater.FillTemplate(path.ToString(), templatePath, value);
 
             var rows = _excelImporter.Query<TestIEnumerableTypePoco>(path.ToString()).ToList();
             Assert.Equal(value.@string, rows[0].@string);
@@ -611,7 +609,7 @@ public class MiniExcelTemplateTests
         {
             Tests = Enumerable.Range(1, 5).Select(i => new { test1 = i, test2 = i })
         };
-        _excelTemplater.ApplyTemplate(path.ToString(), templatePath, value);
+        _excelTemplater.FillTemplate(path.ToString(), templatePath, value);
     }
 
     [Fact]
@@ -629,7 +627,7 @@ public class MiniExcelTemplateTests
                 VIP = true,
                 Points = 123
             };
-            _excelTemplater.ApplyTemplate(path.ToString(), templatePath, value);
+            _excelTemplater.FillTemplate(path.ToString(), templatePath, value);
 
             var rows = _excelImporter.Query(path.ToString()).ToList();
             Assert.Equal("Jack", rows[1].A);
@@ -653,7 +651,7 @@ public class MiniExcelTemplateTests
                 VIP = true,
                 Points = 123
             };
-            _excelTemplater.ApplyTemplate(path.ToString(), templateBytes, value);
+            _excelTemplater.FillTemplate(path.ToString(), templateBytes, value);
 
             var rows = _excelImporter.Query(path.ToString()).ToList();
             Assert.Equal("Jack", rows[1].A);
@@ -680,7 +678,7 @@ public class MiniExcelTemplateTests
             };
             using (var stream = File.Create(path.ToString()))
             {
-                _excelTemplater.ApplyTemplate(stream, templateBytes, value);
+                _excelTemplater.FillTemplate(stream, templateBytes, value);
             }
 
             var rows = _excelImporter.Query(path.ToString()).ToList();
@@ -705,7 +703,7 @@ public class MiniExcelTemplateTests
                 ["VIP"] = true,
                 ["Points"] = 123
             };
-            _excelTemplater.ApplyTemplate(path.ToString(), templatePath, value);
+            _excelTemplater.FillTemplate(path.ToString(), templatePath, value);
 
             var rows = _excelImporter.Query(path.ToString()).ToList();
             Assert.Equal("Jack", rows[1].A);
@@ -739,7 +737,7 @@ public class MiniExcelTemplateTests
                     new { name = "Loan", department = "IT" }
                 }
             };
-            _excelTemplater.ApplyTemplate(path.ToString(), templatePath, value);
+            _excelTemplater.FillTemplate(path.ToString(), templatePath, value);
 
             var dimension = SheetHelper.GetFirstSheetDimensionRefValue(path.ToString());
             Assert.Equal("A1:B7", dimension);
@@ -761,7 +759,7 @@ public class MiniExcelTemplateTests
                     new { name = "Loan", department = "IT" }
                 }
             };
-            _excelTemplater.ApplyTemplate(path.ToString(), templatePath, value);
+            _excelTemplater.FillTemplate(path.ToString(), templatePath, value);
 
             var dimension = SheetHelper.GetFirstSheetDimensionRefValue(path.ToString());
             Assert.Equal("A1:B7", dimension);
@@ -786,7 +784,7 @@ public class MiniExcelTemplateTests
             {
                 ["employees"] = dt
             };
-            _excelTemplater.ApplyTemplate(path.ToString(), templatePath, value);
+            _excelTemplater.FillTemplate(path.ToString(), templatePath, value);
 
             var dimension = SheetHelper.GetFirstSheetDimensionRefValue(path.ToString());
             Assert.Equal("A1:B7", dimension);
@@ -811,7 +809,7 @@ public class MiniExcelTemplateTests
                 new { name = "Joan", department = "IT", salary = 120000 }
             }
         };
-        _excelTemplater.ApplyTemplate(path.ToString(), templatePath, value);
+        _excelTemplater.FillTemplate(path.ToString(), templatePath, value);
 
         var dimension = SheetHelper.GetFirstSheetDimensionRefValue(path.ToString());
         Assert.Equal("A1:C13", dimension);
@@ -841,7 +839,7 @@ public class MiniExcelTemplateTests
                     new { name = "Keaton", department = "IT" }
                 }
             };
-            _excelTemplater.ApplyTemplate(path.ToString(), templatePath, value);
+            _excelTemplater.FillTemplate(path.ToString(), templatePath, value);
 
             {
                 var rows = _excelImporter.Query(path.ToString()).ToList();
@@ -915,7 +913,7 @@ public class MiniExcelTemplateTests
                     new { name = "Keaton", department = "IT" }
                 }
             };
-            _excelTemplater.ApplyTemplate(path.ToString(), templatePath, value);
+            _excelTemplater.FillTemplate(path.ToString(), templatePath, value);
 
             var rows = _excelImporter.Query(path.ToString()).ToList();
             Assert.Equal("FooCompany", rows[0].A);

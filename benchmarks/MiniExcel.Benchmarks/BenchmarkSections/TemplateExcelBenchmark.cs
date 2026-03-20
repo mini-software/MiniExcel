@@ -51,7 +51,7 @@ public class TemplateExcelBenchmark : BenchmarkBase
                 })
         };
 
-        _templater.ApplyTemplate(path.FilePath, templatePath, value);
+        _templater.FillTemplate(path.FilePath, templatePath, value);
     }
 
     [Benchmark(Description = "ClosedXml.Report Template Generate")]

@@ -5,14 +5,24 @@ internal partial class OpenXmlTemplate
     [CreateSyncVersion]
     public async Task MergeSameCellsAsync(string path, CancellationToken cancellationToken = default)
     {
+#if NETSTANDARD2_0
         using var stream = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+#else
+        var stream = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+        await using var disposableStream = stream.ConfigureAwait(false);
+#endif
         await MergeSameCellsImplAsync(stream, cancellationToken).ConfigureAwait(false);
     }
 
     [CreateSyncVersion]
     public async Task MergeSameCellsAsync(byte[] fileInBytes, CancellationToken cancellationToken = default)
     {
-        using Stream stream = new MemoryStream(fileInBytes);
+#if NETSTANDARD2_0
+        using var stream = new MemoryStream(fileInBytes);
+#else
+        var stream = new MemoryStream(fileInBytes);
+        await using var disposableStream = stream.ConfigureAwait(false);
+#endif
         await MergeSameCellsImplAsync(stream, cancellationToken).ConfigureAwait(false);
     }
 
@@ -25,7 +35,7 @@ internal partial class OpenXmlTemplate
 #endif
         ).ConfigureAwait(false);
 
-        using var reader = await MiniExcelLib.OpenXml.OpenXmlReader.CreateAsync(_outputFileStream, null, cancellationToken: cancellationToken).ConfigureAwait(false);
+        using var reader = await OpenXmlReader.CreateAsync(_outputFileStream, null, cancellationToken: cancellationToken).ConfigureAwait(false);
         using var archive = new OpenXmlZip(_outputFileStream, mode: ZipArchiveMode.Update, true, Encoding.UTF8);
 
         //read sharedString
@@ -43,27 +53,31 @@ internal partial class OpenXmlTemplate
             _xMergeCellInfos = [];
             _newXMergeCellInfos = [];
 
+#if NETSTANDARD2_0
+            using var sheetStream = sheet.Open();
+#else            
 #if NET10_0_OR_GREATER
             var sheetStream = await sheet.OpenAsync(cancellationToken).ConfigureAwait(false);
 #else
             var sheetStream = sheet.Open();
 #endif
+            await using var disposableSheetStream = sheetStream.ConfigureAwait(false);
+#endif
             var fullName = sheet.FullName;
 
             var entry = archive.ZipFile.CreateEntry(fullName);
-#if NET10_0_OR_GREATER
-            using var zipStream = await entry.OpenAsync(cancellationToken).ConfigureAwait(false);
-#else
+#if NETSTANDARD2_0
             using var zipStream = entry.Open();
+#else
+#if NET10_0_OR_GREATER
+            var zipStream = await entry.OpenAsync(cancellationToken).ConfigureAwait(false);
+#else
+            var zipStream = entry.Open();
+#endif
+            await using var disposableZipStream = zipStream.ConfigureAwait(false);
 #endif
             await GenerateSheetXmlImplByUpdateModeAsync(sheet, zipStream, sheetStream, new Dictionary<string, object>(), sharedStrings, mergeCells: true, cancellationToken).ConfigureAwait(false);
             //doc.Save(zipStream); //don't do it beacause: https://user-images.githubusercontent.com/12729184/114361127-61a5d100-9ba8-11eb-9bb9-34f076ee28a2.png
         }
-
-#if NET10_0_OR_GREATER
-        await archive.ZipFile.DisposeAsync().ConfigureAwait(false);
-#else
-        archive.ZipFile.Dispose();
-#endif
     }
 }

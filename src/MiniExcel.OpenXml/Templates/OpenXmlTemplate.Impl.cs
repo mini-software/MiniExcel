@@ -4,131 +4,11 @@ using System.ComponentModel;
 
 namespace MiniExcelLib.OpenXml.Templates;
 
-#region Utils
-internal class XRowInfo
-{
-    public string FormatText { get; set; }
-    public string IEnumerablePropName { get; set; }
-    public XmlElement Row { get; set; }
-    public Type IEnumerableGenericType { get; set; }
-    public IDictionary<string, PropInfo> PropsMap { get; set; }
-    public bool IsDictionary { get; set; }
-    public bool IsDataTable { get; set; }
-    public int CellIEnumerableValuesCount { get; set; }
-    public IList<object>? CellIlListValues { get; set; }
-    public IEnumerable? CellIEnumerableValues { get; set; }
-    public XMergeCell? IEnumerableMercell { get; set; }
-    public List<XMergeCell>? RowMercells { get; set; }
-    public List<XmlElement>? ConditionalFormats { get; set; }
-
-
-}
-
-internal class PropInfo
-{
-    public PropertyInfo PropertyInfo { get; set; }
-    public FieldInfo FieldInfo { get; set; }
-    public Type UnderlyingTypePropType { get; set; }
-    public PropertyInfoOrFieldInfo PropertyInfoOrFieldInfo { get; set; } = PropertyInfoOrFieldInfo.None;
-}
-
-internal enum PropertyInfoOrFieldInfo
-{
-    None = 0,
-    PropertyInfo = 1,
-    FieldInfo = 2
-}
-
-internal class XMergeCell
-{
-    public XMergeCell(XMergeCell mergeCell)
-    {
-        Width = mergeCell.Width;
-        Height = mergeCell.Height;
-        X1 = mergeCell.X1;
-        Y1 = mergeCell.Y1;
-        X2 = mergeCell.X2;
-        Y2 = mergeCell.Y2;
-        MergeCell = mergeCell.MergeCell;
-    }
-    public XMergeCell(XmlElement mergeCell)
-    {
-        var refAttr = mergeCell.Attributes["ref"].Value;
-        var refs = refAttr.Split(':');
-
-        //TODO: width,height
-        var xy1 = refs[0];
-        X1 = CellReferenceConverter.GetNumericalIndex(StringHelper.GetLetters(refs[0]));
-        Y1 = StringHelper.GetNumber(xy1);
-
-        var xy2 = refs[1];
-        X2 = CellReferenceConverter.GetNumericalIndex(StringHelper.GetLetters(refs[1]));
-        Y2 = StringHelper.GetNumber(xy2);
-
-        Width = Math.Abs(X1 - X2) + 1;
-        Height = Math.Abs(Y1 - Y2) + 1;
-    }
-    public XMergeCell(string x1, int y1, string x2, int y2)
-    {
-        X1 = CellReferenceConverter.GetNumericalIndex(x1);
-        Y1 = y1;
-
-        X2 = CellReferenceConverter.GetNumericalIndex(x2);
-        Y2 = y2;
-
-        Width = Math.Abs(X1 - X2) + 1;
-        Height = Math.Abs(Y1 - Y2) + 1;
-    }
-
-    public string XY1 => $"{CellReferenceConverter.GetAlphabeticalIndex(X1)}{Y1}";
-    public int X1 { get; set; }
-    public int Y1 { get; set; }
-    public string XY2 => $"{CellReferenceConverter.GetAlphabeticalIndex(X2)}{Y2}";
-    public int X2 { get; set; }
-    public int Y2 { get; set; }
-    public string Ref => $"{CellReferenceConverter.GetAlphabeticalIndex(X1)}{Y1}:{CellReferenceConverter.GetAlphabeticalIndex(X2)}{Y2}";
-    public XmlElement MergeCell { get; set; }
-    public int Width { get; internal set; }
-    public int Height { get; internal set; }
-
-    public string ToXmlString(string prefix)
-        => $"<{prefix}mergeCell ref=\"{CellReferenceConverter.GetAlphabeticalIndex(X1)}{Y1}:{CellReferenceConverter.GetAlphabeticalIndex(X2)}{Y2}\"/>";
-}
-
-internal class MergeCellIndex(int rowStart, int rowEnd)
-{
-    public int RowStart { get; } = rowStart;
-    public int RowEnd { get; } = rowEnd;
-}
-
-internal class XChildNode
-{
-    public string? InnerText { get; set; }
-    public string ColIndex { get; set; }
-    public int RowIndex { get; set; }
-}
-
-internal struct Range
-{
-    public int StartColumn { get; set; }
-    public int StartRow { get; set; }
-    public int EndColumn { get; set; }
-    public int EndRow { get; set; }
-
-    public bool ContainsRow(int row) => StartRow <= row && row <= EndRow;
-}
-
-internal class ConditionalFormatRange
-{
-    public XmlNode? Node { get; set; }
-    public List<Range> Ranges { get; set; } = [];
-}
-#endregion
-
 internal partial class OpenXmlTemplate
 {
-    private List<XRowInfo> _xRowInfos;
     private readonly List<string> _calcChainCellRefs = [];
+    
+    private List<XRowInfo> _xRowInfos;
     private Dictionary<string, XMergeCell> _xMergeCellInfos;
     private List<XMergeCell> _newXMergeCellInfos;
 
@@ -153,6 +33,7 @@ internal partial class OpenXmlTemplate
     {
         var doc = new XmlDocument();
         doc.Load(sheetStream);
+
 #if NET5_0_OR_GREATER
         await sheetStream.DisposeAsync().ConfigureAwait(false);
 #else
@@ -176,30 +57,22 @@ internal partial class OpenXmlTemplate
     [CreateSyncVersion]
     private async Task GenerateSheetXmlImplByCreateModeAsync(ZipArchiveEntry templateSheetZipEntry, Stream outputZipSheetEntryStream, IDictionary<string, object?> inputMaps, IDictionary<int, string> sharedStrings, bool mergeCells = false)
     {
-        Stream? newTemplateStream = null;
         var doc = new XmlDocument
         {
             XmlResolver = null
         };
         
-        try
-        {
-#if NET10_0_OR_GREATER
-            newTemplateStream = await templateSheetZipEntry.OpenAsync().ConfigureAwait(false);
-#else
-            newTemplateStream = templateSheetZipEntry.Open();
-#endif
-            doc.Load(newTemplateStream);
-        }
-        finally
-        {
 #if NET5_0_OR_GREATER
-            if (newTemplateStream is not null)
-                await newTemplateStream.DisposeAsync().ConfigureAwait(false);
+#if NET10_0_OR_GREATER
+        var newTemplateStream = await templateSheetZipEntry.OpenAsync().ConfigureAwait(false);
 #else
-            newTemplateStream?.Dispose();
+        var newTemplateStream = templateSheetZipEntry.Open();
 #endif
-        }
+        await using var disposableStream = newTemplateStream.ConfigureAwait(false);
+#else
+        using var newTemplateStream = templateSheetZipEntry.Open();
+#endif
+        doc.Load(newTemplateStream);
 
         var worksheet = doc.SelectSingleNode("/x:worksheet", Ns);
         var sheetData = doc.SelectSingleNode("/x:worksheet/x:sheetData", Ns);
@@ -330,16 +203,20 @@ internal partial class OpenXmlTemplate
         }
 
         var contents = doc.InnerXml.Split(new[] { $"<{prefix}sheetData>{{{{{{{{{{{{split}}}}}}}}}}}}</{prefix}sheetData>" }, StringSplitOptions.None);
-
+#if NETCOREAPP3_0_OR_GREATER
+        var writer = new StreamWriter(outputFileStream, Encoding.UTF8);
+        await using var disposableWriter =  writer.ConfigureAwait(false);
+#else
         using var writer = new StreamWriter(outputFileStream, Encoding.UTF8);
+#endif
         await writer.WriteAsync(contents[0]
 #if NET7_0_OR_GREATER
-                    .AsMemory(), cancellationToken
+            .AsMemory(), cancellationToken
 #endif
         ).ConfigureAwait(false);
         await writer.WriteAsync($"<{prefix}sheetData>"
 #if NET7_0_OR_GREATER
-                    .AsMemory(), cancellationToken
+            .AsMemory(), cancellationToken
 #endif
         ).ConfigureAwait(false); // prefix problem
 
@@ -378,23 +255,23 @@ internal partial class OpenXmlTemplate
             var rowInfo = _xRowInfos[rowNo];
             var row = rowInfo.Row;
 
-            string specialCellType = "";
+            SpecialCellType specialCellType = default;
             foreach (XmlNode c in row.GetElementsByTagName("c"))
             {
                 specialCellType = c.InnerText switch
                 {
-                    "@group" => "group",
-                    "@endgroup" => "endgroup",
-                    "@merge" or "@endmerge" => "merge",
-                    var s when s.StartsWith("@header") => "header",
-                    _ => ""
+                    "@group" => SpecialCellType.Group,
+                    "@endgroup" => SpecialCellType.Endgroup,
+                    "@merge" or "@endmerge" => SpecialCellType.Merge,
+                    var s when s.StartsWith("@header") => SpecialCellType.Header,
+                    _ => SpecialCellType.None
                 };
 
-                if (!string.IsNullOrEmpty(specialCellType))
+                if (specialCellType != SpecialCellType.None)
                     break;
             }
             
-            if (specialCellType == "group")
+            if (specialCellType == SpecialCellType.Group)
             {
                 groupingStarted = true;
                 hasEverGroupStarted = true;
@@ -403,7 +280,7 @@ internal partial class OpenXmlTemplate
                 prevHeader = "";
                 continue;
             }
-            else if (specialCellType == "endgroup")
+            else if (specialCellType == SpecialCellType.Endgroup)
             {
                 if (cellIEnumerableValuesIndex >= cellIEnumerableValues.Count - 1)
                 {
@@ -420,13 +297,13 @@ internal partial class OpenXmlTemplate
                 isFirstRound = false;
                 continue;
             }
-            else if (specialCellType == "header")
+            else if (specialCellType == SpecialCellType.Header)
             {
                 isHeaderRow = true;
             }
             else if (mergeCells)
             {
-                if (specialCellType == "merge")
+                if (specialCellType == SpecialCellType.Merge)
                 {
                     mergeRowCount++;
                     continue;
@@ -629,17 +506,6 @@ internal partial class OpenXmlTemplate
                     .AsMemory(), cancellationToken
 #endif
         ).ConfigureAwait(false);
-    }
-
-    class GenerateCellValuesContext
-    {
-        public int rowIndexDiff { get; set; }
-        public int headerDiff { get; set; }
-        public string prevHeader { get; set; }
-        public string currentHeader { get; set; }
-        public int newRowIndex { get; set; }
-        public bool isFirst { get; set; }
-        public int iEnumerableIndex { get; set; }
     }
 
     //todo: refactor in a way that needs less parameters
@@ -1349,15 +1215,15 @@ internal partial class OpenXmlTemplate
                                         xRowInfo.PropsMap = dic.ToDictionary(
                                             kv => kv.Key,
                                             kv => kv.Value is not null
-                                                ? new PropInfo { UnderlyingTypePropType = Nullable.GetUnderlyingType(kv.Value.GetType()) ?? kv.Value.GetType() }
-                                                : new PropInfo { UnderlyingTypePropType = typeof(object) });
+                                                ? new MemberInfo { UnderlyingTypePropType = Nullable.GetUnderlyingType(kv.Value.GetType()) ?? kv.Value.GetType() }
+                                                : new MemberInfo { UnderlyingTypePropType = typeof(object) });
                                     }
                                     else
                                     {
                                         var props = xRowInfo.IEnumerableGenericType.GetProperties();
                                         var values = props.ToDictionary(
                                             p => p.Name,
-                                            p => new PropInfo
+                                            p => new MemberInfo
                                             {
                                                 PropertyInfo = p,
                                                 PropertyInfoOrFieldInfo = PropertyInfoOrFieldInfo.PropertyInfo,
@@ -1369,7 +1235,7 @@ internal partial class OpenXmlTemplate
                                         {
                                             if (!values.ContainsKey(f.Name))
                                             {
-                                                var propInfo = new PropInfo
+                                                var propInfo = new MemberInfo
                                                 {
                                                     FieldInfo = f,
                                                     PropertyInfoOrFieldInfo = PropertyInfoOrFieldInfo.FieldInfo,
@@ -1453,7 +1319,7 @@ internal partial class OpenXmlTemplate
                             //maxRowIndexDiff = dt.Rows.Count <= 1 ? 0 : dt.Rows.Count-1;
                             xRowInfo.PropsMap = dt.Columns.Cast<DataColumn>().ToDictionary(col => 
                                 col.ColumnName,
-                                col => new PropInfo { UnderlyingTypePropType = Nullable.GetUnderlyingType(col.DataType) }
+                                col => new MemberInfo { UnderlyingTypePropType = Nullable.GetUnderlyingType(col.DataType) }
                             );
                         }
 

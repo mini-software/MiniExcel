@@ -62,7 +62,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
                 new() { { "specialMark", 3 } },
             }
         };
-        _excelTemplater.ApplyTemplate(path.ToString(), templatePath, data);
+         _excelTemplater.FillTemplate(path.ToString(), templatePath, data);
     }
 
     [Fact]
@@ -79,7 +79,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
                 new{ ITM=3 }
             }
         };
-        _excelTemplater.ApplyTemplate(path.ToString(), templatePath, data);
+         _excelTemplater.FillTemplate(path.ToString(), templatePath, data);
 
         var rows = _excelImporter.Query(path.ToString()).ToList();
         Assert.Equal(rows[2].A, 1);
@@ -178,7 +178,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             }
         };
         var templatePath = PathHelper.GetFile("xlsx/TestIssue413.xlsx");
-        _excelTemplater.ApplyTemplate(path.ToString(), templatePath, value);
+         _excelTemplater.FillTemplate(path.ToString(), templatePath, value);
         var rows = _excelImporter.Query(path.ToString()).ToList();
 
         Assert.Equal("2022-12-25 00:00:00", rows[1].B);
@@ -609,7 +609,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         {
             ["users"] = Array.Empty<TestIssueI4WM67Dto>()
         };
-        _excelTemplater.ApplyTemplate(path.ToString(), templatePath, value);
+         _excelTemplater.FillTemplate(path.ToString(), templatePath, value);
         var rows = _excelImporter.Query(path.ToString()).ToList();
         Assert.Single(rows);
     }
@@ -632,7 +632,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
                 ["Amount"] = 1000,
                 ["Department"] = "HR"
             };
-            _excelTemplater.ApplyTemplate(path.ToString(), templatePath, value);
+             _excelTemplater.FillTemplate(path.ToString(), templatePath, value);
         }
 
         {
@@ -648,7 +648,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
                 ["Amount"] = 1000,
                 ["Department"] = "HR"
             };
-            Assert.Throws<KeyNotFoundException>(() => _excelTemplater.ApplyTemplate(path.ToString(), templatePath, value, configuration: config));
+            Assert.Throws<KeyNotFoundException>(() => _excelTemplater.FillTemplate(path.ToString(), templatePath, value, configuration: config));
         }
     }
 
@@ -754,14 +754,14 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
                 id=1,
                 name="Jack",
                 indate=new DateTime(2022,5,13),
-                file = File.ReadAllBytes(PathHelper.GetFile("images/TestIssue327.png"))
+                file = File.ReadAllBytes(PathHelper.GetFile("xlsx/Issue327/TestIssue327.png"))
             },
             new
             {
                 id=2,
                 name="Henry",
                 indate=new DateTime(2022,4,10),
-                file = File.ReadAllBytes(PathHelper.GetFile("other/TestIssue327.txt"))
+                file = File.ReadAllBytes(PathHelper.GetFile("xlsx/Issue327/TestIssue327.txt"))
             },
         };
         _excelExporter.Export(path.ToString(), value);
@@ -782,11 +782,11 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
                 if (rowIndx == 0 && i == 0) Assert.Equal(1.0, v);
                 if (rowIndx == 0 && i == 1) Assert.Equal("Jack", v);
                 if (rowIndx == 0 && i == 2) Assert.Equal(new DateTime(2022, 5, 13), v);
-                if (rowIndx == 0 && i == 3) Assert.Equal(File.ReadAllBytes(PathHelper.GetFile("images/TestIssue327.png")), v);
+                if (rowIndx == 0 && i == 3) Assert.Equal(File.ReadAllBytes(PathHelper.GetFile("xlsx/Issue327/TestIssue327.png")), v);
                 if (rowIndx == 1 && i == 0) Assert.Equal(2.0, v);
                 if (rowIndx == 1 && i == 1) Assert.Equal("Henry", v);
                 if (rowIndx == 1 && i == 2) Assert.Equal(new DateTime(2022, 4, 10), v);
-                if (rowIndx == 1 && i == 3) Assert.Equal(File.ReadAllBytes(PathHelper.GetFile("other/TestIssue327.txt")), v);
+                if (rowIndx == 1 && i == 3) Assert.Equal(File.ReadAllBytes(PathHelper.GetFile("xlsx/Issue327/TestIssue327.txt")), v);
             }
             rowIndx++;
         }
@@ -800,9 +800,9 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         using var path = AutoDeletingPath.Create();
         var value = new[]
         {
-            new { id = 1, file = File.ReadAllBytes(PathHelper.GetFile("images/TestIssue327.png")) },
-            new { id = 2, file = File.ReadAllBytes(PathHelper.GetFile("other/TestIssue327.txt")) },
-            new { id = 3, file = File.ReadAllBytes(PathHelper.GetFile("other/TestIssue327.html")) },
+            new { id = 1, file = File.ReadAllBytes(PathHelper.GetFile("xlsx/Issue327/TestIssue327.png")) },
+            new { id = 2, file = File.ReadAllBytes(PathHelper.GetFile("xlsx/Issue327/TestIssue327.txt")) },
+            new { id = 3, file = File.ReadAllBytes(PathHelper.GetFile("xlsx/Issue327/TestIssue327.html")) },
         };
         _excelExporter.Export(path.ToString(), value);
         var rows = _excelImporter.Query(path.ToString(), true).ToList();
@@ -959,7 +959,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             new { Name="google", Image=File.ReadAllBytes(PathHelper.GetFile("images/google_logo.png"))},
             new { Name="microsoft", Image=File.ReadAllBytes(PathHelper.GetFile("images/microsoft_logo.png"))},
             new { Name="reddit", Image=File.ReadAllBytes(PathHelper.GetFile("images/reddit_logo.png"))},
-            new { Name="statck_overflow", Image=File.ReadAllBytes(PathHelper.GetFile("images/statck_overflow_logo.png"))},
+            new { Name="stackoverflow", Image=File.ReadAllBytes(PathHelper.GetFile("images/stackoverflow_logo.png"))},
         };
         _excelExporter.Export(path, value);
 
@@ -985,7 +985,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         {
             { "Texts",reader}
         };
-        _excelTemplater.ApplyTemplate(path.ToString(), templatePath, value);
+         _excelTemplater.FillTemplate(path.ToString(), templatePath, value);
 
         var rows = _excelImporter.Query(path.ToString(), true).ToList();
         Assert.Equal("Hello World1", rows[0].Text);
@@ -1037,7 +1037,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             { "Title", "Hello & World < , > , \" , '" },
             { "Details", new[] { new { Value = "Hello & Value < , > , \" , '" } } },
         };
-        _excelTemplater.ApplyTemplate(path.ToString(), templatePath, value);
+         _excelTemplater.FillTemplate(path.ToString(), templatePath, value);
 
         var sheetXml = SheetHelper.GetZipFileContent(path.ToString(), "xl/worksheets/sheet1.xml");
         // Template now uses inlineStr format (<is><t>...</t></is>) instead of SharedStrings (<v>...</v>)
@@ -1409,7 +1409,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
                     new Issue255DTO { Time = new DateTime(2021, 01, 01), Time2 = new DateTime(2021, 01, 01) }
                 }
             };
-            _excelTemplater.ApplyTemplate(path.ToString(), templatePath, value);
+             _excelTemplater.FillTemplate(path.ToString(), templatePath, value);
             var rows = _excelImporter.Query(path.ToString()).ToList();
             Assert.Equal("2021", rows[1].A.ToString());
             Assert.Equal("2021", rows[1].B.ToString());
@@ -1813,7 +1813,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     {
         using var path = AutoDeletingPath.Create();
         var templatePath = PathHelper.GetFile("xlsx/TestIssue226.xlsx");
-        _excelTemplater.ApplyTemplate(path.ToString(), templatePath, new { employees = new[] { new { name = "123" }, new { name = "123" } } });
+         _excelTemplater.FillTemplate(path.ToString(), templatePath, new { employees = new[] { new { name = "123" }, new { name = "123" } } });
         Assert.Equal("A1:A3", SheetHelper.GetFirstSheetDimensionRefValue(path.ToString()));
     }
 
@@ -2087,7 +2087,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
                 }
             };
 
-             _excelTemplater.ApplyTemplate(path, tempaltePath, value);
+             _excelTemplater.FillTemplate(path, tempaltePath, value);
             var rows = _excelImporter.Query(path).ToList();
 
             Assert.Equal("項目1", rows[0].A);
@@ -2131,7 +2131,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
                 }
             };
 
-            _excelTemplater.ApplyTemplate(path, tempaltePath, value);
+             _excelTemplater.FillTemplate(path, tempaltePath, value);
             var rows = _excelImporter.Query(path).ToList();
 
             Assert.Equal("項目1", rows[0].A);
@@ -2161,7 +2161,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         };
 
         var rows = _excelImporter.Query(templatePath).ToList();
-        _excelTemplater.ApplyTemplate(path.ToString(), templatePath, value);
+         _excelTemplater.FillTemplate(path.ToString(), templatePath, value);
     }
 
     /// <summary>
@@ -2195,7 +2195,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             {
                 ["employees"] = dt
             };
-            _excelTemplater.ApplyTemplate(path.ToString(), templatePath, value);
+             _excelTemplater.FillTemplate(path.ToString(), templatePath, value);
 
             var dimension = SheetHelper.GetFirstSheetDimensionRefValue(path.ToString());
             Assert.Equal("A1:B2", dimension);
@@ -2211,7 +2211,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             dt.Rows.Add("Jack", "HR");
 
             var value = new Dictionary<string, object> { ["employees"] = dt };
-            _excelTemplater.ApplyTemplate(path.ToString(), templatePath, value);
+             _excelTemplater.FillTemplate(path.ToString(), templatePath, value);
 
             var dimension = SheetHelper.GetFirstSheetDimensionRefValue(path.ToString());
             Assert.Equal("A1:B2", dimension);
@@ -2247,7 +2247,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
                     new { name = "Keaton", department = "IT" }
                 }
             };
-            _excelTemplater.ApplyTemplate(path, templatePath, value);
+             _excelTemplater.FillTemplate(path, templatePath, value);
 
             foreach (var sheetName in _excelImporter.GetSheetNames(path))
             {
@@ -2298,7 +2298,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
                     new {name="Keaton",department="IT"}
                 }
             };
-            _excelTemplater.ApplyTemplate(path.ToString(), templatePath, value);
+             _excelTemplater.FillTemplate(path.ToString(), templatePath, value);
             var rows = _excelImporter.Query(path.ToString()).ToList();
 
             Assert.Equal("FooCompany", rows[0].A);
@@ -2687,7 +2687,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             new { Name = "google", Image = File.ReadAllBytes(PathHelper.GetFile("images/google_logo.png")) },
             new { Name = "microsoft", Image = File.ReadAllBytes(PathHelper.GetFile("images/microsoft_logo.png")) },
             new { Name = "reddit", Image = File.ReadAllBytes(PathHelper.GetFile("images/reddit_logo.png")) },
-            new { Name = "statck_overflow", Image = File.ReadAllBytes(PathHelper.GetFile("images/statck_overflow_logo.png")) }
+            new { Name = "stackoverflow", Image = File.ReadAllBytes(PathHelper.GetFile("images/stackoverflow_logo.png")) }
         ];
 
         List<dynamic> list2 =
@@ -2812,7 +2812,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             }
         };
 
-         _excelTemplater.ApplyTemplate(ms, template, values);
+         _excelTemplater.FillTemplate(ms, template, values);
     }
 
     [Fact]
@@ -2828,7 +2828,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         var template = PathHelper.GetFile("xlsx/Issue527Template.xlsx");
 
         using var path = AutoDeletingPath.Create();
-        _excelTemplater.ApplyTemplate(path.FilePath, template, value);
+         _excelTemplater.FillTemplate(path.FilePath, template, value);
 
         var rows = _excelImporter.Query(path.FilePath).ToList();
         Assert.Equal("General User", rows[1].B);
@@ -2977,7 +2977,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         );
 
         var templateFileName = PathHelper.GetFile("xlsx/TestIssue606_Template.xlsx");
-        _excelTemplater.ApplyTemplate(path, Path.GetFullPath(templateFileName), value);
+         _excelTemplater.FillTemplate(path, Path.GetFullPath(templateFileName), value);
         File.Delete(path);
     }
 
@@ -3208,7 +3208,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             ["list"] = Enumerable.Range(0, 10_000)
                 .Select(_ => new { value1 = Guid.NewGuid(), value2 = Guid.NewGuid(), })
         };
-        _excelTemplater.ApplyTemplate(path.ToString(), templatePath, data);
+         _excelTemplater.FillTemplate(path.ToString(), templatePath, data);
 
         var rows = _excelImporter.Query(path.ToString())
             .Skip(1453)
@@ -3240,7 +3240,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         {
             ["list"] = list
         };
-        _excelTemplater.ApplyTemplate(path.ToString(), templatePath, data);
+         _excelTemplater.FillTemplate(path.ToString(), templatePath, data);
 
         using var stream = File.OpenRead(path.ToString());
         using var workbook = new XSSFWorkbook(stream);
@@ -3298,7 +3298,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             ["list"] = list
         };
 
-         _excelTemplater.ApplyTemplate(path.ToString(), templatePath, data);
+         _excelTemplater.FillTemplate(path.ToString(), templatePath, data);
         var rows = _excelImporter.Query(path.ToString(), startCell: "A16").ToList();
 
         Assert.Equal(list[0].value1.ToString(), rows[0].A.ToString());
@@ -3362,7 +3362,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
             list12 = GetEnumerable()
         };
 
-        _excelTemplater.ApplyTemplate(path.FilePath, template, value);
+         _excelTemplater.FillTemplate(path.FilePath, template, value);
         var rows = _excelImporter.Query(path.FilePath).ToList();
 
         Assert.Equal("2025-1", rows[2].B);
@@ -3405,7 +3405,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         var fill = new { t = a };
         using var path = AutoDeletingPath.Create();
 
-        _excelTemplater.ApplyTemplate(path.FilePath, templatePath, fill);
+         _excelTemplater.FillTemplate(path.FilePath, templatePath, fill);
         var rows = _excelImporter.Query(path.FilePath).ToList();
 
         Assert.Equal("H1", rows[4].AF);
@@ -3815,7 +3815,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         };
         
         using var path = AutoDeletingPath.Create();
-        _excelTemplater.ApplyTemplate(path.ToString(), templatePath, value);
+        _excelTemplater.FillTemplate(path.ToString(), templatePath, value);
 
         var result = _excelImporter.Query(path.ToString(), true).ToList();
         

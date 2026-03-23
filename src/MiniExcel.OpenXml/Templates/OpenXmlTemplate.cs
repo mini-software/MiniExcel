@@ -90,13 +90,15 @@ internal partial class OpenXmlTemplate : IMiniExcelTemplate
 
             // Copy the content of the original entry to the new entry
 #if NET10_0_OR_GREATER
-            using var originalEntryStream = await entry.OpenAsync(cancellationToken).ConfigureAwait(false);
+            var originalEntryStream = await entry.OpenAsync(cancellationToken).ConfigureAwait(false);
+            await using var disposableEntryStream = originalEntryStream.ConfigureAwait(false);
 #else
             using var originalEntryStream = entry.Open();
 #endif
             // Copy the content of the original entry to the new entry
 #if NET10_0_OR_GREATER
-            using var newEntryStream = await newEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
+            var newEntryStream = await newEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
+            await using var disposableNewEntryStream = newEntryStream.ConfigureAwait(false);
 #else
             using var newEntryStream = newEntry.Open();
 #endif
@@ -137,7 +139,8 @@ internal partial class OpenXmlTemplate : IMiniExcelTemplate
             var outputZipEntry = outputFileArchive.ZipFile.CreateEntry(templateFullName);
 
 #if NET10_0_OR_GREATER
-            using var outputZipSheetEntryStream = await outputZipEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
+            var outputZipSheetEntryStream = await outputZipEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
+            await using var disposableSheetEntryStream = outputZipSheetEntryStream.ConfigureAwait(false);
 #else
             using var outputZipSheetEntryStream = outputZipEntry.Open();
 #endif
@@ -158,7 +161,8 @@ internal partial class OpenXmlTemplate : IMiniExcelTemplate
 
             var calcChainEntry = outputFileArchive.ZipFile.CreateEntry(calcChainPathName);
 #if NET10_0_OR_GREATER
-            using var calcChainStream = await calcChainEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
+            var calcChainStream = await calcChainEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
+            await using var disposableChainEntryStream = calcChainStream.ConfigureAwait(false);
 #else
             using var calcChainStream = calcChainEntry.Open();
 #endif
@@ -174,12 +178,14 @@ internal partial class OpenXmlTemplate : IMiniExcelTemplate
 
                     // Copy the content of the original entry to the new entry
 #if NET10_0_OR_GREATER
-                    using var originalEntryStream = await entry.OpenAsync(cancellationToken).ConfigureAwait(false);
+                    var originalEntryStream = await entry.OpenAsync(cancellationToken).ConfigureAwait(false);
+                    await using var disposableEntryStream = originalEntryStream.ConfigureAwait(false);
 #else
                     using var originalEntryStream = entry.Open();
 #endif
 #if NET10_0_OR_GREATER
-                    using var newEntryStream = await newEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
+                    var newEntryStream = await newEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
+                    await using  var disposableNewEntryStream = newEntryStream.ConfigureAwait(false);
 #else
                     using var newEntryStream = newEntry.Open();
 #endif

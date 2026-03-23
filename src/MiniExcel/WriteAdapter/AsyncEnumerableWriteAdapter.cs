@@ -73,16 +73,16 @@ namespace MiniExcelLibs.WriteAdapter
             foreach (var prop in props)
             {
                 column++;
-            
-                if (prop is null)
-                    continue;
 
-                yield return currentValue switch
+                if (prop is { ExcelIgnore: false })
                 {
-                    IDictionary<string, object> genericDictionary => new CellWriteInfo(genericDictionary[prop.Key.ToString()], column, prop),
-                    IDictionary dictionary => new CellWriteInfo(dictionary[prop.Key], column, prop),
-                    _ => new CellWriteInfo(prop.Property.GetValue(currentValue), column, prop)
-                };
+                    yield return currentValue switch
+                    {
+                        IDictionary<string, object> genericDictionary => new CellWriteInfo(genericDictionary[prop.Key.ToString()], column, prop),
+                        IDictionary dictionary => new CellWriteInfo(dictionary[prop.Key], column, prop),
+                        _ => new CellWriteInfo(prop.Property.GetValue(currentValue), column, prop)
+                    };
+                }
             }
         }
 

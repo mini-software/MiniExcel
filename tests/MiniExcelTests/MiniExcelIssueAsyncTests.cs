@@ -1853,4 +1853,40 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
         public double? 波段 { get; set; }
         public double? 當沖 { get; set; }
     }
+    
+    [Fact]
+    public async Task TestIssue584()
+    {
+        var excelconfig = new OpenXmlConfiguration
+        {
+            DynamicColumns =
+            [
+                new DynamicExcelColumn("Id") { Ignore = true }
+            ]
+        };
+
+        await using var conn = Db.GetConnection();
+        conn.Open();
+
+        await using var cmd = conn.CreateCommand();
+        cmd.CommandText =
+            """
+            WITH test('Id', 'Name') AS (
+                VALUES 
+                    (1, 'test1'), 
+                    (2, 'test2'), 
+                    (3, 'test3')
+                )
+            SELECT * FROM test;
+            """;
+
+        await using var reader = cmd.ExecuteReader();
+
+        using var path = AutoDeletingPath.Create();
+        await MiniExcel.SaveAsAsync(path.FilePath, reader, configuration: excelconfig, overwriteFile: true);
+
+        var rows = (await MiniExcel.QueryAsync(path.FilePath)).ToList();
+        Assert.All(rows, x => Assert.Single(x));
+        Assert.Equal("Name", rows[0].A);
+    }
 }

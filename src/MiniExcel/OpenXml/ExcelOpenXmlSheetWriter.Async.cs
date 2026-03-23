@@ -362,22 +362,21 @@ namespace MiniExcelLibs.OpenXml
 
         private async Task PrintHeaderAsync(MiniExcelAsyncStreamWriter writer, List<ExcelColumnInfo> props, CancellationToken cancellationToken = default)
         {
-            var xIndex = 1;
-            var yIndex = 1;
+            const int yIndex = 1;
             await writer.WriteAsync(WorksheetXml.StartRow(yIndex));
 
+            var xIndex = 1;
             foreach (var p in props)
             {
-                cancellationToken.ThrowIfCancellationRequested();
-                
-                if (p == null)
+                //reason : https://github.com/mini-software/MiniExcel/issues/142
+                if (p != null)
                 {
-                    xIndex++; //reason : https://github.com/mini-software/MiniExcel/issues/142
-                    continue;
-                }
+                    if (p.ExcelIgnore)
+                        continue;
 
-                var r = ExcelOpenXmlUtils.ConvertXyToCell(xIndex, yIndex);
-                await WriteCellAsync(writer, r, columnName: p.ExcelColumnName);
+                    var r = ExcelOpenXmlUtils.ConvertXyToCell(xIndex, yIndex);
+                    await WriteCellAsync(writer, r, columnName: p.ExcelColumnName);
+                }
                 xIndex++;
             }
 

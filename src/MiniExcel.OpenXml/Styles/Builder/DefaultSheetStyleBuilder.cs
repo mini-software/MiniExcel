@@ -19,12 +19,12 @@ internal partial class DefaultSheetStyleBuilder(SheetStyleBuildContext context, 
     private static readonly Color DefaultBackgroundColor = Color.FromArgb(0x284472C4);
     private const HorizontalCellAlignment DefaultHorizontalAlignment = HorizontalCellAlignment.Left;
     private const VerticalCellAlignment DefaultVerticalAlignment = VerticalCellAlignment.Bottom;
-    
+
     private readonly SheetStyleBuildContext _context = context;
     private readonly OpenXmlStyleOptions _styleOptions = styleOptions;
 
     private XmlReader OldReader => _context.OldXmlReader!;
-    private XmlWriter NewWriter => _context.NewXmlWriter!; 
+    private XmlWriter NewWriter => _context.NewXmlWriter!;
 
     protected override SheetStyleElementInfos GetGenerateElementInfos()
     {
@@ -148,7 +148,7 @@ internal partial class DefaultSheetStyleBuilder(SheetStyleBuildContext context, 
         var bgColor = _styleOptions.HeaderStyle?.BackgroundColor ?? DefaultBackgroundColor;
         var hexBgColor = $"{bgColor.A:X2}{bgColor.R:X2}{bgColor.G:X2}{bgColor.B:X2}";
         await NewWriter.WriteAttributeStringAsync(null, "rgb", null, hexBgColor).ConfigureAwait(false);
-        
+
         await NewWriter.WriteEndElementAsync().ConfigureAwait(false);
         await NewWriter.WriteEndElementAsync().ConfigureAwait(false);
         await NewWriter.WriteEndElementAsync().ConfigureAwait(false);
@@ -360,20 +360,20 @@ internal partial class DefaultSheetStyleBuilder(SheetStyleBuildContext context, 
         await NewWriter.WriteAttributeStringAsync(null, "applyAlignment", null, "1").ConfigureAwait(false);
         await NewWriter.WriteAttributeStringAsync(null, "applyProtection", null, "1").ConfigureAwait(false);
         await NewWriter.WriteStartElementAsync(OldReader.Prefix, "alignment", OldReader.NamespaceURI).ConfigureAwait(false);
-        
-        var horizontalAlignment = _styleOptions.HeaderStyle?.HorizontalAlignment ?? DefaultHorizontalAlignment;
-        var horizontalAlignmentStr = horizontalAlignment.ToString().ToLowerInvariant();
-        await NewWriter.WriteAttributeStringAsync(null, "horizontal", null, horizontalAlignmentStr).ConfigureAwait(false);
-        
-        var verticalAlignment = _styleOptions.HeaderStyle?.VerticalAlignment ?? DefaultVerticalAlignment;
-        var verticalAlignmentStr = verticalAlignment.ToString().ToLowerInvariant();
-        await NewWriter.WriteAttributeStringAsync(null, "vertical", null, verticalAlignmentStr).ConfigureAwait(false);
-        
+
+        var headerHorizontalAlignment = _styleOptions.HeaderStyle?.HorizontalAlignment ?? DefaultHorizontalAlignment;
+        var headerHorizontalAlignmentStr = headerHorizontalAlignment.ToString().ToLowerInvariant();
+        await NewWriter.WriteAttributeStringAsync(null, "horizontal", null, headerHorizontalAlignmentStr).ConfigureAwait(false);
+
+        var headerVerticalAlignment = _styleOptions.HeaderStyle?.VerticalAlignment ?? DefaultVerticalAlignment;
+        var headerVerticalAlignmentStr = headerVerticalAlignment.ToString().ToLowerInvariant();
+        await NewWriter.WriteAttributeStringAsync(null, "vertical", null, headerVerticalAlignmentStr).ConfigureAwait(false);
+
         await NewWriter.WriteAttributeStringAsync(null, "textRotation", null, "0").ConfigureAwait(false);
 
         var wrapHeader = (_styleOptions.HeaderStyle?.WrapText ?? false) ? "1" : "0";
         await NewWriter.WriteAttributeStringAsync(null, "wrapText", null, wrapHeader).ConfigureAwait(false);
-        
+
         await NewWriter.WriteAttributeStringAsync(null, "indent", null, "0").ConfigureAwait(false);
         await NewWriter.WriteAttributeStringAsync(null, "relativeIndent", null, "0").ConfigureAwait(false);
         await NewWriter.WriteAttributeStringAsync(null, "justifyLastLine", null, "0").ConfigureAwait(false);
@@ -404,13 +404,28 @@ internal partial class DefaultSheetStyleBuilder(SheetStyleBuildContext context, 
         await NewWriter.WriteAttributeStringAsync(null, "applyAlignment", null, "1").ConfigureAwait(false);
         await NewWriter.WriteAttributeStringAsync(null, "applyProtection", null, "1").ConfigureAwait(false);
         await NewWriter.WriteStartElementAsync(OldReader.Prefix, "alignment", OldReader.NamespaceURI).ConfigureAwait(false);
-        await NewWriter.WriteAttributeStringAsync(null, "horizontal", null, "general").ConfigureAwait(false);
-        await NewWriter.WriteAttributeStringAsync(null, "vertical", null, "bottom").ConfigureAwait(false);
-        await NewWriter.WriteAttributeStringAsync(null, "textRotation", null, "0").ConfigureAwait(false);
+
+        var style1HorizontalAlignment = _styleOptions.HorizontalAlignment switch
+        {
+            HorizontalCellAlignment.Center => "center",
+            HorizontalCellAlignment.Right => "right",
+            _ => "general"
+        };
+
+        var style1VerticalAlignment = _styleOptions.VerticalAlignment switch
+        {
+            VerticalCellAlignment.Top => "top",
+            VerticalCellAlignment.Center => "center",
+            _ => "bottom"
+        };
         
+        await NewWriter.WriteAttributeStringAsync(null, "horizontal", null, style1HorizontalAlignment).ConfigureAwait(false);
+        await NewWriter.WriteAttributeStringAsync(null, "vertical", null, style1VerticalAlignment).ConfigureAwait(false);
+        await NewWriter.WriteAttributeStringAsync(null, "textRotation", null, "0").ConfigureAwait(false);
+
         var wrapContent = _styleOptions.WrapCellContents ? "1" : "0";
         await NewWriter.WriteAttributeStringAsync(null, "wrapText", null, wrapContent).ConfigureAwait(false);
-        
+
         await NewWriter.WriteAttributeStringAsync(null, "indent", null, "0").ConfigureAwait(false);
         await NewWriter.WriteAttributeStringAsync(null, "relativeIndent", null, "0").ConfigureAwait(false);
         await NewWriter.WriteAttributeStringAsync(null, "justifyLastLine", null, "0").ConfigureAwait(false);
@@ -441,8 +456,23 @@ internal partial class DefaultSheetStyleBuilder(SheetStyleBuildContext context, 
         await NewWriter.WriteAttributeStringAsync(null, "applyAlignment", null, "1").ConfigureAwait(false);
         await NewWriter.WriteAttributeStringAsync(null, "applyProtection", null, "1").ConfigureAwait(false);
         await NewWriter.WriteStartElementAsync(OldReader.Prefix, "alignment", OldReader.NamespaceURI).ConfigureAwait(false);
-        await NewWriter.WriteAttributeStringAsync(null, "horizontal", null, "general").ConfigureAwait(false);
-        await NewWriter.WriteAttributeStringAsync(null, "vertical", null, "bottom").ConfigureAwait(false);
+
+        var style2HorizontalAlignment = _styleOptions.HorizontalAlignment switch
+        {
+            HorizontalCellAlignment.Center => "center",
+            HorizontalCellAlignment.Right => "right",
+            _ => "general"
+        };
+
+        var style2VerticalAlignment = _styleOptions.VerticalAlignment switch
+        {
+            VerticalCellAlignment.Top => "top",
+            VerticalCellAlignment.Center => "center",
+            _ => "bottom"
+        };
+
+        await NewWriter.WriteAttributeStringAsync(null, "horizontal", null, style2HorizontalAlignment).ConfigureAwait(false);
+        await NewWriter.WriteAttributeStringAsync(null, "vertical", null, style2VerticalAlignment).ConfigureAwait(false);
         await NewWriter.WriteAttributeStringAsync(null, "textRotation", null, "0").ConfigureAwait(false);
         await NewWriter.WriteAttributeStringAsync(null, "wrapText", null, "0").ConfigureAwait(false);
         await NewWriter.WriteAttributeStringAsync(null, "indent", null, "0").ConfigureAwait(false);
@@ -499,8 +529,23 @@ internal partial class DefaultSheetStyleBuilder(SheetStyleBuildContext context, 
             await NewWriter.WriteAttributeStringAsync(null, "applyAlignment", null, "1").ConfigureAwait(false);
             await NewWriter.WriteAttributeStringAsync(null, "applyProtection", null, "1").ConfigureAwait(false);
             await NewWriter.WriteStartElementAsync(OldReader.Prefix, "alignment", OldReader.NamespaceURI).ConfigureAwait(false);
-            await NewWriter.WriteAttributeStringAsync(null, "horizontal", null, "general").ConfigureAwait(false);
-            await NewWriter.WriteAttributeStringAsync(null, "vertical", null, "bottom").ConfigureAwait(false);
+
+            var style3HorizontalAlignment = _styleOptions.HorizontalAlignment switch
+            {
+                HorizontalCellAlignment.Center => "center",
+                HorizontalCellAlignment.Right => "right",
+                _ => "general"
+            };
+
+            var style3VerticalAlignment = _styleOptions.VerticalAlignment switch
+            {
+                VerticalCellAlignment.Top => "top",
+                VerticalCellAlignment.Center => "center",
+                _ => "bottom"
+            };
+            
+            await NewWriter.WriteAttributeStringAsync(null, "horizontal", null, style3HorizontalAlignment).ConfigureAwait(false);
+            await NewWriter.WriteAttributeStringAsync(null, "vertical", null, style3VerticalAlignment).ConfigureAwait(false);
             await NewWriter.WriteAttributeStringAsync(null, "textRotation", null, "0").ConfigureAwait(false);
             await NewWriter.WriteAttributeStringAsync(null, "wrapText", null, "0").ConfigureAwait(false);
             await NewWriter.WriteAttributeStringAsync(null, "indent", null, "0").ConfigureAwait(false);

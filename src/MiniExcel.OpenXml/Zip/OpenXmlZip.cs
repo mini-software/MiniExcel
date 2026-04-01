@@ -10,7 +10,7 @@ internal class OpenXmlZip : IDisposable
     public ReadOnlyCollection<ZipArchiveEntry> EntryCollection = new([]);
     
     internal readonly Dictionary<string, ZipArchiveEntry> Entries;
-    internal MiniExcelZipArchive? ZipFile;
+    internal ZipArchive? ZipFile;
 
     private static readonly XmlReaderSettings XmlSettings = new()
     {
@@ -22,7 +22,7 @@ internal class OpenXmlZip : IDisposable
     public OpenXmlZip(Stream fileStream, ZipArchiveMode mode = ZipArchiveMode.Read, bool leaveOpen = false, Encoding? entryNameEncoding = null, bool isUpdateMode = true)
     {
         entryNameEncoding ??= Encoding.UTF8;
-        ZipFile = new MiniExcelZipArchive(fileStream, mode, leaveOpen, entryNameEncoding);
+        ZipFile = new ZipArchive(fileStream, mode, leaveOpen, entryNameEncoding);
         Entries = new Dictionary<string, ZipArchiveEntry>(StringComparer.OrdinalIgnoreCase);
         
         if (!isUpdateMode)

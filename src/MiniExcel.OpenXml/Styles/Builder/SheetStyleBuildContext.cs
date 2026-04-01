@@ -3,17 +3,20 @@ using MiniExcelLib.OpenXml.Constants;
 
 namespace MiniExcelLib.OpenXml.Styles.Builder;
 
-internal class SheetStyleBuildContext : IDisposable
+internal sealed partial class SheetStyleBuildContext : IDisposable
+#if NET8_0_OR_GREATER
+    , IAsyncDisposable
+#endif
 {
     private static readonly string EmptyStylesXml = XmlHelper.MinifyXml(
-    """
-     <?xml version="1.0" encoding="utf-8"?>
-     <x:styleSheet xmlns:x="http://schemas.openxmlformats.org/spreadsheetml/2006/main">                
-     </x:styleSheet>
-     """);
+        """
+        <?xml version="1.0" encoding="utf-8"?>
+        <x:styleSheet xmlns:x="http://schemas.openxmlformats.org/spreadsheetml/2006/main">                
+        </x:styleSheet>
+        """);
 
     private readonly Dictionary<string, ZipPackageInfo> _zipDictionary;
-    private readonly MiniExcelZipArchive _archive;
+    private readonly ZipArchive _archive;
     private readonly Encoding _encoding;
     private readonly ICollection<MiniExcelColumnAttribute> _columns;
 
@@ -27,7 +30,7 @@ internal class SheetStyleBuildContext : IDisposable
     private bool _finalized;
     private bool _disposed;
 
-    public SheetStyleBuildContext(Dictionary<string, ZipPackageInfo> zipDictionary, MiniExcelZipArchive archive, Encoding encoding, ICollection<MiniExcelColumnAttribute> columns)
+    public SheetStyleBuildContext(Dictionary<string, ZipPackageInfo> zipDictionary, ZipArchive archive, Encoding encoding, ICollection<MiniExcelColumnAttribute> columns)
     {
         _zipDictionary = zipDictionary;
         _archive = archive;
@@ -42,45 +45,7 @@ internal class SheetStyleBuildContext : IDisposable
     public MiniExcelColumnAttribute[] ColumnsToApply { get; private set; } = [];
     public int CustomFormatCount { get; private set; }
 
-    public void Initialize(SheetStyleElementInfos generateElementInfos)
-    {
-        if (_initialized)
-            throw new InvalidOperationException("The context has been initialized.");
-
-        _oldStyleXmlZipEntry = _archive.Mode == ZipArchiveMode.Update ? _archive.Entries.SingleOrDefault(s => s.FullName == ExcelFileNames.Styles) : null;
-        if (_oldStyleXmlZipEntry is not null)
-        {
-            using (var oldStyleXmlStream = _oldStyleXmlZipEntry.Open())
-            {
-                using var reader = XmlReader.Create(oldStyleXmlStream, new XmlReaderSettings { IgnoreWhitespace = true });
-                OldElementInfos = ReadSheetStyleElementInfos(reader);
-            }
-
-            _oldXmlReaderStream = _oldStyleXmlZipEntry.Open();
-            OldXmlReader = XmlReader.Create(_oldXmlReaderStream, new XmlReaderSettings { IgnoreWhitespace = true });
-
-            _newStyleXmlZipEntry = _archive.CreateEntry(ExcelFileNames.Styles + ".temp", CompressionLevel.Fastest);
-        }
-        else
-        {
-            OldElementInfos = new SheetStyleElementInfos();
-
-            _emptyStylesXmlStringReader = new StringReader(EmptyStylesXml);
-            OldXmlReader = XmlReader.Create(_emptyStylesXmlStringReader, new XmlReaderSettings { IgnoreWhitespace = true });
-
-            _newStyleXmlZipEntry = _archive.CreateEntry(ExcelFileNames.Styles, CompressionLevel.Fastest);
-        }
-
-        _newXmlWriterStream = _newStyleXmlZipEntry.Open();
-        NewXmlWriter = XmlWriter.Create(_newXmlWriterStream, new XmlWriterSettings { Indent = true, Encoding = _encoding });
-
-        GenerateElementInfos = generateElementInfos;
-        ColumnsToApply = SheetStyleBuilderHelper.GenerateStyleIds(OldElementInfos.CellXfCount + generateElementInfos.CellXfCount, _columns).ToArray();
-        CustomFormatCount = ColumnsToApply.Length;
-
-        _initialized = true;
-    }
-
+    [CreateSyncVersion]
     public async Task InitializeAsync(SheetStyleElementInfos generateElementInfos, CancellationToken cancellationToken = default)
     {
         if (_initialized)
@@ -88,11 +53,18 @@ internal class SheetStyleBuildContext : IDisposable
 
         cancellationToken.ThrowIfCancellationRequested();
 
-        _oldStyleXmlZipEntry = _archive.Mode == ZipArchiveMode.Update ? _archive.Entries.SingleOrDefault(s => s.FullName == ExcelFileNames.Styles) : null;
+        _oldStyleXmlZipEntry = _archive.Mode == ZipArchiveMode.Update
+            ? _archive.Entries.SingleOrDefault(s => s.FullName == ExcelFileNames.Styles)
+            : null;
+
         if (_oldStyleXmlZipEntry is not null)
         {
 #if NET10_0_OR_GREATER
-            using (var oldStyleXmlStream = await _oldStyleXmlZipEntry.OpenAsync(cancellationToken).ConfigureAwait(false))
+            var oldStyleXmlStream = await _oldStyleXmlZipEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
+            await using (_ = oldStyleXmlStream.ConfigureAwait(false))
+#elif NET8_0_OR_GREATER
+            var oldStyleXmlStream = _oldStyleXmlZipEntry.Open();
+            await using (_ = oldStyleXmlStream.ConfigureAwait(false))
 #else
             using (var oldStyleXmlStream = _oldStyleXmlZipEntry.Open())
 #endif
@@ -100,13 +72,13 @@ internal class SheetStyleBuildContext : IDisposable
                 using var reader = XmlReader.Create(oldStyleXmlStream, new XmlReaderSettings { IgnoreWhitespace = true, Async = true });
                 OldElementInfos = await ReadSheetStyleElementInfosAsync(reader, cancellationToken).ConfigureAwait(false);
             }
+
 #if NET10_0_OR_GREATER
             _oldXmlReaderStream = await _oldStyleXmlZipEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
 #else
             _oldXmlReaderStream = _oldStyleXmlZipEntry.Open();
 #endif
             OldXmlReader = XmlReader.Create(_oldXmlReaderStream, new XmlReaderSettings { IgnoreWhitespace = true, Async = true });
-
             _newStyleXmlZipEntry = _archive.CreateEntry(ExcelFileNames.Styles + ".temp", CompressionLevel.Fastest);
         }
         else
@@ -132,62 +104,7 @@ internal class SheetStyleBuildContext : IDisposable
         _initialized = true;
     }
 
-    public void FinalizeAndUpdateZipDictionary()
-    {
-        if (!_initialized)
-            throw new InvalidOperationException("The context has not been initialized.");
-        if (_disposed)
-            throw new ObjectDisposedException(nameof(SheetStyleBuildContext));
-        if (_finalized)
-            throw new InvalidOperationException("The context has been finalized.");
-
-        try
-        {
-            OldXmlReader?.Dispose();
-            OldXmlReader = null;
-            _oldXmlReaderStream?.Dispose();
-            _oldXmlReaderStream = null;
-
-            _emptyStylesXmlStringReader?.Dispose();
-            _emptyStylesXmlStringReader = null;
-
-            NewXmlWriter?.Flush();
-            NewXmlWriter?.Close();
-            NewXmlWriter?.Dispose();
-            NewXmlWriter = null;
-
-            _newXmlWriterStream?.Dispose();
-            _newXmlWriterStream = null;
-
-            if (_oldStyleXmlZipEntry is null)
-            {
-                _zipDictionary.Add(ExcelFileNames.Styles, new ZipPackageInfo(_newStyleXmlZipEntry!, ExcelContentTypes.Styles));
-            }
-            else
-            {
-                _oldStyleXmlZipEntry?.Delete();
-                _oldStyleXmlZipEntry = null;
-                var finalStyleXmlZipEntry = _archive.CreateEntry(ExcelFileNames.Styles, CompressionLevel.Fastest);
-
-                using (var tempStream = _newStyleXmlZipEntry!.Open())
-                using (var newStream = finalStyleXmlZipEntry.Open())
-                {
-                    tempStream.CopyTo(newStream);
-                }
-
-                _zipDictionary[ExcelFileNames.Styles] = new ZipPackageInfo(finalStyleXmlZipEntry, ExcelContentTypes.Styles);
-                _newStyleXmlZipEntry.Delete();
-                _newStyleXmlZipEntry = null;
-            }
-
-            _finalized = true;
-        }
-        catch (Exception ex)
-        {
-            throw new Exception("Failed to finalize and replace styles.", ex);
-        }
-    }
-
+    [CreateSyncVersion]
     public async Task FinalizeAndUpdateZipDictionaryAsync(CancellationToken cancellationToken = default)
     {
         if (!_initialized)
@@ -203,7 +120,7 @@ internal class SheetStyleBuildContext : IDisposable
 
             OldXmlReader?.Dispose();
             OldXmlReader = null;
-#if NET5_0_OR_GREATER
+#if NET8_0_OR_GREATER
             if (_oldXmlReaderStream is not null)
             {
                 await _oldXmlReaderStream.DisposeAsync().ConfigureAwait(false);
@@ -217,10 +134,7 @@ internal class SheetStyleBuildContext : IDisposable
             _emptyStylesXmlStringReader = null;
 
             await NewXmlWriter!.FlushAsync().ConfigureAwait(false);
-            NewXmlWriter.Close();
-            //NewXmlWriter.Dispose();
-
-#if NET5_0_OR_GREATER
+#if NET8_0_OR_GREATER
             await NewXmlWriter.DisposeAsync().ConfigureAwait(false);
 #else
             NewXmlWriter.Dispose();
@@ -228,7 +142,7 @@ internal class SheetStyleBuildContext : IDisposable
 
             NewXmlWriter = null;
 
-#if NET5_0_OR_GREATER
+#if NET8_0_OR_GREATER
             await _newXmlWriterStream!.DisposeAsync().ConfigureAwait(false);
 #else
             _newXmlWriterStream?.Dispose();
@@ -245,14 +159,18 @@ internal class SheetStyleBuildContext : IDisposable
                 _oldStyleXmlZipEntry = null;
                 var finalStyleXmlZipEntry = _archive.CreateEntry(ExcelFileNames.Styles, CompressionLevel.Fastest);
 
+#if NET8_0_OR_GREATER
 #if NET10_0_OR_GREATER
-                using (var tempStream = await _newStyleXmlZipEntry!.OpenAsync(cancellationToken).ConfigureAwait(false))
+                var tempStream = await _newStyleXmlZipEntry!.OpenAsync(cancellationToken).ConfigureAwait(false);
+                var newStream = await finalStyleXmlZipEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
+#else
+                var tempStream = _newStyleXmlZipEntry!.Open();
+                var newStream = finalStyleXmlZipEntry.Open();
+#endif
+                await using (var disposableTempStream = tempStream.ConfigureAwait(false))
+                await using (var disposableNewStream = newStream.ConfigureAwait(false))
 #else
                 using (var tempStream = _newStyleXmlZipEntry!.Open())
-#endif
-#if NET10_0_OR_GREATER
-                using (var newStream = await finalStyleXmlZipEntry.OpenAsync(cancellationToken).ConfigureAwait(false))
-#else
                 using (var newStream = finalStyleXmlZipEntry.Open())
 #endif
                 {
@@ -279,6 +197,7 @@ internal class SheetStyleBuildContext : IDisposable
         {
             SetElementInfos(reader, elementInfos);
         }
+
         return elementInfos;
     }
 
@@ -290,6 +209,7 @@ internal class SheetStyleBuildContext : IDisposable
             cancellationToken.ThrowIfCancellationRequested();
             SetElementInfos(reader, elementInfos);
         }
+
         return elementInfos;
     }
 
@@ -325,35 +245,52 @@ internal class SheetStyleBuildContext : IDisposable
                 elementInfos.CellXfCount = GetCount();
                 break;
         }
+        return;
 
         int GetCount()
         {
-            var count = reader.GetAttribute("count") ?? string.Empty;
+            var count = reader.GetAttribute("count");
             return int.TryParse(count, out var countValue) ? countValue : 0;
         }
     }
 
     public void Dispose()
     {
-        Dispose(true);
-        GC.SuppressFinalize(this);
+        if (_disposed)
+            return;
+
+        OldXmlReader?.Dispose();
+        _oldXmlReaderStream?.Dispose();
+        _emptyStylesXmlStringReader?.Dispose();
+
+        NewXmlWriter?.Dispose();
+        _newXmlWriterStream?.Dispose();
+
+        _disposed = true;
     }
 
-    protected virtual void Dispose(bool disposing)
+#if NET8_0_OR_GREATER
+    public async ValueTask DisposeAsync()
     {
         if (_disposed)
             return;
 
-        if (disposing)
-        {
-            OldXmlReader?.Dispose();
-            _oldXmlReaderStream?.Dispose();
-            _emptyStylesXmlStringReader?.Dispose();
-
-            NewXmlWriter?.Dispose();
-            _newXmlWriterStream?.Dispose();
-        }
+        await CastAndDispose(_emptyStylesXmlStringReader).ConfigureAwait(false);
+        await CastAndDispose(_oldXmlReaderStream).ConfigureAwait(false);
+        await CastAndDispose(_newXmlWriterStream).ConfigureAwait(false);
+        await CastAndDispose(OldXmlReader).ConfigureAwait(false);
+        await CastAndDispose(NewXmlWriter).ConfigureAwait(false);
 
         _disposed = true;
+        return;
+    
+        static async ValueTask CastAndDispose(IDisposable? resource)
+        {
+            if (resource is IAsyncDisposable asyncDisposable)
+                await asyncDisposable.DisposeAsync().ConfigureAwait(false);
+            else
+                resource?.Dispose();
+        }
     }
+#endif
 }

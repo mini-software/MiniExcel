@@ -22,7 +22,7 @@ internal partial class OpenXmlTemplate : IMiniExcelTemplate
     static OpenXmlTemplate()
     {
         Ns = new XmlNamespaceManager(new NameTable());
-        Ns.AddNamespace("x", Schemas.SpreadsheetmlXmlns);
+        Ns.AddNamespace("x", Schemas.SpreadsheetmlXmlNs);
         Ns.AddNamespace("x14ac", Schemas.SpreadsheetmlXmlX14Ac);
     }
 

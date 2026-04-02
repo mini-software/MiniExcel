@@ -967,7 +967,7 @@ internal partial class OpenXmlTemplate
                 if (!v.InnerText.StartsWith("$="))
                     continue;
 
-                var fNode = c.OwnerDocument.CreateElement("f", Schemas.SpreadsheetmlXmlns);
+                var fNode = c.OwnerDocument.CreateElement("f", Schemas.SpreadsheetmlXmlNs);
                 fNode.InnerText = v.InnerText[2..];
                 c.InsertBefore(fNode, v);
                 c.RemoveChild(v);
@@ -1022,11 +1022,11 @@ internal partial class OpenXmlTemplate
                 var prefix = v.Prefix;
                 c.RemoveChild(v);
                 var isNode = string.IsNullOrEmpty(prefix)
-                    ? c.OwnerDocument.CreateElement("is", Schemas.SpreadsheetmlXmlns)
-                    : c.OwnerDocument.CreateElement(prefix, "is", Schemas.SpreadsheetmlXmlns);
+                    ? c.OwnerDocument.CreateElement("is", Schemas.SpreadsheetmlXmlNs)
+                    : c.OwnerDocument.CreateElement(prefix, "is", Schemas.SpreadsheetmlXmlNs);
                 var tNode = string.IsNullOrEmpty(prefix)
-                    ? c.OwnerDocument.CreateElement("t", Schemas.SpreadsheetmlXmlns)
-                    : c.OwnerDocument.CreateElement(prefix, "t", Schemas.SpreadsheetmlXmlns);
+                    ? c.OwnerDocument.CreateElement("t", Schemas.SpreadsheetmlXmlNs)
+                    : c.OwnerDocument.CreateElement(prefix, "t", Schemas.SpreadsheetmlXmlNs);
                 tNode.InnerText = shared;
                 isNode.AppendChild(tNode);
                 c.AppendChild(isNode);
@@ -1054,11 +1054,11 @@ internal partial class OpenXmlTemplate
                 var text = v.InnerText;
                 c.RemoveChild(v);
                 var isNode = string.IsNullOrEmpty(prefix)
-                    ? c.OwnerDocument.CreateElement("is", Schemas.SpreadsheetmlXmlns)
-                    : c.OwnerDocument.CreateElement(prefix, "is", Schemas.SpreadsheetmlXmlns);
+                    ? c.OwnerDocument.CreateElement("is", Schemas.SpreadsheetmlXmlNs)
+                    : c.OwnerDocument.CreateElement(prefix, "is", Schemas.SpreadsheetmlXmlNs);
                 var tNode = string.IsNullOrEmpty(prefix)
-                    ? c.OwnerDocument.CreateElement("t", Schemas.SpreadsheetmlXmlns)
-                    : c.OwnerDocument.CreateElement(prefix, "t", Schemas.SpreadsheetmlXmlns);
+                    ? c.OwnerDocument.CreateElement("t", Schemas.SpreadsheetmlXmlNs)
+                    : c.OwnerDocument.CreateElement(prefix, "t", Schemas.SpreadsheetmlXmlNs);
                 tNode.InnerText = text;
                 isNode.AppendChild(tNode);
                 c.AppendChild(isNode);
@@ -1067,11 +1067,11 @@ internal partial class OpenXmlTemplate
             {
                 // Create empty <is><t></t></is> if neither <v> nor <is> exists
                 var isNode = string.IsNullOrEmpty(prefix)
-                    ? c.OwnerDocument.CreateElement("is", Schemas.SpreadsheetmlXmlns)
-                    : c.OwnerDocument.CreateElement(prefix, "is", Schemas.SpreadsheetmlXmlns);
+                    ? c.OwnerDocument.CreateElement("is", Schemas.SpreadsheetmlXmlNs)
+                    : c.OwnerDocument.CreateElement(prefix, "is", Schemas.SpreadsheetmlXmlNs);
                 var tNode = string.IsNullOrEmpty(prefix)
-                    ? c.OwnerDocument.CreateElement("t", Schemas.SpreadsheetmlXmlns)
-                    : c.OwnerDocument.CreateElement(prefix, "t", Schemas.SpreadsheetmlXmlns);
+                    ? c.OwnerDocument.CreateElement("t", Schemas.SpreadsheetmlXmlNs)
+                    : c.OwnerDocument.CreateElement(prefix, "t", Schemas.SpreadsheetmlXmlNs);
                 isNode.AppendChild(tNode);
                 c.AppendChild(isNode);
             }
@@ -1093,8 +1093,8 @@ internal partial class OpenXmlTemplate
                 var text = tNode?.InnerText ?? string.Empty;
                 c.RemoveChild(isNode);
                 var v = string.IsNullOrEmpty(prefix)
-                    ? c.OwnerDocument.CreateElement("v", Schemas.SpreadsheetmlXmlns)
-                    : c.OwnerDocument.CreateElement(prefix, "v", Schemas.SpreadsheetmlXmlns);
+                    ? c.OwnerDocument.CreateElement("v", Schemas.SpreadsheetmlXmlNs)
+                    : c.OwnerDocument.CreateElement(prefix, "v", Schemas.SpreadsheetmlXmlNs);
                 v.InnerText = text;
                 c.AppendChild(v);
             }

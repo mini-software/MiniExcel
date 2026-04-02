@@ -9,8 +9,8 @@ namespace MiniExcelLib.OpenXml;
 
 internal partial class OpenXmlReader : IMiniExcelReader
 {
-    private static readonly string[] Ns = [Schemas.SpreadsheetmlXmlns, Schemas.SpreadsheetmlXmlStrictns];
-    private static readonly string[] RelationshiopNs = [Schemas.SpreadsheetmlXmlRelationshipns, Schemas.SpreadsheetmlXmlStrictRelationshipns];
+    private static readonly string[] Ns = [Schemas.SpreadsheetmlXmlNs, Schemas.SpreadsheetmlXmlStrictNs];
+    private static readonly string[] RelationshiopNs = [Schemas.SpreadsheetmlXmlRelationships, Schemas.SpreadsheetmlXmlStrictRelationships];
     private readonly OpenXmlConfiguration _config;
     
     private List<SheetRecord>? _sheetRecords;
@@ -567,14 +567,14 @@ internal partial class OpenXmlReader : IMiniExcelReader
 #endif
         using var reader = XmlReader.Create(stream, xmlSettings);
         
-        if (!XmlReaderHelper.IsStartElement(reader, "Relationships", "http://schemas.openxmlformats.org/package/2006/relationships"))
+        if (!XmlReaderHelper.IsStartElement(reader, "Relationships", Schemas.OpenXmlPackageRelationships))
             return null;
         if (!await XmlReaderHelper.ReadFirstContentAsync(reader, cancellationToken).ConfigureAwait(false))
             return null;
 
         while (!reader.EOF)
         {
-            if (XmlReaderHelper.IsStartElement(reader, "Relationship", "http://schemas.openxmlformats.org/package/2006/relationships"))
+            if (XmlReaderHelper.IsStartElement(reader, "Relationship", Schemas.OpenXmlPackageRelationships))
             {
                 var rid = reader.GetAttribute("Id");
                 foreach (var sheet in sheetRecords.Where(sh => sh.Rid == rid))

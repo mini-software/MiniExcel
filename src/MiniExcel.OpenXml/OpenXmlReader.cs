@@ -1142,7 +1142,7 @@ internal partial class OpenXmlReader : IMiniExcelReader
     }
 
     [CreateSyncVersion]
-    internal async Task<CommentResultSet> ReadCommentsAsync(string sheetName, CancellationToken cancellationToken = default)
+    internal async Task<CommentResultSet> ReadCommentsAsync(string? sheetName, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrEmpty(sheetName))
             throw new ArgumentException("sheetName cannot be null or empty", nameof(sheetName));

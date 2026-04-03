@@ -302,6 +302,25 @@ public sealed partial class OpenXmlImporter
         return [];
     }
 
+    [CreateSyncVersion]
+    public async Task<CommentResultSet> RetrieveCommentsAsync(string path, string? sheetName, CancellationToken cancellationToken = default)
+    {
+#if NET8_0_OR_GREATER
+        var stream = FileHelper.OpenSharedRead(path);
+        await using var disposableStream = stream.ConfigureAwait(false); 
+#else
+        using var stream = FileHelper.OpenSharedRead(path);
+#endif
+        return await RetrieveCommentsAsync(stream, sheetName, cancellationToken).ConfigureAwait(false);
+    }
+
+    [CreateSyncVersion]
+    public async Task<CommentResultSet> RetrieveCommentsAsync(Stream stream, string? sheetName, CancellationToken cancellationToken = default)
+    {
+        using var reader = await OpenXmlReader.CreateAsync(stream, null, cancellationToken).ConfigureAwait(false);
+        return await reader.ReadCommentsAsync(sheetName, cancellationToken).ConfigureAwait(false);
+    }
+
     #endregion
 
     #region DataReader

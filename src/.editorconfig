@@ -6,6 +6,7 @@ dotnet_diagnostic.CA1835.severity = error
 # CA1849: Call async methods when in an async method
 dotnet_diagnostic.CA1849.severity = error
 
+# CA2000: Dispose objects before losing scope
 dotnet_diagnostic.CA2000.severity = error
 
 # CA2007: Do not directly await a Task

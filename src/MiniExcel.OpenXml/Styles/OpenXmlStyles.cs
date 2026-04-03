@@ -107,7 +107,7 @@ internal class OpenXmlStyles
         }
     }
 
-    public NumberFormatString? GetStyleFormat(int index)
+    internal NumberFormatString? GetStyleFormat(int index)
     {
         if (!_cellXfs.TryGetValue(index, out var styleRecord)) 
             return null;
@@ -115,7 +115,7 @@ internal class OpenXmlStyles
         if (Formats.TryGetValue(styleRecord.NumFmtId, out var numberFormat))
             return numberFormat;
 
-        return _customFormats.TryGetValue(styleRecord.NumFmtId, out var customNumberFormat) ? customNumberFormat : null;
+        return _customFormats.GetValueOrDefault(styleRecord.NumFmtId);
     }
 
     public object? ConvertValueByStyleFormat(int index, object? value)

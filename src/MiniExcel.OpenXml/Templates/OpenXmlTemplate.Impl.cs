@@ -359,24 +359,24 @@ internal partial class OpenXmlTemplate
 
                 var generateCellValuesContext = new GenerateCellValuesContext()
                 {
-                    currentHeader = currentHeader,
-                    headerDiff = headerDiff,
-                    iEnumerableIndex = iEnumerableIndex,
-                    isFirst = isFirst,
-                    newRowIndex = newRowIndex,
-                    prevHeader = prevHeader,
-                    rowIndexDiff = rowIndexDiff,
+                    CurrentHeader = currentHeader,
+                    HeaderDiff = headerDiff,
+                    EnumerableIndex = iEnumerableIndex,
+                    IsFirst = isFirst,
+                    NewRowIndex = newRowIndex,
+                    PrevHeader = prevHeader,
+                    RowIndexDiff = rowIndexDiff,
                 };
 
                 generateCellValuesContext = await GenerateCellValuesAsync(generateCellValuesContext, endPrefix, writer, rowXml, mergeRowCount, isHeaderRow, rowInfo, row, groupingRowDiff, innerXml, outerXmlOpen, row, cancellationToken).ConfigureAwait(false);
 
-                rowIndexDiff = generateCellValuesContext.rowIndexDiff;
-                headerDiff = generateCellValuesContext.headerDiff;
-                prevHeader = generateCellValuesContext.prevHeader;
-                newRowIndex = generateCellValuesContext.newRowIndex;
-                isFirst = generateCellValuesContext.isFirst;
-                iEnumerableIndex = generateCellValuesContext.iEnumerableIndex;
-                currentHeader = generateCellValuesContext.currentHeader;
+                rowIndexDiff = generateCellValuesContext.RowIndexDiff;
+                headerDiff = generateCellValuesContext.HeaderDiff;
+                prevHeader = generateCellValuesContext.PrevHeader;
+                newRowIndex = generateCellValuesContext.NewRowIndex;
+                isFirst = generateCellValuesContext.IsFirst;
+                iEnumerableIndex = generateCellValuesContext.EnumerableIndex;
+                currentHeader = generateCellValuesContext.CurrentHeader;
 
                 enumrowend = newRowIndex - 1;
 
@@ -525,13 +525,13 @@ internal partial class OpenXmlTemplate
         XmlElement rowElement, 
         CancellationToken cancellationToken = default)
     {
-        var rowIndexDiff = generateCellValuesContext.rowIndexDiff;
-        var headerDiff = generateCellValuesContext.headerDiff;
-        var prevHeader = generateCellValuesContext.prevHeader;
-        var newRowIndex = generateCellValuesContext.newRowIndex;
-        var isFirst = generateCellValuesContext.isFirst;
-        var iEnumerableIndex = generateCellValuesContext.iEnumerableIndex;
-        var currentHeader = generateCellValuesContext.currentHeader;
+        var rowIndexDiff = generateCellValuesContext.RowIndexDiff;
+        var headerDiff = generateCellValuesContext.HeaderDiff;
+        var prevHeader = generateCellValuesContext.PrevHeader;
+        var newRowIndex = generateCellValuesContext.NewRowIndex;
+        var isFirst = generateCellValuesContext.IsFirst;
+        var iEnumerableIndex = generateCellValuesContext.EnumerableIndex;
+        var currentHeader = generateCellValuesContext.CurrentHeader;
         
         // https://github.com/mini-software/MiniExcel/issues/771 Saving by template introduces unintended value replication in each row #771
         var notFirstRowElement = rowElement.Clone();
@@ -601,11 +601,11 @@ internal partial class OpenXmlTemplate
                     }
                     else
                     {
-                        var prop = rowInfo.PropsMap[newLines[0]];
-                        value = prop.PropertyInfoOrFieldInfo switch
+                        var map = rowInfo.MembersMap[newLines[0]];
+                        value = map.PropertyInfoOrFieldInfo switch
                         {
-                            PropertyInfoOrFieldInfo.PropertyInfo => prop.PropertyInfo.GetValue(item),
-                            PropertyInfoOrFieldInfo.FieldInfo => prop.FieldInfo.GetValue(item),
+                            PropertyInfoOrFieldInfo.PropertyInfo => map.PropertyInfo.GetValue(item),
+                            PropertyInfoOrFieldInfo.FieldInfo => map.FieldInfo.GetValue(item),
                             _ => string.Empty
                         };
                     }
@@ -638,26 +638,23 @@ internal partial class OpenXmlTemplate
             else
             {
                 var replacements = new Dictionary<string, string>();
-#if NETCOREAPP3_0_OR_GREATER
                 string MatchDelegate(Match x) => replacements.GetValueOrDefault(x.Groups[1].Value, "");
-#else
-                string MatchDelegate(Match x) => replacements.TryGetValue(x.Groups[1].Value, out var repl) ? repl : "";
-#endif
-                foreach (var prop in rowInfo.PropsMap)
+
+                foreach (var map in rowInfo.MembersMap)
                 {
-                    var propInfo = prop.Value.PropertyInfo;
-                    var name = isDictOrTable ? prop.Key : propInfo.Name;
+                    var propInfo = map.Value.PropertyInfo;
+                    var name = isDictOrTable ? map.Key : propInfo.Name;
                     var key = $"{rowInfo.IEnumerablePropName}.{name}";
 
                     object? cellValue;
                     if (rowInfo.IsDictionary)
                     {
-                        if (!dict!.TryGetValue(prop.Key, out cellValue))
+                        if (!dict!.TryGetValue(map.Key, out cellValue))
                             continue;
                     }
                     else if (rowInfo.IsDataTable)
                     {
-                        cellValue = dataRow![prop.Key];
+                        cellValue = dataRow![map.Key];
                     }
                     else
                     {
@@ -668,7 +665,7 @@ internal partial class OpenXmlTemplate
                         continue;
 
                     var type = isDictOrTable
-                        ? prop.Value.UnderlyingTypePropType
+                        ? map.Value.UnderlyingMemberType
                         : Nullable.GetUnderlyingType(propInfo.PropertyType) ?? propInfo.PropertyType;
 
                     string? cellValueStr;
@@ -813,13 +810,13 @@ internal partial class OpenXmlTemplate
 
         return new GenerateCellValuesContext
         {
-            currentHeader = currentHeader,
-            headerDiff = headerDiff,
-            iEnumerableIndex = iEnumerableIndex,
-            isFirst = isFirst,
-            newRowIndex = newRowIndex,
-            prevHeader = prevHeader,
-            rowIndexDiff = rowIndexDiff,
+            CurrentHeader = currentHeader,
+            HeaderDiff = headerDiff,
+            EnumerableIndex = iEnumerableIndex,
+            IsFirst = isFirst,
+            NewRowIndex = newRowIndex,
+            PrevHeader = prevHeader,
+            RowIndexDiff = rowIndexDiff,
         };
     }
 
@@ -1168,17 +1165,17 @@ internal partial class OpenXmlTemplate
                 foreach (var formatText in matches)
                 {
                     xRowInfo.FormatText = formatText;
-                    var propNames = formatText.Split('.');
-                    if (propNames[0].StartsWith("$")) //e.g:"$rowindex" it doesn't need to check cell value type
+                    var mapNames = formatText.Split('.');
+                    if (mapNames[0].StartsWith("$")) //e.g:"$rowindex" it doesn't need to check cell value type
                         continue;
 
                     // TODO: default if not contain property key, clean the template string
-                    if (!inputMaps.TryGetValue(propNames[0], out var cellValue))
+                    if (!inputMaps.TryGetValue(mapNames[0], out var cellValue))
                     {
                         if (!_configuration.IgnoreTemplateParameterMissing)
-                            throw new KeyNotFoundException($"The parameter '{propNames[0]}' was not found.");
+                            throw new KeyNotFoundException($"The parameter '{mapNames[0]}' was not found.");
 
-                        v.InnerText = v.InnerText.Replace($"{{{{{propNames[0]}}}}}", "");
+                        v.InnerText = v.InnerText.Replace($"{{{{{mapNames[0]}}}}}", "");
                         break;
                     }
 
@@ -1203,17 +1200,17 @@ internal partial class OpenXmlTemplate
                                 xRowInfo.CellIEnumerableValuesCount++;
                                 if (xRowInfo.IEnumerableGenericType is null && element is not null)
                                 {
-                                    xRowInfo.IEnumerablePropName = propNames[0];
+                                    xRowInfo.IEnumerablePropName = mapNames[0];
                                     xRowInfo.IEnumerableGenericType = element.GetType();
 
                                     if (element is IDictionary<string, object> dic)
                                     {
                                         xRowInfo.IsDictionary = true;
-                                        xRowInfo.PropsMap = dic.ToDictionary(
+                                        xRowInfo.MembersMap = dic.ToDictionary(
                                             kv => kv.Key,
                                             kv => kv.Value is not null
-                                                ? new MemberInfo { UnderlyingTypePropType = Nullable.GetUnderlyingType(kv.Value.GetType()) ?? kv.Value.GetType() }
-                                                : new MemberInfo { UnderlyingTypePropType = typeof(object) });
+                                                ? new MemberInfo { UnderlyingMemberType = Nullable.GetUnderlyingType(kv.Value.GetType()) ?? kv.Value.GetType() }
+                                                : new MemberInfo { UnderlyingMemberType = typeof(object) });
                                     }
                                     else
                                     {
@@ -1224,7 +1221,7 @@ internal partial class OpenXmlTemplate
                                             {
                                                 PropertyInfo = p,
                                                 PropertyInfoOrFieldInfo = PropertyInfoOrFieldInfo.PropertyInfo,
-                                                UnderlyingTypePropType = Nullable.GetUnderlyingType(p.PropertyType) ?? p.PropertyType
+                                                UnderlyingMemberType = Nullable.GetUnderlyingType(p.PropertyType) ?? p.PropertyType
                                             });
 
                                         var fields = xRowInfo.IEnumerableGenericType.GetFields();
@@ -1232,17 +1229,17 @@ internal partial class OpenXmlTemplate
                                         {
                                             if (!values.ContainsKey(f.Name))
                                             {
-                                                var propInfo = new MemberInfo
+                                                var fieldInfo = new MemberInfo
                                                 {
                                                     FieldInfo = f,
                                                     PropertyInfoOrFieldInfo = PropertyInfoOrFieldInfo.FieldInfo,
-                                                    UnderlyingTypePropType = Nullable.GetUnderlyingType(f.FieldType) ?? f.FieldType
+                                                    UnderlyingMemberType = Nullable.GetUnderlyingType(f.FieldType) ?? f.FieldType
                                                 };
-                                                values.Add(f.Name, propInfo);
+                                                values.Add(f.Name, fieldInfo);
                                             }
                                         }
 
-                                        xRowInfo.PropsMap = values;
+                                        xRowInfo.MembersMap = values;
                                     }
                                 }
 
@@ -1257,21 +1254,21 @@ internal partial class OpenXmlTemplate
                         //only check first one match IEnumerable, so only render one collection at same row
 
                         // Empty collection parameter will get exception  https://gitee.com/dotnetchina/MiniExcel/issues/I4WM67
-                        if (xRowInfo.PropsMap is null)
+                        if (xRowInfo.MembersMap is null)
                         {
-                            v.InnerText = v.InnerText.Replace($"{{{{{propNames[0]}}}}}", propNames[1]);
+                            v.InnerText = v.InnerText.Replace($"{{{{{mapNames[0]}}}}}", mapNames[1]);
                             break;
                         }
-                        if (!xRowInfo.PropsMap.TryGetValue(propNames[1], out var prop))
+                        if (!xRowInfo.MembersMap.TryGetValue(mapNames[1], out var map))
                         {
-                            v.InnerText = v.InnerText.Replace($"{{{{{propNames[0]}.{propNames[1]}}}}}", "");
+                            v.InnerText = v.InnerText.Replace($"{{{{{mapNames[0]}.{mapNames[1]}}}}}", "");
                             continue;
 
                             //why unreachable exception?
-                            throw new InvalidDataException($"{propNames[0]} doesn't have {propNames[1]} property");
+                            throw new InvalidDataException($"{mapNames[0]} doesn't have {mapNames[1]} property");
                         }
                         // auto check type https://github.com/mini-software/MiniExcel/issues/177
-                        var type = prop.UnderlyingTypePropType; //avoid nullable
+                        var type = map.UnderlyingMemberType; //avoid nullable
 
                         if (isMultiMatch)
                         {
@@ -1296,7 +1293,7 @@ internal partial class OpenXmlTemplate
                     {
                         if (xRowInfo.CellIEnumerableValues is null)
                         {
-                            xRowInfo.IEnumerablePropName = propNames[0];
+                            xRowInfo.IEnumerablePropName = mapNames[0];
                             xRowInfo.IEnumerableGenericType = typeof(DataRow);
                             xRowInfo.IsDataTable = true;
 
@@ -1314,16 +1311,16 @@ internal partial class OpenXmlTemplate
                             }
                             //TODO:need to optimize
                             //maxRowIndexDiff = dt.Rows.Count <= 1 ? 0 : dt.Rows.Count-1;
-                            xRowInfo.PropsMap = dt.Columns.Cast<DataColumn>().ToDictionary(col => 
+                            xRowInfo.MembersMap = dt.Columns.Cast<DataColumn>().ToDictionary(col => 
                                 col.ColumnName,
-                                col => new MemberInfo { UnderlyingTypePropType = Nullable.GetUnderlyingType(col.DataType) }
+                                col => new MemberInfo { UnderlyingMemberType = Nullable.GetUnderlyingType(col.DataType) }
                             );
                         }
 
-                        var column = dt.Columns[propNames[1]];
+                        var column = dt.Columns[mapNames[1]];
                         var type = Nullable.GetUnderlyingType(column.DataType) ?? column.DataType; //avoid nullable
-                        if (!xRowInfo.PropsMap.ContainsKey(propNames[1]))
-                            throw new InvalidDataException($"{propNames[0]} doesn't have {propNames[1]} property");
+                        if (!xRowInfo.MembersMap.ContainsKey(mapNames[1]))
+                            throw new InvalidDataException($"{mapNames[0]} doesn't have {mapNames[1]} property");
 
                         if (isMultiMatch)
                         {
@@ -1372,7 +1369,7 @@ internal partial class OpenXmlTemplate
 
                         // Re-acquire v after SetCellType may have changed DOM structure
                         v = c.SelectSingleNode("x:v", Ns) ?? c.SelectSingleNode("x:is/x:t", Ns);
-                        v.InnerText = v.InnerText.Replace($"{{{{{propNames[0]}}}}}", cellValueStr); //TODO: auto check type and set value
+                        v.InnerText = v.InnerText.Replace($"{{{{{mapNames[0]}}}}}", cellValueStr); //TODO: auto check type and set value
                     }
                 }
                 //if (xRowInfo.CellIEnumerableValues is not null) //2. From left to right, only the first set is used as the basis for the list

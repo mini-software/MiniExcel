@@ -1,6 +1,4 @@
-﻿using System.Xml.Linq;
-
-namespace MiniExcelLib.OpenXml.Templates;
+﻿namespace MiniExcelLib.OpenXml.Templates;
 
 internal class XRowInfo
 {
@@ -8,7 +6,7 @@ internal class XRowInfo
     public string IEnumerablePropName { get; set; }
     public XmlElement Row { get; set; }
     public Type IEnumerableGenericType { get; set; }
-    public IDictionary<string, MemberInfo> PropsMap { get; set; }
+    public IDictionary<string, MemberInfo> MembersMap { get; set; }
     public bool IsDictionary { get; set; }
     public bool IsDataTable { get; set; }
     public int CellIEnumerableValuesCount { get; set; }
@@ -17,15 +15,13 @@ internal class XRowInfo
     public XMergeCell? IEnumerableMercell { get; set; }
     public List<XMergeCell>? RowMercells { get; set; }
     public List<XmlElement>? ConditionalFormats { get; set; }
-
-
 }
 
 internal class MemberInfo
 {
     public PropertyInfo PropertyInfo { get; set; }
     public FieldInfo FieldInfo { get; set; }
-    public Type UnderlyingTypePropType { get; set; }
+    public Type UnderlyingMemberType { get; set; }
     public PropertyInfoOrFieldInfo PropertyInfoOrFieldInfo { get; set; } = PropertyInfoOrFieldInfo.None;
 }
 
@@ -48,6 +44,7 @@ internal class XMergeCell
         Y2 = mergeCell.Y2;
         MergeCell = mergeCell.MergeCell;
     }
+
     public XMergeCell(XmlElement mergeCell)
     {
         var refAttr = mergeCell.Attributes["ref"].Value;
@@ -64,6 +61,7 @@ internal class XMergeCell
         Width = Math.Abs(X1 - X2) + 1;
         Height = Math.Abs(Y1 - Y2) + 1;
     }
+
     public XMergeCell(string x1, int y1, string x2, int y2)
     {
         X1 = CellReferenceConverter.GetNumericalIndex(x1);
@@ -124,11 +122,11 @@ internal enum SpecialCellType { None, Group, Endgroup, Merge, Header }
 
 internal class GenerateCellValuesContext
 {
-    public int rowIndexDiff { get; set; }
-    public int headerDiff { get; set; }
-    public string prevHeader { get; set; }
-    public string currentHeader { get; set; }
-    public int newRowIndex { get; set; }
-    public bool isFirst { get; set; }
-    public int iEnumerableIndex { get; set; }
+    public int RowIndexDiff { get; set; }
+    public int HeaderDiff { get; set; }
+    public string PrevHeader { get; set; }
+    public string CurrentHeader { get; set; }
+    public int NewRowIndex { get; set; }
+    public bool IsFirst { get; set; }
+    public int EnumerableIndex { get; set; }
 }

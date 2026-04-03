@@ -13,30 +13,32 @@ internal class DataTableWriteAdapter(DataTable dataTable, MiniExcelBaseConfigura
 
     public List<MiniExcelColumnMapping> GetColumns()
     {
-        var props = new List<MiniExcelColumnMapping>();
+        var mappings = new List<MiniExcelColumnMapping>();
         for (var i = 0; i < _dataTable.Columns.Count; i++)
         {
             var columnName = _dataTable.Columns[i].Caption ?? _dataTable.Columns[i].ColumnName;
-            var prop = ColumnMappingsProvider.GetColumnMappingFromDynamicConfiguration(columnName, _configuration);
-            props.Add(prop);
+            var map = ColumnMappingsProvider.GetColumnMappingFromDynamicConfiguration(columnName, _configuration);
+            mappings.Add(map);
         }
-        return props;
+        return mappings;
     }
 
-    public IEnumerable<IEnumerable<CellWriteInfo>> GetRows(List<MiniExcelColumnMapping> props, CancellationToken cancellationToken = default)
+    public IEnumerable<CellWriteInfo[]> GetRows(List<MiniExcelColumnMapping> mappings, CancellationToken cancellationToken = default)
     {
         for (int row = 0; row < _dataTable.Rows.Count; row++)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            yield return GetRowValues(row, props);
+            yield return GetRowValues(row, mappings);
         }
     }
 
-    private IEnumerable<CellWriteInfo> GetRowValues(int row, List<MiniExcelColumnMapping> props)
+    private CellWriteInfo[] GetRowValues(int row, List<MiniExcelColumnMapping> mappings)
     {
+        var result = new List<CellWriteInfo>(mappings.Count);
         for (int i = 0, column = 1; i < _dataTable.Columns.Count; i++, column++)
         {
-            yield return new CellWriteInfo(_dataTable.Rows[row][i], column, props[i]);
+            result.Add(new CellWriteInfo(_dataTable.Rows[row][i], column, mappings[i]));
         }
+        return result.ToArray();
     }
 }

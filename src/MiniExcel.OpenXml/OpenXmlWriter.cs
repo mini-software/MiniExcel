@@ -247,21 +247,21 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
             var isKnownCount = writeAdapter is not null && writeAdapter.TryGetKnownCount(out count);
 
 #if SYNC_ONLY
-            var props = writeAdapter?.GetColumns();
+            var mappings = writeAdapter?.GetColumns();
 #else
-            var props = writeAdapter is not null
+            var mappings = writeAdapter is not null
                 ? writeAdapter.GetColumns()
                 : await (asyncWriteAdapter?.GetColumnsAsync() ?? Task.FromResult<List<MiniExcelColumnMapping>?>(null)).ConfigureAwait(false);
 #endif
 
-            if (props is null)
+            if (mappings is null)
             {
                 await WriteEmptySheetAsync(writer).ConfigureAwait(false);
                 return 0;
             }
 
             int maxRowIndex;
-            var maxColumnIndex = props.Count(x => x is { ExcelIgnoreColumn: false });
+            var maxColumnIndex = mappings.Count(x => x is { ExcelIgnoreColumn: false });
             long dimensionPlaceholderPostition = 0;
 
             await writer.WriteAsync(WorksheetXml.StartWorksheetWithRelationship, cancellationToken).ConfigureAwait(false);
@@ -270,7 +270,7 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
             if (isKnownCount)
             {
                 maxRowIndex = _printHeader ? count + 1 : count;
-                await writer.WriteAsync(WorksheetXml.Dimension(GetDimensionRef(maxRowIndex, props.Count)), cancellationToken).ConfigureAwait(false);
+                await writer.WriteAsync(WorksheetXml.Dimension(GetDimensionRef(maxRowIndex, mappings.Count)), cancellationToken).ConfigureAwait(false);
             }
             else if (_configuration.FastMode)
             {
@@ -286,11 +286,11 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
             if (_configuration.EnableAutoWidth)
             {
                 columnWidthsPlaceholderPosition = await WriteColumnWidthPlaceholdersAsync(writer, maxColumnIndex, cancellationToken).ConfigureAwait(false);
-                widths = ExcelColumnWidthCollection.GetFromMappings(props!, _configuration.MinWidth, _configuration.MaxWidth);
+                widths = ExcelColumnWidthCollection.GetFromMappings(mappings!, _configuration.MinWidth, _configuration.MaxWidth);
             }
             else
             {
-                var colWidths = ExcelColumnWidthCollection.GetFromMappings(props!);
+                var colWidths = ExcelColumnWidthCollection.GetFromMappings(mappings!);
                 await WriteColumnsWidthsAsync(writer, colWidths.Columns, cancellationToken).ConfigureAwait(false);
             }
 
@@ -299,13 +299,13 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
             var currentRowIndex = 0;
             if (_printHeader)
             {
-                await PrintHeaderAsync(writer, props!, cancellationToken).ConfigureAwait(false);
+                await PrintHeaderAsync(writer, mappings!, cancellationToken).ConfigureAwait(false);
                 currentRowIndex++;
             }
 
             if (writeAdapter is not null)
             {
-                foreach (var row in writeAdapter.GetRows(props, cancellationToken))
+                foreach (var row in writeAdapter.GetRows(mappings, cancellationToken))
                 {
                     cancellationToken.ThrowIfCancellationRequested();
                     await writer.WriteAsync(WorksheetXml.StartRow(++currentRowIndex), cancellationToken).ConfigureAwait(false);
@@ -313,7 +313,7 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
                     foreach (var cellValue in row)
                     {
                         cancellationToken.ThrowIfCancellationRequested();
-                        await WriteCellAsync(writer, currentRowIndex, cellValue.CellIndex, cellValue.Value, cellValue.Prop, widths, cancellationToken).ConfigureAwait(false);
+                        await WriteCellAsync(writer, currentRowIndex, cellValue.CellIndex, cellValue.Value, cellValue.Mapping, widths, cancellationToken).ConfigureAwait(false);
                         progress?.Report(1);
                     }
                     await writer.WriteAsync(WorksheetXml.EndRow, cancellationToken).ConfigureAwait(false);
@@ -322,14 +322,14 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
             else
             {
 #if !SYNC_ONLY
-                await foreach (var row in asyncWriteAdapter!.GetRowsAsync(props, cancellationToken).ConfigureAwait(false))
+                await foreach (var row in asyncWriteAdapter!.GetRowsAsync(mappings, cancellationToken).ConfigureAwait(false))
                 {
                     cancellationToken.ThrowIfCancellationRequested();
                     await writer.WriteAsync(WorksheetXml.StartRow(++currentRowIndex), cancellationToken).ConfigureAwait(false);
 
                     foreach (var cellValue in row)
                     {
-                        await WriteCellAsync(writer, currentRowIndex, cellValue.CellIndex, cellValue.Value, cellValue.Prop, widths, cancellationToken).ConfigureAwait(false);
+                        await WriteCellAsync(writer, currentRowIndex, cellValue.CellIndex, cellValue.Value, cellValue.Mapping, widths, cancellationToken).ConfigureAwait(false);
                         progress?.Report(1);
                     }
                     await writer.WriteAsync(WorksheetXml.EndRow, cancellationToken).ConfigureAwait(false);
@@ -423,22 +423,22 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
     }
 
     [CreateSyncVersion]
-    private async Task PrintHeaderAsync(MiniExcelStreamWriter writer, List<MiniExcelColumnMapping?> props, CancellationToken cancellationToken = default)
+    private async Task PrintHeaderAsync(MiniExcelStreamWriter writer, List<MiniExcelColumnMapping?> mappings, CancellationToken cancellationToken = default)
     {
         const int yIndex = 1;
         await writer.WriteAsync(WorksheetXml.StartRow(yIndex), cancellationToken).ConfigureAwait(false);
 
         var xIndex = 1;
-        foreach (var p in props)
+        foreach (var map in mappings)
         {
             //reason : https://github.com/mini-software/MiniExcel/issues/142
-            if (p is not null)
+            if (map is not null)
             {
-                if (p.ExcelIgnoreColumn)
+                if (map.ExcelIgnoreColumn)
                     continue;
 
                 var r = CellReferenceConverter.GetCellFromCoordinates(xIndex, yIndex);
-                await WriteCellAsync(writer, r, columnName: p.ExcelColumnName).ConfigureAwait(false);
+                await WriteCellAsync(writer, r, columnName: map.ExcelColumnName).ConfigureAwait(false);
             }
             xIndex++;
         }
@@ -447,19 +447,19 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
     }
 
     [CreateSyncVersion]
-    private async Task WriteCellAsync(MiniExcelStreamWriter writer, string cellReference, string columnName)
+    private async Task WriteCellAsync(MiniExcelStreamWriter writer, string cellReference, string? columnName)
     {
         await writer.WriteAsync(WorksheetXml.Cell(cellReference, "str", GetCellXfId("1"), XmlHelper.EncodeXml(columnName))).ConfigureAwait(false);
     }
 
     [CreateSyncVersion]
-    private async Task WriteCellAsync(MiniExcelStreamWriter writer, int rowIndex, int cellIndex, object? value, MiniExcelColumnMapping columnInfo, ExcelColumnWidthCollection? widthCollection, CancellationToken cancellationToken = default)
+    private async Task WriteCellAsync(MiniExcelStreamWriter writer, int rowIndex, int cellIndex, object? value, MiniExcelColumnMapping? columnInfo, ExcelColumnWidthCollection? widthCollection, CancellationToken cancellationToken = default)
     {
-        if (columnInfo?.CustomFormatter is not null)
+        if (columnInfo?.CustomFormatter is { } formatter)
         {
             try
             {
-                value = columnInfo.CustomFormatter(value);
+                value = formatter.Invoke(value);
             }
             catch
             {
@@ -480,7 +480,7 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
 
         var styleIndex = tuple.Item1;
         var dataType = tuple.Item2;
-        string? cellValue = tuple.Item3;
+        var cellValue = tuple.Item3;
         var columnType = columnInfo.ExcelColumnType;
 
         /*Prefix and suffix blank space will lost after SaveAs #294*/
@@ -689,7 +689,7 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
 #endif
         await writer.WriteAsync(content, cancellationToken).ConfigureAwait(false);
 
-        if (!string.IsNullOrEmpty(contentType))
+        if (contentType is not (null or ""))
             _zipDictionary.Add(path, new ZipPackageInfo(entry, contentType));
     }
 

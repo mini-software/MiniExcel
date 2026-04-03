@@ -1,4 +1,3 @@
-using System.Reflection;
 using MiniExcelLib.OpenXml.FluentMapping.Configuration;
 
 namespace MiniExcelLib.OpenXml.FluentMapping;
@@ -62,9 +61,7 @@ public sealed class MappingRegistry
     {
         lock (_lock)
         {
-            return _compiledMappings.TryGetValue(type, out var mapping) 
-                ? mapping 
-                : null;
+            return _compiledMappings.GetValueOrDefault(type);
         }
     }
 

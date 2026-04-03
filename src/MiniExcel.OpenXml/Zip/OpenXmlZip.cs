@@ -43,10 +43,7 @@ internal class OpenXmlZip : IDisposable
         }
     }
 
-    public ZipArchiveEntry? GetEntry(string path)
-    {
-        return Entries.TryGetValue(path, out var entry) ? entry : null;
-    }
+    public ZipArchiveEntry? GetEntry(string path) => Entries.GetValueOrDefault(path);
 
     public XmlReader? GetXmlReader(string path)
     {

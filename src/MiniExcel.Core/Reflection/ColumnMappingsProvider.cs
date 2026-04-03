@@ -48,14 +48,14 @@ internal static class ColumnMappingsProvider
 
     private static List<MiniExcelColumnMapping?> GetMappingsForExport(this Type type, MiniExcelBaseConfiguration configuration)
     {
-        var props = GetColumnMappings(type, ExportMembersFlags, configuration)
+        var mappings = GetColumnMappings(type, ExportMembersFlags, configuration)
             .Where(prop => prop?.MemberAccessor.CanRead is true)
             .ToList();
 
-        if (props.Count == 0)
+        if (mappings.Count == 0)
             throw new InvalidMappingException($"{type.Name} must contain at least one mappable property or field.", type);
 
-        return SortMappings(props);
+        return SortMappings(mappings);
     }
 
     private static List<MiniExcelColumnMapping?> SortMappings(List<MiniExcelColumnMapping?> mappings)
@@ -81,29 +81,29 @@ internal static class ColumnMappingsProvider
         if (explicitIndexMappings.Count != 0)
             maxColumnIndex = Math.Max(explicitIndexMappings.Max(w => w?.ExcelColumnIndex ?? 0), maxColumnIndex);
 
-        var withoutCustomIndexProps = mappings
+        var mappingsWithoutCustomIndex = mappings
             .Where(w => w?.ExcelColumnIndex is null or -1)
             .ToList();
 
         var index = 0;
-        var newProps = new List<MiniExcelColumnMapping?>();
+        var newMappings = new List<MiniExcelColumnMapping?>();
         for (int i = 0; i <= maxColumnIndex; i++)
         {
             if (explicitIndexMappings.SingleOrDefault(s => s?.ExcelColumnIndex == i) is { } p1)
             {
-                newProps.Add(p1);
+                newMappings.Add(p1);
             }
             else
             {
-                var p2 = withoutCustomIndexProps.ElementAtOrDefault(index);
+                var map = mappingsWithoutCustomIndex.ElementAtOrDefault(index);
 
-                p2?.ExcelColumnIndex = i;
-                newProps.Add(p2);
+                map?.ExcelColumnIndex = i;
+                newMappings.Add(map);
 
                 index++;
             }
         }
-        return newProps;
+        return newMappings;
     }
 
     private static IEnumerable<MiniExcelColumnMapping?> GetColumnMappings(Type type, BindingFlags bindingFlags, MiniExcelBaseConfiguration configuration)
@@ -156,7 +156,7 @@ internal static class ColumnMappingsProvider
 
     private static List<MiniExcelColumnMapping?> GetDictionaryColumnInfo(IDictionary<string, object?>? dicString, IDictionary? dic, MiniExcelBaseConfiguration configuration)
     {
-        var props = new List<MiniExcelColumnMapping?>();
+        var mappings = new List<MiniExcelColumnMapping?>();
         
         var keys = dicString?.Keys.ToList()
             ?? dic?.Keys
@@ -164,15 +164,15 @@ internal static class ColumnMappingsProvider
 
         foreach (var key in keys)
         {
-            SetDictionaryColumnInfo(props, key, configuration);
+            SetDictionaryColumnInfo(mappings, key, configuration);
         }
         
-        return SortMappings(props);
+        return SortMappings(mappings);
     }
 
-    private static void SetDictionaryColumnInfo(List<MiniExcelColumnMapping?> props, object key, MiniExcelBaseConfiguration configuration)
+    private static void SetDictionaryColumnInfo(List<MiniExcelColumnMapping?> mappings, object key, MiniExcelBaseConfiguration configuration)
     {
-        var mapping = new MiniExcelColumnMapping
+        var map = new MiniExcelColumnMapping
         {
             Key = key,
             ExcelColumnName = key?.ToString()
@@ -185,40 +185,40 @@ internal static class ColumnMappingsProvider
             var dynamicColumn = configuration.DynamicColumns.SingleOrDefault(x => x.Key == key?.ToString());
             if (dynamicColumn is not null)
             {
-                mapping.Nullable = true;
+                map.Nullable = true;
 
                 if (dynamicColumn is { Format: { } fmt, FormatId: var fmtId })
                 {
-                    mapping.ExcelFormat = fmt;
-                    mapping.ExcelFormatId = fmtId;
+                    map.ExcelFormat = fmt;
+                    map.ExcelFormatId = fmtId;
                 }
 
                 if (dynamicColumn.Aliases is { } aliases)
-                    mapping.ExcelColumnAliases = aliases;
+                    map.ExcelColumnAliases = aliases;
 
                 if (dynamicColumn.IndexName is { } idxName)
-                    mapping.ExcelIndexName = idxName;
+                    map.ExcelIndexName = idxName;
 
                 if (dynamicColumn.Name is { } colName)
-                    mapping.ExcelColumnName = colName;
+                    map.ExcelColumnName = colName;
 
-                mapping.ExcelColumnIndex = dynamicColumn.Index;
-                mapping.ExcelColumnWidth = dynamicColumn.Width;
-                mapping.ExcelHiddenColumn = dynamicColumn.Hidden;
-                mapping.ExcelColumnType = dynamicColumn.Type;
-                mapping.CustomFormatter = dynamicColumn.CustomFormatter;
+                map.ExcelColumnIndex = dynamicColumn.Index;
+                map.ExcelColumnWidth = dynamicColumn.Width;
+                map.ExcelHiddenColumn = dynamicColumn.Hidden;
+                map.ExcelColumnType = dynamicColumn.Type;
+                map.CustomFormatter = dynamicColumn.CustomFormatter;
                 
                 isIgnore = dynamicColumn.Ignore;
             }
         }
         
         if (!isIgnore)
-            props.Add(mapping);
+            mappings.Add(map);
     }
 
-    internal static bool TryGetColumnMappings(Type? type, MiniExcelBaseConfiguration configuration, out List<MiniExcelColumnMapping?> props)
+    internal static bool TryGetColumnMappings(Type? type, MiniExcelBaseConfiguration configuration, out List<MiniExcelColumnMapping?> mappings)
     {
-        props = [];
+        mappings = [];
 
         // Unknown type
         if (type is null)
@@ -230,7 +230,7 @@ internal static class ColumnMappingsProvider
         if (ValueIsNeededToDetermineProperties(type))
             return false;
 
-        props = type.GetMappingsForExport(configuration);
+        mappings = type.GetMappingsForExport(configuration);
         return true;
     }
     

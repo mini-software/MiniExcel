@@ -73,13 +73,8 @@ internal class MappingCellStreamAdapter<T>(MappingCellStream<T> cellStream, stri
 
         foreach (var map in mappings)
         {
-            object? cellValue = null;
-            if (row.TryGetValue(prop.Key.ToString(), out var value))
-            {
-                cellValue = value;
-            }
-            
             columnIndex++;
+            var cellValue = row.GetValueOrDefault(map.Key.ToString());
             result.Add(new CellWriteInfo(cellValue, columnIndex, map));
         }
 

@@ -638,12 +638,9 @@ internal partial class OpenXmlTemplate
             else
             {
                 var replacements = new Dictionary<string, string>();
-#if NETCOREAPP3_0_OR_GREATER
                 string MatchDelegate(Match x) => replacements.GetValueOrDefault(x.Groups[1].Value, "");
-#else
-                string MatchDelegate(Match x) => replacements.TryGetValue(x.Groups[1].Value, out var repl) ? repl : "";
-#endif
-                foreach (var prop in rowInfo.PropsMap)
+
+                foreach (var map in rowInfo.MembersMap)
                 {
                     var propInfo = map.Value.PropertyInfo;
                     var name = isDictOrTable ? map.Key : propInfo.Name;

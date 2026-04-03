@@ -1146,7 +1146,7 @@ internal partial class OpenXmlReader : IMiniExcelReader
     {
         if (string.IsNullOrEmpty(sheetName))
             throw new ArgumentException("sheetName cannot be null or empty", nameof(sheetName));
-                
+
         XNamespace nsRel = Schemas.OpenXmlPackageRelationships;
         XNamespace ns18Tc = Schemas.SpreadsheetmlXmlX18Tc;
         XNamespace nsMain = Schemas.SpreadsheetmlXmlNs;
@@ -1185,8 +1185,10 @@ internal partial class OpenXmlReader : IMiniExcelReader
                 })
                 .ToList() ?? [];
         }
-        
-        var rel = Archive.EntryCollection.Single(x => x.FullName == $"xl/worksheets/_rels/{sheetFile}.rels");
+
+        if (Archive.EntryCollection.SingleOrDefault(x => x.FullName == $"xl/worksheets/_rels/{sheetFile}.rels") is not { } rel)
+            return new CommentResultSet(sheetName, [], []);
+
 #if NET10_0_OR_GREATER
         var stream = await rel.OpenAsync(cancellationToken).ConfigureAwait(false);
         await using var disposableStream = stream.ConfigureAwait(false);  
@@ -1204,14 +1206,14 @@ internal partial class OpenXmlReader : IMiniExcelReader
 #endif
 
         var threadedCommentRels = relDoc.Root?.Elements(nsRel + "Relationship");
-        var threadedCommentsPath = threadedCommentRels
-            ?.FirstOrDefault(x => x.Attribute("Type")?.Value == Schemas.SpreadsheetmlXmlThreadedComment)
-            ?.Attribute("Target")?.Value.TrimStart('.', '/');
+        var threadedCommentsElement = threadedCommentRels?.FirstOrDefault(x => x.Attribute("Type")?.Value == Schemas.SpreadsheetmlXmlThreadedComment);
+        var threadedCommentsTarget = threadedCommentsElement?.Attribute("Target");
+        var threadedCommentsPath = threadedCommentsTarget?.Value.TrimStart('.', '/');
 
         var noteRels = relDoc.Root?.Elements(nsRel + "Relationship");
-        var notesPath = noteRels
-            ?.FirstOrDefault(x => x.Attribute("Type")?.Value == Schemas.SpreadsheetmlXmlComments)
-            ?.Attribute("Target")?.Value.TrimStart('.', '/');
+        var notesElement = noteRels?.FirstOrDefault(x => x.Attribute("Type")?.Value == Schemas.SpreadsheetmlXmlComments);
+        var notesTarget = notesElement?.Attribute("Target");
+        var notesPath = notesTarget?.Value.TrimStart('.', '/');
 
         List<ThreadedComment> commentThreads = [];
         List<NoteComment> notes = [];
@@ -1241,10 +1243,10 @@ internal partial class OpenXmlReader : IMiniExcelReader
                 {
                     Id = Guid.Parse(tc.Attribute("id")!.Value.Trim('{', '}')),
                     Author = people.FirstOrDefault(p => p.Id == (Guid.TryParse(tc.Attribute("personId")?.Value, out var person) ? person : Guid.Empty)),
-                    CreatedAt = DateTime.Parse(tc.Attribute("dT")!.Value),
+                    CreationTime = DateTime.Parse(tc.Attribute("dT")!.Value),
                     ReferenceCell = tc.Attribute("ref")?.Value!,
                     FirstMessage = tc.Value,
-                    Active = tc.Attribute("done")?.Value is not (null or "0")
+                    Resolved = tc.Attribute("done")?.Value is not (null or "0")
                 })
                 .ToList() ?? [];
 
@@ -1257,7 +1259,7 @@ internal partial class OpenXmlReader : IMiniExcelReader
                     ParentId = Guid.Parse(tc.Attribute("parentId")!.Value),
                     Author = people.FirstOrDefault(p => p.Id == Guid.Parse(tc.Attribute("personId")!.Value)),
                     ReplyTime = DateTime.Parse(tc.Attribute("dT")!.Value),
-                    Text = tc.Value
+                    ReplyText = tc.Value
                 })
                 .ToLookup(x => x.ParentId);
 
@@ -1309,11 +1311,7 @@ internal partial class OpenXmlReader : IMiniExcelReader
                 .ToList() ?? [];
         }
 
-        return new CommentResultSet
-        {
-            Comments = commentThreads,
-            Notes = notes
-        };
+        return new CommentResultSet(sheetName, commentThreads, notes);
 
         IEnumerable<string?> GetTextFromComment(XElement? comment)
         {

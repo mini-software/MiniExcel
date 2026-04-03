@@ -13,14 +13,14 @@ internal class DataTableWriteAdapter(DataTable dataTable, MiniExcelBaseConfigura
 
     public List<MiniExcelColumnMapping> GetColumns()
     {
-        var props = new List<MiniExcelColumnMapping>();
+        var mappings = new List<MiniExcelColumnMapping>();
         for (var i = 0; i < _dataTable.Columns.Count; i++)
         {
             var columnName = _dataTable.Columns[i].Caption ?? _dataTable.Columns[i].ColumnName;
-            var prop = ColumnMappingsProvider.GetColumnMappingFromDynamicConfiguration(columnName, _configuration);
-            props.Add(prop);
+            var map = ColumnMappingsProvider.GetColumnMappingFromDynamicConfiguration(columnName, _configuration);
+            mappings.Add(map);
         }
-        return props;
+        return mappings;
     }
 
     public IEnumerable<CellWriteInfo[]> GetRows(List<MiniExcelColumnMapping> mappings, CancellationToken cancellationToken = default)

@@ -27,7 +27,7 @@ internal sealed class AsyncEnumerableWriteAdapter<T>(IAsyncEnumerable<T> values,
         return ColumnMappingsProvider.GetColumnMappingFromValue(_enumerator.Current, _configuration);
     }
 
-    public async IAsyncEnumerable<CellWriteInfo[]> GetRowsAsync(List<MiniExcelColumnMapping> props, [EnumeratorCancellation] CancellationToken cancellationToken)
+    public async IAsyncEnumerable<CellWriteInfo[]> GetRowsAsync(List<MiniExcelColumnMapping> mappings, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         if (_empty)
             yield break;
@@ -44,30 +44,27 @@ internal sealed class AsyncEnumerableWriteAdapter<T>(IAsyncEnumerable<T> values,
         do
         {
             cancellationToken.ThrowIfCancellationRequested();
-            yield return GetRowValues(_enumerator.Current, props);
+            yield return GetRowValues(_enumerator.Current, mappings);
         }
         while (await _enumerator.MoveNextAsync().ConfigureAwait(false));
     }
 
-    private static CellWriteInfo[] GetRowValues(T currentValue, List<MiniExcelColumnMapping> props)
+    private static CellWriteInfo[] GetRowValues(T currentValue, List<MiniExcelColumnMapping?> mappings)
     {
         var column = 0;
-        var result = new List<CellWriteInfo>();
+        var result = new List<CellWriteInfo>(mappings.Count);
         
-        foreach (var prop in props)
+        foreach (var map in mappings)
         {
             column++;
-            
-            if (prop is null)
-                continue;
-
-            var info = currentValue switch
+            var cellValue = currentValue switch
             {
-                IDictionary<string, object> genericDictionary => new CellWriteInfo(genericDictionary[prop.Key.ToString()], column, prop),
-                IDictionary dictionary => new CellWriteInfo(dictionary[prop.Key], column, prop),
-                _ => new CellWriteInfo(prop.MemberAccessor.GetValue(currentValue), column, prop)
+                _ when map is null => null,
+                IDictionary<string, object> genericDictionary => genericDictionary[map.Key.ToString()],
+                IDictionary dictionary => dictionary[map.Key],
+                _ => map.MemberAccessor.GetValue(currentValue)
             };
-            result.Add(info);
+            result.Add(new CellWriteInfo(cellValue, column, map));
         }
         
         return result.ToArray();

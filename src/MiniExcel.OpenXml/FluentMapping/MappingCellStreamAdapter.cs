@@ -18,11 +18,10 @@ internal class MappingCellStreamAdapter<T>(MappingCellStream<T> cellStream, stri
 
     public List<MiniExcelColumnMapping> GetColumns()
     {
-        var props = new List<MiniExcelColumnMapping>();
-        
+        var mappings = new List<MiniExcelColumnMapping>();
         for (int i = 0; i < _columnLetters.Length; i++)
         {
-            props.Add(new MiniExcelColumnMapping
+            mappings.Add(new MiniExcelColumnMapping
             {
                 Key = _columnLetters[i],
                 ExcelColumnName = _columnLetters[i],
@@ -30,7 +29,7 @@ internal class MappingCellStreamAdapter<T>(MappingCellStream<T> cellStream, stri
             });
         }
         
-        return props;
+        return mappings;
     }
 
     public IEnumerable<CellWriteInfo[]> GetRows(List<MiniExcelColumnMapping> mappings, CancellationToken cancellationToken = default)

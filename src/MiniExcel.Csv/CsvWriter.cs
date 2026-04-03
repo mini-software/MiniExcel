@@ -24,7 +24,7 @@ internal partial class CsvWriter : IMiniExcelWriter, IDisposable
     
     private void AppendColumn(StringBuilder rowBuilder, CellWriteInfo column)
     {
-        rowBuilder.Append(CsvSanitizer.SanitizeCsvField(ToCsvString(column.Value, column.Prop), _configuration));
+        rowBuilder.Append(CsvSanitizer.SanitizeCsvField(ToCsvString(column.Value, column.Mapping), _configuration));
         rowBuilder.Append(_configuration.Seperator);
     }
 
@@ -51,14 +51,14 @@ internal partial class CsvWriter : IMiniExcelWriter, IDisposable
         try
         {
 #if SYNC_ONLY
-            var props = writeAdapter?.GetColumns();
+            var mappings = writeAdapter?.GetColumns();
 #else
-            var props = writeAdapter is not null 
+            var mappings = writeAdapter is not null 
                 ? writeAdapter.GetColumns() 
                 : await asyncWriteAdapter!.GetColumnsAsync().ConfigureAwait(false);
 #endif
     
-            if (props is null)
+            if (mappings is null)
             {
                 await _writer.WriteAsync(_configuration.NewLine
 #if NET5_0_OR_GREATER
@@ -75,7 +75,7 @@ internal partial class CsvWriter : IMiniExcelWriter, IDisposable
     
             if (_printHeader)
             {
-                await _writer.WriteAsync(GetHeader(props)
+                await _writer.WriteAsync(GetHeader(mappings)
 #if NET5_0_OR_GREATER
                     .AsMemory(), cancellationToken
 #endif
@@ -92,7 +92,7 @@ internal partial class CsvWriter : IMiniExcelWriter, IDisposable
     
             if (writeAdapter is not null)
             {
-                foreach (var row in writeAdapter.GetRows(props, cancellationToken))
+                foreach (var row in writeAdapter.GetRows(mappings, cancellationToken))
                 {
                     rowBuilder.Clear();
                     foreach (var column in row)
@@ -120,7 +120,7 @@ internal partial class CsvWriter : IMiniExcelWriter, IDisposable
             else
             {
 #if !SYNC_ONLY
-                await foreach (var row in asyncWriteAdapter!.GetRowsAsync(props, cancellationToken).ConfigureAwait(false))
+                await foreach (var row in asyncWriteAdapter!.GetRowsAsync(mappings, cancellationToken).ConfigureAwait(false))
                 {
                     cancellationToken.ThrowIfCancellationRequested();
                     rowBuilder.Clear();
@@ -221,9 +221,9 @@ internal partial class CsvWriter : IMiniExcelWriter, IDisposable
         return Convert.ToString(value, _configuration.Culture) ?? "";
     }
     
-    private string GetHeader(List<MiniExcelColumnMapping> props) => string.Join(
+    private string GetHeader(List<MiniExcelColumnMapping> mappings) => string.Join(
         _configuration.Seperator.ToString(),
-        props.Select(s => CsvSanitizer.SanitizeCsvField(s?.ExcelColumnName, _configuration)));
+        mappings.Select(s => CsvSanitizer.SanitizeCsvField(s?.ExcelColumnName, _configuration)));
     
     private void Dispose(bool disposing)
     {

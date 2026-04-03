@@ -7,9 +7,9 @@ public interface IMiniExcelWriteAdapter
     IEnumerable<CellWriteInfo[]> GetRows(List<MiniExcelColumnMapping> mappings, CancellationToken cancellationToken = default);
 }
 
-public readonly struct CellWriteInfo(object? value, int cellIndex, MiniExcelColumnMapping prop)
+public readonly struct CellWriteInfo(object? value, int cellIndex, MiniExcelColumnMapping? mapping)
 {
     public object? Value { get; } = value;
     public int CellIndex { get; } = cellIndex;
-    public MiniExcelColumnMapping Prop { get; } = prop;
+    public MiniExcelColumnMapping? Mapping { get; } = mapping;
 }

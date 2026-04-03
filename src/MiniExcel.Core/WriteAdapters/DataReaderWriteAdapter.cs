@@ -13,18 +13,18 @@ internal class DataReaderWriteAdapter(IDataReader reader, MiniExcelBaseConfigura
 
     public List<MiniExcelColumnMapping> GetColumns()
     {
-        var props = new List<MiniExcelColumnMapping>();
+        var mappings = new List<MiniExcelColumnMapping>();
         for (var i = 0; i < _reader.FieldCount; i++)
         {
             var columnName = _reader.GetName(i);
             if (!_configuration.DynamicColumnFirst || 
                 _configuration.DynamicColumns.Any(d => string.Equals(d.Key, columnName, StringComparison.OrdinalIgnoreCase)))
             {
-                var prop = ColumnMappingsProvider.GetColumnMappingFromDynamicConfiguration(columnName, _configuration);
-                props.Add(prop);
+                var map = ColumnMappingsProvider.GetColumnMappingFromDynamicConfiguration(columnName, _configuration);
+                mappings.Add(map);
             }
         }
-        return props;
+        return mappings;
     }
 
     public IEnumerable<CellWriteInfo[]> GetRows(List<MiniExcelColumnMapping> mappings, CancellationToken cancellationToken = default)

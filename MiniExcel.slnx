@@ -25,6 +25,7 @@
     <File Path="docs\README.zh-Hant.md" />
   </Folder>
   <Folder Name="/src/">
+    <File Path="src/.editorconfig" />
     <File Path="src\Directory.Build.props" />
     <File Path="src\Directory.Packages.props" />
     <Project Path="src\MiniExcel.OpenXml/MiniExcel.OpenXml.csproj" />

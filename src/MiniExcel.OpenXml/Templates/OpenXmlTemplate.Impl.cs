@@ -779,15 +779,12 @@ internal partial class OpenXmlTemplate
             if (iEnumerableIndex == rowInfo.CellIEnumerableValuesCount)
                 continue;
 
-            if (rowInfo.IEnumerableMercell is not null)
-                continue;
-
             // https://github.com/mini-software/MiniExcel/assets/12729184/1a699497-57e8-4602-b01e-9ffcfef1478d
-            if (rowInfo.IEnumerableMercell?.Height is null)
+            if (rowInfo.IEnumerableMercell?.Height is not { } height)
                 continue;
 
             // https://github.com/mini-software/MiniExcel/issues/207#issuecomment-824518897
-            for (int i = 1; i < rowInfo.IEnumerableMercell.Height; i++)
+            for (int i = 1; i < height; i++)
             {
                 mergeBaseRowIndex++;
                 var newRow = row.Clone() as XmlElement;

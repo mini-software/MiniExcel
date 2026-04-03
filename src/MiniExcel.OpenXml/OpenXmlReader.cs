@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Xml.Linq;
 using MiniExcelLib.Core;
 using MiniExcelLib.OpenXml.Constants;
 using MiniExcelLib.OpenXml.Styles;
@@ -1140,9 +1141,186 @@ internal partial class OpenXmlReader : IMiniExcelReader
         return true;
     }
 
-    ~OpenXmlReader()
+    [CreateSyncVersion]
+    internal async Task<CommentResultSet> ReadCommentsAsync(string sheetName, CancellationToken cancellationToken = default)
     {
-        Dispose(false);
+        if (string.IsNullOrEmpty(sheetName))
+            throw new ArgumentException("sheetName cannot be null or empty", nameof(sheetName));
+                
+        XNamespace nsRel = Schemas.OpenXmlPackageRelationships;
+        XNamespace ns18Tc = Schemas.SpreadsheetmlXmlX18Tc;
+        XNamespace nsMain = Schemas.SpreadsheetmlXmlNs;
+        XNamespace ns14R = Schemas.SpreadsheetmlXmlX14R;
+        
+        SetWorkbookRels(Archive.EntryCollection);
+        var sheetRecord = _sheetRecords?.SingleOrDefault(s => s.Name.Equals(sheetName, StringComparison.CurrentCultureIgnoreCase));
+        if (sheetRecord?.Path.Split('/')[^1] is not { } sheetFile)
+            throw new InvalidDataException($"There is no sheet named {sheetName}");
+        
+        List<Author> people = [];
+        if (Archive.GetEntry("xl/persons/person.xml") is { } persons)
+        {
+#if NET10_0_OR_GREATER
+            var personStream = await persons.OpenAsync(cancellationToken).ConfigureAwait(false);
+            await using var disposablePersonStream = personStream.ConfigureAwait(false);  
+#elif !NETSTANDARD2_0
+            var personStream = persons.Open();
+            await using var disposablePersonStream = personStream.ConfigureAwait(false);
+#else
+            using var personStream = persons.Open();
+#endif
+            
+#if NETSTANDARD2_0
+            var personDoc = XDocument.Load(personStream, LoadOptions.None);
+#else
+            var personDoc = await XDocument.LoadAsync(personStream, LoadOptions.None, cancellationToken).ConfigureAwait(false);
+#endif
+            var personElements = personDoc.Root?.Elements(ns18Tc + "person");
+            people = personElements
+                ?.Select(p => new Author
+                {
+                    Id = Guid.Parse(p.Attribute("id")!.Value),
+                    DisplayName = p.Attribute("displayName")?.Value is { } name and not "" ? name : "???",
+                    ProviderId = p.Attribute("providerId")?.Value,
+                })
+                .ToList() ?? [];
+        }
+        
+        var rel = Archive.EntryCollection.Single(x => x.FullName == $"xl/worksheets/_rels/{sheetFile}.rels");
+#if NET10_0_OR_GREATER
+        var stream = await rel.OpenAsync(cancellationToken).ConfigureAwait(false);
+        await using var disposableStream = stream.ConfigureAwait(false);  
+#elif !NETSTANDARD2_0
+        var stream = rel.Open();
+        await using var disposableStream = stream.ConfigureAwait(false);
+#else
+        using var stream = rel.Open();
+#endif
+        
+#if NETSTANDARD2_0
+        var relDoc = XDocument.Load(stream, LoadOptions.None);
+#else
+        var relDoc = await XDocument.LoadAsync(stream, LoadOptions.None, cancellationToken).ConfigureAwait(false);
+#endif
+
+        var threadedCommentRels = relDoc.Root?.Elements(nsRel + "Relationship");
+        var threadedCommentsPath = threadedCommentRels
+            ?.FirstOrDefault(x => x.Attribute("Type")?.Value == Schemas.SpreadsheetmlXmlThreadedComment)
+            ?.Attribute("Target")?.Value.TrimStart('.', '/');
+
+        var noteRels = relDoc.Root?.Elements(nsRel + "Relationship");
+        var notesPath = noteRels
+            ?.FirstOrDefault(x => x.Attribute("Type")?.Value == Schemas.SpreadsheetmlXmlComments)
+            ?.Attribute("Target")?.Value.TrimStart('.', '/');
+
+        List<ThreadedComment> commentThreads = [];
+        List<NoteComment> notes = [];
+        string[] refCells = [];
+        if (Archive.GetEntry($"xl/{threadedCommentsPath}") is { } threadEntry)
+        {
+#if NET10_0_OR_GREATER
+            var threadEntryStream = await threadEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
+            await using var disposableThreadEntryStream = threadEntryStream.ConfigureAwait(false);
+#elif !NETSTANDARD2_0
+            var threadEntryStream = threadEntry.Open();
+            await using var disposableThreadEntryStream = threadEntryStream.ConfigureAwait(false);
+#else
+            using var threadEntryStream = threadEntry.Open();
+#endif
+
+#if NETSTANDARD2_0
+            var doc = XDocument.Load(threadEntryStream, LoadOptions.None);
+#else
+            var doc = await XDocument.LoadAsync(threadEntryStream, LoadOptions.None, cancellationToken).ConfigureAwait(false);
+#endif
+
+            var commentThreadElements = doc.Root?.Elements(ns18Tc + "threadedComment");
+            commentThreads = commentThreadElements
+                ?.Where(tc => tc.Attribute("parentId") is null)
+                .Select(tc => new ThreadedComment
+                {
+                    Id = Guid.Parse(tc.Attribute("id")!.Value.Trim('{', '}')),
+                    Author = people.FirstOrDefault(p => p.Id == (Guid.TryParse(tc.Attribute("personId")?.Value, out var person) ? person : Guid.Empty)),
+                    CreatedAt = DateTime.Parse(tc.Attribute("dT")!.Value),
+                    ReferenceCell = tc.Attribute("ref")?.Value!,
+                    FirstMessage = tc.Value,
+                    Active = tc.Attribute("done")?.Value is not (null or "0")
+                })
+                .ToList() ?? [];
+
+            var replyElements = doc.Root?.Elements(ns18Tc + "threadedComment");
+            var replies = replyElements
+                ?.Where(tc => tc.Attribute("parentId") is not null)
+                .Select(tc => new ThreadedCommentReply
+                {
+                    Id = Guid.Parse(tc.Attribute("id")!.Value.Trim('{', '}')),
+                    ParentId = Guid.Parse(tc.Attribute("parentId")!.Value),
+                    Author = people.FirstOrDefault(p => p.Id == Guid.Parse(tc.Attribute("personId")!.Value)),
+                    ReplyTime = DateTime.Parse(tc.Attribute("dT")!.Value),
+                    Text = tc.Value
+                })
+                .ToLookup(x => x.ParentId);
+
+            if (replies is not null)
+            {
+                foreach (var thread in commentThreads)
+                {
+                    thread.ThreadedComments = replies[thread.Id].ToList();
+                }
+            }
+
+            refCells = [..commentThreads.Select(x => x.ReferenceCell).Distinct()];
+        }
+
+        if (Archive.GetEntry($"xl/{notesPath}") is { } noteEntry)
+        {
+#if NET10_0_OR_GREATER
+            var noteEntryStream = await noteEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
+            await using var disposableNoteEntryStream = noteEntryStream.ConfigureAwait(false);
+#elif !NETSTANDARD2_0
+            var noteEntryStream = noteEntry.Open();
+            await using var disposableNoteEntryStream = noteEntryStream.ConfigureAwait(false);
+#else
+            using var noteEntryStream = noteEntry.Open();
+#endif
+
+#if NETSTANDARD2_0
+            var doc = XDocument.Load(noteEntryStream, LoadOptions.None);
+#else
+            var doc = await XDocument.LoadAsync(noteEntryStream, LoadOptions.None, cancellationToken).ConfigureAwait(false);
+#endif
+
+            var authorElements = doc.Root?.Element(nsMain + "authors")?.Elements(nsMain + "author");
+            var authors = authorElements?.Select(a => a.Value).ToArray();
+
+            var commentElements = doc.Root
+                ?.Element(nsMain + "commentList")
+                ?.Elements(nsMain + "comment");
+
+            notes = commentElements
+                ?.Where(c => !refCells.Contains(c.Attribute("ref")?.Value))
+                .Select(c => new NoteComment
+                {
+                    Id = Guid.Parse(c.Attribute(ns14R + "uid")!.Value.Trim('{', '}')),
+                    Author = authors?.ElementAtOrDefault(int.Parse(c.Attribute("authorId")!.Value)),
+                    ReferenceCell =  c.Attribute("ref")?.Value,
+                    Text = string.Join("", GetTextFromComment(c))
+                })
+                .ToList() ?? [];
+        }
+
+        return new CommentResultSet
+        {
+            Comments = commentThreads,
+            Notes = notes
+        };
+
+        IEnumerable<string?> GetTextFromComment(XElement? comment)
+        {
+            return comment?.Element(nsMain + "text") is { } textElement
+                ? textElement.Elements(nsMain + "r").Select(r => r.Element(nsMain + "t")?.Value)
+                : [];
+        }
     }
 
     /// <summary>
@@ -1310,5 +1488,10 @@ internal partial class OpenXmlReader : IMiniExcelReader
 
             _disposed = true;
         }
+    }
+    
+    ~OpenXmlReader()
+    {
+        Dispose(false);
     }
 }

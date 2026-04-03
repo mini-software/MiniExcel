@@ -33,7 +33,7 @@ internal class MappingCellStreamAdapter<T>(MappingCellStream<T> cellStream, stri
         return props;
     }
 
-    public IEnumerable<IEnumerable<CellWriteInfo>> GetRows(List<MiniExcelColumnMapping> props, CancellationToken cancellationToken = default)
+    public IEnumerable<CellWriteInfo[]> GetRows(List<MiniExcelColumnMapping> mappings, CancellationToken cancellationToken = default)
     {
         var currentRow = new Dictionary<string, object?>();
         var currentRowIndex = 0;
@@ -48,7 +48,7 @@ internal class MappingCellStreamAdapter<T>(MappingCellStream<T> cellStream, stri
                 // Yield the completed row if we have one
                 if (currentRowIndex > 0 && currentRow.Count > 0)
                 {
-                    yield return ConvertRowToCellWriteInfos(currentRow, props);
+                    yield return ConvertRowToCellWriteInfos(currentRow, mappings);
                 }
                 
                 // Start new row
@@ -63,14 +63,16 @@ internal class MappingCellStreamAdapter<T>(MappingCellStream<T> cellStream, stri
         // Yield the final row
         if (currentRow.Count > 0)
         {
-            yield return ConvertRowToCellWriteInfos(currentRow, props);
+            yield return ConvertRowToCellWriteInfos(currentRow, mappings);
         }
     }
 
-    private static IEnumerable<CellWriteInfo> ConvertRowToCellWriteInfos(Dictionary<string, object?> row, List<MiniExcelColumnMapping> props)
+    private static CellWriteInfo[] ConvertRowToCellWriteInfos(Dictionary<string, object?> row, List<MiniExcelColumnMapping> mappings)
     {
-        var columnIndex = 1;
-        foreach (var prop in props)
+        var columnIndex = 0;
+        var result = new List<CellWriteInfo>(mappings.Count);
+
+        foreach (var map in mappings)
         {
             object? cellValue = null;
             if (row.TryGetValue(prop.Key.ToString(), out var value))
@@ -78,8 +80,10 @@ internal class MappingCellStreamAdapter<T>(MappingCellStream<T> cellStream, stri
                 cellValue = value;
             }
             
-            yield return new CellWriteInfo(cellValue, columnIndex, prop);
             columnIndex++;
+            result.Add(new CellWriteInfo(cellValue, columnIndex, map));
         }
+
+        return result.ToArray();
     }
 }

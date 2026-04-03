@@ -23,8 +23,8 @@ internal class EnumerableWriteAdapter(IEnumerable values, MiniExcelBaseConfigura
 
     public List<MiniExcelColumnMapping>? GetColumns()
     {
-        if (ColumnMappingsProvider.TryGetColumnMappings(_genericType, _configuration, out var props))
-            return props;
+        if (ColumnMappingsProvider.TryGetColumnMappings(_genericType, _configuration, out var mappings))
+            return mappings;
 
         _enumerator = _values.GetEnumerator();
         if (_enumerator.MoveNext())
@@ -42,7 +42,7 @@ internal class EnumerableWriteAdapter(IEnumerable values, MiniExcelBaseConfigura
         }
     }
 
-    public IEnumerable<IEnumerable<CellWriteInfo>> GetRows(List<MiniExcelColumnMapping> props, CancellationToken cancellationToken = default)
+    public IEnumerable<CellWriteInfo[]> GetRows(List<MiniExcelColumnMapping> mappings, CancellationToken cancellationToken = default)
     {
         if (_empty)
             yield break;
@@ -59,7 +59,7 @@ internal class EnumerableWriteAdapter(IEnumerable values, MiniExcelBaseConfigura
             do
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                yield return GetRowValues(_enumerator.Current, props);
+                yield return GetRowValues(_enumerator.Current, mappings);
             } 
             while (_enumerator.MoveNext());
         }
@@ -69,32 +69,25 @@ internal class EnumerableWriteAdapter(IEnumerable values, MiniExcelBaseConfigura
             _enumerator = null;
         }
     }
-        
-    public static IEnumerable<CellWriteInfo> GetRowValues(object currentValue, List<MiniExcelColumnMapping> props)
+
+    private static CellWriteInfo[] GetRowValues(object currentValue, List<MiniExcelColumnMapping?> mappings)
     {
-        var column = 1;
-        foreach (var prop in props)
+        var column = 0;
+        var result = new List<CellWriteInfo>(mappings.Count);
+
+        foreach (var map in mappings)
         {
-            object? cellValue;
-            if (prop is null)
-            {
-                cellValue = null;
-            }
-            else if (currentValue is IDictionary<string, object> genericDictionary)
-            {
-                cellValue = genericDictionary[prop.Key.ToString()];
-            }
-            else if (currentValue is IDictionary dictionary)
-            {
-                cellValue = dictionary[prop.Key];
-            }
-            else 
-            {
-                cellValue = prop.MemberAccessor.GetValue(currentValue);
-            }
-                
-            yield return new CellWriteInfo(cellValue, column, prop);
             column++;
+            var cellValue = currentValue switch
+            {
+                _ when map is null => null,
+                IDictionary<string, object> genericDictionary => genericDictionary[map.Key.ToString()],
+                IDictionary dictionary => dictionary[map.Key],
+                _ => map.MemberAccessor.GetValue(currentValue)
+            };
+            result.Add(new CellWriteInfo(cellValue, column, map));
         }
+
+        return result.ToArray();
     }
 }

@@ -4,7 +4,7 @@ public interface IMiniExcelWriteAdapter
 {
     bool TryGetKnownCount(out int count);
     List<MiniExcelColumnMapping>? GetColumns();
-    IEnumerable<IEnumerable<CellWriteInfo>> GetRows(List<MiniExcelColumnMapping> props, CancellationToken cancellationToken = default);
+    IEnumerable<CellWriteInfo[]> GetRows(List<MiniExcelColumnMapping> mappings, CancellationToken cancellationToken = default);
 }
 
 public readonly struct CellWriteInfo(object? value, int cellIndex, MiniExcelColumnMapping prop)

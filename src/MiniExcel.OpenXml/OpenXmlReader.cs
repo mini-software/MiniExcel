@@ -376,7 +376,7 @@ internal partial class OpenXmlReader : IMiniExcelReader
             var s = _sheetRecords[0];
             sheetEntry = sheets.Single(w => w.FullName == $"xl/{s.Path}" || 
                                             w.FullName == $"/xl/{s.Path}" || 
-                                            w.FullName.TrimStart('/') == s.Path.TrimStart('/'));
+                                            w.FullName.TrimStart('/') == s.Path?.TrimStart('/'));
         }
         else
         {
@@ -1154,7 +1154,7 @@ internal partial class OpenXmlReader : IMiniExcelReader
         
         SetWorkbookRels(Archive.EntryCollection);
         var sheetRecord = _sheetRecords?.SingleOrDefault(s => s.Name.Equals(sheetName, StringComparison.CurrentCultureIgnoreCase));
-        if (sheetRecord?.Path.Split('/')[^1] is not { } sheetFile)
+        if (sheetRecord?.Path?.Split('/')[^1] is not { } sheetFile)
             throw new InvalidDataException($"There is no sheet named {sheetName}");
         
         List<Author> people = [];
@@ -1186,7 +1186,7 @@ internal partial class OpenXmlReader : IMiniExcelReader
                 .ToList() ?? [];
         }
 
-        if (Archive.EntryCollection.SingleOrDefault(x => x.FullName == $"xl/worksheets/_rels/{sheetFile}.rels") is not { } rel)
+        if (Archive.GetEntry($"xl/worksheets/_rels/{sheetFile}.rels") is not { } rel)
             return new CommentResultSet(sheetName, [], []);
 
 #if NET10_0_OR_GREATER
@@ -1217,7 +1217,7 @@ internal partial class OpenXmlReader : IMiniExcelReader
 
         List<ThreadedComment> commentThreads = [];
         List<NoteComment> notes = [];
-        string[] refCells = [];
+        HashSet<string?> refCells = [];
         if (Archive.GetEntry($"xl/{threadedCommentsPath}") is { } threadEntry)
         {
 #if NET10_0_OR_GREATER
@@ -1243,7 +1243,7 @@ internal partial class OpenXmlReader : IMiniExcelReader
                 {
                     Id = Guid.Parse(tc.Attribute("id")!.Value.Trim('{', '}')),
                     Author = people.FirstOrDefault(p => p.Id == (Guid.TryParse(tc.Attribute("personId")?.Value, out var person) ? person : Guid.Empty)),
-                    CreationTime = DateTime.Parse(tc.Attribute("dT")!.Value),
+                    CreationTime = DateTime.Parse(tc.Attribute("dT")!.Value, CultureInfo.InvariantCulture),
                     ReferenceCell = tc.Attribute("ref")?.Value!,
                     FirstMessage = tc.Value,
                     Resolved = tc.Attribute("done")?.Value is not (null or "0")
@@ -1258,7 +1258,7 @@ internal partial class OpenXmlReader : IMiniExcelReader
                     Id = Guid.Parse(tc.Attribute("id")!.Value.Trim('{', '}')),
                     ParentId = Guid.Parse(tc.Attribute("parentId")!.Value),
                     Author = people.FirstOrDefault(p => p.Id == Guid.Parse(tc.Attribute("personId")!.Value)),
-                    ReplyTime = DateTime.Parse(tc.Attribute("dT")!.Value),
+                    ReplyTime = DateTime.Parse(tc.Attribute("dT")!.Value, CultureInfo.InvariantCulture),
                     ReplyText = tc.Value
                 })
                 .ToLookup(x => x.ParentId);
@@ -1271,7 +1271,7 @@ internal partial class OpenXmlReader : IMiniExcelReader
                 }
             }
 
-            refCells = [..commentThreads.Select(x => x.ReferenceCell).Distinct()];
+            refCells = [..commentThreads.Select(x => x.ReferenceCell)];
         }
 
         if (Archive.GetEntry($"xl/{notesPath}") is { } noteEntry)
@@ -1303,8 +1303,8 @@ internal partial class OpenXmlReader : IMiniExcelReader
                 ?.Where(c => !refCells.Contains(c.Attribute("ref")?.Value))
                 .Select(c => new NoteComment
                 {
-                    Id = Guid.Parse(c.Attribute(ns14R + "uid")!.Value.Trim('{', '}')),
-                    Author = authors?.ElementAtOrDefault(int.Parse(c.Attribute("authorId")!.Value)),
+                    Id = Guid.TryParse(c.Attribute(ns14R + "uid")?.Value.Trim('{', '}'), out var noteId) ? noteId : Guid.Empty,
+                    Author = int.TryParse(c.Attribute("authorId")?.Value, out var authorId) ? authors?.ElementAtOrDefault(authorId) : "",
                     ReferenceCell =  c.Attribute("ref")?.Value,
                     Text = string.Join("", GetTextFromComment(c))
                 })
@@ -1316,7 +1316,7 @@ internal partial class OpenXmlReader : IMiniExcelReader
         IEnumerable<string?> GetTextFromComment(XElement? comment)
         {
             return comment?.Element(nsMain + "text") is { } textElement
-                ? textElement.Elements(nsMain + "r").Select(r => r.Element(nsMain + "t")?.Value)
+                ? textElement.Descendants(nsMain + "t").Select(t => t.Value)
                 : [];
         }
     }

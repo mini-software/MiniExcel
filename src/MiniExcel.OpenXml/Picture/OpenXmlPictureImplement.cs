@@ -35,7 +35,7 @@ internal static partial class MiniExcelPictureImplement
         {
             var sheetName = sheetGroup.Key;
             var sheetEnt = sheetEntries.Find(x => x.Name == sheetName) ?? sheetEntries[0];
-            var sheetXmlName = sheetEnt.Path.Split('/').Last().Split('.')[0];
+            var sheetXmlName = !string.IsNullOrEmpty(sheetEnt.Path) ? sheetEnt.Path.Split('/')[^1].Split('.')[0] : null;
             var sheetPath = $"xl/worksheets/{sheetXmlName}.xml";
 
             var sheetEntry = archive.GetEntry(sheetPath);

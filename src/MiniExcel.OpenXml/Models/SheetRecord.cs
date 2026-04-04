@@ -6,7 +6,7 @@ internal sealed class SheetRecord(string name, string state, uint id, string rid
     public string State { get; set; } = state;
     public uint Id { get; } = id;
     public string Rid { get; set; } = rid;
-    public string Path { get; set; }
+    public string? Path { get; set; }
     public bool Active { get; } = active;
 
     public SheetInfo ToSheetInfo(uint index)

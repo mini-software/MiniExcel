@@ -1,4 +1,3 @@
-using System.Dynamic;
 using MiniExcelLib.OpenXml;
 using OpenXmlReader = MiniExcelLib.OpenXml.OpenXmlReader;
 
@@ -16,11 +15,14 @@ public sealed partial class OpenXmlImporter
         string startCell = "A1", bool treatHeaderAsData = false, OpenXmlConfiguration? configuration = null,
         [EnumeratorCancellation] CancellationToken cancellationToken = default) where T : class, new()
     {
+#if NET8_0_OR_GREATER
+        var stream = FileHelper.OpenSharedRead(path);
+        await using var disposableStream = stream.ConfigureAwait(false); 
+#else
         using var stream = FileHelper.OpenSharedRead(path);
-
+#endif
         var query = QueryAsync<T>(stream, sheetName, startCell, treatHeaderAsData, configuration, cancellationToken);
         
-        //Foreach yield return twice reason : https://stackoverflow.com/questions/66791982/ienumerable-extract-code-lazy-loading-show-stream-was-not-readable
         await foreach (var item in query.ConfigureAwait(false))
             yield return item; 
     }
@@ -40,7 +42,13 @@ public sealed partial class OpenXmlImporter
         string? sheetName = null, string startCell = "A1", OpenXmlConfiguration? configuration = null,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
+#if NET8_0_OR_GREATER
+        var stream = FileHelper.OpenSharedRead(path);
+        await using var disposableStream = stream.ConfigureAwait(false); 
+#else
         using var stream = FileHelper.OpenSharedRead(path);
+#endif
+
         await foreach (var item in QueryAsync(stream, useHeaderRow, sheetName, startCell, configuration, cancellationToken).ConfigureAwait(false))
             yield return item;
     }
@@ -72,7 +80,12 @@ public sealed partial class OpenXmlImporter
         string? sheetName = null, string startCell = "A1", string endCell = "", OpenXmlConfiguration? configuration = null,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
+#if NET8_0_OR_GREATER
+        var stream = FileHelper.OpenSharedRead(path);
+        await using var disposableStream = stream.ConfigureAwait(false); 
+#else
         using var stream = FileHelper.OpenSharedRead(path);
+#endif
         await foreach (var item in QueryRangeAsync(stream, useHeaderRow, sheetName, startCell, endCell, configuration, cancellationToken).ConfigureAwait(false))
             yield return item;
     }
@@ -93,7 +106,12 @@ public sealed partial class OpenXmlImporter
         int? endColumnIndex = null, OpenXmlConfiguration? configuration = null,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
+#if NET8_0_OR_GREATER
+        var stream = FileHelper.OpenSharedRead(path);
+        await using var disposableStream = stream.ConfigureAwait(false); 
+#else
         using var stream = FileHelper.OpenSharedRead(path);
+#endif
         await foreach (var item in QueryRangeAsync(stream, useHeaderRow, sheetName, startRowIndex, startColumnIndex, endRowIndex, endColumnIndex, configuration, cancellationToken).ConfigureAwait(false))
             yield return item;
     }
@@ -121,7 +139,12 @@ public sealed partial class OpenXmlImporter
         string? sheetName = null, string startCell = "A1", OpenXmlConfiguration? configuration = null,
         CancellationToken cancellationToken = default)
     {
+#if NET8_0_OR_GREATER
+        var stream = FileHelper.OpenSharedRead(path);
+        await using var disposableStream = stream.ConfigureAwait(false); 
+#else
         using var stream = FileHelper.OpenSharedRead(path);
+#endif
         return await QueryAsDataTableAsync(stream, useHeaderRow, sheetName, startCell, configuration, cancellationToken).ConfigureAwait(false);
     }
 
@@ -133,7 +156,6 @@ public sealed partial class OpenXmlImporter
         string? sheetName = null, string startCell = "A1", OpenXmlConfiguration? configuration = null,
         CancellationToken cancellationToken = default)
     {
-        /*Issue #279*/
         sheetName ??= (await GetSheetNamesAsync(stream, configuration, cancellationToken).ConfigureAwait(false)).First();
 
         var dt = new DataTable(sheetName);
@@ -187,7 +209,12 @@ public sealed partial class OpenXmlImporter
     [CreateSyncVersion]
     public async Task<List<string>> GetSheetNamesAsync(string path, OpenXmlConfiguration? config = null, CancellationToken cancellationToken = default)
     {
+#if NET8_0_OR_GREATER
+        var stream = FileHelper.OpenSharedRead(path);
+        await using var disposableStream = stream.ConfigureAwait(false); 
+#else
         using var stream = FileHelper.OpenSharedRead(path);
+#endif
         return await GetSheetNamesAsync(stream, config, cancellationToken).ConfigureAwait(false);
     }
 
@@ -207,7 +234,12 @@ public sealed partial class OpenXmlImporter
     [CreateSyncVersion]
     public async Task<List<SheetInfo>> GetSheetInformationsAsync(string path, OpenXmlConfiguration? config = null, CancellationToken cancellationToken = default)
     {
+#if NET8_0_OR_GREATER
+        var stream = FileHelper.OpenSharedRead(path);
+        await using var disposableStream = stream.ConfigureAwait(false); 
+#else
         using var stream = FileHelper.OpenSharedRead(path);
+#endif
         return await GetSheetInformationsAsync(stream, config, cancellationToken).ConfigureAwait(false);
     }
 
@@ -226,7 +258,12 @@ public sealed partial class OpenXmlImporter
     [CreateSyncVersion]
     public async Task<IList<ExcelRange>> GetSheetDimensionsAsync(string path, CancellationToken cancellationToken = default)
     {
+#if NET8_0_OR_GREATER
+        var stream = FileHelper.OpenSharedRead(path);
+        await using var disposableStream = stream.ConfigureAwait(false); 
+#else
         using var stream = FileHelper.OpenSharedRead(path);
+#endif
         return await GetSheetDimensionsAsync(stream, cancellationToken).ConfigureAwait(false);
     }
 
@@ -242,7 +279,12 @@ public sealed partial class OpenXmlImporter
         string? sheetName = null, string startCell = "A1", OpenXmlConfiguration? configuration = null,
         CancellationToken cancellationToken = default)
     {
+#if NET8_0_OR_GREATER
+        var stream = FileHelper.OpenSharedRead(path);
+        await using var disposableStream = stream.ConfigureAwait(false); 
+#else
         using var stream = FileHelper.OpenSharedRead(path);
+#endif
         return await GetColumnNamesAsync(stream, useHeaderRow, sheetName, startCell, configuration, cancellationToken).ConfigureAwait(false);
     }
 
@@ -258,6 +300,25 @@ public sealed partial class OpenXmlImporter
             return (enumerator.Current as IDictionary<string, object?>)?.Keys ?? [];
 
         return [];
+    }
+
+    [CreateSyncVersion]
+    public async Task<CommentResultSet> RetrieveCommentsAsync(string path, string? sheetName, CancellationToken cancellationToken = default)
+    {
+#if NET8_0_OR_GREATER
+        var stream = FileHelper.OpenSharedRead(path);
+        await using var disposableStream = stream.ConfigureAwait(false); 
+#else
+        using var stream = FileHelper.OpenSharedRead(path);
+#endif
+        return await RetrieveCommentsAsync(stream, sheetName, cancellationToken).ConfigureAwait(false);
+    }
+
+    [CreateSyncVersion]
+    public async Task<CommentResultSet> RetrieveCommentsAsync(Stream stream, string? sheetName, CancellationToken cancellationToken = default)
+    {
+        using var reader = await OpenXmlReader.CreateAsync(stream, null, cancellationToken).ConfigureAwait(false);
+        return await reader.ReadCommentsAsync(sheetName, cancellationToken).ConfigureAwait(false);
     }
 
     #endregion

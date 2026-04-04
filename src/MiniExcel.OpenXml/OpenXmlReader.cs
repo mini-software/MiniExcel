@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Xml.Linq;
 using MiniExcelLib.Core;
 using MiniExcelLib.OpenXml.Constants;
 using MiniExcelLib.OpenXml.Styles;
@@ -9,8 +10,8 @@ namespace MiniExcelLib.OpenXml;
 
 internal partial class OpenXmlReader : IMiniExcelReader
 {
-    private static readonly string[] Ns = [Schemas.SpreadsheetmlXmlns, Schemas.SpreadsheetmlXmlStrictns];
-    private static readonly string[] RelationshiopNs = [Schemas.SpreadsheetmlXmlRelationshipns, Schemas.SpreadsheetmlXmlStrictRelationshipns];
+    private static readonly string[] Ns = [Schemas.SpreadsheetmlXmlNs, Schemas.SpreadsheetmlXmlStrictNs];
+    private static readonly string[] RelationshiopNs = [Schemas.SpreadsheetmlXmlRelationships, Schemas.SpreadsheetmlXmlStrictRelationships];
     private readonly OpenXmlConfiguration _config;
     
     private List<SheetRecord>? _sheetRecords;
@@ -90,9 +91,7 @@ internal partial class OpenXmlReader : IMiniExcelReader
     {
         var query = QueryRangeAsync(false, sheetName, startCell, endCell, cancellationToken);
         if (!CellReferenceConverter.TryParseCellReference(startCell, out _, out var rowOffset))
-        {
             throw new InvalidDataException($"Value {startCell} is not a valid cell reference.");
-        }
         
         return MiniExcelMapper.MapQueryAsync<T>(query, rowOffset, treatHeaderAsData, _config.TrimColumnNames, _config, XmlHelper.DecodeString, cancellationToken);
     }
@@ -178,7 +177,11 @@ internal partial class OpenXmlReader : IMiniExcelReader
         }
 
 #if NET10_0_OR_GREATER
-        using var sheetStream = await sheetEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
+        var sheetStream = await sheetEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
+        await using var disposableSheetStream = sheetStream.ConfigureAwait(false);
+#elif !NETSTANDARD2_0
+        var sheetStream = sheetEntry.Open();
+        await using var disposableSheetStream = sheetStream.ConfigureAwait(false);
 #else
         using var sheetStream = sheetEntry.Open();
 #endif
@@ -373,7 +376,7 @@ internal partial class OpenXmlReader : IMiniExcelReader
             var s = _sheetRecords[0];
             sheetEntry = sheets.Single(w => w.FullName == $"xl/{s.Path}" || 
                                             w.FullName == $"/xl/{s.Path}" || 
-                                            w.FullName.TrimStart('/') == s.Path.TrimStart('/'));
+                                            w.FullName.TrimStart('/') == s.Path?.TrimStart('/'));
         }
         else
         {
@@ -425,7 +428,11 @@ internal partial class OpenXmlReader : IMiniExcelReader
         
         var idx = 0;
 #if NET10_0_OR_GREATER
-        using var stream = await sharedStringsEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
+        var stream = await sharedStringsEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
+        await using var disposableStream = stream.ConfigureAwait(false);
+#elif !NETSTANDARD2_0
+        var stream = sharedStringsEntry.Open();
+        await using var disposableStream = stream.ConfigureAwait(false);
 #else
         using var stream = sharedStringsEntry.Open();
 #endif
@@ -453,7 +460,7 @@ internal partial class OpenXmlReader : IMiniExcelReader
     }
 
     [CreateSyncVersion]
-    internal static async IAsyncEnumerable<SheetRecord> ReadWorkbookAsync(ReadOnlyCollection<ZipArchiveEntry> entries, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    private static async IAsyncEnumerable<SheetRecord> ReadWorkbookAsync(ReadOnlyCollection<ZipArchiveEntry> entries, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         var xmlSettings = XmlReaderHelper.GetXmlReaderSettings(
 #if SYNC_ONLY
@@ -465,7 +472,11 @@ internal partial class OpenXmlReader : IMiniExcelReader
 
         var entry = entries.Single(w => w.FullName == "xl/workbook.xml");
 #if NET10_0_OR_GREATER
-        using var stream = await entry.OpenAsync(cancellationToken).ConfigureAwait(false);
+        var stream = await entry.OpenAsync(cancellationToken).ConfigureAwait(false);
+        await using var disposableStream = stream.ConfigureAwait(false);
+#elif !NETSTANDARD2_0
+        var stream = entry.Open();
+        await using var disposableStream = stream.ConfigureAwait(false);
 #else
         using var stream = entry.Open();
 #endif
@@ -561,20 +572,24 @@ internal partial class OpenXmlReader : IMiniExcelReader
         var entry = entries.Single(w => w.FullName == "xl/_rels/workbook.xml.rels");
         
 #if NET10_0_OR_GREATER
-        using var stream = await entry.OpenAsync(cancellationToken).ConfigureAwait(false);
+        var stream = await entry.OpenAsync(cancellationToken).ConfigureAwait(false);
+        await using var disposableStream = stream.ConfigureAwait(false);
+#elif !NETSTANDARD2_0
+        var stream = entry.Open();
+        await using var disposableStream = stream.ConfigureAwait(false);
 #else
         using var stream = entry.Open();
 #endif
         using var reader = XmlReader.Create(stream, xmlSettings);
         
-        if (!XmlReaderHelper.IsStartElement(reader, "Relationships", "http://schemas.openxmlformats.org/package/2006/relationships"))
+        if (!XmlReaderHelper.IsStartElement(reader, "Relationships", Schemas.OpenXmlPackageRelationships))
             return null;
         if (!await XmlReaderHelper.ReadFirstContentAsync(reader, cancellationToken).ConfigureAwait(false))
             return null;
 
         while (!reader.EOF)
         {
-            if (XmlReaderHelper.IsStartElement(reader, "Relationship", "http://schemas.openxmlformats.org/package/2006/relationships"))
+            if (XmlReaderHelper.IsStartElement(reader, "Relationship", Schemas.OpenXmlPackageRelationships))
             {
                 var rid = reader.GetAttribute("Id");
                 foreach (var sheet in sheetRecords.Where(sh => sh.Rid == rid))
@@ -766,11 +781,15 @@ internal partial class OpenXmlReader : IMiniExcelReader
             var withoutCr = false;
 
 #if NET10_0_OR_GREATER
-            using (var sheetStream = await sheet.OpenAsync(cancellationToken).ConfigureAwait(false))
+            var crSheetStream = await sheet.OpenAsync(cancellationToken).ConfigureAwait(false);
+            await using var disposableCrSheetStream = crSheetStream.ConfigureAwait(false);
+#elif !NETSTANDARD2_0
+            var crSheetStream = sheet.Open();
+            await using var disposableCrSheetStream = crSheetStream.ConfigureAwait(false);
 #else
-            using (var sheetStream = sheet.Open())
+            using var crSheetStream = sheet.Open();
 #endif
-            using (var reader = XmlReader.Create(sheetStream, xmlSettings))
+            using (var reader = XmlReader.Create(crSheetStream, xmlSettings))
             {
                 while (await reader.ReadAsync().ConfigureAwait(false))
                 {
@@ -818,7 +837,11 @@ internal partial class OpenXmlReader : IMiniExcelReader
             if (withoutCr)
             {
 #if NET10_0_OR_GREATER
-                using var sheetStream = await sheet.OpenAsync(cancellationToken).ConfigureAwait(false);
+                var sheetStream = await sheet.OpenAsync(cancellationToken).ConfigureAwait(false);
+                await using var disposableSheetStream = sheetStream.ConfigureAwait(false);
+#elif !NETSTANDARD2_0
+                var sheetStream = sheet.Open();
+                await using var disposableSheetStream = sheetStream.ConfigureAwait(false);
 #else
                 using var sheetStream = sheet.Open();
 #endif
@@ -915,12 +938,17 @@ internal partial class OpenXmlReader : IMiniExcelReader
         bool withoutCr = false;
         int maxRowIndex = -1;
         int maxColumnIndex = -1;
+
 #if NET10_0_OR_GREATER
-        using (var sheetStream = await sheetEntry.OpenAsync(cancellationToken).ConfigureAwait(false))
+        var crSheetStream = await sheetEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
+        await using var disposableCrSheetStream  = crSheetStream.ConfigureAwait(false);
+#elif !NETSTANDARD2_0
+       var crSheetStream = sheetEntry.Open();
+       await using var disposableCrSheetStream  = crSheetStream.ConfigureAwait(false);
 #else
-        using (var sheetStream = sheetEntry.Open())
+        using var crSheetStream = sheetEntry.Open();
 #endif
-        using (var reader = XmlReader.Create(sheetStream, xmlSettings))
+        using (var reader = XmlReader.Create(crSheetStream, xmlSettings))
         {
             while (await reader.ReadAsync()
 #if NET6_0_OR_GREATER
@@ -970,7 +998,11 @@ internal partial class OpenXmlReader : IMiniExcelReader
         if (withoutCr)
         {
 #if NET10_0_OR_GREATER
-            using var sheetStream = await sheetEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
+            var sheetStream = await sheetEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
+            await using var disposableSheetStream = sheetStream.ConfigureAwait(false);
+#elif !NETSTANDARD2_0
+            var sheetStream = sheetEntry.Open();
+            await using var disposableSheetStream = sheetStream.ConfigureAwait(false);
 #else
             using var sheetStream = sheetEntry.Open();
 #endif
@@ -978,6 +1010,7 @@ internal partial class OpenXmlReader : IMiniExcelReader
             
             if (!XmlReaderHelper.IsStartElement(reader, "worksheet", Ns))
                 return new GetMaxRowColumnIndexResult(false);
+
             if (!await XmlReaderHelper.ReadFirstContentAsync(reader, cancellationToken).ConfigureAwait(false))
                 return new GetMaxRowColumnIndexResult(false);
 
@@ -1048,7 +1081,11 @@ internal partial class OpenXmlReader : IMiniExcelReader
         var mergeCells = new MergeCells();
 
 #if NET10_0_OR_GREATER
-        using var sheetStream = await sheetEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
+        var sheetStream = await sheetEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
+        await  using var disposableSheetStream = sheetStream.ConfigureAwait(false);
+#elif !NETSTANDARD2_0
+        var sheetStream = sheetEntry.Open();
+        await using var disposableSheetStream = sheetStream.ConfigureAwait(false);
 #else
         using var sheetStream = sheetEntry.Open();
 #endif
@@ -1104,9 +1141,184 @@ internal partial class OpenXmlReader : IMiniExcelReader
         return true;
     }
 
-    ~OpenXmlReader()
+    [CreateSyncVersion]
+    internal async Task<CommentResultSet> ReadCommentsAsync(string? sheetName, CancellationToken cancellationToken = default)
     {
-        Dispose(false);
+        if (string.IsNullOrEmpty(sheetName))
+            throw new ArgumentException("sheetName cannot be null or empty", nameof(sheetName));
+
+        XNamespace nsRel = Schemas.OpenXmlPackageRelationships;
+        XNamespace ns18Tc = Schemas.SpreadsheetmlXmlX18Tc;
+        XNamespace nsMain = Schemas.SpreadsheetmlXmlNs;
+        XNamespace ns14R = Schemas.SpreadsheetmlXmlX14R;
+        
+        SetWorkbookRels(Archive.EntryCollection);
+        var sheetRecord = _sheetRecords?.SingleOrDefault(s => s.Name.Equals(sheetName, StringComparison.CurrentCultureIgnoreCase));
+        if (sheetRecord?.Path?.Split('/')[^1] is not { } sheetFile)
+            throw new InvalidDataException($"There is no sheet named {sheetName}");
+        
+        List<Author> people = [];
+        if (Archive.GetEntry("xl/persons/person.xml") is { } persons)
+        {
+#if NET10_0_OR_GREATER
+            var personStream = await persons.OpenAsync(cancellationToken).ConfigureAwait(false);
+            await using var disposablePersonStream = personStream.ConfigureAwait(false);  
+#elif !NETSTANDARD2_0
+            var personStream = persons.Open();
+            await using var disposablePersonStream = personStream.ConfigureAwait(false);
+#else
+            using var personStream = persons.Open();
+#endif
+            
+#if NETSTANDARD2_0
+            var personDoc = XDocument.Load(personStream, LoadOptions.None);
+#else
+            var personDoc = await XDocument.LoadAsync(personStream, LoadOptions.None, cancellationToken).ConfigureAwait(false);
+#endif
+            var personElements = personDoc.Root?.Elements(ns18Tc + "person");
+            people = personElements
+                ?.Select(p => new Author
+                {
+                    Id = Guid.Parse(p.Attribute("id")!.Value),
+                    DisplayName = p.Attribute("displayName")?.Value is { } name and not "" ? name : "???",
+                    ProviderId = p.Attribute("providerId")?.Value,
+                })
+                .ToList() ?? [];
+        }
+
+        if (Archive.GetEntry($"xl/worksheets/_rels/{sheetFile}.rels") is not { } rel)
+            return new CommentResultSet(sheetName, [], []);
+
+#if NET10_0_OR_GREATER
+        var stream = await rel.OpenAsync(cancellationToken).ConfigureAwait(false);
+        await using var disposableStream = stream.ConfigureAwait(false);  
+#elif !NETSTANDARD2_0
+        var stream = rel.Open();
+        await using var disposableStream = stream.ConfigureAwait(false);
+#else
+        using var stream = rel.Open();
+#endif
+        
+#if NETSTANDARD2_0
+        var relDoc = XDocument.Load(stream, LoadOptions.None);
+#else
+        var relDoc = await XDocument.LoadAsync(stream, LoadOptions.None, cancellationToken).ConfigureAwait(false);
+#endif
+
+        var threadedCommentRels = relDoc.Root?.Elements(nsRel + "Relationship");
+        var threadedCommentsElement = threadedCommentRels?.FirstOrDefault(x => x.Attribute("Type")?.Value == Schemas.SpreadsheetmlXmlThreadedComment);
+        var threadedCommentsTarget = threadedCommentsElement?.Attribute("Target");
+        var threadedCommentsPath = threadedCommentsTarget?.Value.TrimStart('.', '/');
+
+        var noteRels = relDoc.Root?.Elements(nsRel + "Relationship");
+        var notesElement = noteRels?.FirstOrDefault(x => x.Attribute("Type")?.Value == Schemas.SpreadsheetmlXmlComments);
+        var notesTarget = notesElement?.Attribute("Target");
+        var notesPath = notesTarget?.Value.TrimStart('.', '/');
+
+        List<ThreadedComment> commentThreads = [];
+        List<NoteComment> notes = [];
+        HashSet<string?> refCells = [];
+        if (Archive.GetEntry($"xl/{threadedCommentsPath}") is { } threadEntry)
+        {
+#if NET10_0_OR_GREATER
+            var threadEntryStream = await threadEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
+            await using var disposableThreadEntryStream = threadEntryStream.ConfigureAwait(false);
+#elif !NETSTANDARD2_0
+            var threadEntryStream = threadEntry.Open();
+            await using var disposableThreadEntryStream = threadEntryStream.ConfigureAwait(false);
+#else
+            using var threadEntryStream = threadEntry.Open();
+#endif
+
+#if NETSTANDARD2_0
+            var doc = XDocument.Load(threadEntryStream, LoadOptions.None);
+#else
+            var doc = await XDocument.LoadAsync(threadEntryStream, LoadOptions.None, cancellationToken).ConfigureAwait(false);
+#endif
+
+            var commentThreadElements = doc.Root?.Elements(ns18Tc + "threadedComment");
+            commentThreads = commentThreadElements
+                ?.Where(tc => tc.Attribute("parentId") is null)
+                .Select(tc => new ThreadedComment
+                {
+                    Id = Guid.Parse(tc.Attribute("id")!.Value.Trim('{', '}')),
+                    Author = people.FirstOrDefault(p => p.Id == (Guid.TryParse(tc.Attribute("personId")?.Value, out var person) ? person : Guid.Empty)),
+                    CreatedAt = DateTime.Parse(tc.Attribute("dT")!.Value, CultureInfo.InvariantCulture),
+                    ReferenceCell = tc.Attribute("ref")?.Value!,
+                    Text = tc.Value,
+                    Resolved = tc.Attribute("done")?.Value is not (null or "0")
+                })
+                .ToList() ?? [];
+
+            var replyElements = doc.Root?.Elements(ns18Tc + "threadedComment");
+            var replies = replyElements
+                ?.Where(tc => tc.Attribute("parentId") is not null)
+                .Select(tc => new ThreadedCommentReply
+                {
+                    Id = Guid.Parse(tc.Attribute("id")!.Value.Trim('{', '}')),
+                    ParentId = Guid.Parse(tc.Attribute("parentId")!.Value),
+                    Author = people.FirstOrDefault(p => p.Id == Guid.Parse(tc.Attribute("personId")!.Value)),
+                    CreatedAt = DateTime.Parse(tc.Attribute("dT")!.Value, CultureInfo.InvariantCulture),
+                    Text = tc.Value
+                })
+                .ToLookup(x => x.ParentId);
+
+            if (replies is not null)
+            {
+                foreach (var thread in commentThreads)
+                {
+                    thread.ThreadedComments = replies[thread.Id].ToList();
+                }
+            }
+
+            refCells = [..commentThreads.Select(x => x.ReferenceCell)];
+        }
+
+        if (Archive.GetEntry($"xl/{notesPath}") is { } noteEntry)
+        {
+#if NET10_0_OR_GREATER
+            var noteEntryStream = await noteEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
+            await using var disposableNoteEntryStream = noteEntryStream.ConfigureAwait(false);
+#elif !NETSTANDARD2_0
+            var noteEntryStream = noteEntry.Open();
+            await using var disposableNoteEntryStream = noteEntryStream.ConfigureAwait(false);
+#else
+            using var noteEntryStream = noteEntry.Open();
+#endif
+
+#if NETSTANDARD2_0
+            var doc = XDocument.Load(noteEntryStream, LoadOptions.None);
+#else
+            var doc = await XDocument.LoadAsync(noteEntryStream, LoadOptions.None, cancellationToken).ConfigureAwait(false);
+#endif
+
+            var authorElements = doc.Root?.Element(nsMain + "authors")?.Elements(nsMain + "author");
+            var authors = authorElements?.Select(a => a.Value).ToArray();
+
+            var commentElements = doc.Root
+                ?.Element(nsMain + "commentList")
+                ?.Elements(nsMain + "comment");
+
+            notes = commentElements
+                ?.Where(c => !refCells.Contains(c.Attribute("ref")?.Value))
+                .Select(c => new NoteComment
+                {
+                    Id = Guid.TryParse(c.Attribute(ns14R + "uid")?.Value.Trim('{', '}'), out var noteId) ? noteId : Guid.Empty,
+                    Author = int.TryParse(c.Attribute("authorId")?.Value, out var authorId) ? authors?.ElementAtOrDefault(authorId) : "",
+                    ReferenceCell =  c.Attribute("ref")?.Value,
+                    Text = string.Join("", GetTextFromComment(c))
+                })
+                .ToList() ?? [];
+        }
+
+        return new CommentResultSet(sheetName, commentThreads, notes);
+
+        IEnumerable<string?> GetTextFromComment(XElement? comment)
+        {
+            return comment?.Element(nsMain + "text") is { } textElement
+                ? textElement.Descendants(nsMain + "t").Select(t => t.Value)
+                : [];
+        }
     }
 
     /// <summary>
@@ -1140,7 +1352,11 @@ internal partial class OpenXmlReader : IMiniExcelReader
         };
 
 #if NET10_0_OR_GREATER
-        using var sheetStream = await sheetEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
+        var sheetStream = await sheetEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
+        await using var disposableSheetStream = sheetStream.ConfigureAwait(false);
+#elif !NETSTANDARD2_0
+        var sheetStream = sheetEntry.Open();
+        await using var disposableSheetStream = sheetStream.ConfigureAwait(false);
 #else
         using var sheetStream = sheetEntry.Open();
 #endif
@@ -1270,5 +1486,10 @@ internal partial class OpenXmlReader : IMiniExcelReader
 
             _disposed = true;
         }
+    }
+    
+    ~OpenXmlReader()
+    {
+        Dispose(false);
     }
 }

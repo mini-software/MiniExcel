@@ -342,7 +342,7 @@ var excelImporter = MiniExcel.Importers.GetOpenXmlImporter();
 var sheetNames = excelImporter.GetSheetNames(path);
 ```
 
-#### 6. Get the columns' names from an Excel sheet
+#### 6. Get the columns' names from an Excel worksheet
 
 ```csharp
 var excelImporter = MiniExcel.Importers.GetOpenXmlImporter();
@@ -350,9 +350,39 @@ var columns = excelImporter.GetColumnNames(path);
 
 // columns = [ColumnName1, ColumnName2, ...] when there is a header row
 // columns = ["A","B",...] otherwise
+
+```
+#### 7. Retrieve Comments from an Excel worksheet
+
+You can extract threaded comments and their replies from a worksheet using the `RetrieveComments` method:
+
+```csharp
+var excelImporter = MiniExcel.Importers.GetOpenXmlImporter(); 
+var comments = excelImporter.RetrieveComments(path, sheetName: "Sheet1").Comments;
+
+foreach (var comment in comments) 
+{
+    Console.WriteLine($"Cell: {comment.CellAddress}");
+    Console.WriteLine($"{comment.CreatedAt:yy-MM-dd HH:mm}, {comment.Author.DisplayName}: {comment.Text}");
+
+    foreach (var reply in comment.Replies)
+    {
+        Console.WriteLine($"{reply.CreatedAt:yy-MM-dd HH:mm}, {reply.Author.DisplayName}: {reply.Text}");    
+    }
+}
 ```
 
-#### 7. Casting dynamic rows to IDictionary
+You can similarly retrieve notes as well:
+```csharp
+var notes = excelImporter.RetrieveComments(path, sheetName: "Sheet1").Notes;
+foreach (var note in notes) 
+{
+    Console.WriteLine($"Cell: {note.CellAddress}");
+    Console.WriteLine($"{note.Author.DisplayName}: {note.Text}");
+}
+```
+
+#### 8. Casting dynamic rows to IDictionary
 
 Under the hood the dynamic objects returned in a query are implemented using `ExpandoObject`,
 making it possible to cast them to `IDictionary<string,object>`:
@@ -370,7 +400,7 @@ foreach(IDictionary<string,object> row in excelImporter.Query(path))
 }
 ```
 
-#### 8. Query Excel sheet as a DataTable
+#### 9. Query Excel worksheet as a DataTable
 
 This is not recommended, as `DataTable` will forcibly load all data into memory, effectively losing the advantages MiniExcel offers.
 
@@ -379,7 +409,7 @@ var excelImporter = MiniExcel.Importers.GetOpenXmlImporter();
 var table = excelImporter.QueryAsDataTable(path);
 ```
 
-#### 9. Specify what cell to start reading data from
+#### 10. Specify what cell to start reading data from
 
 ```csharp
 var excelImporter = MiniExcel.Importers.GetOpenXmlImporter();
@@ -387,7 +417,7 @@ excelImporter.Query(path, startCell: "B3")
 ```
 ![image](https://user-images.githubusercontent.com/12729184/117260316-8593c400-ae81-11eb-9877-c087b7ac2b01.png)
 
-#### 10. Fill Merged Cells
+#### 11. Fill Merged Cells
 
 If the Excel sheet being queried contains merged cells it is possble to enable the option to fill every row with the merged value.
 
@@ -410,7 +440,7 @@ Filling of cells with variable width and height is also supported
 >Note: The performance will take a hit when enabling the feature.
 >This happens because in the OpenXml standard the `mergeCells` are indicated at the bottom of the file, which leads to the need of reading the whole sheet twice.
 
-#### 11. Big files and disk-based cache
+#### 12. Big files and disk-based cache
 
 If the SharedStrings file size exceeds 5 MB, MiniExcel will default to use a local disk cache.
 E.g: on the file [10x100000.xlsx](https://github.com/MiniExcel/MiniExcel/files/8403819/NotDuplicateSharedStrings_10x100000.xlsx) (one million rows of data), when disabling the disk cache the maximum memory usage is 195 MB, but with disk cache enabled only 65 MB of memory are used. 

@@ -18,7 +18,7 @@ internal class DataReaderWriteAdapter(IDataReader reader, MiniExcelBaseConfigura
         {
             var columnName = _reader.GetName(i);
             if (!_configuration.DynamicColumnFirst || 
-                _configuration.DynamicColumns.Any(d => string.Equals(d.Key, columnName, StringComparison.OrdinalIgnoreCase)))
+                _configuration.DynamicColumns?.Any(d => string.Equals(d.Key, columnName, StringComparison.OrdinalIgnoreCase)) is true)
             {
                 var map = ColumnMappingsProvider.GetColumnMappingFromDynamicConfiguration(columnName, _configuration);
                 mappings.Add(map);

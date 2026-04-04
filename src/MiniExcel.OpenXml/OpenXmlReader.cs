@@ -1243,9 +1243,9 @@ internal partial class OpenXmlReader : IMiniExcelReader
                 {
                     Id = Guid.Parse(tc.Attribute("id")!.Value.Trim('{', '}')),
                     Author = people.FirstOrDefault(p => p.Id == (Guid.TryParse(tc.Attribute("personId")?.Value, out var person) ? person : Guid.Empty)),
-                    CreationTime = DateTime.Parse(tc.Attribute("dT")!.Value, CultureInfo.InvariantCulture),
+                    CreatedAt = DateTime.Parse(tc.Attribute("dT")!.Value, CultureInfo.InvariantCulture),
                     ReferenceCell = tc.Attribute("ref")?.Value!,
-                    FirstMessage = tc.Value,
+                    Text = tc.Value,
                     Resolved = tc.Attribute("done")?.Value is not (null or "0")
                 })
                 .ToList() ?? [];
@@ -1258,8 +1258,8 @@ internal partial class OpenXmlReader : IMiniExcelReader
                     Id = Guid.Parse(tc.Attribute("id")!.Value.Trim('{', '}')),
                     ParentId = Guid.Parse(tc.Attribute("parentId")!.Value),
                     Author = people.FirstOrDefault(p => p.Id == Guid.Parse(tc.Attribute("personId")!.Value)),
-                    ReplyTime = DateTime.Parse(tc.Attribute("dT")!.Value, CultureInfo.InvariantCulture),
-                    ReplyText = tc.Value
+                    CreatedAt = DateTime.Parse(tc.Attribute("dT")!.Value, CultureInfo.InvariantCulture),
+                    Text = tc.Value
                 })
                 .ToLookup(x => x.ParentId);
 

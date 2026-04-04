@@ -16,9 +16,9 @@ public class CommentsRetrievalTests
         Assert.Equal(2, commentSet.Comments.Count);
         
         Assert.Equal("B3", firstComment.ReferenceCell);
-        Assert.Equal(new DateTime(2026, 3, 21, 12, 7, 24), firstComment.CreationTime);
+        Assert.Equal(new DateTime(2026, 3, 21, 12, 7, 24), firstComment.CreatedAt);
         Assert.Equal(new Guid("8d44beaf-9259-4d6a-8559-58427a76727b"), firstComment.Id);
-        Assert.Equal("this is a comment", firstComment.FirstMessage);
+        Assert.Equal("this is a comment", firstComment.Text);
         Assert.Equal(new Guid("cb8b42e9-e059-4d6b-b054-b1437d6cf7cd"), firstComment.Author?.Id);
         Assert.Equal("John Doe", firstComment.Author?.DisplayName);
         Assert.Equal("google-sheets", firstComment.Author?.ProviderId);
@@ -27,25 +27,25 @@ public class CommentsRetrievalTests
 
         Assert.Equal(new Guid("dfb1d4cd-7f1f-42ae-9f61-330f03f0b9ad"), firstComment.Replies[0].Id);
         Assert.Equal(new Guid("8d44beaf-9259-4d6a-8559-58427a76727b"), firstComment.Replies[0].ParentId);
-        Assert.Equal(new DateTime(2026, 3, 21, 21, 17, 45), firstComment.Replies[0].ReplyTime);
+        Assert.Equal(new DateTime(2026, 3, 21, 21, 17, 45), firstComment.Replies[0].CreatedAt);
         Assert.Equal("Mary Sue", firstComment.Replies[0].Author?.DisplayName);
-        Assert.Equal("this is a reply", firstComment.Replies[0].ReplyText);
+        Assert.Equal("this is a reply", firstComment.Replies[0].Text);
         
         Assert.Equal(new Guid("d99bde2c-3df5-4300-a12e-2cc3b831c5dd"), firstComment.Replies[1].Id);
         Assert.Equal(new Guid("8d44beaf-9259-4d6a-8559-58427a76727b"), firstComment.Replies[1].ParentId);
-        Assert.Equal(new DateTime(2026, 3, 21, 21, 20, 3), firstComment.Replies[1].ReplyTime);
+        Assert.Equal(new DateTime(2026, 3, 21, 21, 20, 3), firstComment.Replies[1].CreatedAt);
         Assert.Equal("John Doe", firstComment.Replies[1].Author?.DisplayName);
-        Assert.Equal("this is another reply", firstComment.Replies[1].ReplyText);
+        Assert.Equal("this is another reply", firstComment.Replies[1].Text);
 
         Assert.Empty(secondComment.Replies);
         Assert.Equal("E2", secondComment.ReferenceCell);
         Assert.Equal(new Guid("0fdf4b1e-0d47-4717-9dd5-c9fc731b0ad6"), secondComment.Id);
-        Assert.Equal(new DateTime(2026, 3, 21, 21, 35, 17), secondComment.CreationTime);
+        Assert.Equal(new DateTime(2026, 3, 21, 21, 35, 17), secondComment.CreatedAt);
         Assert.Equal(new Guid("eaf7fda0-61e5-4210-9faa-da7028ea718a"), secondComment.Author?.Id);
         Assert.Equal("Mary Sue", secondComment.Author?.DisplayName);
         Assert.Equal("AD", secondComment.Author?.ProviderId);
         Assert.False(secondComment.Resolved);
-        Assert.Equal("this is a separate comment", secondComment.FirstMessage);
+        Assert.Equal("this is a separate comment", secondComment.Text);
         
         Assert.Equal(2, commentSet.Notes.Count);
         
@@ -71,12 +71,12 @@ public class CommentsRetrievalTests
         Assert.Empty(comment.Replies);
         Assert.Equal("A3", comment.ReferenceCell);
         Assert.Equal(new Guid("597d85de-079d-4129-8ebb-e6a9666c1c31"), comment.Id);
-        Assert.Equal(new DateTime(2026, 3, 21, 12, 8, 22), comment.CreationTime);
+        Assert.Equal(new DateTime(2026, 3, 21, 12, 8, 22), comment.CreatedAt);
         Assert.Equal(new Guid("cb8b42e9-e059-4d6b-b054-b1437d6cf7cd"), comment.Author?.Id);
         Assert.Equal("John Doe", comment.Author?.DisplayName);
         Assert.Equal("google-sheets", comment.Author?.ProviderId);
         Assert.False(comment.Resolved);
-        Assert.Equal("this is a comment on another sheet", comment.FirstMessage);
+        Assert.Equal("this is a comment on another sheet", comment.Text);
         
         Assert.Single(commentSet.Notes);
         var note = commentSet.Notes[0];
@@ -105,9 +105,9 @@ public class CommentsRetrievalTests
         Assert.Single(commentSet.Comments);
         Assert.Equal("sheet4", commentSet.SheetName, ignoreCase: true);
         Assert.Equal("D2", comment.ReferenceCell);
-        Assert.Equal(new DateTime(2026, 3, 21, 12, 34, 24), comment.CreationTime);
+        Assert.Equal(new DateTime(2026, 3, 21, 12, 34, 24), comment.CreatedAt);
         Assert.Equal(new Guid("cc210736-0fae-4525-aa57-df776a5548fa"), comment.Id);
-        Assert.Equal("this thread will be resolved", comment.FirstMessage);
+        Assert.Equal("this thread will be resolved", comment.Text);
         Assert.Equal(new Guid("cb8b42e9-e059-4d6b-b054-b1437d6cf7cd"), comment.Author?.Id);
         Assert.Equal("John Doe", comment.Author?.DisplayName);
         Assert.Equal("google-sheets", comment.Author?.ProviderId);
@@ -116,10 +116,10 @@ public class CommentsRetrievalTests
 
         Assert.Equal(new Guid("f4863ec3-3a84-453a-88a7-ed634a96dd18"), comment.Replies[0].Id);
         Assert.Equal(new Guid("cc210736-0fae-4525-aa57-df776a5548fa"), comment.Replies[0].ParentId);
-        Assert.Equal(new DateTime(2026, 3, 21, 21, 20, 55), comment.Replies[0].ReplyTime);
+        Assert.Equal(new DateTime(2026, 3, 21, 21, 20, 55), comment.Replies[0].CreatedAt);
         Assert.Equal(new Guid("eaf7fda0-61e5-4210-9faa-da7028ea718a"), comment.Replies[0].Author?.Id);
         Assert.Equal("Mary Sue", comment.Replies[0].Author?.DisplayName);
         Assert.Equal("AD", comment.Replies[0].Author?.ProviderId);
-        Assert.Equal("ok", comment.Replies[0].ReplyText);
+        Assert.Equal("ok", comment.Replies[0].Text);
     }
 }

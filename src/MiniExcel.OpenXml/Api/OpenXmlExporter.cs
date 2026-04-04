@@ -18,7 +18,12 @@ public sealed partial class OpenXmlExporter
             return rowsWritten.FirstOrDefault();
         }
 
+#if NET8_0_OR_GREATER
+        var stream = new FileStream(path, FileMode.Open, FileAccess.ReadWrite, FileShare.Read, 4096, FileOptions.SequentialScan);
+        await using var disposableStream = stream.ConfigureAwait(false); 
+#else
         using var stream = new FileStream(path, FileMode.Open, FileAccess.ReadWrite, FileShare.Read, 4096, FileOptions.SequentialScan);
+#endif
         return await InsertSheetAsync(stream, value, sheetName, printHeader, overwriteSheet, configuration, progress, cancellationToken).ConfigureAwait(false);
     }
 
@@ -46,8 +51,13 @@ public sealed partial class OpenXmlExporter
             throw new NotSupportedException("MiniExcel's Export does not support the .xlsm format");
         
         var filePath = path.EndsWith(".xlsx",  StringComparison.InvariantCultureIgnoreCase) ? path : $"{path}.xlsx" ;
-        
+
+#if NET8_0_OR_GREATER
+        var stream = overwriteFile ? File.Create(filePath) : new FileStream(filePath, FileMode.CreateNew);
+        await using var disposableStream = stream.ConfigureAwait(false); 
+#else
         using var stream = overwriteFile ? File.Create(filePath) : new FileStream(filePath, FileMode.CreateNew);
+#endif
         return await ExportAsync(stream, value, printHeader, sheetName, configuration, progress, cancellationToken).ConfigureAwait(false);
     }
 

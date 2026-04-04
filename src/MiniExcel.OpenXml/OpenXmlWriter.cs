@@ -23,18 +23,12 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
 
     private int _currentSheetIndex = 0;
 
-    private OpenXmlWriter(Stream stream, object? value, string? sheetName, IMiniExcelConfiguration? configuration, bool printHeader)
+    private OpenXmlWriter(Stream stream, ZipArchive archive, object? value, string? sheetName, OpenXmlConfiguration configuration, bool printHeader)
     {
         _stream = stream;
 
-        // A. Why ZipArchiveMode.Update and not ZipArchiveMode.Create?
-        // R. ZipArchiveEntry does not support seeking when Mode is Create.
-        _configuration = configuration as OpenXmlConfiguration ?? OpenXmlConfiguration.Default;
-        if (_configuration is { EnableAutoWidth: true, FastMode: false })
-            throw new InvalidOperationException("Auto width requires fast mode to be enabled");
-
-        var archiveMode = _configuration.FastMode ? ZipArchiveMode.Update : ZipArchiveMode.Create;
-        _archive = new ZipArchive(_stream, archiveMode, true, Utf8WithBom);
+        _configuration = configuration;
+        _archive = archive;
 
         _value = value;
         _printHeader = printHeader;
@@ -42,12 +36,24 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
     }
 
     [CreateSyncVersion]
-    internal static Task<OpenXmlWriter> CreateAsync(Stream stream, object? value, string? sheetName, bool printHeader, IMiniExcelConfiguration? configuration, CancellationToken cancellationToken = default)
+    internal static async ValueTask<OpenXmlWriter> CreateAsync(Stream stream, object? value, string? sheetName, bool printHeader, IMiniExcelConfiguration? configuration, CancellationToken cancellationToken = default)
     {
         ThrowHelper.ThrowIfInvalidSheetName(sheetName);
 
-        var writer = new OpenXmlWriter(stream, value, sheetName, configuration, printHeader);
-        return Task.FromResult(writer);
+        var conf = configuration as OpenXmlConfiguration ?? OpenXmlConfiguration.Default;
+        if (conf is { EnableAutoWidth: true, FastMode: false })
+            throw new InvalidOperationException("Auto width requires fast mode to be enabled");
+
+        // A. Why ZipArchiveMode.Update and not ZipArchiveMode.Create?
+        // R. ZipArchiveEntry does not support seeking when Mode is Create.
+        var archiveMode = conf.FastMode ? ZipArchiveMode.Update : ZipArchiveMode.Create;
+
+#if NET10_0_OR_GREATER
+        var archive = await ZipArchive.CreateAsync(stream, archiveMode, true, Utf8WithBom, cancellationToken).ConfigureAwait(false);
+#else
+        var archive = new ZipArchive(stream, archiveMode, true, Utf8WithBom);
+#endif
+        return new OpenXmlWriter(stream, archive, value, sheetName, conf, printHeader);
     }
 
     [CreateSyncVersion]

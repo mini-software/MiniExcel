@@ -6,7 +6,7 @@ namespace MiniExcelLib.OpenXml.Templates;
 
 internal partial class OpenXmlTemplate : IMiniExcelTemplate
 {
-#if NET7_0_OR_GREATER
+#if NET8_0_OR_GREATER
     [GeneratedRegex("(?<={{).*?(?=}})")] private static partial Regex ExpressionRegex();
     private static readonly Regex IsExpressionRegex = ExpressionRegex();
 #else
@@ -16,7 +16,7 @@ internal partial class OpenXmlTemplate : IMiniExcelTemplate
 
     private readonly Stream _outputFileStream;
     private readonly OpenXmlConfiguration _configuration;
-    private readonly IInputValueExtractor _inputValueExtractor;
+    private readonly OpenXmlValueExtractor _inputValueExtractor;
     private readonly StringBuilder _calcChainContent = new();
 
     static OpenXmlTemplate()
@@ -36,14 +36,24 @@ internal partial class OpenXmlTemplate : IMiniExcelTemplate
     [CreateSyncVersion]
     public async Task SaveAsByTemplateAsync(string templatePath, object value, CancellationToken cancellationToken = default)
     {
+#if NET8_0_OR_GREATER
+        var stream = File.Open(templatePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+        await using var disposableStream = stream.ConfigureAwait(false); 
+#else
         using var stream = File.Open(templatePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+#endif
         await SaveAsByTemplateAsync(stream, value, cancellationToken).ConfigureAwait(false);
     }
 
     [CreateSyncVersion]
     public async Task SaveAsByTemplateAsync(byte[] templateBytes, object value, CancellationToken cancellationToken = default)
     {
-        using Stream stream = new MemoryStream(templateBytes);
+#if NET8_0_OR_GREATER
+        var stream = new MemoryStream(templateBytes);
+        await using var disposableStream = stream.ConfigureAwait(false); 
+#else
+        using var stream = new MemoryStream(templateBytes);
+#endif
         await SaveAsByTemplateAsync(stream, value, cancellationToken).ConfigureAwait(false);
     }
 
@@ -54,8 +64,9 @@ internal partial class OpenXmlTemplate : IMiniExcelTemplate
             throw new ArgumentException("The template stream must be seekable");
         
         templateStream.Seek(0, SeekOrigin.Begin);
-        using var templateReader = await MiniExcelLib.OpenXml.OpenXmlReader.CreateAsync(templateStream, null, cancellationToken: cancellationToken).ConfigureAwait(false);
-        using var outputFileArchive = new OpenXmlZip(_outputFileStream, mode: ZipArchiveMode.Create, true, Encoding.UTF8, isUpdateMode: false);
+        using var templateReader = await OpenXmlReader.CreateAsync(templateStream, null, cancellationToken: cancellationToken).ConfigureAwait(false);
+        var outputFileArchive = await OpenXmlZip.CreateAsync(_outputFileStream, mode: ZipArchiveMode.Create, true, Encoding.UTF8, isUpdateMode: false, cancellationToken: cancellationToken).ConfigureAwait(false);
+        await using var disposableOutputFileArchive = outputFileArchive.ConfigureAwait(false);
         
         try
         {
@@ -72,39 +83,43 @@ internal partial class OpenXmlTemplate : IMiniExcelTemplate
             outputFileArchive.Entries.Add(entry.FullName.Replace('\\', '/'), entry);
         }
             
-        templateStream.Position = 0;
-        using var originalArchive = new ZipArchive(templateStream, ZipArchiveMode.Read);
         // Create a new zip file for writing
+        templateStream.Position = 0;
+#if NET10_0_OR_GREATER
+        var originalArchive = await ZipArchive.CreateAsync(templateStream, ZipArchiveMode.Read, false, null, cancellationToken).ConfigureAwait(false);
+        await using var disposableArchive = originalArchive.ConfigureAwait(false); 
+#else
+        using var originalArchive = new ZipArchive(templateStream, ZipArchiveMode.Read);
+#endif
 
         // Iterate through each entry in the original archive
         foreach (var entry in originalArchive.Entries)
         {
-            if (entry.FullName.StartsWith("xl/worksheets/sheet", StringComparison.OrdinalIgnoreCase) ||
-                entry.FullName.StartsWith("/xl/worksheets/sheet", StringComparison.OrdinalIgnoreCase) ||
-                entry.FullName.Contains("xl/calcChain.xml")
-               )
+            var entryName = entry.FullName.TrimStart('/');
+            if (entryName.StartsWith("xl/worksheets/sheet", StringComparison.OrdinalIgnoreCase) || entryName.Equals("xl/calcChain.xml"))
                 continue;
                     
             // Create a new entry in the new archive with the same name
             var newEntry = outputFileArchive.ZipFile.CreateEntry(entry.FullName);
 
             // Copy the content of the original entry to the new entry
+#if NET8_0_OR_GREATER
 #if NET10_0_OR_GREATER
             var originalEntryStream = await entry.OpenAsync(cancellationToken).ConfigureAwait(false);
-            await using var disposableEntryStream = originalEntryStream.ConfigureAwait(false);
-#else
-            using var originalEntryStream = entry.Open();
-#endif
-            // Copy the content of the original entry to the new entry
-#if NET10_0_OR_GREATER
             var newEntryStream = await newEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
+#else
+            var originalEntryStream = entry.Open();
+            var newEntryStream = newEntry.Open();
+#endif
+            await using var disposableEntryStream = originalEntryStream.ConfigureAwait(false);
             await using var disposableNewEntryStream = newEntryStream.ConfigureAwait(false);
 #else
+            using var originalEntryStream = entry.Open();
             using var newEntryStream = newEntry.Open();
 #endif
 
             await originalEntryStream.CopyToAsync(newEntryStream
-#if NETCOREAPP2_1_OR_GREATER
+#if NET8_0_OR_GREATER
                 , cancellationToken
 #endif
             ).ConfigureAwait(false);
@@ -116,9 +131,9 @@ internal partial class OpenXmlTemplate : IMiniExcelTemplate
 
         //read all xlsx sheets
         var templateSheets = templateReader.Archive.ZipFile.Entries
-            .Where<ZipArchiveEntry>(entry =>
-                entry.FullName.StartsWith("xl/worksheets/sheet", StringComparison.OrdinalIgnoreCase) ||
-                entry.FullName.StartsWith("/xl/worksheets/sheet", StringComparison.OrdinalIgnoreCase));
+            .Where(entry => entry.FullName
+                .TrimStart('/')
+                .StartsWith("xl/worksheets/sheet", StringComparison.OrdinalIgnoreCase));
 
         int sheetIdx = 0;
         foreach (var templateSheet in templateSheets)
@@ -127,19 +142,17 @@ internal partial class OpenXmlTemplate : IMiniExcelTemplate
             _xRowInfos = [];
             _xMergeCellInfos = [];
             _newXMergeCellInfos = [];
-
-#if NET10_0_OR_GREATER
-            var templateSheetStream = await templateSheet.OpenAsync(cancellationToken).ConfigureAwait(false);
-#else
-            var templateSheetStream = templateSheet.Open();
-#endif
+            
             var templateFullName = templateSheet.FullName;
-
             var inputValues = _inputValueExtractor.ToValueDictionary(value);
             var outputZipEntry = outputFileArchive.ZipFile.CreateEntry(templateFullName);
 
+#if NET8_0_OR_GREATER
 #if NET10_0_OR_GREATER
             var outputZipSheetEntryStream = await outputZipEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
+#else
+            var outputZipSheetEntryStream = outputZipEntry.Open();
+#endif
             await using var disposableSheetEntryStream = outputZipSheetEntryStream.ConfigureAwait(false);
 #else
             using var outputZipSheetEntryStream = outputZipEntry.Open();
@@ -177,21 +190,23 @@ internal partial class OpenXmlTemplate : IMiniExcelTemplate
                     var newEntry = outputFileArchive.ZipFile.CreateEntry(entry.FullName);
 
                     // Copy the content of the original entry to the new entry
+#if NET8_0_OR_GREATER
 #if NET10_0_OR_GREATER
                     var originalEntryStream = await entry.OpenAsync(cancellationToken).ConfigureAwait(false);
+                    var newEntryStream = await newEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
+#else
+                    var originalEntryStream = entry.Open();
+                    var newEntryStream = newEntry.Open();
+#endif
                     await using var disposableEntryStream = originalEntryStream.ConfigureAwait(false);
+                    await using var disposableNewEntryStream = newEntryStream.ConfigureAwait(false);
 #else
                     using var originalEntryStream = entry.Open();
-#endif
-#if NET10_0_OR_GREATER
-                    var newEntryStream = await newEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
-                    await using  var disposableNewEntryStream = newEntryStream.ConfigureAwait(false);
-#else
                     using var newEntryStream = newEntry.Open();
 #endif
 
                     await originalEntryStream.CopyToAsync(newEntryStream
-#if NETCOREAPP2_1_OR_GREATER
+#if NET8_0_OR_GREATER
                         , cancellationToken
 #endif
                     ).ConfigureAwait(false);

@@ -4,10 +4,10 @@ using static MiniExcelLib.Core.Helpers.ImageHelper;
 
 namespace MiniExcelLib.OpenXml;
 
-internal partial class OpenXmlWriter : IMiniExcelWriter
+internal partial class OpenXmlWriter
 {
     private readonly Dictionary<string, ZipPackageInfo> _zipDictionary = [];
-    private Dictionary<string, string> _cellXfIdMap;
+    private Dictionary<string, string> _cellXfIdMap = [];
     
     private IEnumerable<Tuple<SheetDto, object?>> GetSheets()
     {

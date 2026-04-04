@@ -30,13 +30,14 @@ internal partial class OpenXmlTemplate
     private async Task MergeSameCellsImplAsync(Stream stream, CancellationToken cancellationToken = default)
     {
         await stream.CopyToAsync(_outputFileStream
-#if NETCOREAPP2_1_OR_GREATER
+#if NET8_0_OR_GREATER
             , cancellationToken
 #endif
         ).ConfigureAwait(false);
 
         using var reader = await OpenXmlReader.CreateAsync(_outputFileStream, null, cancellationToken: cancellationToken).ConfigureAwait(false);
-        using var archive = new OpenXmlZip(_outputFileStream, mode: ZipArchiveMode.Update, true, Encoding.UTF8);
+        var archive = await OpenXmlZip.CreateAsync(_outputFileStream, mode: ZipArchiveMode.Update, true, Encoding.UTF8, true, cancellationToken).ConfigureAwait(false);
+        await using  var disposableArchive = archive.ConfigureAwait(false);
 
         //read sharedString
         var sharedStrings = reader.SharedStrings;
@@ -63,9 +64,8 @@ internal partial class OpenXmlTemplate
 #endif
             await using var disposableSheetStream = sheetStream.ConfigureAwait(false);
 #endif
-            var fullName = sheet.FullName;
+            var entry = archive.ZipFile.CreateEntry(sheet.FullName);
 
-            var entry = archive.ZipFile.CreateEntry(fullName);
 #if NETSTANDARD2_0
             using var zipStream = entry.Open();
 #else
@@ -77,7 +77,6 @@ internal partial class OpenXmlTemplate
             await using var disposableZipStream = zipStream.ConfigureAwait(false);
 #endif
             await GenerateSheetXmlImplByUpdateModeAsync(sheet, zipStream, sheetStream, new Dictionary<string, object>(), sharedStrings, mergeCells: true, cancellationToken).ConfigureAwait(false);
-            //doc.Save(zipStream); //don't do it beacause: https://user-images.githubusercontent.com/12729184/114361127-61a5d100-9ba8-11eb-9bb9-34f076ee28a2.png
         }
     }
 }

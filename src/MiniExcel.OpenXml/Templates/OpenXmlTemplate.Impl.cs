@@ -8,11 +8,11 @@ internal partial class OpenXmlTemplate
 {
     private readonly List<string> _calcChainCellRefs = [];
     
-    private List<XRowInfo> _xRowInfos;
-    private Dictionary<string, XMergeCell> _xMergeCellInfos;
-    private List<XMergeCell> _newXMergeCellInfos;
+    private List<XRowInfo> _xRowInfos = [];
+    private Dictionary<string, XMergeCell> _xMergeCellInfos = [];
+    private List<XMergeCell> _newXMergeCellInfos = [];
 
-#if NET7_0_OR_GREATER
+#if NET8_0_OR_GREATER
     [GeneratedRegex("([A-Z]+)([0-9]+)")] private static partial Regex CellRegexImpl();
     private static readonly Regex CellRegex = CellRegexImpl();
     [GeneratedRegex(@"\{\{(.*?)\}\}")] private static partial Regex TemplateRegexImpl();
@@ -34,7 +34,7 @@ internal partial class OpenXmlTemplate
         var doc = new XmlDocument();
         doc.Load(sheetStream);
 
-#if NET5_0_OR_GREATER
+#if NET8_0_OR_GREATER
         await sheetStream.DisposeAsync().ConfigureAwait(false);
 #else
         sheetStream.Dispose();
@@ -62,7 +62,7 @@ internal partial class OpenXmlTemplate
             XmlResolver = null
         };
         
-#if NET5_0_OR_GREATER
+#if NET8_0_OR_GREATER
 #if NET10_0_OR_GREATER
         var newTemplateStream = await templateSheetZipEntry.OpenAsync().ConfigureAwait(false);
 #else
@@ -182,7 +182,7 @@ internal partial class OpenXmlTemplate
         for (var i = 0; i < conditionalFormatNodes?.Count; ++i)
         {
             var node = conditionalFormatNodes.Item(i);
-            node.ParentNode.RemoveChild(node);
+            node?.ParentNode?.RemoveChild(node);
         }
 
         var phoneticPr = doc.SelectSingleNode("/x:worksheet/x:phoneticPr", Ns);
@@ -190,7 +190,7 @@ internal partial class OpenXmlTemplate
         if (phoneticPr is not null)
         {
             phoneticPrXml = phoneticPr.OuterXml;
-            phoneticPr.ParentNode.RemoveChild(phoneticPr);
+            phoneticPr.ParentNode?.RemoveChild(phoneticPr);
         }
 
         // Extract autoFilter - must be written before mergeCells and phoneticPr per ECMA-376
@@ -199,23 +199,23 @@ internal partial class OpenXmlTemplate
         if (autoFilter is not null)
         {
             autoFilterXml = autoFilter.OuterXml;
-            autoFilter.ParentNode.RemoveChild(autoFilter);
+            autoFilter.ParentNode?.RemoveChild(autoFilter);
         }
 
-        var contents = doc.InnerXml.Split(new[] { $"<{prefix}sheetData>{{{{{{{{{{{{split}}}}}}}}}}}}</{prefix}sheetData>" }, StringSplitOptions.None);
-#if NETCOREAPP3_0_OR_GREATER
+        var contents = doc.InnerXml.Split([$"<{prefix}sheetData>{{{{{{{{{{{{split}}}}}}}}}}}}</{prefix}sheetData>"], StringSplitOptions.None);
+#if NET8_0_OR_GREATER
         var writer = new StreamWriter(outputFileStream, Encoding.UTF8);
         await using var disposableWriter =  writer.ConfigureAwait(false);
 #else
         using var writer = new StreamWriter(outputFileStream, Encoding.UTF8);
 #endif
         await writer.WriteAsync(contents[0]
-#if NET7_0_OR_GREATER
+#if NET8_0_OR_GREATER
             .AsMemory(), cancellationToken
 #endif
         ).ConfigureAwait(false);
         await writer.WriteAsync($"<{prefix}sheetData>"
-#if NET7_0_OR_GREATER
+#if NET8_0_OR_GREATER
             .AsMemory(), cancellationToken
 #endif
         ).ConfigureAwait(false); // prefix problem
@@ -282,7 +282,7 @@ internal partial class OpenXmlTemplate
             }
             else if (specialCellType == SpecialCellType.Endgroup)
             {
-                if (cellIEnumerableValuesIndex >= cellIEnumerableValues.Count - 1)
+                if (cellIEnumerableValuesIndex >= cellIEnumerableValues?.Count - 1)
                 {
                     groupingStarted = false;
                     groupStartRowIndex = 0;
@@ -312,7 +312,7 @@ internal partial class OpenXmlTemplate
 
             if (groupingStarted && !isCellIEnumerableValuesSet)
             {
-                cellIEnumerableValues = rowInfo.CellIlListValues ?? rowInfo.CellIEnumerableValues.Cast<object>().ToList();
+                cellIEnumerableValues = rowInfo.CellIlListValues ?? rowInfo.CellIEnumerableValues?.Cast<object>().ToList() ?? [];
                 isCellIEnumerableValuesSet = true;
             }
 
@@ -374,29 +374,20 @@ internal partial class OpenXmlTemplate
                 headerDiff = generateCellValuesContext.HeaderDiff;
                 prevHeader = generateCellValuesContext.PrevHeader;
                 newRowIndex = generateCellValuesContext.NewRowIndex;
-                isFirst = generateCellValuesContext.IsFirst;
-                iEnumerableIndex = generateCellValuesContext.EnumerableIndex;
-                currentHeader = generateCellValuesContext.CurrentHeader;
 
                 enumrowend = newRowIndex - 1;
 
                 var conditionalFormats = conditionalFormatRanges.Where(cfr => cfr.Ranges.Any(r => r.ContainsRow(originRowIndex)));
                 foreach (var conditionalFormat in conditionalFormats)
                 {
-                    var newConditionalFormat = conditionalFormat.Node.Clone();
-                    var sqref = newConditionalFormat.Attributes["sqref"];
+                    var newConditionalFormat = conditionalFormat.Node?.Clone();
+                    var sqref = newConditionalFormat?.Attributes?["sqref"];
                     var ranges = conditionalFormat.Ranges
                         .Where(r => r.ContainsRow(originRowIndex))
-                        .Select(r => new Range
-                        {
-                            StartColumn = r.StartColumn,
-                            StartRow = enumrowstart,
-                            EndColumn = r.EndColumn,
-                            EndRow = enumrowend
-                        })
+                        .Select(r => r with { StartRow = enumrowstart, EndRow = enumrowend })
                         .ToList();
 
-                    sqref.Value = string.Join(" ", ranges.Select(r => $"{CellReferenceConverter.GetAlphabeticalIndex(r.StartColumn)}{r.StartRow}:{CellReferenceConverter.GetAlphabeticalIndex(r.EndColumn)}{r.EndRow}"));
+                    sqref?.Value = string.Join(" ", ranges.Select(r => $"{CellReferenceConverter.GetAlphabeticalIndex(r.StartColumn)}{r.StartRow}:{CellReferenceConverter.GetAlphabeticalIndex(r.EndColumn)}{r.EndRow}"));
                     newConditionalFormatRanges.Remove(conditionalFormat);
                     newConditionalFormatRanges.Add(new ConditionalFormatRange
                     {
@@ -418,7 +409,7 @@ internal partial class OpenXmlTemplate
 
                 ProcessFormulas(rowXml, newRowIndex);
                 await writer.WriteAsync(CleanXml(rowXml, endPrefix).ToString()
-#if NET5_0_OR_GREATER
+#if NET8_0_OR_GREATER
                     .AsMemory(), cancellationToken
 #endif
                 ).ConfigureAwait(false);
@@ -441,7 +432,7 @@ internal partial class OpenXmlTemplate
         #endregion
 
         await writer.WriteAsync($"</{prefix}sheetData>"
-#if NET7_0_OR_GREATER
+#if NET8_0_OR_GREATER
             .AsMemory(), cancellationToken
 #endif
         ).ConfigureAwait(false);
@@ -452,7 +443,7 @@ internal partial class OpenXmlTemplate
         if (!string.IsNullOrEmpty(autoFilterXml))
         {
             await writer.WriteAsync(CleanXml(autoFilterXml, endPrefix)
-#if NET7_0_OR_GREATER
+#if NET8_0_OR_GREATER
                 .AsMemory(), cancellationToken
 #endif
             ).ConfigureAwait(false);
@@ -462,20 +453,20 @@ internal partial class OpenXmlTemplate
         if (_newXMergeCellInfos.Count != 0)
         {
             await writer.WriteAsync($"<{prefix}mergeCells count=\"{_newXMergeCellInfos.Count}\">"
-#if NET7_0_OR_GREATER
+#if NET8_0_OR_GREATER
                 .AsMemory(), cancellationToken
 #endif
             ).ConfigureAwait(false);
             foreach (var cell in _newXMergeCellInfos)
             {
                 await writer.WriteAsync(cell.ToXmlString(prefix)
-#if NET7_0_OR_GREATER
+#if NET8_0_OR_GREATER
                     .AsMemory(), cancellationToken
 #endif
                 ).ConfigureAwait(false);
             }
             await writer.WriteLineAsync($"</{prefix}mergeCells>"
-#if NET7_0_OR_GREATER
+#if NET8_0_OR_GREATER
                 .AsMemory(), cancellationToken
 #endif
             ).ConfigureAwait(false);
@@ -485,7 +476,7 @@ internal partial class OpenXmlTemplate
         if (!string.IsNullOrEmpty(phoneticPrXml))
         {
             await writer.WriteAsync(CleanXml(phoneticPrXml, endPrefix)
-#if NET7_0_OR_GREATER
+#if NET8_0_OR_GREATER
                 .AsMemory(), cancellationToken
 #endif
             ).ConfigureAwait(false);
@@ -494,15 +485,15 @@ internal partial class OpenXmlTemplate
         // 4. conditionalFormatting
         if (newConditionalFormatRanges.Count != 0)
         {
-            await writer.WriteAsync(CleanXml(string.Join(string.Empty, newConditionalFormatRanges.Select(cf => cf.Node.OuterXml)), endPrefix)
-#if NET7_0_OR_GREATER
+            await writer.WriteAsync(CleanXml(string.Join(string.Empty, newConditionalFormatRanges.Select(cf => cf.Node?.OuterXml)), endPrefix)
+#if NET8_0_OR_GREATER
                 .AsMemory(), cancellationToken
 #endif
             ).ConfigureAwait(false);
         }
 
         await writer.WriteAsync(contents[1]
-#if NET7_0_OR_GREATER
+#if NET8_0_OR_GREATER
                     .AsMemory(), cancellationToken
 #endif
         ).ConfigureAwait(false);
@@ -610,8 +601,7 @@ internal partial class OpenXmlTemplate
                         };
                     }
 
-                    var evaluation = EvaluateStatement(value, newLines[1], newLines[2]);
-                    if (evaluation)
+                    if (EvaluateStatement(value, newLines[1], newLines[2]))
                     {
                         newCellValue += lines[i + 1];
                         break;
@@ -755,7 +745,7 @@ internal partial class OpenXmlTemplate
             ProcessFormulas(rowXml, newRowIndex);
             var finalXml = CleanXml(rowXml, endPrefix).ToString();
             await writer.WriteAsync(finalXml
-#if NET7_0_OR_GREATER
+#if NET8_0_OR_GREATER
                 .AsMemory(), cancellationToken
 #endif
             ).ConfigureAwait(false);
@@ -785,9 +775,9 @@ internal partial class OpenXmlTemplate
             {
                 mergeBaseRowIndex++;
                 var newRow = row.Clone() as XmlElement;
-                newRow.SetAttribute("r", mergeBaseRowIndex.ToString());
+                newRow?.SetAttribute("r", mergeBaseRowIndex.ToString());
 
-                var cs = newRow.SelectNodes("x:c", Ns);
+                var cs = newRow?.SelectNodes("x:c", Ns);
                 // all v replace by empty
                 // TODO: remove c/v
                 foreach (XmlElement c in cs)
@@ -799,9 +789,9 @@ internal partial class OpenXmlTemplate
                     }
                 }
 
-                newRow.InnerXml = new StringBuilder(newRow.InnerXml).Replace("{{$rowindex}}", mergeBaseRowIndex.ToString()).ToString();
-                await writer.WriteAsync(CleanXml(newRow.OuterXml, endPrefix)
-#if NET7_0_OR_GREATER
+                newRow?.InnerXml = new StringBuilder(newRow.InnerXml).Replace("{{$rowindex}}", mergeBaseRowIndex.ToString()).ToString();
+                await writer.WriteAsync(CleanXml(newRow?.OuterXml, endPrefix)
+#if NET8_0_OR_GREATER
                     .AsMemory(), cancellationToken
 #endif
                 ).ConfigureAwait(false);
@@ -839,9 +829,9 @@ internal partial class OpenXmlTemplate
             .OrderBy(x => x.RowIndex)
             .ToList();
 
-        var mergeColumns = columns.Where(s => s.InnerText.Contains("@merge")).ToList();
-        var endMergeColumns = columns.Where(s => s.InnerText.Contains("@endmerge")).ToList();
-        var mergeLimitColumn = mergeColumns.FirstOrDefault(x => x.InnerText.Contains("@mergelimit"));
+        var mergeColumns = columns.Where(s => s.InnerText?.Contains("@merge") is true).ToList();
+        var endMergeColumns = columns.Where(s => s.InnerText?.Contains("@endmerge") is true).ToList();
+        var mergeLimitColumn = mergeColumns.FirstOrDefault(x => x.InnerText?.Contains("@mergelimit") is true);
 
         foreach (var mergeColumn in mergeColumns)
         {
@@ -949,8 +939,8 @@ internal partial class OpenXmlTemplate
         var row = d.FirstChild as XmlElement;
 
         // convert cells starting with '$=' into formulas
-        var cs = row.SelectNodes("x:c", Ns);
-        for (var ci = 0; ci < cs.Count; ci++)
+        var cs = row?.SelectNodes("x:c", Ns);
+        for (var ci = 0; ci < cs?.Count; ci++)
         {
             var c = cs.Item(ci) as XmlElement;
             if (c is null)
@@ -967,8 +957,8 @@ internal partial class OpenXmlTemplate
                 if (!v.InnerText.StartsWith("$="))
                     continue;
 
-                var fNode = c.OwnerDocument.CreateElement("f", Schemas.SpreadsheetmlXmlNs);
-                fNode.InnerText = v.InnerText[2..];
+                var fNode = c.OwnerDocument?.CreateElement("f", Schemas.SpreadsheetmlXmlNs);
+                fNode?.InnerText = v.InnerText[2..];
                 c.InsertBefore(fNode, v);
                 c.RemoveChild(v);
 
@@ -978,7 +968,7 @@ internal partial class OpenXmlTemplate
         }
 
         rowXml.Clear();
-        rowXml.Append(row.OuterXml);
+        rowXml.Append(row?.OuterXml);
     }
 
     private static string? ConvertToDateTimeString(PropertyInfo? propInfo, object cellValue)
@@ -992,7 +982,7 @@ internal partial class OpenXmlTemplate
     }
 
     //TODO: need to optimize
-    private static string CleanXml(string xml, string endPrefix) => CleanXml(new StringBuilder(xml), endPrefix).ToString();
+    private static string CleanXml(string? xml, string endPrefix) => CleanXml(new StringBuilder(xml), endPrefix).ToString();
     private static StringBuilder CleanXml(StringBuilder xml, string endPrefix) => xml
         .Replace("xmlns:x14ac=\"http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac\"", "")
         .Replace($"xmlns{endPrefix}=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"", "")
@@ -1021,14 +1011,17 @@ internal partial class OpenXmlTemplate
                 // Use the same prefix as the source element to handle namespaced documents (e.g., x:v -> x:is, x:t)
                 var prefix = v.Prefix;
                 c.RemoveChild(v);
+
                 var isNode = string.IsNullOrEmpty(prefix)
-                    ? c.OwnerDocument.CreateElement("is", Schemas.SpreadsheetmlXmlNs)
-                    : c.OwnerDocument.CreateElement(prefix, "is", Schemas.SpreadsheetmlXmlNs);
+                    ? c.OwnerDocument?.CreateElement("is", Schemas.SpreadsheetmlXmlNs)
+                    : c.OwnerDocument?.CreateElement(prefix, "is", Schemas.SpreadsheetmlXmlNs);
+
                 var tNode = string.IsNullOrEmpty(prefix)
-                    ? c.OwnerDocument.CreateElement("t", Schemas.SpreadsheetmlXmlNs)
-                    : c.OwnerDocument.CreateElement(prefix, "t", Schemas.SpreadsheetmlXmlNs);
-                tNode.InnerText = shared;
-                isNode.AppendChild(tNode);
+                    ? c.OwnerDocument?.CreateElement("t", Schemas.SpreadsheetmlXmlNs)
+                    : c.OwnerDocument?.CreateElement(prefix, "t", Schemas.SpreadsheetmlXmlNs);
+
+                tNode?.InnerText = shared;
+                isNode?.AppendChild(tNode);
                 c.AppendChild(isNode);
 
                 c.RemoveAttribute("t");
@@ -1053,26 +1046,31 @@ internal partial class OpenXmlTemplate
             {
                 var text = v.InnerText;
                 c.RemoveChild(v);
+
                 var isNode = string.IsNullOrEmpty(prefix)
-                    ? c.OwnerDocument.CreateElement("is", Schemas.SpreadsheetmlXmlNs)
-                    : c.OwnerDocument.CreateElement(prefix, "is", Schemas.SpreadsheetmlXmlNs);
+                    ? c.OwnerDocument?.CreateElement("is", Schemas.SpreadsheetmlXmlNs)
+                    : c.OwnerDocument?.CreateElement(prefix, "is", Schemas.SpreadsheetmlXmlNs);
+
                 var tNode = string.IsNullOrEmpty(prefix)
-                    ? c.OwnerDocument.CreateElement("t", Schemas.SpreadsheetmlXmlNs)
-                    : c.OwnerDocument.CreateElement(prefix, "t", Schemas.SpreadsheetmlXmlNs);
-                tNode.InnerText = text;
-                isNode.AppendChild(tNode);
+                    ? c.OwnerDocument?.CreateElement("t", Schemas.SpreadsheetmlXmlNs)
+                    : c.OwnerDocument?.CreateElement(prefix, "t", Schemas.SpreadsheetmlXmlNs);
+
+                tNode?.InnerText = text;
+                isNode?.AppendChild(tNode);
                 c.AppendChild(isNode);
             }
             else if (c.SelectSingleNode("x:is", Ns) == null)
             {
                 // Create empty <is><t></t></is> if neither <v> nor <is> exists
                 var isNode = string.IsNullOrEmpty(prefix)
-                    ? c.OwnerDocument.CreateElement("is", Schemas.SpreadsheetmlXmlNs)
-                    : c.OwnerDocument.CreateElement(prefix, "is", Schemas.SpreadsheetmlXmlNs);
+                    ? c.OwnerDocument?.CreateElement("is", Schemas.SpreadsheetmlXmlNs)
+                    : c.OwnerDocument?.CreateElement(prefix, "is", Schemas.SpreadsheetmlXmlNs);
+                
                 var tNode = string.IsNullOrEmpty(prefix)
-                    ? c.OwnerDocument.CreateElement("t", Schemas.SpreadsheetmlXmlNs)
-                    : c.OwnerDocument.CreateElement(prefix, "t", Schemas.SpreadsheetmlXmlNs);
-                isNode.AppendChild(tNode);
+                    ? c.OwnerDocument?.CreateElement("t", Schemas.SpreadsheetmlXmlNs)
+                    : c.OwnerDocument?.CreateElement(prefix, "t", Schemas.SpreadsheetmlXmlNs);
+                
+                isNode?.AppendChild(tNode);
                 c.AppendChild(isNode);
             }
         }
@@ -1086,16 +1084,17 @@ internal partial class OpenXmlTemplate
             else
                 c.RemoveAttribute("t"); 
 
-            var isNode = c.SelectSingleNode("x:is", Ns);
-            if (isNode != null)
+            if (c.SelectSingleNode("x:is", Ns) is { } isNode)
             {
                 var tNode = isNode.SelectSingleNode("x:t", Ns);
                 var text = tNode?.InnerText ?? string.Empty;
                 c.RemoveChild(isNode);
+
                 var v = string.IsNullOrEmpty(prefix)
-                    ? c.OwnerDocument.CreateElement("v", Schemas.SpreadsheetmlXmlNs)
-                    : c.OwnerDocument.CreateElement(prefix, "v", Schemas.SpreadsheetmlXmlNs);
-                v.InnerText = text;
+                    ? c.OwnerDocument?.CreateElement("v", Schemas.SpreadsheetmlXmlNs)
+                    : c.OwnerDocument?.CreateElement(prefix, "v", Schemas.SpreadsheetmlXmlNs);
+                
+                v?.InnerText = text;
                 c.AppendChild(v);
             }
         }
@@ -1263,9 +1262,6 @@ internal partial class OpenXmlTemplate
                         {
                             v.InnerText = v.InnerText.Replace($"{{{{{mapNames[0]}.{mapNames[1]}}}}}", "");
                             continue;
-
-                            //why unreachable exception?
-                            throw new InvalidDataException($"{mapNames[0]} doesn't have {mapNames[1]} property");
                         }
                         // auto check type https://github.com/mini-software/MiniExcel/issues/177
                         var type = map.UnderlyingMemberType; //avoid nullable
@@ -1309,6 +1305,7 @@ internal partial class OpenXmlTemplate
                                     maxRowIndexDiff++;
                                 first = false;
                             }
+
                             //TODO:need to optimize
                             //maxRowIndexDiff = dt.Rows.Count <= 1 ? 0 : dt.Rows.Count-1;
                             xRowInfo.MembersMap = dt.Columns.Cast<DataColumn>().ToDictionary(col => 
@@ -1319,7 +1316,7 @@ internal partial class OpenXmlTemplate
 
                         var column = dt.Columns[mapNames[1]];
                         var type = Nullable.GetUnderlyingType(column.DataType) ?? column.DataType; //avoid nullable
-                        if (!xRowInfo.MembersMap.ContainsKey(mapNames[1]))
+                        if (xRowInfo.MembersMap?.ContainsKey(mapNames[1]) is false)
                             throw new InvalidDataException($"{mapNames[0]} doesn't have {mapNames[1]} property");
 
                         if (isMultiMatch)
@@ -1369,7 +1366,7 @@ internal partial class OpenXmlTemplate
 
                         // Re-acquire v after SetCellType may have changed DOM structure
                         v = c.SelectSingleNode("x:v", Ns) ?? c.SelectSingleNode("x:is/x:t", Ns);
-                        v.InnerText = v.InnerText.Replace($"{{{{{mapNames[0]}}}}}", cellValueStr); //TODO: auto check type and set value
+                        v?.InnerText = v.InnerText.Replace($"{{{{{mapNames[0]}}}}}", cellValueStr); //TODO: auto check type and set value
                     }
                 }
                 //if (xRowInfo.CellIEnumerableValues is not null) //2. From left to right, only the first set is used as the basis for the list
@@ -1403,7 +1400,8 @@ internal partial class OpenXmlTemplate
                 ">" => dtg > doubleNumber,
                 "<" => dtg < doubleNumber,
                 ">=" => dtg >= doubleNumber,
-                "<=" => dtg <= doubleNumber
+                "<=" => dtg <= doubleNumber,
+                _ => throw new InvalidDataException($"Invalid comparison oeprator: {comparisonOperator}")
             },
             
             int itg when int.TryParse(value, out var intNumber) => comparisonOperator switch
@@ -1413,7 +1411,8 @@ internal partial class OpenXmlTemplate
                 ">" => itg > intNumber,
                 "<" => itg < intNumber,
                 ">=" => itg >= intNumber,
-                "<=" => itg <= intNumber
+                "<=" => itg <= intNumber,
+                _ => throw new InvalidDataException($"Invalid comparison oeprator: {comparisonOperator}")
             },
             
             DateTime dttg when DateTime.TryParse(value, out var date) => comparisonOperator switch
@@ -1423,13 +1422,15 @@ internal partial class OpenXmlTemplate
                 ">" => dttg > date,
                 "<" => dttg < date,
                 ">=" => dttg >= date,
-                "<=" => dttg <= date
+                "<=" => dttg <= date,
+                _ => throw new InvalidDataException($"Invalid comparison oeprator: {comparisonOperator}")
             },
             
             string stg => comparisonOperator switch
             {
                 "==" => stg == value,
-                "!=" => stg != value
+                "!=" => stg != value,
+                _ => throw new InvalidDataException($"Invalid comparison oeprator: {comparisonOperator}")
             },
             
             _ => false

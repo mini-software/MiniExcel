@@ -17,16 +17,18 @@ internal static partial class MiniExcelPictureImplement
     public static async Task AddPictureAsync(Stream excelStream, CancellationToken cancellationToken = default, params MiniExcelPicture[] images)
     {
         // get sheets
-        using var excelArchive = new OpenXmlZip(excelStream);
+        var excelArchive = await OpenXmlZip.CreateAsync(excelStream, cancellationToken: cancellationToken).ConfigureAwait(false);
+        await using var disposableExcelArchive = excelArchive.ConfigureAwait(false);
+
         using var reader = await OpenXmlReader.CreateAsync(excelStream, null, cancellationToken).ConfigureAwait(false);
 
 #if NET10_0_OR_GREATER
-        var archive = new ZipArchive(excelStream, ZipArchiveMode.Update, true);
-        await using var disposableArchive = archive.ConfigureAwait(false); 
+        var archive = await ZipArchive.CreateAsync(excelStream, ZipArchiveMode.Update, true, null, cancellationToken).ConfigureAwait(false);
+        await using var disposableArchive = archive.ConfigureAwait(false);
 #else
         using var archive = new ZipArchive(excelStream, ZipArchiveMode.Update, true);
 #endif
-        var rels = await reader.GetWorkbookRelsAsync(excelArchive.EntryCollection, cancellationToken).ConfigureAwait(false);
+		var rels = await reader.GetWorkbookRelsAsync(excelArchive.EntryCollection, cancellationToken).ConfigureAwait(false);
         var sheetEntries = rels?.ToList() ?? [];
 
         // Group images by sheet

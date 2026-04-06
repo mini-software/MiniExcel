@@ -49,14 +49,12 @@ public sealed partial class OpenXmlExporter
     {
         if (Path.GetExtension(path).Equals(".xlsm", StringComparison.InvariantCultureIgnoreCase))
             throw new NotSupportedException("MiniExcel's Export does not support the .xlsm format");
-        
-        var filePath = path.EndsWith(".xlsx",  StringComparison.InvariantCultureIgnoreCase) ? path : $"{path}.xlsx" ;
 
 #if NET8_0_OR_GREATER
-        var stream = overwriteFile ? File.Create(filePath) : new FileStream(filePath, FileMode.CreateNew);
+        var stream = overwriteFile ? File.Create(path) : new FileStream(path, FileMode.CreateNew);
         await using var disposableStream = stream.ConfigureAwait(false); 
 #else
-        using var stream = overwriteFile ? File.Create(filePath) : new FileStream(filePath, FileMode.CreateNew);
+        using var stream = overwriteFile ? File.Create(path) : new FileStream(path, FileMode.CreateNew);
 #endif
         return await ExportAsync(stream, value, printHeader, sheetName, configuration, progress, cancellationToken).ConfigureAwait(false);
     }

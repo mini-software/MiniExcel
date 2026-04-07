@@ -938,7 +938,7 @@ public class MiniExcelTemplateTests
     }
 
     [Fact]
-    public void MergeSameCellsWithTagTest()
+    public void TestMergeSameCellsWithTag()
     {
         var path = PathHelper.GetFile("xlsx/TestMergeWithTag.xlsx");
         using var mergedFilePath = AutoDeletingPath.Create();
@@ -952,7 +952,7 @@ public class MiniExcelTemplateTests
     }
 
     [Fact]
-    public void MergeSameCellsWithLimitTagTest()
+    public void TestMergeSameCellsWithLimitTag()
     {
         var path = PathHelper.GetFile("xlsx/TestMergeWithLimitTag.xlsx");
         using var mergedFilePath = AutoDeletingPath.Create();

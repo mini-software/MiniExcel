@@ -31,7 +31,7 @@ public class MiniExcelTemplateAsyncTests
                 ["employees"] = employees
             };
             await _excelTemplater.FillTemplateAsync(path.ToString(), templatePath, value);
-            var rows = _excelImporter.QueryAsync(path.ToString()).ToBlockingEnumerable().ToList();
+            var rows = await _excelImporter.QueryAsync(path.ToString()).ToListAsync();
 
             var dimension = SheetHelper.GetFirstSheetDimensionRefValue(path.ToString());
             Assert.Equal("A1:C5", dimension);
@@ -56,7 +56,7 @@ public class MiniExcelTemplateAsyncTests
             };
             
             await _excelTemplater.FillTemplateAsync(path.ToString(), templatePath, value);
-            var rows = _excelImporter.QueryAsync(path.ToString()).ToBlockingEnumerable().ToList();
+            var rows = await _excelImporter.QueryAsync(path.ToString()).ToListAsync();
 
             var dimension = SheetHelper.GetFirstSheetDimensionRefValue(path.ToString());
             Assert.Equal("A1:C5", dimension);
@@ -90,7 +90,7 @@ public class MiniExcelTemplateAsyncTests
             ["employees"] = employees
         };
         await _excelTemplater.FillTemplateAsync(path.ToString(), templatePath, value);
-        var rows = _excelImporter.QueryAsync(path.ToString()).ToBlockingEnumerable().ToList();
+        var rows = await _excelImporter.QueryAsync(path.ToString()).ToListAsync();
 
         var dimension = SheetHelper.GetFirstSheetDimensionRefValue(path.ToString());
         Assert.Equal("A1:C9", dimension);
@@ -113,7 +113,7 @@ public class MiniExcelTemplateAsyncTests
         Assert.Equal("IT", rows[8].C);
 
         {
-            rows = _excelImporter.QueryAsync(path.ToString(), sheetName: "Sheet2").ToBlockingEnumerable().ToList();
+            rows = await _excelImporter.QueryAsync(path.ToString(), sheetName: "Sheet2").ToListAsync();
             Assert.Equal(9, rows.Count);
 
             Assert.Equal("FooCompany", rows[0].A);
@@ -153,7 +153,7 @@ public class MiniExcelTemplateAsyncTests
         await _excelTemplater.FillTemplateAsync(path.ToString(), templatePath, value);
 
         {
-            var rows = _excelImporter.QueryAsync(path.ToString()).ToBlockingEnumerable().ToList();
+            var rows = await _excelImporter.QueryAsync(path.ToString()).ToListAsync();
 
             Assert.Equal(9, rows.Count);
 
@@ -178,7 +178,7 @@ public class MiniExcelTemplateAsyncTests
         }
 
         {
-            var rows = _excelImporter.QueryAsync(path.ToString(), sheetName: "Sheet2").ToBlockingEnumerable().ToList();
+            var rows = await _excelImporter.QueryAsync(path.ToString(), sheetName: "Sheet2").ToListAsync();
             Assert.Equal(9, rows.Count);
 
             Assert.Equal("FooCompany", rows[0].A);
@@ -297,7 +297,7 @@ public class MiniExcelTemplateAsyncTests
         };
         await _excelTemplater.FillTemplateAsync(path.ToString(), templatePath, value);
 
-        var rows = _excelImporter.QueryAsync(path.ToString()).ToBlockingEnumerable().ToList();
+        var rows = await _excelImporter.QueryAsync(path.ToString()).ToListAsync();
         Assert.Equal("ITWeiHan Github Projects", rows[0].B);
         Assert.Equal("Total Star : 178", rows[8].C);
 
@@ -342,6 +342,7 @@ public class MiniExcelTemplateAsyncTests
                 poco
             }
         };
+        // await _excelTemplater.FillTemplateAsync(@"c:\users\computer\desktop\0.xlsx", templatePath, value, true);
         await _excelTemplater.FillTemplateAsync(path.ToString(), templatePath, value);
 
         var rows = _excelImporter.Query<TestIEnumerableTypePoco>(path.ToString()).ToList();
@@ -353,30 +354,17 @@ public class MiniExcelTemplateAsyncTests
         Assert.Equal(poco.datetime, rows[0].datetime);
         Assert.Equal(poco.Guid, rows[0].Guid);
 
-        Assert.Null(rows[1].@string);
-        Assert.Null(rows[1].@int);
-        Assert.Null(rows[1].@double);
-        Assert.Null(rows[1].@decimal);
-        Assert.Null(rows[1].@bool);
-        Assert.Null(rows[1].datetime);
-        Assert.Null(rows[1].Guid);
-
         // special input null but query is empty vo
-        Assert.Null(rows[2].@string);
-        Assert.Null(rows[2].@int);
-        Assert.Null(rows[2].@double);
-        Assert.Null(rows[2].@decimal);
-        Assert.Null(rows[2].@bool);
-        Assert.Null(rows[2].datetime);
-        Assert.Null(rows[2].Guid);
-
-        Assert.Null(rows[3].@string);
-        Assert.Null(rows[3].@int);
-        Assert.Null(rows[3].@double);
-        Assert.Null(rows[3].@decimal);
-        Assert.Null(rows[3].@bool);
-        Assert.Null(rows[3].datetime);
-        Assert.Null(rows[3].Guid);
+        for (int i = 1; i <= 3; i++)
+        {
+            Assert.Null(rows[i].@string);
+            Assert.Null(rows[i].@int);
+            Assert.Null(rows[i].@double);
+            Assert.Null(rows[i].@decimal);
+            Assert.Null(rows[i].@bool);
+            Assert.Null(rows[i].datetime);
+            Assert.Null(rows[i].Guid);
+        }
 
         Assert.Equal(poco.@string, rows[4].@string);
         Assert.Equal(poco.@int, rows[4].@int);
@@ -450,7 +438,7 @@ public class MiniExcelTemplateAsyncTests
             };
             await _excelTemplater.FillTemplateAsync(path.ToString(), templatePath, value);
 
-            var rows = _excelImporter.QueryAsync(path.ToString()).ToBlockingEnumerable().ToList();
+            var rows = await _excelImporter.QueryAsync(path.ToString()).ToListAsync();
             Assert.Equal("Jack", rows[1].A);
             Assert.Equal("2021-01-01 00:00:00", rows[1].B);
             Assert.Equal(true, rows[1].C);
@@ -474,7 +462,7 @@ public class MiniExcelTemplateAsyncTests
             };
             await _excelTemplater.FillTemplateAsync(path, templateBytes, value);
 
-            var rows = (_excelImporter.QueryAsync(path).ToBlockingEnumerable()).ToList();
+            var rows = await _excelImporter.QueryAsync(path).ToListAsync();
             Assert.Equal("Jack", rows[1].A);
             Assert.Equal("2021-01-01 00:00:00", rows[1].B);
             Assert.Equal(true, rows[1].C);
@@ -502,7 +490,7 @@ public class MiniExcelTemplateAsyncTests
                 await _excelTemplater.FillTemplateAsync(stream, templateBytes, value);
             }
 
-            var rows = _excelImporter.QueryAsync(path.ToString()).ToBlockingEnumerable().ToList();
+            var rows = await _excelImporter.QueryAsync(path.ToString()).ToListAsync();
             Assert.Equal("Jack", rows[1].A);
             Assert.Equal("2021-01-01 00:00:00", rows[1].B);
             Assert.Equal(true, rows[1].C);
@@ -526,7 +514,7 @@ public class MiniExcelTemplateAsyncTests
             };
             await _excelTemplater.FillTemplateAsync(path.ToString(), templatePath, value);
 
-            var rows = _excelImporter.QueryAsync(path.ToString()).ToBlockingEnumerable().ToList();
+            var rows = await _excelImporter.QueryAsync(path.ToString()).ToListAsync();
             Assert.Equal("Jack", rows[1].A);
             Assert.Equal("2021-01-01 00:00:00", rows[1].B);
             Assert.Equal(true, rows[1].C);
@@ -787,7 +775,7 @@ public class MiniExcelTemplateAsyncTests
             await _excelTemplater.FillTemplateAsync(path.ToString(), templatePath, value);
 
             {
-                var rows = _excelImporter.QueryAsync(path.ToString()).ToBlockingEnumerable().ToList();
+                var rows = await _excelImporter.QueryAsync(path.ToString()).ToListAsync();
                 Assert.Equal(9, rows.Count);
 
                 Assert.Equal("FooCompany", rows[0].A);
@@ -811,7 +799,7 @@ public class MiniExcelTemplateAsyncTests
             }
 
             {
-                var rows = _excelImporter.QueryAsync(path.ToString(), sheetName: "Sheet2").ToBlockingEnumerable().ToList();
+                var rows = await _excelImporter.QueryAsync(path.ToString(), sheetName: "Sheet2").ToListAsync();
                 Assert.Equal(9, rows.Count);
 
                 Assert.Equal("FooCompany", rows[0].A);
@@ -857,7 +845,7 @@ public class MiniExcelTemplateAsyncTests
             };
             await _excelTemplater.FillTemplateAsync(path.ToString(), templatePath, value);
 
-            var rows = _excelImporter.QueryAsync(path.ToString()).ToBlockingEnumerable().ToList();
+            var rows = await _excelImporter.QueryAsync(path.ToString()).ToListAsync();
             Assert.Equal("FooCompany", rows[0].A);
             Assert.Equal("Jack", rows[2].B);
             Assert.Equal("HR", rows[2].C);
@@ -899,5 +887,59 @@ public class MiniExcelTemplateAsyncTests
             await cts.CancelAsync();
             await _excelTemplater.FillTemplateAsync(path.ToString(), templatePath, value, cancellationToken: cts.Token);
         });
+    }
+    
+    
+    [Fact]
+    public async Task TestMergeSameCellsWithTagAsync()
+    {
+        var path = PathHelper.GetFile("xlsx/TestMergeWithTag.xlsx");
+        using var mergedFilePath = AutoDeletingPath.Create();
+
+        await _excelTemplater.MergeSameCellsAsync(mergedFilePath.ToString(), path);
+        var mergedCells = SheetHelper.GetFirstSheetMergedCells(mergedFilePath.ToString());
+
+        Assert.Equal("A2:A4", mergedCells[0]);
+        Assert.Equal("C3:C4", mergedCells[1]);
+        Assert.Equal("A7:A8", mergedCells[2]);
+    }
+
+    [Fact]
+    public async Task TestMergeSameCellsWithLimitTagAsync()
+    {
+        var path = PathHelper.GetFile("xlsx/TestMergeWithLimitTag.xlsx");
+        using var mergedFilePath = AutoDeletingPath.Create();
+
+        await _excelTemplater.MergeSameCellsAsync(mergedFilePath.ToString(), path);
+        var mergedCells = SheetHelper.GetFirstSheetMergedCells(mergedFilePath.ToString());
+
+        Assert.Equal("A3:A4", mergedCells[0]);
+        Assert.Equal("C3:C6", mergedCells[1]);
+        Assert.Equal("A5:A6", mergedCells[2]);
+    }
+    
+    
+    [Fact]
+    public async Task TestIEnumerableWithFormulas()
+    {
+        var templatePath = PathHelper.GetFile("xlsx/TestTemplateBasicIEnumerableFillWithFormulas.xlsx");
+        using var path = AutoDeletingPath.Create();
+
+        var value = new
+        {
+            employees = new[]
+            {
+                new { name = "Jack", department = "HR", salary = 90000 },
+                new { name = "Lisa", department = "HR", salary = 150000 },
+                new { name = "John", department = "HR", salary = 64000 },
+                new { name = "Mike", department = "IT", salary = 87000 },
+                new { name = "Neo", department = "IT", salary = 98000 },
+                new { name = "Joan", department = "IT", salary = 120000 }
+            }
+        };
+        await _excelTemplater.FillTemplateAsync(path.FilePath, templatePath, value, true);
+
+        var dimension = SheetHelper.GetFirstSheetDimensionRefValue(path.FilePath);
+        Assert.Equal("A1:C13", dimension);
     }
 }

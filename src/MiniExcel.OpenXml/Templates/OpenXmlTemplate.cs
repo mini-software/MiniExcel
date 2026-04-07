@@ -1,30 +1,14 @@
 using MiniExcelLib.Core;
-using MiniExcelLib.OpenXml.Constants;
 using CalcChainHelper = MiniExcelLib.OpenXml.Utils.CalcChainHelper;
 
 namespace MiniExcelLib.OpenXml.Templates;
 
 internal partial class OpenXmlTemplate : IMiniExcelTemplate
 {
-#if NET8_0_OR_GREATER
-    [GeneratedRegex("(?<={{).*?(?=}})")] private static partial Regex ExpressionRegex();
-    private static readonly Regex IsExpressionRegex = ExpressionRegex();
-#else
-    private static readonly Regex IsExpressionRegex = new("(?<={{).*?(?=}})");
-#endif 
-    private static readonly XmlNamespaceManager Ns;
-
     private readonly Stream _outputFileStream;
     private readonly OpenXmlConfiguration _configuration;
     private readonly OpenXmlValueExtractor _inputValueExtractor;
     private readonly StringBuilder _calcChainContent = new();
-
-    static OpenXmlTemplate()
-    {
-        Ns = new XmlNamespaceManager(new NameTable());
-        Ns.AddNamespace("x", Schemas.SpreadsheetmlXmlNs);
-        Ns.AddNamespace("x14ac", Schemas.SpreadsheetmlXmlX14Ac);
-    }
 
     internal OpenXmlTemplate(Stream stream, IMiniExcelConfiguration? configuration, OpenXmlValueExtractor inputValueExtractor)
     {
@@ -138,10 +122,11 @@ internal partial class OpenXmlTemplate : IMiniExcelTemplate
         int sheetIdx = 0;
         foreach (var templateSheet in templateSheets)
         {
-            //every time need to use new XRowInfos or it'll cause duplicate problem: https://user-images.githubusercontent.com/12729184/115003101-0fcab700-9ed8-11eb-9151-ca4d7b86d59e.png
-            _xRowInfos = [];
-            _xMergeCellInfos = [];
-            _newXMergeCellInfos = [];
+            // XRowInfos musy be cleared for every sheet or it'll cause duplicates: https://user-images.githubusercontent.com/12729184/115003101-0fcab700-9ed8-11eb-9151-ca4d7b86d59e.png
+            _xRowInfos.Clear();
+            _xMergeCellInfos.Clear();
+            _newXMergeCellInfos.Clear();
+            _calcChainCellRefs.Clear();
             
             var templateFullName = templateSheet.FullName;
             var inputValues = _inputValueExtractor.ToValueDictionary(value);
@@ -157,7 +142,8 @@ internal partial class OpenXmlTemplate : IMiniExcelTemplate
 #else
             using var outputZipSheetEntryStream = outputZipEntry.Open();
 #endif
-            await GenerateSheetXmlImplByCreateModeAsync(templateSheet, outputZipSheetEntryStream, inputValues, templateSharedStrings).ConfigureAwait(false);
+            await GenerateSheetByCreateModeAsync(templateSheet, outputZipSheetEntryStream, inputValues, templateSharedStrings, cancellationToken: cancellationToken).ConfigureAwait(false);
+            
             //doc.Save(zipStream); //don't do it because: https://user-images.githubusercontent.com/12729184/114361127-61a5d100-9ba8-11eb-9bb9-34f076ee28a2.png
             // disposing writer disposes streams as well. read and parse calc functions before that
             

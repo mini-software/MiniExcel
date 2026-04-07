@@ -952,10 +952,9 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
             };
             await  _excelTemplater.FillTemplateAsync(path, templatePath, value);
 
-            foreach (var sheetName in  _excelImporter.GetSheetNames(path))
+            foreach (var sheetName in  await _excelImporter.GetSheetNamesAsync(path))
             {
-                var q =  _excelImporter.QueryAsync(path, sheetName: sheetName).ToBlockingEnumerable();
-                var rows = q.ToList();
+                var rows = await _excelImporter.QueryAsync(path, sheetName: sheetName).ToListAsync();
                 Assert.Equal(9, rows.Count);
 
                 Assert.Equal("FooCompany", rows[0].A);
@@ -979,7 +978,6 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
 
                 //TODO:row can't contain xmlns
                 //![image](https://user-images.githubusercontent.com/12729184/114998840-ead44500-9ed3-11eb-8611-58afb98faed9.png)
-
             }
         }
 

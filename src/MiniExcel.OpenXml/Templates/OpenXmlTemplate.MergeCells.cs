@@ -50,33 +50,30 @@ internal partial class OpenXmlTemplate
 
         foreach (var sheet in sheets)
         {
-            _xRowInfos = []; //every time need to use new XRowInfos or it'll cause duplicate problem: https://user-images.githubusercontent.com/12729184/115003101-0fcab700-9ed8-11eb-9151-ca4d7b86d59e.png
-            _xMergeCellInfos = [];
-            _newXMergeCellInfos = [];
+            // XRowInfos musy be cleared for every sheet or it'll cause duplicates
+            _xRowInfos.Clear();
+            _xMergeCellInfos.Clear();
+            _newXMergeCellInfos.Clear();
+            _calcChainCellRefs.Clear();
 
-#if NETSTANDARD2_0
-            using var sheetStream = sheet.Open();
-#else            
-#if NET10_0_OR_GREATER
-            var sheetStream = await sheet.OpenAsync(cancellationToken).ConfigureAwait(false);
-#else
-            var sheetStream = sheet.Open();
-#endif
-            await using var disposableSheetStream = sheetStream.ConfigureAwait(false);
-#endif
             var entry = archive.ZipFile.CreateEntry(sheet.FullName);
 
-#if NETSTANDARD2_0
-            using var zipStream = entry.Open();
-#else
+#if NET8_0_OR_GREATER
 #if NET10_0_OR_GREATER
+            var sheetStream = await sheet.OpenAsync(cancellationToken).ConfigureAwait(false);
             var zipStream = await entry.OpenAsync(cancellationToken).ConfigureAwait(false);
 #else
+            var sheetStream = sheet.Open();
             var zipStream = entry.Open();
 #endif
+            await using var disposableSheetStream = sheetStream.ConfigureAwait(false);
             await using var disposableZipStream = zipStream.ConfigureAwait(false);
+#else
+            using var sheetStream = sheet.Open();
+            using var zipStream = entry.Open();
 #endif
-            await GenerateSheetXmlImplByUpdateModeAsync(sheet, zipStream, sheetStream, new Dictionary<string, object>(), sharedStrings, mergeCells: true, cancellationToken).ConfigureAwait(false);
+
+            await GenerateSheetByUpdateModeAsync(sheet, zipStream, sheetStream, new Dictionary<string, object>(), sharedStrings, mergeCells: true, cancellationToken).ConfigureAwait(false);
         }
     }
 }

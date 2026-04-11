@@ -795,7 +795,8 @@ namespace MiniExcelLibs.OpenXml.Styles
             }
 
             _context.NewXmlWriter.WriteAttributeString("horizontal", style2HorizontalAlignment);
-            _context.NewXmlWriter.WriteAttributeString("vertical", style2VerticalAlignment);            _context.NewXmlWriter.WriteAttributeString("textRotation", "0");
+            _context.NewXmlWriter.WriteAttributeString("vertical", style2VerticalAlignment);
+            _context.NewXmlWriter.WriteAttributeString("textRotation", "0");
             _context.NewXmlWriter.WriteAttributeString("wrapText", "0");
             _context.NewXmlWriter.WriteAttributeString("indent", "0");
             _context.NewXmlWriter.WriteAttributeString("relativeIndent", "0");
@@ -803,6 +804,7 @@ namespace MiniExcelLibs.OpenXml.Styles
             _context.NewXmlWriter.WriteAttributeString("shrinkToFit", "0");
             _context.NewXmlWriter.WriteAttributeString("readingOrder", "0");
             _context.NewXmlWriter.WriteEndElement();
+
             _context.NewXmlWriter.WriteStartElement(_context.OldXmlReader.Prefix, "protection", _context.OldXmlReader.NamespaceURI);
             _context.NewXmlWriter.WriteAttributeString("locked", "1");
             _context.NewXmlWriter.WriteAttributeString("hidden", "0");
@@ -882,7 +884,8 @@ namespace MiniExcelLibs.OpenXml.Styles
                 }
 
                 _context.NewXmlWriter.WriteAttributeString("horizontal", style3HorizontalAlignment);
-                _context.NewXmlWriter.WriteAttributeString("vertical", style3VerticalAlignment);                _context.NewXmlWriter.WriteAttributeString("textRotation", "0");
+                _context.NewXmlWriter.WriteAttributeString("vertical", style3VerticalAlignment);
+                _context.NewXmlWriter.WriteAttributeString("textRotation", "0");
                 _context.NewXmlWriter.WriteAttributeString("wrapText", "0");
                 _context.NewXmlWriter.WriteAttributeString("indent", "0");
                 _context.NewXmlWriter.WriteAttributeString("relativeIndent", "0");
@@ -997,8 +1000,8 @@ namespace MiniExcelLibs.OpenXml.Styles
                     break;
             }
 
-            _context.NewXmlWriter.WriteAttributeString("horizontal", style1HorizontalAlignment);
-            _context.NewXmlWriter.WriteAttributeString("vertical", style1VerticalAlignment);
+            await _context.NewXmlWriter.WriteAttributeStringAsync(null,"horizontal", null, style1HorizontalAlignment).ConfigureAwait(false);
+            await _context.NewXmlWriter.WriteAttributeStringAsync(null,"vertical", null, style1VerticalAlignment).ConfigureAwait(false);
             
             await _context.NewXmlWriter.WriteAttributeStringAsync(null, "textRotation", null, "0");
 
@@ -1064,8 +1067,8 @@ namespace MiniExcelLibs.OpenXml.Styles
                     break;
             }
 
-            _context.NewXmlWriter.WriteAttributeString("horizontal", style2HorizontalAlignment);
-            _context.NewXmlWriter.WriteAttributeString("vertical", style2VerticalAlignment);  
+            await _context.NewXmlWriter.WriteAttributeStringAsync(null, "horizontal", null, style2HorizontalAlignment);
+            await _context.NewXmlWriter.WriteAttributeStringAsync(null, "vertical", null, style2VerticalAlignment);  
             
             await _context.NewXmlWriter.WriteAttributeStringAsync(null, "textRotation", null, "0");
             await _context.NewXmlWriter.WriteAttributeStringAsync(null, "wrapText", null, "0");
@@ -1153,8 +1156,8 @@ namespace MiniExcelLibs.OpenXml.Styles
                         break;
                 }
 
-                _context.NewXmlWriter.WriteAttributeString("horizontal", style3HorizontalAlignment);
-                _context.NewXmlWriter.WriteAttributeString("vertical", style3VerticalAlignment);
+                await _context.NewXmlWriter.WriteAttributeStringAsync(null, "horizontal", null, style3HorizontalAlignment);
+                await _context.NewXmlWriter.WriteAttributeStringAsync(null, "vertical", null, style3VerticalAlignment);
                 
                 await _context.NewXmlWriter.WriteAttributeStringAsync(null, "textRotation", null, "0");
                 await _context.NewXmlWriter.WriteAttributeStringAsync(null, "wrapText", null, "0");

@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Drawing;
+using System.Threading.Tasks;
 
 namespace MiniExcelLibs.OpenXml.Styles
 {
@@ -14,8 +15,12 @@ namespace MiniExcelLibs.OpenXml.Styles
             CellXfCount = 5
         };
 
+        private static readonly Color DefaultBackgroundColor = Color.FromArgb(0x284472C4);
+        private const HorizontalCellAlignment DefaultHorizontalAlignment = HorizontalCellAlignment.Left;
+        private const VerticalCellAlignment DefaultVerticalAlignment = VerticalCellAlignment.Bottom;
+
         private readonly SheetStyleBuildContext _context;
-        private OpenXmlStyleOptions _styleOptions;
+        private readonly OpenXmlStyleOptions _styleOptions;
 
         public DefaultSheetStyleBuilder(SheetStyleBuildContext context, OpenXmlStyleOptions styleOptions) : base(context)
         {
@@ -214,7 +219,11 @@ namespace MiniExcelLibs.OpenXml.Styles
             _context.NewXmlWriter.WriteStartElement(_context.OldXmlReader.Prefix, "patternFill", _context.OldXmlReader.NamespaceURI);
             _context.NewXmlWriter.WriteAttributeString("patternType", "solid");
             _context.NewXmlWriter.WriteStartElement(_context.OldXmlReader.Prefix, "fgColor", _context.OldXmlReader.NamespaceURI);
-            _context.NewXmlWriter.WriteAttributeString("rgb", "284472C4");
+
+            var bgColor = _styleOptions.HeaderStyle?.BackgroundColor ?? DefaultBackgroundColor;
+            var hexBgColor = $"{bgColor.A:X2}{bgColor.R:X2}{bgColor.G:X2}{bgColor.B:X2}";
+            _context.NewXmlWriter.WriteAttributeString(null, "rgb", null, hexBgColor);
+
             _context.NewXmlWriter.WriteEndElement();
             _context.NewXmlWriter.WriteEndElement();
             _context.NewXmlWriter.WriteEndElement();
@@ -255,7 +264,11 @@ namespace MiniExcelLibs.OpenXml.Styles
             await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "patternFill", _context.OldXmlReader.NamespaceURI);
             await _context.NewXmlWriter.WriteAttributeStringAsync(null, "patternType", null, "solid");
             await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "fgColor", _context.OldXmlReader.NamespaceURI);
-            await _context.NewXmlWriter.WriteAttributeStringAsync(null, "rgb", null, "284472C4");
+            
+            var bgColor = _styleOptions.HeaderStyle?.BackgroundColor ?? DefaultBackgroundColor;
+            var hexBgColor = $"{bgColor.A:X2}{bgColor.R:X2}{bgColor.G:X2}{bgColor.B:X2}";
+            await _context.NewXmlWriter.WriteAttributeStringAsync(null, "rgb", null, hexBgColor).ConfigureAwait(false);
+
             await _context.NewXmlWriter.WriteEndElementAsync();
             await _context.NewXmlWriter.WriteEndElementAsync();
             await _context.NewXmlWriter.WriteEndElementAsync();
@@ -640,17 +653,28 @@ namespace MiniExcelLibs.OpenXml.Styles
             _context.NewXmlWriter.WriteAttributeString("applyBorder", "1");
             _context.NewXmlWriter.WriteAttributeString("applyAlignment", "1");
             _context.NewXmlWriter.WriteAttributeString("applyProtection", "1");
+
             _context.NewXmlWriter.WriteStartElement(_context.OldXmlReader.Prefix, "alignment", _context.OldXmlReader.NamespaceURI);
-            _context.NewXmlWriter.WriteAttributeString("horizontal", "left");
-            _context.NewXmlWriter.WriteAttributeString("vertical", "bottom");
+            
+            var horizontalAlignment = _styleOptions.HeaderStyle?.HorizontalAlignment ?? DefaultHorizontalAlignment;
+            var horizontalAlignmentStr = horizontalAlignment.ToString().ToLowerInvariant();
+            _context.NewXmlWriter.WriteAttributeString(null, "horizontal", null, horizontalAlignmentStr);
+        
+            var verticalAlignment = _styleOptions.HeaderStyle?.VerticalAlignment ?? DefaultVerticalAlignment;
+            var verticalAlignmentStr = verticalAlignment.ToString().ToLowerInvariant();
+            _context.NewXmlWriter.WriteAttributeString(null, "vertical", null, verticalAlignmentStr);
+            
+            var wrapHeader = (_styleOptions.HeaderStyle?.WrapText ?? false) ? "1" : "0";
+            _context.NewXmlWriter.WriteAttributeString(null, "wrapText", null, wrapHeader);
+            
             _context.NewXmlWriter.WriteAttributeString("textRotation", "0");
-            _context.NewXmlWriter.WriteAttributeString("wrapText", "0");
             _context.NewXmlWriter.WriteAttributeString("indent", "0");
             _context.NewXmlWriter.WriteAttributeString("relativeIndent", "0");
             _context.NewXmlWriter.WriteAttributeString("justifyLastLine", "0");
             _context.NewXmlWriter.WriteAttributeString("shrinkToFit", "0");
             _context.NewXmlWriter.WriteAttributeString("readingOrder", "0");
             _context.NewXmlWriter.WriteEndElement();
+
             _context.NewXmlWriter.WriteStartElement(_context.OldXmlReader.Prefix, "protection", _context.OldXmlReader.NamespaceURI);
             _context.NewXmlWriter.WriteAttributeString("locked", "1");
             _context.NewXmlWriter.WriteAttributeString("hidden", "0");
@@ -674,11 +698,43 @@ namespace MiniExcelLibs.OpenXml.Styles
             _context.NewXmlWriter.WriteAttributeString("applyBorder", "1");
             _context.NewXmlWriter.WriteAttributeString("applyAlignment", "1");
             _context.NewXmlWriter.WriteAttributeString("applyProtection", "1");
+
             _context.NewXmlWriter.WriteStartElement(_context.OldXmlReader.Prefix, "alignment", _context.OldXmlReader.NamespaceURI);
-            _context.NewXmlWriter.WriteAttributeString("horizontal", "general");
-            _context.NewXmlWriter.WriteAttributeString("vertical", "bottom");
+            string style1HorizontalAlignment;
+            switch (_styleOptions.HorizontalAlignment)
+            {
+                case HorizontalCellAlignment.Center:
+                    style1HorizontalAlignment = "center";
+                    break;
+                case HorizontalCellAlignment.Right:
+                    style1HorizontalAlignment = "right";
+                    break;
+                default:
+                    style1HorizontalAlignment = "general";
+                    break;
+            }
+
+            string style1VerticalAlignment;
+            switch (_styleOptions.VerticalAlignment)
+            {
+                case VerticalCellAlignment.Top:
+                    style1VerticalAlignment = "top";
+                    break;
+                case VerticalCellAlignment.Center:
+                    style1VerticalAlignment = "center";
+                    break;
+                default:
+                    style1VerticalAlignment = "bottom";
+                    break;
+            }
+
+            _context.NewXmlWriter.WriteAttributeString("horizontal", style1HorizontalAlignment);
+            _context.NewXmlWriter.WriteAttributeString("vertical", style1VerticalAlignment);
             _context.NewXmlWriter.WriteAttributeString("textRotation", "0");
-            _context.NewXmlWriter.WriteAttributeString("wrapText", _styleOptions.WrapCellContents ? "1" : "0");
+            
+            var wrapContent = _styleOptions.WrapCellContents ? "1" : "0";
+            _context.NewXmlWriter.WriteAttributeString(null, "wrapText", null, wrapContent);
+
             _context.NewXmlWriter.WriteAttributeString("indent", "0");
             _context.NewXmlWriter.WriteAttributeString("relativeIndent", "0");
             _context.NewXmlWriter.WriteAttributeString("justifyLastLine", "0");
@@ -708,10 +764,38 @@ namespace MiniExcelLibs.OpenXml.Styles
             _context.NewXmlWriter.WriteAttributeString("applyBorder", "1");
             _context.NewXmlWriter.WriteAttributeString("applyAlignment", "1");
             _context.NewXmlWriter.WriteAttributeString("applyProtection", "1");
+            
             _context.NewXmlWriter.WriteStartElement(_context.OldXmlReader.Prefix, "alignment", _context.OldXmlReader.NamespaceURI);
-            _context.NewXmlWriter.WriteAttributeString("horizontal", "general");
-            _context.NewXmlWriter.WriteAttributeString("vertical", "bottom");
-            _context.NewXmlWriter.WriteAttributeString("textRotation", "0");
+            string style2HorizontalAlignment;
+            switch (_styleOptions.HorizontalAlignment)
+            {
+                case HorizontalCellAlignment.Center:
+                    style2HorizontalAlignment = "center";
+                    break;
+                case HorizontalCellAlignment.Right:
+                    style2HorizontalAlignment = "right";
+                    break;
+                default:
+                    style2HorizontalAlignment = "general";
+                    break;
+            }
+
+            string style2VerticalAlignment;
+            switch (_styleOptions.VerticalAlignment)
+            {
+                case VerticalCellAlignment.Top:
+                    style2VerticalAlignment = "top";
+                    break;
+                case VerticalCellAlignment.Center:
+                    style2VerticalAlignment = "center";
+                    break;
+                default:
+                    style2VerticalAlignment = "bottom";
+                    break;
+            }
+
+            _context.NewXmlWriter.WriteAttributeString("horizontal", style2HorizontalAlignment);
+            _context.NewXmlWriter.WriteAttributeString("vertical", style2VerticalAlignment);            _context.NewXmlWriter.WriteAttributeString("textRotation", "0");
             _context.NewXmlWriter.WriteAttributeString("wrapText", "0");
             _context.NewXmlWriter.WriteAttributeString("indent", "0");
             _context.NewXmlWriter.WriteAttributeString("relativeIndent", "0");
@@ -738,6 +822,7 @@ namespace MiniExcelLibs.OpenXml.Styles
             _context.NewXmlWriter.WriteAttributeString("xfId", "0");
             _context.NewXmlWriter.WriteAttributeString("applyBorder", "1");
             _context.NewXmlWriter.WriteAttributeString("applyAlignment", "1");
+
             _context.NewXmlWriter.WriteStartElement(_context.OldXmlReader.Prefix, "alignment", _context.OldXmlReader.NamespaceURI);
             _context.NewXmlWriter.WriteAttributeString("horizontal", "fill");
             _context.NewXmlWriter.WriteEndElement();
@@ -766,10 +851,38 @@ namespace MiniExcelLibs.OpenXml.Styles
                 _context.NewXmlWriter.WriteAttributeString("applyBorder", "1");
                 _context.NewXmlWriter.WriteAttributeString("applyAlignment", "1");
                 _context.NewXmlWriter.WriteAttributeString("applyProtection", "1");
+                
                 _context.NewXmlWriter.WriteStartElement(_context.OldXmlReader.Prefix, "alignment", _context.OldXmlReader.NamespaceURI);
-                _context.NewXmlWriter.WriteAttributeString("horizontal", "general");
-                _context.NewXmlWriter.WriteAttributeString("vertical", "bottom");
-                _context.NewXmlWriter.WriteAttributeString("textRotation", "0");
+                string style3HorizontalAlignment;
+                switch (_styleOptions.HorizontalAlignment)
+                {
+                    case HorizontalCellAlignment.Center:
+                        style3HorizontalAlignment = "center";
+                        break;
+                    case HorizontalCellAlignment.Right:
+                        style3HorizontalAlignment = "right";
+                        break;
+                    default:
+                        style3HorizontalAlignment = "general";
+                        break;
+                }
+
+                string style3VerticalAlignment;
+                switch (_styleOptions.VerticalAlignment)
+                {
+                    case VerticalCellAlignment.Top:
+                        style3VerticalAlignment = "top";
+                        break;
+                    case VerticalCellAlignment.Center:
+                        style3VerticalAlignment = "center";
+                        break;
+                    default:
+                        style3VerticalAlignment = "bottom";
+                        break;
+                }
+
+                _context.NewXmlWriter.WriteAttributeString("horizontal", style3HorizontalAlignment);
+                _context.NewXmlWriter.WriteAttributeString("vertical", style3VerticalAlignment);                _context.NewXmlWriter.WriteAttributeString("textRotation", "0");
                 _context.NewXmlWriter.WriteAttributeString("wrapText", "0");
                 _context.NewXmlWriter.WriteAttributeString("indent", "0");
                 _context.NewXmlWriter.WriteAttributeString("relativeIndent", "0");
@@ -777,6 +890,7 @@ namespace MiniExcelLibs.OpenXml.Styles
                 _context.NewXmlWriter.WriteAttributeString("shrinkToFit", "0");
                 _context.NewXmlWriter.WriteAttributeString("readingOrder", "0");
                 _context.NewXmlWriter.WriteEndElement();
+ 
                 _context.NewXmlWriter.WriteStartElement(_context.OldXmlReader.Prefix, "protection", _context.OldXmlReader.NamespaceURI);
                 _context.NewXmlWriter.WriteAttributeString("locked", "1");
                 _context.NewXmlWriter.WriteAttributeString("hidden", "0");
@@ -811,10 +925,19 @@ namespace MiniExcelLibs.OpenXml.Styles
             await _context.NewXmlWriter.WriteAttributeStringAsync(null, "applyAlignment", null, "1");
             await _context.NewXmlWriter.WriteAttributeStringAsync(null, "applyProtection", null, "1");
             await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "alignment", _context.OldXmlReader.NamespaceURI);
-            await _context.NewXmlWriter.WriteAttributeStringAsync(null, "horizontal", null, "left");
-            await _context.NewXmlWriter.WriteAttributeStringAsync(null, "vertical", null, "bottom");
+
+            var horizontalAlignment = _styleOptions.HeaderStyle?.HorizontalAlignment ?? DefaultHorizontalAlignment;
+            var horizontalAlignmentStr = horizontalAlignment.ToString().ToLowerInvariant();
+            await _context.NewXmlWriter.WriteAttributeStringAsync(null, "horizontal", null, horizontalAlignmentStr).ConfigureAwait(false);
+        
+            var verticalAlignment = _styleOptions.HeaderStyle?.VerticalAlignment ?? DefaultVerticalAlignment;
+            var verticalAlignmentStr = verticalAlignment.ToString().ToLowerInvariant();
+            await _context.NewXmlWriter.WriteAttributeStringAsync(null, "vertical", null, verticalAlignmentStr).ConfigureAwait(false);
+            
+            var wrapHeader = (_styleOptions.HeaderStyle?.WrapText ?? false) ? "1" : "0";
+            await _context.NewXmlWriter.WriteAttributeStringAsync(null, "wrapText", null, wrapHeader).ConfigureAwait(false);
+
             await _context.NewXmlWriter.WriteAttributeStringAsync(null, "textRotation", null, "0");
-            await _context.NewXmlWriter.WriteAttributeStringAsync(null, "wrapText", null, "0");
             await _context.NewXmlWriter.WriteAttributeStringAsync(null, "indent", null, "0");
             await _context.NewXmlWriter.WriteAttributeStringAsync(null, "relativeIndent", null, "0");
             await _context.NewXmlWriter.WriteAttributeStringAsync(null, "justifyLastLine", null, "0");
@@ -844,11 +967,44 @@ namespace MiniExcelLibs.OpenXml.Styles
             await _context.NewXmlWriter.WriteAttributeStringAsync(null, "applyBorder", null, "1");
             await _context.NewXmlWriter.WriteAttributeStringAsync(null, "applyAlignment", null, "1");
             await _context.NewXmlWriter.WriteAttributeStringAsync(null, "applyProtection", null, "1");
+
             await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "alignment", _context.OldXmlReader.NamespaceURI);
-            await _context.NewXmlWriter.WriteAttributeStringAsync(null, "horizontal", null, "general");
-            await _context.NewXmlWriter.WriteAttributeStringAsync(null, "vertical", null, "bottom");
+            string style1HorizontalAlignment;
+            switch (_styleOptions.HorizontalAlignment)
+            {
+                case HorizontalCellAlignment.Center:
+                    style1HorizontalAlignment = "center";
+                    break;
+                case HorizontalCellAlignment.Right:
+                    style1HorizontalAlignment = "right";
+                    break;
+                default:
+                    style1HorizontalAlignment = "general";
+                    break;
+            }
+
+            string style1VerticalAlignment;
+            switch (_styleOptions.VerticalAlignment)
+            {
+                case VerticalCellAlignment.Top:
+                    style1VerticalAlignment = "top";
+                    break;
+                case VerticalCellAlignment.Center:
+                    style1VerticalAlignment = "center";
+                    break;
+                default:
+                    style1VerticalAlignment = "bottom";
+                    break;
+            }
+
+            _context.NewXmlWriter.WriteAttributeString("horizontal", style1HorizontalAlignment);
+            _context.NewXmlWriter.WriteAttributeString("vertical", style1VerticalAlignment);
+            
             await _context.NewXmlWriter.WriteAttributeStringAsync(null, "textRotation", null, "0");
-            await _context.NewXmlWriter.WriteAttributeStringAsync(null, "wrapText", null, _styleOptions.WrapCellContents ? "1" : "0");
+
+            var wrapContent = _styleOptions.WrapCellContents ? "1" : "0";
+            await _context.NewXmlWriter.WriteAttributeStringAsync(null, "wrapText", null, wrapContent).ConfigureAwait(false);
+
             await _context.NewXmlWriter.WriteAttributeStringAsync(null, "indent", null, "0");
             await _context.NewXmlWriter.WriteAttributeStringAsync(null, "relativeIndent", null, "0");
             await _context.NewXmlWriter.WriteAttributeStringAsync(null, "justifyLastLine", null, "0");
@@ -878,9 +1034,39 @@ namespace MiniExcelLibs.OpenXml.Styles
             await _context.NewXmlWriter.WriteAttributeStringAsync(null, "applyBorder", null, "1");
             await _context.NewXmlWriter.WriteAttributeStringAsync(null, "applyAlignment", null, "1");
             await _context.NewXmlWriter.WriteAttributeStringAsync(null, "applyProtection", null, "1");
+
             await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "alignment", _context.OldXmlReader.NamespaceURI);
-            await _context.NewXmlWriter.WriteAttributeStringAsync(null, "horizontal", null, "general");
-            await _context.NewXmlWriter.WriteAttributeStringAsync(null, "vertical", null, "bottom");
+            string style2HorizontalAlignment;
+            switch (_styleOptions.HorizontalAlignment)
+            {
+                case HorizontalCellAlignment.Center:
+                    style2HorizontalAlignment = "center";
+                    break;
+                case HorizontalCellAlignment.Right:
+                    style2HorizontalAlignment = "right";
+                    break;
+                default:
+                    style2HorizontalAlignment = "general";
+                    break;
+            }
+
+            string style2VerticalAlignment;
+            switch (_styleOptions.VerticalAlignment)
+            {
+                case VerticalCellAlignment.Top:
+                    style2VerticalAlignment = "top";
+                    break;
+                case VerticalCellAlignment.Center:
+                    style2VerticalAlignment = "center";
+                    break;
+                default:
+                    style2VerticalAlignment = "bottom";
+                    break;
+            }
+
+            _context.NewXmlWriter.WriteAttributeString("horizontal", style2HorizontalAlignment);
+            _context.NewXmlWriter.WriteAttributeString("vertical", style2VerticalAlignment);  
+            
             await _context.NewXmlWriter.WriteAttributeStringAsync(null, "textRotation", null, "0");
             await _context.NewXmlWriter.WriteAttributeStringAsync(null, "wrapText", null, "0");
             await _context.NewXmlWriter.WriteAttributeStringAsync(null, "indent", null, "0");
@@ -889,6 +1075,7 @@ namespace MiniExcelLibs.OpenXml.Styles
             await _context.NewXmlWriter.WriteAttributeStringAsync(null, "shrinkToFit", null, "0");
             await _context.NewXmlWriter.WriteAttributeStringAsync(null, "readingOrder", null, "0");
             await _context.NewXmlWriter.WriteEndElementAsync();
+
             await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "protection", _context.OldXmlReader.NamespaceURI);
             await _context.NewXmlWriter.WriteAttributeStringAsync(null, "locked", null, "1");
             await _context.NewXmlWriter.WriteAttributeStringAsync(null, "hidden", null, "0");
@@ -936,9 +1123,39 @@ namespace MiniExcelLibs.OpenXml.Styles
                 await _context.NewXmlWriter.WriteAttributeStringAsync(null, "applyBorder", null, "1");
                 await _context.NewXmlWriter.WriteAttributeStringAsync(null, "applyAlignment", null, "1");
                 await _context.NewXmlWriter.WriteAttributeStringAsync(null, "applyProtection", null, "1");
+
                 await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "alignment", _context.OldXmlReader.NamespaceURI);
-                await _context.NewXmlWriter.WriteAttributeStringAsync(null, "horizontal", null, "general");
-                await _context.NewXmlWriter.WriteAttributeStringAsync(null, "vertical", null, "bottom");
+                string style3HorizontalAlignment;
+                switch (_styleOptions.HorizontalAlignment)
+                {
+                    case HorizontalCellAlignment.Center:
+                        style3HorizontalAlignment = "center";
+                        break;
+                    case HorizontalCellAlignment.Right:
+                        style3HorizontalAlignment = "right";
+                        break;
+                    default:
+                        style3HorizontalAlignment = "general";
+                        break;
+                }
+
+                string style3VerticalAlignment;
+                switch (_styleOptions.VerticalAlignment)
+                {
+                    case VerticalCellAlignment.Top:
+                        style3VerticalAlignment = "top";
+                        break;
+                    case VerticalCellAlignment.Center:
+                        style3VerticalAlignment = "center";
+                        break;
+                    default:
+                        style3VerticalAlignment = "bottom";
+                        break;
+                }
+
+                _context.NewXmlWriter.WriteAttributeString("horizontal", style3HorizontalAlignment);
+                _context.NewXmlWriter.WriteAttributeString("vertical", style3VerticalAlignment);
+                
                 await _context.NewXmlWriter.WriteAttributeStringAsync(null, "textRotation", null, "0");
                 await _context.NewXmlWriter.WriteAttributeStringAsync(null, "wrapText", null, "0");
                 await _context.NewXmlWriter.WriteAttributeStringAsync(null, "indent", null, "0");
@@ -947,6 +1164,7 @@ namespace MiniExcelLibs.OpenXml.Styles
                 await _context.NewXmlWriter.WriteAttributeStringAsync(null, "shrinkToFit", null, "0");
                 await _context.NewXmlWriter.WriteAttributeStringAsync(null, "readingOrder", null, "0");
                 await _context.NewXmlWriter.WriteEndElementAsync();
+
                 await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "protection", _context.OldXmlReader.NamespaceURI);
                 await _context.NewXmlWriter.WriteAttributeStringAsync(null, "locked", null, "1");
                 await _context.NewXmlWriter.WriteAttributeStringAsync(null, "hidden", null, "0");

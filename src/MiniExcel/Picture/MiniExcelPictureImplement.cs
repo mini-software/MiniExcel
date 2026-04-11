@@ -231,10 +231,10 @@ namespace MiniExcelLibs.Picture
             }
 
             public static XmlDocument CreateOrUpdateDrawingXml(
-    XmlDocument existingDoc,
-    int col, int row,
-    int widthPx, int heightPx,
-    string relId)
+                XmlDocument existingDoc,
+                int col, int row,
+                int widthPx, int heightPx,
+                string relId)
             {
                 var doc = existingDoc ?? new XmlDocument();
                 var ns = new XmlNamespaceManager(doc.NameTable);

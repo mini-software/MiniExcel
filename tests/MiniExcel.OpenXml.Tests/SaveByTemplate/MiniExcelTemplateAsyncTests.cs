@@ -342,7 +342,6 @@ public class MiniExcelTemplateAsyncTests
                 poco
             }
         };
-        // await _excelTemplater.FillTemplateAsync(@"c:\users\computer\desktop\0.xlsx", templatePath, value, true);
         await _excelTemplater.FillTemplateAsync(path.ToString(), templatePath, value);
 
         var rows = _excelImporter.Query<TestIEnumerableTypePoco>(path.ToString()).ToList();
@@ -422,7 +421,7 @@ public class MiniExcelTemplateAsyncTests
     }
 
     [Fact]
-    public async Task TemplateAsyncBasiTest()
+    public async Task TemplateAsyncBasicTest()
     {
         var templatePath = PathHelper.GetFile("xlsx/TestTemplateEasyFill.xlsx");
         {

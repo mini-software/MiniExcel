@@ -10,7 +10,7 @@ namespace MiniExcelLib.OpenXml;
 
 internal partial class OpenXmlReader : IMiniExcelReader
 {
-    private static readonly string[] Ns = [Schemas.SpreadsheetmlXmlNs, Schemas.SpreadsheetmlXmlStrictNs];
+    private static readonly string[] Ns = [Schemas.SpreadsheetmlXmlMain, Schemas.SpreadsheetmlXmlStrictNs];
     private static readonly string[] RelationshiopNs = [Schemas.SpreadsheetmlXmlRelationships, Schemas.SpreadsheetmlXmlStrictRelationships];
     private readonly OpenXmlConfiguration _config;
     
@@ -1151,7 +1151,7 @@ internal partial class OpenXmlReader : IMiniExcelReader
 
         XNamespace nsRel = Schemas.OpenXmlPackageRelationships;
         XNamespace ns18Tc = Schemas.SpreadsheetmlXmlX18Tc;
-        XNamespace nsMain = Schemas.SpreadsheetmlXmlNs;
+        XNamespace nsMain = Schemas.SpreadsheetmlXmlMain;
         XNamespace ns14R = Schemas.SpreadsheetmlXmlX14R;
         
         SetWorkbookRels(Archive.EntryCollection);

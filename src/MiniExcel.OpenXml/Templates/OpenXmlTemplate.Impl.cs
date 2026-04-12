@@ -1,13 +1,13 @@
 using MiniExcelLib.Core.Attributes;
 using System.ComponentModel;
 using System.Xml.Linq;
-using static MiniExcelLib.OpenXml.Constants.Schemas;
+using  MiniExcelLib.OpenXml.Constants;
 
 namespace MiniExcelLib.OpenXml.Templates;
 
 internal partial class OpenXmlTemplate
 {
-    private static readonly XNamespace SpreadsheetNs = SpreadsheetmlXmlNs;
+    private static readonly XNamespace SpreadsheetNs = Schemas.SpreadsheetmlXmlMain;
 
     private static readonly XmlWriterSettings DocXmlWriterSettings = new()
     {
@@ -206,7 +206,9 @@ internal partial class OpenXmlTemplate
 
         sheetData.RemoveAll();
         worksheet.Elements(SpreadsheetNs + "conditionalFormatting").Remove();
+        
         var prefix = worksheet.GetPrefixOfNamespace(SpreadsheetNs);
+        var fullPrefix = !string.IsNullOrEmpty(prefix) ? $"{prefix}:" : "";
 
         var phoneticPrXml = string.Empty;
         if (worksheet.Element(SpreadsheetNs + "phoneticPr") is { } phoneticPr)
@@ -226,7 +228,7 @@ internal partial class OpenXmlTemplate
         var beforeSheetData = worksheet.Element(SpreadsheetNs + "sheetData")?.ElementsBeforeSelf() ?? [];
         var afterSheetData = worksheet.Element(SpreadsheetNs + "sheetData")?.ElementsAfterSelf() ?? [];
 
-        await writer.WriteStartElementAsync(null, "worksheet", SpreadsheetmlXmlNs).ConfigureAwait(false);
+        await writer.WriteStartElementAsync(null, "worksheet", Schemas.SpreadsheetmlXmlMain).ConfigureAwait(false);
         foreach (var attr in worksheet.Attributes())
         {
             var (nsPrefix, ns) = attr is { IsNamespaceDeclaration: true, Name.LocalName: not "xmlns" } 
@@ -245,7 +247,7 @@ internal partial class OpenXmlTemplate
 #endif
         }
 
-        await writer.WriteStartElementAsync(null,"sheetData", SpreadsheetmlXmlNs).ConfigureAwait(false);
+        await writer.WriteStartElementAsync(null,"sheetData", Schemas.SpreadsheetmlXmlMain).ConfigureAwait(false);
 
         if (mergeCells)
         {
@@ -360,9 +362,10 @@ internal partial class OpenXmlTemplate
             }
 
             //TODO: Fix parsing for documents that don't have the "r" attribute on rows
-            var originRowIndex = int.Parse(row.Attribute("r").Value);
-            var newRowIndex = originRowIndex + rowIndexDiff + groupingRowDiff - mergeRowCount;
+            if (row.Attribute("r")?.Value is not { } rVal || !int.TryParse(rVal, out var originRowIndex))
+                throw new NotSupportedException("The format of the chosen template is not currently supported.");
 
+            var newRowIndex = originRowIndex + rowIndexDiff + groupingRowDiff - mergeRowCount;
             var innerXml = string.Concat(row.Nodes());
 
             var rowXml = new StringBuilder("<");
@@ -430,7 +433,6 @@ internal partial class OpenXmlTemplate
             }
             else
             {
-                prefix = !string.IsNullOrEmpty(prefix) ? $"{prefix}:" : "";
                 rowXml.Clear()
                     .Append(outerXmlOpen)
                     .Append($@" r=""{newRowIndex}"">")
@@ -438,9 +440,9 @@ internal partial class OpenXmlTemplate
                     .Replace("{{$rowindex}}", newRowIndex.ToString())
                     .Replace("{{$enumrowstart}}", enumrowstart.ToString())
                     .Replace("{{$enumrowend}}", enumrowend.ToString())
-                    .Append($"</{prefix}{row.Name.LocalName}>");
+                    .Append($"</{fullPrefix}{row.Name.LocalName}>");
 
-                await ProcessFormulasAsync(rowXml, newRowIndex, cancellationToken).ConfigureAwait(false);
+                ProcessFormulas(rowXml, newRowIndex);
                 await writer.WriteRawAsync(CleanXml(rowXml, prefix).ToString()).ConfigureAwait(false);
 
                 //mergecells
@@ -472,12 +474,12 @@ internal partial class OpenXmlTemplate
         // 2. mergeCells
         if (_newXMergeCellInfos.Count != 0)
         {
-            await writer.WriteRawAsync($"<{prefix}mergeCells count=\"{_newXMergeCellInfos.Count}\">").ConfigureAwait(false);
+            await writer.WriteRawAsync($"<{fullPrefix}mergeCells count=\"{_newXMergeCellInfos.Count}\">").ConfigureAwait(false);
             foreach (var cell in _newXMergeCellInfos)
             {
                 await writer.WriteRawAsync(cell.ToXmlString(prefix)).ConfigureAwait(false);
             }
-            await writer.WriteRawAsync($"</{prefix}mergeCells>\r\n").ConfigureAwait(false);
+            await writer.WriteRawAsync($"</{fullPrefix}mergeCells>\r\n").ConfigureAwait(false);
         }
 
         // 3. phoneticPr
@@ -489,7 +491,8 @@ internal partial class OpenXmlTemplate
         // 4. conditionalFormatting
         if (newConditionalFormatRanges.Count != 0)
         {
-            await writer.WriteRawAsync(CleanXml(string.Join(string.Empty, newConditionalFormatRanges.Select(cf => cf.Node?.ToString(SaveOptions.DisableFormatting))), prefix)).ConfigureAwait(false);
+            var nodes = newConditionalFormatRanges.Select(cf => cf.Node?.ToString(SaveOptions.DisableFormatting));
+            await writer.WriteRawAsync(CleanXml(string.Join("", nodes), prefix)).ConfigureAwait(false);
         }
 
         foreach (var afterElement in afterSheetData)
@@ -751,7 +754,7 @@ internal partial class OpenXmlTemplate
             rowXml.Replace("{{$rowindex}}", mergeBaseRowIndex.ToString());
 
             // replace formulas
-            await ProcessFormulasAsync(rowXml, newRowIndex, cancellationToken).ConfigureAwait(false);
+            ProcessFormulas(rowXml, newRowIndex);
             var finalXml = CleanXml(rowXml, endPrefix).ToString();
             await writer.WriteRawAsync(finalXml).ConfigureAwait(false);
 
@@ -779,20 +782,23 @@ internal partial class OpenXmlTemplate
             for (int i = 1; i < height; i++)
             {
                 mergeBaseRowIndex++;
+
                 var newRow = new XElement(row);
                 newRow.SetAttributeValue("r", mergeBaseRowIndex.ToString());
 
-                var cells = newRow.Elements(SpreadsheetNs + "c");
+                var oldCells = row.Elements(SpreadsheetNs + "c");
+                var newCells = newRow.Elements(SpreadsheetNs + "c");
+
                 // all v replace by empty
                 // TODO: remove c/v
-                foreach (var cell in cells)
+                foreach (var (newCell, oldCell) in newCells.Zip(oldCells, (x1, x2) => (x1, x2)))
                 {
-                    cell.Attribute("t")?.Remove();
-                    cell.RemoveNodes();
+                    newCell.Attribute("t")?.Remove();
+                    newCell.RemoveNodes();
+                    newCell.Value = oldCell.Value.Replace("{{$rowindex}}", mergeBaseRowIndex.ToString());
                 }
 
-                newRow.Value = new StringBuilder(newRow.Value).Replace("{{$rowindex}}", mergeBaseRowIndex.ToString()).ToString();
-                await writer.WriteRawAsync(CleanXml(newRow.Value, endPrefix)).ConfigureAwait(false);
+                await writer.WriteRawAsync(CleanXml(newRow.ToString(), endPrefix)).ConfigureAwait(false);
             }
         }
 
@@ -920,38 +926,20 @@ internal partial class OpenXmlTemplate
         }
     }
 
-    [CreateSyncVersion]
-    private async Task ProcessFormulasAsync(StringBuilder rowXml, int rowIndex, CancellationToken cancellationToken = default)
+    private void ProcessFormulas(StringBuilder rowXml, int rowIndex)
     {
-        var rowXmlString = rowXml.ToString();
-
         // exit if no formula is found
-        if (!rowXmlString.Contains("$="))
+        if (!rowXml.ToString().Contains("$="))
             return;
 
-#if NETSTANDARD2_0
-        using var stream =  new MemoryStream();
-        using var writer = XmlWriter.Create(stream, FragXmlWriterSettings);
-#else
-        var stream =  new MemoryStream();
-        await using var disposableStream = stream.ConfigureAwait(false);
-        var writer = XmlWriter.Create(stream, FragXmlWriterSettings);
-        await using var disposableWriter = writer.ConfigureAwait(false);
-#endif
-        await writer.WriteStartElementAsync(null, "dummy", null).ConfigureAwait(false);
-        await writer.WriteAttributeStringAsync(null, "x14ac", XNamespace.Xmlns.NamespaceName, SpreadsheetmlXmlX14Ac).ConfigureAwait(false);        
-        await writer.WriteRawAsync(rowXmlString).ConfigureAwait(false);
-        await writer.WriteEndElementAsync().ConfigureAwait(false);
-        await writer.FlushAsync().ConfigureAwait(false);
-        stream.Seek(0, SeekOrigin.Begin);
+        // adding dummy element for correctly parsing namespace prefix
+        rowXml.Insert(0, $"<d xmlns:x14ac=\"{Schemas.SpreadsheetmlXmlX14Ac}\">");
+        rowXml.Append("</d>");
 
-#if NETSTANDARD2_0
-        var dummyContainer = XElement.Load(stream);
-#else
-        var dummyContainer = await XElement.LoadAsync(stream, LoadOptions.None, cancellationToken).ConfigureAwait(false);
-#endif
+        var rowElement = XElement.Parse(rowXml.ToString());
+
         var index = 1;
-        foreach (var cell in dummyContainer.Descendants(SpreadsheetNs + "c"))
+        foreach (var cell in rowElement.Descendants(SpreadsheetNs + "c"))
         {
             // convert cells starting with '$=' into formulas
             /* Target:
@@ -977,7 +965,7 @@ internal partial class OpenXmlTemplate
         }
 
         rowXml.Clear();
-        rowXml.Append(dummyContainer.Element("row"));
+        rowXml.Append(rowElement.FirstNode);
     }
 
     private static string? ConvertToDateTimeString(PropertyInfo? propInfo, object cellValue)

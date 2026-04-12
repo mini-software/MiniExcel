@@ -41,7 +41,7 @@ internal sealed partial class OpenXmlZip : IDisposable, IAsyncDisposable
 
         try
         {
-            var entries = zipFile.Entries.ToDictionary(entry => entry.FullName.Replace('\\', '/'), entry => entry);
+            var entries = zipFile.Entries.ToDictionary(entry => entry.FullName.Replace('\\', '/'), entry => entry, StringComparer.OrdinalIgnoreCase);
             return new OpenXmlZip(zipFile, entries)
             {
                 EntryCollection = zipFile.Entries

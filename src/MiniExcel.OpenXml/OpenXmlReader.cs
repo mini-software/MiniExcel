@@ -10,7 +10,7 @@ namespace MiniExcelLib.OpenXml;
 
 internal partial class OpenXmlReader : IMiniExcelReader
 {
-    private static readonly string[] Ns = [Schemas.SpreadsheetmlXmlNs, Schemas.SpreadsheetmlXmlStrictNs];
+    private static readonly string[] Ns = [Schemas.SpreadsheetmlXmlMain, Schemas.SpreadsheetmlXmlStrictNs];
     private static readonly string[] RelationshiopNs = [Schemas.SpreadsheetmlXmlRelationships, Schemas.SpreadsheetmlXmlStrictRelationships];
     private readonly OpenXmlConfiguration _config;
     
@@ -21,9 +21,9 @@ internal partial class OpenXmlReader : IMiniExcelReader
     internal readonly OpenXmlZip Archive;
     internal IDictionary<int, string> SharedStrings = new Dictionary<int, string>();
     
-    private OpenXmlReader(Stream stream, IMiniExcelConfiguration? configuration)
+    private OpenXmlReader(OpenXmlZip openXmlZip, IMiniExcelConfiguration? configuration)
     {
-        Archive = new OpenXmlZip(stream);
+        Archive = openXmlZip;
         _config = (OpenXmlConfiguration?)configuration ?? OpenXmlConfiguration.Default;
     }
 
@@ -31,8 +31,10 @@ internal partial class OpenXmlReader : IMiniExcelReader
     internal static async Task<OpenXmlReader> CreateAsync(Stream stream, IMiniExcelConfiguration? configuration, CancellationToken cancellationToken = default)
     {
         ThrowHelper.ThrowIfInvalidOpenXml(stream);
-        
-        var reader = new OpenXmlReader(stream, configuration);
+
+        var archive = await OpenXmlZip.CreateAsync(stream, cancellationToken: cancellationToken).ConfigureAwait(false);
+        var reader = new OpenXmlReader(archive, configuration);
+
         await reader.SetSharedStringsAsync(cancellationToken).ConfigureAwait(false);
         return reader;
     }
@@ -1149,7 +1151,7 @@ internal partial class OpenXmlReader : IMiniExcelReader
 
         XNamespace nsRel = Schemas.OpenXmlPackageRelationships;
         XNamespace ns18Tc = Schemas.SpreadsheetmlXmlX18Tc;
-        XNamespace nsMain = Schemas.SpreadsheetmlXmlNs;
+        XNamespace nsMain = Schemas.SpreadsheetmlXmlMain;
         XNamespace ns14R = Schemas.SpreadsheetmlXmlX14R;
         
         SetWorkbookRels(Archive.EntryCollection);

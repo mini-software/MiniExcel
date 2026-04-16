@@ -5,7 +5,7 @@ namespace MiniExcelLib.OpenXml.Styles;
 
 internal class OpenXmlStyles
 {
-    private static readonly string[] Ns = [Schemas.SpreadsheetmlXmlNs, Schemas.SpreadsheetmlXmlStrictNs];
+    private static readonly string[] Ns = [Schemas.SpreadsheetmlXmlMain, Schemas.SpreadsheetmlXmlStrictNs];
     
     private readonly Dictionary<int, StyleRecord> _cellXfs = new();
     private readonly Dictionary<int, StyleRecord> _cellStyleXfs = new();

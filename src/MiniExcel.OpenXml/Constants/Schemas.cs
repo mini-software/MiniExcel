@@ -2,7 +2,7 @@
 
 internal static class Schemas
 {
-    public const string SpreadsheetmlXmlNs = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
+    public const string SpreadsheetmlXmlMain = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
     public const string SpreadsheetmlXmlStrictNs = "http://purl.oclc.org/ooxml/spreadsheetml/main";
 
     public const string OpenXmlPackageRelationships = "http://schemas.openxmlformats.org/package/2006/relationships";

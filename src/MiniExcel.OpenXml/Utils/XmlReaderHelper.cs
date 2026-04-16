@@ -4,7 +4,7 @@ namespace MiniExcelLib.OpenXml.Utils;
 
 internal static partial class XmlReaderHelper
 {
-    private static readonly string[] Ns = [Schemas.SpreadsheetmlXmlNs, Schemas.SpreadsheetmlXmlStrictNs];
+    private static readonly string[] Ns = [Schemas.SpreadsheetmlXmlMain, Schemas.SpreadsheetmlXmlStrictNs];
     
     /// <summary>
     /// Pass &lt;?xml&gt; and &lt;worksheet&gt;

@@ -223,11 +223,11 @@ public sealed partial class OpenXmlImporter
     {
         config ??= OpenXmlConfiguration.Default;
 
-        using var archive = new OpenXmlZip(stream, leaveOpen: true);
-
+        var archive = await OpenXmlZip.CreateAsync(stream, leaveOpen: true, cancellationToken: cancellationToken).ConfigureAwait(false);
+        await using var disposableArchive = archive.ConfigureAwait(false);
         using var reader = await OpenXmlReader.CreateAsync(stream, config, cancellationToken: cancellationToken).ConfigureAwait(false);
-        var rels = await reader.GetWorkbookRelsAsync(archive.EntryCollection, cancellationToken).ConfigureAwait(false);
 
+        var rels = await reader.GetWorkbookRelsAsync(archive.EntryCollection, cancellationToken).ConfigureAwait(false);
         return rels?.Select(s => s.Name).ToList() ?? [];
     }
 
@@ -248,10 +248,11 @@ public sealed partial class OpenXmlImporter
     {
         config ??= OpenXmlConfiguration.Default;
 
-        using var archive = new OpenXmlZip(stream);
+        var archive = await OpenXmlZip.CreateAsync(stream, cancellationToken: cancellationToken).ConfigureAwait(false);
+        await using var disposableArchve = archive.ConfigureAwait(false);
         using var reader = await OpenXmlReader.CreateAsync(stream, config, cancellationToken: cancellationToken).ConfigureAwait(false);
-        var rels = await reader.GetWorkbookRelsAsync(archive.EntryCollection, cancellationToken).ConfigureAwait(false);
 
+        var rels = await reader.GetWorkbookRelsAsync(archive.EntryCollection, cancellationToken).ConfigureAwait(false);
         return rels?.Select((s, i) => s.ToSheetInfo((uint)i)).ToList() ?? [];
     }
 

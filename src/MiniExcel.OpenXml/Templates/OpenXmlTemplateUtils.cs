@@ -1,12 +1,14 @@
-﻿namespace MiniExcelLib.OpenXml.Templates;
+﻿using System.Xml.Linq;
+
+namespace MiniExcelLib.OpenXml.Templates;
 
 internal class XRowInfo
 {
     public string FormatText { get; set; }
     public string IEnumerablePropName { get; set; }
-    public XmlElement Row { get; set; }
+    public XElement Row { get; set; }
     public Type IEnumerableGenericType { get; set; }
-    public IDictionary<string, MemberInfo> MembersMap { get; set; }
+    public IDictionary<string, MemberInfo> PropsMap { get; set; }
     public bool IsDictionary { get; set; }
     public bool IsDataTable { get; set; }
     public int CellIEnumerableValuesCount { get; set; }
@@ -14,22 +16,7 @@ internal class XRowInfo
     public IEnumerable? CellIEnumerableValues { get; set; }
     public XMergeCell? IEnumerableMercell { get; set; }
     public List<XMergeCell>? RowMercells { get; set; }
-    public List<XmlElement>? ConditionalFormats { get; set; }
-}
-
-internal class MemberInfo
-{
-    public PropertyInfo PropertyInfo { get; set; }
-    public FieldInfo FieldInfo { get; set; }
-    public Type UnderlyingMemberType { get; set; }
-    public PropertyInfoOrFieldInfo PropertyInfoOrFieldInfo { get; set; } = PropertyInfoOrFieldInfo.None;
-}
-
-internal enum PropertyInfoOrFieldInfo
-{
-    None = 0,
-    PropertyInfo = 1,
-    FieldInfo = 2
+    public List<XElement>? ConditionalFormats { get; set; }
 }
 
 internal class XMergeCell
@@ -45,11 +32,12 @@ internal class XMergeCell
         MergeCell = mergeCell.MergeCell;
     }
 
-    public XMergeCell(XmlElement mergeCell)
+    public XMergeCell(XElement mergeCell)
     {
-        var refAttr = mergeCell.Attributes["ref"].Value;
-        var refs = refAttr.Split(':');
+        var refAttr = mergeCell.Attribute("ref")?.Value;
+        var refs = refAttr?.Split(':');
 
+        //TODO: width,height
         var xy1 = refs[0];
         X1 = CellReferenceConverter.GetNumericalIndex(StringHelper.GetLetters(refs[0]));
         Y1 = StringHelper.GetNumber(xy1);
@@ -81,12 +69,19 @@ internal class XMergeCell
     public int X2 { get; set; }
     public int Y2 { get; set; }
     public string Ref => $"{CellReferenceConverter.GetAlphabeticalIndex(X1)}{Y1}:{CellReferenceConverter.GetAlphabeticalIndex(X2)}{Y2}";
-    public XmlElement MergeCell { get; set; }
+    public XElement MergeCell { get; set; }
     public int Width { get; internal set; }
     public int Height { get; internal set; }
 
-    public string ToXmlString(string prefix)
+    public string ToXmlString(string? prefix)
         => $"<{prefix}mergeCell ref=\"{CellReferenceConverter.GetAlphabeticalIndex(X1)}{Y1}:{CellReferenceConverter.GetAlphabeticalIndex(X2)}{Y2}\"/>";
+}
+
+internal class XChildNode
+{
+    public string? InnerText { get; set; }
+    public string ColIndex { get; set; }
+    public int RowIndex { get; set; }
 }
 
 internal class MergeCellIndex(int rowStart, int rowEnd)
@@ -95,11 +90,30 @@ internal class MergeCellIndex(int rowStart, int rowEnd)
     public int RowEnd { get; } = rowEnd;
 }
 
-internal class XChildNode
+
+internal class MemberInfo
 {
-    public string? InnerText { get; set; }
-    public string ColIndex { get; set; }
-    public int RowIndex { get; set; }
+    public PropertyInfo PropertyInfo { get; set; }
+    public FieldInfo FieldInfo { get; set; }
+    public Type UnderlyingMemberType { get; set; }
+    public PropertyInfoOrFieldInfo PropertyInfoOrFieldInfo { get; set; } = PropertyInfoOrFieldInfo.None;
+}
+
+internal class GenerateCellValuesContext
+{
+    public int RowIndexDiff { get; set; }
+    public int HeaderDiff { get; set; }
+    public string PrevHeader { get; set; }
+    public string CurrentHeader { get; set; }
+    public int NewRowIndex { get; set; }
+    public bool IsFirst { get; set; }
+    public int EnumerableIndex { get; set; }
+}
+
+internal class ConditionalFormatRange
+{
+    public XElement? Node { get; set; }
+    public List<Range> Ranges { get; set; } = [];
 }
 
 internal struct Range
@@ -112,21 +126,6 @@ internal struct Range
     public bool ContainsRow(int row) => StartRow <= row && row <= EndRow;
 }
 
-internal class ConditionalFormatRange
-{
-    public XmlNode? Node { get; set; }
-    public List<Range> Ranges { get; set; } = [];
-}
+internal enum PropertyInfoOrFieldInfo { None, PropertyInfo, FieldInfo }
 
 internal enum SpecialCellType { None, Group, Endgroup, Merge, Header }
-
-internal class GenerateCellValuesContext
-{
-    public int RowIndexDiff { get; set; }
-    public int HeaderDiff { get; set; }
-    public string PrevHeader { get; set; }
-    public string CurrentHeader { get; set; }
-    public int NewRowIndex { get; set; }
-    public bool IsFirst { get; set; }
-    public int EnumerableIndex { get; set; }
-}

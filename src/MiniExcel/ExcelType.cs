@@ -1,13 +1,12 @@
-﻿namespace MiniExcelLibs
+﻿namespace MiniExcelLibs;
+
+public enum ExcelType
 {
-    public enum ExcelType
-    {
-        XLSX,
-        //XLS,
-        CSV,
-        /// <summary>
-        /// Will auto check excel type by stream or file path
-        /// </summary>
-        UNKNOWN
-    }
+    XLSX,
+    //XLS,
+    CSV,
+    /// <summary>
+    /// Will auto check excel type by stream or file path
+    /// </summary>
+    UNKNOWN
 }

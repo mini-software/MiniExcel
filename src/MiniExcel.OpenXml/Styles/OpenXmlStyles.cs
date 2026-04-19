@@ -17,14 +17,14 @@ internal class OpenXmlStyles
         if (reader is null)
             throw new InvalidDataException("The OpenXml styles could not be found, the file might be malformed.");
                 
-        if (!XmlReaderHelper.IsStartElement(reader, "styleSheet", Ns))
+        if (!reader.IsStartElement("styleSheet", Ns))
             return;
-        if (!XmlReaderHelper.ReadFirstContent(reader))
+        if (!reader.ReadFirstContent())
             return;
                 
         while (!reader.EOF)
         {
-            if (XmlReaderHelper.IsStartElement(reader, "cellXfs", Ns))
+            if (reader.IsStartElement("cellXfs", Ns))
             {
                 if (!XmlReaderHelper.ReadFirstContent(reader))
                     continue;
@@ -32,7 +32,7 @@ internal class OpenXmlStyles
                 var index = 0;
                 while (!reader.EOF)
                 {
-                    if (XmlReaderHelper.IsStartElement(reader, "xf", Ns))
+                    if (reader.IsStartElement("xf", Ns))
                     {
                         int.TryParse(reader.GetAttribute("xfId"), out var xfId);
                         int.TryParse(reader.GetAttribute("numFmtId"), out var numFmtId);
@@ -40,19 +40,19 @@ internal class OpenXmlStyles
                         reader.Skip();
                         index++;
                     }
-                    else if (!XmlReaderHelper.SkipContent(reader))
+                    else if (!reader.SkipContent())
                         break;
                 }
             }
-            else if (XmlReaderHelper.IsStartElement(reader, "cellStyleXfs", Ns))
+            else if (reader.IsStartElement("cellStyleXfs", Ns))
             {
-                if (!XmlReaderHelper.ReadFirstContent(reader))
+                if (!reader.ReadFirstContent())
                     continue;
 
                 var index = 0;
                 while (!reader.EOF)
                 {
-                    if (XmlReaderHelper.IsStartElement(reader, "xf", Ns))
+                    if (reader.IsStartElement("xf", Ns))
                     {
                         int.TryParse(reader.GetAttribute("xfId"), out var xfId);
                         int.TryParse(reader.GetAttribute("numFmtId"), out var numFmtId);
@@ -61,20 +61,20 @@ internal class OpenXmlStyles
                         reader.Skip();
                         index++;
                     }
-                    else if (!XmlReaderHelper.SkipContent(reader))
+                    else if (!reader.SkipContent())
                     {
                         break;
                     }
                 }
             }
-            else if (XmlReaderHelper.IsStartElement(reader, "numFmts", Ns))
+            else if (reader.IsStartElement("numFmts", Ns))
             {
-                if (!XmlReaderHelper.ReadFirstContent(reader))
+                if (!reader.ReadFirstContent())
                     continue;
 
                 while (!reader.EOF)
                 {
-                    if (XmlReaderHelper.IsStartElement(reader, "numFmt", Ns))
+                    if (reader.IsStartElement("numFmt", Ns))
                     {
                         _ = int.TryParse(reader.GetAttribute("numFmtId"), out var numFmtId);
                         var formatCode = reader.GetAttribute("formatCode");
@@ -94,13 +94,13 @@ internal class OpenXmlStyles
 #endif
                         reader.Skip();
                     }
-                    else if (!XmlReaderHelper.SkipContent(reader))
+                    else if (!reader.SkipContent())
                     {
                         break;
                     }
                 }
             }
-            else if (!XmlReaderHelper.SkipContent(reader))
+            else if (!reader.SkipContent())
             {
                 break;
             }

@@ -189,16 +189,16 @@ internal partial class OpenXmlReader : IMiniExcelReader
 #endif
         using var reader = XmlReader.Create(sheetStream, xmlSettings);
 
-        if (!XmlReaderHelper.IsStartElement(reader, "worksheet", Ns))
+        if (!reader.IsStartElement("worksheet", Ns))
             yield break;
-        if (!await XmlReaderHelper.ReadFirstContentAsync(reader, cancellationToken).ConfigureAwait(false))
+        if (!await reader.ReadFirstContentAsync(cancellationToken).ConfigureAwait(false))
             yield break;
 
         while (!reader.EOF)
         {
-            if (XmlReaderHelper.IsStartElement(reader, "sheetData", Ns))
+            if (reader.IsStartElement("sheetData", Ns))
             {
-                if (!await XmlReaderHelper.ReadFirstContentAsync(reader, cancellationToken).ConfigureAwait(false))
+                if (!await reader.ReadFirstContentAsync(cancellationToken).ConfigureAwait(false))
                     continue;
 
                 int rowIndex = -1;
@@ -206,7 +206,7 @@ internal partial class OpenXmlReader : IMiniExcelReader
                 var headRows = new Dictionary<int, string>();
                 while (!reader.EOF)
                 {
-                    if (XmlReaderHelper.IsStartElement(reader, "row", Ns))
+                    if (reader.IsStartElement("row", Ns))
                     {
                         var nextRowIndex = rowIndex + 1;
                         if (int.TryParse(reader.GetAttribute("r"), out int arValue))
@@ -216,9 +216,9 @@ internal partial class OpenXmlReader : IMiniExcelReader
 
                         if (rowIndex < startRowIndex)
                         {
-                            if (await XmlReaderHelper.ReadFirstContentAsync(reader, cancellationToken).ConfigureAwait(false))
+                            if (await reader.ReadFirstContentAsync(cancellationToken).ConfigureAwait(false))
                             {
-                                await XmlReaderHelper.SkipToNextSameLevelDomAsync(reader, cancellationToken).ConfigureAwait(false);
+                                await reader.SkipToNextSiblingAsync(cancellationToken).ConfigureAwait(false);
                             }
                             continue;
                         }
@@ -243,13 +243,13 @@ internal partial class OpenXmlReader : IMiniExcelReader
                             yield return row;
                         }
                     }
-                    else if (!await XmlReaderHelper.SkipContentAsync(reader, cancellationToken).ConfigureAwait(false))
+                    else if (!await reader.SkipContentAsync(cancellationToken).ConfigureAwait(false))
                     {
                         break;
                     }
                 }
             }
-            else if (!await XmlReaderHelper.SkipContentAsync(reader, cancellationToken).ConfigureAwait(false))
+            else if (!await reader.SkipContentAsync(cancellationToken).ConfigureAwait(false))
             {
                 break;
             }
@@ -286,7 +286,7 @@ internal partial class OpenXmlReader : IMiniExcelReader
         }
 
         // row -> c, must after `if (nextRowIndex < rowIndex)` condition code, eg. The first empty row has no xml element,and the second row xml element is <row r="2"/>
-        if (!await XmlReaderHelper.ReadFirstContentAsync(reader, cancellationToken).ConfigureAwait(false) && !_config.IgnoreEmptyRows)
+        if (!await reader.ReadFirstContentAsync(cancellationToken).ConfigureAwait(false) && !_config.IgnoreEmptyRows)
         {
             //Fill in case of self closed empty row tag eg. <row r="1"/>
             yield return GetCell(useHeaderRow, maxColumnIndex, headRows, startColumnIndex);
@@ -297,7 +297,7 @@ internal partial class OpenXmlReader : IMiniExcelReader
         var columnIndex = withoutCr ? -1 : 0;
         while (!reader.EOF)
         {
-            if (XmlReaderHelper.IsStartElement(reader, "c", Ns))
+            if (reader.IsStartElement("c", Ns))
             {
                 var aS = reader.GetAttribute("s");
                 var aR = reader.GetAttribute("r");
@@ -335,7 +335,7 @@ internal partial class OpenXmlReader : IMiniExcelReader
 
                 SetCellsValueAndHeaders(cellValue, useHeaderRow, headRows, isFirstRow, cell, columnIndex);
             }
-            else if (!await XmlReaderHelper.SkipContentAsync(reader, cancellationToken).ConfigureAwait(false))
+            else if (!await reader.SkipContentAsync(cancellationToken).ConfigureAwait(false))
             {
                 break;
             }
@@ -484,22 +484,22 @@ internal partial class OpenXmlReader : IMiniExcelReader
 #endif
         using var reader = XmlReader.Create(stream, xmlSettings);
         
-        if (!XmlReaderHelper.IsStartElement(reader, "workbook", Ns))
+        if (!reader.IsStartElement("workbook", Ns))
             yield break;
-        if (!await XmlReaderHelper.ReadFirstContentAsync(reader, cancellationToken).ConfigureAwait(false))
+        if (!await reader.ReadFirstContentAsync(cancellationToken).ConfigureAwait(false))
             yield break;
 
         var activeSheetIndex = 0;
         while (!reader.EOF)
         {
-            if (XmlReaderHelper.IsStartElement(reader, "bookViews", Ns))
+            if (reader.IsStartElement("bookViews", Ns))
             {
-                if (!await XmlReaderHelper.ReadFirstContentAsync(reader, cancellationToken).ConfigureAwait(false))
+                if (!await reader.ReadFirstContentAsync(cancellationToken).ConfigureAwait(false))
                     continue;
 
                 while (!reader.EOF)
                 {
-                    if (XmlReaderHelper.IsStartElement(reader, "workbookView", Ns))
+                    if (reader.IsStartElement("workbookView", Ns))
                     {
                         var activeSheet = reader.GetAttribute("activeTab");
                         if (int.TryParse(activeSheet, out var index))
@@ -513,27 +513,27 @@ internal partial class OpenXmlReader : IMiniExcelReader
 #endif
                             .ConfigureAwait(false);
                     }
-                    else if (!await XmlReaderHelper.SkipContentAsync(reader, cancellationToken).ConfigureAwait(false))
+                    else if (!await reader.SkipContentAsync(cancellationToken).ConfigureAwait(false))
                     {
                         break;
                     }
                 }
             }
-            else if (XmlReaderHelper.IsStartElement(reader, "sheets", Ns))
+            else if (reader.IsStartElement("sheets", Ns))
             {
-                if (!await XmlReaderHelper.ReadFirstContentAsync(reader, cancellationToken).ConfigureAwait(false))
+                if (!await reader.ReadFirstContentAsync(cancellationToken).ConfigureAwait(false))
                     continue;
 
                 var sheetCount = 0;
                 while (!reader.EOF)
                 {
-                    if (XmlReaderHelper.IsStartElement(reader, "sheet", Ns))
+                    if (reader.IsStartElement("sheet", Ns))
                     {
                         yield return new SheetRecord(
                             reader.GetAttribute("name"),
                             reader.GetAttribute("state"),
                             uint.Parse(reader.GetAttribute("sheetId")),
-                            XmlReaderHelper.GetAttribute(reader, "id", RelationshiopNs),
+                            reader.GetAttribute("id", RelationshiopNs),
                             sheetCount == activeSheetIndex
                         );
                         sheetCount++;
@@ -543,13 +543,13 @@ internal partial class OpenXmlReader : IMiniExcelReader
 #endif
                             .ConfigureAwait(false);
                     }
-                    else if (!await XmlReaderHelper.SkipContentAsync(reader, cancellationToken).ConfigureAwait(false))
+                    else if (!await reader.SkipContentAsync(cancellationToken).ConfigureAwait(false))
                     {
                         break;
                     }
                 }
             }
-            else if (!await XmlReaderHelper.SkipContentAsync(reader, cancellationToken).ConfigureAwait(false))
+            else if (!await reader.SkipContentAsync(cancellationToken).ConfigureAwait(false))
             {
                 yield break;
             }
@@ -586,7 +586,7 @@ internal partial class OpenXmlReader : IMiniExcelReader
         
         if (!XmlReaderHelper.IsStartElement(reader, "Relationships", Schemas.OpenXmlPackageRelationships))
             return null;
-        if (!await XmlReaderHelper.ReadFirstContentAsync(reader, cancellationToken).ConfigureAwait(false))
+        if (!await reader.ReadFirstContentAsync(cancellationToken).ConfigureAwait(false))
             return null;
 
         while (!reader.EOF)
@@ -606,7 +606,7 @@ internal partial class OpenXmlReader : IMiniExcelReader
 #endif
                     .ConfigureAwait(false);
             }
-            else if (!await XmlReaderHelper.SkipContentAsync(reader, cancellationToken).ConfigureAwait(false))
+            else if (!await reader.SkipContentAsync(cancellationToken).ConfigureAwait(false))
             {
                 break;
             }
@@ -647,25 +647,25 @@ internal partial class OpenXmlReader : IMiniExcelReader
 
         if (columnIndex < startColumnIndex)
         {
-            if (!await XmlReaderHelper.ReadFirstContentAsync(reader, cancellationToken).ConfigureAwait(false))
+            if (!await reader.ReadFirstContentAsync(cancellationToken).ConfigureAwait(false))
                 return new CellAndColumn(null, columnIndex);
 
             while (!reader.EOF)
             {
-                if (!await XmlReaderHelper.SkipContentAsync(reader, cancellationToken).ConfigureAwait(false))
+                if (!await reader.SkipContentAsync(cancellationToken).ConfigureAwait(false))
                     break;
             }
 
             return new CellAndColumn(null, columnIndex);
         }
 
-        if (!await XmlReaderHelper.ReadFirstContentAsync(reader, cancellationToken).ConfigureAwait(false))
+        if (!await reader.ReadFirstContentAsync(cancellationToken).ConfigureAwait(false))
             return new CellAndColumn(null, columnIndex);
 
         object? value = null;
         while (!reader.EOF)
         {
-            if (XmlReaderHelper.IsStartElement(reader, "v", Ns))
+            if (reader.IsStartElement("v", Ns))
             {
                 var rawValue = await reader.ReadElementContentAsStringAsync()
 #if NET6_0_OR_GREATER
@@ -676,13 +676,13 @@ internal partial class OpenXmlReader : IMiniExcelReader
                 if (!string.IsNullOrEmpty(rawValue))
                     ConvertCellValue(rawValue, aT, xfIndex, out value);
             }
-            else if (XmlReaderHelper.IsStartElement(reader, "is", Ns))
+            else if (reader.IsStartElement("is", Ns))
             {
-                var rawValue = await XmlReaderHelper.ReadStringItemAsync(reader, cancellationToken).ConfigureAwait(false);
+                var rawValue = await reader.ReadStringItemAsync(cancellationToken).ConfigureAwait(false);
                 if (!string.IsNullOrEmpty(rawValue))
                     ConvertCellValue(rawValue, aT, xfIndex, out value);
             }
-            else if (!await XmlReaderHelper.SkipContentAsync(reader, cancellationToken).ConfigureAwait(false))
+            else if (!await reader.SkipContentAsync(cancellationToken).ConfigureAwait(false))
             {
                 break;
             }
@@ -793,7 +793,7 @@ internal partial class OpenXmlReader : IMiniExcelReader
             {
                 while (await reader.ReadAsync().ConfigureAwait(false))
                 {
-                    if (XmlReaderHelper.IsStartElement(reader, "c", Ns))
+                    if (reader.IsStartElement("c", Ns))
                     {
                         var r = reader.GetAttribute("r");
                         if (r is not null)
@@ -813,7 +813,7 @@ internal partial class OpenXmlReader : IMiniExcelReader
                         }
                     }
 
-                    else if (XmlReaderHelper.IsStartElement(reader, "dimension", Ns))
+                    else if (reader.IsStartElement("dimension", Ns))
                     {
                         var refAttr = reader.GetAttribute("ref");
                         if (string.IsNullOrEmpty(refAttr))
@@ -847,48 +847,48 @@ internal partial class OpenXmlReader : IMiniExcelReader
 #endif
                 using var reader = XmlReader.Create(sheetStream, xmlSettings);
                 
-                if (!XmlReaderHelper.IsStartElement(reader, "worksheet", Ns))
+                if (!reader.IsStartElement("worksheet", Ns))
                     throw new InvalidDataException("No worksheet data found for the sheet");
 
-                if (!await XmlReaderHelper.ReadFirstContentAsync(reader, cancellationToken).ConfigureAwait(false))
+                if (!await reader.ReadFirstContentAsync(cancellationToken).ConfigureAwait(false))
                     throw new InvalidOperationException("Excel sheet does not contain any data");
 
                 while (!reader.EOF)
                 {
-                    if (XmlReaderHelper.IsStartElement(reader, "sheetData", Ns))
+                    if (reader.IsStartElement("sheetData", Ns))
                     {
-                        if (!await XmlReaderHelper.ReadFirstContentAsync(reader, cancellationToken).ConfigureAwait(false))
+                        if (!await reader.ReadFirstContentAsync(cancellationToken).ConfigureAwait(false))
                             continue;
 
                         while (!reader.EOF)
                         {
-                            if (XmlReaderHelper.IsStartElement(reader, "row", Ns))
+                            if (reader.IsStartElement("row", Ns))
                             {
                                 maxRowIndex++;
 
-                                if (!await XmlReaderHelper.ReadFirstContentAsync(reader, cancellationToken).ConfigureAwait(false))
+                                if (!await reader.ReadFirstContentAsync(cancellationToken).ConfigureAwait(false))
                                     continue;
 
                                 var cellIndex = -1;
                                 while (!reader.EOF)
                                 {
-                                    if (XmlReaderHelper.IsStartElement(reader, "c", Ns))
+                                    if (reader.IsStartElement("c", Ns))
                                     {
                                         cellIndex++;
                                         maxColumnIndex = Math.Max(maxColumnIndex, cellIndex);
                                     }
 
-                                    if (!await XmlReaderHelper.SkipContentAsync(reader, cancellationToken).ConfigureAwait(false))
+                                    if (!await reader.SkipContentAsync(cancellationToken).ConfigureAwait(false))
                                         break;
                                 }
                             }
-                            else if (!await XmlReaderHelper.SkipContentAsync(reader, cancellationToken).ConfigureAwait(false))
+                            else if (!await reader.SkipContentAsync(cancellationToken).ConfigureAwait(false))
                             {
                                 break;
                             }
                         }
                     }
-                    else if (!await XmlReaderHelper.SkipContentAsync(reader, cancellationToken).ConfigureAwait(false))
+                    else if (!await reader.SkipContentAsync(cancellationToken).ConfigureAwait(false))
                     {
                         break;
                     }
@@ -956,7 +956,7 @@ internal partial class OpenXmlReader : IMiniExcelReader
 #endif
                 .ConfigureAwait(false))
             {
-                if (XmlReaderHelper.IsStartElement(reader, "c", Ns))
+                if (reader.IsStartElement("c", Ns))
                 {
                     var r = reader.GetAttribute("r");
                     if (r is not null)
@@ -976,7 +976,7 @@ internal partial class OpenXmlReader : IMiniExcelReader
                     }
                 }
                 //this method logic depends on dimension to get maxcolumnIndex, if without dimension then it need to foreach all rows first time to get maxColumn and maxRowColumn
-                else if (XmlReaderHelper.IsStartElement(reader, "dimension", Ns))
+                else if (reader.IsStartElement("dimension", Ns))
                 {
                     var refAttr = reader.GetAttribute("ref");
                     if (string.IsNullOrEmpty(refAttr))
@@ -1008,49 +1008,49 @@ internal partial class OpenXmlReader : IMiniExcelReader
 #endif
             using var reader = XmlReader.Create(sheetStream, xmlSettings);
             
-            if (!XmlReaderHelper.IsStartElement(reader, "worksheet", Ns))
+            if (!reader.IsStartElement("worksheet", Ns))
                 return new GetMaxRowColumnIndexResult(false);
 
-            if (!await XmlReaderHelper.ReadFirstContentAsync(reader, cancellationToken).ConfigureAwait(false))
+            if (!await reader.ReadFirstContentAsync(cancellationToken).ConfigureAwait(false))
                 return new GetMaxRowColumnIndexResult(false);
 
             while (!reader.EOF)
             {
-                if (XmlReaderHelper.IsStartElement(reader, "sheetData", Ns))
+                if (reader.IsStartElement("sheetData", Ns))
                 {
-                    if (!await XmlReaderHelper.ReadFirstContentAsync(reader, cancellationToken).ConfigureAwait(false))
+                    if (!await reader.ReadFirstContentAsync(cancellationToken).ConfigureAwait(false))
                         continue;
 
                     while (!reader.EOF)
                     {
-                        if (XmlReaderHelper.IsStartElement(reader, "row", Ns))
+                        if (reader.IsStartElement("row", Ns))
                         {
                             maxRowIndex++;
 
-                            if (!await XmlReaderHelper.ReadFirstContentAsync(reader, cancellationToken).ConfigureAwait(false))
+                            if (!await reader.ReadFirstContentAsync(cancellationToken).ConfigureAwait(false))
                                 continue;
 
                             // Cells
                             var cellIndex = -1;
                             while (!reader.EOF)
                             {
-                                if (XmlReaderHelper.IsStartElement(reader, "c", Ns))
+                                if (reader.IsStartElement("c", Ns))
                                 {
                                     cellIndex++;
                                     maxColumnIndex = Math.Max(maxColumnIndex, cellIndex);
                                 }
 
-                                if (!await XmlReaderHelper.SkipContentAsync(reader, cancellationToken).ConfigureAwait(false))
+                                if (!await reader.SkipContentAsync(cancellationToken).ConfigureAwait(false))
                                     break;
                             }
                         }
-                        else if (!await XmlReaderHelper.SkipContentAsync(reader, cancellationToken).ConfigureAwait(false))
+                        else if (!await reader.SkipContentAsync(cancellationToken).ConfigureAwait(false))
                         {
                             break;
                         }
                     }
                 }
-                else if (!await XmlReaderHelper.SkipContentAsync(reader, cancellationToken).ConfigureAwait(false))
+                else if (!await reader.SkipContentAsync(cancellationToken).ConfigureAwait(false))
                 {
                     break;
                 }
@@ -1091,20 +1091,20 @@ internal partial class OpenXmlReader : IMiniExcelReader
 #endif
         using var reader = XmlReader.Create(sheetStream, xmlSettings);
         
-        if (!XmlReaderHelper.IsStartElement(reader, "worksheet", Ns))
+        if (!reader.IsStartElement("worksheet", Ns))
             return false;
         
         while (await reader.ReadAsync().ConfigureAwait(false))
         {
-            if (!XmlReaderHelper.IsStartElement(reader, "mergeCells", Ns))
+            if (!reader.IsStartElement("mergeCells", Ns))
                 continue;
 
-            if (!await XmlReaderHelper.ReadFirstContentAsync(reader, cancellationToken).ConfigureAwait(false))
+            if (!await reader.ReadFirstContentAsync(cancellationToken).ConfigureAwait(false))
                 return false;
 
             while (!reader.EOF)
             {
-                if (XmlReaderHelper.IsStartElement(reader, "mergeCell", Ns))
+                if (reader.IsStartElement("mergeCell", Ns))
                 {
                     var refAttr = reader.GetAttribute("ref");
                     var refs = refAttr.Split(':');
@@ -1128,9 +1128,9 @@ internal partial class OpenXmlReader : IMiniExcelReader
                         }
                     }
 
-                    await XmlReaderHelper.SkipContentAsync(reader, cancellationToken).ConfigureAwait(false);
+                    await reader.SkipContentAsync(cancellationToken).ConfigureAwait(false);
                 }
-                else if (!await XmlReaderHelper.SkipContentAsync(reader, cancellationToken).ConfigureAwait(false))
+                else if (!await reader.SkipContentAsync(cancellationToken).ConfigureAwait(false))
                 {
                     break;
                 }
@@ -1362,23 +1362,23 @@ internal partial class OpenXmlReader : IMiniExcelReader
 #endif
         using var reader = XmlReader.Create(sheetStream, xmlSettings);
         
-        if (!XmlReaderHelper.IsStartElement(reader, "worksheet", Ns))
+        if (!reader.IsStartElement("worksheet", Ns))
             yield break;
 
-        if (!await XmlReaderHelper.ReadFirstContentAsync(reader, cancellationToken).ConfigureAwait(false))
+        if (!await reader.ReadFirstContentAsync(cancellationToken).ConfigureAwait(false))
             yield break;
 
         while (!reader.EOF)
         {
-            if (XmlReaderHelper.IsStartElement(reader, "sheetData", Ns))
+            if (reader.IsStartElement("sheetData", Ns))
             {
-                if (!await XmlReaderHelper.ReadFirstContentAsync(reader, cancellationToken).ConfigureAwait(false))
+                if (!await reader.ReadFirstContentAsync(cancellationToken).ConfigureAwait(false))
                     continue;
 
                 int rowIndex = -1;
                 while (!reader.EOF)
                 {
-                    if (XmlReaderHelper.IsStartElement(reader, "row", Ns))
+                    if (reader.IsStartElement("row", Ns))
                     {
                         if (int.TryParse(reader.GetAttribute("r"), out int arValue))
                             rowIndex = arValue - 1; // The row attribute is 1-based
@@ -1391,13 +1391,13 @@ internal partial class OpenXmlReader : IMiniExcelReader
                             yield return mappedRow;
                         }
                     }
-                    else if (!await XmlReaderHelper.SkipContentAsync(reader, cancellationToken).ConfigureAwait(false))
+                    else if (!await reader.SkipContentAsync(cancellationToken).ConfigureAwait(false))
                     {
                         break;
                     }
                 }
             }
-            else if (!await XmlReaderHelper.SkipContentAsync(reader, cancellationToken).ConfigureAwait(false))
+            else if (!await reader.SkipContentAsync(cancellationToken).ConfigureAwait(false))
             {
                 break;
             }
@@ -1412,7 +1412,7 @@ internal partial class OpenXmlReader : IMiniExcelReader
         MergeCells? mergeCells,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        if (!await XmlReaderHelper.ReadFirstContentAsync(reader, cancellationToken).ConfigureAwait(false))
+        if (!await reader.ReadFirstContentAsync(cancellationToken).ConfigureAwait(false))
         {
             // Empty row
             yield return new MappedRow(rowIndex);
@@ -1424,7 +1424,7 @@ internal partial class OpenXmlReader : IMiniExcelReader
         
         while (!reader.EOF)
         {
-            if (XmlReaderHelper.IsStartElement(reader, "c", Ns))
+            if (reader.IsStartElement("c", Ns))
             {
                 var aS = reader.GetAttribute("s");
                 var aR = reader.GetAttribute("r");
@@ -1457,7 +1457,7 @@ internal partial class OpenXmlReader : IMiniExcelReader
 
                 row.SetCell(columnIndex, cellValue);
             }
-            else if (!await XmlReaderHelper.SkipContentAsync(reader, cancellationToken).ConfigureAwait(false))
+            else if (!await reader.SkipContentAsync(cancellationToken).ConfigureAwait(false))
             {
                 break;
             }

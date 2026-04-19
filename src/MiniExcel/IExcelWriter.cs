@@ -1,13 +1,9 @@
-﻿using System.Threading;
-using System.Threading.Tasks;
+﻿namespace MiniExcelLibs;
 
-namespace MiniExcelLibs
+internal interface IExcelWriter
 {
-    internal interface IExcelWriter
-    {
-        int[] SaveAs();
-        Task<int[]> SaveAsAsync(CancellationToken cancellationToken = default);
-        int Insert(bool overwriteSheet = false);
-        Task<int> InsertAsync(bool overwriteSheet = false, CancellationToken cancellationToken = default);
-    }
+    int[] SaveAs();
+    Task<int[]> SaveAsAsync(CancellationToken cancellationToken = default);
+    int Insert(bool overwriteSheet = false);
+    Task<int> InsertAsync(bool overwriteSheet = false, CancellationToken cancellationToken = default);
 }

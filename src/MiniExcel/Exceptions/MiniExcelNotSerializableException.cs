@@ -1,15 +1,13 @@
-using System;
 using System.Reflection;
 
-namespace MiniExcelLibs.Exceptions
+namespace MiniExcelLibs.Exceptions;
+
+public class MiniExcelNotSerializableException : InvalidOperationException
 {
-    public class MiniExcelNotSerializableException : InvalidOperationException
-    {
-        public MemberInfo Member { get; }
+    public MemberInfo Member { get; }
         
-        public MiniExcelNotSerializableException(string message, MemberInfo member) :  base(message)
-        {
-            Member = member;
-        }
+    public MiniExcelNotSerializableException(string message, MemberInfo member) :  base(message)
+    {
+        Member = member;
     }
 }

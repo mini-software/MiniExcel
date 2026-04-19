@@ -1,12 +1,8 @@
-﻿using System.Threading;
-using System.Threading.Tasks;
+﻿namespace MiniExcelLibs.OpenXml.Styles;
 
-namespace MiniExcelLibs.OpenXml.Styles
+internal interface ISheetStyleBuilder
 {
-    internal interface ISheetStyleBuilder
-    {
-        SheetStyleBuildResult Build();
+    SheetStyleBuildResult Build();
 
-        Task<SheetStyleBuildResult> BuildAsync(CancellationToken cancellationToken = default);
-    }
+    Task<SheetStyleBuildResult> BuildAsync(CancellationToken cancellationToken = default);
 }

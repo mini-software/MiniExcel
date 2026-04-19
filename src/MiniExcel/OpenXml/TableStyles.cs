@@ -1,8 +1,7 @@
-﻿namespace MiniExcelLibs.OpenXml
+﻿namespace MiniExcelLibs.OpenXml;
+
+public enum TableStyles
 {
-    public enum TableStyles
-    {
-        None,
-        Default
-    }
+    None,
+    Default
 }

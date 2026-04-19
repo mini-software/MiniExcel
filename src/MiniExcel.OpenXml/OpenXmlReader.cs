@@ -21,9 +21,9 @@ internal partial class OpenXmlReader : IMiniExcelReader
     internal readonly OpenXmlZip Archive;
     internal IDictionary<int, string> SharedStrings = new Dictionary<int, string>();
     
-    private OpenXmlReader(OpenXmlZip openXmlZip, IMiniExcelConfiguration? configuration)
+    private OpenXmlReader(OpenXmlZip archive, IMiniExcelConfiguration? configuration)
     {
-        Archive = openXmlZip;
+        Archive = archive;
         _config = (OpenXmlConfiguration?)configuration ?? OpenXmlConfiguration.Default;
     }
 
@@ -34,8 +34,8 @@ internal partial class OpenXmlReader : IMiniExcelReader
 
         var archive = await OpenXmlZip.CreateAsync(stream, cancellationToken: cancellationToken).ConfigureAwait(false);
         var reader = new OpenXmlReader(archive, configuration);
-
         await reader.SetSharedStringsAsync(cancellationToken).ConfigureAwait(false);
+
         return reader;
     }
     
@@ -48,7 +48,7 @@ internal partial class OpenXmlReader : IMiniExcelReader
     [CreateSyncVersion]
     public IAsyncEnumerable<T> QueryAsync<T>(string? sheetName, string startCell, bool mapHeaderAsData, CancellationToken cancellationToken = default) where T : class, new()
     {
-        sheetName ??= MiniExcelPropertyHelper.GetExcellSheetInfo(typeof(T), _config)?.ExcelSheetName;
+        sheetName ??= MiniExcelPropertyHelper.GetExcelSheetInfo(typeof(T), _config)?.ExcelSheetName;
         var query = QueryAsync(false, sheetName, startCell, cancellationToken);
         if (!CellReferenceConverter.TryParseCellReference(startCell, out _, out var rowOffset))
         {
@@ -720,15 +720,13 @@ internal partial class OpenXmlReader : IMiniExcelReader
                     if (v?.StartsWith("@@@fileid@@@,", StringComparison.Ordinal) ?? false)
                     {
                         var path = v[13..];
-                        var entry = Archive.GetEntry(path);
-                        var bytes = new byte[entry.Length];
+                        var entry = Archive.GetEntry(path)!;
 
-                        using (var stream = entry.Open())
-                        using (var ms = new MemoryStream(bytes))
-                        {
-                            stream.CopyTo(ms);
-                        }
-                        value = bytes;
+                        using var stream = entry.Open();
+                        using var ms = new MemoryStream((int)entry.Length);
+
+                        stream.CopyTo(ms);
+                        value = ms.ToArray();
                     }
                 }
                 break;

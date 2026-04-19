@@ -348,14 +348,13 @@ internal partial class ExcelOpenXmlSheetReader : IExcelReader
 
                 //Q: Why need to check every time? A: it needs to check everytime, because it's dictionary
                 object itemValue = null;
-                if (pInfo.ExcelIndexName != null && keys.Contains(pInfo.ExcelIndexName))
+                if (pInfo.ExcelIndexName == null || !item.TryGetValue(pInfo.ExcelIndexName, out itemValue))
                 {
-                    item.TryGetValue(pInfo.ExcelIndexName, out itemValue);
-                }
-                else if (headersDic.TryGetValue(pInfo.ExcelColumnName, out var columnId))
-                {
-                    var columnName = keys[columnId];
-                    item.TryGetValue(columnName, out itemValue);
+                    if (headersDic.TryGetValue(pInfo.ExcelColumnName, out var columnId))
+                    {
+                        var columnName = keys[columnId];
+                        item.TryGetValue(columnName, out itemValue);
+                    }
                 }
 
                 if (itemValue != null)
@@ -668,14 +667,12 @@ internal partial class ExcelOpenXmlSheetReader : IExcelReader
                     {
                         var path = v.Substring(13);
                         var entry = _archive.GetEntry(path);
-                        var bytes = new byte[entry.Length];
 
-                        using (var stream = entry.Open())
-                        using (var ms = new MemoryStream(bytes))
-                        {
-                            stream.CopyTo(ms);
-                        }
-                        value = bytes;
+                        using var stream = entry.Open();
+                        using var ms = new MemoryStream((int)entry.Length);
+
+                        stream.CopyTo(ms);
+                        value = ms.ToArray();
                     }
                     else
                     {
@@ -847,14 +844,15 @@ internal partial class ExcelOpenXmlSheetReader : IExcelReader
         return ranges;
     }
 
-    internal static bool TryGetMaxRowColumnIndex(ZipArchiveEntry sheetEntry, out bool withoutCR, out int maxRowIndex, out int maxColumnIndex)
+    internal static bool TryGetMaxRowColumnIndex(ZipArchiveEntry sheetEntry, out bool withoutCr, out int maxRowIndex, out int maxColumnIndex)
     {
-        withoutCR = false;
+        withoutCr = false;
         maxRowIndex = -1;
         maxColumnIndex = -1;
+
         using (var sheetStream = sheetEntry.Open())
-        using (var reader = XmlReader.Create(sheetStream, _xmlSettings))
         {
+            using var reader = XmlReader.Create(sheetStream, _xmlSettings);
             while (reader.Read())
             {
                 if (XmlReaderHelper.IsStartElement(reader, "c", _ns))
@@ -872,7 +870,7 @@ internal partial class ExcelOpenXmlSheetReader : IExcelReader
                     }
                     else
                     {
-                        withoutCR = true;
+                        withoutCr = true;
                         break;
                     }
                 }
@@ -896,58 +894,57 @@ internal partial class ExcelOpenXmlSheetReader : IExcelReader
             }
         }
 
-        if (withoutCR)
+        if (!withoutCr) 
+            return true;
+
+        using var noCrSheetStream = sheetEntry.Open();
+        using var xmlReader = XmlReader.Create(noCrSheetStream, _xmlSettings);
+
+        if (!XmlReaderHelper.IsStartElement(xmlReader, "worksheet", _ns))
+            return false;
+
+        if (!XmlReaderHelper.ReadFirstContent(xmlReader))
+            return false;
+
+        while (!xmlReader.EOF)
         {
-            using (var sheetStream = sheetEntry.Open())
-            using (var reader = XmlReader.Create(sheetStream, _xmlSettings))
+            if (XmlReaderHelper.IsStartElement(xmlReader, "sheetData", _ns))
             {
-                if (!XmlReaderHelper.IsStartElement(reader, "worksheet", _ns))
-                    return false;
+                if (!XmlReaderHelper.ReadFirstContent(xmlReader))
+                    continue;
 
-                if (!XmlReaderHelper.ReadFirstContent(reader))
-                    return false;
-
-                while (!reader.EOF)
+                while (!xmlReader.EOF)
                 {
-                    if (XmlReaderHelper.IsStartElement(reader, "sheetData", _ns))
+                    if (XmlReaderHelper.IsStartElement(xmlReader, "row", _ns))
                     {
-                        if (!XmlReaderHelper.ReadFirstContent(reader))
+                        maxRowIndex++;
+
+                        if (!XmlReaderHelper.ReadFirstContent(xmlReader))
                             continue;
 
-                        while (!reader.EOF)
+                        // Cells
+                        var cellIndex = -1;
+                        while (!xmlReader.EOF)
                         {
-                            if (XmlReaderHelper.IsStartElement(reader, "row", _ns))
+                            if (XmlReaderHelper.IsStartElement(xmlReader, "c", _ns))
                             {
-                                maxRowIndex++;
-
-                                if (!XmlReaderHelper.ReadFirstContent(reader))
-                                    continue;
-
-                                // Cells
-                                var cellIndex = -1;
-                                while (!reader.EOF)
-                                {
-                                    if (XmlReaderHelper.IsStartElement(reader, "c", _ns))
-                                    {
-                                        cellIndex++;
-                                        maxColumnIndex = Math.Max(maxColumnIndex, cellIndex);
-                                    }
-
-                                    if (!XmlReaderHelper.SkipContent(reader))
-                                        break;
-                                }
+                                cellIndex++;
+                                maxColumnIndex = Math.Max(maxColumnIndex, cellIndex);
                             }
-                            else if (!XmlReaderHelper.SkipContent(reader))
-                            {
+
+                            if (!XmlReaderHelper.SkipContent(xmlReader))
                                 break;
-                            }
                         }
                     }
-                    else if (!XmlReaderHelper.SkipContent(reader))
+                    else if (!XmlReaderHelper.SkipContent(xmlReader))
                     {
                         break;
                     }
                 }
+            }
+            else if (!XmlReaderHelper.SkipContent(xmlReader))
+            {
+                break;
             }
         }
 

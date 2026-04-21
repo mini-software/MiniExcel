@@ -695,6 +695,7 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
         var entry = _archive.CreateEntry(path, CompressionLevel.Fastest);
 
 #if NET8_0_OR_GREATER
+        
 #if NET10_0_OR_GREATER
         var zipStream = await entry.OpenAsync(cancellationToken).ConfigureAwait(false);
 #else
@@ -706,5 +707,105 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
         using var zipStream = entry.Open();
         await zipStream.WriteAsync(content, 0, content.Length, cancellationToken).ConfigureAwait(false);
 #endif
+    }
+
+    [CreateSyncVersion]
+    /* Todo: this method is not very efficient, but workbook.xml is generally a very small file so at the moment it's not worth over-optimizing it.
+     Also, consider adding active sheet as one of the editable properties.  */
+    internal async Task AlterWorksheetAsync(string sheetName, string? newSheetName, int? newSheetIndex, SheetState? newSheetState, CancellationToken cancellationToken = default)
+    {
+        if (newSheetName is null && newSheetIndex is null && newSheetState is null)
+            return;
+
+        var oldWorkbookEntry = _archive.GetEntry("xl/workbook.xml")!;
+ 
+        try
+        {
+            var xmlDoc = await LoadWorkbook().ConfigureAwait(false);
+
+            oldWorkbookEntry.Delete();
+            var newWorkbookEntry = _archive.CreateEntry("xl/workbook.xml", CompressionLevel.Fastest);
+#if NET8_0_OR_GREATER
+#if NET10_0_OR_GREATER
+            var newZipStream = await newWorkbookEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
+#else
+            var newZipStream = newWorkbookEntry.Open();
+#endif
+            await using var newDisposableZipStream = newZipStream.ConfigureAwait(false);
+            var writer = XmlWriter.Create(newZipStream, new XmlWriterSettings
+            {
+#if !SYNC_ONLY
+                Async = true
+#endif
+            });
+            await using var disposableWriter = writer.ConfigureAwait(false);
+            await xmlDoc.WriteToAsync(writer, CancellationToken.None).ConfigureAwait(false);
+#else
+            using var newZipStream = newWorkbookEntry.Open();
+            using var writer = XmlWriter.Create(newZipStream, new XmlWriterSettings { Async = false });
+            xmlDoc.WriteTo(writer);
+#endif
+        }
+        finally
+        {
+#if NET10_0_OR_GREATER
+            await _archive.DisposeAsync().ConfigureAwait(false);
+#else
+            _archive.Dispose();
+#endif
+        }
+        return;
+
+        async Task<XDocument> LoadWorkbook()
+        {
+#if NET8_0_OR_GREATER
+#if NET10_0_OR_GREATER
+            var zipStream = await oldWorkbookEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
+#else
+            var zipStream = oldWorkbookEntry.Open();
+#endif
+            await using var disposableZipStream = zipStream.ConfigureAwait(false);
+            var workbookDoc = await XDocument.LoadAsync(zipStream, LoadOptions.None, cancellationToken).ConfigureAwait(false);
+#else
+            using var zipStream = oldWorkbookEntry.Open();
+            var workbookDoc = XDocument.Load(zipStream);
+#endif
+            var sheetsContainer = workbookDoc.Root?.Element((XNamespace)Schemas.SpreadsheetmlXmlMain + "sheets")!;
+            var sheets = sheetsContainer.Elements().ToList();
+
+            if (sheets.Find(s => s.Attribute("name")?.Value.Equals(sheetName, StringComparison.OrdinalIgnoreCase) is true) is not { } sheet)
+                throw new InvalidDataException($"Sheet {sheetName} not found");
+
+            if (!string.IsNullOrEmpty(newSheetName))
+            {
+                if (newSheetName.Length > 31)
+                    throw new ArgumentException($"The name \"{newSheetName}\" is too long, the maximum allowed length is 31 characters.");
+
+                sheet.SetAttributeValue("name", newSheetName);
+            }
+
+            if (newSheetIndex is not null)
+            {
+                var newIndex = Math.Clamp(newSheetIndex.Value, 0, sheets.Count - 1);
+                sheets.Remove(sheet);
+                sheets.Insert(newIndex, sheet);
+
+                sheetsContainer.RemoveAll();
+                sheetsContainer.Add(sheets);
+            }
+
+            if (newSheetState is not null)
+            {
+                sheet.SetAttributeValue("state", newSheetState switch
+                {
+                    SheetState.Visible => "visible",
+                    SheetState.Hidden => "hidden",
+                    SheetState.VeryHidden => "veryHidden",
+                    _ => "visible"
+                });
+            }
+
+            return workbookDoc;
+        }
     }
 }

@@ -10,7 +10,7 @@ public static class SynchronousHelper
 {
     extension(ZipArchive)
     {
-        public static ZipArchive Create(Stream stream, ZipArchiveMode mode, bool leaveOpen, Encoding? encoding = null) 
-            => new(stream, mode, leaveOpen, encoding);
+        public static ZipArchive Create(Stream stream, ZipArchiveMode mode, bool leaveOpen, Encoding? entryNameEncoding = null) 
+            => new(stream, mode, leaveOpen, entryNameEncoding);
     }
 }

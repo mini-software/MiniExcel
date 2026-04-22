@@ -178,11 +178,8 @@ internal partial class OpenXmlReader : IMiniExcelReader
             maxColumnIndex = endColumnIndex.Value;
         }
 
-#if NET10_0_OR_GREATER
+#if NET8_0_OR_GREATER
         var sheetStream = await sheetEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
-        await using var disposableSheetStream = sheetStream.ConfigureAwait(false);
-#elif !NETSTANDARD2_0
-        var sheetStream = sheetEntry.Open();
         await using var disposableSheetStream = sheetStream.ConfigureAwait(false);
 #else
         using var sheetStream = sheetEntry.Open();
@@ -429,11 +426,8 @@ internal partial class OpenXmlReader : IMiniExcelReader
             return;
         
         var idx = 0;
-#if NET10_0_OR_GREATER
+#if NET8_0_OR_GREATER
         var stream = await sharedStringsEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
-        await using var disposableStream = stream.ConfigureAwait(false);
-#elif !NETSTANDARD2_0
-        var stream = sharedStringsEntry.Open();
         await using var disposableStream = stream.ConfigureAwait(false);
 #else
         using var stream = sharedStringsEntry.Open();
@@ -473,11 +467,8 @@ internal partial class OpenXmlReader : IMiniExcelReader
         );
 
         var entry = entries.Single(w => w.FullName == "xl/workbook.xml");
-#if NET10_0_OR_GREATER
+#if NET8_0_OR_GREATER
         var stream = await entry.OpenAsync(cancellationToken).ConfigureAwait(false);
-        await using var disposableStream = stream.ConfigureAwait(false);
-#elif !NETSTANDARD2_0
-        var stream = entry.Open();
         await using var disposableStream = stream.ConfigureAwait(false);
 #else
         using var stream = entry.Open();
@@ -573,11 +564,8 @@ internal partial class OpenXmlReader : IMiniExcelReader
 
         var entry = entries.Single(w => w.FullName == "xl/_rels/workbook.xml.rels");
         
-#if NET10_0_OR_GREATER
+#if NET8_0_OR_GREATER
         var stream = await entry.OpenAsync(cancellationToken).ConfigureAwait(false);
-        await using var disposableStream = stream.ConfigureAwait(false);
-#elif !NETSTANDARD2_0
-        var stream = entry.Open();
         await using var disposableStream = stream.ConfigureAwait(false);
 #else
         using var stream = entry.Open();
@@ -780,11 +768,8 @@ internal partial class OpenXmlReader : IMiniExcelReader
 
             var withoutCr = false;
 
-#if NET10_0_OR_GREATER
+#if NET8_0_OR_GREATER
             var crSheetStream = await sheet.OpenAsync(cancellationToken).ConfigureAwait(false);
-            await using var disposableCrSheetStream = crSheetStream.ConfigureAwait(false);
-#elif !NETSTANDARD2_0
-            var crSheetStream = sheet.Open();
             await using var disposableCrSheetStream = crSheetStream.ConfigureAwait(false);
 #else
             using var crSheetStream = sheet.Open();
@@ -836,11 +821,8 @@ internal partial class OpenXmlReader : IMiniExcelReader
 
             if (withoutCr)
             {
-#if NET10_0_OR_GREATER
+#if NET8_0_OR_GREATER
                 var sheetStream = await sheet.OpenAsync(cancellationToken).ConfigureAwait(false);
-                await using var disposableSheetStream = sheetStream.ConfigureAwait(false);
-#elif !NETSTANDARD2_0
-                var sheetStream = sheet.Open();
                 await using var disposableSheetStream = sheetStream.ConfigureAwait(false);
 #else
                 using var sheetStream = sheet.Open();
@@ -939,12 +921,9 @@ internal partial class OpenXmlReader : IMiniExcelReader
         int maxRowIndex = -1;
         int maxColumnIndex = -1;
 
-#if NET10_0_OR_GREATER
+#if NET8_0_OR_GREATER
         var crSheetStream = await sheetEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
         await using var disposableCrSheetStream  = crSheetStream.ConfigureAwait(false);
-#elif !NETSTANDARD2_0
-       var crSheetStream = sheetEntry.Open();
-       await using var disposableCrSheetStream  = crSheetStream.ConfigureAwait(false);
 #else
         using var crSheetStream = sheetEntry.Open();
 #endif
@@ -997,11 +976,8 @@ internal partial class OpenXmlReader : IMiniExcelReader
 
         if (withoutCr)
         {
-#if NET10_0_OR_GREATER
+#if NET8_0_OR_GREATER
             var sheetStream = await sheetEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
-            await using var disposableSheetStream = sheetStream.ConfigureAwait(false);
-#elif !NETSTANDARD2_0
-            var sheetStream = sheetEntry.Open();
             await using var disposableSheetStream = sheetStream.ConfigureAwait(false);
 #else
             using var sheetStream = sheetEntry.Open();
@@ -1080,12 +1056,9 @@ internal partial class OpenXmlReader : IMiniExcelReader
         );
         var mergeCells = new MergeCells();
 
-#if NET10_0_OR_GREATER
+#if NET8_0_OR_GREATER
         var sheetStream = await sheetEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
         await  using var disposableSheetStream = sheetStream.ConfigureAwait(false);
-#elif !NETSTANDARD2_0
-        var sheetStream = sheetEntry.Open();
-        await using var disposableSheetStream = sheetStream.ConfigureAwait(false);
 #else
         using var sheetStream = sheetEntry.Open();
 #endif
@@ -1160,12 +1133,9 @@ internal partial class OpenXmlReader : IMiniExcelReader
         List<Author> people = [];
         if (Archive.GetEntry("xl/persons/person.xml") is { } persons)
         {
-#if NET10_0_OR_GREATER
+#if NET8_0_OR_GREATER
             var personStream = await persons.OpenAsync(cancellationToken).ConfigureAwait(false);
             await using var disposablePersonStream = personStream.ConfigureAwait(false);  
-#elif !NETSTANDARD2_0
-            var personStream = persons.Open();
-            await using var disposablePersonStream = personStream.ConfigureAwait(false);
 #else
             using var personStream = persons.Open();
 #endif
@@ -1189,12 +1159,9 @@ internal partial class OpenXmlReader : IMiniExcelReader
         if (Archive.GetEntry($"xl/worksheets/_rels/{sheetFile}.rels") is not { } rel)
             return new CommentResultSet(sheetName, [], []);
 
-#if NET10_0_OR_GREATER
+#if NET8_0_OR_GREATER
         var stream = await rel.OpenAsync(cancellationToken).ConfigureAwait(false);
         await using var disposableStream = stream.ConfigureAwait(false);  
-#elif !NETSTANDARD2_0
-        var stream = rel.Open();
-        await using var disposableStream = stream.ConfigureAwait(false);
 #else
         using var stream = rel.Open();
 #endif
@@ -1220,11 +1187,8 @@ internal partial class OpenXmlReader : IMiniExcelReader
         HashSet<string?> refCells = [];
         if (Archive.GetEntry($"xl/{threadedCommentsPath}") is { } threadEntry)
         {
-#if NET10_0_OR_GREATER
+#if NET8_0_OR_GREATER
             var threadEntryStream = await threadEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
-            await using var disposableThreadEntryStream = threadEntryStream.ConfigureAwait(false);
-#elif !NETSTANDARD2_0
-            var threadEntryStream = threadEntry.Open();
             await using var disposableThreadEntryStream = threadEntryStream.ConfigureAwait(false);
 #else
             using var threadEntryStream = threadEntry.Open();
@@ -1276,11 +1240,8 @@ internal partial class OpenXmlReader : IMiniExcelReader
 
         if (Archive.GetEntry($"xl/{notesPath}") is { } noteEntry)
         {
-#if NET10_0_OR_GREATER
+#if NET8_0_OR_GREATER
             var noteEntryStream = await noteEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
-            await using var disposableNoteEntryStream = noteEntryStream.ConfigureAwait(false);
-#elif !NETSTANDARD2_0
-            var noteEntryStream = noteEntry.Open();
             await using var disposableNoteEntryStream = noteEntryStream.ConfigureAwait(false);
 #else
             using var noteEntryStream = noteEntry.Open();
@@ -1351,11 +1312,8 @@ internal partial class OpenXmlReader : IMiniExcelReader
             Async = true
         };
 
-#if NET10_0_OR_GREATER
+#if NET8_0_OR_GREATER
         var sheetStream = await sheetEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
-        await using var disposableSheetStream = sheetStream.ConfigureAwait(false);
-#elif !NETSTANDARD2_0
-        var sheetStream = sheetEntry.Open();
         await using var disposableSheetStream = sheetStream.ConfigureAwait(false);
 #else
         using var sheetStream = sheetEntry.Open();

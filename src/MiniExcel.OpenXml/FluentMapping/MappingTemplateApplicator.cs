@@ -1,6 +1,3 @@
-using System.IO.Compression;
-using Zomp.SyncMethodGenerator;
-
 namespace MiniExcelLib.OpenXml.FluentMapping;
 
 internal static partial class MappingTemplateApplicator<T> where T : class
@@ -37,12 +34,20 @@ internal static partial class MappingTemplateApplicator<T> where T : class
         }
         
         templateStream.Position = 0;
-        
+
+#if NET10_0_OR_GREATER
         // Open template archive for reading
-        using var templateArchive = new ZipArchive(templateStream, ZipArchiveMode.Read, leaveOpen: true);
-        
+        var templateArchive = await ZipArchive.CreateAsync(templateStream, ZipArchiveMode.Read, true, null, cancellationToken: cancellationToken).ConfigureAwait(false);
+        await using var disposableTemplateArchive = templateArchive.ConfigureAwait(false);
+
         // Create output archive
-        using var outputArchive = new ZipArchive(outputStream, ZipArchiveMode.Create, leaveOpen: true);
+        var outputArchive = await ZipArchive.CreateAsync(outputStream, ZipArchiveMode.Create, true, null, cancellationToken).ConfigureAwait(false);
+        await using var disposableOutputArchive = outputArchive.ConfigureAwait(false);
+#else
+        using var templateArchive = new ZipArchive(templateStream, ZipArchiveMode.Read, true);
+        using var outputArchive = new ZipArchive(outputStream, ZipArchiveMode.Create, true);
+#endif
+        
         
         // Process each entry
         foreach (var entry in templateArchive.Entries)
@@ -106,17 +111,18 @@ internal static partial class MappingTemplateApplicator<T> where T : class
         targetEntry.LastWriteTime = sourceEntry.LastWriteTime;
         
         // Copy content
-#if NET10_0_OR_GREATER
-        using var sourceStream = await sourceEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
-        using var targetStream = await targetEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
+#if NET8_0_OR_GREATER
+        var sourceStream = await sourceEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
+        var targetStream = await targetEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
+
+        await using var disposableSourceStream = sourceStream.ConfigureAwait(false);
+        await using var disposableTargetStream = targetStream.ConfigureAwait(false);
+
+        await sourceStream.CopyToAsync(targetStream, cancellationToken).ConfigureAwait(false);
 #else
         using var sourceStream = sourceEntry.Open();
         using var targetStream = targetEntry.Open();
-#endif
-        
-#if NETCOREAPP2_1_OR_GREATER
-        await sourceStream.CopyToAsync(targetStream, cancellationToken).ConfigureAwait(false);
-#else
+
         await sourceStream.CopyToAsync(targetStream).ConfigureAwait(false);
 #endif
     }
@@ -135,9 +141,12 @@ internal static partial class MappingTemplateApplicator<T> where T : class
         targetEntry.LastWriteTime = sourceEntry.LastWriteTime;
         
         // Open streams
-#if NET10_0_OR_GREATER
-        using var sourceStream = await sourceEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
-        using var targetStream = await targetEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
+#if NET8_0_OR_GREATER
+        var sourceStream = await sourceEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
+        var targetStream = await targetEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
+
+        await using var disposableSourceStream = sourceStream.ConfigureAwait(false);
+        await using var disposableTargetStream = targetStream.ConfigureAwait(false);
 #else
         using var sourceStream = sourceEntry.Open();
         using var targetStream = targetEntry.Open();

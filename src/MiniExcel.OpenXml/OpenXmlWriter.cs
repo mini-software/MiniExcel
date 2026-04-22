@@ -47,12 +47,8 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
         // A. Why ZipArchiveMode.Update and not ZipArchiveMode.Create?
         // R. ZipArchiveEntry does not support seeking when Mode is Create.
         var archiveMode = conf.FastMode ? ZipArchiveMode.Update : ZipArchiveMode.Create;
-
-#if NET10_0_OR_GREATER
         var archive = await ZipArchive.CreateAsync(stream, archiveMode, true, Utf8WithBom, cancellationToken).ConfigureAwait(false);
-#else
-        var archive = new ZipArchive(stream, archiveMode, true, Utf8WithBom);
-#endif
+
         return new OpenXmlWriter(stream, archive, value, sheetName, conf, printHeader);
     }
 
@@ -178,11 +174,7 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
         var rowsWritten = 0;
 
 #if NET8_0_OR_GREATER
-#if NET10_0_OR_GREATER
         var zipStream = await entry.OpenAsync(cancellationToken).ConfigureAwait(false);
-#else
-        var zipStream = entry.Open();
-#endif
         await using var disposableZipStream = zipStream.ConfigureAwait(false);
 
         var writer = new MiniExcelStreamWriter(zipStream, Utf8WithBom, _configuration.BufferSize);
@@ -619,11 +611,7 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
         }
 
 #if NET8_0_OR_GREATER
-#if NET10_0_OR_GREATER
         var stream = await contentTypesZipEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
-#else
-        var stream = contentTypesZipEntry.Open();
-#endif
         await using var disposableStream = stream.ConfigureAwait(false);
         var doc = await XDocument.LoadAsync(stream, LoadOptions.None, cancellationToken).ConfigureAwait(false);
 #else
@@ -669,12 +657,9 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
         var entry = _archive.CreateEntry(path, CompressionLevel.Fastest);
 
 #if NET8_0_OR_GREATER
-#if NET10_0_OR_GREATER
         var zipStream = await entry.OpenAsync(cancellationToken).ConfigureAwait(false);
-#else
-        var zipStream = entry.Open();
-#endif
         await using var disposableZipStream = zipStream.ConfigureAwait(false);
+
         var writer = new MiniExcelStreamWriter(zipStream, Utf8WithBom, _configuration.BufferSize);
         await using var disposableWriter = writer.ConfigureAwait(false);
 #else
@@ -695,12 +680,7 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
         var entry = _archive.CreateEntry(path, CompressionLevel.Fastest);
 
 #if NET8_0_OR_GREATER
-        
-#if NET10_0_OR_GREATER
         var zipStream = await entry.OpenAsync(cancellationToken).ConfigureAwait(false);
-#else
-        var zipStream = entry.Open();
-#endif
         await using var disposableZipStream = zipStream.ConfigureAwait(false);
         await zipStream.WriteAsync(content, cancellationToken).ConfigureAwait(false);
 #else
@@ -726,11 +706,7 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
             oldWorkbookEntry.Delete();
             var newWorkbookEntry = _archive.CreateEntry("xl/workbook.xml", CompressionLevel.Fastest);
 #if NET8_0_OR_GREATER
-#if NET10_0_OR_GREATER
             var newZipStream = await newWorkbookEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
-#else
-            var newZipStream = newWorkbookEntry.Open();
-#endif
             await using var newDisposableZipStream = newZipStream.ConfigureAwait(false);
             var writer = XmlWriter.Create(newZipStream, new XmlWriterSettings
             {
@@ -759,11 +735,7 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
         async Task<XDocument> LoadWorkbook()
         {
 #if NET8_0_OR_GREATER
-#if NET10_0_OR_GREATER
             var zipStream = await oldWorkbookEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
-#else
-            var zipStream = oldWorkbookEntry.Open();
-#endif
             await using var disposableZipStream = zipStream.ConfigureAwait(false);
             var workbookDoc = await XDocument.LoadAsync(zipStream, LoadOptions.None, cancellationToken).ConfigureAwait(false);
 #else

@@ -59,14 +59,10 @@ internal partial class OpenXmlTemplate
             var entry = archive.ZipFile.CreateEntry(sheet.FullName);
 
 #if NET8_0_OR_GREATER
-#if NET10_0_OR_GREATER
             var sheetStream = await sheet.OpenAsync(cancellationToken).ConfigureAwait(false);
-            var zipStream = await entry.OpenAsync(cancellationToken).ConfigureAwait(false);
-#else
-            var sheetStream = sheet.Open();
-            var zipStream = entry.Open();
-#endif
             await using var disposableSheetStream = sheetStream.ConfigureAwait(false);
+
+            var zipStream = await entry.OpenAsync(cancellationToken).ConfigureAwait(false);
             await using var disposableZipStream = zipStream.ConfigureAwait(false);
 #else
             using var sheetStream = sheet.Open();

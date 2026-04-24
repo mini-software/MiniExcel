@@ -9,7 +9,7 @@ internal partial class OpenXmlWriter
     private readonly Dictionary<string, ZipPackageInfo> _zipDictionary = [];
     private Dictionary<string, string> _cellXfIdMap = [];
     
-    private IEnumerable<Tuple<SheetDto, object?>> GetSheets()
+    private IEnumerable<(SheetDto, object?)> GetSheets()
     {
         var sheetId = 0;
         if (_value is IDictionary<string, object?> dictionary)
@@ -20,7 +20,7 @@ internal partial class OpenXmlWriter
                 
                 sheetId++;
                 var sheetInfos = GetSheetInfos(sheet.Key);
-                yield return Tuple.Create(sheetInfos.ToDto(sheetId), sheet.Value);
+                yield return (sheetInfos.ToDto(sheetId), sheet.Value);
             }
 
             yield break;
@@ -32,7 +32,7 @@ internal partial class OpenXmlWriter
             {
                 sheetId++;
                 var sheetInfos = GetSheetInfos(dt.TableName);
-                yield return Tuple.Create(sheetInfos.ToDto(sheetId), (object?)dt);
+                yield return (sheetInfos.ToDto(sheetId), dt);
             }
 
             yield break;
@@ -40,12 +40,12 @@ internal partial class OpenXmlWriter
 
         sheetId++;
         var defaultSheetInfo = GetSheetInfos(_defaultSheetName);
-        yield return Tuple.Create(defaultSheetInfo.ToDto(sheetId), _value);
+        yield return (defaultSheetInfo.ToDto(sheetId), _value);
     }
 
-    private ExcellSheetInfo GetSheetInfos(string sheetName)
+    private ExcelSheetInfo GetSheetInfos(string sheetName)
     {
-        var info = new ExcellSheetInfo
+        var info = new ExcelSheetInfo
         {
             ExcelSheetName = sheetName,
             Key = sheetName,
@@ -153,20 +153,20 @@ internal partial class OpenXmlWriter
         return sb.ToString();
     }
 
-    private Tuple<string, string, string> GetCellValue(int rowIndex, int cellIndex, object value, MiniExcelColumnMapping? columnInfo, bool valueIsNull)
+    private (string, string?, string?) GetCellValue(int rowIndex, int cellIndex, object value, MiniExcelColumnMapping? columnInfo, bool valueIsNull)
     {
         if (valueIsNull)
-            return Tuple.Create("2", "str", string.Empty);
+            return ("2", "str", string.Empty);
 
         if (value is string str)
-            return Tuple.Create("2", "str", XmlHelper.EncodeXml(str));
+            return ("2", "str", XmlHelper.EncodeXml(str));
 
         var type = GetValueType(value, columnInfo);
 
         if (columnInfo is { ExcelFormat: not null, ExcelFormatId: -1 } && value is IFormattable formattableValue)
         {
             var formattedStr = formattableValue.ToString(columnInfo.ExcelFormat, _configuration.Culture);
-            return Tuple.Create("2", "str", XmlHelper.EncodeXml(formattedStr));
+            return ("2", "str", XmlHelper.EncodeXml(formattedStr));
         }
 
         if (type == typeof(DateTime))
@@ -188,7 +188,7 @@ internal partial class OpenXmlWriter
             }
 
             description ??= value.ToString();
-            return Tuple.Create("2", "str", description);
+            return ("2", "str", description);
         }
 
         if (TypeHelper.IsNumericType(type))
@@ -197,26 +197,26 @@ internal partial class OpenXmlWriter
 
             if (columnInfo?.ExcelFormat is null)
             {
-                var dataType = _configuration.Culture == CultureInfo.InvariantCulture ? "n" : "str";
-                return Tuple.Create("2", dataType, cellValue);
+                var dataType = ReferenceEquals(_configuration.Culture, CultureInfo.InvariantCulture) ? "n" : "str";
+                return ("2", dataType, cellValue);
             }
 
-            return Tuple.Create(columnInfo.ExcelFormatId.ToString(), (string?)null, cellValue);
+            return (columnInfo.ExcelFormatId.ToString(), null, cellValue);
         }
 
         if (type == typeof(bool))
-            return Tuple.Create("2", "b", (bool)value ? "1" : "0");
+            return ("2", "b", (bool)value ? "1" : "0");
 
         if (type == typeof(byte[]) && _configuration.EnableConvertByteArray)
         {
             if (!_configuration.EnableWriteFilePath) 
-                return Tuple.Create("4", "str", "");
+                return ("4", "str", "");
             
             var base64 = GetFileValue(rowIndex, cellIndex, value);
-            return Tuple.Create("4", "str", XmlHelper.EncodeXml(base64));  
+            return ("4", "str", XmlHelper.EncodeXml(base64));  
         }
 
-        return Tuple.Create("2", "str", XmlHelper.EncodeXml(value.ToString()));
+        return ("2", "str", XmlHelper.EncodeXml(value.ToString()));
     }
 
     private static Type? GetValueType(object value, MiniExcelColumnMapping? columnInfo)
@@ -303,20 +303,20 @@ internal partial class OpenXmlWriter
         return base64;
     }
 
-    private Tuple<string, string?, string> GetDateTimeValue(DateTime value, MiniExcelColumnMapping columnInfo)
+    private (string, string?, string) GetDateTimeValue(DateTime value, MiniExcelColumnMapping columnInfo)
     {
         string? cellValue;
         if (!ReferenceEquals(_configuration.Culture, CultureInfo.InvariantCulture))
         {
             cellValue = value.ToString(_configuration.Culture);
-            return Tuple.Create("2", (string?)"str", cellValue);
+            return ("2", (string?)"str", cellValue);
         }
 
         var oaDate = CorrectDateTimeValue(value);
         cellValue = oaDate.ToString(CultureInfo.InvariantCulture);
         var format = columnInfo?.ExcelFormat is not null ? columnInfo.ExcelFormatId.ToString() : "3";
 
-        return Tuple.Create(format, (string?)null, cellValue);
+        return (format, null, cellValue);
     }
 
     private static double CorrectDateTimeValue(DateTime value)
@@ -409,6 +409,6 @@ internal partial class OpenXmlWriter
 
     private string GetCellXfId(string styleIndex)
     {
-        return _cellXfIdMap.TryGetValue(styleIndex, out var cellXfId) ? cellXfId : styleIndex;
+        return _cellXfIdMap.GetValueOrDefault(styleIndex, styleIndex);
     }
 }

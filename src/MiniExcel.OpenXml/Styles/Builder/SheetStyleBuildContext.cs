@@ -59,11 +59,8 @@ internal sealed partial class SheetStyleBuildContext : IDisposable
 
         if (_oldStyleXmlZipEntry is not null)
         {
-#if NET10_0_OR_GREATER
+#if NET8_0_OR_GREATER
             var oldStyleXmlStream = await _oldStyleXmlZipEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
-            await using (_ = oldStyleXmlStream.ConfigureAwait(false))
-#elif NET8_0_OR_GREATER
-            var oldStyleXmlStream = _oldStyleXmlZipEntry.Open();
             await using (_ = oldStyleXmlStream.ConfigureAwait(false))
 #else
             using (var oldStyleXmlStream = _oldStyleXmlZipEntry.Open())
@@ -73,7 +70,7 @@ internal sealed partial class SheetStyleBuildContext : IDisposable
                 OldElementInfos = await ReadSheetStyleElementInfosAsync(reader, cancellationToken).ConfigureAwait(false);
             }
 
-#if NET10_0_OR_GREATER
+#if NET8_0_OR_GREATER
             _oldXmlReaderStream = await _oldStyleXmlZipEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
 #else
             _oldXmlReaderStream = _oldStyleXmlZipEntry.Open();
@@ -90,7 +87,7 @@ internal sealed partial class SheetStyleBuildContext : IDisposable
             _newStyleXmlZipEntry = _archive.CreateEntry(ExcelFileNames.Styles, CompressionLevel.Fastest);
         }
 
-#if NET10_0_OR_GREATER
+#if NET8_0_OR_GREATER
         _newXmlWriterStream = await _newStyleXmlZipEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
 #else
         _newXmlWriterStream = _newStyleXmlZipEntry.Open();
@@ -160,15 +157,10 @@ internal sealed partial class SheetStyleBuildContext : IDisposable
                 var finalStyleXmlZipEntry = _archive.CreateEntry(ExcelFileNames.Styles, CompressionLevel.Fastest);
 
 #if NET8_0_OR_GREATER
-#if NET10_0_OR_GREATER
                 var tempStream = await _newStyleXmlZipEntry!.OpenAsync(cancellationToken).ConfigureAwait(false);
                 var newStream = await finalStyleXmlZipEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
-#else
-                var tempStream = _newStyleXmlZipEntry!.Open();
-                var newStream = finalStyleXmlZipEntry.Open();
-#endif
-                await using (var disposableTempStream = tempStream.ConfigureAwait(false))
-                await using (var disposableNewStream = newStream.ConfigureAwait(false))
+                await using (_ = tempStream.ConfigureAwait(false))
+                await using (_= newStream.ConfigureAwait(false))
 #else
                 using (var tempStream = _newStyleXmlZipEntry!.Open())
                 using (var newStream = finalStyleXmlZipEntry.Open())
@@ -178,7 +170,7 @@ internal sealed partial class SheetStyleBuildContext : IDisposable
                 }
 
                 _zipDictionary[ExcelFileNames.Styles] = new ZipPackageInfo(finalStyleXmlZipEntry, ExcelContentTypes.Styles);
-                _newStyleXmlZipEntry.Delete();
+                _newStyleXmlZipEntry?.Delete();
                 _newStyleXmlZipEntry = null;
             }
 

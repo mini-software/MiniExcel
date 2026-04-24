@@ -119,4 +119,18 @@ internal static class SheetHelper
 
         return mergeCellsDict;
     }
+    
+    internal static MemoryStream CreateTestWorkbookStream()
+    {
+        var stream = new MemoryStream();
+        
+        using var package = new ExcelPackage(stream);
+        package.Workbook.Worksheets.Add("Sheet1");
+        package.Workbook.Worksheets.Add("Sheet2");
+        package.Workbook.Worksheets.Add("Sheet3");
+        package.Save();
+
+        stream.Position = 0; 
+        return stream;
+    }
 }

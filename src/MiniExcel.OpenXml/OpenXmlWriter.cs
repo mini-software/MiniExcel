@@ -11,9 +11,9 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
 {
     private static readonly UTF8Encoding Utf8WithBom = new(true);
 
+    private readonly Stream _stream;
     private readonly ZipArchive _archive;
     private readonly OpenXmlConfiguration _configuration;
-    private readonly Stream _stream;
     private readonly List<SheetDto> _sheets = [];
     private readonly List<FileDto> _files = [];
 
@@ -47,12 +47,8 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
         // A. Why ZipArchiveMode.Update and not ZipArchiveMode.Create?
         // R. ZipArchiveEntry does not support seeking when Mode is Create.
         var archiveMode = conf.FastMode ? ZipArchiveMode.Update : ZipArchiveMode.Create;
-
-#if NET10_0_OR_GREATER
         var archive = await ZipArchive.CreateAsync(stream, archiveMode, true, Utf8WithBom, cancellationToken).ConfigureAwait(false);
-#else
-        var archive = new ZipArchive(stream, archiveMode, true, Utf8WithBom);
-#endif
+
         return new OpenXmlWriter(stream, archive, value, sheetName, conf, printHeader);
     }
 
@@ -61,7 +57,9 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
     {
         try
         {
-            await GenerateDefaultOpenXmlAsync(cancellationToken).ConfigureAwait(false);
+            await CreateZipEntryAsync(ExcelFileNames.Rels, ExcelContentTypes.Relationships, ExcelXml.DefaultRels, cancellationToken).ConfigureAwait(false);
+            await CreateZipEntryAsync(ExcelFileNames.SharedStrings, ExcelContentTypes.SharedStrings, ExcelXml.DefaultSharedString, cancellationToken).ConfigureAwait(false);
+            await GenerateStylesXmlAsync(cancellationToken).ConfigureAwait(false);
 
             var sheets = GetSheets();
             var rowsWritten = new List<int>();
@@ -170,25 +168,13 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
     }
 
     [CreateSyncVersion]
-    private async Task GenerateDefaultOpenXmlAsync(CancellationToken cancellationToken)
-    {
-        await CreateZipEntryAsync(ExcelFileNames.Rels, ExcelContentTypes.Relationships, ExcelXml.DefaultRels, cancellationToken).ConfigureAwait(false);
-        await CreateZipEntryAsync(ExcelFileNames.SharedStrings, ExcelContentTypes.SharedStrings, ExcelXml.DefaultSharedString, cancellationToken).ConfigureAwait(false);
-        await GenerateStylesXmlAsync(cancellationToken).ConfigureAwait(false);
-    }
-
-    [CreateSyncVersion]
     private async Task<int> CreateSheetXmlAsync(object? values, string sheetPath, IProgress<int>? progress, CancellationToken cancellationToken)
     {
         var entry = _archive.CreateEntry(sheetPath, CompressionLevel.Fastest);
         var rowsWritten = 0;
 
 #if NET8_0_OR_GREATER
-#if NET10_0_OR_GREATER
         var zipStream = await entry.OpenAsync(cancellationToken).ConfigureAwait(false);
-#else
-        var zipStream = entry.Open();
-#endif
         await using var disposableZipStream = zipStream.ConfigureAwait(false);
 
         var writer = new MiniExcelStreamWriter(zipStream, Utf8WithBom, _configuration.BufferSize);
@@ -247,6 +233,7 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
         {
             writeAdapter = MiniExcelWriteAdapterFactory.GetWriteAdapter(values, _configuration);
         }
+
         try
         {
             var count = 0;
@@ -482,11 +469,7 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
             return;
         }
 
-        var tuple = GetCellValue(rowIndex, cellIndex, value, columnInfo, valueIsNull);
-
-        var styleIndex = tuple.Item1;
-        var dataType = tuple.Item2;
-        var cellValue = tuple.Item3;
+        var (styleIndex, dataType, cellValue) = GetCellValue(rowIndex, cellIndex, value, columnInfo, valueIsNull);
         var columnType = columnInfo.ExcelColumnType;
 
         /*Prefix and suffix blank space will lost after SaveAs #294*/
@@ -628,21 +611,14 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
         }
 
 #if NET8_0_OR_GREATER
-#if NET10_0_OR_GREATER
         var stream = await contentTypesZipEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
-#else
-        var stream = contentTypesZipEntry.Open();
-#endif
         await using var disposableStream = stream.ConfigureAwait(false);
-#else
-        using var stream = contentTypesZipEntry.Open();
-#endif
-
-#if NETCOREAPP2_0_OR_GREATER
         var doc = await XDocument.LoadAsync(stream, LoadOptions.None, cancellationToken).ConfigureAwait(false);
 #else
+        using var stream = contentTypesZipEntry.Open();
         var doc = XDocument.Load(stream);
 #endif
+
         var ns = doc.Root?.GetDefaultNamespace();
         var typesElement = doc.Descendants(ns + "Types").Single();
 
@@ -681,12 +657,9 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
         var entry = _archive.CreateEntry(path, CompressionLevel.Fastest);
 
 #if NET8_0_OR_GREATER
-#if NET10_0_OR_GREATER
         var zipStream = await entry.OpenAsync(cancellationToken).ConfigureAwait(false);
-#else
-        var zipStream = entry.Open();
-#endif
         await using var disposableZipStream = zipStream.ConfigureAwait(false);
+
         var writer = new MiniExcelStreamWriter(zipStream, Utf8WithBom, _configuration.BufferSize);
         await using var disposableWriter = writer.ConfigureAwait(false);
 #else
@@ -707,16 +680,104 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
         var entry = _archive.CreateEntry(path, CompressionLevel.Fastest);
 
 #if NET8_0_OR_GREATER
-#if NET10_0_OR_GREATER
         var zipStream = await entry.OpenAsync(cancellationToken).ConfigureAwait(false);
-#else
-        var zipStream = entry.Open();
-#endif
-        await using var  disposableZipStream = zipStream.ConfigureAwait(false);
+        await using var disposableZipStream = zipStream.ConfigureAwait(false);
         await zipStream.WriteAsync(content, cancellationToken).ConfigureAwait(false);
 #else
         using var zipStream = entry.Open();
         await zipStream.WriteAsync(content, 0, content.Length, cancellationToken).ConfigureAwait(false);
 #endif
+    }
+
+    [CreateSyncVersion]
+    /* Todo: this method is not very efficient, but workbook.xml is generally a very small file so at the moment it's not worth over-optimizing it.
+     Also, consider adding active sheet as one of the editable properties.  */
+    internal async Task AlterWorksheetAsync(string sheetName, string? newSheetName, int? newSheetIndex, SheetState? newSheetState, CancellationToken cancellationToken = default)
+    {
+        if (newSheetName is null && newSheetIndex is null && newSheetState is null)
+            return;
+
+        var oldWorkbookEntry = _archive.GetEntry("xl/workbook.xml")!;
+ 
+        try
+        {
+            var xmlDoc = await LoadWorkbook().ConfigureAwait(false);
+
+            oldWorkbookEntry.Delete();
+            var newWorkbookEntry = _archive.CreateEntry("xl/workbook.xml", CompressionLevel.Fastest);
+#if NET8_0_OR_GREATER
+            var newZipStream = await newWorkbookEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
+            await using var newDisposableZipStream = newZipStream.ConfigureAwait(false);
+            var writer = XmlWriter.Create(newZipStream, new XmlWriterSettings
+            {
+#if !SYNC_ONLY
+                Async = true
+#endif
+            });
+            await using var disposableWriter = writer.ConfigureAwait(false);
+            await xmlDoc.WriteToAsync(writer, CancellationToken.None).ConfigureAwait(false);
+#else
+            using var newZipStream = newWorkbookEntry.Open();
+            using var writer = XmlWriter.Create(newZipStream, new XmlWriterSettings { Async = false });
+            xmlDoc.WriteTo(writer);
+#endif
+        }
+        finally
+        {
+#if NET10_0_OR_GREATER
+            await _archive.DisposeAsync().ConfigureAwait(false);
+#else
+            _archive.Dispose();
+#endif
+        }
+        return;
+
+        async Task<XDocument> LoadWorkbook()
+        {
+#if NET8_0_OR_GREATER
+            var zipStream = await oldWorkbookEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
+            await using var disposableZipStream = zipStream.ConfigureAwait(false);
+            var workbookDoc = await XDocument.LoadAsync(zipStream, LoadOptions.None, cancellationToken).ConfigureAwait(false);
+#else
+            using var zipStream = oldWorkbookEntry.Open();
+            var workbookDoc = XDocument.Load(zipStream);
+#endif
+            var sheetsContainer = workbookDoc.Root?.Element((XNamespace)Schemas.SpreadsheetmlXmlMain + "sheets")!;
+            var sheets = sheetsContainer.Elements().ToList();
+
+            if (sheets.Find(s => s.Attribute("name")?.Value.Equals(sheetName, StringComparison.OrdinalIgnoreCase) is true) is not { } sheet)
+                throw new InvalidDataException($"Sheet {sheetName} not found");
+
+            if (!string.IsNullOrEmpty(newSheetName))
+            {
+                if (newSheetName.Length > 31)
+                    throw new ArgumentException($"The name \"{newSheetName}\" is too long, the maximum allowed length is 31 characters.");
+
+                sheet.SetAttributeValue("name", newSheetName);
+            }
+
+            if (newSheetIndex is not null)
+            {
+                var newIndex = Math.Clamp(newSheetIndex.Value, 0, sheets.Count - 1);
+                sheets.Remove(sheet);
+                sheets.Insert(newIndex, sheet);
+
+                sheetsContainer.RemoveAll();
+                sheetsContainer.Add(sheets);
+            }
+
+            if (newSheetState is not null)
+            {
+                sheet.SetAttributeValue("state", newSheetState switch
+                {
+                    SheetState.Visible => "visible",
+                    SheetState.Hidden => "hidden",
+                    SheetState.VeryHidden => "veryHidden",
+                    _ => "visible"
+                });
+            }
+
+            return workbookDoc;
+        }
     }
 }

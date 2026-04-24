@@ -87,11 +87,7 @@ internal partial class OpenXmlTemplate
     private async Task GenerateSheetByCreateModeAsync(ZipArchiveEntry templateSheetZipEntry, Stream outputZipSheetEntryStream, IDictionary<string, object?> inputMaps, IDictionary<int, string> sharedStrings, bool mergeCells = false, CancellationToken cancellationToken = default)
     {
 #if NET8_0_OR_GREATER
-#if NET10_0_OR_GREATER
         var newTemplateStream = await templateSheetZipEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
-#else
-        var newTemplateStream = templateSheetZipEntry.Open();
-#endif
         await using var disposableNewTemplateStream = newTemplateStream.ConfigureAwait(false);
         var doc = await XDocument.LoadAsync(newTemplateStream, LoadOptions.None, cancellationToken).ConfigureAwait(false);
 #else

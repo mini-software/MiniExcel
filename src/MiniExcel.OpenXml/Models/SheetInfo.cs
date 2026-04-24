@@ -3,17 +3,17 @@ namespace MiniExcelLib.OpenXml.Models;
 public class SheetInfo(uint id, uint index, string name, SheetState sheetState, bool active)
 {
     /// <summary>
-    /// Internal sheet id - depends on the order in which the sheet is added
+    /// Internal sheet id - depends on the order in which the sheet is added.
     /// </summary>
     public uint Id { get; } = id;
 
     /// <summary>
-    /// Next sheet index - numbered from 0
+    /// The 0-based index of the worksheet in the workbook
     /// </summary>
     public uint Index { get; } = index;
 
     /// <summary>
-    /// Sheet name
+    /// The name of the worksheet
     /// </summary>
     public string Name { get; } = name;
 
@@ -23,7 +23,7 @@ public class SheetInfo(uint id, uint index, string name, SheetState sheetState, 
     public SheetState State { get; } = sheetState;
 
     /// <summary>
-    /// Indicates whether the sheet is active
+    /// Indicates whether the worksheet was active the last time 
     /// </summary>
     public bool Active { get; } = active;
 }

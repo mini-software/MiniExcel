@@ -4,10 +4,10 @@ namespace MiniExcelLib.OpenXml.Utils;
 
 internal static class MiniExcelPropertyHelper
 {
-    internal static ExcellSheetInfo GetExcellSheetInfo(Type type, MiniExcelBaseConfiguration configuration)
+    internal static ExcelSheetInfo GetExcelSheetInfo(Type type, MiniExcelBaseConfiguration configuration)
     {
         // default options
-        var sheetInfo = new ExcellSheetInfo
+        var sheetInfo = new ExcelSheetInfo
         {
             Key = type.Name,
             ExcelSheetName = null, // will be generated automatically as Sheet<Index>
@@ -15,7 +15,7 @@ internal static class MiniExcelPropertyHelper
         };
 
         // options from ExcelSheetAttribute
-        if (type.GetCustomAttribute(typeof(MiniExcelSheetAttribute)) is MiniExcelSheetAttribute excelSheetAttr)
+        if (type.GetCustomAttribute<MiniExcelSheetAttribute>() is { } excelSheetAttr)
         {
             sheetInfo.ExcelSheetName = excelSheetAttr.Name ?? type.Name;
             sheetInfo.ExcelSheetState = excelSheetAttr.State;

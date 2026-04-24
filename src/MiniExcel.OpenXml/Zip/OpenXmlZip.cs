@@ -2,7 +2,7 @@ using System.Collections.ObjectModel;
 
 namespace MiniExcelLib.OpenXml.Zip;
 
-/// Copy & modified by ExcelDataReader ZipWorker @MIT License
+/// Copied & modified from ExcelDataReader ZipWorker @MIT License
 internal sealed partial class OpenXmlZip : IDisposable, IAsyncDisposable
 {
     private static readonly XmlReaderSettings XmlSettings = new()
@@ -30,11 +30,7 @@ internal sealed partial class OpenXmlZip : IDisposable, IAsyncDisposable
     internal static async Task<OpenXmlZip> CreateAsync(Stream fileStream, ZipArchiveMode mode = ZipArchiveMode.Read, bool leaveOpen = false, Encoding? entryNameEncoding = null, bool isUpdateMode = true, CancellationToken cancellationToken = default)
     {
         entryNameEncoding ??= Encoding.UTF8;
-#if NET10_0_OR_GREATER
         var zipFile = await ZipArchive.CreateAsync(fileStream, mode, leaveOpen, entryNameEncoding, cancellationToken).ConfigureAwait(false);
-#else
-        var zipFile = new ZipArchive(fileStream, mode, leaveOpen, entryNameEncoding);
-#endif
 
         if (!isUpdateMode)
             return new OpenXmlZip(zipFile, []);

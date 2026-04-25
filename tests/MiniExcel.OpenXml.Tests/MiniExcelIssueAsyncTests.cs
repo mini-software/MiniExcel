@@ -181,14 +181,16 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
 
         {
             using var path = AutoDeletingPath.Create();
-            var value = JsonConvert.DeserializeObject<DataTable>(
-                JsonConvert.SerializeObject(new[] 
-                {
-                    new { Name ="Jack", Age=25,InDate=new DateTime(2021,01,03)},
-                    new { Name ="Henry", Age=36,InDate=new DateTime(2020,05,03)},
-                })
-            );
-            var rowsWritten = await  _excelExporter.ExportAsync(path.ToString(), value);
+
+            var dt = new DataTable();
+            dt.Columns.Add("Name");
+            dt.Columns.Add("Age");
+            dt.Columns.Add("Date");
+
+            dt.Rows.Add("Jack", 25, new DateTime(2021, 01, 03));
+            dt.Rows.Add("Henry", 36, new DateTime(2021, 01, 03));
+
+            var rowsWritten = await  _excelExporter.ExportAsync(path.ToString(), dt);
             
             Assert.Single(rowsWritten);
             Assert.Equal(2, rowsWritten[0]);
@@ -203,15 +205,22 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
     {
         using var file = AutoDeletingPath.Create();
         var path = file.ToString();
-        var sheets = new DataSet();
 
-        var users = JsonConvert.DeserializeObject<DataTable>(JsonConvert.SerializeObject(new[] { new { Name = "Jack", Age = 25 }, new { Name = "Mike", Age = 44 } }));
-        users.TableName = "users";
+        var users = new DataTable { TableName = "users" };
+        users.Columns.Add("Name", typeof(string));
+        users.Columns.Add("Age", typeof(int));
+        users.Rows.Add("Jack", 25);
+        users.Rows.Add("Mike", 44);
+
+        var departments = new DataTable { TableName = "departments" };
+        departments.Columns.Add("ID");
+        departments.Columns.Add("Name");
+        departments.Rows.Add("01", "HR");
+        departments.Rows.Add("02", "IT");
+
+        DataSet sheets = new();
         sheets.Tables.Add(users);
-        
-        var department = JsonConvert.DeserializeObject<DataTable>(JsonConvert.SerializeObject(new[] { new { ID = "01", Name = "HR" }, new { ID = "02", Name = "IT" } }));
-        department.TableName = "department";
-        sheets.Tables.Add(department);
+        sheets.Tables.Add(departments);
 
         var rowsWritten = await  _excelExporter.ExportAsync(path, sheets);
         Assert.Equal(2, rowsWritten.Length);
@@ -219,24 +228,19 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
 
         var sheetNames = await  _excelImporter.GetSheetNamesAsync(path);
         Assert.Equal("users", sheetNames[0]);
-        Assert.Equal("department", sheetNames[1]);
+        Assert.Equal("departments", sheetNames[1]);
 
-        {
-            var q =  _excelImporter.QueryAsync(path, true, sheetName: "users").ToBlockingEnumerable();
-            var rows = q.ToList();
-            Assert.Equal("Jack", rows[0].Name);
-            Assert.Equal(25, rows[0].Age);
-            Assert.Equal("Mike", rows[1].Name);
-            Assert.Equal(44, rows[1].Age);
-        }
-        {
-            var q =  _excelImporter.QueryAsync(path, true, sheetName: "department").ToBlockingEnumerable();
-            var rows = q.ToList();
-            Assert.Equal("01", rows[0].ID);
-            Assert.Equal("HR", rows[0].Name);
-            Assert.Equal("02", rows[1].ID);
-            Assert.Equal("IT", rows[1].Name);
-        }
+        var rows1 = await _excelImporter.QueryAsync(path, true, sheetName: "users").ToListAsync();
+        Assert.Equal("Jack", rows1[0].Name);
+        Assert.Equal(25, rows1[0].Age);
+        Assert.Equal("Mike", rows1[1].Name);
+        Assert.Equal(44, rows1[1].Age);
+
+        var rows2 = await _excelImporter.QueryAsync(path, true, sheetName: "departments").ToListAsync();
+        Assert.Equal("01", rows2[0].ID);
+        Assert.Equal("HR", rows2[0].Name);
+        Assert.Equal("02", rows2[1].ID);
+        Assert.Equal("IT", rows2[1].Name);
     }
 
     /// <summary>
@@ -246,11 +250,8 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
     public async Task Issue233()
     {
         var path = PathHelper.GetFile("xlsx/TestIssue233.xlsx");
-            
 
         var dt = await  _excelImporter.QueryAsDataTableAsync(path);
-
-            
         var rows = dt.Rows;
             
         Assert.Equal(0.55, rows[0]["Size"]);
@@ -1131,59 +1132,49 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
         {
             using var file = AutoDeletingPath.Create();
             var path = file.ToString();
-            
-            _output.WriteLine("==== SaveAs by strongly type ====");
-            var input = JsonConvert.DeserializeObject<IEnumerable<MiniExcelOpenXmlTests.UserAccount>>(
-                """
-                [
-                  {
-                    "ID":"78de23d2-dcb6-bd3d-ec67-c112bbc322a2",
-                    "Name":"Wade",
-                    "BoD":"2020-09-27T00:00:00",
-                    "Age":5019,
-                    "VIP":false,
-                    "Points":5019.12,
-                    "IgnoredProperty":null
-                  },
-                  {
-                    "ID":"20d3bfce-27c3-ad3e-4f70-35c81c7e8e45",
-                    "Name":"Felix",
-                    "BoD":"2020-10-25T00:00:00",
-                    "Age":7028,
-                    "VIP":true,
-                    "Points":7028.46,
-                    "IgnoredProperty":null
-                  },
-                  {
-                    "ID":"52013bf0-9aeb-48e6-e5f5-e9500afb034f",
-                    "Name":"Phelan",
-                    "BoD":"2021-10-04T00:00:00",
-                    "Age":3836,
-                    "VIP":true,
-                    "Points":3835.7,
-                    "IgnoredProperty":null
-                  },
-                    {
-                    "ID":"3b97b87c-7afe-664f-1af5-6914d313ae25",
-                    "Name":"Samuel",
-                    "BoD":"2020-06-21T00:00:00",
-                    "Age":9352,
-                    "VIP":false,
-                    "Points":9351.71,
-                    "IgnoredProperty":null
-                  },
-                  {
-                    "ID":"9a989c43-d55f-5306-0d2f-0fbafae135bb",
-                    "Name":"Raymond",
-                    "BoD":"2021-07-12T00:00:00",
-                    "Age":8210,
-                    "VIP":true,
-                    "Points":8209.76,
-                    "IgnoredProperty":null
-                  }
-                ]
-                """);
-            var rowsWritten = await  _excelExporter.ExportAsync(path, input);
+
+            List<MiniExcelOpenXmlTests.UserAccount> data = 
+            [
+                new()
+                {
+                    ID = new Guid("78de23d2-dcb6-bd3d-ec67-c112bbc322a2"),
+                    Name = "Wade",
+                    BoD = new DateTime(2020, 9, 27),
+                    Points = 5019.12m
+                },
+                new()
+                {
+                    ID = new Guid("20d3bfce-27c3-ad3e-4f70-35c81c7e8e45"),
+                    Name = "Felix",
+                    BoD = new DateTime(2020, 10, 25),
+                    Points = 7028.46m
+                },
+                new()
+                {
+                    ID = new Guid("52013bf0-9aeb-48e6-e5f5-e9500afb034f"),
+                    Name = "Phelan",
+                    BoD = new DateTime(2020, 10, 25),
+                    Points = 3835.7m,
+                    VIP = true
+                },
+                new()
+                {
+                    ID = new Guid("3b97b87c-7afe-664f-1af5-6914d313ae25"),
+                    Name = "Samuel",
+                    BoD = new DateTime(2020, 6, 21),
+                    Points = 9351.71m
+                },
+                new()
+                {
+                    ID = new Guid("9a989c43-d55f-5306-0d2f-0fbafae135bb"),
+                    Name = "Raymond",
+                    BoD = new DateTime(2021, 7, 12),
+                    Points = 8209.76m,
+                    VIP = true
+                }
+            ];
+
+            var rowsWritten = await  _excelExporter.ExportAsync(path, data);
             Assert.Single(rowsWritten);
             Assert.Equal(5, rowsWritten[0]);
 
@@ -1221,7 +1212,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
                 Assert.Equal("Wade", rows[0].Name);
                 Assert.Equal(DateTime.ParseExact("27/09/2020", "dd/MM/yyyy", CultureInfo.InvariantCulture), rows[0].BoD);
                 Assert.False(rows[0].VIP);
-                Assert.Equal(5019m, rows[0].Points);
+                Assert.Equal(5019.12m, rows[0].Points);
                 Assert.Equal(1, rows[0].IgnoredProperty);
             }
         }

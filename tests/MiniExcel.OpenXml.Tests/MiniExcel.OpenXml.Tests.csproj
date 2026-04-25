@@ -15,11 +15,10 @@
 	
 	<ItemGroup>
 		<PackageReference Include="ClosedXML" Version="0.105.0" />
-		<PackageReference Include="EPPlus" Version="7.7.2" />
-		<PackageReference Include="ExcelDataReader" Version="3.7.0" />
-		<PackageReference Include="ExcelDataReader.DataSet" Version="3.7.0" />
-		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-		<PackageReference Include="NPOI" Version="2.7.5" />
+		<PackageReference Include="EPPlus" Version="7.7.3" />
+		<PackageReference Include="ExcelDataReader" Version="3.8.0" />
+		<PackageReference Include="ExcelDataReader.DataSet" Version="3.8.0" />
+		<PackageReference Include="NPOI" Version="2.8.0" />
 
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.1" />
 		<PackageReference Include="xunit" Version="2.9.3" />
@@ -53,7 +52,6 @@
 		<Using Include="MiniExcelLib.OpenXml" />
 		<Using Include="MiniExcelLib.OpenXml.Api" />
 		<Using Include="MiniExcelLib.OpenXml.Utils" />
-		<Using Include="Newtonsoft.Json" />
 		<Using Include="OfficeOpenXml" />
 		<Using Include="Xunit" />
 		<Using Include="Xunit.Abstractions" />

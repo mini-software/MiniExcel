@@ -9,7 +9,7 @@
 
     <ItemGroup>
         <PackageReference Include="System.Data.SQLite.Core" Version="1.0.119"/>
-        <PackageReference Include="Dapper" Version="2.1.66"/>
+        <PackageReference Include="Dapper" Version="2.1.72" />
     </ItemGroup>
 
 </Project>

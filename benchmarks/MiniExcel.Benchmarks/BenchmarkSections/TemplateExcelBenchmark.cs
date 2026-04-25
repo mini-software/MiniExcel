@@ -35,7 +35,7 @@ public class TemplateExcelBenchmark : BenchmarkBase
         _mappingTemplater = MiniExcel.Templaters.GetMappingTemplater(registry);
     }
     
-    [Benchmark(Description = "MiniExcel Template Generate")]
+    [Benchmark(Description = "MiniExcel Fill Template")]
     public void MiniExcel_Template_Generate_Test()
     {
         const string templatePath = "TestTemplateBasicIEmumerableFill.xlsx";
@@ -54,7 +54,7 @@ public class TemplateExcelBenchmark : BenchmarkBase
         _templater.FillTemplate(path.FilePath, templatePath, value);
     }
 
-    [Benchmark(Description = "ClosedXml.Report Template Generate")]
+    [Benchmark(Description = "ClosedXml.Report Generate Template")]
     public void ClosedXml_Report_Template_Generate_Test()
     {
         const string templatePath = "TestTemplateBasicIEmumerableFill_ClosedXML_Report.xlsx";
@@ -77,7 +77,7 @@ public class TemplateExcelBenchmark : BenchmarkBase
         template.SaveAs(path.FilePath);
     }
 
-    [Benchmark(Description = "MiniExcel Mapping Template Generate")]
+    [Benchmark(Description = "MiniExcel Mapping Fill Template")]
     public void MiniExcel_Mapping_Template_Generate_Test()
     {
         using var templatePath = AutoDeletingPath.Create();

@@ -96,6 +96,6 @@ public class TemplateExcelBenchmark : BenchmarkBase
                 Department = "HR"
             });
 
-        _mappingTemplater.ApplyTemplate(outputPath.FilePath, templatePath.FilePath, employees);
+        _mappingTemplater.FillTemplate(outputPath.FilePath, templatePath.FilePath, employees);
     }
 }

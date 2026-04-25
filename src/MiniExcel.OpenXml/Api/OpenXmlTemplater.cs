@@ -132,4 +132,49 @@ public sealed partial class OpenXmlTemplater
     }
 
     #endregion
+
+    #region Obsolete
+
+    [CreateSyncVersion, Obsolete("Please use FillTemplate or FillTemplateAsync instead")]
+    public Task ApplyTemplateAsync(string path, string templatePath, object value, bool overwriteFile = false,
+        OpenXmlConfiguration? configuration = null, CancellationToken cancellationToken = default)
+    {
+        return FillTemplateAsync(path, templatePath, value, overwriteFile, configuration, cancellationToken);
+    }
+
+    [CreateSyncVersion, Obsolete("Please use FillTemplate or FillTemplateAsync instead")]
+    public Task ApplyTemplateAsync(string path, Stream templateStream, object value, bool overwriteFile = false,
+        OpenXmlConfiguration? configuration = null, CancellationToken cancellationToken = default)
+    {
+        return FillTemplateAsync(path, templateStream, value, overwriteFile, configuration, cancellationToken);
+    }
+    
+    [CreateSyncVersion, Obsolete("Please use FillTemplate or FillTemplateAsync instead")]
+    public Task ApplyTemplateAsync(Stream stream, string templatePath, object value,
+        OpenXmlConfiguration? configuration = null, CancellationToken cancellationToken = default)
+    {
+        return FillTemplateAsync(stream, templatePath, value, configuration, cancellationToken);
+    }
+    
+    [CreateSyncVersion, Obsolete("Please use FillTemplate or FillTemplateAsync instead")]
+    public Task ApplyTemplateAsync(Stream stream, Stream templateStream, object value,
+        OpenXmlConfiguration? configuration = null, CancellationToken cancellationToken = default)
+    {
+        return FillTemplateAsync(stream, templateStream, value, configuration, cancellationToken);
+    }
+    
+    [CreateSyncVersion, Obsolete("Please use FillTemplate or FillTemplateAsync instead")]
+    public Task ApplyTemplateAsync(string path, byte[] templateBytes, object value, bool overwriteFile = false,
+        OpenXmlConfiguration? configuration = null, CancellationToken cancellationToken = default)
+    {
+        return FillTemplateAsync(path, templateBytes, value, overwriteFile, configuration, cancellationToken);
+    }
+    
+    [CreateSyncVersion, Obsolete("Please use FillTemplate or FillTemplateAsync instead")]
+    public Task ApplyTemplateAsync(Stream stream, byte[] templateBytes, object value,
+        OpenXmlConfiguration? configuration = null, CancellationToken cancellationToken = default)
+    {
+        return FillTemplateAsync(stream, templateBytes, value, configuration, cancellationToken);
+    }
+    #endregion
 }

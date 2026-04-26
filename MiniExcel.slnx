@@ -9,7 +9,6 @@
     <File Path="appveyor.yml" />
     <File Path=".github\workflows\dotnet.yml" />
     <File Path="LICENSE" />
-    <File Path="README-NuGet.md" />
     <File Path="README.md" />
     <File Path="README.zh-CN.md" />
     <File Path=".github\workflows\benchmark.yml" />

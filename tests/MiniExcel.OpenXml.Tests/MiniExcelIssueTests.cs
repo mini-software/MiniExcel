@@ -17,6 +17,10 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     private readonly OpenXmlExporter _excelExporter =  MiniExcel.Exporters.GetOpenXmlExporter();
     private readonly OpenXmlTemplater _excelTemplater =  MiniExcel.Templaters.GetOpenXmlTemplater();
 
+    static MiniExcelIssueTests()
+    {
+        EpplusLicence.SetContext();
+    }
 
     /// <summary>
     /// https://github.com/mini-software/MiniExcel/issues/549
@@ -207,34 +211,32 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         {
             DynamicColumns =
             [
-                new DynamicExcelColumn("id") { Ignore=true },
-                new DynamicExcelColumn("name") { Index=1,Width=10 },
-                new DynamicExcelColumn("createdate") { Index=0, Format="yyyy-MM-dd", Width=15 },
-                new DynamicExcelColumn("point") { Index=2, Name="Account Point" }
+                new DynamicExcelColumn("Id") { Ignore = true },
+                new DynamicExcelColumn("Name") { Index = 1,Width = 10 },
+                new DynamicExcelColumn("Date") { Index = 0, Format="yyyy-MM-dd", Width = 15 },
+                new DynamicExcelColumn("Point") { Index = 2, Name = "Account Point" }
             ]
         };
         using var path = AutoDeletingPath.Create();
-        var json = JsonConvert.SerializeObject(new[]
-        {
-            new
+        List<Dictionary<string, object>> value =
+        [
+            new()
             {
-                id = 1,
-                name = "Jack",
-                createdate = new DateTime(2022, 04, 12),
-                point = 123.456
+                ["Id"] = 1,
+                ["Name"] = "Jack",
+                ["Date"] = new DateTime(2022, 04, 12),
+                ["Point"] = 123.456
             }
-        }, Formatting.Indented);
-
-        var value = JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(json);
+        ];
         _excelExporter.Export(path.ToString(), value, configuration: config);
 
         var rows = _excelImporter.Query(path.ToString()).ToList();
-        Assert.Equal("createdate", rows[0].A);
+        Assert.Equal("Date", rows[0].A);
         Assert.Equal(new DateTime(2022, 04, 12), rows[1].A);
-        Assert.Equal("name", rows[0].B);
+        Assert.Equal("Name", rows[0].B);
         Assert.Equal("Jack", rows[1].B);
         Assert.Equal("Account Point", rows[0].C);
-        Assert.Equal(123.456, rows[1].C);
+        Assert.Equal(123.456, rows[1].C);    
     }
 
     [Fact]
@@ -1526,14 +1528,16 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
 
         {
             using var path = AutoDeletingPath.Create();
-            var value = JsonConvert.DeserializeObject<DataTable>(
-                JsonConvert.SerializeObject(new[]
-                {
-                    new { name = "Jack", Age = 25, InDate = new DateTime(2021,01,03)},
-                    new { name = "Henry", Age = 36, InDate = new DateTime(2020,05,03)},
-                })
-            );
-            _excelExporter.Export(path.ToString(), value);
+
+            var dt = new DataTable();
+            dt.Columns.Add("Name");
+            dt.Columns.Add("Age");
+            dt.Columns.Add("Date");
+
+            dt.Rows.Add("Jack", 25, new DateTime(2021, 01, 03));
+            dt.Rows.Add("Henry", 36, new DateTime(2021, 01, 03));
+
+            _excelExporter.Export(path.ToString(), dt);
         }
     }
 
@@ -1544,24 +1548,22 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     public void Issue235()
     {
         using var path = AutoDeletingPath.Create();
+        
+        var users = new DataTable { TableName = "users" };
+        users.Columns.Add("Name", typeof(string));
+        users.Columns.Add("Age", typeof(int));
+        users.Rows.Add("Jack", 25);
+        users.Rows.Add("Mike", 44);
+
+        var departments = new DataTable { TableName = "departments" };
+        departments.Columns.Add("ID");
+        departments.Columns.Add("Name");
+        departments.Rows.Add("01", "HR");
+        departments.Rows.Add("02", "IT");
 
         DataSet dataSet = new();
-        var users = JsonConvert.DeserializeObject<DataTable>(JsonConvert.SerializeObject(new[]
-        {
-            new { Name = "Jack", Age = 25 },
-            new { Name = "Mike", Age = 44 }
-        }));
-        users!.TableName = "users";
-
-        var department = JsonConvert.DeserializeObject<DataTable>(JsonConvert.SerializeObject(new[]
-        {
-            new { ID = "01", Name = "HR" },
-            new { ID = "02", Name = "IT" }
-        }));
-        department!.TableName = "department";
-
         dataSet.Tables.Add(users);
-        dataSet.Tables.Add(department);
+        dataSet.Tables.Add(departments);
 
         var rowsWritten = _excelExporter.Export(path.ToString(), dataSet);
         Assert.Equal(2, rowsWritten.Length);
@@ -1569,22 +1571,19 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
 
         var sheetNames = _excelImporter.GetSheetNames(path.ToString());
         Assert.Equal("users", sheetNames[0]);
-        Assert.Equal("department", sheetNames[1]);
+        Assert.Equal("departments", sheetNames[1]);
 
-        {
-            var rows = _excelImporter.Query(path.ToString(), true, sheetName: "users").ToList();
-            Assert.Equal("Jack", rows[0].Name);
-            Assert.Equal(25, rows[0].Age);
-            Assert.Equal("Mike", rows[1].Name);
-            Assert.Equal(44, rows[1].Age);
-        }
-        {
-            var rows = _excelImporter.Query(path.ToString(), true, sheetName: "department").ToList();
-            Assert.Equal("01", rows[0].ID);
-            Assert.Equal("HR", rows[0].Name);
-            Assert.Equal("02", rows[1].ID);
-            Assert.Equal("IT", rows[1].Name);
-        }
+        var rows1 = _excelImporter.Query(path.ToString(), true, sheetName: "users").ToList();
+        Assert.Equal("Jack", rows1[0].Name);
+        Assert.Equal(25, rows1[0].Age);
+        Assert.Equal("Mike", rows1[1].Name);
+        Assert.Equal(44, rows1[1].Age);
+
+        var rows2 = _excelImporter.Query(path.ToString(), true, sheetName: "departments").ToList();
+        Assert.Equal("01", rows2[0].ID);
+        Assert.Equal("HR", rows2[0].Name);
+        Assert.Equal("02", rows2[1].ID);
+        Assert.Equal("IT", rows2[1].Name);
     }
 
     /// <summary>
@@ -2355,44 +2354,49 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         {
             using var file = AutoDeletingPath.Create();
             var path = file.ToString();
-            _output.WriteLine("==== SaveAs by strongly type ====");
 
-            var input = JsonConvert.DeserializeObject<IEnumerable<MiniExcelOpenXmlTests.UserAccount>>(
-                """
-                [
-                  {
-                    "ID":"78de23d2-dcb6-bd3d-ec67-c112bbc322a2",
-                    "Name":"Wade","BoD":"2020-09-27T00:00:00",
-                    "Age":5019,"VIP":false,"Points":5019.12,
-                    "IgnoredProperty":null
-                  },
-                  {
-                    "ID":"20d3bfce-27c3-ad3e-4f70-35c81c7e8e45",
-                    "Name":"Felix","BoD":"2020-10-25T00:00:00",
-                    "Age":7028,"VIP":true,"Points":7028.46,
-                    "IgnoredProperty":null
-                  },
-                  {
-                    "ID":"52013bf0-9aeb-48e6-e5f5-e9500afb034f",
-                    "Name":"Phelan","BoD":"2021-10-04T00:00:00",
-                    "Age":3836,"VIP":true,"Points":3835.7,
-                    "IgnoredProperty":null
-                  },
-                  {
-                    "ID":"3b97b87c-7afe-664f-1af5-6914d313ae25",
-                    "Name":"Samuel","BoD":"2020-06-21T00:00:00",
-                    "Age":9352,"VIP":false,"Points":9351.71,
-                    "IgnoredProperty":null
-                  },
-                  {
-                    "ID":"9a989c43-d55f-5306-0d2f-0fbafae135bb",
-                    "Name":"Raymond","BoD":"2021-07-12T00:00:00",
-                    "Age":8210,"VIP":true,"Points":8209.76,
-                    "IgnoredProperty":null
-                  }
-                ]
-                """);
-            _excelExporter.Export(path, input);
+            List<MiniExcelOpenXmlTests.UserAccount> data = 
+            [
+                new()
+                {
+                    ID = new Guid("78de23d2-dcb6-bd3d-ec67-c112bbc322a2"),
+                    Name = "Wade",
+                    BoD = new DateTime(2020, 9, 27),
+                    Points = 5019.12m
+                },
+                new()
+                {
+                    ID = new Guid("20d3bfce-27c3-ad3e-4f70-35c81c7e8e45"),
+                    Name = "Felix",
+                    BoD = new DateTime(2020, 10, 25),
+                    Points = 7028.46m
+                },
+                new()
+                {
+                    ID = new Guid("52013bf0-9aeb-48e6-e5f5-e9500afb034f"),
+                    Name = "Phelan",
+                    BoD = new DateTime(2020, 10, 25),
+                    Points = 3835.7m,
+                    VIP = true
+                },
+                new()
+                {
+                    ID = new Guid("3b97b87c-7afe-664f-1af5-6914d313ae25"),
+                    Name = "Samuel",
+                    BoD = new DateTime(2020, 6, 21),
+                    Points = 9351.71m
+                },
+                new()
+                {
+                    ID = new Guid("9a989c43-d55f-5306-0d2f-0fbafae135bb"),
+                    Name = "Raymond",
+                    BoD = new DateTime(2021, 7, 12),
+                    Points = 8209.76m,
+                    VIP = true
+                }
+            ];
+
+            _excelExporter.Export(path, data);
 
             var rows = _excelImporter.Query(path, sheetName: "Sheet1").ToList();
             Assert.Equal(6, rows.Count);
@@ -2422,11 +2426,11 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
                 var rows = _excelImporter.Query<MiniExcelOpenXmlTests.UserAccount>(path, sheetName: "Sheet1").ToList();
                 Assert.Equal(5, rows.Count);
 
-                Assert.Equal(Guid.Parse("78DE23D2-DCB6-BD3D-EC67-C112BBC322A2"), rows[0].ID);
+                Assert.Equal(new Guid("78DE23D2-DCB6-BD3D-EC67-C112BBC322A2"), rows[0].ID);
                 Assert.Equal("Wade", rows[0].Name);
-                Assert.Equal(DateTime.ParseExact("27/09/2020", "dd/MM/yyyy", CultureInfo.InvariantCulture), rows[0].BoD);
+                Assert.Equal(new DateTime(2020,9,27), rows[0].BoD);
                 Assert.False(rows[0].VIP);
-                Assert.Equal(5019m, rows[0].Points);
+                Assert.Equal(5019.12m, rows[0].Points);
                 Assert.Equal(1, rows[0].IgnoredProperty);
             }
         }

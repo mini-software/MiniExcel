@@ -2,8 +2,6 @@ namespace MiniExcelLib.OpenXml.Tests.Utils;
 
 internal static class EpplusLicence
 {
-    static EpplusLicence()
-    {
-        ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
-    }
+    internal static void SetContext() 
+        => ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
 }

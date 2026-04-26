@@ -53,7 +53,10 @@ public class QueryExcelBenchmark : BenchmarkBase
     [Benchmark(Description = "MiniExcel Query")]
     public void MiniExcel_Query()
     {
-        foreach (var _ in _importer.Query(FilePath)) { }
+        foreach (var row in _importer.Query(FilePath))
+        {
+            var value = row;
+        }
     }
 
     [Benchmark(Description = "MiniExcel QueryFirst with Mapping")]
@@ -65,7 +68,10 @@ public class QueryExcelBenchmark : BenchmarkBase
     [Benchmark(Description = "MiniExcel Query with Mapping")]
     public void MiniExcel_Query_Mapping()
     {
-        foreach (var _ in _mappingImporter.Query<DemoDto>(FilePath)) { }
+        foreach (var row in _mappingImporter.Query<DemoDto>(FilePath))
+        {
+            var value = row;
+        }
     }
 
     [Benchmark(Description = "ExcelDataReader QueryFirst")]
@@ -74,11 +80,11 @@ public class QueryExcelBenchmark : BenchmarkBase
         using var stream = File.Open(FilePath, FileMode.Open, FileAccess.Read);
         using var reader = ExcelReaderFactory.CreateReader(stream);
     
-        List<object> d = [];
         reader.Read();
-    
         for (var i = 0; i < reader.FieldCount; i++)
-            d.Add(reader.GetValue(i));
+        {
+            var value = reader.GetValue(i);
+        }
     }
     
     [Benchmark(Description = "ExcelDataReader Query")]
@@ -89,9 +95,10 @@ public class QueryExcelBenchmark : BenchmarkBase
     
         while (reader.Read())
         {
-            List<object> d = [];
             for (var i = 0; i < reader.FieldCount; i++)
-                d.Add(reader.GetValue(i));
+            {
+                var value = reader.GetValue(i);
+            }
         }
     }
     
@@ -105,8 +112,6 @@ public class QueryExcelBenchmark : BenchmarkBase
     [Benchmark(Description = "Epplus Query")]
     public void Epplus_Query_Test()
     {
-        // [How do I iterate through rows in an excel table using epplus? - Stack Overflow] (https://stackoverflow.com/questions/21742038/how-do-i-iterate-through-rows-in-an-excel-table-using-epplus)
-    
         using var p = new ExcelPackage(new FileInfo(FilePath));
     
         var workSheet = p.Workbook.Worksheets[0];
@@ -135,12 +140,14 @@ public class QueryExcelBenchmark : BenchmarkBase
         using var workbook = new XLWorkbook(FilePath);
         workbook.Worksheet(1).Rows();
     }
+
     [Benchmark(Description = "NPOI QueryFirst")]
     public void NPOI_QueryFirst_Test()
     {
         using var wb = new XSSFWorkbook(FilePath,true);
         wb.GetSheetAt(0).GetRow(1);
     }
+
     [Benchmark(Description = "NPOI Query")]
     public void NPOI_Query_Test()
     {
@@ -181,6 +188,9 @@ public class QueryExcelBenchmark : BenchmarkBase
         var worksheetPart = workbookPart!.WorksheetParts.First();
     
         var sheetData = worksheetPart.Worksheet.Elements<SheetData>().First();
-        var firstRow = sheetData.Elements<Row>().ToList();
+        foreach(var row in sheetData.Elements<Row>())
+        {
+            var cellValue = row;
+        }
     }
 }

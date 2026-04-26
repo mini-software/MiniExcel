@@ -1,6 +1,3 @@
-using System.Runtime.CompilerServices;
-using Zomp.SyncMethodGenerator;
-
 namespace MiniExcelLib.OpenXml.FluentMapping.Api;
 
 public sealed partial class MappingImporter()
@@ -15,7 +12,13 @@ public sealed partial class MappingImporter()
     [CreateSyncVersion]
     public async IAsyncEnumerable<T> QueryAsync<T>(string path, [EnumeratorCancellation] CancellationToken cancellationToken = default) where T : class, new()
     {
+    #if NET8_0_OR_GREATER
+        var stream = File.OpenRead(path);
+        await using var disposableStream = stream.ConfigureAwait(false);
+    #else
         using var stream = File.OpenRead(path);
+    #endif
+
         await foreach (var item in QueryAsync<T>(stream, cancellationToken).ConfigureAwait(false))
             yield return item;
     }
@@ -36,7 +39,12 @@ public sealed partial class MappingImporter()
     [CreateSyncVersion]
     public async Task<T> QuerySingleAsync<T>(string path, CancellationToken cancellationToken = default) where T : class, new()
     {
+#if NET8_0_OR_GREATER
+        var stream = File.OpenRead(path);
+        await using var disposableStream = stream.ConfigureAwait(false);
+#else
         using var stream = File.OpenRead(path);
+#endif
         return await QuerySingleAsync<T>(stream, cancellationToken).ConfigureAwait(false);
     }
 

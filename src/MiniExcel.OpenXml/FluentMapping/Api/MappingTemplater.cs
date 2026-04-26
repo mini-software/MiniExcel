@@ -1,5 +1,3 @@
-using Zomp.SyncMethodGenerator;
-
 namespace MiniExcelLib.OpenXml.FluentMapping.Api;
 
 public sealed partial class MappingTemplater()
@@ -12,7 +10,7 @@ public sealed partial class MappingTemplater()
     }
     
     [CreateSyncVersion]
-    public async Task ApplyTemplateAsync<T>(
+    public async Task FillTemplateAsync<T>(
         string? outputPath,
         string? templatePath,
         IEnumerable<T>? values,
@@ -25,13 +23,21 @@ public sealed partial class MappingTemplater()
         if (values is null)
             throw new ArgumentNullException(nameof(values));
 
+#if NET8_0_OR_GREATER
+        var outputStream = File.Create(outputPath);
+        await using var disposableOutputStream = outputStream.ConfigureAwait(false);
+        
+        var templateStream = File.OpenRead(templatePath);
+        await using var disposableTemplateStream = templateStream.ConfigureAwait(false);
+#else
         using var outputStream = File.Create(outputPath);
         using var templateStream = File.OpenRead(templatePath);
-        await ApplyTemplateAsync(outputStream, templateStream, values, cancellationToken).ConfigureAwait(false);
+#endif
+        await FillTemplateAsync(outputStream, templateStream, values, cancellationToken).ConfigureAwait(false);
     }
 
     [CreateSyncVersion]
-    public async Task ApplyTemplateAsync<T>(
+    public async Task FillTemplateAsync<T>(
         Stream? outputStream,
         Stream? templateStream,
         IEnumerable<T>? values,
@@ -54,7 +60,7 @@ public sealed partial class MappingTemplater()
     }
 
     [CreateSyncVersion]
-    public async Task ApplyTemplateAsync<T>(
+    public async Task FillTemplateAsync<T>(
         Stream? outputStream,
         byte[]? templateBytes,
         IEnumerable<T>? values,
@@ -67,7 +73,45 @@ public sealed partial class MappingTemplater()
         if (values is null)
             throw new ArgumentNullException(nameof(values));
 
+#if NET8_0_OR_GREATER
+        var templateStream = new MemoryStream(templateBytes);
+        await using var disposableTemplateStream = templateStream.ConfigureAwait(false);
+#else
         using var templateStream = new MemoryStream(templateBytes);
-        await ApplyTemplateAsync(outputStream, templateStream, values, cancellationToken).ConfigureAwait(false);
+#endif
+        await FillTemplateAsync(outputStream, templateStream, values, cancellationToken).ConfigureAwait(false);
     }
+
+#region Obsolete
+[CreateSyncVersion, Obsolete("Please use FillTemplate or FillTemplateAsync instead.")]
+public Task ApplyTemplateAsync<T>(
+    string? outputPath,
+    string? templatePath,
+    IEnumerable<T>? values,
+    CancellationToken cancellationToken = default) where T : class
+{
+    return FillTemplateAsync(outputPath, templatePath, values, cancellationToken);
+}
+
+[CreateSyncVersion, Obsolete("Please use FillTemplate or FillTemplateAsync instead.")]
+public Task ApplyTemplateAsync<T>(
+    Stream? outputStream,
+    Stream? templateStream,
+    IEnumerable<T>? values,
+    CancellationToken cancellationToken = default) where T : class
+{
+    return FillTemplateAsync(outputStream, templateStream, values, cancellationToken);
+}
+
+
+[CreateSyncVersion, Obsolete("Please use FillTemplate or FillTemplateAsync instead.")]
+public Task ApplyTemplateAsync<T>(
+    Stream? outputStream,
+    byte[]? templateBytes,
+    IEnumerable<T>? values,
+    CancellationToken cancellationToken = default) where T : class
+{
+    return FillTemplateAsync(outputStream, templateBytes, values, cancellationToken);
+}
+#endregion
 }

@@ -107,12 +107,12 @@ You can download the full package from [NuGet](https://www.nuget.org/packages/Mi
 dotnet add package MiniExcel
 ```
 
-This package will contain the assemblies with both Excel and Csv functionalities, along with the original `v1.x` methods' signatures.
-~~If you don't care for those you can also install the Excel and Csv packages separately:~~
-We're still pondering whether this is the best way to move forward with the library, and if we do this is how you'll be able to add the separate packages:
+This package will contain the assemblies with both Excel and Csv functionalities,
+along with the `MiniExcelConverter` utility class and the original `v1.x` methods' signatures.
+If you don't care for those you can also install the OpenXml and Csv packages separately:
 
 ```bash
-dotnet add package MiniExcel.Core
+dotnet add package MiniExcel.OpenXml
 ```
 
 ```bash

@@ -134,19 +134,18 @@ public sealed partial class OpenXmlTemplater
     #endregion
 
     #region Obsolete
-
     [CreateSyncVersion, Obsolete("Please use FillTemplate or FillTemplateAsync instead")]
-    public Task ApplyTemplateAsync(string path, string templatePath, object value, bool overwriteFile = false,
+    public Task ApplyTemplateAsync(string path, string templatePath, object value,
         OpenXmlConfiguration? configuration = null, CancellationToken cancellationToken = default)
     {
-        return FillTemplateAsync(path, templatePath, value, overwriteFile, configuration, cancellationToken);
+        return FillTemplateAsync(path, templatePath, value, true, configuration, cancellationToken);
     }
 
     [CreateSyncVersion, Obsolete("Please use FillTemplate or FillTemplateAsync instead")]
-    public Task ApplyTemplateAsync(string path, Stream templateStream, object value, bool overwriteFile = false,
+    public Task ApplyTemplateAsync(string path, Stream templateStream, object value,
         OpenXmlConfiguration? configuration = null, CancellationToken cancellationToken = default)
     {
-        return FillTemplateAsync(path, templateStream, value, overwriteFile, configuration, cancellationToken);
+        return FillTemplateAsync(path, templateStream, value, true, configuration, cancellationToken);
     }
     
     [CreateSyncVersion, Obsolete("Please use FillTemplate or FillTemplateAsync instead")]
@@ -164,10 +163,10 @@ public sealed partial class OpenXmlTemplater
     }
     
     [CreateSyncVersion, Obsolete("Please use FillTemplate or FillTemplateAsync instead")]
-    public Task ApplyTemplateAsync(string path, byte[] templateBytes, object value, bool overwriteFile = false,
+    public Task ApplyTemplateAsync(string path, byte[] templateBytes, object value,
         OpenXmlConfiguration? configuration = null, CancellationToken cancellationToken = default)
     {
-        return FillTemplateAsync(path, templateBytes, value, overwriteFile, configuration, cancellationToken);
+        return FillTemplateAsync(path, templateBytes, value, true, configuration, cancellationToken);
     }
     
     [CreateSyncVersion, Obsolete("Please use FillTemplate or FillTemplateAsync instead")]

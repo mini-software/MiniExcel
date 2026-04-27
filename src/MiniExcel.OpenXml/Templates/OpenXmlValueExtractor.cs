@@ -20,8 +20,10 @@ public class OpenXmlValueExtractor : IInputValueExtractor
     {
         var type = valueObject.GetType();
 
+        //todo: consider throwing an exception if a property has indexer instead of silently ignoring it
         var propertyValues = type
             .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+            .Where(property => property.CanRead && property.GetIndexParameters().Length == 0)
             .Select(property => new { property.Name, Value = property.GetValue(valueObject) });
 
         var fieldValues = type

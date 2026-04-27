@@ -1476,4 +1476,32 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
         public double? 波段 { get; set; }
         public double? 當沖 { get; set; }
     }
+    
+    [Fact]
+    public async Task TestIssue951()
+    {
+        var templatePath = PathHelper.GetFile("xlsx/TestTemplateEasyFill.xlsx");
+        using var path = AutoDeletingPath.Create();
+        
+        var value = new Issue951
+        {
+            Name = "Jack",
+            CreateDate = new DateTime(2021, 01, 01),
+            VIP = true,
+            Points = 123
+        };
+
+        // must not throw
+        await _excelTemplater.FillTemplateAsync(path.ToString(), templatePath, value);
+    }
+
+    class Issue951
+    {
+        public string? Name { get; set; }
+        public DateTime CreateDate { get; set; }
+        public bool VIP { get; set; }
+        public double Points { get; set; }
+        
+        public object this[string test] => new();
+    }
 }

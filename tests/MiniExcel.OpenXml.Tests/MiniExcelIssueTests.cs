@@ -3827,4 +3827,32 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         Assert.Equal(7.4, result[1].Altitude);
         Assert.Equal(8.6, result[2].Altitude);
     }
+
+    [Fact]
+    public void TestIssue951()
+    {
+        var templatePath = PathHelper.GetFile("xlsx/TestTemplateEasyFill.xlsx");
+        using var path = AutoDeletingPath.Create();
+        
+        var value = new Issue951
+        {
+            Name = "Jack",
+            CreateDate = new DateTime(2021, 01, 01),
+            VIP = true,
+            Points = 123
+        };
+
+        // must not throw
+        _excelTemplater.FillTemplate(path.ToString(), templatePath, value);
+    }
+
+    class Issue951
+    {
+        public string? Name { get; set; }
+        public DateTime CreateDate { get; set; }
+        public bool VIP { get; set; }
+        public double Points { get; set; }
+        
+        public object this[string test] => new();
+    }
 }

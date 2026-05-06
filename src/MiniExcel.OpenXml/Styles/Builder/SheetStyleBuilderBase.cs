@@ -22,13 +22,11 @@ internal abstract partial class SheetStyleBuilderBase(SheetStyleBuildContext con
         ["extLst"] = 9
     };
 
-
     // Todo: add CancellationToken to all methods called inside of BuildAsync
     [CreateSyncVersion]
     public virtual async Task<SheetStyleBuildResult> BuildAsync(CancellationToken cancellationToken = default)
     {
         await _context.InitializeAsync(GetGenerateElementInfos(), cancellationToken).ConfigureAwait(false);
-
         while (await OldReader.ReadAsync().ConfigureAwait(false))
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -79,7 +77,7 @@ internal abstract partial class SheetStyleBuilderBase(SheetStyleBuildContext con
         return new SheetStyleBuildResult(GetCellXfIdMap());
     }
 
-    protected abstract SheetStyleElementInfos GetGenerateElementInfos();
+    protected internal abstract SheetStyleElementInfos GetGenerateElementInfos();
 
     [CreateSyncVersion]
     protected virtual async Task WriteAttributesAsync(string element, CancellationToken cancellationToken = default)

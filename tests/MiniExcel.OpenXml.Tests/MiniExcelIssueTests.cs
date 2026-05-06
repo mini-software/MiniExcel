@@ -6,6 +6,7 @@ using MiniExcelLib.OpenXml.Picture;
 using MiniExcelLib.OpenXml.Tests.Utils;
 using MiniExcelLib.Tests.Common.Utils;
 using NPOI.XSSF.UserModel;
+using LicenseContext = OfficeOpenXml.LicenseContext;
 
 namespace MiniExcelLib.OpenXml.Tests;
 
@@ -19,7 +20,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
 
     static MiniExcelIssueTests()
     {
-        EpplusLicence.SetContext();
+        ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
     }
 
     /// <summary>

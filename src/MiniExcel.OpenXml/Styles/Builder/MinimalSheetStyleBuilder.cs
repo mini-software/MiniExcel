@@ -2,7 +2,7 @@
 
 internal partial class MinimalSheetStyleBuilder(SheetStyleBuildContext context) : SheetStyleBuilderBase(context)
 {
-    internal static SheetStyleElementInfos GenerateElementInfos = new()
+    private static readonly SheetStyleElementInfos GenerateElementInfos = new()
     {
         NumFmtCount = 0, //The default NumFmt number is 0, but there will be NumFmt dynamically generated based on ColumnsToApply
         FontCount = 1,
@@ -17,7 +17,7 @@ internal partial class MinimalSheetStyleBuilder(SheetStyleBuildContext context) 
     private XmlWriter NewWriter => _context.NewXmlWriter!; 
 
     
-    protected override SheetStyleElementInfos GetGenerateElementInfos()
+    protected internal override SheetStyleElementInfos GetGenerateElementInfos()
     {
         return GenerateElementInfos;
     }

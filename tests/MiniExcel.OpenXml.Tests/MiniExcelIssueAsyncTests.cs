@@ -11,7 +11,12 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
     private readonly OpenXmlImporter _excelImporter =  MiniExcel.Importers.GetOpenXmlImporter();
     private readonly OpenXmlExporter _excelExporter =  MiniExcel.Exporters.GetOpenXmlExporter();
     private readonly OpenXmlTemplater _excelTemplater =  MiniExcel.Templaters.GetOpenXmlTemplater();
-    
+
+    static MiniExcelIssueAsyncTests()
+    {
+        ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+    }
+
     /// <summary>
     /// [SaveAsByTemplate support DateTime custom format · Issue #255 · mini-software/MiniExcel]
     /// (https://github.com/mini-software/MiniExcel/issues/255)

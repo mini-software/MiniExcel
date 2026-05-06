@@ -3,8 +3,7 @@ using MiniExcelLib.Core.Enums;
 
 namespace MiniExcelLib.OpenXml.Styles.Builder;
 
-internal partial class DefaultSheetStyleBuilder(SheetStyleBuildContext context, OpenXmlStyleOptions styleOptions)
-    : SheetStyleBuilderBase(context)
+internal partial class DefaultSheetStyleBuilder(SheetStyleBuildContext context, OpenXmlStyleOptions styleOptions) : SheetStyleBuilderBase(context)
 {
     private static readonly SheetStyleElementInfos GenerateElementInfos = new()
     {
@@ -26,7 +25,7 @@ internal partial class DefaultSheetStyleBuilder(SheetStyleBuildContext context, 
     private XmlReader OldReader => _context.OldXmlReader!;
     private XmlWriter NewWriter => _context.NewXmlWriter!;
 
-    protected override SheetStyleElementInfos GetGenerateElementInfos()
+    protected internal override SheetStyleElementInfos GetGenerateElementInfos()
     {
         return GenerateElementInfos;
     }

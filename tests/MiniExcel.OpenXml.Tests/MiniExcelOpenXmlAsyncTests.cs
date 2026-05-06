@@ -125,8 +125,7 @@ public class MiniExcelOpenXmlAsyncTests
             });
 
         await  _excelExporter.ExportAsync(path.ToString(), input);
-        var d =  _excelImporter.QueryAsync(path.ToString(), true).ToBlockingEnumerable();
-        var rows = d.ToList();
+        var rows = await _excelImporter.QueryAsync(path.ToString(), true).ToListAsync();
         var first = rows[0] as IDictionary<string, object>;
 
         Assert.Equal(3, rows.Count);
@@ -152,8 +151,7 @@ public class MiniExcelOpenXmlAsyncTests
             });
 
         await  _excelExporter.ExportAsync(path.ToString(), input);
-        var d =  _excelImporter.QueryAsync(path.ToString(), true).ToBlockingEnumerable();
-        var rows = d.ToList();
+        var rows = await _excelImporter.QueryAsync(path.ToString(), true).ToListAsync();
         var first = rows[0] as IDictionary<string, object>;
 
         Assert.Equal(3, rows.Count);

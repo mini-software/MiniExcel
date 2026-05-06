@@ -15,6 +15,11 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
     private readonly OpenXmlImporter _excelImporter =  MiniExcel.Importers.GetOpenXmlImporter();
     private readonly OpenXmlExporter _excelExporter =  MiniExcel.Exporters.GetOpenXmlExporter();
    
+    static MiniExcelOpenXmlTests()
+    {
+        ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+    }
+    
     [Fact]
     public void GetColumnsTest()
     {

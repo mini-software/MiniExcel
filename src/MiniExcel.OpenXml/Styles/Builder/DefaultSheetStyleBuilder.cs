@@ -5,9 +5,13 @@ namespace MiniExcelLib.OpenXml.Styles.Builder;
 
 internal partial class DefaultSheetStyleBuilder(SheetStyleBuildContext context, OpenXmlStyleOptions styleOptions) : SheetStyleBuilderBase(context)
 {
-    private static readonly SheetStyleElementInfos GenerateElementInfos = new()
+    private const HorizontalCellAlignment DefaultHorizontalAlignment = HorizontalCellAlignment.Left;
+    private const VerticalCellAlignment DefaultVerticalAlignment = VerticalCellAlignment.Bottom;
+    private static readonly Color DefaultBackgroundColor = Color.FromArgb(0x284472C4);
+
+    private static readonly SheetStyleElementInfos GeneratedElementInfos = new()
     {
-        NumFmtCount = 0, //The default NumFmt number is 0, but there will be NumFmt dynamically generated based on ColumnsToApply
+        NumFmtCount = 0, //The default NumFmt number is 0, but others will be dynamically generated based on format mappings
         FontCount = 2,
         FillCount = 3,
         BorderCount = 2,
@@ -15,19 +19,15 @@ internal partial class DefaultSheetStyleBuilder(SheetStyleBuildContext context, 
         CellXfCount = 5
     };
 
-    private static readonly Color DefaultBackgroundColor = Color.FromArgb(0x284472C4);
-    private const HorizontalCellAlignment DefaultHorizontalAlignment = HorizontalCellAlignment.Left;
-    private const VerticalCellAlignment DefaultVerticalAlignment = VerticalCellAlignment.Bottom;
-
     private readonly SheetStyleBuildContext _context = context;
     private readonly OpenXmlStyleOptions _styleOptions = styleOptions;
 
     private XmlReader OldReader => _context.OldXmlReader!;
     private XmlWriter NewWriter => _context.NewXmlWriter!;
 
-    protected internal override SheetStyleElementInfos GetGenerateElementInfos()
+    protected internal override SheetStyleElementInfos GetGeneratedElementInfos()
     {
-        return GenerateElementInfos;
+        return GeneratedElementInfos;
     }
 
     [CreateSyncVersion]
@@ -35,7 +35,7 @@ internal partial class DefaultSheetStyleBuilder(SheetStyleBuildContext context, 
     {
         const int numFmtIndex = 166;
         var index = 0;
-        foreach (var item in _context.ColumnsToApply)
+        foreach (var map in _context.SheetStyleFormatsCache.FormatMappings)
         {
             index++;
 
@@ -44,8 +44,8 @@ internal partial class DefaultSheetStyleBuilder(SheetStyleBuildContext context, 
              */
             await NewWriter.WriteStartElementAsync(OldReader.Prefix, "numFmt", OldReader.NamespaceURI).ConfigureAwait(false);
             await NewWriter.WriteAttributeStringAsync(null, "numFmtId", null, (numFmtIndex + index + _context.OldElementInfos.NumFmtCount).ToString()).ConfigureAwait(false);
-            await NewWriter.WriteAttributeStringAsync(null, "formatCode", null, item.Format).ConfigureAwait(false);
-            await NewWriter.WriteFullEndElementAsync().ConfigureAwait(false);
+            await NewWriter.WriteAttributeStringAsync(null, "formatCode", null, map.Format).ConfigureAwait(false);
+            await NewWriter.WriteEndElementAsync().ConfigureAwait(false);
         }
     }
 
@@ -506,7 +506,7 @@ internal partial class DefaultSheetStyleBuilder(SheetStyleBuildContext context, 
 
         const int numFmtIndex = 166;
         var index = 0;
-        foreach (var _ in _context.ColumnsToApply)
+        for (var i = 0; i < _context.CustomFormatCount; i++)
         {
             index++;
 

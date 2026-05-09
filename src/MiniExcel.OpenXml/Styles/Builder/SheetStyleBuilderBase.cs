@@ -7,8 +7,8 @@ internal abstract partial class SheetStyleBuilderBase(SheetStyleBuildContext con
     //todo: these may actually be null if used when the context is not initialized
     private XmlReader OldReader => _context.OldXmlReader!;
     private XmlWriter NewWriter => _context.NewXmlWriter!;
-    
-    internal static readonly Dictionary<string, int> AllElements = new()
+
+    private static readonly Dictionary<string, int> AllElements = new()
     {
         ["numFmts"] = 0,
         ["fonts"] = 1,
@@ -24,9 +24,9 @@ internal abstract partial class SheetStyleBuilderBase(SheetStyleBuildContext con
 
     // Todo: add CancellationToken to all methods called inside of BuildAsync
     [CreateSyncVersion]
-    public virtual async Task<SheetStyleBuildResult> BuildAsync(CancellationToken cancellationToken = default)
+    public virtual async Task BuildAsync(CancellationToken cancellationToken = default)
     {
-        await _context.InitializeAsync(GetGenerateElementInfos(), cancellationToken).ConfigureAwait(false);
+        await _context.InitializeAsync(GetGeneratedElementInfos(), cancellationToken).ConfigureAwait(false);
         while (await OldReader.ReadAsync().ConfigureAwait(false))
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -73,11 +73,9 @@ internal abstract partial class SheetStyleBuilderBase(SheetStyleBuildContext con
         }
 
         await _context.FinalizeAndUpdateZipDictionaryAsync(cancellationToken).ConfigureAwait(false);
-
-        return new SheetStyleBuildResult(GetCellXfIdMap());
     }
 
-    protected internal abstract SheetStyleElementInfos GetGenerateElementInfos();
+    protected internal abstract SheetStyleElementInfos GetGeneratedElementInfos();
 
     [CreateSyncVersion]
     protected virtual async Task WriteAttributesAsync(string element, CancellationToken cancellationToken = default)
@@ -108,12 +106,12 @@ internal abstract partial class SheetStyleBuilderBase(SheetStyleBuildContext con
                     {
                         var value = element switch
                         {
-                            "numFmts" => (_context.OldElementInfos.NumFmtCount + _context.GenerateElementInfos.NumFmtCount + _context.CustomFormatCount).ToString(),
-                            "fonts" => (_context.OldElementInfos.FontCount + _context.GenerateElementInfos.FontCount).ToString(),
-                            "fills" => (_context.OldElementInfos.FillCount + _context.GenerateElementInfos.FillCount).ToString(),
-                            "borders" => (_context.OldElementInfos.BorderCount + _context.GenerateElementInfos.BorderCount).ToString(),
-                            "cellStyleXfs" => (_context.OldElementInfos.CellStyleXfCount + _context.GenerateElementInfos.CellStyleXfCount).ToString(),
-                            "cellXfs" => (_context.OldElementInfos.CellXfCount + _context.GenerateElementInfos.CellXfCount + _context.CustomFormatCount).ToString(),
+                            "numFmts" => (_context.OldElementInfos.NumFmtCount + _context.GeneratedElementInfos.NumFmtCount + _context.CustomFormatCount).ToString(),
+                            "fonts" => (_context.OldElementInfos.FontCount + _context.GeneratedElementInfos.FontCount).ToString(),
+                            "fills" => (_context.OldElementInfos.FillCount + _context.GeneratedElementInfos.FillCount).ToString(),
+                            "borders" => (_context.OldElementInfos.BorderCount + _context.GeneratedElementInfos.BorderCount).ToString(),
+                            "cellStyleXfs" => (_context.OldElementInfos.CellStyleXfCount + _context.GeneratedElementInfos.CellStyleXfCount).ToString(),
+                            "cellXfs" => (_context.OldElementInfos.CellXfCount + _context.GeneratedElementInfos.CellXfCount + _context.CustomFormatCount).ToString(),
                             _ => OldReader.Value
                         };
                         await NewWriter.WriteStringAsync(value).ConfigureAwait(false);
@@ -135,35 +133,35 @@ internal abstract partial class SheetStyleBuilderBase(SheetStyleBuildContext con
         if (!AllElements.TryGetValue(OldReader.LocalName, out var elementIndex))
             return;
         
-        if (!_context.OldElementInfos.ExistsNumFmts && !_context.GenerateElementInfos.ExistsNumFmts && AllElements["numFmts"] < elementIndex)
+        if (!_context.OldElementInfos.ExistsNumFmts && !_context.GeneratedElementInfos.ExistsNumFmts && AllElements["numFmts"] < elementIndex)
         {
             await GenerateNumFmtsAsync().ConfigureAwait(false);
-            _context.GenerateElementInfos.ExistsNumFmts = true;
+            _context.GeneratedElementInfos.ExistsNumFmts = true;
         }
-        else if (!_context.OldElementInfos.ExistsFonts && !_context.GenerateElementInfos.ExistsFonts && AllElements["fonts"] < elementIndex)
+        else if (!_context.OldElementInfos.ExistsFonts && !_context.GeneratedElementInfos.ExistsFonts && AllElements["fonts"] < elementIndex)
         {
             await GenerateFontsAsync().ConfigureAwait(false);
-            _context.GenerateElementInfos.ExistsFonts = true;
+            _context.GeneratedElementInfos.ExistsFonts = true;
         }
-        else if (!_context.OldElementInfos.ExistsFills && !_context.GenerateElementInfos.ExistsFills && AllElements["fills"] < elementIndex)
+        else if (!_context.OldElementInfos.ExistsFills && !_context.GeneratedElementInfos.ExistsFills && AllElements["fills"] < elementIndex)
         {
             await GenerateFillsAsync().ConfigureAwait(false);
-            _context.GenerateElementInfos.ExistsFills = true;
+            _context.GeneratedElementInfos.ExistsFills = true;
         }
-        else if (!_context.OldElementInfos.ExistsBorders && !_context.GenerateElementInfos.ExistsBorders && AllElements["borders"] < elementIndex)
+        else if (!_context.OldElementInfos.ExistsBorders && !_context.GeneratedElementInfos.ExistsBorders && AllElements["borders"] < elementIndex)
         {
             await GenerateBordersAsync().ConfigureAwait(false);
-            _context.GenerateElementInfos.ExistsBorders = true;
+            _context.GeneratedElementInfos.ExistsBorders = true;
         }
-        else if (!_context.OldElementInfos.ExistsCellStyleXfs && !_context.GenerateElementInfos.ExistsCellStyleXfs && AllElements["cellStyleXfs"] < elementIndex)
+        else if (!_context.OldElementInfos.ExistsCellStyleXfs && !_context.GeneratedElementInfos.ExistsCellStyleXfs && AllElements["cellStyleXfs"] < elementIndex)
         {
             await GenerateCellStyleXfsAsync().ConfigureAwait(false);
-            _context.GenerateElementInfos.ExistsCellStyleXfs = true;
+            _context.GeneratedElementInfos.ExistsCellStyleXfs = true;
         }
-        else if (!_context.OldElementInfos.ExistsCellXfs && !_context.GenerateElementInfos.ExistsCellXfs && AllElements["cellXfs"] < elementIndex)
+        else if (!_context.OldElementInfos.ExistsCellXfs && !_context.GeneratedElementInfos.ExistsCellXfs && AllElements["cellXfs"] < elementIndex)
         {
             await GenerateCellXfsAsync().ConfigureAwait(false);
-            _context.GenerateElementInfos.ExistsCellXfs = true;
+            _context.GeneratedElementInfos.ExistsCellXfs = true;
         }
     }
 
@@ -172,7 +170,7 @@ internal abstract partial class SheetStyleBuilderBase(SheetStyleBuildContext con
     {
         switch (OldReader.LocalName)
         {
-            case "styleSheet" when !_context.OldElementInfos.ExistsNumFmts && !_context.GenerateElementInfos.ExistsNumFmts:
+            case "styleSheet" when !_context.OldElementInfos.ExistsNumFmts && !_context.GeneratedElementInfos.ExistsNumFmts:
                 await GenerateNumFmtsAsync().ConfigureAwait(false);
                 break;
             case "numFmts":
@@ -200,7 +198,7 @@ internal abstract partial class SheetStyleBuilderBase(SheetStyleBuildContext con
     protected virtual async Task GenerateNumFmtsAsync()
     {
         await NewWriter.WriteStartElementAsync(OldReader.Prefix, "numFmts", OldReader.NamespaceURI).ConfigureAwait(false);
-        await NewWriter.WriteAttributeStringAsync(null, "count", null, (_context.OldElementInfos.NumFmtCount + _context.GenerateElementInfos.NumFmtCount + _context.CustomFormatCount).ToString()).ConfigureAwait(false);
+        await NewWriter.WriteAttributeStringAsync(null, "count", null, (_context.OldElementInfos.NumFmtCount + _context.GeneratedElementInfos.NumFmtCount + _context.CustomFormatCount).ToString()).ConfigureAwait(false);
         await GenerateNumFmtAsync().ConfigureAwait(false);
         await NewWriter.WriteFullEndElementAsync().ConfigureAwait(false);
 
@@ -217,7 +215,7 @@ internal abstract partial class SheetStyleBuilderBase(SheetStyleBuildContext con
     protected virtual async Task GenerateFontsAsync()
     {
         await NewWriter.WriteStartElementAsync(OldReader.Prefix, "fonts", OldReader.NamespaceURI).ConfigureAwait(false);
-        await NewWriter.WriteAttributeStringAsync(null, "count", null, (_context.OldElementInfos.FontCount + _context.GenerateElementInfos.FontCount).ToString()).ConfigureAwait(false);
+        await NewWriter.WriteAttributeStringAsync(null, "count", null, (_context.OldElementInfos.FontCount + _context.GeneratedElementInfos.FontCount).ToString()).ConfigureAwait(false);
         await GenerateFontAsync().ConfigureAwait(false);
         await NewWriter.WriteFullEndElementAsync().ConfigureAwait(false);
 
@@ -234,7 +232,7 @@ internal abstract partial class SheetStyleBuilderBase(SheetStyleBuildContext con
     protected virtual async Task GenerateFillsAsync()
     {
         await NewWriter.WriteStartElementAsync(OldReader.Prefix, "fills", OldReader.NamespaceURI).ConfigureAwait(false);
-        await NewWriter.WriteAttributeStringAsync(null, "count", null, (_context.OldElementInfos.FillCount + _context.GenerateElementInfos.FillCount).ToString()).ConfigureAwait(false);
+        await NewWriter.WriteAttributeStringAsync(null, "count", null, (_context.OldElementInfos.FillCount + _context.GeneratedElementInfos.FillCount).ToString()).ConfigureAwait(false);
         await GenerateFillAsync().ConfigureAwait(false);
         await NewWriter.WriteFullEndElementAsync().ConfigureAwait(false);
 
@@ -251,7 +249,7 @@ internal abstract partial class SheetStyleBuilderBase(SheetStyleBuildContext con
     protected virtual async Task GenerateBordersAsync()
     {
         await NewWriter.WriteStartElementAsync(OldReader.Prefix, "borders", OldReader.NamespaceURI).ConfigureAwait(false);
-        await NewWriter.WriteAttributeStringAsync(null, "count", null, (_context.OldElementInfos.BorderCount + _context.GenerateElementInfos.BorderCount).ToString()).ConfigureAwait(false);
+        await NewWriter.WriteAttributeStringAsync(null, "count", null, (_context.OldElementInfos.BorderCount + _context.GeneratedElementInfos.BorderCount).ToString()).ConfigureAwait(false);
         await GenerateBorderAsync().ConfigureAwait(false);
         await NewWriter.WriteFullEndElementAsync().ConfigureAwait(false);
 
@@ -268,7 +266,7 @@ internal abstract partial class SheetStyleBuilderBase(SheetStyleBuildContext con
     protected virtual async Task GenerateCellStyleXfsAsync()
     {
         await NewWriter.WriteStartElementAsync(OldReader.Prefix, "cellStyleXfs", OldReader.NamespaceURI).ConfigureAwait(false);
-        await NewWriter.WriteAttributeStringAsync(null, "count", null, (_context.OldElementInfos.CellStyleXfCount + _context.GenerateElementInfos.CellStyleXfCount).ToString()).ConfigureAwait(false);
+        await NewWriter.WriteAttributeStringAsync(null, "count", null, (_context.OldElementInfos.CellStyleXfCount + _context.GeneratedElementInfos.CellStyleXfCount).ToString()).ConfigureAwait(false);
         await GenerateCellStyleXfAsync().ConfigureAwait(false);
         await NewWriter.WriteFullEndElementAsync().ConfigureAwait(false);
 
@@ -285,21 +283,11 @@ internal abstract partial class SheetStyleBuilderBase(SheetStyleBuildContext con
     protected virtual async Task GenerateCellXfsAsync()
     {
         await NewWriter.WriteStartElementAsync(OldReader.Prefix, "cellXfs", OldReader.NamespaceURI).ConfigureAwait(false);
-        await NewWriter.WriteAttributeStringAsync(null, "count", null, (_context.OldElementInfos.CellXfCount + _context.GenerateElementInfos.CellXfCount + _context.CustomFormatCount).ToString()).ConfigureAwait(false);
+        await NewWriter.WriteAttributeStringAsync(null, "count", null, (_context.OldElementInfos.CellXfCount + _context.GeneratedElementInfos.CellXfCount + _context.CustomFormatCount).ToString()).ConfigureAwait(false);
         await GenerateCellXfAsync().ConfigureAwait(false);
         await NewWriter.WriteFullEndElementAsync().ConfigureAwait(false);
     }
 
     [CreateSyncVersion]
     protected abstract Task GenerateCellXfAsync();
-
-    private Dictionary<string, string> GetCellXfIdMap()
-    {
-        var result = new Dictionary<string, string>();
-        for (int i = 0; i < _context.GenerateElementInfos.CellXfCount; i++)
-        {
-            result.Add(i.ToString(), (_context.OldElementInfos.CellXfCount + i).ToString());
-        }
-        return result;
-    }
 }

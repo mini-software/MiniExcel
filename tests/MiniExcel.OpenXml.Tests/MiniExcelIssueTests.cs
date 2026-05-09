@@ -270,15 +270,16 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     public void TestIssueI4ZYUU()
     {
         using var path = AutoDeletingPath.Create();
-        TestIssueI4ZYUUDto[] value = [new() { MyProperty = "1", MyProperty2 = new DateTime(2022, 10, 15) }];
+        
+        var dt = new DateTime(2022, 10, 15);
+        TestIssueI4ZYUUDto[] value = [new() { MyProperty = "1", MyProperty2 = dt }];
         _excelExporter.Export(path.ToString(), value);
-
-        var rows = _excelImporter.Query(path.ToString()).ToList();
-        Assert.Equal("2022-10", rows[1].B);
 
         using var workbook = new ClosedXML.Excel.XLWorkbook(path.ToString());
         var ws = workbook.Worksheet(1);
 
+        Assert.Equal(dt, ws.Cell(2, "B").Value.GetDateTime());
+        Assert.Equal("2022-10", ws.Cell(2, "B").GetFormattedString());
         Assert.True(ws.Column("A").Width > 0);
         Assert.True(ws.Column("B").Width > 0);
     }
@@ -841,25 +842,29 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     /// https://github.com/mini-software/MiniExcel/issues/305
     /// </summary>
     [Fact]
-    public void TestIssueI49RZH()
+    public async Task TestIssueI49RZH()
     {
-        // xlsx
-        using var path = AutoDeletingPath.Create();
-        var value = new[]
-        {
-            new TestIssueI49RZHDto{ dd = DateTimeOffset.Parse("2022-01-22")},
-            new TestIssueI49RZHDto{ dd = null}
-        };
-       _excelExporter.Export(path.ToString(), value);
+        var dt = new DateTime(2022, 01, 22);
 
-        var rows = _excelImporter.Query(path.ToString()).ToList();
-        Assert.Equal("2022-01-22", rows[1].A);
+        using var path = AutoDeletingPath.Create();
+        TestIssueI49RZHDto[] value =
+        [
+            new() { dd = dt },
+            new() { dd = null }
+        ];
+        await _excelExporter.ExportAsync(path.FilePath, value, overwriteFile: true);
+
+        using var package = new ExcelPackage(path.ToString());
+        var cells = package.Workbook.Worksheets[0].Cells;
+        
+        Assert.Equal(dt, DateTime.FromOADate((double)cells["A2"].Value));
+        Assert.Equal("22-01-2022", cells["A2"].Text);
     }
 
     private class TestIssueI49RZHDto
     {
-        [MiniExcelFormat("yyyy-MM-dd")]
-        public DateTimeOffset? dd { get; set; }
+        [MiniExcelFormat("dd-MM-yyyy")]
+        public DateTime? dd { get; set; }
     }
 
     /// <summary>
@@ -871,13 +876,17 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         using var path = AutoDeletingPath.Create();
         TestIssue312Dto[] value =
         [
-            new() { Value = 12345.6789},
-            new() { Value = null}
+            new() { Value = 12_345.6789 },
+            new() { Value = null }
         ];
        _excelExporter.Export(path.ToString(), value);
 
-        var rows = _excelImporter.Query(path.ToString()).ToList();
-        Assert.Equal("12,345.68", rows[1].A);
+       using var package = new ExcelPackage(path.ToString());
+       var cells = package.Workbook.Worksheets[0].Cells;
+
+       var fmt = cells["A2"].Style.Numberformat.Format;
+       Assert.Equal(12_345.68.ToString(fmt), cells["A2"].Text);
+       Assert.Equal(12_345.6789, (double)cells["A2"].Value);
     }
 
     private class TestIssue312Dto
@@ -1401,32 +1410,47 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     [Fact]
     public void Issue255()
     {
+        var dt1 = new DateTime(2021, 01, 01);
+        var dt2 = new DateTime(2022, 01, 01);
+       
         //template
         {
             var templatePath = PathHelper.GetFile("xlsx/TestsIssue255_Template.xlsx");
-            using var path = AutoDeletingPath.Create();
+            using var ms = new MemoryStream();
             var value = new
             {
-                Issue255DTO = new[]
-                {
-                    new Issue255DTO { Time = new DateTime(2021, 01, 01), Time2 = new DateTime(2021, 01, 01) }
-                }
+                Issue255DTO = new[] { new Issue255DTO { Time = dt1, Time2 = dt2 } }
             };
-             _excelTemplater.FillTemplate(path.ToString(), templatePath, value);
-            var rows = _excelImporter.Query(path.ToString()).ToList();
-            Assert.Equal("2021", rows[1].A.ToString());
-            Assert.Equal("2021", rows[1].B.ToString());
+            
+            _excelTemplater.FillTemplate(ms, templatePath, value);
+
+            ms.Seek(0, SeekOrigin.Begin);
+            using var package = new ExcelPackage(ms);
+            var cells = package.Workbook.Worksheets[0].Cells;
+
+            Assert.Equal("2021", cells["A2"].Text);
+            Assert.Equal("2022", cells["B2"].Text);
         }
-        //saveas
+        //export
         {
-            using var path = AutoDeletingPath.Create();
-            var value = new[]
-            {
-                new Issue255DTO { Time = new DateTime(2021, 01, 01) }
-            };
-            _excelExporter.Export(path.ToString(), value);
-            var rows = _excelImporter.Query(path.ToString()).ToList();
-            Assert.Equal("2021", rows[1].A.ToString());
+            using var ms = new MemoryStream();
+            Issue255DTO[] value = 
+            [
+                new() { Time = dt1, Time2 = dt2 }
+            ];
+
+            var rowsWritten = _excelExporter.Export(ms, value);
+            Assert.Single(rowsWritten);
+            Assert.Equal(1, rowsWritten[0]);
+
+            ms.Seek(0, SeekOrigin.Begin);
+            using var package = new ExcelPackage(ms);
+
+            var cells = package.Workbook.Worksheets[0].Cells;
+            Assert.Equal(dt1, DateTime.FromOADate((double)cells["A2"].Value));
+            Assert.Equal("2021", cells["A2"].Text);
+            Assert.Equal(dt2, DateTime.FromOADate((double)cells["B2"].Value));
+            Assert.Equal("2022", cells["B2"].Text);
         }
     }
 
@@ -1471,22 +1495,29 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     [Fact]
     public void Issue241()
     {
+        var date1 = new DateTime(2021, 01, 04);
+        var date2 = new DateTime(2020, 04, 05);
+
         Issue241Dto[] value =
         [
-            new() { Name = "Jack", InDate = new DateTime(2021,01,04) },
-            new() { Name = "Henry", InDate = new DateTime(2020,04,05) }
+            new() { Name = "Jack", InDate = date1 },
+            new() { Name = "Henry", InDate = date2 }
         ];
 
-        using var path = AutoDeletingPath.Create();
-        _excelExporter.Export(path.ToString(), value);
+        using var file = AutoDeletingPath.Create();
+        var path = file.ToString();
+        var rowsWritten =  _excelExporter.Export(path, value);
+            
+        Assert.Single(rowsWritten);
+        Assert.Equal(2, rowsWritten[0]);
 
-        var rows1 = _excelImporter.Query(path.ToString(), true).ToList();
-        Assert.Equal(rows1[0].InDate, "01 04, 2021");
-        Assert.Equal(rows1[1].InDate, "04 05, 2020");
+        using var package = new ExcelPackage(path);
+        var cells = package.Workbook.Worksheets.First().Cells;
 
-        var rows2 = _excelImporter.Query<Issue241Dto>(path.ToString()).ToList();
-        Assert.Equal(rows2[0].InDate, new DateTime(2021, 01, 04));
-        Assert.Equal(rows2[1].InDate, new DateTime(2020, 04, 05));
+        Assert.Equal(date1, DateTime.FromOADate((double)cells["B2"].Value));
+        Assert.Equal("01 04, 2021", cells["B2"].Text);
+        Assert.Equal(date2, DateTime.FromOADate((double)cells["B3"].Value));
+        Assert.Equal("04 05, 2020", cells["B3"].Text);
     }
 
     private class Issue241Dto

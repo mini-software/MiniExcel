@@ -24,44 +24,47 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
     [Fact]
     public async Task Issue255()
     {
-        //tempalte
+        var dt1 = new DateTime(2021, 01, 01);
+        var dt2 = new DateTime(2022, 01, 01);
+       
+        //template
         {
             var templatePath = PathHelper.GetFile("xlsx/TestsIssue255_Template.xlsx");
-            using var path = AutoDeletingPath.Create();
+            await using var ms = new MemoryStream();
             var value = new
             {
-                Issue255DTO = new[] 
-                {
-                    new Issue255DTO { Time = new DateTime(2021, 01, 01), Time2 = new DateTime(2021, 01, 01) }
-                }
+                Issue255DTO = new[] { new Issue255DTO { Time = dt1, Time2 = dt2 } }
             };
             
-            await  _excelTemplater.FillTemplateAsync(path.ToString(), templatePath, value);
-            var q =  _excelImporter.QueryAsync(path.ToString()).ToBlockingEnumerable();
-            var rows = q.ToList();
-            
-            Assert.Equal("2021", rows[1].A.ToString());
-            Assert.Equal("2021", rows[1].B.ToString());
+            await _excelTemplater.FillTemplateAsync(ms, templatePath, value);
+
+            ms.Seek(0, SeekOrigin.Begin);
+            using var package = new ExcelPackage(ms);
+            var cells = package.Workbook.Worksheets[0].Cells;
+
+            Assert.Equal("2021", cells["A2"].Text);
+            Assert.Equal("2022", cells["B2"].Text);
         }
-        //saveas
+        //export
         {
-            using var path = AutoDeletingPath.Create();
-            var value = new[] 
-            {
-                new Issue255DTO
-                {
-                    Time = new DateTime(2021, 01, 01),
-                    Time2 = new DateTime(2021, 01, 01)
-                }
-            };
-            var rowsWritten = await  _excelExporter.ExportAsync(path.ToString(), value);
+            await using var ms = new MemoryStream();
+            Issue255DTO[] value = 
+            [
+                new() { Time = dt1, Time2 = dt2 }
+            ];
+
+            var rowsWritten = await  _excelExporter.ExportAsync(ms, value);
             Assert.Single(rowsWritten);
             Assert.Equal(1, rowsWritten[0]);
-                
-            var q =  _excelImporter.QueryAsync(path.ToString()).ToBlockingEnumerable();
-            var rows = q.ToList();
-            Assert.Equal("2021", rows[1].A.ToString());
-            Assert.Equal("2021", rows[1].B.ToString());
+
+            ms.Seek(0, SeekOrigin.Begin);
+            using var package = new ExcelPackage(ms);
+
+            var cells = package.Workbook.Worksheets[0].Cells;
+            Assert.Equal(dt1, DateTime.FromOADate((double)cells["A2"].Value));
+            Assert.Equal("2021", cells["A2"].Text);
+            Assert.Equal(dt2, DateTime.FromOADate((double)cells["B2"].Value));
+            Assert.Equal("2022", cells["B2"].Text);
         }
     }
 
@@ -82,7 +85,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
     public async Task Issue256()
     {
         var path = PathHelper.GetFile("xlsx/TestIssue256.xlsx");
-        var q =  _excelImporter.QueryAsync(path, false).ToBlockingEnumerable();
+        var q = await _excelImporter.QueryAsync(path).ToListAsync();
         var rows = q.ToList();
         
         Assert.Equal(new DateTime(2003, 4, 16), rows[1].A);
@@ -109,37 +112,29 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
     [Fact]
     public async Task Issue241()
     {
+        var date1 = new DateTime(2021, 01, 04);
+        var date2 = new DateTime(2020, 04, 05);
+
         Issue241Dto[] value =
         [
-            new() { Name="Jack",InDate=new DateTime(2021,01,04) },
-            new() { Name="Henry",InDate=new DateTime(2020,04,05) }
+            new() { Name = "Jack", InDate = date1 },
+            new() { Name = "Henry", InDate = date2 }
         ];
 
-        // xlsx
-        {
-            using var file = AutoDeletingPath.Create();
-            var path = file.ToString();
-            var rowsWritten = await  _excelExporter.ExportAsync(path, value);
+        using var file = AutoDeletingPath.Create();
+        var path = file.ToString();
+        var rowsWritten = await _excelExporter.ExportAsync(path, value);
             
-            Assert.Single(rowsWritten);
-            Assert.Equal(2, rowsWritten[0]);
+        Assert.Single(rowsWritten);
+        Assert.Equal(2, rowsWritten[0]);
 
-            {
-                var q =  _excelImporter.QueryAsync(path, true).ToBlockingEnumerable();
-                var rows = q.ToList();
-                
-                Assert.Equal(rows[0].InDate, "01 04, 2021");
-                Assert.Equal(rows[1].InDate, "04 05, 2020");
-            }
+        using var package = new ExcelPackage(path);
+        var cells = package.Workbook.Worksheets[0].Cells;
 
-            {
-                var q =  _excelImporter.QueryAsync<Issue241Dto>(path).ToBlockingEnumerable();
-                var rows = q.ToList();
-                
-                Assert.Equal(rows[0].InDate, new DateTime(2021, 01, 04));
-                Assert.Equal(rows[1].InDate, new DateTime(2020, 04, 05));
-            }
-        }
+        Assert.Equal(date1, DateTime.FromOADate((double)cells["B2"].Value));
+        Assert.Equal("01 04, 2021", cells["B2"].Text);
+        Assert.Equal(date2, DateTime.FromOADate((double)cells["B3"].Value));
+        Assert.Equal("04 05, 2020", cells["B3"].Text);
     }
 
     private class Issue241Dto
@@ -1179,17 +1174,17 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
                 }
             ];
 
-            var rowsWritten = await  _excelExporter.ExportAsync(path, data);
+            var rowsWritten = await _excelExporter.ExportAsync(path, data);
             Assert.Single(rowsWritten);
             Assert.Equal(5, rowsWritten[0]);
 
-            var q =  _excelImporter.QueryAsync(path, sheetName: "Sheet1").ToBlockingEnumerable();
+            var q = await _excelImporter.QueryAsync(path, sheetName: "Sheet1").ToListAsync();
             var rows = q.ToList();
             Assert.Equal(6, rows.Count);
-            Assert.Equal("Sheet1",  _excelImporter.GetSheetNames(path).First());
+            Assert.Equal("Sheet1", (await _excelImporter.GetSheetNamesAsync(path))[0]);
 
             using var p = new ExcelPackage(new FileInfo(path));
-            var ws = p.Workbook.Worksheets.First();
+            var ws = p.Workbook.Worksheets[0];
             Assert.Equal("Sheet1", ws.Name);
             Assert.Equal("Sheet1", p.Workbook.Worksheets["Sheet1"].Name);
         }
@@ -1199,7 +1194,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
                 var q =  _excelImporter.QueryAsync(path, sheetName: "Sheet1").ToBlockingEnumerable();
                 var rows = q.ToList();
                 Assert.Equal(6, rows.Count);
-                Assert.Equal("Sheet1",  _excelImporter.GetSheetNames(path).First());
+                Assert.Equal("Sheet1", (await _excelImporter.GetSheetNamesAsync(path))[0]);
             }
             using (var p = new ExcelPackage(new FileInfo(path)))
             {

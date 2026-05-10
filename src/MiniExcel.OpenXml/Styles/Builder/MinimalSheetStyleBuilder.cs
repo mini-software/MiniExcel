@@ -9,7 +9,7 @@ internal partial class MinimalSheetStyleBuilder(SheetStyleBuildContext context) 
         FillCount = 1,
         BorderCount = 1,
         CellStyleXfCount = 1,
-        CellXfCount = 5
+        CellXfCount = 6
     };
 
     private readonly SheetStyleBuildContext _context = context;
@@ -90,6 +90,7 @@ internal partial class MinimalSheetStyleBuilder(SheetStyleBuildContext context) 
          * <x:xf />
          * <x:xf numFmtId="14" applyNumberFormat="1" />
          * <x:xf />
+         * <x:xf numFmtId="21" applyNumberFormat="1" />
          */
         await NewWriter.WriteStartElementAsync(OldReader.Prefix, "xf", OldReader.NamespaceURI).ConfigureAwait(false);
         await NewWriter.WriteEndElementAsync().ConfigureAwait(false);
@@ -102,6 +103,10 @@ internal partial class MinimalSheetStyleBuilder(SheetStyleBuildContext context) 
         await NewWriter.WriteAttributeStringAsync(null, "applyNumberFormat", null, "1").ConfigureAwait(false);
         await NewWriter.WriteEndElementAsync().ConfigureAwait(false);
         await NewWriter.WriteStartElementAsync(OldReader.Prefix, "xf", OldReader.NamespaceURI).ConfigureAwait(false);
+        await NewWriter.WriteEndElementAsync().ConfigureAwait(false);
+        await NewWriter.WriteStartElementAsync(OldReader.Prefix, "xf", OldReader.NamespaceURI).ConfigureAwait(false);
+        await NewWriter.WriteAttributeStringAsync(null, "numFmtId", null, "21").ConfigureAwait(false);
+        await NewWriter.WriteAttributeStringAsync(null, "applyNumberFormat", null, "1").ConfigureAwait(false);
         await NewWriter.WriteEndElementAsync().ConfigureAwait(false);
 
         const int numFmtIndex = 166;

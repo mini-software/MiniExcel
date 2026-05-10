@@ -1768,4 +1768,163 @@ public class MiniExcelOpenXmlAsyncTests
         [MiniExcelFormat("0.000")]
         public double CustomFormat { get; set; } = customFormat;
     }
+    
+    [Fact]
+    public async Task DateTimeFormattingWithMiniExcelFormatAttributeTest()
+    {
+        using var file = AutoDeletingPath.Create();
+        var path = file.ToString();
+
+        // Create fixed DateTime values for consistent testing
+        var baseDate = new DateTime(2026, 5, 8, 14, 30, 45);
+        var baseTime = new TimeSpan(14, 30, 45);
+
+        DateTimeFormattingTestDto[] testData =
+        [
+            new(
+                shortDate: baseDate,
+                longDate: baseDate,
+                dateWithTime: baseDate,
+                timeOnly: baseTime,
+                isoDateTime: baseDate,
+                customDateTime: baseDate,
+                monthYear: baseDate
+            ),
+            new(
+                shortDate: new DateTime(2020, 12, 25),
+                longDate: new DateTime(2020, 12, 25),
+                dateWithTime: new DateTime(2020, 12, 25, 8, 15, 30),
+                timeOnly: new TimeSpan(8, 15, 30),
+                isoDateTime: new DateTime(2020, 12, 25, 8, 15, 30),
+                customDateTime: new DateTime(2020, 12, 25, 8, 15, 30),
+                monthYear: new DateTime(2020, 12, 25)
+            )
+        ];
+
+        await _excelExporter.ExportAsync(path, testData, overwriteFile: true);
+
+        using var package = new ExcelPackage(path);
+        var cells = package.Workbook.Worksheets[0].Cells;
+
+        // Verify headers
+        Assert.Equal("ShortDate", cells["A1"].Value);
+        Assert.Equal("LongDate", cells["B1"].Value);
+        Assert.Equal("DateWithTime", cells["C1"].Value);
+        Assert.Equal("TimeOnly", cells["D1"].Value);
+        Assert.Equal("IsoDateTime", cells["E1"].Value);
+        Assert.Equal("CustomDateTime", cells["F1"].Value);
+        Assert.Equal("MonthYear", cells["G1"].Value);
+
+        // Verify first row
+        Assert.Equal(baseDate, GetDateTime(cells["A2"].Value));
+        Assert.Equal("mm/dd/yyyy", cells["A2"].Style.Numberformat.Format);
+
+        // Long date format (dddd, mmmm dd, yyyy)
+        Assert.Equal(baseDate, GetDateTime(cells["B2"].Value));
+        Assert.Equal("dddd, mmmm dd, yyyy", cells["B2"].Style.Numberformat.Format);
+
+        // Date with time (yyyy-mm-dd hh:mm:ss)
+        Assert.Equal(baseDate, GetDateTime(cells["C2"].Value));
+        Assert.Equal("yyyy-mm-dd hh:mm:ss", cells["C2"].Style.Numberformat.Format);
+
+        // Time only format ([h]:mm:ss)
+        Assert.Equal(baseTime, GetDateTime(cells["D2"].Value).TimeOfDay);
+        Assert.Equal("[h]:mm:ss", cells["D2"].Style.Numberformat.Format);
+
+        // ISO 8601 format (yyyy-mm-ddThh:mm:ss)
+        Assert.Equal(baseDate, GetDateTime(cells["E2"].Value));
+        Assert.Equal("yyyy-mm-dd\"T\"hh:mm:ss", cells["E2"].Style.Numberformat.Format);
+
+        // Custom format (dd.mm.yyyy hh:mm)
+        Assert.Equal(baseDate, GetDateTime(cells["F2"].Value));
+        Assert.Equal("dd.mm.yyyy hh:mm", cells["F2"].Style.Numberformat.Format);
+
+        // Month/Year format (mmmm yyyy)
+        Assert.Equal(baseDate, GetDateTime(cells["G2"].Value));
+        Assert.Equal("mmmm yyyy", cells["G2"].Style.Numberformat.Format);
+
+        // Verify second row
+        var secondRowDate = new DateTime(2020, 12, 25);
+        var secondRowTime = new TimeSpan(8, 15, 30);
+
+        Assert.Equal(secondRowDate, GetDateTime(cells["A3"].Value));
+        Assert.Equal("mm/dd/yyyy", cells["A3"].Style.Numberformat.Format);
+
+        Assert.Equal(secondRowDate, GetDateTime(cells["B3"].Value));
+        Assert.Equal("dddd, mmmm dd, yyyy", cells["B3"].Style.Numberformat.Format);
+
+        Assert.Equal(new DateTime(2020, 12, 25, 8, 15, 30), GetDateTime(cells["C3"].Value));
+        Assert.Equal("yyyy-mm-dd hh:mm:ss", cells["C3"].Style.Numberformat.Format);
+
+        Assert.Equal(secondRowTime, GetDateTime(cells["D3"].Value).TimeOfDay);
+        Assert.Equal("[h]:mm:ss", cells["D3"].Style.Numberformat.Format);
+
+        Assert.Equal(new DateTime(2020, 12, 25, 8, 15, 30), GetDateTime(cells["E3"].Value));
+        Assert.Equal("yyyy-mm-dd\"T\"hh:mm:ss", cells["E3"].Style.Numberformat.Format);
+
+        Assert.Equal(new DateTime(2020, 12, 25, 8, 15, 30), GetDateTime(cells["F3"].Value));
+        Assert.Equal("dd.mm.yyyy hh:mm", cells["F3"].Style.Numberformat.Format);
+
+        Assert.Equal(secondRowDate, GetDateTime(cells["G3"].Value));
+        Assert.Equal("mmmm yyyy", cells["G3"].Style.Numberformat.Format);
+        return;
+
+        static DateTime GetDateTime(object value) => DateTime.FromOADate((double)value);
+    }
+
+    /// <summary>
+    /// Test class with multiple date and time properties using MiniExcelFormatAttribute
+    /// to verify that date/time formatting is correctly applied during Excel export.
+    /// </summary>
+    private class DateTimeFormattingTestDto(
+        DateTime shortDate,
+        DateTime longDate,
+        DateTime dateWithTime,
+        TimeSpan timeOnly,
+        DateTime isoDateTime,
+        DateTime customDateTime,
+        DateTime monthYear)
+    {
+        /// <summary>
+        /// Short date format (mm/dd/yyyy)
+        /// </summary>
+        [MiniExcelFormat("mm/dd/yyyy")]
+        public DateTime ShortDate { get; set; } = shortDate;
+
+        /// <summary>
+        /// Long date format (dddd, mmmm dd, yyyy)
+        /// </summary>
+        [MiniExcelFormat("dddd, mmmm dd, yyyy")]
+        public DateTime LongDate { get; set; } = longDate;
+
+        /// <summary>
+        /// Date with time format (yyyy-mm-dd hh:mm:ss)
+        /// </summary>
+        [MiniExcelFormat("yyyy-mm-dd hh:mm:ss")]
+        public DateTime DateWithTime { get; set; } = dateWithTime;
+
+        /// <summary>
+        /// Time only format ([h]:mm:ss)
+        /// </summary>
+        [MiniExcelFormat("[h]:mm:ss")]
+        public TimeSpan TimeOnly { get; set; } = timeOnly;
+
+        /// <summary>
+        /// ISO 8601 datetime format (yyyy-mm-ddThh:mm:ss)
+        /// </summary>
+        [MiniExcelFormat("yyyy-mm-dd\"T\"hh:mm:ss")]
+        public DateTime IsoDateTime { get; set; } = isoDateTime;
+
+        /// <summary>
+        /// Custom European format (dd.mm.yyyy hh:mm)
+        /// </summary>
+        [MiniExcelFormat("dd.mm.yyyy hh:mm")]
+        public DateTime CustomDateTime { get; set; } = customDateTime;
+
+        /// <summary>
+        /// Month and year format (mmmm yyyy)
+        /// </summary>
+        [MiniExcelFormat("mmmm yyyy")]
+        public DateTime MonthYear { get; set; } = monthYear;
+    }
 }

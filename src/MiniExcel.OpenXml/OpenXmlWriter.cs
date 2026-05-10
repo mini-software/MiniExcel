@@ -419,7 +419,7 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
     }
 
     [CreateSyncVersion]
-    private async Task PrintHeaderAsync(MiniExcelStreamWriter writer, List<MiniExcelColumnMapping?> mappings, CancellationToken cancellationToken = default)
+    private static async Task PrintHeaderAsync(MiniExcelStreamWriter writer, List<MiniExcelColumnMapping?> mappings, CancellationToken cancellationToken = default)
     {
         const int yIndex = 1;
         await writer.WriteAsync(WorksheetXml.StartRow(yIndex), cancellationToken).ConfigureAwait(false);
@@ -434,18 +434,12 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
                     continue;
 
                 var r = CellReferenceConverter.GetCellFromCoordinates(xIndex, yIndex);
-                await WriteCellAsync(writer, r, columnName: map.ExcelColumnName).ConfigureAwait(false);
+                await writer.WriteAsync(WorksheetXml.Cell(r, "str", HeaderCellStyleIndex, XmlHelper.EncodeXml(map.ExcelColumnName)), cancellationToken).ConfigureAwait(false);
             }
             xIndex++;
         }
 
         await writer.WriteAsync(WorksheetXml.EndRow, cancellationToken).ConfigureAwait(false);
-    }
-
-    [CreateSyncVersion]
-    private async Task WriteCellAsync(MiniExcelStreamWriter writer, string cellReference, string? columnName)
-    {
-        await writer.WriteAsync(WorksheetXml.Cell(cellReference, "str", DefaultCellStyleIndex, XmlHelper.EncodeXml(columnName))).ConfigureAwait(false);
     }
 
     [CreateSyncVersion]
@@ -468,7 +462,7 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
 
         if (_configuration.EnableWriteNullValueCell && valueIsNull)
         {
-            await writer.WriteAsync(WorksheetXml.EmptyCell(columnReference, EmptyCellStyleIndex), cancellationToken).ConfigureAwait(false);
+            await writer.WriteAsync(WorksheetXml.EmptyCell(columnReference, DefaultCellStyleIndex), cancellationToken).ConfigureAwait(false);
             return;
         }
 

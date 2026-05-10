@@ -1801,7 +1801,7 @@ public class MiniExcelOpenXmlAsyncTests
             )
         ];
 
-        await _excelExporter.ExportAsync(path, testData, overwriteFile: true);
+        await _excelExporter.ExportAsync(path, testData);
 
         using var package = new ExcelPackage(path);
         var cells = package.Workbook.Worksheets[0].Cells;

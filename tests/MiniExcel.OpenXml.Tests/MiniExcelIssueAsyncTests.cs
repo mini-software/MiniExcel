@@ -1476,7 +1476,37 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
         public double? 波段 { get; set; }
         public double? 當沖 { get; set; }
     }
-    
+
+    [Fact]
+    public async Task Issue520()
+    {
+        await using var ms = new MemoryStream();
+
+        Issue520Dto[] data = [new(542, DateTime.Today, 300)];
+
+        await _excelExporter.ExportAsync(ms, data);
+        ms.Seek(0, SeekOrigin.Begin);
+        
+        using var package = new ExcelPackage(ms);
+        var cells = package.Workbook.Worksheets.First().Cells;
+        
+        Assert.Equal(542.0, cells["A2"].Value);
+        Assert.Equal(DateTime.Today, DateTime.FromOADate((double)cells["B2"].Value));
+        Assert.Equal(300.0, cells["C2"].Value);
+    }
+
+    class Issue520Dto(long l1, DateTime dt, long l2)
+    {
+        [MiniExcelColumn(Format = "R$ #,##0.00", Width = 15)]
+        public long PaymentValue { get; set; } = l1;
+
+        [MiniExcelColumn(Format = "dd/MM/yyyy", Width = 15)]
+        public DateTime PaymentDate { get; set; } = dt;
+
+        [MiniExcelColumn(Format = "R$ #,##0.00", Width = 15)]
+        public long ValueToSettle { get; set; } = l2;
+    }
+
     [Fact]
     public async Task TestIssue951()
     {
@@ -1491,7 +1521,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
             Points = 123
         };
 
-        // must not throw
+        // must not throw because of indexer
         await _excelTemplater.FillTemplateAsync(path.ToString(), templatePath, value);
     }
 

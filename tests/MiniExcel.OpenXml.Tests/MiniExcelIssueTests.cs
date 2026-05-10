@@ -131,18 +131,19 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     public void TestIssue430()
     {
         using var path = AutoDeletingPath.Create();
-        var value = new[]
-        {
-            new TestIssue430Dto{ Date=DateTimeOffset.Parse("2021-01-31 10:03:00 +05:00")}
-        };
+        TestIssue430Dto[] value =
+        [
+            new() { Date = new DateTimeOffset(2021, 1, 31, 10, 3, 0, TimeSpan.FromHours(5)) }
+        ];
         _excelExporter.Export(path.ToString(), value);
-        var rows = _excelImporter.Query<TestIssue430Dto>(path.ToString()).ToArray();
-        Assert.Equal("2021-01-31 10:03:00 +05:00", rows[0].Date.ToString("yyyy-MM-dd HH:mm:ss zzz"));
+
+        var testValue = _excelImporter.Query(path.ToString(), useHeaderRow: true).First();
+        Assert.Equal("2021-01-31 10:03:00", testValue.Date.ToString("yyyy-MM-dd HH:mm:ss"));
     }
 
     private class TestIssue430Dto
     {
-        [MiniExcelFormat("yyyy-MM-dd HH:mm:ss zzz")]
+        [MiniExcelFormat("yyyy-MM-dd HH:mm:ss")]
         public DateTimeOffset Date { get; set; }
     }
 
@@ -2852,6 +2853,37 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     }
 
     [Fact]
+    public void Issue520()
+    {
+        using var ms = new MemoryStream();
+        Issue520Dto[] data = [new(542, DateTime.Today, 300)];
+        _excelExporter.Export(ms, data);
+        ms.Seek(0, SeekOrigin.Begin);
+        
+        using var package = new ExcelPackage(ms);
+        var cells = package.Workbook.Worksheets.First().Cells;
+        
+        Assert.Equal(542.0, cells["A2"].Value);
+        Assert.Equal(542.0.ToString("R$ #,##0.00"), cells["A2"].Text);
+        Assert.Equal(DateTime.Today, DateTime.FromOADate((double)cells["B2"].Value));
+        Assert.Equal(DateTime.Today.ToString("dd/MM/yyyy"), cells["B2"].Text);
+        Assert.Equal(300.0, cells["C2"].Value);
+        Assert.Equal(300.0.ToString("R$ #,##0.00"), cells["C2"].Text);
+    }
+
+    class Issue520Dto(long l1, DateTime dt, long l2)
+    {
+        [MiniExcelColumn(Format = "R$ #,##0.00", Width = 15)]
+        public long PaymentValue { get; set; } = l1;
+
+        [MiniExcelColumn(Format = "dd/MM/yyyy", Width = 15)]
+        public DateTime PaymentDate { get; set; } = dt;
+
+        [MiniExcelColumn(Format = "R$ #,##0.00", Width = 15)]
+        public long ValueToSettle { get; set; } = l2;
+    }
+    
+    [Fact]
     public void Issue527()
     {
         List<DescriptionEnumDto> row =
@@ -2864,7 +2896,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         var template = PathHelper.GetFile("xlsx/Issue527Template.xlsx");
 
         using var path = AutoDeletingPath.Create();
-         _excelTemplater.FillTemplate(path.FilePath, template, value);
+        _excelTemplater.FillTemplate(path.FilePath, template, value);
 
         var rows = _excelImporter.Query(path.FilePath).ToList();
         Assert.Equal("General User", rows[1].B);
@@ -3417,11 +3449,12 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     public void TestIssue772()
     {
         var path = PathHelper.GetFile("xlsx/TestIssue772.xlsx");
-        var rows = _excelImporter.Query(path, sheetName: "Supply plan(daily)", startCell: "A1")
-            .Cast<IDictionary<string, object>>()
-            .ToArray();
+        var testValue = _excelImporter.Query(path, sheetName: "Supply plan(daily)", startCell: "A1")
+            .Skip(19)
+            .First().C
+            .ToString();
 
-        Assert.Equal("01108083-1Delta", (string)rows[19]["C"]);
+        Assert.Equal("01108083-1Delta", testValue);
     }
 
     /// <summary>

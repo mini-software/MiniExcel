@@ -1649,10 +1649,10 @@ public class MiniExcelOpenXmlAsyncTests
         Assert.Equal("AlignedCurrency", cells["B1"].Value);
         Assert.Equal("Percentage", cells["C1"].Value);
         Assert.Equal("ScientificNotation", cells["D1"].Value);
-        Assert.Equal("FixedDecimal", cells["E1"].Value);
-        Assert.Equal("PhoneNumber", cells["F1"].Value);
-        Assert.Equal("VeryLongNumber", cells["G1"].Value);
-        Assert.Equal("CustomFormat", cells["H1"].Value);
+        Assert.Equal("FixedDecimal", cells["F1"].Value);
+        Assert.Equal("PhoneNumber", cells["G1"].Value);
+        Assert.Equal("VeryLongNumber", cells["H1"].Value);
+        Assert.Equal("CustomFormat", cells["I1"].Value);
 
         // Verify first row of data
         Assert.Equal(1234.56, cells["A2"].Value);
@@ -1667,17 +1667,17 @@ public class MiniExcelOpenXmlAsyncTests
         Assert.Equal(1234567890.123, cells["D2"].Value);
         Assert.Equal("0.00E+00", cells["D2"].Style.Numberformat.Format);
 
-        Assert.Equal(42.123456, cells["E2"].Value);
-        Assert.Equal("0.000000", cells["E2"].Style.Numberformat.Format);
+        Assert.Equal(42.123456, cells["F2"].Value);
+        Assert.Equal("0.000000", cells["F2"].Style.Numberformat.Format);
 
-        Assert.Equal(5551234567, Convert.ToInt64(cells["F2"].Value));
-        Assert.Equal("[<=9999999]###-####;(###) ###-####", cells["F2"].Style.Numberformat.Format);
+        Assert.Equal(5551234567, Convert.ToInt64(cells["G2"].Value));
+        Assert.Equal("[<=9999999]###-####;(###) ###-####", cells["G2"].Style.Numberformat.Format);
 
-        Assert.Equal(155043269579349, Convert.ToInt64(cells["G2"].Value));
-        Assert.Equal("#", cells["G2"].Style.Numberformat.Format);
+        Assert.Equal(155043269579349, Convert.ToInt64(cells["H2"].Value));
+        Assert.Equal("#", cells["H2"].Style.Numberformat.Format);
 
-        Assert.Equal(999.999, cells["H2"].Value);
-        Assert.Equal("0.000", cells["H2"].Style.Numberformat.Format);
+        Assert.Equal(999.999, cells["I2"].Value);
+        Assert.Equal("0.000", cells["I2"].Style.Numberformat.Format);
 
         // Verify second row of data
         Assert.Equal(-500.00, cells["A3"].Value);
@@ -1692,17 +1692,17 @@ public class MiniExcelOpenXmlAsyncTests
         Assert.Equal(987654321.456, cells["D3"].Value);
         Assert.Equal("0.00E+00", cells["D3"].Style.Numberformat.Format);
 
-        Assert.Equal(15.5, cells["E3"].Value);
-        Assert.Equal("0.000000", cells["E3"].Style.Numberformat.Format);
+        Assert.Equal(15.5, cells["F3"].Value);
+        Assert.Equal("0.000000", cells["F3"].Style.Numberformat.Format);
 
-        Assert.Equal(4155552671, Convert.ToInt64(cells["F3"].Value));
-        Assert.Equal("[<=9999999]###-####;(###) ###-####", cells["F3"].Style.Numberformat.Format);
+        Assert.Equal(4155552671, Convert.ToInt64(cells["G3"].Value));
+        Assert.Equal("[<=9999999]###-####;(###) ###-####", cells["G3"].Style.Numberformat.Format);
 
-        Assert.Equal(20573068629711152, Convert.ToInt64(cells["G3"].Value));
-        Assert.Equal("#", cells["G3"].Style.Numberformat.Format);
+        Assert.Equal(20573068629711152, Convert.ToInt64(cells["H3"].Value));
+        Assert.Equal("#", cells["H3"].Style.Numberformat.Format);
 
-        Assert.Equal(100.012, cells["H3"].Value);
-        Assert.Equal("0.000", cells["H3"].Style.Numberformat.Format);
+        Assert.Equal(100.012, cells["I3"].Value);
+        Assert.Equal("0.000", cells["I3"].Style.Numberformat.Format);
     }
 
     /// <summary>
@@ -1743,6 +1743,9 @@ public class MiniExcelOpenXmlAsyncTests
         /// </summary>
         [MiniExcelFormat("0.00E+00")]
         public double ScientificNotation { get; set; } = scientificNotation;
+
+        [MiniExcelFormat("0.00E+00"), MiniExcelHidden]
+        public double ScientificNotationDuplicate { get; set; } = scientificNotation;
 
         /// <summary>
         /// Fixed decimal places (6 decimal places)

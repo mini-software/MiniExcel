@@ -6,10 +6,14 @@ namespace MiniExcelLib.OpenXml;
 
 internal partial class OpenXmlWriter
 {
-    private readonly Dictionary<string, ZipPackageInfo> _zipDictionary = [];
-    private Dictionary<string, string> _cellXfIdMap = [];
+    private const string DefaultCellStyleIndex = "0";
+    private const string HeaderCellStyleIndex = "1";
+    private const string RegularCellStyleIndex = "2";
+    private static readonly DateTime ExcelZeroDate = new(1899, 12, 31);
     
-    private IEnumerable<(SheetDto, object?)> GetSheets()
+    private readonly Dictionary<string, ZipPackageInfo> _zipDictionary = [];
+    
+    private IEnumerable<(SheetDto Sheet, object? Data)> GetSheets()
     {
         var sheetId = 0;
         if (_value is IDictionary<string, object?> dictionary)
@@ -153,29 +157,39 @@ internal partial class OpenXmlWriter
         return sb.ToString();
     }
 
-    private (string, string?, string?) GetCellValue(int rowIndex, int cellIndex, object value, MiniExcelColumnMapping? columnInfo, bool valueIsNull)
+    private (string StyleIndex, string? DataType, string? CellValue) GetCellValue(int rowIndex, int cellIndex, object value, MiniExcelColumnMapping? columnInfo, bool valueIsNull)
     {
         if (valueIsNull)
-            return ("2", "str", string.Empty);
+            return (RegularCellStyleIndex, "str", string.Empty);
 
         if (value is string str)
-            return ("2", "str", XmlHelper.EncodeXml(str));
+            return (RegularCellStyleIndex, "str", XmlHelper.EncodeXml(str));
 
         var type = GetValueType(value, columnInfo);
 
         if (columnInfo is { ExcelFormat: not null, ExcelFormatId: -1 } && value is IFormattable formattableValue)
         {
             var formattedStr = formattableValue.ToString(columnInfo.ExcelFormat, _configuration.Culture);
-            return ("2", "str", XmlHelper.EncodeXml(formattedStr));
+            return (RegularCellStyleIndex, "str", XmlHelper.EncodeXml(formattedStr));
         }
 
         if (type == typeof(DateTime))
             return GetDateTimeValue((DateTime)value, columnInfo);
 
-#if NET6_0_OR_GREATER
+        if (type == typeof(DateTimeOffset))
+            return GetDateTimeValue(((DateTimeOffset)value).DateTime, columnInfo);
+
+        if (type == typeof(TimeSpan))
+            return GetTimeSpanValue((TimeSpan)value, columnInfo);
+
+#if NET8_0_OR_GREATER
         if (type == typeof(DateOnly))
-            return GetDateTimeValue(((DateOnly)value).ToDateTime(new TimeOnly()), columnInfo);
+            return GetDateTimeValue(((DateOnly)value).ToDateTime(default), columnInfo);
+
+        if (type == typeof(TimeOnly))
+            return GetTimeSpanValue(((TimeOnly)value).ToTimeSpan(), columnInfo);
 #endif
+
         if (type.IsEnum)
         {
             string? description = null;
@@ -188,24 +202,23 @@ internal partial class OpenXmlWriter
             }
 
             description ??= value.ToString();
-            return ("2", "str", description);
+            return (RegularCellStyleIndex, "str", description);
         }
 
         if (TypeHelper.IsNumericType(type))
         {
             var cellValue = GetNumericValue(value, type);
-
             if (columnInfo?.ExcelFormat is null)
             {
                 var dataType = ReferenceEquals(_configuration.Culture, CultureInfo.InvariantCulture) ? "n" : "str";
-                return ("2", dataType, cellValue);
+                return (RegularCellStyleIndex, dataType, cellValue);
             }
 
             return (columnInfo.ExcelFormatId.ToString(), null, cellValue);
         }
 
         if (type == typeof(bool))
-            return ("2", "b", (bool)value ? "1" : "0");
+            return (RegularCellStyleIndex, "b", (bool)value ? "1" : "0");
 
         if (type == typeof(byte[]) && _configuration.EnableConvertByteArray)
         {
@@ -216,25 +229,18 @@ internal partial class OpenXmlWriter
             return ("4", "str", XmlHelper.EncodeXml(base64));  
         }
 
-        return ("2", "str", XmlHelper.EncodeXml(value.ToString()));
+        return (RegularCellStyleIndex, "str", XmlHelper.EncodeXml(value.ToString()));
     }
 
-    private static Type? GetValueType(object value, MiniExcelColumnMapping? columnInfo)
+    private static Type GetValueType(object value, MiniExcelColumnMapping? columnInfo)
     {
-        Type type;
-        if (columnInfo is not { Key: null })
-        {
-            // TODO: need to optimize
-            // Dictionary need to check type every time, so it's slow..
-            type = value.GetType();
-            type = Nullable.GetUnderlyingType(type) ?? type;
-        }
-        else
-        {
-            type = columnInfo.ExcludeNullableType; //sometime it doesn't need to re-get type like prop
-        }
+        if (columnInfo is { Key: null })
+            return columnInfo.ExcludeNullableType; //sometime it doesn't need to re-get type like prop
 
-        return type;
+        // TODO: need to optimize
+        // Dictionary need to check type every time, so it's slow..
+        var type = value.GetType();
+        return Nullable.GetUnderlyingType(type) ?? type;
     }
 
     private string GetNumericValue(object value, Type type)
@@ -303,36 +309,48 @@ internal partial class OpenXmlWriter
         return base64;
     }
 
-    private (string, string?, string) GetDateTimeValue(DateTime value, MiniExcelColumnMapping columnInfo)
+    //todo:reconsider cultureinfo
+    private (string, string?, string) GetDateTimeValue(DateTime value, MiniExcelColumnMapping? columnMapping)
     {
         string? cellValue;
         if (!ReferenceEquals(_configuration.Culture, CultureInfo.InvariantCulture))
         {
             cellValue = value.ToString(_configuration.Culture);
-            return ("2", (string?)"str", cellValue);
+            return (RegularCellStyleIndex, (string?)"str", cellValue);
         }
 
         var oaDate = CorrectDateTimeValue(value);
         cellValue = oaDate.ToString(CultureInfo.InvariantCulture);
-        var format = columnInfo?.ExcelFormat is not null ? columnInfo.ExcelFormatId.ToString() : "3";
+        var format = columnMapping?.ExcelFormatId is { } fmt and not -1 ? fmt.ToString() : "3";
 
         return (format, null, cellValue);
     }
 
     private static double CorrectDateTimeValue(DateTime value)
     {
-        var oaDate = value.ToOADate();
-
         // Excel says 1900 was a leap year  :( Replicate an incorrect behavior thanks
         // to Lotus 1-2-3 decision from 1983...
         // https://github.com/ClosedXML/ClosedXML/blob/develop/ClosedXML/Extensions/DateTimeExtensions.cs#L45
         const int nonExistent1900Feb29SerialDate = 60;
+
+        var oaDate = value.ToOADate();
         if (oaDate <= nonExistent1900Feb29SerialDate)
         {
             oaDate -= 1;
         }
 
         return oaDate;
+    }
+
+    private (string, string?, string) GetTimeSpanValue(TimeSpan value, MiniExcelColumnMapping? columnMapping)
+    {
+        if (value.TotalDays >= 1)
+            return GetDateTimeValue(ExcelZeroDate + value, columnMapping);
+
+        var cellValue = (value.TotalSeconds / 86400).ToString(CultureInfo.InvariantCulture);
+        var format = columnMapping?.ExcelFormatId is { } fmt and not -1 ? fmt.ToString() : "5";
+
+        return (format, null, cellValue);
     }
 
     private static string GetDimensionRef(int maxRowIndex, int maxColumnIndex)
@@ -405,10 +423,5 @@ internal partial class OpenXmlWriter
 
         sb.Append(ExcelXml.EndTypes);
         return sb.ToString();
-    }
-
-    private string GetCellXfId(string styleIndex)
-    {
-        return _cellXfIdMap.GetValueOrDefault(styleIndex, styleIndex);
     }
 }

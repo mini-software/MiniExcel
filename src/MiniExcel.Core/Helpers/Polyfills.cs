@@ -15,10 +15,17 @@ public static class Polyfills
         return dictionary.TryGetValue(key, out var value) ? value : defaultValue;
     }
 
+    [EditorBrowsable(EditorBrowsableState.Advanced)]
+    public static void Deconstruct<TKey, TValue>(this KeyValuePair<TKey, TValue> kvp, out TKey key, out TValue value)
+    {
+        key = kvp.Key;
+        value = kvp.Value;
+    }
+
     extension(Math)
     {
         [EditorBrowsable(EditorBrowsableState.Advanced)]
-        public static TNumber Clamp<TNumber>(TNumber value, TNumber min, TNumber max) where TNumber : unmanaged, IComparable<TNumber>
+        public static TNumber Clamp<TNumber>(TNumber value, TNumber min, TNumber max) where TNumber : IComparable<TNumber>
         {
             if (value.CompareTo(min) < 0) return min;
             if (value.CompareTo(max) > 0) return max;

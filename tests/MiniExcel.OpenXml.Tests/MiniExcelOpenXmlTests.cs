@@ -15,6 +15,11 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
     private readonly OpenXmlImporter _excelImporter =  MiniExcel.Importers.GetOpenXmlImporter();
     private readonly OpenXmlExporter _excelExporter =  MiniExcel.Exporters.GetOpenXmlExporter();
    
+    static MiniExcelOpenXmlTests()
+    {
+        ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+    }
+    
     [Fact]
     public void GetColumnsTest()
     {
@@ -631,15 +636,13 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
             var path = file.ToString();
 
             var table = new DataTable();
-             _excelExporter.Export(path, table);
+            _excelExporter.Export(path, table);
             Assert.Equal("A1", SheetHelper.GetFirstSheetDimensionRefValue(path));
-            {
-                using var stream = File.OpenRead(path);
-                var rows =  _excelImporter.Query(stream).ToList();
-                Assert.Single(rows);
-            }
+            
+            var rows = _excelImporter.Query(path).ToList();
+            Assert.Empty(rows);
 
-             _excelExporter.Export(path, table, printHeader: false, overwriteFile: true);
+            _excelExporter.Export(path, table, printHeader: false, overwriteFile: true);
             Assert.Equal("A1", SheetHelper.GetFirstSheetDimensionRefValue(path));
         }
 
@@ -655,28 +658,22 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
             table.Rows.Add(@"""<>+-*//}{\\n", 1234567890);
             table.Rows.Add("<test>Hello World</test>", -1234567890, false, DateTime.Now);
 
-             _excelExporter.Export(path, table);
+            _excelExporter.Export(path, table);
             Assert.Equal("A1:D3", SheetHelper.GetFirstSheetDimensionRefValue(path));
 
-            using (var stream = File.OpenRead(path))
-            {
-                var rows =  _excelImporter.Query(stream, useHeaderRow: true).ToList();
-                Assert.Equal(2, rows.Count);
-                Assert.Equal(@"""<>+-*//}{\\n", rows[0].a);
-                Assert.Equal(1234567890, rows[0].b);
-                Assert.Null(rows[0].c);
-                Assert.Null(rows[0].d);
-            }
+            var rowsWithHeader = _excelImporter.Query(path, useHeaderRow: true).ToList();
+            Assert.Equal(2, rowsWithHeader.Count);
+            Assert.Equal(@"""<>+-*//}{\\n", rowsWithHeader[0].a);
+            Assert.Equal(1234567890, rowsWithHeader[0].b);
+            Assert.Null(rowsWithHeader[0].c);
+            Assert.Null(rowsWithHeader[0].d);
 
-            using (var stream = File.OpenRead(path))
-            {
-                var rows =  _excelImporter.Query(stream).ToList();
-                Assert.Equal(3, rows.Count);
-                Assert.Equal("a", rows[0].A);
-                Assert.Equal("b", rows[0].B);
-                Assert.Equal("c", rows[0].C);
-                Assert.Equal("d", rows[0].D);
-            }
+            var rowsNoHeader = _excelImporter.Query(path).ToList();
+            Assert.Equal(3, rowsNoHeader.Count);
+            Assert.Equal("a", rowsNoHeader[0].A);
+            Assert.Equal("b", rowsNoHeader[0].B);
+            Assert.Equal("c", rowsNoHeader[0].C);
+            Assert.Equal("d", rowsNoHeader[0].D);
 
             _excelExporter.Export(path, table, printHeader: false, overwriteFile: true);
             Assert.Equal("A1:D2", SheetHelper.GetFirstSheetDimensionRefValue(path));
@@ -717,17 +714,17 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
             using var p = new ExcelPackage(new FileInfo(path));
             var ws = p.Workbook.Worksheets.First();
 
-            Assert.True(ws.Cells["A1"].Value.ToString() == "a");
-            Assert.True(ws.Cells["B1"].Value.ToString() == "b");
-            Assert.True(ws.Cells["C1"].Value.ToString() == "c");
-            Assert.True(ws.Cells["D1"].Value.ToString() == "d");
+            Assert.Equal("a", ws.Cells["A1"].Value.ToString());
+            Assert.Equal("b", ws.Cells["B1"].Value.ToString());
+            Assert.Equal("c", ws.Cells["C1"].Value.ToString());
+            Assert.Equal("d", ws.Cells["D1"].Value.ToString());
 
-            Assert.True(ws.Cells["A2"].Value.ToString() == @"""<>+-*//}{\\n");
-            Assert.True(ws.Cells["B2"].Value.ToString() == "1234567890");
+            Assert.Equal(@"""<>+-*//}{\\n", ws.Cells["A2"].Value.ToString());
+            Assert.Equal("1234567890", ws.Cells["B2"].Value.ToString());
             Assert.True(ws.Cells["C2"].Value.ToString() == true.ToString());
             Assert.True(ws.Cells["D2"].Value.ToString() == now.ToString());
 
-            Assert.True(ws.Name == "R&D");
+            Assert.Equal("R&D", ws.Name);
         }
         {
             using var path = AutoDeletingPath.Create();
@@ -1169,13 +1166,13 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
         using var p = new ExcelPackage(new FileInfo(path.ToString()));
         var ws = p.Workbook.Worksheets.First();
 
-        Assert.True(ws.Cells["A1"].Value.ToString() == "a");
-        Assert.True(ws.Cells["B1"].Value.ToString() == "b");
-        Assert.True(ws.Cells["C1"].Value.ToString() == "c");
-        Assert.True(ws.Cells["D1"].Value.ToString() == "d");
+        Assert.Equal("a", ws.Cells["A1"].Value.ToString());
+        Assert.Equal("b", ws.Cells["B1"].Value.ToString());
+        Assert.Equal("c", ws.Cells["C1"].Value.ToString());
+        Assert.Equal("d", ws.Cells["D1"].Value.ToString());
 
-        Assert.True(ws.Cells["A2"].Value.ToString() == @"""<>+-*//}{\\n");
-        Assert.True(ws.Cells["B2"].Value.ToString() == "1234567890");
+        Assert.Equal(@"""<>+-*//}{\\n", ws.Cells["A2"].Value.ToString());
+        Assert.Equal("1234567890", ws.Cells["B2"].Value.ToString());
         Assert.True(ws.Cells["C2"].Value.ToString() == true.ToString());
         Assert.True(ws.Cells["D2"].Value.ToString() == now.ToString());
     }
@@ -1197,17 +1194,17 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
         using var workbook = new XLWorkbook(path.ToString());
         var ws = workbook.Worksheets.First();
 
-        Assert.True(ws.Cell("A1").Value.ToString() == "a");
-        Assert.True(ws.Cell("D1").Value.ToString() == "d");
-        Assert.True(ws.Cell("B1").Value.ToString() == "b");
-        Assert.True(ws.Cell("C1").Value.ToString() == "c");
+        Assert.Equal("a", ws.Cell("A1").Value.ToString());
+        Assert.Equal("d", ws.Cell("D1").Value.ToString());
+        Assert.Equal("b", ws.Cell("B1").Value.ToString());
+        Assert.Equal("c", ws.Cell("C1").Value.ToString());
 
-        Assert.True(ws.Cell("A2").Value.ToString() == @"""<>+-*//}{\\n");
-        Assert.True(ws.Cell("B2").Value.ToString() == "1234567890");
+        Assert.Equal(@"""<>+-*//}{\\n", ws.Cell("A2").Value.ToString());
+        Assert.Equal("1234567890", ws.Cell("B2").Value.ToString());
         Assert.Equal(bool.TrueString, ws.Cell("C2").Value.ToString(), ignoreCase: true);
         Assert.True(ws.Cell("D2").Value.ToString() == now.ToString());
 
-        Assert.True(ws.Name == "R&D");
+        Assert.Equal("R&D", ws.Name);
     }
 
     [Fact]
@@ -1228,11 +1225,11 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
             .Select(s => new { s.CompressionOption, s.ContentType, s.Uri, s.Package.GetType().Name })
             .ToDictionary(s => s.Uri.ToString(), s => s);
 
-        Assert.True(allParts["/xl/styles.xml"].ContentType == "application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml");
-        Assert.True(allParts["/xl/workbook.xml"].ContentType == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml");
-        Assert.True(allParts["/xl/worksheets/sheet1.xml"].ContentType == "application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml");
-        Assert.True(allParts["/xl/_rels/workbook.xml.rels"].ContentType == "application/vnd.openxmlformats-package.relationships+xml");
-        Assert.True(allParts["/_rels/.rels"].ContentType == "application/vnd.openxmlformats-package.relationships+xml");
+        Assert.Equal("application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml", allParts["/xl/styles.xml"].ContentType);
+        Assert.Equal("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml", allParts["/xl/workbook.xml"].ContentType);
+        Assert.Equal("application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml", allParts["/xl/worksheets/sheet1.xml"].ContentType);
+        Assert.Equal("application/vnd.openxmlformats-package.relationships+xml", allParts["/xl/_rels/workbook.xml.rels"].ContentType);
+        Assert.Equal("application/vnd.openxmlformats-package.relationships+xml", allParts["/_rels/.rels"].ContentType);
     }
 
     [Fact]
@@ -1428,23 +1425,23 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
             table.Rows.Add(@"""<>+-*//}{\\n", 1234567890, true, now);
             table.Rows.Add("<test>Hello World</test>", -1234567890, false, now.Date);
 
-            var rowsWritten =  _excelExporter.InsertSheet(path, table, sheetName: "Sheet1");
+            var rowsWritten = _excelExporter.InsertSheet(path, table, sheetName: "Sheet1");
             Assert.Equal(2, rowsWritten);
 
-            using var p = new ExcelPackage(new FileInfo(path));
+            using var p = new ExcelPackage(path);
             var sheet1 = p.Workbook.Worksheets[0];
 
-            Assert.True(sheet1.Cells["A1"].Value.ToString() == "a");
-            Assert.True(sheet1.Cells["B1"].Value.ToString() == "b");
-            Assert.True(sheet1.Cells["C1"].Value.ToString() == "c");
-            Assert.True(sheet1.Cells["D1"].Value.ToString() == "d");
+            Assert.Equal("a", sheet1.Cells["A1"].Value.ToString());
+            Assert.Equal("b", sheet1.Cells["B1"].Value.ToString());
+            Assert.Equal("c", sheet1.Cells["C1"].Value.ToString());
+            Assert.Equal("d", sheet1.Cells["D1"].Value.ToString());
 
-            Assert.True(sheet1.Cells["A2"].Value.ToString() == @"""<>+-*//}{\\n");
-            Assert.True(sheet1.Cells["B2"].Value.ToString() == "1234567890");
+            Assert.Equal(@"""<>+-*//}{\\n", sheet1.Cells["A2"].Value.ToString());
+            Assert.Equal("1234567890", sheet1.Cells["B2"].Value.ToString());
             Assert.True(sheet1.Cells["C2"].Value.ToString() == true.ToString());
             Assert.True(sheet1.Cells["D2"].Value.ToString() == now.ToString());
 
-            Assert.True(sheet1.Name == "Sheet1");
+            Assert.Equal("Sheet1", sheet1.Name);
         }
         {
             var table = new DataTable();
@@ -1453,30 +1450,30 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
             table.Rows.Add("MiniExcel", 1);
             table.Rows.Add("Github", 2);
 
-            var rowsWritten =  _excelExporter.InsertSheet(path, table, sheetName: "Sheet2");
+            var rowsWritten = _excelExporter.InsertSheet(path, table, sheetName: "Sheet2");
             Assert.Equal(2, rowsWritten);
 
-            using var p = new ExcelPackage(new FileInfo(path));
+            using var p = new ExcelPackage(path);
             var sheet2 = p.Workbook.Worksheets[1];
 
-            Assert.True(sheet2.Cells["A1"].Value.ToString() == "Column1");
-            Assert.True(sheet2.Cells["B1"].Value.ToString() == "Column2");
+            Assert.Equal("Column1", sheet2.Cells["A1"].Value.ToString());
+            Assert.Equal("Column2", sheet2.Cells["B1"].Value.ToString());
 
-            Assert.True(sheet2.Cells["A2"].Value.ToString() == "MiniExcel");
-            Assert.True(sheet2.Cells["B2"].Value.ToString() == "1");
+            Assert.Equal("MiniExcel", sheet2.Cells["A2"].Value.ToString());
+            Assert.Equal("1", sheet2.Cells["B2"].Value.ToString());
 
-            Assert.True(sheet2.Cells["A3"].Value.ToString() == "Github");
-            Assert.True(sheet2.Cells["B3"].Value.ToString() == "2");
+            Assert.Equal("Github", sheet2.Cells["A3"].Value.ToString());
+            Assert.Equal("2", sheet2.Cells["B3"].Value.ToString());
 
-            Assert.True(sheet2.Name == "Sheet2");
+            Assert.Equal("Sheet2", sheet2.Name);
         }
         {
             var table = new DataTable();
             table.Columns.Add("Column1", typeof(string));
             table.Columns.Add("Column2", typeof(DateTime));
             table.Rows.Add("Test", now);
-
-            var rowsWritten =  _excelExporter.InsertSheet(path, table, sheetName: "Sheet2", printHeader: false, configuration: new OpenXmlConfiguration
+        
+            var rowsWritten = _excelExporter.InsertSheet(path, table, sheetName: "Sheet2", printHeader: false, configuration: new OpenXmlConfiguration
             {
                 FastMode = true,
                 AutoFilter = false,
@@ -1492,15 +1489,15 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
                     }
                 ]
             }, overwriteSheet: true);
-
+        
             Assert.Equal(1, rowsWritten);
-
-            using var p = new ExcelPackage(new FileInfo(path));
+        
+            using var p = new ExcelPackage(path);
             var sheet2 = p.Workbook.Worksheets[1];
-
-            Assert.True(sheet2.Cells["A1"].Value.ToString() == "Test");
+        
+            Assert.Equal("Test", sheet2.Cells["A1"].Value.ToString());
             Assert.True(sheet2.Cells["B1"].Text == now.ToString("dd.MM.yyyy HH:mm:ss"));
-            Assert.True(sheet2.Name == "Sheet2");
+            Assert.Equal("Sheet2", sheet2.Name);
         }
         {
             var table = new DataTable();
@@ -1509,7 +1506,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
             table.Rows.Add("MiniExcel", now);
             table.Rows.Add("Github", now);
 
-            var rowsWritten =  _excelExporter.InsertSheet(path, table, sheetName: "Sheet3", configuration: new OpenXmlConfiguration
+            var rowsWritten = _excelExporter.InsertSheet(path, table, sheetName: "Sheet3", configuration: new OpenXmlConfiguration
             {
                 FastMode = true,
                 AutoFilter = false,
@@ -1527,19 +1524,19 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
             });
             Assert.Equal(2, rowsWritten);
 
-            using var p = new ExcelPackage(new FileInfo(path));
+            using var p = new ExcelPackage(path);
             var sheet3 = p.Workbook.Worksheets[2];
 
-            Assert.True(sheet3.Cells["A1"].Value.ToString() == "Column1");
-            Assert.True(sheet3.Cells["B1"].Value.ToString() == "Its Date");
+            Assert.Equal("Column1", sheet3.Cells["A1"].Value.ToString());
+            Assert.Equal("Its Date", sheet3.Cells["B1"].Value.ToString());
 
-            Assert.True(sheet3.Cells["A2"].Value.ToString() == "MiniExcel");
+            Assert.Equal("MiniExcel", sheet3.Cells["A2"].Value.ToString());
             Assert.True(sheet3.Cells["B2"].Text == now.ToString("dd.MM.yyyy HH:mm:ss"));
 
-            Assert.True(sheet3.Cells["A3"].Value.ToString() == "Github");
+            Assert.Equal("Github", sheet3.Cells["A3"].Value.ToString());
             Assert.True(sheet3.Cells["B3"].Text == now.ToString("dd.MM.yyyy HH:mm:ss"));
 
-            Assert.True(sheet3.Name == "Sheet3");
+            Assert.Equal("Sheet3", sheet3.Name);
         }
     }
 
@@ -1712,10 +1709,8 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
 
          _excelExporter.Export(path.ToString(), input);
 
-        var rows =  _excelImporter.Query(path.ToString(), true).ToList();
-        var first = rows[0] as IDictionary<string, object>;
-
-        Assert.Contains("Mapped", first?.Keys);
-        Assert.DoesNotContain("NotMappedField", first?.Keys);
+        var rows = _excelImporter.Query(path.ToString(), true).Cast<IDictionary<string, object>>().ToList();
+        Assert.Contains("Mapped", rows[0].Keys);
+        Assert.DoesNotContain("NotMappedField", rows[0].Keys);
     }
 }

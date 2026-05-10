@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using MiniExcelLib.Core.Attributes;
 
 namespace MiniExcelLib.Core.Reflection;
@@ -16,7 +17,10 @@ public class MiniExcelColumnMapping
     public string? ExcelIndexName { get; internal set; }
     public bool ExcelHiddenColumn { get; internal set; }
     public bool ExcelIgnoreColumn { get; internal set; }
-    public int ExcelFormatId { get; internal set; }
+    public int ExcelFormatId { get; internal set; } = -1;
     public ColumnType ExcelColumnType { get; internal set; }
     public Func<object?, object?>? CustomFormatter { get; set; }
+    
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public void SetFormatId(int fmtId) => ExcelFormatId = fmtId;
 }

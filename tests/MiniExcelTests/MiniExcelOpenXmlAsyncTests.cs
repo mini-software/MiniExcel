@@ -1607,21 +1607,50 @@ public class MiniExcelOpenXmlAsyncTests
     {
         using var path = AutoDeletingPath.Create();
 
-#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
-        static async IAsyncEnumerable<Demo> GetValues()
-        {
-            yield return new Demo { Column1 = "MiniExcel", Column2 = 1 };
-            yield return new Demo { Column1 = "Github", Column2 = 2 };
-        }
-#pragma warning restore CS1998
-
         await MiniExcel.SaveAsAsync(path.ToString(), GetValues());
         var results = MiniExcel.Query<Demo>(path.ToString()).ToList();
 
-        Assert.True(results.Count == 2);
-        Assert.True(results.First().Column1 == "MiniExcel");
-        Assert.True(results.First().Column2 == 1);
-        Assert.True(results.Last().Column1 == "Github");
-        Assert.True(results.Last().Column2 == 2);
+        Assert.Equal(2, results.Count);
+        Assert.Equal("MiniExcel", results.First().Column1);
+        Assert.Equal(1, results.First().Column2);
+        Assert.Equal("Github", results.Last().Column1);
+        Assert.Equal(2, results.Last().Column2);
+        return;
+
+        static async IAsyncEnumerable<Demo> GetValues()
+        {
+            yield return new Demo { Column1 = "MiniExcel", Column2 = 1 };
+            await Task.CompletedTask;
+            yield return new Demo { Column1 = "Github", Column2 = 2 };
+            await Task.CompletedTask;
+        }
+    }
+
+    [Fact]
+    public async Task TestIssue951()
+    {
+        var templatePath = PathHelper.GetFile("xlsx/TestTemplateEasyFill.xlsx");
+        using var path = AutoDeletingPath.Create();
+        
+        var value = new Issue951
+        {
+            Name = "Jack",
+            CreateDate = new DateTime(2021, 01, 01),
+            VIP = true,
+            Points = 123
+        };
+
+        // must not throw
+        await MiniExcel.SaveAsByTemplateAsync(path.ToString(), templatePath, value);
+    }
+
+    class Issue951
+    {
+        public string? Name { get; set; }
+        public DateTime CreateDate { get; set; }
+        public bool VIP { get; set; }
+        public double Points { get; set; }
+        
+        public object this[string test] => new();
     }
 }

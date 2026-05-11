@@ -60,7 +60,7 @@ public static partial class MiniExcel
         return await ExcelWriterFactory.GetProvider(stream, value, sheetName, excelType, configuration, printHeader).SaveAsAsync(cancellationToken);
     }
 
-    public static async Task MergeSameCellsAsync(string mergedFilePath, string path, ExcelType excelType = ExcelType.UNKNOWN, IConfiguration configuration = null, CancellationToken cancellationToken = default)
+    public static async Task MergeSameCellsAsync(string mergedFilePath, string path, ExcelType excelType = ExcelType.XLSX, IConfiguration configuration = null, CancellationToken cancellationToken = default)
     {
         await Task.Run(() => MergeSameCells(mergedFilePath, path, excelType, configuration), cancellationToken).ConfigureAwait(false);
     }

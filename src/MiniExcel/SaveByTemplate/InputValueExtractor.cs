@@ -26,6 +26,7 @@ public class InputValueExtractor : IInputValueExtractor
 
         var propertyValues = type
             .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+            .Where(property => property.CanRead && property.GetIndexParameters().Length == 0)
             .Select(property => new { property.Name, Value = property.GetValue(valueObject) });
 
         var fieldValues = type

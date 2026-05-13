@@ -2,9 +2,11 @@
 
 namespace MiniExcelLibs.OpenXml.Styles;
 
-internal abstract class SheetStyleBuilderBase : ISheetStyleBuilder
+internal abstract class SheetStyleBuilderBase(SheetStyleBuildContext context) : ISheetStyleBuilder
 {
-    internal readonly static Dictionary<string, int> _allElements = new Dictionary<string, int>
+    private readonly SheetStyleBuildContext _context = context;
+    
+    private static readonly Dictionary<string, int> AllElements = new()
     {
         ["numFmts"] = 0,
         ["fonts"] = 1,
@@ -18,14 +20,8 @@ internal abstract class SheetStyleBuilderBase : ISheetStyleBuilder
         ["extLst"] = 9
     };
 
-    private readonly SheetStyleBuildContext _context;
 
-    public SheetStyleBuilderBase(SheetStyleBuildContext context)
-    {
-        _context = context;
-    }
-
-    public virtual SheetStyleBuildResult Build()
+    public virtual void Build()
     {
         _context.Initialize(GetGenerateElementInfos());
 
@@ -80,12 +76,10 @@ internal abstract class SheetStyleBuilderBase : ISheetStyleBuilder
         }
 
         _context.FinalizeAndUpdateZipDictionary();
-
-        return new SheetStyleBuildResult(GetCellXfIdMap());
     }
         
     // Todo: add CancellationToken to all methods called inside of BuildAsync 
-    public virtual async Task<SheetStyleBuildResult> BuildAsync(CancellationToken cancellationToken = default)
+    public virtual async Task BuildAsync(CancellationToken cancellationToken = default)
     {
         await _context.InitializeAsync(GetGenerateElementInfos(), cancellationToken);
 
@@ -136,11 +130,9 @@ internal abstract class SheetStyleBuilderBase : ISheetStyleBuilder
         }
 
         await _context.FinalizeAndUpdateZipDictionaryAsync(cancellationToken);
-
-        return new SheetStyleBuildResult(GetCellXfIdMap());
     }
 
-    protected abstract SheetStyleElementInfos GetGenerateElementInfos();
+    protected internal abstract SheetStyleElementInfos GetGenerateElementInfos();
 
     protected virtual void WriteAttributes(string element)
     {
@@ -266,36 +258,36 @@ internal abstract class SheetStyleBuilderBase : ISheetStyleBuilder
 
     protected virtual void GenerateElementBeforStartElement()
     {
-        if (!_allElements.TryGetValue(_context.OldXmlReader.LocalName, out var elementIndex))
+        if (!AllElements.TryGetValue(_context.OldXmlReader.LocalName, out var elementIndex))
         {
             return;
         }
-        if (!_context.OldElementInfos.ExistsNumFmts && !_context.GenerateElementInfos.ExistsNumFmts && _allElements["numFmts"] < elementIndex)
+        if (!_context.OldElementInfos.ExistsNumFmts && !_context.GenerateElementInfos.ExistsNumFmts && AllElements["numFmts"] < elementIndex)
         {
             GenerateNumFmts();
             _context.GenerateElementInfos.ExistsNumFmts = true;
         }
-        else if (!_context.OldElementInfos.ExistsFonts && !_context.GenerateElementInfos.ExistsFonts && _allElements["fonts"] < elementIndex)
+        else if (!_context.OldElementInfos.ExistsFonts && !_context.GenerateElementInfos.ExistsFonts && AllElements["fonts"] < elementIndex)
         {
             GenerateFonts();
             _context.GenerateElementInfos.ExistsFonts = true;
         }
-        else if (!_context.OldElementInfos.ExistsFills && !_context.GenerateElementInfos.ExistsFills && _allElements["fills"] < elementIndex)
+        else if (!_context.OldElementInfos.ExistsFills && !_context.GenerateElementInfos.ExistsFills && AllElements["fills"] < elementIndex)
         {
             GenerateFills();
             _context.GenerateElementInfos.ExistsFills = true;
         }
-        else if (!_context.OldElementInfos.ExistsBorders && !_context.GenerateElementInfos.ExistsBorders && _allElements["borders"] < elementIndex)
+        else if (!_context.OldElementInfos.ExistsBorders && !_context.GenerateElementInfos.ExistsBorders && AllElements["borders"] < elementIndex)
         {
             GenerateBorders();
             _context.GenerateElementInfos.ExistsBorders = true;
         }
-        else if (!_context.OldElementInfos.ExistsCellStyleXfs && !_context.GenerateElementInfos.ExistsCellStyleXfs && _allElements["cellStyleXfs"] < elementIndex)
+        else if (!_context.OldElementInfos.ExistsCellStyleXfs && !_context.GenerateElementInfos.ExistsCellStyleXfs && AllElements["cellStyleXfs"] < elementIndex)
         {
             GenerateCellStyleXfs();
             _context.GenerateElementInfos.ExistsCellStyleXfs = true;
         }
-        else if (!_context.OldElementInfos.ExistsCellXfs && !_context.GenerateElementInfos.ExistsCellXfs && _allElements["cellXfs"] < elementIndex)
+        else if (!_context.OldElementInfos.ExistsCellXfs && !_context.GenerateElementInfos.ExistsCellXfs && AllElements["cellXfs"] < elementIndex)
         {
             GenerateCellXfs();
             _context.GenerateElementInfos.ExistsCellXfs = true;
@@ -304,36 +296,36 @@ internal abstract class SheetStyleBuilderBase : ISheetStyleBuilder
 
     protected virtual async Task GenerateElementBeforStartElementAsync()
     {
-        if (!_allElements.TryGetValue(_context.OldXmlReader.LocalName, out var elementIndex))
+        if (!AllElements.TryGetValue(_context.OldXmlReader.LocalName, out var elementIndex))
         {
             return;
         }
-        if (!_context.OldElementInfos.ExistsNumFmts && !_context.GenerateElementInfos.ExistsNumFmts && _allElements["numFmts"] < elementIndex)
+        if (!_context.OldElementInfos.ExistsNumFmts && !_context.GenerateElementInfos.ExistsNumFmts && AllElements["numFmts"] < elementIndex)
         {
             await GenerateNumFmtsAsync();
             _context.GenerateElementInfos.ExistsNumFmts = true;
         }
-        else if (!_context.OldElementInfos.ExistsFonts && !_context.GenerateElementInfos.ExistsFonts && _allElements["fonts"] < elementIndex)
+        else if (!_context.OldElementInfos.ExistsFonts && !_context.GenerateElementInfos.ExistsFonts && AllElements["fonts"] < elementIndex)
         {
             await GenerateFontsAsync();
             _context.GenerateElementInfos.ExistsFonts = true;
         }
-        else if (!_context.OldElementInfos.ExistsFills && !_context.GenerateElementInfos.ExistsFills && _allElements["fills"] < elementIndex)
+        else if (!_context.OldElementInfos.ExistsFills && !_context.GenerateElementInfos.ExistsFills && AllElements["fills"] < elementIndex)
         {
             await GenerateFillsAsync();
             _context.GenerateElementInfos.ExistsFills = true;
         }
-        else if (!_context.OldElementInfos.ExistsBorders && !_context.GenerateElementInfos.ExistsBorders && _allElements["borders"] < elementIndex)
+        else if (!_context.OldElementInfos.ExistsBorders && !_context.GenerateElementInfos.ExistsBorders && AllElements["borders"] < elementIndex)
         {
             await GenerateBordersAsync();
             _context.GenerateElementInfos.ExistsBorders = true;
         }
-        else if (!_context.OldElementInfos.ExistsCellStyleXfs && !_context.GenerateElementInfos.ExistsCellStyleXfs && _allElements["cellStyleXfs"] < elementIndex)
+        else if (!_context.OldElementInfos.ExistsCellStyleXfs && !_context.GenerateElementInfos.ExistsCellStyleXfs && AllElements["cellStyleXfs"] < elementIndex)
         {
             await GenerateCellStyleXfsAsync();
             _context.GenerateElementInfos.ExistsCellStyleXfs = true;
         }
-        else if (!_context.OldElementInfos.ExistsCellXfs && !_context.GenerateElementInfos.ExistsCellXfs && _allElements["cellXfs"] < elementIndex)
+        else if (!_context.OldElementInfos.ExistsCellXfs && !_context.GenerateElementInfos.ExistsCellXfs && AllElements["cellXfs"] < elementIndex)
         {
             await GenerateCellXfsAsync();
             _context.GenerateElementInfos.ExistsCellXfs = true;
@@ -568,14 +560,4 @@ internal abstract class SheetStyleBuilderBase : ISheetStyleBuilder
     protected abstract void GenerateCellXf();
 
     protected abstract Task GenerateCellXfAsync();
-
-    private Dictionary<string, string> GetCellXfIdMap()
-    {
-        var result = new Dictionary<string, string>();
-        for (int i = 0; i < _context.GenerateElementInfos.CellXfCount; i++)
-        {
-            result.Add(i.ToString(), (_context.OldElementInfos.CellXfCount + i).ToString());
-        }
-        return result;
-    }
 }

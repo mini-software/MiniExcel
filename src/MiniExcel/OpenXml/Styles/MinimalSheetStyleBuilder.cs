@@ -1,25 +1,20 @@
 ﻿namespace MiniExcelLibs.OpenXml.Styles;
 
-internal class MinimalSheetStyleBuilder : SheetStyleBuilderBase
+internal class MinimalSheetStyleBuilder(SheetStyleBuildContext context) : SheetStyleBuilderBase(context)
 {
-    internal static SheetStyleElementInfos GenerateElementInfos = new SheetStyleElementInfos
+    private static readonly SheetStyleElementInfos GenerateElementInfos = new()
     {
-        NumFmtCount = 0,//默认的NumFmt数量是0，但是会有根据ColumnsToApply动态生成的NumFmt
+        NumFmtCount = 0,
         FontCount = 1,
         FillCount = 1,
         BorderCount = 1,
         CellStyleXfCount = 1,
-        CellXfCount = 5
+        CellXfCount = 6
     };
 
-    private readonly SheetStyleBuildContext _context;
+    private readonly SheetStyleBuildContext _context = context;
 
-    public MinimalSheetStyleBuilder(SheetStyleBuildContext context) : base(context)
-    {
-        _context = context;
-    }
-
-    protected override SheetStyleElementInfos GetGenerateElementInfos()
+    protected internal override SheetStyleElementInfos GetGenerateElementInfos()
     {
         return GenerateElementInfos;
     }
@@ -29,7 +24,7 @@ internal class MinimalSheetStyleBuilder : SheetStyleBuilderBase
         const int numFmtIndex = 166;
 
         var index = 0;
-        foreach (var item in _context.ColumnsToApply)
+        foreach (var item in _context.SheetStyleFormatsCache.FormatMappings)
         {
             index++;
 
@@ -38,7 +33,7 @@ internal class MinimalSheetStyleBuilder : SheetStyleBuilderBase
              */
             _context.NewXmlWriter.WriteStartElement(_context.OldXmlReader.Prefix, "numFmt", _context.OldXmlReader.NamespaceURI);
             _context.NewXmlWriter.WriteAttributeString("numFmtId", (numFmtIndex + index + _context.OldElementInfos.NumFmtCount).ToString());
-            _context.NewXmlWriter.WriteAttributeString("formatCode", item.Format);
+            _context.NewXmlWriter.WriteAttributeString("formatCode", item.Key);
             _context.NewXmlWriter.WriteFullEndElement();
         }
     }
@@ -47,7 +42,7 @@ internal class MinimalSheetStyleBuilder : SheetStyleBuilderBase
     {
         const int numFmtIndex = 166;
         var index = 0;
-        foreach (var item in _context.ColumnsToApply)
+        foreach (var item in _context.SheetStyleFormatsCache.FormatMappings)
         {
             index++;
 
@@ -56,7 +51,7 @@ internal class MinimalSheetStyleBuilder : SheetStyleBuilderBase
              */
             await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "numFmt", _context.OldXmlReader.NamespaceURI);
             await _context.NewXmlWriter.WriteAttributeStringAsync(null, "numFmtId", null, (numFmtIndex + index + _context.OldElementInfos.NumFmtCount).ToString());
-            await _context.NewXmlWriter.WriteAttributeStringAsync(null, "formatCode", null, item.Format);
+            await _context.NewXmlWriter.WriteAttributeStringAsync(null, "formatCode", null, item.Key);
             await _context.NewXmlWriter.WriteFullEndElementAsync();
         }
     }
@@ -141,6 +136,7 @@ internal class MinimalSheetStyleBuilder : SheetStyleBuilderBase
          * <x:xf />
          * <x:xf numFmtId="14" applyNumberFormat="1" />
          * <x:xf />
+         * <x:xf numFmtId="21" applyNumberFormat="1" />
          */
         _context.NewXmlWriter.WriteStartElement(_context.OldXmlReader.Prefix, "xf", _context.OldXmlReader.NamespaceURI);
         _context.NewXmlWriter.WriteFullEndElement();
@@ -154,20 +150,21 @@ internal class MinimalSheetStyleBuilder : SheetStyleBuilderBase
         _context.NewXmlWriter.WriteFullEndElement();
         _context.NewXmlWriter.WriteStartElement(_context.OldXmlReader.Prefix, "xf", _context.OldXmlReader.NamespaceURI);
         _context.NewXmlWriter.WriteFullEndElement();
+        _context.NewXmlWriter.WriteStartElement(_context.OldXmlReader.Prefix, "xf", _context.OldXmlReader.NamespaceURI);
+        _context.NewXmlWriter.WriteAttributeString("numFmtId", "21");
+        _context.NewXmlWriter.WriteAttributeString("applyNumberFormat", "1");
+        _context.NewXmlWriter.WriteFullEndElement();
 
         const int numFmtIndex = 166;
-        var index = 0;
-        foreach (var item in _context.ColumnsToApply)
+        for (var i = 1; i <= _context.CustomFormatCount; i++)
         {
-            index++;
-
             /*
              * <x:xf numFmtId="{numFmtIndex + i}" applyNumberFormat="1"
              */
             _context.NewXmlWriter.WriteStartElement(_context.OldXmlReader.Prefix, "xf", _context.OldXmlReader.NamespaceURI);
-            _context.NewXmlWriter.WriteAttributeString("numFmtId", (numFmtIndex + index).ToString());
+            _context.NewXmlWriter.WriteAttributeString("numFmtId", (numFmtIndex + i).ToString());
             _context.NewXmlWriter.WriteAttributeString("applyNumberFormat", "1");
-            _context.NewXmlWriter.WriteFullEndElement();
+            _context.NewXmlWriter.WriteEndElement();
         }
     }
 
@@ -179,6 +176,7 @@ internal class MinimalSheetStyleBuilder : SheetStyleBuilderBase
          * <x:xf />
          * <x:xf numFmtId="14" applyNumberFormat="1" />
          * <x:xf />
+         * <x:xf numFmtId="21" applyNumberFormat="1" />
          */
         await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "xf", _context.OldXmlReader.NamespaceURI);
         await _context.NewXmlWriter.WriteFullEndElementAsync();
@@ -191,19 +189,20 @@ internal class MinimalSheetStyleBuilder : SheetStyleBuilderBase
         await _context.NewXmlWriter.WriteAttributeStringAsync(null, "applyNumberFormat", null, "1");
         await _context.NewXmlWriter.WriteFullEndElementAsync();
         await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "xf", _context.OldXmlReader.NamespaceURI);
+        await _context.NewXmlWriter.WriteEndElementAsync();
+        await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "xf", _context.OldXmlReader.NamespaceURI);
+        await _context.NewXmlWriter.WriteAttributeStringAsync(null, "numFmtId", null, "21");
+        await _context.NewXmlWriter.WriteAttributeStringAsync(null, "applyNumberFormat", null, "1");
         await _context.NewXmlWriter.WriteFullEndElementAsync();
 
         const int numFmtIndex = 166;
-        var index = 0;
-        foreach (var item in _context.ColumnsToApply)
+        for (var i = 1; i <= _context.CustomFormatCount; i++)
         {
-            index++;
-
             /*
              * <x:xf numFmtId="{numFmtIndex + i}" applyNumberFormat="1"
              */
             await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "xf", _context.OldXmlReader.NamespaceURI);
-            await _context.NewXmlWriter.WriteAttributeStringAsync(null, "numFmtId", null, (numFmtIndex + index).ToString());
+            await _context.NewXmlWriter.WriteAttributeStringAsync(null, "numFmtId", null, (numFmtIndex + i).ToString());
             await _context.NewXmlWriter.WriteAttributeStringAsync(null, "applyNumberFormat", null, "1");
             await _context.NewXmlWriter.WriteFullEndElementAsync();
         }

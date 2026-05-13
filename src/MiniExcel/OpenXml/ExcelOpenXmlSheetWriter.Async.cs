@@ -1,4 +1,5 @@
-﻿using MiniExcelLibs.OpenXml.Constants;
+﻿using System.ComponentModel;
+using MiniExcelLibs.OpenXml.Constants;
 using MiniExcelLibs.OpenXml.Models;
 using MiniExcelLibs.OpenXml.Styles;
 using MiniExcelLibs.Utils;
@@ -10,13 +11,17 @@ using System.Xml.Linq;
 
 namespace MiniExcelLibs.OpenXml;
 
-internal partial class ExcelOpenXmlSheetWriter : IExcelWriter
+internal partial class ExcelOpenXmlSheetWriter
 {
     public async Task<int[]> SaveAsAsync(CancellationToken cancellationToken = default)
     {
         try
         {
-            await GenerateDefaultOpenXmlAsync(cancellationToken);
+            await CreateZipEntryAsync(ExcelFileNames.Rels, ExcelContentTypes.Relationships, ExcelXml.DefaultRels, cancellationToken);
+            await CreateZipEntryAsync(ExcelFileNames.SharedStrings, ExcelContentTypes.SharedStrings, ExcelXml.DefaultSharedString, cancellationToken);
+
+            using var sbc = _sheetStyleBuildContext;
+            var styleBuilder = await GetSheetStyleBuilderAsync(cancellationToken);
 
             var sheets = GetSheets();
             var rowsWritten = new List<int>();
@@ -31,6 +36,7 @@ internal partial class ExcelOpenXmlSheetWriter : IExcelWriter
                 rowsWritten.Add(rows);
             }
 
+            await styleBuilder.BuildAsync(cancellationToken);
             await GenerateEndXmlAsync(cancellationToken);
             return rowsWritten.ToArray();
         }
@@ -47,8 +53,6 @@ internal partial class ExcelOpenXmlSheetWriter : IExcelWriter
             if (!_configuration.FastMode)
                 throw new InvalidOperationException("Insert requires fast mode to be enabled");
 
-            cancellationToken.ThrowIfCancellationRequested();
-                
             var sheetRecords = new ExcelOpenXmlSheetReader(_stream, _configuration).GetWorkbookRels(_archive.Entries).ToArray();
             foreach (var sheetRecord in sheetRecords.OrderBy(o => o.Id))
             {
@@ -59,7 +63,7 @@ internal partial class ExcelOpenXmlSheetWriter : IExcelWriter
             if (existSheetDto != null && !overwriteSheet)
                 throw new Exception($"Sheet “{_defaultSheetName}” already exist");
 
-            await GenerateStylesXmlAsync(cancellationToken);//GenerateStylesXml必须在校验overwriteSheet之后，避免不必要的样式更改
+            var styleBuilder = await GetSheetStyleBuilderAsync(cancellationToken).ConfigureAwait(false);
 
             int rowsWritten;
             if (existSheetDto == null)
@@ -77,6 +81,7 @@ internal partial class ExcelOpenXmlSheetWriter : IExcelWriter
                 rowsWritten = await CreateSheetXmlAsync(_value, existSheetDto.Path, cancellationToken);
             }
 
+            await styleBuilder.BuildAsync(cancellationToken);
             await AddFilesToZipAsync(cancellationToken);
 
             _archive.Entries.SingleOrDefault(s => s.FullName == ExcelFileNames.DrawingRels(_currentSheetIndex - 1))?.Delete();
@@ -85,7 +90,7 @@ internal partial class ExcelOpenXmlSheetWriter : IExcelWriter
             _archive.Entries.SingleOrDefault(s => s.FullName == ExcelFileNames.Drawing(_currentSheetIndex - 1))?.Delete();
             await GenerateDrawingXmlAsync(_currentSheetIndex - 1, cancellationToken);
 
-            GenerateWorkBookXmls(out StringBuilder workbookXml, out StringBuilder workbookRelsXml, out Dictionary<int, string> sheetsRelsXml);
+            GenerateWorkBookXmls(out var workbookXml, out var workbookRelsXml, out var sheetsRelsXml);
             foreach (var sheetRelsXml in sheetsRelsXml)
             {
                 var sheetRelsXmlPath = ExcelFileNames.SheetRels(sheetRelsXml.Key);
@@ -105,15 +110,13 @@ internal partial class ExcelOpenXmlSheetWriter : IExcelWriter
         }
         finally
         {
+#if NET10_0_OR_GREATER
+            await _archive.DisposeAsync();
+#else
             _archive.Dispose();
+#endif
+            _sheetStyleBuildContext.Dispose();
         }
-    }
-
-    internal async Task GenerateDefaultOpenXmlAsync(CancellationToken cancellationToken)
-    {
-        await CreateZipEntryAsync(ExcelFileNames.Rels, ExcelContentTypes.Relationships, ExcelXml.DefaultRels, cancellationToken);
-        await CreateZipEntryAsync(ExcelFileNames.SharedStrings, ExcelContentTypes.SharedStrings, ExcelXml.DefaultSharedString, cancellationToken);
-        await GenerateStylesXmlAsync(cancellationToken);
     }
 
     private async Task<int> CreateSheetXmlAsync(object values, string sheetPath, CancellationToken cancellationToken)
@@ -124,7 +127,7 @@ internal partial class ExcelOpenXmlSheetWriter : IExcelWriter
         var rowsWritten = 0;
             
         using (var zipStream = entry.Open())
-        using (var writer = new MiniExcelAsyncStreamWriter(zipStream, _utf8WithBom, _configuration.BufferSize, cancellationToken))
+        using (var writer = new MiniExcelAsyncStreamWriter(zipStream, Utf8WithBom, _configuration.BufferSize, cancellationToken))
         {
             if (values == null)
             {
@@ -169,21 +172,21 @@ internal partial class ExcelOpenXmlSheetWriter : IExcelWriter
 
         IMiniExcelWriteAdapter writeAdapter = null;
 #if NETSTANDARD2_0_OR_GREATER || NET
-            IAsyncMiniExcelWriteAdapter asyncWriteAdapter = null;
+        IAsyncMiniExcelWriteAdapter asyncWriteAdapter = null;
 #endif
         try
         {
 #if NETSTANDARD2_0_OR_GREATER || NET
-                if (!MiniExcelWriteAdapterFactory.TryGetAsyncWriteAdapter(values, _configuration, out asyncWriteAdapter))
-                {
-                    writeAdapter = MiniExcelWriteAdapterFactory.GetWriteAdapter(values, _configuration);
-                }
+            if (!MiniExcelWriteAdapterFactory.TryGetAsyncWriteAdapter(values, _configuration, out asyncWriteAdapter))
+            {
+                writeAdapter = MiniExcelWriteAdapterFactory.GetWriteAdapter(values, _configuration);
+            }
 
-                var count = 0;
-                var isKnownCount = writeAdapter != null && writeAdapter.TryGetKnownCount(out count);
-                var props = writeAdapter != null
-                    ? writeAdapter?.GetColumns()
-                    : await asyncWriteAdapter.GetColumnsAsync();
+            var count = 0;
+            var isKnownCount = writeAdapter != null && writeAdapter.TryGetKnownCount(out count);
+            var props = writeAdapter != null
+                ? writeAdapter?.GetColumns()
+                : await asyncWriteAdapter.GetColumnsAsync();
 #else
             writeAdapter = MiniExcelWriteAdapterFactory.GetWriteAdapter(values, _configuration);
 
@@ -191,18 +194,19 @@ internal partial class ExcelOpenXmlSheetWriter : IExcelWriter
             var props = writeAdapter.GetColumns();
 #endif
 
-            if (props == null)
+            if (props is null or { Count: 0 })
             {
                 await WriteEmptySheetAsync(writer);
                 return 0;
             }
 
-            var maxColumnIndex = props.Count;
+            _sheetStyleBuildContext.UpdateFormatIds(props);
+
             int maxRowIndex;
+            var maxColumnIndex = props.Count;
+            long dimensionPlaceholderPostition = 0;
 
             await writer.WriteAsync(WorksheetXml.StartWorksheetWithRelationship);
-
-            long dimensionPlaceholderPostition = 0;
 
             // We can write the dimensions directly if the row count is known
             if (_configuration.FastMode && !isKnownCount)
@@ -370,17 +374,12 @@ internal partial class ExcelOpenXmlSheetWriter : IExcelWriter
                     continue;
 
                 var r = ExcelOpenXmlUtils.ConvertXyToCell(xIndex, yIndex);
-                await WriteCellAsync(writer, r, columnName: p.ExcelColumnName);
+                await writer.WriteAsync(WorksheetXml.Cell(r, StringDataType, HeaderCellStyleIndex, ExcelOpenXmlUtils.EncodeXML(p.ExcelColumnName))).ConfigureAwait(false);
             }
             xIndex++;
         }
 
         await writer.WriteAsync(WorksheetXml.EndRow);
-    }
-
-    private async Task WriteCellAsync(MiniExcelAsyncStreamWriter writer, string cellReference, string columnName)
-    {
-        await writer.WriteAsync(WorksheetXml.Cell(cellReference, "str", GetCellXfId("1"), ExcelOpenXmlUtils.EncodeXML(columnName)));
     }
 
     private async Task WriteCellAsync(MiniExcelAsyncStreamWriter writer, int rowIndex, int cellIndex, object value, ExcelColumnInfo p, ExcelWidthCollection widthCollection)
@@ -398,11 +397,11 @@ internal partial class ExcelOpenXmlSheetWriter : IExcelWriter
         }
 
         var columnReference = ExcelOpenXmlUtils.ConvertXyToCell(cellIndex, rowIndex);
-        var valueIsNull = value is null || value is DBNull;
+        var valueIsNull = value is null or DBNull;
 
         if (_configuration.EnableWriteNullValueCell && valueIsNull)
         {
-            await writer.WriteAsync(WorksheetXml.EmptyCell(columnReference, GetCellXfId("2")));
+            await writer.WriteAsync(WorksheetXml.EmptyCell(columnReference, DefaultCellStyleIndex));
             return;
         }
 
@@ -414,10 +413,9 @@ internal partial class ExcelOpenXmlSheetWriter : IExcelWriter
         var columnType = p.ExcelColumnType;
 
         /*Prefix and suffix blank space will lost after SaveAs #294*/
-        var preserveSpace = cellValue != null && (cellValue.StartsWith(" ", StringComparison.Ordinal) ||
-                                                  cellValue.EndsWith(" ", StringComparison.Ordinal));
+        var preserveSpace = cellValue != null && (cellValue.StartsWith(" ") || cellValue.EndsWith(" "));
 
-        await writer.WriteAsync(WorksheetXml.Cell(columnReference, dataType, GetCellXfId(styleIndex), cellValue, preserveSpace: preserveSpace, columnType: columnType));
+        await writer.WriteAsync(WorksheetXml.Cell(columnReference, dataType, styleIndex, cellValue, preserveSpace: preserveSpace, columnType: columnType));
         widthCollection?.AdjustWidth(cellIndex, cellValue);
     }
 
@@ -439,25 +437,19 @@ internal partial class ExcelOpenXmlSheetWriter : IExcelWriter
         }
     }
 
-    private async Task GenerateStylesXmlAsync(CancellationToken cancellationToken)
+    private async Task<ISheetStyleBuilder> GetSheetStyleBuilderAsync(CancellationToken cancellationToken)
     {
-        cancellationToken.ThrowIfCancellationRequested();
-            
-        using (var context = new SheetStyleBuildContext(_zipDictionary, _archive, _utf8WithBom, _configuration.DynamicColumns))
+        SheetStyleBuilderBase builder = _configuration.TableStyles switch
         {
-            ISheetStyleBuilder builder = null;
-            switch (_configuration.TableStyles)
-            {
-                case TableStyles.None:
-                    builder = new MinimalSheetStyleBuilder(context);
-                    break;
-                case TableStyles.Default:
-                    builder = new DefaultSheetStyleBuilder(context, _configuration.StyleOptions);
-                    break;
-            }
-            var result = await builder.BuildAsync(cancellationToken);
-            _cellXfIdMap = result.CellXfIdMap;
-        }
+            TableStyles.None => new MinimalSheetStyleBuilder(_sheetStyleBuildContext),
+            TableStyles.Default => new DefaultSheetStyleBuilder(_sheetStyleBuildContext, _configuration.StyleOptions),
+            _ => throw new InvalidEnumArgumentException(nameof(_configuration.TableStyles), (int)_configuration.TableStyles, typeof(TableStyles))
+        };
+
+        var newInfos = builder.GetGenerateElementInfos();
+        await _sheetStyleBuildContext.CreateAsync(newInfos, cancellationToken).ConfigureAwait(false);
+
+        return builder;
     }
 
     private async Task GenerateDrawinRelXmlAsync(CancellationToken cancellationToken)
@@ -589,7 +581,7 @@ internal partial class ExcelOpenXmlSheetWriter : IExcelWriter
 #else
         using (var zipStream = entry.Open())
 #endif
-        using (var writer = new MiniExcelAsyncStreamWriter(zipStream, _utf8WithBom, _configuration.BufferSize, cancellationToken))
+        using (var writer = new MiniExcelAsyncStreamWriter(zipStream, Utf8WithBom, _configuration.BufferSize, cancellationToken))
             await writer.WriteAsync(content);
             
         if (!string.IsNullOrEmpty(contentType))

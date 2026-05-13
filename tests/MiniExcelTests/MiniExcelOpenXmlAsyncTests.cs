@@ -605,7 +605,7 @@ public class MiniExcelOpenXmlAsyncTests
                 await using var stream = File.OpenRead(path);
                 var d = await stream.QueryAsync();
                 var rows = d.ToList();
-                Assert.Single(rows); 
+                Assert.Empty(rows); 
             }
             await MiniExcel.SaveAsAsync(path, table, printHeader: false, overwriteFile: true);
             Assert.Equal("A1", Helpers.GetFirstSheetDimensionRefValue(path));
@@ -1652,5 +1652,326 @@ public class MiniExcelOpenXmlAsyncTests
         public double Points { get; set; }
         
         public object this[string test] => new();
+    }
+    
+    [Fact]
+    public async Task NumericFormattingWithMiniExcelFormatAttributeTest()
+    {
+        using var file = AutoDeletingPath.Create();
+        var path = file.ToString();
+
+        NumericFormattingTestDto[] testData =
+        [
+            new(currency: 1234.56m,
+                alignedCurrency: 9876.54m,
+                percentage: 0.85m,
+                scientificNotation: 1234567890.123d,
+                fixedDecimal: 42.123456m,
+                phoneNumber: 5551234567,
+                veryLongNumber: 155043269579349,
+                customFormat: 999.999
+            ),
+
+            new(currency: -500.00m,
+                alignedCurrency: -250.75m,
+                percentage: 0.42m,
+                scientificNotation: 987654321.456d,
+                fixedDecimal: 15.5m,
+                phoneNumber: 4155552671,
+                veryLongNumber: 20573068629711152,
+                customFormat: 100.012
+            )
+        ];
+
+        await MiniExcel.SaveAsAsync(path, testData);
+
+        using var package = new ExcelPackage(path);
+        var cells = package.Workbook.Worksheets[0].Cells;
+
+        // Verify headers
+        Assert.Equal("Currency", cells["A1"].Value);
+        Assert.Equal("AlignedCurrency", cells["B1"].Value);
+        Assert.Equal("Percentage", cells["C1"].Value);
+        Assert.Equal("ScientificNotation", cells["D1"].Value);
+        Assert.Equal("FixedDecimal", cells["F1"].Value);
+        Assert.Equal("PhoneNumber", cells["G1"].Value);
+        Assert.Equal("VeryLongNumber", cells["H1"].Value);
+        Assert.Equal("CustomFormat", cells["I1"].Value);
+
+        // Verify first row of data
+        Assert.Equal(1234.56, cells["A2"].Value);
+        Assert.Equal("\"$\"#,##0.00", cells["A2"].Style.Numberformat.Format);
+
+        Assert.Equal(9876.54, cells["B2"].Value);
+        Assert.Equal("$#,##0.00_);($#,##0.00)", cells["B2"].Style.Numberformat.Format);
+
+        Assert.Equal(0.85, cells["C2"].Value);
+        Assert.Equal("0%", cells["C2"].Style.Numberformat.Format);
+
+        Assert.Equal(1234567890.123, cells["D2"].Value);
+        Assert.Equal("0.00E+00", cells["D2"].Style.Numberformat.Format);
+
+        Assert.Equal(42.123456, cells["F2"].Value);
+        Assert.Equal("0.000000", cells["F2"].Style.Numberformat.Format);
+
+        Assert.Equal(5551234567, Convert.ToInt64(cells["G2"].Value));
+        Assert.Equal("[<=9999999]###-####;(###) ###-####", cells["G2"].Style.Numberformat.Format);
+
+        Assert.Equal(155043269579349, Convert.ToInt64(cells["H2"].Value));
+        Assert.Equal("#", cells["H2"].Style.Numberformat.Format);
+
+        Assert.Equal(999.999, cells["I2"].Value);
+        Assert.Equal("0.000", cells["I2"].Style.Numberformat.Format);
+
+        // Verify second row of data
+        Assert.Equal(-500.00, cells["A3"].Value);
+        Assert.Equal("\"$\"#,##0.00", cells["A3"].Style.Numberformat.Format);
+
+        Assert.Equal(-250.75, cells["B3"].Value);
+        Assert.Equal("$#,##0.00_);($#,##0.00)", cells["B3"].Style.Numberformat.Format);
+
+        Assert.Equal(0.42, cells["C3"].Value);
+        Assert.Equal("0%", cells["C3"].Style.Numberformat.Format);
+
+        Assert.Equal(987654321.456, cells["D3"].Value);
+        Assert.Equal("0.00E+00", cells["D3"].Style.Numberformat.Format);
+
+        Assert.Equal(15.5, cells["F3"].Value);
+        Assert.Equal("0.000000", cells["F3"].Style.Numberformat.Format);
+
+        Assert.Equal(4155552671, Convert.ToInt64(cells["G3"].Value));
+        Assert.Equal("[<=9999999]###-####;(###) ###-####", cells["G3"].Style.Numberformat.Format);
+
+        Assert.Equal(20573068629711152, Convert.ToInt64(cells["H3"].Value));
+        Assert.Equal("#", cells["H3"].Style.Numberformat.Format);
+
+        Assert.Equal(100.012, cells["I3"].Value);
+        Assert.Equal("0.000", cells["I3"].Style.Numberformat.Format);
+    }
+
+    /// <summary>
+    /// Test class with multiple numeric properties using MiniExcelFormatAttribute
+    /// to verify that formatting is correctly applied during Excel export.
+    /// </summary>
+    private class NumericFormattingTestDto(
+        decimal currency,
+        decimal alignedCurrency,
+        decimal percentage,
+        double scientificNotation,
+        decimal fixedDecimal,
+        long phoneNumber,
+        long veryLongNumber,
+        double customFormat)
+    {
+
+        /// <summary>
+        /// Regular currency format with 2 decimal places
+        /// </summary>
+        [ExcelFormat("\"$\"#,##0.00")]
+        public decimal Currency { get; set; } = currency;
+
+        /// <summary>
+        /// Currency format with 2 decimal places, parentheses for negatives
+        /// </summary>
+        [ExcelFormat("$#,##0.00_);($#,##0.00)")]
+        public decimal AlignedCurrency { get; set; } = alignedCurrency;
+
+        /// <summary>
+        /// Percentage format with 0 decimal places
+        /// </summary>
+        [ExcelFormat("0%")]
+        public decimal Percentage { get; set; } = percentage;
+
+        /// <summary>
+        /// Scientific notation format with 2 decimal places
+        /// </summary>
+        [ExcelFormat("0.00E+00")]
+        public double ScientificNotation { get; set; } = scientificNotation;
+
+        [ExcelFormat("0.00E+00"), ExcelHidden]
+        public double ScientificNotationDuplicate { get; set; } = scientificNotation;
+
+        /// <summary>
+        /// Fixed decimal places (6 decimal places)
+        /// </summary>
+        [ExcelFormat("0.000000")]
+        public decimal FixedDecimal { get; set; } = fixedDecimal;
+
+        /// <summary>
+        /// Phone number format
+        /// </summary>
+        [ExcelFormat("[<=9999999]###-####;(###) ###-####")]
+        public long PhoneNumber { get; set; } = phoneNumber;
+
+        /// <summary>
+        /// Simple integer format that shows the number in its full length (no scientific notation)
+        /// </summary>
+        [ExcelFormat("#")]
+        public long VeryLongNumber { get; set; } = veryLongNumber;
+
+        /// <summary>
+        /// Simple decimal format with 3 decimal places
+        /// </summary>
+        [ExcelFormat("0.000")]
+        public double CustomFormat { get; set; } = customFormat;
+    }
+    
+    [Fact]
+    public async Task DateTimeFormattingWithMiniExcelFormatAttributeTest()
+    {
+        using var file = AutoDeletingPath.Create();
+        var path = file.ToString();
+
+        // Create fixed DateTime values for consistent testing
+        var baseDate = new DateTime(2026, 5, 8, 14, 30, 45);
+        var baseTime = new TimeSpan(14, 30, 45);
+
+        DateTimeFormattingTestDto[] testData =
+        [
+            new(
+                shortDate: baseDate,
+                longDate: baseDate,
+                dateWithTime: baseDate,
+                timeOnly: baseTime,
+                isoDateTime: baseDate,
+                customDateTime: baseDate,
+                monthYear: baseDate
+            ),
+            new(
+                shortDate: new DateTime(2020, 12, 25),
+                longDate: new DateTime(2020, 12, 25),
+                dateWithTime: new DateTime(2020, 12, 25, 8, 15, 30),
+                timeOnly: new TimeSpan(8, 15, 30),
+                isoDateTime: new DateTime(2020, 12, 25, 8, 15, 30),
+                customDateTime: new DateTime(2020, 12, 25, 8, 15, 30),
+                monthYear: new DateTime(2020, 12, 25)
+            )
+        ];
+
+        await MiniExcel.SaveAsAsync(path, testData);
+
+        using var package = new ExcelPackage(path);
+        var cells = package.Workbook.Worksheets[0].Cells;
+
+        // Verify headers
+        Assert.Equal("ShortDate", cells["A1"].Value);
+        Assert.Equal("LongDate", cells["B1"].Value);
+        Assert.Equal("DateWithTime", cells["C1"].Value);
+        Assert.Equal("TimeOnly", cells["D1"].Value);
+        Assert.Equal("IsoDateTime", cells["E1"].Value);
+        Assert.Equal("CustomDateTime", cells["F1"].Value);
+        Assert.Equal("MonthYear", cells["G1"].Value);
+
+        // Verify first row
+        Assert.Equal(baseDate, GetDateTime(cells["A2"].Value));
+        Assert.Equal("mm/dd/yyyy", cells["A2"].Style.Numberformat.Format);
+
+        // Long date format (dddd, mmmm dd, yyyy)
+        Assert.Equal(baseDate, GetDateTime(cells["B2"].Value));
+        Assert.Equal("dddd, mmmm dd, yyyy", cells["B2"].Style.Numberformat.Format);
+
+        // Date with time (yyyy-mm-dd hh:mm:ss)
+        Assert.Equal(baseDate, GetDateTime(cells["C2"].Value));
+        Assert.Equal("yyyy-mm-dd hh:mm:ss", cells["C2"].Style.Numberformat.Format);
+
+        // Time only format ([h]:mm:ss)
+        Assert.Equal(baseTime, GetDateTime(cells["D2"].Value).TimeOfDay);
+        Assert.Equal("[h]:mm:ss", cells["D2"].Style.Numberformat.Format);
+
+        // ISO 8601 format (yyyy-mm-ddThh:mm:ss)
+        Assert.Equal(baseDate, GetDateTime(cells["E2"].Value));
+        Assert.Equal("yyyy-mm-dd\"T\"hh:mm:ss", cells["E2"].Style.Numberformat.Format);
+
+        // Custom format (dd.mm.yyyy hh:mm)
+        Assert.Equal(baseDate, GetDateTime(cells["F2"].Value));
+        Assert.Equal("dd.mm.yyyy hh:mm", cells["F2"].Style.Numberformat.Format);
+
+        // Month/Year format (mmmm yyyy)
+        Assert.Equal(baseDate, GetDateTime(cells["G2"].Value));
+        Assert.Equal("mmmm yyyy", cells["G2"].Style.Numberformat.Format);
+
+        // Verify second row
+        var secondRowDate = new DateTime(2020, 12, 25);
+        var secondRowTime = new TimeSpan(8, 15, 30);
+
+        Assert.Equal(secondRowDate, GetDateTime(cells["A3"].Value));
+        Assert.Equal("mm/dd/yyyy", cells["A3"].Style.Numberformat.Format);
+
+        Assert.Equal(secondRowDate, GetDateTime(cells["B3"].Value));
+        Assert.Equal("dddd, mmmm dd, yyyy", cells["B3"].Style.Numberformat.Format);
+
+        Assert.Equal(new DateTime(2020, 12, 25, 8, 15, 30), GetDateTime(cells["C3"].Value));
+        Assert.Equal("yyyy-mm-dd hh:mm:ss", cells["C3"].Style.Numberformat.Format);
+
+        Assert.Equal(secondRowTime, GetDateTime(cells["D3"].Value).TimeOfDay);
+        Assert.Equal("[h]:mm:ss", cells["D3"].Style.Numberformat.Format);
+
+        Assert.Equal(new DateTime(2020, 12, 25, 8, 15, 30), GetDateTime(cells["E3"].Value));
+        Assert.Equal("yyyy-mm-dd\"T\"hh:mm:ss", cells["E3"].Style.Numberformat.Format);
+
+        Assert.Equal(new DateTime(2020, 12, 25, 8, 15, 30), GetDateTime(cells["F3"].Value));
+        Assert.Equal("dd.mm.yyyy hh:mm", cells["F3"].Style.Numberformat.Format);
+
+        Assert.Equal(secondRowDate, GetDateTime(cells["G3"].Value));
+        Assert.Equal("mmmm yyyy", cells["G3"].Style.Numberformat.Format);
+        return;
+
+        static DateTime GetDateTime(object value) => DateTime.FromOADate((double)value);
+    }
+
+    /// <summary>
+    /// Test class with multiple date and time properties using MiniExcelFormatAttribute
+    /// to verify that date/time formatting is correctly applied during Excel export.
+    /// </summary>
+    private class DateTimeFormattingTestDto(
+        DateTime shortDate,
+        DateTime longDate,
+        DateTime dateWithTime,
+        TimeSpan timeOnly,
+        DateTime isoDateTime,
+        DateTime customDateTime,
+        DateTime monthYear)
+    {
+        /// <summary>
+        /// Short date format (mm/dd/yyyy)
+        /// </summary>
+        [ExcelFormat("mm/dd/yyyy")]
+        public DateTime ShortDate { get; set; } = shortDate;
+
+        /// <summary>
+        /// Long date format (dddd, mmmm dd, yyyy)
+        /// </summary>
+        [ExcelFormat("dddd, mmmm dd, yyyy")]
+        public DateTime LongDate { get; set; } = longDate;
+
+        /// <summary>
+        /// Date with time format (yyyy-mm-dd hh:mm:ss)
+        /// </summary>
+        [ExcelFormat("yyyy-mm-dd hh:mm:ss")]
+        public DateTime DateWithTime { get; set; } = dateWithTime;
+
+        /// <summary>
+        /// Time only format ([h]:mm:ss)
+        /// </summary>
+        [ExcelFormat("[h]:mm:ss")]
+        public TimeSpan TimeOnly { get; set; } = timeOnly;
+
+        /// <summary>
+        /// ISO 8601 datetime format (yyyy-mm-ddThh:mm:ss)
+        /// </summary>
+        [ExcelFormat("yyyy-mm-dd\"T\"hh:mm:ss")]
+        public DateTime IsoDateTime { get; set; } = isoDateTime;
+
+        /// <summary>
+        /// Custom European format (dd.mm.yyyy hh:mm)
+        /// </summary>
+        [ExcelFormat("dd.mm.yyyy hh:mm")]
+        public DateTime CustomDateTime { get; set; } = customDateTime;
+
+        /// <summary>
+        /// Month and year format (mmmm yyyy)
+        /// </summary>
+        [ExcelFormat("mmmm yyyy")]
+        public DateTime MonthYear { get; set; } = monthYear;
     }
 }

@@ -9,10 +9,22 @@ using static MiniExcelLibs.Utils.ImageHelper;
 
 namespace MiniExcelLibs.OpenXml;
 
-internal partial class ExcelOpenXmlSheetWriter : IExcelWriter
+internal partial class ExcelOpenXmlSheetWriter
 {
-    private readonly Dictionary<string, ZipPackageInfo> _zipDictionary = new Dictionary<string, ZipPackageInfo>();
-    private Dictionary<string, string> _cellXfIdMap;
+    private const string DefaultCellStyleIndex = "0";
+    private const string HeaderCellStyleIndex = "1";
+    private const string RegularCellStyleIndex = "2";
+    private const string DateCellStyleIndex = "3";
+    private const string FillCellStyleIndex = "4";
+    private const string TimeCellStyleIndex = "5";
+
+    private const string StringDataType = "str";
+    private const string NumericDataType = "n";
+    private const string BooleanDataType = "b";
+    
+    private static readonly DateTime ExcelZeroDate = new(1899, 12, 31);
+
+    private readonly Dictionary<string, ZipPackageInfo> _zipDictionary = new();
 
     private IEnumerable<Tuple<SheetDto, object>> GetSheets()
     {
@@ -113,8 +125,8 @@ internal partial class ExcelOpenXmlSheetWriter : IExcelWriter
         }
         sb.Append(
             WorksheetXml.StartPane(
-                xSplit: _configuration.FreezeColumnCount > 0 ? _configuration.FreezeColumnCount : (int?)null,
-                ySplit: _configuration.FreezeRowCount > 0 ? _configuration.FreezeRowCount : (int?)null,
+                xSplit: _configuration.FreezeColumnCount > 0 ? _configuration.FreezeColumnCount : null,
+                ySplit: _configuration.FreezeRowCount > 0 ? _configuration.FreezeRowCount : null,
                 topLeftCell: ExcelOpenXmlUtils.ConvertXyToCell(
                     _configuration.FreezeColumnCount + 1,
                     _configuration.FreezeRowCount + 1
@@ -168,77 +180,79 @@ internal partial class ExcelOpenXmlSheetWriter : IExcelWriter
     private Tuple<string, string, string> GetCellValue(int rowIndex, int cellIndex, object value, ExcelColumnInfo columnInfo, bool valueIsNull)
     {
         if (valueIsNull)
-            return Tuple.Create("2", "str", string.Empty);
+            return Tuple.Create(RegularCellStyleIndex, StringDataType, string.Empty);
 
         if (value is string str)
-            return Tuple.Create("2", "str", ExcelOpenXmlUtils.EncodeXML(str));
+            return Tuple.Create(RegularCellStyleIndex, StringDataType, ExcelOpenXmlUtils.EncodeXML(str));
 
         var type = GetValueType(value, columnInfo);
 
-        if (columnInfo?.ExcelFormat != null && columnInfo?.ExcelFormatId == -1 && value is IFormattable formattableValue)
+        if (columnInfo is { ExcelFormat: not null, ExcelFormatId: -1 } && value is IFormattable formattableValue)
         {
             var formattedStr = formattableValue.ToString(columnInfo.ExcelFormat, _configuration.Culture);
-            return Tuple.Create("2", "str", ExcelOpenXmlUtils.EncodeXML(formattedStr));
+            return Tuple.Create(RegularCellStyleIndex, StringDataType, ExcelOpenXmlUtils.EncodeXML(formattedStr));
         }
 
         if (type == typeof(DateTime))
             return GetDateTimeValue((DateTime)value, columnInfo);
 
+        if (type == typeof(DateTimeOffset))
+            return GetDateTimeValue(((DateTimeOffset)value).DateTime, columnInfo);
+
+        if (type == typeof(TimeSpan))
+            return GetTimeSpanValue((TimeSpan)value, columnInfo);
+
 #if NET6_0_OR_GREATER
         if (type == typeof(DateOnly))
             return GetDateTimeValue(((DateOnly)value).ToDateTime(new TimeOnly()), columnInfo);
+
+        if (type == typeof(TimeOnly))
+            return GetTimeSpanValue(((TimeOnly)value).ToTimeSpan(), columnInfo);
 #endif
         if (type.IsEnum)
         {
             var description = CustomPropertyHelper.DescriptionAttr(type, value);
-            return Tuple.Create("2", "str", description ?? value.ToString());
+            return Tuple.Create(RegularCellStyleIndex, StringDataType, description ?? value.ToString());
         }
 
         if (TypeHelper.IsNumericType(type))
         {
             var cellValue = GetNumericValue(value, type);
 
-            if (columnInfo == null || columnInfo.ExcelFormat == null)
+            if (columnInfo?.ExcelFormat is null)
             {
-                var dataType = _configuration.Culture == CultureInfo.InvariantCulture ? "n" : "str";
-                return Tuple.Create("2", dataType, cellValue);
+                var dataType = ReferenceEquals(_configuration.Culture, CultureInfo.InvariantCulture) ? NumericDataType : StringDataType;
+                return Tuple.Create(RegularCellStyleIndex, dataType, cellValue);
             }
 
             return Tuple.Create(columnInfo.ExcelFormatId.ToString(), (string)null, cellValue);
         }
 
         if (type == typeof(bool))
-            return Tuple.Create("2", "b", (bool)value ? "1" : "0");
+            return Tuple.Create(RegularCellStyleIndex, BooleanDataType, (bool)value ? "1" : "0");
 
         if (type == typeof(byte[]) && _configuration.EnableConvertByteArray)
         {
             var base64 = GetFileValue(rowIndex, cellIndex, value);
             if (_configuration.EnableWriteFilePath)
             {
-                return Tuple.Create("4", "str", ExcelOpenXmlUtils.EncodeXML(base64));
+                return Tuple.Create(FillCellStyleIndex, StringDataType, ExcelOpenXmlUtils.EncodeXML(base64));
             }
-            return Tuple.Create("4", "str", "");  
+            return Tuple.Create(FillCellStyleIndex, StringDataType, "");  
         }
 
-        return Tuple.Create("2", "str", ExcelOpenXmlUtils.EncodeXML(value.ToString()));
+        return Tuple.Create(RegularCellStyleIndex, StringDataType, ExcelOpenXmlUtils.EncodeXML(value.ToString()));
     }
 
     private static Type GetValueType(object value, ExcelColumnInfo columnInfo)
     {
-        Type type;
-        if (columnInfo == null || columnInfo.Key != null)
-        {
-            // TODO: need to optimize
-            // Dictionary need to check type every time, so it's slow..
-            type = value.GetType();
-            type = Nullable.GetUnderlyingType(type) ?? type;
-        }
-        else
-        {
-            type = columnInfo.ExcludeNullableType; //sometime it doesn't need to re-get type like prop
-        }
+        if (columnInfo is { Key: null })
+            return columnInfo.ExcludeNullableType; //sometime it doesn't need to re-get type like prop
 
-        return type;
+        // TODO: need to optimize
+        // Dictionary need to check type every time, so it's slow..
+        var type = value.GetType();
+        return Nullable.GetUnderlyingType(type) ?? type;
     }
 
     private string GetNumericValue(object value, Type type)
@@ -270,7 +284,7 @@ internal partial class ExcelOpenXmlSheetWriter : IExcelWriter
         if (type.IsAssignableFrom(typeof(float)))
             return ((float)value).ToString(_configuration.Culture);
 
-        return (decimal.Parse(value.ToString())).ToString(_configuration.Culture);
+        return decimal.Parse(value.ToString()).ToString(_configuration.Culture);
     }
 
     private string GetFileValue(int rowIndex, int cellIndex, object value)
@@ -282,7 +296,7 @@ internal partial class ExcelOpenXmlSheetWriter : IExcelWriter
         //it can't insert to zip first to avoid cache image to memory
         //because sheet xml is opening.. https://github.com/mini-software/MiniExcel/issues/304#issuecomment-1017031691
         //int rowIndex, int cellIndex
-        var file = new FileDto()
+        var file = new FileDto
         {
             Byte = bytes,
             RowIndex = rowIndex,
@@ -309,28 +323,28 @@ internal partial class ExcelOpenXmlSheetWriter : IExcelWriter
 
     private Tuple<string, string, string> GetDateTimeValue(DateTime value, ExcelColumnInfo columnInfo)
     {
-        string cellValue = null;
+        string cellValue;
         if (!ReferenceEquals(_configuration.Culture, CultureInfo.InvariantCulture))
         {
             cellValue = value.ToString(_configuration.Culture);
-            return Tuple.Create("2", "str", cellValue);
+            return Tuple.Create(DateCellStyleIndex, StringDataType, cellValue);
         }
 
         var oaDate = CorrectDateTimeValue(value);
         cellValue = oaDate.ToString(CultureInfo.InvariantCulture);
-        var format = columnInfo?.ExcelFormat != null ? columnInfo.ExcelFormatId.ToString() : "3";
+        var format = columnInfo?.ExcelFormatId is { } fmt and not -1 ? fmt.ToString() : "3";
 
         return Tuple.Create(format, (string)null, cellValue);
     }
 
     private static double CorrectDateTimeValue(DateTime value)
     {
-        var oaDate = value.ToOADate();
-
         // Excel says 1900 was a leap year  :( Replicate an incorrect behavior thanks
         // to Lotus 1-2-3 decision from 1983...
         // https://github.com/ClosedXML/ClosedXML/blob/develop/ClosedXML/Extensions/DateTimeExtensions.cs#L45
         const int nonExistent1900Feb29SerialDate = 60;
+
+        var oaDate = value.ToOADate();
         if (oaDate <= nonExistent1900Feb29SerialDate)
         {
             oaDate -= 1;
@@ -339,12 +353,21 @@ internal partial class ExcelOpenXmlSheetWriter : IExcelWriter
         return oaDate;
     }
 
+    private Tuple<string, string, string> GetTimeSpanValue(TimeSpan value, ExcelColumnInfo columnInfo)
+    {
+        if (value.TotalDays >= 1)
+            return GetDateTimeValue(ExcelZeroDate + value, columnInfo);
+
+        var cellValue = value.TotalDays.ToString(CultureInfo.InvariantCulture);
+        var format = columnInfo?.ExcelFormatId is { } fmt and not -1 ? fmt.ToString() : TimeCellStyleIndex;
+
+        return Tuple.Create(format, (string)null, cellValue);
+    }
+    
     private static string GetDimensionRef(int maxRowIndex, int maxColumnIndex)
     {
         string dimensionRef;
-        if (maxRowIndex == 0 && maxColumnIndex == 0)
-            dimensionRef = "A1";
-        else if (maxRowIndex <= 1 && maxColumnIndex == 0)
+        if (maxRowIndex <= 1 && maxColumnIndex == 0)
             dimensionRef = "A1";
         else if (maxColumnIndex <= 1)
             dimensionRef = $"A1:A{maxRowIndex}";
@@ -352,6 +375,7 @@ internal partial class ExcelOpenXmlSheetWriter : IExcelWriter
             dimensionRef = $"A1:{ColumnHelper.GetAlphabetColumnName(maxColumnIndex - 1)}1";
         else
             dimensionRef = $"A1:{ColumnHelper.GetAlphabetColumnName(maxColumnIndex - 1)}{maxRowIndex}";
+ 
         return dimensionRef;
     }
 
@@ -414,10 +438,5 @@ internal partial class ExcelOpenXmlSheetWriter : IExcelWriter
 
         sb.Append(ExcelXml.EndTypes);
         return sb.ToString();
-    }
-
-    private string GetCellXfId(string styleIndex)
-    {
-        return _cellXfIdMap.TryGetValue(styleIndex, out var cellXfId) ? cellXfId : styleIndex;
     }
 }

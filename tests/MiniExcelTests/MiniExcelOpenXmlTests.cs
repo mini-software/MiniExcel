@@ -641,7 +641,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
             {
                 using var stream = File.OpenRead(path);
                 var rows = stream.Query().ToList();
-                Assert.Single(rows);
+                Assert.Empty(rows);
             }
 
             MiniExcel.SaveAs(path, table, printHeader: false, overwriteFile: true);

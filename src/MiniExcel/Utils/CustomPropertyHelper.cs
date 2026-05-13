@@ -21,7 +21,7 @@ internal class ExcelColumnInfo
     public string ExcelIndexName { get; internal set; }
     public bool ExcelHidden { get; internal set; }
     public bool ExcelIgnore { get; internal set; }
-    public int ExcelFormatId { get; internal set; }
+    public int ExcelFormatId { get; internal set; } = -1;
     public ColumnType ExcelColumnType { get; internal set; }
     public Func<object, object> CustomFormatter { get; set; }
 }

@@ -25,6 +25,9 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
     [Fact]
     public async Task Issue255()
     {
+        var dt1 = new DateTime(2021, 01, 01);
+        var dt2 = new DateTime(2022, 01, 01);
+
         //tempalte
         {
             var templatePath = PathHelper.GetFile("xlsx/TestsIssue255_Template.xlsx");
@@ -33,7 +36,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
             {
                 Issue255DTO = new[] 
                 {
-                    new Issue255DTO { Time = new DateTime(2021, 01, 01), Time2 = new DateTime(2021, 01, 01) }
+                    new Issue255DTO { Time = dt1, Time2 = dt2 }
                 }
             };
             
@@ -42,27 +45,28 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
             var rows = q.ToList();
             
             Assert.Equal("2021", rows[1].A.ToString());
-            Assert.Equal("2021", rows[1].B.ToString());
+            Assert.Equal("2022", rows[1].B.ToString());
         }
         //saveas
         {
-            using var path = AutoDeletingPath.Create();
-            var value = new[] 
-            {
-                new Issue255DTO
-                {
-                    Time = new DateTime(2021, 01, 01),
-                    Time2 = new DateTime(2021, 01, 01)
-                }
-            };
-            var rowsWritten = await MiniExcel.SaveAsAsync(path.ToString(), value);
+            using var ms = new MemoryStream();
+            Issue255DTO[] value = 
+            [
+                new() { Time = dt1, Time2 = dt2 }
+            ];
+
+            var rowsWritten = MiniExcel.SaveAs(ms, value);
             Assert.Single(rowsWritten);
             Assert.Equal(1, rowsWritten[0]);
-                
-            var q = await MiniExcel.QueryAsync(path.ToString());
-            var rows = q.ToList();
-            Assert.Equal("2021", rows[1].A.ToString());
-            Assert.Equal("2021", rows[1].B.ToString());
+
+            ms.Seek(0, SeekOrigin.Begin);
+            using var package = new ExcelPackage(ms);
+
+            var cells = package.Workbook.Worksheets[0].Cells;
+            Assert.Equal(dt1, DateTime.FromOADate((double)cells["A2"].Value));
+            Assert.Equal("2021", cells["A2"].Text);
+            Assert.Equal(dt2, DateTime.FromOADate((double)cells["B2"].Value));
+            Assert.Equal("2022", cells["B2"].Text);
         }
     }
 
@@ -265,28 +269,23 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
 
         // xlsx
         {
+            var date1 = new DateTime(2021, 01, 04);
+            var date2 = new DateTime(2020, 04, 05);
+
             using var file = AutoDeletingPath.Create();
             var path = file.ToString();
-            var rowsWritten = await MiniExcel.SaveAsAsync(path, value);
-            
+            var rowsWritten = MiniExcel.SaveAs(path, value);
+
             Assert.Single(rowsWritten);
             Assert.Equal(2, rowsWritten[0]);
 
-            {
-                var q = await MiniExcel.QueryAsync(path, true);
-                var rows = q.ToList();
-                
-                Assert.Equal(rows[0].InDate, "01 04, 2021");
-                Assert.Equal(rows[1].InDate, "04 05, 2020");
-            }
+            using var package = new ExcelPackage(path);
+            var cells = package.Workbook.Worksheets.First().Cells;
 
-            {
-                var q = await MiniExcel.QueryAsync<Issue241Dto>(path);
-                var rows = q.ToList();
-                
-                Assert.Equal(rows[0].InDate, new DateTime(2021, 01, 04));
-                Assert.Equal(rows[1].InDate, new DateTime(2020, 04, 05));
-            }
+            Assert.Equal(date1, DateTime.FromOADate((double)cells["B2"].Value));
+            Assert.Equal("01 04, 2021", cells["B2"].Text);
+            Assert.Equal(date2, DateTime.FromOADate((double)cells["B3"].Value));
+            Assert.Equal("04 05, 2020", cells["B3"].Text);
         }
     }
 

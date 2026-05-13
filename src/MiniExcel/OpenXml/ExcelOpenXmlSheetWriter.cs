@@ -7,7 +7,6 @@ using MiniExcelLibs.Utils;
 using MiniExcelLibs.WriteAdapter;
 using MiniExcelLibs.Zip;
 using System.IO.Compression;
-using System.Security.Cryptography;
 using System.Text;
 using System.Xml.Linq;
 
@@ -411,21 +410,6 @@ internal partial class ExcelOpenXmlSheetWriter : IExcelWriter
 
         var newInfos = builder.GetGenerateElementInfos();
         context.Create(newInfos);
-
-        return builder;
-    }
-
-    private ISheetStyleBuilder GetSheetStyleBuilderAsync(SheetStyleBuildContext context)
-    {
-        SheetStyleBuilderBase builder = _configuration.TableStyles switch
-        {
-            TableStyles.None => new MinimalSheetStyleBuilder(_sheetStyleBuildContext),
-            TableStyles.Default => new DefaultSheetStyleBuilder(_sheetStyleBuildContext, _configuration.StyleOptions),
-            _ => throw new InvalidEnumArgumentException(nameof(_configuration.TableStyles), (int)_configuration.TableStyles, typeof(TableStyles))
-        };
-
-        var newInfos = builder.GetGenerateElementInfos();
-        _sheetStyleBuildContext.Create(newInfos);
 
         return builder;
     }

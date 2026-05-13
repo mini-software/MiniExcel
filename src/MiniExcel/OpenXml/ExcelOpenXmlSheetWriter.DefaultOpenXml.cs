@@ -358,7 +358,7 @@ internal partial class ExcelOpenXmlSheetWriter
         if (value.TotalDays >= 1)
             return GetDateTimeValue(ExcelZeroDate + value, columnInfo);
 
-        var cellValue = (value.TotalSeconds / 86400).ToString(CultureInfo.InvariantCulture);
+        var cellValue = value.TotalDays.ToString(CultureInfo.InvariantCulture);
         var format = columnInfo?.ExcelFormatId is { } fmt and not -1 ? fmt.ToString() : TimeCellStyleIndex;
 
         return Tuple.Create(format, (string)null, cellValue);

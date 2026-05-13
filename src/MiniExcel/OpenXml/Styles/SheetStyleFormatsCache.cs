@@ -8,7 +8,7 @@ internal class SheetStyleFormatsCache
     private int _stylesCount;
     
     internal int FormatMappingsCount => _formatMappings.Count;
-    internal IEnumerable<KeyValuePair<string, int>> FormatMappings => _formatMappings.Select(x => x);
+    internal IEnumerable<KeyValuePair<string, int>> FormatMappings => _formatMappings;
     
     public void AddMappings(IEnumerable<ExcelColumnInfo> mappings)
     {

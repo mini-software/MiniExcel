@@ -4,22 +4,17 @@ using MiniExcelLibs.Zip;
 using System.IO.Compression;
 using System.Text;
 using System.Xml;
+using MiniExcelLibs.Utils;
 
 namespace MiniExcelLibs.OpenXml.Styles;
 
-internal class SheetStyleBuildContext : IDisposable
+internal sealed class SheetStyleBuildContext(Dictionary<string, ZipPackageInfo> zipDictionary, MiniExcelZipArchive archive, Encoding encoding) : IDisposable
 {
-    private static readonly string _emptyStylesXml = ExcelOpenXmlUtils.MinifyXml
-    (@"
-            <?xml version=""1.0"" encoding=""utf-8""?>
-            <x:styleSheet xmlns:x=""http://schemas.openxmlformats.org/spreadsheetml/2006/main"">                
-            </x:styleSheet>"
-    );
-
-    private readonly Dictionary<string, ZipPackageInfo> _zipDictionary;
-    private readonly MiniExcelZipArchive _archive;
-    private readonly Encoding _encoding;
-    private readonly ICollection<ExcelColumnAttribute> _columns;
+    private const string EmptyStylesXml = 
+        """
+        <?xml version="1.0" encoding="utf-8"?>
+        <x:styleSheet xmlns:x="http://schemas.openxmlformats.org/spreadsheetml/2006/main" />                
+        """;
 
     private StringReader _emptyStylesXmlStringReader;
     private ZipArchiveEntry _oldStyleXmlZipEntry;
@@ -30,28 +25,73 @@ internal class SheetStyleBuildContext : IDisposable
     private bool _initialized;
     private bool _finalized;
     private bool _disposed;
-
-    public SheetStyleBuildContext(Dictionary<string, ZipPackageInfo> zipDictionary, MiniExcelZipArchive archive, Encoding encoding, ICollection<ExcelColumnAttribute> columns)
-    {
-        _zipDictionary = zipDictionary;
-        _archive = archive;
-        _encoding = encoding;
-        _columns = columns;
-    }
+    
+    internal readonly SheetStyleFormatsCache SheetStyleFormatsCache = new();
 
     public XmlReader OldXmlReader { get; private set; }
     public XmlWriter NewXmlWriter { get; private set; }
     public SheetStyleElementInfos OldElementInfos { get; private set; }
     public SheetStyleElementInfos GenerateElementInfos { get; private set; }
-    public IEnumerable<ExcelColumnAttribute> ColumnsToApply { get; private set; }
-    public int CustomFormatCount { get; private set; }
+    public int CustomFormatCount => SheetStyleFormatsCache.FormatMappingsCount;
 
+    public void Create(SheetStyleElementInfos generatedElementInfos)
+    {
+        SheetStyleElementInfos infos;
+        var styleEntry = archive.Mode == ZipArchiveMode.Update
+            ? archive.Entries.SingleOrDefault(s => s.FullName == ExcelFileNames.Styles)
+            : null;
+
+        if (styleEntry is not null)
+        {
+            using var oldStyleXmlStream = styleEntry.Open();
+            using var reader = XmlReader.Create(oldStyleXmlStream, new XmlReaderSettings { IgnoreWhitespace = true });
+            infos = ReadSheetStyleElementInfos(reader);
+        }
+        else
+        {
+            infos = new SheetStyleElementInfos();
+        }
+
+        SheetStyleFormatsCache.SetCurrentIndex(infos.CellXfCount + generatedElementInfos.CellXfCount);
+    }
+
+    public async Task CreateAsync(SheetStyleElementInfos generatedElementInfos, CancellationToken cancellationToken = default)
+    {
+        SheetStyleElementInfos infos;
+        var styleEntry = archive.Mode == ZipArchiveMode.Update
+            ? archive.Entries.SingleOrDefault(s => s.FullName == ExcelFileNames.Styles)
+            : null;
+
+        if (styleEntry is not null)
+        {
+#if NET10_0_OR_GREATER
+            var oldStyleXmlStream = await styleEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
+            await using var disposableStream = oldStyleXmlStream.ConfigureAwait(false);
+#else
+            using var oldStyleXmlStream = styleEntry.Open();
+#endif
+            using var reader = XmlReader.Create(oldStyleXmlStream, new XmlReaderSettings { IgnoreWhitespace = true, Async = true });
+            infos = await ReadSheetStyleElementInfosAsync(reader, cancellationToken).ConfigureAwait(false);
+        }
+        else
+        {
+            infos = new SheetStyleElementInfos();
+        }
+
+        SheetStyleFormatsCache.SetCurrentIndex(infos.CellXfCount + generatedElementInfos.CellXfCount);
+    }
+    
     public void Initialize(SheetStyleElementInfos generateElementInfos)
     {
         if (_initialized)
             throw new InvalidOperationException("The context has been initialized.");
 
-        _oldStyleXmlZipEntry = _archive.Mode == ZipArchiveMode.Update ? _archive.Entries.SingleOrDefault(s => s.FullName == ExcelFileNames.Styles) : null;
+        GenerateElementInfos =  generateElementInfos; 
+        
+        _oldStyleXmlZipEntry = archive.Mode == ZipArchiveMode.Update 
+            ? archive.Entries.SingleOrDefault(s => s.FullName == ExcelFileNames.Styles) 
+            : null;
+
         if (_oldStyleXmlZipEntry != null)
         {
             using (var oldStyleXmlStream = _oldStyleXmlZipEntry.Open())
@@ -62,24 +102,20 @@ internal class SheetStyleBuildContext : IDisposable
             _oldXmlReaderStream = _oldStyleXmlZipEntry.Open();
             OldXmlReader = XmlReader.Create(_oldXmlReaderStream, new XmlReaderSettings { IgnoreWhitespace = true });
 
-            _newStyleXmlZipEntry = _archive.CreateEntry(ExcelFileNames.Styles + ".temp", CompressionLevel.Fastest);
+            _newStyleXmlZipEntry = archive.CreateEntry(ExcelFileNames.Styles + ".temp", CompressionLevel.Fastest);
         }
         else
         {
             OldElementInfos = new SheetStyleElementInfos();
 
-            _emptyStylesXmlStringReader = new StringReader(_emptyStylesXml);
+            _emptyStylesXmlStringReader = new StringReader(EmptyStylesXml);
             OldXmlReader = XmlReader.Create(_emptyStylesXmlStringReader, new XmlReaderSettings { IgnoreWhitespace = true });
 
-            _newStyleXmlZipEntry = _archive.CreateEntry(ExcelFileNames.Styles, CompressionLevel.Fastest);
+            _newStyleXmlZipEntry = archive.CreateEntry(ExcelFileNames.Styles, CompressionLevel.Fastest);
         }
 
         _newXmlWriterStream = _newStyleXmlZipEntry.Open();
-        NewXmlWriter = XmlWriter.Create(_newXmlWriterStream, new XmlWriterSettings { Indent = true, Encoding = _encoding });
-
-        GenerateElementInfos = generateElementInfos;
-        ColumnsToApply = SheetStyleBuilderHelper.GenerateStyleIds(OldElementInfos.CellXfCount + generateElementInfos.CellXfCount, _columns).ToArray();//这里暂时加ToArray，避免多次计算，如果有性能问题再考虑优化
-        CustomFormatCount = ColumnsToApply.Count();
+        NewXmlWriter = XmlWriter.Create(_newXmlWriterStream, new XmlWriterSettings { Indent = true, Encoding = encoding });
 
         _initialized = true;
     }
@@ -88,40 +124,57 @@ internal class SheetStyleBuildContext : IDisposable
     {
         if (_initialized)
             throw new InvalidOperationException("The context has already been initialized.");
-            
-        cancellationToken.ThrowIfCancellationRequested();
-            
-        _oldStyleXmlZipEntry = _archive.Mode == ZipArchiveMode.Update ? _archive.Entries.SingleOrDefault(s => s.FullName == ExcelFileNames.Styles) : null;
+
+        GenerateElementInfos = generateElementInfos;
+
+        _oldStyleXmlZipEntry = archive.Mode == ZipArchiveMode.Update 
+            ? archive.Entries.SingleOrDefault(s => s.FullName == ExcelFileNames.Styles) 
+            : null;
+
         if (_oldStyleXmlZipEntry != null)
         {
+#if NET10_0_OR_GREATER
+            var oldStyleXmlStream = await _oldStyleXmlZipEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
+            await using (_ = oldStyleXmlStream.ConfigureAwait(false))
+#else
             using (var oldStyleXmlStream = _oldStyleXmlZipEntry.Open())
+#endif
             {
                 OldElementInfos = await ReadSheetStyleElementInfosAsync(XmlReader.Create(oldStyleXmlStream, new XmlReaderSettings { IgnoreWhitespace = true, Async = true }), cancellationToken);
             }
-            _oldXmlReaderStream = _oldStyleXmlZipEntry.Open();
-            OldXmlReader = XmlReader.Create(_oldXmlReaderStream, new XmlReaderSettings { IgnoreWhitespace = true, Async = true });
 
-            _newStyleXmlZipEntry = _archive.CreateEntry(ExcelFileNames.Styles + ".temp", CompressionLevel.Fastest);
+#if NET10_0_OR_GREATER
+            _oldXmlReaderStream = await _oldStyleXmlZipEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
+#else
+            _oldXmlReaderStream = _oldStyleXmlZipEntry.Open();
+#endif
+            OldXmlReader = XmlReader.Create(_oldXmlReaderStream, new XmlReaderSettings { IgnoreWhitespace = true, Async = true });
+            _newStyleXmlZipEntry = archive.CreateEntry(ExcelFileNames.Styles + ".temp", CompressionLevel.Fastest);
         }
         else
         {
             OldElementInfos = new SheetStyleElementInfos();
-            _emptyStylesXmlStringReader = new StringReader(_emptyStylesXml);
+            _emptyStylesXmlStringReader = new StringReader(EmptyStylesXml);
             OldXmlReader = XmlReader.Create(_emptyStylesXmlStringReader, new XmlReaderSettings { IgnoreWhitespace = true, Async = true });
 
-            _newStyleXmlZipEntry = _archive.CreateEntry(ExcelFileNames.Styles, CompressionLevel.Fastest);
+            _newStyleXmlZipEntry = archive.CreateEntry(ExcelFileNames.Styles, CompressionLevel.Fastest);
         }
 
+#if NET10_0_OR_GREATER
+        _newXmlWriterStream = await _newStyleXmlZipEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
+#else
         _newXmlWriterStream = _newStyleXmlZipEntry.Open();
-        NewXmlWriter = XmlWriter.Create(_newXmlWriterStream, new XmlWriterSettings { Indent = true, Encoding = _encoding, Async = true });
-
-        GenerateElementInfos = generateElementInfos;
-        ColumnsToApply = SheetStyleBuilderHelper.GenerateStyleIds(OldElementInfos.CellXfCount + generateElementInfos.CellXfCount, _columns).ToArray();//ToArray to avoid multiple calculations, if there is a performance problem then consider optimizing the
-        CustomFormatCount = ColumnsToApply.Count();
+#endif
+        NewXmlWriter = XmlWriter.Create(_newXmlWriterStream, new XmlWriterSettings { Indent = true, Encoding = encoding, Async = true });
 
         _initialized = true;
     }
-
+    
+    public void UpdateFormatIds(ICollection<ExcelColumnInfo> mappings)
+    {
+        SheetStyleFormatsCache.AddMappings(mappings);
+    }
+    
     public void FinalizeAndUpdateZipDictionary()
     {
         if (!_initialized)
@@ -151,13 +204,13 @@ internal class SheetStyleBuildContext : IDisposable
 
             if (_oldStyleXmlZipEntry == null)
             {
-                _zipDictionary.Add(ExcelFileNames.Styles, new ZipPackageInfo(_newStyleXmlZipEntry, ExcelContentTypes.Styles));
+                zipDictionary.Add(ExcelFileNames.Styles, new ZipPackageInfo(_newStyleXmlZipEntry, ExcelContentTypes.Styles));
             }
             else
             {
                 _oldStyleXmlZipEntry?.Delete();
                 _oldStyleXmlZipEntry = null;
-                var finalStyleXmlZipEntry = _archive.CreateEntry(ExcelFileNames.Styles, CompressionLevel.Fastest);
+                var finalStyleXmlZipEntry = archive.CreateEntry(ExcelFileNames.Styles, CompressionLevel.Fastest);
                     
                 using (var tempStream = _newStyleXmlZipEntry.Open())
                 using (var newStream = finalStyleXmlZipEntry.Open())
@@ -165,7 +218,7 @@ internal class SheetStyleBuildContext : IDisposable
                     tempStream.CopyTo(newStream);
                 }
                     
-                _zipDictionary[ExcelFileNames.Styles] = new ZipPackageInfo(finalStyleXmlZipEntry, ExcelContentTypes.Styles);
+                zipDictionary[ExcelFileNames.Styles] = new ZipPackageInfo(finalStyleXmlZipEntry, ExcelContentTypes.Styles);
                 _newStyleXmlZipEntry.Delete();
                 _newStyleXmlZipEntry = null;
             }
@@ -209,13 +262,13 @@ internal class SheetStyleBuildContext : IDisposable
 
             if (_oldStyleXmlZipEntry == null)
             {
-                _zipDictionary.Add(ExcelFileNames.Styles, new ZipPackageInfo(_newStyleXmlZipEntry, ExcelContentTypes.Styles));
+                zipDictionary.Add(ExcelFileNames.Styles, new ZipPackageInfo(_newStyleXmlZipEntry, ExcelContentTypes.Styles));
             }
             else
             {
                 _oldStyleXmlZipEntry?.Delete();
                 _oldStyleXmlZipEntry = null;
-                var finalStyleXmlZipEntry = _archive.CreateEntry(ExcelFileNames.Styles, CompressionLevel.Fastest);
+                var finalStyleXmlZipEntry = archive.CreateEntry(ExcelFileNames.Styles, CompressionLevel.Fastest);
                     
                 using (var tempStream = _newStyleXmlZipEntry.Open())
                 using (var newStream = finalStyleXmlZipEntry.Open())
@@ -223,7 +276,7 @@ internal class SheetStyleBuildContext : IDisposable
                     await tempStream.CopyToAsync(newStream, 4096, cancellationToken);
                 }
                     
-                _zipDictionary[ExcelFileNames.Styles] = new ZipPackageInfo(finalStyleXmlZipEntry, ExcelContentTypes.Styles);
+                zipDictionary[ExcelFileNames.Styles] = new ZipPackageInfo(finalStyleXmlZipEntry, ExcelContentTypes.Styles);
                 _newStyleXmlZipEntry.Delete();
                 _newStyleXmlZipEntry = null;
             }
@@ -300,10 +353,9 @@ internal class SheetStyleBuildContext : IDisposable
     public void Dispose()
     {
         Dispose(true);
-        GC.SuppressFinalize(this);
     }
 
-    protected virtual void Dispose(bool disposing)
+    private void Dispose(bool disposing)
     {
         if (_disposed)
             return;

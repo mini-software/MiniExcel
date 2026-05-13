@@ -2,32 +2,25 @@
 
 namespace MiniExcelLibs.OpenXml.Styles;
 
-internal class DefaultSheetStyleBuilder : SheetStyleBuilderBase
+internal class DefaultSheetStyleBuilder(SheetStyleBuildContext context, OpenXmlStyleOptions styleOptions) : SheetStyleBuilderBase(context)
 {
-    private static readonly SheetStyleElementInfos GenerateElementInfos = new SheetStyleElementInfos
+    private static readonly SheetStyleElementInfos GenerateElementInfos = new()
     {
-        NumFmtCount = 0,//The default NumFmt number is 0, but there will be NumFmt dynamically generated based on ColumnsToApply
+        NumFmtCount = 0, //The default NumFmt number is 0, but there will be NumFmt dynamically generated based on format mappings
         FontCount = 2,
         FillCount = 3,
         BorderCount = 2,
         CellStyleXfCount = 3,
-        CellXfCount = 5
+        CellXfCount = 6
     };
 
     private static readonly Color DefaultBackgroundColor = Color.FromArgb(0x284472C4);
-    private const HorizontalCellAlignment DefaultHorizontalAlignment = HorizontalCellAlignment.Left;
-    private const VerticalCellAlignment DefaultVerticalAlignment = VerticalCellAlignment.Bottom;
 
-    private readonly SheetStyleBuildContext _context;
-    private readonly OpenXmlStyleOptions _styleOptions;
+    private readonly SheetStyleBuildContext _context = context;
+    private readonly OpenXmlStyleOptions _styleOptions = styleOptions;
 
-    public DefaultSheetStyleBuilder(SheetStyleBuildContext context, OpenXmlStyleOptions styleOptions) : base(context)
-    {
-        _context = context;
-        _styleOptions = styleOptions;
-    }
 
-    protected override SheetStyleElementInfos GetGenerateElementInfos()
+    protected internal override SheetStyleElementInfos GetGenerateElementInfos()
     {
         return GenerateElementInfos;
     }
@@ -37,7 +30,7 @@ internal class DefaultSheetStyleBuilder : SheetStyleBuilderBase
         const int numFmtIndex = 166;
 
         var index = 0;
-        foreach (var item in _context.ColumnsToApply)
+        foreach (var item in _context.SheetStyleFormatsCache.FormatMappings)
         {
             index++;
 
@@ -46,8 +39,8 @@ internal class DefaultSheetStyleBuilder : SheetStyleBuilderBase
              */
             _context.NewXmlWriter.WriteStartElement(_context.OldXmlReader.Prefix, "numFmt", _context.OldXmlReader.NamespaceURI);
             _context.NewXmlWriter.WriteAttributeString("numFmtId", (numFmtIndex + index + _context.OldElementInfos.NumFmtCount).ToString());
-            _context.NewXmlWriter.WriteAttributeString("formatCode", item.Format);
-            _context.NewXmlWriter.WriteFullEndElement();
+            _context.NewXmlWriter.WriteAttributeString("formatCode", item.Key);
+            _context.NewXmlWriter.WriteEndElement();
         }
     }
 
@@ -55,7 +48,7 @@ internal class DefaultSheetStyleBuilder : SheetStyleBuilderBase
     {
         const int numFmtIndex = 166;
         var index = 0;
-        foreach (var item in _context.ColumnsToApply)
+        foreach (var item in _context.SheetStyleFormatsCache.FormatMappings)
         {
             index++;
 
@@ -64,8 +57,8 @@ internal class DefaultSheetStyleBuilder : SheetStyleBuilderBase
              */
             await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "numFmt", _context.OldXmlReader.NamespaceURI);
             await _context.NewXmlWriter.WriteAttributeStringAsync(null, "numFmtId", null, (numFmtIndex + index + _context.OldElementInfos.NumFmtCount).ToString()); ;
-            await _context.NewXmlWriter.WriteAttributeStringAsync(null, "formatCode", null, item.Format);
-            await _context.NewXmlWriter.WriteFullEndElementAsync();
+            await _context.NewXmlWriter.WriteAttributeStringAsync(null, "formatCode", null, item.Key);
+            await _context.NewXmlWriter.WriteEndElementAsync();
         }
     }
 
@@ -504,9 +497,9 @@ internal class DefaultSheetStyleBuilder : SheetStyleBuilderBase
          */
         _context.NewXmlWriter.WriteStartElement(_context.OldXmlReader.Prefix, "xf", _context.OldXmlReader.NamespaceURI);
         _context.NewXmlWriter.WriteAttributeString("numFmtId", "0");
-        _context.NewXmlWriter.WriteAttributeString("fontId", $"{_context.OldElementInfos.FontCount + 0}");
-        _context.NewXmlWriter.WriteAttributeString("fillId", $"{_context.OldElementInfos.FillCount + 0}");
-        _context.NewXmlWriter.WriteAttributeString("borderId", $"{_context.OldElementInfos.BorderCount + 0}");
+        _context.NewXmlWriter.WriteAttributeString("fontId", $"{_context.OldElementInfos.FontCount}");
+        _context.NewXmlWriter.WriteAttributeString("fillId", $"{_context.OldElementInfos.FillCount}");
+        _context.NewXmlWriter.WriteAttributeString("borderId", $"{_context.OldElementInfos.BorderCount}");
         _context.NewXmlWriter.WriteAttributeString("applyNumberFormat", "1");
         _context.NewXmlWriter.WriteAttributeString("applyFill", "1");
         _context.NewXmlWriter.WriteAttributeString("applyBorder", "0");
@@ -546,8 +539,8 @@ internal class DefaultSheetStyleBuilder : SheetStyleBuilderBase
          */
         _context.NewXmlWriter.WriteStartElement(_context.OldXmlReader.Prefix, "xf", _context.OldXmlReader.NamespaceURI);
         _context.NewXmlWriter.WriteAttributeString("numFmtId", "0");
-        _context.NewXmlWriter.WriteAttributeString("fontId", $"{_context.OldElementInfos.FontCount + 0}");
-        _context.NewXmlWriter.WriteAttributeString("fillId", $"{_context.OldElementInfos.FillCount + 0}");
+        _context.NewXmlWriter.WriteAttributeString("fontId", $"{_context.OldElementInfos.FontCount}");
+        _context.NewXmlWriter.WriteAttributeString("fillId", $"{_context.OldElementInfos.FillCount}");
         _context.NewXmlWriter.WriteAttributeString("borderId", $"{_context.OldElementInfos.BorderCount + 1}");
         _context.NewXmlWriter.WriteAttributeString("applyNumberFormat", "1");
         _context.NewXmlWriter.WriteAttributeString("applyFill", "1");
@@ -570,9 +563,9 @@ internal class DefaultSheetStyleBuilder : SheetStyleBuilderBase
          */
         await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "xf", _context.OldXmlReader.NamespaceURI);
         await _context.NewXmlWriter.WriteAttributeStringAsync(null, "numFmtId", null, "0");
-        await _context.NewXmlWriter.WriteAttributeStringAsync(null, "fontId", null, $"{_context.OldElementInfos.FontCount + 0}");
-        await _context.NewXmlWriter.WriteAttributeStringAsync(null, "fillId", null, $"{_context.OldElementInfos.FillCount + 0}");
-        await _context.NewXmlWriter.WriteAttributeStringAsync(null, "borderId", null, $"{_context.OldElementInfos.BorderCount + 0}");
+        await _context.NewXmlWriter.WriteAttributeStringAsync(null, "fontId", null, $"{_context.OldElementInfos.FontCount}");
+        await _context.NewXmlWriter.WriteAttributeStringAsync(null, "fillId", null, $"{_context.OldElementInfos.FillCount}");
+        await _context.NewXmlWriter.WriteAttributeStringAsync(null, "borderId", null, $"{_context.OldElementInfos.BorderCount}");
         await _context.NewXmlWriter.WriteAttributeStringAsync(null, "applyNumberFormat", null, "1");
         await _context.NewXmlWriter.WriteAttributeStringAsync(null, "applyFill", null, "1");
         await _context.NewXmlWriter.WriteAttributeStringAsync(null, "applyBorder", null, "0");
@@ -612,8 +605,8 @@ internal class DefaultSheetStyleBuilder : SheetStyleBuilderBase
          */
         await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "xf", _context.OldXmlReader.NamespaceURI);
         await _context.NewXmlWriter.WriteAttributeStringAsync(null, "numFmtId", null, "0");
-        await _context.NewXmlWriter.WriteAttributeStringAsync(null, "fontId", null, $"{_context.OldElementInfos.FontCount + 0}");
-        await _context.NewXmlWriter.WriteAttributeStringAsync(null, "fillId", null, $"{_context.OldElementInfos.FillCount + 0}");
+        await _context.NewXmlWriter.WriteAttributeStringAsync(null, "fontId", null, $"{_context.OldElementInfos.FontCount}");
+        await _context.NewXmlWriter.WriteAttributeStringAsync(null, "fillId", null, $"{_context.OldElementInfos.FillCount}");
         await _context.NewXmlWriter.WriteAttributeStringAsync(null, "borderId", null, $"{_context.OldElementInfos.BorderCount + 1}");
         await _context.NewXmlWriter.WriteAttributeStringAsync(null, "applyNumberFormat", null, "1");
         await _context.NewXmlWriter.WriteAttributeStringAsync(null, "applyFill", null, "1");
@@ -629,11 +622,39 @@ internal class DefaultSheetStyleBuilder : SheetStyleBuilderBase
 
     protected override void GenerateCellXf()
     {
+        var headerHorizontalAlignment = _styleOptions.HeaderStyle?.HorizontalAlignment switch
+        {
+            HorizontalCellAlignment.Center => "center",
+            HorizontalCellAlignment.Right => "right",
+            _ => "general"
+        };
+
+        var headerVerticalAlignment = _styleOptions.HeaderStyle?.VerticalAlignment switch
+        {
+            VerticalCellAlignment.Top => "top",
+            VerticalCellAlignment.Center => "center",
+            _ => "bottom"
+        };
+
+        var cellHorizontalAlignment = _styleOptions.HorizontalAlignment switch
+        {
+            HorizontalCellAlignment.Center => "center",
+            HorizontalCellAlignment.Right => "right",
+            _ => "general"
+        };
+
+        var cellVerticalAlignment = _styleOptions.VerticalAlignment switch
+        {
+            VerticalCellAlignment.Top => "top",
+            VerticalCellAlignment.Center => "center",
+            _ => "bottom"
+        };
+        
         /*
-         * <x:xf></x:xf>
+         * <x:xf />
          */
         _context.NewXmlWriter.WriteStartElement(_context.OldXmlReader.Prefix, "xf", _context.OldXmlReader.NamespaceURI);
-        _context.NewXmlWriter.WriteEndElement();
+        _context.NewXmlWriter.WriteFullEndElement();
 
         /*
          * <x:xf numFmtId="0" fontId="1" fillId="2" borderId="1" xfId="0" applyNumberFormat="1" applyFill="0" applyBorder="1" applyAlignment="1" applyProtection="1">
@@ -652,18 +673,11 @@ internal class DefaultSheetStyleBuilder : SheetStyleBuilderBase
         _context.NewXmlWriter.WriteAttributeString("applyBorder", "1");
         _context.NewXmlWriter.WriteAttributeString("applyAlignment", "1");
         _context.NewXmlWriter.WriteAttributeString("applyProtection", "1");
-
         _context.NewXmlWriter.WriteStartElement(_context.OldXmlReader.Prefix, "alignment", _context.OldXmlReader.NamespaceURI);
+        _context.NewXmlWriter.WriteAttributeString(null, "horizontal", null, headerHorizontalAlignment);
+        _context.NewXmlWriter.WriteAttributeString(null, "vertical", null, headerVerticalAlignment);
             
-        var horizontalAlignment = _styleOptions.HeaderStyle?.HorizontalAlignment ?? DefaultHorizontalAlignment;
-        var horizontalAlignmentStr = horizontalAlignment.ToString().ToLowerInvariant();
-        _context.NewXmlWriter.WriteAttributeString(null, "horizontal", null, horizontalAlignmentStr);
-        
-        var verticalAlignment = _styleOptions.HeaderStyle?.VerticalAlignment ?? DefaultVerticalAlignment;
-        var verticalAlignmentStr = verticalAlignment.ToString().ToLowerInvariant();
-        _context.NewXmlWriter.WriteAttributeString(null, "vertical", null, verticalAlignmentStr);
-            
-        var wrapHeader = (_styleOptions.HeaderStyle?.WrapText ?? false) ? "1" : "0";
+        var wrapHeader = _styleOptions.HeaderStyle?.WrapText is true ? "1" : "0";
         _context.NewXmlWriter.WriteAttributeString(null, "wrapText", null, wrapHeader);
             
         _context.NewXmlWriter.WriteAttributeString("textRotation", "0");
@@ -688,8 +702,8 @@ internal class DefaultSheetStyleBuilder : SheetStyleBuilderBase
          */
         _context.NewXmlWriter.WriteStartElement(_context.OldXmlReader.Prefix, "xf", _context.OldXmlReader.NamespaceURI);
         _context.NewXmlWriter.WriteAttributeString("numFmtId", "0");
-        _context.NewXmlWriter.WriteAttributeString("fontId", $"{_context.OldElementInfos.FontCount + 0}");
-        _context.NewXmlWriter.WriteAttributeString("fillId", $"{_context.OldElementInfos.FillCount + 0}");
+        _context.NewXmlWriter.WriteAttributeString("fontId", $"{_context.OldElementInfos.FontCount}");
+        _context.NewXmlWriter.WriteAttributeString("fillId", $"{_context.OldElementInfos.FillCount}");
         _context.NewXmlWriter.WriteAttributeString("borderId", $"{_context.OldElementInfos.BorderCount + 1}");
         _context.NewXmlWriter.WriteAttributeString("xfId", "0");
         _context.NewXmlWriter.WriteAttributeString("applyNumberFormat", "1");
@@ -699,36 +713,8 @@ internal class DefaultSheetStyleBuilder : SheetStyleBuilderBase
         _context.NewXmlWriter.WriteAttributeString("applyProtection", "1");
 
         _context.NewXmlWriter.WriteStartElement(_context.OldXmlReader.Prefix, "alignment", _context.OldXmlReader.NamespaceURI);
-        string style1HorizontalAlignment;
-        switch (_styleOptions.HorizontalAlignment)
-        {
-            case HorizontalCellAlignment.Center:
-                style1HorizontalAlignment = "center";
-                break;
-            case HorizontalCellAlignment.Right:
-                style1HorizontalAlignment = "right";
-                break;
-            default:
-                style1HorizontalAlignment = "general";
-                break;
-        }
-
-        string style1VerticalAlignment;
-        switch (_styleOptions.VerticalAlignment)
-        {
-            case VerticalCellAlignment.Top:
-                style1VerticalAlignment = "top";
-                break;
-            case VerticalCellAlignment.Center:
-                style1VerticalAlignment = "center";
-                break;
-            default:
-                style1VerticalAlignment = "bottom";
-                break;
-        }
-
-        _context.NewXmlWriter.WriteAttributeString("horizontal", style1HorizontalAlignment);
-        _context.NewXmlWriter.WriteAttributeString("vertical", style1VerticalAlignment);
+        _context.NewXmlWriter.WriteAttributeString("horizontal", cellHorizontalAlignment);
+        _context.NewXmlWriter.WriteAttributeString("vertical", cellVerticalAlignment);
         _context.NewXmlWriter.WriteAttributeString("textRotation", "0");
             
         var wrapContent = _styleOptions.WrapCellContents ? "1" : "0";
@@ -754,8 +740,8 @@ internal class DefaultSheetStyleBuilder : SheetStyleBuilderBase
          */
         _context.NewXmlWriter.WriteStartElement(_context.OldXmlReader.Prefix, "xf", _context.OldXmlReader.NamespaceURI);
         _context.NewXmlWriter.WriteAttributeString("numFmtId", "14");
-        _context.NewXmlWriter.WriteAttributeString("fontId", $"{_context.OldElementInfos.FontCount + 0}");
-        _context.NewXmlWriter.WriteAttributeString("fillId", $"{_context.OldElementInfos.FillCount + 0}");
+        _context.NewXmlWriter.WriteAttributeString("fontId", $"{_context.OldElementInfos.FontCount}");
+        _context.NewXmlWriter.WriteAttributeString("fillId", $"{_context.OldElementInfos.FillCount}");
         _context.NewXmlWriter.WriteAttributeString("borderId", $"{_context.OldElementInfos.BorderCount + 1}");
         _context.NewXmlWriter.WriteAttributeString("xfId", "0");
         _context.NewXmlWriter.WriteAttributeString("applyNumberFormat", "1");
@@ -763,38 +749,10 @@ internal class DefaultSheetStyleBuilder : SheetStyleBuilderBase
         _context.NewXmlWriter.WriteAttributeString("applyBorder", "1");
         _context.NewXmlWriter.WriteAttributeString("applyAlignment", "1");
         _context.NewXmlWriter.WriteAttributeString("applyProtection", "1");
-            
+
         _context.NewXmlWriter.WriteStartElement(_context.OldXmlReader.Prefix, "alignment", _context.OldXmlReader.NamespaceURI);
-        string style2HorizontalAlignment;
-        switch (_styleOptions.HorizontalAlignment)
-        {
-            case HorizontalCellAlignment.Center:
-                style2HorizontalAlignment = "center";
-                break;
-            case HorizontalCellAlignment.Right:
-                style2HorizontalAlignment = "right";
-                break;
-            default:
-                style2HorizontalAlignment = "general";
-                break;
-        }
-
-        string style2VerticalAlignment;
-        switch (_styleOptions.VerticalAlignment)
-        {
-            case VerticalCellAlignment.Top:
-                style2VerticalAlignment = "top";
-                break;
-            case VerticalCellAlignment.Center:
-                style2VerticalAlignment = "center";
-                break;
-            default:
-                style2VerticalAlignment = "bottom";
-                break;
-        }
-
-        _context.NewXmlWriter.WriteAttributeString("horizontal", style2HorizontalAlignment);
-        _context.NewXmlWriter.WriteAttributeString("vertical", style2VerticalAlignment);
+        _context.NewXmlWriter.WriteAttributeString("horizontal", cellHorizontalAlignment);
+        _context.NewXmlWriter.WriteAttributeString("vertical", cellVerticalAlignment);
         _context.NewXmlWriter.WriteAttributeString("textRotation", "0");
         _context.NewXmlWriter.WriteAttributeString("wrapText", "0");
         _context.NewXmlWriter.WriteAttributeString("indent", "0");
@@ -817,8 +775,8 @@ internal class DefaultSheetStyleBuilder : SheetStyleBuilderBase
          */
         _context.NewXmlWriter.WriteStartElement(_context.OldXmlReader.Prefix, "xf", _context.OldXmlReader.NamespaceURI);
         _context.NewXmlWriter.WriteAttributeString("numFmtId", "0");
-        _context.NewXmlWriter.WriteAttributeString("fontId", $"{_context.OldElementInfos.FontCount + 0}");
-        _context.NewXmlWriter.WriteAttributeString("fillId", $"{_context.OldElementInfos.FillCount + 0}");
+        _context.NewXmlWriter.WriteAttributeString("fontId", $"{_context.OldElementInfos.FontCount}");
+        _context.NewXmlWriter.WriteAttributeString("fillId", $"{_context.OldElementInfos.FillCount}");
         _context.NewXmlWriter.WriteAttributeString("borderId", $"{_context.OldElementInfos.BorderCount + 1}");
         _context.NewXmlWriter.WriteAttributeString("xfId", "0");
         _context.NewXmlWriter.WriteAttributeString("applyBorder", "1");
@@ -829,12 +787,43 @@ internal class DefaultSheetStyleBuilder : SheetStyleBuilderBase
         _context.NewXmlWriter.WriteEndElement();
         _context.NewXmlWriter.WriteEndElement();
 
+        /*
+         * <x:xf numFmtId="21" fontId="0" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyFill="1" applyBorder="1" applyAlignment="1" applyProtection="1">
+         *     <x:alignment horizontal="general" vertical="bottom" textRotation="0" wrapText="0" indent="0" relativeIndent="0" justifyLastLine="0" shrinkToFit="0" readingOrder="0" />
+         *     <x:protection locked="1" hidden="0" />
+         * </x:xf>
+         */
+        _context.NewXmlWriter.WriteStartElement(_context.OldXmlReader.Prefix, "xf", _context.OldXmlReader.NamespaceURI);
+        _context.NewXmlWriter.WriteAttributeString("numFmtId", "21");
+        _context.NewXmlWriter.WriteAttributeString("fontId", $"{_context.OldElementInfos.FontCount}");
+        _context.NewXmlWriter.WriteAttributeString("fillId", $"{_context.OldElementInfos.FillCount}");
+        _context.NewXmlWriter.WriteAttributeString("borderId", $"{_context.OldElementInfos.BorderCount + 1}");
+        _context.NewXmlWriter.WriteAttributeString("xfId", "0");
+        _context.NewXmlWriter.WriteAttributeString("applyNumberFormat", "1");
+        _context.NewXmlWriter.WriteAttributeString("applyFill", "1");
+        _context.NewXmlWriter.WriteAttributeString("applyBorder", "1");
+        _context.NewXmlWriter.WriteAttributeString("applyAlignment", "1");
+        _context.NewXmlWriter.WriteAttributeString("applyProtection", "1");
+        _context.NewXmlWriter.WriteStartElement(_context.OldXmlReader.Prefix, "alignment", _context.OldXmlReader.NamespaceURI);
+        _context.NewXmlWriter.WriteAttributeString("horizontal", cellHorizontalAlignment);
+        _context.NewXmlWriter.WriteAttributeString("vertical", cellVerticalAlignment);
+        _context.NewXmlWriter.WriteAttributeString("textRotation", "0");
+        _context.NewXmlWriter.WriteAttributeString("wrapText", "0");
+        _context.NewXmlWriter.WriteAttributeString("indent", "0");
+        _context.NewXmlWriter.WriteAttributeString("relativeIndent", "0");
+        _context.NewXmlWriter.WriteAttributeString("justifyLastLine", "0");
+        _context.NewXmlWriter.WriteAttributeString("shrinkToFit", "0");
+        _context.NewXmlWriter.WriteAttributeString("readingOrder", "0");
+        _context.NewXmlWriter.WriteEndElement();
+        _context.NewXmlWriter.WriteStartElement(_context.OldXmlReader.Prefix, "protection", _context.OldXmlReader.NamespaceURI);
+        _context.NewXmlWriter.WriteAttributeString("locked", "1");
+        _context.NewXmlWriter.WriteAttributeString("hidden", "0");
+        _context.NewXmlWriter.WriteEndElement();
+        _context.NewXmlWriter.WriteEndElement();
+        
         const int numFmtIndex = 166;
-        var index = 0;
-        foreach (var item in _context.ColumnsToApply)
+        for (var i = 1; i <= _context.CustomFormatCount; i++)
         {
-            index++;
-
             /*
              * <x:xf numFmtId=""{numFmtIndex + i}"" fontId=""0"" fillId=""0"" borderId=""1"" xfId=""0"" applyNumberFormat=""1"" applyFill=""1"" applyBorder=""1"" applyAlignment=""1"" applyProtection=""1"">
              *     <x:alignment horizontal=""general"" vertical=""bottom"" textRotation=""0"" wrapText=""0"" indent=""0"" relativeIndent=""0"" justifyLastLine=""0"" shrinkToFit=""0"" readingOrder=""0"" />
@@ -842,9 +831,9 @@ internal class DefaultSheetStyleBuilder : SheetStyleBuilderBase
              * </x:xf>
              */
             _context.NewXmlWriter.WriteStartElement(_context.OldXmlReader.Prefix, "xf", _context.OldXmlReader.NamespaceURI);
-            _context.NewXmlWriter.WriteAttributeString("numFmtId", (numFmtIndex + index + _context.OldElementInfos.NumFmtCount).ToString());
-            _context.NewXmlWriter.WriteAttributeString("fontId", $"{_context.OldElementInfos.FontCount + 0}");
-            _context.NewXmlWriter.WriteAttributeString("fillId", $"{_context.OldElementInfos.FillCount + 0}");
+            _context.NewXmlWriter.WriteAttributeString("numFmtId", (numFmtIndex + i + _context.OldElementInfos.NumFmtCount).ToString());
+            _context.NewXmlWriter.WriteAttributeString("fontId", $"{_context.OldElementInfos.FontCount}");
+            _context.NewXmlWriter.WriteAttributeString("fillId", $"{_context.OldElementInfos.FillCount}");
             _context.NewXmlWriter.WriteAttributeString("borderId", $"{_context.OldElementInfos.BorderCount + 1}");
             _context.NewXmlWriter.WriteAttributeString("xfId", "0");
             _context.NewXmlWriter.WriteAttributeString("applyNumberFormat", "1");
@@ -854,36 +843,8 @@ internal class DefaultSheetStyleBuilder : SheetStyleBuilderBase
             _context.NewXmlWriter.WriteAttributeString("applyProtection", "1");
                 
             _context.NewXmlWriter.WriteStartElement(_context.OldXmlReader.Prefix, "alignment", _context.OldXmlReader.NamespaceURI);
-            string style3HorizontalAlignment;
-            switch (_styleOptions.HorizontalAlignment)
-            {
-                case HorizontalCellAlignment.Center:
-                    style3HorizontalAlignment = "center";
-                    break;
-                case HorizontalCellAlignment.Right:
-                    style3HorizontalAlignment = "right";
-                    break;
-                default:
-                    style3HorizontalAlignment = "general";
-                    break;
-            }
-
-            string style3VerticalAlignment;
-            switch (_styleOptions.VerticalAlignment)
-            {
-                case VerticalCellAlignment.Top:
-                    style3VerticalAlignment = "top";
-                    break;
-                case VerticalCellAlignment.Center:
-                    style3VerticalAlignment = "center";
-                    break;
-                default:
-                    style3VerticalAlignment = "bottom";
-                    break;
-            }
-
-            _context.NewXmlWriter.WriteAttributeString("horizontal", style3HorizontalAlignment);
-            _context.NewXmlWriter.WriteAttributeString("vertical", style3VerticalAlignment);
+            _context.NewXmlWriter.WriteAttributeString("horizontal", cellHorizontalAlignment);
+            _context.NewXmlWriter.WriteAttributeString("vertical", cellVerticalAlignment);
             _context.NewXmlWriter.WriteAttributeString("textRotation", "0");
             _context.NewXmlWriter.WriteAttributeString("wrapText", "0");
             _context.NewXmlWriter.WriteAttributeString("indent", "0");
@@ -903,8 +864,36 @@ internal class DefaultSheetStyleBuilder : SheetStyleBuilderBase
 
     protected override async Task GenerateCellXfAsync()
     {
+        var headerHorizontalAlignment = _styleOptions.HeaderStyle?.HorizontalAlignment switch
+        {
+            HorizontalCellAlignment.Center => "center",
+            HorizontalCellAlignment.Right => "right",
+            _ => "general"
+        };
+
+        var headerVerticalAlignment = _styleOptions.HeaderStyle?.VerticalAlignment switch
+        {
+            VerticalCellAlignment.Top => "top",
+            VerticalCellAlignment.Center => "center",
+            _ => "bottom"
+        };
+
+        var cellHorizontalAlignment = _styleOptions.HorizontalAlignment switch
+        {
+            HorizontalCellAlignment.Center => "center",
+            HorizontalCellAlignment.Right => "right",
+            _ => "general"
+        };
+
+        var cellVerticalAlignment = _styleOptions.VerticalAlignment switch
+        {
+            VerticalCellAlignment.Top => "top",
+            VerticalCellAlignment.Center => "center",
+            _ => "bottom"
+        };
+        
         /*
-         * <x:xf></x:xf>
+         * <x:x />
          */
         await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "xf", _context.OldXmlReader.NamespaceURI);
         await _context.NewXmlWriter.WriteEndElementAsync();
@@ -927,16 +916,10 @@ internal class DefaultSheetStyleBuilder : SheetStyleBuilderBase
         await _context.NewXmlWriter.WriteAttributeStringAsync(null, "applyAlignment", null, "1");
         await _context.NewXmlWriter.WriteAttributeStringAsync(null, "applyProtection", null, "1");
         await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "alignment", _context.OldXmlReader.NamespaceURI);
-
-        var horizontalAlignment = _styleOptions.HeaderStyle?.HorizontalAlignment ?? DefaultHorizontalAlignment;
-        var horizontalAlignmentStr = horizontalAlignment.ToString().ToLowerInvariant();
-        await _context.NewXmlWriter.WriteAttributeStringAsync(null, "horizontal", null, horizontalAlignmentStr).ConfigureAwait(false);
-        
-        var verticalAlignment = _styleOptions.HeaderStyle?.VerticalAlignment ?? DefaultVerticalAlignment;
-        var verticalAlignmentStr = verticalAlignment.ToString().ToLowerInvariant();
-        await _context.NewXmlWriter.WriteAttributeStringAsync(null, "vertical", null, verticalAlignmentStr).ConfigureAwait(false);
+        await _context.NewXmlWriter.WriteAttributeStringAsync(null, "horizontal", null, headerHorizontalAlignment).ConfigureAwait(false);
+        await _context.NewXmlWriter.WriteAttributeStringAsync(null, "vertical", null, headerVerticalAlignment).ConfigureAwait(false);
             
-        var wrapHeader = (_styleOptions.HeaderStyle?.WrapText ?? false) ? "1" : "0";
+        var wrapHeader = _styleOptions.HeaderStyle?.WrapText is true ? "1" : "0";
         await _context.NewXmlWriter.WriteAttributeStringAsync(null, "wrapText", null, wrapHeader).ConfigureAwait(false);
 
         await _context.NewXmlWriter.WriteAttributeStringAsync(null, "textRotation", null, "0");
@@ -960,8 +943,8 @@ internal class DefaultSheetStyleBuilder : SheetStyleBuilderBase
          */
         await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "xf", _context.OldXmlReader.NamespaceURI);
         await _context.NewXmlWriter.WriteAttributeStringAsync(null, "numFmtId", null, "0");
-        await _context.NewXmlWriter.WriteAttributeStringAsync(null, "fontId", null, $"{_context.OldElementInfos.FontCount + 0}");
-        await _context.NewXmlWriter.WriteAttributeStringAsync(null, "fillId", null, $"{_context.OldElementInfos.FillCount + 0}");
+        await _context.NewXmlWriter.WriteAttributeStringAsync(null, "fontId", null, $"{_context.OldElementInfos.FontCount}");
+        await _context.NewXmlWriter.WriteAttributeStringAsync(null, "fillId", null, $"{_context.OldElementInfos.FillCount}");
         await _context.NewXmlWriter.WriteAttributeStringAsync(null, "borderId", null, $"{_context.OldElementInfos.BorderCount + 1}");
         await _context.NewXmlWriter.WriteAttributeStringAsync(null, "xfId", null, "0");
         await _context.NewXmlWriter.WriteAttributeStringAsync(null, "applyNumberFormat", null, "1");
@@ -971,37 +954,8 @@ internal class DefaultSheetStyleBuilder : SheetStyleBuilderBase
         await _context.NewXmlWriter.WriteAttributeStringAsync(null, "applyProtection", null, "1");
 
         await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "alignment", _context.OldXmlReader.NamespaceURI);
-        string style1HorizontalAlignment;
-        switch (_styleOptions.HorizontalAlignment)
-        {
-            case HorizontalCellAlignment.Center:
-                style1HorizontalAlignment = "center";
-                break;
-            case HorizontalCellAlignment.Right:
-                style1HorizontalAlignment = "right";
-                break;
-            default:
-                style1HorizontalAlignment = "general";
-                break;
-        }
-
-        string style1VerticalAlignment;
-        switch (_styleOptions.VerticalAlignment)
-        {
-            case VerticalCellAlignment.Top:
-                style1VerticalAlignment = "top";
-                break;
-            case VerticalCellAlignment.Center:
-                style1VerticalAlignment = "center";
-                break;
-            default:
-                style1VerticalAlignment = "bottom";
-                break;
-        }
-
-        await _context.NewXmlWriter.WriteAttributeStringAsync(null,"horizontal", null, style1HorizontalAlignment).ConfigureAwait(false);
-        await _context.NewXmlWriter.WriteAttributeStringAsync(null,"vertical", null, style1VerticalAlignment).ConfigureAwait(false);
-            
+        await _context.NewXmlWriter.WriteAttributeStringAsync(null,"horizontal", null, cellHorizontalAlignment).ConfigureAwait(false);
+        await _context.NewXmlWriter.WriteAttributeStringAsync(null,"vertical", null, cellVerticalAlignment).ConfigureAwait(false);
         await _context.NewXmlWriter.WriteAttributeStringAsync(null, "textRotation", null, "0");
 
         var wrapContent = _styleOptions.WrapCellContents ? "1" : "0";
@@ -1027,8 +981,8 @@ internal class DefaultSheetStyleBuilder : SheetStyleBuilderBase
          */
         await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "xf", _context.OldXmlReader.NamespaceURI);
         await _context.NewXmlWriter.WriteAttributeStringAsync(null, "numFmtId", null, "14");
-        await _context.NewXmlWriter.WriteAttributeStringAsync(null, "fontId", null, $"{_context.OldElementInfos.FontCount + 0}");
-        await _context.NewXmlWriter.WriteAttributeStringAsync(null, "fillId", null, $"{_context.OldElementInfos.FillCount + 0}");
+        await _context.NewXmlWriter.WriteAttributeStringAsync(null, "fontId", null, $"{_context.OldElementInfos.FontCount}");
+        await _context.NewXmlWriter.WriteAttributeStringAsync(null, "fillId", null, $"{_context.OldElementInfos.FillCount}");
         await _context.NewXmlWriter.WriteAttributeStringAsync(null, "borderId", null, $"{_context.OldElementInfos.BorderCount + 1}");
         await _context.NewXmlWriter.WriteAttributeStringAsync(null, "xfId", null, "0");
         await _context.NewXmlWriter.WriteAttributeStringAsync(null, "applyNumberFormat", null, "1");
@@ -1038,37 +992,8 @@ internal class DefaultSheetStyleBuilder : SheetStyleBuilderBase
         await _context.NewXmlWriter.WriteAttributeStringAsync(null, "applyProtection", null, "1");
 
         await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "alignment", _context.OldXmlReader.NamespaceURI);
-        string style2HorizontalAlignment;
-        switch (_styleOptions.HorizontalAlignment)
-        {
-            case HorizontalCellAlignment.Center:
-                style2HorizontalAlignment = "center";
-                break;
-            case HorizontalCellAlignment.Right:
-                style2HorizontalAlignment = "right";
-                break;
-            default:
-                style2HorizontalAlignment = "general";
-                break;
-        }
-
-        string style2VerticalAlignment;
-        switch (_styleOptions.VerticalAlignment)
-        {
-            case VerticalCellAlignment.Top:
-                style2VerticalAlignment = "top";
-                break;
-            case VerticalCellAlignment.Center:
-                style2VerticalAlignment = "center";
-                break;
-            default:
-                style2VerticalAlignment = "bottom";
-                break;
-        }
-
-        await _context.NewXmlWriter.WriteAttributeStringAsync(null, "horizontal", null, style2HorizontalAlignment);
-        await _context.NewXmlWriter.WriteAttributeStringAsync(null, "vertical", null, style2VerticalAlignment);  
-            
+        await _context.NewXmlWriter.WriteAttributeStringAsync(null, "horizontal", null, cellHorizontalAlignment);
+        await _context.NewXmlWriter.WriteAttributeStringAsync(null, "vertical", null, cellVerticalAlignment);  
         await _context.NewXmlWriter.WriteAttributeStringAsync(null, "textRotation", null, "0");
         await _context.NewXmlWriter.WriteAttributeStringAsync(null, "wrapText", null, "0");
         await _context.NewXmlWriter.WriteAttributeStringAsync(null, "indent", null, "0");
@@ -1091,8 +1016,8 @@ internal class DefaultSheetStyleBuilder : SheetStyleBuilderBase
          */
         await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "xf", _context.OldXmlReader.NamespaceURI);
         await _context.NewXmlWriter.WriteAttributeStringAsync(null, "numFmtId", null, "0");
-        await _context.NewXmlWriter.WriteAttributeStringAsync(null, "fontId", null, $"{_context.OldElementInfos.FontCount + 0}");
-        await _context.NewXmlWriter.WriteAttributeStringAsync(null, "fillId", null, $"{_context.OldElementInfos.FillCount + 0}");
+        await _context.NewXmlWriter.WriteAttributeStringAsync(null, "fontId", null, $"{_context.OldElementInfos.FontCount}");
+        await _context.NewXmlWriter.WriteAttributeStringAsync(null, "fillId", null, $"{_context.OldElementInfos.FillCount}");
         await _context.NewXmlWriter.WriteAttributeStringAsync(null, "borderId", null, $"{_context.OldElementInfos.BorderCount + 1}");
         await _context.NewXmlWriter.WriteAttributeStringAsync(null, "xfId", null, "0");
         await _context.NewXmlWriter.WriteAttributeStringAsync(null, "applyBorder", null, "1");
@@ -1102,12 +1027,43 @@ internal class DefaultSheetStyleBuilder : SheetStyleBuilderBase
         await _context.NewXmlWriter.WriteEndElementAsync();
         await _context.NewXmlWriter.WriteEndElementAsync();
 
+        /*
+         * <x:xf numFmtId="21" fontId="0" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyFill="1" applyBorder="1" applyAlignment="1" applyProtection="1">
+         *     <x:alignment horizontal="general" vertical="bottom" textRotation="0" wrapText="0" indent="0" relativeIndent="0" justifyLastLine="0" shrinkToFit="0" readingOrder="0" />
+         *     <x:protection locked="1" hidden="0" />
+         * </x:xf>
+         */
+        await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "xf", _context.OldXmlReader.NamespaceURI).ConfigureAwait(false);
+        await _context.NewXmlWriter.WriteAttributeStringAsync(null, "numFmtId", null, "21").ConfigureAwait(false);
+        await _context.NewXmlWriter.WriteAttributeStringAsync(null, "fontId", null, $"{_context.OldElementInfos.FontCount + 0}").ConfigureAwait(false);
+        await _context.NewXmlWriter.WriteAttributeStringAsync(null, "fillId", null, $"{_context.OldElementInfos.FillCount + 0}").ConfigureAwait(false);
+        await _context.NewXmlWriter.WriteAttributeStringAsync(null, "borderId", null, $"{_context.OldElementInfos.BorderCount + 1}").ConfigureAwait(false);
+        await _context.NewXmlWriter.WriteAttributeStringAsync(null, "xfId", null, "0").ConfigureAwait(false);
+        await _context.NewXmlWriter.WriteAttributeStringAsync(null, "applyNumberFormat", null, "1").ConfigureAwait(false);
+        await _context.NewXmlWriter.WriteAttributeStringAsync(null, "applyFill", null, "1").ConfigureAwait(false);
+        await _context.NewXmlWriter.WriteAttributeStringAsync(null, "applyBorder", null, "1").ConfigureAwait(false);
+        await _context.NewXmlWriter.WriteAttributeStringAsync(null, "applyAlignment", null, "1").ConfigureAwait(false);
+        await _context.NewXmlWriter.WriteAttributeStringAsync(null, "applyProtection", null, "1").ConfigureAwait(false);
+        await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "alignment", _context.OldXmlReader.NamespaceURI).ConfigureAwait(false);
+        await _context.NewXmlWriter.WriteAttributeStringAsync(null, "horizontal", null, cellHorizontalAlignment).ConfigureAwait(false);
+        await _context.NewXmlWriter.WriteAttributeStringAsync(null, "vertical", null, cellVerticalAlignment).ConfigureAwait(false);
+        await _context.NewXmlWriter.WriteAttributeStringAsync(null, "textRotation", null, "0").ConfigureAwait(false);
+        await _context.NewXmlWriter.WriteAttributeStringAsync(null, "wrapText", null, "0").ConfigureAwait(false);
+        await _context.NewXmlWriter.WriteAttributeStringAsync(null, "indent", null, "0").ConfigureAwait(false);
+        await _context.NewXmlWriter.WriteAttributeStringAsync(null, "relativeIndent", null, "0").ConfigureAwait(false);
+        await _context.NewXmlWriter.WriteAttributeStringAsync(null, "justifyLastLine", null, "0").ConfigureAwait(false);
+        await _context.NewXmlWriter.WriteAttributeStringAsync(null, "shrinkToFit", null, "0").ConfigureAwait(false);
+        await _context.NewXmlWriter.WriteAttributeStringAsync(null, "readingOrder", null, "0").ConfigureAwait(false);
+        await _context.NewXmlWriter.WriteEndElementAsync().ConfigureAwait(false);
+        await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "protection", _context.OldXmlReader.NamespaceURI).ConfigureAwait(false);
+        await _context.NewXmlWriter.WriteAttributeStringAsync(null, "locked", null, "1").ConfigureAwait(false);
+        await _context.NewXmlWriter.WriteAttributeStringAsync(null, "hidden", null, "0").ConfigureAwait(false);
+        await _context.NewXmlWriter.WriteEndElementAsync().ConfigureAwait(false);
+        await _context.NewXmlWriter.WriteEndElementAsync().ConfigureAwait(false);
+        
         const int numFmtIndex = 166;
-        var index = 0;
-        foreach (var item in _context.ColumnsToApply)
+        for (var i = 1; i <= _context.CustomFormatCount; i++)
         {
-            index++;
-
             /*
              * <x:xf numFmtId=""{numFmtIndex + i}"" fontId=""0"" fillId=""0"" borderId=""1"" xfId=""0"" applyNumberFormat=""1"" applyFill=""1"" applyBorder=""1"" applyAlignment=""1"" applyProtection=""1"">
              *     <x:alignment horizontal=""general"" vertical=""bottom"" textRotation=""0"" wrapText=""0"" indent=""0"" relativeIndent=""0"" justifyLastLine=""0"" shrinkToFit=""0"" readingOrder=""0"" />
@@ -1115,9 +1071,9 @@ internal class DefaultSheetStyleBuilder : SheetStyleBuilderBase
              * </x:xf>
              */
             await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "xf", _context.OldXmlReader.NamespaceURI);
-            await _context.NewXmlWriter.WriteAttributeStringAsync(null, "numFmtId", null, (numFmtIndex + index + _context.OldElementInfos.NumFmtCount).ToString());
-            await _context.NewXmlWriter.WriteAttributeStringAsync(null, "fontId", null, $"{_context.OldElementInfos.FontCount + 0}");
-            await _context.NewXmlWriter.WriteAttributeStringAsync(null, "fillId", null, $"{_context.OldElementInfos.FillCount + 0}");
+            await _context.NewXmlWriter.WriteAttributeStringAsync(null, "numFmtId", null, (numFmtIndex + i + _context.OldElementInfos.NumFmtCount).ToString());
+            await _context.NewXmlWriter.WriteAttributeStringAsync(null, "fontId", null, $"{_context.OldElementInfos.FontCount}");
+            await _context.NewXmlWriter.WriteAttributeStringAsync(null, "fillId", null, $"{_context.OldElementInfos.FillCount}");
             await _context.NewXmlWriter.WriteAttributeStringAsync(null, "borderId", null, $"{_context.OldElementInfos.BorderCount + 1}");
             await _context.NewXmlWriter.WriteAttributeStringAsync(null, "xfId", null, "0");
             await _context.NewXmlWriter.WriteAttributeStringAsync(null, "applyNumberFormat", null, "1");
@@ -1127,36 +1083,8 @@ internal class DefaultSheetStyleBuilder : SheetStyleBuilderBase
             await _context.NewXmlWriter.WriteAttributeStringAsync(null, "applyProtection", null, "1");
 
             await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "alignment", _context.OldXmlReader.NamespaceURI);
-            string style3HorizontalAlignment;
-            switch (_styleOptions.HorizontalAlignment)
-            {
-                case HorizontalCellAlignment.Center:
-                    style3HorizontalAlignment = "center";
-                    break;
-                case HorizontalCellAlignment.Right:
-                    style3HorizontalAlignment = "right";
-                    break;
-                default:
-                    style3HorizontalAlignment = "general";
-                    break;
-            }
-
-            string style3VerticalAlignment;
-            switch (_styleOptions.VerticalAlignment)
-            {
-                case VerticalCellAlignment.Top:
-                    style3VerticalAlignment = "top";
-                    break;
-                case VerticalCellAlignment.Center:
-                    style3VerticalAlignment = "center";
-                    break;
-                default:
-                    style3VerticalAlignment = "bottom";
-                    break;
-            }
-
-            await _context.NewXmlWriter.WriteAttributeStringAsync(null, "horizontal", null, style3HorizontalAlignment);
-            await _context.NewXmlWriter.WriteAttributeStringAsync(null, "vertical", null, style3VerticalAlignment);
+            await _context.NewXmlWriter.WriteAttributeStringAsync(null, "horizontal", null, cellHorizontalAlignment);
+            await _context.NewXmlWriter.WriteAttributeStringAsync(null, "vertical", null, cellVerticalAlignment);
                 
             await _context.NewXmlWriter.WriteAttributeStringAsync(null, "textRotation", null, "0");
             await _context.NewXmlWriter.WriteAttributeStringAsync(null, "wrapText", null, "0");

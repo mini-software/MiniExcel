@@ -2,7 +2,7 @@
 
 internal interface ISheetStyleBuilder
 {
-    SheetStyleBuildResult Build();
+    void Build();
 
-    Task<SheetStyleBuildResult> BuildAsync(CancellationToken cancellationToken = default);
+    Task BuildAsync(CancellationToken cancellationToken = default);
 }

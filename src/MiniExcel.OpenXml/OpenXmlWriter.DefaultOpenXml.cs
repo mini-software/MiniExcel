@@ -1,5 +1,6 @@
 using MiniExcelLib.OpenXml.Constants;
 using System.ComponentModel;
+using MiniExcelLib.Core.Attributes;
 using static MiniExcelLib.Core.Helpers.ImageHelper;
 
 namespace MiniExcelLib.OpenXml;
@@ -164,12 +165,12 @@ internal partial class OpenXmlWriter
     private (string StyleIndex, string? DataType, string? CellValue) GetCellValue(int rowIndex, int cellIndex, object value, MiniExcelColumnMapping? columnMapping, bool valueIsNull)
     {
         if (valueIsNull)
-            return (RegularCellStyleIndex, "str", string.Empty);
+            return (RegularCellStyleIndex, GetStringType(), string.Empty);
 
         if (value is string str)
         {
             var styleIndex = columnMapping?.ExcelFormatId is { } fmt and not -1 ? fmt.ToString() : RegularCellStyleIndex;
-            return (styleIndex, "str", XmlHelper.EncodeXml(str));
+            return (styleIndex, GetStringType(), XmlHelper.EncodeXml(str));
         }
 
         var type = GetValueType(value, columnMapping);
@@ -177,7 +178,7 @@ internal partial class OpenXmlWriter
         if (columnMapping is { ExcelFormat: not null, ExcelFormatId: -1 } && value is IFormattable formattableValue)
         {
             var formattedStr = formattableValue.ToString(columnMapping.ExcelFormat, _configuration.Culture);
-            return (RegularCellStyleIndex, "str", XmlHelper.EncodeXml(formattedStr));
+            return (RegularCellStyleIndex, GetStringType(), XmlHelper.EncodeXml(formattedStr));
         }
 
         if (type == typeof(DateTime))
@@ -209,7 +210,7 @@ internal partial class OpenXmlWriter
             }
 
             description ??= value.ToString();
-            return (RegularCellStyleIndex, "str", description);
+            return (RegularCellStyleIndex, GetStringType(), description);
         }
 
         if (TypeHelper.IsNumericType(type))
@@ -217,7 +218,7 @@ internal partial class OpenXmlWriter
             var cellValue = GetNumericValue(value, type);
             if (columnMapping?.ExcelFormat is null)
             {
-                var dataType = ReferenceEquals(_configuration.Culture, CultureInfo.InvariantCulture) ? "n" : "str";
+                var dataType = ReferenceEquals(_configuration.Culture, CultureInfo.InvariantCulture) ? ExcelXml.NumericDataType : GetStringType();
                 return (RegularCellStyleIndex, dataType, cellValue);
             }
 
@@ -230,13 +231,15 @@ internal partial class OpenXmlWriter
         if (type == typeof(byte[]) && _configuration.EnableConvertByteArray)
         {
             if (!_configuration.EnableWriteFilePath)
-                return (FillCellStyleIndex, "str", "");
+                return (FillCellStyleIndex, GetStringType(), "");
             
             var base64 = GetFileValue(rowIndex, cellIndex, value);
-            return (FillCellStyleIndex, "str", XmlHelper.EncodeXml(base64));  
+            return (FillCellStyleIndex, GetStringType(), XmlHelper.EncodeXml(base64));  
         }
 
-        return (RegularCellStyleIndex, "str", XmlHelper.EncodeXml(value.ToString()));
+        return (RegularCellStyleIndex, GetStringType(), XmlHelper.EncodeXml(value.ToString()));
+        
+        string GetStringType() => columnMapping?.ExcelColumnType == ColumnType.Value ? ExcelXml.InlineStringDataType : ExcelXml.StringDataType; 
     }
 
     private static Type GetValueType(object value, MiniExcelColumnMapping? columnInfo)

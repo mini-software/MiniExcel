@@ -11,6 +11,7 @@ internal static class ExcelXml
         DefaultDrawing = XmlHelper.MinifyXml(DefaultDrawing);
     }
 
+    internal const string InlineStringDataType = "inlineStr";
     internal const string StringDataType = "str";
     internal const string NumericDataType = "n";
     internal const string BooleanDataType = "b";

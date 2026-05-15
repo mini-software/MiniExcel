@@ -428,7 +428,7 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
                     continue;
 
                 var r = CellReferenceConverter.GetCellFromCoordinates(xIndex, yIndex);
-                await writer.WriteAsync(WorksheetXml.Cell(r, "str", HeaderCellStyleIndex, XmlHelper.EncodeXml(map.ExcelColumnName)), cancellationToken).ConfigureAwait(false);
+                await writer.WriteAsync(WorksheetXml.Cell(r, ExcelXml.InlineStringDataType, HeaderCellStyleIndex, XmlHelper.EncodeXml(map.ExcelColumnName)), cancellationToken).ConfigureAwait(false);
             }
             xIndex++;
         }

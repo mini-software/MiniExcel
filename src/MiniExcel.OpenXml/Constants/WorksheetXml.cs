@@ -55,7 +55,11 @@ internal static class WorksheetXml
         
     //t check avoid format error ![image](https://user-images.githubusercontent.com/12729184/118770190-9eee3480-b8b3-11eb-9f5a-87a439f5e320.png)
     internal static string Cell(string cellReference, string? cellType, string styleIndex, string? cellValue, bool preserveSpace = false, ColumnType columnType = ColumnType.Value)
-        => $"<x:c r=\"{cellReference}\"{(cellType is null ? string.Empty : $" t=\"{cellType}\"")} s=\"{styleIndex}\"{(preserveSpace ? " xml:space=\"preserve\"" : string.Empty)}><x:{(columnType == ColumnType.Formula ? "f" : "v")}>{cellValue}</x:{(columnType == ColumnType.Formula ? "f" : "v")}></x:c>";
+    {
+        return cellType == ExcelXml.InlineStringDataType
+             ? $"""<x:c r="{cellReference}" t="{ExcelXml.InlineStringDataType}" s="{styleIndex}"{(preserveSpace ? " xml:space=\"preserve\"" : "")}><x:is><x:t>{cellValue}</x:t></x:is></x:c>""" 
+             : $"""<x:c r="{cellReference}"{(cellType is null ? "" : $" t=\"{cellType}\"")} s="{styleIndex}"{(preserveSpace ? " xml:space=\"preserve\"" : "")}><x:{(columnType == ColumnType.Formula ? "f" : "v")}>{cellValue}</x:{(columnType == ColumnType.Formula ? "f" : "v")}></x:c>""";
+    }
 
     internal static string Autofilter(string dimensionRef) => $"<x:autoFilter ref=\"{dimensionRef}\" />";
     internal static string Drawing(int sheetIndex) => $"<x:drawing r:id=\"drawing{sheetIndex}\" />";

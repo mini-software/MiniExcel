@@ -110,16 +110,13 @@ internal partial class MinimalSheetStyleBuilder(SheetStyleBuildContext context) 
         await NewWriter.WriteEndElementAsync().ConfigureAwait(false);
 
         const int numFmtIndex = 166;
-        var index = 0;
-        for (var i = 0; i < _context.CustomFormatCount; i++)
+        for (var i = 1; i <= _context.CustomFormatCount; i++)
         {
-            index++;
-
             /*
              * <x:xf numFmtId="{numFmtIndex + i}" applyNumberFormat="1"
              */
             await NewWriter.WriteStartElementAsync(OldReader.Prefix, "xf", OldReader.NamespaceURI).ConfigureAwait(false);
-            await NewWriter.WriteAttributeStringAsync(null, "numFmtId", null, (numFmtIndex + index).ToString()).ConfigureAwait(false);
+            await NewWriter.WriteAttributeStringAsync(null, "numFmtId", null, (numFmtIndex + i).ToString()).ConfigureAwait(false);
             await NewWriter.WriteAttributeStringAsync(null, "applyNumberFormat", null, "1").ConfigureAwait(false);
             await NewWriter.WriteEndElementAsync().ConfigureAwait(false);
         }

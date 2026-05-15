@@ -11,6 +11,10 @@ internal static class ExcelXml
         DefaultDrawing = XmlHelper.MinifyXml(DefaultDrawing);
     }
 
+    internal const string StringDataType = "str";
+    internal const string NumericDataType = "n";
+    internal const string BooleanDataType = "b";
+
     internal const string EmptySheetXml = """<?xml version="1.0" encoding="utf-8"?><x:worksheet xmlns:x="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><x:dimension ref="A1"/><x:sheetData></x:sheetData></x:worksheet>""";
 
     internal static readonly string DefaultRels = 
@@ -122,5 +126,4 @@ internal static class ExcelXml
 
     internal static string Sheet(SheetDto sheetDto, int sheetId)
         => $"""<x:sheet name="{XmlHelper.EncodeXml(sheetDto.Name)}" sheetId="{sheetId}"{(string.IsNullOrWhiteSpace(sheetDto.State) ? string.Empty : $" state=\"{sheetDto.State}\"")} r:id="{sheetDto.ID}" />""";
-
 }

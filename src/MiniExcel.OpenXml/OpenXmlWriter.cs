@@ -67,7 +67,7 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
         await CreateZipEntryAsync(ExcelFileNames.SharedStrings, ExcelContentTypes.SharedStrings, ExcelXml.DefaultSharedString, cancellationToken).ConfigureAwait(false);
 
         await using var sbc = _sheetStyleBuildContext.ConfigureAwait(false);
-        var styleBuilder = await GetSheetStyleBuilderAsync(_sheetStyleBuildContext, cancellationToken).ConfigureAwait(false);
+        var styleBuilder = await GetSheetStyleBuilderAsync(cancellationToken).ConfigureAwait(false);
 
         var sheets = GetSheets();
         var rowsWritten = new List<int>();
@@ -93,81 +93,75 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
         if (!_configuration.FastMode)
             throw new InvalidOperationException("Insert requires fast mode to be enabled");
 
-        try
-        {
 #if NET10_0_OR_GREATER
-            await using var disposableArchive = _archive.ConfigureAwait(false);
+        await using var disposableArchive = _archive.ConfigureAwait(false);
 #else
-            using var disposableArchive = _archive;
+        using var disposableArchive = _archive;
 #endif
+        await using var sbc = _sheetStyleBuildContext.ConfigureAwait(false);
 
-            using var reader = await OpenXmlReader.CreateAsync(_stream, _configuration, cancellationToken: cancellationToken).ConfigureAwait(false);
-            var rels = await reader.GetWorkbookRelsAsync(_archive.Entries, cancellationToken).ConfigureAwait(false) ?? [];
+        using var reader = await OpenXmlReader.CreateAsync(_stream, _configuration, cancellationToken: cancellationToken).ConfigureAwait(false);
+        var rels = await reader.GetWorkbookRelsAsync(_archive.Entries, cancellationToken).ConfigureAwait(false) ?? [];
 
-            _sheets.AddRange(rels
-                .OrderBy(sheet => sheet.Id)
-                .Select(sheet => new SheetDto
-                {
-                    Name = sheet.Name,
-                    SheetIdx = (int)sheet.Id,
-                    State = sheet.State
-                })
-            );
-
-            var existSheetDto = _sheets.SingleOrDefault(s => s.Name == _defaultSheetName);
-            if (existSheetDto is not null && !overwriteSheet)
-                throw new Exception($"Sheet \"{_defaultSheetName}\" already exist");
-
-            // GenerateStylesXml must be invoked after validating the overwritesheet parameter to avoid unnecessary style changes.
-            var styleBuilder = await GetSheetStyleBuilderAsync(_sheetStyleBuildContext, cancellationToken).ConfigureAwait(false);
-
-            int rowsWritten;
-            if (existSheetDto is null)
+        _sheets.AddRange(rels
+            .OrderBy(sheet => sheet.Id)
+            .Select(sheet => new SheetDto
             {
-                _currentSheetIndex = (int)rels.Max(m => m.Id) + 1;
-                var insertSheetInfo = GetSheetInfos(_defaultSheetName);
-                var insertSheetDto = insertSheetInfo.ToDto(_currentSheetIndex);
-                _sheets.Add(insertSheetDto);
-                rowsWritten = await CreateSheetXmlAsync(_value, insertSheetDto.Path, progress, cancellationToken).ConfigureAwait(false);
-            }
-            else
-            {
-                _currentSheetIndex = existSheetDto.SheetIdx;
-                _archive.Entries.Single(s => s.FullName == existSheetDto.Path).Delete();
-                rowsWritten = await CreateSheetXmlAsync(_value, existSheetDto.Path, progress, cancellationToken).ConfigureAwait(false);
-            }
+                Name = sheet.Name,
+                SheetIdx = (int)sheet.Id,
+                State = sheet.State
+            })
+        );
 
-            await styleBuilder.BuildAsync(cancellationToken).ConfigureAwait(false);
-            await AddFilesToZipAsync(cancellationToken).ConfigureAwait(false);
+        var existSheetDto = _sheets.SingleOrDefault(s => s.Name == _defaultSheetName);
+        if (existSheetDto is not null && !overwriteSheet)
+            throw new Exception($"Sheet \"{_defaultSheetName}\" already exist");
 
-            _archive.Entries.SingleOrDefault(s => s.FullName == ExcelFileNames.DrawingRels(_currentSheetIndex - 1))?.Delete();
-            await GenerateDrawinRelXmlAsync(_currentSheetIndex - 1, cancellationToken).ConfigureAwait(false);
+        // GenerateStylesXml must be invoked after validating the overwritesheet parameter to avoid unnecessary style changes.
+        var styleBuilder = await GetSheetStyleBuilderAsync(cancellationToken).ConfigureAwait(false);
 
-            _archive.Entries.SingleOrDefault(s => s.FullName == ExcelFileNames.Drawing(_currentSheetIndex - 1))?.Delete();
-            await GenerateDrawingXmlAsync(_currentSheetIndex - 1, cancellationToken).ConfigureAwait(false);
-
-            GenerateWorkBookXmls(out var workbookXml, out var workbookRelsXml, out var sheetsRelsXml);
-            foreach (var (key, value) in sheetsRelsXml)
-            {
-                var sheetRelsXmlPath = ExcelFileNames.SheetRels(key);
-                _archive.Entries.SingleOrDefault(s => s.FullName == sheetRelsXmlPath)?.Delete();
-                await CreateZipEntryAsync(sheetRelsXmlPath, null, ExcelXml.DefaultSheetRelXml.Replace("{{format}}", value), cancellationToken).ConfigureAwait(false);
-            }
-
-            _archive.Entries.SingleOrDefault(s => s.FullName == ExcelFileNames.Workbook)?.Delete();
-            await CreateZipEntryAsync(ExcelFileNames.Workbook, ExcelContentTypes.Workbook, ExcelXml.DefaultWorkbookXml.Replace("{{sheets}}", workbookXml.ToString()), cancellationToken).ConfigureAwait(false);
-
-            _archive.Entries.SingleOrDefault(s => s.FullName == ExcelFileNames.WorkbookRels)?.Delete();
-            await CreateZipEntryAsync(ExcelFileNames.WorkbookRels, null, ExcelXml.DefaultWorkbookXmlRels.Replace("{{sheets}}", workbookRelsXml.ToString()), cancellationToken).ConfigureAwait(false);
-
-            await InsertContentTypesXmlAsync(cancellationToken).ConfigureAwait(false);
-
-            return rowsWritten;
-        }
-        finally
+        int rowsWritten;
+        if (existSheetDto is null)
         {
-            await _sheetStyleBuildContext.DisposeAsync().ConfigureAwait(false);   
+            _currentSheetIndex = (int)rels.Max(m => m.Id) + 1;
+            var insertSheetInfo = GetSheetInfos(_defaultSheetName);
+            var insertSheetDto = insertSheetInfo.ToDto(_currentSheetIndex);
+            _sheets.Add(insertSheetDto);
+            rowsWritten = await CreateSheetXmlAsync(_value, insertSheetDto.Path, progress, cancellationToken).ConfigureAwait(false);
         }
+        else
+        {
+            _currentSheetIndex = existSheetDto.SheetIdx;
+            _archive.Entries.Single(s => s.FullName == existSheetDto.Path).Delete();
+            rowsWritten = await CreateSheetXmlAsync(_value, existSheetDto.Path, progress, cancellationToken).ConfigureAwait(false);
+        }
+
+        await styleBuilder.BuildAsync(cancellationToken).ConfigureAwait(false);
+        await AddFilesToZipAsync(cancellationToken).ConfigureAwait(false);
+
+        _archive.Entries.SingleOrDefault(s => s.FullName == ExcelFileNames.DrawingRels(_currentSheetIndex - 1))?.Delete();
+        await GenerateDrawinRelXmlAsync(_currentSheetIndex - 1, cancellationToken).ConfigureAwait(false);
+
+        _archive.Entries.SingleOrDefault(s => s.FullName == ExcelFileNames.Drawing(_currentSheetIndex - 1))?.Delete();
+        await GenerateDrawingXmlAsync(_currentSheetIndex - 1, cancellationToken).ConfigureAwait(false);
+
+        GenerateWorkBookXmls(out var workbookXml, out var workbookRelsXml, out var sheetsRelsXml);
+        foreach (var (key, value) in sheetsRelsXml)
+        {
+            var sheetRelsXmlPath = ExcelFileNames.SheetRels(key);
+            _archive.Entries.SingleOrDefault(s => s.FullName == sheetRelsXmlPath)?.Delete();
+            await CreateZipEntryAsync(sheetRelsXmlPath, null, ExcelXml.DefaultSheetRelXml.Replace("{{format}}", value), cancellationToken).ConfigureAwait(false);
+        }
+
+        _archive.Entries.SingleOrDefault(s => s.FullName == ExcelFileNames.Workbook)?.Delete();
+        await CreateZipEntryAsync(ExcelFileNames.Workbook, ExcelContentTypes.Workbook, ExcelXml.DefaultWorkbookXml.Replace("{{sheets}}", workbookXml.ToString()), cancellationToken).ConfigureAwait(false);
+
+        _archive.Entries.SingleOrDefault(s => s.FullName == ExcelFileNames.WorkbookRels)?.Delete();
+        await CreateZipEntryAsync(ExcelFileNames.WorkbookRels, null, ExcelXml.DefaultWorkbookXmlRels.Replace("{{sheets}}", workbookRelsXml.ToString()), cancellationToken).ConfigureAwait(false);
+
+        await InsertContentTypesXmlAsync(cancellationToken).ConfigureAwait(false);
+
+        return rowsWritten;
     }
 
     [CreateSyncVersion]
@@ -497,17 +491,17 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
     }
 
     [CreateSyncVersion]
-    private async Task<ISheetStyleBuilder> GetSheetStyleBuilderAsync(SheetStyleBuildContext context, CancellationToken cancellationToken = default)
+    private async Task<ISheetStyleBuilder> GetSheetStyleBuilderAsync(CancellationToken cancellationToken = default)
     {
         SheetStyleBuilderBase builder = _configuration.TableStyles switch
         {
-            TableStyles.None => new MinimalSheetStyleBuilder(context),
-            TableStyles.Default => new DefaultSheetStyleBuilder(context, _configuration.StyleOptions),
+            TableStyles.None => new MinimalSheetStyleBuilder(_sheetStyleBuildContext),
+            TableStyles.Default => new DefaultSheetStyleBuilder(_sheetStyleBuildContext, _configuration.StyleOptions),
             _ => throw new InvalidEnumArgumentException(nameof(_configuration.TableStyles), (int)_configuration.TableStyles, typeof(TableStyles))
         };
 
         var newInfos = builder.GetGeneratedElementInfos();
-        await context.CreateAsync(newInfos, cancellationToken).ConfigureAwait(false);
+        await _sheetStyleBuildContext.CreateAsync(newInfos, cancellationToken).ConfigureAwait(false);
 
         return builder;
     }

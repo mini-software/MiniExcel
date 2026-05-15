@@ -275,9 +275,9 @@ internal partial class DefaultSheetStyleBuilder(SheetStyleBuildContext context, 
          */
         await NewWriter.WriteStartElementAsync(OldReader.Prefix, "xf", OldReader.NamespaceURI).ConfigureAwait(false);
         await NewWriter.WriteAttributeStringAsync(null, "numFmtId", null, "0").ConfigureAwait(false);
-        await NewWriter.WriteAttributeStringAsync(null, "fontId", null, $"{_context.OldElementInfos.FontCount + 0}").ConfigureAwait(false);
-        await NewWriter.WriteAttributeStringAsync(null, "fillId", null, $"{_context.OldElementInfos.FillCount + 0}").ConfigureAwait(false);
-        await NewWriter.WriteAttributeStringAsync(null, "borderId", null, $"{_context.OldElementInfos.BorderCount + 0}").ConfigureAwait(false);
+        await NewWriter.WriteAttributeStringAsync(null, "fontId", null, $"{_context.OldElementInfos.FontCount}").ConfigureAwait(false);
+        await NewWriter.WriteAttributeStringAsync(null, "fillId", null, $"{_context.OldElementInfos.FillCount}").ConfigureAwait(false);
+        await NewWriter.WriteAttributeStringAsync(null, "borderId", null, $"{_context.OldElementInfos.BorderCount}").ConfigureAwait(false);
         await NewWriter.WriteAttributeStringAsync(null, "applyNumberFormat", null, "1").ConfigureAwait(false);
         await NewWriter.WriteAttributeStringAsync(null, "applyFill", null, "1").ConfigureAwait(false);
         await NewWriter.WriteAttributeStringAsync(null, "applyBorder", null, "0").ConfigureAwait(false);
@@ -317,8 +317,8 @@ internal partial class DefaultSheetStyleBuilder(SheetStyleBuildContext context, 
          */
         await NewWriter.WriteStartElementAsync(OldReader.Prefix, "xf", OldReader.NamespaceURI).ConfigureAwait(false);
         await NewWriter.WriteAttributeStringAsync(null, "numFmtId", null, "0").ConfigureAwait(false);
-        await NewWriter.WriteAttributeStringAsync(null, "fontId", null, $"{_context.OldElementInfos.FontCount + 0}").ConfigureAwait(false);
-        await NewWriter.WriteAttributeStringAsync(null, "fillId", null, $"{_context.OldElementInfos.FillCount + 0}").ConfigureAwait(false);
+        await NewWriter.WriteAttributeStringAsync(null, "fontId", null, $"{_context.OldElementInfos.FontCount}").ConfigureAwait(false);
+        await NewWriter.WriteAttributeStringAsync(null, "fillId", null, $"{_context.OldElementInfos.FillCount}").ConfigureAwait(false);
         await NewWriter.WriteAttributeStringAsync(null, "borderId", null, $"{_context.OldElementInfos.BorderCount + 1}").ConfigureAwait(false);
         await NewWriter.WriteAttributeStringAsync(null, "applyNumberFormat", null, "1").ConfigureAwait(false);
         await NewWriter.WriteAttributeStringAsync(null, "applyFill", null, "1").ConfigureAwait(false);
@@ -414,8 +414,8 @@ internal partial class DefaultSheetStyleBuilder(SheetStyleBuildContext context, 
          */
         await NewWriter.WriteStartElementAsync(OldReader.Prefix, "xf", OldReader.NamespaceURI).ConfigureAwait(false);
         await NewWriter.WriteAttributeStringAsync(null, "numFmtId", null, "0").ConfigureAwait(false);
-        await NewWriter.WriteAttributeStringAsync(null, "fontId", null, $"{_context.OldElementInfos.FontCount + 0}").ConfigureAwait(false);
-        await NewWriter.WriteAttributeStringAsync(null, "fillId", null, $"{_context.OldElementInfos.FillCount + 0}").ConfigureAwait(false);
+        await NewWriter.WriteAttributeStringAsync(null, "fontId", null, $"{_context.OldElementInfos.FontCount}").ConfigureAwait(false);
+        await NewWriter.WriteAttributeStringAsync(null, "fillId", null, $"{_context.OldElementInfos.FillCount}").ConfigureAwait(false);
         await NewWriter.WriteAttributeStringAsync(null, "borderId", null, $"{_context.OldElementInfos.BorderCount + 1}").ConfigureAwait(false);
         await NewWriter.WriteAttributeStringAsync(null, "xfId", null, "0").ConfigureAwait(false);
         await NewWriter.WriteAttributeStringAsync(null, "applyNumberFormat", null, "1").ConfigureAwait(false);
@@ -451,8 +451,8 @@ internal partial class DefaultSheetStyleBuilder(SheetStyleBuildContext context, 
          */
         await NewWriter.WriteStartElementAsync(OldReader.Prefix, "xf", OldReader.NamespaceURI).ConfigureAwait(false);
         await NewWriter.WriteAttributeStringAsync(null, "numFmtId", null, "14").ConfigureAwait(false);
-        await NewWriter.WriteAttributeStringAsync(null, "fontId", null, $"{_context.OldElementInfos.FontCount + 0}").ConfigureAwait(false);
-        await NewWriter.WriteAttributeStringAsync(null, "fillId", null, $"{_context.OldElementInfos.FillCount + 0}").ConfigureAwait(false);
+        await NewWriter.WriteAttributeStringAsync(null, "fontId", null, $"{_context.OldElementInfos.FontCount}").ConfigureAwait(false);
+        await NewWriter.WriteAttributeStringAsync(null, "fillId", null, $"{_context.OldElementInfos.FillCount}").ConfigureAwait(false);
         await NewWriter.WriteAttributeStringAsync(null, "borderId", null, $"{_context.OldElementInfos.BorderCount + 1}").ConfigureAwait(false);
         await NewWriter.WriteAttributeStringAsync(null, "xfId", null, "0").ConfigureAwait(false);
         await NewWriter.WriteAttributeStringAsync(null, "applyNumberFormat", null, "1").ConfigureAwait(false);
@@ -484,8 +484,8 @@ internal partial class DefaultSheetStyleBuilder(SheetStyleBuildContext context, 
          */
         await NewWriter.WriteStartElementAsync(OldReader.Prefix, "xf", OldReader.NamespaceURI).ConfigureAwait(false);
         await NewWriter.WriteAttributeStringAsync(null, "numFmtId", null, "0").ConfigureAwait(false);
-        await NewWriter.WriteAttributeStringAsync(null, "fontId", null, $"{_context.OldElementInfos.FontCount + 0}").ConfigureAwait(false);
-        await NewWriter.WriteAttributeStringAsync(null, "fillId", null, $"{_context.OldElementInfos.FillCount + 0}").ConfigureAwait(false);
+        await NewWriter.WriteAttributeStringAsync(null, "fontId", null, $"{_context.OldElementInfos.FontCount}").ConfigureAwait(false);
+        await NewWriter.WriteAttributeStringAsync(null, "fillId", null, $"{_context.OldElementInfos.FillCount}").ConfigureAwait(false);
         await NewWriter.WriteAttributeStringAsync(null, "borderId", null, $"{_context.OldElementInfos.BorderCount + 1}").ConfigureAwait(false);
         await NewWriter.WriteAttributeStringAsync(null, "xfId", null, "0").ConfigureAwait(false);
         await NewWriter.WriteAttributeStringAsync(null, "applyBorder", null, "1").ConfigureAwait(false);
@@ -503,8 +503,8 @@ internal partial class DefaultSheetStyleBuilder(SheetStyleBuildContext context, 
          */
         await NewWriter.WriteStartElementAsync(OldReader.Prefix, "xf", OldReader.NamespaceURI).ConfigureAwait(false);
         await NewWriter.WriteAttributeStringAsync(null, "numFmtId", null, "21").ConfigureAwait(false);
-        await NewWriter.WriteAttributeStringAsync(null, "fontId", null, $"{_context.OldElementInfos.FontCount + 0}").ConfigureAwait(false);
-        await NewWriter.WriteAttributeStringAsync(null, "fillId", null, $"{_context.OldElementInfos.FillCount + 0}").ConfigureAwait(false);
+        await NewWriter.WriteAttributeStringAsync(null, "fontId", null, $"{_context.OldElementInfos.FontCount}").ConfigureAwait(false);
+        await NewWriter.WriteAttributeStringAsync(null, "fillId", null, $"{_context.OldElementInfos.FillCount}").ConfigureAwait(false);
         await NewWriter.WriteAttributeStringAsync(null, "borderId", null, $"{_context.OldElementInfos.BorderCount + 1}").ConfigureAwait(false);
         await NewWriter.WriteAttributeStringAsync(null, "xfId", null, "0").ConfigureAwait(false);
         await NewWriter.WriteAttributeStringAsync(null, "applyNumberFormat", null, "1").ConfigureAwait(false);
@@ -540,8 +540,8 @@ internal partial class DefaultSheetStyleBuilder(SheetStyleBuildContext context, 
              */
             await NewWriter.WriteStartElementAsync(OldReader.Prefix, "xf", OldReader.NamespaceURI).ConfigureAwait(false);
             await NewWriter.WriteAttributeStringAsync(null, "numFmtId", null, (numFmtIndex + i + _context.OldElementInfos.NumFmtCount).ToString()).ConfigureAwait(false);
-            await NewWriter.WriteAttributeStringAsync(null, "fontId", null, $"{_context.OldElementInfos.FontCount + 0}").ConfigureAwait(false);
-            await NewWriter.WriteAttributeStringAsync(null, "fillId", null, $"{_context.OldElementInfos.FillCount + 0}").ConfigureAwait(false);
+            await NewWriter.WriteAttributeStringAsync(null, "fontId", null, $"{_context.OldElementInfos.FontCount}").ConfigureAwait(false);
+            await NewWriter.WriteAttributeStringAsync(null, "fillId", null, $"{_context.OldElementInfos.FillCount}").ConfigureAwait(false);
             await NewWriter.WriteAttributeStringAsync(null, "borderId", null, $"{_context.OldElementInfos.BorderCount + 1}").ConfigureAwait(false);
             await NewWriter.WriteAttributeStringAsync(null, "xfId", null, "0").ConfigureAwait(false);
             await NewWriter.WriteAttributeStringAsync(null, "applyNumberFormat", null, "1").ConfigureAwait(false);

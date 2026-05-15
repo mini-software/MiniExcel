@@ -35,7 +35,7 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
         _printHeader = printHeader;
         _defaultSheetName = sheetName;
 
-        _sheetStyleBuildContext = new SheetStyleBuildContext(_zipDictionary, _archive, Utf8WithBom);
+        _sheetStyleBuildContext = new SheetStyleBuildContext(_zipContentsMap, _archive, Utf8WithBom);
     }
 
     [CreateSyncVersion]
@@ -189,7 +189,7 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
             rowsWritten = await WriteValuesAsync(writer, values, cancellationToken, progress).ConfigureAwait(false);
         }
 
-        _zipDictionary.Add(sheetPath, new ZipPackageInfo(entry, ExcelContentTypes.Worksheet));
+        _zipContentsMap.Add(sheetPath, ExcelContentTypes.Worksheet);
         return rowsWritten;
     }
 
@@ -616,14 +616,14 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
             partNames.Add(partName);
         }
 
-        foreach (var p in _zipDictionary)
+        foreach (var (entry, contentType) in _zipContentsMap)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            var partName = $"/{p.Key}";
-            if (!partNames.Contains(partName))
+            var entryPath = $"/{entry}";
+            if (!partNames.Contains(entryPath))
             {
-                var newElement = new XElement(ns + "Override", new XAttribute("ContentType", p.Value.ContentType), new XAttribute("PartName", partName));
+                var newElement = new XElement(ns + "Override", new XAttribute("ContentType", contentType), new XAttribute("PartName", entryPath));
                 typesElement.Add(newElement);
             }
         }
@@ -656,7 +656,7 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
         await writer.WriteAsync(content, cancellationToken).ConfigureAwait(false);
 
         if (contentType is not (null or ""))
-            _zipDictionary.Add(path, new ZipPackageInfo(entry, contentType));
+            _zipContentsMap.Add(path, contentType);
     }
 
     [CreateSyncVersion]

@@ -15,5 +15,4 @@ global using MiniExcelLib.Core.Reflection;
 global using MiniExcelLib.OpenXml.Helpers;
 global using MiniExcelLib.OpenXml.Models;
 global using MiniExcelLib.OpenXml.Utils;
-global using MiniExcelLib.OpenXml.Zip;
 global using Zomp.SyncMethodGenerator;

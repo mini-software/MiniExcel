@@ -2,7 +2,7 @@
 
 namespace MiniExcelLib.OpenXml.Styles.Builder;
 
-internal sealed partial class SheetStyleBuildContext(Dictionary<string, ZipPackageInfo> zipDictionary, ZipArchive archive, Encoding encoding) : IDisposable, IAsyncDisposable
+internal sealed partial class SheetStyleBuildContext(Dictionary<string, string> contentTypes, ZipArchive archive, Encoding encoding) : IDisposable, IAsyncDisposable
 {
     private const string EmptyStylesXml = 
         """
@@ -10,7 +10,7 @@ internal sealed partial class SheetStyleBuildContext(Dictionary<string, ZipPacka
         <x:styleSheet xmlns:x="http://schemas.openxmlformats.org/spreadsheetml/2006/main" />
         """;
 
-    private readonly Dictionary<string, ZipPackageInfo> _zipDictionary = zipDictionary;
+    private readonly Dictionary<string, string> _contentTypes = contentTypes;
     private readonly ZipArchive _archive = archive;
     private readonly Encoding _encoding = encoding;
 
@@ -176,7 +176,7 @@ internal sealed partial class SheetStyleBuildContext(Dictionary<string, ZipPacka
 
             if (_oldStyleXmlZipEntry is null)
             {
-                _zipDictionary.Add(ExcelFileNames.Styles, new ZipPackageInfo(_newStyleXmlZipEntry!, ExcelContentTypes.Styles));
+                _contentTypes.Add(ExcelFileNames.Styles, ExcelContentTypes.Styles);
             }
             else
             {
@@ -197,7 +197,7 @@ internal sealed partial class SheetStyleBuildContext(Dictionary<string, ZipPacka
                     await tempStream.CopyToAsync(newStream, 4096, cancellationToken).ConfigureAwait(false);
                 }
 
-                _zipDictionary[ExcelFileNames.Styles] = new ZipPackageInfo(finalStyleXmlZipEntry, ExcelContentTypes.Styles);
+                _contentTypes[ExcelFileNames.Styles] = ExcelContentTypes.Styles;
                 _newStyleXmlZipEntry?.Delete();
                 _newStyleXmlZipEntry = null;
             }

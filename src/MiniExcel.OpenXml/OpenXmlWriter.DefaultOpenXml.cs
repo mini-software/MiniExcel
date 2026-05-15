@@ -16,7 +16,7 @@ internal partial class OpenXmlWriter
     
     private static readonly DateTime ExcelZeroDate = new(1899, 12, 31);
     
-    private readonly Dictionary<string, ZipPackageInfo> _zipDictionary = [];
+    private readonly Dictionary<string, string> _zipContentsMap = [];
     
     private IEnumerable<(SheetDto Sheet, object? Data)> GetSheets()
     {
@@ -426,9 +426,9 @@ internal partial class OpenXmlWriter
     private string GetContentTypesXml()
     {
         var sb = new StringBuilder(ExcelXml.StartTypes);
-        foreach (var p in _zipDictionary)
+        foreach (var p in _zipContentsMap)
         {
-            sb.Append(ExcelXml.ContentType(p.Value.ContentType, p.Key));
+            sb.Append(ExcelXml.ContentType(p.Value, p.Key));
         }
 
         sb.Append(ExcelXml.EndTypes);

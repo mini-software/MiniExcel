@@ -1,6 +1,6 @@
 using System.Collections.ObjectModel;
 
-namespace MiniExcelLib.OpenXml.Zip;
+namespace MiniExcelLib.OpenXml.Utils;
 
 /// Copied & modified from ExcelDataReader ZipWorker @MIT License
 internal sealed partial class OpenXmlZip : IDisposable, IAsyncDisposable

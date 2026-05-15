@@ -163,7 +163,10 @@ internal partial class OpenXmlWriter
             return (RegularCellStyleIndex, "str", string.Empty);
 
         if (value is string str)
-            return (RegularCellStyleIndex, "str", XmlHelper.EncodeXml(str));
+        {
+            var styleIndex = columnInfo?.ExcelFormatId is { } fmt and not -1 ? fmt.ToString() : RegularCellStyleIndex;
+            return (styleIndex, "str", XmlHelper.EncodeXml(str));
+        }
 
         var type = GetValueType(value, columnInfo);
 

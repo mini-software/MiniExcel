@@ -8,9 +8,9 @@ namespace MiniExcelLib.OpenXml.Tests.SaveByTemplate;
 
 public class MiniExcelTemplateTests
 {
-    private readonly OpenXmlImporter _excelImporter =  MiniExcel.Importers.GetOpenXmlImporter();
-    private readonly OpenXmlTemplater _excelTemplater =  MiniExcel.Templaters.GetOpenXmlTemplater();
-    
+    private readonly OpenXmlImporter _excelImporter = MiniExcel.Importers.GetOpenXmlImporter();
+    private readonly OpenXmlTemplater _excelTemplater = MiniExcel.Templaters.GetOpenXmlTemplater();
+
     [Fact]
     public void TestImageType()
     {
@@ -20,9 +20,9 @@ public class MiniExcelTemplateTests
         using var path = AutoDeletingPath.Create();
         File.Copy(absolutePath, path.FilePath, overwrite: true); // Copy the template file
 
-        var img1Bytes= File.ReadAllBytes(PathHelper.GetFile("xlsx/Issue327/TestIssue327.png"));
-        var img2Bytes= File.ReadAllBytes(PathHelper.GetFile("xlsx/Issue327/TestIssue327.png"));
-        var img3Bytes= File.ReadAllBytes(PathHelper.GetFile("xlsx/Issue327/TestIssue327.png"));
+        var img1Bytes = File.ReadAllBytes(PathHelper.GetFile("xlsx/Issue327/TestIssue327.png"));
+        var img2Bytes = File.ReadAllBytes(PathHelper.GetFile("xlsx/Issue327/TestIssue327.png"));
+        var img3Bytes = File.ReadAllBytes(PathHelper.GetFile("xlsx/Issue327/TestIssue327.png"));
 
         var pictures = new[]
         {
@@ -66,7 +66,7 @@ public class MiniExcelTemplateTests
 
         // Assert (use EPPlus to verify that images are inserted correctly)
         using var package = new ExcelPackage(new FileInfo(path.FilePath));
-            
+
         var sheet = package.Workbook.Worksheets[0];
         var picB2 = sheet.Drawings
             .OfType<ExcelPicture>()
@@ -83,7 +83,7 @@ public class MiniExcelTemplateTests
         var picD4 = sheet.Drawings
             .OfType<ExcelPicture>()
             .FirstOrDefault(p => p is { EditAs: eEditAs.TwoCell, From: { Column: 3, Row: 3 } });
-                
+
         Assert.NotNull(picD4);
         //Console.WriteLine("✅ Image inserted successfully (D4 - TwoCellAnchor)");
 
@@ -95,7 +95,7 @@ public class MiniExcelTemplateTests
         Assert.NotNull(picF6);
         //Console.WriteLine("✅ Image inserted successfully (F6 - OneCellAnchor)");
     }
-    
+
     [Fact]
     public void DatatableTemptyRowTest()
     {
@@ -106,11 +106,11 @@ public class MiniExcelTemplateTests
             var managers = new DataTable();
             managers.Columns.Add("name");
             managers.Columns.Add("department");
-            
+
             var employees = new DataTable();
             employees.Columns.Add("name");
             employees.Columns.Add("department");
-            
+
             var value = new Dictionary<string, object>
             {
                 ["title"] = "FooCompany",
@@ -118,24 +118,24 @@ public class MiniExcelTemplateTests
                 ["employees"] = employees
             };
             _excelTemplater.FillTemplate(path.ToString(), templatePath, value);
-            
+
             var rows = _excelImporter.Query(path.ToString()).ToList();
             var dimension = SheetHelper.GetFirstSheetDimensionRefValue(path.ToString());
             Assert.Equal("A1:C5", dimension);
         }
         {
             using var path = AutoDeletingPath.Create();
-            
+
             var managers = new DataTable();
             managers.Columns.Add("name");
             managers.Columns.Add("department");
             managers.Rows.Add("Jack", "HR");
-            
+
             var employees = new DataTable();
             employees.Columns.Add("name");
             employees.Columns.Add("department");
             employees.Rows.Add("Wade", "HR");
-            
+
             var value = new Dictionary<string, object>()
             {
                 ["title"] = "FooCompany",
@@ -143,7 +143,7 @@ public class MiniExcelTemplateTests
                 ["employees"] = employees
             };
             _excelTemplater.FillTemplate(path.ToString(), templatePath, value);
-            
+
             var rows = _excelImporter.Query(path.ToString()).ToList();
             var dimension = SheetHelper.GetFirstSheetDimensionRefValue(path.ToString());
             Assert.Equal("A1:C5", dimension);
@@ -162,7 +162,7 @@ public class MiniExcelTemplateTests
         managers.Columns.Add("department");
         managers.Rows.Add("Jack", "HR");
         managers.Rows.Add("Loan", "IT");
-        
+
         var employees = new DataTable();
         employees.Columns.Add("name");
         employees.Columns.Add("department");
@@ -170,7 +170,7 @@ public class MiniExcelTemplateTests
         employees.Rows.Add("Felix", "HR");
         employees.Rows.Add("Eric", "IT");
         employees.Rows.Add("Keaton", "IT");
-        
+
         var value = new Dictionary<string, object>()
         {
             ["title"] = "FooCompany",
@@ -576,12 +576,12 @@ public class MiniExcelTemplateTests
             //1. By POCO
             var value = new TestIEnumerableTypePoco
             {
-                @string = "string", 
+                @string = "string",
                 @int = 123,
                 @decimal = 123.45m,
-                @double = 123.33, 
+                @double = 123.33,
                 datetime = new DateTime(2021, 4, 1),
-                @bool = true, 
+                @bool = true,
                 Guid = Guid.NewGuid()
             };
             _excelTemplater.FillTemplate(path.ToString(), templatePath, value);
@@ -618,7 +618,7 @@ public class MiniExcelTemplateTests
         var templatePath = PathHelper.GetFile("xlsx/TestTemplateEasyFill.xlsx");
         {
             using var path = AutoDeletingPath.Create();
-            
+
             // 1. By POCO
             var value = new
             {
@@ -667,7 +667,7 @@ public class MiniExcelTemplateTests
         {
             var path = AutoDeletingPath.Create();
             var templateBytes = File.ReadAllBytes(templatePath);
-            
+
             // 1. By POCO
             var value = new
             {
@@ -694,7 +694,7 @@ public class MiniExcelTemplateTests
 
         {
             using var path = AutoDeletingPath.Create();
-            
+
             // 2. By Dictionary
             var value = new Dictionary<string, object>
             {
@@ -964,4 +964,137 @@ public class MiniExcelTemplateTests
         Assert.Equal("C3:C6", mergedCells[1]);
         Assert.Equal("A5:A6", mergedCells[2]);
     }
+
+    #region Extend
+
+    public record struct Identity(int Type, string Id);
+
+    private class Fund
+    {
+        public int Id { get; set; }
+        public string? Name { get; set; }
+        public Identity Identity { get; set; }
+        public DateOnly SetupDate { get; set; }
+
+        public List<NetValue> NetValues { get; set; } = [];
+    }
+
+    public record NetValue(DateOnly Date, decimal Value);
+    private static object GenerateData()
+    {
+        // 初始化基金基础数据 + 生成对应净值数据
+        List<Fund> fundList = new List<Fund>
+    {
+        new Fund
+        {
+            Id = 1,
+            Name = "易方达货币A",
+            Identity = new Identity(1, "FUND_000001"),
+            SetupDate = new DateOnly(2019, 5, 20),
+            NetValues = GenerateNetValues(1, new DateOnly(2025, 1, 1))
+        },
+        new Fund
+        {
+            Id = 2,
+            Name = "南方成长混合",
+            Identity = new Identity(2, "FUND_000002"),
+            SetupDate = new DateOnly(2020, 3, 10),
+            NetValues = GenerateNetValues(2, new DateOnly(2025, 1, 1))
+        },
+        new Fund
+        {
+            Id = 3,
+            Name = "招商债券基金",
+            Identity = new Identity(3, "FUND_000003"),
+            SetupDate = new DateOnly(2021, 7, 1),
+            NetValues = GenerateNetValues(3, new DateOnly(2025, 1, 1))
+        },
+        new Fund
+        {
+            Id = 4,
+            Name = "华夏沪深300ETF",
+            Identity = new Identity(4, "FUND_000004"),
+            SetupDate = new DateOnly(2018, 11, 5),
+            NetValues = GenerateNetValues(4, new DateOnly(2025, 1, 1))
+        },
+        new Fund
+        {
+            Id = 5,
+            Name = "工银瑞信新能源",
+            Identity = new Identity(5, "FUND_000005"),
+            SetupDate = new DateOnly(2022, 1, 25),
+            NetValues = GenerateNetValues(5, new DateOnly(2025, 1, 1))
+        }
+    };
+
+        // 返回完整数据（包含净值列表）
+        var value = new
+        {
+            Funds = fundList.Select(x => new
+            {
+                x.Id,
+                x.Name,
+                x.Identity,
+                x.SetupDate,
+                x.NetValues,
+                SheetName = x.Name
+            })
+        };
+        return value;
+    }
+
+    /// <summary>
+    /// 辅助方法：根据基金类型生成模拟净值数据
+    /// </summary>
+    /// <param name="fundType">基金类型</param>
+    /// <param name="startDate">开始日期</param>
+    /// <returns>30条连续日期的净值列表</returns>
+    private static List<NetValue> GenerateNetValues(int fundType, DateOnly startDate)
+    {
+        var netValues = new List<NetValue>();
+        var random = Random.Shared;
+
+        // 生成30条连续的净值数据
+        for (int i = 0; i < 30; i++)
+        {
+            decimal value = fundType switch
+            {
+                // 货币基金：净值稳定在 1.0000 左右
+                1 => Math.Round(1.0000m + (decimal)random.NextDouble() * 0.0010m, 4),
+                // 混合型基金：净值 1.2 ~ 2.0
+                2 => Math.Round(1.2m + (decimal)random.NextDouble() * 0.8m, 4),
+                // 债券基金：净值 1.05 ~ 1.30
+                3 => Math.Round(1.05m + (decimal)random.NextDouble() * 0.25m, 4),
+                // ETF基金：净值 1.1 ~ 1.8
+                4 => Math.Round(1.1m + (decimal)random.NextDouble() * 0.7m, 4),
+                // 新能源主题基金：净值 1.5 ~ 2.5（波动较大）
+                5 => Math.Round(1.5m + (decimal)random.NextDouble() * 1.0m, 4),
+                _ => 1.0000m
+            };
+
+            netValues.Add(new NetValue(startDate.AddDays(i), value));
+        }
+
+        return netValues;
+    }
+
+
+    [Fact]
+    public async Task TestExtend()
+    {
+        // 造 5 条测试数据
+        var value = GenerateData();
+
+        var templatePath = PathHelper.GetFile("xlsx/TestObjectExt.xlsx");
+
+        var path = "object-ext.xlsx";
+        File.Delete(path);
+
+        await _excelTemplater.FillTemplateAsync(path, templatePath, value);
+
+        Assert.True(true);
+    }
+
+    #endregion
+
 }

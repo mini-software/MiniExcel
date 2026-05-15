@@ -701,6 +701,8 @@ internal partial class OpenXmlTemplate
                         : tempReplacement;
                     
                     replacements[key] = replacementValue;
+                    AddFlattenedAndFormattedValues(replacements, key, cellValue, propInfo);
+
                     rowXml.Replace($"@header{{{{{key}}}}}", replacementValue);
 
                     if (isHeaderRow && row.Value.Contains(key))

@@ -183,7 +183,10 @@ internal partial class ExcelOpenXmlSheetWriter
             return Tuple.Create(RegularCellStyleIndex, StringDataType, string.Empty);
 
         if (value is string str)
-            return Tuple.Create(RegularCellStyleIndex, StringDataType, ExcelOpenXmlUtils.EncodeXML(str));
+        {
+            var styleIndex = columnInfo?.ExcelFormatId is { } fmt and not -1 ? fmt.ToString() : RegularCellStyleIndex; 
+            return Tuple.Create(styleIndex, StringDataType, ExcelOpenXmlUtils.EncodeXML(str));
+        }
 
         var type = GetValueType(value, columnInfo);
 

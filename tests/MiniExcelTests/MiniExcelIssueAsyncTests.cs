@@ -1888,4 +1888,27 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
         Assert.All(rows, x => Assert.Single(x));
         Assert.Equal("Name", rows[0].A);
     }
+
+    [Fact]
+    public async Task TestIssue627()
+    {
+        var data = new[] { new { LongNumber = "1550432695793487872" } };
+        
+        var config = new OpenXmlConfiguration
+        {
+            DynamicColumns = [
+                new DynamicExcelColumn("LongNumber") { Format = "@" } 
+            ]
+        };
+
+        await using var ms = new MemoryStream();
+        await ms.SaveAsAsync(data, configuration: config);
+        ms.Seek(0, SeekOrigin.Begin);
+
+        using var package = new ExcelPackage(ms);
+        var cell = package.Workbook.Worksheets[0].Cells["A2"];
+        
+        Assert.Equal("1550432695793487872", cell.GetValue<string>());
+        Assert.Equal("@", cell.Style.Numberformat.Format);
+    }
 }

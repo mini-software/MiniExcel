@@ -48,8 +48,8 @@ internal partial class OpenXmlWriter
         }
 
         sheetId++;
-        var defaultSheetInfo = GetSheetInfos(_defaultSheetName);
-        yield return (defaultSheetInfo.ToDto(sheetId), _value);
+        var sheetInfo = GetSheetInfos(_sheetName);
+        yield return (sheetInfo.ToDto(sheetId), _value);
     }
 
     private ExcelSheetInfo GetSheetInfos(string sheetName)

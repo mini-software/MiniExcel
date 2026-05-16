@@ -5,7 +5,7 @@ public sealed partial class OpenXmlExporter
     internal OpenXmlExporter() { }
     
     [CreateSyncVersion]
-    public async Task<int> InsertSheetAsync(string path, object value, string? sheetName = "Sheet1",
+    public async Task<int> InsertSheetAsync(string path, object value, string sheetName = "Sheet1",
         bool printHeader = true, bool overwriteSheet = false, OpenXmlConfiguration? configuration = null,
         IProgress<int>? progress = null, CancellationToken cancellationToken = default)
     {
@@ -28,7 +28,7 @@ public sealed partial class OpenXmlExporter
     }
 
     [CreateSyncVersion]
-    public async Task<int> InsertSheetAsync(Stream stream, object value, string? sheetName = "Sheet1", 
+    public async Task<int> InsertSheetAsync(Stream stream, object value, string sheetName = "Sheet1", 
         bool printHeader = true, bool overwriteSheet = false, OpenXmlConfiguration? configuration = null, 
         IProgress<int>? progress = null, CancellationToken cancellationToken = default)
     {
@@ -44,7 +44,7 @@ public sealed partial class OpenXmlExporter
 
     [CreateSyncVersion]
     public async Task<int[]> ExportAsync(string path, object value, bool printHeader = true, 
-        string? sheetName = "Sheet1", bool overwriteFile = false, OpenXmlConfiguration? configuration = null, 
+        string sheetName = "Sheet1", bool overwriteFile = false, OpenXmlConfiguration? configuration = null, 
         IProgress<int>? progress = null, CancellationToken cancellationToken = default)
     {
         if (Path.GetExtension(path).Equals(".xlsm", StringComparison.InvariantCultureIgnoreCase))
@@ -60,7 +60,7 @@ public sealed partial class OpenXmlExporter
     }
 
     [CreateSyncVersion]
-    public async Task<int[]> ExportAsync(Stream stream, object value, bool printHeader = true, string? sheetName = "Sheet1", 
+    public async Task<int[]> ExportAsync(Stream stream, object value, bool printHeader = true, string sheetName = "Sheet1", 
         OpenXmlConfiguration? configuration = null, IProgress<int>? progress = null, CancellationToken cancellationToken = default)
     {
         var writer = await OpenXmlWriter

@@ -3,6 +3,7 @@
 internal static class ThrowHelper
 {
     private static readonly byte[] ZipArchiveHeader = [0x50, 0x4B];
+    private static readonly char[] InvalidSheetNameCharacters = ['\\', '/', '?', '*', '[', ']'];
     private const int ExcelMaxSheetNameLength = 31;
     
     internal static void ThrowIfInvalidOpenXml(Stream stream)
@@ -23,9 +24,12 @@ internal static class ThrowHelper
     internal static void ThrowIfInvalidSheetName(string? sheetName)
     {
         if (string.IsNullOrEmpty(sheetName))
-            throw new ArgumentException("Sheet names cannot be empty or null");
+            throw new ArgumentException("Sheet names cannot be empty");
 
         if (sheetName.Length > ExcelMaxSheetNameLength)
             throw new ArgumentException("Sheet names must be less than 31 characters");
+
+        if (sheetName.Intersect(InvalidSheetNameCharacters).Any())
+            throw new ArgumentException($"Sheet names cannot contain any of the following charachters: {string.Join(", ", InvalidSheetNameCharacters)}");
     }
 }

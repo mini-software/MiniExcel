@@ -18,13 +18,14 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
     private readonly List<FileDto> _files = [];
     private readonly SheetStyleBuildContext _sheetStyleBuildContext;
     
-    private readonly string? _defaultSheetName;
+    private readonly string _sheetName;
     private readonly bool _printHeader;
+    private readonly bool _useSharedStrings;
     private readonly object? _value;
 
     private int _currentSheetIndex = 0;
 
-    private OpenXmlWriter(Stream stream, ZipArchive archive, object? value, string? sheetName, OpenXmlConfiguration configuration, bool printHeader)
+    private OpenXmlWriter(Stream stream, ZipArchive archive, object? value, string sheetName, OpenXmlConfiguration configuration, bool printHeader)
     {
         _stream = stream;
 
@@ -33,13 +34,13 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
 
         _value = value;
         _printHeader = printHeader;
-        _defaultSheetName = sheetName;
+        _sheetName = sheetName;
 
         _sheetStyleBuildContext = new SheetStyleBuildContext(_zipContentsMap, _archive, Utf8WithBom);
     }
 
     [CreateSyncVersion]
-    internal static async ValueTask<OpenXmlWriter> CreateAsync(Stream stream, object? value, string? sheetName, bool printHeader, IMiniExcelConfiguration? configuration, CancellationToken cancellationToken = default)
+    internal static async ValueTask<OpenXmlWriter> CreateAsync(Stream stream, object? value, string sheetName, bool printHeader, IMiniExcelConfiguration? configuration, CancellationToken cancellationToken = default)
     {
         ThrowHelper.ThrowIfInvalidSheetName(sheetName);
 
@@ -113,9 +114,9 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
             })
         );
 
-        var existSheetDto = _sheets.SingleOrDefault(s => s.Name == _defaultSheetName);
+        var existSheetDto = _sheets.SingleOrDefault(s => s.Name == _sheetName);
         if (existSheetDto is not null && !overwriteSheet)
-            throw new Exception($"Sheet \"{_defaultSheetName}\" already exist");
+            throw new Exception($"Sheet \"{_sheetName}\" already exist");
 
         // GenerateStylesXml must be invoked after validating the overwritesheet parameter to avoid unnecessary style changes.
         var styleBuilder = await GetSheetStyleBuilderAsync(cancellationToken).ConfigureAwait(false);
@@ -124,7 +125,7 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
         if (existSheetDto is null)
         {
             _currentSheetIndex = (int)rels.Max(m => m.Id) + 1;
-            var insertSheetInfo = GetSheetInfos(_defaultSheetName);
+            var insertSheetInfo = GetSheetInfos(_sheetName);
             var insertSheetDto = insertSheetInfo.ToDto(_currentSheetIndex);
             _sheets.Add(insertSheetDto);
             rowsWritten = await CreateSheetXmlAsync(_value, insertSheetDto.Path, progress, cancellationToken).ConfigureAwait(false);
@@ -735,11 +736,9 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
             if (sheets.Find(s => s.Attribute("name")?.Value.Equals(sheetName, StringComparison.OrdinalIgnoreCase) is true) is not { } sheet)
                 throw new InvalidDataException($"Sheet {sheetName} not found");
 
-            if (!string.IsNullOrEmpty(newSheetName))
+            if (newSheetName is not null)
             {
-                if (newSheetName.Length > 31)
-                    throw new ArgumentException($"The name \"{newSheetName}\" is too long, the maximum allowed length is 31 characters.");
-
+                ThrowHelper.ThrowIfInvalidSheetName(newSheetName);
                 sheet.SetAttributeValue("name", newSheetName);
             }
 

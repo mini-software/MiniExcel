@@ -77,7 +77,7 @@ internal static class ExcelXml
     internal static string SharedStrings(Dictionary<string, int> sharedStrings)
     {
         var sb = new StringBuilder();
-        sb.Append("""<?xml version="1.0" encoding="UTF-8" standalone="yes" ?><x:sst xmlns:x="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="0" """);
+        sb.Append("""<?xml version="1.0" encoding="UTF-8" standalone="yes" ?><x:sst xmlns:x="http://schemas.openxmlformats.org/spreadsheetml/2006/main" """);
         sb.Append($"uniqueCount=\"{sharedStrings.Count}\">");
 
         foreach(var (text, _) in sharedStrings.OrderBy(x => x.Value))
@@ -87,7 +87,7 @@ internal static class ExcelXml
             if (text.StartsWith(" ") || text.EndsWith(" "))
                 sb.Append(" xml:space=\"preserve\"");
             
-            sb.Append($">{text}</x:t></x:si>");
+            sb.Append($">{XmlHelper.EncodeXml(text)}</x:t></x:si>");
         }
         
         sb.Append("</x:sst>");

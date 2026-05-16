@@ -171,7 +171,7 @@ internal partial class OpenXmlWriter
         if (value is string str)
         {
             var styleIndex = columnMapping?.ExcelFormatId is { } fmt and not -1 ? fmt.ToString() : RegularCellStyleIndex;
-            return (styleIndex, GetStringType(), XmlHelper.EncodeXml(str));
+            return (styleIndex, GetStringType(), str);
         }
 
         var type = GetValueType(value, columnMapping);
@@ -179,7 +179,7 @@ internal partial class OpenXmlWriter
         if (columnMapping is { ExcelFormat: not null, ExcelFormatId: -1 } && value is IFormattable formattableValue)
         {
             var formattedStr = formattableValue.ToString(columnMapping.ExcelFormat, _configuration.Culture);
-            return (RegularCellStyleIndex, GetStringType(), XmlHelper.EncodeXml(formattedStr));
+            return (RegularCellStyleIndex, GetStringType(), formattedStr);
         }
 
         if (type == typeof(DateTime))
@@ -235,10 +235,10 @@ internal partial class OpenXmlWriter
                 return (FillCellStyleIndex, ExcelXml.CalculatedStringDataType, "");
             
             var base64 = GetFileValue(rowIndex, cellIndex, value);
-            return (FillCellStyleIndex, ExcelXml.InlineStringDataType, XmlHelper.EncodeXml(base64));  
+            return (FillCellStyleIndex, ExcelXml.InlineStringDataType, base64);  
         }
 
-        return (RegularCellStyleIndex, GetStringType(), XmlHelper.EncodeXml(value.ToString()));
+        return (RegularCellStyleIndex, GetStringType(), value.ToString());
         
         string GetStringType()
         {

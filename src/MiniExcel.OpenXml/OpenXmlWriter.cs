@@ -120,7 +120,7 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
 
         var existingSheetDto = _sheets.SingleOrDefault(s => s.Name == _sheetName);
         if (existingSheetDto is not null && !overwriteSheet)
-            throw new Exception($"Sheet \"{_sheetName}\" already exist");
+            throw new Exception($"Sheet \"{_sheetName}\" already exists");
 
         // GenerateStylesXml must be invoked after validating the overwritesheet parameter to avoid unnecessary style changes.
         var styleBuilder = await GetSheetStyleBuilderAsync(cancellationToken).ConfigureAwait(false);
@@ -453,7 +453,7 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
                     continue;
 
                 var r = CellReferenceConverter.GetCellFromCoordinates(xIndex, yIndex);
-                await writer.WriteAsync(WorksheetXml.Cell(r, ExcelXml.InlineStringDataType, HeaderCellStyleIndex, XmlHelper.EncodeXml(map.ExcelColumnName)), cancellationToken).ConfigureAwait(false);
+                await writer.WriteAsync(WorksheetXml.Cell(r, ExcelXml.InlineStringDataType, HeaderCellStyleIndex, map.ExcelColumnName), cancellationToken).ConfigureAwait(false);
             }
             xIndex++;
         }
@@ -678,16 +678,15 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
 #if NET8_0_OR_GREATER
         var zipStream = await entry.OpenAsync(cancellationToken).ConfigureAwait(false);
         await using var disposableZipStream = zipStream.ConfigureAwait(false);
+#else
+        using var zipStream = entry.Open();
+#endif
 
         var writer = new MiniExcelStreamWriter(zipStream, Utf8WithBom, _configuration.BufferSize);
         await using var disposableWriter = writer.ConfigureAwait(false);
-#else
-        using var zipStream = entry.Open();
-        using var writer = new MiniExcelStreamWriter(zipStream, Utf8WithBom, _configuration.BufferSize);
-#endif
         await writer.WriteAsync(content, cancellationToken).ConfigureAwait(false);
 
-        if (contentType is not (null or ""))
+        if (!string.IsNullOrEmpty(contentType))
             _zipContentsMap.Add(path, contentType);
     }
 

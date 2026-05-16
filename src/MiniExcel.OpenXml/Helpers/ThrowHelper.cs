@@ -30,6 +30,6 @@ internal static class ThrowHelper
             throw new ArgumentException("Sheet names must be less than 31 characters");
 
         if (sheetName.Intersect(InvalidSheetNameCharacters).Any())
-            throw new ArgumentException($"Sheet names cannot contain any of the following charachters: {string.Join(", ", InvalidSheetNameCharacters)}");
+            throw new ArgumentException($"Sheet names cannot contain any of the following characters: {string.Join(", ", InvalidSheetNameCharacters)}");
     }
 }

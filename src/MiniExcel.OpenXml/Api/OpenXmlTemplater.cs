@@ -1,10 +1,9 @@
-using MiniExcelLib.OpenXml;
 using MiniExcelLib.OpenXml.Picture;
 using MiniExcelLib.OpenXml.Templates;
 using OpenXmlTemplate = MiniExcelLib.OpenXml.Templates.OpenXmlTemplate;
 
 // ReSharper disable once CheckNamespace
-namespace MiniExcelLib.Core;
+namespace MiniExcelLib.OpenXml;
 
 public sealed partial class OpenXmlTemplater
 {

@@ -1,7 +1,7 @@
 using MiniExcelLib.Core;
 using MiniExcelLib.Core.Helpers;
 using MiniExcelLib.Csv;
-using MiniExcelLib.OpenXml.Api;
+using MiniExcelLib.OpenXml;
 using Zomp.SyncMethodGenerator;
 
 namespace MiniExcelLib;

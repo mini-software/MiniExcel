@@ -52,13 +52,21 @@ internal static class WorksheetXml
     internal const string EndCols = "</x:cols>";
 
     internal static string EmptyCell(string cellReference, string styleIndex) => $"<x:c r=\"{cellReference}\" s=\"{styleIndex}\"></x:c>";
-        
-    //t check avoid format error ![image](https://user-images.githubusercontent.com/12729184/118770190-9eee3480-b8b3-11eb-9f5a-87a439f5e320.png)
     internal static string Cell(string cellReference, string? cellType, string styleIndex, string? cellValue, bool preserveSpace = false, ColumnType columnType = ColumnType.Value)
     {
-        return cellType == ExcelXml.InlineStringDataType
-             ? $"""<x:c r="{cellReference}" t="{ExcelXml.InlineStringDataType}" s="{styleIndex}"{(preserveSpace ? " xml:space=\"preserve\"" : "")}><x:is><x:t>{cellValue}</x:t></x:is></x:c>""" 
-             : $"""<x:c r="{cellReference}"{(cellType is null ? "" : $" t=\"{cellType}\"")} s="{styleIndex}"{(preserveSpace ? " xml:space=\"preserve\"" : "")}><x:{(columnType == ColumnType.Formula ? "f" : "v")}>{cellValue}</x:{(columnType == ColumnType.Formula ? "f" : "v")}></x:c>""";
+        return cellType switch
+        {
+            _ when columnType == ColumnType.Formula 
+                => $"""<x:c r="{cellReference}" t="{ExcelXml.CalculatedStringDataType}" s="{styleIndex}"{(preserveSpace ? " xml:space=\"preserve\"" : "")}><x:f>{cellValue}</x:f></x:c>""", 
+            
+            ExcelXml.InlineStringDataType
+                => $"""<x:c r="{cellReference}" t="{ExcelXml.InlineStringDataType}" s="{styleIndex}"><x:is><x:t{(preserveSpace ? " xml:space=\"preserve\"" : "")}>{cellValue}</x:t></x:is></x:c>""",
+
+            ExcelXml.SharedStringDataType
+                => $"""<x:c r="{cellReference}" t="{ExcelXml.SharedStringDataType}" s="{styleIndex}"><x:v>{cellValue}</x:v></x:c>""",
+            
+            _ => $"""<x:c r="{cellReference}" t="{cellType}" s="{styleIndex}"{(preserveSpace ? " xml:space=\"preserve\"" : "")}><x:v>{cellValue}</x:v></x:c>"""
+        };
     }
 
     internal static string Autofilter(string dimensionRef) => $"<x:autoFilter ref=\"{dimensionRef}\" />";

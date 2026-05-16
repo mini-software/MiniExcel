@@ -17,6 +17,7 @@ internal partial class OpenXmlWriter
     private static readonly DateTime ExcelZeroDate = new(1899, 12, 31);
     
     private readonly Dictionary<string, string> _zipContentsMap = [];
+    private readonly Dictionary<string, int> _sharedStrings = [];
     
     private IEnumerable<(SheetDto Sheet, object? Data)> GetSheets()
     {
@@ -162,7 +163,7 @@ internal partial class OpenXmlWriter
         return sb.ToString();
     }
 
-    private (string StyleIndex, string? DataType, string? CellValue) GetCellValue(int rowIndex, int cellIndex, object value, MiniExcelColumnMapping? columnMapping, bool valueIsNull)
+    private (string StyleIndex, string DataType, string? CellValue) GetCellValue(int rowIndex, int cellIndex, object value, MiniExcelColumnMapping? columnMapping, bool valueIsNull)
     {
         if (valueIsNull)
             return (RegularCellStyleIndex, GetStringType(), string.Empty);
@@ -222,7 +223,7 @@ internal partial class OpenXmlWriter
                 return (RegularCellStyleIndex, dataType, cellValue);
             }
 
-            return (columnMapping.ExcelFormatId.ToString(), null, cellValue);
+            return (columnMapping.ExcelFormatId.ToString(), ExcelXml.NumericDataType, cellValue);
         }
 
         if (type == typeof(bool))
@@ -231,15 +232,23 @@ internal partial class OpenXmlWriter
         if (type == typeof(byte[]) && _configuration.EnableConvertByteArray)
         {
             if (!_configuration.EnableWriteFilePath)
-                return (FillCellStyleIndex, GetStringType(), "");
+                return (FillCellStyleIndex, ExcelXml.CalculatedStringDataType, "");
             
             var base64 = GetFileValue(rowIndex, cellIndex, value);
-            return (FillCellStyleIndex, GetStringType(), XmlHelper.EncodeXml(base64));  
+            return (FillCellStyleIndex, ExcelXml.InlineStringDataType, XmlHelper.EncodeXml(base64));  
         }
 
         return (RegularCellStyleIndex, GetStringType(), XmlHelper.EncodeXml(value.ToString()));
         
-        string GetStringType() => columnMapping?.ExcelColumnType == ColumnType.Value ? ExcelXml.InlineStringDataType : ExcelXml.StringDataType; 
+        string GetStringType()
+        {
+            if (columnMapping?.ExcelColumnType == ColumnType.Formula)
+                return ExcelXml.CalculatedStringDataType;
+            
+            return _configuration.StringStorageMode == StringStorageMode.Shared 
+                ? ExcelXml.SharedStringDataType 
+                : ExcelXml.InlineStringDataType;
+        }
     }
 
     private static Type GetValueType(object value, MiniExcelColumnMapping? columnInfo)
@@ -320,20 +329,20 @@ internal partial class OpenXmlWriter
     }
 
     //todo:reconsider cultureinfo
-    private (string, string?, string) GetDateTimeValue(DateTime value, MiniExcelColumnMapping? columnMapping)
+    private (string, string, string) GetDateTimeValue(DateTime value, MiniExcelColumnMapping? columnMapping)
     {
         string? cellValue;
         if (!ReferenceEquals(_configuration.Culture, CultureInfo.InvariantCulture))
         {
             cellValue = value.ToString(_configuration.Culture);
-            return (RegularCellStyleIndex, ExcelXml.StringDataType, cellValue);
+            return (RegularCellStyleIndex, ExcelXml.CalculatedStringDataType, cellValue);
         }
 
         var oaDate = CorrectDateTimeValue(value);
         cellValue = oaDate.ToString(CultureInfo.InvariantCulture);
         var format = columnMapping?.ExcelFormatId is { } fmt and not -1 ? fmt.ToString() : DateCellStyleIndex;
 
-        return (format, null, cellValue);
+        return (format, ExcelXml.NumericDataType, cellValue);
     }
 
     private static double CorrectDateTimeValue(DateTime value)
@@ -352,7 +361,7 @@ internal partial class OpenXmlWriter
         return oaDate;
     }
 
-    private (string, string?, string) GetTimeSpanValue(TimeSpan value, MiniExcelColumnMapping? columnMapping)
+    private (string, string, string) GetTimeSpanValue(TimeSpan value, MiniExcelColumnMapping? columnMapping)
     {
         if (value.TotalDays >= 1)
             return GetDateTimeValue(ExcelZeroDate + value, columnMapping);
@@ -360,7 +369,7 @@ internal partial class OpenXmlWriter
         var cellValue = value.TotalDays.ToString(CultureInfo.InvariantCulture);
         var format = columnMapping?.ExcelFormatId is { } fmt and not -1 ? fmt.ToString() : TimeCellStyleIndex;
 
-        return (format, null, cellValue);
+        return (format, ExcelXml.NumericDataType, cellValue);
     }
 
     private static string GetDimensionRef(int maxRowIndex, int maxColumnIndex)

@@ -650,11 +650,16 @@ internal class DefaultSheetStyleBuilder(SheetStyleBuildContext context, OpenXmlS
             _ => "bottom"
         };
         
-        /*
-         * <x:xf />
-         */
+        /* Empty style is required because Excel always considers the first one to be the default and ignores all its  properties
+         * <x:xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" />
+         * */
         _context.NewXmlWriter.WriteStartElement(_context.OldXmlReader.Prefix, "xf", _context.OldXmlReader.NamespaceURI);
-        _context.NewXmlWriter.WriteFullEndElement();
+        _context.NewXmlWriter.WriteAttributeString("numFmtId", null, "0");
+        _context.NewXmlWriter.WriteAttributeString("fontId", null, "0");
+        _context.NewXmlWriter.WriteAttributeString("fillId", null, "0");
+        _context.NewXmlWriter.WriteAttributeString("borderId", null, "0");
+        _context.NewXmlWriter.WriteAttributeString("xfId", null, "0");
+        _context.NewXmlWriter.WriteEndElement();
 
         /*
          * <x:xf numFmtId="0" fontId="1" fillId="2" borderId="1" xfId="0" applyNumberFormat="1" applyFill="0" applyBorder="1" applyAlignment="1" applyProtection="1">
@@ -892,11 +897,16 @@ internal class DefaultSheetStyleBuilder(SheetStyleBuildContext context, OpenXmlS
             _ => "bottom"
         };
         
-        /*
-         * <x:x />
-         */
-        await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "xf", _context.OldXmlReader.NamespaceURI);
-        await _context.NewXmlWriter.WriteEndElementAsync();
+        /* Empty style is required because Excel always considers the first one to be the default and ignores all its  properties
+         * <x:xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" />
+         * */
+        await _context.NewXmlWriter.WriteStartElementAsync(_context.OldXmlReader.Prefix, "xf", _context.OldXmlReader.NamespaceURI).ConfigureAwait(false);
+        await _context.NewXmlWriter.WriteAttributeStringAsync(null, "numFmtId", null, "0").ConfigureAwait(false);
+        await _context.NewXmlWriter.WriteAttributeStringAsync(null, "fontId", null, "0").ConfigureAwait(false);
+        await _context.NewXmlWriter.WriteAttributeStringAsync(null, "fillId", null, "0").ConfigureAwait(false);
+        await _context.NewXmlWriter.WriteAttributeStringAsync(null, "borderId", null, "0").ConfigureAwait(false);
+        await _context.NewXmlWriter.WriteAttributeStringAsync(null, "xfId", null, "0").ConfigureAwait(false);
+        await _context.NewXmlWriter.WriteEndElementAsync().ConfigureAwait(false);
 
         /*
          * <x:xf numFmtId="0" fontId="1" fillId="2" borderId="1" xfId="0" applyNumberFormat="1" applyFill="0" applyBorder="1" applyAlignment="1" applyProtection="1">

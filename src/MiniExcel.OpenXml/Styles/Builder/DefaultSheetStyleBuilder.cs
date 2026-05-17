@@ -364,9 +364,14 @@ internal partial class DefaultSheetStyleBuilder(SheetStyleBuildContext context, 
         };
         
         /* Empty style is required because Excel always considers the first one to be the default and ignores all its  properties
-         * <x:xf />
+         * <x:xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" />
          * */
         await NewWriter.WriteStartElementAsync(OldReader.Prefix, "xf", OldReader.NamespaceURI).ConfigureAwait(false);
+        await NewWriter.WriteAttributeStringAsync(null, "numFmtId", null, "0").ConfigureAwait(false);
+        await NewWriter.WriteAttributeStringAsync(null, "fontId", null, "0").ConfigureAwait(false);
+        await NewWriter.WriteAttributeStringAsync(null, "fillId", null, "0").ConfigureAwait(false);
+        await NewWriter.WriteAttributeStringAsync(null, "borderId", null, "0").ConfigureAwait(false);
+        await NewWriter.WriteAttributeStringAsync(null, "xfId", null, "0").ConfigureAwait(false);
         await NewWriter.WriteEndElementAsync().ConfigureAwait(false);
 
         /*

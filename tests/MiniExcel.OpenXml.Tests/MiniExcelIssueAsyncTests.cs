@@ -1508,6 +1508,30 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
     }
 
     [Fact]
+    public async Task TestIssue627()
+    {
+        var data = new[] { new { LongNumber = "1550432695793487872" } };
+
+        var config = new OpenXmlConfiguration
+        {
+            DynamicColumns =
+            [
+                new DynamicExcelColumn("LongNumber") { Format = "@" }
+            ]
+        };
+
+        await using var ms = new MemoryStream();
+        await _excelExporter.ExportAsync(ms, data, configuration: config);
+        ms.Seek(0, SeekOrigin.Begin);
+
+        using var package = new ExcelPackage(ms);
+        var cell = package.Workbook.Worksheets[0].Cells["A2"];
+
+        Assert.Equal("1550432695793487872", cell.GetValue<string>());
+        Assert.Equal("@", cell.Style.Numberformat.Format);
+    }
+
+    [Fact]
     public async Task TestIssue951()
     {
         var templatePath = PathHelper.GetFile("xlsx/TestTemplateEasyFill.xlsx");
@@ -1533,29 +1557,5 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
         public double Points { get; set; }
         
         public object this[string test] => new();
-    }
-
-    [Fact]
-    public async Task TestIssue627()
-    {
-        var data = new[] { new { LongNumber = "1550432695793487872" } };
-
-        var config = new OpenXmlConfiguration
-        {
-            DynamicColumns =
-            [
-                new DynamicExcelColumn("LongNumber") { Format = "@" }
-            ]
-        };
-
-        await using var ms = new MemoryStream();
-        await _excelExporter.ExportAsync(ms, data, configuration: config);
-        ms.Seek(0, SeekOrigin.Begin);
-
-        using var package = new ExcelPackage(ms);
-        var cell = package.Workbook.Worksheets[0].Cells["A2"];
-
-        Assert.Equal("1550432695793487872", cell.GetValue<string>());
-        Assert.Equal("@", cell.Style.Numberformat.Format);
     }
 }

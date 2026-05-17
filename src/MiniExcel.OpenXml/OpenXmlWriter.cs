@@ -125,23 +125,15 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
         // GenerateStylesXml must be invoked after validating the overwritesheet parameter to avoid unnecessary style changes.
         var styleBuilder = await GetSheetStyleBuilderAsync(cancellationToken).ConfigureAwait(false);
 
-        var sharedStringsEntry = _archive.GetEntry(ExcelFileNames.SharedStrings);
-        if (sharedStringsEntry is not null)
-        {
-#if NET8_0_OR_GREATER
-            var sharedStringsStream = await sharedStringsEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
-            await using var disposableStream = sharedStringsStream.ConfigureAwait(false);
-#else
-            using var sharedStringsStream = await sharedStringsEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
-#endif
-            
-            var index = 0;
-            await foreach (var sharedString in XmlReaderHelper.GetSharedStringsAsync(sharedStringsStream, cancellationToken).ConfigureAwait(false))
-            {
-                _sharedStrings.Add(sharedString, index++);
-            }
-        }
-        
+         var sharedStringsEntry = _archive.GetEntry(ExcelFileNames.SharedStrings);
+         if (sharedStringsEntry is not null)
+         {
+             foreach (var (key, value) in reader.SharedStrings)
+             {
+                 _sharedStrings[value] = key;
+             }
+         }
+
         int rowsWritten;
         if (existingSheetDto is null)
         {

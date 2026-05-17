@@ -1,8 +1,7 @@
-using MiniExcelLib.OpenXml;
-using OpenXmlReader = MiniExcelLib.OpenXml.OpenXmlReader;
+using MiniExcelLib.Core;
 
 // ReSharper disable once CheckNamespace
-namespace MiniExcelLib.Core;
+namespace MiniExcelLib.OpenXml;
 
 public sealed partial class OpenXmlImporter
 {

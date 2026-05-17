@@ -21,6 +21,7 @@ public class OpenXmlConfiguration : MiniExcelBaseConfiguration
     public bool TrimColumnNames { get; set; } = true;
     public bool IgnoreEmptyRows { get; set; } = false;
     
+    public StringStorageMode StringStorageMode { get; set; } =  StringStorageMode.Inline;
     public bool EnableSharedStringCache { get; set; } = true;
     public long SharedStringCacheSize { get; set; } = 5 * 1024 * 1024;
         
@@ -45,4 +46,19 @@ public enum TableStyles
 {
     None,
     Default
+}
+
+public enum StringStorageMode
+{
+    /// <summary>
+    /// Prioritizes memory usage over file size during export by writing text directly to cells. 
+    /// Ideal when exporting big datasets.
+    /// </summary>
+    Inline,
+
+    /// <summary>
+    /// Prioritizes file size over memory usage during export by storing unique strings in the sharedStrings table.
+    /// Ideal for standard files with repetitive text.
+    /// </summary>
+    Shared
 }

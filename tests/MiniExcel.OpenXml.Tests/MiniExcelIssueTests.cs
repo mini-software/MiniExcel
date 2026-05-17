@@ -203,7 +203,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         _excelExporter.Export(path.ToString(), value);
 
         var xml = SheetHelper.GetZipFileContent(path.ToString(), "xl/sharedStrings.xml");
-        Assert.StartsWith("<sst xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"", xml);
+        Assert.StartsWith("<x:sst xmlns:x=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"", xml);
     }
 
     [Fact]

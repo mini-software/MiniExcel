@@ -1713,4 +1713,22 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
         Assert.Contains("Mapped", rows[0].Keys);
         Assert.DoesNotContain("NotMappedField", rows[0].Keys);
     }
+    
+    [Fact]
+    public async Task InvalidSheetNameCharactersShouldThrow()
+    {
+        await using var ms1 = new MemoryStream();
+        Assert.Throws<ArgumentException>(() => _excelExporter.Export(ms1, Array.Empty<object>(), sheetName: "Sheet?"));
+        
+        await using var ms2 = new MemoryStream();
+        Assert.Throws<ArgumentException>(() => _excelExporter.InsertSheet(ms2, Array.Empty<object>(), sheetName: "Sheet[]"));
+        
+        await using var ms3 = new MemoryStream();
+        using var package = new ExcelPackage(ms3);
+        package.Workbook.Worksheets.Add("Sheet1");
+        package.Save();
+        
+        ms1.Seek(0, SeekOrigin.Begin);
+        Assert.Throws<ArgumentException>(() => _excelExporter.AlterSheet(ms3, "Sheet1", "Sheet*"));
+    }
 }

@@ -1930,4 +1930,22 @@ public class MiniExcelOpenXmlAsyncTests
         [MiniExcelFormat("mmmm yyyy")]
         public DateTime MonthYear { get; set; } = monthYear;
     }
+
+    [Fact]
+    public async Task InvalidSheetNameCharactersShouldThrow()
+    {
+        await using var ms1 = new MemoryStream();
+        await Assert.ThrowsAsync<ArgumentException>(() => _excelExporter.ExportAsync(ms1, Array.Empty<object>(), sheetName: "Sheet?"));
+        
+        await using var ms2 = new MemoryStream();
+        await Assert.ThrowsAsync<ArgumentException>(() => _excelExporter.InsertSheetAsync(ms2, Array.Empty<object>(), sheetName: "Sheet[]"));
+        
+        await using var ms3 = new MemoryStream();
+        using var package = new ExcelPackage(ms3);
+        package.Workbook.Worksheets.Add("Sheet1");
+        await package.SaveAsync();
+        
+        ms1.Seek(0, SeekOrigin.Begin);
+        await Assert.ThrowsAsync<ArgumentException>(() => _excelExporter.AlterSheetAsync(ms3, "Sheet1", "Sheet*"));
+    }
 }

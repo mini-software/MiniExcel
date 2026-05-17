@@ -50,7 +50,6 @@
 		<Using Include="MiniExcelLib.Core.Abstractions" />
 		<Using Include="MiniExcelLib.Core.Attributes" />
 		<Using Include="MiniExcelLib.OpenXml" />
-		<Using Include="MiniExcelLib.OpenXml.Api" />
 		<Using Include="MiniExcelLib.OpenXml.Utils" />
 		<Using Include="OfficeOpenXml" />
 		<Using Include="Xunit" />

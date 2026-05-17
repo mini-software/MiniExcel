@@ -1,6 +1,7 @@
 using MiniExcelLib.Core;
 
-namespace MiniExcelLib.OpenXml.Api;
+// ReSharper disable once CheckNamespace
+namespace MiniExcelLib.OpenXml;
 
 public static class ProviderExtensions
 {

@@ -6,7 +6,7 @@ using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using MiniExcelLib.Benchmarks.Utils;
 using MiniExcelLib.Core;
-using MiniExcelLib.OpenXml.Api;
+using MiniExcelLib.OpenXml;
 using MiniExcelLib.OpenXml.FluentMapping;
 using MiniExcelLib.OpenXml.FluentMapping.Api;
 using NPOI.XSSF.UserModel;

@@ -344,8 +344,7 @@ internal partial class OpenXmlReader : IMiniExcelReader
     {
         // if sheets count > 1 need to read xl/_rels/workbook.xml.rels
         var sheets = Archive.EntryCollection
-            .Where(w => w.FullName.StartsWith("xl/worksheets/sheet", StringComparison.OrdinalIgnoreCase) || 
-                        w.FullName.StartsWith("/xl/worksheets/sheet", StringComparison.OrdinalIgnoreCase))
+            .Where(w => w.FullName.TrimStart('/').StartsWith(ExcelFileNames.Worksheet, StringComparison.OrdinalIgnoreCase))
             .ToArray();
 
         ZipArchiveEntry sheetEntry;
@@ -358,24 +357,18 @@ internal partial class OpenXmlReader : IMiniExcelReader
                 if (_config.DynamicSheets is null)
                     throw new InvalidOperationException("Please check that parameters sheetName/Index are correct");
 
-                var sheetConfig = _config.DynamicSheets.FirstOrDefault(ds => ds.Key == sheetName);
-                if (sheetConfig is not null)
+                if (_config.DynamicSheets.FirstOrDefault(ds => ds.Key == sheetName) is { } sheetConfig)
                 {
                     sheetRecord = _sheetRecords.SingleOrDefault(s => s.Name == sheetConfig.Name);
                 }
             }
-            sheetEntry = sheets.Single(w => w.FullName == $"xl/{sheetRecord.Path}" || 
-                                            w.FullName == $"/xl/{sheetRecord.Path}" || 
-                                            w.FullName == sheetRecord.Path || 
-                                            $"/{w.FullName}" == sheetRecord.Path);
+            sheetEntry = sheets.Single(w => w.FullName.TrimStart('/') == $"xl/{sheetRecord?.Path}" || w.FullName == sheetRecord?.Path?.TrimStart('/'));
         }
         else if (sheets.Length > 1)
         {
             SetWorkbookRels(Archive.EntryCollection);
             var s = _sheetRecords[0];
-            sheetEntry = sheets.Single(w => w.FullName == $"xl/{s.Path}" || 
-                                            w.FullName == $"/xl/{s.Path}" || 
-                                            w.FullName.TrimStart('/') == s.Path?.TrimStart('/'));
+            sheetEntry = sheets.Single(w => w.FullName.TrimStart('/') == $"xl/{s.Path}" || w.FullName.TrimStart('/') == s.Path?.TrimStart('/'));
         }
         else
         {
@@ -421,8 +414,7 @@ internal partial class OpenXmlReader : IMiniExcelReader
         if (SharedStrings is { Count: > 0 })
             return;
         
-        var sharedStringsEntry = Archive.GetEntry("xl/sharedStrings.xml");
-        if (sharedStringsEntry is null)
+        if (Archive.GetEntry(ExcelFileNames.SharedStrings) is not { } sharedStringsEntry)
             return;
         
         var idx = 0;
@@ -466,7 +458,7 @@ internal partial class OpenXmlReader : IMiniExcelReader
 #endif
         );
 
-        var entry = entries.Single(w => w.FullName == "xl/workbook.xml");
+        var entry = entries.Single(w => w.FullName == ExcelFileNames.Workbook);
 #if NET8_0_OR_GREATER
         var stream = await entry.OpenAsync(cancellationToken).ConfigureAwait(false);
         await using var disposableStream = stream.ConfigureAwait(false);
@@ -562,7 +554,7 @@ internal partial class OpenXmlReader : IMiniExcelReader
             .CreateListAsync(cancellationToken)
             .ConfigureAwait(false);
 
-        var entry = entries.Single(w => w.FullName == "xl/_rels/workbook.xml.rels");
+        var entry = entries.Single(w => w.FullName == ExcelFileNames.WorkbookRels);
         
 #if NET8_0_OR_GREATER
         var stream = await entry.OpenAsync(cancellationToken).ConfigureAwait(false);
@@ -755,8 +747,7 @@ internal partial class OpenXmlReader : IMiniExcelReader
         var ranges = new List<ExcelRange>();
 
         var sheets = Archive.EntryCollection.Where(e =>
-            e.FullName.StartsWith("xl/worksheets/sheet", StringComparison.OrdinalIgnoreCase) ||
-            e.FullName.StartsWith("/xl/worksheets/sheet", StringComparison.OrdinalIgnoreCase));
+            e.FullName.TrimStart('/').StartsWith(ExcelFileNames.Worksheet, StringComparison.OrdinalIgnoreCase));
 
         foreach (var sheet in sheets)
         {
@@ -1131,7 +1122,7 @@ internal partial class OpenXmlReader : IMiniExcelReader
             throw new InvalidDataException($"There is no sheet named {sheetName}");
         
         List<Author> people = [];
-        if (Archive.GetEntry("xl/persons/person.xml") is { } persons)
+        if (Archive.GetEntry(ExcelFileNames.Person) is { } persons)
         {
 #if NET8_0_OR_GREATER
             var personStream = await persons.OpenAsync(cancellationToken).ConfigureAwait(false);

@@ -1,4 +1,4 @@
-﻿using MiniExcelLib.OpenXml.Api;
+﻿using MiniExcelLib.OpenXml;
 
 namespace MiniExcelLib.Csv.Tests;
 

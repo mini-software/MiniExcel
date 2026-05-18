@@ -1,9 +1,9 @@
-using MiniExcelLib.OpenXml.Constants;
 using System.ComponentModel;
 using MiniExcelLib.Core.Attributes;
+using MiniExcelLib.OpenXml.Constants;
 using static MiniExcelLib.Core.Helpers.ImageHelper;
 
-namespace MiniExcelLib.OpenXml;
+namespace MiniExcelLib.OpenXml.Writer;
 
 internal partial class OpenXmlWriter
 {
@@ -102,25 +102,24 @@ internal partial class OpenXmlWriter
     {
         var sb = new StringBuilder();
 
-        string activePane = (_configuration.FreezeColumnCount > 0) switch
+        var activePane = (_configuration.FreezeColumnCount > 0) switch
         {
             true when _configuration.FreezeRowCount > 0 => "bottomRight",
             true => "topRight",
             _ => "bottomLeft"
         };
-        
-        sb.Append(
-            WorksheetXml.StartPane(
-                xSplit: _configuration.FreezeColumnCount > 0 ? _configuration.FreezeColumnCount : null,
-                ySplit: _configuration.FreezeRowCount > 0 ? _configuration.FreezeRowCount : null,
-                topLeftCell: CellReferenceConverter.GetCellFromCoordinates(
-                    _configuration.FreezeColumnCount + 1,
-                    _configuration.FreezeRowCount + 1
-                ),
-                activePane: activePane,
-                state: "frozen"
-            )
+
+        var startPane =  WorksheetXml.StartPane(
+            xSplit: _configuration.FreezeColumnCount > 0 ? _configuration.FreezeColumnCount : null,
+            ySplit: _configuration.FreezeRowCount > 0 ? _configuration.FreezeRowCount : null,
+            topLeftCell: CellReferenceConverter.GetCellFromCoordinates(
+                _configuration.FreezeColumnCount + 1,
+                _configuration.FreezeRowCount + 1
+            ),
+            activePane: activePane,
+            state: "frozen"
         );
+        sb.Append(startPane);
 
         // write pane selections
         if (_configuration is { FreezeColumnCount: > 0, FreezeRowCount: > 0 })
@@ -148,7 +147,6 @@ internal partial class OpenXmlWriter
             */
             var cellTr = CellReferenceConverter.GetCellFromCoordinates(_configuration.FreezeColumnCount, 1);
             sb.Append(WorksheetXml.PaneSelection("topRight", cellTr, cellTr));
-
         }
         else
         {
@@ -157,7 +155,6 @@ internal partial class OpenXmlWriter
                 <selection pane="bottomLeft"/>
             */
             sb.Append(WorksheetXml.PaneSelection("bottomLeft", null, null));
-
         }
 
         return sb.ToString();
@@ -305,7 +302,7 @@ internal partial class OpenXmlWriter
         //int rowIndex, int cellIndex
         var file = new FileDto
         {
-            Byte = bytes,
+            Contents = bytes,
             RowIndex = rowIndex,
             CellIndex = cellIndex,
             SheetId = _currentSheetIndex
@@ -355,7 +352,7 @@ internal partial class OpenXmlWriter
         var oaDate = value.ToOADate();
         if (oaDate <= nonExistent1900Feb29SerialDate)
         {
-            oaDate -= 1;
+            oaDate--;
         }
 
         return oaDate;
@@ -410,26 +407,26 @@ internal partial class OpenXmlWriter
         return drawing.ToString();
     }
 
-    private void GenerateWorkBookXmls(
-        out StringBuilder workbookXml,
-        out StringBuilder workbookRelsXml,
-        out Dictionary<int, string> sheetsRelsXml)
+    private (string WorkbookXml, string WorkbookRelsXml, Dictionary<int, string> SheetRelsXml) GenerateWorkbookXmls()
     {
-        workbookXml = new StringBuilder();
-        workbookRelsXml = new StringBuilder();
-        sheetsRelsXml = new Dictionary<int, string>();
+        var workbookXml = new StringBuilder();
+        var workbookRelsXml = new StringBuilder();
+        var sheetsRelsXml = new Dictionary<int, string>();
+
         var sheetId = 0;
         foreach (var sheetDto in _sheets)
         {
             sheetId++;
-            workbookXml.AppendLine(ExcelXml.Sheet(sheetDto, sheetId));
 
+            workbookXml.AppendLine(ExcelXml.Sheet(sheetDto, sheetId));
             workbookRelsXml.AppendLine(ExcelXml.WorksheetRelationship(sheetDto));
 
             //TODO: support multiple drawing
             //TODO: ../drawings/drawing1.xml or /xl/drawings/drawing1.xml
             sheetsRelsXml.Add(sheetDto.SheetIdx, ExcelXml.DrawingRelationship(sheetId));
         }
+
+        return (workbookXml.ToString(), workbookRelsXml.ToString(), sheetsRelsXml);
     }
 
     private string GetContentTypesXml()

@@ -202,7 +202,7 @@ internal partial class OpenXmlTemplate
                 // 创建工作表（独立作用域，流自动关闭）
                 var newSheetEntry = outputFileArchive.ZipFile.CreateEntry(newSheetPath);
 #if NET8_0_OR_GREATER
-                    await using var newSheetStream = await newSheetEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
+                 using var newSheetStream = await newSheetEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
 #else
                 using var newSheetStream = newSheetEntry.Open();
 #endif
@@ -301,8 +301,8 @@ internal partial class OpenXmlTemplate
     {
         var entry = templateArchive.GetEntry(path)!;
 #if NET8_0_OR_GREATER
-    await using var stream = await entry.OpenAsync(cancellationToken).ConfigureAwait(false);
-    return await XDocument.LoadAsync(stream, LoadOptions.None, cancellationToken).ConfigureAwait(false);
+        using var stream = await entry.OpenAsync(cancellationToken).ConfigureAwait(false);
+        return await XDocument.LoadAsync(stream, LoadOptions.None, cancellationToken).ConfigureAwait(false);
 #else
         using var stream = entry.Open();
         return XDocument.Load(stream);
@@ -320,8 +320,8 @@ internal partial class OpenXmlTemplate
 
         var newEntry = outputZip.CreateEntry(path);
 #if NET8_0_OR_GREATER
-    await using var stream = await newEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
-    await doc.SaveAsync(stream, SaveOptions.None, cancellationToken).ConfigureAwait(false);
+        using var stream = await newEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
+        await doc.SaveAsync(stream, SaveOptions.None, cancellationToken).ConfigureAwait(false);
 #else
         using var stream = newEntry.Open();
         doc.Save(stream);

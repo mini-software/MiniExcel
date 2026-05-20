@@ -13,7 +13,6 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
 
     private readonly Stream _stream;
     private readonly ZipArchive _archive;
-    private readonly SheetStyleBuildContext _sheetStyleBuildContext;
     
     private readonly OpenXmlConfiguration _configuration;
     private readonly List<SheetDto> _sheets = [];
@@ -24,6 +23,8 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
     private readonly object? _value;
 
     private int _currentSheetIndex = 0;
+    private SheetStyleBuildContext _sheetStyleBuildContext;
+
 
     private OpenXmlWriter(Stream stream, ZipArchive archive, object? value, string sheetName, OpenXmlConfiguration configuration, bool printHeader)
     {
@@ -266,7 +267,7 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
                 maxRowIndex = _printHeader ? count + 1 : count;
                 await writer.WriteAsync(WorksheetXml.Dimension(GetDimensionRef(maxRowIndex, mappings.Count)), cancellationToken).ConfigureAwait(false);
             }
-            else if (_configuration.FastMode)
+            else if (_archive.Mode == ZipArchiveMode.Update)
             {
                 dimensionPlaceholderPostition = await WriteDimensionPlaceholderAsync(writer).ConfigureAwait(false);
             }

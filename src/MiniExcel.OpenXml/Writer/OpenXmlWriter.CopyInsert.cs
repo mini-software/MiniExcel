@@ -8,7 +8,7 @@ namespace MiniExcelLib.OpenXml.Writer;
 
 internal partial class OpenXmlWriter
 {
-    private static readonly List<string> EntriesToIgnoreOnCopy = [
+    private static readonly string[] EntriesToIgnoreOnCopy = [
         ExcelFileNames.ContentTypes, 
         ExcelFileNames.Workbook, 
         ExcelFileNames.WorkbookRels, 
@@ -84,20 +84,21 @@ internal partial class OpenXmlWriter
         }
 
         int rowsWritten;
+        List<string> entriesToIgnoreOnCopy = [..EntriesToIgnoreOnCopy];
+
         if (existingSheetDto is null)
         {
             _currentSheetIndex = (int)rels.Max(m => m.Id) + 1;
-            var insertSheetInfo = GetSheetInfos(_sheetName);
-            var insertSheetDto = insertSheetInfo.ToDto(_currentSheetIndex);
-            _sheets.Add(insertSheetDto);
+            var newSheetInfoDto = GetSheetInfos(_sheetName).ToDto(_currentSheetIndex);
+            _sheets.Add(newSheetInfoDto);
          
-            rowsWritten = await CreateSheetXmlAsync(_value, insertSheetDto.Path, progress, cancellationToken).ConfigureAwait(false);
+            rowsWritten = await CreateSheetXmlAsync(_value, newSheetInfoDto.Path, progress, cancellationToken).ConfigureAwait(false);
         }
         else
         {
             _currentSheetIndex = existingSheetDto.SheetIdx;
             rowsWritten = await CreateSheetXmlAsync(_value, existingSheetDto.Path, progress, cancellationToken).ConfigureAwait(false);
-            EntriesToIgnoreOnCopy.AddRange([
+            entriesToIgnoreOnCopy.AddRange([
                 ExcelFileNames.Worksheet(_currentSheetIndex),
                 ExcelFileNames.SheetRels(_currentSheetIndex),
                 ExcelFileNames.Drawing(_currentSheetIndex - 1),
@@ -105,7 +106,7 @@ internal partial class OpenXmlWriter
             ]);
         }
 
-        foreach (var entry in _oldArchive.Entries.ExceptBy(EntriesToIgnoreOnCopy, e => e.FullName, StringComparer.InvariantCultureIgnoreCase))
+        foreach (var entry in _oldArchive.Entries.ExceptBy(entriesToIgnoreOnCopy, e => e.FullName, StringComparer.InvariantCultureIgnoreCase))
         {
             await CopyEntryAsync(entry, cancellationToken).ConfigureAwait(false);
         }
@@ -122,7 +123,7 @@ internal partial class OpenXmlWriter
             await using var disposableTempStylesEntryStream = tempStylesEntryStream.ConfigureAwait(false);
 #else
             using var disposableNewStylesEntryStream = newStylesEntryStream;
-            using var disposableTempStylesEntryStream = newStylesEntryStream;
+            using var disposableTempStylesEntryStream = tempStylesEntryStream;
 #endif
 
             await tempStylesEntryStream.CopyToAsync(newStylesEntryStream, 81920, cancellationToken).ConfigureAwait(false);

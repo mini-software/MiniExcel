@@ -97,8 +97,6 @@ public sealed partial class OpenXmlExporter
         bool printHeader = true, bool overwriteSheet = false, OpenXmlConfiguration? configuration = null, 
         IProgress<int>? progress = null, CancellationToken cancellationToken = default)
     {
-        inputStream.Seek(0, SeekOrigin.End);
-
         var writer = await OpenXmlWriter
             .CreateForCopyAsync(inputStream, outputStream, value, sheetName, printHeader, configuration, cancellationToken)
             .ConfigureAwait(false);
@@ -136,13 +134,11 @@ public sealed partial class OpenXmlExporter
         var inputStream = new FileStream(inputFile, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, FileOptions.RandomAccess);
         await using var disposableInputStream = inputStream.ConfigureAwait(false);
 
-        var outputStream = overwriteFile
-            ? File.Create(outputFile) 
-            : new FileStream(outputFile, FileMode.CreateNew, FileAccess.Write, FileShare.None, 4096, FileOptions.SequentialScan);
+        var outputStream = new FileStream(outputFile, overwriteFile ? FileMode.Create : FileMode.CreateNew, FileAccess.Write, FileShare.None, 4096, FileOptions.SequentialScan);
         await using var disposableOutputStream = outputStream.ConfigureAwait(false);
     #else
-        using var outputStream = File.OpenWrite(inputFile);
-        using var inputStream = File.OpenRead(outputFile);
+        using var inputStream = new FileStream(inputFile, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, FileOptions.RandomAccess);
+        using var outputStream = new FileStream(outputFile, mode: overwriteFile ? FileMode.Create : FileMode.CreateNew, FileAccess.Write, FileShare.None, 4096, FileOptions.SequentialScan);
     #endif
 
         return await CopyAndAddSheetAsync(inputStream, outputStream, value, sheetName, printHeader, overwriteSheet, configuration, progress, cancellationToken).ConfigureAwait(false);

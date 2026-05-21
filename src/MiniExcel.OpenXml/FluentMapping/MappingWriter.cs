@@ -1,3 +1,5 @@
+using MiniExcelLib.OpenXml.Writer;
+
 namespace MiniExcelLib.OpenXml.FluentMapping;
 
 internal static partial class MappingWriter<T> where T : class

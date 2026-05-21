@@ -344,7 +344,7 @@ internal partial class OpenXmlReader : IMiniExcelReader
     {
         // if sheets count > 1 need to read xl/_rels/workbook.xml.rels
         var sheets = Archive.EntryCollection
-            .Where(w => w.FullName.TrimStart('/').StartsWith(ExcelFileNames.Worksheet, StringComparison.OrdinalIgnoreCase))
+            .Where(w => w.FullName.TrimStart('/').StartsWith(ExcelFileNames.WorksheetBase, StringComparison.OrdinalIgnoreCase))
             .ToArray();
 
         ZipArchiveEntry sheetEntry;
@@ -747,7 +747,7 @@ internal partial class OpenXmlReader : IMiniExcelReader
         var ranges = new List<ExcelRange>();
 
         var sheets = Archive.EntryCollection.Where(e =>
-            e.FullName.TrimStart('/').StartsWith(ExcelFileNames.Worksheet, StringComparison.OrdinalIgnoreCase));
+            e.FullName.TrimStart('/').StartsWith(ExcelFileNames.WorksheetBase, StringComparison.OrdinalIgnoreCase));
 
         foreach (var sheet in sheets)
         {

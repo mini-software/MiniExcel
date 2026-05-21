@@ -71,8 +71,8 @@ internal partial class OpenXmlWriter
         var sheetStylesBuilderUtils = await CopySheetStylesAndGetBuilderUtilsAsync(cancellationToken).ConfigureAwait(false);
         await using var disposableSheetStylesBuilderUtils = sheetStylesBuilderUtils.ConfigureAwait(false);
 
-        await _sheetStyleBuildContext.DisposeAsync().ConfigureAwait(false);
-        _sheetStyleBuildContext = sheetStylesBuilderUtils.SheetStyleBuildContext;
+        await _sheetStyleBuilderContext.DisposeAsync().ConfigureAwait(false);
+        _sheetStyleBuilderContext = sheetStylesBuilderUtils.SheetStyleBuilderContext;
 
         var sharedStringsEntry = _oldArchive.GetEntry(ExcelFileNames.SharedStrings);
         if (sharedStringsEntry is not null)
@@ -101,8 +101,8 @@ internal partial class OpenXmlWriter
             entriesToIgnoreOnCopy.AddRange([
                 ExcelFileNames.Worksheet(_currentSheetIndex),
                 ExcelFileNames.SheetRels(_currentSheetIndex),
-                ExcelFileNames.Drawing(_currentSheetIndex - 1),
-                ExcelFileNames.DrawingRels(_currentSheetIndex - 1)
+                ExcelFileNames.Drawing(_currentSheetIndex),
+                ExcelFileNames.DrawingRels(_currentSheetIndex)
             ]);
         }
 
@@ -132,8 +132,8 @@ internal partial class OpenXmlWriter
         
         await AddFilesToZipAsync(cancellationToken).ConfigureAwait(false);
         await GenerateSharedStringsAsync(cancellationToken).ConfigureAwait(false);
-        await GenerateDrawingRelXmlAsync(_currentSheetIndex - 1, cancellationToken).ConfigureAwait(false);
-        await GenerateDrawingXmlAsync(_currentSheetIndex - 1, cancellationToken).ConfigureAwait(false);
+        await GenerateDrawingRelXmlAsync(_currentSheetIndex, cancellationToken).ConfigureAwait(false);
+        await GenerateDrawingXmlAsync(_currentSheetIndex, cancellationToken).ConfigureAwait(false);
         
         await CreateZipEntryAsync(
             ExcelFileNames.SheetRels(_currentSheetIndex),
@@ -184,10 +184,10 @@ internal partial class OpenXmlWriter
         backingStream.Seek(0, SeekOrigin.Begin);
         var copiedArchive = await ZipArchive.CreateAsync(backingStream, ZipArchiveMode.Update, true, Utf8WithBom, cancellationToken).ConfigureAwait(false);
 
-        SheetStyleBuildContext? oldStylesContext = null;
+        SheetStyleBuilderContext? oldStylesContext = null;
         try
         {
-            oldStylesContext = new SheetStyleBuildContext(_zipContentsMap, copiedArchive, Utf8WithBom);
+            oldStylesContext = new SheetStyleBuilderContext(_zipContentsMap, copiedArchive, Utf8WithBom);
             SheetStyleBuilderBase builder = _configuration.TableStyles switch
             {
                 TableStyles.None => new MinimalSheetStyleBuilder(oldStylesContext),
@@ -285,24 +285,24 @@ internal partial class OpenXmlWriter
 #endif
     }
     
-    private class TempSheetStylesBuilderUtils(Stream backingStream, ZipArchive archive, SheetStyleBuildContext sheetStyleBuildContext, ISheetStyleBuilder sheetStyleBuilder) : IDisposable, IAsyncDisposable
+    private class TempSheetStylesBuilderUtils(Stream backingStream, ZipArchive archive, SheetStyleBuilderContext sheetStyleBuilderContext, ISheetStyleBuilder sheetStyleBuilder) : IDisposable, IAsyncDisposable
     {
         private readonly Stream _backingStream = backingStream;
 
         public ZipArchive Archive { get; } = archive;
         public ISheetStyleBuilder SheetStyleBuilder { get; } = sheetStyleBuilder;
-        public SheetStyleBuildContext SheetStyleBuildContext { get; } = sheetStyleBuildContext;
+        public SheetStyleBuilderContext SheetStyleBuilderContext { get; } = sheetStyleBuilderContext;
 
         public void Dispose()
         {
-            SheetStyleBuildContext.Dispose();
+            SheetStyleBuilderContext.Dispose();
             Archive.Dispose();
             _backingStream.Dispose();
         }
 
         public async ValueTask DisposeAsync()
         {
-            await SheetStyleBuildContext.DisposeAsync().ConfigureAwait(false);
+            await SheetStyleBuilderContext.DisposeAsync().ConfigureAwait(false);
 #if NET10_0_OR_GREATER
             await Archive.DisposeAsync().ConfigureAwait(false);
 #else

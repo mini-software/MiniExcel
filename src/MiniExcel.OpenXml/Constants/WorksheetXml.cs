@@ -57,13 +57,13 @@ internal static class WorksheetXml
         return cellType switch
         {
             _ when columnType == ColumnType.Formula 
-                => $"""<x:c r="{cellReference}" t="{ExcelXml.CalculatedStringDataType}" s="{styleIndex}"{(preserveSpace ? " xml:space=\"preserve\"" : "")}><x:f>{XmlHelper.EncodeXml(cellValue)}</x:f></x:c>""", 
+                => $"""<x:c r="{cellReference}" t="{ExcelDataTypes.CalculatedString}" s="{styleIndex}"{(preserveSpace ? " xml:space=\"preserve\"" : "")}><x:f>{XmlHelper.EncodeXml(cellValue)}</x:f></x:c>""", 
             
-            ExcelXml.InlineStringDataType
-                => $"""<x:c r="{cellReference}" t="{ExcelXml.InlineStringDataType}" s="{styleIndex}"><x:is><x:t{(preserveSpace ? " xml:space=\"preserve\"" : "")}>{XmlHelper.EncodeXml(cellValue)}</x:t></x:is></x:c>""",
+            ExcelDataTypes.InlineString
+                => $"""<x:c r="{cellReference}" t="{ExcelDataTypes.InlineString}" s="{styleIndex}"><x:is><x:t{(preserveSpace ? " xml:space=\"preserve\"" : "")}>{XmlHelper.EncodeXml(cellValue)}</x:t></x:is></x:c>""",
 
-            ExcelXml.SharedStringDataType
-                => $"""<x:c r="{cellReference}" t="{ExcelXml.SharedStringDataType}" s="{styleIndex}"><x:v>{cellValue}</x:v></x:c>""",
+            ExcelDataTypes.SharedString
+                => $"""<x:c r="{cellReference}" t="{ExcelDataTypes.SharedString}" s="{styleIndex}"><x:v>{cellValue}</x:v></x:c>""",
             
             _ => $"""<x:c r="{cellReference}" t="{cellType}" s="{styleIndex}"><x:v>{cellValue}</x:v></x:c>"""
         };

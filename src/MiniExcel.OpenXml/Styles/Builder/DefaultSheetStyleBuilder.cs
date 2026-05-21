@@ -3,7 +3,7 @@ using MiniExcelLib.Core.Enums;
 
 namespace MiniExcelLib.OpenXml.Styles.Builder;
 
-internal partial class DefaultSheetStyleBuilder(SheetStyleBuildContext context, OpenXmlStyleOptions styleOptions) : SheetStyleBuilderBase(context)
+internal partial class DefaultSheetStyleBuilder(SheetStyleBuilderContext context, OpenXmlStyleOptions styleOptions) : SheetStyleBuilderBase(context)
 {
     private const HorizontalCellAlignment DefaultHorizontalAlignment = HorizontalCellAlignment.Left;
     private const VerticalCellAlignment DefaultVerticalAlignment = VerticalCellAlignment.Bottom;
@@ -19,7 +19,7 @@ internal partial class DefaultSheetStyleBuilder(SheetStyleBuildContext context, 
         CellXfCount = 6
     };
 
-    private readonly SheetStyleBuildContext _context = context;
+    private readonly SheetStyleBuilderContext _context = context;
     private readonly OpenXmlStyleOptions _styleOptions = styleOptions;
 
     private XmlReader OldReader => _context.OldXmlReader!;

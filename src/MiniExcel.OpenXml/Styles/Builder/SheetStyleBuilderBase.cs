@@ -1,8 +1,8 @@
 ﻿namespace MiniExcelLib.OpenXml.Styles.Builder;
 
-internal abstract partial class SheetStyleBuilderBase(SheetStyleBuildContext context) : ISheetStyleBuilder
+internal abstract partial class SheetStyleBuilderBase(SheetStyleBuilderContext context) : ISheetStyleBuilder
 {
-    private readonly SheetStyleBuildContext _context = context;
+    private readonly SheetStyleBuilderContext _context = context;
     
     //todo: these may actually be null if used when the context is not initialized
     private XmlReader OldReader => _context.OldXmlReader!;

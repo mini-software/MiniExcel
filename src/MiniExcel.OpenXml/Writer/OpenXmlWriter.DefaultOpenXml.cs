@@ -216,23 +216,23 @@ internal partial class OpenXmlWriter
             var cellValue = GetNumericValue(value, type);
             if (columnMapping?.ExcelFormat is null)
             {
-                var dataType = ReferenceEquals(_configuration.Culture, CultureInfo.InvariantCulture) ? ExcelXml.NumericDataType : GetStringType();
+                var dataType = ReferenceEquals(_configuration.Culture, CultureInfo.InvariantCulture) ? ExcelDataTypes.Numeric : GetStringType();
                 return (RegularCellStyleIndex, dataType, cellValue);
             }
 
-            return (columnMapping.ExcelFormatId.ToString(), ExcelXml.NumericDataType, cellValue);
+            return (columnMapping.ExcelFormatId.ToString(), ExcelDataTypes.Numeric, cellValue);
         }
 
         if (type == typeof(bool))
-            return (RegularCellStyleIndex, ExcelXml.BooleanDataType, (bool)value ? "1" : "0");
+            return (RegularCellStyleIndex, ExcelDataTypes.Boolean, (bool)value ? "1" : "0");
 
         if (type == typeof(byte[]) && _configuration.EnableConvertByteArray)
         {
             if (!_configuration.EnableWriteFilePath)
-                return (FillCellStyleIndex, ExcelXml.CalculatedStringDataType, "");
+                return (FillCellStyleIndex, ExcelDataTypes.CalculatedString, "");
             
             var base64 = GetFileValue(rowIndex, cellIndex, value);
-            return (FillCellStyleIndex, ExcelXml.InlineStringDataType, base64);  
+            return (FillCellStyleIndex, ExcelDataTypes.InlineString, base64);  
         }
 
         return (RegularCellStyleIndex, GetStringType(), value.ToString());
@@ -240,11 +240,11 @@ internal partial class OpenXmlWriter
         string GetStringType()
         {
             if (columnMapping?.ExcelColumnType == ColumnType.Formula)
-                return ExcelXml.CalculatedStringDataType;
+                return ExcelDataTypes.CalculatedString;
             
             return _configuration.StringStorageMode == StringStorageMode.Shared 
-                ? ExcelXml.SharedStringDataType 
-                : ExcelXml.InlineStringDataType;
+                ? ExcelDataTypes.SharedString 
+                : ExcelDataTypes.InlineString;
         }
     }
 
@@ -332,14 +332,14 @@ internal partial class OpenXmlWriter
         if (!ReferenceEquals(_configuration.Culture, CultureInfo.InvariantCulture))
         {
             cellValue = value.ToString(_configuration.Culture);
-            return (RegularCellStyleIndex, ExcelXml.CalculatedStringDataType, cellValue);
+            return (RegularCellStyleIndex, ExcelDataTypes.CalculatedString, cellValue);
         }
 
         var oaDate = CorrectDateTimeValue(value);
         cellValue = oaDate.ToString(CultureInfo.InvariantCulture);
         var format = columnMapping?.ExcelFormatId is { } fmt and not -1 ? fmt.ToString() : DateCellStyleIndex;
 
-        return (format, ExcelXml.NumericDataType, cellValue);
+        return (format, ExcelDataTypes.Numeric, cellValue);
     }
 
     private static double CorrectDateTimeValue(DateTime value)
@@ -366,7 +366,7 @@ internal partial class OpenXmlWriter
         var cellValue = value.TotalDays.ToString(CultureInfo.InvariantCulture);
         var format = columnMapping?.ExcelFormatId is { } fmt and not -1 ? fmt.ToString() : TimeCellStyleIndex;
 
-        return (format, ExcelXml.NumericDataType, cellValue);
+        return (format, ExcelDataTypes.Numeric, cellValue);
     }
 
     private static string GetDimensionRef(int maxRowIndex, int maxColumnIndex)
@@ -383,7 +383,7 @@ internal partial class OpenXmlWriter
     private string GetDrawingRelationshipXml(int sheetIndex)
     {
         var drawing = new StringBuilder();
-        foreach (var image in _files.Where(w => w.IsImage && w.SheetId == sheetIndex + 1))
+        foreach (var image in _files.Where(w => w.IsImage && w.SheetId == sheetIndex))
         {
             drawing.AppendLine(ExcelXml.ImageRelationship(image));
         }
@@ -398,7 +398,7 @@ internal partial class OpenXmlWriter
         for (int fileIndex = 0; fileIndex < _files.Count; fileIndex++)
         {
             var file = _files[fileIndex];
-            if (file.IsImage && file.SheetId == sheetIndex + 1)
+            if (file.IsImage && file.SheetId == sheetIndex)
             {
                 drawing.Append(ExcelXml.DrawingXml(file, fileIndex));
             }

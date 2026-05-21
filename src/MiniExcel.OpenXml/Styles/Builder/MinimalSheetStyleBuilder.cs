@@ -1,6 +1,6 @@
 ﻿namespace MiniExcelLib.OpenXml.Styles.Builder;
 
-internal partial class MinimalSheetStyleBuilder(SheetStyleBuildContext context) : SheetStyleBuilderBase(context)
+internal partial class MinimalSheetStyleBuilder(SheetStyleBuilderContext context) : SheetStyleBuilderBase(context)
 {
     private static readonly SheetStyleElementInfos GenerateElementInfos = new()
     {
@@ -12,7 +12,7 @@ internal partial class MinimalSheetStyleBuilder(SheetStyleBuildContext context) 
         CellXfCount = 6
     };
 
-    private readonly SheetStyleBuildContext _context = context;
+    private readonly SheetStyleBuilderContext _context = context;
 
     private XmlReader OldReader => _context.OldXmlReader!;
     private XmlWriter NewWriter => _context.NewXmlWriter!; 

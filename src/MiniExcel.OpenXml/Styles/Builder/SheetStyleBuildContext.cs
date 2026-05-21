@@ -2,7 +2,7 @@
 
 namespace MiniExcelLib.OpenXml.Styles.Builder;
 
-internal sealed partial class SheetStyleBuildContext(Dictionary<string, string> contentTypes, ZipArchive archive, Encoding encoding) : IDisposable, IAsyncDisposable
+internal sealed partial class SheetStyleBuilderContext(Dictionary<string, string> contentTypes, ZipArchive archive, Encoding encoding) : IDisposable, IAsyncDisposable
 {
     private const string EmptyStylesXml = 
         """
@@ -137,7 +137,7 @@ internal sealed partial class SheetStyleBuildContext(Dictionary<string, string> 
         if (!_initialized)
             throw new InvalidOperationException("The context has not been initialized.");
         if (_disposed)
-            throw new ObjectDisposedException(nameof(SheetStyleBuildContext));
+            throw new ObjectDisposedException(nameof(SheetStyleBuilderContext));
         if (_finalized)
             throw new InvalidOperationException("The context has been finalized.");
 

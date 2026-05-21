@@ -8,6 +8,7 @@ internal static class Schemas
     public const string OpenXmlPackageRelationships = "http://schemas.openxmlformats.org/package/2006/relationships";
     public const string SpreadsheetmlXmlRelationships = "http://schemas.openxmlformats.org/officeDocument/2006/relationships";
     public const string SpreadsheetmlXmlStrictRelationships = "http://purl.oclc.org/ooxml/officeDocument/relationships";
+    public const string SpreadsheetmlXmlTable = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/table";
     public const string SpreadsheetmlXmlComments = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/comments";
     public const string SpreadsheetmlXmlThreadedComment = "http://schemas.microsoft.com/office/2017/10/relationships/threadedComment";
 

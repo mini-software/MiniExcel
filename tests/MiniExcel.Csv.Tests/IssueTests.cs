@@ -324,81 +324,6 @@ public class IssueTests
     [Fact]
     public void TestIssue316()
     {
-        // XLSX
-        {
-            using var file = AutoDeletingPath.Create();
-            var path = file.ToString();
-            var value = new[]
-            {
-                new{ Amount=123_456.789M, CreateTime=DateTime.Parse("2018-01-31",CultureInfo.InvariantCulture)}
-            };
-            var config = new OpenXmlConfiguration
-            {
-                Culture = new CultureInfo("fr-FR"),
-            };
-            _openXmlExporter.Export(path, value, configuration: config);
-
-            //Datetime error
-            Assert.Throws<ValueNotAssignableException>(() =>
-            {
-                var conf = new OpenXmlConfiguration
-                {
-                    Culture = new CultureInfo("en-US"),
-                };
-                _ = _openXmlImporter.Query<TestIssue316Dto>(path, configuration: conf).ToList();
-            });
-
-            // dynamic
-            var rows = _openXmlImporter.Query(path, true).ToList();
-            Assert.Equal("123456,789", rows[0].Amount);
-            Assert.Equal("31/01/2018 00:00:00", rows[0].CreateTime);
-        }
-
-        // type
-        {
-            using var file = AutoDeletingPath.Create();
-            var path = file.ToString();
-            var value = new[]
-            {
-                new { Amount = 123_456.789M, CreateTime = new DateTime(2018, 5, 12) }
-            };
-            {
-                var config = new OpenXmlConfiguration
-                {
-                    Culture = new CultureInfo("fr-FR"),
-                };
-                _openXmlExporter.Export(path, value, configuration: config);
-            }
-
-            {
-                var rows = _openXmlImporter.Query(path, true).ToList();
-                Assert.Equal("123456,789", rows[0].Amount);
-                Assert.Equal("12/05/2018 00:00:00", rows[0].CreateTime);
-            }
-
-            {
-                var config = new OpenXmlConfiguration
-                {
-                    Culture = new CultureInfo("en-US"),
-                };
-                var rows = _openXmlImporter.Query<TestIssue316Dto>(path, configuration: config).ToList();
-
-                Assert.Equal("2018-12-05 00:00:00", rows[0].CreateTime.ToString("yyyy-MM-dd HH:mm:ss"));
-                Assert.Equal(123456789m, rows[0].Amount);
-            }
-
-            {
-                var config = new OpenXmlConfiguration
-                {
-                    Culture = new CultureInfo("fr-FR"),
-                };
-                var rows = _openXmlImporter.Query<TestIssue316Dto>(path, configuration: config).ToList();
-
-                Assert.Equal("2018-05-12 00:00:00", rows[0].CreateTime.ToString("yyyy-MM-dd HH:mm:ss"));
-                Assert.Equal(123456.789m, rows[0].Amount);
-            }
-        }
-
         // CSV
         {
             using var file = AutoDeletingPath.Create(ExcelType.Csv);
@@ -677,53 +602,33 @@ public class IssueTests
     public void Issue89()
     {
         //csv
-        {
-            const string text =
-               """
-               State
-               OnDuty
-               Fired
-               Leave
-               """;
+        const string text =
+            """
+            State
+            OnDuty
+            Fired
+            Leave
+            """;
 
-            using var stream = new MemoryStream();
-            using var writer = new StreamWriter(stream);
+        using var stream = new MemoryStream();
+        using var writer = new StreamWriter(stream);
 
-            writer.Write(text);
-            writer.Flush();
-            stream.Position = 0;
-            var rows = _csvImporter.Query(stream, useHeaderRow: true).ToList();
+        writer.Write(text);
+        writer.Flush();
+        stream.Position = 0;
+        var rows = _csvImporter.Query(stream, useHeaderRow: true).ToList();
 
-            Assert.Equal(nameof(Issue89Model.WorkState.OnDuty), rows[0].State);
-            Assert.Equal(nameof(Issue89Model.WorkState.Fired), rows[1].State);
-            Assert.Equal(nameof(Issue89Model.WorkState.Leave), rows[2].State);
+        Assert.Equal(nameof(Issue89Model.WorkState.OnDuty), rows[0].State);
+        Assert.Equal(nameof(Issue89Model.WorkState.Fired), rows[1].State);
+        Assert.Equal(nameof(Issue89Model.WorkState.Leave), rows[2].State);
 
-            using var path = AutoDeletingPath.Create(ExcelType.Csv);
-            _csvExporter.Export(path.ToString(), rows);
-            var rows2 = _csvImporter.Query<Issue89Model>(path.ToString()).ToList();
+        using var path = AutoDeletingPath.Create(ExcelType.Csv);
+        _csvExporter.Export(path.ToString(), rows);
+        var rows2 = _csvImporter.Query<Issue89Model>(path.ToString()).ToList();
 
-            Assert.Equal(Issue89Model.WorkState.OnDuty, rows2[0].State);
-            Assert.Equal(Issue89Model.WorkState.Fired, rows2[1].State);
-            Assert.Equal(Issue89Model.WorkState.Leave, rows2[2].State);
-        }
-
-        //xlsx
-        {
-            var path = PathHelper.GetFile("xlsx/TestIssue89.xlsx");
-            var rows = _openXmlImporter.Query<Issue89Model>(path).ToList();
-
-            Assert.Equal(Issue89Model.WorkState.OnDuty, rows[0].State);
-            Assert.Equal(Issue89Model.WorkState.Fired, rows[1].State);
-            Assert.Equal(Issue89Model.WorkState.Leave, rows[2].State);
-
-            using var xlsxPath = AutoDeletingPath.Create();
-            _openXmlExporter.Export(xlsxPath.ToString(), rows);
-            var rows2 = _openXmlImporter.Query<Issue89Model>(xlsxPath.ToString()).ToList();
-
-            Assert.Equal(Issue89Model.WorkState.OnDuty, rows2[0].State);
-            Assert.Equal(Issue89Model.WorkState.Fired, rows2[1].State);
-            Assert.Equal(Issue89Model.WorkState.Leave, rows2[2].State);
-        }
+        Assert.Equal(Issue89Model.WorkState.OnDuty, rows2[0].State);
+        Assert.Equal(Issue89Model.WorkState.Fired, rows2[1].State);
+        Assert.Equal(Issue89Model.WorkState.Leave, rows2[2].State);
     }
 
     private class Issue142VoDuplicateColumnName

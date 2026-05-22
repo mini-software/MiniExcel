@@ -16,6 +16,16 @@ public static class Polyfills
     }
 
     [EditorBrowsable(EditorBrowsableState.Advanced)]
+    public static bool TryAdd<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key, TValue value)
+    {
+        if (dictionary.ContainsKey(key))
+            return false;
+ 
+        dictionary.Add(key, value);
+        return true;
+    }
+
+    [EditorBrowsable(EditorBrowsableState.Advanced)]
     public static void Deconstruct<TKey, TValue>(this KeyValuePair<TKey, TValue> kvp, out TKey key, out TValue value)
     {
         key = kvp.Key;

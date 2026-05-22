@@ -86,12 +86,7 @@ internal class OpenXmlStyles
                             type = typeof(DateTime?);
                         }
 
-#if NETCOREAPP2_0_OR_GREATER
                         _customFormats.TryAdd(numFmtId, new NumberFormatString(formatCode, type));
-#else
-                        if (!_customFormats.ContainsKey(numFmtId))
-                            _customFormats.Add(numFmtId, new NumberFormatString(formatCode, type));
-#endif
                         reader.Skip();
                     }
                     else if (!reader.SkipContent())

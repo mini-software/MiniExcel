@@ -15,17 +15,8 @@ internal partial class OpenXmlTemplate
         Async = true
 #endif
     };
-    
-    private static readonly XmlWriterSettings FragXmlWriterSettings = new()
-    {
-        OmitXmlDeclaration = true,
-        ConformanceLevel =  ConformanceLevel.Fragment,
-#if !SYNC_ONLY
-        Async = true
-#endif
-    };
 
-#if NET8_0_OR_GREATER
+#if NET
     [GeneratedRegex("(?<={{).*?(?=}})")] private static partial Regex ExpressionRegex();
     private static readonly Regex IsExpressionRegex = ExpressionRegex();
     [GeneratedRegex("([A-Z]+)([0-9]+)")] private static partial Regex CellRegexImpl();
@@ -53,7 +44,7 @@ internal partial class OpenXmlTemplate
     [CreateSyncVersion]
     private async Task GenerateSheetByUpdateModeAsync(ZipArchiveEntry sheetZipEntry, Stream stream, Stream sheetStream, IDictionary<string, object> inputMaps, IDictionary<int, string> sharedStrings, bool mergeCells = false, CancellationToken cancellationToken = default)
     {
-#if NET8_0_OR_GREATER
+#if NET
         var doc = await XDocument.LoadAsync(sheetStream, LoadOptions.None, cancellationToken).ConfigureAwait(false);
         await sheetStream.DisposeAsync().ConfigureAwait(false);
 #else
@@ -73,7 +64,7 @@ internal partial class OpenXmlTemplate
         GetMergeCells(worksheet);
         UpdateDimensionAndGetRowsInfo(inputMaps, worksheet, rows, !mergeCells);
 
-#if NET8_0_OR_GREATER
+#if NET
         var writer = XmlWriter.Create(stream, DocXmlWriterSettings);
         await using var disposableWriter = writer.ConfigureAwait(false);
 #else
@@ -86,7 +77,7 @@ internal partial class OpenXmlTemplate
     [CreateSyncVersion]
     private async Task GenerateSheetByCreateModeAsync(ZipArchiveEntry templateSheetZipEntry, Stream outputZipSheetEntryStream, IDictionary<string, object?> inputMaps, IDictionary<int, string> sharedStrings, bool mergeCells = false, CancellationToken cancellationToken = default)
     {
-#if NET8_0_OR_GREATER
+#if NET
         var newTemplateStream = await templateSheetZipEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
         await using var disposableNewTemplateStream = newTemplateStream.ConfigureAwait(false);
         var doc = await XDocument.LoadAsync(newTemplateStream, LoadOptions.None, cancellationToken).ConfigureAwait(false);
@@ -111,7 +102,7 @@ internal partial class OpenXmlTemplate
         GetMergeCells(worksheet);
         UpdateDimensionAndGetRowsInfo(inputMaps, worksheet, rows, !mergeCells);
 
-#if NET8_0_OR_GREATER
+#if NET
         var writer = XmlWriter.Create(outputZipSheetEntryStream, DocXmlWriterSettings);
         await using var disposableWriter = writer.ConfigureAwait(false);
 #else
@@ -236,7 +227,7 @@ internal partial class OpenXmlTemplate
 
         foreach (var beforeElement in beforeSheetData)
         {
-#if NET8_0_OR_GREATER
+#if NET
             await beforeElement.WriteToAsync(writer, cancellationToken).ConfigureAwait(false);
 #else
             beforeElement.WriteTo(writer);
@@ -493,7 +484,7 @@ internal partial class OpenXmlTemplate
 
         foreach (var afterElement in afterSheetData)
         {
-#if NET8_0_OR_GREATER
+#if NET
             await afterElement.WriteToAsync(writer, cancellationToken).ConfigureAwait(false);
 #else
             afterElement.WriteTo(writer);
@@ -633,11 +624,8 @@ internal partial class OpenXmlTemplate
             else
             {
                 var replacements = new Dictionary<string, string>();
-#if NET8_0_OR_GREATER
                 string MatchDelegate(Match x) => replacements.GetValueOrDefault(x.Groups[1].Value, "");
-#else
-                string MatchDelegate(Match x) => replacements.TryGetValue(x.Groups[1].Value, out var repl) ? repl : "";
-#endif
+
                 foreach (var prop in rowInfo.PropsMap)
                 {
                     var propInfo = prop.Value.PropertyInfo;

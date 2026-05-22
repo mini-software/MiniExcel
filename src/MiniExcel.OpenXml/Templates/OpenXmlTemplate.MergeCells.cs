@@ -30,7 +30,7 @@ internal partial class OpenXmlTemplate
     private async Task MergeSameCellsImplAsync(Stream stream, CancellationToken cancellationToken = default)
     {
         await stream.CopyToAsync(_outputFileStream
-#if NET8_0_OR_GREATER
+#if NET
             , cancellationToken
 #endif
         ).ConfigureAwait(false);
@@ -58,7 +58,7 @@ internal partial class OpenXmlTemplate
 
             var entry = archive.ZipFile.CreateEntry(sheet.FullName);
 
-#if NET8_0_OR_GREATER
+#if NET
             var sheetStream = await sheet.OpenAsync(cancellationToken).ConfigureAwait(false);
             await using var disposableSheetStream = sheetStream.ConfigureAwait(false);
 

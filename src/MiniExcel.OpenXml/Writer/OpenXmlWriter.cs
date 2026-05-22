@@ -176,7 +176,7 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
         var entry = _archive.CreateEntry(sheetPath, CompressionLevel.Fastest);
         var rowsWritten = 0;
 
-#if NET8_0_OR_GREATER
+#if NET
         var zipStream = await entry.OpenAsync(cancellationToken).ConfigureAwait(false);
         await using var disposableZipStream = zipStream.ConfigureAwait(false);
 #else
@@ -500,7 +500,7 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
 
             var entry = _archive.CreateEntry(item.Path, CompressionLevel.Fastest);
 
-#if NET8_0_OR_GREATER
+#if NET
             var zipStream = await entry.OpenAsync(cancellationToken).ConfigureAwait(false);
             await using var disposableZipStream = zipStream.ConfigureAwait(false);
             await zipStream.WriteAsync(item.Contents, cancellationToken).ConfigureAwait(false);
@@ -632,7 +632,7 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
             return;
         }
 
-#if NET8_0_OR_GREATER
+#if NET
         var stream = await contentTypesZipEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
         await using var disposableStream = stream.ConfigureAwait(false);
         var doc = await XDocument.LoadAsync(stream, LoadOptions.None, cancellationToken).ConfigureAwait(false);
@@ -664,7 +664,7 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
         }
 
         stream.Position = 0;
-#if NET8_0_OR_GREATER
+#if NET
         await doc.SaveAsync(stream, SaveOptions.None, cancellationToken).ConfigureAwait(false);
 #else
         doc.Save(stream);
@@ -678,7 +678,7 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
 
         var entry = _archive.CreateEntry(path, CompressionLevel.Fastest);
 
-#if NET8_0_OR_GREATER
+#if NET
         var zipStream = await entry.OpenAsync(cancellationToken).ConfigureAwait(false);
         await using var disposableZipStream = zipStream.ConfigureAwait(false);
 #else
@@ -709,7 +709,7 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
 
             oldWorkbookEntry.Delete();
             var newWorkbookEntry = _archive.CreateEntry("xl/workbook.xml", CompressionLevel.Fastest);
-#if NET8_0_OR_GREATER
+#if NET
             var newZipStream = await newWorkbookEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
             await using var newDisposableZipStream = newZipStream.ConfigureAwait(false);
             var writer = XmlWriter.Create(newZipStream, new XmlWriterSettings
@@ -738,7 +738,7 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
 
         async Task<XDocument> LoadWorkbook()
         {
-#if NET8_0_OR_GREATER
+#if NET
             var zipStream = await oldWorkbookEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
             await using var disposableZipStream = zipStream.ConfigureAwait(false);
             var workbookDoc = await XDocument.LoadAsync(zipStream, LoadOptions.None, cancellationToken).ConfigureAwait(false);

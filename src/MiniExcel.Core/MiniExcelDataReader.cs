@@ -300,7 +300,7 @@ public sealed class MiniExcelDataReader : IMiniExcelDataReader
         }
         _source?.Dispose();
 
-#if NETCOREAPP3_0_OR_GREATER
+#if NET
         await _stream!.DisposeAsync().ConfigureAwait(false);
 #else
         _stream.Dispose();

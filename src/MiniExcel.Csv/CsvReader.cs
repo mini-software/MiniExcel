@@ -33,7 +33,7 @@ internal partial class CsvReader : IMiniExcelReader
 
         var rowIndex = 0;
         while (await reader.ReadLineAsync(
-#if NET7_0_OR_GREATER
+#if NET
             cancellationToken
 #endif
             ).ConfigureAwait(false) is { } row)
@@ -49,7 +49,7 @@ internal partial class CsvReader : IMiniExcelReader
                 while (finalRow.Count(c => c == '"') % 2 != 0)
                 {
                     var nextPart = await reader.ReadLineAsync(
-#if NET7_0_OR_GREATER
+#if NET
                         cancellationToken
 #endif
                     ).ConfigureAwait(false);
@@ -165,6 +165,6 @@ internal partial class CsvReader : IMiniExcelReader
 
     public void Dispose()
     {
-        ((Stream?)_stream)?.Dispose();
+        _stream?.Dispose();
     }
 }

@@ -188,7 +188,7 @@ internal partial class OpenXmlWriter
         if (type == typeof(TimeSpan))
             return GetTimeSpanValue((TimeSpan)value, columnMapping);
 
-#if NET8_0_OR_GREATER
+#if NET
         if (type == typeof(DateOnly))
             return GetDateTimeValue(((DateOnly)value).ToDateTime(default), columnMapping);
 

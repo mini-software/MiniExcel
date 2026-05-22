@@ -24,11 +24,11 @@ internal static partial class MappingTemplateApplicator<T> where T : class
         {
             // Copy to memory stream if not seekable
             var memStream = new MemoryStream();
-#if NETCOREAPP2_1_OR_GREATER
-            await templateStream.CopyToAsync(memStream, cancellationToken).ConfigureAwait(false);
-#else
-            await templateStream.CopyToAsync(memStream).ConfigureAwait(false);
+            await templateStream.CopyToAsync(memStream
+#if NET
+                , cancellationToken
 #endif
+            ).ConfigureAwait(false);
             memStream.Position = 0;
             templateStream = memStream;
         }
@@ -111,7 +111,7 @@ internal static partial class MappingTemplateApplicator<T> where T : class
         targetEntry.LastWriteTime = sourceEntry.LastWriteTime;
         
         // Copy content
-#if NET8_0_OR_GREATER
+#if NET
         var sourceStream = await sourceEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
         var targetStream = await targetEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
 
@@ -141,7 +141,7 @@ internal static partial class MappingTemplateApplicator<T> where T : class
         targetEntry.LastWriteTime = sourceEntry.LastWriteTime;
         
         // Open streams
-#if NET8_0_OR_GREATER
+#if NET
         var sourceStream = await sourceEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
         var targetStream = await targetEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
 

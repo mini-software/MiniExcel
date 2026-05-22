@@ -118,7 +118,7 @@ internal partial class OpenXmlWriter
             var newStylesEntryStream = await newStylesEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
             var tempStylesEntryStream = await tempStylesEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
 
-#if NET8_0_OR_GREATER
+#if NET
             await using var disposableNewStylesEntryStream = newStylesEntryStream.ConfigureAwait(false);
             await using var disposableTempStylesEntryStream = tempStylesEntryStream.ConfigureAwait(false);
 #else
@@ -218,7 +218,7 @@ internal partial class OpenXmlWriter
     {
         var newEntry = _archive.CreateEntry(entry.FullName, CompressionLevel.Fastest);
 
-#if NET8_0_OR_GREATER
+#if NET
         var oldEntryStream = await _oldArchive!.GetEntry(entry.FullName)!.OpenAsync(cancellationToken).ConfigureAwait(false);
         await using var oldDisposableSheetStream = oldEntryStream.ConfigureAwait(false);
 
@@ -243,7 +243,7 @@ internal partial class OpenXmlWriter
             return;
         }
 
-#if NET8_0_OR_GREATER
+#if NET
         var stream = await contentTypesZipEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
         await using var disposableStream = stream.ConfigureAwait(false);
         var doc = await XDocument.LoadAsync(stream, LoadOptions.None, cancellationToken).ConfigureAwait(false);
@@ -276,7 +276,7 @@ internal partial class OpenXmlWriter
 
         var contentTypesEntry = _archive.CreateEntry(ExcelFileNames.ContentTypes, CompressionLevel.Fastest);
         var contentTypesEntryStream = await contentTypesEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
-#if NET8_0_OR_GREATER
+#if NET
         await using var disposableContetTypesEntryStream = contentTypesEntryStream.ConfigureAwait(false);
         await doc.SaveAsync(contentTypesEntryStream, SaveOptions.None, cancellationToken).ConfigureAwait(false);
 #else
@@ -308,7 +308,7 @@ internal partial class OpenXmlWriter
 #else
             Archive.Dispose();
 #endif
-#if NET8_0_OR_GREATER
+#if NET
             await _backingStream.DisposeAsync().ConfigureAwait(false);
 #else
             _backingStream.Dispose();

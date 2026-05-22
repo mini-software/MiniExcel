@@ -12,7 +12,7 @@ public sealed partial class OpenXmlTemplater
     [CreateSyncVersion]
     public async Task AddPictureAsync(string path, CancellationToken cancellationToken = default, params MiniExcelPicture[] images)
     {
-#if NET8_0_OR_GREATER
+#if NET
         var stream = File.Open(path, FileMode.OpenOrCreate);
         await using var disposableStream = stream.ConfigureAwait(false); 
 #else
@@ -31,7 +31,7 @@ public sealed partial class OpenXmlTemplater
     public async Task FillTemplateAsync(string path, string templatePath, object value, bool overwriteFile = false,
         OpenXmlConfiguration? configuration = null, CancellationToken cancellationToken = default)
     {
-#if NET8_0_OR_GREATER
+#if NET
         var stream = overwriteFile ? File.Create(path) : File.Open(path, FileMode.CreateNew);
         await using var disposableStream = stream.ConfigureAwait(false); 
 #else
@@ -44,7 +44,7 @@ public sealed partial class OpenXmlTemplater
     public async Task FillTemplateAsync(string path, Stream templateStream, object value, bool  overwriteFile = false,
         OpenXmlConfiguration? configuration = null, CancellationToken cancellationToken = default)
     {
-#if NET8_0_OR_GREATER
+#if NET
         var stream = overwriteFile ? File.Create(path) : File.Open(path, FileMode.CreateNew);
         await using var disposableStream = stream.ConfigureAwait(false); 
 #else
@@ -75,7 +75,7 @@ public sealed partial class OpenXmlTemplater
     public async Task FillTemplateAsync(string path, byte[] templateBytes, object value, bool overwriteFile = false,
         OpenXmlConfiguration? configuration = null, CancellationToken cancellationToken = default)
     {
-#if NET8_0_OR_GREATER
+#if NET
         var stream = overwriteFile ? File.Create(path) :  File.Open(path, FileMode.CreateNew);
         await using var disposableStream = stream.ConfigureAwait(false); 
 #else
@@ -98,7 +98,7 @@ public sealed partial class OpenXmlTemplater
     public async Task MergeSameCellsAsync(string mergedFilePath, string path,
         OpenXmlConfiguration? configuration = null, CancellationToken cancellationToken = default)
     {
-#if NET8_0_OR_GREATER
+#if NET
         var stream = File.Create(mergedFilePath);
         await using var disposableStream = stream.ConfigureAwait(false); 
 #else

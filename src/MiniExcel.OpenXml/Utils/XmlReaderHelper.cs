@@ -13,7 +13,7 @@ internal static partial class XmlReaderHelper
         if (reader.IsEmptyElement)
         {
             await reader.ReadAsync()
-#if NET6_0_OR_GREATER
+#if NET
                 .WaitAsync(cancellationToken)
 #endif
                 .ConfigureAwait(false);
@@ -21,13 +21,13 @@ internal static partial class XmlReaderHelper
         }
 
         await reader.MoveToContentAsync()
-#if NET6_0_OR_GREATER
+#if NET
             .WaitAsync(cancellationToken)
 #endif
             .ConfigureAwait(false);
 
         await reader.ReadAsync()
-#if NET6_0_OR_GREATER
+#if NET
             .WaitAsync(cancellationToken)
 #endif
             .ConfigureAwait(false);
@@ -41,7 +41,7 @@ internal static partial class XmlReaderHelper
         if (reader.NodeType == XmlNodeType.EndElement)
         {
             await reader.ReadAsync()
-#if NET6_0_OR_GREATER
+#if NET
                 .WaitAsync(cancellationToken)
 #endif
                 .ConfigureAwait(false);
@@ -49,7 +49,7 @@ internal static partial class XmlReaderHelper
         }
 
         await reader.SkipAsync()
-#if NET6_0_OR_GREATER
+#if NET
             .WaitAsync(cancellationToken)
 #endif
             .ConfigureAwait(false);
@@ -95,7 +95,7 @@ internal static partial class XmlReaderHelper
             {
                 // There are multiple <t> in a <si>. Concatenate <t> within an <si>.
                 result.Append(await reader.ReadElementContentAsStringAsync()
-#if NET6_0_OR_GREATER
+#if NET
                     .WaitAsync(cancellationToken)
 #endif
                     .ConfigureAwait(false));
@@ -126,7 +126,7 @@ internal static partial class XmlReaderHelper
             if (reader.IsStartElement("t", Ns))
             {
                 result.Append(await reader.ReadElementContentAsStringAsync()
-#if NET6_0_OR_GREATER
+#if NET
                         .WaitAsync(cancellationToken)
 #endif
                     .ConfigureAwait(false));

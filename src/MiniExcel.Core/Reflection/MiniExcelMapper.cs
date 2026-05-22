@@ -145,8 +145,8 @@ public static partial class MiniExcelMapper
                 else
                     throw new InvalidCastException($"{vs} cannot be cast to DateTime");
             }
-            
-#if NET6_0_OR_GREATER
+
+#if NET
             else if (map.ExcludeNullableType == typeof(DateOnly))
             {
                 if (itemValue is DateOnly)

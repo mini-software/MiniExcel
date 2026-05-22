@@ -12,7 +12,7 @@ public sealed partial class MiniExcelStreamWriter(Stream stream, Encoding encodi
     {
         if (!string.IsNullOrEmpty(content))
         {
-#if NET8_0_OR_GREATER
+#if NET
             await _streamWriter.WriteAsync(content.AsMemory(), cancellationToken)
 #else
             cancellationToken.ThrowIfCancellationRequested();
@@ -33,7 +33,7 @@ public sealed partial class MiniExcelStreamWriter(Stream stream, Encoding encodi
     public async Task<long> FlushAndGetPositionAsync(CancellationToken cancellationToken = default)
     {
         await _streamWriter.FlushAsync(
-#if NET8_0_OR_GREATER
+#if NET
             cancellationToken
 #endif
         ).ConfigureAwait(false);

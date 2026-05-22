@@ -23,7 +23,7 @@ public sealed partial class MappingTemplater()
         if (values is null)
             throw new ArgumentNullException(nameof(values));
 
-#if NET8_0_OR_GREATER
+#if NET
         var outputStream = File.Create(outputPath);
         await using var disposableOutputStream = outputStream.ConfigureAwait(false);
         
@@ -73,7 +73,7 @@ public sealed partial class MappingTemplater()
         if (values is null)
             throw new ArgumentNullException(nameof(values));
 
-#if NET8_0_OR_GREATER
+#if NET
         var templateStream = new MemoryStream(templateBytes);
         await using var disposableTemplateStream = templateStream.ConfigureAwait(false);
 #else

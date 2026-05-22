@@ -12,7 +12,7 @@ public sealed partial class MappingImporter()
     [CreateSyncVersion]
     public async IAsyncEnumerable<T> QueryAsync<T>(string path, [EnumeratorCancellation] CancellationToken cancellationToken = default) where T : class, new()
     {
-    #if NET8_0_OR_GREATER
+    #if NET
         var stream = File.OpenRead(path);
         await using var disposableStream = stream.ConfigureAwait(false);
     #else
@@ -39,7 +39,7 @@ public sealed partial class MappingImporter()
     [CreateSyncVersion]
     public async Task<T> QuerySingleAsync<T>(string path, CancellationToken cancellationToken = default) where T : class, new()
     {
-#if NET8_0_OR_GREATER
+#if NET
         var stream = File.OpenRead(path);
         await using var disposableStream = stream.ConfigureAwait(false);
 #else

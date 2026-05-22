@@ -14,7 +14,7 @@ public sealed partial class OpenXmlImporter
         string startCell = "A1", bool treatHeaderAsData = false, OpenXmlConfiguration? configuration = null,
         [EnumeratorCancellation] CancellationToken cancellationToken = default) where T : class, new()
     {
-#if NET8_0_OR_GREATER
+#if NET
         var stream = FileHelper.OpenSharedRead(path);
         await using var disposableStream = stream.ConfigureAwait(false); 
 #else
@@ -41,7 +41,7 @@ public sealed partial class OpenXmlImporter
         string? sheetName = null, string startCell = "A1", OpenXmlConfiguration? configuration = null,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-#if NET8_0_OR_GREATER
+#if NET
         var stream = FileHelper.OpenSharedRead(path);
         await using var disposableStream = stream.ConfigureAwait(false); 
 #else
@@ -79,7 +79,7 @@ public sealed partial class OpenXmlImporter
         string? sheetName = null, string startCell = "A1", string endCell = "", OpenXmlConfiguration? configuration = null,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-#if NET8_0_OR_GREATER
+#if NET
         var stream = FileHelper.OpenSharedRead(path);
         await using var disposableStream = stream.ConfigureAwait(false); 
 #else
@@ -105,7 +105,7 @@ public sealed partial class OpenXmlImporter
         int? endColumnIndex = null, OpenXmlConfiguration? configuration = null,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-#if NET8_0_OR_GREATER
+#if NET
         var stream = FileHelper.OpenSharedRead(path);
         await using var disposableStream = stream.ConfigureAwait(false); 
 #else
@@ -138,7 +138,7 @@ public sealed partial class OpenXmlImporter
         string? sheetName = null, string startCell = "A1", OpenXmlConfiguration? configuration = null,
         CancellationToken cancellationToken = default)
     {
-#if NET8_0_OR_GREATER
+#if NET
         var stream = FileHelper.OpenSharedRead(path);
         await using var disposableStream = stream.ConfigureAwait(false); 
 #else
@@ -208,7 +208,7 @@ public sealed partial class OpenXmlImporter
     [CreateSyncVersion]
     public async Task<List<string>> GetSheetNamesAsync(string path, OpenXmlConfiguration? config = null, CancellationToken cancellationToken = default)
     {
-#if NET8_0_OR_GREATER
+#if NET
         var stream = FileHelper.OpenSharedRead(path);
         await using var disposableStream = stream.ConfigureAwait(false); 
 #else
@@ -233,7 +233,7 @@ public sealed partial class OpenXmlImporter
     [CreateSyncVersion]
     public async Task<List<SheetInfo>> GetSheetInformationsAsync(string path, OpenXmlConfiguration? config = null, CancellationToken cancellationToken = default)
     {
-#if NET8_0_OR_GREATER
+#if NET
         var stream = FileHelper.OpenSharedRead(path);
         await using var disposableStream = stream.ConfigureAwait(false); 
 #else
@@ -258,7 +258,7 @@ public sealed partial class OpenXmlImporter
     [CreateSyncVersion]
     public async Task<IList<ExcelRange>> GetSheetDimensionsAsync(string path, CancellationToken cancellationToken = default)
     {
-#if NET8_0_OR_GREATER
+#if NET
         var stream = FileHelper.OpenSharedRead(path);
         await using var disposableStream = stream.ConfigureAwait(false); 
 #else
@@ -279,7 +279,7 @@ public sealed partial class OpenXmlImporter
         string? sheetName = null, string startCell = "A1", OpenXmlConfiguration? configuration = null,
         CancellationToken cancellationToken = default)
     {
-#if NET8_0_OR_GREATER
+#if NET
         var stream = FileHelper.OpenSharedRead(path);
         await using var disposableStream = stream.ConfigureAwait(false); 
 #else
@@ -305,7 +305,7 @@ public sealed partial class OpenXmlImporter
     [CreateSyncVersion]
     public async Task<CommentResultSet> RetrieveCommentsAsync(string path, string? sheetName, CancellationToken cancellationToken = default)
     {
-#if NET8_0_OR_GREATER
+#if NET
         var stream = FileHelper.OpenSharedRead(path);
         await using var disposableStream = stream.ConfigureAwait(false); 
 #else

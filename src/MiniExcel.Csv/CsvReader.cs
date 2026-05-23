@@ -159,7 +159,7 @@ internal partial class CsvReader : IMiniExcelReader
         
         //this code from S.O : https://stackoverflow.com/a/11365961/9131476
         return Regex.Split(row, $"[\t{_config.Seperator}](?=(?:[^\"]|\"[^\"]*\")*$)")
-            .Select(s => Regex.Replace(s.Replace("\"\"", "\""), "^\"|\"$", ""))
+            .Select(s => DoubleQuotesRegexImpl.Replace(s.Replace("\"\"", "\""), ""))
             .ToArray();
     }
 
@@ -167,4 +167,11 @@ internal partial class CsvReader : IMiniExcelReader
     {
         _stream?.Dispose();
     }
+#if NET
+    [GeneratedRegex("^\"|\"$")]
+    private static partial Regex DoubleQuotesRegex();
+    private static readonly Regex DoubleQuotesRegexImpl = DoubleQuotesRegex();
+#else
+    private static readonly Regex DoubleQuotesRegexImpl = new Regex("^\"|\"$",  RegexOptions.Compiled);
+#endif
 }

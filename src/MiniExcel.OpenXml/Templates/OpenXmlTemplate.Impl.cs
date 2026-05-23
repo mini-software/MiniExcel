@@ -44,11 +44,10 @@ internal partial class OpenXmlTemplate
     [CreateSyncVersion]
     private async Task GenerateSheetByUpdateModeAsync(ZipArchiveEntry sheetZipEntry, Stream stream, Stream sheetStream, IDictionary<string, object> inputMaps, IDictionary<int, string> sharedStrings, bool mergeCells = false, CancellationToken cancellationToken = default)
     {
-#if NET
         var doc = await XDocument.LoadAsync(sheetStream, LoadOptions.None, cancellationToken).ConfigureAwait(false);
+#if NET
         await sheetStream.DisposeAsync().ConfigureAwait(false);
 #else
-        var doc = XDocument.Load(sheetStream);
         sheetStream.Dispose();
 #endif
 
@@ -80,11 +79,11 @@ internal partial class OpenXmlTemplate
 #if NET
         var newTemplateStream = await templateSheetZipEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
         await using var disposableNewTemplateStream = newTemplateStream.ConfigureAwait(false);
-        var doc = await XDocument.LoadAsync(newTemplateStream, LoadOptions.None, cancellationToken).ConfigureAwait(false);
 #else
         using var newTemplateStream = templateSheetZipEntry.Open();
-        var doc = XDocument.Load(newTemplateStream);
 #endif
+        var doc = await XDocument.LoadAsync(newTemplateStream, LoadOptions.None, cancellationToken).ConfigureAwait(false);
+
         var worksheet = doc.Element(SpreadsheetNs + "worksheet");
         var prefix = worksheet?.GetPrefixOfNamespace(SpreadsheetNs);
         if (!string.IsNullOrEmpty(prefix))

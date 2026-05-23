@@ -246,11 +246,10 @@ internal partial class OpenXmlWriter
 #if NET
         var stream = await contentTypesZipEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
         await using var disposableStream = stream.ConfigureAwait(false);
-        var doc = await XDocument.LoadAsync(stream, LoadOptions.None, cancellationToken).ConfigureAwait(false);
 #else
         using var stream = contentTypesZipEntry.Open();
-        var doc = XDocument.Load(stream);
 #endif
+        var doc = await XDocument.LoadAsync(stream, LoadOptions.None, cancellationToken).ConfigureAwait(false);
 
         var ns = doc.Root!.GetDefaultNamespace();
         var typesElement = doc.Descendants(ns + "Types").Single();
@@ -278,11 +277,10 @@ internal partial class OpenXmlWriter
         var contentTypesEntryStream = await contentTypesEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
 #if NET
         await using var disposableContetTypesEntryStream = contentTypesEntryStream.ConfigureAwait(false);
-        await doc.SaveAsync(contentTypesEntryStream, SaveOptions.None, cancellationToken).ConfigureAwait(false);
 #else
         using var disposableContetTypesEntryStream = contentTypesEntryStream;
-        doc.Save(contentTypesEntryStream);
 #endif
+        await doc.SaveAsync(contentTypesEntryStream, SaveOptions.None, cancellationToken).ConfigureAwait(false);
     }
     
     private class TempSheetStylesBuilderUtils(Stream backingStream, ZipArchive archive, SheetStyleBuilderContext sheetStyleBuilderContext, ISheetStyleBuilder sheetStyleBuilder) : IDisposable, IAsyncDisposable

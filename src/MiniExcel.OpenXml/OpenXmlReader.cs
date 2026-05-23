@@ -1131,11 +1131,7 @@ internal partial class OpenXmlReader : IMiniExcelReader
             using var personStream = persons.Open();
 #endif
             
-#if NETSTANDARD2_0
-            var personDoc = XDocument.Load(personStream, LoadOptions.None);
-#else
             var personDoc = await XDocument.LoadAsync(personStream, LoadOptions.None, cancellationToken).ConfigureAwait(false);
-#endif
             var personElements = personDoc.Root?.Elements(ns18Tc + "person");
             people = personElements
                 ?.Select(p => new Author
@@ -1156,12 +1152,7 @@ internal partial class OpenXmlReader : IMiniExcelReader
 #else
         using var stream = rel.Open();
 #endif
-        
-#if NETSTANDARD2_0
-        var relDoc = XDocument.Load(stream, LoadOptions.None);
-#else
         var relDoc = await XDocument.LoadAsync(stream, LoadOptions.None, cancellationToken).ConfigureAwait(false);
-#endif
 
         var threadedCommentRels = relDoc.Root?.Elements(nsRel + "Relationship");
         var threadedCommentsElement = threadedCommentRels?.FirstOrDefault(x => x.Attribute("Type")?.Value == Schemas.SpreadsheetmlXmlThreadedComment);
@@ -1184,12 +1175,7 @@ internal partial class OpenXmlReader : IMiniExcelReader
 #else
             using var threadEntryStream = threadEntry.Open();
 #endif
-
-#if NETSTANDARD2_0
-            var doc = XDocument.Load(threadEntryStream, LoadOptions.None);
-#else
             var doc = await XDocument.LoadAsync(threadEntryStream, LoadOptions.None, cancellationToken).ConfigureAwait(false);
-#endif
 
             var commentThreadElements = doc.Root?.Elements(ns18Tc + "threadedComment");
             commentThreads = commentThreadElements
@@ -1237,12 +1223,7 @@ internal partial class OpenXmlReader : IMiniExcelReader
 #else
             using var noteEntryStream = noteEntry.Open();
 #endif
-
-#if NETSTANDARD2_0
-            var doc = XDocument.Load(noteEntryStream, LoadOptions.None);
-#else
             var doc = await XDocument.LoadAsync(noteEntryStream, LoadOptions.None, cancellationToken).ConfigureAwait(false);
-#endif
 
             var authorElements = doc.Root?.Element(nsMain + "authors")?.Elements(nsMain + "author");
             var authors = authorElements?.Select(a => a.Value).ToArray();

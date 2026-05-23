@@ -635,12 +635,11 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
 #if NET
         var stream = await contentTypesZipEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
         await using var disposableStream = stream.ConfigureAwait(false);
-        var doc = await XDocument.LoadAsync(stream, LoadOptions.None, cancellationToken).ConfigureAwait(false);
 #else
         using var stream = contentTypesZipEntry.Open();
-        var doc = XDocument.Load(stream);
 #endif
 
+        var doc = await XDocument.LoadAsync(stream, LoadOptions.None, cancellationToken).ConfigureAwait(false);
         var ns = doc.Root!.GetDefaultNamespace();
         var typesElement = doc.Descendants(ns + "Types").Single();
 
@@ -663,12 +662,8 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
             }
         }
 
-        stream.Position = 0;
-#if NET
+        stream.Seek(0, SeekOrigin.Begin);
         await doc.SaveAsync(stream, SaveOptions.None, cancellationToken).ConfigureAwait(false);
-#else
-        doc.Save(stream);
-#endif
     }
 
     [CreateSyncVersion]
@@ -741,11 +736,11 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
 #if NET
             var zipStream = await oldWorkbookEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
             await using var disposableZipStream = zipStream.ConfigureAwait(false);
-            var workbookDoc = await XDocument.LoadAsync(zipStream, LoadOptions.None, cancellationToken).ConfigureAwait(false);
 #else
             using var zipStream = oldWorkbookEntry.Open();
-            var workbookDoc = XDocument.Load(zipStream);
 #endif
+
+            var workbookDoc = await XDocument.LoadAsync(zipStream, LoadOptions.None, cancellationToken).ConfigureAwait(false);
             var sheetsContainer = workbookDoc.Root?.Element((XNamespace)Schemas.SpreadsheetmlXmlMain + "sheets")!;
             var sheets = sheetsContainer.Elements().ToList();
 

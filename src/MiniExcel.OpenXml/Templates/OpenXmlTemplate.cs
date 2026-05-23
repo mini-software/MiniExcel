@@ -21,24 +21,18 @@ internal partial class OpenXmlTemplate : IMiniExcelTemplate
     [CreateSyncVersion]
     public async Task SaveAsByTemplateAsync(string templatePath, object value, CancellationToken cancellationToken = default)
     {
-#if NET
         var stream = File.Open(templatePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
         await using var disposableStream = stream.ConfigureAwait(false); 
-#else
-        using var stream = File.Open(templatePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-#endif
+
         await SaveAsByTemplateAsync(stream, value, cancellationToken).ConfigureAwait(false);
     }
 
     [CreateSyncVersion]
     public async Task SaveAsByTemplateAsync(byte[] templateBytes, object value, CancellationToken cancellationToken = default)
     {
-#if NET
         var stream = new MemoryStream(templateBytes);
         await using var disposableStream = stream.ConfigureAwait(false); 
-#else
-        using var stream = new MemoryStream(templateBytes);
-#endif
+
         await SaveAsByTemplateAsync(stream, value, cancellationToken).ConfigureAwait(false);
     }
 
@@ -91,16 +85,11 @@ internal partial class OpenXmlTemplate : IMiniExcelTemplate
             var newEntry = outputFileArchive.ZipFile.CreateEntry(entry.FullName);
 
             // Copy the content of the original entry to the new entry
-#if NET
             var originalEntryStream = await entry.OpenAsync(cancellationToken).ConfigureAwait(false);
             await using var disposableEntryStream = originalEntryStream.ConfigureAwait(false);
 
             var newEntryStream = await newEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
             await using var disposableNewEntryStream = newEntryStream.ConfigureAwait(false);
-#else
-            using var originalEntryStream = entry.Open();
-            using var newEntryStream = newEntry.Open();
-#endif
 
             await originalEntryStream.CopyToAsync(newEntryStream
 #if NET
@@ -132,12 +121,8 @@ internal partial class OpenXmlTemplate : IMiniExcelTemplate
             var inputValues = _inputValueExtractor.ToValueDictionary(value);
             var outputZipEntry = outputFileArchive.ZipFile.CreateEntry(templateFullName);
 
-#if NET
             var outputZipSheetEntryStream = await outputZipEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
             await using var disposableSheetEntryStream = outputZipSheetEntryStream.ConfigureAwait(false);
-#else
-            using var outputZipSheetEntryStream = outputZipEntry.Open();
-#endif
 
             await GenerateSheetByCreateModeAsync(templateSheet, outputZipSheetEntryStream, inputValues, templateSharedStrings, cancellationToken: cancellationToken).ConfigureAwait(false);
             
@@ -154,13 +139,10 @@ internal partial class OpenXmlTemplate : IMiniExcelTemplate
 
         if (calcChain is not null)
         {
-#if NET
             var calcChainEntry = outputFileArchive.ZipFile.CreateEntry(calcChain.FullName);
             var calcChainStream = await calcChainEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
             await using var disposableChainEntryStream = calcChainStream.ConfigureAwait(false);
-#else
-            using var calcChainStream = calcChainEntry.Open();
-#endif
+
             await CalcChainHelper.GenerateCalcChainSheetAsync(calcChainStream, _calcChainContent.ToString(), cancellationToken).ConfigureAwait(false);
         }
         else
@@ -172,16 +154,11 @@ internal partial class OpenXmlTemplate : IMiniExcelTemplate
                     var newEntry = outputFileArchive.ZipFile.CreateEntry(entry.FullName);
 
                     // Copy the content of the original entry to the new entry
-#if NET
                     var originalEntryStream = await entry.OpenAsync(cancellationToken).ConfigureAwait(false);
                     await using var disposableEntryStream = originalEntryStream.ConfigureAwait(false);
 
                     var newEntryStream = await newEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
                     await using var disposableNewEntryStream = newEntryStream.ConfigureAwait(false);
-#else
-                    using var originalEntryStream = entry.Open();
-                    using var newEntryStream = newEntry.Open();
-#endif
 
                     await originalEntryStream.CopyToAsync(newEntryStream
 #if NET

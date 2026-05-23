@@ -19,12 +19,8 @@ public sealed partial class MappingExporter
     {
         var filePath = path.EndsWith(".xlsx",  StringComparison.InvariantCultureIgnoreCase) ? path : $"{path}.xlsx" ;
 
-#if NET
         var stream = overwriteFile ? File.Create(filePath) : new FileStream(filePath, FileMode.CreateNew);
         await using var disposableStream = stream.ConfigureAwait(false);
-#else
-        using var stream = overwriteFile ? File.Create(filePath) : new FileStream(filePath, FileMode.CreateNew);
-#endif
 
         await ExportAsync(stream, values, cancellationToken).ConfigureAwait(false);
     }

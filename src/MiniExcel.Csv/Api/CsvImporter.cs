@@ -15,7 +15,8 @@ public partial class CsvImporter
         CsvConfiguration? configuration = null, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         where T : class, new()
     {
-        using var stream = FileHelper.OpenSharedRead(path);
+        var stream = FileHelper.OpenSharedRead(path);
+        await using var disposableStream = stream.ConfigureAwait(false);
 
         var query = QueryAsync<T>(stream, treatHeaderAsData, configuration, cancellationToken);
         
@@ -38,7 +39,9 @@ public partial class CsvImporter
     public async IAsyncEnumerable<dynamic> QueryAsync(string path, bool useHeaderRow = false, 
         CsvConfiguration? configuration = null, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        using var stream = FileHelper.OpenSharedRead(path);
+        var stream = FileHelper.OpenSharedRead(path);
+        await using var disposableStream = stream.ConfigureAwait(false);
+
         await foreach (var item in QueryAsync(stream, useHeaderRow, configuration, cancellationToken).ConfigureAwait(false))
             yield return item;
     }
@@ -64,7 +67,9 @@ public partial class CsvImporter
     public async Task<DataTable> QueryAsDataTableAsync(string path, bool useHeaderRow = true,
         CsvConfiguration? configuration = null, CancellationToken cancellationToken = default)
     {
-        using var stream = FileHelper.OpenSharedRead(path);
+        var stream = FileHelper.OpenSharedRead(path);
+        await using var disposableStream = stream.ConfigureAwait(false);
+
         return await QueryAsDataTableAsync(stream, useHeaderRow, configuration, cancellationToken).ConfigureAwait(false);
     }
 
@@ -127,7 +132,8 @@ public partial class CsvImporter
     public async Task<ICollection<string>> GetColumnNamesAsync(string path, bool useHeaderRow = false,
         CsvConfiguration? configuration = null, CancellationToken cancellationToken = default)
     {
-        using var stream = FileHelper.OpenSharedRead(path);
+        var stream = FileHelper.OpenSharedRead(path);
+        await using var disposableStream = stream.ConfigureAwait(false);
         return await GetColumnNamesAsync(stream, useHeaderRow, configuration, cancellationToken).ConfigureAwait(false);
     }
 

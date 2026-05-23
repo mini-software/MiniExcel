@@ -137,12 +137,11 @@ internal static partial class MiniExcelPictureImplement
                 var imagePath = $"xl/media/{imageName}";
                 var imageEntry = archive.CreateEntry(imagePath);
 
-#if NET
                 var entryStream = await imageEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
                 await using var disposableStream = entryStream.ConfigureAwait(false);
+#if NET
                 await entryStream.WriteAsync(imageBytes.AsMemory(), cancellationToken).ConfigureAwait(false);
 #else
-                using var entryStream = imageEntry.Open();
                 await entryStream.WriteAsync(imageBytes, 0, imageBytes.Length, cancellationToken).ConfigureAwait(false);
 #endif
 

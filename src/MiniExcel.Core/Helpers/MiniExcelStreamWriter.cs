@@ -13,12 +13,11 @@ public sealed partial class MiniExcelStreamWriter(Stream stream, Encoding encodi
         if (!string.IsNullOrEmpty(content))
         {
 #if NET
-            await _streamWriter.WriteAsync(content.AsMemory(), cancellationToken)
+            await _streamWriter.WriteAsync(content.AsMemory(), cancellationToken).ConfigureAwait(false);
 #else
             cancellationToken.ThrowIfCancellationRequested();
-            await _streamWriter.WriteAsync(content)
+            await _streamWriter.WriteAsync(content).ConfigureAwait(false);
 #endif
-                .ConfigureAwait(false);
         }
     }
 

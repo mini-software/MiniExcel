@@ -45,11 +45,7 @@ internal partial class OpenXmlTemplate
     private async Task GenerateSheetByUpdateModeAsync(ZipArchiveEntry sheetZipEntry, Stream stream, Stream sheetStream, IDictionary<string, object> inputMaps, IDictionary<int, string> sharedStrings, bool mergeCells = false, CancellationToken cancellationToken = default)
     {
         var doc = await XDocument.LoadAsync(sheetStream, LoadOptions.None, cancellationToken).ConfigureAwait(false);
-#if NET
         await sheetStream.DisposeAsync().ConfigureAwait(false);
-#else
-        sheetStream.Dispose();
-#endif
 
         // we can't update ZipArchiveEntry directly, so we delete the original entry and recreate it
         sheetZipEntry.Delete();
@@ -76,12 +72,8 @@ internal partial class OpenXmlTemplate
     [CreateSyncVersion]
     private async Task GenerateSheetByCreateModeAsync(ZipArchiveEntry templateSheetZipEntry, Stream outputZipSheetEntryStream, IDictionary<string, object?> inputMaps, IDictionary<int, string> sharedStrings, bool mergeCells = false, CancellationToken cancellationToken = default)
     {
-#if NET
         var newTemplateStream = await templateSheetZipEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
         await using var disposableNewTemplateStream = newTemplateStream.ConfigureAwait(false);
-#else
-        using var newTemplateStream = templateSheetZipEntry.Open();
-#endif
         var doc = await XDocument.LoadAsync(newTemplateStream, LoadOptions.None, cancellationToken).ConfigureAwait(false);
 
         var worksheet = doc.Element(SpreadsheetNs + "worksheet");

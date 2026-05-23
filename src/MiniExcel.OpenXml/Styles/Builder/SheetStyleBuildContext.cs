@@ -49,13 +49,10 @@ internal sealed partial class SheetStyleBuilderContext(Dictionary<string, string
 
         if (styleEntry is not null)
         {
-#if NET
             var oldStyleXmlStream = await styleEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
             await using var disposableStream = oldStyleXmlStream.ConfigureAwait(false);
-#else
-            using var oldStyleXmlStream = styleEntry.Open();
-#endif
             using var reader = XmlReader.Create(oldStyleXmlStream, XmlReaderHelper.GetXmlReaderSettings(isAsync));
+
             infos = await ReadSheetStyleElementInfosAsync(reader, cancellationToken).ConfigureAwait(false);
         }
         else
@@ -88,22 +85,14 @@ internal sealed partial class SheetStyleBuilderContext(Dictionary<string, string
         var xmlReaderSettings = XmlReaderHelper.GetXmlReaderSettings(isAsync);
         if (_oldStyleXmlZipEntry is not null)
         {
-#if NET
             var oldStyleXmlStream = await _oldStyleXmlZipEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
             await using (_ = oldStyleXmlStream.ConfigureAwait(false))
-#else
-            using (var oldStyleXmlStream = _oldStyleXmlZipEntry.Open())
-#endif
             {
                 using var reader = XmlReader.Create(oldStyleXmlStream, xmlReaderSettings);
                 OldElementInfos = await ReadSheetStyleElementInfosAsync(reader, cancellationToken).ConfigureAwait(false);
             }
 
-#if NET
             _oldXmlReaderStream = await _oldStyleXmlZipEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
-#else
-            _oldXmlReaderStream = _oldStyleXmlZipEntry.Open();
-#endif
             OldXmlReader = XmlReader.Create(_oldXmlReaderStream, xmlReaderSettings);
             _newStyleXmlZipEntry = _archive.CreateEntry(ExcelFileNames.Styles + ".temp", CompressionLevel.Fastest);
         }
@@ -116,11 +105,7 @@ internal sealed partial class SheetStyleBuilderContext(Dictionary<string, string
             _newStyleXmlZipEntry = _archive.CreateEntry(ExcelFileNames.Styles, CompressionLevel.Fastest);
         }
 
-#if NET
         _newXmlWriterStream = await _newStyleXmlZipEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
-#else
-        _newXmlWriterStream = _newStyleXmlZipEntry.Open();
-#endif
         NewXmlWriter = XmlWriter.Create(_newXmlWriterStream, new XmlWriterSettings { Indent = true, Encoding = _encoding, Async = isAsync });
 
         _initialized = true;
@@ -145,23 +130,18 @@ internal sealed partial class SheetStyleBuilderContext(Dictionary<string, string
         {
             OldXmlReader?.Dispose();
             OldXmlReader = null;
-#if NET
             if (_oldXmlReaderStream is not null)
             {
                 await _oldXmlReaderStream.DisposeAsync().ConfigureAwait(false);
             }
-#else
-            _oldXmlReaderStream?.Dispose();
-#endif
 
             await NewXmlWriter!.FlushAsync().ConfigureAwait(false);
 #if NET
             await NewXmlWriter.DisposeAsync().ConfigureAwait(false);
-            await _newXmlWriterStream!.DisposeAsync().ConfigureAwait(false);
 #else
             NewXmlWriter.Dispose();
-            _newXmlWriterStream?.Dispose();
 #endif
+            await _newXmlWriterStream!.DisposeAsync().ConfigureAwait(false);
             NewXmlWriter = null;
             _newXmlWriterStream = null;
 
@@ -175,16 +155,12 @@ internal sealed partial class SheetStyleBuilderContext(Dictionary<string, string
                 _oldStyleXmlZipEntry = null;
                 var finalStyleXmlZipEntry = _archive.CreateEntry(ExcelFileNames.Styles, CompressionLevel.Fastest);
 
-#if NET
                 var tempStream = await _newStyleXmlZipEntry!.OpenAsync(cancellationToken).ConfigureAwait(false);
-                var newStream = await finalStyleXmlZipEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
-                await using (_ = tempStream.ConfigureAwait(false))
-                await using (_= newStream.ConfigureAwait(false))
-#else
-                using (var tempStream = _newStyleXmlZipEntry!.Open())
-                using (var newStream = finalStyleXmlZipEntry.Open())
-#endif
+                await using (var disposableTempStream = tempStream.ConfigureAwait(false))
                 {
+                    var newStream = await finalStyleXmlZipEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
+                    await using var disposableNewStream = newStream.ConfigureAwait(false);
+
                     await tempStream.CopyToAsync(newStream, 4096, cancellationToken).ConfigureAwait(false);
                 }
 

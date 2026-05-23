@@ -116,15 +116,10 @@ internal partial class OpenXmlWriter
         {
             var newStylesEntry = _archive.CreateEntry(ExcelFileNames.Styles, CompressionLevel.Fastest);
             var newStylesEntryStream = await newStylesEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
-            var tempStylesEntryStream = await tempStylesEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
-
-#if NET
             await using var disposableNewStylesEntryStream = newStylesEntryStream.ConfigureAwait(false);
+
+            var tempStylesEntryStream = await tempStylesEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
             await using var disposableTempStylesEntryStream = tempStylesEntryStream.ConfigureAwait(false);
-#else
-            using var disposableNewStylesEntryStream = newStylesEntryStream;
-            using var disposableTempStylesEntryStream = tempStylesEntryStream;
-#endif
 
             await tempStylesEntryStream.CopyToAsync(newStylesEntryStream, 81920, cancellationToken).ConfigureAwait(false);
             await newStylesEntryStream.FlushAsync(cancellationToken).ConfigureAwait(false);
@@ -218,16 +213,11 @@ internal partial class OpenXmlWriter
     {
         var newEntry = _archive.CreateEntry(entry.FullName, CompressionLevel.Fastest);
 
-#if NET
         var oldEntryStream = await _oldArchive!.GetEntry(entry.FullName)!.OpenAsync(cancellationToken).ConfigureAwait(false);
         await using var oldDisposableSheetStream = oldEntryStream.ConfigureAwait(false);
 
         var newEntryStream = await newEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
         await using var newDisposableSheetStream = newEntryStream.ConfigureAwait(false);
-#else
-        using var oldEntryStream = await _oldArchive!.GetEntry(entry.FullName)!.OpenAsync(cancellationToken).ConfigureAwait(false);
-        using var newEntryStream = await newEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
-#endif
 
         await oldEntryStream.CopyToAsync(newEntryStream, 81920, cancellationToken).ConfigureAwait(false);
         await newEntryStream.FlushAsync(cancellationToken).ConfigureAwait(false);
@@ -243,14 +233,10 @@ internal partial class OpenXmlWriter
             return;
         }
 
-#if NET
         var stream = await contentTypesZipEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
         await using var disposableStream = stream.ConfigureAwait(false);
-#else
-        using var stream = contentTypesZipEntry.Open();
-#endif
-        var doc = await XDocument.LoadAsync(stream, LoadOptions.None, cancellationToken).ConfigureAwait(false);
 
+        var doc = await XDocument.LoadAsync(stream, LoadOptions.None, cancellationToken).ConfigureAwait(false);
         var ns = doc.Root!.GetDefaultNamespace();
         var typesElement = doc.Descendants(ns + "Types").Single();
 
@@ -275,11 +261,8 @@ internal partial class OpenXmlWriter
 
         var contentTypesEntry = _archive.CreateEntry(ExcelFileNames.ContentTypes, CompressionLevel.Fastest);
         var contentTypesEntryStream = await contentTypesEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
-#if NET
         await using var disposableContetTypesEntryStream = contentTypesEntryStream.ConfigureAwait(false);
-#else
-        using var disposableContetTypesEntryStream = contentTypesEntryStream;
-#endif
+
         await doc.SaveAsync(contentTypesEntryStream, SaveOptions.None, cancellationToken).ConfigureAwait(false);
     }
     
@@ -306,11 +289,7 @@ internal partial class OpenXmlWriter
 #else
             Archive.Dispose();
 #endif
-#if NET
             await _backingStream.DisposeAsync().ConfigureAwait(false);
-#else
-            _backingStream.Dispose();
-#endif
         }
     }
 }

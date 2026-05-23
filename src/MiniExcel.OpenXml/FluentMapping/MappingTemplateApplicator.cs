@@ -113,20 +113,13 @@ internal static partial class MappingTemplateApplicator<T> where T : class
         targetEntry.LastWriteTime = sourceEntry.LastWriteTime;
         
         // Copy content
-#if NET
         var sourceStream = await sourceEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
-        var targetStream = await targetEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
-
         await using var disposableSourceStream = sourceStream.ConfigureAwait(false);
+
+        var targetStream = await targetEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
         await using var disposableTargetStream = targetStream.ConfigureAwait(false);
 
-        await sourceStream.CopyToAsync(targetStream, cancellationToken).ConfigureAwait(false);
-#else
-        using var sourceStream = sourceEntry.Open();
-        using var targetStream = targetEntry.Open();
-
-        await sourceStream.CopyToAsync(targetStream).ConfigureAwait(false);
-#endif
+        await sourceStream.CopyToAsync(targetStream, 81920, cancellationToken).ConfigureAwait(false);
     }
     
     [CreateSyncVersion]
@@ -143,16 +136,11 @@ internal static partial class MappingTemplateApplicator<T> where T : class
         targetEntry.LastWriteTime = sourceEntry.LastWriteTime;
         
         // Open streams
-#if NET
         var sourceStream = await sourceEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
-        var targetStream = await targetEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
-
         await using var disposableSourceStream = sourceStream.ConfigureAwait(false);
+
+        var targetStream = await targetEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
         await using var disposableTargetStream = targetStream.ConfigureAwait(false);
-#else
-        using var sourceStream = sourceEntry.Open();
-        using var targetStream = targetEntry.Open();
-#endif
         
         // Create processor for this worksheet
         var processor = new MappingTemplateProcessor<T>(mapping);

@@ -178,12 +178,9 @@ internal partial class OpenXmlReader : IMiniExcelReader
             maxColumnIndex = endColumnIndex.Value;
         }
 
-#if NET
         var sheetStream = await sheetEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
         await using var disposableSheetStream = sheetStream.ConfigureAwait(false);
-#else
-        using var sheetStream = sheetEntry.Open();
-#endif
+
         using var reader = XmlReader.Create(sheetStream, xmlSettings);
 
         if (!reader.IsStartElement("worksheet", Ns))
@@ -417,13 +414,10 @@ internal partial class OpenXmlReader : IMiniExcelReader
         if (Archive.GetEntry(ExcelFileNames.SharedStrings) is not { } sharedStringsEntry)
             return;
         
-        var idx = 0;
-#if NET
         var stream = await sharedStringsEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
         await using var disposableStream = stream.ConfigureAwait(false);
-#else
-        using var stream = sharedStringsEntry.Open();
-#endif
+
+        var idx = 0;
         if (_config.EnableSharedStringCache && sharedStringsEntry.Length >= _config.SharedStringCacheSize)
         {
             SharedStrings = new SharedStringsDiskCache(_config.SharedStringCachePath);
@@ -459,12 +453,9 @@ internal partial class OpenXmlReader : IMiniExcelReader
         );
 
         var entry = entries.Single(w => w.FullName == ExcelFileNames.Workbook);
-#if NET
         var stream = await entry.OpenAsync(cancellationToken).ConfigureAwait(false);
         await using var disposableStream = stream.ConfigureAwait(false);
-#else
-        using var stream = entry.Open();
-#endif
+
         using var reader = XmlReader.Create(stream, xmlSettings);
         
         if (!reader.IsStartElement("workbook", Ns))
@@ -522,7 +513,7 @@ internal partial class OpenXmlReader : IMiniExcelReader
                         sheetCount++;
                         await reader.SkipAsync()
 #if NET
-                                .WaitAsync(cancellationToken)
+                            .WaitAsync(cancellationToken)
 #endif
                             .ConfigureAwait(false);
                     }
@@ -556,12 +547,9 @@ internal partial class OpenXmlReader : IMiniExcelReader
 
         var entry = entries.Single(w => w.FullName == ExcelFileNames.WorkbookRels);
         
-#if NET
         var stream = await entry.OpenAsync(cancellationToken).ConfigureAwait(false);
         await using var disposableStream = stream.ConfigureAwait(false);
-#else
-        using var stream = entry.Open();
-#endif
+
         using var reader = XmlReader.Create(stream, xmlSettings);
         
         if (!XmlReaderHelper.IsStartElement(reader, "Relationships", Schemas.OpenXmlPackageRelationships))
@@ -758,12 +746,8 @@ internal partial class OpenXmlReader : IMiniExcelReader
 
             var withoutCr = false;
 
-#if NET
             var crSheetStream = await sheet.OpenAsync(cancellationToken).ConfigureAwait(false);
             await using var disposableCrSheetStream = crSheetStream.ConfigureAwait(false);
-#else
-            using var crSheetStream = sheet.Open();
-#endif
             using (var reader = XmlReader.Create(crSheetStream, xmlSettings))
             {
                 while (await reader.ReadAsync().ConfigureAwait(false))
@@ -811,12 +795,9 @@ internal partial class OpenXmlReader : IMiniExcelReader
 
             if (withoutCr)
             {
-#if NET
                 var sheetStream = await sheet.OpenAsync(cancellationToken).ConfigureAwait(false);
                 await using var disposableSheetStream = sheetStream.ConfigureAwait(false);
-#else
-                using var sheetStream = sheet.Open();
-#endif
+
                 using var reader = XmlReader.Create(sheetStream, xmlSettings);
                 
                 if (!reader.IsStartElement("worksheet", Ns))
@@ -911,12 +892,8 @@ internal partial class OpenXmlReader : IMiniExcelReader
         int maxRowIndex = -1;
         int maxColumnIndex = -1;
 
-#if NET
         var crSheetStream = await sheetEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
         await using var disposableCrSheetStream  = crSheetStream.ConfigureAwait(false);
-#else
-        using var crSheetStream = sheetEntry.Open();
-#endif
         using (var reader = XmlReader.Create(crSheetStream, xmlSettings))
         {
             while (await reader.ReadAsync()
@@ -966,12 +943,9 @@ internal partial class OpenXmlReader : IMiniExcelReader
 
         if (withoutCr)
         {
-#if NET
             var sheetStream = await sheetEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
             await using var disposableSheetStream = sheetStream.ConfigureAwait(false);
-#else
-            using var sheetStream = sheetEntry.Open();
-#endif
+
             using var reader = XmlReader.Create(sheetStream, xmlSettings);
             
             if (!reader.IsStartElement("worksheet", Ns))
@@ -1046,12 +1020,9 @@ internal partial class OpenXmlReader : IMiniExcelReader
         );
         var mergeCells = new MergeCells();
 
-#if NET
         var sheetStream = await sheetEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
         await  using var disposableSheetStream = sheetStream.ConfigureAwait(false);
-#else
-        using var sheetStream = sheetEntry.Open();
-#endif
+
         using var reader = XmlReader.Create(sheetStream, xmlSettings);
         
         if (!reader.IsStartElement("worksheet", Ns))
@@ -1123,12 +1094,8 @@ internal partial class OpenXmlReader : IMiniExcelReader
         List<Author> people = [];
         if (Archive.GetEntry(ExcelFileNames.Person) is { } persons)
         {
-#if NET
             var personStream = await persons.OpenAsync(cancellationToken).ConfigureAwait(false);
             await using var disposablePersonStream = personStream.ConfigureAwait(false);  
-#else
-            using var personStream = persons.Open();
-#endif
             
             var personDoc = await XDocument.LoadAsync(personStream, LoadOptions.None, cancellationToken).ConfigureAwait(false);
             var personElements = personDoc.Root?.Elements(ns18Tc + "person");
@@ -1145,12 +1112,9 @@ internal partial class OpenXmlReader : IMiniExcelReader
         if (Archive.GetEntry($"xl/worksheets/_rels/{sheetFile}.rels") is not { } rel)
             return new CommentResultSet(sheetName, [], []);
 
-#if NET
         var stream = await rel.OpenAsync(cancellationToken).ConfigureAwait(false);
         await using var disposableStream = stream.ConfigureAwait(false);  
-#else
-        using var stream = rel.Open();
-#endif
+
         var relDoc = await XDocument.LoadAsync(stream, LoadOptions.None, cancellationToken).ConfigureAwait(false);
 
         var threadedCommentRels = relDoc.Root?.Elements(nsRel + "Relationship");
@@ -1168,12 +1132,9 @@ internal partial class OpenXmlReader : IMiniExcelReader
         HashSet<string?> refCells = [];
         if (Archive.GetEntry($"xl/{threadedCommentsPath}") is { } threadEntry)
         {
-#if NET
             var threadEntryStream = await threadEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
             await using var disposableThreadEntryStream = threadEntryStream.ConfigureAwait(false);
-#else
-            using var threadEntryStream = threadEntry.Open();
-#endif
+
             var doc = await XDocument.LoadAsync(threadEntryStream, LoadOptions.None, cancellationToken).ConfigureAwait(false);
 
             var commentThreadElements = doc.Root?.Elements(ns18Tc + "threadedComment");
@@ -1216,12 +1177,9 @@ internal partial class OpenXmlReader : IMiniExcelReader
 
         if (Archive.GetEntry($"xl/{notesPath}") is { } noteEntry)
         {
-#if NET
             var noteEntryStream = await noteEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
             await using var disposableNoteEntryStream = noteEntryStream.ConfigureAwait(false);
-#else
-            using var noteEntryStream = noteEntry.Open();
-#endif
+
             var doc = await XDocument.LoadAsync(noteEntryStream, LoadOptions.None, cancellationToken).ConfigureAwait(false);
 
             var authorElements = doc.Root?.Element(nsMain + "authors")?.Elements(nsMain + "author");
@@ -1283,12 +1241,9 @@ internal partial class OpenXmlReader : IMiniExcelReader
             Async = true
         };
 
-#if NET
         var sheetStream = await sheetEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
         await using var disposableSheetStream = sheetStream.ConfigureAwait(false);
-#else
-        using var sheetStream = sheetEntry.Open();
-#endif
+
         using var reader = XmlReader.Create(sheetStream, xmlSettings);
         
         if (!reader.IsStartElement("worksheet", Ns))

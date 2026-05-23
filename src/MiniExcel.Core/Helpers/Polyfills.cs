@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.IO.Compression;
+using System.Runtime.InteropServices;
 using System.Xml.Linq;
 
 namespace MiniExcelLib.Core.Helpers;
@@ -58,6 +59,47 @@ public static class Polyfills
                 yield return element;
             }
         }
+    }
+
+    extension(Stream? stream)
+    {
+        [EditorBrowsable(EditorBrowsableState.Advanced)]
+        public ValueTask DisposeAsync()
+        {
+            if (stream is IAsyncDisposable asyncDisposable)
+                return asyncDisposable.DisposeAsync();
+    
+            stream?.Dispose();
+            return default;
+        }
+    
+        [EditorBrowsable(EditorBrowsableState.Advanced)]
+        public StreamConfiguredAsyncDisposable ConfigureAwait(bool continueOnCapturedContext) 
+            => new(stream, continueOnCapturedContext);
+    }
+
+    /// <summary>
+    /// This is a copy of the runtime's <see cref="ConfiguredAsyncDisposable" />, which we cannot instantiate directly for our needs
+    /// due to the constructor that initializes the object to eventually dispose being internal. 
+    /// </summary>
+    [StructLayout(LayoutKind.Auto)]
+    [EditorBrowsable(EditorBrowsableState.Advanced)]
+    public readonly struct StreamConfiguredAsyncDisposable : IDisposable
+    {
+        private readonly Stream? _source;
+        private readonly bool _continueOnCapturedContext;
+    
+        internal StreamConfiguredAsyncDisposable(Stream? source, bool continueOnCapturedContext)
+        {
+            _source = source;
+            _continueOnCapturedContext = continueOnCapturedContext;
+        }
+    
+        public ConfiguredValueTaskAwaitable DisposeAsync() 
+            => _source.DisposeAsync().ConfigureAwait(_continueOnCapturedContext);
+
+        public void Dispose() 
+            => _source?.Dispose();
     }
 #endif
 

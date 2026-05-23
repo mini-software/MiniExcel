@@ -679,7 +679,7 @@ internal partial class OpenXmlReader : IMiniExcelReader
         
         switch (aT)
         {
-            case "s":
+            case ExcelDataTypes.SharedString:
                 if (int.TryParse(rawValue, style, invariantCulture, out var sstIndex))
                 {
                     if (sstIndex >= 0 && sstIndex < SharedStrings?.Count)
@@ -689,8 +689,7 @@ internal partial class OpenXmlReader : IMiniExcelReader
                 }
                 break;
 
-            case "inlineStr":
-            case "str":
+            case ExcelDataTypes.InlineString or ExcelDataTypes.CalculatedString:
                 //TODO: it will unbox,box
                 var v = XmlHelper.DecodeString(rawValue);
                 value = v;
@@ -711,17 +710,17 @@ internal partial class OpenXmlReader : IMiniExcelReader
                 }
                 break;
 
-            case "b":
+            case ExcelDataTypes.Boolean:
                 value = rawValue == "1";
                 return;
 
-            case "d":
+            case ExcelDataTypes.DateTime:
                 value = DateTime.TryParseExact(rawValue, "yyyy-MM-dd", invariantCulture, DateTimeStyles.AllowLeadingWhite | DateTimeStyles.AllowTrailingWhite, out var date)
                     ? date
                     : rawValue;
                 return;
 
-            case "e":
+            case ExcelDataTypes.Error:
                 value = rawValue;
                 return;
 
@@ -1155,12 +1154,12 @@ internal partial class OpenXmlReader : IMiniExcelReader
         var relDoc = await XDocument.LoadAsync(stream, LoadOptions.None, cancellationToken).ConfigureAwait(false);
 
         var threadedCommentRels = relDoc.Root?.Elements(nsRel + "Relationship");
-        var threadedCommentsElement = threadedCommentRels?.FirstOrDefault(x => x.Attribute("Type")?.Value == Schemas.SpreadsheetmlXmlThreadedComment);
+        var threadedCommentsElement = threadedCommentRels?.FirstOrDefault(x => x.Attribute("Type")?.Value == Schemas.SpreadsheetmlXmlThreadedCommentRelationship);
         var threadedCommentsTarget = threadedCommentsElement?.Attribute("Target");
         var threadedCommentsPath = threadedCommentsTarget?.Value.TrimStart('.', '/');
 
         var noteRels = relDoc.Root?.Elements(nsRel + "Relationship");
-        var notesElement = noteRels?.FirstOrDefault(x => x.Attribute("Type")?.Value == Schemas.SpreadsheetmlXmlComments);
+        var notesElement = noteRels?.FirstOrDefault(x => x.Attribute("Type")?.Value == Schemas.SpreadsheetmlXmlCommentsRelationship);
         var notesTarget = notesElement?.Attribute("Target");
         var notesPath = notesTarget?.Value.TrimStart('.', '/');
 

@@ -696,15 +696,15 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
         if (newSheetName is null && newSheetIndex is null && newSheetState is null)
             return;
 
-        var oldWorkbookEntry = _archive.GetEntry("xl/workbook.xml")!;
+        var oldWorkbookEntry = _archive.GetEntry(ExcelFileNames.Workbook)!;
  
         try
         {
             var xmlDoc = await LoadWorkbook().ConfigureAwait(false);
 
             oldWorkbookEntry.Delete();
-            var newWorkbookEntry = _archive.CreateEntry("xl/workbook.xml", CompressionLevel.Fastest);
-#if NET
+            var newWorkbookEntry = _archive.CreateEntry(ExcelFileNames.Workbook, CompressionLevel.Fastest);
+
             var newZipStream = await newWorkbookEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
             await using var newDisposableZipStream = newZipStream.ConfigureAwait(false);
             var writer = XmlWriter.Create(newZipStream, new XmlWriterSettings

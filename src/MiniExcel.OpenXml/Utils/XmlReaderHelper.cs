@@ -127,7 +127,7 @@ internal static partial class XmlReaderHelper
             {
                 result.Append(await reader.ReadElementContentAsStringAsync()
 #if NET
-                        .WaitAsync(cancellationToken)
+                    .WaitAsync(cancellationToken)
 #endif
                     .ConfigureAwait(false));
             }

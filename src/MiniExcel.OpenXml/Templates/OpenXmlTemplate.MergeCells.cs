@@ -1,3 +1,5 @@
+using MiniExcelLib.OpenXml.Constants;
+
 namespace MiniExcelLib.OpenXml.Templates;
 
 internal partial class OpenXmlTemplate
@@ -44,8 +46,7 @@ internal partial class OpenXmlTemplate
 
         //read all xlsx sheets
         var sheets = archive.ZipFile.Entries.Where(w =>
-            w.FullName.StartsWith("xl/worksheets/sheet", StringComparison.OrdinalIgnoreCase) ||
-            w.FullName.StartsWith("/xl/worksheets/sheet", StringComparison.OrdinalIgnoreCase)
+            w.FullName.TrimStart('/').StartsWith(ExcelFileNames.WorksheetBase, StringComparison.OrdinalIgnoreCase)
         ).ToList();
 
         foreach (var sheet in sheets)

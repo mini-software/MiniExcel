@@ -13,7 +13,7 @@ internal class OpenXmlStyles
 
     public OpenXmlStyles(OpenXmlZip zip)
     {
-        using var reader = zip.GetXmlReader("xl/styles.xml");
+        using var reader = zip.GetXmlReader(ExcelFileNames.Styles);
         if (reader is null)
             throw new InvalidDataException("The OpenXml styles could not be found, the file might be malformed.");
                 

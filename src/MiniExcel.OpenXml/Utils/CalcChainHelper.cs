@@ -28,9 +28,9 @@ internal static partial class CalcChainHelper
 		var writer = new StreamWriter(calcChainStream, Encoding.UTF8);
 		await using var disposableWriter = writer.ConfigureAwait(false);
 		await writer.WriteAsync(content.AsMemory(), cancellationToken).ConfigureAwait(false);
-	#else
+#else
 		using var writer = new StreamWriter(calcChainStream, Encoding.UTF8);
 		await writer.WriteAsync(content).ConfigureAwait(false);
-	#endif
+#endif
 	}
 }

@@ -28,7 +28,7 @@ internal partial class OpenXmlTemplate
     [GeneratedRegex(@"<(?:x:)?v>\s*</(?:x:)?v>")] private static partial Regex EmptyVTagRegexImpl();
     private static readonly Regex EmptyVTagRegex = EmptyVTagRegexImpl();
 #else
-    private static readonly Regex IsExpressionRegex = new("(?<={{).*?(?=}})");
+    private static readonly Regex IsExpressionRegex = new("(?<={{).*?(?=}})", RegexOptions.Compiled);
     private static readonly Regex CellRegex = new("([A-Z]+)([0-9]+)", RegexOptions.Compiled);
     private static readonly Regex TemplateRegex = new(@"\{\{(.*?)\}\}", RegexOptions.Compiled);
     private static readonly Regex NonTemplateRegex = new(@".*?\{\{.*?\}\}.*?", RegexOptions.Compiled);

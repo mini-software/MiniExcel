@@ -1,4 +1,5 @@
 using MiniExcelLib.Core;
+using MiniExcelLib.OpenXml.Constants;
 using CalcChainHelper = MiniExcelLib.OpenXml.Utils.CalcChainHelper;
 
 namespace MiniExcelLib.OpenXml.Templates;
@@ -80,9 +81,12 @@ internal partial class OpenXmlTemplate : IMiniExcelTemplate
         foreach (var entry in originalArchive.Entries)
         {
             var entryName = entry.FullName.TrimStart('/');
-            if (entryName.StartsWith("xl/worksheets/sheet", StringComparison.OrdinalIgnoreCase) || entryName.Equals("xl/calcChain.xml"))
+            if (entryName.StartsWith(ExcelFileNames.WorksheetBase, StringComparison.OrdinalIgnoreCase) || 
+                entryName.Equals(ExcelFileNames.CalcChain, StringComparison.OrdinalIgnoreCase))
+            {
                 continue;
-                    
+            }
+
             // Create a new entry in the new archive with the same name
             var newEntry = outputFileArchive.ZipFile.CreateEntry(entry.FullName);
 
@@ -113,7 +117,7 @@ internal partial class OpenXmlTemplate : IMiniExcelTemplate
         var templateSheets = templateReader.Archive.ZipFile.Entries
             .Where(entry => entry.FullName
                 .TrimStart('/')
-                .StartsWith("xl/worksheets/sheet", StringComparison.OrdinalIgnoreCase));
+                .StartsWith(ExcelFileNames.WorksheetBase, StringComparison.OrdinalIgnoreCase));
 
         int sheetIdx = 0;
         foreach (var templateSheet in templateSheets)
@@ -134,6 +138,7 @@ internal partial class OpenXmlTemplate : IMiniExcelTemplate
 #else
             using var outputZipSheetEntryStream = outputZipEntry.Open();
 #endif
+
             await GenerateSheetByCreateModeAsync(templateSheet, outputZipSheetEntryStream, inputValues, templateSharedStrings, cancellationToken: cancellationToken).ConfigureAwait(false);
             
             //doc.Save(zipStream); //don't do it because: https://user-images.githubusercontent.com/12729184/114361127-61a5d100-9ba8-11eb-9bb9-34f076ee28a2.png
@@ -144,14 +149,13 @@ internal partial class OpenXmlTemplate : IMiniExcelTemplate
         }
 
         // create mode we need to not create first then create here
-        var calcChain = outputFileArchive.EntryCollection.FirstOrDefault(e => e.FullName.Contains("xl/calcChain.xml"));
+        var calcChain = outputFileArchive.EntryCollection.FirstOrDefault(e 
+            => e.FullName.TrimStart('/').Equals(ExcelFileNames.CalcChain, StringComparison.OrdinalIgnoreCase));
+
         if (calcChain is not null)
         {
-            var calcChainPathName = calcChain.FullName;
-            //calcChain.Delete();
-
-            var calcChainEntry = outputFileArchive.ZipFile.CreateEntry(calcChainPathName);
 #if NET
+            var calcChainEntry = outputFileArchive.ZipFile.CreateEntry(calcChain.FullName);
             var calcChainStream = await calcChainEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
             await using var disposableChainEntryStream = calcChainStream.ConfigureAwait(false);
 #else
@@ -163,7 +167,7 @@ internal partial class OpenXmlTemplate : IMiniExcelTemplate
         {
             foreach (var entry in originalArchive.Entries)
             {
-                if (entry.FullName.Contains("xl/calcChain.xml"))
+                if (entry.FullName.TrimStart('/').Equals(ExcelFileNames.CalcChain, StringComparison.OrdinalIgnoreCase))
                 {
                     var newEntry = outputFileArchive.ZipFile.CreateEntry(entry.FullName);
 

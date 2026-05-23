@@ -1,3 +1,5 @@
+using MiniExcelLib.OpenXml.Constants;
+
 namespace MiniExcelLib.OpenXml.FluentMapping;
 
 internal static partial class MappingTemplateApplicator<T> where T : class
@@ -88,7 +90,7 @@ internal static partial class MappingTemplateApplicator<T> where T : class
     
     private static bool IsWorksheetEntry(string fullName)
     {
-        return fullName.StartsWith("xl/worksheets/sheet", StringComparison.OrdinalIgnoreCase) &&
+        return fullName.StartsWith(ExcelFileNames.WorksheetBase, StringComparison.OrdinalIgnoreCase) &&
                fullName.EndsWith(".xml", StringComparison.OrdinalIgnoreCase);
     }
     

@@ -8,6 +8,8 @@ internal static class ExcelFileNames
     internal const string ContentTypes = "[Content_Types].xml";
     internal const string Person = "xl/persons/person.xml";
     internal const string Styles = "xl/styles.xml";
+    internal const string CalcChain = "xl/calcChain.xml";
+
     internal const string Workbook = "xl/workbook.xml";
     internal const string WorkbookRels = "xl/_rels/workbook.xml.rels";
     internal const string WorksheetBase = "xl/worksheets/sheet";

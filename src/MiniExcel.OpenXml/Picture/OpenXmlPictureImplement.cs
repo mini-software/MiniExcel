@@ -1,5 +1,6 @@
 ﻿using System.Drawing;
 using MiniExcelLib.Core.Enums;
+using MiniExcelLib.OpenXml.Constants;
 
 namespace MiniExcelLib.OpenXml.Picture;
 
@@ -8,8 +9,8 @@ internal static partial class MiniExcelPictureImplement
     private static XmlNamespaceManager GetRNamespaceManager(XmlDocument doc)
     {
         var nsmgr = new XmlNamespaceManager(doc.NameTable);
-        nsmgr.AddNamespace("x", "http://schemas.openxmlformats.org/spreadsheetml/2006/main");
-        nsmgr.AddNamespace("r", "http://schemas.openxmlformats.org/officeDocument/2006/relationships");
+        nsmgr.AddNamespace("x", Schemas.SpreadsheetmlXmlMain);
+        nsmgr.AddNamespace("r", Schemas.SpreadsheetmlXmlRelationships);
         return nsmgr;
     }
 
@@ -58,7 +59,7 @@ internal static partial class MiniExcelPictureImplement
                 var relsDoc = LoadXml(relsEntry);
                     
                 var namespaceManager = new XmlNamespaceManager(relsDoc.NameTable);
-                namespaceManager.AddNamespace("x", "http://schemas.openxmlformats.org/package/2006/relationships");
+                namespaceManager.AddNamespace("x", Schemas.OpenXmlPackageRelationships);
                     
                 var xpath = $"/x:Relationships/x:Relationship[@Id='{drawingRelId}']";
                 var relNode = relsDoc.SelectSingleNode(xpath, namespaceManager);
@@ -85,13 +86,13 @@ internal static partial class MiniExcelPictureImplement
                 var relsDoc = LoadXml(relsEntry);
                 var relNode = relsDoc.CreateElement("Relationship", relsDoc.DocumentElement.NamespaceURI);
                 relNode.SetAttribute("Id", drawingRelId);
-                relNode.SetAttribute("Type", "http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing");
+                relNode.SetAttribute("Type", Schemas.SpreadsheetmlXmlDrawingRelationship);
                 relNode.SetAttribute("Target", $"../drawings/drawing{drawingId}.xml");
                 relsDoc.DocumentElement.AppendChild(relNode);
                 SaveXml(relsDoc, relsEntry);
                     
                 // Update [Content_Types].xml for drawing
-                var contentTypesEntry = archive.GetEntry("[Content_Types].xml");
+                var contentTypesEntry = archive.GetEntry(ExcelFileNames.ContentTypes);
                 var contentTypesDoc = LoadXml(contentTypesEntry);
                 var overrideDrawingFileExists = contentTypesDoc.DocumentElement
                     .ChildNodes
@@ -103,7 +104,7 @@ internal static partial class MiniExcelPictureImplement
                 {
                     var overrideNode = contentTypesDoc.CreateElement("Override", contentTypesDoc.DocumentElement.NamespaceURI);
                     overrideNode.SetAttribute("PartName", $"/xl/drawings/drawing{drawingId}.xml");
-                    overrideNode.SetAttribute("ContentType", "application/vnd.openxmlformats-officedocument.drawing+xml");
+                    overrideNode.SetAttribute("ContentType", ExcelContentTypes.Drawing);
                     contentTypesDoc.DocumentElement.AppendChild(overrideNode);
                 }
 
@@ -146,7 +147,7 @@ internal static partial class MiniExcelPictureImplement
 #endif
 
                 // Step 2: Update [Content_Types].xml for image
-                var contentTypesEntry = archive.GetEntry("[Content_Types].xml");
+                var contentTypesEntry = archive.GetEntry(ExcelFileNames.ContentTypes);
                 var contentTypesDoc = LoadXml(contentTypesEntry);
                 if (!contentTypesDoc.DocumentElement.InnerXml.Contains("image/png"))
                 {
@@ -164,7 +165,7 @@ internal static partial class MiniExcelPictureImplement
                 // Step 4: Add image relationship to drawing rels
                 var relNode = drawingRelsDoc.CreateElement("Relationship", drawingRelsDoc.DocumentElement.NamespaceURI);
                 relNode.SetAttribute("Id", relId);
-                relNode.SetAttribute("Type", "http://schemas.openxmlformats.org/officeDocument/2006/relationships/image");
+                relNode.SetAttribute("Type", Schemas.SpreadsheetmlXmlImageRelationship);
                 relNode.SetAttribute("Target", $"../media/{imageName}");
                 drawingRelsDoc.DocumentElement.AppendChild(relNode);
             }
@@ -208,7 +209,7 @@ internal static partial class MiniExcelPictureImplement
     private static XmlNamespaceManager GetNamespaceManager(XmlDocument doc)
     {
         var nsmgr = new XmlNamespaceManager(doc.NameTable);
-        nsmgr.AddNamespace("x", "http://schemas.openxmlformats.org/spreadsheetml/2006/main");
+        nsmgr.AddNamespace("x", Schemas.SpreadsheetmlXmlMain);
         return nsmgr;
     }
 
@@ -219,8 +220,8 @@ internal static partial class MiniExcelPictureImplement
 
 	private static class DrawingXmlHelper
     {
-        private const string XdrNamespace = "http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing";
-        private const string ANamespace = "http://schemas.openxmlformats.org/drawingml/2006/main";
+        private const string XdrNamespace = Schemas.SpreadsheetmlXmlSpreadsheetDrawing;
+        private const string ANamespace = Schemas.SpreadsheetmlXmlDrawingml2006;
 
         private static long PixelsToEmu(int pixels) => pixels * 9525;
 
@@ -251,7 +252,7 @@ internal static partial class MiniExcelPictureImplement
 			var ns = new XmlNamespaceManager(doc.NameTable);
 			ns.AddNamespace("xdr", XdrNamespace);
 			ns.AddNamespace("a", ANamespace);
-			ns.AddNamespace("r", "http://schemas.openxmlformats.org/officeDocument/2006/relationships");
+			ns.AddNamespace("r", Schemas.SpreadsheetmlXmlRelationships);
 
 			// Root
 			XmlElement wsDr;
@@ -350,8 +351,8 @@ internal static partial class MiniExcelPictureImplement
 			var extNode = doc.CreateElement("a", "ext", ANamespace);
 			extNode.SetAttribute("uri", "{FF2B5EF4-FFF2-40B4-BE49-F238E27FC236}");
 
-			var creationId = doc.CreateElement("a16", "creationId", "http://schemas.microsoft.com/office/drawing/2014/main");
-			creationId.SetAttribute("id", "http://schemas.microsoft.com/office/drawing/2014/main", $"{{00000000-0008-0000-0000-0000{nextId:D6}000000}}");
+			var creationId = doc.CreateElement("a16", "creationId", Schemas.SpreadsheetmlXmlDrawing2014);
+			creationId.SetAttribute("id", Schemas.SpreadsheetmlXmlDrawing2014, $"{{00000000-0008-0000-0000-0000{nextId:D6}000000}}");
 
 			extNode.AppendChild(creationId);
 			extLst.AppendChild(extNode);
@@ -371,7 +372,7 @@ internal static partial class MiniExcelPictureImplement
 			var blipFill = doc.CreateElement("xdr", "blipFill", XdrNamespace);
 			var blip = doc.CreateElement("a", "blip", ANamespace);
 
-			blip.SetAttribute("xmlns:r", "http://schemas.openxmlformats.org/officeDocument/2006/relationships");
+			blip.SetAttribute("xmlns:r", Schemas.SpreadsheetmlXmlRelationships);
 			blip.SetAttribute("embed", ns.LookupNamespace("r"), relId);
 			blip.SetAttribute("cstate", "print");
 

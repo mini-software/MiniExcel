@@ -1,5 +1,3 @@
-using System.Collections;
-
 namespace MiniExcelLib.OpenXml.FluentMapping.Configuration;
 
 public interface ICollectionMappingBuilder<T, TCollection> where TCollection : IEnumerable

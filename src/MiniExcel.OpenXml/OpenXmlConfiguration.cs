@@ -1,4 +1,3 @@
-using MiniExcelLib.Core;
 using MiniExcelLib.OpenXml.Styles;
 
 namespace MiniExcelLib.OpenXml;

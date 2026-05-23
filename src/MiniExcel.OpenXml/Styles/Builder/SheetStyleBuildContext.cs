@@ -1,6 +1,4 @@
-﻿using MiniExcelLib.OpenXml.Constants;
-
-namespace MiniExcelLib.OpenXml.Styles.Builder;
+﻿namespace MiniExcelLib.OpenXml.Styles.Builder;
 
 internal sealed partial class SheetStyleBuilderContext(Dictionary<string, string> contentTypes, ZipArchive archive, Encoding encoding) : IDisposable, IAsyncDisposable
 {

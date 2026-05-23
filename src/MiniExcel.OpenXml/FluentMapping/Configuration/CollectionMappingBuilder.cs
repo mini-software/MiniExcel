@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Text.RegularExpressions;
 
 namespace MiniExcelLib.OpenXml.FluentMapping.Configuration;

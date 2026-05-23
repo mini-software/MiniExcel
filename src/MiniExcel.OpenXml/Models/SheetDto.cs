@@ -1,6 +1,4 @@
-﻿using MiniExcelLib.OpenXml.Constants;
-
-namespace MiniExcelLib.OpenXml.Models;
+﻿namespace MiniExcelLib.OpenXml.Models;
 
 internal class SheetDto
 {

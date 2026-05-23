@@ -1,4 +1,3 @@
-using System.Collections;
 using MiniExcelLib.Core.Abstractions;
 
 namespace MiniExcelLib.OpenXml.FluentMapping;

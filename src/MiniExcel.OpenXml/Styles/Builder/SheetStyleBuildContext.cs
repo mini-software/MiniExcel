@@ -153,25 +153,16 @@ internal sealed partial class SheetStyleBuilderContext(Dictionary<string, string
 #else
             _oldXmlReaderStream?.Dispose();
 #endif
-            _oldXmlReaderStream = null;
-
-            _emptyStylesXmlStringReader?.Dispose();
-            _emptyStylesXmlStringReader = null;
 
             await NewXmlWriter!.FlushAsync().ConfigureAwait(false);
 #if NET
             await NewXmlWriter.DisposeAsync().ConfigureAwait(false);
-#else
-            NewXmlWriter.Dispose();
-#endif
-
-            NewXmlWriter = null;
-
-#if NET
             await _newXmlWriterStream!.DisposeAsync().ConfigureAwait(false);
 #else
+            NewXmlWriter.Dispose();
             _newXmlWriterStream?.Dispose();
 #endif
+            NewXmlWriter = null;
             _newXmlWriterStream = null;
 
             if (_oldStyleXmlZipEntry is null)

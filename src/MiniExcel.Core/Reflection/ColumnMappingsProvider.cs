@@ -139,7 +139,12 @@ internal static class ColumnMappingsProvider
                 ExcludeNullableType = accessor.Type,
                 Nullable = accessor.IsNullable,
                 ExcelColumnAliases = excelColumnName?.Aliases ?? excelColumn?.Aliases ?? [],
-                ExcelColumnName = excelColumnName?.ExcelColumnName ?? m.GetAttribute<DisplayNameAttribute>()?.DisplayName ?? excelColumn?.Name ?? m.Name,
+
+                ExcelColumnName = excelColumnName?.GetColumnName()
+                                  ?? excelColumn?.GetColumnName(m.Name) 
+                                  ?? m.GetAttribute<DisplayNameAttribute>()?.DisplayName 
+                                  ?? m.Name,
+
                 ExcelColumnIndex = m.GetAttribute<MiniExcelColumnIndexAttribute>()?.ExcelColumnIndex ?? excelColumnIndex,
                 ExcelIndexName = m.GetAttribute<MiniExcelColumnIndexAttribute>()?.ExcelXName ?? excelColumn?.IndexName,
                 ExcelColumnWidth = m.GetAttribute<MiniExcelColumnWidthAttribute>()?.ExcelColumnWidth ?? excelColumn?.Width,
@@ -199,7 +204,7 @@ internal static class ColumnMappingsProvider
                 if (dynamicColumn.IndexName is { } idxName)
                     map.ExcelIndexName = idxName;
 
-                if (dynamicColumn.Name is { } colName)
+                if (dynamicColumn.GetColumnName(dynamicColumn.Key) is { } colName)
                     map.ExcelColumnName = colName;
 
                 map.ExcelColumnIndex = dynamicColumn.Index;
@@ -285,7 +290,7 @@ internal static class ColumnMappingsProvider
         if (dynamicColumn.IndexName is { } idxName)
             member.ExcelIndexName = idxName;
 
-        if (dynamicColumn.Name is { } colName)
+        if (dynamicColumn.GetColumnName(columnName) is { } colName)
             member.ExcelColumnName = colName;
 
         return member;

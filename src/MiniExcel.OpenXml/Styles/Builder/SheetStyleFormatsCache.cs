@@ -1,5 +1,6 @@
 namespace MiniExcelLib.OpenXml.Styles.Builder;
 
+// todo: find a way to make it compatible with SharedStringsDiskCache
 internal class SheetStyleFormatsCache
 {
     private readonly Dictionary<string, int> _formatMappings = [];

@@ -1,6 +1,6 @@
 ﻿namespace MiniExcelLib.OpenXml.Styles;
 
-public class SheetStyleElementInfos
+internal class SheetStyleElementInfos
 {
     public bool ExistsNumFmts { get; set; }
     public int NumFmtCount { get; set; }

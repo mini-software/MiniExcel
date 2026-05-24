@@ -388,9 +388,7 @@ public class MiniExcelOpenXmlAsyncTests
     [InlineData("../../../../data/xlsx/TestCenterEmptyRow/TestCenterEmptyRow.xlsx")]
     public async Task QueryExcelDataReaderCheckTest(string path)
     {
-#if NETCOREAPP3_1_OR_GREATER
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-#endif
 
         await using var fs = File.OpenRead(path);
         using var reader = ExcelReaderFactory.CreateReader(fs);

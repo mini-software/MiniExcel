@@ -5,8 +5,6 @@ public class AsyncIssueTests
     private readonly CsvExporter _csvExporter = MiniExcel.Exporters.GetCsvExporter();
     private readonly CsvImporter _csvImporter = MiniExcel.Importers.GetCsvImporter();
 
-    private readonly OpenXmlExporter _openXmlExporter = MiniExcel.Exporters.GetOpenXmlExporter();
-    private readonly OpenXmlImporter _openXmlImporter = MiniExcel.Importers.GetOpenXmlImporter();
     /// <summary>
     /// Csv SaveAs by datareader with encoding default show messy code #253
     /// </summary>
@@ -111,60 +109,36 @@ public class AsyncIssueTests
     [Fact]
     public async Task Issue89()
     {
-        {
-            const string text =
-                """
-                State
-                OnDuty
-                Fired
-                Leave
-                """;
-            await using var stream = new MemoryStream();
-            await using var writer = new StreamWriter(stream);
+        const string text =
+            """
+            State
+            OnDuty
+            Fired
+            Leave
+            """;
 
-            await writer.WriteAsync(text);
-            await writer.FlushAsync();
+        await using var stream = new MemoryStream();
+        await using var writer = new StreamWriter(stream);
 
-            stream.Position = 0;
-            var q = _csvImporter.QueryAsync<Issue89Dto>(stream).ToBlockingEnumerable();
-            var rows = q.ToList();
+        await writer.WriteAsync(text);
+        await writer.FlushAsync();
 
-            Assert.Equal(Issue89Dto.WorkState.OnDuty, rows[0].State);
-            Assert.Equal(Issue89Dto.WorkState.Fired, rows[1].State);
-            Assert.Equal(Issue89Dto.WorkState.Leave, rows[2].State);
+        stream.Position = 0;
+        var rows1 = await _csvImporter.QueryAsync<Issue89Dto>(stream).ToListAsync();
 
-            var outputPath = PathHelper.GetTempPath();
-            var rowsWritten = await _openXmlExporter.ExportAsync(outputPath, rows);
-            Assert.Single(rowsWritten);
-            Assert.Equal(3, rowsWritten[0]);
+        Assert.Equal(Issue89Dto.WorkState.OnDuty, rows1[0].State);
+        Assert.Equal(Issue89Dto.WorkState.Fired, rows1[1].State);
+        Assert.Equal(Issue89Dto.WorkState.Leave, rows1[2].State);
 
-            var q2 = _openXmlImporter.QueryAsync<Issue89Dto>(outputPath).ToBlockingEnumerable();
-            var rows2 = q2.ToList();
-            Assert.Equal(Issue89Dto.WorkState.OnDuty, rows2[0].State);
-            Assert.Equal(Issue89Dto.WorkState.Fired, rows2[1].State);
-            Assert.Equal(Issue89Dto.WorkState.Leave, rows2[2].State);
-        }
+        var outputPath = PathHelper.GetTempPath();
+        var rowsWritten = await MiniExcel.Exporters.GetOpenXmlExporter().ExportAsync(outputPath, rows1);
+        Assert.Single(rowsWritten);
+        Assert.Equal(3, rowsWritten[0]);
 
-        //xlsx
-        {
-            var path = PathHelper.GetFile("xlsx/TestIssue89.xlsx");
-            var q = _openXmlImporter.QueryAsync<Issue89Dto>(path).ToBlockingEnumerable();
-            var rows = q.ToList();
-            Assert.Equal(Issue89Dto.WorkState.OnDuty, rows[0].State);
-            Assert.Equal(Issue89Dto.WorkState.Fired, rows[1].State);
-            Assert.Equal(Issue89Dto.WorkState.Leave, rows[2].State);
-
-            var outputPath = PathHelper.GetTempPath();
-            var rowsWritten = await _openXmlExporter.ExportAsync(outputPath, rows);
-            Assert.Single(rowsWritten);
-            Assert.Equal(3, rowsWritten[0]);
-
-            var q1 = _openXmlImporter.QueryAsync<Issue89Dto>(outputPath).ToBlockingEnumerable();
-            var rows2 = q1.ToList();
-            Assert.Equal(Issue89Dto.WorkState.OnDuty, rows2[0].State);
-            Assert.Equal(Issue89Dto.WorkState.Fired, rows2[1].State);
-            Assert.Equal(Issue89Dto.WorkState.Leave, rows2[2].State);
-        }
+        var rows2 = await MiniExcel.Importers.GetOpenXmlImporter().QueryAsync<Issue89Dto>(outputPath).ToListAsync();
+        Assert.Equal(Issue89Dto.WorkState.OnDuty, rows2[0].State);
+        Assert.Equal(Issue89Dto.WorkState.Fired, rows2[1].State);
+        Assert.Equal(Issue89Dto.WorkState.Leave, rows2[2].State);
     }
 
     private class Issue142VoDuplicateColumnName
@@ -184,76 +158,27 @@ public class AsyncIssueTests
     [Fact]
     public async Task Issue142()
     {
-        {
-            using var file = AutoDeletingPath.Create();
-            var path = file.ToString();
-            await _openXmlExporter.ExportAsync(path, new[] { new Issue142Dto { MyProperty1 = "MyProperty1", MyProperty2 = "MyProperty2", MyProperty3 = "MyProperty3", MyProperty4 = "MyProperty4", MyProperty5 = "MyProperty5", MyProperty6 = "MyProperty6", MyProperty7 = "MyProperty7" } });
+        using var file = AutoDeletingPath.Create(ExcelType.Csv);
+        var path = file.ToString();
 
-            {
-                var q = _openXmlImporter.QueryAsync(path).ToBlockingEnumerable();
-                var rows = q.ToList();
-                Assert.Equal("MyProperty4", rows[0].A);
-                Assert.Equal("CustomColumnName", rows[0].B); //note
-                Assert.Equal("MyProperty5", rows[0].C);
-                Assert.Equal("MyProperty2", rows[0].D);
-                Assert.Equal("MyProperty6", rows[0].E);
-                Assert.Null(rows[0].F);
-                Assert.Equal("MyProperty3", rows[0].G);
+        await _csvExporter.ExportAsync(path, new[] { new Issue142Dto { MyProperty1 = "MyProperty1", MyProperty2 = "MyProperty2", MyProperty3 = "MyProperty3", MyProperty4 = "MyProperty4", MyProperty5 = "MyProperty5", MyProperty6 = "MyProperty6", MyProperty7 = "MyProperty7" } });
+        const string expected =
+            """
+            MyProperty4,CustomColumnName,MyProperty5,MyProperty2,MyProperty6,,MyProperty3
+            MyProperty4,MyProperty1,MyProperty5,MyProperty2,MyProperty6,,MyProperty3
 
-                Assert.Equal("MyProperty4", rows[0].A);
-                Assert.Equal("CustomColumnName", rows[0].B); //note
-                Assert.Equal("MyProperty5", rows[0].C);
-                Assert.Equal("MyProperty2", rows[0].D);
-                Assert.Equal("MyProperty6", rows[0].E);
-                Assert.Null(rows[0].F);
-                Assert.Equal("MyProperty3", rows[0].G);
-            }
+            """;
 
-            {
-                var q = _openXmlImporter.QueryAsync<Issue142Dto>(path).ToBlockingEnumerable();
-                var rows = q.ToList();
+        Assert.Equal(expected, await File.ReadAllTextAsync(path));
+        var rows = await _csvImporter.QueryAsync<Issue142Dto>(path).ToListAsync();
 
-                Assert.Equal("MyProperty4", rows[0].MyProperty4);
-                Assert.Equal("MyProperty1", rows[0].MyProperty1); //note
-                Assert.Equal("MyProperty5", rows[0].MyProperty5);
-                Assert.Equal("MyProperty2", rows[0].MyProperty2);
-                Assert.Equal("MyProperty6", rows[0].MyProperty6);
-                Assert.Null(rows[0].MyProperty7);
-                Assert.Equal("MyProperty3", rows[0].MyProperty3);
-            }
-        }
-
-        {
-            using var file = AutoDeletingPath.Create(ExcelType.Csv);
-            var path = file.ToString();
-            await _csvExporter.ExportAsync(path, new[] { new Issue142Dto { MyProperty1 = "MyProperty1", MyProperty2 = "MyProperty2", MyProperty3 = "MyProperty3", MyProperty4 = "MyProperty4", MyProperty5 = "MyProperty5", MyProperty6 = "MyProperty6", MyProperty7 = "MyProperty7" } });
-            const string expected =
-                """
-                MyProperty4,CustomColumnName,MyProperty5,MyProperty2,MyProperty6,,MyProperty3
-                MyProperty4,MyProperty1,MyProperty5,MyProperty2,MyProperty6,,MyProperty3
-
-                """;
-            Assert.Equal(expected, await File.ReadAllTextAsync(path));
-
-            {
-                var q = _csvImporter.QueryAsync<Issue142Dto>(path).ToBlockingEnumerable();
-                var rows = q.ToList();
-
-                Assert.Equal("MyProperty4", rows[0].MyProperty4);
-                Assert.Equal("MyProperty1", rows[0].MyProperty1);
-                Assert.Equal("MyProperty5", rows[0].MyProperty5);
-                Assert.Equal("MyProperty2", rows[0].MyProperty2);
-                Assert.Equal("MyProperty6", rows[0].MyProperty6);
-                Assert.Null(rows[0].MyProperty7);
-                Assert.Equal("MyProperty3", rows[0].MyProperty3);
-            }
-        }
-
-        {
-            using var path = AutoDeletingPath.Create();
-            Issue142VoDuplicateColumnName[] input = [new() { MyProperty1 = 0, MyProperty2 = 0, MyProperty3 = 0, MyProperty4 = 0 }];
-            Assert.Throws<InvalidMappingException>(() => _openXmlExporter.Export(path.ToString(), input));
-        }
+        Assert.Equal("MyProperty4", rows[0].MyProperty4);
+        Assert.Equal("MyProperty1", rows[0].MyProperty1);
+        Assert.Equal("MyProperty5", rows[0].MyProperty5);
+        Assert.Equal("MyProperty2", rows[0].MyProperty2);
+        Assert.Equal("MyProperty6", rows[0].MyProperty6);
+        Assert.Null(rows[0].MyProperty7);
+        Assert.Equal("MyProperty3", rows[0].MyProperty3);
     }
     
     /// <summary>
@@ -273,8 +198,7 @@ public class AsyncIssueTests
         using var path = AutoDeletingPath.Create(ExcelType.Csv);
         await  _csvExporter.ExportAsync(path.ToString(), table);
 
-        var q =  _csvImporter.QueryAsync(path.ToString()).ToBlockingEnumerable();
-        var rows = q.ToList();
+        var rows = await _csvImporter.QueryAsync(path.ToString()).ToListAsync();
         Assert.Equal("Name", rows[0].B);
         Assert.Equal("Limit", rows[0].C);
     }
@@ -295,9 +219,7 @@ public class AsyncIssueTests
         };
         await  _csvExporter.ExportAsync(path.ToString(), value);
 
-        var q =  _csvImporter.QueryAsync(path.ToString(), true).ToBlockingEnumerable();
-        var rows = q.ToList();
-
+        var rows = await _csvImporter.QueryAsync(path.ToString(), true).ToListAsync();
         Assert.Equal("\"\"1,2,3\"\"", rows[0].id);
         Assert.Equal("1,2,3", rows[1].id);
     }
@@ -322,13 +244,11 @@ public class AsyncIssueTests
         Assert.Single(rowsWritten);
         Assert.Equal(2, rowsWritten[0]);
 
-        var q1 = _csvImporter.QueryAsync(path, true).ToBlockingEnumerable();
-        var rows1 = q1.ToList();
+        var rows1 = await _csvImporter.QueryAsync(path, true).ToListAsync();
         Assert.Equal(rows1[0].InDate, "01 04, 2021");
         Assert.Equal(rows1[1].InDate, "04 05, 2020");
 
-        var q2 = _csvImporter.QueryAsync<Issue241Dto>(path).ToBlockingEnumerable();
-        var rows2 = q2.ToList();
+        var rows2 = await _csvImporter.QueryAsync<Issue241Dto>(path).ToListAsync();
         Assert.Equal(rows2[0].InDate, new DateTime(2021, 01, 04));
         Assert.Equal(rows2[1].InDate, new DateTime(2020, 04, 05));
     }
@@ -343,17 +263,16 @@ public class AsyncIssueTests
         using var path = AutoDeletingPath.Create(ExcelType.Csv);
         var value = new[] 
         {
-            new { Name ="Jack",Age=25,InDate=new DateTime(2021,01,03)},
-            new { Name ="Henry",Age=36,InDate=new DateTime(2020,05,03)},
+            new { Name = "Jack", Age = 25, InDate = new DateTime(2021,01,03) },
+            new { Name = "Henry", Age = 36, InDate = new DateTime(2020,05,03) }
         };
         
         var rowsWritten = await  _csvExporter.ExportAsync(path.ToString(), value);
         Assert.Single(rowsWritten);
         Assert.Equal(2, rowsWritten[0]);
 
-        var q =  _csvImporter.QueryAsync<Issue243Dto>(path.ToString()).ToBlockingEnumerable();
-        var rows = q.ToList();
-        
+        var rows = await _csvImporter.QueryAsync<Issue243Dto>(path.ToString()).ToListAsync();
+
         Assert.Equal("Jack", rows[0].Name);
         Assert.Equal(25, rows[0].Age);
         Assert.Equal(new DateTime(2021, 01, 03), rows[0].InDate);

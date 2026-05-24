@@ -1,4 +1,3 @@
-using MiniExcelLib.Core;
 using CalcChainHelper = MiniExcelLib.OpenXml.Utils.CalcChainHelper;
 
 namespace MiniExcelLib.OpenXml.Templates;
@@ -20,24 +19,18 @@ internal partial class OpenXmlTemplate : IMiniExcelTemplate
     [CreateSyncVersion]
     public async Task SaveAsByTemplateAsync(string templatePath, object value, CancellationToken cancellationToken = default)
     {
-#if NET8_0_OR_GREATER
         var stream = File.Open(templatePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
         await using var disposableStream = stream.ConfigureAwait(false); 
-#else
-        using var stream = File.Open(templatePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-#endif
+
         await SaveAsByTemplateAsync(stream, value, cancellationToken).ConfigureAwait(false);
     }
 
     [CreateSyncVersion]
     public async Task SaveAsByTemplateAsync(byte[] templateBytes, object value, CancellationToken cancellationToken = default)
     {
-#if NET8_0_OR_GREATER
         var stream = new MemoryStream(templateBytes);
         await using var disposableStream = stream.ConfigureAwait(false); 
-#else
-        using var stream = new MemoryStream(templateBytes);
-#endif
+
         await SaveAsByTemplateAsync(stream, value, cancellationToken).ConfigureAwait(false);
     }
 
@@ -80,26 +73,24 @@ internal partial class OpenXmlTemplate : IMiniExcelTemplate
         foreach (var entry in originalArchive.Entries)
         {
             var entryName = entry.FullName.TrimStart('/');
-            if (entryName.StartsWith("xl/worksheets/sheet", StringComparison.OrdinalIgnoreCase) || entryName.Equals("xl/calcChain.xml"))
+            if (entryName.StartsWith(ExcelFileNames.WorksheetBase, StringComparison.OrdinalIgnoreCase) || 
+                entryName.Equals(ExcelFileNames.CalcChain, StringComparison.OrdinalIgnoreCase))
+            {
                 continue;
-                    
+            }
+
             // Create a new entry in the new archive with the same name
             var newEntry = outputFileArchive.ZipFile.CreateEntry(entry.FullName);
 
             // Copy the content of the original entry to the new entry
-#if NET8_0_OR_GREATER
             var originalEntryStream = await entry.OpenAsync(cancellationToken).ConfigureAwait(false);
             await using var disposableEntryStream = originalEntryStream.ConfigureAwait(false);
 
             var newEntryStream = await newEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
             await using var disposableNewEntryStream = newEntryStream.ConfigureAwait(false);
-#else
-            using var originalEntryStream = entry.Open();
-            using var newEntryStream = newEntry.Open();
-#endif
 
             await originalEntryStream.CopyToAsync(newEntryStream
-#if NET8_0_OR_GREATER
+#if NET
                 , cancellationToken
 #endif
             ).ConfigureAwait(false);
@@ -113,7 +104,7 @@ internal partial class OpenXmlTemplate : IMiniExcelTemplate
         var templateSheets = templateReader.Archive.ZipFile.Entries
             .Where(entry => entry.FullName
                 .TrimStart('/')
-                .StartsWith("xl/worksheets/sheet", StringComparison.OrdinalIgnoreCase));
+                .StartsWith(ExcelFileNames.WorksheetBase, StringComparison.OrdinalIgnoreCase));
 
         int sheetIdx = 0;
         foreach (var templateSheet in templateSheets)
@@ -128,12 +119,9 @@ internal partial class OpenXmlTemplate : IMiniExcelTemplate
             var inputValues = _inputValueExtractor.ToValueDictionary(value);
             var outputZipEntry = outputFileArchive.ZipFile.CreateEntry(templateFullName);
 
-#if NET8_0_OR_GREATER
             var outputZipSheetEntryStream = await outputZipEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
             await using var disposableSheetEntryStream = outputZipSheetEntryStream.ConfigureAwait(false);
-#else
-            using var outputZipSheetEntryStream = outputZipEntry.Open();
-#endif
+
             await GenerateSheetByCreateModeAsync(templateSheet, outputZipSheetEntryStream, inputValues, templateSharedStrings, cancellationToken: cancellationToken).ConfigureAwait(false);
             
             //doc.Save(zipStream); //don't do it because: https://user-images.githubusercontent.com/12729184/114361127-61a5d100-9ba8-11eb-9bb9-34f076ee28a2.png
@@ -144,43 +132,34 @@ internal partial class OpenXmlTemplate : IMiniExcelTemplate
         }
 
         // create mode we need to not create first then create here
-        var calcChain = outputFileArchive.EntryCollection.FirstOrDefault(e => e.FullName.Contains("xl/calcChain.xml"));
+        var calcChain = outputFileArchive.EntryCollection.FirstOrDefault(e 
+            => e.FullName.TrimStart('/').Equals(ExcelFileNames.CalcChain, StringComparison.OrdinalIgnoreCase));
+
         if (calcChain is not null)
         {
-            var calcChainPathName = calcChain.FullName;
-            //calcChain.Delete();
-
-            var calcChainEntry = outputFileArchive.ZipFile.CreateEntry(calcChainPathName);
-#if NET8_0_OR_GREATER
+            var calcChainEntry = outputFileArchive.ZipFile.CreateEntry(calcChain.FullName);
             var calcChainStream = await calcChainEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
             await using var disposableChainEntryStream = calcChainStream.ConfigureAwait(false);
-#else
-            using var calcChainStream = calcChainEntry.Open();
-#endif
+
             await CalcChainHelper.GenerateCalcChainSheetAsync(calcChainStream, _calcChainContent.ToString(), cancellationToken).ConfigureAwait(false);
         }
         else
         {
             foreach (var entry in originalArchive.Entries)
             {
-                if (entry.FullName.Contains("xl/calcChain.xml"))
+                if (entry.FullName.TrimStart('/').Equals(ExcelFileNames.CalcChain, StringComparison.OrdinalIgnoreCase))
                 {
                     var newEntry = outputFileArchive.ZipFile.CreateEntry(entry.FullName);
 
                     // Copy the content of the original entry to the new entry
-#if NET8_0_OR_GREATER
                     var originalEntryStream = await entry.OpenAsync(cancellationToken).ConfigureAwait(false);
                     await using var disposableEntryStream = originalEntryStream.ConfigureAwait(false);
 
                     var newEntryStream = await newEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
                     await using var disposableNewEntryStream = newEntryStream.ConfigureAwait(false);
-#else
-                    using var originalEntryStream = entry.Open();
-                    using var newEntryStream = newEntry.Open();
-#endif
 
                     await originalEntryStream.CopyToAsync(newEntryStream
-#if NET8_0_OR_GREATER
+#if NET
                         , cancellationToken
 #endif
                     ).ConfigureAwait(false);

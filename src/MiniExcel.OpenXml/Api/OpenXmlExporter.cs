@@ -36,12 +36,9 @@ public sealed partial class OpenXmlExporter
             return rowsWritten.FirstOrDefault();
         }
 
-#if NET8_0_OR_GREATER
         var stream = new FileStream(path, FileMode.Open, FileAccess.ReadWrite, FileShare.Read, 4096, FileOptions.SequentialScan);
         await using var disposableStream = stream.ConfigureAwait(false); 
-#else
-        using var stream = new FileStream(path, FileMode.Open, FileAccess.ReadWrite, FileShare.Read, 4096, FileOptions.SequentialScan);
-#endif
+
         return await InsertSheetAsync(stream, value, sheetName, printHeader, overwriteSheet, configuration, progress, cancellationToken).ConfigureAwait(false);
     }
 
@@ -130,16 +127,11 @@ public sealed partial class OpenXmlExporter
         if (inputFile.Equals(outputFile, StringComparison.InvariantCultureIgnoreCase))
             throw new ArgumentException("The generated file must not have the same path as the original file.");
 
-    #if NET8_0_OR_GREATER
         var inputStream = new FileStream(inputFile, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, FileOptions.RandomAccess);
         await using var disposableInputStream = inputStream.ConfigureAwait(false);
 
         var outputStream = new FileStream(outputFile, overwriteFile ? FileMode.Create : FileMode.CreateNew, FileAccess.Write, FileShare.None, 4096, FileOptions.SequentialScan);
         await using var disposableOutputStream = outputStream.ConfigureAwait(false);
-    #else
-        using var inputStream = new FileStream(inputFile, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, FileOptions.RandomAccess);
-        using var outputStream = new FileStream(outputFile, mode: overwriteFile ? FileMode.Create : FileMode.CreateNew, FileAccess.Write, FileShare.None, 4096, FileOptions.SequentialScan);
-    #endif
 
         return await CopyAndAddSheetAsync(inputStream, outputStream, value, sheetName, printHeader, overwriteSheet, configuration, progress, cancellationToken).ConfigureAwait(false);
     }
@@ -164,12 +156,9 @@ public sealed partial class OpenXmlExporter
         if (Path.GetExtension(path).Equals(".xlsm", StringComparison.InvariantCultureIgnoreCase))
             throw new NotSupportedException("MiniExcel's Export does not support the .xlsm format");
 
-#if NET8_0_OR_GREATER
         var stream = overwriteFile ? File.Create(path) : new FileStream(path, FileMode.CreateNew);
         await using var disposableStream = stream.ConfigureAwait(false); 
-#else
-        using var stream = overwriteFile ? File.Create(path) : new FileStream(path, FileMode.CreateNew);
-#endif
+
         return await ExportAsync(stream, value, printHeader, sheetName, configuration, progress, cancellationToken).ConfigureAwait(false);
     }
 
@@ -210,12 +199,9 @@ public sealed partial class OpenXmlExporter
     [CreateSyncVersion]
     public async Task AlterSheetAsync(string path, string sheetName, string? newSheetName = null, int? newSheetIndex = null, SheetState? newSheetState = null, CancellationToken cancellationToken = default)
     {
-#if NET8_0_OR_GREATER
         var stream = new FileStream(path, FileMode.Open, FileAccess.ReadWrite, FileShare.Read);
         await using var disposableStream = stream.ConfigureAwait(false); 
-#else
-        using var stream = new FileStream(path, FileMode.Open, FileAccess.ReadWrite, FileShare.Read);
-#endif
+
         await AlterSheetAsync(stream, sheetName, newSheetName, newSheetIndex, newSheetState, cancellationToken).ConfigureAwait(false);
     }
 

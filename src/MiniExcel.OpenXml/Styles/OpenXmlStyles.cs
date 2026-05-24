@@ -1,4 +1,3 @@
-using MiniExcelLib.OpenXml.Constants;
 using XmlReaderHelper = MiniExcelLib.OpenXml.Utils.XmlReaderHelper;
 
 namespace MiniExcelLib.OpenXml.Styles;
@@ -13,7 +12,7 @@ internal class OpenXmlStyles
 
     public OpenXmlStyles(OpenXmlZip zip)
     {
-        using var reader = zip.GetXmlReader("xl/styles.xml");
+        using var reader = zip.GetXmlReader(ExcelFileNames.Styles);
         if (reader is null)
             throw new InvalidDataException("The OpenXml styles could not be found, the file might be malformed.");
                 
@@ -86,12 +85,7 @@ internal class OpenXmlStyles
                             type = typeof(DateTime?);
                         }
 
-#if NETCOREAPP2_0_OR_GREATER
                         _customFormats.TryAdd(numFmtId, new NumberFormatString(formatCode, type));
-#else
-                        if (!_customFormats.ContainsKey(numFmtId))
-                            _customFormats.Add(numFmtId, new NumberFormatString(formatCode, type));
-#endif
                         reader.Skip();
                     }
                     else if (!reader.SkipContent())

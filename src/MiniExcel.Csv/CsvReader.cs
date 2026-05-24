@@ -33,7 +33,7 @@ internal partial class CsvReader : IMiniExcelReader
 
         var rowIndex = 0;
         while (await reader.ReadLineAsync(
-#if NET7_0_OR_GREATER
+#if NET
             cancellationToken
 #endif
             ).ConfigureAwait(false) is { } row)
@@ -49,7 +49,7 @@ internal partial class CsvReader : IMiniExcelReader
                 while (finalRow.Count(c => c == '"') % 2 != 0)
                 {
                     var nextPart = await reader.ReadLineAsync(
-#if NET7_0_OR_GREATER
+#if NET
                         cancellationToken
 #endif
                     ).ConfigureAwait(false);
@@ -159,12 +159,19 @@ internal partial class CsvReader : IMiniExcelReader
         
         //this code from S.O : https://stackoverflow.com/a/11365961/9131476
         return Regex.Split(row, $"[\t{_config.Seperator}](?=(?:[^\"]|\"[^\"]*\")*$)")
-            .Select(s => Regex.Replace(s.Replace("\"\"", "\""), "^\"|\"$", ""))
+            .Select(s => DoubleQuotesRegexImpl.Replace(s.Replace("\"\"", "\""), ""))
             .ToArray();
     }
 
     public void Dispose()
     {
-        ((Stream?)_stream)?.Dispose();
+        _stream?.Dispose();
     }
+#if NET
+    [GeneratedRegex("^\"|\"$")]
+    private static partial Regex DoubleQuotesRegex();
+    private static readonly Regex DoubleQuotesRegexImpl = DoubleQuotesRegex();
+#else
+    private static readonly Regex DoubleQuotesRegexImpl = new Regex("^\"|\"$",  RegexOptions.Compiled);
+#endif
 }

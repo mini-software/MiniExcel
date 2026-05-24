@@ -24,11 +24,11 @@ internal static partial class MappingTemplateApplicator<T> where T : class
         {
             // Copy to memory stream if not seekable
             var memStream = new MemoryStream();
-#if NETCOREAPP2_1_OR_GREATER
-            await templateStream.CopyToAsync(memStream, cancellationToken).ConfigureAwait(false);
-#else
-            await templateStream.CopyToAsync(memStream).ConfigureAwait(false);
+            await templateStream.CopyToAsync(memStream
+#if NET
+                , cancellationToken
 #endif
+            ).ConfigureAwait(false);
             memStream.Position = 0;
             templateStream = memStream;
         }
@@ -88,7 +88,7 @@ internal static partial class MappingTemplateApplicator<T> where T : class
     
     private static bool IsWorksheetEntry(string fullName)
     {
-        return fullName.StartsWith("xl/worksheets/sheet", StringComparison.OrdinalIgnoreCase) &&
+        return fullName.StartsWith(ExcelFileNames.WorksheetBase, StringComparison.OrdinalIgnoreCase) &&
                fullName.EndsWith(".xml", StringComparison.OrdinalIgnoreCase);
     }
     
@@ -111,20 +111,13 @@ internal static partial class MappingTemplateApplicator<T> where T : class
         targetEntry.LastWriteTime = sourceEntry.LastWriteTime;
         
         // Copy content
-#if NET8_0_OR_GREATER
         var sourceStream = await sourceEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
-        var targetStream = await targetEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
-
         await using var disposableSourceStream = sourceStream.ConfigureAwait(false);
+
+        var targetStream = await targetEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
         await using var disposableTargetStream = targetStream.ConfigureAwait(false);
 
-        await sourceStream.CopyToAsync(targetStream, cancellationToken).ConfigureAwait(false);
-#else
-        using var sourceStream = sourceEntry.Open();
-        using var targetStream = targetEntry.Open();
-
-        await sourceStream.CopyToAsync(targetStream).ConfigureAwait(false);
-#endif
+        await sourceStream.CopyToAsync(targetStream, 81920, cancellationToken).ConfigureAwait(false);
     }
     
     [CreateSyncVersion]
@@ -141,16 +134,11 @@ internal static partial class MappingTemplateApplicator<T> where T : class
         targetEntry.LastWriteTime = sourceEntry.LastWriteTime;
         
         // Open streams
-#if NET8_0_OR_GREATER
         var sourceStream = await sourceEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
-        var targetStream = await targetEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
-
         await using var disposableSourceStream = sourceStream.ConfigureAwait(false);
+
+        var targetStream = await targetEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
         await using var disposableTargetStream = targetStream.ConfigureAwait(false);
-#else
-        using var sourceStream = sourceEntry.Open();
-        using var targetStream = targetEntry.Open();
-#endif
         
         // Create processor for this worksheet
         var processor = new MappingTemplateProcessor<T>(mapping);

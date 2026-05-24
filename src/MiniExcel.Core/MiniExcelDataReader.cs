@@ -294,17 +294,11 @@ public sealed class MiniExcelDataReader : IMiniExcelDataReader
         if (IsClosed)
             return;
 
-        if (_isAsyncSource)
-        {
+        if (_isAsyncSource) 
             await _asyncSource!.DisposeAsync().ConfigureAwait(false);
-        }
-        _source?.Dispose();
 
-#if NETCOREAPP3_0_OR_GREATER
+        _source?.Dispose();
         await _stream!.DisposeAsync().ConfigureAwait(false);
-#else
-        _stream.Dispose();
-#endif
 
         IsClosed = true;
     }

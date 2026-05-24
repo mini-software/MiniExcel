@@ -11,12 +11,6 @@ internal static class ExcelXml
         DefaultDrawing = XmlHelper.MinifyXml(DefaultDrawing);
     }
 
-    internal const string InlineStringDataType = "inlineStr";
-    internal const string CalculatedStringDataType = "str";
-    internal const string SharedStringDataType = "s";
-    internal const string NumericDataType = "n";
-    internal const string BooleanDataType = "b";
-
     internal const string EmptySheetXml = """<?xml version="1.0" encoding="utf-8"?><x:worksheet xmlns:x="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><x:dimension ref="A1"/><x:sheetData></x:sheetData></x:worksheet>""";
 
     internal static readonly string DefaultRels = 

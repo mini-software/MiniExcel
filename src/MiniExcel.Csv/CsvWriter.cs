@@ -60,31 +60,26 @@ internal partial class CsvWriter : IMiniExcelWriter, IDisposable
     
             if (mappings is null)
             {
-                await _writer.WriteAsync(_configuration.NewLine
-#if NET5_0_OR_GREATER
-                    .AsMemory(), cancellationToken
+#if NET
+                await _writer.WriteAsync(_configuration.NewLine.AsMemory(), cancellationToken).ConfigureAwait(false);
+                await _writer.FlushAsync(cancellationToken).ConfigureAwait(false);
+#else
+                await _writer.WriteAsync(_configuration.NewLine).ConfigureAwait(false);
+                await _writer.FlushAsync().ConfigureAwait(false);
 #endif
-                ).ConfigureAwait(false);
-                await _writer.FlushAsync(
-#if NET8_0_OR_GREATER
-                    cancellationToken
-#endif
-                ).ConfigureAwait(false);
+
                 return 0;
             }
     
             if (_printHeader)
             {
-                await _writer.WriteAsync(GetHeader(mappings)
-#if NET5_0_OR_GREATER
-                    .AsMemory(), cancellationToken
+#if NET
+                await _writer.WriteAsync(GetHeader(mappings).AsMemory(), cancellationToken).ConfigureAwait(false);
+                await _writer.WriteAsync(newLine.AsMemory(), cancellationToken).ConfigureAwait(false);
+#else
+                await _writer.WriteAsync(GetHeader(mappings)).ConfigureAwait(false);
+                await _writer.WriteAsync(newLine).ConfigureAwait(false);
 #endif
-                ).ConfigureAwait(false);
-                await _writer.WriteAsync(newLine
-#if NET5_0_OR_GREATER
-                    .AsMemory(), cancellationToken
-#endif
-                ).ConfigureAwait(false);
             }
             
             var rowBuilder = new StringBuilder();
@@ -103,17 +98,13 @@ internal partial class CsvWriter : IMiniExcelWriter, IDisposable
                     }
     
                     RemoveTrailingSeparator(rowBuilder);
-                    await _writer.WriteAsync(rowBuilder.ToString()
-#if NET5_0_OR_GREATER
-                        .AsMemory(), cancellationToken
+#if NET
+                    await _writer.WriteAsync(rowBuilder.ToString().AsMemory(), cancellationToken).ConfigureAwait(false);
+                    await _writer.WriteAsync(newLine.AsMemory(), cancellationToken).ConfigureAwait(false);
+#else
+                    await _writer.WriteAsync(rowBuilder.ToString()).ConfigureAwait(false);
+                    await _writer.WriteAsync(newLine).ConfigureAwait(false);
 #endif
-                    ).ConfigureAwait(false);
-                    await _writer.WriteAsync(newLine
-#if NET5_0_OR_GREATER
-                        .AsMemory(), cancellationToken
-#endif
-                    ).ConfigureAwait(false);
-    
                     rowsWritten++;
                 }
             }
@@ -132,17 +123,13 @@ internal partial class CsvWriter : IMiniExcelWriter, IDisposable
                     }
     
                     RemoveTrailingSeparator(rowBuilder);
-                    await _writer.WriteAsync(rowBuilder.ToString()
-#if NET5_0_OR_GREATER
-                        .AsMemory(), cancellationToken
+#if NET
+                    await _writer.WriteAsync(rowBuilder.ToString().AsMemory(), cancellationToken).ConfigureAwait(false);
+                    await _writer.WriteAsync(newLine.AsMemory(), cancellationToken).ConfigureAwait(false);
+#else
+                    await _writer.WriteAsync(rowBuilder.ToString()).ConfigureAwait(false);
+                    await _writer.WriteAsync(newLine).ConfigureAwait(false);
 #endif
-                    ).ConfigureAwait(false);
-                    await _writer.WriteAsync(newLine
-#if NET5_0_OR_GREATER
-                        .AsMemory(), cancellationToken
-#endif
-                    ).ConfigureAwait(false);
-    
                     rowsWritten++;
                 }
 #endif
@@ -152,10 +139,8 @@ internal partial class CsvWriter : IMiniExcelWriter, IDisposable
         finally
         {
 #if !SYNC_ONLY
-            if (asyncWriteAdapter is IAsyncDisposable asyncDisposable)
-            {
-                await asyncDisposable.DisposeAsync().ConfigureAwait(false);
-            }
+            if (asyncWriteAdapter is not null)
+                await asyncWriteAdapter.DisposeAsync().ConfigureAwait(false);
 #endif
         }
     }
@@ -170,22 +155,19 @@ internal partial class CsvWriter : IMiniExcelWriter, IDisposable
 
         if (_value is null)
         {
-            await _writer.WriteAsync(""
-#if NET5_0_OR_GREATER
-                .AsMemory(), cancellationToken
+#if NET
+            await _writer.WriteAsync("".AsMemory(), cancellationToken).ConfigureAwait(false);
+            await _writer.FlushAsync(cancellationToken).ConfigureAwait(false);
+#else
+            await _writer.WriteAsync("").ConfigureAwait(false);
+            await _writer.FlushAsync().ConfigureAwait(false);
 #endif
-            ).ConfigureAwait(false);
-            await _writer.FlushAsync(
-#if NET5_0_OR_GREATER
-                cancellationToken
-#endif
-            ).ConfigureAwait(false);
             return [];
         }
 
         var rowsWritten = await WriteValuesAsync(_writer, _value, seperator, newLine, progress, cancellationToken).ConfigureAwait(false);
         await _writer.FlushAsync(
-#if NET5_0_OR_GREATER
+#if NET
             cancellationToken
 #endif
         ).ConfigureAwait(false);
@@ -200,23 +182,23 @@ internal partial class CsvWriter : IMiniExcelWriter, IDisposable
         return rowsWritten.FirstOrDefault();
     }
 
-    public string ToCsvString(object? value, MiniExcelColumnMapping? p)
+    private string ToCsvString(object? value, MiniExcelColumnMapping? mapping)
     {
         if (value is null)
             return "";
 
         if (value is DateTime dateTime)
         {
-            if (p?.ExcelFormat is not null)
-                return dateTime.ToString(p.ExcelFormat, _configuration.Culture);
+            if (mapping?.ExcelFormat is not null)
+                return dateTime.ToString(mapping.ExcelFormat, _configuration.Culture);
             
             return _configuration.Culture.Equals(CultureInfo.InvariantCulture)
                 ? dateTime.ToString("yyyy-MM-dd HH:mm:ss", _configuration.Culture)
                 : dateTime.ToString(_configuration.Culture);
         }
 
-        if (p?.ExcelFormat is not null && value is IFormattable formattableValue)
-            return formattableValue.ToString(p.ExcelFormat, _configuration.Culture);
+        if (mapping?.ExcelFormat is not null && value is IFormattable formattableValue)
+            return formattableValue.ToString(mapping.ExcelFormat, _configuration.Culture);
 
         return Convert.ToString(value, _configuration.Culture) ?? "";
     }

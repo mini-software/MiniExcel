@@ -1,6 +1,4 @@
-﻿using System.Xml.Linq;
-
-namespace MiniExcelLib.OpenXml.Templates;
+﻿namespace MiniExcelLib.OpenXml.Templates;
 
 internal class XRowInfo
 {

@@ -1,8 +1,4 @@
-using System.ComponentModel;
-using System.Xml.Linq;
-using MiniExcelLib.Core;
 using MiniExcelLib.Core.WriteAdapters;
-using MiniExcelLib.OpenXml.Constants;
 using MiniExcelLib.OpenXml.Styles.Builder;
 
 namespace MiniExcelLib.OpenXml.Writer;
@@ -22,8 +18,9 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
     private readonly bool _printHeader;
     private readonly object? _value;
 
-    private int _currentSheetIndex = 0;
-    private SheetStyleBuildContext _sheetStyleBuildContext;
+    // the index is 1-based to match how the rels work in OpenXml and to make it more intuitive to reason about them 
+    private int _currentSheetIndex;
+    private SheetStyleBuilderContext _sheetStyleBuilderContext;
 
 
     private OpenXmlWriter(Stream stream, ZipArchive archive, object? value, string sheetName, OpenXmlConfiguration configuration, bool printHeader)
@@ -37,7 +34,7 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
         _printHeader = printHeader;
         _sheetName = sheetName;
 
-        _sheetStyleBuildContext = new SheetStyleBuildContext(_zipContentsMap, _archive, Utf8WithBom);
+        _sheetStyleBuilderContext = new SheetStyleBuilderContext(_zipContentsMap, _archive, Utf8WithBom);
     }
 
     [CreateSyncVersion]
@@ -67,7 +64,7 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
 #endif
         await CreateZipEntryAsync(ExcelFileNames.Rels, ExcelContentTypes.Relationships, ExcelXml.DefaultRels, cancellationToken).ConfigureAwait(false);
 
-        await using var sbc = _sheetStyleBuildContext.ConfigureAwait(false);
+        await using var sbc = _sheetStyleBuilderContext.ConfigureAwait(false);
         var styleBuilder = await GetSheetStyleBuilderAsync(cancellationToken).ConfigureAwait(false);
 
         var sheets = GetSheets();
@@ -105,7 +102,7 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
 #else
         using var disposableArchive = _archive;
 #endif
-        await using var sbc = _sheetStyleBuildContext.ConfigureAwait(false);
+        await using var sbc = _sheetStyleBuilderContext.ConfigureAwait(false);
 
         using var reader = await OpenXmlReader.CreateAsync(_stream, _configuration, cancellationToken: cancellationToken).ConfigureAwait(false);
         var rels = await reader.GetWorkbookRelsAsync(_archive.Entries, cancellationToken).ConfigureAwait(false) ?? [];
@@ -158,11 +155,11 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
         sharedStringsEntry?.Delete();
         await GenerateSharedStringsAsync(cancellationToken).ConfigureAwait(false);
 
-        _archive.Entries.SingleOrDefault(s => s.FullName == ExcelFileNames.DrawingRels(_currentSheetIndex - 1))?.Delete();
-        await GenerateDrawingRelXmlAsync(_currentSheetIndex - 1, cancellationToken).ConfigureAwait(false);
+        _archive.Entries.SingleOrDefault(s => s.FullName == ExcelFileNames.DrawingRels(_currentSheetIndex))?.Delete();
+        await GenerateDrawingRelXmlAsync(_currentSheetIndex, cancellationToken).ConfigureAwait(false);
 
-        _archive.Entries.SingleOrDefault(s => s.FullName == ExcelFileNames.Drawing(_currentSheetIndex - 1))?.Delete();
-        await GenerateDrawingXmlAsync(_currentSheetIndex - 1, cancellationToken).ConfigureAwait(false);
+        _archive.Entries.SingleOrDefault(s => s.FullName == ExcelFileNames.Drawing(_currentSheetIndex))?.Delete();
+        await GenerateDrawingXmlAsync(_currentSheetIndex, cancellationToken).ConfigureAwait(false);
         await GenerateWorkbookXmlAsync(true, cancellationToken).ConfigureAwait(false);
         await InsertContentTypesXmlAsync(cancellationToken).ConfigureAwait(false);
 
@@ -175,12 +172,8 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
         var entry = _archive.CreateEntry(sheetPath, CompressionLevel.Fastest);
         var rowsWritten = 0;
 
-#if NET8_0_OR_GREATER
         var zipStream = await entry.OpenAsync(cancellationToken).ConfigureAwait(false);
         await using var disposableZipStream = zipStream.ConfigureAwait(false);
-#else
-        using var zipStream = entry.Open();
-#endif
 
         var writer = new MiniExcelStreamWriter(zipStream, Utf8WithBom, _configuration.BufferSize);
         await using var disposableWriter = writer.ConfigureAwait(false);
@@ -253,7 +246,7 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
                 return 0;
             }
 
-            _sheetStyleBuildContext.UpdateFormatIds(mappings);
+            _sheetStyleBuilderContext.UpdateFormatIds(mappings);
             
             int maxRowIndex;
             var maxColumnIndex = mappings.Count(x => x is { ExcelIgnoreColumn: false });
@@ -433,7 +426,7 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
                     continue;
 
                 var r = CellReferenceConverter.GetCellFromCoordinates(xIndex, yIndex);
-                await writer.WriteAsync(WorksheetXml.Cell(r, ExcelXml.InlineStringDataType, HeaderCellStyleIndex, map.ExcelColumnName), cancellationToken).ConfigureAwait(false);
+                await writer.WriteAsync(WorksheetXml.Cell(r, ExcelDataTypes.InlineString, HeaderCellStyleIndex, map.ExcelColumnName), cancellationToken).ConfigureAwait(false);
             }
             xIndex++;
         }
@@ -470,7 +463,7 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
         widthCollection?.AdjustWidth(cellIndex, cellValue);
 
         if (_configuration.StringStorageMode == StringStorageMode.Shared && 
-            dataType == ExcelXml.SharedStringDataType 
+            dataType == ExcelDataTypes.SharedString 
             && cellValue is not null)
         {
             if (_sharedStrings.TryGetValue(cellValue, out var sharedStringIndex))
@@ -499,12 +492,12 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
 
             var entry = _archive.CreateEntry(item.Path, CompressionLevel.Fastest);
 
-#if NET8_0_OR_GREATER
             var zipStream = await entry.OpenAsync(cancellationToken).ConfigureAwait(false);
             await using var disposableZipStream = zipStream.ConfigureAwait(false);
+
+#if NET
             await zipStream.WriteAsync(item.Contents, cancellationToken).ConfigureAwait(false);
 #else
-            using var zipStream = entry.Open();
             await zipStream.WriteAsync(item.Contents, 0, item.Contents.Length, cancellationToken).ConfigureAwait(false);
 #endif
         }
@@ -515,13 +508,13 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
     {
         SheetStyleBuilderBase builder = _configuration.TableStyles switch
         {
-            TableStyles.None => new MinimalSheetStyleBuilder(_sheetStyleBuildContext),
-            TableStyles.Default => new DefaultSheetStyleBuilder(_sheetStyleBuildContext, _configuration.StyleOptions),
+            TableStyles.None => new MinimalSheetStyleBuilder(_sheetStyleBuilderContext),
+            TableStyles.Default => new DefaultSheetStyleBuilder(_sheetStyleBuilderContext, _configuration.StyleOptions),
             _ => throw new InvalidEnumArgumentException(nameof(_configuration.TableStyles), (int)_configuration.TableStyles, typeof(TableStyles))
         };
 
         var newInfos = builder.GetGeneratedElementInfos();
-        await _sheetStyleBuildContext.CreateAsync(newInfos, cancellationToken).ConfigureAwait(false);
+        await _sheetStyleBuilderContext.CreateAsync(newInfos, cancellationToken).ConfigureAwait(false);
 
         return builder;
     }
@@ -529,7 +522,7 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
     [CreateSyncVersion]
     private async Task GenerateDrawingRelXmlAsync(CancellationToken cancellationToken)
     {
-        for (int sheetIndex = 0; sheetIndex < _sheets.Count; sheetIndex++)
+        for (int sheetIndex = 1; sheetIndex <= _sheets.Count; sheetIndex++)
         {
             cancellationToken.ThrowIfCancellationRequested();
             await GenerateDrawingRelXmlAsync(sheetIndex, cancellationToken).ConfigureAwait(false);
@@ -550,7 +543,7 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
     [CreateSyncVersion]
     private async Task GenerateDrawingXmlAsync(CancellationToken cancellationToken)
     {
-        for (int sheetIndex = 0; sheetIndex < _sheets.Count; sheetIndex++)
+        for (int sheetIndex = 1; sheetIndex <= _sheets.Count; sheetIndex++)
         {
             cancellationToken.ThrowIfCancellationRequested();
             await GenerateDrawingXmlAsync(sheetIndex, cancellationToken).ConfigureAwait(false);
@@ -631,15 +624,10 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
             return;
         }
 
-#if NET8_0_OR_GREATER
         var stream = await contentTypesZipEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
         await using var disposableStream = stream.ConfigureAwait(false);
-        var doc = await XDocument.LoadAsync(stream, LoadOptions.None, cancellationToken).ConfigureAwait(false);
-#else
-        using var stream = contentTypesZipEntry.Open();
-        var doc = XDocument.Load(stream);
-#endif
 
+        var doc = await XDocument.LoadAsync(stream, LoadOptions.None, cancellationToken).ConfigureAwait(false);
         var ns = doc.Root!.GetDefaultNamespace();
         var typesElement = doc.Descendants(ns + "Types").Single();
 
@@ -662,12 +650,8 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
             }
         }
 
-        stream.Position = 0;
-#if NET8_0_OR_GREATER
+        stream.Seek(0, SeekOrigin.Begin);
         await doc.SaveAsync(stream, SaveOptions.None, cancellationToken).ConfigureAwait(false);
-#else
-        doc.Save(stream);
-#endif
     }
 
     [CreateSyncVersion]
@@ -677,12 +661,8 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
 
         var entry = _archive.CreateEntry(path, CompressionLevel.Fastest);
 
-#if NET8_0_OR_GREATER
         var zipStream = await entry.OpenAsync(cancellationToken).ConfigureAwait(false);
         await using var disposableZipStream = zipStream.ConfigureAwait(false);
-#else
-        using var zipStream = entry.Open();
-#endif
 
         var writer = new MiniExcelStreamWriter(zipStream, Utf8WithBom, _configuration.BufferSize);
         await using var disposableWriter = writer.ConfigureAwait(false);
@@ -700,17 +680,18 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
         if (newSheetName is null && newSheetIndex is null && newSheetState is null)
             return;
 
-        var oldWorkbookEntry = _archive.GetEntry("xl/workbook.xml")!;
+        var oldWorkbookEntry = _archive.GetEntry(ExcelFileNames.Workbook)!;
  
         try
         {
             var xmlDoc = await LoadWorkbook().ConfigureAwait(false);
 
             oldWorkbookEntry.Delete();
-            var newWorkbookEntry = _archive.CreateEntry("xl/workbook.xml", CompressionLevel.Fastest);
-#if NET8_0_OR_GREATER
+            var newWorkbookEntry = _archive.CreateEntry(ExcelFileNames.Workbook, CompressionLevel.Fastest);
+
             var newZipStream = await newWorkbookEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
             await using var newDisposableZipStream = newZipStream.ConfigureAwait(false);
+#if NET
             var writer = XmlWriter.Create(newZipStream, new XmlWriterSettings
             {
 #if !SYNC_ONLY
@@ -720,7 +701,6 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
             await using var disposableWriter = writer.ConfigureAwait(false);
             await xmlDoc.WriteToAsync(writer, CancellationToken.None).ConfigureAwait(false);
 #else
-            using var newZipStream = newWorkbookEntry.Open();
             using var writer = XmlWriter.Create(newZipStream, new XmlWriterSettings { Async = false });
             xmlDoc.WriteTo(writer);
 #endif
@@ -737,14 +717,10 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
 
         async Task<XDocument> LoadWorkbook()
         {
-#if NET8_0_OR_GREATER
             var zipStream = await oldWorkbookEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
             await using var disposableZipStream = zipStream.ConfigureAwait(false);
+
             var workbookDoc = await XDocument.LoadAsync(zipStream, LoadOptions.None, cancellationToken).ConfigureAwait(false);
-#else
-            using var zipStream = oldWorkbookEntry.Open();
-            var workbookDoc = XDocument.Load(zipStream);
-#endif
             var sheetsContainer = workbookDoc.Root?.Element((XNamespace)Schemas.SpreadsheetmlXmlMain + "sheets")!;
             var sheets = sheetsContainer.Elements().ToList();
 

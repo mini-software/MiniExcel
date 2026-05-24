@@ -1,5 +1,3 @@
-using MiniExcelLib.Core;
-
 // ReSharper disable once CheckNamespace
 namespace MiniExcelLib.Csv;
 
@@ -20,7 +18,9 @@ public partial class CsvExporter
             return rowsWritten.FirstOrDefault();
         }
 
-        using var stream = new FileStream(path, FileMode.Append, FileAccess.Write, FileShare.Read, 4096, FileOptions.SequentialScan);
+        var stream = new FileStream(path, FileMode.Append, FileAccess.Write, FileShare.Read, 4096, FileOptions.SequentialScan);
+        await using var disposableStream = stream.ConfigureAwait(false);
+
         return await AppendAsync(stream, value, configuration, progress, cancellationToken).ConfigureAwait(false);
     }
 
@@ -39,7 +39,9 @@ public partial class CsvExporter
     public async Task<int[]> ExportAsync(string path, object value, bool printHeader = true, bool overwriteFile = false,
         CsvConfiguration? configuration = null, IProgress<int>? progress = null, CancellationToken cancellationToken = default)
     {
-        using var stream = overwriteFile ? File.Create(path) : new FileStream(path, FileMode.CreateNew);
+        var stream = overwriteFile ? File.Create(path) : new FileStream(path, FileMode.CreateNew);
+        await using var disposableStream = stream.ConfigureAwait(false);
+
         return await ExportAsync(stream, value, printHeader, configuration, progress, cancellationToken).ConfigureAwait(false);
     }
 

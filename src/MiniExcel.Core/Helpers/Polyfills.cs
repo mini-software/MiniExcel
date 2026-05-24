@@ -94,12 +94,15 @@ public static class Polyfills
             _source = source;
             _continueOnCapturedContext = continueOnCapturedContext;
         }
-    
-        public ConfiguredValueTaskAwaitable DisposeAsync() 
-            => _source.DisposeAsync().ConfigureAwait(_continueOnCapturedContext);
 
-        public void Dispose() 
-            => _source?.Dispose();
+        public ConfiguredValueTaskAwaitable DisposeAsync()
+        {
+            return _source is not null 
+                ? _source.DisposeAsync().ConfigureAwait(_continueOnCapturedContext) 
+                : default;
+        }
+
+        public void Dispose() => _source?.Dispose();
     }
 #endif
 

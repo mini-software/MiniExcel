@@ -1731,7 +1731,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
         ms1.Seek(0, SeekOrigin.Begin);
         Assert.Throws<ArgumentException>(() => _excelExporter.AlterSheet(ms3, "Sheet1", "Sheet*"));
     }
-    
+
     class LocalizationSupportDto(string firstName, string lastName, string address, int age)
     {
         [MiniExcelColumn(Name = nameof(FirstName), ResourceType = typeof(Localization), Width = 15)]

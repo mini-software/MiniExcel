@@ -140,7 +140,7 @@ internal static class ColumnMappingsProvider
                 Nullable = accessor.IsNullable,
                 ExcelColumnAliases = excelColumnName?.Aliases ?? excelColumn?.Aliases ?? [],
 
-                ExcelColumnName = excelColumnName?.GetColumnName() 
+                ExcelColumnName = excelColumnName?.GetColumnName()
                                   ?? excelColumn?.GetColumnName(m.Name) 
                                   ?? m.GetAttribute<DisplayNameAttribute>()?.DisplayName 
                                   ?? m.Name,

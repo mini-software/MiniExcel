@@ -4,6 +4,8 @@ namespace MiniExcelLib.Core.Attributes;
 
 public class MiniExcelColumnAttribute : MiniExcelAttributeBase
 {
+    private ResourceManager? _resourceManager;
+
     public string? Name { get; set; }
     public string[]? Aliases { get; set; } = [];
     public string? Format { get; set; }
@@ -28,23 +30,29 @@ public class MiniExcelColumnAttribute : MiniExcelAttributeBase
         set => Init(CellReferenceConverter.GetNumericalIndex(value), value);
     }
 
-    private ResourceManager? _resourceManager;
+    private Type? _resourceType;
     public Type? ResourceType
     {
-        get;
+        get => _resourceType;
         set
         {
-            if (field == value)
+            if (_resourceType == value)
                 return;
 
-            field = value;
+            _resourceType = value;
             if (value is null)
                 return;
 
             const BindingFlags bindingFlags = BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
-            _resourceManager = value.GetProperty(nameof(ResourceManager), bindingFlags) is { } property 
-                ? property.GetValue(null) as ResourceManager
-                : new ResourceManager(value);
+            if (value.GetProperty(nameof(ResourceManager), bindingFlags) is { } property && 
+                property.GetValue(null) is ResourceManager resourceManager)
+            {
+                _resourceManager = resourceManager;
+            }
+            else
+            {
+                _resourceManager = new ResourceManager(value);
+            }
         }
     }
 

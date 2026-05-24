@@ -1218,22 +1218,15 @@ public class MiniExcelOpenXmlAsyncTests
     }
 
     [Fact]
-    public async Task ReadBigExcel_Prcoessing_TakeCancel_Throws_TaskCanceledException()
+    public async Task ReadBigExcel_Processing_TakeCancel_Throws_TaskCanceledException()
     {
         await Assert.ThrowsAsync<OperationCanceledException>(async () =>
         {
-            var path = PathHelper.GetFile("xlsx/bigExcel.xlsx");
             var cts = new CancellationTokenSource();
 
-            _ = Task.Run(async () =>
-            {
-                await Task.Delay(500);
-                await cts.CancelAsync();
-                cts.Token.ThrowIfCancellationRequested();
-            });
-
-            await using var stream = FileHelper.OpenRead(path);
-            _ = await _excelImporter.QueryAsync(stream, cancellationToken: cts.Token).ToListAsync(cts.Token);
+            var exportTask = _excelImporter.QueryAsync(PathHelper.GetFile("xlsx/bigExcel.xlsx"), cancellationToken: cts.Token).ToListAsync(cts.Token);
+            await cts.CancelAsync();
+            await exportTask;
         });
     }
 

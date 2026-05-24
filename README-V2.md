@@ -1161,7 +1161,7 @@ templater.ApplyTemplate(path, templatePath, value, config)
 
 ### Attributes and configuration <a name="docs-attributes" />
 
-#### 1. Specify the column name, column index, or ignore the column entirely
+#### 1. Specify the column name, column index, or ignore the column entirely.
 
 ![image](https://user-images.githubusercontent.com/12729184/114230869-3e163700-99ac-11eb-9a90-2039d4b4b313.png)
 
@@ -1300,7 +1300,22 @@ public class Dto
 }
 ```
 
-#### 8. DynamicColumnAttribute
+#### 8. Resource based localization
+
+Support for localizable resources is available for both `MiniExcelColumnAttribute` and `MiniExcelColumnNameAttribute`:
+
+```csharp
+public class Dto
+{
+    [MiniExcelColumn(Name = "Column1", ResourceType = typeof(MyResources))]
+    public string Test1 { get; set; }
+
+    [MiniExcelColumnName("Column2", ResourceType = typeof(MyResources))]
+    public string Test2 { get; set; }
+}
+```
+
+#### 9. DynamicColumnAttribute
 
 Attributes can also be set on columns dynamically:
 ```csharp
@@ -1321,7 +1336,7 @@ var exporter = MiniExcel.Exporters.GetOpenXmlExporter();
 exporter.Export(path, value, configuration: config);
 ```
 
-#### 9. MiniExcelSheetAttribute
+#### 10. MiniExcelSheetAttribute
 
 It is possible to define the name and visibility of a sheet through the `MiniExcelSheetAttribute`:
 

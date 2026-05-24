@@ -2,6 +2,7 @@
 using ExcelDataReader;
 using MiniExcelLib.Core.Exceptions;
 using MiniExcelLib.OpenXml.Tests.Utils;
+using MiniExcelLib.Tests.Common;
 using MiniExcelLib.Tests.Common.Utils;
 
 namespace MiniExcelLib.OpenXml.Tests;
@@ -1923,5 +1924,106 @@ public class MiniExcelOpenXmlAsyncTests
         
         ms1.Seek(0, SeekOrigin.Begin);
         await Assert.ThrowsAsync<ArgumentException>(() => _excelExporter.AlterSheetAsync(ms3, "Sheet1", "Sheet*"));
+    }
+    
+    class LocalizationSupportDto(string firstName, string lastName, string address, int age)
+    {
+        [MiniExcelColumn(Name = nameof(FirstName), ResourceType = typeof(Localization), Width = 15)]
+        public string? FirstName { get; set; } = firstName;
+
+        [MiniExcelColumn(Name = nameof(LastName), ResourceType = typeof(Localization), Width = 15)]
+        public string? LastName { get; set; } = lastName;
+
+        [MiniExcelColumnName("Address", ResourceType = typeof(Localization))]
+        public string? Residency { get; set; } = address;
+
+        [MiniExcelColumn(Name = nameof(Age), ResourceType = typeof(Localization), Width = 20)]
+        public int Age { get; set; } = age;
+    }
+    
+    [Theory]
+    [InlineData("")]
+    [InlineData("it")]
+    [InlineData("zh")]
+    public async Task LocalizationTest(string cultureId)
+    {
+        var ogCulture = CultureInfo.CurrentUICulture;
+
+        try
+        {
+            CultureInfo.CurrentUICulture = new CultureInfo(cultureId);
+
+            await using var ms = new MemoryStream();
+            await _excelExporter.ExportAsync(ms, Array.Empty<LocalizationSupportDto>());
+            ms.Seek(0, SeekOrigin.Begin);
+            
+            using var package = new ExcelPackage(ms);
+            var cells = package.Workbook.Worksheets[0].Cells;
+
+            var (firstName, lastName, address, age) = cultureId switch
+            {
+                "" => ("Name", "Surname", "Address", "Age"),
+                "it" => ("Nome", "Cognome", "Indirizzo", "Età"),
+                "zh" => ("名", "姓", "地址", "年龄"),
+                _ => throw new UnreachableException()
+            };
+            
+            Assert.Equal(firstName, cells["A1"].Value);
+            Assert.Equal(lastName, cells["B1"].Value);
+            Assert.Equal(address, cells["C1"].Value);
+            Assert.Equal(age, cells["D1"].Value);
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = ogCulture;
+        }
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("it")]
+    [InlineData("zh")]
+    public async Task LocalizationTestDynamicColumns(string cultureId)
+    {
+        var ogCulture = CultureInfo.CurrentUICulture;
+
+        try
+        {
+            CultureInfo.CurrentUICulture = new CultureInfo(cultureId);
+
+            DynamicExcelColumn[] cols = [
+                new("FirstName") { ResourceType = typeof(Localization) }, 
+                new("LastName") { ResourceType = typeof(Localization) },
+                new("Address") { ResourceType = typeof(Localization) },
+                new("Age") { ResourceType = typeof(Localization) }
+            ]; 
+
+            await using var stream = new MemoryStream();
+            await _excelExporter.ExportAsync(
+                stream, 
+                new[] { new { FirstName = "", LastName = "", Address = "", Age = 0 } },
+                configuration: new OpenXmlConfiguration { DynamicColumns =  cols });
+            
+            stream.Seek(0, SeekOrigin.Begin);
+            using var package = new ExcelPackage(stream);
+            var cells = package.Workbook.Worksheets[0].Cells;
+
+            var (firstName, lastName, address, age) = cultureId switch
+            {
+                "" => ("Name", "Surname", "Address", "Age"),
+                "it" => ("Nome", "Cognome", "Indirizzo", "Età"),
+                "zh" => ("名", "姓", "地址", "年龄"),
+                _ => throw new UnreachableException()
+            };
+            
+            Assert.Equal(firstName, cells["A1"].Value);
+            Assert.Equal(lastName, cells["B1"].Value);
+            Assert.Equal(address, cells["C1"].Value);
+            Assert.Equal(age, cells["D1"].Value);
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = ogCulture;
+        }
     }
 }

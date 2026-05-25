@@ -1,3 +1,5 @@
+using MiniExcelLib.OpenXml.Reader;
+
 namespace MiniExcelLib.OpenXml.FluentMapping;
 
 internal static partial class MappingReader<T> where T : class, new()
@@ -203,8 +205,7 @@ internal static partial class MappingReader<T> where T : class, new()
         else
         {
             // This should never happen with properly optimized mappings
-            throw new InvalidOperationException(
-                "OptimizedCollectionHelpers is null. Ensure the mapping was properly compiled and optimized.");
+            throw new InvalidOperationException("OptimizedCollectionHelpers is null. Ensure the mapping was properly compiled and optimized.");
         }
         
         return collections;

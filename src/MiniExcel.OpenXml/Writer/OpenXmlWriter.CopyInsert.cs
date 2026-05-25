@@ -1,3 +1,4 @@
+using MiniExcelLib.OpenXml.Reader;
 using MiniExcelLib.OpenXml.Styles.Builder;
 
 namespace MiniExcelLib.OpenXml.Writer;
@@ -48,7 +49,7 @@ internal partial class OpenXmlWriter
         using var disposableNewArchive = _archive;
 #endif
         using var reader = await OpenXmlReader.CreateAsync(_oldStream!, _configuration, cancellationToken: cancellationToken).ConfigureAwait(false);
-        var rels = await reader.GetWorkbookRelsAsync(_oldArchive!.Entries, cancellationToken).ConfigureAwait(false) ?? [];
+        var rels = await OpenXmlReader.GetWorkbookRelsAsync(_oldArchive!.Entries, cancellationToken).ConfigureAwait(false) ?? [];
 
         _sheets.AddRange(rels
             .OrderBy(sheet => sheet.Id)

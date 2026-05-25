@@ -1,5 +1,3 @@
-using MiniExcelLib.Core.Abstractions;
-
 namespace MiniExcelLib.OpenXml.FluentMapping;
 
 internal readonly struct MappingCellStream<T>(IEnumerable<T> items, CompiledMapping<T> mapping, string[] columnLetters) : IMappingCellStream

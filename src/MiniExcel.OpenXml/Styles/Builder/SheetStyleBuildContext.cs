@@ -49,7 +49,7 @@ internal sealed partial class SheetStyleBuilderContext(Dictionary<string, string
         {
             var oldStyleXmlStream = await styleEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
             await using var disposableStream = oldStyleXmlStream.ConfigureAwait(false);
-            using var reader = XmlReader.Create(oldStyleXmlStream, XmlReaderHelper.GetXmlReaderSettings(isAsync));
+            using var reader = XmlReader.Create(oldStyleXmlStream, XmlReaderHelper.GetXmlReaderSettings());
 
             infos = await ReadSheetStyleElementInfosAsync(reader, cancellationToken).ConfigureAwait(false);
         }
@@ -67,20 +67,13 @@ internal sealed partial class SheetStyleBuilderContext(Dictionary<string, string
         if (_initialized)
             throw new InvalidOperationException("The context has already been initialized.");
 
-        const bool isAsync =
-#if SYNC_ONLY
-            false;
-#else
-            true;
-#endif
-
         GeneratedElementInfos = generatedElementInfos;
 
         _oldStyleXmlZipEntry = _archive.Mode == ZipArchiveMode.Update
             ? _archive.Entries.SingleOrDefault(s => s.FullName == ExcelFileNames.Styles)
             : null;
 
-        var xmlReaderSettings = XmlReaderHelper.GetXmlReaderSettings(isAsync);
+        var xmlReaderSettings = XmlReaderHelper.GetXmlReaderSettings();
         if (_oldStyleXmlZipEntry is not null)
         {
             var oldStyleXmlStream = await _oldStyleXmlZipEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
@@ -104,7 +97,16 @@ internal sealed partial class SheetStyleBuilderContext(Dictionary<string, string
         }
 
         _newXmlWriterStream = await _newStyleXmlZipEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
-        NewXmlWriter = XmlWriter.Create(_newXmlWriterStream, new XmlWriterSettings { Indent = true, Encoding = _encoding, Async = isAsync });
+        NewXmlWriter = XmlWriter.Create(
+            _newXmlWriterStream, 
+            new XmlWriterSettings
+            {
+                Indent = true, 
+                Encoding = _encoding,
+#if !SYNC_ONLY
+                Async = true
+#endif
+            });
 
         _initialized = true;
     }

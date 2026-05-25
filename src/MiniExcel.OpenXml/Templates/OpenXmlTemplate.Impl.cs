@@ -112,7 +112,7 @@ internal partial class OpenXmlTemplate
         }
     }
 
-    private static IEnumerable<ConditionalFormatRange> NewParseConditionalFormatRanges(XElement worksheet)
+    private static IEnumerable<ConditionalFormatRange> ParseConditionalFormatRanges(XElement worksheet)
     {
         var conditionalFormatting = worksheet.Element(SpreadsheetNs + "conditionalFormatting");
         if (conditionalFormatting is null)
@@ -173,7 +173,7 @@ internal partial class OpenXmlTemplate
     {
         // TODO: Can we make this less complex?
 
-        var conditionalFormatRanges = NewParseConditionalFormatRanges(worksheet).ToList();
+        var conditionalFormatRanges = ParseConditionalFormatRanges(worksheet).ToList();
         var newConditionalFormatRanges = new List<ConditionalFormatRange>();
         newConditionalFormatRanges.AddRange(conditionalFormatRanges);
 

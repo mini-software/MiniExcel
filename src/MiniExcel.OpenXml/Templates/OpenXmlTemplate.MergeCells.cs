@@ -1,3 +1,5 @@
+using MiniExcelLib.OpenXml.Reader;
+
 namespace MiniExcelLib.OpenXml.Templates;
 
 internal partial class OpenXmlTemplate

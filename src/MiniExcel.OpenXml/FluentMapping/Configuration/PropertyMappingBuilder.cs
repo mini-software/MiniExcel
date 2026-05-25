@@ -1,5 +1,3 @@
-using System.Text.RegularExpressions;
-
 namespace MiniExcelLib.OpenXml.FluentMapping.Configuration;
 
 internal partial class PropertyMappingBuilder<T, TProperty> : IPropertyMappingBuilder<T, TProperty>

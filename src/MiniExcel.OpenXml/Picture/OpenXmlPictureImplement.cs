@@ -1,4 +1,5 @@
 ﻿using System.Drawing;
+using MiniExcelLib.OpenXml.Reader;
 
 namespace MiniExcelLib.OpenXml.Picture;
 
@@ -27,7 +28,7 @@ internal static partial class MiniExcelPictureImplement
 #else
         using var archive = new ZipArchive(excelStream, ZipArchiveMode.Update, true);
 #endif
-		var rels = await reader.GetWorkbookRelsAsync(excelArchive.EntryCollection, cancellationToken).ConfigureAwait(false);
+		var rels = await OpenXmlReader.GetWorkbookRelsAsync(excelArchive.EntryCollection, cancellationToken).ConfigureAwait(false);
         var sheetEntries = rels?.ToList() ?? [];
 
         // Group images by sheet

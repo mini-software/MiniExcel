@@ -1,3 +1,5 @@
+using MiniExcelLib.OpenXml.Reader;
+
 // ReSharper disable once CheckNamespace
 namespace MiniExcelLib.OpenXml;
 
@@ -326,7 +328,7 @@ public sealed partial class OpenXmlImporter
         await using var disposableArchive = archive.ConfigureAwait(false);
         using var reader = await OpenXmlReader.CreateAsync(stream, null, leaveOpen, cancellationToken).ConfigureAwait(false);
 
-        var rels = await reader.GetWorkbookRelsAsync(archive.EntryCollection, cancellationToken).ConfigureAwait(false);
+        var rels = await OpenXmlReader.GetWorkbookRelsAsync(archive.EntryCollection, cancellationToken).ConfigureAwait(false);
         return rels?.Select(s => s.Name).ToList() ?? [];
     }
 
@@ -366,7 +368,7 @@ public sealed partial class OpenXmlImporter
         await using var disposableArchve = archive.ConfigureAwait(false);
         using var reader = await OpenXmlReader.CreateAsync(stream, null, leaveOpen, cancellationToken).ConfigureAwait(false);
 
-        var rels = await reader.GetWorkbookRelsAsync(archive.EntryCollection, cancellationToken).ConfigureAwait(false);
+        var rels = await OpenXmlReader.GetWorkbookRelsAsync(archive.EntryCollection, cancellationToken).ConfigureAwait(false);
         return rels?.Select((s, i) => s.ToSheetInfo((uint)i)).ToList() ?? [];
     }
 
@@ -591,4 +593,9 @@ public sealed partial class OpenXmlImporter
     }
 
     #endregion
+
+    [CreateSyncVersion]
+
+
+    [CreateSyncVersion]
 }

@@ -163,10 +163,6 @@ internal partial class CsvReader : IMiniExcelReader
             .ToArray();
     }
 
-    public void Dispose()
-    {
-        _stream?.Dispose();
-    }
 #if NET
     [GeneratedRegex("^\"|\"$")]
     private static partial Regex DoubleQuotesRegex();
@@ -174,4 +170,9 @@ internal partial class CsvReader : IMiniExcelReader
 #else
     private static readonly Regex DoubleQuotesRegexImpl = new Regex("^\"|\"$",  RegexOptions.Compiled);
 #endif
+
+    public void Dispose()
+    {
+        _stream?.Dispose();
+    }
 }

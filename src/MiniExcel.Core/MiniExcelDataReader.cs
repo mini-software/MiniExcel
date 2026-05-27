@@ -5,6 +5,7 @@ public sealed class MiniExcelDataReader : IMiniExcelDataReader
     private readonly IEnumerator<IDictionary<string, object?>>? _source;
     private readonly IAsyncEnumerator<IDictionary<string, object?>>? _asyncSource;
     private readonly Stream _stream;
+    private readonly Dictionary<string, int> _ordinals = [];
 
     private bool _isEmpty;
     private List<string> _columns = [];
@@ -244,8 +245,16 @@ public sealed class MiniExcelDataReader : IMiniExcelDataReader
         => _columns[i];
 
     public int GetOrdinal(string name)
-        => _columns.IndexOf(name);
-    
+    {
+        if (_ordinals.TryGetValue(name, out var ordinal))
+            return ordinal;
+
+        var ord = _columns.IndexOf(name);
+        _ordinals[name] = ord;
+            
+        return ord;
+    }
+
     public DataTable GetSchemaTable()
     {
         if (_schema is null)

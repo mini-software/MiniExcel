@@ -119,7 +119,7 @@ internal partial class OpenXmlTemplate : IMiniExcelTemplate
                 .StartsWith("xl/worksheets/sheet", StringComparison.OrdinalIgnoreCase));
 
         int sheetIdx = 0;
-        // 全局收集所有工作表信息（单表/多表都在这里汇总）
+        // collect all sheet info for batch add to config, avoid duplicated and missing sheet name when create mode
         var allSheetInfos = new List<(int Index, string Name)>();
 
         foreach (var templateSheet in templateSheets)
@@ -159,7 +159,7 @@ internal partial class OpenXmlTemplate : IMiniExcelTemplate
 
 
 
-        // 【一次性写入所有配置】（修复覆盖BUG，表名生效）
+        // batch add sheet
         await BatchAddSheetsToExcelConfigAsync(outputFileArchive.ZipFile, originalArchive, allSheetInfos, cancellationToken).ConfigureAwait(false);
 
 

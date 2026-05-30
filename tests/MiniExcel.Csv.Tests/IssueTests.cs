@@ -464,7 +464,7 @@ public class IssueTests
         var path = PathHelper.GetFile("/csv/Test5x2.csv");
         using var tempPath = AutoDeletingPath.Create();
         using var csv = File.OpenRead(path);
-        var value = _csvImporter.Query(csv, useHeaderRow: false);
+        var value = _csvImporter.Query(csv, hasHeaderRow: false);
         _openXmlExporter.Export(tempPath.ToString(), value, printHeader: false);
     }
 
@@ -616,7 +616,7 @@ public class IssueTests
         writer.Write(text);
         writer.Flush();
         stream.Position = 0;
-        var rows = _csvImporter.Query(stream, useHeaderRow: true).ToList();
+        var rows = _csvImporter.Query(stream, hasHeaderRow: true).ToList();
 
         Assert.Equal(nameof(Issue89Model.WorkState.OnDuty), rows[0].State);
         Assert.Equal(nameof(Issue89Model.WorkState.Fired), rows[1].State);

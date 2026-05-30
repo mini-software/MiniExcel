@@ -13,6 +13,6 @@
 - MiniExcel now fully supports asynchronous streaming the queries, 
 so the return type for `OpenXmlImporter.QueryAsync` is `IAsyncEnumerable<T>` instead of `Task<IEnumerable<T>>`
 - When applying a template, unlike version 1.x, the flag for overwriting an already existing file must be provided explicitly.
-- `leaveOpen` parameter has been added to `GetDataReader` and `GetDataReaderAsync` to configure whether the underlying stream must be disposed alongside the data reader.   
+- `leaveOpen` parameter has been added to `GetDataReader` and `GetDataReaderAsync` in both `OpenXmlImporter` and `CsvImporter` to configure whether the underlying stream must be disposed alongside the data reader.   
 - `useHeaderRow` parameter in multiple `OpenXmlImporter` methods has been renamed to `hasHeaderRow` for making its usage clearer.
 - `CsvExporter.Export` API methods, not being required to return the same type of `OpenXmlExporter.Export`, now return `int` instead of `int[]`.

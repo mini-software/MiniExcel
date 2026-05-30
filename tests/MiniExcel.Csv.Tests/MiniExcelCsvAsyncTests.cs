@@ -252,7 +252,7 @@ public class MiniExcelCsvAsyncTests
 
         await using (var stream = File.OpenRead(path))
         {
-            var rows = _csvImporter.QueryAsync(stream, useHeaderRow: true).ToBlockingEnumerable().ToList();
+            var rows = _csvImporter.QueryAsync(stream, hasHeaderRow: true).ToBlockingEnumerable().ToList();
             Assert.Equal("A1", rows[0].C1);
             Assert.Equal("B1", rows[0].C2);
             Assert.Equal("A2", rows[1].C1);
@@ -260,7 +260,7 @@ public class MiniExcelCsvAsyncTests
         }
 
         {
-            var rows = _csvImporter.QueryAsync(path, useHeaderRow: true).ToBlockingEnumerable().ToList();
+            var rows = _csvImporter.QueryAsync(path, hasHeaderRow: true).ToBlockingEnumerable().ToList();
             Assert.Equal("A1", rows[0].C1);
             Assert.Equal("B1", rows[0].C2);
             Assert.Equal("A2", rows[1].C1);

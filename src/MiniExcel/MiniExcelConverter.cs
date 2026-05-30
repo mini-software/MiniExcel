@@ -13,7 +13,7 @@ public static partial class MiniExcelConverter
     {
         var value = MiniExcel.Importers
             .GetCsvImporter()
-            .QueryAsync(csv, useHeaderRow: csvHasHeader, cancellationToken: cancellationToken);
+            .QueryAsync(csv, hasHeaderRow: csvHasHeader, cancellationToken: cancellationToken);
 
         await MiniExcel.Exporters
             .GetOpenXmlExporter()

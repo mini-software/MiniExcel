@@ -352,7 +352,7 @@ public class MiniExcelCsvTests
 
         using (var stream = File.OpenRead(path))
         {
-            var rows = _csvImporter.Query(stream, useHeaderRow: true).ToList();
+            var rows = _csvImporter.Query(stream, hasHeaderRow: true).ToList();
             Assert.Equal("A1", rows[0].C1);
             Assert.Equal("B1", rows[0].C2);
             Assert.Equal("A2", rows[1].C1);
@@ -360,7 +360,7 @@ public class MiniExcelCsvTests
         }
 
         {
-            var rows = _csvImporter.Query(path, useHeaderRow: true).ToList();
+            var rows = _csvImporter.Query(path, hasHeaderRow: true).ToList();
             Assert.Equal("A1", rows[0].C1);
             Assert.Equal("B1", rows[0].C2);
             Assert.Equal("A2", rows[1].C1);

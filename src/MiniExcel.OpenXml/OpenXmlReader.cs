@@ -25,11 +25,11 @@ internal partial class OpenXmlReader : IMiniExcelReader
     }
 
     [CreateSyncVersion]
-    internal static async Task<OpenXmlReader> CreateAsync(Stream stream, IMiniExcelConfiguration? configuration, CancellationToken cancellationToken = default)
+    internal static async Task<OpenXmlReader> CreateAsync(Stream stream, IMiniExcelConfiguration? configuration, bool leaveOpen = false, CancellationToken cancellationToken = default)
     {
         ThrowHelper.ThrowIfInvalidOpenXml(stream);
 
-        var archive = await OpenXmlZip.CreateAsync(stream, cancellationToken: cancellationToken).ConfigureAwait(false);
+        var archive = await OpenXmlZip.CreateAsync(stream, leaveOpen: leaveOpen, cancellationToken: cancellationToken).ConfigureAwait(false);
         var reader = new OpenXmlReader(archive, configuration);
         await reader.SetSharedStringsAsync(cancellationToken).ConfigureAwait(false);
 
@@ -37,9 +37,9 @@ internal partial class OpenXmlReader : IMiniExcelReader
     }
     
     [CreateSyncVersion]
-    public IAsyncEnumerable<IDictionary<string, object?>> QueryAsync(bool useHeaderRow, string? sheetName, string startCell, CancellationToken cancellationToken = default)
+    public IAsyncEnumerable<IDictionary<string, object?>> QueryAsync(bool hasHeaderRow, string? sheetName, string startCell, CancellationToken cancellationToken = default)
     {
-        return QueryRangeAsync(useHeaderRow, sheetName, startCell, "", cancellationToken);
+        return QueryRangeAsync(hasHeaderRow, sheetName, startCell, "", cancellationToken);
     }
 
     [CreateSyncVersion]
@@ -58,7 +58,7 @@ internal partial class OpenXmlReader : IMiniExcelReader
     }
 
     [CreateSyncVersion]
-    public IAsyncEnumerable<IDictionary<string, object?>> QueryRangeAsync(bool useHeaderRow, string? sheetName, string? startCell, string? endCell, CancellationToken cancellationToken = default)
+    public IAsyncEnumerable<IDictionary<string, object?>> QueryRangeAsync(bool hasHeaderRow, string? sheetName, string? startCell, string? endCell, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
@@ -82,7 +82,7 @@ internal partial class OpenXmlReader : IMiniExcelReader
             endRowIndex = rIndex - 1;
         }
 
-        return InternalQueryRangeAsync(useHeaderRow, sheetName, startRowIndex, startColumnIndex, endRowIndex, endColumnIndex, cancellationToken);
+        return InternalQueryRangeAsync(hasHeaderRow, sheetName, startRowIndex, startColumnIndex, endRowIndex, endColumnIndex, cancellationToken);
     }
 
     [CreateSyncVersion]
@@ -96,7 +96,7 @@ internal partial class OpenXmlReader : IMiniExcelReader
     }
 
     [CreateSyncVersion]
-    public IAsyncEnumerable<IDictionary<string, object?>> QueryRangeAsync(bool useHeaderRow, string? sheetName, int startRowIndex, int startColumnIndex, int? endRowIndex, int? endColumnIndex, CancellationToken cancellationToken = default)
+    public IAsyncEnumerable<IDictionary<string, object?>> QueryRangeAsync(bool hasHeaderRow, string? sheetName, int startRowIndex, int startColumnIndex, int? endRowIndex, int? endColumnIndex, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
@@ -130,7 +130,7 @@ internal partial class OpenXmlReader : IMiniExcelReader
             }
         }
 
-        return InternalQueryRangeAsync(useHeaderRow, sheetName, startRowIndex, startColumnIndex, endRowIndex, endColumnIndex, cancellationToken);
+        return InternalQueryRangeAsync(hasHeaderRow, sheetName, startRowIndex, startColumnIndex, endRowIndex, endColumnIndex, cancellationToken);
     }
 
     [CreateSyncVersion]
@@ -258,7 +258,7 @@ internal partial class OpenXmlReader : IMiniExcelReader
         int? endColumnIndex,
         int maxColumnIndex,
         bool withoutCr,
-        bool useHeaderRow,
+        bool hasHeaderRow,
         Dictionary<int, string> headRows,
         MergeCells? mergeCells,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
@@ -271,7 +271,7 @@ internal partial class OpenXmlReader : IMiniExcelReader
             {
                 for (int i = expectedRowIndex; i < rowIndex; i++)
                 {
-                    yield return GetCell(useHeaderRow, maxColumnIndex, headRows, startColumnIndex);
+                    yield return GetCell(hasHeaderRow, maxColumnIndex, headRows, startColumnIndex);
                 }
             }
         }
@@ -280,11 +280,11 @@ internal partial class OpenXmlReader : IMiniExcelReader
         if (!await reader.ReadFirstContentAsync(cancellationToken).ConfigureAwait(false) && !_config.IgnoreEmptyRows)
         {
             //Fill in case of self closed empty row tag eg. <row r="1"/>
-            yield return GetCell(useHeaderRow, maxColumnIndex, headRows, startColumnIndex);
+            yield return GetCell(hasHeaderRow, maxColumnIndex, headRows, startColumnIndex);
             yield break;
         }
 
-        var cell = GetCell(useHeaderRow, maxColumnIndex, headRows, startColumnIndex);
+        var cell = GetCell(hasHeaderRow, maxColumnIndex, headRows, startColumnIndex);
         var columnIndex = withoutCr ? -1 : 0;
         while (!reader.EOF)
         {
@@ -324,7 +324,7 @@ internal partial class OpenXmlReader : IMiniExcelReader
                     cellValue = _style.ConvertValueByStyleFormat(xfIndex, cellValue);
                 }
 
-                SetCellsValueAndHeaders(cellValue, useHeaderRow, headRows, isFirstRow, cell, columnIndex);
+                SetCellsValueAndHeaders(cellValue, hasHeaderRow, headRows, isFirstRow, cell, columnIndex);
             }
             else if (!await reader.SkipContentAsync(cancellationToken).ConfigureAwait(false))
             {

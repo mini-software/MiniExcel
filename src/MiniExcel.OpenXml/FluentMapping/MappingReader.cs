@@ -1,24 +1,21 @@
-using System.Runtime.CompilerServices;
-using Zomp.SyncMethodGenerator;
-
 namespace MiniExcelLib.OpenXml.FluentMapping;
 
 internal static partial class MappingReader<T> where T : class, new()
 {
     [CreateSyncVersion]
-    public static async IAsyncEnumerable<T> QueryAsync(Stream stream, CompiledMapping<T> mapping, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    public static async IAsyncEnumerable<T> QueryAsync(Stream stream, CompiledMapping<T> mapping, bool leaveOpen = false, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         if (stream is null)
             throw new ArgumentNullException(nameof(stream));
         if (mapping is null)
             throw new ArgumentNullException(nameof(mapping));
 
-        await foreach (var item in QueryOptimizedAsync(stream, mapping, cancellationToken).ConfigureAwait(false))
+        await foreach (var item in QueryOptimizedAsync(stream, mapping, leaveOpen, cancellationToken).ConfigureAwait(false))
             yield return item;
     }
     
     [CreateSyncVersion]
-    private static async IAsyncEnumerable<T> QueryOptimizedAsync(Stream stream, CompiledMapping<T> mapping, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    private static async IAsyncEnumerable<T> QueryOptimizedAsync(Stream stream, CompiledMapping<T> mapping, bool leaveOpen = false, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         if (mapping.OptimizedCellGrid is null || mapping.OptimizedBoundaries is null)
             throw new InvalidOperationException("QueryOptimizedAsync requires an optimized mapping");
@@ -31,7 +28,7 @@ internal static partial class MappingReader<T> where T : class, new()
         {
             FillMergedCells = false,
             FastMode = false
-        }, cancellationToken).ConfigureAwait(false);
+        }, leaveOpen, cancellationToken).ConfigureAwait(false);
         
         // If we have collections, we need to handle multiple items with collections
         if (mapping.Collections.Any())

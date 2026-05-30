@@ -26,9 +26,7 @@ public partial class CsvImporter
         var stream = FileHelper.OpenSharedRead(path);
         await using var disposableStream = stream.ConfigureAwait(false);
 
-        var query = QueryAsync<T>(stream, treatHeaderAsData, configuration, cancellationToken);
-        
-        //Foreach yield return twice reason : https://stackoverflow.com/questions/66791982/ienumerable-extract-code-lazy-loading-show-stream-was-not-readable
+        var query = QueryAsync<T>(stream, treatHeaderAsData, configuration, leaveOpen: false, cancellationToken);
         await foreach (var item in query.ConfigureAwait(false))
             yield return item;
     }
@@ -40,13 +38,14 @@ public partial class CsvImporter
     /// <param name="stream">The stream containing the CSV data.</param>
     /// <param name="treatHeaderAsData">If true, the first row is treated as data. If false (default), the first row is used as headers.</param>
     /// <param name="configuration">Optional configuration settings (delimiters, encoding, etc.).</param>
+    /// <param name="leaveOpen">True to leave the stream open after the query is completed, otherwise false.</param>
     /// <param name="cancellationToken">A token to cancel the asynchronous operation.</param>
     [CreateSyncVersion]
     public async IAsyncEnumerable<T> QueryAsync<T>(Stream stream, bool treatHeaderAsData = false, 
-        CsvConfiguration? configuration = null, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        CsvConfiguration? configuration = null, bool leaveOpen = false, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         where T : class, new()
     {
-        using var csv = new CsvReader(stream, configuration);
+        using var csv = new CsvReader(stream, configuration, leaveOpen);
         await foreach (var item in csv.QueryAsync<T>(null, "A1", treatHeaderAsData, cancellationToken).ConfigureAwait(false))
             yield return item;
     }
@@ -68,7 +67,7 @@ public partial class CsvImporter
         var stream = FileHelper.OpenSharedRead(path);
         await using var disposableStream = stream.ConfigureAwait(false);
 
-        await foreach (var item in QueryAsync(stream, hasHeaderRow, configuration, cancellationToken).ConfigureAwait(false))
+        await foreach (var item in QueryAsync(stream, hasHeaderRow, configuration, leaveOpen: false, cancellationToken).ConfigureAwait(false))
             yield return item;
     }
 
@@ -78,15 +77,16 @@ public partial class CsvImporter
     /// <param name="stream">The stream containing the CSV data.</param>
     /// <param name="hasHeaderRow">If true, the first row is used as column headers for the dynamic object properties. Default is false.</param>
     /// <param name="configuration">Optional configuration settings (delimiters, encoding, etc.).</param>
+    /// <param name="leaveOpen">True to leave the stream open after the query is completed, otherwise false.</param>
     /// <param name="cancellationToken">A token to cancel the asynchronous operation.</param>
     /// <remarks>
     /// When <paramref name="hasHeaderRow"/> is true, column names from the first row become dynamic property names, otherwise they will be assigned alphabetically (A, B, C, etc.).
     /// </remarks>
     [CreateSyncVersion]
     public async IAsyncEnumerable<dynamic> QueryAsync(Stream stream, bool hasHeaderRow = false,
-        CsvConfiguration? configuration = null, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        CsvConfiguration? configuration = null, bool leaveOpen = false, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        using var excelReader = new CsvReader(stream, configuration);
+        using var excelReader = new CsvReader(stream, configuration, leaveOpen);
         await foreach (var item in excelReader.QueryAsync(hasHeaderRow, null, "A1", cancellationToken).ConfigureAwait(false))
             yield return item;
     }
@@ -113,7 +113,7 @@ public partial class CsvImporter
         var stream = FileHelper.OpenSharedRead(path);
         await using var disposableStream = stream.ConfigureAwait(false);
 
-        return await QueryAsDataTableAsync(stream, hasHeaderRow, configuration, cancellationToken).ConfigureAwait(false);
+        return await QueryAsDataTableAsync(stream, hasHeaderRow, configuration, leaveOpen: false, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -122,6 +122,7 @@ public partial class CsvImporter
     /// <param name="stream">The stream containing the CSV data.</param>
     /// <param name="hasHeaderRow">If true, the first row is used as column headers.</param>
     /// <param name="configuration">Optional configuration settings.</param>
+    /// <param name="leaveOpen">True to leave the stream open after the query is completed, otherwise false.</param>
     /// <param name="cancellationToken">A token to cancel the asynchronous operation.</param>
     /// <remarks>
     /// Empty column names are skipped.
@@ -129,11 +130,11 @@ public partial class CsvImporter
     /// </remarks>
     [CreateSyncVersion]
     public async Task<DataTable> QueryAsDataTableAsync(Stream stream, bool hasHeaderRow = true,
-        CsvConfiguration? configuration = null, CancellationToken cancellationToken = default)
+        CsvConfiguration? configuration = null, bool leaveOpen = false, CancellationToken cancellationToken = default)
     {
         var dt = new DataTable();
         var first = true;
-        using var reader = new CsvReader(stream, configuration);
+        using var reader = new CsvReader(stream, configuration, leaveOpen);
         var rows = reader.QueryAsync(false, null, "A1", cancellationToken);
 
         var columnDict = new Dictionary<string, string>();
@@ -208,7 +209,7 @@ public partial class CsvImporter
     public async Task<ICollection<string>> GetColumnNamesAsync(Stream stream, bool hasHeaderRow = false,
         CsvConfiguration? configuration = null, CancellationToken cancellationToken = default)
     {
-        var enumerator = QueryAsync(stream, hasHeaderRow, configuration, cancellationToken).GetAsyncEnumerator(cancellationToken);
+        var enumerator = QueryAsync(stream, hasHeaderRow, configuration, leaveOpen: false, cancellationToken).GetAsyncEnumerator(cancellationToken);
         await using var disposableEnumerator = enumerator.ConfigureAwait(false);
 
         if (await enumerator.MoveNextAsync().ConfigureAwait(false))
@@ -234,9 +235,9 @@ public partial class CsvImporter
     public MiniExcelDataReader GetDataReader(string path, bool hasHeaderRow = false, CsvConfiguration? configuration = null)
     {
         var stream = FileHelper.OpenSharedRead(path);
-        var values = Query(stream, hasHeaderRow, configuration).Cast<IDictionary<string, object?>>();
+        var values = Query(stream, hasHeaderRow, configuration, leaveOpen: false).Cast<IDictionary<string, object?>>();
 
-        return MiniExcelDataReader.Create(stream, values, leaveOpen: false);
+        return MiniExcelDataReader.Create(stream, values);
     }
 
     /// <summary>
@@ -253,7 +254,7 @@ public partial class CsvImporter
     /// </remarks>
     public MiniExcelDataReader GetDataReader(Stream stream, bool hasHeaderRow = false, CsvConfiguration ? configuration = null, bool leaveOpen = false)
     {
-        var values = Query(stream, hasHeaderRow, configuration).Cast<IDictionary<string, object?>>();
+        var values = Query(stream, hasHeaderRow, configuration, leaveOpen).Cast<IDictionary<string, object?>>();
         return MiniExcelDataReader.Create(stream, values, leaveOpen);
     }
 
@@ -272,9 +273,9 @@ public partial class CsvImporter
         CsvConfiguration? configuration = null, CancellationToken cancellationToken = default)
     {
         var stream = FileHelper.OpenSharedRead(path);
-        var values = QueryAsync(stream, hasHeaderRow, configuration, cancellationToken);
+        var values = QueryAsync(stream, hasHeaderRow, configuration, leaveOpen: false, cancellationToken);
         
-        return await MiniExcelDataReader.CreateAsync(stream, values.CastToDictionary(cancellationToken), leaveOpen: false).ConfigureAwait(false);
+        return await MiniExcelDataReader.CreateAsync(stream, values.CastToDictionary(cancellationToken)).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -293,7 +294,7 @@ public partial class CsvImporter
     public async Task<MiniExcelDataReader> GetAsyncDataReader(Stream stream, bool hasHeaderRow = false,
         CsvConfiguration? configuration = null, bool leaveOpen = false, CancellationToken cancellationToken = default)
     {
-        var values = QueryAsync(stream, hasHeaderRow, configuration, cancellationToken);
+        var values = QueryAsync(stream, hasHeaderRow, configuration, leaveOpen, cancellationToken);
         return await MiniExcelDataReader.CreateAsync(stream, values.CastToDictionary(cancellationToken), leaveOpen).ConfigureAwait(false);
     }
     

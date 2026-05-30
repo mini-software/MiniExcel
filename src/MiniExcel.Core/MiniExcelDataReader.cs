@@ -39,7 +39,7 @@ public sealed class MiniExcelDataReader : IMiniExcelDataReader
         var reader = new MiniExcelDataReader(stream, values, leaveOpen);
         if (reader._source!.MoveNext())
         {
-            reader._columns = reader._source.Current!.Keys.ToList();
+            reader._columns = reader._source.Current?.Keys.ToList() ?? [];
             reader.FieldCount = reader._columns.Count;
         }
         else
@@ -63,7 +63,7 @@ public sealed class MiniExcelDataReader : IMiniExcelDataReader
         var reader = new MiniExcelDataReader(stream, values, leaveOpen);
         if (await reader._asyncSource!.MoveNextAsync().ConfigureAwait(false))
         {
-            reader._columns = reader._asyncSource.Current.Keys.ToList();
+            reader._columns = reader._asyncSource.Current?.Keys.ToList() ?? [];
             reader.FieldCount = reader._columns.Count;
         }
         else
@@ -249,6 +249,9 @@ public sealed class MiniExcelDataReader : IMiniExcelDataReader
 
     public int GetOrdinal(string name)
     {
+        if (name is null)
+            throw new ArgumentNullException(nameof(name));
+
         if (_ordinals.TryGetValue(name, out var ordinal))
             return ordinal;
 

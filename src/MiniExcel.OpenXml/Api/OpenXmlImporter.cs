@@ -307,6 +307,7 @@ public sealed partial class OpenXmlImporter
         var values = Query(stream, useHeaderRow, sheetName, startCell, configuration).Cast<IDictionary<string, object?>>();
 
         return MiniExcelDataReader.Create(stream, values);
+        return MiniExcelDataReader.Create(stream, values, leaveOpen: false);
     }
 
     /// <summary>
@@ -317,9 +318,11 @@ public sealed partial class OpenXmlImporter
     /// </exception>
     public MiniExcelDataReader GetDataReader(Stream stream, bool useHeaderRow = false,
         string? sheetName = null, string startCell = "A1", OpenXmlConfiguration? configuration = null)
+        string? sheetName = null, string startCell = "A1", OpenXmlConfiguration? configuration = null, bool leaveOpen = false)
     {
         var values = Query(stream, useHeaderRow, sheetName, startCell, configuration).Cast<IDictionary<string, object?>>();
         return MiniExcelDataReader.Create(stream, values);
+        return MiniExcelDataReader.Create(stream, values, leaveOpen);
     }
     
     /// <summary>
@@ -334,6 +337,7 @@ public sealed partial class OpenXmlImporter
         var values = QueryAsync(stream, useHeaderRow, sheetName, startCell, configuration, cancellationToken);
         
         return await MiniExcelDataReader.CreateAsync(stream, values.CastToDictionary(cancellationToken)).ConfigureAwait(false);
+        return await MiniExcelDataReader.CreateAsync(stream, values.CastToDictionary(cancellationToken), leaveOpen: false).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -346,6 +350,7 @@ public sealed partial class OpenXmlImporter
     {
         var values = QueryAsync(stream, useHeaderRow, sheetName, startCell, configuration, cancellationToken);
         return await MiniExcelDataReader.CreateAsync(stream, values.CastToDictionary(cancellationToken)).ConfigureAwait(false);
+        return await MiniExcelDataReader.CreateAsync(stream, values.CastToDictionary(cancellationToken), leaveOpen).ConfigureAwait(false);
     }
 
     #endregion

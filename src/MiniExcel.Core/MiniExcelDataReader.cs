@@ -4,8 +4,9 @@ public sealed class MiniExcelDataReader : IMiniExcelDataReader
 {
     private readonly IEnumerator<IDictionary<string, object?>>? _source;
     private readonly IAsyncEnumerator<IDictionary<string, object?>>? _asyncSource;
-    private readonly Stream _stream;
     private readonly Dictionary<string, int> _ordinals = [];
+    private readonly Stream _stream;
+    private readonly bool _leaveOpen;
 
     private bool _isEmpty;
     private List<string> _columns = [];
@@ -26,18 +27,19 @@ public sealed class MiniExcelDataReader : IMiniExcelDataReader
     public int RecordsAffected => 0;
 
     
-    private MiniExcelDataReader(Stream? stream, IEnumerable<IDictionary<string, object?>>? values)
+    private MiniExcelDataReader(Stream? stream, IEnumerable<IDictionary<string, object?>>? values, bool leaveOpen)
     {
         _stream = stream ?? throw new ArgumentNullException(nameof(stream));
         _source = values?.GetEnumerator() ?? throw new ArgumentNullException(nameof(values));
+        _leaveOpen = leaveOpen;
     }
     
-    public static MiniExcelDataReader Create(Stream? stream, IEnumerable<IDictionary<string, object?>> values)
+    public static MiniExcelDataReader Create(Stream? stream, IEnumerable<IDictionary<string, object?>> values, bool leaveOpen = false)
     {
-        var reader = new MiniExcelDataReader(stream, values);
+        var reader = new MiniExcelDataReader(stream, values, leaveOpen);
         if (reader._source!.MoveNext())
         {
-            reader._columns = reader._source.Current?.Keys.ToList() ?? [];
+            reader._columns = reader._source.Current!.Keys.ToList();
             reader.FieldCount = reader._columns.Count;
         }
         else
@@ -48,16 +50,17 @@ public sealed class MiniExcelDataReader : IMiniExcelDataReader
         return reader;
     }
 
-    private MiniExcelDataReader(Stream? stream, IAsyncEnumerable<IDictionary<string, object?>>? values)
+    private MiniExcelDataReader(Stream? stream, IAsyncEnumerable<IDictionary<string, object?>>? values, bool leaveOpen = false)
     {
         _stream = stream ?? throw new ArgumentNullException(nameof(stream));
         _asyncSource = values?.GetAsyncEnumerator() ?? throw new ArgumentNullException(nameof(values));
+        _leaveOpen = leaveOpen;
         _isAsyncSource =  true;
     }
 
-    public static async Task<MiniExcelDataReader> CreateAsync(Stream? stream, IAsyncEnumerable<IDictionary<string, object?>> values)
+    public static async Task<MiniExcelDataReader> CreateAsync(Stream? stream, IAsyncEnumerable<IDictionary<string, object?>> values, bool leaveOpen = false)
     {
-        var reader = new MiniExcelDataReader(stream, values);
+        var reader = new MiniExcelDataReader(stream, values, leaveOpen);
         if (await reader._asyncSource!.MoveNextAsync().ConfigureAwait(false))
         {
             reader._columns = reader._asyncSource.Current.Keys.ToList();
@@ -220,8 +223,8 @@ public sealed class MiniExcelDataReader : IMiniExcelDataReader
     public object GetValue(int i)
     {
         var currentRow = _isAsyncSource
-            ? _asyncSource!.Current
-            : _source!.Current!;
+            ? _asyncSource?.Current
+            : _source?.Current;
 
         return currentRow is not null
             ? currentRow[_columns[i]] ?? DBNull.Value
@@ -294,7 +297,9 @@ public sealed class MiniExcelDataReader : IMiniExcelDataReader
             _source!.Dispose();
         }
 
-        _stream.Dispose();
+        if (!_leaveOpen)
+            _stream.Dispose();
+
         IsClosed = true;
     }
 
@@ -307,7 +312,8 @@ public sealed class MiniExcelDataReader : IMiniExcelDataReader
             await _asyncSource!.DisposeAsync().ConfigureAwait(false);
 
         _source?.Dispose();
-        await _stream!.DisposeAsync().ConfigureAwait(false);
+        if (!_leaveOpen)
+            await _stream.DisposeAsync().ConfigureAwait(false);
 
         IsClosed = true;
     }

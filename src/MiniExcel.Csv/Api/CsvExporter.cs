@@ -14,8 +14,7 @@ public partial class CsvExporter
     {
         if (!File.Exists(path))
         {
-            var rowsWritten = await ExportAsync(path, value, printHeader, false, configuration, progress, cancellationToken).ConfigureAwait(false);
-            return rowsWritten.FirstOrDefault();
+            return await ExportAsync(path, value, printHeader, false, configuration, progress, cancellationToken).ConfigureAwait(false);
         }
 
         var stream = new FileStream(path, FileMode.Append, FileAccess.Write, FileShare.Read, 4096, FileOptions.SequentialScan);
@@ -36,7 +35,7 @@ public partial class CsvExporter
     }
 
     [CreateSyncVersion]
-    public async Task<int[]> ExportAsync(string path, object value, bool printHeader = true, bool overwriteFile = false,
+    public async Task<int> ExportAsync(string path, object value, bool printHeader = true, bool overwriteFile = false,
         CsvConfiguration? configuration = null, IProgress<int>? progress = null, CancellationToken cancellationToken = default)
     {
         var stream = overwriteFile ? File.Create(path) : new FileStream(path, FileMode.CreateNew);
@@ -46,12 +45,12 @@ public partial class CsvExporter
     }
 
     [CreateSyncVersion]
-    public async Task<int[]> ExportAsync(Stream stream, object value, bool printHeader = true,
+    public async Task<int> ExportAsync(Stream stream, object value, bool printHeader = true,
         CsvConfiguration? configuration = null, IProgress<int>? progress = null, CancellationToken cancellationToken = default)
     {
         using var writer = new CsvWriter(stream, value, printHeader, configuration);
-        return await writer.SaveAsAsync(progress, cancellationToken).ConfigureAwait(false);
-    }
+        var result = await writer.SaveAsAsync(progress, cancellationToken).ConfigureAwait(false);
 
-    #endregion
+        return result.FirstOrDefault();
+    }
 }

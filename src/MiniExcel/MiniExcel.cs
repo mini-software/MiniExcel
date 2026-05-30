@@ -90,7 +90,7 @@ public static partial class MiniExcel
         return type switch
         {
             ExcelType.XLSX => await ExcelExporter.ExportAsync(path, value, printHeader, sheetName, overwriteFile, configuration as NewOpenXmlConfiguration, progress, cancellationToken).ConfigureAwait(false),
-            ExcelType.CSV => await CsvExporter.ExportAsync(path, value, printHeader, overwriteFile, configuration as Csv.CsvConfiguration, progress, cancellationToken).ConfigureAwait(false),
+            ExcelType.CSV => [await CsvExporter.ExportAsync(path, value, printHeader, overwriteFile, configuration as Csv.CsvConfiguration, progress, cancellationToken).ConfigureAwait(false)],
             _ => throw new InvalidDataException($"Type {type} is not a valid Excel type")
         };
     }
@@ -104,7 +104,7 @@ public static partial class MiniExcel
         return type switch
         {
             ExcelType.XLSX => await ExcelExporter.ExportAsync(stream, value, printHeader, sheetName, configuration as NewOpenXmlConfiguration, progress, cancellationToken).ConfigureAwait(false),
-            ExcelType.CSV => await CsvExporter.ExportAsync(stream, value, printHeader, configuration as Csv.CsvConfiguration, progress, cancellationToken).ConfigureAwait(false),
+            ExcelType.CSV => [await CsvExporter.ExportAsync(stream, value, printHeader, configuration as Csv.CsvConfiguration, progress, cancellationToken).ConfigureAwait(false)],
             _ => throw new InvalidDataException($"Type {type} is not a valid Excel type")
         };
     }

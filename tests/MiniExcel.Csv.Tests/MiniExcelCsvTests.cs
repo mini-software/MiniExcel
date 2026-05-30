@@ -43,7 +43,7 @@ public class MiniExcelCsvTests
             }
         ];
         var rowsWritten = _csvExporter.Export(path, values, configuration: new CsvConfiguration { Seperator = ';' });
-        Assert.Equal(2, rowsWritten[0]);
+        Assert.Equal(2, rowsWritten);
             
         const string expected =
             """"
@@ -80,7 +80,7 @@ public class MiniExcelCsvTests
             }
         ];
         var rowsWritten = _csvExporter.Export(path, values, configuration: new CsvConfiguration { QuoteWhitespaces = false });
-        Assert.Equal(2, rowsWritten[0]);
+        Assert.Equal(2, rowsWritten);
             
         const string expected =
             """"
@@ -145,7 +145,7 @@ public class MiniExcelCsvTests
 
         ];
         var rowsWritten = _csvExporter.Export(path, values, configuration: new CsvConfiguration());
-        Assert.Equal(1, rowsWritten[0]);
+        Assert.Equal(1, rowsWritten);
             
         const string expected = "a,b,c,d\r\n\"potato,banana\",\"text\ntest\",\"text\rpotato\",\"2021-01-01 00:00:00\"\r\n";
         Assert.Equal(expected, File.ReadAllText(path));
@@ -190,7 +190,7 @@ public class MiniExcelCsvTests
             ];
             
             var rowsWritten = _csvExporter.Export(path.ToString(), values);
-            Assert.Equal(2, rowsWritten[0]);
+            Assert.Equal(2, rowsWritten);
 
             using var reader = new StreamReader(path.ToString());
             using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
@@ -277,7 +277,7 @@ public class MiniExcelCsvTests
             }
 
             var rowsWritten = _csvExporter.Export(path.ToString(), table);
-            Assert.Equal(2, rowsWritten[0]);
+            Assert.Equal(2, rowsWritten);
 
             using (var reader = new StreamReader(path.ToString()))
             using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
@@ -495,7 +495,7 @@ public class MiniExcelCsvTests
         {
             IEnumerable<object> records = [new { v1 = value, v2 = value }];
             var rowsWritten = MiniExcel.Exporters.GetCsvExporter().Export(stream, records);
-            Assert.Equal(1, rowsWritten[0]);
+            Assert.Equal(1, rowsWritten);
         }
 
         var content = File.ReadAllText(path);

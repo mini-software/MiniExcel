@@ -724,8 +724,7 @@ public class IssueTests
                 }
             ];
             var rowsWritten = _csvExporter.Export(path, values);
-            Assert.Single(rowsWritten);
-            Assert.Equal(1, rowsWritten[0]);
+            Assert.Equal(1, rowsWritten);
 
             const string expected =
                 """

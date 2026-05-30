@@ -5,7 +5,7 @@ using MiniExcelMapper = MiniExcelLib.Core.Reflection.MiniExcelMapper;
 
 namespace MiniExcelLib.Csv;
 
-internal partial class CsvReader : IMiniExcelReader
+internal sealed partial class CsvReader : IMiniExcelReader
 {
     private readonly Stream _stream;
     private readonly CsvConfiguration _config;

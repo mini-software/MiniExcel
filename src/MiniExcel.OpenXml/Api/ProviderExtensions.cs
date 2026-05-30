@@ -1,5 +1,3 @@
-
-
 // ReSharper disable once CheckNamespace
 namespace MiniExcelLib.OpenXml;
 

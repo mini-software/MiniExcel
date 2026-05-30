@@ -1,4 +1,5 @@
-namespace MiniExcelLib.OpenXml.FluentMapping.Api;
+// ReSharper disable once CheckNamespace
+namespace MiniExcelLib.OpenXml.FluentMapping;
 
 public sealed partial class MappingImporter()
 {

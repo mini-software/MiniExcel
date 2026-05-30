@@ -1,14 +1,22 @@
-
-
 // ReSharper disable once CheckNamespace
 namespace MiniExcelLib.OpenXml;
 
 public sealed partial class OpenXmlImporter
 {
     internal OpenXmlImporter() { }
-    
+
     #region Query
 
+    /// <summary>
+    /// Queries an Excel document using a strongly-typed class model.
+    /// </summary>
+    /// <typeparam name="T">The class type to map each row to. Must have a parameterless constructor.</typeparam>
+    /// <param name="path">The path to the Excel document.</param>
+    /// <param name="sheetName">The name of the worsksheet to query. If not specified, the first sheet is used.</param>
+    /// <param name="startCell">The starting cell reference (e.g., "C2"). Default is "A1".</param>
+    /// <param name="treatHeaderAsData">If true, the first row is treated as data. If false (default), the first row is used as headers.</param>
+    /// <param name="configuration">Optional configuration settings.</param>
+    /// <param name="cancellationToken">A token to cancel the asynchronous operation.</param>
     [CreateSyncVersion]
     public async IAsyncEnumerable<T> QueryAsync<T>(string path, string? sheetName = null,
         string startCell = "A1", bool treatHeaderAsData = false, OpenXmlConfiguration? configuration = null,
@@ -23,6 +31,16 @@ public sealed partial class OpenXmlImporter
             yield return item; 
     }
 
+    /// <summary>
+    /// Queries an Excel document using a strongly-typed class model.
+    /// </summary>
+    /// <typeparam name="T">The class type to map each row to. Must have a parameterless constructor.</typeparam>
+    /// <param name="stream">The stream containing the Excel file data. The stream position is not reset after reading.</param>
+    /// <param name="sheetName">The name of the worsksheet to query. If not specified, the first sheet is used.</param>
+    /// <param name="startCell">The starting cell reference (e.g., "C2"). Default is "A1".</param>
+    /// <param name="treatHeaderAsData">If true, the first row is treated as data. If false (default), the first row is used as headers.</param>
+    /// <param name="configuration">Optional configuration settings.</param>
+    /// <param name="cancellationToken">A token to cancel the asynchronous operation.</param>
     [CreateSyncVersion]
     public async IAsyncEnumerable<T> QueryAsync<T>(Stream stream, string? sheetName = null,
         string startCell = "A1", bool treatHeaderAsData = false, OpenXmlConfiguration? configuration = null,
@@ -33,6 +51,18 @@ public sealed partial class OpenXmlImporter
             yield return item;
     }
 
+    /// <summary>
+    /// Queries an Excel document and returns dynamic objects representing each row.
+    /// </summary>
+    /// <param name="path">The path to the OpenXml document.</param>
+    /// <param name="hasHeaderRow">If true, the first row is used as column headers for the dynamic object properties. Default is false.</param>
+    /// <param name="sheetName">The name of the sheet to query. If null, the first sheet is used.</param>
+    /// <param name="startCell">The starting cell reference (e.g., "C2"). Default is "A1".</param>
+    /// <param name="configuration">Optional configuration settings.</param>
+    /// <param name="cancellationToken">A token to cancel the asynchronous operation.</param>
+    /// <remarks>
+    /// When <paramref name="hasHeaderRow"/> is true, column names from the first row become dynamic property names, otherwise they will be assigned alphabetically (A, B, C, etc.).
+    /// </remarks>
     [CreateSyncVersion]
     public async IAsyncEnumerable<dynamic> QueryAsync(string path, bool hasHeaderRow = false,
         string? sheetName = null, string startCell = "A1", OpenXmlConfiguration? configuration = null,
@@ -45,6 +75,18 @@ public sealed partial class OpenXmlImporter
             yield return item;
     }
 
+    /// <summary>
+    /// Queries an Excel document and returns dynamic objects representing each row.
+    /// </summary>
+    /// <param name="stream">The stream containing the Excel file data. The stream position is not reset after reading.</param>
+    /// <param name="hasHeaderRow">If true, the first row is used as column headers for the dynamic object properties. Default is false.</param>
+    /// <param name="sheetName">The name of the sheet to query. If null, the first sheet is used.</param>
+    /// <param name="startCell">The starting cell reference (e.g., "C2"). Default is "A1".</param>
+    /// <param name="configuration">Optional configuration settings.</param>
+    /// <param name="cancellationToken">A token to cancel the asynchronous operation.</param>
+    /// <remarks>
+    /// When <paramref name="hasHeaderRow"/> is true, column names from the first row become dynamic property names, otherwise they will be assigned alphabetically (A, B, C, etc.).
+    /// </remarks>
     [CreateSyncVersion]
     public async IAsyncEnumerable<dynamic> QueryAsync(Stream stream, bool hasHeaderRow = false,
         string? sheetName = null, string startCell = "A1", OpenXmlConfiguration? configuration = null,
@@ -60,13 +102,15 @@ public sealed partial class OpenXmlImporter
     #region Query Range
 
     /// <summary>
-    /// Extract the given range。 Only uppercase letters are effective。
-    /// e.g.
-    ///     MiniExcel.QueryRange(path, startCell: "A2", endCell: "C3")
-    ///     A2 represents the second row of column A, C3 represents the third row of column C
-    ///     If you don't want to restrict rows, just don't include numbers
+    /// Queries a specific rectangular region within an worksheet using index-based coordinates.
     /// </summary>
-    /// <returns></returns>
+    /// <param name="path">The path to the Excel document.</param>
+    /// <param name="hasHeaderRow">If true, the first row within the range is used as column headers for dynamic object properties. Default is false.</param>
+    /// <param name="sheetName">The name of the sheet to query. If null, the first sheet is used.</param>
+    /// <param name="startCell">The starting cell reference. Default is "A1".</param>
+    /// <param name="endCell">The ending cell reference. If left empty, the last cell containing data will be used.</param>
+    /// <param name="configuration">Optional configuration settings.</param>
+    /// <param name="cancellationToken">A token to cancel the asynchronous operation.</param>
     [CreateSyncVersion]
     public async IAsyncEnumerable<dynamic> QueryRangeAsync(string path, bool hasHeaderRow = false,
         string? sheetName = null, string startCell = "A1", string? endCell = null, OpenXmlConfiguration? configuration = null,
@@ -79,6 +123,16 @@ public sealed partial class OpenXmlImporter
             yield return item;
     }
 
+    /// <summary>
+    /// Queries a specific rectangular region within an worksheet using index-based coordinates.
+    /// </summary>
+    /// <param name="stream">The stream containing the Excel file data. The stream position is not reset after reading.</param>
+    /// <param name="hasHeaderRow">If true, the first row within the range is used as column headers for dynamic object properties. Default is false.</param>
+    /// <param name="sheetName">The name of the sheet to query. If null, the first sheet is used.</param>
+    /// <param name="startCell">The starting cell reference. Default is "A1".</param>
+    /// <param name="endCell">The ending cell reference. If left empty, the last cell containing data will be used.</param>
+    /// <param name="configuration">Optional configuration settings.</param>
+    /// <param name="cancellationToken">A token to cancel the asynchronous operation.</param>
     [CreateSyncVersion]
     public async IAsyncEnumerable<dynamic> QueryRangeAsync(Stream stream, bool hasHeaderRow = false,
         string? sheetName = null, string startCell = "A1", string? endCell = null, OpenXmlConfiguration? configuration = null,
@@ -89,6 +143,18 @@ public sealed partial class OpenXmlImporter
             yield return item;
     }
 
+    /// <summary>
+    /// Queries a specific rectangular region within an worksheet using index-based coordinates.
+    /// </summary>
+    /// <param name="path">The path to Excel document.</param>
+    /// <param name="hasHeaderRow">If true, the first row within the range is used as column headers for dynamic object properties. Default is false.</param>
+    /// <param name="sheetName">The name of the sheet to query. If null, the first sheet is used.</param>
+    /// <param name="startRowIndex">The 1-based index of the starting row.</param>
+    /// <param name="startColumnIndex">The 1-based index of the starting column.</param>
+    /// <param name="endRowIndex">The 1-based index of the ending row (inclusive). If null, reads to the last row containing data.</param>
+    /// <param name="endColumnIndex">The 1-based index of the ending column (inclusive). If null, reads to the last column containing data.</param>
+    /// <param name="configuration">Optional configuration settings.</param>
+    /// <param name="cancellationToken">A token to cancel the asynchronous operation.</param>
     [CreateSyncVersion]
     public async IAsyncEnumerable<dynamic> QueryRangeAsync(string path, bool hasHeaderRow = false,
         string? sheetName = null, int startRowIndex = 1, int startColumnIndex = 1, int? endRowIndex = null,
@@ -102,6 +168,18 @@ public sealed partial class OpenXmlImporter
             yield return item;
     }
 
+    /// <summary>
+    /// Queries a specific rectangular region within an worksheet using index-based coordinates.
+    /// </summary>
+    /// <param name="stream">The stream containing the Excel file data. The stream position is not reset after reading.</param>
+    /// <param name="hasHeaderRow">If true, the first row within the range is used as column headers for dynamic object properties. Default is false.</param>
+    /// <param name="sheetName">The name of the sheet to query. If null, the first sheet is used.</param>
+    /// <param name="startRowIndex">The 1-based index of the starting row.</param>
+    /// <param name="startColumnIndex">The 1-based index of the starting column.</param>
+    /// <param name="endRowIndex">The 1-based index of the ending row (inclusive). If null, reads to the last row containing data.</param>
+    /// <param name="endColumnIndex">The 1-based index of the ending column (inclusive). If null, reads to the last column containing data.</param>
+    /// <param name="configuration">Optional configuration settings.</param>
+    /// <param name="cancellationToken">A token to cancel the asynchronous operation.</param>
     [CreateSyncVersion]
     public async IAsyncEnumerable<dynamic> QueryRangeAsync(Stream stream, bool hasHeaderRow = false,
         string? sheetName = null, int startRowIndex = 1, int startColumnIndex = 1, int? endRowIndex = null,
@@ -118,8 +196,18 @@ public sealed partial class OpenXmlImporter
     #region Query As DataTable
 
     /// <summary>
-    /// QueryAsDataTable is not recommended, because it'll load all data into memory.
+    /// Queries an Excel sheet and returns the results as a <see cref="DataTable"/>.
     /// </summary>
+    /// <param name="path">The path to the Excel file data.</param>
+    /// <param name="hasHeaderRow">If true, the first row is used as column headers.</param>
+    /// <param name="sheetName">The name of the sheet to query. If not specified, the first sheet is used.</param>
+    /// <param name="startCell">The starting cell reference (e.g., "C2"). Default is "A1".</param>
+    /// <param name="configuration">Optional configuration settings.</param>
+    /// <param name="cancellationToken">A token to cancel the asynchronous operation.</param>
+    /// <remarks>
+    /// Empty column names are skipped.
+    /// This method loads the entire worksheet into memory, so its usage is recommended only for datasets of moderate size.
+    /// </remarks>
     [CreateSyncVersion]
     public async Task<DataTable> QueryAsDataTableAsync(string path, bool hasHeaderRow = true,
         string? sheetName = null, string startCell = "A1", OpenXmlConfiguration? configuration = null,
@@ -132,8 +220,18 @@ public sealed partial class OpenXmlImporter
     }
 
     /// <summary>
-    /// QueryAsDataTable is not recommended, because it'll load all data into memory.
+    /// Queries an Excel sheet and returns the results as a <see cref="DataTable"/>.
     /// </summary>
+    /// <param name="stream">The stream containing the Excel file data. The stream position is not reset after reading.</param>
+    /// <param name="hasHeaderRow">If true, the first row is used as column headers.</param>
+    /// <param name="sheetName">The name of the sheet to query. If not specified, the first sheet is used.</param>
+    /// <param name="startCell">The starting cell reference (e.g., "C2"). Default is "A1".</param>
+    /// <param name="configuration">Optional configuration settings.</param>
+    /// <param name="cancellationToken">A token to cancel the asynchronous operation.</param>
+    /// <remarks>
+    /// Empty column names are skipped.
+    /// This method loads the entire worksheet into memory, so its usage is recommended only for datasets of moderate size.
+    /// </remarks>
     [CreateSyncVersion]
     public async Task<DataTable> QueryAsDataTableAsync(Stream stream, bool hasHeaderRow = true,
         string? sheetName = null, string startCell = "A1", OpenXmlConfiguration? configuration = null,
@@ -189,6 +287,15 @@ public sealed partial class OpenXmlImporter
 
     #region Sheet Info
 
+    /// <summary>
+    /// Retrieves the names of all sheets in an Excel workbook.
+    /// </summary>
+    /// <param name="path">The path to the Excel file.</param>
+    /// <param name="cancellationToken">A token to cancel the asynchronous operation.</param>
+    /// <returns>A list of sheet names in the workbook, or an empty list if no sheets are found.</returns>
+    /// <remarks>
+    /// Sheet names are returned in the order they appear in the workbook.
+    /// </remarks>
     [CreateSyncVersion]
     public async Task<List<string>> GetSheetNamesAsync(string path, CancellationToken cancellationToken = default)
     {
@@ -198,6 +305,15 @@ public sealed partial class OpenXmlImporter
         return await GetSheetNamesAsync(stream, cancellationToken).ConfigureAwait(false);
     }
 
+    /// <summary>
+    /// Retrieves the names of all sheets in an Excel workbook.
+    /// </summary>
+    /// <param name="stream">The stream containing the Excel file data. The stream position is not reset after reading.</param>
+    /// <param name="cancellationToken">A token to cancel the asynchronous operation.</param>
+    /// <returns>A list of sheet names in the workbook, or an empty list if no sheets are found.</returns>
+    /// <remarks>
+    /// Sheet names are returned in the order they appear in the workbook.
+    /// </remarks>
     [CreateSyncVersion]
     public async Task<List<string>> GetSheetNamesAsync(Stream stream, CancellationToken cancellationToken = default)
     {
@@ -209,8 +325,15 @@ public sealed partial class OpenXmlImporter
         return rels?.Select(s => s.Name).ToList() ?? [];
     }
 
+    /// <summary>
     /// Retrieves detailed information about all sheets in an Excel workbook.
     /// </summary>
+    /// <param name="path">The path to the Excel file.</param>
+    /// <param name="cancellationToken">A token to cancel the asynchronous operation.</param>
+    /// <returns>A list of <see cref="SheetInfo"/> objects containing metadata for each sheet, including name, dimensions, and sheet index.</returns>
+    /// <remarks>
+    /// Sheet information is returned in the order sheets appear in the workbook.
+    /// </remarks>
     [CreateSyncVersion]
     public async Task<List<SheetInfo>> GetSheetInformationsAsync(string path, CancellationToken cancellationToken = default)
     {
@@ -220,8 +343,15 @@ public sealed partial class OpenXmlImporter
         return await GetSheetInformationsAsync(stream, cancellationToken).ConfigureAwait(false);
     }
 
+    /// <summary>
+    /// Retrieves detailed information about all sheets in an Excel workbook.
+    /// </summary>
     /// <param name="stream">The stream containing the Excel file data. The stream position is not reset after reading.</param>
     /// <param name="cancellationToken">A token to cancel the asynchronous operation.</param>
+    /// <returns>A list of <see cref="SheetInfo"/> objects containing metadata for each sheet, including name, dimensions, and sheet index.</returns>
+    /// <remarks>
+    /// Sheet information is returned in the order sheets appear in the workbook.
+    /// </remarks>
     [CreateSyncVersion]
     public async Task<List<SheetInfo>> GetSheetInformationsAsync(Stream stream, CancellationToken cancellationToken = default)
     {
@@ -234,6 +364,18 @@ public sealed partial class OpenXmlImporter
         return rels?.Select((s, i) => s.ToSheetInfo((uint)i)).ToList() ?? [];
     }
 
+    /// <summary>
+    /// Retrieves the dimensions (used cell range) for all sheets in an Excel workbook.
+    /// </summary>
+    /// <param name="path">The path to the Excel file.</param>
+    /// <param name="cancellationToken">A token to cancel the asynchronous operation.</param>
+    /// <returns>A list of <see cref="ExcelRange"/> objects representing the used dimensions for each sheet in the workbook.</returns>
+    /// <remarks>
+    /// The dimension of a sheet represents the rectangular range of cells that contain data.
+    /// Each <see cref="ExcelRange"/> in the returned list corresponds to a sheet, in the order sheets appear in the workbook.
+    /// Empty sheets will have dimensions that reflect no used cells.
+    /// A synchronous version of this method is automatically generated via the [CreateSyncVersion] attribute.
+    /// </remarks>
     [CreateSyncVersion]
     public async Task<IList<ExcelRange>> GetSheetDimensionsAsync(string path, CancellationToken cancellationToken = default)
     {
@@ -243,6 +385,18 @@ public sealed partial class OpenXmlImporter
         return await GetSheetDimensionsAsync(stream, cancellationToken).ConfigureAwait(false);
     }
 
+    /// <summary>
+    /// Retrieves the dimensions (used cell range) for all sheets in an Excel workbook.
+    /// </summary>
+    /// <param name="stream">The stream containing the Excel file data. The stream position is not reset after reading.</param>
+    /// <param name="cancellationToken">A token to cancel the asynchronous operation.</param>
+    /// <returns>A list of <see cref="ExcelRange"/> objects representing the used dimensions for each sheet in the workbook.</returns>
+    /// <remarks>
+    /// The dimension of a sheet represents the rectangular range of cells that contain data.
+    /// Each <see cref="ExcelRange"/> in the returned list corresponds to a sheet, in the order sheets appear in the workbook.
+    /// Empty sheets will have dimensions that reflect no used cells.
+    /// A synchronous version of this method is automatically generated via the [CreateSyncVersion] attribute.
+    /// </remarks>
     [CreateSyncVersion]
     public async Task<IList<ExcelRange>> GetSheetDimensionsAsync(Stream stream, CancellationToken cancellationToken = default)
     {
@@ -250,6 +404,18 @@ public sealed partial class OpenXmlImporter
         return await reader.GetDimensionsAsync(cancellationToken).ConfigureAwait(false);
     }
 
+    /// <summary>
+    /// Retrieves the column names from the first row (header row) of an Excel sheet.
+    /// </summary>
+    /// <param name="path">The path to the Excel document.</param>
+    /// <param name="hasHeaderRow">If true, the first row values are used as column names. If false, column letters (A, B, C, etc.) are used. Default is false.</param>
+    /// <param name="sheetName">The name of the worksheet to query. If not provided, the first sheet is used.</param>
+    /// <param name="startCell">The starting cell reference (e.g., "C2"). Default is "A1".</param>
+    /// <param name="cancellationToken">A token to cancel the asynchronous operation.</param>
+    /// <returns>A collection of column names from the specified location, or an empty collection if the sheet is empty.</returns>
+    /// <remarks>
+    /// Returns an empty collection if the sheet has no rows starting from <paramref name="startCell"/>.
+    /// </remarks>
     [CreateSyncVersion]
     public async Task<ICollection<string>> GetColumnNamesAsync(string path, bool hasHeaderRow = false,
         string? sheetName = null, string startCell = "A1", CancellationToken cancellationToken = default)
@@ -260,8 +426,19 @@ public sealed partial class OpenXmlImporter
         return await GetColumnNamesAsync(stream, hasHeaderRow, sheetName, startCell, cancellationToken).ConfigureAwait(false);
     }
 
+
+    /// <summary>
+    /// Retrieves the column names from the first row (header row) of an Excel sheet.
+    /// </summary>
+    /// <param name="stream">The stream containing the Excel file data.</param>
     /// <param name="hasHeaderRow">If true, the first row values are used as column names. If false, column letters (A, B, C, etc.) are used. Default is false.</param>
     /// <param name="sheetName">The name of the worksheet to query. If not provided, the first sheet is used.</param>
+    /// <param name="startCell">The starting cell reference (e.g., "C2"). Default is "A1".</param>
+    /// <param name="cancellationToken">A token to cancel the asynchronous operation.</param>
+    /// <returns>A collection of column names from the specified location, or an empty collection if the sheet is empty.</returns>
+    /// <remarks>
+    /// Returns an empty collection if the sheet has no rows starting from <paramref name="startCell"/>.
+    /// </remarks>
     [CreateSyncVersion]
     public async Task<ICollection<string>> GetColumnNamesAsync(Stream stream, bool hasHeaderRow = false, 
         string? sheetName = null, string startCell = "A1", CancellationToken cancellationToken = default)
@@ -275,6 +452,16 @@ public sealed partial class OpenXmlImporter
         return [];
     }
 
+    /// <summary>
+    /// Retrieves all threaded comments and notes from a specific sheet in an Excel workbook.
+    /// </summary>
+    /// <param name="path">The path to the Excel document.</param>
+    /// <param name="sheetName">The name of the worksheet from which to retrieve comments. If not provided, comments from the first sheet are returned.</param>
+    /// <param name="cancellationToken">A token to cancel the asynchronous operation.</param>
+    /// <remarks>
+    /// Comments are cell-level annotations in Excel files that are stored separately from the cell data.
+    /// The returned <see cref="CommentResultSet"/> provides access to both threaded comments and legacy note comments, along with the associated metadata.
+    /// </remarks>
     [CreateSyncVersion]
     public async Task<CommentResultSet> RetrieveCommentsAsync(string path, string? sheetName, CancellationToken cancellationToken = default)
     {
@@ -284,6 +471,16 @@ public sealed partial class OpenXmlImporter
         return await RetrieveCommentsAsync(stream, sheetName, cancellationToken).ConfigureAwait(false);
     }
 
+    /// <summary>
+    /// Retrieves all threaded comments and notes from a specific sheet in an Excel workbook.
+    /// </summary>
+    /// <param name="stream">The stream containing the Excel file data. The stream position is not reset after reading.</param>
+    /// <param name="sheetName">The name of the worksheet from which to retrieve comments. If not provided, comments from the first sheet are retrieved.</param>
+    /// <param name="cancellationToken">A token to cancel the asynchronous operation.</param>
+    /// <remarks>
+    /// Comments are cell-level annotations in Excel files that are stored separately from the cell data.
+    /// The returned <see cref="CommentResultSet"/> provides access to both threaded comments and legacy note comments, along with the associated metadata.
+    /// </remarks>
     [CreateSyncVersion]
     public async Task<CommentResultSet> RetrieveCommentsAsync(Stream stream, string? sheetName, CancellationToken cancellationToken = default)
     {
@@ -296,12 +493,18 @@ public sealed partial class OpenXmlImporter
     #region DataReader
 
     /// <summary>
-    /// Gets an <see cref="IDataReader" /> for the Excel document at the specified path.
+    /// Gets an <see cref="IDataReader" /> for the Excel document provided for synchronous reading.
     /// </summary>
-    /// <exception cref="InvalidOperationException">
-    /// Asynchronous reads are not allowed when creating the data reader from this overload and will result in an exception.
-    /// </exception>
-    public MiniExcelDataReader GetDataReader(string path, bool useHeaderRow = false,
+    /// <param name="path">The path to the Excel document.</param>
+    /// <param name="hasHeaderRow">If true, the first row is used as column headers. Default is false.</param>
+    /// <param name="sheetName">The name of the worksheet to read. If not provided, the first sheet is used.</param>
+    /// <param name="startCell">The starting cell reference (e.g."C2"). Default is "A1".</param>
+    /// <param name="configuration">Optional configuration settings.</param>
+    /// <remarks>
+    /// The returned <see cref="MiniExcelDataReader"/> implements <see cref="IDataReader"/> and supports its standard reading patterns.
+    /// The data reader returned by this method is designed to perform synchronous, blocking reads, and will throw <exception cref="InvalidOperationException" /> if an asynchronous operation is called from it.
+    /// For asynchronous reading scenarios, use <see cref="GetAsyncDataReader(string, bool, string?, string, OpenXmlConfiguration?, CancellationToken)"/> instead.
+    /// </remarks>
     public MiniExcelDataReader GetDataReader(string path, bool hasHeaderRow = false,
         string? sheetName = null, string startCell = "A1", OpenXmlConfiguration? configuration = null)
     {
@@ -312,13 +515,19 @@ public sealed partial class OpenXmlImporter
     }
 
     /// <summary>
-    /// Gets an <see cref="IDataReader" /> for the Excel document from an underlying stream.
+    /// Gets an <see cref="IDataReader" /> for the Excel document from an underlying stream for synchronous reading.
     /// </summary>
-    /// <exception cref="InvalidOperationException">
-    /// Asynchronous reads are not allowed when creating the data reader from this overload and will result in an exception.
-    /// </exception>
-    public MiniExcelDataReader GetDataReader(Stream stream, bool useHeaderRow = false,
-        string? sheetName = null, string startCell = "A1", OpenXmlConfiguration? configuration = null)
+    /// <param name="stream">The stream containing the Excel file data.</param>
+    /// <param name="hasHeaderRow">If true, the first row is used as column headers. Default is false.</param>
+    /// <param name="sheetName">The name of the worksheet to read. If not provided, the first sheet is used.</param>
+    /// <param name="startCell">The starting cell reference (e.g."C2"). Default is "A1".</param>
+    /// <param name="configuration">Optional configuration settings.</param>
+    /// <param name="leaveOpen">True to leave the stream open after the data reader is disposed, otherwise false.</param>
+    /// <remarks>
+    /// The returned <see cref="MiniExcelDataReader"/> implements <see cref="IDataReader"/> and supports its standard reading patterns.
+    /// The data reader returned by this method is designed to perform synchronous, blocking reads, and will throw <exception cref="InvalidOperationException" /> if an asynchronous operation is called from it.
+    /// For asynchronous reading scenarios, use <see cref="GetAsyncDataReader(Stream, bool, string?, string, OpenXmlConfiguration?, bool, CancellationToken)"/> instead.
+    /// </remarks>
     public MiniExcelDataReader GetDataReader(Stream stream, bool hasHeaderRow = false,
         string? sheetName = null, string startCell = "A1", OpenXmlConfiguration? configuration = null, bool leaveOpen = false)
     {
@@ -327,34 +536,47 @@ public sealed partial class OpenXmlImporter
     }
 
     /// <summary>
-    /// Gets an <see cref="IDataReader" /> for the Excel document at the specific path.
-    /// When created from this overload, the resulting data reader is supposed to be advanced asynchronously.
+    /// Gets an <see cref="IDataReader" /> for the Excel document from an underlying stream for asynchronous reading.
     /// </summary>
-    public async Task<MiniExcelDataReader> GetAsyncDataReader(string path, bool useHeaderRow = false,
-        string? sheetName = null, string startCell = "A1", OpenXmlConfiguration? configuration = null, 
-        CancellationToken cancellationToken = default)
+    /// <param name="path">The path to the Excel document.</param>
+    /// <param name="hasHeaderRow">If true, the first row is used as column headers. Default is false.</param>
+    /// <param name="sheetName">The name of the worksheet to read. If null, the first sheet is used.</param>
+    /// <param name="startCell">The starting cell reference (e.g."C2"). Default is "A1".</param>
+    /// <param name="configuration">Optional configuration settings.</param>
+    /// <param name="cancellationToken">A token to cancel the asynchronous operation.</param>
+    /// <remarks>
+    /// The returned <see cref="MiniExcelDataReader"/> implements <see cref="IDataReader"/> and supports its standard reading patterns.
+    /// The data reader returned by this method is designed to supports asynchronous reads, but will not throw an exception if a synchronous operation is performed.
+    /// Still, it's advised to use <see cref="GetDataReader(Stream, bool, string?, string, OpenXmlConfiguration?, bool)"/> for synchronous reads instead.
+    /// </remarks>
     public async Task<MiniExcelDataReader> GetAsyncDataReader(string path, bool hasHeaderRow = false,
         string? sheetName = null, string startCell = "A1", OpenXmlConfiguration? configuration = null, CancellationToken cancellationToken = default)
     {
         var stream = FileHelper.OpenSharedRead(path);
-        var values = QueryAsync(stream, useHeaderRow, sheetName, startCell, configuration, cancellationToken);
         var values = QueryAsync(stream, hasHeaderRow, sheetName, startCell, configuration, cancellationToken);
         
         return await MiniExcelDataReader.CreateAsync(stream, values.CastToDictionary(cancellationToken), leaveOpen: false).ConfigureAwait(false);
     }
 
     /// <summary>
-    /// Gets an <see cref="IDataReader" /> for the Excel document from an underlying stream.
-    /// When created from this overload, the resulting data reader is supposed to be advanced asynchronously.
+    /// Gets an <see cref="IDataReader" /> for the Excel document from an underlying stream for asynchronous reading.
     /// </summary>
-    public async Task<MiniExcelDataReader> GetAsyncDataReader(Stream stream, bool useHeaderRow = false,
-        string? sheetName = null, string startCell = "A1", OpenXmlConfiguration? configuration = null,
+    /// <param name="stream">The stream containing the Excel file data.</param>
+    /// <param name="hasHeaderRow">If true, the first row is used as column headers. Default is false.</param>
+    /// <param name="sheetName">The name of the worksheet to read. If null, the first sheet is used.</param>
+    /// <param name="startCell">The starting cell reference (e.g."C2"). Default is "A1".</param>
+    /// <param name="configuration">Optional configuration settings.</param>
+    /// <param name="leaveOpen">True to leave the stream open after the data reader is disposed, otherwise false.</param>
+    /// <param name="cancellationToken">A token to cancel the asynchronous operation.</param>
+    /// <remarks>
+    /// The returned <see cref="MiniExcelDataReader"/> implements <see cref="IDataReader"/> and supports its standard reading patterns.
+    /// The data reader returned by this method is designed to supports asynchronous reads, but will not throw an exception if a synchronous operation is performed.
+    /// Still, it's advised to use <see cref="GetDataReader(Stream, bool, string?, string, OpenXmlConfiguration?, bool)"/> for synchronous reads instead.
+    /// </remarks>
     public async Task<MiniExcelDataReader> GetAsyncDataReader(Stream stream, bool hasHeaderRow = false,
         string? sheetName = null, string startCell = "A1", OpenXmlConfiguration? configuration = null, bool leaveOpen = false,
         CancellationToken cancellationToken = default)
     {
-        var values = QueryAsync(stream, useHeaderRow, sheetName, startCell, configuration, cancellationToken);
-        return await MiniExcelDataReader.CreateAsync(stream, values.CastToDictionary(cancellationToken)).ConfigureAwait(false);
         var values = QueryAsync(stream, hasHeaderRow, sheetName, startCell, configuration, cancellationToken);
         return await MiniExcelDataReader.CreateAsync(stream, values.CastToDictionary(cancellationToken), leaveOpen).ConfigureAwait(false);
     }

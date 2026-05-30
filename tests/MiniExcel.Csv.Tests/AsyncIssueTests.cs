@@ -76,8 +76,7 @@ public class AsyncIssueTests
         using var path = AutoDeletingPath.Create(ExcelType.Csv);
         var rowsWritten = await _csvExporter.ExportAsync(path.ToString(), reader);
 
-        Assert.Single(rowsWritten);
-        Assert.Equal(2, rowsWritten[0]);
+        Assert.Equal(2, rowsWritten);
 
         const string expected =
             """"
@@ -241,8 +240,7 @@ public class AsyncIssueTests
         var path = file.ToString();
         var rowsWritten = await _csvExporter.ExportAsync(path, value);
 
-        Assert.Single(rowsWritten);
-        Assert.Equal(2, rowsWritten[0]);
+        Assert.Equal(2, rowsWritten);
 
         var rows1 = await _csvImporter.QueryAsync(path, true).ToListAsync();
         Assert.Equal(rows1[0].InDate, "01 04, 2021");
@@ -268,8 +266,7 @@ public class AsyncIssueTests
         };
         
         var rowsWritten = await  _csvExporter.ExportAsync(path.ToString(), value);
-        Assert.Single(rowsWritten);
-        Assert.Equal(2, rowsWritten[0]);
+        Assert.Equal(2, rowsWritten);
 
         var rows = await _csvImporter.QueryAsync<Issue243Dto>(path.ToString()).ToListAsync();
 

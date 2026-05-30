@@ -73,7 +73,7 @@ public class MiniExcelMappingTemplateTests
         var templater = MiniExcel.Templaters.GetMappingTemplater(registry);
         await templater.FillTemplateAsync(outputPath.ToString(), templatePath.ToString(), [data]);
         
-        var rows = _importer.Query(outputPath.ToString(), useHeaderRow: false).ToList();
+        var rows = _importer.Query(outputPath.ToString(), hasHeaderRow: false).ToList();
         
         Assert.Equal(3, rows.Count);
         
@@ -133,7 +133,7 @@ public class MiniExcelMappingTemplateTests
             await templater.FillTemplateAsync(outputStream, templateStream, [data]);
         }
         
-        var rows = _importer.Query(outputPath.ToString(), useHeaderRow: false).ToList();
+        var rows = _importer.Query(outputPath.ToString(), hasHeaderRow: false).ToList();
         Assert.Equal("Jack", rows[2].A);
     }
     
@@ -174,7 +174,7 @@ public class MiniExcelMappingTemplateTests
             await templater.FillTemplateAsync(outputStream, templateBytes, [data]);
         }
         
-        var rows = _importer.Query(outputPath.ToString(), useHeaderRow: false).ToList();
+        var rows = _importer.Query(outputPath.ToString(), hasHeaderRow: false).ToList();
         Assert.Equal("Jack", rows[2].A);
     }
     
@@ -238,7 +238,7 @@ public class MiniExcelMappingTemplateTests
         var templater = MiniExcel.Templaters.GetMappingTemplater(registry);
         await templater.FillTemplateAsync(outputPath.ToString(), templatePath.ToString(), [dept]);
         
-        var rows = _importer.Query(outputPath.ToString(), useHeaderRow: false).ToList();
+        var rows = _importer.Query(outputPath.ToString(), hasHeaderRow: false).ToList();
         
         
         Assert.Equal(11, rows.Count); // We expect 11 rows total
@@ -286,7 +286,7 @@ public class MiniExcelMappingTemplateTests
         var templater = MiniExcel.Templaters.GetMappingTemplater(registry);
         await templater.FillTemplateAsync(outputPath.ToString(), templatePath.ToString(), Array.Empty<TestEntity>());
         
-        var rows = _importer.Query(outputPath.ToString(), useHeaderRow: false).ToList();
+        var rows = _importer.Query(outputPath.ToString(), hasHeaderRow: false).ToList();
         Assert.Equal(3, rows.Count); // Column headers + our headers + empty data row
         Assert.Equal("Name", rows[1].A);
         Assert.Equal("Date", rows[1].B);
@@ -331,8 +331,8 @@ public class MiniExcelMappingTemplateTests
         await templater.FillTemplateAsync(outputPath.ToString(), templatePath.ToString(), [data]);
         
         // Verify null handling
-        // Verify - use useHeaderRow=false since we want to see all rows
-        var rows = _importer.Query(outputPath.ToString(), useHeaderRow: false).ToList();
+        // Verify - use hasHeaderRow=false since we want to see all rows
+        var rows = _importer.Query(outputPath.ToString(), hasHeaderRow: false).ToList();
         Assert.True(string.IsNullOrEmpty(rows[2].A?.ToString())); // Null replaced the default
         Assert.Equal(new DateTime(2021, 01, 01), ParseDateValue(rows[2].B));
         Assert.Equal(false, rows[2].C);
@@ -376,8 +376,8 @@ public class MiniExcelMappingTemplateTests
         await templater.FillTemplateAsync(outputPath.ToString(), templatePath.ToString(), data);
         
         // Verify - should only update first item since mapping is for specific cells
-        // Verify - use useHeaderRow=false since we want to see all rows
-        var rows = _importer.Query(outputPath.ToString(), useHeaderRow: false).ToList();
+        // Verify - use hasHeaderRow=false since we want to see all rows
+        var rows = _importer.Query(outputPath.ToString(), hasHeaderRow: false).ToList();
         Assert.Equal("Jack", rows[2].A);
         Assert.Equal(123, rows[2].D);
         

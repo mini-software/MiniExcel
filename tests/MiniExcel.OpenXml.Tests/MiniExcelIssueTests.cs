@@ -137,7 +137,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         ];
         _excelExporter.Export(path.ToString(), value);
 
-        var testValue = _excelImporter.Query(path.ToString(), useHeaderRow: true).First();
+        var testValue = _excelImporter.Query(path.ToString(), hasHeaderRow: true).First();
         Assert.Equal("2021-01-31 10:03:00", testValue.Date.ToString("yyyy-MM-dd HH:mm:ss"));
     }
 
@@ -301,7 +301,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         var sheets = _excelImporter.GetSheetNames(path);
         foreach (var sheetName in sheets)
         {
-            var dt = _excelImporter.QueryAsDataTable(path, useHeaderRow: true, sheetName: sheetName, configuration: config);
+            var dt = _excelImporter.QueryAsDataTable(path, hasHeaderRow: true, sheetName: sheetName, configuration: config);
         }
     }
 
@@ -1767,7 +1767,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         {
             var path = PathHelper.GetFile("xlsx/TestIssue122.xlsx");
             {
-                var rows = _excelImporter.Query(path, useHeaderRow: true, configuration: config).ToList();
+                var rows = _excelImporter.Query(path, hasHeaderRow: true, configuration: config).ToList();
                 Assert.Equal("HR", rows[0].Department);
                 Assert.Equal("HR", rows[1].Department);
                 Assert.Equal("HR", rows[2].Department);
@@ -1780,7 +1780,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         {
             var path = PathHelper.GetFile("xlsx/TestIssue122_2.xlsx");
             {
-                var rows = _excelImporter.Query(path, useHeaderRow: true, configuration: config).ToList();
+                var rows = _excelImporter.Query(path, hasHeaderRow: true, configuration: config).ToList();
                 Assert.Equal("V1", rows[2].Test1);
                 Assert.Equal("V2", rows[5].Test2);
                 Assert.Equal("V3", rows[1].Test3);
@@ -1897,7 +1897,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     {
         {
             var path = PathHelper.GetFile("xlsx/TestIssue147.xlsx");
-            var rows = _excelImporter.Query(path, useHeaderRow: false, startCell: "C3", sheetName: "Sheet1").ToList();
+            var rows = _excelImporter.Query(path, hasHeaderRow: false, startCell: "C3", sheetName: "Sheet1").ToList();
 
             Assert.Equal(["C", "D", "E"], (rows[0] as IDictionary<string, object>)?.Keys);
             Assert.Equal(["Column1", "Column2", "Column3"], new[] { rows[0].C as string, rows[0].D as string, rows[0].E as string });
@@ -1917,7 +1917,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
 
         {
             var path = PathHelper.GetFile("xlsx/TestIssue147.xlsx");
-            var rows = _excelImporter.Query(path, useHeaderRow: true, startCell: "C3", sheetName: "Sheet1").ToList();
+            var rows = _excelImporter.Query(path, hasHeaderRow: true, startCell: "C3", sheetName: "Sheet1").ToList();
 
             Assert.Equal(["Column1", "Column2", "Column3"], (rows[0] as IDictionary<string, object>)?.Keys);
             Assert.Equal(["C4", "D4", "E4"], new[] { rows[0].Column1 as string, rows[0].Column2 as string, rows[0].Column3 as string });
@@ -1929,7 +1929,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
 
             Assert.Equal(10, rows.Count);
 
-            var columns = _excelImporter.GetColumnNames(path, useHeaderRow: true, startCell: "C3");
+            var columns = _excelImporter.GetColumnNames(path, hasHeaderRow: true, startCell: "C3");
             Assert.Equal(["Column1", "Column2", "Column3"], columns);
         }
     }
@@ -2029,7 +2029,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     public void Issue220()
     {
         var path = PathHelper.GetFile("xlsx/TestIssue220.xlsx");
-        var rows = _excelImporter.Query(path, useHeaderRow: true);
+        var rows = _excelImporter.Query(path, hasHeaderRow: true);
         var result = rows
             .GroupBy(s => s.PRT_ID)
             .Select(g => new
@@ -3190,10 +3190,10 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
     {
         var path = PathHelper.GetFile("xlsx/TestIssue686.xlsx");
         Assert.Throws<InvalidDataException>(() =>
-            _excelImporter.QueryRange(path, useHeaderRow: false, startCell: "ZZFF10", endCell: "ZZFF11").First());
+            _excelImporter.QueryRange(path, hasHeaderRow: false, startCell: "ZZFF10", endCell: "ZZFF11").First());
 
         Assert.Throws<InvalidDataException>(() =>
-            _excelImporter.QueryRange(path, useHeaderRow: false, startCell: "ZZFF@@10", endCell: "ZZFF@@11").First());
+            _excelImporter.QueryRange(path, hasHeaderRow: false, startCell: "ZZFF@@10", endCell: "ZZFF@@11").First());
     }
 
     [Fact]
@@ -3236,7 +3236,7 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         });
 
         memoryStream.Position = 0;
-        using var dataReader = _excelImporter.GetDataReader(memoryStream, useHeaderRow: false);
+        using var dataReader = _excelImporter.GetDataReader(memoryStream, hasHeaderRow: false);
 
         dataReader.Read();
         for (int i = 0; i < dataReader.FieldCount; i++)

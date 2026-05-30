@@ -5,19 +5,21 @@ using MiniExcelMapper = MiniExcelLib.Core.Reflection.MiniExcelMapper;
 
 namespace MiniExcelLib.Csv;
 
-internal partial class CsvReader : IMiniExcelReader
+internal sealed partial class CsvReader : IMiniExcelReader
 {
     private readonly Stream _stream;
+    private readonly bool _leaveOpen;
     private readonly CsvConfiguration _config;
 
-    internal CsvReader(Stream stream, IMiniExcelConfiguration? configuration)
+    internal CsvReader(Stream stream, IMiniExcelConfiguration? configuration, bool leaveOpen = false)
     {
         _stream = stream;
+        _leaveOpen = leaveOpen;
         _config = configuration as CsvConfiguration ?? CsvConfiguration.Default;
     }
 
     [CreateSyncVersion]
-    public async IAsyncEnumerable<IDictionary<string, object?>> QueryAsync(bool useHeaderRow, string? sheetName, string startCell, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    public async IAsyncEnumerable<IDictionary<string, object?>> QueryAsync(bool hasHeaderRow, string? sheetName, string startCell, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
@@ -75,7 +77,7 @@ internal partial class CsvReader : IMiniExcelReader
             }
 
             //header
-            if (useHeaderRow)
+            if (hasHeaderRow)
             {
                 if (firstRow)
                 {
@@ -127,7 +129,7 @@ internal partial class CsvReader : IMiniExcelReader
     }
 
     [CreateSyncVersion]
-    public IAsyncEnumerable<IDictionary<string, object?>> QueryRangeAsync(bool useHeaderRow, string? sheetName, string startCell, string endCell, CancellationToken cancellationToken = default)
+    public IAsyncEnumerable<IDictionary<string, object?>> QueryRangeAsync(bool hasHeaderRow, string? sheetName, string startCell, string endCell, CancellationToken cancellationToken = default)
     {
         throw new NotSupportedException("Ranged queries are not supported for csv file");
     }
@@ -140,7 +142,7 @@ internal partial class CsvReader : IMiniExcelReader
     }
 
     [CreateSyncVersion]
-    public IAsyncEnumerable<IDictionary<string, object?>> QueryRangeAsync(bool useHeaderRow, string? sheetName, int startRowIndex, int startColumnIndex, int? endRowIndex, int? endColumnIndex, CancellationToken cancellationToken = default)
+    public IAsyncEnumerable<IDictionary<string, object?>> QueryRangeAsync(bool hasHeaderRow, string? sheetName, int startRowIndex, int startColumnIndex, int? endRowIndex, int? endColumnIndex, CancellationToken cancellationToken = default)
     {
         throw new NotSupportedException("Ranged queries are not supported for csv file");
     }
@@ -163,10 +165,6 @@ internal partial class CsvReader : IMiniExcelReader
             .ToArray();
     }
 
-    public void Dispose()
-    {
-        _stream?.Dispose();
-    }
 #if NET
     [GeneratedRegex("^\"|\"$")]
     private static partial Regex DoubleQuotesRegex();
@@ -174,4 +172,10 @@ internal partial class CsvReader : IMiniExcelReader
 #else
     private static readonly Regex DoubleQuotesRegexImpl = new Regex("^\"|\"$",  RegexOptions.Compiled);
 #endif
+
+    public void Dispose()
+    {
+        if (!_leaveOpen)
+            _stream.Dispose();
+    }
 }

@@ -44,7 +44,7 @@ public class MiniExcelCsvAsyncTests
         ];
             
         var rowsWritten = await _csvExporter.ExportAsync(path, values, configuration: new CsvConfiguration { Seperator = ';' });
-        Assert.Equal(2, rowsWritten[0]);
+        Assert.Equal(2, rowsWritten);
             
         const string expected =
             """"
@@ -99,7 +99,7 @@ public class MiniExcelCsvAsyncTests
                 }
             ];
             var rowsWritten = await _csvExporter.ExportAsync(path, values);
-            Assert.Equal(2, rowsWritten[0]);
+            Assert.Equal(2, rowsWritten);
 
             using var reader = new StreamReader(path);
             using var csv = new global::CsvHelper.CsvReader(reader, CultureInfo.InvariantCulture);
@@ -140,7 +140,7 @@ public class MiniExcelCsvAsyncTests
             ];
             
             var rowsWritten = await _csvExporter.ExportAsync(path, values);
-            Assert.Equal(2, rowsWritten[0]);
+            Assert.Equal(2, rowsWritten);
 
             using var reader = new StreamReader(path);
             using var csv = new global::CsvHelper.CsvReader(reader, CultureInfo.InvariantCulture);
@@ -185,7 +185,7 @@ public class MiniExcelCsvAsyncTests
         table.Rows.Add("<test>Hello World</test>", -1234567890, false, new DateTime(2021, 1, 2));
 
         var rowsWritten = await _csvExporter.ExportAsync(path2, table);
-        Assert.Equal(2, rowsWritten[0]);
+        Assert.Equal(2, rowsWritten);
 
         using var reader = new StreamReader(path2);
         using var csv = new global::CsvHelper.CsvReader(reader, CultureInfo.InvariantCulture);
@@ -252,7 +252,7 @@ public class MiniExcelCsvAsyncTests
 
         await using (var stream = File.OpenRead(path))
         {
-            var rows = _csvImporter.QueryAsync(stream, useHeaderRow: true).ToBlockingEnumerable().ToList();
+            var rows = _csvImporter.QueryAsync(stream, hasHeaderRow: true).ToBlockingEnumerable().ToList();
             Assert.Equal("A1", rows[0].C1);
             Assert.Equal("B1", rows[0].C2);
             Assert.Equal("A2", rows[1].C1);
@@ -260,7 +260,7 @@ public class MiniExcelCsvAsyncTests
         }
 
         {
-            var rows = _csvImporter.QueryAsync(path, useHeaderRow: true).ToBlockingEnumerable().ToList();
+            var rows = _csvImporter.QueryAsync(path, hasHeaderRow: true).ToBlockingEnumerable().ToList();
             Assert.Equal("A1", rows[0].C1);
             Assert.Equal("B1", rows[0].C2);
             Assert.Equal("A2", rows[1].C1);
@@ -361,7 +361,7 @@ public class MiniExcelCsvAsyncTests
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
 
         var rowsWritten = await _csvExporter.ExportAsync(path, GetValues());
-        Assert.Equal(2, rowsWritten[0]);
+        Assert.Equal(2, rowsWritten);
     
         var results = _csvImporter.Query<Test>(path).ToList();
         Assert.Equal(2, results.Count);
@@ -388,8 +388,7 @@ public class MiniExcelCsvAsyncTests
 
         var progress = new SimpleProgress();
         var rowCounts = await _csvExporter.ExportAsync(tempFilePath, dataTable, progress: progress);
-        Assert.Single(rowCounts);
-        Assert.Equal(3, rowCounts.First());
+        Assert.Equal(3, rowCounts);
 
         //Confirm the progress report is correct
         var cellCount = dataTable.Columns.Count * dataTable.Rows.Count;

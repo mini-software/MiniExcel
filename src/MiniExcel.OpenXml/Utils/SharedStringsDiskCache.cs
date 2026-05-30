@@ -1,4 +1,6 @@
-﻿namespace MiniExcelLib.OpenXml.Utils;
+﻿using System.Buffers;
+
+namespace MiniExcelLib.OpenXml.Utils;
 
 internal sealed class SharedStringsDiskCache : IDictionary<int, string>, IDisposable
 {
@@ -53,21 +55,65 @@ internal sealed class SharedStringsDiskCache : IDictionary<int, string>, IDispos
         if (index > _maxIndex)
             throw new KeyNotFoundException();
         
-        _positionFs.Position = index * 4;
-        var bytes = new byte[4];
-        _ = _positionFs.Read(bytes, 0, 4);
-        var position = BitConverter.ToInt32(bytes, 0);
-            
-        bytes = new byte[4];
-        _lengthFs.Position = index * 4;
-        _ = _lengthFs.Read(bytes, 0, 4);
-        var length = BitConverter.ToInt32(bytes, 0);
-            
-        bytes = new byte[length];
-        _valueFs.Position = position;
-        _ = _valueFs.Read(bytes, 0, length);
+        _positionFs.Seek(index * 4, SeekOrigin.Begin);
+#if NET
+        Span<byte> bytes = stackalloc byte[4];
+        _ = _positionFs.Read(bytes);
+        var position = BitConverter.ToInt32(bytes);
 
-        return Encoding.GetString(bytes);
+        bytes.Clear();
+        _lengthFs.Seek(index * 4, SeekOrigin.Begin);
+        _ = _lengthFs.Read(bytes);
+        var length = BitConverter.ToInt32(bytes);
+
+        byte[] rented = [];
+        if (length <= 1024)
+        {
+            bytes = stackalloc byte[length];
+        }
+        else
+        {
+            rented = ArrayPool<byte>.Shared.Rent(length);
+            bytes = rented;
+        }
+
+        try
+        {
+            _valueFs.Seek(position, SeekOrigin.Begin);
+            _ = _valueFs.Read(bytes);
+
+            return Encoding.GetString(bytes[..length]);
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(rented);
+        }
+#else
+        var bytes1 = ArrayPool<byte>.Shared.Rent(4);
+        byte[] bytes2 = [];
+
+        try
+        {
+            _ = _positionFs.Read(bytes1, 0, 4);
+            var position = BitConverter.ToInt32(bytes1, 0);
+
+            Array.Clear(bytes1, 0, 4);
+            _lengthFs.Position = index * 4;
+            _ = _lengthFs.Read(bytes1, 0, 4);
+            var length = BitConverter.ToInt32(bytes1, 0);
+
+            bytes2 = ArrayPool<byte>.Shared.Rent(length);
+            _valueFs.Position = position;
+            _ = _valueFs.Read(bytes2, 0, length);
+
+            return Encoding.GetString(bytes2);
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(bytes1);
+            ArrayPool<byte>.Shared.Return(bytes2);
+        }
+#endif
     }
 
     public ICollection<int> Keys => throw new NotSupportedException();

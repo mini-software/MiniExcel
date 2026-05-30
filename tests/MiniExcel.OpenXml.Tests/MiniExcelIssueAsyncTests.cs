@@ -405,7 +405,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
         };
             
         var path1 = PathHelper.GetFile("xlsx/TestIssue122.xlsx");
-        var rows1 =  _excelImporter.QueryAsync(path1, useHeaderRow: true, configuration: config).ToBlockingEnumerable().ToList();
+        var rows1 =  _excelImporter.QueryAsync(path1, hasHeaderRow: true, configuration: config).ToBlockingEnumerable().ToList();
         
         Assert.Equal("HR", rows1[0].Department);
         Assert.Equal("HR", rows1[1].Department);
@@ -415,7 +415,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
         Assert.Equal("IT", rows1[5].Department);
 
         var path2 = PathHelper.GetFile("xlsx/TestIssue122_2.xlsx");
-        var rows2 =  _excelImporter.QueryAsync(path2, useHeaderRow: true, configuration: config).ToBlockingEnumerable().ToList();
+        var rows2 =  _excelImporter.QueryAsync(path2, hasHeaderRow: true, configuration: config).ToBlockingEnumerable().ToList();
 
         Assert.Equal("V1", rows2[2].Test1);
         Assert.Equal("V2", rows2[5].Test2);
@@ -537,7 +537,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
     {
         {
             var path = PathHelper.GetFile("xlsx/TestIssue147.xlsx");
-            var q =  _excelImporter.QueryAsync(path, useHeaderRow: false, startCell: "C3", sheetName: "Sheet1").ToBlockingEnumerable();
+            var q =  _excelImporter.QueryAsync(path, hasHeaderRow: false, startCell: "C3", sheetName: "Sheet1").ToBlockingEnumerable();
             var rows = q.ToList();
             
             Assert.Equal(["C", "D", "E"], (rows[0] as IDictionary<string, object>)?.Keys);
@@ -559,7 +559,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
 
         {
             var path = PathHelper.GetFile("xlsx/TestIssue147.xlsx");
-            var q =  _excelImporter.QueryAsync(path, useHeaderRow: true, startCell: "C3", sheetName: "Sheet1").ToBlockingEnumerable();
+            var q =  _excelImporter.QueryAsync(path, hasHeaderRow: true, startCell: "C3", sheetName: "Sheet1").ToBlockingEnumerable();
             var rows = q.ToList();
             
             Assert.Equal(["Column1", "Column2", "Column3"], (rows[0] as IDictionary<string, object>)?.Keys);
@@ -574,7 +574,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
             }
             Assert.Equal(10, rows.Count);
                 
-            var columns = await  _excelImporter.GetColumnNamesAsync(path, useHeaderRow: true, startCell: "C3");
+            var columns = await  _excelImporter.GetColumnNamesAsync(path, hasHeaderRow: true, startCell: "C3");
             Assert.Equal(["Column1", "Column2", "Column3"], columns);
         }
     }
@@ -699,7 +699,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
     public async Task Issue220()
     {
         var path = PathHelper.GetFile("xlsx/TestIssue220.xlsx");
-        var rows =  _excelImporter.QueryAsync(path, useHeaderRow: true).ToBlockingEnumerable();
+        var rows =  _excelImporter.QueryAsync(path, hasHeaderRow: true).ToBlockingEnumerable();
         var result = rows
             .GroupBy(s => s.PRT_ID)
             .Select(g => new

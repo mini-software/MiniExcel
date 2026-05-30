@@ -4,7 +4,7 @@ using IMiniExcelWriter = MiniExcelLib.Core.Abstractions.IMiniExcelWriter;
 
 namespace MiniExcelLib.Csv;
 
-internal partial class CsvWriter : IMiniExcelWriter, IDisposable
+internal sealed partial class CsvWriter : IMiniExcelWriter, IDisposable
 {
     private readonly StreamWriter _writer;
     private readonly CsvConfiguration _configuration;
@@ -207,29 +207,12 @@ internal partial class CsvWriter : IMiniExcelWriter, IDisposable
         _configuration.Seperator.ToString(),
         mappings.Select(s => CsvSanitizer.SanitizeCsvField(s?.ExcelColumnName, _configuration)));
     
-    private void Dispose(bool disposing)
+    public void Dispose()
     {
         if (!_disposed)
         {
-            if (disposing)
-            {
-                _writer.Dispose();
-            }
-
+            _writer.Dispose();
             _disposed = true;
         }
-    }
-
-    ~CsvWriter()
-    {
-        // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-        Dispose(disposing: false);
-    }
-
-    public void Dispose()
-    {
-        // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-        Dispose(disposing: true);
-        GC.SuppressFinalize(this);
     }
 }

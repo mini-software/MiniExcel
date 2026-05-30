@@ -44,7 +44,7 @@ public static partial class MiniExcelConverter
     {
         var value = MiniExcel.Importers
             .GetOpenXmlImporter()
-            .QueryAsync(xlsx, useHeaderRow: xlsxHasHeader, cancellationToken: cancellationToken)
+            .QueryAsync(xlsx, hasHeaderRow: xlsxHasHeader, cancellationToken: cancellationToken)
             .ConfigureAwait(false);
         
         await MiniExcel.Exporters

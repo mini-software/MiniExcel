@@ -225,7 +225,7 @@ public class MiniExcelOpenXmlAsyncTests
 
         await using (var stream = File.OpenRead(path))
         {
-            var rows = await _excelImporter.QueryAsync(stream, useHeaderRow: true).Cast<IDictionary<string, object>>().ToListAsync();
+            var rows = await _excelImporter.QueryAsync(stream, hasHeaderRow: true).Cast<IDictionary<string, object>>().ToListAsync();
             Assert.Equal(1d, rows[0]["a"]);
             Assert.Null(rows[0]["b"]);
             Assert.Equal(3d, rows[0]["c"]);
@@ -272,7 +272,7 @@ public class MiniExcelOpenXmlAsyncTests
         var path = PathHelper.GetFile("xlsx/TestDynamicQueryBasic.xlsx");
         await using (var stream = File.OpenRead(path))
         {
-            var rows = await _excelImporter.QueryAsync(stream, useHeaderRow: true).Cast<IDictionary<string, object>>().ToListAsync();
+            var rows = await _excelImporter.QueryAsync(stream, hasHeaderRow: true).Cast<IDictionary<string, object>>().ToListAsync();
             Assert.Equal("MiniExcel", rows[0]["Column1"]);
             Assert.Equal(1d, rows[0]["Column2"]);
             Assert.Equal("Github", rows[1]["Column1"]);
@@ -280,7 +280,7 @@ public class MiniExcelOpenXmlAsyncTests
         }
 
         {
-            var rows = await _excelImporter.QueryAsync(path, useHeaderRow: true).ToListAsync();
+            var rows = await _excelImporter.QueryAsync(path, hasHeaderRow: true).ToListAsync();
             Assert.Equal("MiniExcel", rows[0].Column1);
             Assert.Equal(1d, rows[0].Column2);
             Assert.Equal("Github", rows[1].Column1);
@@ -323,7 +323,7 @@ public class MiniExcelOpenXmlAsyncTests
         }
 
         {
-            var rows =  _excelImporter.Query(path, useHeaderRow: true).ToList();
+            var rows =  _excelImporter.Query(path, hasHeaderRow: true).ToList();
             Assert.Equal(100, rows.Count);
 
             Assert.Equal("78DE23D2-DCB6-BD3D-EC67-C112BBC322A2", rows[0].ID);
@@ -469,7 +469,7 @@ public class MiniExcelOpenXmlAsyncTests
                 await _excelExporter.ExportAsync(path, values);
                 await using (var stream = File.OpenRead(path))
                 {
-                    var rows = await _excelImporter.QueryAsync(stream, useHeaderRow: false).Cast<IDictionary<string, object>>().ToListAsync();
+                    var rows = await _excelImporter.QueryAsync(stream, hasHeaderRow: false).Cast<IDictionary<string, object>>().ToListAsync();
                     Assert.Equal(3, rows.Count);
                     Assert.Equal("A", rows[0]["A"]);
                     Assert.Equal("A", rows[1]["A"]);
@@ -478,7 +478,7 @@ public class MiniExcelOpenXmlAsyncTests
 
                 await using (var stream = File.OpenRead(path))
                 {
-                    var rows = await _excelImporter.QueryAsync(stream, useHeaderRow: true).Cast<IDictionary<string, object>>().ToListAsync();
+                    var rows = await _excelImporter.QueryAsync(stream, hasHeaderRow: true).Cast<IDictionary<string, object>>().ToListAsync();
                     Assert.Equal(2, rows.Count);
                     Assert.Equal("A", rows[0]["A"]);
                     Assert.Equal("A", rows[1]["A"]);
@@ -501,7 +501,7 @@ public class MiniExcelOpenXmlAsyncTests
                 await _excelExporter.ExportAsync(path, values, false);
                 await using (var stream = File.OpenRead(path))
                 {
-                    var rows = await _excelImporter.QueryAsync(stream, useHeaderRow: false).ToListAsync();
+                    var rows = await _excelImporter.QueryAsync(stream, hasHeaderRow: false).ToListAsync();
                     Assert.Empty(rows);
                 }
 
@@ -514,7 +514,7 @@ public class MiniExcelOpenXmlAsyncTests
                 await _excelExporter.ExportAsync(path, values);
                 {
                     await using var stream = File.OpenRead(path);
-                    var rows = await _excelImporter.QueryAsync(stream, useHeaderRow: false).ToListAsync();
+                    var rows = await _excelImporter.QueryAsync(stream, hasHeaderRow: false).ToListAsync();
                     Assert.Single(rows);
                 }
                 Assert.Equal("A1:B1", SheetHelper.GetFirstSheetDimensionRefValue(path));
@@ -536,7 +536,7 @@ public class MiniExcelOpenXmlAsyncTests
 
                 await using (var stream = File.OpenRead(path))
                 {
-                    var rows = await _excelImporter.QueryAsync(stream, useHeaderRow: false).Cast<IDictionary<string, object>>().ToListAsync();
+                    var rows = await _excelImporter.QueryAsync(stream, hasHeaderRow: false).Cast<IDictionary<string, object>>().ToListAsync();
                     Assert.Equal(3, rows.Count);
                     Assert.Equal("A", rows[0]["A"]);
                     Assert.Equal("A", rows[1]["A"]);
@@ -545,7 +545,7 @@ public class MiniExcelOpenXmlAsyncTests
 
                 await using (var stream = File.OpenRead(path))
                 {
-                    var rows = await _excelImporter.QueryAsync(stream, useHeaderRow: true).Cast<IDictionary<string, object>>().ToListAsync();
+                    var rows = await _excelImporter.QueryAsync(stream, hasHeaderRow: true).Cast<IDictionary<string, object>>().ToListAsync();
                     Assert.Equal(2, rows.Count);
                     Assert.Equal("A", rows[0]["A"]);
                     Assert.Equal("A", rows[1]["A"]);
@@ -603,7 +603,7 @@ public class MiniExcelOpenXmlAsyncTests
 
             await using (var stream = File.OpenRead(path))
             {
-                var rows = await _excelImporter.QueryAsync(stream, useHeaderRow: true)
+                var rows = await _excelImporter.QueryAsync(stream, hasHeaderRow: true)
                     .Cast<IDictionary<string, object>>()
                     .ToListAsync();
  
@@ -712,7 +712,7 @@ public class MiniExcelOpenXmlAsyncTests
 
         await using (var stream = File.OpenRead(path.ToString()))
         {
-            var row = await _excelImporter.QueryAsync(stream, useHeaderRow: true).ToListAsync();
+            var row = await _excelImporter.QueryAsync(stream, hasHeaderRow: true).ToListAsync();
             Assert.Empty(row);
         }
     }
@@ -732,7 +732,7 @@ public class MiniExcelOpenXmlAsyncTests
 
             await using (var stream = File.OpenRead(path))
             {
-                var rows = await _excelImporter.QueryAsync(stream, useHeaderRow: false).Cast<IDictionary<string, object>>().ToListAsync();
+                var rows = await _excelImporter.QueryAsync(stream, hasHeaderRow: false).Cast<IDictionary<string, object>>().ToListAsync();
                 Assert.Equal("Column1", rows[0]["A"]);
                 Assert.Equal("Column2", rows[0]["B"]);
                 Assert.Equal("MiniExcel", rows[1]["A"]);
@@ -743,7 +743,7 @@ public class MiniExcelOpenXmlAsyncTests
 
             await using (var stream = File.OpenRead(path))
             {
-                var rows = await _excelImporter.QueryAsync(stream, useHeaderRow: true).Cast<IDictionary<string, object>>().ToListAsync();
+                var rows = await _excelImporter.QueryAsync(stream, hasHeaderRow: true).Cast<IDictionary<string, object>>().ToListAsync();
                 Assert.Equal(2, rows.Count);
                 Assert.Equal("MiniExcel", rows[0]["Column1"]);
                 Assert.Equal(1d, rows[0]["Column2"]);
@@ -767,7 +767,7 @@ public class MiniExcelOpenXmlAsyncTests
 
             await using (var stream = File.OpenRead(path))
             {
-                var rows = await _excelImporter.QueryAsync(stream, useHeaderRow: false).ToListAsync();
+                var rows = await _excelImporter.QueryAsync(stream, hasHeaderRow: false).ToListAsync();
                 Assert.Equal(3, rows.Count);
             }
             Assert.Equal("A1:B3", SheetHelper.GetFirstSheetDimensionRefValue(path));
@@ -798,7 +798,7 @@ public class MiniExcelOpenXmlAsyncTests
 
         await using (var stream = File.OpenRead(path))
         {
-            var rows = await _excelImporter.QueryAsync(stream, useHeaderRow: true).Cast<IDictionary<string, object>>().ToListAsync();
+            var rows = await _excelImporter.QueryAsync(stream, hasHeaderRow: true).Cast<IDictionary<string, object>>().ToListAsync();
             Assert.Equal(2, rows.Count);
             Assert.Equal("Name Column", rows[0].Keys.ElementAt(0));
             Assert.Equal("Value Column", rows[0].Keys.ElementAt(1));
@@ -836,7 +836,7 @@ public class MiniExcelOpenXmlAsyncTests
 
         await using (var stream = File.OpenRead(path))
         {
-            var rows = await _excelImporter.QueryAsync(stream, useHeaderRow: true).ToListAsync();
+            var rows = await _excelImporter.QueryAsync(stream, hasHeaderRow: true).ToListAsync();
 
             Assert.Equal("MiniExcel", rows[0].Column1);
             Assert.Equal(1, rows[0].Column2);
@@ -881,7 +881,7 @@ public class MiniExcelOpenXmlAsyncTests
 
         await using (var stream = File.OpenRead(path))
         {
-            var rows = await _excelImporter.QueryAsync(stream, useHeaderRow: true).Cast<IDictionary<string, object>>().ToListAsync();
+            var rows = await _excelImporter.QueryAsync(stream, hasHeaderRow: true).Cast<IDictionary<string, object>>().ToListAsync();
             Assert.Equal("MiniExcel", rows[0]["Column1"]);
             Assert.Equal(1d, rows[0]["Column2"]);
             Assert.Equal("Github", rows[1]["Column1"]);
@@ -897,13 +897,13 @@ public class MiniExcelOpenXmlAsyncTests
 
         await using (var stream = File.OpenRead(path))
         {
-            var rows = await _excelImporter.QueryAsync(stream, useHeaderRow: false).ToListAsync();
+            var rows = await _excelImporter.QueryAsync(stream, hasHeaderRow: false).ToListAsync();
             Assert.Empty(rows);
         }
 
         await using (var stream = File.OpenRead(path))
         {
-            var rows = await _excelImporter.QueryAsync(stream, useHeaderRow: true).ToListAsync();
+            var rows = await _excelImporter.QueryAsync(stream, hasHeaderRow: true).ToListAsync();
             Assert.Empty(rows);
         }
         Assert.Equal("A1", SheetHelper.GetFirstSheetDimensionRefValue(path));
@@ -918,7 +918,7 @@ public class MiniExcelOpenXmlAsyncTests
 
         await using (var stream = File.OpenRead(path))
         {
-            var rows = await _excelImporter.QueryAsync(stream, useHeaderRow: false).Cast<IDictionary<string, object>>().ToListAsync();
+            var rows = await _excelImporter.QueryAsync(stream, hasHeaderRow: false).Cast<IDictionary<string, object>>().ToListAsync();
             Assert.Equal("Column1", rows[0]["A"]);
             Assert.Equal("Column2", rows[0]["B"]);
             Assert.Equal("MiniExcel", rows[1]["A"]);
@@ -929,7 +929,7 @@ public class MiniExcelOpenXmlAsyncTests
 
         await using (var stream = File.OpenRead(path))
         {
-            var rows = await _excelImporter.QueryAsync(stream, useHeaderRow: true).Cast<IDictionary<string, object>>().ToListAsync();
+            var rows = await _excelImporter.QueryAsync(stream, hasHeaderRow: true).Cast<IDictionary<string, object>>().ToListAsync();
             Assert.Equal("MiniExcel", rows[0]["Column1"]);
             Assert.Equal(1d, rows[0]["Column2"]);
             Assert.Equal("Github", rows[1]["Column1"]);
@@ -956,7 +956,7 @@ public class MiniExcelOpenXmlAsyncTests
         await _excelExporter.ExportAsync(path, values);
 
         await using var stream = File.OpenRead(path);
-        var rows = await _excelImporter.QueryAsync(stream, useHeaderRow: true).Cast<IDictionary<string, object>>().ToListAsync();
+        var rows = await _excelImporter.QueryAsync(stream, hasHeaderRow: true).Cast<IDictionary<string, object>>().ToListAsync();
 
         Assert.Equal("MiniExcel", rows[0]["Column1"]);
         Assert.Equal(1d, rows[0]["Column2"]);
@@ -977,7 +977,7 @@ public class MiniExcelOpenXmlAsyncTests
         await _excelExporter.ExportAsync(path, values);
 
         await using var stream = File.OpenRead(path);
-        var rows = await _excelImporter.QueryAsync(stream, useHeaderRow: true).Cast<IDictionary<string, object>>().ToListAsync();
+        var rows = await _excelImporter.QueryAsync(stream, hasHeaderRow: true).Cast<IDictionary<string, object>>().ToListAsync();
 
         Assert.Equal("MiniExcel", rows[0]["Column1"]);
         Assert.Equal(1d, rows[0]["Column2"]);
@@ -1037,7 +1037,7 @@ public class MiniExcelOpenXmlAsyncTests
 
         await using (var stream = File.OpenRead(path))
         {
-            var rows = await _excelImporter.QueryAsync(stream, useHeaderRow: true).Cast<IDictionary<string, object>>().ToListAsync();
+            var rows = await _excelImporter.QueryAsync(stream, hasHeaderRow: true).Cast<IDictionary<string, object>>().ToListAsync();
             Assert.Equal("MiniExcel", rows[0]["Column1"]);
             Assert.Equal(1d, rows[0]["Column2"]);
             Assert.Equal("Github", rows[1]["Column1"]);
@@ -1066,7 +1066,7 @@ public class MiniExcelOpenXmlAsyncTests
 
             await using (var stream = File.OpenRead(path))
             {
-                var rows = await _excelImporter.QueryAsync(stream, useHeaderRow: true)
+                var rows = await _excelImporter.QueryAsync(stream, hasHeaderRow: true)
                     .Cast<IDictionary<string, object>>()
                     .ToListAsync();
 
@@ -1095,7 +1095,7 @@ public class MiniExcelOpenXmlAsyncTests
 
             await using (var stream = File.OpenRead(path))
             {
-                var rows = await _excelImporter.QueryAsync(stream, useHeaderRow: true)
+                var rows = await _excelImporter.QueryAsync(stream, hasHeaderRow: true)
                     .Cast<IDictionary<string, object>>()
                     .ToListAsync();
 
@@ -1275,7 +1275,7 @@ public class MiniExcelOpenXmlAsyncTests
         await _excelExporter.ExportAsync(path.ToString(), reader, configuration: configuration);
 
         await using var stream = File.OpenRead(path.ToString());
-        var rows = await _excelImporter.QueryAsync(stream, useHeaderRow: true)
+        var rows = await _excelImporter.QueryAsync(stream, hasHeaderRow: true)
             .Cast<IDictionary<string, object>>()
             .ToListAsync();
 
@@ -1341,7 +1341,7 @@ public class MiniExcelOpenXmlAsyncTests
         await _excelExporter.ExportAsync(path.ToString(), table, configuration: configuration);
 
         await using var stream = File.OpenRead(path.ToString());
-        var rows = await _excelImporter.QueryAsync(stream, useHeaderRow: true)
+        var rows = await _excelImporter.QueryAsync(stream, hasHeaderRow: true)
             .Cast<IDictionary<string, object>>()
             .ToListAsync();
 
@@ -1525,7 +1525,7 @@ public class MiniExcelOpenXmlAsyncTests
         using var path = AutoDeletingPath.Create();
 
         await _excelExporter.ExportAsync(path.ToString(), GetValues());
-        var results = await _excelImporter.QueryAsync(path.ToString(), useHeaderRow: true).ToListAsync();
+        var results = await _excelImporter.QueryAsync(path.ToString(), hasHeaderRow: true).ToListAsync();
 
         Assert.Equal(2, results.Count);
         Assert.Equal("MiniExcel", results[0].Column1);

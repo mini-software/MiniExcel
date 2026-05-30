@@ -139,7 +139,7 @@ public sealed partial class OpenXmlImporter
         string? sheetName = null, string startCell = "A1", OpenXmlConfiguration? configuration = null,
         CancellationToken cancellationToken = default)
     {
-        sheetName ??= (await GetSheetNamesAsync(stream, configuration, cancellationToken).ConfigureAwait(false)).First();
+        sheetName ??= (await GetSheetNamesAsync(stream, cancellationToken).ConfigureAwait(false)).First();
 
         var dt = new DataTable(sheetName);
         var first = true;
@@ -190,44 +190,46 @@ public sealed partial class OpenXmlImporter
     #region Sheet Info
 
     [CreateSyncVersion]
-    public async Task<List<string>> GetSheetNamesAsync(string path, OpenXmlConfiguration? config = null, CancellationToken cancellationToken = default)
+    public async Task<List<string>> GetSheetNamesAsync(string path, CancellationToken cancellationToken = default)
     {
         var stream = FileHelper.OpenSharedRead(path);
         await using var disposableStream = stream.ConfigureAwait(false); 
 
-        return await GetSheetNamesAsync(stream, config, cancellationToken).ConfigureAwait(false);
+        return await GetSheetNamesAsync(stream, cancellationToken).ConfigureAwait(false);
     }
 
     [CreateSyncVersion]
-    public async Task<List<string>> GetSheetNamesAsync(Stream stream, OpenXmlConfiguration? config = null, CancellationToken cancellationToken = default)
+    public async Task<List<string>> GetSheetNamesAsync(Stream stream, CancellationToken cancellationToken = default)
     {
-        config ??= OpenXmlConfiguration.Default;
-
         var archive = await OpenXmlZip.CreateAsync(stream, leaveOpen: true, cancellationToken: cancellationToken).ConfigureAwait(false);
         await using var disposableArchive = archive.ConfigureAwait(false);
-        using var reader = await OpenXmlReader.CreateAsync(stream, config, cancellationToken: cancellationToken).ConfigureAwait(false);
+        using var reader = await OpenXmlReader.CreateAsync(stream, null, cancellationToken).ConfigureAwait(false);
 
         var rels = await reader.GetWorkbookRelsAsync(archive.EntryCollection, cancellationToken).ConfigureAwait(false);
         return rels?.Select(s => s.Name).ToList() ?? [];
     }
 
+    /// Retrieves detailed information about all sheets in an Excel workbook.
+    /// </summary>
     [CreateSyncVersion]
-    public async Task<List<SheetInfo>> GetSheetInformationsAsync(string path, OpenXmlConfiguration? config = null, CancellationToken cancellationToken = default)
+    public async Task<List<SheetInfo>> GetSheetInformationsAsync(string path, CancellationToken cancellationToken = default)
     {
         var stream = FileHelper.OpenSharedRead(path);
         await using var disposableStream = stream.ConfigureAwait(false); 
 
-        return await GetSheetInformationsAsync(stream, config, cancellationToken).ConfigureAwait(false);
+        return await GetSheetInformationsAsync(stream, cancellationToken).ConfigureAwait(false);
     }
 
+    /// <param name="stream">The stream containing the Excel file data. The stream position is not reset after reading.</param>
+    /// <param name="cancellationToken">A token to cancel the asynchronous operation.</param>
     [CreateSyncVersion]
-    public async Task<List<SheetInfo>> GetSheetInformationsAsync(Stream stream, OpenXmlConfiguration? config = null, CancellationToken cancellationToken = default)
+    public async Task<List<SheetInfo>> GetSheetInformationsAsync(Stream stream, CancellationToken cancellationToken = default)
     {
         config ??= OpenXmlConfiguration.Default;
 
         var archive = await OpenXmlZip.CreateAsync(stream, cancellationToken: cancellationToken).ConfigureAwait(false);
         await using var disposableArchve = archive.ConfigureAwait(false);
-        using var reader = await OpenXmlReader.CreateAsync(stream, config, cancellationToken: cancellationToken).ConfigureAwait(false);
+        using var reader = await OpenXmlReader.CreateAsync(stream, null, cancellationToken: cancellationToken).ConfigureAwait(false);
 
         var rels = await reader.GetWorkbookRelsAsync(archive.EntryCollection, cancellationToken).ConfigureAwait(false);
         return rels?.Select((s, i) => s.ToSheetInfo((uint)i)).ToList() ?? [];
@@ -260,6 +262,8 @@ public sealed partial class OpenXmlImporter
         return await GetColumnNamesAsync(stream, useHeaderRow, sheetName, startCell, configuration, cancellationToken).ConfigureAwait(false);
     }
 
+    /// <param name="hasHeaderRow">If true, the first row values are used as column names. If false, column letters (A, B, C, etc.) are used. Default is false.</param>
+    /// <param name="sheetName">The name of the worksheet to query. If not provided, the first sheet is used.</param>
     [CreateSyncVersion]
     public async Task<ICollection<string>> GetColumnNamesAsync(Stream stream, bool useHeaderRow = false,
         string? sheetName = null, string startCell = "A1", OpenXmlConfiguration? configuration = null,

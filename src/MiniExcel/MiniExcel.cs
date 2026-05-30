@@ -299,19 +299,19 @@ public static partial class MiniExcel
 
     [CreateSyncVersion]
     public static async Task<List<string>> GetSheetNamesAsync(string path, NewOpenXmlConfiguration? config = null, CancellationToken cancellationToken = default)
-        => await ExcelImporter.GetSheetNamesAsync(path, config, cancellationToken).ConfigureAwait(false);
+        => await ExcelImporter.GetSheetNamesAsync(path, cancellationToken).ConfigureAwait(false);
     
     [CreateSyncVersion]
     public static async Task<List<string>> GetSheetNamesAsync(this Stream stream, NewOpenXmlConfiguration? config = null, CancellationToken cancellationToken = default)
-        => await ExcelImporter.GetSheetNamesAsync(stream, config, cancellationToken).ConfigureAwait(false);
+        => await ExcelImporter.GetSheetNamesAsync(stream, cancellationToken).ConfigureAwait(false);
 
     [CreateSyncVersion]
     public static async Task<List<SheetInfo>> GetSheetInformationsAsync(string path, NewOpenXmlConfiguration? config = null, CancellationToken cancellationToken = default)
-        => await ExcelImporter.GetSheetInformationsAsync(path, config, cancellationToken).ConfigureAwait(false);
+        => await ExcelImporter.GetSheetInformationsAsync(path, cancellationToken).ConfigureAwait(false);
     
     [CreateSyncVersion]
     public static async Task<List<SheetInfo>> GetSheetInformationsAsync(this Stream stream, NewOpenXmlConfiguration? config = null, CancellationToken cancellationToken = default)
-        => await ExcelImporter.GetSheetInformationsAsync(stream, config, cancellationToken).ConfigureAwait(false);
+        => await ExcelImporter.GetSheetInformationsAsync(stream, cancellationToken).ConfigureAwait(false);
 
     [CreateSyncVersion]
     public static async Task<ICollection<string>> GetColumnsAsync(string path, bool useHeaderRow = false, string? sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration? configuration = null, CancellationToken cancellationToken = default)
@@ -319,7 +319,7 @@ public static partial class MiniExcel
         var type = path.GetExcelType(excelType);
         return type switch
         {
-            ExcelType.XLSX => await ExcelImporter.GetColumnNamesAsync(path, useHeaderRow, sheetName, startCell, configuration as NewOpenXmlConfiguration, cancellationToken).ConfigureAwait(false),
+            ExcelType.XLSX => await ExcelImporter.GetColumnNamesAsync(path, useHeaderRow, sheetName, startCell, cancellationToken).ConfigureAwait(false),
             ExcelType.CSV => await CsvImporter.GetColumnNamesAsync(path, useHeaderRow, configuration as Csv.CsvConfiguration, cancellationToken).ConfigureAwait(false),
             _ => throw new InvalidDataException($"Excel type {type} is not a valid Excel type")
         };
@@ -331,7 +331,7 @@ public static partial class MiniExcel
         var type = stream.GetExcelType(excelType);
         return type switch
         {
-            ExcelType.XLSX => await ExcelImporter.GetColumnNamesAsync(stream, useHeaderRow, sheetName, startCell, configuration as NewOpenXmlConfiguration, cancellationToken).ConfigureAwait(false),
+            ExcelType.XLSX => await ExcelImporter.GetColumnNamesAsync(stream, useHeaderRow, sheetName, startCell, cancellationToken).ConfigureAwait(false),
             ExcelType.CSV => await CsvImporter.GetColumnNamesAsync(stream, useHeaderRow, configuration as Csv.CsvConfiguration, cancellationToken).ConfigureAwait(false),
             _ => throw new InvalidDataException($"Excel type {type} is not a valid Excel type")
         };

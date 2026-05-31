@@ -39,11 +39,14 @@ internal partial class OpenXmlReader
         if (prependHeaders)
         {
             var headers = ExpandoHelper.CreateEmptyByIndices(endCol - 1, startCol - 1);
-            for (int i = 0; i < headers.Count; i++)
+            var columnCount = Math.Min(headers.Count, table.Columns.Length);
+
+            for (int i = 0; i < columnCount; i++)
             {
                 var index = CellReferenceConverter.GetAlphabeticalIndex(startCol + i - 1);
                 headers[index] = table.Columns[i];
             }
+
             yield return headers;
         }
         
@@ -53,9 +56,16 @@ internal partial class OpenXmlReader
             {
                 for (var i = 0; i < table.Columns.Length; i++)
                 {
-                    var index = CellReferenceConverter.GetAlphabeticalIndex(i + startCol - 1);
-                    row[table.Columns[i]] = row[index];
-                    row.Remove(index);
+                    var oldHeader = CellReferenceConverter.GetAlphabeticalIndex(i + startCol - 1);
+                    if (row.TryGetValue(oldHeader, out var cellValue))
+                    {
+                        var newHeader = table.Columns[i];
+                        row[newHeader] = cellValue;
+                        if (newHeader != oldHeader)
+                        {
+                            row.Remove(oldHeader);
+                        }
+                    }
                 }
             }
 
@@ -67,7 +77,7 @@ internal partial class OpenXmlReader
     private async IAsyncEnumerable<TableInfo> GetTableInfosAsync(string sheetName, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         var rels = await GetWorkbookRelsAsync(Archive.EntryCollection, cancellationToken).ConfigureAwait(false);
-        if (rels?.Find(x => x.Name == sheetName) is not { Path: { } path })
+        if (rels?.Find(x => x.Name.Equals(sheetName, StringComparison.OrdinalIgnoreCase)) is not { Path: { } path })
             throw new InvalidDataException($"Worksheet {sheetName} was not found.");
         
         List<string> tables = [];
@@ -100,31 +110,38 @@ internal partial class OpenXmlReader
 
         foreach (var table in tables)
         {
-            if (Archive.GetEntry($"xl/tables/{table}") is { } tableEntry)
+            if (Archive.GetEntry($"xl/tables/{table}") is not { } tableEntry)
+                continue;
+
+            var entryStream = await tableEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
+            await using var disposableEntryStream = entryStream.ConfigureAwait(false);
+            using var reader = XmlReader.Create(entryStream, XmlReaderHelper.GetXmlReaderSettings());
+
+            if (!reader.ReadToFollowing("table"))
+                continue;
+
+            if (reader.GetAttribute("name") is not { } tableName || 
+                reader.GetAttribute("ref") is not {  } @ref)
             {
-                var entryStream = await tableEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
-                await using var disposableEntryStream = entryStream.ConfigureAwait(false);
-                using var reader = XmlReader.Create(entryStream, XmlReaderHelper.GetXmlReaderSettings());
-
-                reader.ReadToFollowing("table");
-                var tableName = reader.GetAttribute("name")!;
-                var @ref = reader.GetAttribute("ref")!;
-                var headerIsHidden = reader.GetAttribute("headerRowCount") == "0";
-
-                List<string> columns = [];
-                reader.ReadToDescendant("tableColumn");
-                var colCount = 0;
-
-                do
-                {
-                    var colName = reader.GetAttribute("name") ?? $"Column{colCount}";
-                    columns.Add(colName);
-                    colCount++;
-                }
-                while (reader.ReadToNextSibling("tableColumn"));
-                
-                yield return new TableInfo(tableName, [..columns], @ref, headerIsHidden);
+                continue;
             }
+
+            var headerIsHidden = reader.GetAttribute("headerRowCount") == "0";
+            if (!reader.ReadToDescendant("tableColumn"))
+                continue;
+
+            List<string> columns = [];
+            var colCount = 0;
+
+            do
+            {
+                var colName = reader.GetAttribute("name") ?? $"Column{colCount}";
+                columns.Add(colName);
+                colCount++;
+            }
+            while (reader.ReadToNextSibling("tableColumn"));
+                
+            yield return new TableInfo(tableName, [..columns], @ref, headerIsHidden);
         }
     }
 }

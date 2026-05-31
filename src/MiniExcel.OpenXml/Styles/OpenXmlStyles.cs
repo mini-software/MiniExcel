@@ -15,17 +15,14 @@ internal partial class OpenXmlStyles
     [CreateSyncVersion]
     internal static async Task<OpenXmlStyles> CreateAsync(OpenXmlZip zip, CancellationToken cancellationToken = default)
     {
-        var openXmlStyles = new OpenXmlStyles();
-        
-        var entry = zip.GetEntry(ExcelFileNames.Styles)!;
-        var entryStream = await entry.OpenAsync(cancellationToken).ConfigureAwait(false);
+        if (zip.GetEntry(ExcelFileNames.Styles) is not { } entry)
+            throw new InvalidDataException("The OpenXml styles.xml file could not be found, the document might be malformed.");
 
+        var entryStream = await entry.OpenAsync(cancellationToken).ConfigureAwait(false);
         await using var disposableEntryStream = entryStream.ConfigureAwait(false);
         using var reader = XmlReader.Create(entryStream, XmlReaderHelper.GetXmlReaderSettings());
-
-        if (reader is null)
-            throw new InvalidDataException("The OpenXml styles could not be found, the file might be malformed.");
                 
+        var openXmlStyles = new OpenXmlStyles();
         if (!reader.IsStartElement("styleSheet", Ns) || 
             !await reader.ReadFirstContentAsync(cancellationToken).ConfigureAwait(false))
         {

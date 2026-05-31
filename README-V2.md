@@ -1764,7 +1764,10 @@ You can either keep it dynamic or map it to a strong-typed object like reqular q
 
 ```csharp
 var importer = MiniExcel.Importers.GetOpenXmlImporter();
-var rows = importer.QueryTable(stream, "Sheet1", "YourTable").ToList();
+
+var rows = importer.QueryTable(yourPath, "Sheet1", "YourTable").ToList();
+// or
+var rows = importer.QueryTable<YourTypedObject>(yourPath, "Sheet1", "YourTable").ToList();
 ```
 
 ### FAQ <a name="docs-faq" />

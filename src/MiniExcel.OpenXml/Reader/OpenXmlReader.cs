@@ -52,7 +52,7 @@ internal sealed partial class OpenXmlReader : IMiniExcelReader
             throw new InvalidDataException($"Value {startCell} is not a valid cell reference.");
         
         //Todo: Find a way if possible to remove the 'hasHeader' parameter to check whether or not to include
-        // the first row in the result set in favor of modifying the already present 'useHeaderRow' to do the same job          
+        // the first row in the result set in favor of modifying the already present 'hasHeaderRow' to do the same job          
         return MiniExcelMapper.MapQueryAsync<T>(query, rowOffset, mapHeaderAsData, _config.TrimColumnNames, _config, XmlHelper.DecodeString, cancellationToken);    
     }
 
@@ -140,7 +140,7 @@ internal sealed partial class OpenXmlReader : IMiniExcelReader
     }
 
     [CreateSyncVersion]
-    private async IAsyncEnumerable<IDictionary<string, object?>> InternalQueryRangeAsync(bool useHeaderRow, string? sheetName, int startRowIndex, int startColumnIndex, int? endRowIndex, int? endColumnIndex, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    private async IAsyncEnumerable<IDictionary<string, object?>> InternalQueryRangeAsync(bool hasHeaderRow, string? sheetName, int startRowIndex, int startColumnIndex, int? endRowIndex, int? endColumnIndex, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
@@ -222,7 +222,7 @@ internal sealed partial class OpenXmlReader : IMiniExcelReader
                         }
 
                         var query = QueryRowAsync(reader, isFirstRow, startRowIndex, nextRowIndex, rowIndex, 
-                            startColumnIndex, endColumnIndex, maxColumnIndex, withoutCr, useHeaderRow, headRows, 
+                            startColumnIndex, endColumnIndex, maxColumnIndex, withoutCr, hasHeaderRow, headRows, 
                             mergeCells, cancellationToken);
 
                         await foreach (var row in query.ConfigureAwait(false))
@@ -230,7 +230,7 @@ internal sealed partial class OpenXmlReader : IMiniExcelReader
                             if (isFirstRow)
                             {
                                 isFirstRow = false; // for startcell logic
-                                if (useHeaderRow)
+                                if (hasHeaderRow)
                                     continue;
                             }
 
@@ -274,7 +274,7 @@ internal sealed partial class OpenXmlReader : IMiniExcelReader
             {
                 for (int i = expectedRowIndex; i < rowIndex; i++)
                 {
-                    yield return GetCell(hasHeaderRow, maxColumnIndex, headRows, startColumnIndex);
+                    yield return GetHeaders(hasHeaderRow, maxColumnIndex, headRows, startColumnIndex);
                 }
             }
         }
@@ -283,11 +283,11 @@ internal sealed partial class OpenXmlReader : IMiniExcelReader
         if (!await reader.ReadFirstContentAsync(cancellationToken).ConfigureAwait(false) && !_config.IgnoreEmptyRows)
         {
             //Fill in case of self closed empty row tag eg. <row r="1"/>
-            yield return GetCell(hasHeaderRow, maxColumnIndex, headRows, startColumnIndex);
+            yield return GetHeaders(hasHeaderRow, maxColumnIndex, headRows, startColumnIndex);
             yield break;
         }
 
-        var cell = GetCell(hasHeaderRow, maxColumnIndex, headRows, startColumnIndex);
+        var cell = GetHeaders(hasHeaderRow, maxColumnIndex, headRows, startColumnIndex);
         var columnIndex = withoutCr ? -1 : 0;
         while (!reader.EOF)
         {
@@ -375,16 +375,16 @@ internal sealed partial class OpenXmlReader : IMiniExcelReader
         return sheetEntry;
     }
 
-    private static IDictionary<string, object?> GetCell(bool useHeaderRow, int maxColumnIndex, Dictionary<int, string> headRows, int startColumnIndex)
+    private static IDictionary<string, object?> GetHeaders(bool hasHeaderRow, int maxColumnIndex, Dictionary<int, string> headRows, int startColumnIndex)
     {
-        return useHeaderRow 
+        return hasHeaderRow 
             ? ExpandoHelper.CreateEmptyByHeaders(headRows) 
             : ExpandoHelper.CreateEmptyByIndices(maxColumnIndex, startColumnIndex);
     }
 
-    private static void SetCellsValueAndHeaders(object? cellValue, bool useHeaderRow, Dictionary<int, string> headRows, bool isFirstRow, IDictionary<string, object?> cell, int columnIndex)
+    private static void SetCellsValueAndHeaders(object? cellValue, bool hasHeaderRow, Dictionary<int, string> headRows, bool isFirstRow, IDictionary<string, object?> cell, int columnIndex)
     {
-        if (!useHeaderRow)
+        if (!hasHeaderRow)
         {
             //if not using First Head then using A,B,C as index
             cell[CellReferenceConverter.GetAlphabeticalIndex(columnIndex)] = cellValue;

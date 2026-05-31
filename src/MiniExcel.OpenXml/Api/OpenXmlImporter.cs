@@ -435,7 +435,6 @@ public sealed partial class OpenXmlImporter
         return await GetColumnNamesAsync(stream, hasHeaderRow, sheetName, startCell, false, cancellationToken).ConfigureAwait(false);
     }
 
-
     /// <summary>
     /// Retrieves the column names from the first row (header row) of an Excel sheet.
     /// </summary>
@@ -499,6 +498,94 @@ public sealed partial class OpenXmlImporter
         return await reader.ReadCommentsAsync(sheetName, cancellationToken).ConfigureAwait(false);
     }
 
+    /// <summary>
+    /// Queries a named table in an Excel worksheet and returns dynamic objects representing each row.
+    /// </summary>
+    /// <param name="path">The path to the Excel document.</param>
+    /// <param name="sheetName">The name of the worksheet containing the table. Default is "Sheet1".</param>
+    /// <param name="tableName">The name of the table to query. Default is "Table1".</param>
+    /// <param name="cancellationToken">A token to cancel the asynchronous operation.</param>
+    /// <remarks>
+    /// Named tables in Excel are structured data ranges with defined column headers and a unique name.
+    /// This method reads from the specified table within a stream and yields rows as dynamic objects with properties based on the table's column names.
+    /// </remarks>
+    [CreateSyncVersion]
+    public async IAsyncEnumerable<dynamic> QueryTableAsync(string path, string sheetName = "Sheet1", string tableName = "Table1", [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        var stream = FileHelper.OpenSharedRead(path);
+        await using var disposableStream = stream.ConfigureAwait(false); 
+
+        using var reader = await OpenXmlReader.CreateAsync(stream, null, false, cancellationToken).ConfigureAwait(false);
+        await foreach (var table in reader.QueryTableAsync(sheetName, tableName, false, cancellationToken).ConfigureAwait(false))
+            yield return table;
+    }
+
+    /// <summary>
+    /// Queries a named table in an Excel worksheet and returns dynamic objects representing each row.
+    /// </summary>
+    /// <param name="stream">The stream containing the Excel file data. The stream position is not reset after reading.</param>
+    /// <param name="sheetName">The name of the worksheet containing the table. Default is "Sheet1".</param>
+    /// <param name="tableName">The name of the table to query. Default is "Table1".</param>
+    /// <param name="leaveOpen">True to leave the stream open after the query is completed, otherwise false.</param>
+    /// <param name="cancellationToken">A token to cancel the asynchronous operation.</param>
+    /// <remarks>
+    /// Named tables in Excel are structured data ranges with defined column headers and a unique name.
+    /// This method reads from the specified table within a stream and yields rows as dynamic objects with properties based on the table's column names.
+    /// </remarks>
+    [CreateSyncVersion]
+    public async IAsyncEnumerable<dynamic> QueryTableAsync(Stream stream, string sheetName = "Sheet1", string tableName = "Table1", bool leaveOpen = false, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        using var reader = await OpenXmlReader.CreateAsync(stream, null, leaveOpen, cancellationToken).ConfigureAwait(false);
+        await foreach (var table in reader.QueryTableAsync(sheetName, tableName, false, cancellationToken).ConfigureAwait(false))
+            yield return table;
+    }
+    
+    /// <summary>
+    /// Queries a named table in an Excel worksheet and returns strongly-typed objects representing each row.
+    /// </summary>
+    /// <typeparam name="T">The class type to map each row to. Must have a parameterless constructor. Property names should match the table's column names.</typeparam>
+    /// <param name="path">The path to the Excel document. The stream position is not reset after reading.</param>
+    /// <param name="sheetName">The name of the worksheet containing the table. Default is "Sheet1".</param>
+    /// <param name="tableName">The name of the table to query. Default is "Table1".</param>
+    /// <param name="cancellationToken">A token to cancel the asynchronous operation.</param>
+    /// <remarks>
+    /// Named tables in Excel are structured data ranges with defined column headers and a unique name.
+    /// This method reads from the specified table within a stream and maps each row to an instance of the provided type. The mapping is based on property/field names matching column headers.
+    /// </remarks>
+    [CreateSyncVersion]
+    public async IAsyncEnumerable<T> QueryTableAsync<T>(string path, string sheetName = "Sheet1", string tableName = "Table1", [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        where T : class, new()
+    {
+        var stream = FileHelper.OpenSharedRead(path);
+        await using var disposableStream = stream.ConfigureAwait(false); 
+
+        using var reader = await OpenXmlReader.CreateAsync(stream, null, false, cancellationToken).ConfigureAwait(false);
+        await foreach (var table in reader.QueryTableAsync<T>(sheetName, tableName, cancellationToken).ConfigureAwait(false))
+            yield return table;
+    }
+
+    /// <summary>
+    /// Queries a named table in an Excel worksheet and returns strongly-typed objects representing each row.
+    /// </summary>
+    /// <typeparam name="T">The class type to map each row to. Must have a parameterless constructor. Property names should match the table's column names.</typeparam>
+    /// <param name="stream">The stream containing the Excel file data. The stream position is not reset after reading.</param>
+    /// <param name="sheetName">The name of the worksheet containing the table. Default is "Sheet1".</param>
+    /// <param name="tableName">The name of the table to query. Default is "Table1".</param>
+    /// <param name="leaveOpen">True to leave the stream open after the query is completed, otherwise false.</param>
+    /// <param name="cancellationToken">A token to cancel the asynchronous operation.</param>
+    /// <remarks>
+    /// Named tables in Excel are structured data ranges with defined column headers and a unique name.
+    /// This method reads from the specified table within a stream and maps each row to an instance of the provided type. The mapping is based on property/field names matching column headers.
+    /// </remarks>
+    [CreateSyncVersion]
+    public async IAsyncEnumerable<T> QueryTableAsync<T>(Stream stream, string sheetName = "Sheet1", string tableName = "Table1", bool leaveOpen = false, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        where T : class, new()
+    {
+        using var reader = await OpenXmlReader.CreateAsync(stream, null, leaveOpen, cancellationToken).ConfigureAwait(false);
+        await foreach (var table in reader.QueryTableAsync<T>(sheetName, tableName, cancellationToken).ConfigureAwait(false))
+            yield return table;
+    }
+    
     #endregion
 
     #region DataReader
@@ -593,9 +680,4 @@ public sealed partial class OpenXmlImporter
     }
 
     #endregion
-
-    [CreateSyncVersion]
-
-
-    [CreateSyncVersion]
 }

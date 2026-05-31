@@ -6,39 +6,65 @@ internal partial class OpenXmlReader
     internal IAsyncEnumerable<T> QueryTableAsync<T>(string sheetName, string tableName, CancellationToken cancellationToken = default)
         where T : class, new()
     {
-        var query = QueryTableAsync(sheetName, tableName, cancellationToken);
+        var query = QueryTableAsync(sheetName, tableName, true, cancellationToken);
         return MiniExcelMapper.MapQueryAsync<T>(query, 0, false, _config.TrimColumnNames, _config, XmlHelper.DecodeString, cancellationToken);    
     }
 
     [CreateSyncVersion]
-    internal async IAsyncEnumerable<IDictionary<string, object?>> QueryTableAsync(string sheetName, string tableName, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    internal async IAsyncEnumerable<IDictionary<string, object?>> QueryTableAsync(string sheetName, string tableName, bool prependHeaders, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        string? refCells = null;
+        TableInfo? table = null;
         await foreach (var item in GetTableInfosAsync(sheetName, cancellationToken).ConfigureAwait(false))
         {
             if (item.Name.Equals(tableName, StringComparison.OrdinalIgnoreCase))
             {
-                refCells = item.Ref;
+                table = item;
                 break;
             }
         }
 
-        if (refCells is null)
+        if (table is null)
             throw new InvalidDataException($"The table {tableName} was not found.");
 
-        if (refCells.Split(':') is not [var start, var end] ||
-            !CellReferenceConverter.TryParseCellReference(start, out _, out _) ||
-            !CellReferenceConverter.TryParseCellReference(end, out _, out _))
+        if (table.ReferenceCells?.Split(':') is not [var start, var end] ||
+            !CellReferenceConverter.TryParseCellReference(start, out var startCol, out var startRow) ||
+            !CellReferenceConverter.TryParseCellReference(end, out var endCol, out var endRow))
         {
             throw new InvalidDataException("A valid cell range could not be extracted from the table metadata.");
         }
 
-        await foreach (var row in QueryRangeAsync(false, sheetName, start, end, cancellationToken).ConfigureAwait(false))
+        if (!table.HiddenHeader)
+            startRow++;
+
+        if (prependHeaders)
+        {
+            var headers = ExpandoHelper.CreateEmptyByIndices(endCol - 1, startCol - 1);
+            for (int i = 0; i < headers.Count; i++)
+            {
+                var index = CellReferenceConverter.GetAlphabeticalIndex(startCol + i - 1);
+                headers[index] = table.Columns[i];
+            }
+            yield return headers;
+        }
+        
+        await foreach (var row in QueryRangeAsync(false, sheetName, startRow, startCol, endRow, endCol, cancellationToken).ConfigureAwait(false))
+        {
+            if (!prependHeaders)
+            {
+                for (var i = 0; i < table.Columns.Length; i++)
+                {
+                    var index = CellReferenceConverter.GetAlphabeticalIndex(i + startCol - 1);
+                    row[table.Columns[i]] = row[index];
+                    row.Remove(index);
+                }
+            }
+
             yield return row;
+        }
     }
-    
+
     [CreateSyncVersion]
-    private async IAsyncEnumerable<(string Name, string Ref)> GetTableInfosAsync(string sheetName, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    private async IAsyncEnumerable<TableInfo> GetTableInfosAsync(string sheetName, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         var rels = await GetWorkbookRelsAsync(Archive.EntryCollection, cancellationToken).ConfigureAwait(false);
         if (rels?.Find(x => x.Name == sheetName) is not { Path: { } path })
@@ -81,10 +107,23 @@ internal partial class OpenXmlReader
                 using var reader = XmlReader.Create(entryStream, XmlReaderHelper.GetXmlReaderSettings());
 
                 reader.ReadToFollowing("table");
-                var name = reader.GetAttribute("name")!;
+                var tableName = reader.GetAttribute("name")!;
                 var @ref = reader.GetAttribute("ref")!;
- 
-                yield return (name, @ref);
+                var headerIsHidden = reader.GetAttribute("headerRowCount") == "0";
+
+                List<string> columns = [];
+                reader.ReadToDescendant("tableColumn");
+                var colCount = 0;
+
+                do
+                {
+                    var colName = reader.GetAttribute("name") ?? $"Column{colCount}";
+                    columns.Add(colName);
+                    colCount++;
+                }
+                while (reader.ReadToNextSibling("tableColumn"));
+                
+                yield return new TableInfo(tableName, [..columns], @ref, headerIsHidden);
             }
         }
     }

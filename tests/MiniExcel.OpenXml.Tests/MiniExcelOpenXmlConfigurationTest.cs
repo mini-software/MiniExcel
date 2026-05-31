@@ -23,7 +23,7 @@ public class MiniExcelOpenXmlConfigurationTest
         await _excelExporter.ExportAsync(path, value, configuration: new OpenXmlConfiguration { EnableWriteFilePath = false }, overwriteFile: true);
         Assert.True(File.Exists(path));
 
-        var rows = await _excelImporter.QueryAsync<ImgExportTestDto>(path).CreateListAsync();
+        var rows = await _excelImporter.QueryAsync<ImgExportTestDto>(path).ToListAsync();
         Assert.True(rows.All(x => x.Img is null or []));
     }
     

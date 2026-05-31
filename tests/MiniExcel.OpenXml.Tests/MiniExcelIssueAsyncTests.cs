@@ -953,7 +953,7 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
             };
             await  _excelTemplater.FillTemplateAsync(path, templatePath, value);
 
-            foreach (var sheetName in  await _excelImporter.GetSheetNamesAsync(path))
+            foreach (var sheetName in await _excelImporter.GetSheetNamesAsync(path))
             {
                 var rows = await _excelImporter.QueryAsync(path, sheetName: sheetName).ToListAsync();
                 Assert.Equal(9, rows.Count);

@@ -1757,6 +1757,16 @@ var importer = MiniExcel.Importers.GetOpenXmlImporter();
 var dim = importer.GetSheetDimensions(path);
 ```
 
+#### 8. Retrieve Table Data
+
+It is possible to query arbitrary tables from any worksheet. 
+You can either keep it dynamic or map it to a strong-typed object like reqular queries: 
+
+```csharp
+var importer = MiniExcel.Importers.GetOpenXmlImporter();
+var rows = importer.QueryTable(stream, "Sheet1", "YourTable").ToList();
+```
+
 ### FAQ <a name="docs-faq" />
 
 #### Q: Excel header title is not equal to my DTO class property name, how do I map it?

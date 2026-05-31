@@ -3,9 +3,9 @@ using MiniExcelLib.OpenXml.Styles;
 using MiniExcelMapper = MiniExcelLib.Core.Reflection.MiniExcelMapper;
 using XmlReaderHelper = MiniExcelLib.OpenXml.Utils.XmlReaderHelper;
 
-namespace MiniExcelLib.OpenXml;
+namespace MiniExcelLib.OpenXml.Reader;
 
-internal partial class OpenXmlReader : IMiniExcelReader
+internal sealed partial class OpenXmlReader : IMiniExcelReader
 {
     private static readonly string[] Ns = [Schemas.SpreadsheetmlXmlMain, Schemas.SpreadsheetmlXmlStrictNs];
     private static readonly string[] RelationshiopNs = [Schemas.SpreadsheetmlXmlRelationships, Schemas.SpreadsheetmlXmlStrictRelationships];
@@ -47,13 +47,12 @@ internal partial class OpenXmlReader : IMiniExcelReader
     {
         sheetName ??= MiniExcelPropertyHelper.GetExcelSheetInfo(typeof(T), _config)?.ExcelSheetName;
         var query = QueryAsync(false, sheetName, startCell, cancellationToken);
+
         if (!CellReferenceConverter.TryParseCellReference(startCell, out _, out var rowOffset))
-        {
             throw new InvalidDataException($"Value {startCell} is not a valid cell reference.");
-        }
         
         //Todo: Find a way if possible to remove the 'hasHeader' parameter to check whether or not to include
-        // the first row in the result set in favor of modifying the already present 'useHeaderRow' to do the same job          
+        // the first row in the result set in favor of modifying the already present 'hasHeaderRow' to do the same job          
         return MiniExcelMapper.MapQueryAsync<T>(query, rowOffset, mapHeaderAsData, _config.TrimColumnNames, _config, XmlHelper.DecodeString, cancellationToken);    
     }
 
@@ -141,26 +140,29 @@ internal partial class OpenXmlReader : IMiniExcelReader
     }
 
     [CreateSyncVersion]
-    private async IAsyncEnumerable<IDictionary<string, object?>> InternalQueryRangeAsync(bool useHeaderRow, string? sheetName, int startRowIndex, int startColumnIndex, int? endRowIndex, int? endColumnIndex, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    private async IAsyncEnumerable<IDictionary<string, object?>> InternalQueryRangeAsync(bool hasHeaderRow, string? sheetName, int startRowIndex, int startColumnIndex, int? endRowIndex, int? endColumnIndex, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        var xmlSettings = XmlReaderHelper.GetXmlReaderSettings(
-#if SYNC_ONLY
-            false
-#else
-            true
-#endif
-        );
-
+        var xmlSettings = XmlReaderHelper.GetXmlReaderSettings();
         var sheetEntry = GetSheetEntry(sheetName);
 
         // TODO: need to optimize performance
         // Q. why need 3 times openstream merge one open read? A. no, zipstream can't use position = 0
 
-        var mergeCellsContext = new MergeCellsContext();
-        if (_config.FillMergedCells && !await TryGetMergeCellsAsync(sheetEntry, mergeCellsContext, cancellationToken).ConfigureAwait(false))
-            yield break;
+        MergeCells? mergeCells = null;
+        if (_config.FillMergedCells)
+        {
+            var mergeCellsResult = await TryGetMergeCellsAsync(sheetEntry, cancellationToken).ConfigureAwait(false);
+            if (mergeCellsResult.Success)
+            {
+                mergeCells = mergeCellsResult.MergeCells;
+            }
+            else
+            {
+                yield break;
+            }
+        }
 
         var maxRowColumnIndexResult = await TryGetMaxRowColumnIndexAsync(sheetEntry, cancellationToken).ConfigureAwait(false);
         if (!maxRowColumnIndexResult.IsSuccess)
@@ -219,15 +221,16 @@ internal partial class OpenXmlReader : IMiniExcelReader
                             break;
                         }
 
-                        await foreach (var row in QueryRowAsync(reader, isFirstRow, startRowIndex, nextRowIndex,
-                                               rowIndex, startColumnIndex, endColumnIndex, maxColumnIndex,
-                                               withoutCr, useHeaderRow, headRows, mergeCellsContext.MergeCells,
-                                               cancellationToken).ConfigureAwait(false))
+                        var query = QueryRowAsync(reader, isFirstRow, startRowIndex, nextRowIndex, rowIndex, 
+                            startColumnIndex, endColumnIndex, maxColumnIndex, withoutCr, hasHeaderRow, headRows, 
+                            mergeCells, cancellationToken);
+
+                        await foreach (var row in query.ConfigureAwait(false))
                         {
                             if (isFirstRow)
                             {
                                 isFirstRow = false; // for startcell logic
-                                if (useHeaderRow)
+                                if (hasHeaderRow)
                                     continue;
                             }
 
@@ -271,7 +274,7 @@ internal partial class OpenXmlReader : IMiniExcelReader
             {
                 for (int i = expectedRowIndex; i < rowIndex; i++)
                 {
-                    yield return GetCell(hasHeaderRow, maxColumnIndex, headRows, startColumnIndex);
+                    yield return GetHeaders(hasHeaderRow, maxColumnIndex, headRows, startColumnIndex);
                 }
             }
         }
@@ -280,11 +283,11 @@ internal partial class OpenXmlReader : IMiniExcelReader
         if (!await reader.ReadFirstContentAsync(cancellationToken).ConfigureAwait(false) && !_config.IgnoreEmptyRows)
         {
             //Fill in case of self closed empty row tag eg. <row r="1"/>
-            yield return GetCell(hasHeaderRow, maxColumnIndex, headRows, startColumnIndex);
+            yield return GetHeaders(hasHeaderRow, maxColumnIndex, headRows, startColumnIndex);
             yield break;
         }
 
-        var cell = GetCell(hasHeaderRow, maxColumnIndex, headRows, startColumnIndex);
+        var cell = GetHeaders(hasHeaderRow, maxColumnIndex, headRows, startColumnIndex);
         var columnIndex = withoutCr ? -1 : 0;
         while (!reader.EOF)
         {
@@ -320,7 +323,7 @@ internal partial class OpenXmlReader : IMiniExcelReader
                         xfIndex = styleIndex;
 
                     // only when have s attribute then load styles xml data
-                    _style ??= new OpenXmlStyles(Archive);
+                    _style ??= await OpenXmlStyles.CreateAsync(Archive, cancellationToken).ConfigureAwait(false);
                     cellValue = _style.ConvertValueByStyleFormat(xfIndex, cellValue);
                 }
 
@@ -372,16 +375,16 @@ internal partial class OpenXmlReader : IMiniExcelReader
         return sheetEntry;
     }
 
-    private static IDictionary<string, object?> GetCell(bool useHeaderRow, int maxColumnIndex, Dictionary<int, string> headRows, int startColumnIndex)
+    private static IDictionary<string, object?> GetHeaders(bool hasHeaderRow, int maxColumnIndex, Dictionary<int, string> headRows, int startColumnIndex)
     {
-        return useHeaderRow 
+        return hasHeaderRow 
             ? ExpandoHelper.CreateEmptyByHeaders(headRows) 
             : ExpandoHelper.CreateEmptyByIndices(maxColumnIndex, startColumnIndex);
     }
 
-    private static void SetCellsValueAndHeaders(object? cellValue, bool useHeaderRow, Dictionary<int, string> headRows, bool isFirstRow, IDictionary<string, object?> cell, int columnIndex)
+    private static void SetCellsValueAndHeaders(object? cellValue, bool hasHeaderRow, Dictionary<int, string> headRows, bool isFirstRow, IDictionary<string, object?> cell, int columnIndex)
     {
-        if (!useHeaderRow)
+        if (!hasHeaderRow)
         {
             //if not using First Head then using A,B,C as index
             cell[CellReferenceConverter.GetAlphabeticalIndex(columnIndex)] = cellValue;
@@ -407,10 +410,10 @@ internal partial class OpenXmlReader : IMiniExcelReader
 
         if (SharedStrings is { Count: > 0 })
             return;
-        
+
         if (Archive.GetEntry(ExcelFileNames.SharedStrings) is not { } sharedStringsEntry)
             return;
-        
+
         var stream = await sharedStringsEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
         await using var disposableStream = stream.ConfigureAwait(false);
 
@@ -441,13 +444,7 @@ internal partial class OpenXmlReader : IMiniExcelReader
     [CreateSyncVersion]
     private static async IAsyncEnumerable<SheetRecord> ReadWorkbookAsync(ReadOnlyCollection<ZipArchiveEntry> entries, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        var xmlSettings = XmlReaderHelper.GetXmlReaderSettings(
-#if SYNC_ONLY
-            false
-#else
-            true
-#endif
-        );
+        var xmlSettings = XmlReaderHelper.GetXmlReaderSettings();
 
         var entry = entries.Single(w => w.FullName == ExcelFileNames.Workbook);
         var stream = await entry.OpenAsync(cancellationToken).ConfigureAwait(false);
@@ -528,35 +525,28 @@ internal partial class OpenXmlReader : IMiniExcelReader
     }
 
     [CreateSyncVersion]
-    internal async Task<List<SheetRecord>?> GetWorkbookRelsAsync(ReadOnlyCollection<ZipArchiveEntry> entries, CancellationToken cancellationToken = default)
+    internal static async Task<List<SheetRecord>?> GetWorkbookRelsAsync(ReadOnlyCollection<ZipArchiveEntry> entries, CancellationToken cancellationToken = default)
     {
-        var xmlSettings = XmlReaderHelper.GetXmlReaderSettings(
-#if SYNC_ONLY
-            false
-#else
-            true
-#endif
-        );
-
         var sheetRecords = await ReadWorkbookAsync(entries, cancellationToken)
             .CreateListAsync(cancellationToken)
             .ConfigureAwait(false);
 
         var entry = entries.Single(w => w.FullName == ExcelFileNames.WorkbookRels);
-        
         var stream = await entry.OpenAsync(cancellationToken).ConfigureAwait(false);
         await using var disposableStream = stream.ConfigureAwait(false);
 
-        using var reader = XmlReader.Create(stream, xmlSettings);
+        var readerSettings = XmlReaderHelper.GetXmlReaderSettings();
+        using var reader = XmlReader.Create(stream, readerSettings);
         
         if (!XmlReaderHelper.IsStartElement(reader, "Relationships", Schemas.OpenXmlPackageRelationships))
             return null;
+
         if (!await reader.ReadFirstContentAsync(cancellationToken).ConfigureAwait(false))
             return null;
 
         while (!reader.EOF)
         {
-            if (XmlReaderHelper.IsStartElement(reader, "Relationship", Schemas.OpenXmlPackageRelationships))
+            if (reader.IsStartElement("Relationship", Schemas.OpenXmlPackageRelationships))
             {
                 var rid = reader.GetAttribute("Id");
                 foreach (var sheet in sheetRecords.Where(sh => sh.Rid == rid))
@@ -720,14 +710,7 @@ internal partial class OpenXmlReader : IMiniExcelReader
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        var xmlSettings = XmlReaderHelper.GetXmlReaderSettings(
-#if SYNC_ONLY
-            false
-#else
-            true
-#endif
-        );
-
+        var xmlSettings = XmlReaderHelper.GetXmlReaderSettings();
         var ranges = new List<ExcelRange>();
 
         var sheets = Archive.EntryCollection.Where(e =>
@@ -877,13 +860,7 @@ internal partial class OpenXmlReader : IMiniExcelReader
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        var xmlSettings = XmlReaderHelper.GetXmlReaderSettings(
-#if SYNC_ONLY
-            false
-#else
-            true
-#endif
-        );
+        var xmlSettings = XmlReaderHelper.GetXmlReaderSettings();
 
         bool withoutCr = false;
         int maxRowIndex = -1;
@@ -997,380 +974,14 @@ internal partial class OpenXmlReader : IMiniExcelReader
         return new GetMaxRowColumnIndexResult(true, withoutCr, maxRowIndex, maxColumnIndex);
     }
 
-    internal class MergeCellsContext
-    {
-        public MergeCells? MergeCells { get; set; }
-    }
-    
-    
-    [CreateSyncVersion]
-    internal static async Task<bool> TryGetMergeCellsAsync(ZipArchiveEntry sheetEntry, MergeCellsContext mergeCellsContext, CancellationToken cancellationToken = default)
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-
-        var xmlSettings = XmlReaderHelper.GetXmlReaderSettings(
-#if SYNC_ONLY
-            false
-#else
-            true
-#endif
-        );
-        var mergeCells = new MergeCells();
-
-        var sheetStream = await sheetEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
-        await  using var disposableSheetStream = sheetStream.ConfigureAwait(false);
-
-        using var reader = XmlReader.Create(sheetStream, xmlSettings);
-        
-        if (!reader.IsStartElement("worksheet", Ns))
-            return false;
-        
-        while (await reader.ReadAsync().ConfigureAwait(false))
-        {
-            if (!reader.IsStartElement("mergeCells", Ns))
-                continue;
-
-            if (!await reader.ReadFirstContentAsync(cancellationToken).ConfigureAwait(false))
-                return false;
-
-            while (!reader.EOF)
-            {
-                if (reader.IsStartElement("mergeCell", Ns))
-                {
-                    var refAttr = reader.GetAttribute("ref");
-                    var refs = refAttr.Split(':');
-                    if (refs.Length == 1)
-                        continue;
-
-                    CellReferenceConverter.TryParseCellReference(refs[0], out var x1, out var y1);
-                    CellReferenceConverter.TryParseCellReference(refs[1], out var x2, out var y2);
-
-                    mergeCells.MergesValues.Add(refs[0], null);
-
-                    // foreach range
-                    var isFirst = true;
-                    for (int x = x1; x <= x2; x++)
-                    {
-                        for (int y = y1; y <= y2; y++)
-                        {
-                            if (!isFirst)
-                                mergeCells.MergesMap.Add(CellReferenceConverter.GetCellFromCoordinates(x, y), refs[0]);
-                            isFirst = false;
-                        }
-                    }
-
-                    await reader.SkipContentAsync(cancellationToken).ConfigureAwait(false);
-                }
-                else if (!await reader.SkipContentAsync(cancellationToken).ConfigureAwait(false))
-                {
-                    break;
-                }
-            }
-        }
-
-        mergeCellsContext.MergeCells = mergeCells;
-        return true;
-    }
-
-    [CreateSyncVersion]
-    internal async Task<CommentResultSet> ReadCommentsAsync(string? sheetName, CancellationToken cancellationToken = default)
-    {
-        if (string.IsNullOrEmpty(sheetName))
-            throw new ArgumentException("sheetName cannot be null or empty", nameof(sheetName));
-
-        XNamespace nsRel = Schemas.OpenXmlPackageRelationships;
-        XNamespace ns18Tc = Schemas.SpreadsheetmlXmlX18Tc;
-        XNamespace nsMain = Schemas.SpreadsheetmlXmlMain;
-        XNamespace ns14R = Schemas.SpreadsheetmlXmlX14R;
-        
-        SetWorkbookRels(Archive.EntryCollection);
-        var sheetRecord = _sheetRecords?.SingleOrDefault(s => s.Name.Equals(sheetName, StringComparison.CurrentCultureIgnoreCase));
-        if (sheetRecord?.Path?.Split('/')[^1] is not { } sheetFile)
-            throw new InvalidDataException($"There is no sheet named {sheetName}");
-        
-        List<Author> people = [];
-        if (Archive.GetEntry(ExcelFileNames.Person) is { } persons)
-        {
-            var personStream = await persons.OpenAsync(cancellationToken).ConfigureAwait(false);
-            await using var disposablePersonStream = personStream.ConfigureAwait(false);  
-            
-            var personDoc = await XDocument.LoadAsync(personStream, LoadOptions.None, cancellationToken).ConfigureAwait(false);
-            var personElements = personDoc.Root?.Elements(ns18Tc + "person");
-            people = personElements
-                ?.Select(p => new Author
-                {
-                    Id = Guid.Parse(p.Attribute("id")!.Value),
-                    DisplayName = p.Attribute("displayName")?.Value is { } name and not "" ? name : "???",
-                    ProviderId = p.Attribute("providerId")?.Value,
-                })
-                .ToList() ?? [];
-        }
-
-        if (Archive.GetEntry($"xl/worksheets/_rels/{sheetFile}.rels") is not { } rel)
-            return new CommentResultSet(sheetName, [], []);
-
-        var stream = await rel.OpenAsync(cancellationToken).ConfigureAwait(false);
-        await using var disposableStream = stream.ConfigureAwait(false);  
-
-        var relDoc = await XDocument.LoadAsync(stream, LoadOptions.None, cancellationToken).ConfigureAwait(false);
-
-        var threadedCommentRels = relDoc.Root?.Elements(nsRel + "Relationship");
-        var threadedCommentsElement = threadedCommentRels?.FirstOrDefault(x => x.Attribute("Type")?.Value == Schemas.SpreadsheetmlXmlThreadedCommentRelationship);
-        var threadedCommentsTarget = threadedCommentsElement?.Attribute("Target");
-        var threadedCommentsPath = threadedCommentsTarget?.Value.TrimStart('.', '/');
-
-        var noteRels = relDoc.Root?.Elements(nsRel + "Relationship");
-        var notesElement = noteRels?.FirstOrDefault(x => x.Attribute("Type")?.Value == Schemas.SpreadsheetmlXmlCommentsRelationship);
-        var notesTarget = notesElement?.Attribute("Target");
-        var notesPath = notesTarget?.Value.TrimStart('.', '/');
-
-        List<ThreadedComment> commentThreads = [];
-        List<NoteComment> notes = [];
-        HashSet<string?> refCells = [];
-        if (Archive.GetEntry($"xl/{threadedCommentsPath}") is { } threadEntry)
-        {
-            var threadEntryStream = await threadEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
-            await using var disposableThreadEntryStream = threadEntryStream.ConfigureAwait(false);
-
-            var doc = await XDocument.LoadAsync(threadEntryStream, LoadOptions.None, cancellationToken).ConfigureAwait(false);
-
-            var commentThreadElements = doc.Root?.Elements(ns18Tc + "threadedComment");
-            commentThreads = commentThreadElements
-                ?.Where(tc => tc.Attribute("parentId") is null)
-                .Select(tc => new ThreadedComment
-                {
-                    Id = Guid.Parse(tc.Attribute("id")!.Value.Trim('{', '}')),
-                    Author = people.FirstOrDefault(p => p.Id == (Guid.TryParse(tc.Attribute("personId")?.Value, out var person) ? person : Guid.Empty)),
-                    CreatedAt = DateTime.Parse(tc.Attribute("dT")!.Value, CultureInfo.InvariantCulture),
-                    ReferenceCell = tc.Attribute("ref")?.Value!,
-                    Text = tc.Value,
-                    Resolved = tc.Attribute("done")?.Value is not (null or "0")
-                })
-                .ToList() ?? [];
-
-            var replyElements = doc.Root?.Elements(ns18Tc + "threadedComment");
-            var replies = replyElements
-                ?.Where(tc => tc.Attribute("parentId") is not null)
-                .Select(tc => new ThreadedCommentReply
-                {
-                    Id = Guid.Parse(tc.Attribute("id")!.Value.Trim('{', '}')),
-                    ParentId = Guid.Parse(tc.Attribute("parentId")!.Value),
-                    Author = people.FirstOrDefault(p => p.Id == Guid.Parse(tc.Attribute("personId")!.Value)),
-                    CreatedAt = DateTime.Parse(tc.Attribute("dT")!.Value, CultureInfo.InvariantCulture),
-                    Text = tc.Value
-                })
-                .ToLookup(x => x.ParentId);
-
-            if (replies is not null)
-            {
-                foreach (var thread in commentThreads)
-                {
-                    thread.ThreadedComments = replies[thread.Id].ToList();
-                }
-            }
-
-            refCells = [..commentThreads.Select(x => x.ReferenceCell)];
-        }
-
-        if (Archive.GetEntry($"xl/{notesPath}") is { } noteEntry)
-        {
-            var noteEntryStream = await noteEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
-            await using var disposableNoteEntryStream = noteEntryStream.ConfigureAwait(false);
-
-            var doc = await XDocument.LoadAsync(noteEntryStream, LoadOptions.None, cancellationToken).ConfigureAwait(false);
-
-            var authorElements = doc.Root?.Element(nsMain + "authors")?.Elements(nsMain + "author");
-            var authors = authorElements?.Select(a => a.Value).ToArray();
-
-            var commentElements = doc.Root
-                ?.Element(nsMain + "commentList")
-                ?.Elements(nsMain + "comment");
-
-            notes = commentElements
-                ?.Where(c => !refCells.Contains(c.Attribute("ref")?.Value))
-                .Select(c => new NoteComment
-                {
-                    Id = Guid.TryParse(c.Attribute(ns14R + "uid")?.Value.Trim('{', '}'), out var noteId) ? noteId : Guid.Empty,
-                    Author = int.TryParse(c.Attribute("authorId")?.Value, out var authorId) ? authors?.ElementAtOrDefault(authorId) : "",
-                    ReferenceCell =  c.Attribute("ref")?.Value,
-                    Text = string.Join("", GetTextFromComment(c))
-                })
-                .ToList() ?? [];
-        }
-
-        return new CommentResultSet(sheetName, commentThreads, notes);
-
-        IEnumerable<string?> GetTextFromComment(XElement? comment)
-        {
-            return comment?.Element(nsMain + "text") is { } textElement
-                ? textElement.Descendants(nsMain + "t").Select(t => t.Value)
-                : [];
-        }
-    }
-
-    /// <summary>
-    /// Direct mapped query that bypasses dictionary creation for better performance
-    /// </summary>
-    [CreateSyncVersion]
-    internal async IAsyncEnumerable<MappedRow> QueryMappedAsync(
-        string? sheetName,
-        [EnumeratorCancellation] CancellationToken cancellationToken = default)
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-        
-        var sheetEntry = GetSheetEntry(sheetName);
-        var withoutCr = false;
-        
-        var mergeCellsContext = new MergeCellsContext();
-        if (_config.FillMergedCells)
-        {
-            await TryGetMergeCellsAsync(sheetEntry, mergeCellsContext, cancellationToken).ConfigureAwait(false);
-        }
-        var mergeCells = _config.FillMergedCells ? mergeCellsContext.MergeCells : null;
-        
-        // Direct XML reading without dictionary creation
-        var xmlSettings = new XmlReaderSettings
-        {
-            CheckCharacters = false,
-            IgnoreWhitespace = true,
-            IgnoreComments = true,
-            XmlResolver = null,
-            Async = true
-        };
-
-        var sheetStream = await sheetEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
-        await using var disposableSheetStream = sheetStream.ConfigureAwait(false);
-
-        using var reader = XmlReader.Create(sheetStream, xmlSettings);
-        
-        if (!reader.IsStartElement("worksheet", Ns))
-            yield break;
-
-        if (!await reader.ReadFirstContentAsync(cancellationToken).ConfigureAwait(false))
-            yield break;
-
-        while (!reader.EOF)
-        {
-            if (reader.IsStartElement("sheetData", Ns))
-            {
-                if (!await reader.ReadFirstContentAsync(cancellationToken).ConfigureAwait(false))
-                    continue;
-
-                int rowIndex = -1;
-                while (!reader.EOF)
-                {
-                    if (reader.IsStartElement("row", Ns))
-                    {
-                        if (int.TryParse(reader.GetAttribute("r"), out int arValue))
-                            rowIndex = arValue - 1; // The row attribute is 1-based
-                        else
-                            rowIndex++;
-
-                        // Read row directly into mapped structure
-                        await foreach (var mappedRow in ReadMappedRowAsync(reader, rowIndex, withoutCr, mergeCells, cancellationToken).ConfigureAwait(false))
-                        {
-                            yield return mappedRow;
-                        }
-                    }
-                    else if (!await reader.SkipContentAsync(cancellationToken).ConfigureAwait(false))
-                    {
-                        break;
-                    }
-                }
-            }
-            else if (!await reader.SkipContentAsync(cancellationToken).ConfigureAwait(false))
-            {
-                break;
-            }
-        }
-    }
-    
-    [CreateSyncVersion]
-    private async IAsyncEnumerable<MappedRow> ReadMappedRowAsync(
-        XmlReader reader,
-        int rowIndex,
-        bool withoutCr,
-        MergeCells? mergeCells,
-        [EnumeratorCancellation] CancellationToken cancellationToken = default)
-    {
-        if (!await reader.ReadFirstContentAsync(cancellationToken).ConfigureAwait(false))
-        {
-            // Empty row
-            yield return new MappedRow(rowIndex);
-            yield break;
-        }
-
-        var row = new MappedRow(rowIndex);
-        var columnIndex = withoutCr ? -1 : 0;
-        
-        while (!reader.EOF)
-        {
-            if (reader.IsStartElement("c", Ns))
-            {
-                var aS = reader.GetAttribute("s");
-                var aR = reader.GetAttribute("r");
-                var aT = reader.GetAttribute("t");
-                
-                var cellAndColumn = await ReadCellAndSetColumnIndexAsync(reader, columnIndex, withoutCr, 0, aR, aT, cancellationToken).ConfigureAwait(false);
-                var cellValue = cellAndColumn.CellValue;
-                columnIndex = cellAndColumn.ColumnIndex;
-
-                if (_config.FillMergedCells && mergeCells is not null)
-                {
-                    if (mergeCells.MergesValues.ContainsKey(aR))
-                    {
-                        mergeCells.MergesValues[aR] = cellValue;
-                    }
-                    else if (mergeCells.MergesMap.TryGetValue(aR, out var mergeKey))
-                    {
-                        mergeCells.MergesValues.TryGetValue(mergeKey, out cellValue);
-                    }
-                }
-
-                if (!string.IsNullOrEmpty(aS)) // Custom style
-                {
-                    if (int.TryParse(aS, NumberStyles.Any, CultureInfo.InvariantCulture, out var styleIndex))
-                    {
-                        _style ??= new OpenXmlStyles(Archive);
-                        cellValue = _style.ConvertValueByStyleFormat(styleIndex, cellValue);
-                    }
-                }
-
-                row.SetCell(columnIndex, cellValue);
-            }
-            else if (!await reader.SkipContentAsync(cancellationToken).ConfigureAwait(false))
-            {
-                break;
-            }
-        }
-        
-        yield return row;
-    }
-    
     public void Dispose()
     {
-        Dispose(true);
-        GC.SuppressFinalize(this);
-    }
+        if (_disposed)
+            return;
 
-    protected void Dispose(bool disposing)
-    {
-        if (!_disposed)
-        {
-            if (disposing)
-            {
-                if (SharedStrings is SharedStringsDiskCache cache)
-                {
-                    cache.Dispose();
-                }
-            }
+        if (SharedStrings is SharedStringsDiskCache cache)
+            cache.Dispose();
 
-            _disposed = true;
-        }
-    }
-    
-    ~OpenXmlReader()
-    {
-        Dispose(false);
+        _disposed = true;
     }
 }

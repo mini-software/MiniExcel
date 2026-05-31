@@ -5,13 +5,6 @@ namespace MiniExcelLib.OpenXml.Utils;
 /// Copied & modified from ExcelDataReader ZipWorker @MIT License
 internal sealed partial class OpenXmlZip : IDisposable, IAsyncDisposable
 {
-    private static readonly XmlReaderSettings XmlSettings = new()
-    {
-        IgnoreComments = true,
-        IgnoreWhitespace = true,
-        XmlResolver = null,
-    };
-
     private bool _disposed;
 
     internal ZipArchive ZipFile { get; }
@@ -50,10 +43,6 @@ internal sealed partial class OpenXmlZip : IDisposable, IAsyncDisposable
     }
 
     public ZipArchiveEntry? GetEntry(string path) => Entries.GetValueOrDefault(path);
-
-    public XmlReader? GetXmlReader(string path) => GetEntry(path) is { } entry 
-        ? XmlReader.Create(entry.Open(), XmlSettings)
-        : null;
 
 
     public void Dispose()

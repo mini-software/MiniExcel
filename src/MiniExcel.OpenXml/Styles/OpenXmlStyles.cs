@@ -2,7 +2,7 @@ using XmlReaderHelper = MiniExcelLib.OpenXml.Utils.XmlReaderHelper;
 
 namespace MiniExcelLib.OpenXml.Styles;
 
-internal class OpenXmlStyles
+internal partial class OpenXmlStyles
 {
     private static readonly string[] Ns = [Schemas.SpreadsheetmlXmlMain, Schemas.SpreadsheetmlXmlStrictNs];
     
@@ -10,22 +10,30 @@ internal class OpenXmlStyles
     private readonly Dictionary<int, StyleRecord> _cellStyleXfs = new();
     private readonly Dictionary<int, NumberFormatString> _customFormats = new();
 
-    public OpenXmlStyles(OpenXmlZip zip)
+    private OpenXmlStyles() { }
+
+    [CreateSyncVersion]
+    internal static async Task<OpenXmlStyles> CreateAsync(OpenXmlZip zip, CancellationToken cancellationToken = default)
     {
-        using var reader = zip.GetXmlReader(ExcelFileNames.Styles);
-        if (reader is null)
-            throw new InvalidDataException("The OpenXml styles could not be found, the file might be malformed.");
+        if (zip.GetEntry(ExcelFileNames.Styles) is not { } entry)
+            throw new InvalidDataException("The OpenXml styles.xml file could not be found, the document might be malformed.");
+
+        var entryStream = await entry.OpenAsync(cancellationToken).ConfigureAwait(false);
+        await using var disposableEntryStream = entryStream.ConfigureAwait(false);
+        using var reader = XmlReader.Create(entryStream, XmlReaderHelper.GetXmlReaderSettings());
                 
-        if (!reader.IsStartElement("styleSheet", Ns))
-            return;
-        if (!reader.ReadFirstContent())
-            return;
-                
+        var openXmlStyles = new OpenXmlStyles();
+        if (!reader.IsStartElement("styleSheet", Ns) || 
+            !await reader.ReadFirstContentAsync(cancellationToken).ConfigureAwait(false))
+        {
+            return openXmlStyles;
+        }
+
         while (!reader.EOF)
         {
             if (reader.IsStartElement("cellXfs", Ns))
             {
-                if (!XmlReaderHelper.ReadFirstContent(reader))
+                if (!await reader.ReadFirstContentAsync(cancellationToken).ConfigureAwait(false))
                     continue;
 
                 var index = 0;
@@ -35,17 +43,17 @@ internal class OpenXmlStyles
                     {
                         int.TryParse(reader.GetAttribute("xfId"), out var xfId);
                         int.TryParse(reader.GetAttribute("numFmtId"), out var numFmtId);
-                        _cellXfs.Add(index, new StyleRecord() { XfId = xfId, NumFmtId = numFmtId });
-                        reader.Skip();
+                        openXmlStyles._cellXfs.Add(index, new StyleRecord { XfId = xfId, NumFmtId = numFmtId });
+                        await reader.SkipAsync().ConfigureAwait(false);
                         index++;
                     }
-                    else if (!reader.SkipContent())
+                    else if (!await reader.SkipContentAsync(cancellationToken).ConfigureAwait(false))
                         break;
                 }
             }
             else if (reader.IsStartElement("cellStyleXfs", Ns))
             {
-                if (!reader.ReadFirstContent())
+                if (!await reader.ReadFirstContentAsync(cancellationToken).ConfigureAwait(false))
                     continue;
 
                 var index = 0;
@@ -56,11 +64,11 @@ internal class OpenXmlStyles
                         int.TryParse(reader.GetAttribute("xfId"), out var xfId);
                         int.TryParse(reader.GetAttribute("numFmtId"), out var numFmtId);
 
-                        _cellStyleXfs.Add(index, new StyleRecord() { XfId = xfId, NumFmtId = numFmtId });
-                        reader.Skip();
+                        openXmlStyles._cellStyleXfs.Add(index, new StyleRecord() { XfId = xfId, NumFmtId = numFmtId });
+                        await reader.SkipAsync().ConfigureAwait(false);
                         index++;
                     }
-                    else if (!reader.SkipContent())
+                    else if (!await reader.SkipContentAsync(cancellationToken).ConfigureAwait(false))
                     {
                         break;
                     }
@@ -68,7 +76,7 @@ internal class OpenXmlStyles
             }
             else if (reader.IsStartElement("numFmts", Ns))
             {
-                if (!reader.ReadFirstContent())
+                if (!await reader.ReadFirstContentAsync(cancellationToken).ConfigureAwait(false))
                     continue;
 
                 while (!reader.EOF)
@@ -85,20 +93,22 @@ internal class OpenXmlStyles
                             type = typeof(DateTime?);
                         }
 
-                        _customFormats.TryAdd(numFmtId, new NumberFormatString(formatCode, type));
-                        reader.Skip();
+                        openXmlStyles._customFormats.TryAdd(numFmtId, new NumberFormatString(formatCode, type));
+                        await reader.SkipAsync().ConfigureAwait(false);
                     }
-                    else if (!reader.SkipContent())
+                    else if (!await reader.SkipContentAsync(cancellationToken).ConfigureAwait(false))
                     {
                         break;
                     }
                 }
             }
-            else if (!reader.SkipContent())
+            else if (!await reader.SkipContentAsync(cancellationToken).ConfigureAwait(false))
             {
                 break;
             }
         }
+
+        return openXmlStyles;
     }
 
     internal NumberFormatString? GetStyleFormat(int index)

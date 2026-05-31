@@ -56,11 +56,11 @@ public static partial class MiniExcelMapper
 
                 //Q: Why need to check every time? A: it needs to check everytime, because it's dictionary
                 object? itemValue = null;
-                if (map.ExcelIndexName is not null && (keys?.Contains(map.ExcelIndexName) is true))
+                if (map.ExcelIndexName is not null && keys?.Contains(map.ExcelIndexName) is true)
                 {
                     item.TryGetValue(map.ExcelIndexName, out itemValue);
                 }
-                else if (map.ExcelColumnName is not null && (headersDic?.TryGetValue(map.ExcelColumnName, out var columnId) is true))
+                else if (map.ExcelColumnName is not null && headersDic?.TryGetValue(map.ExcelColumnName, out var columnId) is true)
                 {
                     var columnName = keys[columnId];
                     item.TryGetValue(columnName, out itemValue);

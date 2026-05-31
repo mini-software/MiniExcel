@@ -1,9 +1,10 @@
 using MiniExcelLib.Core.WriteAdapters;
+using MiniExcelLib.OpenXml.Reader;
 using MiniExcelLib.OpenXml.Styles.Builder;
 
 namespace MiniExcelLib.OpenXml.Writer;
 
-internal partial class OpenXmlWriter : IMiniExcelWriter
+internal sealed partial class OpenXmlWriter : IMiniExcelWriter
 {
     private static readonly UTF8Encoding Utf8WithBom = new(true);
 
@@ -105,7 +106,7 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
         await using var sbc = _sheetStyleBuilderContext.ConfigureAwait(false);
 
         using var reader = await OpenXmlReader.CreateAsync(_stream, _configuration, cancellationToken: cancellationToken).ConfigureAwait(false);
-        var rels = await reader.GetWorkbookRelsAsync(_archive.Entries, cancellationToken).ConfigureAwait(false) ?? [];
+        var rels = await OpenXmlReader.GetWorkbookRelsAsync(_archive.Entries, cancellationToken).ConfigureAwait(false) ?? [];
 
         _sheets.AddRange(rels
             .OrderBy(sheet => sheet.Id)
@@ -674,7 +675,7 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
 
     [CreateSyncVersion]
     /* Todo: this method is not very efficient, but workbook.xml is generally a very small file so at the moment it's not worth over-optimizing it.
-     Also, consider adding active sheet as one of the editable properties.  */
+     Also, consider adding active sheet as one of the editable properties.*/
     internal async Task AlterWorksheetAsync(string sheetName, string? newSheetName, int? newSheetIndex, SheetState? newSheetState, CancellationToken cancellationToken = default)
     {
         if (newSheetName is null && newSheetIndex is null && newSheetState is null)

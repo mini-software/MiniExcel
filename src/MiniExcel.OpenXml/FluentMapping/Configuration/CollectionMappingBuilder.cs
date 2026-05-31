@@ -1,5 +1,3 @@
-using System.Text.RegularExpressions;
-
 namespace MiniExcelLib.OpenXml.FluentMapping.Configuration;
 
 internal partial class CollectionMappingBuilder<T, TCollection> : ICollectionMappingBuilder<T, TCollection> where TCollection : IEnumerable

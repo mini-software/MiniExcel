@@ -141,13 +141,7 @@ internal static partial class XmlReaderHelper
     [CreateSyncVersion]
     public static async IAsyncEnumerable<string> GetSharedStringsAsync(Stream stream, [EnumeratorCancellation]CancellationToken cancellationToken = default, params string[] nss)
     {
-        var xmlSettings = GetXmlReaderSettings(
-#if SYNC_ONLY
-            false
-#else
-            true
-#endif
-        );
+        var xmlSettings = GetXmlReaderSettings();
         
         using var reader = XmlReader.Create(stream, xmlSettings);
         if (!reader.IsStartElement("sst", nss))
@@ -170,11 +164,14 @@ internal static partial class XmlReaderHelper
         }
     }
 
-    internal static XmlReaderSettings GetXmlReaderSettings(bool async) => new()
+    internal static XmlReaderSettings GetXmlReaderSettings(bool forceSynchronous = false) => new()
     {
+        CheckCharacters = false,
         IgnoreComments = true,
         IgnoreWhitespace = true,
         XmlResolver = null,
-        Async = async
+#if !SYNC_ONLY
+        Async = !forceSynchronous
+#endif
     };
 }

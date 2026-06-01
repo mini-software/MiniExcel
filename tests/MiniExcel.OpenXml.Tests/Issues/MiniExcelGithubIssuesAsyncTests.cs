@@ -386,22 +386,14 @@ public class MiniExcelGithubIssuesAsyncTests(ITestOutputHelper output)
     [Fact]
     public async Task Issue150()
     {
-        var path = PathHelper.GetTempFilePath();
+        using var filePath = AutoDeletingPath.Create();
+        var path = filePath.ToString();
     
-        await Assert.ThrowsAnyAsync<NotSupportedException>(async () => await  _excelExporter.ExportAsync(path, new[] { 1, 2 }));
-        File.Delete(path);
-  
-        await Assert.ThrowsAnyAsync<NotSupportedException>(async () => await  _excelExporter.ExportAsync(path, new[] { "1", "2" }));
-        File.Delete(path);
-        
-        await Assert.ThrowsAnyAsync<NotSupportedException>(async () => await  _excelExporter.ExportAsync(path, new[] { '1', '2' }));
-        File.Delete(path);
-        
-        await Assert.ThrowsAnyAsync<NotSupportedException>(async () => await  _excelExporter.ExportAsync(path, new[] { DateTime.Now }));
-        File.Delete(path);
-        
-        await Assert.ThrowsAnyAsync<NotSupportedException>(async () => await  _excelExporter.ExportAsync(path, new[] { Guid.NewGuid() }));
-        File.Delete(path);
+        await Assert.ThrowsAnyAsync<NotSupportedException>(async () => await  _excelExporter.ExportAsync(path, new[] { 1, 2 }, overwriteFile: true));
+        await Assert.ThrowsAnyAsync<NotSupportedException>(async () => await  _excelExporter.ExportAsync(path, new[] { "1", "2" }, overwriteFile: true));
+        await Assert.ThrowsAnyAsync<NotSupportedException>(async () => await  _excelExporter.ExportAsync(path, new[] { '1', '2' }, overwriteFile: true));
+        await Assert.ThrowsAnyAsync<NotSupportedException>(async () => await  _excelExporter.ExportAsync(path, new[] { DateTime.Now }, overwriteFile: true));
+        await Assert.ThrowsAnyAsync<NotSupportedException>(async () => await  _excelExporter.ExportAsync(path, new[] { Guid.NewGuid() }, overwriteFile: true));
     }
 
     [Fact]
@@ -776,7 +768,7 @@ public class MiniExcelGithubIssuesAsyncTests(ITestOutputHelper output)
         Assert.Single(rowsWritten);
         Assert.Equal(2, rowsWritten[0]);
 
-        var table = await _excelImporter.QueryAsDataTableAsync(path.ToString());
+        using var table = await _excelImporter.QueryAsDataTableAsync(path.ToString());
         Assert.Equal("Test1", table.Columns[0].ColumnName);
         Assert.Equal("Test2", table.Columns[1].ColumnName);
         Assert.Equal("1", table.Rows[0]["Test1"]);
@@ -784,7 +776,7 @@ public class MiniExcelGithubIssuesAsyncTests(ITestOutputHelper output)
         Assert.Equal("3", table.Rows[1]["Test1"]);
         Assert.Equal(4.0, table.Rows[1]["Test2"]);
 
-        var dt = await _excelImporter.QueryAsDataTableAsync(path.ToString(), false);
+        using var dt = await _excelImporter.QueryAsDataTableAsync(path.ToString(), false);
         Assert.Equal("Test1", dt.Rows[0]["A"]);
         Assert.Equal("Test2", dt.Rows[0]["B"]);
         Assert.Equal("1", dt.Rows[1]["A"]);
@@ -861,7 +853,7 @@ public class MiniExcelGithubIssuesAsyncTests(ITestOutputHelper output)
         Assert.Equal(3, rowsWritten[0]);
 
 
-        var dt = await  _excelImporter.QueryAsDataTableAsync(path.ToString());
+        using var dt = await  _excelImporter.QueryAsDataTableAsync(path.ToString());
 #pragma warning restore CS0618
         var columns = dt.Columns;
         Assert.Equal(typeof(object), columns[0].DataType);
@@ -885,9 +877,8 @@ public class MiniExcelGithubIssuesAsyncTests(ITestOutputHelper output)
     [Fact]
     public async Task Issue227()
     {
-        var xlsmPath = PathHelper.GetTempPath("xlsm");
-        Assert.Throws<NotSupportedException>(() =>  _excelExporter.Export(xlsmPath, new[] { new { V = "A1" }, new { V = "A2" } }));
-        File.Delete(xlsmPath);
+        var xlsmPath = AutoDeletingPath.Create(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsm");
+        Assert.Throws<NotSupportedException>(() =>  _excelExporter.Export(xlsmPath.FilePath, new[] { new { V = "A1" }, new { V = "A2" } }));
 
         var path = PathHelper.GetFile("xlsx/TestIssue227.xlsm");
         var rows1 = await _excelImporter.QueryAsync<UserAccount>(path).ToListAsync();
@@ -921,7 +912,7 @@ public class MiniExcelGithubIssuesAsyncTests(ITestOutputHelper output)
     {
         var path = PathHelper.GetFile("xlsx/TestIssue229.xlsx");
             
-        var dt = await  _excelImporter.QueryAsDataTableAsync(path);
+        using var dt = await  _excelImporter.QueryAsDataTableAsync(path);
             
         foreach (DataColumn column in dt.Columns)
         {
@@ -993,7 +984,7 @@ public class MiniExcelGithubIssuesAsyncTests(ITestOutputHelper output)
     {
         var path = PathHelper.GetFile("xlsx/TestIssue233.xlsx");
 
-        var dt = await  _excelImporter.QueryAsDataTableAsync(path);
+        using var dt = await  _excelImporter.QueryAsDataTableAsync(path);
         var rows = dt.Rows;
             
         Assert.Equal(0.55, rows[0]["Size"]);

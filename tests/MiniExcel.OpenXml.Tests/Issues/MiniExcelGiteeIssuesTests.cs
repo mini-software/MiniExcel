@@ -207,23 +207,21 @@ public class MiniExcelGiteeIssuesTests
     [Fact]
     public void TestIssueI45TF5_2()
     {
-        {
-            var value = new[] { new Dictionary<string, object> { { "Col1&Col2", "V1&V2" } } };
-            var path = PathHelper.GetTempPath();
-            _excelExporter.Export(path, value);
-            //System.Xml.XmlException : '<' is an unexpected token. The expected token is ';'.
-            SheetHelper.GetZipFileContent(path, "xl/worksheets/sheet1.xml"); //check illegal format or not
-        }
+        var value = new[] { new Dictionary<string, object> { { "Col1&Col2", "V1&V2" } } };
 
-        {
-            using var dt = new DataTable();
-            dt.Columns.Add("Col1&Col2");
-            dt.Rows.Add("V1&V2");
-            var path = PathHelper.GetTempPath();
-            _excelExporter.Export(path, dt);
-            //System.Xml.XmlException : '<' is an unexpected token. The expected token is ';'.
-            SheetHelper.GetZipFileContent(path, "xl/worksheets/sheet1.xml"); //check illegal format or not
-        }
+        using var path1 = AutoDeletingPath.Create();
+        _excelExporter.Export(path1.ToString(), value);
+        //System.Xml.XmlException : '<' is an unexpected token. The expected token is ';'.
+        SheetHelper.GetZipFileContent(path1.ToString(), "xl/worksheets/sheet1.xml"); //check illegal format or not
+
+        using var dt = new DataTable();
+        dt.Columns.Add("Col1&Col2");
+        dt.Rows.Add("V1&V2");
+
+        using var path2 = AutoDeletingPath.Create();
+        _excelExporter.Export(path2.FilePath, dt);
+        //System.Xml.XmlException : '<' is an unexpected token. The expected token is ';'.
+        SheetHelper.GetZipFileContent(path2.FilePath, "xl/worksheets/sheet1.xml"); //check illegal format or not
     }
 
     [Fact]

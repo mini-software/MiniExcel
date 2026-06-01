@@ -1,6 +1,6 @@
 ﻿namespace MiniExcelLib.Csv.Tests.Issues;
 
-public class AsyncIssueTests
+public class GithubIssuesAsyncTests
 {
     private readonly CsvExporter _csvExporter = MiniExcel.Exporters.GetCsvExporter();
     private readonly CsvImporter _csvImporter = MiniExcel.Importers.GetCsvImporter();

@@ -517,8 +517,11 @@ public class MiniExcelGithubIssuesTests(ITestOutputHelper output)
         Assert.Equal(new[]{"C9", "D9", "E9"}, new[] { rows2[5].Column1 as string, rows2[5].Column2 as string, rows2[5].Column3 as string });
         Assert.Equal(new[]{"C12", "D12", "E12"}, new[] { rows2[8].Column1 as string, rows2[8].Column2 as string, rows2[8].Column3 as string });
         Assert.Equal(new[]{"C13", "D13", "E13"}, new[] { rows2[9].Column1 as string, rows2[9].Column2 as string, rows2[9].Column3 as string });
+        
         foreach (var i in new[] { 3, 4, 6, 7 })
+        {
             Assert.Equal(new string?[]{null, null, null}, new[] { rows2[i].Column1 as string, rows2[i].Column2 as string, rows2[i].Column3 as string });
+        }
 
         Assert.Equal(10, rows2.Count);
 

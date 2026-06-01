@@ -1,5 +1,4 @@
 ﻿using MiniExcelLib.Core.Exceptions;
-using MiniExcelLib.OpenXml.Tests.OpenXml;
 using MiniExcelLib.OpenXml.Tests.Utils;
 using MiniExcelLib.Tests.Common.Utils;
 
@@ -37,8 +36,7 @@ public class MiniExcelGithubIssuesAsyncTests(ITestOutputHelper output)
         Assert.Single(rowsWritten);
         Assert.Equal(0, rowsWritten[0]);
 
-        var q =  _excelImporter.QueryAsync(path.ToString(), true).ToBlockingEnumerable();
-        var rows = q.ToList();
+        var rows = await _excelImporter.QueryAsync(path.ToString(), true).ToListAsync();
         Assert.Empty(rows);
     }
 
@@ -59,7 +57,7 @@ public class MiniExcelGithubIssuesAsyncTests(ITestOutputHelper output)
 
     // QueryAsync Merge cells data
     [Fact]
-    public Task Issue122()
+    public async Task Issue122()
     {
         var config = new OpenXmlConfiguration
         {
@@ -67,7 +65,7 @@ public class MiniExcelGithubIssuesAsyncTests(ITestOutputHelper output)
         };
             
         var path1 = PathHelper.GetFile("xlsx/TestIssue122.xlsx");
-        var rows1 =  _excelImporter.QueryAsync(path1, hasHeaderRow: true, configuration: config).ToBlockingEnumerable().ToList();
+        var rows1 = await _excelImporter.QueryAsync(path1, hasHeaderRow: true, configuration: config).ToListAsync();
         
         Assert.Equal("HR", rows1[0].Department);
         Assert.Equal("HR", rows1[1].Department);
@@ -77,7 +75,7 @@ public class MiniExcelGithubIssuesAsyncTests(ITestOutputHelper output)
         Assert.Equal("IT", rows1[5].Department);
 
         var path2 = PathHelper.GetFile("xlsx/TestIssue122_2.xlsx");
-        var rows2 =  _excelImporter.QueryAsync(path2, hasHeaderRow: true, configuration: config).ToBlockingEnumerable().ToList();
+        var rows2 = await _excelImporter.QueryAsync(path2, hasHeaderRow: true, configuration: config).ToListAsync();
 
         Assert.Equal("V1", rows2[2].Test1);
         Assert.Equal("V2", rows2[5].Test2);
@@ -85,8 +83,6 @@ public class MiniExcelGithubIssuesAsyncTests(ITestOutputHelper output)
         Assert.Equal("V4", rows2[2].Test4);
         Assert.Equal("V5", rows2[3].Test5);
         Assert.Equal("V6", rows2[5].Test5);
-        
-        return Task.CompletedTask;
     }
 
     // SaveAs Default Template
@@ -205,12 +201,11 @@ public class MiniExcelGithubIssuesAsyncTests(ITestOutputHelper output)
     }
 
     [Fact]
-    public void Issue138()
+    public async Task Issue138()
     {
         var path = PathHelper.GetFile("xlsx/TestIssue138.xlsx");
         {
-            var q =  _excelImporter.QueryAsync(path, true).ToBlockingEnumerable();
-            var rows = q.ToList();
+            var rows = await _excelImporter.QueryAsync(path, true).ToListAsync();
             Assert.Equal(6, rows.Count);
 
             foreach (var index in new[] { 0, 2, 5 })
@@ -235,8 +230,7 @@ public class MiniExcelGithubIssuesAsyncTests(ITestOutputHelper output)
         }
         {
 
-            var q =  _excelImporter.QueryAsync<Issue138Dto>(path).ToBlockingEnumerable();
-            var rows = q.ToList();
+            var rows = await _excelImporter.QueryAsync<Issue138Dto>(path).ToListAsync();
             Assert.Equal(6, rows.Count);
             Assert.Equal(new DateTime(2021, 3, 1), rows[0].Date);
 
@@ -266,7 +260,7 @@ public class MiniExcelGithubIssuesAsyncTests(ITestOutputHelper output)
     public async Task Issue142()
     {
         var path = PathHelper.GetFile("xlsx/TestIssue142.xlsx");
-        var rows =  _excelImporter.QueryAsync<Issue142DtoVariant2>(path).ToBlockingEnumerable().ToList();
+        var rows = await _excelImporter.QueryAsync<Issue142DtoVariant2>(path).ToListAsync();
 
         Assert.Equal(0, rows[0].MyProperty1);
         await Assert.ThrowsAsync<InvalidMappingException>(async () =>
@@ -301,15 +295,15 @@ public class MiniExcelGithubIssuesAsyncTests(ITestOutputHelper output)
         var rows1 = await _excelImporter.QueryAsync(path1, hasHeaderRow: false, startCell: "C3", sheetName: "Sheet1").ToListAsync();
             
         Assert.Equal(["C", "D", "E"], (rows1[0] as IDictionary<string, object>)?.Keys);
-        Assert.Equal(["Column1", "Column2", "Column3"], new[] { rows1[0].C as string, rows1[0].D as string, rows1[0].E as string });
-        Assert.Equal(["C4", "D4", "E4"], new[] { rows1[1].C as string, rows1[1].D as string, rows1[1].E as string });
-        Assert.Equal(["C9", "D9", "E9"], new[] { rows1[6].C as string, rows1[6].D as string, rows1[6].E as string });
-        Assert.Equal(["C12", "D12", "E12"], new[] { rows1[9].C as string, rows1[9].D as string, rows1[9].E as string });
-        Assert.Equal(["C13", "D13", "E13"], new[] { rows1[10].C as string, rows1[10].D as string, rows1[10].E as string });
+        Assert.Equal(new[]{ "Column1", "Column2", "Column3" }, new[] { rows1[0].C as string, rows1[0].D as string, rows1[0].E as string });
+        Assert.Equal(new[]{ "C4", "D4", "E4" }, new[] { rows1[1].C as string, rows1[1].D as string, rows1[1].E as string });
+        Assert.Equal(new[]{ "C9", "D9", "E9" }, new[] { rows1[6].C as string, rows1[6].D as string, rows1[6].E as string });
+        Assert.Equal(new[]{ "C12", "D12", "E12" }, new[] { rows1[9].C as string, rows1[9].D as string, rows1[9].E as string });
+        Assert.Equal(new[]{ "C13", "D13", "E13" }, new[] { rows1[10].C as string, rows1[10].D as string, rows1[10].E as string });
             
         foreach (var i in new[] { 4, 5, 7, 8 })
         {
-            Assert.Equal([null, null, null], new[] { rows1[i].C as string, rows1[i].D as string, rows1[i].E as string });
+            Assert.Equal(new string?[]{null, null, null}, new[] { rows1[i].C as string, rows1[i].D as string, rows1[i].E as string });
         }
         Assert.Equal(11, rows1.Count);
 
@@ -321,14 +315,14 @@ public class MiniExcelGithubIssuesAsyncTests(ITestOutputHelper output)
         var rows2 = await _excelImporter.QueryAsync(path2, hasHeaderRow: true, startCell: "C3", sheetName: "Sheet1").ToListAsync();
             
         Assert.Equal(["Column1", "Column2", "Column3"], (rows2[0] as IDictionary<string, object>)?.Keys);
-        Assert.Equal(["C4", "D4", "E4"], new[] { rows2[0].Column1 as string, rows2[0].Column2 as string, rows2[0].Column3 as string });
-        Assert.Equal(["C9", "D9", "E9"], new[] { rows2[5].Column1 as string, rows2[5].Column2 as string, rows2[5].Column3 as string });
-        Assert.Equal(["C12", "D12", "E12"], new[] { rows2[8].Column1 as string, rows2[8].Column2 as string, rows2[8].Column3 as string });
-        Assert.Equal(["C13", "D13", "E13"], new[] { rows2[9].Column1 as string, rows2[9].Column2 as string, rows2[9].Column3 as string });
+        Assert.Equal(new[]{"C4", "D4", "E4"}, new[] { rows2[0].Column1 as string, rows2[0].Column2 as string, rows2[0].Column3 as string });
+        Assert.Equal(new[]{"C9", "D9", "E9"}, new[] { rows2[5].Column1 as string, rows2[5].Column2 as string, rows2[5].Column3 as string });
+        Assert.Equal(new[]{"C12", "D12", "E12"}, new[] { rows2[8].Column1 as string, rows2[8].Column2 as string, rows2[8].Column3 as string });
+        Assert.Equal(new[]{"C13", "D13", "E13"}, new[] { rows2[9].Column1 as string, rows2[9].Column2 as string, rows2[9].Column3 as string });
             
         foreach (var i in new[] { 3, 4, 6, 7 })
         {
-            Assert.Equal([null, null, null], new[] { rows2[i].Column1 as string, rows2[i].Column2 as string, rows2[i].Column3 as string });
+            Assert.Equal(new string?[]{null, null, null}, new[] { rows2[i].Column1 as string, rows2[i].Column2 as string, rows2[i].Column3 as string });
         }
         Assert.Equal(10, rows2.Count);
                 
@@ -430,7 +424,7 @@ public class MiniExcelGithubIssuesAsyncTests(ITestOutputHelper output)
             using var file = AutoDeletingPath.Create();
             var path = file.ToString();
 
-            List<MiniExcelOpenXmlTests.UserAccount> data = 
+            List<UserAccount> data = 
             [
                 new()
                 {
@@ -488,8 +482,7 @@ public class MiniExcelGithubIssuesAsyncTests(ITestOutputHelper output)
         {
             var path = PathHelper.GetFile("xlsx/TestIssue157.xlsx");
             {
-                var q =  _excelImporter.QueryAsync(path, sheetName: "Sheet1").ToBlockingEnumerable();
-                var rows = q.ToList();
+                var rows = await _excelImporter.QueryAsync(path, sheetName: "Sheet1").ToListAsync();
                 Assert.Equal(6, rows.Count);
                 Assert.Equal("Sheet1", (await _excelImporter.GetSheetNamesAsync(path))[0]);
             }
@@ -501,8 +494,7 @@ public class MiniExcelGithubIssuesAsyncTests(ITestOutputHelper output)
             }
 
             {
-                var q =  _excelImporter.QueryAsync<MiniExcelOpenXmlTests.UserAccount>(path, sheetName: "Sheet1").ToBlockingEnumerable();
-                var rows = q.ToList();
+                var rows = await _excelImporter.QueryAsync<UserAccount>(path, sheetName: "Sheet1").ToListAsync();
                 Assert.Equal(5, rows.Count);
 
                 Assert.Equal(Guid.Parse("78DE23D2-DCB6-BD3D-EC67-C112BBC322A2"), rows[0].ID);
@@ -595,8 +587,7 @@ public class MiniExcelGithubIssuesAsyncTests(ITestOutputHelper output)
             };
             await  _excelTemplater.FillTemplateAsync(path, templatePath, value);
 
-            var q =  _excelImporter.QueryAsync(path).ToBlockingEnumerable();
-            var rows = q.ToList();
+            var rows = await _excelImporter.QueryAsync(path).ToListAsync();
             Assert.Equal("FooCompany", rows[0].A);
             Assert.Equal("Jack", rows[2].B);
             Assert.Equal("HR", rows[2].C);
@@ -678,8 +669,7 @@ public class MiniExcelGithubIssuesAsyncTests(ITestOutputHelper output)
             };
 
             await  _excelTemplater.FillTemplateAsync(path, templatePath, value);
-            var q =  _excelImporter.QueryAsync(path).ToBlockingEnumerable();
-            var rows = q.ToList();
+            var rows = await _excelImporter.QueryAsync(path).ToListAsync();
 
             Assert.Equal("項目1", rows[0].A);
             Assert.Equal("[]內容1,[]內容2,[]內容3,[]內容4,[]內容5", rows[0].B);
@@ -725,8 +715,7 @@ public class MiniExcelGithubIssuesAsyncTests(ITestOutputHelper output)
 
             await  _excelTemplater.FillTemplateAsync(path, templatePath, value);
 
-            var q =  _excelImporter.QueryAsync(path).ToBlockingEnumerable();
-            var rows = q.ToList();
+            var rows = await _excelImporter.QueryAsync(path).ToListAsync();
             Assert.Equal("項目1", rows[0].A);
             Assert.Equal("[]內容1,[]內容2,[]內容3,[]內容4,[]內容5", rows[0].C);
             Assert.Equal("項目2", rows[3].A);
@@ -756,8 +745,7 @@ public class MiniExcelGithubIssuesAsyncTests(ITestOutputHelper output)
         Assert.Single(rowsWritten);
         Assert.Equal(3, rowsWritten[0]);
 
-        var q =  _excelImporter.QueryAsync(path.ToString(), true).ToBlockingEnumerable();
-        var rows = q.ToList();
+        var rows = await _excelImporter.QueryAsync(path.ToString(), true).ToListAsync();
         Assert.Equal(1.0, rows[0].Test1);
         Assert.Equal(2.0, rows[0].Test2);
         Assert.Equal(3.0, rows[1].Test1);
@@ -821,8 +809,7 @@ public class MiniExcelGithubIssuesAsyncTests(ITestOutputHelper output)
         Assert.Single(rowsWritten);
         Assert.Equal(2, rowsWritten[0]);
                 
-        var q =  _excelImporter.QueryAsync(path.ToString()).ToBlockingEnumerable();
-        var rows = q.ToList();
+        var rows = await _excelImporter.QueryAsync(path.ToString()).ToListAsync();
         Assert.Equal("Name", rows[0].B);
         Assert.Equal("Limit", rows[0].C);
     }
@@ -903,7 +890,7 @@ public class MiniExcelGithubIssuesAsyncTests(ITestOutputHelper output)
         File.Delete(xlsmPath);
 
         var path = PathHelper.GetFile("xlsx/TestIssue227.xlsm");
-        var rows1 = await _excelImporter.QueryAsync<MiniExcelOpenXmlTests.UserAccount>(path).ToListAsync();
+        var rows1 = await _excelImporter.QueryAsync<UserAccount>(path).ToListAsync();
         Assert.Equal(100, rows1.Count);
 
         Assert.Equal(Guid.Parse("78DE23D2-DCB6-BD3D-EC67-C112BBC322A2"), rows1[0].ID);
@@ -916,7 +903,7 @@ public class MiniExcelGithubIssuesAsyncTests(ITestOutputHelper output)
 
         
         await using var stream = File.OpenRead(path);
-        var rows2 = await _excelImporter.QueryAsync<MiniExcelOpenXmlTests.UserAccount>(stream).ToListAsync();
+        var rows2 = await _excelImporter.QueryAsync<UserAccount>(stream).ToListAsync();
         Assert.Equal(100, rows2.Count);
 
         Assert.Equal(Guid.Parse("78DE23D2-DCB6-BD3D-EC67-C112BBC322A2"), rows2[0].ID);
@@ -989,14 +976,12 @@ public class MiniExcelGithubIssuesAsyncTests(ITestOutputHelper output)
         await using (var reader = await cmd3.ExecuteReaderAsync(CommandBehavior.CloseConnection))
         {
             using var path = AutoDeletingPath.Create();
+
             var rowsWritten = await  _excelExporter.ExportAsync(path.ToString(), reader, printHeader: true);
-            
             Assert.Single(rowsWritten);
             Assert.Equal(2, rowsWritten[0]);
                 
-            var q =  _excelImporter.QueryAsync(path.ToString(), true).ToBlockingEnumerable();
-            var rows = q.ToList();
-            
+            var rows = await _excelImporter.QueryAsync(path.ToString(), true).ToListAsync();
             Assert.Equal(1, rows[0].id);
             Assert.Equal(2, rows[1].id);
         }
@@ -1048,18 +1033,14 @@ public class MiniExcelGithubIssuesAsyncTests(ITestOutputHelper output)
         Assert.Equal("department", sheetNames[1]);
 
         {
-            var q =  _excelImporter.QueryAsync(path, true, sheetName: "users").ToBlockingEnumerable();
-            var rows = q.ToList();
-            
+            var rows = await _excelImporter.QueryAsync(path, true, sheetName: "users").ToListAsync();
             Assert.Equal("Jack", rows[0].Name);
             Assert.Equal(25, rows[0].Age);
             Assert.Equal("Mike", rows[1].Name);
             Assert.Equal(44, rows[1].Age);
         }
         {
-            var q =  _excelImporter.QueryAsync(path, true, sheetName: "department").ToBlockingEnumerable();
-            var rows = q.ToList();
-            
+            var rows = await  _excelImporter.QueryAsync(path, true, sheetName: "department").ToListAsync();
             Assert.Equal("01", rows[0].ID);
             Assert.Equal("HR", rows[0].Name);
             Assert.Equal("02", rows[1].ID);
@@ -1145,10 +1126,10 @@ public class MiniExcelGithubIssuesAsyncTests(ITestOutputHelper output)
     public async Task Issue242()
     {
         var path = PathHelper.GetFile("xls/TestIssue242.xls");
-        Assert.Throws<InvalidDataException>(() => _ =  _excelImporter.QueryAsync(path).ToBlockingEnumerable().ToList());
+        await Assert.ThrowsAsync<InvalidDataException>(async () => _ = await _excelImporter.QueryAsync(path).ToListAsync());
 
         await using var stream = File.OpenRead(path);
-        Assert.Throws<InvalidDataException>(() => _ =  _excelImporter.QueryAsync(stream).ToBlockingEnumerable().ToList());
+        await Assert.ThrowsAsync<InvalidDataException>(async () => _ = await _excelImporter.QueryAsync(stream).ToListAsync());
     }
 
     // SaveAsByTemplate support DateTime custom format

@@ -2,7 +2,6 @@
 using MiniExcelLib.Core.Enums;
 using MiniExcelLib.Core.Exceptions;
 using MiniExcelLib.OpenXml.Picture;
-using MiniExcelLib.OpenXml.Tests.OpenXml;
 using MiniExcelLib.OpenXml.Tests.Utils;
 using MiniExcelLib.Tests.Common.Utils;
 using NPOI.XSSF.UserModel;
@@ -407,7 +406,7 @@ public class MiniExcelGithubIssuesTests(ITestOutputHelper output)
             using var file = AutoDeletingPath.Create();
             var path = file.ToString();
 
-            List<MiniExcelOpenXmlTests.UserAccount> data = 
+            List<UserAccount> data = 
             [
                 new()
                 {
@@ -475,7 +474,7 @@ public class MiniExcelGithubIssuesTests(ITestOutputHelper output)
             }
 
             {
-                var rows = _excelImporter.Query<MiniExcelOpenXmlTests.UserAccount>(path, sheetName: "Sheet1").ToList();
+                var rows = _excelImporter.Query<UserAccount>(path, sheetName: "Sheet1").ToList();
                 Assert.Equal(5, rows.Count);
 
                 Assert.Equal(new Guid("78DE23D2-DCB6-BD3D-EC67-C112BBC322A2"), rows[0].ID);
@@ -496,11 +495,11 @@ public class MiniExcelGithubIssuesTests(ITestOutputHelper output)
         var rows1 = _excelImporter.Query(path1, hasHeaderRow: false, startCell: "C3", sheetName: "Sheet1").ToList();
 
         Assert.Equal(["C", "D", "E"], (rows1[0] as IDictionary<string, object>)?.Keys);
-        Assert.Equal(["Column1", "Column2", "Column3"], new[] { rows1[0].C as string, rows1[0].D as string, rows1[0].E as string });
-        Assert.Equal(["C4", "D4", "E4"], new[] { rows1[1].C as string, rows1[1].D as string, rows1[1].E as string });
-        Assert.Equal(["C9", "D9", "E9"], new[] { rows1[6].C as string, rows1[6].D as string, rows1[6].E as string });
-        Assert.Equal(["C12", "D12", "E12"], new[] { rows1[9].C as string, rows1[9].D as string, rows1[9].E as string });
-        Assert.Equal(["C13", "D13", "E13"], new[] { rows1[10].C as string, rows1[10].D as string, rows1[10].E as string });
+        Assert.Equal(new[]{"Column1", "Column2", "Column3"}, new[] { rows1[0].C as string, rows1[0].D as string, rows1[0].E as string });
+        Assert.Equal(new[]{"C4", "D4", "E4"}, new[] { rows1[1].C as string, rows1[1].D as string, rows1[1].E as string });
+        Assert.Equal(new[]{"C9", "D9", "E9"}, new[] { rows1[6].C as string, rows1[6].D as string, rows1[6].E as string });
+        Assert.Equal(new[]{"C12", "D12", "E12"}, new[] { rows1[9].C as string, rows1[9].D as string, rows1[9].E as string });
+        Assert.Equal(new[]{"C13", "D13", "E13"}, new[] { rows1[10].C as string, rows1[10].D as string, rows1[10].E as string });
         foreach (var i in new[] { 4, 5, 7, 8 })
             Assert.Equal(expected: [null, null, null], new[] { rows1[i].C as string, rows1[i].D as string, rows1[i].E as string });
 
@@ -514,12 +513,12 @@ public class MiniExcelGithubIssuesTests(ITestOutputHelper output)
         var rows2 = _excelImporter.Query(path2, hasHeaderRow: true, startCell: "C3", sheetName: "Sheet1").ToList();
 
         Assert.Equal(["Column1", "Column2", "Column3"], (rows2[0] as IDictionary<string, object>)?.Keys);
-        Assert.Equal(["C4", "D4", "E4"], new[] { rows2[0].Column1 as string, rows2[0].Column2 as string, rows2[0].Column3 as string });
-        Assert.Equal(["C9", "D9", "E9"], new[] { rows2[5].Column1 as string, rows2[5].Column2 as string, rows2[5].Column3 as string });
-        Assert.Equal(["C12", "D12", "E12"], new[] { rows2[8].Column1 as string, rows2[8].Column2 as string, rows2[8].Column3 as string });
-        Assert.Equal(["C13", "D13", "E13"], new[] { rows2[9].Column1 as string, rows2[9].Column2 as string, rows2[9].Column3 as string });
+        Assert.Equal(new[]{"C4", "D4", "E4"}, new[] { rows2[0].Column1 as string, rows2[0].Column2 as string, rows2[0].Column3 as string });
+        Assert.Equal(new[]{"C9", "D9", "E9"}, new[] { rows2[5].Column1 as string, rows2[5].Column2 as string, rows2[5].Column3 as string });
+        Assert.Equal(new[]{"C12", "D12", "E12"}, new[] { rows2[8].Column1 as string, rows2[8].Column2 as string, rows2[8].Column3 as string });
+        Assert.Equal(new[]{"C13", "D13", "E13"}, new[] { rows2[9].Column1 as string, rows2[9].Column2 as string, rows2[9].Column3 as string });
         foreach (var i in new[] { 3, 4, 6, 7 })
-            Assert.Equal([null, null, null], new[] { rows2[i].Column1 as string, rows2[i].Column2 as string, rows2[i].Column3 as string });
+            Assert.Equal(new string?[]{null, null, null}, new[] { rows2[i].Column1 as string, rows2[i].Column2 as string, rows2[i].Column3 as string });
 
         Assert.Equal(10, rows2.Count);
 
@@ -824,7 +823,7 @@ public class MiniExcelGithubIssuesTests(ITestOutputHelper output)
         try
         {
             var path = PathHelper.GetFile("xlsx/TestIssue309.xlsx");
-            var rows = _excelImporter.Query<TestIssue209Dto>(path).ToList();
+            _ = _excelImporter.Query<TestIssue209Dto>(path).ToList();
         }
         catch (ValueNotAssignableException ex)
         {
@@ -987,7 +986,7 @@ public class MiniExcelGithubIssuesTests(ITestOutputHelper output)
         File.Delete(path);
 
         var path1 = PathHelper.GetFile("xlsx/TestIssue227.xlsm");
-        var rows1 = _excelImporter.Query<MiniExcelOpenXmlTests.UserAccount>(path1).ToList();
+        var rows1 = _excelImporter.Query<UserAccount>(path1).ToList();
         Assert.Equal(100, rows1.Count);
 
         Assert.Equal(Guid.Parse("78DE23D2-DCB6-BD3D-EC67-C112BBC322A2"), rows1[0].ID);
@@ -999,7 +998,7 @@ public class MiniExcelGithubIssuesTests(ITestOutputHelper output)
         Assert.Equal(1, rows1[0].IgnoredProperty);
 
         using var stream = File.OpenRead(path1);
-        var rows2 = _excelImporter.Query<MiniExcelOpenXmlTests.UserAccount>(stream).ToList();
+        var rows2 = _excelImporter.Query<UserAccount>(stream).ToList();
         Assert.Equal(100, rows2.Count);
 
         Assert.Equal(Guid.Parse("78DE23D2-DCB6-BD3D-EC67-C112BBC322A2"), rows2[0].ID);
@@ -1742,7 +1741,7 @@ public class MiniExcelGithubIssuesTests(ITestOutputHelper output)
             var reader = table.CreateDataReader();
             _excelExporter.Export(path.ToString(), reader);
             var xml = SheetHelper.GetZipFileContent(path.ToString(), "xl/worksheets/sheet1.xml");
-            var cnt = Regex.Matches(xml, "<x:autoFilter ref=\"A1:B3\" />").Count;
+            var cnt = Regex.Count(xml, "<x:autoFilter ref=\"A1:B3\" />");
         }
         {
             using var table = new DataTable();
@@ -1755,7 +1754,7 @@ public class MiniExcelGithubIssuesTests(ITestOutputHelper output)
             var reader = table.CreateDataReader();
             _excelExporter.Export(path.ToString(), reader, false);
             var xml = SheetHelper.GetZipFileContent(path.ToString(), "xl/worksheets/sheet1.xml");
-            var cnt = Regex.Matches(xml, "<x:autoFilter ref=\"A1:B2\" />").Count;
+            var cnt = Regex.Count(xml, "<x:autoFilter ref=\"A1:B2\" />");
         }
         {
             using var table = new DataTable();
@@ -1766,7 +1765,7 @@ public class MiniExcelGithubIssuesTests(ITestOutputHelper output)
             var reader = table.CreateDataReader();
             _excelExporter.Export(path.ToString(), reader);
             var xml = SheetHelper.GetZipFileContent(path.ToString(), "xl/worksheets/sheet1.xml");
-            var cnt = Regex.Matches(xml, "<x:autoFilter ref=\"A1:B1\" />").Count;
+            var cnt = Regex.Count(xml, "<x:autoFilter ref=\"A1:B1\" />");
         }
     }
 
@@ -1778,7 +1777,7 @@ public class MiniExcelGithubIssuesTests(ITestOutputHelper output)
         var sheets = _excelImporter.GetSheetNames(path);
         foreach (var sheetName in sheets)
         {
-            var dt = _excelImporter.QueryAsDataTable(path, hasHeaderRow: true, sheetName: sheetName, configuration: config);
+            _ = _excelImporter.QueryAsDataTable(path, hasHeaderRow: true, sheetName: sheetName, configuration: config);
         }
     }
 
@@ -2897,16 +2896,16 @@ public class MiniExcelGithubIssuesTests(ITestOutputHelper output)
         var path = PathHelper.GetFile($"xlsx/TestIssue869/{fileName}.xlsx");
         var config = new OpenXmlConfiguration { DateOnlyConversionMode = mode };
         
-        var testFn = () => _excelImporter.Query<Issue869>(path, configuration: config).ToList();
+        List<Issue869> TestFn() => _excelImporter.Query<Issue869>(path, configuration: config).ToList();
         if (throwsException)
         {
-            Assert.Throws<ValueNotAssignableException>(testFn);
+            Assert.Throws<ValueNotAssignableException>(TestFn);
         }
         else
         {
             try
             {
-                var result = testFn();
+                var result = TestFn();
                 Assert.Equal(new DateOnly(2025, 1, 1), result[0].Date);
             }
             catch (Exception ex)

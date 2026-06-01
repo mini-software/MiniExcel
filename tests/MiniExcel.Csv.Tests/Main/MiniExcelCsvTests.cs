@@ -1,4 +1,4 @@
-﻿namespace MiniExcelLib.Csv.Tests;
+﻿namespace MiniExcelLib.Csv.Tests.Main;
 
 public class MiniExcelCsvTests
 {

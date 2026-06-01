@@ -7,7 +7,7 @@ using MiniExcelLib.Tests.Common.Utils;
 using FileHelper = MiniExcelLib.OpenXml.Tests.Utils.FileHelper;
 using Path = System.IO.Path;
 
-namespace MiniExcelLib.OpenXml.Tests;
+namespace MiniExcelLib.OpenXml.Tests.Main;
 
 public class MiniExcelOpenXmlTests(ITestOutputHelper output)
 {

@@ -6,9 +6,6 @@
         <a href="https://www.nuget.org/packages/MiniExcel">
             <img src="https://img.shields.io/nuget/dt/MiniExcel.svg" alt="">
         </a>
-        <a href="https://ci.appveyor.com/project/mini-software/miniexcel/branch/master">
-            <img src="https://ci.appveyor.com/api/projects/status/b2vustrwsuqx45f4/branch/master?svg=true" alt="Build status">
-        </a>
         <a href="https://gitee.com/dotnetchina/MiniExcel">
             <img src="https://gitee.com/dotnetchina/MiniExcel/badge/star.svg" alt="star">
         </a>

@@ -1,7 +1,6 @@
-using MiniExcelLib.Core.Helpers;
 using MiniExcelLib.Tests.Common.Utils;
 
-namespace MiniExcelLib.OpenXml.Tests;
+namespace MiniExcelLib.OpenXml.Tests.Configuration;
 
 public class MiniExcelOpenXmlConfigurationTest
 {
@@ -25,13 +24,5 @@ public class MiniExcelOpenXmlConfigurationTest
 
         var rows = await _excelImporter.QueryAsync<ImgExportTestDto>(path).ToListAsync();
         Assert.True(rows.All(x => x.Img is null or []));
-    }
-    
-    private class ImgExportTestDto
-    {
-        public string? Name { get; set; }
-
-        [MiniExcelColumn(Name = "图片", Width = 100)]
-        public byte[]? Img { get; set; }
     }
 }

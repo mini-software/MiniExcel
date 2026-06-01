@@ -12,7 +12,7 @@ public class AutoDeletingPath : IDisposable
     public static AutoDeletingPath Create(string path) => new(path);
     public static AutoDeletingPath Create(string path, string filename) => new(Path.Combine(path, filename));
     public static AutoDeletingPath Create(ExcelType type = ExcelType.Xlsx) => Create(
-        Path.GetTempPath(), 
+        Path.GetTempPath(),
         $"{Guid.NewGuid()}.{type.ToString().ToLowerInvariant()}");
 
     public void Dispose()

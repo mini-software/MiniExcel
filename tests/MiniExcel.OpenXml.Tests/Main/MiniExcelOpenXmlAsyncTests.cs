@@ -5,7 +5,7 @@ using MiniExcelLib.OpenXml.Tests.Utils;
 using MiniExcelLib.Tests.Common;
 using MiniExcelLib.Tests.Common.Utils;
 
-namespace MiniExcelLib.OpenXml.Tests;
+namespace MiniExcelLib.OpenXml.Tests.Main;
 
 public class MiniExcelOpenXmlAsyncTests
 {
@@ -38,43 +38,6 @@ public class MiniExcelOpenXmlAsyncTests
 
         var rows2 = await _excelImporter.QueryAsync(path, true).ToListAsync();
         var rows1 = await _excelImporter.QueryAsync<SaveAsControlChracterVO>(path).ToListAsync();
-    }
-
-    private class SaveAsControlChracterVO
-    {
-        public string Test { get; set; }
-    }
-
-    private class ExcelAttributeDemo
-    {
-        [MiniExcelColumnName("Column1")]
-        public string Test1 { get; set; }
-        [MiniExcelColumnName("Column2")]
-        public string Test2 { get; set; }
-        [MiniExcelIgnore]
-        public string Test3 { get; set; }
-        [MiniExcelColumnIndex("I")] // system will convert "I" to 8 index
-        public string Test4 { get; set; }
-        public string Test5 { get; } //wihout set will ignore
-        public string Test6 { get; private set; } //un-public set will ignore
-        [MiniExcelColumnIndex(3)] // start with 0
-        public string Test7 { get; set; }
-    }
-
-    private class ExcelAttributeDemo2
-    {
-        [MiniExcelColumn(Name = "Column1")]
-        public string Test1 { get; set; }
-        [MiniExcelColumn(Name = "Column2")]
-        public string Test2 { get; set; }
-        [MiniExcelColumn(Ignore = true)]
-        public string Test3 { get; set; }
-        [MiniExcelColumn(IndexName = "I")] // system will convert "I" to 8 index
-        public string Test4 { get; set; }
-        public string Test5 { get; } //wihout set will ignore
-        public string Test6 { get; private set; } //un-public set will ignore
-        [MiniExcelColumn(Index = 3)] // start with 0
-        public string Test7 { get; set; }
     }
 
     [Fact]
@@ -164,14 +127,6 @@ public class MiniExcelOpenXmlAsyncTests
         Assert.Equal("Test4", rows[0].Test4);
         Assert.Null(rows[0].Test5);
         Assert.Null(rows[0].Test6);
-    }
-
-    private class CustomAttributesWihoutVaildPropertiesTestPoco
-    {
-        [MiniExcelIgnore]
-        public string Test3 { get; set; }
-        public string Test5 { get; }
-        public string Test6 { get; private set; }
     }
 
     [Fact]
@@ -288,22 +243,6 @@ public class MiniExcelOpenXmlAsyncTests
         }
     }
 
-    private class DemoPocoHelloWorld
-    {
-        public string HelloWorld1 { get; set; }
-    }
-
-    private class UserAccount
-    {
-        public Guid ID { get; set; }
-        public string Name { get; set; }
-        public DateTime BoD { get; set; }
-        public int Age { get; set; }
-        public bool VIP { get; set; }
-        public decimal Points { get; set; }
-        public int IgnoredProperty => 1;
-    }
-
     [Fact]
     public async Task QueryStrongTypeMapping_Test()
     {
@@ -334,15 +273,6 @@ public class MiniExcelOpenXmlAsyncTests
             Assert.Equal(5019.12d, rows[0].Points);
             Assert.Null(rows[0].IgnoredProperty);
         }
-    }
-
-
-    private class AutoCheckType
-    {
-        public Guid? @guid { get; set; }
-        public bool? @bool { get; set; }
-        public DateTime? datetime { get; set; }
-        public string @string { get; set; }
     }
 
     [Fact]
@@ -447,11 +377,6 @@ public class MiniExcelOpenXmlAsyncTests
         Assert.Equal(2, rows.Count);
     }
 
-    private class SaveAsFileWithDimensionByICollectionTestType
-    {
-        public string A { get; set; }
-        public string B { get; set; }
-    }
     [Fact]
     public async Task SaveAsFileWithDimensionByICollection()
     {
@@ -937,12 +862,6 @@ public class MiniExcelOpenXmlAsyncTests
         }
     }
 
-
-    private class Demo
-    {
-        public string Column1 { get; set; }
-        public decimal Column2 { get; set; }
-    }
     [Fact]
     public async Task QueryByStrongTypeParameterTest()
     {
@@ -1675,73 +1594,6 @@ public class MiniExcelOpenXmlAsyncTests
         Assert.Equal("0.000", cells["I3"].Style.Numberformat.Format);
     }
 
-    /// <summary>
-    /// Test class with multiple numeric properties using MiniExcelFormatAttribute
-    /// to verify that formatting is correctly applied during Excel export.
-    /// </summary>
-    private class NumericFormattingTestDto(
-        decimal currency,
-        decimal alignedCurrency,
-        decimal percentage,
-        double scientificNotation,
-        decimal fixedDecimal,
-        long phoneNumber,
-        long veryLongNumber,
-        double customFormat)
-    {
-
-        /// <summary>
-        /// Regular currency format with 2 decimal places
-        /// </summary>
-        [MiniExcelFormat("\"$\"#,##0.00")]
-        public decimal Currency { get; set; } = currency;
-
-        /// <summary>
-        /// Currency format with 2 decimal places, parentheses for negatives
-        /// </summary>
-        [MiniExcelFormat("$#,##0.00_);($#,##0.00)")]
-        public decimal AlignedCurrency { get; set; } = alignedCurrency;
-
-        /// <summary>
-        /// Percentage format with 0 decimal places
-        /// </summary>
-        [MiniExcelFormat("0%")]
-        public decimal Percentage { get; set; } = percentage;
-
-        /// <summary>
-        /// Scientific notation format with 2 decimal places
-        /// </summary>
-        [MiniExcelFormat("0.00E+00")]
-        public double ScientificNotation { get; set; } = scientificNotation;
-
-        [MiniExcelFormat("0.00E+00"), MiniExcelHidden]
-        public double ScientificNotationDuplicate { get; set; } = scientificNotation;
-
-        /// <summary>
-        /// Fixed decimal places (6 decimal places)
-        /// </summary>
-        [MiniExcelFormat("0.000000")]
-        public decimal FixedDecimal { get; set; } = fixedDecimal;
-
-        /// <summary>
-        /// Phone number format
-        /// </summary>
-        [MiniExcelFormat("[<=9999999]###-####;(###) ###-####")]
-        public long PhoneNumber { get; set; } = phoneNumber;
-
-        /// <summary>
-        /// Simple integer format that shows the number in its full length (no scientific notation)
-        /// </summary>
-        [MiniExcelFormat("#")]
-        public long VeryLongNumber { get; set; } = veryLongNumber;
-
-        /// <summary>
-        /// Simple decimal format with 3 decimal places
-        /// </summary>
-        [MiniExcelFormat("0.000")]
-        public double CustomFormat { get; set; } = customFormat;
-    }
-    
     [Fact]
     public async Task DateTimeFormattingWithMiniExcelFormatAttributeTest()
     {
@@ -1845,62 +1697,6 @@ public class MiniExcelOpenXmlAsyncTests
         static DateTime GetDateTime(object value) => DateTime.FromOADate((double)value);
     }
 
-    /// <summary>
-    /// Test class with multiple date and time properties using MiniExcelFormatAttribute
-    /// to verify that date/time formatting is correctly applied during Excel export.
-    /// </summary>
-    private class DateTimeFormattingTestDto(
-        DateTime shortDate,
-        DateTime longDate,
-        DateTime dateWithTime,
-        TimeSpan timeOnly,
-        DateTime isoDateTime,
-        DateTime customDateTime,
-        DateTime monthYear)
-    {
-        /// <summary>
-        /// Short date format (mm/dd/yyyy)
-        /// </summary>
-        [MiniExcelFormat("mm/dd/yyyy")]
-        public DateTime ShortDate { get; set; } = shortDate;
-
-        /// <summary>
-        /// Long date format (dddd, mmmm dd, yyyy)
-        /// </summary>
-        [MiniExcelFormat("dddd, mmmm dd, yyyy")]
-        public DateTime LongDate { get; set; } = longDate;
-
-        /// <summary>
-        /// Date with time format (yyyy-mm-dd hh:mm:ss)
-        /// </summary>
-        [MiniExcelFormat("yyyy-mm-dd hh:mm:ss")]
-        public DateTime DateWithTime { get; set; } = dateWithTime;
-
-        /// <summary>
-        /// Time only format ([h]:mm:ss)
-        /// </summary>
-        [MiniExcelFormat("[h]:mm:ss")]
-        public TimeSpan TimeOnly { get; set; } = timeOnly;
-
-        /// <summary>
-        /// ISO 8601 datetime format (yyyy-mm-ddThh:mm:ss)
-        /// </summary>
-        [MiniExcelFormat("yyyy-mm-dd\"T\"hh:mm:ss")]
-        public DateTime IsoDateTime { get; set; } = isoDateTime;
-
-        /// <summary>
-        /// Custom European format (dd.mm.yyyy hh:mm)
-        /// </summary>
-        [MiniExcelFormat("dd.mm.yyyy hh:mm")]
-        public DateTime CustomDateTime { get; set; } = customDateTime;
-
-        /// <summary>
-        /// Month and year format (mmmm yyyy)
-        /// </summary>
-        [MiniExcelFormat("mmmm yyyy")]
-        public DateTime MonthYear { get; set; } = monthYear;
-    }
-
     [Fact]
     public async Task InvalidSheetNameCharactersShouldThrow()
     {
@@ -1917,21 +1713,6 @@ public class MiniExcelOpenXmlAsyncTests
         
         ms1.Seek(0, SeekOrigin.Begin);
         await Assert.ThrowsAsync<ArgumentException>(() => _excelExporter.AlterSheetAsync(ms3, "Sheet1", "Sheet*"));
-    }
-    
-    class LocalizationSupportDto(string firstName, string lastName, string address, int age)
-    {
-        [MiniExcelColumn(Name = nameof(FirstName), ResourceType = typeof(Localization), Width = 15)]
-        public string? FirstName { get; set; } = firstName;
-
-        [MiniExcelColumn(Name = nameof(LastName), ResourceType = typeof(Localization), Width = 15)]
-        public string? LastName { get; set; } = lastName;
-
-        [MiniExcelColumnName("Address", ResourceType = typeof(Localization))]
-        public string? Residency { get; set; } = address;
-
-        [MiniExcelColumn(Name = nameof(Age), ResourceType = typeof(Localization), Width = 20)]
-        public int Age { get; set; } = age;
     }
     
     [Theory]

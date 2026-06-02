@@ -30,12 +30,12 @@ public class GithubIssuesAsyncTests
         Assert.Equal(Issue89Dto.WorkState.Fired, rows1[1].State);
         Assert.Equal(Issue89Dto.WorkState.Leave, rows1[2].State);
 
-        var outputPath = PathHelper.GetTempPath();
-        var rowsWritten = await MiniExcel.Exporters.GetOpenXmlExporter().ExportAsync(outputPath, rows1);
+        using var outputPath = AutoDeletingPath.Create();
+        var rowsWritten = await MiniExcel.Exporters.GetOpenXmlExporter().ExportAsync(outputPath.ToString(), rows1);
         Assert.Single(rowsWritten);
         Assert.Equal(3, rowsWritten[0]);
 
-        var rows2 = await MiniExcel.Importers.GetOpenXmlImporter().QueryAsync<Issue89Dto>(outputPath).ToListAsync();
+        var rows2 = await MiniExcel.Importers.GetOpenXmlImporter().QueryAsync<Issue89Dto>(outputPath.ToString()).ToListAsync();
         Assert.Equal(Issue89Dto.WorkState.OnDuty, rows2[0].State);
         Assert.Equal(Issue89Dto.WorkState.Fired, rows2[1].State);
         Assert.Equal(Issue89Dto.WorkState.Leave, rows2[2].State);

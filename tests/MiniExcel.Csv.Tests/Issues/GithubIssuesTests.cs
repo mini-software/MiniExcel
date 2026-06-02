@@ -346,9 +346,7 @@ public class GithubIssuesTests
     public void TestIssue279()
     {
         var path = PathHelper.GetFile("/csv/TestHeader.csv");
-#pragma warning disable CS0618 // Type or member is obsolete
         using var dt = _csvImporter.QueryAsDataTable(path);
-#pragma warning restore CS0618
         Assert.Equal("A1", dt.Rows[0]["Column1"]);
         Assert.Equal("A2", dt.Rows[1]["Column1"]);
         Assert.Equal("B1", dt.Rows[0]["Column2"]);
@@ -409,9 +407,7 @@ public class GithubIssuesTests
     public void TestIssue298()
     {
         var path = PathHelper.GetFile("/csv/TestIssue298.csv");
-#pragma warning disable CS0618 // Type or member is obsolete
         using var dt = _csvImporter.QueryAsDataTable(path);
-#pragma warning restore CS0618
         Assert.Equal(["ID", "Name", "Age"], dt.Columns.Cast<DataColumn>().Select(x => x.ColumnName));
     }
 

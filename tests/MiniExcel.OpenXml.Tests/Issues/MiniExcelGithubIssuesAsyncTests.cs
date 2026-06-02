@@ -854,7 +854,6 @@ public class MiniExcelGithubIssuesAsyncTests(ITestOutputHelper output)
 
 
         using var dt = await  _excelImporter.QueryAsDataTableAsync(path.ToString());
-#pragma warning restore CS0618
         var columns = dt.Columns;
         Assert.Equal(typeof(object), columns[0].DataType);
         Assert.Equal(typeof(object), columns[1].DataType);

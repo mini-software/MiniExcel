@@ -77,7 +77,7 @@ public static partial class MiniExcelMapper
         }
     }
     
-    public static object? MapValue<T>(T v, MiniExcelColumnMapping map, object itemValue, int rowIndex, MiniExcelBaseConfiguration config, Func<string?, string?>? stringDecoderFunc = null) where T : class, new()
+    public static object? MapValue<T>(T v, MiniExcelColumnMapping map, object? itemValue, int rowIndex, MiniExcelBaseConfiguration config, Func<string?, string?>? stringDecoderFunc = null) where T : class, new()
     {
         try
         {

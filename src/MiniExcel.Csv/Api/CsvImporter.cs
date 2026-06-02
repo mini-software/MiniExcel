@@ -147,11 +147,11 @@ public partial class CsvImporter
                     cancellationToken.ThrowIfCancellationRequested();
 
                     var columnName = hasHeaderRow ? entry.Value?.ToString() : entry.Key;
-                    if (!string.IsNullOrWhiteSpace(columnName)) // avoid #298 : Column '' does not belong to table
+                    if (columnName is { Length: > 0 }) // avoid #298 : Column '' does not belong to table
                     {
                         var column = new DataColumn(columnName, typeof(object)) { Caption = columnName };
                         dt.Columns.Add(column);
-                        columnDict.Add(entry.Key, columnName!); //same column name throw exception???
+                        columnDict.Add(entry.Key, columnName); //same column name throw exception???
                     }
                 }
 

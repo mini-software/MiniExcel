@@ -123,7 +123,6 @@ internal sealed partial class CsvReader : IMiniExcelReader
     [CreateSyncVersion]
     public IAsyncEnumerable<T> QueryAsync<T>(string? sheetName, string startCell, bool mapHeaderAsData, CancellationToken cancellationToken = default) where T : class, new()
     {
-        const int rowOffset = 0; // ranged queries are not supported for csv
         var records = QueryAsync(false, sheetName, startCell, cancellationToken);
         return MiniExcelMapper.MapQueryAsync<T>(records, 0, mapHeaderAsData, false, _config, null, cancellationToken);
     }

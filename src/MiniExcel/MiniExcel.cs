@@ -7,7 +7,7 @@ using MiniExcelLib.OpenXml.Models;
 using MiniExcelLib.OpenXml.Picture;
 using Zomp.SyncMethodGenerator;
 
-using NewMiniExcel = MiniExcelLib.Core.MiniExcel;
+using NewMiniExcel = MiniExcelLib.MiniExcel;
 using NewOpenXmlConfiguration = MiniExcelLib.OpenXml.OpenXmlConfiguration;
 
 // ReSharper disable once CheckNamespace

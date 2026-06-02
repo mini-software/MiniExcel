@@ -1,4 +1,4 @@
-namespace MiniExcelLib.OpenXml;
+namespace MiniExcelLib.OpenXml.FluentMapping;
 
 public struct MappedRow(int rowIndex)
 {

@@ -1,3 +1,4 @@
+using MiniExcelLib.OpenXml.FluentMapping;
 using MiniExcelLib.OpenXml.Styles;
 
 namespace MiniExcelLib.OpenXml.Reader;

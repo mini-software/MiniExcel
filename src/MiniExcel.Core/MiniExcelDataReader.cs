@@ -21,7 +21,7 @@ public sealed class MiniExcelDataReader : IMiniExcelDataReader
     public object this[string name]
         => GetValue(GetOrdinal(name));
 
-    public int Depth { get; private set; } = -1;
+    public int Depth => 0;
     public int FieldCount { get; private set; }
     public bool IsClosed { get; private set; }
     public int RecordsAffected => 0;
@@ -82,7 +82,6 @@ public sealed class MiniExcelDataReader : IMiniExcelDataReader
         if (_isAsyncSource)
             throw new InvalidOperationException("The data reader was configured to execute asynchronously");
         
-        Depth++;
         if (_isFirst)
         {
             _isFirst = false;
@@ -100,7 +99,6 @@ public sealed class MiniExcelDataReader : IMiniExcelDataReader
         if (!_isAsyncSource)
             return await Task.FromResult(Read()).ConfigureAwait(false);
 
-        Depth++;
         if (_isFirst)
         {
             _isFirst = false;
@@ -290,10 +288,9 @@ public sealed class MiniExcelDataReader : IMiniExcelDataReader
 
         if (_isAsyncSource)
         {
-            if (_asyncSource is IDisposable disposable)
-                disposable.Dispose();
-            else 
-                _asyncSource!.DisposeAsync(); // fire and forget if all other options are exhausted
+            if (_asyncSource is IDisposable disposable) disposable.Dispose();
+            // necessary fallback when the synchronous Close is called despite the data reader being initialized asynchronously  
+            else Task.Run(async () => await _asyncSource!.DisposeAsync().ConfigureAwait(false)).GetAwaiter().GetResult();
         }
         else
         {

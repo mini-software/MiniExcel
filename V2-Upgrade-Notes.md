@@ -16,3 +16,4 @@ so the return type for `OpenXmlImporter.QueryAsync` is `IAsyncEnumerable<T>` ins
 - `leaveOpen` parameter has been added to most methods that take a stream as input in both `OpenXmlImporter` and `CsvImporter` to configure whether the stream must be disposed after the operation performed is completed.   
 - `useHeaderRow` parameter in multiple `OpenXmlImporter` methods has been renamed to `hasHeaderRow` for making its usage clearer.
 - `CsvExporter.Export` API methods, not being required to return the same type of `OpenXmlExporter.Export`, now return `int` instead of `int[]`.
+- Most `OpenXmlImporter` and `CsvImporter` methods that take a stream as input now take an additional `leaveOpen` boolean parameter, to set to `true` explicitly if you want the stream to be left open at the of the operation.

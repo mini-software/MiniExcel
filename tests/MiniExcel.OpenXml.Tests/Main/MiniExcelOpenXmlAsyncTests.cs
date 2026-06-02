@@ -1484,7 +1484,7 @@ public class MiniExcelOpenXmlAsyncTests
         Assert.Equal(cellCount, progress.Value);
 
         ms.Seek(0, SeekOrigin.Begin);
-        var resultDataTable = await _excelImporter.QueryAsDataTableAsync(ms);
+        var resultDataTable = await _excelImporter.QueryAsDataTableAsync(ms, leaveOpen: true);
 
         //Confirm the data is correct
         Assert.Equal(dataTable.Rows.Count, resultDataTable.Rows.Count);

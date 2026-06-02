@@ -48,7 +48,9 @@ public sealed partial class OpenXmlImporter
         string startCell = "A1", bool treatHeaderAsData = false, OpenXmlConfiguration? configuration = null,
         bool leaveOpen = false, [EnumeratorCancellation] CancellationToken cancellationToken = default) where T : class, new()
     {
-        using var reader = await OpenXmlReader.CreateAsync(stream, configuration, leaveOpen, cancellationToken).ConfigureAwait(false);
+        var reader = await OpenXmlReader.CreateAsync(stream, configuration, leaveOpen, cancellationToken).ConfigureAwait(false);
+        await using var disposableReader = reader.ConfigureAwait(false);
+        
         await foreach (var item in reader.QueryAsync<T>(sheetName, startCell, treatHeaderAsData, cancellationToken).ConfigureAwait(false))
             yield return item;
     }
@@ -95,7 +97,9 @@ public sealed partial class OpenXmlImporter
         string? sheetName = null, string startCell = "A1", OpenXmlConfiguration? configuration = null,
         bool leaveOpen = false, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        using var reader = await OpenXmlReader.CreateAsync(stream, configuration, leaveOpen, cancellationToken).ConfigureAwait(false);
+        var reader = await OpenXmlReader.CreateAsync(stream, configuration, leaveOpen, cancellationToken).ConfigureAwait(false);
+        await using var disposableReader = reader.ConfigureAwait(false);
+
         await foreach (var item in reader.QueryAsync(hasHeaderRow, sheetName, startCell, cancellationToken).ConfigureAwait(false))
             yield return item;
     }
@@ -142,7 +146,9 @@ public sealed partial class OpenXmlImporter
         string? sheetName = null, string startCell = "A1", string? endCell = null, OpenXmlConfiguration? configuration = null,
         bool leaveOpen = false, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        using var reader = await OpenXmlReader.CreateAsync(stream, configuration, leaveOpen, cancellationToken).ConfigureAwait(false);
+        var reader = await OpenXmlReader.CreateAsync(stream, configuration, leaveOpen, cancellationToken).ConfigureAwait(false);
+        await using var disposableReader = reader.ConfigureAwait(false);
+
         await foreach (var item in reader.QueryRangeAsync(hasHeaderRow, sheetName, startCell, endCell, cancellationToken).ConfigureAwait(false))
             yield return item;
     }
@@ -191,7 +197,9 @@ public sealed partial class OpenXmlImporter
         int? endColumnIndex = null, OpenXmlConfiguration? configuration = null, bool leaveOpen = false, 
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        using var reader = await OpenXmlReader.CreateAsync(stream, configuration, leaveOpen, cancellationToken).ConfigureAwait(false);
+        var reader = await OpenXmlReader.CreateAsync(stream, configuration, leaveOpen, cancellationToken).ConfigureAwait(false);
+        await using var disposableReader = reader.ConfigureAwait(false);
+
         await foreach (var item in reader.QueryRangeAsync(hasHeaderRow, sheetName, startRowIndex, startColumnIndex, endRowIndex, endColumnIndex, cancellationToken).ConfigureAwait(false))
             yield return item;
     }
@@ -243,11 +251,13 @@ public sealed partial class OpenXmlImporter
         string? sheetName = null, string startCell = "A1", OpenXmlConfiguration? configuration = null,
         bool leaveOpen = false, CancellationToken cancellationToken = default)
     {
-        sheetName ??= (await GetSheetNamesAsync(stream, false, cancellationToken).ConfigureAwait(false)).First();
+        sheetName ??= (await GetSheetNamesAsync(stream, true, cancellationToken).ConfigureAwait(false)).First();
 
         var dt = new DataTable(sheetName);
         var first = true;
-        using var reader = await OpenXmlReader.CreateAsync(stream, configuration, leaveOpen, cancellationToken).ConfigureAwait(false);
+        var reader = await OpenXmlReader.CreateAsync(stream, configuration, leaveOpen, cancellationToken).ConfigureAwait(false);
+        await using var disposableReader = reader.ConfigureAwait(false);
+        
         var rows = reader.QueryAsync(false, sheetName, startCell, cancellationToken);
 
         var columnDict = new Dictionary<string, string>();
@@ -326,7 +336,9 @@ public sealed partial class OpenXmlImporter
     {
         var archive = await OpenXmlZip.CreateAsync(stream, leaveOpen: true, cancellationToken: cancellationToken).ConfigureAwait(false);
         await using var disposableArchive = archive.ConfigureAwait(false);
-        using var reader = await OpenXmlReader.CreateAsync(stream, null, leaveOpen, cancellationToken).ConfigureAwait(false);
+
+        var reader = await OpenXmlReader.CreateAsync(stream, null, leaveOpen, cancellationToken).ConfigureAwait(false);
+        await using var disposableReader = reader.ConfigureAwait(false);
 
         var rels = await OpenXmlReader.GetWorkbookRelsAsync(archive.EntryCollection, cancellationToken).ConfigureAwait(false);
         return rels?.Select(s => s.Name).ToList() ?? [];
@@ -364,9 +376,7 @@ public sealed partial class OpenXmlImporter
     public async Task<List<SheetInfo>> GetSheetInformationsAsync(Stream stream, bool leaveOpen = false, CancellationToken cancellationToken = default)
     {
         var archive = await OpenXmlZip.CreateAsync(stream, cancellationToken: cancellationToken).ConfigureAwait(false);
-
         await using var disposableArchve = archive.ConfigureAwait(false);
-        using var reader = await OpenXmlReader.CreateAsync(stream, null, leaveOpen, cancellationToken).ConfigureAwait(false);
 
         var rels = await OpenXmlReader.GetWorkbookRelsAsync(archive.EntryCollection, cancellationToken).ConfigureAwait(false);
         return rels?.Select((s, i) => s.ToSheetInfo((uint)i)).ToList() ?? [];
@@ -409,7 +419,9 @@ public sealed partial class OpenXmlImporter
     [CreateSyncVersion]
     public async Task<IList<ExcelRange>> GetSheetDimensionsAsync(Stream stream, bool leaveOpen = false, CancellationToken cancellationToken = default)
     {
-        using var reader = await OpenXmlReader.CreateAsync(stream, null, leaveOpen, cancellationToken).ConfigureAwait(false);
+        var reader = await OpenXmlReader.CreateAsync(stream, null, leaveOpen, cancellationToken).ConfigureAwait(false);
+        await using var disposableReader = reader.ConfigureAwait(false);
+
         return await reader.GetDimensionsAsync(cancellationToken).ConfigureAwait(false);
     }
 
@@ -494,7 +506,9 @@ public sealed partial class OpenXmlImporter
     [CreateSyncVersion]
     public async Task<CommentResultSet> RetrieveCommentsAsync(Stream stream, string? sheetName = null, bool leaveOpen = false, CancellationToken cancellationToken = default)
     {
-        using var reader = await OpenXmlReader.CreateAsync(stream, null, leaveOpen, cancellationToken).ConfigureAwait(false);
+        var reader = await OpenXmlReader.CreateAsync(stream, null, leaveOpen, cancellationToken).ConfigureAwait(false);
+        await using var disposableReader = reader.ConfigureAwait(false);
+
         return await reader.ReadCommentsAsync(sheetName, cancellationToken).ConfigureAwait(false);
     }
 
@@ -515,7 +529,9 @@ public sealed partial class OpenXmlImporter
         var stream = FileHelper.OpenSharedRead(path);
         await using var disposableStream = stream.ConfigureAwait(false); 
 
-        using var reader = await OpenXmlReader.CreateAsync(stream, null, false, cancellationToken).ConfigureAwait(false);
+        var reader = await OpenXmlReader.CreateAsync(stream, null, false, cancellationToken).ConfigureAwait(false);
+        await using var disposableReader = reader.ConfigureAwait(false);
+
         await foreach (var table in reader.QueryTableAsync(sheetName, tableName, false, cancellationToken).ConfigureAwait(false))
             yield return table;
     }
@@ -535,7 +551,9 @@ public sealed partial class OpenXmlImporter
     [CreateSyncVersion]
     public async IAsyncEnumerable<dynamic> QueryTableAsync(Stream stream, string? sheetName = null, string tableName = "Table1", bool leaveOpen = false, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        using var reader = await OpenXmlReader.CreateAsync(stream, null, leaveOpen, cancellationToken).ConfigureAwait(false);
+        var reader = await OpenXmlReader.CreateAsync(stream, null, leaveOpen, cancellationToken).ConfigureAwait(false);
+        await using var disposableReader = reader.ConfigureAwait(false);
+
         await foreach (var table in reader.QueryTableAsync(sheetName, tableName, false, cancellationToken).ConfigureAwait(false))
             yield return table;
     }
@@ -559,7 +577,9 @@ public sealed partial class OpenXmlImporter
         var stream = FileHelper.OpenSharedRead(path);
         await using var disposableStream = stream.ConfigureAwait(false); 
 
-        using var reader = await OpenXmlReader.CreateAsync(stream, null, false, cancellationToken).ConfigureAwait(false);
+        var reader = await OpenXmlReader.CreateAsync(stream, null, false, cancellationToken).ConfigureAwait(false);
+        await using var disposableReader = reader.ConfigureAwait(false);
+
         await foreach (var table in reader.QueryTableAsync<T>(sheetName, tableName, cancellationToken).ConfigureAwait(false))
             yield return table;
     }
@@ -581,7 +601,9 @@ public sealed partial class OpenXmlImporter
     public async IAsyncEnumerable<T> QueryTableAsync<T>(Stream stream, string? sheetName = null, string tableName = "Table1", bool leaveOpen = false, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         where T : class, new()
     {
-        using var reader = await OpenXmlReader.CreateAsync(stream, null, leaveOpen, cancellationToken).ConfigureAwait(false);
+        var reader = await OpenXmlReader.CreateAsync(stream, null, leaveOpen, cancellationToken).ConfigureAwait(false);
+        await using var disposableReader = reader.ConfigureAwait(false);
+
         await foreach (var table in reader.QueryTableAsync<T>(sheetName, tableName, cancellationToken).ConfigureAwait(false))
             yield return table;
     }

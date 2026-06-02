@@ -720,7 +720,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
 
             using (var stream = File.OpenRead(path))
             {
-                var rows =  _excelImporter.Query(stream, hasHeaderRow: false).ToList();
+                var rows =  _excelImporter.Query(stream, hasHeaderRow: false, leaveOpen: true).ToList();
                 Assert.Equal("Column1", rows[0].A);
                 Assert.Equal("Column2", rows[0].B);
                 Assert.Equal("MiniExcel", rows[1].A);
@@ -728,12 +728,12 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
                 Assert.Equal("Github", rows[2].A);
                 Assert.Equal(2, rows[2].B);
 
-                Assert.Equal("R&D",  _excelImporter.GetSheetNames(stream)[0]);
+                Assert.Equal("R&D", _excelImporter.GetSheetNames(stream)[0]);
             }
 
             using (var stream = File.OpenRead(path))
             {
-                var rows =  _excelImporter.Query(stream, hasHeaderRow: true).ToList();
+                var rows = _excelImporter.Query(stream, hasHeaderRow: true, leaveOpen: true).ToList();
 
                 Assert.Equal(2, rows.Count);
                 Assert.Equal("MiniExcel", rows[0].Column1);
@@ -741,7 +741,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
                 Assert.Equal("Github", rows[1].Column1);
                 Assert.Equal(2, rows[1].Column2);
 
-                Assert.Equal("success!",  _excelImporter.GetSheetNames(stream)[1]);
+                Assert.Equal("success!", _excelImporter.GetSheetNames(stream)[1]);
             }
 
             Assert.Equal("A1:B3", SheetHelper.GetFirstSheetDimensionRefValue(path));
@@ -757,7 +757,7 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
 
             using (var stream = File.OpenRead(path))
             {
-                var rows =  _excelImporter.Query(stream, hasHeaderRow: false).ToList();
+                var rows = _excelImporter.Query(stream, hasHeaderRow: false).ToList();
                 Assert.Equal(3, rows.Count);
             }
 

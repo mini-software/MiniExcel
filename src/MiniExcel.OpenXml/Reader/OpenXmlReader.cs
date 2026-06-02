@@ -394,7 +394,7 @@ internal sealed partial class OpenXmlReader : IMiniExcelReader
         {
             var cellValueString = cellValue?.ToString();
             if (!string.IsNullOrWhiteSpace(cellValueString))
-                headRows.Add(columnIndex, cellValueString);
+                headRows.Add(columnIndex, cellValueString!);
         }
         else if (headRows.TryGetValue(columnIndex, out var key))
         {
@@ -977,14 +977,29 @@ internal sealed partial class OpenXmlReader : IMiniExcelReader
         return new GetMaxRowColumnIndexResult(true, withoutCr, maxRowIndex, maxColumnIndex);
     }
 
-    public void Dispose()
+    private void DisposeCore()
     {
-        if (_disposed)
-            return;
-
         if (SharedStrings is SharedStringsDiskCache cache)
             cache.Dispose();
+    }
+    
+    public void Dispose()
+    {
+        if (!_disposed)
+        {
+            DisposeCore();
+            Archive.Dispose();
+            _disposed = true;
+        }
+    }
 
-        _disposed = true;
+    public async ValueTask DisposeAsync()
+    {
+        if (!_disposed)
+        {
+            DisposeCore();
+            await Archive.DisposeAsync().ConfigureAwait(false);
+            _disposed = true;
+        }
     }
 }

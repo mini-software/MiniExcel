@@ -48,7 +48,9 @@ internal partial class OpenXmlWriter
         using var disposableOldArchive = _oldArchive;
         using var disposableNewArchive = _archive;
 #endif
-        using var reader = await OpenXmlReader.CreateAsync(_oldStream!, _configuration, cancellationToken: cancellationToken).ConfigureAwait(false);
+        var reader = await OpenXmlReader.CreateAsync(_oldStream!, _configuration, cancellationToken: cancellationToken).ConfigureAwait(false);
+        await using var disposableReader = reader.ConfigureAwait(false);
+
         var rels = await OpenXmlReader.GetWorkbookRelsAsync(_oldArchive!.Entries, cancellationToken).ConfigureAwait(false) ?? [];
 
         _sheets.AddRange(rels

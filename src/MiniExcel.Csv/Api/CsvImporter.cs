@@ -45,8 +45,10 @@ public partial class CsvImporter
         CsvConfiguration? configuration = null, bool leaveOpen = false, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         where T : class, new()
     {
-        using var csv = new CsvReader(stream, configuration, leaveOpen);
-        await foreach (var item in csv.QueryAsync<T>(null, "A1", treatHeaderAsData, cancellationToken).ConfigureAwait(false))
+        var reader = new CsvReader(stream, configuration, leaveOpen);
+        await using var disposableReader = reader.ConfigureAwait(false);
+
+        await foreach (var item in reader.QueryAsync<T>(null, "A1", treatHeaderAsData, cancellationToken).ConfigureAwait(false))
             yield return item;
     }
 
@@ -86,8 +88,10 @@ public partial class CsvImporter
     public async IAsyncEnumerable<dynamic> QueryAsync(Stream stream, bool hasHeaderRow = false,
         CsvConfiguration? configuration = null, bool leaveOpen = false, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        using var excelReader = new CsvReader(stream, configuration, leaveOpen);
-        await foreach (var item in excelReader.QueryAsync(hasHeaderRow, null, "A1", cancellationToken).ConfigureAwait(false))
+        var reader = new CsvReader(stream, configuration, leaveOpen);
+        await using var disposableReader = reader.ConfigureAwait(false);
+
+        await foreach (var item in reader.QueryAsync(hasHeaderRow, null, "A1", cancellationToken).ConfigureAwait(false))
             yield return item;
     }
 
@@ -134,7 +138,9 @@ public partial class CsvImporter
     {
         var dt = new DataTable();
         var first = true;
-        using var reader = new CsvReader(stream, configuration, leaveOpen);
+        var reader = new CsvReader(stream, configuration, leaveOpen);
+        await using var disposableReader = reader.ConfigureAwait(false);
+
         var rows = reader.QueryAsync(false, null, "A1", cancellationToken);
 
         var columnDict = new Dictionary<string, string>();
@@ -194,7 +200,7 @@ public partial class CsvImporter
     {
         var stream = FileHelper.OpenSharedRead(path);
         await using var disposableStream = stream.ConfigureAwait(false);
-        return await GetColumnNamesAsync(stream, hasHeaderRow, configuration, cancellationToken).ConfigureAwait(false);
+        return await GetColumnNamesAsync(stream, hasHeaderRow, configuration, false, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -203,13 +209,14 @@ public partial class CsvImporter
     /// <param name="stream">The stream containing the CSV data.</param>
     /// <param name="hasHeaderRow">If true, the first row values are used as column names. If false, column letters (A, B, C, etc.) are used. Default is false.</param>
     /// <param name="configuration">Optional configuration settings (delimiters, encoding, etc.).</param>
+    /// <param name="leaveOpen">True to leave the stream open after the operation is completed, otherwise false.</param>
     /// <param name="cancellationToken">A token to cancel the asynchronous operation.</param>
     /// <returns>A collection of column names from the specified location, or an empty collection if the sheet is empty.</returns>
     [CreateSyncVersion]
     public async Task<ICollection<string>> GetColumnNamesAsync(Stream stream, bool hasHeaderRow = false,
-        CsvConfiguration? configuration = null, CancellationToken cancellationToken = default)
+        CsvConfiguration? configuration = null, bool leaveOpen = false, CancellationToken cancellationToken = default)
     {
-        var enumerator = QueryAsync(stream, hasHeaderRow, configuration, leaveOpen: false, cancellationToken).GetAsyncEnumerator(cancellationToken);
+        var enumerator = QueryAsync(stream, hasHeaderRow, configuration, leaveOpen: leaveOpen, cancellationToken).GetAsyncEnumerator(cancellationToken);
         await using var disposableEnumerator = enumerator.ConfigureAwait(false);
 
         if (await enumerator.MoveNextAsync().ConfigureAwait(false))

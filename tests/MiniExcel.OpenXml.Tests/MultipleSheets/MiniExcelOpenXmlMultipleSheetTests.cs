@@ -29,17 +29,17 @@ public class MiniExcelOpenXmlMultipleSheetTests
 
         using var stream = File.OpenRead(path);
         
-        var rows4 = _excelImporter.Query(stream, sheetName: "Sheet3").ToList();
+        var rows4 = _excelImporter.Query(stream, sheetName: "Sheet3", leaveOpen: true).ToList();
         Assert.Equal(5, rows4.Count);
         Assert.Equal(3, rows4[0].A);
         Assert.Equal(3, rows4[0].B);
 
-        var rows5 = _excelImporter.Query(stream, sheetName: "Sheet2").ToList();
+        var rows5 = _excelImporter.Query(stream, sheetName: "Sheet2", leaveOpen: true).ToList();
         Assert.Equal(12, rows5.Count);
         Assert.Equal(1, rows5[0].A);
         Assert.Equal(1, rows5[0].B);
 
-        var rows6 = _excelImporter.Query(stream, sheetName: "Sheet1").ToList();
+        var rows6 = _excelImporter.Query(stream, sheetName: "Sheet1", leaveOpen: true).ToList();
         Assert.Equal(12, rows6.Count);
         Assert.Equal(2, rows6[0].A);
         Assert.Equal(2, rows6[0].B);
@@ -75,12 +75,12 @@ public class MiniExcelOpenXmlMultipleSheetTests
         Assert.Equal(["Sheet1", "Sheet2", "Sheet3"], sheetNames1);
 
         using var stream = File.OpenRead(path);
-        var sheetNames2 = _excelImporter.GetSheetNames(stream).ToList();
+        var sheetNames2 = _excelImporter.GetSheetNames(stream, leaveOpen: true).ToList();
             
         Assert.Equal(["Sheet1", "Sheet2", "Sheet3"], sheetNames2);
         foreach (var sheetName in sheetNames2)
         {
-            var rows =  _excelImporter.Query(stream, sheetName: sheetName).ToList();
+            var rows =  _excelImporter.Query(stream, sheetName: sheetName, leaveOpen: true).ToList();
             Assert.NotEmpty(rows);
         }
     }
@@ -91,21 +91,21 @@ public class MiniExcelOpenXmlMultipleSheetTests
         var path = PathHelper.GetFile("xlsx/TestDynamicSheet.xlsx");
         using (var stream = File.OpenRead(path))
         {
-            var users =  _excelImporter.Query<UserDto>(stream).ToList();
+            var users = _excelImporter.Query<UserDto>(stream, leaveOpen: true).ToList();
             Assert.Equal(2, users.Count);
             Assert.Equal("Jack", users[0].Name);
 
-            var departments =  _excelImporter.Query<DepartmentDto>(stream).ToList();
+            var departments = _excelImporter.Query<DepartmentDto>(stream).ToList();
             Assert.Equal(2, departments.Count);
             Assert.Equal("HR", departments[0].Name);
         }
 
         {
-            var users =  _excelImporter.Query<UserDto>(path).ToList();
+            var users = _excelImporter.Query<UserDto>(path).ToList();
             Assert.Equal(2, users.Count);
             Assert.Equal("Jack", users[0].Name);
 
-            var departments =  _excelImporter.Query<DepartmentDto>(path).ToList();
+            var departments = _excelImporter.Query<DepartmentDto>(path).ToList();
             Assert.Equal(2, departments.Count);
             Assert.Equal("HR", departments[0].Name);
         }
@@ -127,34 +127,34 @@ public class MiniExcelOpenXmlMultipleSheetTests
         using (var stream = File.OpenRead(path))
         {
             // take first sheet as default
-            var users =  _excelImporter.Query(stream, configuration: configuration, hasHeaderRow: true).ToList();
+            var users = _excelImporter.Query(stream, configuration: configuration, hasHeaderRow: true, leaveOpen: true).ToList();
             Assert.Equal(2, users.Count);
             Assert.Equal("Jack", users[0].Name);
 
             // take second sheet by sheet name
-            var departments =  _excelImporter.Query(stream, sheetName: "Departments", configuration: configuration, hasHeaderRow: true).ToList();
+            var departments = _excelImporter.Query(stream, sheetName: "Departments", configuration: configuration, hasHeaderRow: true, leaveOpen: true).ToList();
             Assert.Equal(2, departments.Count);
             Assert.Equal("HR", departments[0].Name);
 
             // take second sheet by sheet key
-            departments =  _excelImporter.Query(stream, sheetName: "departmentSheet", configuration: configuration, hasHeaderRow: true).ToList();
+            departments = _excelImporter.Query(stream, sheetName: "departmentSheet", configuration: configuration, hasHeaderRow: true).ToList();
             Assert.Equal(2, departments.Count);
             Assert.Equal("HR", departments[0].Name);
         }
 
         {
             // take first sheet as default
-            var users =  _excelImporter.Query(path, configuration: configuration, hasHeaderRow: true).ToList();
+            var users = _excelImporter.Query(path, configuration: configuration, hasHeaderRow: true).ToList();
             Assert.Equal(2, users.Count);
             Assert.Equal("Jack", users[0].Name);
 
             // take second sheet by sheet name
-            var departments =  _excelImporter.Query(path, sheetName: "Departments", configuration: configuration, hasHeaderRow: true).ToList();
+            var departments = _excelImporter.Query(path, sheetName: "Departments", configuration: configuration, hasHeaderRow: true).ToList();
             Assert.Equal(2, departments.Count);
             Assert.Equal("HR", departments[0].Name);
 
             // take second sheet by sheet key
-            departments =  _excelImporter.Query(path, sheetName: "departmentSheet", configuration: configuration, hasHeaderRow: true).ToList();
+            departments = _excelImporter.Query(path, sheetName: "departmentSheet", configuration: configuration, hasHeaderRow: true).ToList();
             Assert.Equal(2, departments.Count);
             Assert.Equal("HR", departments[0].Name);
         }

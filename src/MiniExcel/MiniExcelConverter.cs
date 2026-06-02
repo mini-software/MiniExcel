@@ -7,12 +7,13 @@ namespace MiniExcelLib;
 
 public static partial class MiniExcelConverter
 {
+    /// <remarks>The origin stream is left open.</remarks>
     [CreateSyncVersion]
     public static async Task ConvertCsvToXlsxAsync(Stream csv, Stream xlsx, bool csvHasHeader = false, CancellationToken cancellationToken = default)
     {
         var value = MiniExcel.Importers
             .GetCsvImporter()
-            .QueryAsync(csv, hasHeaderRow: csvHasHeader, cancellationToken: cancellationToken);
+            .QueryAsync(csv, hasHeaderRow: csvHasHeader, leaveOpen: true, cancellationToken: cancellationToken);
 
         await MiniExcel.Exporters
             .GetOpenXmlExporter()
@@ -38,12 +39,13 @@ public static partial class MiniExcelConverter
         await ConvertXlsxToCsvAsync(xlsxStream, csvStream, xlsxHasHeader, cancellationToken).ConfigureAwait(false);
     }
 
+    /// <remarks>The origin stream is left open.</remarks>
     [CreateSyncVersion]
     public static async Task ConvertXlsxToCsvAsync(Stream xlsx, Stream csv, bool xlsxHasHeader = true, CancellationToken cancellationToken = default)
     {
         var value = MiniExcel.Importers
             .GetOpenXmlImporter()
-            .QueryAsync(xlsx, hasHeaderRow: xlsxHasHeader, cancellationToken: cancellationToken)
+            .QueryAsync(xlsx, hasHeaderRow: xlsxHasHeader, leaveOpen: true, cancellationToken: cancellationToken)
             .ConfigureAwait(false);
         
         await MiniExcel.Exporters

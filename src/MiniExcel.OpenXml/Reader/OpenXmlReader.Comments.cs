@@ -10,13 +10,17 @@ internal partial class OpenXmlReader
     [CreateSyncVersion]
     internal async Task<CommentResultSet> ReadCommentsAsync(string? sheetName, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrEmpty(sheetName))
-            throw new ArgumentException("sheetName cannot be null or empty", nameof(sheetName));
-
         SetWorkbookRels(Archive.EntryCollection);
-        var sheetRecord = _sheetRecords?.SingleOrDefault(s => s.Name.Equals(sheetName, StringComparison.CurrentCultureIgnoreCase));
+
+        var sheetRecord = string.IsNullOrEmpty(sheetName) 
+            ? _sheetRecords?.FirstOrDefault() 
+            : _sheetRecords?.SingleOrDefault(s => s.Name.Equals(sheetName, StringComparison.CurrentCultureIgnoreCase));
+
         if (sheetRecord?.Path?.Split('/')[^1] is not { } sheetFile)
-            throw new InvalidDataException($"There is no sheet named {sheetName}");
+            throw new InvalidDataException("A valid worksheet could not be found.");
+
+        if (string.IsNullOrEmpty(sheetName))
+            sheetName = sheetRecord.Name;
 
         if (Archive.GetEntry($"xl/worksheets/_rels/{sheetFile}.rels") is not { } rel)
             return new CommentResultSet(sheetName, [], []);

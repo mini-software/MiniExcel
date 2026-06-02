@@ -472,7 +472,7 @@ public sealed partial class OpenXmlImporter
     /// The returned <see cref="CommentResultSet"/> provides access to both threaded comments and legacy note comments, along with the associated metadata.
     /// </remarks>
     [CreateSyncVersion]
-    public async Task<CommentResultSet> RetrieveCommentsAsync(string path, string? sheetName, CancellationToken cancellationToken = default)
+    public async Task<CommentResultSet> RetrieveCommentsAsync(string path, string? sheetName = null, CancellationToken cancellationToken = default)
     {
         var stream = FileHelper.OpenSharedRead(path);
         await using var disposableStream = stream.ConfigureAwait(false); 
@@ -492,7 +492,7 @@ public sealed partial class OpenXmlImporter
     /// The returned <see cref="CommentResultSet"/> provides access to both threaded comments and legacy note comments, along with the associated metadata.
     /// </remarks>
     [CreateSyncVersion]
-    public async Task<CommentResultSet> RetrieveCommentsAsync(Stream stream, string? sheetName, bool leaveOpen = false, CancellationToken cancellationToken = default)
+    public async Task<CommentResultSet> RetrieveCommentsAsync(Stream stream, string? sheetName = null, bool leaveOpen = false, CancellationToken cancellationToken = default)
     {
         using var reader = await OpenXmlReader.CreateAsync(stream, null, leaveOpen, cancellationToken).ConfigureAwait(false);
         return await reader.ReadCommentsAsync(sheetName, cancellationToken).ConfigureAwait(false);
@@ -510,7 +510,7 @@ public sealed partial class OpenXmlImporter
     /// This method reads from the specified table within a stream and yields rows as dynamic objects with properties based on the table's column names.
     /// </remarks>
     [CreateSyncVersion]
-    public async IAsyncEnumerable<dynamic> QueryTableAsync(string path, string sheetName = "Sheet1", string tableName = "Table1", [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    public async IAsyncEnumerable<dynamic> QueryTableAsync(string path, string? sheetName = null, string tableName = "Table1", [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         var stream = FileHelper.OpenSharedRead(path);
         await using var disposableStream = stream.ConfigureAwait(false); 
@@ -533,7 +533,7 @@ public sealed partial class OpenXmlImporter
     /// This method reads from the specified table within a stream and yields rows as dynamic objects with properties based on the table's column names.
     /// </remarks>
     [CreateSyncVersion]
-    public async IAsyncEnumerable<dynamic> QueryTableAsync(Stream stream, string sheetName = "Sheet1", string tableName = "Table1", bool leaveOpen = false, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    public async IAsyncEnumerable<dynamic> QueryTableAsync(Stream stream, string? sheetName = null, string tableName = "Table1", bool leaveOpen = false, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         using var reader = await OpenXmlReader.CreateAsync(stream, null, leaveOpen, cancellationToken).ConfigureAwait(false);
         await foreach (var table in reader.QueryTableAsync(sheetName, tableName, false, cancellationToken).ConfigureAwait(false))
@@ -553,7 +553,7 @@ public sealed partial class OpenXmlImporter
     /// This method reads from the specified table within a stream and maps each row to an instance of the provided type. The mapping is based on property/field names matching column headers.
     /// </remarks>
     [CreateSyncVersion]
-    public async IAsyncEnumerable<T> QueryTableAsync<T>(string path, string sheetName = "Sheet1", string tableName = "Table1", [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    public async IAsyncEnumerable<T> QueryTableAsync<T>(string path, string? sheetName = null, string tableName = "Table1", [EnumeratorCancellation] CancellationToken cancellationToken = default)
         where T : class, new()
     {
         var stream = FileHelper.OpenSharedRead(path);
@@ -578,7 +578,7 @@ public sealed partial class OpenXmlImporter
     /// This method reads from the specified table within a stream and maps each row to an instance of the provided type. The mapping is based on property/field names matching column headers.
     /// </remarks>
     [CreateSyncVersion]
-    public async IAsyncEnumerable<T> QueryTableAsync<T>(Stream stream, string sheetName = "Sheet1", string tableName = "Table1", bool leaveOpen = false, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    public async IAsyncEnumerable<T> QueryTableAsync<T>(Stream stream, string? sheetName = null, string tableName = "Table1", bool leaveOpen = false, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         where T : class, new()
     {
         using var reader = await OpenXmlReader.CreateAsync(stream, null, leaveOpen, cancellationToken).ConfigureAwait(false);

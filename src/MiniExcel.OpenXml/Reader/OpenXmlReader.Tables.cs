@@ -3,7 +3,7 @@ namespace MiniExcelLib.OpenXml.Reader;
 internal partial class OpenXmlReader
 {
     [CreateSyncVersion]
-    internal IAsyncEnumerable<T> QueryTableAsync<T>(string sheetName, string tableName, CancellationToken cancellationToken = default)
+    internal IAsyncEnumerable<T> QueryTableAsync<T>(string? sheetName, string tableName, CancellationToken cancellationToken = default)
         where T : class, new()
     {
         var query = QueryTableAsync(sheetName, tableName, true, cancellationToken);
@@ -11,7 +11,7 @@ internal partial class OpenXmlReader
     }
 
     [CreateSyncVersion]
-    internal async IAsyncEnumerable<IDictionary<string, object?>> QueryTableAsync(string sheetName, string tableName, bool prependHeaders, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    internal async IAsyncEnumerable<IDictionary<string, object?>> QueryTableAsync(string? sheetName, string tableName, bool prependHeaders, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         TableInfo? table = null;
         await foreach (var item in GetTableInfosAsync(sheetName, cancellationToken).ConfigureAwait(false))
@@ -74,11 +74,16 @@ internal partial class OpenXmlReader
     }
 
     [CreateSyncVersion]
-    private async IAsyncEnumerable<TableInfo> GetTableInfosAsync(string sheetName, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    private async IAsyncEnumerable<TableInfo> GetTableInfosAsync(string? sheetName, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         var rels = await GetWorkbookRelsAsync(Archive.EntryCollection, cancellationToken).ConfigureAwait(false);
-        if (rels?.Find(x => x.Name.Equals(sheetName, StringComparison.OrdinalIgnoreCase)) is not { Path: { } path })
-            throw new InvalidDataException($"Worksheet {sheetName} was not found.");
+
+        var sheetRecord = string.IsNullOrEmpty(sheetName) 
+            ? rels?.FirstOrDefault()
+            : rels?.Find(x => x.Name.Equals(sheetName, StringComparison.OrdinalIgnoreCase));
+
+        if (sheetRecord is not { Path: { } path })
+            throw new InvalidDataException("A valid worksheet could not be found.");
         
         List<string> tables = [];
         var sheetFilename = path.Split('/')[^1];

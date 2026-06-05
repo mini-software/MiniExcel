@@ -1687,7 +1687,11 @@ using (var csvStream = new MemoryStream())
 }
 ```
 
-#### 3. Custom CultureInfo
+#### 3. Convert Excel to PDF
+
+If you need to convert Excel files to PDF, you can use [MiniPdf](https://github.com/mini-software/MiniPdf).
+
+#### 4. Custom CultureInfo
 
 You can customise CultureInfo used by MiniExcel through the `Culture` configuration parameter. The default is `CultureInfo.InvariantCulture`:
 
@@ -1698,14 +1702,14 @@ var config = new CsvConfiguration
 };
 ```
 
-#### 4. Custom Buffer Size
+#### 5. Custom Buffer Size
 
 The default buffer size is 5MB, but you can easily customize it:
 ```csharp
 var conf = new OpenXmlConfiguration { BufferSize = 1024 * 1024 * 10 };
 ```
 
-#### 5. FastMode
+#### 6. FastMode
 
 You can set the configuration property `FastMode` to achieve faster saving speeds, but this will make the memory consumption much higher, so it's not recommended:
 
@@ -1716,7 +1720,7 @@ var exporter = MiniExcel.Exporters.GetOpenXmlExporter();
 exporter.Export(path, reader, configuration: config);
 ```
 
-#### 6. Adding images in batch
+#### 7. Adding images in batch
 
 Please add pictures before batch generating the rows' data or a large amount of memory will be used when calling `AddPicture`:
 
@@ -1745,7 +1749,7 @@ templater.AddPicture(path, images);
 ```
 ![Image](https://github.com/user-attachments/assets/19c4d241-9753-4ede-96c8-f810c1a22247)
 
-#### 7. Get Sheets Dimensions
+#### 8. Get Sheets Dimensions
 
 You can easily retrieve the dimensions of all worksheets of an Excel file:
 
@@ -1754,7 +1758,7 @@ var importer = MiniExcel.Importers.GetOpenXmlImporter();
 var dim = importer.GetSheetDimensions(path);
 ```
 
-#### 8. Retrieve Table Data
+#### 9. Retrieve Table Data
 
 It is possible to query arbitrary tables from any worksheet. 
 You can either keep it dynamic or map it to a strong-typed object like reqular queries: 

@@ -27,13 +27,39 @@ internal sealed partial class OpenXmlReader : IMiniExcelReader
     [CreateSyncVersion]
     internal static async Task<OpenXmlReader> CreateAsync(Stream stream, IMiniExcelConfiguration? configuration, bool leaveOpen = false, CancellationToken cancellationToken = default)
     {
-        ThrowHelper.ThrowIfInvalidOpenXml(stream);
+        OpenXmlZip? archive = null;
+        OpenXmlReader? reader = null;
 
-        var archive = await OpenXmlZip.CreateAsync(stream, leaveOpen: leaveOpen, cancellationToken: cancellationToken).ConfigureAwait(false);
-        var reader = new OpenXmlReader(archive, configuration);
-        await reader.SetSharedStringsAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            ThrowHelper.ThrowIfInvalidOpenXml(stream);
+    
+            archive = await OpenXmlZip.CreateAsync(stream, leaveOpen: leaveOpen, cancellationToken: cancellationToken).ConfigureAwait(false);
+            reader = new OpenXmlReader(archive, configuration);
+            await reader.SetSharedStringsAsync(cancellationToken).ConfigureAwait(false);
 
-        return reader;
+            var result = reader;
+            reader = null;
+            archive = null;
+            stream = null!;
+            
+            return result;
+        }
+        finally
+        {
+#if SYNC_ONLY
+            reader?.Dispose();
+#else
+            if (reader?.DisposeAsync() is { } disposeTask)
+                await disposeTask.ConfigureAwait(false);
+#endif
+
+            if (archive is not null)
+                await archive.DisposeAsync().ConfigureAwait(false);
+            
+            if (!leaveOpen && (Stream?)stream is not null)
+                await stream.DisposeAsync().ConfigureAwait(false);
+        }
     }
     
     [CreateSyncVersion]

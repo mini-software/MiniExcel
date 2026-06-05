@@ -1800,4 +1800,28 @@ public class MiniExcelOpenXmlAsyncTests
             CultureInfo.CurrentUICulture = ogCulture;
         }
     }
+
+    [Fact]
+    public async Task MultipleResultSets()
+    {
+        await using var stream =File.OpenRead(PathHelper.GetFile("xlsx/TestTypeMapping.xlsx"));
+        await using var dr = await OpenXmlDataReader.CreateAsync(stream, hasHeaderRow: true, leaveOpen: true);
+        await dr.ReadAsync();
+        var v1 = dr.GetValue(0);
+        var nr = await dr.NextResultAsync();
+        await dr.ReadAsync();
+        var v2 = dr.GetValue(0);
+    }
+
+    [Fact]
+    public void MultipleResultSets2()
+    {
+        using var stream = File.OpenRead(PathHelper.GetFile("xlsx/TestMultiSheet.xlsx"));
+        using var dr = OpenXmlDataReader.Create(stream, leaveOpen: true);
+        dr.Read();
+        var v1 = dr.GetValue(0);
+        var nr = dr.NextResult();
+        dr.Read();
+        var v2 = dr.GetValue(0);
+    }
 }

@@ -1,6 +1,5 @@
 ﻿using System.Data;
 using MiniExcelLib;
-using MiniExcelLib.Core;
 using MiniExcelLib.Csv;
 using MiniExcelLib.OpenXml;
 using MiniExcelLib.OpenXml.Models;
@@ -9,6 +8,7 @@ using Zomp.SyncMethodGenerator;
 
 using NewMiniExcel = MiniExcelLib.MiniExcel;
 using NewOpenXmlConfiguration = MiniExcelLib.OpenXml.OpenXmlConfiguration;
+using MiniExcelDataReader = MiniExcelLib.Core.MiniExcelDataReaderBase;
 
 // ReSharper disable once CheckNamespace
 namespace MiniExcelLibs;

@@ -102,7 +102,7 @@ public class MiniExcelCsvAsyncTests
             Assert.Equal(2, rowsWritten);
 
             using var reader = new StreamReader(path);
-            using var csv = new global::CsvHelper.CsvReader(reader, CultureInfo.InvariantCulture);
+            using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
             var records = csv.GetRecords<dynamic>().ToList();
             
             Assert.Equal(@"""<>+-*//}{\\n", records[0].a);
@@ -143,7 +143,7 @@ public class MiniExcelCsvAsyncTests
             Assert.Equal(2, rowsWritten);
 
             using var reader = new StreamReader(path);
-            using var csv = new global::CsvHelper.CsvReader(reader, CultureInfo.InvariantCulture);
+            using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
             var records = csv.GetRecords<dynamic>().ToList();
             
             var row1 = records[0] as IDictionary<string, object>;
@@ -188,7 +188,7 @@ public class MiniExcelCsvAsyncTests
         Assert.Equal(2, rowsWritten);
 
         using var reader = new StreamReader(path2);
-        using var csv = new global::CsvHelper.CsvReader(reader, CultureInfo.InvariantCulture);
+        using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
         var records = csv.GetRecords<dynamic>().ToList();
             
         Assert.Equal(@"""<>+-*//}{\\n", records[0].a);
@@ -224,7 +224,7 @@ public class MiniExcelCsvAsyncTests
         Assert.Equal("Test2", rows1[1].B);
 
         using var reader = new StreamReader(path);
-        using var csv = new global::CsvHelper.CsvReader(reader, CultureInfo.InvariantCulture);
+        using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
         var rows2 = csv.GetRecords<dynamic>().ToList();
         
         Assert.Equal("Test1", rows2[0].A);

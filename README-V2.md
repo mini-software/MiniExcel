@@ -208,7 +208,7 @@ Check what we are planning for future versions [here](https://github.com/mini-so
 
 The code for the benchmarks can be found in [MiniExcel.Benchmarks](benchmarks/MiniExcel.Benchmarks/Program.cs).
 
-The file used to test performance is [**Test1,000,000x10.xlsx**](benchmarks/MiniExcel.Benchmarks/Test1%2C000%2C000x10.xlsx), a 32MB document containing 1,000,000 rows * 10 columns whose cells are filled with the string "HelloWorld".
+The main file used to test performance is [**Test100,000x10.xlsx**](benchmarks/MiniExcel.Benchmarks/Test1%2C000%2C000x10.xlsx), a document containing 100,000 rows * 10 columns whose cells are filled with unique strings.
 
 To run all the benchmarks use:
 
@@ -1606,12 +1606,12 @@ There is support for reading one cell at a time using a custom `IDataReader`:
 
 ```csharp
 var importer = MiniExcel.Importers.GetOpenXmlImporter();
-using var reader = importer.GetDataReader(path, useHeaderRow: true);
+using OpenXmlDataReader reader = importer.GetDataReader(path, hasHeaderRow: true);
 
 // or
 
 var importer = MiniExcel.Importers.GetCsvImporter();
-using var reader = importer.GetDataReader(path, useHeaderRow: true);
+using CsvDataReader reader = importer.GetDataReader(path, hasHeaderRow: true);
 
 
 while (reader.Read())
@@ -1622,6 +1622,8 @@ while (reader.Read())
     }
 }
 ```
+When not providing a specific worksheet name, all sheets will be available sequentially by calling the `NextResult` method on the `OpenXmlDataReader`.
+Calling the `NextResult` method on the `CsvDataReader` will always raise a `NotSupportedException` instead.
 
 
 #### Add records

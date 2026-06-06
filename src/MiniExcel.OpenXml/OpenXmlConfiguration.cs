@@ -39,6 +39,11 @@ public class OpenXmlConfiguration : MiniExcelBaseConfiguration
     public bool EnableAutoWidth { get; set; }
     public double MinWidth { get; set; } = 8.42857143;
     public double MaxWidth { get; set; } = 200;
+
+    /// <summary>
+    /// This option sets the maximum level of nesting a property in a model passed to the <see cref="OpenXmlTemplater" /> is allowed to have 
+    /// </summary>
+    public int RecursivePropertiesMaxDepth { get; set; } = 4;
 }
 
 public enum TableStyles

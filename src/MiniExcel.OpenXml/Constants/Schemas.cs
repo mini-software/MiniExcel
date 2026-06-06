@@ -11,6 +11,7 @@ internal static class Schemas
     public const string SpreadsheetmlXmlSpreadsheetDrawing = "http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing";
     public const string SpreadsheetmlXmlDrawingml2006 = "http://schemas.openxmlformats.org/drawingml/2006/main";
     public const string SpreadsheetmlXmlDrawing2014 = "http://schemas.microsoft.com/office/drawing/2014/main";
+    public const string SpreadsheetmlXmlWorksheetRelationship = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet";
     public const string SpreadsheetmlXmlDrawingRelationship = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing";
     public const string SpreadsheetmlXmlImageRelationship = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/image";
     public const string SpreadsheetmlXmlTableRelationship = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/table";

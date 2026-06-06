@@ -42,7 +42,9 @@ internal partial class OpenXmlTemplate : IMiniExcelTemplate
             throw new ArgumentException("The template stream must be seekable");
 
         templateStream.Seek(0, SeekOrigin.Begin);
-        using var templateReader = await OpenXmlReader.CreateAsync(templateStream, null, cancellationToken: cancellationToken).ConfigureAwait(false);
+        var templateReader = await OpenXmlReader.CreateAsync(templateStream, null, cancellationToken: cancellationToken).ConfigureAwait(false);
+        await using var disposableTemplateReader = templateReader.ConfigureAwait(false);
+
         var outputFileArchive = await OpenXmlZip.CreateAsync(_outputFileStream, mode: ZipArchiveMode.Create, true, Encoding.UTF8, isUpdateMode: false, cancellationToken: cancellationToken).ConfigureAwait(false);
         await using var disposableOutputFileArchive = outputFileArchive.ConfigureAwait(false);
 
@@ -70,15 +72,16 @@ internal partial class OpenXmlTemplate : IMiniExcelTemplate
         using var originalArchive = new ZipArchive(templateStream, ZipArchiveMode.Read);
 #endif
         // sheet name map
-        var sheetPathRealNameMap = GetRealSheetNameMap(originalArchive);
+        var sheetPathRealNameMap = await GetSheetNameMapAsync(originalArchive, cancellationToken).ConfigureAwait(false);
 
         // Iterate through each entry in the original archive
         foreach (var entry in originalArchive.Entries)
         {
             var entryName = entry.FullName.TrimStart('/');
             if (entryName.StartsWith(ExcelFileNames.WorksheetBase, StringComparison.OrdinalIgnoreCase) || 
-                entryName.Equals(ExcelFileNames.CalcChain, StringComparison.OrdinalIgnoreCase)) ||
-                entryName.Equals("xl/workbook.xml") || entryName.Equals("xl/_rels/workbook.xml.rels"))
+                entryName.Equals(ExcelFileNames.CalcChain, StringComparison.OrdinalIgnoreCase) ||
+                entryName.Equals(ExcelFileNames.Workbook, StringComparison.OrdinalIgnoreCase) ||
+                entryName.Equals(ExcelFileNames.WorkbookRels, StringComparison.OrdinalIgnoreCase))
             {
                 continue;
             }
@@ -104,16 +107,13 @@ internal partial class OpenXmlTemplate : IMiniExcelTemplate
         var templateSharedStrings = templateReader.SharedStrings;
         templateStream.Position = 0;
 
-
         //read all xlsx sheets
         var templateSheets = templateReader.Archive.ZipFile.Entries
-            .Where(entry => entry.FullName
-                .TrimStart('/')
-                .StartsWith(ExcelFileNames.WorksheetBase, StringComparison.OrdinalIgnoreCase));
+            .Where(entry => entry.FullName.TrimStart('/').StartsWith(ExcelFileNames.WorksheetBase, StringComparison.OrdinalIgnoreCase));
 
         int sheetIdx = 0;
         // collect all sheet info for batch add to config, avoid duplicated and missing sheet name when create mode
-        var allSheetInfos = new List<(int Index, string Name)>();
+        List<(int Index, string Name)> allSheetInfos = [];
 
         foreach (var templateSheet in templateSheets)
         {
@@ -125,33 +125,25 @@ internal partial class OpenXmlTemplate : IMiniExcelTemplate
 
             var templateFullName = templateSheet.FullName;
             var inputValues = _inputValueExtractor.ToValueDictionary(value);
-            sheetPathRealNameMap.TryGetValue(templateFullName, out var realSheetName);
+            sheetPathRealNameMap.TryGetValue(templateFullName, out var sheetName);
 
-
-            if (await HookSheetProcess(outputFileArchive, realSheetName, templateSharedStrings, sheetIdx, allSheetInfos, templateSheet, templateFullName, inputValues, cancellationToken).ConfigureAwait(false))
+            if (await TryExpandParametrizedSheetAsync(outputFileArchive, sheetName, templateSharedStrings, sheetIdx, allSheetInfos, templateSheet, inputValues, cancellationToken).ConfigureAwait(false))
                 break;
 
             var outputZipEntry = outputFileArchive.ZipFile.CreateEntry(templateFullName);
-
             var outputZipSheetEntryStream = await outputZipEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
             await using var disposableSheetEntryStream = outputZipSheetEntryStream.ConfigureAwait(false);
 
             await GenerateSheetByCreateModeAsync(templateSheet, outputZipSheetEntryStream, inputValues, templateSharedStrings, cancellationToken: cancellationToken).ConfigureAwait(false);
-
-            //doc.Save(zipStream); //don't do it because: https://user-images.githubusercontent.com/12729184/114361127-61a5d100-9ba8-11eb-9bb9-34f076ee28a2.png
-            // disposing writer disposes streams as well. read and parse calc functions before that
+            // disposing writer disposes streams as well, read and parse calc functions before that
 
             sheetIdx++;
-            allSheetInfos.Add((sheetIdx, realSheetName));
+            allSheetInfos.Add((sheetIdx, sheetName));
             _calcChainContent.Append(CalcChainHelper.GetCalcChainContent(_calcChainCellRefs, sheetIdx));
-
         }
 
-
-
         // batch add sheet
-        await BatchAddSheetsToExcelConfigAsync(outputFileArchive.ZipFile, originalArchive, allSheetInfos, cancellationToken).ConfigureAwait(false);
-
+        await BatchAddSheetsToWorkbookAsync(outputFileArchive.ZipFile, originalArchive, allSheetInfos, cancellationToken).ConfigureAwait(false);
 
         // create mode we need to not create first then create here
         var calcChain = outputFileArchive.EntryCollection.FirstOrDefault(e 
@@ -195,5 +187,4 @@ internal partial class OpenXmlTemplate : IMiniExcelTemplate
         outputFileArchive.ZipFile.Dispose();
 #endif
     }
-
-   }
+}

@@ -980,55 +980,58 @@ public class MiniExcelTemplateTests
     }
 
     public record NetValue(DateOnly Date, decimal Value);
+
     private static object GenerateData()
     {
-        // 初始化基金基础数据 + 生成对应净值数据
-        List<Fund> fundList = new List<Fund>
-    {
-        new Fund
-        {
-            Id = 1,
-            Name = "易方达货币A",
-            Identity = new Identity(1, "FUND_000001"),
-            SetupDate = new DateOnly(2019, 5, 20),
-            NetValues = GenerateNetValues(1, new DateOnly(2025, 1, 1))
-        },
-        new Fund
-        {
-            Id = 2,
-            Name = "南方成长混合",
-            Identity = new Identity(2, "FUND_000002"),
-            SetupDate = new DateOnly(2020, 3, 10),
-            NetValues = GenerateNetValues(2, new DateOnly(2025, 1, 1))
-        },
-        new Fund
-        {
-            Id = 3,
-            Name = "招商债券基金",
-            Identity = new Identity(3, "FUND_000003"),
-            SetupDate = new DateOnly(2021, 7, 1),
-            NetValues = GenerateNetValues(3, new DateOnly(2025, 1, 1))
-        },
-        new Fund
-        {
-            Id = 4,
-            Name = "华夏沪深300ETF",
-            Identity = new Identity(4, "FUND_000004"),
-            SetupDate = new DateOnly(2018, 11, 5),
-            NetValues = GenerateNetValues(4, new DateOnly(2025, 1, 1))
-        },
-        new Fund
-        {
-            Id = 5,
-            Name = "工银瑞信新能源",
-            Identity = new Identity(5, "FUND_000005"),
-            SetupDate = new DateOnly(2022, 1, 25),
-            NetValues = GenerateNetValues(5, new DateOnly(2025, 1, 1))
-        }
-    };
+        List<Fund> fundList =
+        [
+            new()
+            {
+                Id = 1,
+                Name = "E Fund Money A",
+                Identity = new Identity(1, "FUND_000001"),
+                SetupDate = new DateOnly(2019, 5, 20),
+                NetValues = GenerateNetValues(1, new DateOnly(2025, 1, 1))
+            },
 
-        // 返回完整数据（包含净值列表）
-        var value = new
+            new()
+            {
+                Id = 2,
+                Name = "Southern Growth Mixed",
+                Identity = new Identity(2, "FUND_000002"),
+                SetupDate = new DateOnly(2020, 3, 10),
+                NetValues = GenerateNetValues(2, new DateOnly(2025, 1, 1))
+            },
+
+            new()
+            {
+                Id = 3,
+                Name = "China Merchants Bond Fund",
+                Identity = new Identity(3, "FUND_000003"),
+                SetupDate = new DateOnly(2021, 7, 1),
+                NetValues = GenerateNetValues(3, new DateOnly(2025, 1, 1))
+            },
+
+            new()
+            {
+                Id = 4,
+                Name = "ChinaAMC CSI 300 ETF",
+                Identity = new Identity(4, "FUND_000004"),
+                SetupDate = new DateOnly(2018, 11, 5),
+                NetValues = GenerateNetValues(4, new DateOnly(2025, 1, 1))
+            },
+
+            new()
+            {
+                Id = 5,
+                Name = "ICBC Credit Suisse New Energy",
+                Identity = new Identity(5, "FUND_000005"),
+                SetupDate = new DateOnly(2022, 1, 25),
+                NetValues = GenerateNetValues(5, new DateOnly(2025, 1, 1))
+            }
+        ];
+
+        return new
         {
             Funds = fundList.Select(x => new
             {
@@ -1040,7 +1043,6 @@ public class MiniExcelTemplateTests
                 SheetName = x.Name
             })
         };
-        return value;
     }
 
     /// <summary>
@@ -1086,15 +1088,9 @@ public class MiniExcelTemplateTests
         var value = GenerateData();
 
         var templatePath = PathHelper.GetFile("xlsx/TestObjectExt.xlsx");
-
-        var path = "object-ext.xlsx";
-        File.Delete(path);
-
-        await _excelTemplater.FillTemplateAsync(path, templatePath, value);
-
-        Assert.True(true);
+        using var path = AutoDeletingPath.Create();
+        await _excelTemplater.FillTemplateAsync(path.ToString(), templatePath, value);
     }
 
     #endregion
-
 }

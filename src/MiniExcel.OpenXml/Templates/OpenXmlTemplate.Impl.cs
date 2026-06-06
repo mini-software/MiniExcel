@@ -640,48 +640,16 @@ internal partial class OpenXmlTemplate
                         ? prop.Value.UnderlyingMemberType
                         : Nullable.GetUnderlyingType(propInfo.PropertyType) ?? propInfo.PropertyType;
 
-                    string? cellValueStr;
-                    if (type == typeof(bool))
-                    {
-                        cellValueStr = (bool)cellValue ? "1" : "0";
-                    }
-                    else if (type == typeof(DateTime))
-                    {
-                        cellValueStr = ConvertToDateTimeString(propInfo, cellValue);
-                    }
-                    else if (type?.IsEnum is true)
-                    {
-                        var stringValue = Enum.GetName(type, cellValue) ?? "";
-
-                        var attr = type.GetField(stringValue)?.GetCustomAttribute<DescriptionAttribute>();
-                        var description = attr?.Description ?? stringValue;
-
-                        cellValueStr = XmlHelper.EncodeXml(description);
-                    }
-                    else
-                    {
-                        cellValueStr = XmlHelper.EncodeXml(cellValue?.ToString());
-                        if (TypeHelper.IsNumericType(type))
-                        {
-                            if (decimal.TryParse(cellValueStr, out var decimalValue))
-                                cellValueStr = decimalValue.ToString(CultureInfo.InvariantCulture);
-                        }
-                    }
-
-                    // escaping formulas
-                    var tempReplacement = cellValueStr ?? "";
-                    var replacementValue = tempReplacement.StartsWith("$=") || tempReplacement.StartsWith("=")
-                        ? $"&apos;{tempReplacement}" 
-                        : tempReplacement;
+                    var replacementValue = GetFormattedValue(propInfo, cellValue, type);
                     
                     replacements[key] = replacementValue;
-                    AddFlattenedAndFormattedValues(replacements, key, cellValue, propInfo);
+                    FlattenAndFormatValues(replacements, key, cellValue, _configuration.RecursivePropertiesMaxDepth, propInfo);
 
                     rowXml.Replace($"@header{{{{{key}}}}}", replacementValue);
 
                     if (isHeaderRow && row.Value.Contains(key))
                     {
-                        currentHeader += cellValueStr;
+                        currentHeader += replacementValue;
                     }
                 }
 
@@ -784,6 +752,47 @@ internal partial class OpenXmlTemplate
             PrevHeader = prevHeader,
             RowIndexDiff = rowIndexDiff,
         };
+    }
+
+    /// <summary>
+    /// Formats the given cell value into a string representation suitable for OpenXml injection.
+    /// Handles specific types like booleans, dates, enums, and numeric values.
+    /// </summary>
+    private static string GetFormattedValue(PropertyInfo? propInfo, object? cellValue, Type? type)
+    {
+        string? cellValueStr;
+        if (type == typeof(bool))
+        {
+            cellValueStr = (bool)cellValue! ? "1" : "0";
+        }
+        else if (type == typeof(DateTime))
+        {
+            cellValueStr = ConvertToDateTimeString(propInfo, cellValue);
+        }
+        else if (type?.IsEnum is true)
+        {
+            // Use the DescriptionAttribute value if it exists, otherwise fallback to the enum string name.
+            var stringValue = Enum.GetName(type, cellValue!) ?? "";
+            var attr = type.GetField(stringValue)?.GetCustomAttribute<DescriptionAttribute>();
+            var description = attr?.Description ?? stringValue;
+            
+            // Encode the final string to ensure it is safe for XML.
+            cellValueStr = XmlHelper.EncodeXml(description);
+        }
+        else
+        {
+            cellValueStr = XmlHelper.EncodeXml(cellValue?.ToString());
+            if (TypeHelper.IsNumericType(type) && decimal.TryParse(cellValueStr, out var decimalValue))
+            {
+                cellValueStr = decimalValue.ToString(CultureInfo.InvariantCulture);
+            }
+        }
+
+        // escaping formulas
+        var tempReplacement = cellValueStr ?? "";
+        return tempReplacement.StartsWith("$=") || tempReplacement.StartsWith("=")
+            ? $"&apos;{tempReplacement}"
+            : tempReplacement;
     }
 
     private static void MergeCells(List<XRowInfo> xRowInfos)
@@ -940,7 +949,7 @@ internal partial class OpenXmlTemplate
         rowXml.Append(rowElement.FirstNode);
     }
 
-    private static string? ConvertToDateTimeString(PropertyInfo? propInfo, object cellValue)
+    private static string? ConvertToDateTimeString(PropertyInfo? propInfo, object? cellValue)
     {
         //TODO:c.SetAttribute("t", "d"); and custom format
         var format = propInfo?.GetAttributeValue((MiniExcelFormatAttribute x) => x.Format)

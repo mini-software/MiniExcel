@@ -4,8 +4,7 @@ using ClosedXML.Excel;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using ExcelDataReader;
-using MiniExcelLib.Core;
-using MiniExcelLib.OpenXml.Api;
+using MiniExcelLib.OpenXml;
 using MiniExcelLib.OpenXml.FluentMapping;
 using MiniExcelLib.OpenXml.FluentMapping.Api;
 using NPOI.XSSF.UserModel;
@@ -15,8 +14,8 @@ namespace MiniExcelLib.Benchmarks.BenchmarkSections;
 
 public class QueryExcelBenchmark : BenchmarkBase
 {
-    private OpenXmlImporter _importer;
-    private MappingImporter _mappingImporter;
+    private OpenXmlImporter _importer = null!;
+    private MappingImporter _mappingImporter = null!;
     
     [GlobalSetup]
     public void SetUp()
@@ -55,7 +54,7 @@ public class QueryExcelBenchmark : BenchmarkBase
     {
         foreach (var row in _importer.Query(FilePath))
         {
-            var value = row;
+            _ = row;
         }
     }
 
@@ -70,7 +69,7 @@ public class QueryExcelBenchmark : BenchmarkBase
     {
         foreach (var row in _mappingImporter.Query<DemoDto>(FilePath))
         {
-            var value = row;
+            _ = row;
         }
     }
 
@@ -83,7 +82,7 @@ public class QueryExcelBenchmark : BenchmarkBase
         reader.Read();
         for (var i = 0; i < reader.FieldCount; i++)
         {
-            var value = reader.GetValue(i);
+            _ = reader.GetValue(i);
         }
     }
     
@@ -97,7 +96,7 @@ public class QueryExcelBenchmark : BenchmarkBase
         {
             for (var i = 0; i < reader.FieldCount; i++)
             {
-                var value = reader.GetValue(i);
+                _ = reader.GetValue(i);
             }
         }
     }
@@ -122,7 +121,7 @@ public class QueryExcelBenchmark : BenchmarkBase
         {
             for (var col = start.Column; col <= end.Column; col++)
             {
-                object cellValue = workSheet.Cells[row, col].Text;
+                _ = workSheet.Cells[row, col].Text;
             }
         }
     }
@@ -162,11 +161,12 @@ public class QueryExcelBenchmark : BenchmarkBase
             {
                 for (var j = row.FirstCellNum; j <= row.LastCellNum; j++)
                 {
-                    var cellValue = row.GetCell(j)?.StringCellValue;
+                    _ = row.GetCell(j)?.StringCellValue;
                 }
             }
         }
     }
+
     [Benchmark(Description = "OpenXmlSDK QueryFirst")]
     public void OpenXmlSDK_QueryFirst_Test()
     {
@@ -175,8 +175,9 @@ public class QueryExcelBenchmark : BenchmarkBase
         var workbookPart = spreadsheetDocument.WorkbookPart;
         var worksheetPart = workbookPart!.WorksheetParts.First();
     
-        var sheetData = worksheetPart.Worksheet.Elements<SheetData>().First();
+        var sheetData = worksheetPart.Worksheet!.Elements<SheetData>().First();
         var firstRow = sheetData.Elements<Row>().First();
+        _ = firstRow;
     }
     
     [Benchmark(Description = "OpenXmlSDK Query")]
@@ -187,10 +188,10 @@ public class QueryExcelBenchmark : BenchmarkBase
         var workbookPart = spreadsheetDocument.WorkbookPart;
         var worksheetPart = workbookPart!.WorksheetParts.First();
     
-        var sheetData = worksheetPart.Worksheet.Elements<SheetData>().First();
+        var sheetData = worksheetPart.Worksheet!.Elements<SheetData>().First();
         foreach(var row in sheetData.Elements<Row>())
         {
-            var cellValue = row;
+            _ = row;
         }
     }
 }

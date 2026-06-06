@@ -68,7 +68,25 @@ internal static class ExcelXml
         </Relationships>
         """;
 
-    internal const string DefaultSharedString = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\" ?><sst xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" count=\"0\" uniqueCount=\"0\"></sst>";
+    internal static string SharedStrings(Dictionary<string, int> sharedStrings)
+    {
+        var sb = new StringBuilder();
+        sb.Append("""<?xml version="1.0" encoding="UTF-8" standalone="yes" ?><x:sst xmlns:x="http://schemas.openxmlformats.org/spreadsheetml/2006/main" """);
+        sb.Append($"uniqueCount=\"{sharedStrings.Count}\">");
+
+        foreach(var (text, _) in sharedStrings.OrderBy(x => x.Value))
+        {
+            sb.Append("<x:si><x:t");
+
+            if (text.StartsWith(" ") || text.EndsWith(" "))
+                sb.Append(" xml:space=\"preserve\"");
+            
+            sb.Append($">{XmlHelper.EncodeXml(text)}</x:t></x:si>");
+        }
+        
+        sb.Append("</x:sst>");
+        return sb.ToString();
+    }
 
     internal const string StartTypes = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.printerSettings" Extension="bin"/><Default ContentType="application/xml" Extension="xml"/><Default ContentType="image/jpeg" Extension="jpg"/><Default ContentType="image/png" Extension="png"/><Default ContentType="image/gif" Extension="gif"/><Default ContentType="application/vnd.openxmlformats-package.relationships+xml" Extension="rels"/>""";
     internal static string ContentType(string contentType, string partName) => $"<Override ContentType=\"{contentType}\" PartName=\"/{partName}\" />";
@@ -122,5 +140,4 @@ internal static class ExcelXml
 
     internal static string Sheet(SheetDto sheetDto, int sheetId)
         => $"""<x:sheet name="{XmlHelper.EncodeXml(sheetDto.Name)}" sheetId="{sheetId}"{(string.IsNullOrWhiteSpace(sheetDto.State) ? string.Empty : $" state=\"{sheetDto.State}\"")} r:id="{sheetDto.ID}" />""";
-
 }

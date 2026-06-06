@@ -1,6 +1,5 @@
 <div align="center">
 <p><a href="https://www.nuget.org/packages/MiniExcel"><img src="https://img.shields.io/nuget/v/MiniExcel.svg" alt="NuGet"></a>  <a href="https://www.nuget.org/packages/MiniExcel"><img src="https://img.shields.io/nuget/dt/MiniExcel.svg" alt=""></a>
-<a href="https://ci.appveyor.com/project/mini-software/miniexcel/branch/master"><img src="https://ci.appveyor.com/api/projects/status/b2vustrwsuqx45f4/branch/master?svg=true" alt="Build status"></a>
 <a href="https://gitee.com/dotnetchina/MiniExcel"><img src="https://gitee.com/dotnetchina/MiniExcel/badge/star.svg" alt="star"></a> <a href="https://github.com/mini-software/MiniExcel" rel="nofollow"><img src="https://img.shields.io/github/stars/mini-software/MiniExcel?logo=github" alt="GitHub stars"></a>
 <a href="https://www.nuget.org/packages/MiniExcel"><img src="https://img.shields.io/badge/.NET-%3E%3D%204.5-red.svg" alt="version"></a>
 <a href="https://deepwiki.com/mini-software/MiniExcel"><img src="https://deepwiki.com/badge.svg" alt="Ask DeepWiki"></a>
@@ -1336,7 +1335,12 @@ using (var csvStream = new MemoryStream())
    MiniExcel.ConvertXlsxToCsv(excelStream, csvStream);
 }
 ```
-#### 3. 自定义 CultureInfo
+
+#### 3. Excel 转 PDF
+
+如果需要将 Excel 文件转换为 PDF，可以使用 [MiniPdf](https://github.com/mini-software/MiniPdf)。
+
+#### 4. 自定义 CultureInfo
 
 从 1.22.0 版本开始，可以使用以下代码自定义文化信息，系统预设 `CultureInfo.InvariantCulture`。
 
@@ -1351,7 +1355,7 @@ MiniExcel.SaveAs(path, value, configuration: config);
 MiniExcel.Query(path, configuration: config);
 ```
 
-#### 4. 导出自定义 Buffer Size
+#### 5. 导出自定义 Buffer Size
 ```csharp
     public abstract class Configuration : IConfiguration
     {
@@ -1359,7 +1363,7 @@ MiniExcel.Query(path, configuration: config);
     }
 ```
 
-#### 5. FastMode
+#### 6. FastMode
 
 系统不会限制内存，达到更快的效率
 
@@ -1637,7 +1641,7 @@ public class Order
 
 
 
-#### 6. 批量添加/插入图片 (MiniExcel.AddPicture)
+#### 7. 批量添加/插入图片 (MiniExcel.AddPicture)
 
 请在批量生成行数据之前添加图片，否则在调用 AddPicture 时系统会占用大量内存。
 
@@ -1664,7 +1668,7 @@ MiniExcel.AddPicture(path, images);
 ```
 ![Image](https://github.com/user-attachments/assets/19c4d241-9753-4ede-96c8-f810c1a22247)
 
-#### 7. Get Sheets Dimension
+#### 8. Get Sheets Dimension
 
 ```csharp
 var dim = MiniExcel.GetSheetsDimensions(path);

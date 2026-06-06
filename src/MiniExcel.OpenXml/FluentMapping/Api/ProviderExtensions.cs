@@ -1,5 +1,3 @@
-using MiniExcelLib.Core;
-
 namespace MiniExcelLib.OpenXml.FluentMapping.Api;
 
 public static class ProviderExtensions

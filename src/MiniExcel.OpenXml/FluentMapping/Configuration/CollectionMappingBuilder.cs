@@ -1,11 +1,8 @@
-using System.Collections;
-using System.Text.RegularExpressions;
-
 namespace MiniExcelLib.OpenXml.FluentMapping.Configuration;
 
 internal partial class CollectionMappingBuilder<T, TCollection> : ICollectionMappingBuilder<T, TCollection> where TCollection : IEnumerable
 {
-#if NET7_0_OR_GREATER
+#if NET
     [GeneratedRegex("^[A-Z]+[0-9]+$")] private static partial Regex CellAddressRegexImpl();
     private static readonly Regex CellAddressRegex = CellAddressRegexImpl();
 #else

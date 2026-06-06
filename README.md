@@ -1,6 +1,5 @@
 <div align="center">
 <p><a href="https://www.nuget.org/packages/MiniExcel"><img src="https://img.shields.io/nuget/v/MiniExcel.svg" alt="NuGet"></a>  <a href="https://www.nuget.org/packages/MiniExcel"><img src="https://img.shields.io/nuget/dt/MiniExcel.svg" alt=""></a>
-<a href="https://ci.appveyor.com/project/mini-software/miniexcel/branch/master"><img src="https://ci.appveyor.com/api/projects/status/b2vustrwsuqx45f4/branch/master?svg=true" alt="Build status"></a>
 <a href="https://gitee.com/dotnetchina/MiniExcel"><img src="https://gitee.com/dotnetchina/MiniExcel/badge/star.svg" alt="star"></a> <a href="https://github.com/mini-software/MiniExcel" rel="nofollow"><img src="https://img.shields.io/github/stars/mini-software/MiniExcel?logo=github" alt="GitHub stars"></a>
 <a href="https://www.nuget.org/packages/MiniExcel"><img src="https://img.shields.io/badge/.NET-%3E%3D%204.5-red.svg" alt="version"></a>
 <a href="https://deepwiki.com/mini-software/MiniExcel"><img src="https://deepwiki.com/badge.svg" alt="Ask DeepWiki"></a>
@@ -1439,7 +1438,11 @@ using (var csvStream = new MemoryStream())
 }
 ```
 
-#### 3. Custom CultureInfo
+#### 3. Convert Excel to PDF
+
+If you need to convert Excel files to PDF, you can use [MiniPdf](https://github.com/mini-software/MiniPdf).
+
+#### 4. Custom CultureInfo
 
 Since 1.22.0, you can custom CultureInfo like below, system default `CultureInfo.InvariantCulture`.
 
@@ -1455,7 +1458,7 @@ MiniExcel.Query(path, configuration: config);
 ```
 
 
-#### 4. Custom Buffer Size
+#### 5. Custom Buffer Size
 ```csharp
     public abstract class Configuration : IConfiguration
     {
@@ -1463,7 +1466,7 @@ MiniExcel.Query(path, configuration: config);
     }
 ```
 
-#### 5. FastMode
+#### 6. FastMode
 
 System will not control memory, but you can get faster save speed.
 
@@ -1472,7 +1475,7 @@ var config = new OpenXmlConfiguration() { FastMode = true };
 MiniExcel.SaveAs(path, reader,configuration:config);
 ```
 
-#### 6. Batch Add Image (MiniExcel.AddPicture)
+#### 7. Batch Add Image (MiniExcel.AddPicture)
 
 Please add pictures before batch generate rows data, or system will load large memory usage when calling AddPicture.
 
@@ -1499,7 +1502,7 @@ MiniExcel.AddPicture(path, images);
 ```
 ![Image](https://github.com/user-attachments/assets/19c4d241-9753-4ede-96c8-f810c1a22247)
 
-#### 7. Get Sheets Dimension
+#### 8. Get Sheets Dimension
 
 ```csharp
 var dim = MiniExcel.GetSheetDimensions(path);

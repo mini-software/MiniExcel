@@ -1,4 +1,5 @@
-namespace MiniExcelLib.OpenXml.FluentMapping.Api;
+// ReSharper disable once CheckNamespace
+namespace MiniExcelLib.OpenXml.FluentMapping;
 
 public sealed partial class MappingTemplater()
 {
@@ -23,16 +24,12 @@ public sealed partial class MappingTemplater()
         if (values is null)
             throw new ArgumentNullException(nameof(values));
 
-#if NET8_0_OR_GREATER
         var outputStream = File.Create(outputPath);
         await using var disposableOutputStream = outputStream.ConfigureAwait(false);
         
         var templateStream = File.OpenRead(templatePath);
         await using var disposableTemplateStream = templateStream.ConfigureAwait(false);
-#else
-        using var outputStream = File.Create(outputPath);
-        using var templateStream = File.OpenRead(templatePath);
-#endif
+
         await FillTemplateAsync(outputStream, templateStream, values, cancellationToken).ConfigureAwait(false);
     }
 
@@ -73,12 +70,9 @@ public sealed partial class MappingTemplater()
         if (values is null)
             throw new ArgumentNullException(nameof(values));
 
-#if NET8_0_OR_GREATER
         var templateStream = new MemoryStream(templateBytes);
         await using var disposableTemplateStream = templateStream.ConfigureAwait(false);
-#else
-        using var templateStream = new MemoryStream(templateBytes);
-#endif
+
         await FillTemplateAsync(outputStream, templateStream, values, cancellationToken).ConfigureAwait(false);
     }
 
@@ -115,3 +109,4 @@ public Task ApplyTemplateAsync<T>(
 }
 #endregion
 }
+

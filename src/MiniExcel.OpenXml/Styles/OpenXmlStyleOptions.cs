@@ -1,7 +1,5 @@
 namespace MiniExcelLib.OpenXml.Styles;
 
-using MiniExcelLib.Core.Enums;
-
 public class OpenXmlStyleOptions
 {
     public bool WrapCellContents { get; set; }

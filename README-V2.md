@@ -6,9 +6,6 @@
         <a href="https://www.nuget.org/packages/MiniExcel">
             <img src="https://img.shields.io/nuget/dt/MiniExcel.svg" alt="">
         </a>
-        <a href="https://ci.appveyor.com/project/mini-software/miniexcel/branch/master">
-            <img src="https://ci.appveyor.com/api/projects/status/b2vustrwsuqx45f4/branch/master?svg=true" alt="Build status">
-        </a>
         <a href="https://gitee.com/dotnetchina/MiniExcel">
             <img src="https://gitee.com/dotnetchina/MiniExcel/badge/star.svg" alt="star">
         </a>
@@ -211,7 +208,7 @@ Check what we are planning for future versions [here](https://github.com/mini-so
 
 The code for the benchmarks can be found in [MiniExcel.Benchmarks](benchmarks/MiniExcel.Benchmarks/Program.cs).
 
-The file used to test performance is [**Test1,000,000x10.xlsx**](benchmarks/MiniExcel.Benchmarks/Test1%2C000%2C000x10.xlsx), a 32MB document containing 1,000,000 rows * 10 columns whose cells are filled with the string "HelloWorld".
+The main file used to test performance is [**Test100,000x10.xlsx**](benchmarks/MiniExcel.Benchmarks/Test1%2C000%2C000x10.xlsx), a document containing 100,000 rows * 10 columns whose cells are filled with unique strings.
 
 To run all the benchmarks use:
 
@@ -1161,7 +1158,7 @@ templater.ApplyTemplate(path, templatePath, value, config)
 
 ### Attributes and configuration <a name="docs-attributes" />
 
-#### 1. Specify the column name, column index, or ignore the column entirely
+#### 1. Specify the column name, column index, or ignore the column entirely.
 
 ![image](https://user-images.githubusercontent.com/12729184/114230869-3e163700-99ac-11eb-9a90-2039d4b4b313.png)
 
@@ -1300,7 +1297,22 @@ public class Dto
 }
 ```
 
-#### 8. DynamicColumnAttribute
+#### 8. Resource based localization
+
+Support for localizable resources is available for both `MiniExcelColumnAttribute` and `MiniExcelColumnNameAttribute`:
+
+```csharp
+public class Dto
+{
+    [MiniExcelColumn(Name = "Column1", ResourceType = typeof(MyResources))]
+    public string Test1 { get; set; }
+
+    [MiniExcelColumnName("Column2", ResourceType = typeof(MyResources))]
+    public string Test2 { get; set; }
+}
+```
+
+#### 9. DynamicColumnAttribute
 
 Attributes can also be set on columns dynamically:
 ```csharp
@@ -1321,7 +1333,7 @@ var exporter = MiniExcel.Exporters.GetOpenXmlExporter();
 exporter.Export(path, value, configuration: config);
 ```
 
-#### 9. MiniExcelSheetAttribute
+#### 10. MiniExcelSheetAttribute
 
 It is possible to define the name and visibility of a sheet through the `MiniExcelSheetAttribute`:
 
@@ -1594,12 +1606,12 @@ There is support for reading one cell at a time using a custom `IDataReader`:
 
 ```csharp
 var importer = MiniExcel.Importers.GetOpenXmlImporter();
-using var reader = importer.GetDataReader(path, useHeaderRow: true);
+using OpenXmlDataReader reader = importer.GetDataReader(path, hasHeaderRow: true);
 
 // or
 
 var importer = MiniExcel.Importers.GetCsvImporter();
-using var reader = importer.GetDataReader(path, useHeaderRow: true);
+using CsvDataReader reader = importer.GetDataReader(path, hasHeaderRow: true);
 
 
 while (reader.Read())
@@ -1610,6 +1622,8 @@ while (reader.Read())
     }
 }
 ```
+When not providing a specific worksheet name, all sheets will be available sequentially by calling the `NextResult` method on the `OpenXmlDataReader`.
+Calling the `NextResult` method on the `CsvDataReader` will always raise a `NotSupportedException` instead.
 
 
 #### Add records
@@ -1675,7 +1689,11 @@ using (var csvStream = new MemoryStream())
 }
 ```
 
-#### 3. Custom CultureInfo
+#### 3. Convert Excel to PDF
+
+If you need to convert Excel files to PDF, you can use [MiniPdf](https://github.com/mini-software/MiniPdf).
+
+#### 4. Custom CultureInfo
 
 You can customise CultureInfo used by MiniExcel through the `Culture` configuration parameter. The default is `CultureInfo.InvariantCulture`:
 
@@ -1686,14 +1704,14 @@ var config = new CsvConfiguration
 };
 ```
 
-#### 4. Custom Buffer Size
+#### 5. Custom Buffer Size
 
 The default buffer size is 5MB, but you can easily customize it:
 ```csharp
 var conf = new OpenXmlConfiguration { BufferSize = 1024 * 1024 * 10 };
 ```
 
-#### 5. FastMode
+#### 6. FastMode
 
 You can set the configuration property `FastMode` to achieve faster saving speeds, but this will make the memory consumption much higher, so it's not recommended:
 
@@ -1704,7 +1722,7 @@ var exporter = MiniExcel.Exporters.GetOpenXmlExporter();
 exporter.Export(path, reader, configuration: config);
 ```
 
-#### 6. Adding images in batch
+#### 7. Adding images in batch
 
 Please add pictures before batch generating the rows' data or a large amount of memory will be used when calling `AddPicture`:
 
@@ -1733,13 +1751,26 @@ templater.AddPicture(path, images);
 ```
 ![Image](https://github.com/user-attachments/assets/19c4d241-9753-4ede-96c8-f810c1a22247)
 
-#### 7. Get Sheets Dimensions
+#### 8. Get Sheets Dimensions
 
 You can easily retrieve the dimensions of all worksheets of an Excel file:
 
 ```csharp
 var importer = MiniExcel.Importers.GetOpenXmlImporter();
 var dim = importer.GetSheetDimensions(path);
+```
+
+#### 9. Retrieve Table Data
+
+It is possible to query arbitrary tables from any worksheet. 
+You can either keep it dynamic or map it to a strong-typed object like reqular queries: 
+
+```csharp
+var importer = MiniExcel.Importers.GetOpenXmlImporter();
+
+var rows = importer.QueryTable(yourPath, "Sheet1", "YourTable").ToList();
+// or
+var rows = importer.QueryTable<YourTypedObject>(yourPath, "Sheet1", "YourTable").ToList();
 ```
 
 ### FAQ <a name="docs-faq" />

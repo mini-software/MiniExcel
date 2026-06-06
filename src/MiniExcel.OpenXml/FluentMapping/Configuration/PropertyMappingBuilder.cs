@@ -1,10 +1,8 @@
-using System.Text.RegularExpressions;
-
 namespace MiniExcelLib.OpenXml.FluentMapping.Configuration;
 
 internal partial class PropertyMappingBuilder<T, TProperty> : IPropertyMappingBuilder<T, TProperty>
 {
-#if NET7_0_OR_GREATER
+#if NET
     [GeneratedRegex("^[A-Z]+[0-9]+$")] private static partial Regex CellAddressRegexImpl();
     private static readonly Regex CellAddressRegex = CellAddressRegexImpl();
 #else

@@ -1,5 +1,4 @@
 using System.Drawing;
-using MiniExcelLib.Core.Enums;
 
 namespace MiniExcelLib.OpenXml.Styles;
 

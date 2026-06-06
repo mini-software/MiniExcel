@@ -1,11 +1,29 @@
-namespace MiniExcelLib.OpenXml.Api;
+using MiniExcelLib.OpenXml.Writer;
+
+// ReSharper disable once CheckNamespace
+namespace MiniExcelLib.OpenXml;
 
 public sealed partial class OpenXmlExporter
 {
     internal OpenXmlExporter() { }
     
+    /// <summary>
+    /// Inserts a new worksheet into an existing OpenXml document.
+    /// </summary>
+    /// <param name="path">The path to the OpenXml document to modify.</param>
+    /// <param name="value">The data object to insert into the new sheet. This can be an enumerable collection of a reference type, a <see cref="DataTable" /> or a <see cref="IDataReader"/>.</param>
+    /// <param name="sheetName">The name to assign to the new worksheet.</param>
+    /// <param name="printHeader">If <c>true</c>, includes the header row in the new sheet; otherwise, only data rows are written.</param>
+    /// <param name="overwriteSheet">If <c>true</c>, overwrites any existing sheet with the same name; otherwise, an exception will be raised if the sheet already exists.</param>
+    /// <param name="configuration">Optional configuration settings for the insert operation.</param>
+    /// <param name="progress">Optional progress reporter to track insertion progress. The report value represents the number of cells written.</param>
+    /// <param name="cancellationToken">A cancellation token to monitor for cancellation requests.</param>
+    /// <returns>The number of rows written to the new sheet.</returns>
+    /// <remarks>
+    /// FastMode is automatically enabled for this process and disabling it will result in <see cref="InvalidOperationException"/>.
+    /// </remarks>
     [CreateSyncVersion]
-    public async Task<int> InsertSheetAsync(string path, object value, string? sheetName = "Sheet1",
+    public async Task<int> InsertSheetAsync(string path, object value, string sheetName = "Sheet1",
         bool printHeader = true, bool overwriteSheet = false, OpenXmlConfiguration? configuration = null,
         IProgress<int>? progress = null, CancellationToken cancellationToken = default)
     {
@@ -18,17 +36,30 @@ public sealed partial class OpenXmlExporter
             return rowsWritten.FirstOrDefault();
         }
 
-#if NET8_0_OR_GREATER
         var stream = new FileStream(path, FileMode.Open, FileAccess.ReadWrite, FileShare.Read, 4096, FileOptions.SequentialScan);
         await using var disposableStream = stream.ConfigureAwait(false); 
-#else
-        using var stream = new FileStream(path, FileMode.Open, FileAccess.ReadWrite, FileShare.Read, 4096, FileOptions.SequentialScan);
-#endif
+
         return await InsertSheetAsync(stream, value, sheetName, printHeader, overwriteSheet, configuration, progress, cancellationToken).ConfigureAwait(false);
     }
 
+    /// <summary>
+    /// Inserts a new worksheet into an existing OpenXml document.
+    /// </summary>
+    /// <param name="stream">The stream containing the OpenXml document to copy.</param>
+    /// <param name="value">The data object to insert into the new sheet. This can be an enumerable collection of a reference type, a <c>IEnumeable&lt;IDictionary&lt;string, object&gt;&gt;</c>, a <see cref="DataTable" /> or a <see cref="IDataReader"/>.</param>
+    /// <param name="sheetName">The name to assign to the new worksheet.</param>
+    /// <param name="printHeader">If <c>true</c>, includes the header row in the new sheet; otherwise, only data rows are written.</param>
+    /// <param name="overwriteSheet">If <c>true</c>, overwrites any existing sheet with the same name; otherwise, an exception will be raised if the sheet already exists.</param>
+    /// <param name="configuration">Optional configuration settings for the insert operation.</param>
+    /// <param name="progress">Optional progress reporter to track insertion progress. The report value represents the number of cells written.</param>
+    /// <param name="cancellationToken">A cancellation token to monitor for cancellation requests.</param>
+    /// <returns>The number of rows written to the new sheet.</returns>
+    /// <remarks>
+    /// The stream position is reset to the end before writing.
+    /// FastMode is automatically enabled for this process and disabling it will result in <see cref="InvalidOperationException"/>.
+    /// </remarks>
     [CreateSyncVersion]
-    public async Task<int> InsertSheetAsync(Stream stream, object value, string? sheetName = "Sheet1", 
+    public async Task<int> InsertSheetAsync(Stream stream, object value, string sheetName = "Sheet1", 
         bool printHeader = true, bool overwriteSheet = false, OpenXmlConfiguration? configuration = null, 
         IProgress<int>? progress = null, CancellationToken cancellationToken = default)
     {
@@ -39,28 +70,114 @@ public sealed partial class OpenXmlExporter
             .CreateAsync(stream, value, sheetName, printHeader, configuration, cancellationToken)
             .ConfigureAwait(false);
         
-        return await writer.InsertAsync(overwriteSheet, cancellationToken: cancellationToken).ConfigureAwait(false);
+        return await writer.InsertAsync(overwriteSheet, progress, cancellationToken).ConfigureAwait(false);
     }
 
+    /// <summary>
+    /// Copies an existing OpenXml document and inserts a new worksheet with the provided data.
+    /// </summary>
+    /// <param name="inputStream">A readable stream containing the source OpenXml document to copy.</param>
+    /// <param name="outputStream">A writable stream where the modified OpenXml document will be written.</param>
+    /// <param name="value">The data object to insert into the new sheet. This can be an enumerable collection of a reference type, a <see cref="DataTable" /> or a <see cref="IDataReader"/>.</param>
+    /// <param name="sheetName">The name to assign to the new worksheet. Defaults to "Sheet1".</param>
+    /// <param name="printHeader">If <c>true</c>, includes the header row in the new sheet; otherwise, only data rows are written.</param>
+    /// <param name="overwriteSheet">If <c>true</c>, overwrites any existing sheet with the same name; otherwise, an exception will be raised if the sheet already exists.</param>
+    /// <param name="configuration">Optional configuration settings for the insert operation.</param>
+    /// <param name="progress">Optional progress reporter to track the operation progress. The report value represents the number of cells processed for during the inserting sheet process.</param>
+    /// <param name="cancellationToken">A cancellation token to monitor for cancellation requests.</param>
+    /// <returns>The number of rows written to the new sheet.</returns>
+    /// <remarks>
+    /// This method requires FastMode to be disabled.
+    /// </remarks>
+    [CreateSyncVersion]
+    public async Task<int> CopyAndAddSheetAsync(Stream inputStream, Stream outputStream, object value, string sheetName = "Sheet1", 
+        bool printHeader = true, bool overwriteSheet = false, OpenXmlConfiguration? configuration = null, 
+        IProgress<int>? progress = null, CancellationToken cancellationToken = default)
+    {
+        var writer = await OpenXmlWriter
+            .CreateForCopyAsync(inputStream, outputStream, value, sheetName, printHeader, configuration, cancellationToken)
+            .ConfigureAwait(false);
+        
+        return await writer.CopyAndInsertAsync(overwriteSheet, progress, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Copies an existing OpenXml document and inserts a new worksheet with the provided data.
+    /// </summary>
+    /// <param name="inputFile">The path to the OpenXml document to copy.</param>
+    /// <param name="outputFile">The path where the OpenXml document will be written.</param>
+    /// <param name="value">The data object to insert into the new sheet. This can be an enumerable collection of a reference type, a <see cref="DataTable" /> or a <see cref="IDataReader"/>.</param>
+    /// <param name="sheetName">The name to assign to the new worksheet. Defaults to "Sheet1".</param>
+    /// <param name="printHeader">If <c>true</c>, includes the header row in the new sheet; otherwise, only data rows are written. Defaults to <c>true</c>.</param>
+    /// <param name="overwriteFile">If <c>true</c>, overwrites the file at the specified path, otherwise a <see cref="IOException"/> will be raised if the file already exists.</param>
+    /// <param name="overwriteSheet">If <c>true</c>, overwrites any existing sheet with the same name; otherwise, an exception will be raised if the sheet already exists. Defaults to <c>false</c>.</param>
+    /// <param name="configuration">Optional configuration settings for the copy and insert operation.</param>
+    /// <param name="progress">Optional progress reporter to track the operation progress. The report value represents the number of cells processed.</param>
+    /// <param name="cancellationToken">A cancellation token to monitor for cancellation requests.</param>
+    /// <returns>The number of rows written to the new sheet.</returns>
+    /// <remarks>
+    /// FastMode needs to be disabled for the method to work.
+    /// </remarks>
+    /// <exception cref="ArgumentException">Thrown if the input and output paths reference the same file.</exception>
+    [CreateSyncVersion]
+    public async Task<int> CopyAndAddSheetAsync(string inputFile, string outputFile, object value, string sheetName = "Sheet1", 
+        bool printHeader = true, bool overwriteFile = false, bool overwriteSheet = false, OpenXmlConfiguration? configuration = null, 
+        IProgress<int>? progress = null, CancellationToken cancellationToken = default)
+    {
+        if (inputFile.Equals(outputFile, StringComparison.InvariantCultureIgnoreCase))
+            throw new ArgumentException("The generated file must not have the same path as the original file.");
+
+        var inputStream = new FileStream(inputFile, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, FileOptions.RandomAccess);
+        await using var disposableInputStream = inputStream.ConfigureAwait(false);
+
+        var outputStream = new FileStream(outputFile, overwriteFile ? FileMode.Create : FileMode.CreateNew, FileAccess.Write, FileShare.None, 4096, FileOptions.SequentialScan);
+        await using var disposableOutputStream = outputStream.ConfigureAwait(false);
+
+        return await CopyAndAddSheetAsync(inputStream, outputStream, value, sheetName, printHeader, overwriteSheet, configuration, progress, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Exports data to a file as an OpenXml document.
+    /// </summary>
+    /// <param name="path">The path to write the OpenXml document to.</param>
+    /// <param name="value">The data object to export. This can be an enumerable collection of a reference type, a <c>IEnumeable&lt;IDictionary&lt;string, object&gt;&gt;</c>, a <see cref="DataTable" /> or a <see cref="IDataReader"/>.</param>
+    /// <param name="printHeader">If <c>true</c>, includes the header row in the output; otherwise, only data rows are written.</param>
+    /// <param name="sheetName">The name to assign to the worksheet.</param>
+    /// <param name="overwriteFile">If <c>true</c>, overwrites the file at the specified path, otherwise a <see cref="IOException"/> will be raised if the file already exists.</param>
+    /// <param name="configuration">Optional configuration settings for the export operation.</param>
+    /// <param name="progress">Optional progress reporter to track export progress. The report value represents the number of cells written.</param>
+    /// <param name="cancellationToken">A cancellation token to monitor for cancellation requests.</param>
+    /// <returns>An array of integers representing the number of rows written for each exported sheet.</returns>
     [CreateSyncVersion]
     public async Task<int[]> ExportAsync(string path, object value, bool printHeader = true, 
-        string? sheetName = "Sheet1", bool overwriteFile = false, OpenXmlConfiguration? configuration = null, 
+        string sheetName = "Sheet1", bool overwriteFile = false, OpenXmlConfiguration? configuration = null, 
         IProgress<int>? progress = null, CancellationToken cancellationToken = default)
     {
         if (Path.GetExtension(path).Equals(".xlsm", StringComparison.InvariantCultureIgnoreCase))
             throw new NotSupportedException("MiniExcel's Export does not support the .xlsm format");
 
-#if NET8_0_OR_GREATER
         var stream = overwriteFile ? File.Create(path) : new FileStream(path, FileMode.CreateNew);
         await using var disposableStream = stream.ConfigureAwait(false); 
-#else
-        using var stream = overwriteFile ? File.Create(path) : new FileStream(path, FileMode.CreateNew);
-#endif
+
         return await ExportAsync(stream, value, printHeader, sheetName, configuration, progress, cancellationToken).ConfigureAwait(false);
     }
 
+    /// <summary>
+    /// Exports data to a stream as an OpenXml document.
+    /// </summary>
+    /// <param name="stream">The stream to write the OpenXml document.</param>
+    /// <param name="value">The data object to export. This can be an enumerable collection of a reference type, a <c>IEnumeable&lt;IDictionary&lt;string, object&gt;&gt;</c>, a <see cref="DataTable" /> or a <see cref="IDataReader"/>.</param>
+    /// <param name="printHeader">If <c>true</c>, includes the header row in the output; otherwise, only data rows are written.</param>
+    /// <param name="sheetName">The name to assign to the worksheet.</param>
+    /// <param name="configuration">Optional configuration settings for the export operation.</param>
+    /// <param name="progress">Optional progress reporter to track export progress. The report value represents the number of cells written.</param>
+    /// <param name="cancellationToken">A cancellation token to monitor for cancellation requests.</param>
+    /// <returns>An array of integers representing the number of rows written for each exported sheet.</returns>
+    /// <remarks>
+    /// The stream position is not reset before writing.
+    /// </remarks>
     [CreateSyncVersion]
-    public async Task<int[]> ExportAsync(Stream stream, object value, bool printHeader = true, string? sheetName = "Sheet1", 
+    public async Task<int[]> ExportAsync(Stream stream, object value, bool printHeader = true, string sheetName = "Sheet1", 
         OpenXmlConfiguration? configuration = null, IProgress<int>? progress = null, CancellationToken cancellationToken = default)
     {
         var writer = await OpenXmlWriter
@@ -82,12 +199,9 @@ public sealed partial class OpenXmlExporter
     [CreateSyncVersion]
     public async Task AlterSheetAsync(string path, string sheetName, string? newSheetName = null, int? newSheetIndex = null, SheetState? newSheetState = null, CancellationToken cancellationToken = default)
     {
-#if NET8_0_OR_GREATER
         var stream = new FileStream(path, FileMode.Open, FileAccess.ReadWrite, FileShare.Read);
         await using var disposableStream = stream.ConfigureAwait(false); 
-#else
-        using var stream = new FileStream(path, FileMode.Open, FileAccess.ReadWrite, FileShare.Read);
-#endif
+
         await AlterSheetAsync(stream, sheetName, newSheetName, newSheetIndex, newSheetState, cancellationToken).ConfigureAwait(false);
     }
 

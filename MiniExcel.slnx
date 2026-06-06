@@ -6,7 +6,6 @@
     <File Path=".editorconfig" />
     <File Path=".gitattributes" />
     <File Path=".gitignore" />
-    <File Path="appveyor.yml" />
     <File Path=".github\workflows\dotnet.yml" />
     <File Path="LICENSE" />
     <File Path="README.md" />

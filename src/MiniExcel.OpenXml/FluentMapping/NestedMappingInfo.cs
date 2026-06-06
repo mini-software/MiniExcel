@@ -1,5 +1,3 @@
-using System.Collections;
-
 namespace MiniExcelLib.OpenXml.FluentMapping;
 
 /// <summary>

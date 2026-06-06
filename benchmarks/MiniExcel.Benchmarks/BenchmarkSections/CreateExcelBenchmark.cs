@@ -5,8 +5,7 @@ using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using MiniExcelLib.Benchmarks.Utils;
-using MiniExcelLib.Core;
-using MiniExcelLib.OpenXml.Api;
+using MiniExcelLib.OpenXml;
 using MiniExcelLib.OpenXml.FluentMapping;
 using MiniExcelLib.OpenXml.FluentMapping.Api;
 using NPOI.XSSF.UserModel;
@@ -16,8 +15,8 @@ namespace MiniExcelLib.Benchmarks.BenchmarkSections;
 
 public class CreateExcelBenchmark : BenchmarkBase
 {
-    private OpenXmlExporter _exporter;
-    private MappingExporter _simpleMappingExporter;
+    private OpenXmlExporter _exporter = null!;
+    private MappingExporter _simpleMappingExporter = null!;
         
     [GlobalSetup]
     public void SetUp()
@@ -117,13 +116,13 @@ public class CreateExcelBenchmark : BenchmarkBase
         using var spreadsheetDocument = SpreadsheetDocument.Create(path.FilePath, SpreadsheetDocumentType.Workbook);
         // By default, AutoSave = true, Editable = true, and Type = xlsx.
 
-        WorkbookPart workbookpart = spreadsheetDocument.AddWorkbookPart();
+        var workbookpart = spreadsheetDocument.AddWorkbookPart();
         workbookpart.Workbook = new Workbook();
 
-        WorksheetPart worksheetPart = workbookpart.AddNewPart<WorksheetPart>();
+        var worksheetPart = workbookpart.AddNewPart<WorksheetPart>();
         worksheetPart.Worksheet = new Worksheet(new SheetData());
 
-        Sheets sheets = spreadsheetDocument.WorkbookPart!.Workbook.AppendChild(new Sheets());
+        var sheets = spreadsheetDocument.WorkbookPart!.Workbook!.AppendChild(new Sheets());
 
         sheets.Append(new Sheet
         {

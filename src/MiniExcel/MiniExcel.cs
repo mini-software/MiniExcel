@@ -1,17 +1,14 @@
 ﻿using System.Data;
 using MiniExcelLib;
-using MiniExcelLib.Core;
 using MiniExcelLib.Csv;
-using MiniExcelLib.OpenXml.Api;
+using MiniExcelLib.OpenXml;
 using MiniExcelLib.OpenXml.Models;
 using MiniExcelLib.OpenXml.Picture;
-using MiniExcelLibs.OpenXml;
 using Zomp.SyncMethodGenerator;
 
-using NewMiniExcel = MiniExcelLib.Core.MiniExcel;
-using OpenXmlExporter = MiniExcelLib.OpenXml.Api.OpenXmlExporter;
-using OpenXmlImporter = MiniExcelLib.Core.OpenXmlImporter;
-using OpenXmlTemplater = MiniExcelLib.Core.OpenXmlTemplater;
+using NewMiniExcel = MiniExcelLib.MiniExcel;
+using NewOpenXmlConfiguration = MiniExcelLib.OpenXml.OpenXmlConfiguration;
+using MiniExcelDataReader = MiniExcelLib.Core.MiniExcelDataReaderBase;
 
 // ReSharper disable once CheckNamespace
 namespace MiniExcelLibs;
@@ -39,7 +36,7 @@ public static partial class MiniExcel
         var type = path.GetExcelType(excelType);
         return type switch
         {
-            ExcelType.XLSX => ExcelImporter.GetDataReader(path, useHeaderRow, sheetName, startCell, configuration as OpenXmlConfiguration),
+            ExcelType.XLSX => ExcelImporter.GetDataReader(path, useHeaderRow, sheetName, startCell, configuration as NewOpenXmlConfiguration),
             ExcelType.CSV => CsvImporter.GetDataReader(path, useHeaderRow),
             _ => throw new NotSupportedException($"Type {type} is not a valid Excel type")
         };
@@ -50,8 +47,8 @@ public static partial class MiniExcel
         var type = stream.GetExcelType(excelType);
         return type switch
         {
-            ExcelType.XLSX => ExcelImporter.GetDataReader(stream, useHeaderRow, sheetName, startCell, configuration as OpenXmlConfiguration),
-            ExcelType.CSV => CsvImporter.GetDataReader(stream, useHeaderRow),
+            ExcelType.XLSX => ExcelImporter.GetDataReader(stream, useHeaderRow, sheetName, startCell, configuration as NewOpenXmlConfiguration, leaveOpen: true),
+            ExcelType.CSV => CsvImporter.GetDataReader(stream, useHeaderRow, leaveOpen: true),
             _ => throw new NotSupportedException($"Type {type} is not a valid Excel type")
         };
     }
@@ -64,7 +61,7 @@ public static partial class MiniExcel
         var type = path.GetExcelType(excelType);
         return type switch
         {
-            ExcelType.XLSX => await ExcelExporter.InsertSheetAsync(path, value, sheetName, printHeader, overwriteSheet, configuration as OpenXmlConfiguration, progress, cancellationToken).ConfigureAwait(false),
+            ExcelType.XLSX => await ExcelExporter.InsertSheetAsync(path, value, sheetName, printHeader, overwriteSheet, configuration as NewOpenXmlConfiguration, progress, cancellationToken).ConfigureAwait(false),
             ExcelType.CSV => await CsvExporter.AppendAsync(path, value, printHeader, configuration as Csv.CsvConfiguration, progress, cancellationToken).ConfigureAwait(false),
             _ => throw new InvalidDataException($"Type {type} is not a valid Excel type")
         };
@@ -78,7 +75,7 @@ public static partial class MiniExcel
         var type = stream.GetExcelType(excelType);
         return type switch
         {
-            ExcelType.XLSX => await ExcelExporter.InsertSheetAsync(stream, value, sheetName, printHeader, overwriteSheet, configuration as OpenXmlConfiguration, progress, cancellationToken).ConfigureAwait(false),
+            ExcelType.XLSX => await ExcelExporter.InsertSheetAsync(stream, value, sheetName, printHeader, overwriteSheet, configuration as NewOpenXmlConfiguration, progress, cancellationToken).ConfigureAwait(false),
             ExcelType.CSV => await CsvExporter.AppendAsync(stream, value, configuration as Csv.CsvConfiguration, progress, cancellationToken).ConfigureAwait(false),
             _ => throw new InvalidDataException($"Type {type} is not a valid Excel type")
         };
@@ -92,8 +89,8 @@ public static partial class MiniExcel
         var type = path.GetExcelType(excelType);
         return type switch
         {
-            ExcelType.XLSX => await ExcelExporter.ExportAsync(path, value, printHeader, sheetName, overwriteFile, configuration as OpenXmlConfiguration, progress, cancellationToken).ConfigureAwait(false),
-            ExcelType.CSV => await CsvExporter.ExportAsync(path, value, printHeader, overwriteFile, configuration as Csv.CsvConfiguration, progress, cancellationToken).ConfigureAwait(false),
+            ExcelType.XLSX => await ExcelExporter.ExportAsync(path, value, printHeader, sheetName, overwriteFile, configuration as NewOpenXmlConfiguration, progress, cancellationToken).ConfigureAwait(false),
+            ExcelType.CSV => [await CsvExporter.ExportAsync(path, value, printHeader, overwriteFile, configuration as Csv.CsvConfiguration, progress, cancellationToken).ConfigureAwait(false)],
             _ => throw new InvalidDataException($"Type {type} is not a valid Excel type")
         };
     }
@@ -106,8 +103,8 @@ public static partial class MiniExcel
         var type = stream.GetExcelType(excelType);
         return type switch
         {
-            ExcelType.XLSX => await ExcelExporter.ExportAsync(stream, value, printHeader, sheetName, configuration as OpenXmlConfiguration, progress, cancellationToken).ConfigureAwait(false),
-            ExcelType.CSV => await CsvExporter.ExportAsync(stream, value, printHeader, configuration as Csv.CsvConfiguration, progress, cancellationToken).ConfigureAwait(false),
+            ExcelType.XLSX => await ExcelExporter.ExportAsync(stream, value, printHeader, sheetName, configuration as NewOpenXmlConfiguration, progress, cancellationToken).ConfigureAwait(false),
+            ExcelType.CSV => [await CsvExporter.ExportAsync(stream, value, printHeader, configuration as Csv.CsvConfiguration, progress, cancellationToken).ConfigureAwait(false)],
             _ => throw new InvalidDataException($"Type {type} is not a valid Excel type")
         };
     }
@@ -118,7 +115,7 @@ public static partial class MiniExcel
         var type = path.GetExcelType(excelType);
         return type switch
         {
-            ExcelType.XLSX => ExcelImporter.QueryAsync<T>(path, sheetName, startCell, hasHeader, configuration as OpenXmlConfiguration, cancellationToken),
+            ExcelType.XLSX => ExcelImporter.QueryAsync<T>(path, sheetName, startCell, hasHeader, configuration as NewOpenXmlConfiguration, cancellationToken),
             ExcelType.CSV => CsvImporter.QueryAsync<T>(path, hasHeader, configuration as Csv.CsvConfiguration, cancellationToken),
             _ => throw new InvalidDataException($"Type {type} is not a valid Excel type")
         };
@@ -130,8 +127,8 @@ public static partial class MiniExcel
         var type = stream.GetExcelType(excelType);
         return type switch
         {
-            ExcelType.XLSX => ExcelImporter.QueryAsync<T>(stream, sheetName, startCell, hasHeader, configuration as OpenXmlConfiguration, cancellationToken),
-            ExcelType.CSV => CsvImporter.QueryAsync<T>(stream, hasHeader, configuration as Csv.CsvConfiguration, cancellationToken),
+            ExcelType.XLSX => ExcelImporter.QueryAsync<T>(stream, sheetName, startCell, hasHeader, configuration as NewOpenXmlConfiguration, leaveOpen: true, cancellationToken),
+            ExcelType.CSV => CsvImporter.QueryAsync<T>(stream, hasHeader, configuration as Csv.CsvConfiguration, leaveOpen: true, cancellationToken),
             _ => throw new InvalidDataException($"Type {type} is not a valid Excel type")
         };
     }
@@ -142,7 +139,7 @@ public static partial class MiniExcel
         var type = path.GetExcelType(excelType);
         return type switch
         {
-            ExcelType.XLSX => ExcelImporter.QueryAsync(path, useHeaderRow, sheetName, startCell, configuration as OpenXmlConfiguration, cancellationToken),
+            ExcelType.XLSX => ExcelImporter.QueryAsync(path, useHeaderRow, sheetName, startCell, configuration as NewOpenXmlConfiguration, cancellationToken),
             ExcelType.CSV => CsvImporter.QueryAsync(path, useHeaderRow, configuration as Csv.CsvConfiguration, cancellationToken),
             _ => throw new InvalidDataException($"Type {type} is not a valid Excel type")
         };
@@ -154,8 +151,8 @@ public static partial class MiniExcel
         var type = stream.GetExcelType(excelType);
         return type switch
         {
-            ExcelType.XLSX => ExcelImporter.QueryAsync(stream, useHeaderRow, sheetName, startCell, configuration as OpenXmlConfiguration, cancellationToken),
-            ExcelType.CSV => CsvImporter.QueryAsync(stream, useHeaderRow, configuration as Csv.CsvConfiguration, cancellationToken),
+            ExcelType.XLSX => ExcelImporter.QueryAsync(stream, useHeaderRow, sheetName, startCell, configuration as NewOpenXmlConfiguration, leaveOpen: true, cancellationToken),
+            ExcelType.CSV => CsvImporter.QueryAsync(stream, useHeaderRow, configuration as Csv.CsvConfiguration,leaveOpen: true, cancellationToken),
             _ => throw new InvalidDataException($"Type {type} is not a valid Excel type")
         };
     }
@@ -175,7 +172,7 @@ public static partial class MiniExcel
         var type = path.GetExcelType(excelType);
         return type switch
         {
-            ExcelType.XLSX => ExcelImporter.QueryRangeAsync(path, useHeaderRow, sheetName, startCell, endCell, configuration as OpenXmlConfiguration, cancellationToken),
+            ExcelType.XLSX => ExcelImporter.QueryRangeAsync(path, useHeaderRow, sheetName, startCell, endCell, configuration as NewOpenXmlConfiguration, cancellationToken),
             ExcelType.CSV => throw new NotSupportedException("QueryRange is not supported for csv"),
             _ => throw new InvalidDataException($"Type {type} is not a valid Excel type")
         };
@@ -187,8 +184,8 @@ public static partial class MiniExcel
         var type = stream.GetExcelType(excelType);
         return type switch
         {
-            ExcelType.XLSX => ExcelImporter.QueryRangeAsync(stream, useHeaderRow, sheetName, startCell, endCell, configuration as OpenXmlConfiguration, cancellationToken),
-            ExcelType.CSV => CsvImporter.QueryAsync(stream, useHeaderRow, configuration as Csv.CsvConfiguration, cancellationToken),
+            ExcelType.XLSX => ExcelImporter.QueryRangeAsync(stream, useHeaderRow, sheetName, startCell, endCell, configuration as NewOpenXmlConfiguration, leaveOpen: true, cancellationToken),
+            ExcelType.CSV => CsvImporter.QueryAsync(stream, useHeaderRow, configuration as Csv.CsvConfiguration, leaveOpen: true, cancellationToken),
             _ => throw new InvalidDataException($"Type {type} is not a valid Excel type")
         };
     }
@@ -199,7 +196,7 @@ public static partial class MiniExcel
         var type = path.GetExcelType(excelType);
         return type switch
         {
-            ExcelType.XLSX => ExcelImporter.QueryRangeAsync(path, useHeaderRow, sheetName, startRowIndex, startColumnIndex, endRowIndex, endColumnIndex, configuration as OpenXmlConfiguration, cancellationToken),
+            ExcelType.XLSX => ExcelImporter.QueryRangeAsync(path, useHeaderRow, sheetName, startRowIndex, startColumnIndex, endRowIndex, endColumnIndex, configuration as NewOpenXmlConfiguration, cancellationToken),
             ExcelType.CSV => throw new NotSupportedException("QueryRange is not supported for csv"),
             _ => throw new InvalidDataException($"Type {type} is not a valid Excel type")
         };
@@ -211,7 +208,7 @@ public static partial class MiniExcel
         var type = stream.GetExcelType(excelType);
         return type switch
         {
-            ExcelType.XLSX => ExcelImporter.QueryRangeAsync(stream, useHeaderRow, sheetName, startRowIndex, startColumnIndex, endRowIndex, endColumnIndex, configuration as OpenXmlConfiguration, cancellationToken),
+            ExcelType.XLSX => ExcelImporter.QueryRangeAsync(stream, useHeaderRow, sheetName, startRowIndex, startColumnIndex, endRowIndex, endColumnIndex, configuration as NewOpenXmlConfiguration, leaveOpen: true, cancellationToken),
             ExcelType.CSV => throw new NotSupportedException("QueryRange is not supported for csv"),
             _ => throw new InvalidDataException($"Type {type} is not a valid Excel type")
         };
@@ -221,27 +218,27 @@ public static partial class MiniExcel
 
     [CreateSyncVersion]
     public static async Task SaveAsByTemplateAsync(string path, string templatePath, object value, IConfiguration? configuration = null, CancellationToken cancellationToken = default) 
-        => await ExcelTemplater.FillTemplateAsync(path, templatePath, value, true, configuration as OpenXmlConfiguration, cancellationToken).ConfigureAwait(false);
+        => await ExcelTemplater.FillTemplateAsync(path, templatePath, value, true, configuration as NewOpenXmlConfiguration, cancellationToken).ConfigureAwait(false);
 
     [CreateSyncVersion]
     public static async Task SaveAsByTemplateAsync(string path, byte[] templateBytes, object value, IConfiguration? configuration = null)
-        => await ExcelTemplater.FillTemplateAsync(path, templateBytes, value, true, configuration as OpenXmlConfiguration).ConfigureAwait(false);
+        => await ExcelTemplater.FillTemplateAsync(path, templateBytes, value, true, configuration as NewOpenXmlConfiguration).ConfigureAwait(false);
     
     [CreateSyncVersion]
     public static async Task SaveAsByTemplateAsync(this Stream stream, string templatePath, object value, IConfiguration? configuration = null)
-        => await ExcelTemplater.FillTemplateAsync(stream, templatePath, value, configuration as OpenXmlConfiguration).ConfigureAwait(false);
+        => await ExcelTemplater.FillTemplateAsync(stream, templatePath, value, configuration as NewOpenXmlConfiguration).ConfigureAwait(false);
 
     [CreateSyncVersion]
     public static async Task SaveAsByTemplateAsync(this Stream stream, byte[] templateBytes, object value, IConfiguration? configuration = null)
-        => await ExcelTemplater.FillTemplateAsync(stream, templateBytes, value, configuration as OpenXmlConfiguration).ConfigureAwait(false);
+        => await ExcelTemplater.FillTemplateAsync(stream, templateBytes, value, configuration as NewOpenXmlConfiguration).ConfigureAwait(false);
     
     [CreateSyncVersion]
     public static async Task SaveAsByTemplateAsync(string path, Stream templateStream, object value, IConfiguration? configuration = null)
-        => await ExcelTemplater.FillTemplateAsync(path, templateStream, value, true, configuration as OpenXmlConfiguration).ConfigureAwait(false);
+        => await ExcelTemplater.FillTemplateAsync(path, templateStream, value, true, configuration as NewOpenXmlConfiguration).ConfigureAwait(false);
 
     [CreateSyncVersion]
     public static async Task SaveAsByTemplateAsync(this Stream stream, Stream templateStream, object value, IConfiguration? configuration = null)
-        => await ExcelTemplater.FillTemplateAsync(stream, templateStream, value, configuration as OpenXmlConfiguration).ConfigureAwait(false);
+        => await ExcelTemplater.FillTemplateAsync(stream, templateStream, value, configuration as NewOpenXmlConfiguration).ConfigureAwait(false);
 
     #region MergeCells
 
@@ -251,7 +248,7 @@ public static partial class MiniExcel
         if (excelType != ExcelType.XLSX) 
             throw new NotSupportedException("MergeSameCells is only supported for Xlsx files");
 
-        await ExcelTemplater.MergeSameCellsAsync(mergedFilePath, path, configuration as OpenXmlConfiguration, cancellationToken).ConfigureAwait(false);
+        await ExcelTemplater.MergeSameCellsAsync(mergedFilePath, path, configuration as NewOpenXmlConfiguration, cancellationToken).ConfigureAwait(false);
     }
 
     [CreateSyncVersion]
@@ -260,7 +257,7 @@ public static partial class MiniExcel
         if (excelType != ExcelType.XLSX) 
             throw new NotSupportedException("MergeSameCells is only supported for Xlsx files");
 
-        await ExcelTemplater.MergeSameCellsAsync(stream, path, configuration as OpenXmlConfiguration, cancellationToken).ConfigureAwait(false);
+        await ExcelTemplater.MergeSameCellsAsync(stream, path, configuration as NewOpenXmlConfiguration, cancellationToken).ConfigureAwait(false);
     }
 
     [CreateSyncVersion]
@@ -269,7 +266,7 @@ public static partial class MiniExcel
         if (excelType != ExcelType.XLSX) 
             throw new NotSupportedException("MergeSameCells is only supported for Xlsx files");
 
-        await ExcelTemplater.MergeSameCellsAsync(stream, filePath, configuration as OpenXmlConfiguration, cancellationToken).ConfigureAwait(false);
+        await ExcelTemplater.MergeSameCellsAsync(stream, filePath, configuration as NewOpenXmlConfiguration, cancellationToken).ConfigureAwait(false);
     }
 
     #endregion
@@ -281,7 +278,7 @@ public static partial class MiniExcel
         var type = path.GetExcelType(excelType);
         return type switch
         {
-            ExcelType.XLSX => await ExcelImporter.QueryAsDataTableAsync(path, useHeaderRow, sheetName, startCell, configuration as OpenXmlConfiguration, cancellationToken).ConfigureAwait(false),
+            ExcelType.XLSX => await ExcelImporter.QueryAsDataTableAsync(path, useHeaderRow, sheetName, startCell, configuration as NewOpenXmlConfiguration, cancellationToken).ConfigureAwait(false),
             ExcelType.CSV => await CsvImporter.QueryAsDataTableAsync(path, useHeaderRow, configuration as Csv.CsvConfiguration, cancellationToken).ConfigureAwait(false),
             _ => throw new InvalidDataException($"Type {type} is not a valid Excel type")
         };
@@ -294,27 +291,27 @@ public static partial class MiniExcel
         var type = stream.GetExcelType(excelType);
         return type switch
         {
-            ExcelType.XLSX => await ExcelImporter.QueryAsDataTableAsync(stream, useHeaderRow, sheetName, startCell, configuration as OpenXmlConfiguration, cancellationToken).ConfigureAwait(false),
-            ExcelType.CSV => await CsvImporter.QueryAsDataTableAsync(stream, useHeaderRow, configuration as Csv.CsvConfiguration, cancellationToken).ConfigureAwait(false),
+            ExcelType.XLSX => await ExcelImporter.QueryAsDataTableAsync(stream, useHeaderRow, sheetName, startCell, configuration as NewOpenXmlConfiguration, leaveOpen: true, cancellationToken).ConfigureAwait(false),
+            ExcelType.CSV => await CsvImporter.QueryAsDataTableAsync(stream, useHeaderRow, configuration as Csv.CsvConfiguration, leaveOpen: true, cancellationToken).ConfigureAwait(false),
             _ => throw new InvalidDataException($"Excel type {type} is not a valid Excel type")
         };
     }
 
     [CreateSyncVersion]
-    public static async Task<List<string>> GetSheetNamesAsync(string path, OpenXmlConfiguration? config = null, CancellationToken cancellationToken = default)
-        => await ExcelImporter.GetSheetNamesAsync(path, config, cancellationToken).ConfigureAwait(false);
+    public static async Task<List<string>> GetSheetNamesAsync(string path, NewOpenXmlConfiguration? config = null, CancellationToken cancellationToken = default)
+        => await ExcelImporter.GetSheetNamesAsync(path, cancellationToken).ConfigureAwait(false);
     
     [CreateSyncVersion]
-    public static async Task<List<string>> GetSheetNamesAsync(this Stream stream, OpenXmlConfiguration? config = null, CancellationToken cancellationToken = default)
-        => await ExcelImporter.GetSheetNamesAsync(stream, config, cancellationToken).ConfigureAwait(false);
+    public static async Task<List<string>> GetSheetNamesAsync(this Stream stream, NewOpenXmlConfiguration? config = null, CancellationToken cancellationToken = default)
+        => await ExcelImporter.GetSheetNamesAsync(stream, true, cancellationToken).ConfigureAwait(false);
 
     [CreateSyncVersion]
-    public static async Task<List<SheetInfo>> GetSheetInformationsAsync(string path, OpenXmlConfiguration? config = null, CancellationToken cancellationToken = default)
-        => await ExcelImporter.GetSheetInformationsAsync(path, config, cancellationToken).ConfigureAwait(false);
+    public static async Task<List<SheetInfo>> GetSheetInformationsAsync(string path, NewOpenXmlConfiguration? config = null, CancellationToken cancellationToken = default)
+        => await ExcelImporter.GetSheetInformationsAsync(path, cancellationToken).ConfigureAwait(false);
     
     [CreateSyncVersion]
-    public static async Task<List<SheetInfo>> GetSheetInformationsAsync(this Stream stream, OpenXmlConfiguration? config = null, CancellationToken cancellationToken = default)
-        => await ExcelImporter.GetSheetInformationsAsync(stream, config, cancellationToken).ConfigureAwait(false);
+    public static async Task<List<SheetInfo>> GetSheetInformationsAsync(this Stream stream, NewOpenXmlConfiguration? config = null, CancellationToken cancellationToken = default)
+        => await ExcelImporter.GetSheetInformationsAsync(stream, true, cancellationToken).ConfigureAwait(false);
 
     [CreateSyncVersion]
     public static async Task<ICollection<string>> GetColumnsAsync(string path, bool useHeaderRow = false, string? sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration? configuration = null, CancellationToken cancellationToken = default)
@@ -322,7 +319,7 @@ public static partial class MiniExcel
         var type = path.GetExcelType(excelType);
         return type switch
         {
-            ExcelType.XLSX => await ExcelImporter.GetColumnNamesAsync(path, useHeaderRow, sheetName, startCell, configuration as OpenXmlConfiguration, cancellationToken).ConfigureAwait(false),
+            ExcelType.XLSX => await ExcelImporter.GetColumnNamesAsync(path, useHeaderRow, sheetName, startCell, cancellationToken).ConfigureAwait(false),
             ExcelType.CSV => await CsvImporter.GetColumnNamesAsync(path, useHeaderRow, configuration as Csv.CsvConfiguration, cancellationToken).ConfigureAwait(false),
             _ => throw new InvalidDataException($"Excel type {type} is not a valid Excel type")
         };
@@ -334,8 +331,8 @@ public static partial class MiniExcel
         var type = stream.GetExcelType(excelType);
         return type switch
         {
-            ExcelType.XLSX => await ExcelImporter.GetColumnNamesAsync(stream, useHeaderRow, sheetName, startCell, configuration as OpenXmlConfiguration, cancellationToken).ConfigureAwait(false),
-            ExcelType.CSV => await CsvImporter.GetColumnNamesAsync(stream, useHeaderRow, configuration as Csv.CsvConfiguration, cancellationToken).ConfigureAwait(false),
+            ExcelType.XLSX => await ExcelImporter.GetColumnNamesAsync(stream, useHeaderRow, sheetName, startCell, leaveOpen: true, cancellationToken).ConfigureAwait(false),
+            ExcelType.CSV => await CsvImporter.GetColumnNamesAsync(stream, useHeaderRow, configuration as Csv.CsvConfiguration, leaveOpen: true, cancellationToken).ConfigureAwait(false),
             _ => throw new InvalidDataException($"Excel type {type} is not a valid Excel type")
         };
     }
@@ -346,7 +343,7 @@ public static partial class MiniExcel
     
     [CreateSyncVersion]
     public static async Task<IList<ExcelRange>> GetSheetDimensionsAsync(this Stream stream, CancellationToken cancellationToken = default) 
-        => await ExcelImporter.GetSheetDimensionsAsync(stream, cancellationToken).ConfigureAwait(false);
+        => await ExcelImporter.GetSheetDimensionsAsync(stream, true, cancellationToken).ConfigureAwait(false);
 
     [CreateSyncVersion]
     public static async Task ConvertCsvToXlsxAsync(string csv, string xlsx, CancellationToken cancellationToken = default)

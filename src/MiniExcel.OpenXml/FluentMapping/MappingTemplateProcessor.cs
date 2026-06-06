@@ -1,27 +1,11 @@
-using System.Text;
-using System.Xml;
-using MiniExcelLib.OpenXml.Helpers;
-using MiniExcelLib.OpenXml.Utils;
-using Zomp.SyncMethodGenerator;
-
 namespace MiniExcelLib.OpenXml.FluentMapping;
 
 internal partial struct MappingTemplateProcessor<T>(CompiledMapping<T> mapping) where T : class
 {
     [CreateSyncVersion]
-    public async Task ProcessSheetAsync(
-        Stream sourceStream,
-        Stream targetStream,
-        IEnumerator<T> dataEnumerator,
-        CancellationToken cancellationToken)
+    public async Task ProcessSheetAsync(Stream sourceStream, Stream targetStream, IEnumerator<T> dataEnumerator, CancellationToken cancellationToken)
     {
-        var readerSettings = new XmlReaderSettings
-        {
-            Async = true,
-            IgnoreWhitespace = false,
-            IgnoreComments = false,
-            CheckCharacters = false
-        };
+        var readerSettings = XmlReaderHelper.GetXmlReaderSettings();
         
         var writerSettings = new XmlWriterSettings
         {
@@ -37,7 +21,6 @@ internal partial struct MappingTemplateProcessor<T>(CompiledMapping<T> mapping) 
         // Get first data item
         var currentItem = dataEnumerator.MoveNext() ? dataEnumerator.Current : null;
         var currentItemIndex = currentItem is not null ? 0 : -1;
-        
         
         // Track which rows have been written from the template
         var writtenRows = new HashSet<int>();

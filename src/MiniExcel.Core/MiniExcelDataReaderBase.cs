@@ -269,13 +269,14 @@ public abstract class MiniExcelDataReaderBase : IMiniExcelDataReader
         {
             if (IsAsyncSource)
             {
-                if (AsyncSource is IDisposable disposable) disposable.Dispose();
-                // necessary fallback when the data reader is being disposed synchronously despite having being initialized asynchronously  
-                else Task.Run(async () => await AsyncSource!.DisposeAsync().ConfigureAwait(false)).GetAwaiter().GetResult();
+                if (AsyncSource is IDisposable disposable) 
+                    disposable.Dispose();
+                else if (AsyncSource is not null) // necessary fallback when the data reader is being disposed synchronously despite having being initialized asynchronously 
+                    Task.Run(async () => await AsyncSource.DisposeAsync().ConfigureAwait(false)).GetAwaiter().GetResult();
             }
             else
             {
-                Source!.Dispose();
+                Source?.Dispose();
             }
 
             MiniExcelReader.Dispose();
@@ -298,8 +299,8 @@ public abstract class MiniExcelDataReaderBase : IMiniExcelDataReader
         if (_disposed)
             return;
 
-        if (IsAsyncSource) 
-            await AsyncSource!.DisposeAsync().ConfigureAwait(false);
+        if (IsAsyncSource && AsyncSource is not null) 
+            await AsyncSource.DisposeAsync().ConfigureAwait(false);
 
         Schema?.Dispose();
         await MiniExcelReader.DisposeAsync().ConfigureAwait(false);

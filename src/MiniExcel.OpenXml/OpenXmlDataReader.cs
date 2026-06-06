@@ -69,7 +69,9 @@ public sealed class OpenXmlDataReader : MiniExcelDataReaderBase
         {
             dataReader?.Dispose();
             reader?.Dispose();
-            ((Stream?)stream)?.Dispose();
+            
+            if (!leaveOpen)
+                ((Stream?)stream)?.Dispose();
         }
     }
 

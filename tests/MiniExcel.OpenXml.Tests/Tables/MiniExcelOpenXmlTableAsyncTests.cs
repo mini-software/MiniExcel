@@ -16,7 +16,7 @@ public class MiniExcelOpenXmlTableAsyncTests
         var path = PathHelper.GetFile("xlsx/TestQueryTable.xlsx");
         
         // Act
-        var rows = await _excelImporter.QueryTableAsync(path, "Sheet1", "Table1").ToListAsync();
+        var rows = await _excelImporter.QueryTableAsync(path).ToListAsync();
         
         // Assert
         Assert.Equal(3, rows.Count);
@@ -34,10 +34,10 @@ public class MiniExcelOpenXmlTableAsyncTests
         // Arrange
         var path = PathHelper.GetFile("xlsx/TestQueryTable.xlsx");
         await using var stream = File.OpenRead(path);
-        
+
         // Act
-        var rows = await _excelImporter.QueryTableAsync(stream, "Sheet1", "Table1").ToListAsync();
-        
+        var rows = await _excelImporter.QueryTableAsync(stream).ToListAsync();
+
         // Assert
         Assert.Equal(3, rows.Count);
         Assert.Equal("bbb", rows[1].Col1);
@@ -55,7 +55,7 @@ public class MiniExcelOpenXmlTableAsyncTests
         var path = PathHelper.GetFile("xlsx/TestQueryTable.xlsx");
         
         // Act
-        var rows = await _excelImporter.QueryTableAsync<QueryTableTestModel>(path, "Sheet1", "Table1").ToListAsync();
+        var rows = await _excelImporter.QueryTableAsync<QueryTableTestModel>(path).ToListAsync();
         
         // Assert
         Assert.Equal(3, rows.Count);

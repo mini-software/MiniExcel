@@ -984,9 +984,8 @@ public class MiniExcelGithubIssuesTests(ITestOutputHelper output)
     [Fact]
     public void Issue227()
     {
-        var path = PathHelper.GetTempPath("xlsm");
-        Assert.Throws<NotSupportedException>(() =>  _excelExporter.Export(path, new[] { new { V = "A1" }, new { V = "A2" } }));
-        File.Delete(path);
+        using var path = AutoDeletingPath.Create(Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsm"));
+        Assert.Throws<NotSupportedException>(() =>  _excelExporter.Export(path.ToString(), new[] { new { V = "A1" }, new { V = "A2" } }));
 
         var path1 = PathHelper.GetFile("xlsx/TestIssue227.xlsm");
         var rows1 = _excelImporter.Query<UserAccount>(path1).ToList();
@@ -1444,7 +1443,9 @@ public class MiniExcelGithubIssuesTests(ITestOutputHelper output)
     [Fact]
     public void TestIssue304()
     {
-        var path = PathHelper.GetTempFilePath();
+        using var path = AutoDeletingPath.Create();
+        var filePath = path.ToString();
+
         var value = new[]
         {
             new { Name="github", Image=File.ReadAllBytes(PathHelper.GetFile("images/github_logo.png"))},
@@ -1453,13 +1454,13 @@ public class MiniExcelGithubIssuesTests(ITestOutputHelper output)
             new { Name="reddit", Image=File.ReadAllBytes(PathHelper.GetFile("images/reddit_logo.png"))},
             new { Name="stackoverflow", Image=File.ReadAllBytes(PathHelper.GetFile("images/stackoverflow_logo.png"))},
         };
-        _excelExporter.Export(path, value);
+        _excelExporter.Export(filePath, value);
 
-        Assert.Contains("/xl/media/", SheetHelper.GetZipFileContent(path, "xl/drawings/_rels/drawing1.xml.rels"));
-        Assert.Contains("ext cx=\"609600\" cy=\"190500\"", SheetHelper.GetZipFileContent(path, "xl/drawings/drawing1.xml"));
-        Assert.Contains("/xl/drawings/drawing1.xml", SheetHelper.GetZipFileContent(path, "[Content_Types].xml"));
-        Assert.Contains("drawing r:id=", SheetHelper.GetZipFileContent(path, "xl/worksheets/sheet1.xml"));
-        Assert.Contains("../drawings/drawing1.xml", SheetHelper.GetZipFileContent(path, "xl/worksheets/_rels/sheet1.xml.rels"));
+        Assert.Contains("/xl/media/", SheetHelper.GetZipFileContent(filePath, "xl/drawings/_rels/drawing1.xml.rels"));
+        Assert.Contains("ext cx=\"609600\" cy=\"190500\"", SheetHelper.GetZipFileContent(filePath, "xl/drawings/drawing1.xml"));
+        Assert.Contains("/xl/drawings/drawing1.xml", SheetHelper.GetZipFileContent(filePath, "[Content_Types].xml"));
+        Assert.Contains("drawing r:id=", SheetHelper.GetZipFileContent(filePath, "xl/worksheets/sheet1.xml"));
+        Assert.Contains("../drawings/drawing1.xml", SheetHelper.GetZipFileContent(filePath, "xl/worksheets/_rels/sheet1.xml.rels"));
     }
 
     // https://github.com/mini-software/MiniExcel/issues/305
@@ -1996,9 +1997,9 @@ public class MiniExcelGithubIssuesTests(ITestOutputHelper output)
         Assert.Equal(100, dt.Rows.Count);
         Assert.Equal("78DE23D2-DCB6-BD3D-EC67-C112BBC322A2", dt.Rows[0]["ID"]);
         Assert.Equal("Wade", dt.Rows[0]["Name"]);
-        Assert.Equal("27/09/2020", dt.Rows[0]["BoD"]);
+        Assert.Equal(new DateTime(2020, 9, 27), dt.Rows[0]["BoD"]);
         Assert.Equal(36d, dt.Rows[0]["Age"]);
-        Assert.False(Convert.ToBoolean(dt.Rows[0]["VIP"]));
+        Assert.False((bool)dt.Rows[0]["VIP"]);
         Assert.Equal(5019.12, dt.Rows[0]["Points"]);
     }
     
@@ -2629,15 +2630,15 @@ public class MiniExcelGithubIssuesTests(ITestOutputHelper output)
     [Fact]
     public void TestIssue789()
     {
-        var path = PathHelper.GetTempPath();
+        using var path = AutoDeletingPath.Create();
         var value = new[] {
             new Dictionary<string, object> { {"no","1"} },
             new Dictionary<string, object> { {"no","2"} },
             new Dictionary<string, object> { {"no","3"} },
         };
-        _excelExporter.Export(path, value);
+        _excelExporter.Export(path.ToString(), value);
 
-        var xml = SheetHelper.GetZipFileContent(path, "xl/worksheets/sheet1.xml");
+        var xml = SheetHelper.GetZipFileContent(path.ToString(), "xl/worksheets/sheet1.xml");
 
         Assert.Contains("<x:autoFilter ref=\"A1:A4\" />", xml);
     }

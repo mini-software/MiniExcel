@@ -31,14 +31,13 @@ internal partial class OpenXmlReader
                 if (reader.IsStartElement("mergeCell", Ns))
                 {
                     var refAttr = reader.GetAttribute("ref");
-                    var refs = refAttr.Split(':');
-                    if (refs.Length == 1)
+                    if (refAttr?.Split(':') is not [var startCell, var endCell])
                         continue;
 
-                    CellReferenceConverter.TryParseCellReference(refs[0], out var x1, out var y1);
-                    CellReferenceConverter.TryParseCellReference(refs[1], out var x2, out var y2);
+                    CellReferenceConverter.TryParseCellReference(startCell, out var x1, out var y1);
+                    CellReferenceConverter.TryParseCellReference(endCell, out var x2, out var y2);
 
-                    mergeCells.MergesValues.Add(refs[0], null);
+                    mergeCells.MergesValues.Add(startCell, null);
 
                     // foreach range
                     var isFirst = true;
@@ -47,7 +46,7 @@ internal partial class OpenXmlReader
                         for (int y = y1; y <= y2; y++)
                         {
                             if (!isFirst)
-                                mergeCells.MergesMap.Add(CellReferenceConverter.GetCellFromCoordinates(x, y), refs[0]);
+                                mergeCells.MergesMap.Add(CellReferenceConverter.GetCellFromCoordinates(x, y), startCell);
                             isFirst = false;
                         }
                     }

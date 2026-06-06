@@ -1,6 +1,6 @@
 ﻿namespace MiniExcelLib.Core.Abstractions;
 
-public partial interface IMiniExcelReader : IDisposable
+public partial interface IMiniExcelReader : IDisposable, IAsyncDisposable
 {
     [CreateSyncVersion]
     IAsyncEnumerable<IDictionary<string, object?>> QueryAsync(bool hasHeaderRow, string? sheetName, string startCell, CancellationToken cancellationToken = default);

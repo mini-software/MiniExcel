@@ -29,6 +29,21 @@ internal class DemoPocoHelloWorld
     public string? HelloWorld1 { get; set; }
 }
 
+internal class ExcelUriDemo
+{
+    public string? Name { get; set; }
+    public int Age { get; set; }
+    public Uri? Url { get; set; }
+}
+
+internal class SimpleAccount
+{
+    public string? Name { get; set; }
+    public int Age { get; set; }
+    public string? Mail { get; set; }
+    public decimal Points { get; set; }
+}
+
 internal class SaveAsControlChracterVO
 {
     public string? Test { get; set; }

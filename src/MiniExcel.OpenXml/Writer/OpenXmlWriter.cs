@@ -105,7 +105,9 @@ internal sealed partial class OpenXmlWriter : IMiniExcelWriter
 #endif
         await using var sbc = _sheetStyleBuilderContext.ConfigureAwait(false);
 
-        using var reader = await OpenXmlReader.CreateAsync(_stream, _configuration, cancellationToken: cancellationToken).ConfigureAwait(false);
+        var reader = await OpenXmlReader.CreateAsync(_stream, _configuration, leaveOpen: true, cancellationToken: cancellationToken).ConfigureAwait(false);
+        await using var disposableReader = reader.ConfigureAwait(false);
+
         var rels = await OpenXmlReader.GetWorkbookRelsAsync(_archive.Entries, cancellationToken).ConfigureAwait(false) ?? [];
 
         _sheets.AddRange(rels

@@ -22,8 +22,8 @@ internal static class ColumnMappingsProvider
             throw new InvalidMappingException($"{type.Name} must contain at least one mappable property or field.", type);
 
         var firstDuplicateIndexGroup = mappings
-            .Where(m => m?.ExcelColumnIndex > -1)
-            .GroupBy(m => m?.ExcelColumnIndex)
+            .Where(m => m.ExcelColumnIndex > -1)
+            .GroupBy(m => m.ExcelColumnIndex)
             .FirstOrDefault(g => g.Count() > 1);
 
         if (firstDuplicateIndexGroup?.FirstOrDefault() is { } duplicate)
@@ -31,16 +31,16 @@ internal static class ColumnMappingsProvider
 
         var maxKey = keys.Last();
         var maxIndex = CellReferenceConverter.GetNumericalIndex(maxKey);
-        foreach (var p in mappings)
+        foreach (var map in mappings)
         {
-            if (p?.ExcelColumnIndex is null)
+            if (map.ExcelColumnIndex is null)
                 continue;
 
-            if (p.ExcelColumnIndex > maxIndex)
-                throw new InvalidMappingException($"The defined MiniExcelColumnIndex({p.ExcelColumnIndex}) exceeds the worksheets size({maxIndex})", type, p.MemberAccessor.MemberInfo);
+            if (map.ExcelColumnIndex > maxIndex)
+                throw new InvalidMappingException($"The defined MiniExcelColumnIndex({map.ExcelColumnIndex}) exceeds the worksheets size({maxIndex})", type, map.MemberAccessor.MemberInfo);
 
-            if (p.ExcelColumnName is null)
-                throw new InvalidMappingException($"The defined MiniExcelColumnIndex({p.ExcelColumnIndex}) for type {type.Name}.{p.MemberAccessor.Name} does not match the defined MiniExcelColumnName({p.ExcelColumnName})", type, p.MemberAccessor.MemberInfo);
+            if (map.ExcelColumnName is null)
+                throw new InvalidMappingException($"The defined MiniExcelColumnIndex({map.ExcelColumnIndex}) for type {type.Name}.{map.MemberAccessor.Name} does not match the defined MiniExcelColumnName({map.ExcelColumnName})", type, map.MemberAccessor.MemberInfo);
         }
 
         return mappings;
@@ -180,14 +180,14 @@ internal static class ColumnMappingsProvider
         var map = new MiniExcelColumnMapping
         {
             Key = key,
-            ExcelColumnName = key?.ToString()
+            ExcelColumnName = key.ToString()
         };
             
         // TODO:Dictionary value type is not fixed
         var isIgnore = false;
         if (configuration.DynamicColumns is { Length: > 0 })
         {
-            var dynamicColumn = configuration.DynamicColumns.SingleOrDefault(x => x.Key == key?.ToString());
+            var dynamicColumn = configuration.DynamicColumns.SingleOrDefault(x => x.Key == key.ToString());
             if (dynamicColumn is not null)
             {
                 map.Nullable = true;
@@ -239,11 +239,11 @@ internal static class ColumnMappingsProvider
         return true;
     }
     
-    internal static List<MiniExcelColumnMapping?> GetColumnMappingFromValue(object value, MiniExcelBaseConfiguration configuration) => value switch
+    internal static List<MiniExcelColumnMapping?>? GetColumnMappingFromValue(object? value, MiniExcelBaseConfiguration configuration) => value switch
     {
         IDictionary<string, object?> genericDictionary => GetDictionaryColumnInfo(genericDictionary, null, configuration),
         IDictionary dictionary => GetDictionaryColumnInfo(null, dictionary, configuration),
-        _ => value.GetType().GetMappingsForExport(configuration)
+        _ => value?.GetType().GetMappingsForExport(configuration) ?? []
     };
 
     private static bool ValueIsNeededToDetermineProperties(Type type) => 

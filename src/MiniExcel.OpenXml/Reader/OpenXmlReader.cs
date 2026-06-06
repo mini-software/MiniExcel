@@ -27,13 +27,39 @@ internal sealed partial class OpenXmlReader : IMiniExcelReader
     [CreateSyncVersion]
     internal static async Task<OpenXmlReader> CreateAsync(Stream stream, IMiniExcelConfiguration? configuration, bool leaveOpen = false, CancellationToken cancellationToken = default)
     {
-        ThrowHelper.ThrowIfInvalidOpenXml(stream);
+        OpenXmlZip? archive = null;
+        OpenXmlReader? reader = null;
 
-        var archive = await OpenXmlZip.CreateAsync(stream, leaveOpen: leaveOpen, cancellationToken: cancellationToken).ConfigureAwait(false);
-        var reader = new OpenXmlReader(archive, configuration);
-        await reader.SetSharedStringsAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            ThrowHelper.ThrowIfInvalidOpenXml(stream);
+    
+            archive = await OpenXmlZip.CreateAsync(stream, leaveOpen: leaveOpen, cancellationToken: cancellationToken).ConfigureAwait(false);
+            reader = new OpenXmlReader(archive, configuration);
+            await reader.SetSharedStringsAsync(cancellationToken).ConfigureAwait(false);
 
-        return reader;
+            var result = reader;
+            reader = null;
+            archive = null;
+            stream = null!;
+            
+            return result;
+        }
+        finally
+        {
+#if SYNC_ONLY
+            reader?.Dispose();
+#else
+            if (reader?.DisposeAsync() is { } disposeTask)
+                await disposeTask.ConfigureAwait(false);
+#endif
+
+            if (archive is not null)
+                await archive.DisposeAsync().ConfigureAwait(false);
+            
+            if (!leaveOpen && (Stream?)stream is not null)
+                await stream.DisposeAsync().ConfigureAwait(false);
+        }
     }
     
     [CreateSyncVersion]
@@ -45,7 +71,7 @@ internal sealed partial class OpenXmlReader : IMiniExcelReader
     [CreateSyncVersion]
     public IAsyncEnumerable<T> QueryAsync<T>(string? sheetName, string startCell, bool mapHeaderAsData, CancellationToken cancellationToken = default) where T : class, new()
     {
-        sheetName ??= MiniExcelPropertyHelper.GetExcelSheetInfo(typeof(T), _config)?.ExcelSheetName;
+        sheetName ??= MiniExcelPropertyHelper.GetExcelSheetInfo(typeof(T), _config).ExcelSheetName;
         var query = QueryAsync(false, sheetName, startCell, cancellationToken);
 
         if (!CellReferenceConverter.TryParseCellReference(startCell, out _, out var rowOffset))
@@ -168,7 +194,6 @@ internal sealed partial class OpenXmlReader : IMiniExcelReader
         if (!maxRowColumnIndexResult.IsSuccess)
             yield break;
 
-        var maxRowIndex = maxRowColumnIndexResult.MaxRowIndex;
         var maxColumnIndex = maxRowColumnIndexResult.MaxColumnIndex;
         var withoutCr = maxRowColumnIndexResult.WithoutCr;
 
@@ -348,7 +373,7 @@ internal sealed partial class OpenXmlReader : IMiniExcelReader
         if (sheetName is not null)
         {
             SetWorkbookRels(Archive.EntryCollection);
-            var sheetRecord = _sheetRecords.SingleOrDefault(s => s.Name == sheetName);
+            var sheetRecord = _sheetRecords?.SingleOrDefault(s => s.Name == sheetName);
             if (sheetRecord is null)
             {
                 if (_config.DynamicSheets is null)
@@ -356,7 +381,7 @@ internal sealed partial class OpenXmlReader : IMiniExcelReader
 
                 if (_config.DynamicSheets.FirstOrDefault(ds => ds.Key == sheetName) is { } sheetConfig)
                 {
-                    sheetRecord = _sheetRecords.SingleOrDefault(s => s.Name == sheetConfig.Name);
+                    sheetRecord = _sheetRecords?.SingleOrDefault(s => s.Name == sheetConfig.Name);
                 }
             }
             sheetEntry = sheets.Single(w => w.FullName.TrimStart('/') == $"xl/{sheetRecord?.Path}" || w.FullName == sheetRecord?.Path?.TrimStart('/'));
@@ -364,7 +389,7 @@ internal sealed partial class OpenXmlReader : IMiniExcelReader
         else if (sheets.Length > 1)
         {
             SetWorkbookRels(Archive.EntryCollection);
-            var s = _sheetRecords[0];
+            var s = _sheetRecords![0];
             sheetEntry = sheets.Single(w => w.FullName.TrimStart('/') == $"xl/{s.Path}" || w.FullName.TrimStart('/') == s.Path?.TrimStart('/'));
         }
         else
@@ -395,7 +420,7 @@ internal sealed partial class OpenXmlReader : IMiniExcelReader
         {
             var cellValueString = cellValue?.ToString();
             if (!string.IsNullOrWhiteSpace(cellValueString))
-                headRows.Add(columnIndex, cellValueString);
+                headRows.Add(columnIndex, cellValueString!);
         }
         else if (headRows.TryGetValue(columnIndex, out var key))
         {
@@ -497,14 +522,18 @@ internal sealed partial class OpenXmlReader : IMiniExcelReader
                 {
                     if (reader.IsStartElement("sheet", Ns))
                     {
-                        yield return new SheetRecord(
-                            reader.GetAttribute("name"),
-                            reader.GetAttribute("state"),
-                            uint.Parse(reader.GetAttribute("sheetId")),
-                            reader.GetAttribute("id", RelationshiopNs),
-                            sheetCount == activeSheetIndex
-                        );
-                        sheetCount++;
+                        if (reader.GetAttribute("name") is { } sheetName and not "")
+                        {
+                            yield return new SheetRecord(
+                                sheetName,
+                                reader.GetAttribute("state"),
+                                uint.TryParse(reader.GetAttribute("sheetId"), out var  sheetId) ? sheetId : 0,
+                                reader.GetAttribute("id", RelationshiopNs),
+                                sheetCount == activeSheetIndex
+                            );
+                            sheetCount++;
+                        }
+    
                         await reader.SkipAsync()
 #if NET
                             .WaitAsync(cancellationToken)
@@ -657,7 +686,7 @@ internal sealed partial class OpenXmlReader : IMiniExcelReader
             case ExcelDataTypes.SharedString:
                 if (int.TryParse(rawValue, style, invariantCulture, out var sstIndex))
                 {
-                    if (sstIndex >= 0 && sstIndex < SharedStrings?.Count)
+                    if (sstIndex >= 0 && sstIndex < SharedStrings.Count)
                     {
                         value = XmlHelper.DecodeString(SharedStrings[sstIndex]);
                     }
@@ -974,14 +1003,29 @@ internal sealed partial class OpenXmlReader : IMiniExcelReader
         return new GetMaxRowColumnIndexResult(true, withoutCr, maxRowIndex, maxColumnIndex);
     }
 
-    public void Dispose()
+    private void DisposeCore()
     {
-        if (_disposed)
-            return;
-
         if (SharedStrings is SharedStringsDiskCache cache)
             cache.Dispose();
+    }
+    
+    public void Dispose()
+    {
+        if (!_disposed)
+        {
+            DisposeCore();
+            Archive.Dispose();
+            _disposed = true;
+        }
+    }
 
-        _disposed = true;
+    public async ValueTask DisposeAsync()
+    {
+        if (!_disposed)
+        {
+            DisposeCore();
+            await Archive.DisposeAsync().ConfigureAwait(false);
+            _disposed = true;
+        }
     }
 }

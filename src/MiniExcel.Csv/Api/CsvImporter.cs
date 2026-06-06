@@ -1,5 +1,3 @@
-using MiniExcelLib.Core;
-
 // ReSharper disable once CheckNamespace
 namespace MiniExcelLib.Csv;
 
@@ -45,8 +43,10 @@ public partial class CsvImporter
         CsvConfiguration? configuration = null, bool leaveOpen = false, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         where T : class, new()
     {
-        using var csv = new CsvReader(stream, configuration, leaveOpen);
-        await foreach (var item in csv.QueryAsync<T>(null, "A1", treatHeaderAsData, cancellationToken).ConfigureAwait(false))
+        var reader = new CsvReader(stream, configuration, leaveOpen);
+        await using var disposableReader = reader.ConfigureAwait(false);
+
+        await foreach (var item in reader.QueryAsync<T>(null, "A1", treatHeaderAsData, cancellationToken).ConfigureAwait(false))
             yield return item;
     }
 
@@ -86,8 +86,10 @@ public partial class CsvImporter
     public async IAsyncEnumerable<dynamic> QueryAsync(Stream stream, bool hasHeaderRow = false,
         CsvConfiguration? configuration = null, bool leaveOpen = false, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        using var excelReader = new CsvReader(stream, configuration, leaveOpen);
-        await foreach (var item in excelReader.QueryAsync(hasHeaderRow, null, "A1", cancellationToken).ConfigureAwait(false))
+        var reader = new CsvReader(stream, configuration, leaveOpen);
+        await using var disposableReader = reader.ConfigureAwait(false);
+
+        await foreach (var item in reader.QueryAsync(hasHeaderRow, null, "A1", cancellationToken).ConfigureAwait(false))
             yield return item;
     }
 
@@ -134,7 +136,9 @@ public partial class CsvImporter
     {
         var dt = new DataTable();
         var first = true;
-        using var reader = new CsvReader(stream, configuration, leaveOpen);
+        var reader = new CsvReader(stream, configuration, leaveOpen);
+        await using var disposableReader = reader.ConfigureAwait(false);
+
         var rows = reader.QueryAsync(false, null, "A1", cancellationToken);
 
         var columnDict = new Dictionary<string, string>();
@@ -147,11 +151,11 @@ public partial class CsvImporter
                     cancellationToken.ThrowIfCancellationRequested();
 
                     var columnName = hasHeaderRow ? entry.Value?.ToString() : entry.Key;
-                    if (!string.IsNullOrWhiteSpace(columnName)) // avoid #298 : Column '' does not belong to table
+                    if (columnName is { Length: > 0 }) // avoid #298 : Column '' does not belong to table
                     {
                         var column = new DataColumn(columnName, typeof(object)) { Caption = columnName };
                         dt.Columns.Add(column);
-                        columnDict.Add(entry.Key, columnName!); //same column name throw exception???
+                        columnDict.Add(entry.Key, columnName); //same column name throw exception???
                     }
                 }
 
@@ -194,7 +198,7 @@ public partial class CsvImporter
     {
         var stream = FileHelper.OpenSharedRead(path);
         await using var disposableStream = stream.ConfigureAwait(false);
-        return await GetColumnNamesAsync(stream, hasHeaderRow, configuration, cancellationToken).ConfigureAwait(false);
+        return await GetColumnNamesAsync(stream, hasHeaderRow, configuration, false, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -203,13 +207,14 @@ public partial class CsvImporter
     /// <param name="stream">The stream containing the CSV data.</param>
     /// <param name="hasHeaderRow">If true, the first row values are used as column names. If false, column letters (A, B, C, etc.) are used. Default is false.</param>
     /// <param name="configuration">Optional configuration settings (delimiters, encoding, etc.).</param>
+    /// <param name="leaveOpen">True to leave the stream open after the operation is completed, otherwise false.</param>
     /// <param name="cancellationToken">A token to cancel the asynchronous operation.</param>
     /// <returns>A collection of column names from the specified location, or an empty collection if the sheet is empty.</returns>
     [CreateSyncVersion]
     public async Task<ICollection<string>> GetColumnNamesAsync(Stream stream, bool hasHeaderRow = false,
-        CsvConfiguration? configuration = null, CancellationToken cancellationToken = default)
+        CsvConfiguration? configuration = null, bool leaveOpen = false, CancellationToken cancellationToken = default)
     {
-        var enumerator = QueryAsync(stream, hasHeaderRow, configuration, leaveOpen: false, cancellationToken).GetAsyncEnumerator(cancellationToken);
+        var enumerator = QueryAsync(stream, hasHeaderRow, configuration, leaveOpen: leaveOpen, cancellationToken).GetAsyncEnumerator(cancellationToken);
         await using var disposableEnumerator = enumerator.ConfigureAwait(false);
 
         if (await enumerator.MoveNextAsync().ConfigureAwait(false))
@@ -228,16 +233,14 @@ public partial class CsvImporter
     /// <param name="path">The path to the CSV document.</param>
     /// <param name="hasHeaderRow">If true, the first row is used as column headers. Default is false.</param>
     /// <param name="configuration">Optional configuration settings (delimiters, encoding, etc.).</param>    /// <remarks>
-    /// The returned <see cref="MiniExcelDataReader"/> implements <see cref="IDataReader"/> and supports its standard reading patterns.
+    /// The returned <see cref="CsvDataReader"/> implements <see cref="IDataReader"/> and supports its standard reading patterns.
     /// The data reader returned by this method is designed to perform synchronous, blocking reads, and will throw <exception cref="InvalidOperationException" /> if an asynchronous operation is called from it.
     /// For asynchronous reading scenarios, use <see cref="GetAsyncDataReader(string, bool, CsvConfiguration?, CancellationToken)"/> instead.
     /// </remarks>
-    public MiniExcelDataReader GetDataReader(string path, bool hasHeaderRow = false, CsvConfiguration? configuration = null)
+    public CsvDataReader GetDataReader(string path, bool hasHeaderRow = false, CsvConfiguration? configuration = null)
     {
         var stream = FileHelper.OpenSharedRead(path);
-        var values = Query(stream, hasHeaderRow, configuration, leaveOpen: false).Cast<IDictionary<string, object?>>();
-
-        return MiniExcelDataReader.Create(stream, values);
+        return CsvDataReader.Create(stream, hasHeaderRow, configuration, leaveOpen: false);
     }
 
     /// <summary>
@@ -248,14 +251,13 @@ public partial class CsvImporter
     /// <param name="configuration">Optional configuration settings (delimiters, encoding, etc.).</param>
     /// <param name="leaveOpen">True to leave the stream open after the data reader is disposed, otherwise false.</param>
     /// <remarks>
-    /// The returned <see cref="MiniExcelDataReader"/> implements <see cref="IDataReader"/> and supports its standard reading patterns.
+    /// The returned <see cref="CsvDataReader"/> implements <see cref="IDataReader"/> and supports its standard reading patterns.
     /// The data reader returned by this method is designed to perform synchronous, blocking reads, and will throw <exception cref="InvalidOperationException" /> if an asynchronous operation is called from it.
     /// For asynchronous reading scenarios, use <see cref="GetAsyncDataReader(Stream, bool, CsvConfiguration?, bool, CancellationToken)"/> instead.
     /// </remarks>
-    public MiniExcelDataReader GetDataReader(Stream stream, bool hasHeaderRow = false, CsvConfiguration ? configuration = null, bool leaveOpen = false)
+    public CsvDataReader GetDataReader(Stream stream, bool hasHeaderRow = false, CsvConfiguration ? configuration = null, bool leaveOpen = false)
     {
-        var values = Query(stream, hasHeaderRow, configuration, leaveOpen).Cast<IDictionary<string, object?>>();
-        return MiniExcelDataReader.Create(stream, values, leaveOpen);
+        return CsvDataReader.Create(stream, hasHeaderRow, configuration, leaveOpen);
     }
 
     /// <summary>
@@ -263,19 +265,18 @@ public partial class CsvImporter
     /// </summary>
     /// <param name="path">The path to the CSV document.</param>
     /// <param name="hasHeaderRow">If true, the first row is used as column headers. Default is false.</param>
-    /// <param name="configuration">Optional configuration settings (delimiters, encoding, etc.).</param>    /// <param name="cancellationToken">A token to cancel the asynchronous operation.</param>
+    /// <param name="configuration">Optional configuration settings (delimiters, encoding, etc.).</param>
+    /// /// <param name="cancellationToken">A token to cancel the asynchronous operation.</param>
     /// <remarks>
-    /// The returned <see cref="MiniExcelDataReader"/> implements <see cref="IDataReader"/> and supports its standard reading patterns.
+    /// The returned <see cref="CsvDataReader"/> implements <see cref="IDataReader"/> and supports its standard reading patterns.
     /// The data reader returned by this method is designed to supports asynchronous reads, but will not throw an exception if a synchronous operation is performed.
     /// Still, it's advised to use <see cref="GetDataReader(string, bool, CsvConfiguration?)"/> for synchronous reads instead.
     /// </remarks>
-    public async Task<MiniExcelDataReader> GetAsyncDataReader(string path, bool hasHeaderRow = false, 
+    public async Task<CsvDataReader> GetAsyncDataReader(string path, bool hasHeaderRow = false, 
         CsvConfiguration? configuration = null, CancellationToken cancellationToken = default)
     {
         var stream = FileHelper.OpenSharedRead(path);
-        var values = QueryAsync(stream, hasHeaderRow, configuration, leaveOpen: false, cancellationToken);
-        
-        return await MiniExcelDataReader.CreateAsync(stream, values.CastToDictionary(cancellationToken)).ConfigureAwait(false);
+        return await CsvDataReader.CreateAsync(stream, hasHeaderRow, configuration, leaveOpen: false, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -287,15 +288,14 @@ public partial class CsvImporter
     /// <param name="leaveOpen">True to leave the stream open after the data reader is disposed, otherwise false.</param>
     /// <param name="cancellationToken">A token to cancel the asynchronous operation.</param>
     /// <remarks>
-    /// The returned <see cref="MiniExcelDataReader"/> implements <see cref="IDataReader"/> and supports its standard reading patterns.
+    /// The returned <see cref="CsvDataReader"/> implements <see cref="IDataReader"/> and supports its standard reading patterns.
     /// The data reader returned by this method is designed to supports asynchronous reads, but will not throw an exception if a synchronous operation is performed.
     /// Still, it's advised to use <see cref="GetDataReader(Stream, bool, CsvConfiguration?, bool)"/> for synchronous reads instead.
     /// </remarks>
-    public async Task<MiniExcelDataReader> GetAsyncDataReader(Stream stream, bool hasHeaderRow = false,
+    public async Task<CsvDataReader> GetAsyncDataReader(Stream stream, bool hasHeaderRow = false,
         CsvConfiguration? configuration = null, bool leaveOpen = false, CancellationToken cancellationToken = default)
     {
-        var values = QueryAsync(stream, hasHeaderRow, configuration, leaveOpen, cancellationToken);
-        return await MiniExcelDataReader.CreateAsync(stream, values.CastToDictionary(cancellationToken), leaveOpen).ConfigureAwait(false);
+        return await CsvDataReader.CreateAsync(stream, hasHeaderRow, configuration, leaveOpen, cancellationToken).ConfigureAwait(false);
     }
     
     #endregion

@@ -848,13 +848,12 @@ public class MiniExcelGithubIssuesAsyncTests(ITestOutputHelper output)
             new() { { "A", Guid.NewGuid() }, { "B", "HelloWorld" } }
         ];
         using var path = AutoDeletingPath.Create();
-        var rowsWritten = await  _excelExporter.ExportAsync(path.ToString(), value);
+        var rowsWritten = await _excelExporter.ExportAsync(path.ToString(), value);
         Assert.Single(rowsWritten);
         Assert.Equal(3, rowsWritten[0]);
 
 
-        using var dt = await  _excelImporter.QueryAsDataTableAsync(path.ToString());
-#pragma warning restore CS0618
+        using var dt = await _excelImporter.QueryAsDataTableAsync(path.ToString());
         var columns = dt.Columns;
         Assert.Equal(typeof(object), columns[0].DataType);
         Assert.Equal(typeof(object), columns[1].DataType);
@@ -912,7 +911,7 @@ public class MiniExcelGithubIssuesAsyncTests(ITestOutputHelper output)
     {
         var path = PathHelper.GetFile("xlsx/TestIssue229.xlsx");
             
-        using var dt = await  _excelImporter.QueryAsDataTableAsync(path);
+        using var dt = await _excelImporter.QueryAsDataTableAsync(path);
             
         foreach (DataColumn column in dt.Columns)
         {
@@ -984,7 +983,7 @@ public class MiniExcelGithubIssuesAsyncTests(ITestOutputHelper output)
     {
         var path = PathHelper.GetFile("xlsx/TestIssue233.xlsx");
 
-        using var dt = await  _excelImporter.QueryAsDataTableAsync(path);
+        using var dt = await _excelImporter.QueryAsDataTableAsync(path);
         var rows = dt.Rows;
             
         Assert.Equal(0.55, rows[0]["Size"]);

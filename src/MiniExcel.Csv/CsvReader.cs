@@ -11,6 +11,8 @@ internal sealed partial class CsvReader : IMiniExcelReader
     private readonly bool _leaveOpen;
     private readonly CsvConfiguration _config;
 
+    private bool _disposed;
+
     internal CsvReader(Stream stream, IMiniExcelConfiguration? configuration, bool leaveOpen = false)
     {
         _stream = stream;
@@ -29,7 +31,7 @@ internal sealed partial class CsvReader : IMiniExcelReader
         if (_stream.CanSeek)
             _stream.Position = 0;
 
-        var reader = _config.StreamReaderFunc(_stream);
+        using var reader = _config.StreamReaderFunc(_stream);
         var firstRow = true;
         var headRows = new Dictionary<int, string>();
 
@@ -123,7 +125,6 @@ internal sealed partial class CsvReader : IMiniExcelReader
     [CreateSyncVersion]
     public IAsyncEnumerable<T> QueryAsync<T>(string? sheetName, string startCell, bool mapHeaderAsData, CancellationToken cancellationToken = default) where T : class, new()
     {
-        const int rowOffset = 0; // ranged queries are not supported for csv
         var records = QueryAsync(false, sheetName, startCell, cancellationToken);
         return MiniExcelMapper.MapQueryAsync<T>(records, 0, mapHeaderAsData, false, _config, null, cancellationToken);
     }
@@ -175,7 +176,19 @@ internal sealed partial class CsvReader : IMiniExcelReader
 
     public void Dispose()
     {
-        if (!_leaveOpen)
+        if (!_leaveOpen && !_disposed)
+        {
             _stream.Dispose();
+            _disposed = true;
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (!_leaveOpen && !_disposed)
+        {
+            await _stream.DisposeAsync().ConfigureAwait(false);
+            _disposed = true;
+        }
     }
 }

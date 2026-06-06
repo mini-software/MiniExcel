@@ -17,7 +17,7 @@ public class MiniExcelOpenXmlTableTests
         var path = PathHelper.GetFile("xlsx/TestQueryTable.xlsx");
         
         // Act
-        var rows = _excelImporter.QueryTable(path, "Sheet1", "Table1").ToList();
+        var rows = _excelImporter.QueryTable(path).ToList();
         
         // Assert
         Assert.Equal(3, rows.Count);
@@ -37,7 +37,7 @@ public class MiniExcelOpenXmlTableTests
         using var stream = File.OpenRead(path);
         
         // Act
-        var rows = _excelImporter.QueryTable(stream, "Sheet1", "Table1").ToList();
+        var rows = _excelImporter.QueryTable(stream).ToList();
         
         // Assert
         Assert.Equal(3, rows.Count);
@@ -56,7 +56,7 @@ public class MiniExcelOpenXmlTableTests
         var path = PathHelper.GetFile("xlsx/TestQueryTable.xlsx");
         
         // Act
-        var rows = _excelImporter.QueryTable<QueryTableTestModel>(path, "Sheet1", "Table1").ToList();
+        var rows = _excelImporter.QueryTable<QueryTableTestModel>(path).ToList();
         
         // Assert
         Assert.Equal(3, rows.Count);

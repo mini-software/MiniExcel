@@ -48,7 +48,9 @@ public sealed partial class OpenXmlImporter
         string startCell = "A1", bool treatHeaderAsData = false, OpenXmlConfiguration? configuration = null,
         bool leaveOpen = false, [EnumeratorCancellation] CancellationToken cancellationToken = default) where T : class, new()
     {
-        using var reader = await OpenXmlReader.CreateAsync(stream, configuration, leaveOpen, cancellationToken).ConfigureAwait(false);
+        var reader = await OpenXmlReader.CreateAsync(stream, configuration, leaveOpen, cancellationToken).ConfigureAwait(false);
+        await using var disposableReader = reader.ConfigureAwait(false);
+        
         await foreach (var item in reader.QueryAsync<T>(sheetName, startCell, treatHeaderAsData, cancellationToken).ConfigureAwait(false))
             yield return item;
     }
@@ -95,7 +97,9 @@ public sealed partial class OpenXmlImporter
         string? sheetName = null, string startCell = "A1", OpenXmlConfiguration? configuration = null,
         bool leaveOpen = false, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        using var reader = await OpenXmlReader.CreateAsync(stream, configuration, leaveOpen, cancellationToken).ConfigureAwait(false);
+        var reader = await OpenXmlReader.CreateAsync(stream, configuration, leaveOpen, cancellationToken).ConfigureAwait(false);
+        await using var disposableReader = reader.ConfigureAwait(false);
+
         await foreach (var item in reader.QueryAsync(hasHeaderRow, sheetName, startCell, cancellationToken).ConfigureAwait(false))
             yield return item;
     }
@@ -142,7 +146,9 @@ public sealed partial class OpenXmlImporter
         string? sheetName = null, string startCell = "A1", string? endCell = null, OpenXmlConfiguration? configuration = null,
         bool leaveOpen = false, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        using var reader = await OpenXmlReader.CreateAsync(stream, configuration, leaveOpen, cancellationToken).ConfigureAwait(false);
+        var reader = await OpenXmlReader.CreateAsync(stream, configuration, leaveOpen, cancellationToken).ConfigureAwait(false);
+        await using var disposableReader = reader.ConfigureAwait(false);
+
         await foreach (var item in reader.QueryRangeAsync(hasHeaderRow, sheetName, startCell, endCell, cancellationToken).ConfigureAwait(false))
             yield return item;
     }
@@ -191,7 +197,9 @@ public sealed partial class OpenXmlImporter
         int? endColumnIndex = null, OpenXmlConfiguration? configuration = null, bool leaveOpen = false, 
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        using var reader = await OpenXmlReader.CreateAsync(stream, configuration, leaveOpen, cancellationToken).ConfigureAwait(false);
+        var reader = await OpenXmlReader.CreateAsync(stream, configuration, leaveOpen, cancellationToken).ConfigureAwait(false);
+        await using var disposableReader = reader.ConfigureAwait(false);
+
         await foreach (var item in reader.QueryRangeAsync(hasHeaderRow, sheetName, startRowIndex, startColumnIndex, endRowIndex, endColumnIndex, cancellationToken).ConfigureAwait(false))
             yield return item;
     }
@@ -243,11 +251,13 @@ public sealed partial class OpenXmlImporter
         string? sheetName = null, string startCell = "A1", OpenXmlConfiguration? configuration = null,
         bool leaveOpen = false, CancellationToken cancellationToken = default)
     {
-        sheetName ??= (await GetSheetNamesAsync(stream, false, cancellationToken).ConfigureAwait(false)).First();
+        sheetName ??= (await GetSheetNamesAsync(stream, true, cancellationToken).ConfigureAwait(false)).First();
 
         var dt = new DataTable(sheetName);
         var first = true;
-        using var reader = await OpenXmlReader.CreateAsync(stream, configuration, leaveOpen, cancellationToken).ConfigureAwait(false);
+        var reader = await OpenXmlReader.CreateAsync(stream, configuration, leaveOpen, cancellationToken).ConfigureAwait(false);
+        await using var disposableReader = reader.ConfigureAwait(false);
+        
         var rows = reader.QueryAsync(false, sheetName, startCell, cancellationToken);
 
         var columnDict = new Dictionary<string, string>();
@@ -326,7 +336,9 @@ public sealed partial class OpenXmlImporter
     {
         var archive = await OpenXmlZip.CreateAsync(stream, leaveOpen: true, cancellationToken: cancellationToken).ConfigureAwait(false);
         await using var disposableArchive = archive.ConfigureAwait(false);
-        using var reader = await OpenXmlReader.CreateAsync(stream, null, leaveOpen, cancellationToken).ConfigureAwait(false);
+
+        var reader = await OpenXmlReader.CreateAsync(stream, null, leaveOpen, cancellationToken).ConfigureAwait(false);
+        await using var disposableReader = reader.ConfigureAwait(false);
 
         var rels = await OpenXmlReader.GetWorkbookRelsAsync(archive.EntryCollection, cancellationToken).ConfigureAwait(false);
         return rels?.Select(s => s.Name).ToList() ?? [];
@@ -364,9 +376,7 @@ public sealed partial class OpenXmlImporter
     public async Task<List<SheetInfo>> GetSheetInformationsAsync(Stream stream, bool leaveOpen = false, CancellationToken cancellationToken = default)
     {
         var archive = await OpenXmlZip.CreateAsync(stream, cancellationToken: cancellationToken).ConfigureAwait(false);
-
         await using var disposableArchve = archive.ConfigureAwait(false);
-        using var reader = await OpenXmlReader.CreateAsync(stream, null, leaveOpen, cancellationToken).ConfigureAwait(false);
 
         var rels = await OpenXmlReader.GetWorkbookRelsAsync(archive.EntryCollection, cancellationToken).ConfigureAwait(false);
         return rels?.Select((s, i) => s.ToSheetInfo((uint)i)).ToList() ?? [];
@@ -409,7 +419,9 @@ public sealed partial class OpenXmlImporter
     [CreateSyncVersion]
     public async Task<IList<ExcelRange>> GetSheetDimensionsAsync(Stream stream, bool leaveOpen = false, CancellationToken cancellationToken = default)
     {
-        using var reader = await OpenXmlReader.CreateAsync(stream, null, leaveOpen, cancellationToken).ConfigureAwait(false);
+        var reader = await OpenXmlReader.CreateAsync(stream, null, leaveOpen, cancellationToken).ConfigureAwait(false);
+        await using var disposableReader = reader.ConfigureAwait(false);
+
         return await reader.GetDimensionsAsync(cancellationToken).ConfigureAwait(false);
     }
 
@@ -472,7 +484,7 @@ public sealed partial class OpenXmlImporter
     /// The returned <see cref="CommentResultSet"/> provides access to both threaded comments and legacy note comments, along with the associated metadata.
     /// </remarks>
     [CreateSyncVersion]
-    public async Task<CommentResultSet> RetrieveCommentsAsync(string path, string? sheetName, CancellationToken cancellationToken = default)
+    public async Task<CommentResultSet> RetrieveCommentsAsync(string path, string? sheetName = null, CancellationToken cancellationToken = default)
     {
         var stream = FileHelper.OpenSharedRead(path);
         await using var disposableStream = stream.ConfigureAwait(false); 
@@ -492,9 +504,11 @@ public sealed partial class OpenXmlImporter
     /// The returned <see cref="CommentResultSet"/> provides access to both threaded comments and legacy note comments, along with the associated metadata.
     /// </remarks>
     [CreateSyncVersion]
-    public async Task<CommentResultSet> RetrieveCommentsAsync(Stream stream, string? sheetName, bool leaveOpen = false, CancellationToken cancellationToken = default)
+    public async Task<CommentResultSet> RetrieveCommentsAsync(Stream stream, string? sheetName = null, bool leaveOpen = false, CancellationToken cancellationToken = default)
     {
-        using var reader = await OpenXmlReader.CreateAsync(stream, null, leaveOpen, cancellationToken).ConfigureAwait(false);
+        var reader = await OpenXmlReader.CreateAsync(stream, null, leaveOpen, cancellationToken).ConfigureAwait(false);
+        await using var disposableReader = reader.ConfigureAwait(false);
+
         return await reader.ReadCommentsAsync(sheetName, cancellationToken).ConfigureAwait(false);
     }
 
@@ -510,12 +524,14 @@ public sealed partial class OpenXmlImporter
     /// This method reads from the specified table within a stream and yields rows as dynamic objects with properties based on the table's column names.
     /// </remarks>
     [CreateSyncVersion]
-    public async IAsyncEnumerable<dynamic> QueryTableAsync(string path, string sheetName = "Sheet1", string tableName = "Table1", [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    public async IAsyncEnumerable<dynamic> QueryTableAsync(string path, string? sheetName = null, string tableName = "Table1", [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         var stream = FileHelper.OpenSharedRead(path);
         await using var disposableStream = stream.ConfigureAwait(false); 
 
-        using var reader = await OpenXmlReader.CreateAsync(stream, null, false, cancellationToken).ConfigureAwait(false);
+        var reader = await OpenXmlReader.CreateAsync(stream, null, false, cancellationToken).ConfigureAwait(false);
+        await using var disposableReader = reader.ConfigureAwait(false);
+
         await foreach (var table in reader.QueryTableAsync(sheetName, tableName, false, cancellationToken).ConfigureAwait(false))
             yield return table;
     }
@@ -533,9 +549,11 @@ public sealed partial class OpenXmlImporter
     /// This method reads from the specified table within a stream and yields rows as dynamic objects with properties based on the table's column names.
     /// </remarks>
     [CreateSyncVersion]
-    public async IAsyncEnumerable<dynamic> QueryTableAsync(Stream stream, string sheetName = "Sheet1", string tableName = "Table1", bool leaveOpen = false, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    public async IAsyncEnumerable<dynamic> QueryTableAsync(Stream stream, string? sheetName = null, string tableName = "Table1", bool leaveOpen = false, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        using var reader = await OpenXmlReader.CreateAsync(stream, null, leaveOpen, cancellationToken).ConfigureAwait(false);
+        var reader = await OpenXmlReader.CreateAsync(stream, null, leaveOpen, cancellationToken).ConfigureAwait(false);
+        await using var disposableReader = reader.ConfigureAwait(false);
+
         await foreach (var table in reader.QueryTableAsync(sheetName, tableName, false, cancellationToken).ConfigureAwait(false))
             yield return table;
     }
@@ -553,13 +571,15 @@ public sealed partial class OpenXmlImporter
     /// This method reads from the specified table within a stream and maps each row to an instance of the provided type. The mapping is based on property/field names matching column headers.
     /// </remarks>
     [CreateSyncVersion]
-    public async IAsyncEnumerable<T> QueryTableAsync<T>(string path, string sheetName = "Sheet1", string tableName = "Table1", [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    public async IAsyncEnumerable<T> QueryTableAsync<T>(string path, string? sheetName = null, string tableName = "Table1", [EnumeratorCancellation] CancellationToken cancellationToken = default)
         where T : class, new()
     {
         var stream = FileHelper.OpenSharedRead(path);
         await using var disposableStream = stream.ConfigureAwait(false); 
 
-        using var reader = await OpenXmlReader.CreateAsync(stream, null, false, cancellationToken).ConfigureAwait(false);
+        var reader = await OpenXmlReader.CreateAsync(stream, null, false, cancellationToken).ConfigureAwait(false);
+        await using var disposableReader = reader.ConfigureAwait(false);
+
         await foreach (var table in reader.QueryTableAsync<T>(sheetName, tableName, cancellationToken).ConfigureAwait(false))
             yield return table;
     }
@@ -578,10 +598,12 @@ public sealed partial class OpenXmlImporter
     /// This method reads from the specified table within a stream and maps each row to an instance of the provided type. The mapping is based on property/field names matching column headers.
     /// </remarks>
     [CreateSyncVersion]
-    public async IAsyncEnumerable<T> QueryTableAsync<T>(Stream stream, string sheetName = "Sheet1", string tableName = "Table1", bool leaveOpen = false, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    public async IAsyncEnumerable<T> QueryTableAsync<T>(Stream stream, string? sheetName = null, string tableName = "Table1", bool leaveOpen = false, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         where T : class, new()
     {
-        using var reader = await OpenXmlReader.CreateAsync(stream, null, leaveOpen, cancellationToken).ConfigureAwait(false);
+        var reader = await OpenXmlReader.CreateAsync(stream, null, leaveOpen, cancellationToken).ConfigureAwait(false);
+        await using var disposableReader = reader.ConfigureAwait(false);
+
         await foreach (var table in reader.QueryTableAsync<T>(sheetName, tableName, cancellationToken).ConfigureAwait(false))
             yield return table;
     }
@@ -595,21 +617,37 @@ public sealed partial class OpenXmlImporter
     /// </summary>
     /// <param name="path">The path to the Excel document.</param>
     /// <param name="hasHeaderRow">If true, the first row is used as column headers. Default is false.</param>
-    /// <param name="sheetName">The name of the worksheet to read. If not provided, the first sheet is used.</param>
+    /// <param name="sheetName">The name of the worksheet to read. If not provided, all worksheets will be fetched in order and will be accessible through the <see cref="IDataReader.NextResult">NextResult</see> method.</param>
     /// <param name="startCell">The starting cell reference (e.g."C2"). Default is "A1".</param>
     /// <param name="configuration">Optional configuration settings.</param>
     /// <remarks>
-    /// The returned <see cref="MiniExcelDataReader"/> implements <see cref="IDataReader"/> and supports its standard reading patterns.
-    /// The data reader returned by this method is designed to perform synchronous, blocking reads, and will throw <exception cref="InvalidOperationException" /> if an asynchronous operation is called from it.
+    /// The returned <see cref="OpenXmlDataReader"/> implements <see cref="IDataReader"/> and supports its standard reading patterns.
+    /// Parameters <paramref name="hasHeaderRow" /> and <paramref name="startCell" /> will be applied to all worksheets.
+    /// The data reader returned by this method is designed to perform synchronous, blocking reads, and will throw <exception cref="InvalidOperationException" /> if an asynchronous operation is called on it.
     /// For asynchronous reading scenarios, use <see cref="GetAsyncDataReader(string, bool, string?, string, OpenXmlConfiguration?, CancellationToken)"/> instead.
     /// </remarks>
-    public MiniExcelDataReader GetDataReader(string path, bool hasHeaderRow = false,
+    public OpenXmlDataReader GetDataReader(string path, bool hasHeaderRow = false,
         string? sheetName = null, string startCell = "A1", OpenXmlConfiguration? configuration = null)
     {
-        var stream = FileHelper.OpenSharedRead(path);
-        var values = Query(stream, hasHeaderRow, sheetName, startCell, configuration, leaveOpen: false).Cast<IDictionary<string, object?>>();
-
-        return MiniExcelDataReader.Create(stream, values, leaveOpen: false);
+        Stream? stream = null;
+        OpenXmlDataReader? dataReader = null;
+        
+        try
+        {
+            stream = FileHelper.OpenSharedRead(path);
+            dataReader = OpenXmlDataReader.Create(stream, hasHeaderRow, sheetName, startCell, configuration, leaveOpen: false);
+            
+            var result = dataReader;
+            dataReader = null;
+            stream = null;
+            
+            return result;
+        }
+        finally
+        {
+            dataReader?.Dispose();
+            stream?.Dispose();
+        }
     }
 
     /// <summary>
@@ -617,20 +655,20 @@ public sealed partial class OpenXmlImporter
     /// </summary>
     /// <param name="stream">The stream containing the Excel file data.</param>
     /// <param name="hasHeaderRow">If true, the first row is used as column headers. Default is false.</param>
-    /// <param name="sheetName">The name of the worksheet to read. If not provided, the first sheet is used.</param>
+    /// <param name="sheetName">The name of the worksheet to read. If not provided, all worksheets will be fetched in order and will be accessible through the <see cref="IDataReader.NextResult">NextResult</see> method.</param>
     /// <param name="startCell">The starting cell reference (e.g."C2"). Default is "A1".</param>
     /// <param name="configuration">Optional configuration settings.</param>
     /// <param name="leaveOpen">True to leave the stream open after the data reader is disposed, otherwise false.</param>
     /// <remarks>
-    /// The returned <see cref="MiniExcelDataReader"/> implements <see cref="IDataReader"/> and supports its standard reading patterns.
-    /// The data reader returned by this method is designed to perform synchronous, blocking reads, and will throw <exception cref="InvalidOperationException" /> if an asynchronous operation is called from it.
+    /// The returned <see cref="OpenXmlDataReader"/> implements <see cref="IDataReader"/> and supports its standard reading patterns.
+    /// Parameters <paramref name="hasHeaderRow" /> and <paramref name="startCell" /> will be applied to all worksheets.
+    /// The data reader returned by this method is designed to perform synchronous, blocking reads, and will throw <exception cref="InvalidOperationException" /> if an asynchronous operation is called on it
     /// For asynchronous reading scenarios, use <see cref="GetAsyncDataReader(Stream, bool, string?, string, OpenXmlConfiguration?, bool, CancellationToken)"/> instead.
     /// </remarks>
-    public MiniExcelDataReader GetDataReader(Stream stream, bool hasHeaderRow = false,
+    public OpenXmlDataReader GetDataReader(Stream stream, bool hasHeaderRow = false,
         string? sheetName = null, string startCell = "A1", OpenXmlConfiguration? configuration = null, bool leaveOpen = false)
     {
-        var values = Query(stream, hasHeaderRow, sheetName, startCell, configuration, leaveOpen).Cast<IDictionary<string, object?>>();
-        return MiniExcelDataReader.Create(stream, values, leaveOpen);
+        return OpenXmlDataReader.Create(stream, hasHeaderRow, sheetName, startCell, configuration, leaveOpen);
     }
 
     /// <summary>
@@ -638,22 +676,41 @@ public sealed partial class OpenXmlImporter
     /// </summary>
     /// <param name="path">The path to the Excel document.</param>
     /// <param name="hasHeaderRow">If true, the first row is used as column headers. Default is false.</param>
-    /// <param name="sheetName">The name of the worksheet to read. If null, the first sheet is used.</param>
+    /// <param name="sheetName">The name of the worksheet to read. If not provided, all worksheets will be fetched in order and will be accessible through the <see cref="IDataReader.NextResult">NextResult</see> method.</param>
     /// <param name="startCell">The starting cell reference (e.g."C2"). Default is "A1".</param>
     /// <param name="configuration">Optional configuration settings.</param>
     /// <param name="cancellationToken">A token to cancel the asynchronous operation.</param>
     /// <remarks>
-    /// The returned <see cref="MiniExcelDataReader"/> implements <see cref="IDataReader"/> and supports its standard reading patterns.
-    /// The data reader returned by this method is designed to supports asynchronous reads, but will not throw an exception if a synchronous operation is performed.
-    /// Still, it's advised to use <see cref="GetDataReader(Stream, bool, string?, string, OpenXmlConfiguration?, bool)"/> for synchronous reads instead.
+    /// The returned <see cref="OpenXmlDataReader"/> implements <see cref="IDataReader"/> and supports its standard reading patterns.
+    /// Parameters <paramref name="hasHeaderRow" /> and <paramref name="startCell" /> will be applied to all worksheets.
+    /// The data reader returned by this method is designed to supports asynchronous reads but will not throw an exception if a synchronous operation is performed;
+    /// still it's advised to use <see cref="GetDataReader(Stream, bool, string?, string, OpenXmlConfiguration?, bool)"/> for synchronous reads instead.
     /// </remarks>
-    public async Task<MiniExcelDataReader> GetAsyncDataReader(string path, bool hasHeaderRow = false,
+    public async Task<OpenXmlDataReader> GetAsyncDataReader(string path, bool hasHeaderRow = false,
         string? sheetName = null, string startCell = "A1", OpenXmlConfiguration? configuration = null, CancellationToken cancellationToken = default)
     {
-        var stream = FileHelper.OpenSharedRead(path);
-        var values = QueryAsync(stream, hasHeaderRow, sheetName, startCell, configuration, leaveOpen: false, cancellationToken);
+        Stream? stream = null;
+        OpenXmlDataReader? dataReader = null;
         
-        return await MiniExcelDataReader.CreateAsync(stream, values.CastToDictionary(cancellationToken), leaveOpen: false).ConfigureAwait(false);
+        try
+        {
+            stream = FileHelper.OpenSharedRead(path);
+            dataReader = await OpenXmlDataReader.CreateAsync(stream, hasHeaderRow, sheetName, startCell, configuration, leaveOpen: false, cancellationToken).ConfigureAwait(false);
+
+            var result = dataReader;
+            dataReader = null;
+            stream = null;
+            
+            return result;
+        }
+        finally
+        {
+            if (dataReader is not null)
+                await dataReader.DisposeAsync().ConfigureAwait(false);
+
+            if (stream?.DisposeAsync() is { } streamDisposeTask)
+                await streamDisposeTask.ConfigureAwait(false);
+        }
     }
 
     /// <summary>
@@ -661,22 +718,22 @@ public sealed partial class OpenXmlImporter
     /// </summary>
     /// <param name="stream">The stream containing the Excel file data.</param>
     /// <param name="hasHeaderRow">If true, the first row is used as column headers. Default is false.</param>
-    /// <param name="sheetName">The name of the worksheet to read. If null, the first sheet is used.</param>
+    /// <param name="sheetName">The name of the worksheet to read. If not provided, all worksheets will be fetched in order and will be accessible through the <see cref="IDataReader.NextResult">NextResult</see> method.</param>
     /// <param name="startCell">The starting cell reference (e.g."C2"). Default is "A1".</param>
     /// <param name="configuration">Optional configuration settings.</param>
     /// <param name="leaveOpen">True to leave the stream open after the data reader is disposed, otherwise false.</param>
     /// <param name="cancellationToken">A token to cancel the asynchronous operation.</param>
     /// <remarks>
-    /// The returned <see cref="MiniExcelDataReader"/> implements <see cref="IDataReader"/> and supports its standard reading patterns.
-    /// The data reader returned by this method is designed to supports asynchronous reads, but will not throw an exception if a synchronous operation is performed.
-    /// Still, it's advised to use <see cref="GetDataReader(Stream, bool, string?, string, OpenXmlConfiguration?, bool)"/> for synchronous reads instead.
+    /// The returned <see cref="OpenXmlDataReader"/> implements <see cref="IDataReader"/> and supports its standard reading patterns.
+    /// Parameters <paramref name="hasHeaderRow" /> and <paramref name="startCell" /> will be applied to all worksheets.
+    /// The data reader returned by this method is designed to supports asynchronous reads but will not throw an exception if a synchronous operation is performed;
+    /// still it's advised to use <see cref="GetDataReader(Stream, bool, string?, string, OpenXmlConfiguration?, bool)"/> for synchronous reads instead.
     /// </remarks>
-    public async Task<MiniExcelDataReader> GetAsyncDataReader(Stream stream, bool hasHeaderRow = false,
+    public async Task<OpenXmlDataReader> GetAsyncDataReader(Stream stream, bool hasHeaderRow = false,
         string? sheetName = null, string startCell = "A1", OpenXmlConfiguration? configuration = null, bool leaveOpen = false,
         CancellationToken cancellationToken = default)
     {
-        var values = QueryAsync(stream, hasHeaderRow, sheetName, startCell, configuration, leaveOpen, cancellationToken);
-        return await MiniExcelDataReader.CreateAsync(stream, values.CastToDictionary(cancellationToken), leaveOpen).ConfigureAwait(false);
+        return await OpenXmlDataReader.CreateAsync(stream, hasHeaderRow, sheetName, startCell, configuration, leaveOpen, cancellationToken).ConfigureAwait(false);
     }
 
     #endregion

@@ -267,9 +267,9 @@ public class MiniExcelOpenXmlAsyncTests
 
             Assert.Equal("78DE23D2-DCB6-BD3D-EC67-C112BBC322A2", rows[0].ID);
             Assert.Equal("Wade", rows[0].Name);
-            Assert.Equal("27/09/2020", rows[0].BoD);
+            Assert.Equal(new DateTime(2020, 9, 27), rows[0].BoD);
             Assert.Equal(36, rows[0].Age);
-            Assert.Equal(bool.FalseString, rows[0].VIP);
+            Assert.False(rows[0].VIP);
             Assert.Equal(5019.12d, rows[0].Points);
             Assert.Null(rows[0].IgnoredProperty);
         }
@@ -1484,7 +1484,7 @@ public class MiniExcelOpenXmlAsyncTests
         Assert.Equal(cellCount, progress.Value);
 
         ms.Seek(0, SeekOrigin.Begin);
-        var resultDataTable = await _excelImporter.QueryAsDataTableAsync(ms);
+        var resultDataTable = await _excelImporter.QueryAsDataTableAsync(ms, leaveOpen: true);
 
         //Confirm the data is correct
         Assert.Equal(dataTable.Rows.Count, resultDataTable.Rows.Count);
@@ -1799,5 +1799,29 @@ public class MiniExcelOpenXmlAsyncTests
         {
             CultureInfo.CurrentUICulture = ogCulture;
         }
+    }
+
+    [Fact]
+    public async Task MultipleResultSets()
+    {
+        await using var stream =File.OpenRead(PathHelper.GetFile("xlsx/TestTypeMapping.xlsx"));
+        await using var dr = await OpenXmlDataReader.CreateAsync(stream, hasHeaderRow: true, leaveOpen: true);
+        await dr.ReadAsync();
+        var v1 = dr.GetValue(0);
+        var nr = await dr.NextResultAsync();
+        await dr.ReadAsync();
+        var v2 = dr.GetValue(0);
+    }
+
+    [Fact]
+    public void MultipleResultSets2()
+    {
+        using var stream = File.OpenRead(PathHelper.GetFile("xlsx/TestMultiSheet.xlsx"));
+        using var dr = OpenXmlDataReader.Create(stream, leaveOpen: true);
+        dr.Read();
+        var v1 = dr.GetValue(0);
+        var nr = dr.NextResult();
+        dr.Read();
+        var v2 = dr.GetValue(0);
     }
 }

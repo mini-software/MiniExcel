@@ -37,8 +37,7 @@ internal sealed partial class CsvWriter : IMiniExcelWriter, IDisposable
     }
 
     [CreateSyncVersion]
-    private async Task<int> WriteValuesAsync(StreamWriter writer, object values, string separator, string newLine,
-        IProgress<int>? progress = null, CancellationToken cancellationToken = default)
+    private async Task<int> WriteValuesAsync(object values, string newLine, IProgress<int>? progress = null, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
@@ -148,10 +147,7 @@ internal sealed partial class CsvWriter : IMiniExcelWriter, IDisposable
     [CreateSyncVersion]
     public async Task<int[]> SaveAsAsync(IProgress<int>? progress = null, CancellationToken cancellationToken = default)
     {
-        cancellationToken.ThrowIfCancellationRequested();
-
-        var seperator = _configuration.Seperator.ToString();
-        var newLine = _configuration.NewLine;
+       var newLine = _configuration.NewLine;
 
         if (_value is null)
         {
@@ -165,7 +161,7 @@ internal sealed partial class CsvWriter : IMiniExcelWriter, IDisposable
             return [];
         }
 
-        var rowsWritten = await WriteValuesAsync(_writer, _value, seperator, newLine, progress, cancellationToken).ConfigureAwait(false);
+        var rowsWritten = await WriteValuesAsync(_value, newLine, progress, cancellationToken).ConfigureAwait(false);
         await _writer.FlushAsync(
 #if NET
             cancellationToken

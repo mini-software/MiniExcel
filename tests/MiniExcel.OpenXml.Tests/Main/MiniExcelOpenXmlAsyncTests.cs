@@ -267,9 +267,9 @@ public class MiniExcelOpenXmlAsyncTests
 
             Assert.Equal("78DE23D2-DCB6-BD3D-EC67-C112BBC322A2", rows[0].ID);
             Assert.Equal("Wade", rows[0].Name);
-            Assert.Equal("27/09/2020", rows[0].BoD);
+            Assert.Equal(new DateTime(2020, 9, 27), rows[0].BoD);
             Assert.Equal(36, rows[0].Age);
-            Assert.Equal(bool.FalseString, rows[0].VIP);
+            Assert.False(rows[0].VIP);
             Assert.Equal(5019.12d, rows[0].Points);
             Assert.Null(rows[0].IgnoredProperty);
         }

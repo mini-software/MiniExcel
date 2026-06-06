@@ -1997,9 +1997,9 @@ public class MiniExcelGithubIssuesTests(ITestOutputHelper output)
         Assert.Equal(100, dt.Rows.Count);
         Assert.Equal("78DE23D2-DCB6-BD3D-EC67-C112BBC322A2", dt.Rows[0]["ID"]);
         Assert.Equal("Wade", dt.Rows[0]["Name"]);
-        Assert.Equal("27/09/2020", dt.Rows[0]["BoD"]);
+        Assert.Equal(new DateTime(2020, 9, 27), dt.Rows[0]["BoD"]);
         Assert.Equal(36d, dt.Rows[0]["Age"]);
-        Assert.False(Convert.ToBoolean(dt.Rows[0]["VIP"]));
+        Assert.False((bool)dt.Rows[0]["VIP"]);
         Assert.Equal(5019.12, dt.Rows[0]["Points"]);
     }
     

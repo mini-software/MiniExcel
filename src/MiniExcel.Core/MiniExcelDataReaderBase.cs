@@ -3,6 +3,7 @@
 public abstract class MiniExcelDataReaderBase : IMiniExcelDataReader
 {
     protected readonly IMiniExcelReader MiniExcelReader;
+    protected readonly MiniExcelBaseConfiguration MiniExcelConfiguration;
 
     protected IEnumerator<IDictionary<string, object?>>? Source;
     protected IAsyncEnumerator<IDictionary<string, object?>>? AsyncSource;
@@ -32,11 +33,12 @@ public abstract class MiniExcelDataReaderBase : IMiniExcelDataReader
     public bool IsClosed { get; protected set; }
 
 
-    protected MiniExcelDataReaderBase(IMiniExcelReader miniExcelReader, bool hasHeaderRow, bool isAsyncSource)
+    protected MiniExcelDataReaderBase(IMiniExcelReader miniExcelReader, bool hasHeaderRow, bool isAsyncSource, MiniExcelBaseConfiguration configuration)
     {
         MiniExcelReader = miniExcelReader;
         HasHeaderRow = hasHeaderRow;
         IsAsyncSource =  isAsyncSource;
+        MiniExcelConfiguration = configuration;
     }
 
     public virtual bool Read()
@@ -110,18 +112,18 @@ public abstract class MiniExcelDataReaderBase : IMiniExcelDataReader
     {
         bool b => b,
         null => throw new InvalidOperationException("The value is null"),
-        var value => Convert.ToBoolean(value)
+        var value => Convert.ToBoolean(value, MiniExcelConfiguration.Culture)
     };
 
     public virtual byte GetByte(int i) => GetValue(i) is { } value
-        ? Convert.ToByte(value)
+        ? Convert.ToByte(value, MiniExcelConfiguration.Culture)
         : throw new InvalidOperationException("The value is null");
 
     public virtual char GetChar(int i) => GetValue(i) switch
     {
         char c => c,
         null => throw new InvalidOperationException("The value is null"),
-        var value => Convert.ToChar(value)
+        var value => Convert.ToChar(value, MiniExcelConfiguration.Culture)
     };
 
     public virtual DateTime GetDateTime(int i) => GetValue(i) switch
@@ -129,28 +131,28 @@ public abstract class MiniExcelDataReaderBase : IMiniExcelDataReader
         DateTime dt => dt,
         double d => DateTime.FromOADate(d),
         null => throw new InvalidOperationException("The value is null"),
-        var value => Convert.ToDateTime(value)
+        var value => Convert.ToDateTime(value, MiniExcelConfiguration.Culture)
     };
 
     public virtual decimal GetDecimal(int i) => GetValue(i) switch
     {
         decimal d => d,
         null => throw new InvalidOperationException("The value is null"),
-        var value => Convert.ToDecimal(value)
+        var value => Convert.ToDecimal(value, MiniExcelConfiguration.Culture)
     };
 
     public virtual float GetFloat(int i) => GetValue(i) switch
     {
         float f => f,
         null => throw new InvalidOperationException("The value is null"),
-        var value => Convert.ToSingle(value)
+        var value => Convert.ToSingle(value, MiniExcelConfiguration.Culture)
     };
 
     public virtual double GetDouble(int i) => GetValue(i) switch
     {
         double d => d,
         null => throw new InvalidOperationException("The value is null"),
-        var value => Convert.ToDouble(value)
+        var value => Convert.ToDouble(value, MiniExcelConfiguration.Culture)
     };
 
     public virtual Guid GetGuid(int i) => GetValue(i) switch
@@ -166,27 +168,27 @@ public abstract class MiniExcelDataReaderBase : IMiniExcelDataReader
     {
         short s => s,
         null => throw new InvalidOperationException("The value is null"),
-        var value => Convert.ToInt16(value)
+        var value => Convert.ToInt16(value, MiniExcelConfiguration.Culture)
     };
 
     public virtual int GetInt32(int i) => GetValue(i) switch
     {
         int s => s,
         null => throw new InvalidOperationException("The value is null"),
-        var value => Convert.ToInt32(value)
+        var value => Convert.ToInt32(value, MiniExcelConfiguration.Culture)
     };
 
     public virtual long GetInt64(int i) => GetValue(i) switch
     {
         long l => l,
         null => throw new InvalidOperationException("The value is null"),
-        var value => Convert.ToInt64(value)
+        var value => Convert.ToInt64(value ,MiniExcelConfiguration.Culture)
     };
 
     public virtual string GetString(int i) => GetValue(i) switch
     {
         string s => s,
-        var value => Convert.ToString(value) ?? ""
+        var value => Convert.ToString(value, MiniExcelConfiguration.Culture) ?? ""
     };
 
     public virtual object GetValue(int i)

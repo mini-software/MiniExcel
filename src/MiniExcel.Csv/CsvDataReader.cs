@@ -4,8 +4,8 @@ namespace MiniExcelLib.Csv;
 
 public sealed class CsvDataReader : MiniExcelDataReaderBase
 {
-    private CsvDataReader(CsvReader reader, bool hasHeaderRow, bool isAsyncSource)
-        : base(reader, hasHeaderRow, isAsyncSource)
+    private CsvDataReader(CsvReader reader, bool hasHeaderRow, bool isAsyncSource, CsvConfiguration configuration)
+        : base(reader, hasHeaderRow, isAsyncSource, configuration)
     {
     }
     
@@ -13,11 +13,12 @@ public sealed class CsvDataReader : MiniExcelDataReaderBase
     {
         CsvReader? reader = null;
         CsvDataReader? dataReader = null;
+        configuration ??= CsvConfiguration.Default;
 
         try
         {
             reader = new CsvReader(stream, configuration, leaveOpen);
-            dataReader = new CsvDataReader(reader, hasHeaderRow, isAsyncSource: false)
+            dataReader = new CsvDataReader(reader, hasHeaderRow, isAsyncSource: false, configuration)
             {
                 Source = reader.Query(hasHeaderRow, null, "A1").GetEnumerator(),
             };
@@ -53,11 +54,12 @@ public sealed class CsvDataReader : MiniExcelDataReaderBase
     {
         CsvReader? reader = null;
         CsvDataReader? dataReader = null;
+        configuration ??= CsvConfiguration.Default;
 
         try
         {
             reader = new CsvReader(stream, configuration, leaveOpen);
-            dataReader = new CsvDataReader(reader, hasHeaderRow, isAsyncSource: true)
+            dataReader = new CsvDataReader(reader, hasHeaderRow, isAsyncSource: true, configuration)
             {
                 AsyncSource = reader.QueryAsync(hasHeaderRow, null, "A1", cancellationToken).GetAsyncEnumerator(cancellationToken)
             };

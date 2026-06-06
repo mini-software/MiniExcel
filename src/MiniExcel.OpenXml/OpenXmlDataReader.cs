@@ -13,8 +13,8 @@ public sealed class OpenXmlDataReader : MiniExcelDataReaderBase
     private string _startCell;
 
 
-    private OpenXmlDataReader(OpenXmlReader reader, string sheetName, bool hasHeaderRow, string startCell, bool isAsyncSource, bool expectsSingleResult, string[] sheetNames)
-        : base(reader, hasHeaderRow, isAsyncSource)
+    private OpenXmlDataReader(OpenXmlReader reader, string sheetName, bool hasHeaderRow, string startCell, bool isAsyncSource, bool expectsSingleResult, string[] sheetNames, OpenXmlConfiguration configuration)
+        : base(reader, hasHeaderRow, isAsyncSource, configuration)
     {
         _startCell = startCell;
         _expectsSingleResult = expectsSingleResult;
@@ -26,6 +26,7 @@ public sealed class OpenXmlDataReader : MiniExcelDataReaderBase
     {
         OpenXmlReader? reader = null;
         OpenXmlDataReader? dataReader = null;
+        configuration ??= OpenXmlConfiguration.Default;
 
         try
         {
@@ -43,7 +44,7 @@ public sealed class OpenXmlDataReader : MiniExcelDataReaderBase
                 isSingleResult = true;
             }
 
-            dataReader = new OpenXmlDataReader(reader, sheetName ?? sheetNames[0], hasHeaderRow, startCell, isAsyncSource: false, isSingleResult, sheetNames)
+            dataReader = new OpenXmlDataReader(reader, sheetName ?? sheetNames[0], hasHeaderRow, startCell, isAsyncSource: false, isSingleResult, sheetNames, configuration)
             {
                 Source = reader.Query(hasHeaderRow, sheetName, startCell).GetEnumerator(),
             };
@@ -79,7 +80,8 @@ public sealed class OpenXmlDataReader : MiniExcelDataReaderBase
     {
         OpenXmlReader? reader = null;
         OpenXmlDataReader? dataReader = null;
-        
+        configuration ??= OpenXmlConfiguration.Default;
+
         try
         {
             reader = await OpenXmlReader.CreateAsync(stream, configuration, leaveOpen, cancellationToken).ConfigureAwait(false);
@@ -96,7 +98,7 @@ public sealed class OpenXmlDataReader : MiniExcelDataReaderBase
                 isSingleResult = true;
             }
 
-            dataReader = new OpenXmlDataReader(reader, sheetName ?? sheetNames[0], hasHeaderRow, startCell, isAsyncSource: true, isSingleResult, sheetNames)
+            dataReader = new OpenXmlDataReader(reader, sheetName ?? sheetNames[0], hasHeaderRow, startCell, isAsyncSource: true, isSingleResult, sheetNames, configuration)
             {
                 AsyncSource = reader.QueryAsync(hasHeaderRow, sheetName, startCell, cancellationToken).GetAsyncEnumerator(cancellationToken),
             };

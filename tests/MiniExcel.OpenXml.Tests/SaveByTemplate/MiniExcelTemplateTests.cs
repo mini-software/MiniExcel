@@ -370,12 +370,6 @@ public class MiniExcelTemplateTests
         }
     }
 
-    private class Employee
-    {
-        public string name { get; set; }
-        public string department { get; set; }
-    }
-
     [Fact]
     public void GroupTemplateTest()
     {
@@ -473,17 +467,6 @@ public class MiniExcelTemplateTests
 
         var dimension = SheetHelper.GetFirstSheetDimensionRefValue(path.ToString());
         Assert.Equal("A1:D9", dimension);
-    }
-
-    private class TestIEnumerableTypePoco
-    {
-        public string @string { get; set; }
-        public int? @int { get; set; }
-        public decimal? @decimal { get; set; }
-        public double? @double { get; set; }
-        public DateTime? datetime { get; set; }
-        public bool? @bool { get; set; }
-        public Guid? Guid { get; set; }
     }
 
     [Fact]
@@ -965,132 +948,78 @@ public class MiniExcelTemplateTests
         Assert.Equal("A5:A6", mergedCells[2]);
     }
 
-    #region Extend
-
-    public record struct Identity(int Type, string Id);
-
-    private class Fund
-    {
-        public int Id { get; set; }
-        public string? Name { get; set; }
-        public Identity Identity { get; set; }
-        public DateOnly SetupDate { get; set; }
-
-        public List<NetValue> NetValues { get; set; } = [];
-    }
-
-    public record NetValue(DateOnly Date, decimal Value);
-
-    private static object GenerateData()
-    {
-        List<Fund> fundList =
-        [
-            new()
-            {
-                Id = 1,
-                Name = "E Fund Money A",
-                Identity = new Identity(1, "FUND_000001"),
-                SetupDate = new DateOnly(2019, 5, 20),
-                NetValues = GenerateNetValues(1, new DateOnly(2025, 1, 1))
-            },
-
-            new()
-            {
-                Id = 2,
-                Name = "Southern Growth Mixed",
-                Identity = new Identity(2, "FUND_000002"),
-                SetupDate = new DateOnly(2020, 3, 10),
-                NetValues = GenerateNetValues(2, new DateOnly(2025, 1, 1))
-            },
-
-            new()
-            {
-                Id = 3,
-                Name = "China Merchants Bond Fund",
-                Identity = new Identity(3, "FUND_000003"),
-                SetupDate = new DateOnly(2021, 7, 1),
-                NetValues = GenerateNetValues(3, new DateOnly(2025, 1, 1))
-            },
-
-            new()
-            {
-                Id = 4,
-                Name = "ChinaAMC CSI 300 ETF",
-                Identity = new Identity(4, "FUND_000004"),
-                SetupDate = new DateOnly(2018, 11, 5),
-                NetValues = GenerateNetValues(4, new DateOnly(2025, 1, 1))
-            },
-
-            new()
-            {
-                Id = 5,
-                Name = "ICBC Credit Suisse New Energy",
-                Identity = new Identity(5, "FUND_000005"),
-                SetupDate = new DateOnly(2022, 1, 25),
-                NetValues = GenerateNetValues(5, new DateOnly(2025, 1, 1))
-            }
-        ];
-
-        return new
-        {
-            Funds = fundList.Select(x => new
-            {
-                x.Id,
-                x.Name,
-                x.Identity,
-                x.SetupDate,
-                x.NetValues,
-                SheetName = x.Name
-            })
-        };
-    }
-
-    /// <summary>
-    /// 辅助方法：根据基金类型生成模拟净值数据
-    /// </summary>
-    /// <param name="fundType">基金类型</param>
-    /// <param name="startDate">开始日期</param>
-    /// <returns>30条连续日期的净值列表</returns>
-    private static List<NetValue> GenerateNetValues(int fundType, DateOnly startDate)
-    {
-        var netValues = new List<NetValue>();
-        var random = Random.Shared;
-
-        // 生成30条连续的净值数据
-        for (int i = 0; i < 30; i++)
-        {
-            decimal value = fundType switch
-            {
-                // 货币基金：净值稳定在 1.0000 左右
-                1 => Math.Round(1.0000m + (decimal)random.NextDouble() * 0.0010m, 4),
-                // 混合型基金：净值 1.2 ~ 2.0
-                2 => Math.Round(1.2m + (decimal)random.NextDouble() * 0.8m, 4),
-                // 债券基金：净值 1.05 ~ 1.30
-                3 => Math.Round(1.05m + (decimal)random.NextDouble() * 0.25m, 4),
-                // ETF基金：净值 1.1 ~ 1.8
-                4 => Math.Round(1.1m + (decimal)random.NextDouble() * 0.7m, 4),
-                // 新能源主题基金：净值 1.5 ~ 2.5（波动较大）
-                5 => Math.Round(1.5m + (decimal)random.NextDouble() * 1.0m, 4),
-                _ => 1.0000m
-            };
-
-            netValues.Add(new NetValue(startDate.AddDays(i), value));
-        }
-
-        return netValues;
-    }
-
-
     [Fact]
     public async Task TestExtend()
     {
-        // 造 5 条测试数据
-        var value = GenerateData();
+        var value = GenerateRandomData();
 
         var templatePath = PathHelper.GetFile("xlsx/TestObjectExt.xlsx");
         using var path = AutoDeletingPath.Create();
         await _excelTemplater.FillTemplateAsync(path.ToString(), templatePath, value);
-    }
+        return;
 
-    #endregion
+        static object GenerateRandomData()
+        {
+            List<Fund> fundList =
+            [
+                new()
+                {
+                    Id = 1,
+                    Name = "E Fund Money A",
+                    Identity = new Identity(1, "FUND_000001"),
+                    SetupDate = new DateOnly(2019, 5, 20),
+                    NetValues = NetValue.GenerateRandomValues(1, new DateOnly(2025, 1, 1))
+                },
+
+                new()
+                {
+                    Id = 2,
+                    Name = "Southern Growth Mixed",
+                    Identity = new Identity(2, "FUND_000002"),
+                    SetupDate = new DateOnly(2020, 3, 10),
+                    NetValues = NetValue.GenerateRandomValues(2, new DateOnly(2025, 1, 1))
+                },
+
+                new()
+                {
+                    Id = 3,
+                    Name = "China Merchants Bond Fund",
+                    Identity = new Identity(3, "FUND_000003"),
+                    SetupDate = new DateOnly(2021, 7, 1),
+                    NetValues = NetValue.GenerateRandomValues(3, new DateOnly(2025, 1, 1))
+                },
+
+                new()
+                {
+                    Id = 4,
+                    Name = "ChinaAMC CSI 300 ETF",
+                    Identity = new Identity(4, "FUND_000004"),
+                    SetupDate = new DateOnly(2018, 11, 5),
+                    NetValues = NetValue.GenerateRandomValues(4, new DateOnly(2025, 1, 1))
+                },
+
+                new()
+                {
+                    Id = 5,
+                    Name = "ICBC Credit Suisse New Energy",
+                    Identity = new Identity(5, "FUND_000005"),
+                    SetupDate = new DateOnly(2022, 1, 25),
+                    NetValues = NetValue.GenerateRandomValues(5, new DateOnly(2025, 1, 1))
+                }
+            ];
+
+            return new
+            {
+                Funds = fundList.Select(x => new
+                {
+                    x.Id,
+                    x.Name,
+                    x.Identity,
+                    x.SetupDate,
+                    x.NetValues,
+                    SheetName = x.Name
+                })
+            };
+        }
+    }
 }

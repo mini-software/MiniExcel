@@ -1007,48 +1007,19 @@ public class MiniExcelTemplateTests
                 x.Identity,
                 x.SetupDate,
                 x.NetValues,
+                Latest = new { Date = new DateOnly(2026,1,1), NetValue = 1 },
                 SheetName = x.Name
             })
         };
     }
 
     [Fact]
-    public async Task TestExtend()
+    public async Task TestParametrizedSheet()
     {
         var value = GenerateRandomData();
 
-        var templatePath = PathHelper.GetFile("xlsx/TestObjectExt.xlsx");
+        var templatePath = PathHelper.GetFile("xlsx/TestParametrizedSheet.xlsx");
         using var path = AutoDeletingPath.Create();
-        await _excelTemplater.FillTemplateAsync(path.ToString(), templatePath, value);
-    }
-
-    [Fact]
-    public async Task TestExtend2()
-    {
-        var funds = Enumerable.Range(1, 5).Select(i => new 
-        {
-            Id = i,
-            Name = $"基金{i}",
-            Code = $"FUND_{i:000}",
-            Identity = new Identity(i, $"FUND_{i:000}"),
-            SetupDate = new DateOnly(2020, 1, 1).AddDays(i * 30),
-            NetValues = GenerateRandomData()
-        }).ToList();
-
-        var value = new
-        {
-            f = funds.Select(x => new
-            {
-                Id = x.Id,
-                Name = x.Name,
-                Code = x.Code,
-                Latest = new { Date = new DateOnly(2026,1,1), NetValue = 1}
-            })
-        };
-
-        var templatePath = PathHelper.GetFile("xlsx/C58E68A04C25.xlsx");
-
-        using var path = AutoDeletingPath.Create();
-        await _excelTemplater.FillTemplateAsync(path.ToString(), templatePath, value);
+        await _excelTemplater.FillTemplateAsync(@"c:\users\computer\desktop\cndsaovndc.xlsx", templatePath, value, true);
     }
 }

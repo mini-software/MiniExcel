@@ -107,7 +107,7 @@ internal partial class OpenXmlTemplate
     /// it generates multiple sheets based on the elements of the enumerable and returns true.
     /// </summary>
     [CreateSyncVersion]
-    private async Task<bool> TryExpandParametrizedSheetAsync(OpenXmlZip outputFileArchive, string originalSheetName, IDictionary<int, string> templateSharedStrings, int sheetIndex, List<(int Index, string Name)> allSheetInfos, ZipArchiveEntry templateSheet, IDictionary<string, object?> inputValues, CancellationToken cancellationToken = default)
+    private async Task<(bool IsParametrized, int NewIndex)> TryExpandParametrizedSheetAsync(OpenXmlZip outputFileArchive, string originalSheetName, IDictionary<int, string> templateSharedStrings, int sheetIndex, List<(int Index, string Name)> allSheetInfos, ZipArchiveEntry templateSheet, IDictionary<string, object?> inputValues, CancellationToken cancellationToken = default)
     {
         // Use regex to match the sheet name to pattern "$PlaceholderName$"
         var match = ParametrizedSheetRegexImpl.Match(originalSheetName);
@@ -117,16 +117,19 @@ internal partial class OpenXmlTemplate
             !inputValues.TryGetValue(match.Groups[1].Value, out var subObj) || 
             subObj is not IEnumerable subIter)
         {
-            return false;
+            return (false, sheetIndex);
         }
 
         // Extract the base sheet name from the template placeholder
         var baseSheetName = match.Groups[1].Value;
-        var subIndex = 1;
+        var indexOffset = 0;
 
         // 1. Batch create all worksheet files
         foreach (var subRoot in subIter)
         {
+            sheetIndex++;
+            indexOffset++;
+
             // Clear internal state collections before processing each new sheet
             _xRowInfos.Clear();
             _xMergeCellInfos.Clear();
@@ -141,7 +144,7 @@ internal partial class OpenXmlTemplate
 
             // Check if a custom "SheetName" was provided in the current item's values, or fallback base name + index
             var finalSheetName = subValues.TryGetValue("SheetName", out var customSheetName) && customSheetName is not null
-                ? customSheetName.ToString()?.Trim() ?? $"{baseSheetName}{subIndex++}"
+                ? customSheetName.ToString()?.Trim() ?? $"{baseSheetName}{indexOffset}"
                 : $"{baseSheetName}{sheetIndex}";
 
             // Only collect sheet info, do not call configuration methods yet
@@ -159,7 +162,7 @@ internal partial class OpenXmlTemplate
             _calcChainContent.Append(CalcChainHelper.GetCalcChainContent(_calcChainCellRefs, sheetIndex));
         }
 
-        return true;
+        return (true, sheetIndex);
     }
 
     /// <summary>
@@ -206,7 +209,7 @@ internal partial class OpenXmlTemplate
                 new XAttribute("Target", $"worksheets/sheet{sheet.Index}.xml")));
         }
 
-        // Batch add new sheet definitions to the workbook XML
+        // Batch add new sheet definitions to the workbook
         var sheetsNode = wbDoc.Descendants(SpreadsheetNs + "sheets").FirstOrDefault();
         if (sheetsNode != null)
         {

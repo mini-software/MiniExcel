@@ -5,6 +5,13 @@ namespace MiniExcelLib.OpenXml.Templates;
 
 internal partial class OpenXmlTemplate : IMiniExcelTemplate
 {
+#if NET
+    [GeneratedRegex(@"sheet\d+\.xml")] private static partial Regex WorksheetPathRegex();
+    private static readonly Regex WorksheetPathRegexImpl = WorksheetPathRegex();
+#else
+    private static readonly Regex WorksheetPathRegexImpl = new(@"sheet\d+\.xml", RegexOptions.Compiled);
+#endif
+
     private readonly Stream _outputFileStream;
     private readonly OpenXmlConfiguration _configuration;
     private readonly OpenXmlValueExtractor _inputValueExtractor;
@@ -72,7 +79,7 @@ internal partial class OpenXmlTemplate : IMiniExcelTemplate
         using var originalArchive = new ZipArchive(templateStream, ZipArchiveMode.Read);
 #endif
         // sheet name map
-        var sheetPathRealNameMap = await GetSheetNameMapAsync(originalArchive, cancellationToken).ConfigureAwait(false);
+        var sheetNamesMap = await GetSheetNameMapAsync(originalArchive, cancellationToken).ConfigureAwait(false);
 
         // Iterate through each entry in the original archive
         foreach (var entry in originalArchive.Entries)
@@ -123,23 +130,29 @@ internal partial class OpenXmlTemplate : IMiniExcelTemplate
             _newXMergeCellInfos.Clear();
             _calcChainCellRefs.Clear();
 
-            var templateFullName = templateSheet.FullName;
+            var templateSheetPath = templateSheet.FullName;
             var inputValues = _inputValueExtractor.ToValueDictionary(value);
-            sheetPathRealNameMap.TryGetValue(templateFullName, out var sheetName);
+            sheetNamesMap.TryGetValue(templateSheetPath, out var sheetName);
 
-            if (await TryExpandParametrizedSheetAsync(outputFileArchive, sheetName, templateSharedStrings, sheetIdx, allSheetInfos, templateSheet, inputValues, cancellationToken).ConfigureAwait(false))
-                break;
+            if (await TryExpandParametrizedSheetAsync(outputFileArchive, sheetName, templateSharedStrings, sheetIdx, allSheetInfos, templateSheet, inputValues, cancellationToken).ConfigureAwait(false) is (true, var newIndex))
+            {
+                sheetIdx = newIndex;
+            }
+            else
+            {
+                sheetIdx++;
+                var newSheetPath = WorksheetPathRegexImpl.Replace(templateSheetPath, $"sheet{sheetIdx}.xml");
 
-            var outputZipEntry = outputFileArchive.ZipFile.CreateEntry(templateFullName);
-            var outputZipSheetEntryStream = await outputZipEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
-            await using var disposableSheetEntryStream = outputZipSheetEntryStream.ConfigureAwait(false);
+                var outputZipEntry = outputFileArchive.ZipFile.CreateEntry(newSheetPath);
+                var outputZipSheetEntryStream = await outputZipEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
+                await using var disposableSheetEntryStream = outputZipSheetEntryStream.ConfigureAwait(false);
 
-            await GenerateSheetByCreateModeAsync(templateSheet, outputZipSheetEntryStream, inputValues, templateSharedStrings, cancellationToken: cancellationToken).ConfigureAwait(false);
-            // disposing writer disposes streams as well, read and parse calc functions before that
+                await GenerateSheetByCreateModeAsync(templateSheet, outputZipSheetEntryStream, inputValues, templateSharedStrings, cancellationToken: cancellationToken).ConfigureAwait(false);
+                // disposing writer disposes streams as well, read and parse calc functions before that
 
-            sheetIdx++;
-            allSheetInfos.Add((sheetIdx, sheetName));
-            _calcChainContent.Append(CalcChainHelper.GetCalcChainContent(_calcChainCellRefs, sheetIdx));
+                allSheetInfos.Add((sheetIdx, sheetName));
+                _calcChainContent.Append(CalcChainHelper.GetCalcChainContent(_calcChainCellRefs, sheetIdx));
+            }
         }
 
         // batch add sheet

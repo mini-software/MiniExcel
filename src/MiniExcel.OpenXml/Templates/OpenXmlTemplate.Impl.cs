@@ -1233,7 +1233,37 @@ internal partial class OpenXmlTemplate
                             continue;
                         }
                         // auto check type https://github.com/mini-software/MiniExcel/issues/177
-                        var type = prop.UnderlyingMemberType; //avoid nullable
+                        var currentType = prop.UnderlyingMemberType;
+
+                        // If the template expression exceeds two levels (e.g., ps.Id.Type, propNames.Length > 2),
+                        // continue reflecting down the property chain to retrieve the deepest actual type.
+                        for (int i = 2; i < propNames.Length; i++)
+                        {
+                            if (currentType == null) break;
+
+                            var searchType = Nullable.GetUnderlyingType(currentType) ?? currentType;
+
+                            // Try to find a property first
+                            var deepProp = searchType.GetProperty(propNames[i]);
+                            if (deepProp != null)
+                            {
+                                currentType = Nullable.GetUnderlyingType(deepProp.PropertyType) ?? deepProp.PropertyType;
+                                continue;
+                            }
+
+                            // Fallback to finding a field (for records or public fields)
+                            var deepField = searchType.GetField(propNames[i]);
+                            if (deepField != null)
+                            {
+                                currentType = Nullable.GetUnderlyingType(deepField.FieldType) ?? deepField.FieldType;
+                                continue;
+                            }
+
+                            currentType = null; // Break if neither property nor field is found
+                        }
+
+                        var type = currentType;
+
 
                         if (isMultiMatch)
                         {

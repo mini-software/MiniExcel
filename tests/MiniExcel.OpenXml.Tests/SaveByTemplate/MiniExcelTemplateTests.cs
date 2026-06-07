@@ -1021,5 +1021,34 @@ public class MiniExcelTemplateTests
         var templatePath = PathHelper.GetFile("xlsx/TestParametrizedSheet.xlsx");
         using var path = AutoDeletingPath.Create();
         await _excelTemplater.FillTemplateAsync(path.ToString(), templatePath, value, true);
+
+        using var package = new ExcelPackage(path.ToString());
+        var sheets = package.Workbook.Worksheets;
+        
+        Assert.Equal(7, sheets.Count);
+
+        Assert.Equal("Sheet1", sheets[0].Name);
+        Assert.Equal("1", sheets[0].Cells["A1"].Text);
+        Assert.Equal("5", sheets[0].Cells["A5"].Text);
+        Assert.Equal("E Fund Money A", sheets[0].Cells["B1"].Text);
+        Assert.Equal("ICBC Credit Suisse New Energy", sheets[0].Cells["B5"].Text);
+        Assert.Equal("FUND_000001", sheets[0].Cells["C1"].Text);
+        Assert.Equal("FUND_000005", sheets[0].Cells["C5"].Text);
+        Assert.Equal("2019", sheets[0].Cells["E1"].Text);
+        Assert.Equal("2022", sheets[0].Cells["E5"].Text);
+        
+        Assert.Equal("Southern Growth Mixed", sheets[2].Name);
+        Assert.Equal("2", sheets[2].Cells["A1"].Text);
+        Assert.Equal("Southern Growth Mixed", sheets[2].Cells["B1"].Text);
+        Assert.Equal(new DateOnly(2020, 3, 10).ToString(CultureInfo.CurrentCulture), sheets[2].Cells["C1"].Text);
+        Assert.Equal(new DateOnly(2025, 1, 1).ToString(CultureInfo.CurrentCulture), sheets[2].Cells["A3"].Text);
+
+        Assert.Equal("Sheet3", sheets[^1].Name);
+        Assert.Equal("E Fund Money A", sheets[^1].Cells["A1"].Text);
+        Assert.Equal("ICBC Credit Suisse New Energy", sheets[^1].Cells["A5"].Text);
+        Assert.Equal(new DateOnly(2026, 1, 1).ToString(CultureInfo.CurrentCulture), sheets[^1].Cells["B1"].Text);
+        Assert.Equal(new DateOnly(2026, 1, 1).ToString(CultureInfo.CurrentCulture), sheets[^1].Cells["B5"].Text);
+        Assert.Equal("1", sheets[^1].Cells["C1"].Text);
+        Assert.Equal("1", sheets[^1].Cells["C5"].Text);
     }
 }

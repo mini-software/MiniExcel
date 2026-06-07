@@ -1020,6 +1020,6 @@ public class MiniExcelTemplateTests
 
         var templatePath = PathHelper.GetFile("xlsx/TestParametrizedSheet.xlsx");
         using var path = AutoDeletingPath.Create();
-        await _excelTemplater.FillTemplateAsync(@"c:\users\computer\desktop\cndsaovndc.xlsx", templatePath, value, true);
+        await _excelTemplater.FillTemplateAsync(path.ToString(), templatePath, value, true);
     }
 }

@@ -1095,6 +1095,45 @@ public class MiniExcelTemplateTests
         Assert.True(true);
     }
 
+
+    [Fact]
+    public async Task TestExtend2()
+    {
+        var funds = Enumerable.Range(1, 5).Select(i => new 
+        {
+            Id = i,
+            Name = $"基金{i}",
+            Code = $"FUND_{i:000}",
+            Identity = new Identity(i, $"FUND_{i:000}"),
+            SetupDate = new DateOnly(2020, 1, 1).AddDays(i * 30),
+            NetValues = GenerateNetValues(i, new DateOnly(2025, 1, 1))
+        }).ToList();
+
+        // 造 5 条测试数据
+        var value = new
+        {
+            f = funds.Select(x => new
+            {
+                Id = x.Id,
+                Name = x.Name,
+                Code = x.Code,
+                Latest = new { Date = new DateOnly(2026,1,1), NetValue = 1}
+            })
+        };
+
+        var templatePath = PathHelper.GetFile("xlsx/C58E68A04C25.xlsx");
+
+        var path = "object-ext2.xlsx";
+        File.Delete(path);
+
+        await _excelTemplater.FillTemplateAsync(path, templatePath, value);
+
+        Assert.True(true);
+    }
+
+
+
+
     #endregion
 
 }

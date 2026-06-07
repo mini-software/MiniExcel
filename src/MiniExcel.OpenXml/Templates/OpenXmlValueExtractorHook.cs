@@ -128,8 +128,12 @@ internal partial class OpenXmlTemplate
                 return;
             }
 
+            // add self
+            replacements[key] = GetFormattedValue(propInfo, value, type);
+
             // 5. Object property recursion: Reflect over public instance properties.
             // Filter out indexers and write-only properties.
+
             var properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
                .Where(p => p.CanRead && p.GetIndexParameters().Length == 0);
 

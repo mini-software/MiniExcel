@@ -76,6 +76,8 @@ internal partial class OpenXmlTemplate
                     return;
                 }
 
+                replacements[key] = GetFormattedValue(propInfo, value, type);
+
                 // 5. Object property recursion: Get public instance properties filtering out indexers and write-only properties.
                 var properties = type
                     .GetProperties(BindingFlags.Public | BindingFlags.Instance)

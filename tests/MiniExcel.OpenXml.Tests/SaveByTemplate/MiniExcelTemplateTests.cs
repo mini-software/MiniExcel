@@ -948,6 +948,70 @@ public class MiniExcelTemplateTests
         Assert.Equal("A5:A6", mergedCells[2]);
     }
 
+    static object GenerateRandomData()
+    {
+        List<Fund> fundList =
+        [
+            new()
+            {
+                Id = 1,
+                Name = "E Fund Money A",
+                Identity = new Identity(1, "FUND_000001"),
+                SetupDate = new DateOnly(2019, 5, 20),
+                NetValues = NetValue.GenerateRandomValues(1, new DateOnly(2025, 1, 1))
+            },
+
+            new()
+            {
+                Id = 2,
+                Name = "Southern Growth Mixed",
+                Identity = new Identity(2, "FUND_000002"),
+                SetupDate = new DateOnly(2020, 3, 10),
+                NetValues = NetValue.GenerateRandomValues(2, new DateOnly(2025, 1, 1))
+            },
+
+            new()
+            {
+                Id = 3,
+                Name = "China Merchants Bond Fund",
+                Identity = new Identity(3, "FUND_000003"),
+                SetupDate = new DateOnly(2021, 7, 1),
+                NetValues = NetValue.GenerateRandomValues(3, new DateOnly(2025, 1, 1))
+            },
+
+            new()
+            {
+                Id = 4,
+                Name = "ChinaAMC CSI 300 ETF",
+                Identity = new Identity(4, "FUND_000004"),
+                SetupDate = new DateOnly(2018, 11, 5),
+                NetValues = NetValue.GenerateRandomValues(4, new DateOnly(2025, 1, 1))
+            },
+
+            new()
+            {
+                Id = 5,
+                Name = "ICBC Credit Suisse New Energy",
+                Identity = new Identity(5, "FUND_000005"),
+                SetupDate = new DateOnly(2022, 1, 25),
+                NetValues = NetValue.GenerateRandomValues(5, new DateOnly(2025, 1, 1))
+            }
+        ];
+
+        return new
+        {
+            Funds = fundList.Select(x => new
+            {
+                x.Id,
+                x.Name,
+                x.Identity,
+                x.SetupDate,
+                x.NetValues,
+                SheetName = x.Name
+            })
+        };
+    }
+
     [Fact]
     public async Task TestExtend()
     {
@@ -956,70 +1020,35 @@ public class MiniExcelTemplateTests
         var templatePath = PathHelper.GetFile("xlsx/TestObjectExt.xlsx");
         using var path = AutoDeletingPath.Create();
         await _excelTemplater.FillTemplateAsync(path.ToString(), templatePath, value);
-        return;
+    }
 
-        static object GenerateRandomData()
+    [Fact]
+    public async Task TestExtend2()
+    {
+        var funds = Enumerable.Range(1, 5).Select(i => new 
         {
-            List<Fund> fundList =
-            [
-                new()
-                {
-                    Id = 1,
-                    Name = "E Fund Money A",
-                    Identity = new Identity(1, "FUND_000001"),
-                    SetupDate = new DateOnly(2019, 5, 20),
-                    NetValues = NetValue.GenerateRandomValues(1, new DateOnly(2025, 1, 1))
-                },
+            Id = i,
+            Name = $"基金{i}",
+            Code = $"FUND_{i:000}",
+            Identity = new Identity(i, $"FUND_{i:000}"),
+            SetupDate = new DateOnly(2020, 1, 1).AddDays(i * 30),
+            NetValues = GenerateRandomData()
+        }).ToList();
 
-                new()
-                {
-                    Id = 2,
-                    Name = "Southern Growth Mixed",
-                    Identity = new Identity(2, "FUND_000002"),
-                    SetupDate = new DateOnly(2020, 3, 10),
-                    NetValues = NetValue.GenerateRandomValues(2, new DateOnly(2025, 1, 1))
-                },
-
-                new()
-                {
-                    Id = 3,
-                    Name = "China Merchants Bond Fund",
-                    Identity = new Identity(3, "FUND_000003"),
-                    SetupDate = new DateOnly(2021, 7, 1),
-                    NetValues = NetValue.GenerateRandomValues(3, new DateOnly(2025, 1, 1))
-                },
-
-                new()
-                {
-                    Id = 4,
-                    Name = "ChinaAMC CSI 300 ETF",
-                    Identity = new Identity(4, "FUND_000004"),
-                    SetupDate = new DateOnly(2018, 11, 5),
-                    NetValues = NetValue.GenerateRandomValues(4, new DateOnly(2025, 1, 1))
-                },
-
-                new()
-                {
-                    Id = 5,
-                    Name = "ICBC Credit Suisse New Energy",
-                    Identity = new Identity(5, "FUND_000005"),
-                    SetupDate = new DateOnly(2022, 1, 25),
-                    NetValues = NetValue.GenerateRandomValues(5, new DateOnly(2025, 1, 1))
-                }
-            ];
-
-            return new
+        var value = new
+        {
+            f = funds.Select(x => new
             {
-                Funds = fundList.Select(x => new
-                {
-                    x.Id,
-                    x.Name,
-                    x.Identity,
-                    x.SetupDate,
-                    x.NetValues,
-                    SheetName = x.Name
-                })
-            };
-        }
+                Id = x.Id,
+                Name = x.Name,
+                Code = x.Code,
+                Latest = new { Date = new DateOnly(2026,1,1), NetValue = 1}
+            })
+        };
+
+        var templatePath = PathHelper.GetFile("xlsx/C58E68A04C25.xlsx");
+
+        using var path = AutoDeletingPath.Create();
+        await _excelTemplater.FillTemplateAsync(path.ToString(), templatePath, value);
     }
 }

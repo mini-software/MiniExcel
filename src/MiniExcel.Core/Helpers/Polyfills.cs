@@ -156,3 +156,18 @@ public static class Polyfills
     }
 #endif
 }
+
+#if NETSTANDARD2_0
+/// <summary>
+/// Custom equality comparer that uses reference equality instead of overridden object.Equals.
+/// Required for .NET versions where ReferenceEqualityComparer is not built-in.
+/// </summary>
+public class ReferenceEqualityComparer : IEqualityComparer<object>
+{
+    private  ReferenceEqualityComparer() { }
+    public static ReferenceEqualityComparer Instance { get; } = new();
+
+    bool IEqualityComparer<object>.Equals(object? x, object? y) => ReferenceEquals(x, y);
+    int IEqualityComparer<object>.GetHashCode(object obj) => RuntimeHelpers.GetHashCode(obj);
+}
+#endif

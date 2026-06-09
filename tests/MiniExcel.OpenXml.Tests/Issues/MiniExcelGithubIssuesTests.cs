@@ -2292,15 +2292,8 @@ public class MiniExcelGithubIssuesTests(ITestOutputHelper output)
                 })
         };
 
-        var path = Path.Combine
-        (
-            Path.GetTempPath(),
-            string.Concat(nameof(MiniExcelGithubIssuesTests), "_", nameof(Issue606_1), ".xlsx")
-        );
-
-        var templateFileName = PathHelper.GetFile("xlsx/TestIssue606_Template.xlsx");
-         _excelTemplater.FillTemplate(path, Path.GetFullPath(templateFileName), value);
-        File.Delete(path);
+        using var path = AutoDeletingPath.Create();
+        _excelTemplater.FillTemplate(path.ToString(), PathHelper.GetFile("xlsx/TestIssue606_Template.xlsx"), value);
     }
 
     [Fact]

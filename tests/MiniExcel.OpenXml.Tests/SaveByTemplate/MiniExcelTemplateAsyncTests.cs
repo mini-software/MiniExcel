@@ -305,16 +305,6 @@ public class MiniExcelTemplateAsyncTests
         Assert.Equal("A1:D9", dimension);
     }
 
-    private class TestIEnumerableTypePoco
-    {
-        public string @string { get; set; }
-        public int? @int { get; set; }
-        public decimal? @decimal { get; set; }
-        public double? @double { get; set; }
-        public DateTime? datetime { get; set; }
-        public bool? @bool { get; set; }
-        public Guid? Guid { get; set; }
-    }
     [Fact]
     public async Task TestIEnumerableType()
     {
@@ -450,7 +440,7 @@ public class MiniExcelTemplateAsyncTests
 
         {
             var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.xlsx");
-            var templateBytes = File.ReadAllBytes(templatePath);
+            var templateBytes = await File.ReadAllBytesAsync(templatePath);
             // 1. By POCO
             var value = new
             {

@@ -23,8 +23,11 @@ public static class TypeHelper
             .Select(t => t.GetGenericArguments()[0]);
     }
 
-    public static bool IsNumericType(Type type, bool isNullableUnderlyingType = false)
+    public static bool IsNumericType(Type? type, bool isNullableUnderlyingType = false)
     {
+        if (type is null)
+            return false;
+
         if (isNullableUnderlyingType)
             type = Nullable.GetUnderlyingType(type) ?? type;
 

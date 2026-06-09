@@ -1154,6 +1154,51 @@ templater.ApplyTemplate(path, templatePath, value, config)
 
 ![image](https://user-images.githubusercontent.com/12729184/157464332-e316f829-54aa-4c84-a5aa-9aef337b668d.png)
 
+#### 12. Support generate sheet for enumrables
+When you set the template sheet name to $property$, and the corresponding property holds enumerable values, saving the template will automatically generate sheets.
+
+Take the value funds as an example:
+ - If the fund entity contains a SheetName property, the generated sheet will be named after the value of SheetName.
+ - If no SheetName property exists, sheets will be named sequentially as fund1, fund2, fund3, and so on.
+
+Within each fund sheet, the primary object is the fund itself; you may reference fields directly in the template with placeholders like {{Id}}, {{Name}}.
+
+Nested property references are supported, such as {{Fund.Identy.Type}}.
+
+<img width="984" height="964" alt="image" src="https://github.com/user-attachments/assets/fa3f5d1a-3c11-48dc-9266-6ab836ed8269" />
+
+```csharp
+public record struct Identity(int Type, string Id);
+
+private class Fund
+{
+    public int Id { get; set; }
+    public string? Name { get; set; }
+    public Identity Identity { get; set; }
+    public DateOnly SetupDate { get; set; }
+
+    public List<NetValue> NetValues { get; set; } = [];
+}
+
+public record NetValue(DateOnly Date, decimal Value);
+var value = new
+{
+    Funds = fundList.Select(x => new
+    {
+        x.Id,
+        x.Name,
+        x.Identity,
+        x.SetupDate,
+        x.NetValues,
+        SheetName = x.Name
+    })
+};
+templater.ApplyTemplate(path, templatePath, value, config)
+```
+
+<img width="890" height="999" alt="image" src="https://github.com/user-attachments/assets/fae209ec-b3e2-4f2e-94e4-3b52a37dc364" />
+
+
 
 
 ### Attributes and configuration <a name="docs-attributes" />

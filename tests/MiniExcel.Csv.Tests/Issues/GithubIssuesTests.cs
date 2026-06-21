@@ -559,7 +559,6 @@ public class GithubIssuesTests
         //Problem with multi-line when using Query func
         //https://github.com/mini-software/MiniExcel/issues/507
 
-        var path = Path.Combine(Path.GetTempPath(), string.Concat(nameof(GithubIssuesTests), "_", nameof(Issue507_1), ".csv"));
         var values = new Issue507V01[]
         {
             new() { A = "Github", B = DateTime.Parse("2021-01-01"), C = "abcd", D = 123 },
@@ -575,13 +574,14 @@ public class GithubIssuesTests
         };
 
         // create
-        using (var stream = File.Create(path))
+        using var path = AutoDeletingPath.Create(ExcelType.Csv);
+        using (var stream = File.Create(path.ToString()))
         {
             _csvExporter.Export(stream, values, configuration: config);
         }
 
         // read
-        var getRowsInfo = _csvImporter.Query<Issue507V01>(path, configuration: config).ToArray();
+        var getRowsInfo = _csvImporter.Query<Issue507V01>(path.ToString(), configuration: config).ToArray();
 
         Assert.Equal(values.Length, getRowsInfo.Length);
 
@@ -596,14 +596,11 @@ public class GithubIssuesTests
 
         Assert.Equal($"""Microsoft"" {config.NewLine}Test{config.NewLine}3""", getRowsInfo[3].A);
         Assert.Equal($"""a""{config.NewLine}b{config.NewLine}{config.NewLine}c""", getRowsInfo[3].C);
-
-        File.Delete(path);
     }
 
     [Fact]
     public void Issue507_2()
     {
-        var path = Path.Combine(Path.GetTempPath(), string.Concat(nameof(GithubIssuesTests), "_", nameof(Issue507_2), ".csv"));
         var values = new Issue507V02[]
         {
             new() { B = DateTime.Parse("2021-01-01"), D = 123 },
@@ -619,16 +616,15 @@ public class GithubIssuesTests
         };
 
         // create
-        using (var stream = File.Create(path))
+        using var path = AutoDeletingPath.Create(ExcelType.Csv);
+        using (var stream = File.Create(path.ToString()))
         {
             _csvExporter.Export(stream, values, true, config);
         }
 
         // read
-        var getRowsInfo = _csvImporter.Query<Issue507V02>(path, configuration: config).ToArray();
+        var getRowsInfo = _csvImporter.Query<Issue507V02>(path.ToString(), configuration: config).ToArray();
         Assert.Equal(values.Length, getRowsInfo.Length);
-
-        File.Delete(path);
     }
 
     //Problem with multi-line when using Query func

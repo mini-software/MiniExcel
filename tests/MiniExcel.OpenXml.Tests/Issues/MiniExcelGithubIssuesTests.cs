@@ -2460,7 +2460,6 @@ public class MiniExcelGithubIssuesTests(ITestOutputHelper output)
     public void TestIssue750()
     {
         var templatePath = PathHelper.GetFile("xlsx/TestIssue20250403_SaveAsByTemplate_OPT.xlsx");
-        var memoryBefore = GC.GetTotalMemory(true);
 
         using var path = AutoDeletingPath.Create();
         var data = new Dictionary<string, object>
@@ -2468,7 +2467,10 @@ public class MiniExcelGithubIssuesTests(ITestOutputHelper output)
             ["list"] = Enumerable.Range(0, 10_000)
                 .Select(_ => new { value1 = Guid.NewGuid(), value2 = Guid.NewGuid(), })
         };
+
+        var memoryBefore = GC.GetTotalMemory(true);
          _excelTemplater.FillTemplate(path.ToString(), templatePath, data);
+        var memoryAfter = GC.GetTotalMemory(true);
 
         var rows = _excelImporter.Query(path.ToString())
             .Skip(1453)
@@ -2477,10 +2479,8 @@ public class MiniExcelGithubIssuesTests(ITestOutputHelper output)
 
         Assert.True(((string)rows[0].A).Length > 9);
 
-        var memoryAfter = GC.GetTotalMemory(true);
         var memoryIncrease = memoryAfter - memoryBefore;
-
-        _output.WriteLine($"memoryIncrease: {memoryIncrease}");
+        _output.WriteLine($"memoryIncrease: {memoryIncrease / 1024} KB");
     }
 
     [Fact]

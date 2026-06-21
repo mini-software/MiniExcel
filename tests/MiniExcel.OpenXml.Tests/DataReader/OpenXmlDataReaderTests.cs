@@ -29,11 +29,16 @@ public class OpenXmlDataReaderTests
         
         Assert.True(reader.Read());
         Assert.Equal(Guid.Parse("78DE23D2-DCB6-BD3D-EC67-C112BBC322A2"), reader.GetGuid(0));
+        Assert.False(reader.IsDBNull(1));
         Assert.Equal("Wade", reader.GetString(1));
         Assert.Equal(new DateTime(2020, 9, 27), reader.GetDateTime(2));
+        Assert.Equal(36, reader.GetInt16(3));
         Assert.Equal(36, reader.GetInt32(3));
+        Assert.Equal(36, reader.GetInt64(3));
         Assert.False(reader.GetBoolean(4));
-        Assert.Equal(5019.12, reader.GetDouble(6));
+        Assert.Equal(5019.12f, reader.GetFloat(6));
+        Assert.Equal(5019.12d, reader.GetDouble(6));
+        Assert.Equal(5019.12m, reader.GetDecimal(6));
     }
 
     [Fact]
@@ -152,5 +157,15 @@ public class OpenXmlDataReaderTests
         Assert.True(reader.Read());
         Assert.Equal(3d, reader.GetValue(0));
         Assert.False(reader.NextResult());
+    }
+
+    [Fact]
+    public void GetDataReader_ReadingAfterDispose_ThrowsException()
+    {
+        var path = PathHelper.GetFile("xlsx/TestMultiSheet.xlsx");
+        var reader = _excelImporter.GetDataReader(path);
+
+        reader.Dispose();
+        Assert.Throws<ObjectDisposedException>(() => reader.Read());
     }
 }

@@ -248,12 +248,10 @@ public abstract class MiniExcelDataReaderBase : IMiniExcelDataReader
         
         return Schema;
     }
-    
-    public virtual bool NextResult()
-        => throw new NotImplementedException();
 
-    public virtual Task<bool> NextResultAsync(CancellationToken cancellationToken = default)
-        => throw new NotImplementedException();
+    public abstract bool NextResult();
+
+    public abstract Task<bool> NextResultAsync(CancellationToken cancellationToken = default);
 
 
     public void Close() 

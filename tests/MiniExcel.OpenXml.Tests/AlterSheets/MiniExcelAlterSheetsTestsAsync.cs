@@ -1,4 +1,5 @@
 using MiniExcelLib.OpenXml.Models;
+using MiniExcelLib.Tests.Common.Utils;
 using static MiniExcelLib.OpenXml.Tests.Utils.SheetHelper;
 
 namespace MiniExcelLib.OpenXml.Tests.AlterSheets;
@@ -102,14 +103,19 @@ public class MiniExcelAlterSheetsTestAsync
     {
         // Arrange
         const string targetSheet = "Sheet1";
-        await using var stream = CreateTestWorkbookStream();
+        using var path = AutoDeletingPath.Create();
+        using (var stream = CreateTestWorkbookStream())
+        {
+            await using var fs = File.OpenWrite(path.FilePath);
+            stream.Position = 0;
+            await stream.CopyToAsync(fs);
+        }
 
         // Act
-        await _excelExporter.AlterSheetAsync(stream, targetSheet);
+        await _excelExporter.AlterSheetAsync(path.FilePath, targetSheet);
 
         // Assert
-        stream.Position = 0;
-        using var package = new ExcelPackage(stream);
+        using var package = new ExcelPackage(path.FilePath);
         var sheet = package.Workbook.Worksheets[targetSheet];
 
         // Ensure defaults remain intact

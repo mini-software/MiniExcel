@@ -22,7 +22,7 @@ public sealed partial class OpenXmlTemplater
         var stream = File.Open(path, FileMode.OpenOrCreate);
         await using var disposableStream = stream.ConfigureAwait(false); 
 
-        await MiniExcelPictureImplement.AddPictureAsync(stream, cancellationToken, images).ConfigureAwait(false);
+        await AddPictureAsync(stream, cancellationToken, images).ConfigureAwait(false);
     }
 
     /// <summary>

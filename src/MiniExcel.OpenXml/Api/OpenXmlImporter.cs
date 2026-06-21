@@ -109,7 +109,7 @@ public sealed partial class OpenXmlImporter
     #region Query Range
 
     /// <summary>
-    /// Queries a specific rectangular region within an worksheet using index-based coordinates.
+    /// Queries a specific rectangular region within an worksheet using cell-based coordinates.
     /// </summary>
     /// <param name="path">The path to the Excel document.</param>
     /// <param name="hasHeaderRow">If true, the first row within the range is used as column headers for dynamic object properties. Default is false.</param>
@@ -131,7 +131,7 @@ public sealed partial class OpenXmlImporter
     }
 
     /// <summary>
-    /// Queries a specific rectangular region within an worksheet using index-based coordinates.
+    /// Queries a specific rectangular region within an worksheet using cell-based coordinates.
     /// </summary>
     /// <param name="stream">The stream containing the Excel file data. The stream position is not reset after reading.</param>
     /// <param name="hasHeaderRow">If true, the first row within the range is used as column headers for dynamic object properties. Default is false.</param>
@@ -375,7 +375,7 @@ public sealed partial class OpenXmlImporter
     [CreateSyncVersion]
     public async Task<List<SheetInfo>> GetSheetInformationsAsync(Stream stream, bool leaveOpen = false, CancellationToken cancellationToken = default)
     {
-        var archive = await OpenXmlZip.CreateAsync(stream, cancellationToken: cancellationToken).ConfigureAwait(false);
+        var archive = await OpenXmlZip.CreateAsync(stream, leaveOpen: leaveOpen, cancellationToken: cancellationToken).ConfigureAwait(false);
         await using var disposableArchve = archive.ConfigureAwait(false);
 
         var rels = await OpenXmlReader.GetWorkbookRelsAsync(archive.EntryCollection, cancellationToken).ConfigureAwait(false);

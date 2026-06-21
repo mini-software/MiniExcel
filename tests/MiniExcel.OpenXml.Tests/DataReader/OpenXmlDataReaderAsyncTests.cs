@@ -26,12 +26,16 @@ public class OpenXmlDataReaderAsyncTests
         Assert.Equal("VIP", reader.GetName(4));
         Assert.Equal("Mail", reader.GetName(5));
         Assert.Equal("Points", reader.GetName(6));
-        
+
         Assert.True(await reader.ReadAsync());
         Assert.Equal(Guid.Parse("78DE23D2-DCB6-BD3D-EC67-C112BBC322A2"), reader.GetGuid(0));
+        Assert.False(reader.IsDBNull(1));
         Assert.Equal("Wade", reader.GetString(1));
         Assert.Equal(new DateTime(2020, 9, 27), reader.GetDateTime(2));
+        Assert.Equal(36, reader.GetByte(3));
+        Assert.Equal(36, reader.GetInt16(3));
         Assert.Equal(36, reader.GetInt32(3));
+        Assert.Equal(36, reader.GetInt64(3));
         Assert.False(reader.GetBoolean(4));
         Assert.Equal(5019.12, reader.GetDouble(6));
     }
@@ -152,5 +156,36 @@ public class OpenXmlDataReaderAsyncTests
         Assert.True(await reader.ReadAsync());
         Assert.Equal(3d, reader.GetValue(0));
         Assert.False(await reader.NextResultAsync());
+    }
+
+    [Fact]
+    public async Task GetDataReader_ReadSyncFromAsync_ThrowsException()
+    {
+        var path = PathHelper.GetFile("xlsx/TestTypeMapping.xlsx");
+        using var stream = File.OpenRead(path);
+        await using var reader = await _excelImporter.GetAsyncDataReader(stream, hasHeaderRow: true);
+
+        Assert.Throws<InvalidOperationException>(() => reader.Read());
+    }
+
+    [Fact]
+    public async Task GetDataReader_ReadAsyncFromSync_ReadsCorrectly()
+    {
+        var path = PathHelper.GetFile("xlsx/TestTypeMapping.xlsx");
+        using var stream = File.OpenRead(path);
+        using var reader = _excelImporter.GetDataReader(stream, hasHeaderRow: true);
+
+        Assert.True(await reader.ReadAsync());
+        Assert.Equal("Wade", reader.GetString(1));
+    }
+
+    [Fact]
+    public async Task GetDataReader_ReadingAfterDispose_ThrowsException()
+    {
+        var path = PathHelper.GetFile("xlsx/TestMultiSheet.xlsx");
+        var reader = await _excelImporter.GetAsyncDataReader(path);
+        
+        await reader.DisposeAsync();
+        await Assert.ThrowsAsync<ObjectDisposedException>(async () => await reader.ReadAsync());
     }
 }

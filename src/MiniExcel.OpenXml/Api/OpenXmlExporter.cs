@@ -127,6 +127,9 @@ public sealed partial class OpenXmlExporter
         if (inputFile.Equals(outputFile, StringComparison.InvariantCultureIgnoreCase))
             throw new ArgumentException("The generated file must not have the same path as the original file.");
 
+        if (Path.GetExtension(outputFile).Equals(".xlsm", StringComparison.InvariantCultureIgnoreCase))
+            throw new NotSupportedException("MiniExcel's CopyAndAddSheet does not support the .xlsm format");
+
         var inputStream = new FileStream(inputFile, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, FileOptions.RandomAccess);
         await using var disposableInputStream = inputStream.ConfigureAwait(false);
 

@@ -236,3 +236,39 @@ internal class SaveAsFileWithDimensionByICollectionTestType
     public string? A { get; set; }
     public string? B { get; set; }
 }
+
+internal class DateOnlyTest
+{
+    public DateOnly Date { get; set; }
+    [MiniExcelFormat("d.M.yyyy")] public DateOnly DateWithFormat { get; set; }
+}
+
+internal class ExcelFieldMappingTest
+{
+    [MiniExcelColumnName("Column1")]
+    public string? Test1;
+
+    [MiniExcelColumnName("Column2")]
+    public int Test2;
+
+    [MiniExcelColumnIndex(0)]
+    public decimal Test;
+}
+
+internal class MixedFieldPropertyTest
+{
+    [MiniExcelColumnName("F1")]
+    public string? Field1;
+
+    [MiniExcelColumnName("P1")]
+    public string? Prop1 { get; set; }
+}
+
+internal class FieldsWithoutAttributeTest
+{
+    // field without attribute should not be included for export
+    public string? NotMappedField;
+
+    [MiniExcelColumnName("Mapped")]
+    public string? MappedField;
+}

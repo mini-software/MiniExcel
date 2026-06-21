@@ -6,7 +6,7 @@ public class MiniExcelCsvAsyncTests
     private readonly CsvImporter _csvImporter = MiniExcel.Importers.GetCsvImporter();
     
     [Fact]
-    public void Gb2312_Encoding_Read_Test()
+    public async Task Gb2312_Encoding_Read_Test()
     {
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
         var path = PathHelper.GetFile("csv/gb2312_Encoding_Read_Test.csv");
@@ -14,7 +14,7 @@ public class MiniExcelCsvAsyncTests
         {
             StreamReaderFunc = stream => new StreamReader(stream, encoding: Encoding.GetEncoding("gb2312"))
         };
-        var rows = _csvImporter.QueryAsync(path, true, configuration: config).ToBlockingEnumerable().ToList();
+        var rows = await _csvImporter.QueryAsync(path, true, configuration: config).ToListAsync();
         Assert.Equal("世界你好", rows[0].栏位1);
     }
 
@@ -55,6 +55,14 @@ public class MiniExcelCsvAsyncTests
             """";
         
         Assert.Equal(expected, await File.ReadAllTextAsync(path));
+    }
+
+    [Fact]
+    public async Task WriteNullValueTest()
+    {
+        using var path = AutoDeletingPath.Create(ExcelType.Csv);
+        await _csvExporter.ExportAsync(path.FilePath, null!);
+        Assert.Equal("", File.ReadAllText(path.FilePath));
     }
 
     [Fact]
@@ -361,8 +369,67 @@ public class MiniExcelCsvAsyncTests
         Assert.Equal("A2", results[1].C1);
         Assert.Equal("B2", results[1].C2);
     }
-    
-        [Fact]
+
+    [Fact]
+    public async Task AppendToCsvTest()
+    {
+        using var file = AutoDeletingPath.Create(ExcelType.Csv);
+        var path = file.ToString();
+
+        {
+            var value = new[]
+            {
+                new { ID = 1, Name = "Jack", InDate = new DateTime(2021,01,03) },
+                new { ID = 2, Name = "Henry", InDate = new DateTime(2020,05,03) },
+            };
+            await _csvExporter.AppendAsync(path, value);
+
+            var content = await File.ReadAllTextAsync(path);
+            Assert.Equal(
+                """
+                ID,Name,InDate
+                1,Jack,"2021-01-03 00:00:00"
+                2,Henry,"2020-05-03 00:00:00"
+
+                """, content);
+        }
+        {
+            var value = new { ID = 3, Name = "Mike", InDate = new DateTime(2021, 04, 23) };
+            await _csvExporter.AppendAsync(path, value);
+            
+            var content = await File.ReadAllTextAsync(path);
+            Assert.Equal(
+                """
+                ID,Name,InDate
+                1,Jack,"2021-01-03 00:00:00"
+                2,Henry,"2020-05-03 00:00:00"
+                3,Mike,"2021-04-23 00:00:00"
+
+                """, content);
+        }
+        {
+            var value = new[]
+            {
+                new { ID = 4, Name = "Frank", InDate = new DateTime(2021,06,07) },
+                new { ID = 5, Name = "Gloria", InDate = new DateTime(2022,05,03) }
+            };
+            await _csvExporter.AppendAsync(path, value);
+
+            var content = await File.ReadAllTextAsync(path);
+            Assert.Equal(
+                """
+                ID,Name,InDate
+                1,Jack,"2021-01-03 00:00:00"
+                2,Henry,"2020-05-03 00:00:00"
+                3,Mike,"2021-04-23 00:00:00"
+                4,Frank,"2021-06-07 00:00:00"
+                5,Gloria,"2022-05-03 00:00:00"
+
+                """, content);
+        }
+    }
+
+    [Fact]
     public async Task ExportDataTableWithProgressTest()
     {
         var dataTable = new DataTable();
@@ -408,5 +475,22 @@ public class MiniExcelCsvAsyncTests
                 }
             }
         }
+    }
+
+    [Fact]
+    public async Task GetColumnNamesTest()
+    {
+        var path = PathHelper.GetFile(@"csv/TestHeader.csv");
+        var cols = (await _csvImporter.GetColumnNamesAsync(path, true)).ToArray();
+        Assert.Equal("Column1", cols[0]);
+        Assert.Equal("Column2", cols[1]);
+    }
+
+    [Fact]
+    public async Task GetColumnNamesEmptyTest()
+    {
+        await using var ms = new MemoryStream();
+        var cols = await _csvImporter.GetColumnNamesAsync(ms);
+        Assert.Empty(cols);
     }
 }

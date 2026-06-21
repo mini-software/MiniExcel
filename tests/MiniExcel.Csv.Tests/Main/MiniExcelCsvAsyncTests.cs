@@ -440,19 +440,17 @@ public class MiniExcelCsvAsyncTests
         dataTable.Rows.Add(2, DBNull.Value, new DateTime(1901, 2, 2, 2, 0, 0));
         dataTable.Rows.Add(3, "Alice", DateTime.Now.Date);
 
-        // We need to use the file system because the CsvExporter automatically disposes the stream
-        var tempFilePath = Path.GetTempFileName();
-        File.Delete(tempFilePath);
+        using var path = AutoDeletingPath.Create();
 
         var progress = new SimpleProgress();
-        var rowCounts = await _csvExporter.ExportAsync(tempFilePath, dataTable, progress: progress);
+        var rowCounts = await _csvExporter.ExportAsync(path.FilePath, dataTable, progress: progress);
         Assert.Equal(3, rowCounts);
 
         //Confirm the progress report is correct
         var cellCount = dataTable.Columns.Count * dataTable.Rows.Count;
         Assert.Equal(cellCount, progress.Value);
 
-        var resultDataTable = await _csvImporter.QueryAsDataTableAsync(tempFilePath);
+        var resultDataTable = await _csvImporter.QueryAsDataTableAsync(path.FilePath);
 
         //Confirm the data is correct
         Assert.Equal(dataTable.Rows.Count, resultDataTable.Rows.Count);

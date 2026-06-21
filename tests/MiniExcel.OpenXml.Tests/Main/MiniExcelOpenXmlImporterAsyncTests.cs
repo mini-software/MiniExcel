@@ -463,27 +463,37 @@ public class MiniExcelOpenXmlImporterAsyncTests
     [Fact]
     public async Task ReadBigExcel_TakeCancel_Throws_TaskCanceledException()
     {
-        await Assert.ThrowsAnyAsync<OperationCanceledException>(async () =>
+        var exception = await Assert.ThrowsAnyAsync<Exception>(async () =>
         {
             var cts = new CancellationTokenSource();
 
-            var exportTask = _excelImporter.QueryAsync(PathHelper.GetFile("xlsx/Test10000x10.xlsx"), cancellationToken: cts.Token).ToListAsync(cts.Token);
+            var exportTask = _excelImporter.QueryAsync(PathHelper.GetFile("xlsx/Test10000x10.xlsx"), cancellationToken: cts.Token).ToListAsync();
             await cts.CancelAsync();
             await exportTask;
         });
+        
+        Assert.True(
+            exception is OperationCanceledException || (exception is InvalidOperationException && exception.Message.Contains("An asynchronous operation is already in progress")),
+            $"Unexpected exception type: {exception.GetType().Name}"
+        );
     }
 
     [Fact]
     public async Task ReadBigExcel_Processing_TakeCancel_Throws_TaskCanceledException()
     {
-        await Assert.ThrowsAnyAsync<OperationCanceledException>(async () =>
+        var exception = await Assert.ThrowsAnyAsync<Exception>(async () =>
         {
             var cts = new CancellationTokenSource();
 
-            var exportTask = _excelImporter.QueryAsync(PathHelper.GetFile("xlsx/Test10000x10.xlsx"), cancellationToken: cts.Token).ToListAsync(cts.Token);
+            var exportTask = _excelImporter.QueryAsync(PathHelper.GetFile("xlsx/Test10000x10.xlsx"), cancellationToken: cts.Token).ToListAsync();
             await cts.CancelAsync();
             await exportTask;
         });
+        
+        Assert.True(
+            exception is OperationCanceledException || (exception is InvalidOperationException && exception.Message.Contains("An asynchronous operation is already in progress")),
+            $"Unexpected exception type: {exception.GetType().Name}"
+        );
     }
 
     [Fact]

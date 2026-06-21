@@ -842,7 +842,7 @@ public class MiniExcelTemplateAsyncTests
             await using (var stream = File.OpenWrite(path.FilePath))
             {
                 await using var templateStream = File.OpenRead(templatePath);
-                await _excelTemplater.FillTemplateAsync(stream, templatePath, value);
+                await _excelTemplater.FillTemplateAsync(stream, templateStream, value);
             }
 
             var rows = await _excelImporter.QueryAsync(path.ToString()).ToListAsync();
@@ -908,9 +908,12 @@ public class MiniExcelTemplateAsyncTests
     {
         var path = PathHelper.GetFile("xlsx/TestMergeWithLimitTag.xlsx");
         using var mergedFilePath = AutoDeletingPath.Create();
-        await using var stream = new FileStream(mergedFilePath.FilePath, FileMode.OpenOrCreate, FileAccess.ReadWrite);
 
-        await _excelTemplater.MergeSameCellsAsync(stream, path);
+        await using (var stream = new FileStream(mergedFilePath.FilePath, FileMode.OpenOrCreate, FileAccess.ReadWrite))
+        {
+            await _excelTemplater.MergeSameCellsAsync(stream, path);
+        }
+        
         var mergedCells = SheetHelper.GetFirstSheetMergedCells(mergedFilePath.ToString());
 
         Assert.Equal("A3:A4", mergedCells[0]);
@@ -923,7 +926,6 @@ public class MiniExcelTemplateAsyncTests
     public async Task TestIEnumerableWithFormulas()
     {
         var templatePath = PathHelper.GetFile("xlsx/TestTemplateBasicIEnumerableFillWithFormulas.xlsx");
-        await using var templateStream = File.OpenRead(templatePath);
         using var path = AutoDeletingPath.Create();
 
         var value = new
@@ -938,7 +940,11 @@ public class MiniExcelTemplateAsyncTests
                 new { name = "Joan", department = "IT", salary = 120000 }
             }
         };
-        await _excelTemplater.FillTemplateAsync(path.FilePath, templateStream, value, true);
+
+        await using (var templateStream = File.OpenRead(templatePath))
+        {
+            await _excelTemplater.FillTemplateAsync(path.FilePath, templateStream, value, true);
+        }
 
         var dimension = SheetHelper.GetFirstSheetDimensionRefValue(path.FilePath);
         Assert.Equal("A1:C13", dimension);
@@ -949,10 +955,10 @@ public class MiniExcelTemplateAsyncTests
     {
         MiniExcelPicture[] pictures = 
         [
-            new() { ImageBytes = File.ReadAllBytes(PathHelper.GetFile("images/github_logo.png")), CellAddress = "B2", HeightPx = 40, WidthPx = 40 },
-            new() { ImageBytes = File.ReadAllBytes(PathHelper.GetFile("images/google_logo.png")), CellAddress = "C3", HeightPx = 45, WidthPx = 45 },
-            new() { ImageBytes = File.ReadAllBytes(PathHelper.GetFile("images/microsoft_logo.png")), CellAddress = "D4", HeightPx = 50, WidthPx = 50 },
-            new() { ImageBytes = File.ReadAllBytes(PathHelper.GetFile("images/reddit_logo.png")), CellAddress = "E5", HeightPx = 55, WidthPx = 55 },
+            new() { ImageBytes = await File.ReadAllBytesAsync(PathHelper.GetFile("images/github_logo.png")), CellAddress = "B2", HeightPx = 40, WidthPx = 40 },
+            new() { ImageBytes = await File.ReadAllBytesAsync(PathHelper.GetFile("images/google_logo.png")), CellAddress = "C3", HeightPx = 45, WidthPx = 45 },
+            new() { ImageBytes = await File.ReadAllBytesAsync(PathHelper.GetFile("images/microsoft_logo.png")), CellAddress = "D4", HeightPx = 50, WidthPx = 50 },
+            new() { ImageBytes = await File.ReadAllBytesAsync(PathHelper.GetFile("images/reddit_logo.png")), CellAddress = "E5", HeightPx = 55, WidthPx = 55 },
         ];
 
         using var path = AutoDeletingPath.Create();

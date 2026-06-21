@@ -12,7 +12,7 @@ public class OpenXmlDataReaderTests
     }
 
     [Fact]
-    public async Task GetDataReader_WithSimpleData_ReturnsValidDataReader()
+    public void GetDataReader_WithSimpleData_ReturnsValidDataReader()
     {
         var path = PathHelper.GetFile("xlsx/TestTypeMapping.xlsx");
         using var stream = File.OpenRead(path);

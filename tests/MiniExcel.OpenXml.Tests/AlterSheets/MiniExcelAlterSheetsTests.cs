@@ -99,7 +99,7 @@ public class MiniExcelAlterSheetTests
     }
 
     [Fact]
-    public async Task AlterSheet_WhenNoOptionalParametersProvided_LeavesSheetUnchanged()
+    public void AlterSheet_WhenNoOptionalParametersProvided_LeavesSheetUnchanged()
     {
         // Arrange
         const string targetSheet = "Sheet1";

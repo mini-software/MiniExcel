@@ -1,14 +1,13 @@
 using System.Text.Json;
-using Microsoft.AspNetCore.Mvc;
-using MiniExcelLib.Core;
+using MiniExcelLib.OpenXml;
 
-namespace MiniExcel.Samples.MinimalApis;
+namespace MiniExcelLib.Samples.MinimalApis;
 
 internal static class Endpoints
 {
-    private static readonly OpenXmlImporter Importer = MiniExcelLib.Core.MiniExcel.Importers.GetOpenXmlImporter();
-    private static readonly OpenXmlExporter Exporter = MiniExcelLib.Core.MiniExcel.Exporters.GetOpenXmlExporter();
-    private static readonly OpenXmlTemplater Templater = MiniExcelLib.Core.MiniExcel.Templaters.GetOpenXmlTemplater();
+    private static readonly OpenXmlImporter Importer = MiniExcel.Importers.GetOpenXmlImporter();
+    private static readonly OpenXmlExporter Exporter = MiniExcel.Exporters.GetOpenXmlExporter();
+    private static readonly OpenXmlTemplater Templater = MiniExcel.Templaters.GetOpenXmlTemplater();
 
     internal static RouteGroupBuilder MapExcelApi(this IEndpointRouteBuilder builder)
     {
@@ -16,7 +15,7 @@ internal static class Endpoints
 
         group.MapImportExcel();
         group.MapExportExcel();
-        group.MapApplyExcelTemplate();
+        group.MapFillExcelTemplate();
 
         return group.DisableAntiforgery();
     }
@@ -39,7 +38,7 @@ internal static class Endpoints
         });
     }
 
-    private static RouteHandlerBuilder MapApplyExcelTemplate(this IEndpointRouteBuilder builder)
+    private static RouteHandlerBuilder MapFillExcelTemplate(this IEndpointRouteBuilder builder)
     {
         return builder.MapGet("template", async () =>
         {
@@ -63,7 +62,7 @@ internal static class Endpoints
             };
 
             var memoryStream = new MemoryStream();
-            await Templater.ApplyTemplateAsync("TestTemplateComplex.xlsx", memoryStream, value);
+            await Templater.FillTemplateAsync(memoryStream, "TestTemplateComplex.xlsx", value);
             memoryStream.Seek(0, SeekOrigin.Begin);
             
             return Results.Stream(memoryStream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "template_demo.xlsx");
@@ -78,7 +77,7 @@ internal static class Endpoints
             await file.CopyToAsync(stream);
 
             var result = new List<dynamic>();
-            await foreach (var item in Importer.QueryAsync(stream, useHeaderRow: true))
+            await foreach (var item in Importer.QueryAsync(stream, hasHeaderRow: true))
             {
                 // your logic here
                 result.Add(item);

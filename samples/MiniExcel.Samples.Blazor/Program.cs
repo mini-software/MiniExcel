@@ -1,4 +1,4 @@
-using MiniExcel.Samples.Blazor.Components;
+using MiniExcelLib.Samples.Blazor.Components;
 
 var builder = WebApplication.CreateBuilder(args);
 

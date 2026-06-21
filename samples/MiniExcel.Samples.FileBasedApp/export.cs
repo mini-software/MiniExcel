@@ -1,8 +1,9 @@
 #! /bin/bash
 
-#:package MiniExcel@1.41.4
+#:package MiniExcel@2.0.0-preview.4
 
-using MiniExcelLibs;
+using MiniExcelLib;
+using MiniExcelLib.OpenXml;
 
 object[] data = 
 [ 
@@ -10,5 +11,5 @@ object[] data =
 	new { Name = "Jane", Surname = "Doe", Age = 21 }
 ];
 
-MiniExcel.SaveAs("test.xlsx", data);
+MiniExcel.Exporters.GetOpenXmlExporter().Export("test.xlsx", data);
 Console.WriteLine("Document saved succesfully");

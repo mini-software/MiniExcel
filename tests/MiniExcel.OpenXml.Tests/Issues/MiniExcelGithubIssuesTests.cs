@@ -369,22 +369,11 @@ public class MiniExcelGithubIssuesTests(ITestOutputHelper output)
     [Fact]
     public void Issue150()
     {
-        var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xlsx");
-
-        Assert.Throws<NotSupportedException>(() =>  _excelExporter.Export(path, new[] { 1, 2 }));
-        File.Delete(path);
-
-        Assert.Throws<NotSupportedException>(() =>  _excelExporter.Export(path, new[] { "1", "2" }));
-        File.Delete(path);
-
-        Assert.Throws<NotSupportedException>(() =>  _excelExporter.Export(path, new[] { '1', '2' }));
-        File.Delete(path);
-
-        Assert.Throws<NotSupportedException>(() =>  _excelExporter.Export(path, new[] { DateTime.Now }));
-        File.Delete(path);
-
-        Assert.Throws<NotSupportedException>(() =>  _excelExporter.Export(path, new[] { Guid.NewGuid() }));
-        File.Delete(path);
+        Assert.Throws<NotSupportedException>(() =>  { using var path = AutoDeletingPath.Create(); _excelExporter.Export(path.ToString(), new[] { 1, 2 }); });
+        Assert.Throws<NotSupportedException>(() =>  { using var path = AutoDeletingPath.Create(); _excelExporter.Export(path.ToString(), new[] { "1", "2" }); });
+        Assert.Throws<NotSupportedException>(() =>  { using var path = AutoDeletingPath.Create(); _excelExporter.Export(path.ToString(), new[] { '1', '2' }); });
+        Assert.Throws<NotSupportedException>(() =>  { using var path = AutoDeletingPath.Create(); _excelExporter.Export(path.ToString(), new[] { DateTime.Now }); });
+        Assert.Throws<NotSupportedException>(() =>  { using var path = AutoDeletingPath.Create(); _excelExporter.Export(path.ToString(), new[] { Guid.NewGuid() }); });
     }
 
     [Fact]
@@ -2341,13 +2330,8 @@ public class MiniExcelGithubIssuesTests(ITestOutputHelper output)
             DynamicColumns = [new DynamicExcelColumn("Time") { Index = 0, Width = 20, Format = "d.MM.yyyy" }]
         };
 
-        var path = Path.Combine(
-            Path.GetTempPath(),
-            string.Concat(nameof(MiniExcelGithubIssuesTests), "_", nameof(Issue632_1), ".xlsx")
-        );
-
-         _excelExporter.Export(path, values, configuration: config, overwriteFile: true);
-        File.Delete(path);
+        using var path = AutoDeletingPath.Create();
+        _excelExporter.Export(path.ToString(), values, configuration: config, overwriteFile: true);
     }
 
     [Fact]

@@ -804,6 +804,7 @@ public class MiniExcelTemplateTests
         var templatePath = PathHelper.GetFile("xlsx/TestTemplateComplex.xlsx");
         {
             using var path = AutoDeletingPath.Create();
+            using var templateStream = File.OpenRead(templatePath);
 
             // 1. By Class
             var value = new
@@ -822,7 +823,7 @@ public class MiniExcelTemplateTests
                     new { name = "Keaton", department = "IT" }
                 }
             };
-            _excelTemplater.FillTemplate(path.ToString(), templatePath, value);
+            _excelTemplater.FillTemplate(path.ToString(), templateStream, value);
 
             {
                 var rows = _excelImporter.Query(path.ToString()).ToList();
@@ -939,8 +940,9 @@ public class MiniExcelTemplateTests
     {
         var path = PathHelper.GetFile("xlsx/TestMergeWithLimitTag.xlsx");
         using var mergedFilePath = AutoDeletingPath.Create();
+        using var stream = new FileStream(mergedFilePath.FilePath, FileMode.OpenOrCreate, FileAccess.ReadWrite);
 
-        _excelTemplater.MergeSameCells(mergedFilePath.ToString(), path);
+        _excelTemplater.MergeSameCells(stream, path);
         var mergedCells = SheetHelper.GetFirstSheetMergedCells(mergedFilePath.ToString());
 
         Assert.Equal("A3:A4", mergedCells[0]);

@@ -1,6 +1,6 @@
 using MiniExcelLib.OpenXml.Templates;
 
-namespace MiniExcelLib.OpenXml.Tests.SaveByTemplate;
+namespace MiniExcelLib.OpenXml.Tests.Templates;
 
 public class InputValueExtractorTests
 {

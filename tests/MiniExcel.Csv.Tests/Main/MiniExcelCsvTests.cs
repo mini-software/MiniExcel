@@ -296,20 +296,12 @@ public class MiniExcelCsvTests
         }
     }
 
-
-    private class Test
+    [Fact]
+    public void WriteNullValueTest()
     {
-        public string? C1 { get; set; }
-        public string? C2 { get; set; }
-    }
-
-    private class TestWithAlias
-    {
-        [MiniExcelColumnName(columnName: "c1", aliases: ["column1", "col1"])]
-        public string? C1 { get; set; }
-        
-        [MiniExcelColumnName(columnName: "c2", aliases: ["column2", "col2"])]
-        public string? C2 { get; set; }
+        using var path = AutoDeletingPath.Create(ExcelType.Csv);
+        _csvExporter.Export(path.FilePath, null!);
+        Assert.Equal("", File.ReadAllText(path.FilePath));
     }
 
     [Fact]
@@ -382,7 +374,7 @@ public class MiniExcelCsvTests
 
         using (var stream = File.OpenRead(path))
         {
-            var rows = _csvImporter.Query<Test>(stream).ToList();
+            var rows = _csvImporter.Query<TestDto>(stream).ToList();
             Assert.Equal("A1", rows[0].C1);
             Assert.Equal("B1", rows[0].C2);
             Assert.Equal("A2", rows[1].C1);
@@ -390,7 +382,7 @@ public class MiniExcelCsvTests
         }
 
         {
-            var rows = _csvImporter.Query<Test>(path).ToList();
+            var rows = _csvImporter.Query<TestDto>(path).ToList();
             Assert.Equal("A1", rows[0].C1);
             Assert.Equal("B1", rows[0].C2);
             Assert.Equal("A2", rows[1].C1);
@@ -408,7 +400,7 @@ public class MiniExcelCsvTests
 
         using (var stream = File.OpenRead(path))
         {
-            var exception = Assert.Throws<ColumnNotFoundException>(() => _csvImporter.Query<Test>(stream).ToList());
+            var exception = Assert.Throws<ColumnNotFoundException>(() => _csvImporter.Query<TestDto>(stream).ToList());
 
             Assert.Equal("c2", exception.ColumnName);
             Assert.Equal(2, exception.RowIndex);
@@ -418,7 +410,7 @@ public class MiniExcelCsvTests
         }
 
         {
-            var exception = Assert.Throws<ColumnNotFoundException>(() => _csvImporter.Query<Test>(path).ToList());
+            var exception = Assert.Throws<ColumnNotFoundException>(() => _csvImporter.Query<TestDto>(path).ToList());
 
             Assert.Equal("c2", exception.ColumnName);
             Assert.Equal(2, exception.RowIndex);
@@ -504,7 +496,7 @@ public class MiniExcelCsvTests
     
     
     [Fact]
-    public async Task InsertCsvTest()
+    public void AppendToCsvTest()
     {
         using var file = AutoDeletingPath.Create(ExcelType.Csv);
         var path = file.ToString();
@@ -512,11 +504,12 @@ public class MiniExcelCsvTests
         {
             var value = new[]
             {
-                new { ID=1,Name ="Jack",InDate=new DateTime(2021,01,03)},
-                new { ID=2,Name ="Henry",InDate=new DateTime(2020,05,03)},
+                new { ID = 1, Name = "Jack", InDate = new DateTime(2021,01,03) },
+                new { ID = 2, Name = "Henry", InDate = new DateTime(2020,05,03) }
             };
-            await _csvExporter.ExportAsync(path, value);
-            var content = await File.ReadAllTextAsync(path);
+            _csvExporter.Append(path, value);
+
+            var content = File.ReadAllText(path);
             Assert.Equal(
                 """
                 ID,Name,InDate
@@ -527,8 +520,9 @@ public class MiniExcelCsvTests
         }
         {
             var value = new { ID = 3, Name = "Mike", InDate = new DateTime(2021, 04, 23) };
-            await _csvExporter.AppendAsync(path, value);
-            var content = await File.ReadAllTextAsync(path);
+            _csvExporter.Append(path, value);
+
+            var content = File.ReadAllText(path);
             Assert.Equal(
                 """
                 ID,Name,InDate
@@ -541,12 +535,13 @@ public class MiniExcelCsvTests
         {
             var value = new[]
             {
-                new { ID=4,Name ="Frank",InDate=new DateTime(2021,06,07)},
-                new { ID=5,Name ="Gloria",InDate=new DateTime(2022,05,03)},
+                new { ID = 4, Name = "Frank", InDate = new DateTime(2021,06,07) },
+                new { ID = 5, Name = "Gloria", InDate = new DateTime(2022,05,03) }
             };
 
-            await _csvExporter.AppendAsync(path, value);
-            var content = await File.ReadAllTextAsync(path);
+            _csvExporter.Append(path, value);
+
+            var content = File.ReadAllText(path);
             Assert.Equal(
                 """
                 ID,Name,InDate
@@ -558,18 +553,6 @@ public class MiniExcelCsvTests
 
                 """, content);
         }
-    }
-
-    private class CsvFieldMappingTest
-    {
-        [MiniExcelColumnName("Column1")]
-        public string Test1;
-
-        [MiniExcelColumnName("Column2")]
-        public int Test2;
-
-        [MiniExcelColumnIndex(0)]
-        public decimal Test;
     }
 
     [Fact]
@@ -609,15 +592,6 @@ public class MiniExcelCsvTests
         Assert.Contains("Test", first.Keys);
     }
 
-    private class MixedFieldPropertyTest
-    {
-        [MiniExcelColumnName("F1")]
-        public string Field1;
-
-        [MiniExcelColumnName("P1")]
-        public string Prop1 { get; set; }
-    }
-
     [Fact]
     public void ExportAndQueryMixedFieldAndPropertyTest()
     {
@@ -636,14 +610,6 @@ public class MiniExcelCsvTests
         Assert.Contains("P1", first.Keys);
     }
 
-    private class CsvFieldsWithoutAttributeDemo
-    {
-        public string NotMappedField;
-
-        [MiniExcelColumnName("Mapped")]
-        public string MappedField;
-    }
-
     [Fact]
     public void ExportAndQueryFieldsWithoutAttributeTest()
     {
@@ -660,5 +626,22 @@ public class MiniExcelCsvTests
 
         Assert.Contains("Mapped", first.Keys);
         Assert.DoesNotContain("NotMappedField", first.Keys);
+    }
+
+    [Fact]
+    public void GetColumnNamesTest()
+    {
+        var path = PathHelper.GetFile(@"csv/TestHeader.csv");
+        var cols = _csvImporter.GetColumnNames(path, true).ToArray();
+        Assert.Equal("Column1", cols[0]);
+        Assert.Equal("Column2", cols[1]);
+    }
+
+    [Fact]
+    public void GetColumnNamesEmptyTest()
+    {
+        using var ms = new MemoryStream();
+        var cols = _csvImporter.GetColumnNames(ms);
+        Assert.Empty(cols);
     }
 }

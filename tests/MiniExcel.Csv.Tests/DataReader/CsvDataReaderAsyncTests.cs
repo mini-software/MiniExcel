@@ -115,8 +115,7 @@ public class CsvDataReaderAsyncTests
     public async Task GetDataReader_NextResult_ThrowsNotSupportedException()
     {
         var path = PathHelper.GetFile("csv/TestDataReaderHeader.csv");
-        await using var stream = File.OpenRead(path);
-        await using var reader = await _csvImporter.GetAsyncDataReader(stream, hasHeaderRow: true);
+        await using var reader = await _csvImporter.GetAsyncDataReader(path, hasHeaderRow: true);
         
         await Assert.ThrowsAsync<NotSupportedException>(async () => await reader.NextResultAsync());
     }

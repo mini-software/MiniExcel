@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RunSettings>
+  <DataCollectionRunSettings>
+    <DataCollectors>
+      <DataCollector friendlyName="Code Coverage">
+        <Configuration>
+          <CodeCoverage>
+            <ModulePaths>
+              <Exclude>
+                <ModulePath>.*MiniExcel.Tests.Common.dll</ModulePath>
+                <ModulePath>.*MiniExcel.Csv.Tests.dll</ModulePath>
+                <ModulePath>.*MiniExcel.OpenXml.Tests.dll</ModulePath>
+                <ModulePath>.*Dapper.dll</ModulePath>
+              </Exclude>
+            </ModulePaths>
+			
+		    <Functions>
+		      <Exclude>
+			    <Function>System.Text.RegularExpressions.Generated</Function>
+		      </Exclude>
+			</Functions>
+          </CodeCoverage>
+        </Configuration>
+      </DataCollector>
+    </DataCollectors>
+  </DataCollectionRunSettings>
+</RunSettings>

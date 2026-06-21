@@ -11,6 +11,7 @@
 		<SignAssembly>true</SignAssembly>
 		<AssemblyOriginatorKeyFile>..\..\src\miniexcel.snk</AssemblyOriginatorKeyFile>
 		<RootNamespace>MiniExcelLib.OpenXml.Tests</RootNamespace>
+		<AcceptNPOIOSMFLicense>true</AcceptNPOIOSMFLicense>
 	</PropertyGroup>
 	
 	<ItemGroup>

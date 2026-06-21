@@ -112,11 +112,10 @@ public class CsvDataReaderTests
     }
 
     [Fact]
-    public async Task GetDataReader_NextResult_ThrowsNotSupportedException()
+    public void GetDataReader_NextResult_ThrowsNotSupportedException()
     {
         var path = PathHelper.GetFile("csv/TestDataReaderHeader.csv");
-        await using var stream = File.OpenRead(path);
-        await using var reader = await _csvImporter.GetAsyncDataReader(stream, hasHeaderRow: true);
+        using var reader = _csvImporter.GetDataReader(path, hasHeaderRow: true);
         
         Assert.Throws<NotSupportedException>(() => reader.NextResult());
     }

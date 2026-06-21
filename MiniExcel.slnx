@@ -7,6 +7,7 @@
     <File Path=".gitattributes" />
     <File Path=".gitignore" />
     <File Path=".github\workflows\dotnet.yml" />
+    <File Path=".runsettings" />
     <File Path="LICENSE" />
     <File Path="README.md" />
     <File Path="README.zh-CN.md" />
@@ -26,9 +27,9 @@
     <File Path="src/.editorconfig" />
     <File Path="src\Directory.Build.props" />
     <File Path="src\Directory.Packages.props" />
-    <Project Path="src\MiniExcel.OpenXml/MiniExcel.OpenXml.csproj" />
     <Project Path="src\MiniExcel.Core\MiniExcel.Core.csproj" />
     <Project Path="src\MiniExcel.Csv\MiniExcel.Csv.csproj" />
+    <Project Path="src\MiniExcel.OpenXml/MiniExcel.OpenXml.csproj" />
     <Project Path="src\MiniExcel\MiniExcel.csproj" />
   </Folder>
   <Folder Name="/tests/">

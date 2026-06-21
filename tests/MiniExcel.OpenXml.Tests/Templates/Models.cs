@@ -1,4 +1,4 @@
-namespace MiniExcelLib.OpenXml.Tests.SaveByTemplate;
+namespace MiniExcelLib.OpenXml.Tests.Templates;
 
 internal class TestIEnumerableTypePoco
 {

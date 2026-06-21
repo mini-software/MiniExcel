@@ -1,9 +1,8 @@
-﻿using ClosedXML.Excel;
-using MiniExcelLib.OpenXml.Picture;
+﻿using MiniExcelLib.OpenXml.Picture;
 using MiniExcelLib.OpenXml.Tests.Utils;
 using MiniExcelLib.Tests.Common.Utils;
 
-namespace MiniExcelLib.OpenXml.Tests.SaveByTemplate;
+namespace MiniExcelLib.OpenXml.Tests.Templates;
 
 public class MiniExcelTemplateAsyncTests
 {

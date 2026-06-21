@@ -4,7 +4,7 @@ using MiniExcelLib.OpenXml.Tests.Utils;
 using MiniExcelLib.Tests.Common.Utils;
 using OfficeOpenXml.Drawing;
 
-namespace MiniExcelLib.OpenXml.Tests.SaveByTemplate;
+namespace MiniExcelLib.OpenXml.Tests.Templates;
 
 public class MiniExcelTemplateTests
 {

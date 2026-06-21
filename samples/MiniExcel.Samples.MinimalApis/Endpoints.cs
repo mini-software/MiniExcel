@@ -15,7 +15,7 @@ internal static class Endpoints
 
         group.MapImportExcel();
         group.MapExportExcel();
-        group.MapApplyExcelTemplate();
+        group.MapFillExcelTemplate();
 
         return group.DisableAntiforgery();
     }
@@ -38,7 +38,7 @@ internal static class Endpoints
         });
     }
 
-    private static RouteHandlerBuilder MapApplyExcelTemplate(this IEndpointRouteBuilder builder)
+    private static RouteHandlerBuilder MapFillExcelTemplate(this IEndpointRouteBuilder builder)
     {
         return builder.MapGet("template", async () =>
         {
@@ -62,7 +62,7 @@ internal static class Endpoints
             };
 
             var memoryStream = new MemoryStream();
-            await Templater.FillTemplateAsync("TestTemplateComplex.xlsx", memoryStream, value);
+            await Templater.FillTemplateAsync(memoryStream, "TestTemplateComplex.xlsx", value);
             memoryStream.Seek(0, SeekOrigin.Begin);
             
             return Results.Stream(memoryStream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "template_demo.xlsx");

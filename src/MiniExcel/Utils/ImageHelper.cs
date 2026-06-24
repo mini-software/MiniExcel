@@ -2,6 +2,50 @@
 
 internal static class ImageHelper
 {
+#if NET
+    private static ReadOnlySpan<byte> Bmp => "BM"u8;                  // BMP
+    private static ReadOnlySpan<byte> Gif => "GIF"u8;                 // GIF
+    private static ReadOnlySpan<byte> Png => [137, 80, 78, 71];       // PNG
+    private static ReadOnlySpan<byte> Tiff => "II*"u8;                // TIFF
+    private static ReadOnlySpan<byte> Tiff2 => "MM*"u8;               // TIFF
+    private static ReadOnlySpan<byte> Jpeg => [255, 216, 255, 224];   // JPEG
+    private static ReadOnlySpan<byte> Jpeg2 => [255, 216, 255, 225];  // JPEG canon
+#else
+    private static readonly byte[] Bmp = [(byte)'B', (byte)'M'];            // BMP
+    private static readonly byte[] Gif = [(byte)'G', (byte)'I', (byte)'F']; // GIF
+    private static readonly byte[] Png = [137, 80, 78, 71];                 // PNG
+    private static readonly byte[] Tiff = [(byte)'I', (byte)'I'];           // TIFF
+    private static readonly byte[] Tiff2 = [(byte)'M', (byte)'M'];          // TIFF
+    private static readonly byte[] Jpeg = [255, 216, 255, 224];             // JPEG
+    private static readonly byte[] Jpeg2 = [255, 216, 255, 225];            // JPEG canon
+#endif
+
+    public static ImageFormat GetImageFormat(
+#if NET
+        ReadOnlySpan<byte> bytes
+#else
+        byte[] bytes
+#endif
+    )
+    {
+        if (bytes.StartsWith(Bmp))
+            return ImageFormat.bmp;
+
+        if (bytes.StartsWith(Gif))
+            return ImageFormat.gif;
+
+        if (bytes.StartsWith(Png))
+            return ImageFormat.png;
+
+        if (bytes.StartsWith(Tiff) || bytes.StartsWith(Tiff2))
+            return ImageFormat.tiff;
+
+        if (bytes.StartsWith(Jpeg) || bytes.StartsWith(Jpeg2))
+            return ImageFormat.jpg;
+
+        return ImageFormat.unknown;
+    }
+    
     public enum ImageFormat
     {
         bmp,
@@ -11,75 +55,4 @@ internal static class ImageHelper
         png,
         unknown
     }
-
-#if NET45||NETSTANDARD2_0
-        public static ImageFormat GetImageFormat(byte[] bytes)
-        {
-            var bmp = new byte[] { (byte)'B', (byte)'M' };            // BMP
-            var gif = new byte[] { (byte)'G', (byte)'I', (byte)'F' }; // GIF
-            var png = new byte[] { 137, 80, 78, 71 };                 // PNG
-            var tiff = new byte[] { 73, 73, 42 };                     // TIFF
-            var tiff2 = new byte[] { 77, 77, 42 };                    // TIFF
-            var jpeg = new byte[] { 255, 216, 255, 224 };             // jpeg
-            var jpeg2 = new byte[] { 255, 216, 255, 225 };            // jpeg canon
-
-            if (bytes.StartsWith(bmp))
-                return ImageFormat.bmp;
-
-            if (bytes.StartsWith(gif))
-                return ImageFormat.gif;
-
-            if (bytes.StartsWith(png))
-                return ImageFormat.png;
-
-            if (bytes.StartsWith(tiff))
-                return ImageFormat.tiff;
-
-            if (bytes.StartsWith(tiff2))
-                return ImageFormat.tiff;
-
-            if (bytes.StartsWith(jpeg))
-                return ImageFormat.jpg;
-
-            if (bytes.StartsWith(jpeg2))
-                return ImageFormat.jpg;
-
-            return ImageFormat.unknown;
-        }
-        
-#elif NET5_0_OR_GREATER
-    public static ImageFormat GetImageFormat(ReadOnlySpan<byte> bytes)
-    {
-        ReadOnlySpan<byte> bmp = stackalloc byte[] { (byte)'B', (byte)'M' };            // BMP
-        ReadOnlySpan<byte> gif = stackalloc byte[] { (byte)'G', (byte)'I', (byte)'F' }; // GIF
-        ReadOnlySpan<byte> png = stackalloc byte[] { 137, 80, 78, 71 };                 // PNG
-        ReadOnlySpan<byte> tiff = stackalloc byte[] { 73, 73, 42 };                     // TIFF
-        ReadOnlySpan<byte> tiff2 = stackalloc byte[] { 77, 77, 42 };                    // TIFF
-        ReadOnlySpan<byte> jpeg = stackalloc byte[] { 255, 216, 255, 224 };             // jpeg
-        ReadOnlySpan<byte> jpeg2 = stackalloc byte[] { 255, 216, 255, 225 };            // jpeg canon
-
-        if (bytes.StartsWith(bmp))
-            return ImageFormat.bmp;
-
-        if (bytes.StartsWith(gif))
-            return ImageFormat.gif;
-
-        if (bytes.StartsWith(png))
-            return ImageFormat.png;
-
-        if (bytes.StartsWith(tiff))
-            return ImageFormat.tiff;
-
-        if (bytes.StartsWith(tiff2))
-            return ImageFormat.tiff;
-
-        if (bytes.StartsWith(jpeg))
-            return ImageFormat.jpg;
-
-        if (bytes.StartsWith(jpeg2))
-            return ImageFormat.jpg;
-
-        return ImageFormat.unknown;
-    }
-#endif
 }

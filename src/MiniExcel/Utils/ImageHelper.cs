@@ -14,8 +14,8 @@ internal static class ImageHelper
     private static readonly byte[] Bmp = [(byte)'B', (byte)'M'];            // BMP
     private static readonly byte[] Gif = [(byte)'G', (byte)'I', (byte)'F']; // GIF
     private static readonly byte[] Png = [137, 80, 78, 71];                 // PNG
-    private static readonly byte[] Tiff = [(byte)'I', (byte)'I'];           // TIFF
-    private static readonly byte[] Tiff2 = [(byte)'M', (byte)'M'];          // TIFF
+    private static readonly byte[] Tiff = [(byte)'I', (byte)'I', (byte)'*'];           // TIFF
+    private static readonly byte[] Tiff2 = [(byte)'M', (byte)'M', (byte)'*'];          // TIFF
     private static readonly byte[] Jpeg = [255, 216, 255, 224];             // JPEG
     private static readonly byte[] Jpeg2 = [255, 216, 255, 225];            // JPEG canon
 #endif

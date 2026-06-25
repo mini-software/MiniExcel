@@ -65,7 +65,7 @@ var rows = MiniExcel.Query(path);
 
 #### Exporting
 
-There are multiple ways to exprt data to an Excel document:
+There are multiple ways to export data to an Excel document:
 
 ```csharp
 // From strongly typed objects
@@ -96,7 +96,7 @@ MiniExcel.SaveAs(yourPath, values);
 
 //From a IEnumerable<IDictionary<string, object>>
 
-new List<Dictionary<string, object>>() dicts =
+List<Dictionary<string, object>>() dicts =
 [
     new Dictionary<string, object> { { "Name", "MiniExcel" }, { "Value", 1 } },
     new Dictionary<string, object> { { "Name", "Github" }, { "Value", 2 } }

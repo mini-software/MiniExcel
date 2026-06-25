@@ -245,7 +245,7 @@ internal static class TypeHelper
         return newValue;
     }
 
-#if NETSTANDARD2_0_OR_GREATER || NET
+#if !NET45
     public static bool IsAsyncEnumerable(this Type type, out Type genericArgument)
     {
         var asyncEnumrableInterfaceType = type

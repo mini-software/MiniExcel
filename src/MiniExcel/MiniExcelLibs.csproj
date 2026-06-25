@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFrameworks>net45;netstandard2.0;net8.0;net9.0;net10.0</TargetFrameworks>
-		<Version>1.44.1</Version>
+		<TargetFrameworks>net45;net461;netstandard2.0;net8.0;net9.0;net10.0</TargetFrameworks>
+		<Version>1.45.0</Version>
 		<LangVersion>14</LangVersion>
         <ImplicitUsings>enable</ImplicitUsings>
 		<RootNamespace>MiniExcelLibs</RootNamespace>
@@ -13,11 +13,7 @@
 		<Title>MiniExcel</Title>
 		<Product>MiniExcel</Product>
 		<PackageTags>excel;xlsx;csv;micro-helper;mini;openxml;helper;</PackageTags>
-		<Description>Fast, Low-Memory, Easy Excel .NET helper to import/export/template spreadsheet
-Github : https://github.com/mini-software/MiniExcel
-Gitee : https://gitee.com/dotnetchina/MiniExcel
-Issues : https://github.com/mini-software/MiniExcel/issues
-Todo : https://github.com/mini-software/MiniExcel/projects/1?fullscreen=true</Description>
+        <Description>Lightweight, fast and simple .NET processing tool for importing, exporting and templating spreadsheets.</Description>
 		<Authors>Wei Lin, Michele Bastione, PING-HSIU SHIH, Amos(izanhzh), eynarhaji, Mini-Software team</Authors>
 		<PackageId>MiniExcel</PackageId>
 		<Copyright>Wei Lin, 2021 onwards</Copyright>
@@ -43,13 +39,15 @@ Todo : https://github.com/mini-software/MiniExcel/projects/1?fullscreen=true</De
 		<None Include="..\..\README-NuGet.md" Link="README.md" Pack="true" PackagePath="README.md" />
 	</ItemGroup>
 
-	<ItemGroup Condition=" '$(TargetFramework)' == 'net45'">
-		<Reference Include="System.IO.Compression" />
-	</ItemGroup>
 	<ItemGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
-		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
+		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.300" PrivateAssets="All" />
 	</ItemGroup>
-	<ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
-	  <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="10.0.0" />
+
+	<ItemGroup Condition="'$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net461'">
+		<PackageReference Include="System.IO.Compression" Version="4.3.0" />
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'net461'">
+	  <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="10.0.9" />
 	</ItemGroup>
 </Project>

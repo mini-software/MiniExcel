@@ -171,12 +171,12 @@ internal partial class ExcelOpenXmlSheetWriter
         cancellationToken.ThrowIfCancellationRequested();
 
         IMiniExcelWriteAdapter writeAdapter = null;
-#if NETSTANDARD2_0_OR_GREATER || NET
+#if !NET45
         IAsyncMiniExcelWriteAdapter asyncWriteAdapter = null;
 #endif
         try
         {
-#if NETSTANDARD2_0_OR_GREATER || NET
+#if !NET45
             if (!MiniExcelWriteAdapterFactory.TryGetAsyncWriteAdapter(values, _configuration, out asyncWriteAdapter))
             {
                 writeAdapter = MiniExcelWriteAdapterFactory.GetWriteAdapter(values, _configuration);
@@ -261,7 +261,7 @@ internal partial class ExcelOpenXmlSheetWriter
                     await writer.WriteAsync(WorksheetXml.EndRow);
                 }
             }
-#if NETSTANDARD2_0_OR_GREATER || NET
+#if !NET45
                 else
                 {
                     await foreach (var row in asyncWriteAdapter.GetRowsAsync(props, cancellationToken))
@@ -309,7 +309,7 @@ internal partial class ExcelOpenXmlSheetWriter
         }
         finally
         {
-#if NETSTANDARD2_0_OR_GREATER || NET
+#if !NET45
                 if (asyncWriteAdapter is IAsyncDisposable asyncDisposable)
                 {
                     await asyncDisposable.DisposeAsync().ConfigureAwait(false);

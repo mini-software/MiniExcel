@@ -1,7 +1,7 @@
 ﻿using MiniExcelLibs.Utils;
 using System.Runtime.CompilerServices;
 
-#if NETSTANDARD2_0_OR_GREATER || NET
+#if !NET45
 namespace MiniExcelLibs.WriteAdapter;
 
 internal class MiniExcelDataReaderWriteAdapter : IAsyncMiniExcelWriteAdapter

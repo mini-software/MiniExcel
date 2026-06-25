@@ -1,6 +1,6 @@
 ﻿using MiniExcelLibs.Utils;
 
-#if NETSTANDARD2_0_OR_GREATER || NET
+#if !NET45
 namespace MiniExcelLibs.WriteAdapter
 {
     internal interface IAsyncMiniExcelWriteAdapter 

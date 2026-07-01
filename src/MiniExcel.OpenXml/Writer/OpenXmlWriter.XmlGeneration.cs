@@ -336,7 +336,7 @@ internal partial class OpenXmlWriter
         cellValue = oaDate.ToString(CultureInfo.InvariantCulture);
         var format = columnMapping?.ExcelFormatId is { } fmt and not -1 ? fmt.ToString() : DateCellStyleIndex;
 
-        return (format, ExcelDataTypes.Numeric, cellValue);
+        return (format, ExcelDataTypes.DateTime, cellValue);
     }
 
     private static double CorrectDateTimeValue(DateTime value)

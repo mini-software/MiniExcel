@@ -404,26 +404,27 @@ internal partial class OpenXmlWriter
         return drawing.ToString();
     }
 
-    private (string WorkbookXml, string WorkbookRelsXml, Dictionary<int, string> SheetRelsXml) GenerateWorkbookXmls()
+    private (string WorkbookContents, string WorkbookRelsContents, Dictionary<int, string> SheetRelsContents) GenerateWorkbookItems()
     {
-        var workbookXml = new StringBuilder();
-        var workbookRelsXml = new StringBuilder();
-        var sheetsRelsXml = new Dictionary<int, string>();
+        var workbookContents = new StringBuilder();
+        var workbookRelsContents = new StringBuilder();
+        var sheetsRelsContents = new StringBuilder();
+        var sheetsRelsDict = new Dictionary<int, string>();
 
         var sheetId = 0;
         foreach (var sheetDto in _sheets)
         {
             sheetId++;
 
-            workbookXml.AppendLine(ExcelXml.Sheet(sheetDto, sheetId));
-            workbookRelsXml.AppendLine(ExcelXml.WorksheetRelationship(sheetDto));
-
+            workbookContents.AppendLine(ExcelXml.Sheet(sheetDto, sheetId));
+            workbookRelsContents.AppendLine(ExcelXml.WorksheetRelationship(sheetDto));
+            sheetsRelsContents.AppendLine(ExcelXml.DrawingRelationship(sheetId));
+            
             //TODO: support multiple drawing
-            //TODO: ../drawings/drawing1.xml or /xl/drawings/drawing1.xml
-            sheetsRelsXml.Add(sheetDto.SheetIdx, ExcelXml.DrawingRelationship(sheetId));
+            sheetsRelsDict.Add(sheetDto.SheetIdx, sheetsRelsContents.ToString());
         }
 
-        return (workbookXml.ToString(), workbookRelsXml.ToString(), sheetsRelsXml);
+        return (workbookContents.ToString(), workbookRelsContents.ToString(), sheetsRelsDict);
     }
 
     private string GetContentTypesXml()

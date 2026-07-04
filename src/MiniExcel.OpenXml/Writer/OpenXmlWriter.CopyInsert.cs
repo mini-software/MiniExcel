@@ -73,8 +73,7 @@ internal partial class OpenXmlWriter
         await _sheetStyleBuilderContext.DisposeAsync().ConfigureAwait(false);
         _sheetStyleBuilderContext = sheetStylesBuilderUtils.SheetStyleBuilderContext;
 
-        var sharedStringsEntry = _oldArchive.GetEntry(ExcelFileNames.SharedStrings);
-        if (sharedStringsEntry is not null)
+        if (_oldArchive.GetEntry(ExcelFileNames.SharedStrings) is not null)
         {
             foreach (var (key, value) in reader.SharedStrings)
             {
@@ -126,26 +125,26 @@ internal partial class OpenXmlWriter
         
         await AddFilesToZipAsync(cancellationToken).ConfigureAwait(false);
         await GenerateSharedStringsAsync(cancellationToken).ConfigureAwait(false);
-        await GenerateDrawingRelXmlAsync(_currentSheetIndex, cancellationToken).ConfigureAwait(false);
+        await GenerateDrawingRelAsync(_currentSheetIndex, cancellationToken).ConfigureAwait(false);
         await GenerateDrawingXmlAsync(_currentSheetIndex, cancellationToken).ConfigureAwait(false);
         
         await CreateZipEntryAsync(
             ExcelFileNames.SheetRels(_currentSheetIndex),
             null,
-            ExcelXml.DefaultSheetRelXml.Replace("{{format}}", ExcelXml.DrawingRelationship(_currentSheetIndex)),
+            ExcelXml.DefaultSheetRelXml(ExcelXml.DrawingRelationship(_currentSheetIndex)),
             cancellationToken).ConfigureAwait(false);
 
-        var (workbookXml, workbookRelsXml, _) = GenerateWorkbookXmls();
+        var (workbookXml, workbookRelsXml, _) = GenerateWorkbookItems();
         await CreateZipEntryAsync(
             ExcelFileNames.Workbook,
             ExcelContentTypes.Workbook,
-            ExcelXml.DefaultWorkbookXml.Replace("{{sheets}}", workbookXml),
+            ExcelXml.DefaultWorkbookXml(workbookXml),
             cancellationToken).ConfigureAwait(false);
 
         await CreateZipEntryAsync(
             ExcelFileNames.WorkbookRels,
             null,
-            ExcelXml.DefaultWorkbookXmlRels.Replace("{{sheets}}", workbookRelsXml),
+            ExcelXml.DefaultWorkbookXmlRels(workbookRelsXml),
             cancellationToken).ConfigureAwait(false);
         
         await CopyAndUpdateContentTypesAsync(cancellationToken).ConfigureAwait(false);
@@ -228,7 +227,7 @@ internal partial class OpenXmlWriter
         var contentTypesZipEntry = _oldArchive!.Entries.SingleOrDefault(s => s.FullName == ExcelFileNames.ContentTypes);
         if (contentTypesZipEntry is null)
         {
-            await GenerateContentTypesXmlAsync(cancellationToken).ConfigureAwait(false);
+            await GenerateContentTypesAsync(cancellationToken).ConfigureAwait(false);
             return;
         }
 

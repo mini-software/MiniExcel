@@ -2,69 +2,53 @@
 
 internal static class ExcelXml
 {
-    static ExcelXml()
-    {
-        DefaultRels = XmlHelper.MinifyXml(DefaultRels);
-        DefaultWorkbookXml = XmlHelper.MinifyXml(DefaultWorkbookXml);
-        DefaultWorkbookXmlRels = XmlHelper.MinifyXml(DefaultWorkbookXmlRels);
-        DefaultSheetRelXml = XmlHelper.MinifyXml(DefaultSheetRelXml);
-        DefaultDrawing = XmlHelper.MinifyXml(DefaultDrawing);
-    }
-
     internal const string EmptySheetXml = """<?xml version="1.0" encoding="utf-8"?><x:worksheet xmlns:x="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><x:dimension ref="A1"/><x:sheetData></x:sheetData></x:worksheet>""";
+    internal const string DefaultRels = """<?xml version="1.0" encoding="utf-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml" Id="Rfc2254092b6248a9" /></Relationships>""";
 
-    internal static readonly string DefaultRels = 
-        """
-       <?xml version="1.0" encoding="utf-8"?>
-        <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
-            <Relationship Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml" Id="Rfc2254092b6248a9" />
-        </Relationships>
-       """;
-
-    internal static readonly string DefaultWorkbookXmlRels = 
-        """
+    internal static string DefaultWorkbookXmlRels(string sheets) => XmlHelper.MinifyXml(
+        $"""
         <?xml version="1.0" encoding="utf-8"?>
         <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
-            {{sheets}}
+            {sheets}
             <Relationship Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="/xl/styles.xml" Id="R3db9602ace774fdb" />
             <Relationship Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings" Target="/xl/sharedStrings.xml" Id="R3db9602ace778fdb" />
         </Relationships>
-        """;
+        """);
 
-    internal static readonly string DefaultWorkbookXml = 
-        """
+    internal static string DefaultWorkbookXml(string content) => XmlHelper.MinifyXml(
+        $"""
         <?xml version="1.0" encoding="utf-8"?>
         <x:workbook xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"
             xmlns:x="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
             <x:sheets>
-                {{sheets}}
+                {content}
             </x:sheets>
         </x:workbook>
-        """;
+        """);
 
-    internal static readonly string DefaultSheetRelXml = 
-        """
+    internal static string DefaultSheetRelXml(string content) => XmlHelper.MinifyXml(
+        $"""
         <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
         <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
-            {{format}}
+            {content}
         </Relationships>
-        """;
+        """);
         
-    internal static readonly string DefaultDrawing = 
-        """
+    internal static string DefaultDrawing(string content) => XmlHelper.MinifyXml(
+        $"""
         <?xml version="1.0" encoding="utf-8" standalone="yes"?>
         <xdr:wsDr xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"
             xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"
             xmlns:xdr="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing">
-            {{format}}
+            {content}
         </xdr:wsDr>
-        """;
+        """);
         
-    internal const string DefaultDrawingXmlRels = 
-        """
+    internal static string DefaultDrawingXmlRels(string content) =>
+        $"""
         <?xml version="1.0" encoding="utf-8" standalone="yes"?>
         <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
-            {{format}}
+            {content}
         </Relationships>
         """;
 
@@ -98,8 +82,11 @@ internal static class ExcelXml
     internal static string ImageRelationship(FileDto image)
         => $"""<Relationship Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="{image.Path2}" Id="{image.ID}" />""";
 
-    internal static string DrawingRelationship(int sheetId)
-        => $"""<Relationship Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing" Target="../drawings/drawing{sheetId}.xml" Id="drawing{sheetId}" />""";
+    internal static string DrawingRelationship(int sheetIndex)
+        => $"""<Relationship Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing" Target="../drawings/drawing{sheetIndex}.xml" Id="drawing{sheetIndex}" />""";
+
+    internal static string TableRelationship(int sheetIndex)
+        => $"""<Relationship Id="table{sheetIndex}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/table" Target="../tables/table{sheetIndex}.xml"/>""";
 
     internal static string DrawingXml(FileDto file, int fileIndex)
         => $"""

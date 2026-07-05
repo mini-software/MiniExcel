@@ -84,10 +84,10 @@ internal sealed partial class OpenXmlWriter : IMiniExcelWriter
 
         await AddFilesToZipAsync(cancellationToken).ConfigureAwait(false);
         await GenerateSharedStringsAsync(cancellationToken).ConfigureAwait(false);
-        await GenerateDrawingRelXmlAsync(cancellationToken).ConfigureAwait(false);
-        await GenerateDrawingXmlAsync(cancellationToken).ConfigureAwait(false);
-        await GenerateWorkbookXmlAsync(false, cancellationToken).ConfigureAwait(false);
-        await GenerateContentTypesXmlAsync(cancellationToken).ConfigureAwait(false);
+        await GenerateDrawingRelsAsync(cancellationToken).ConfigureAwait(false);
+        await GenerateDrawingsAsync(cancellationToken).ConfigureAwait(false);
+        await GenerateWorkbookAsync(false, cancellationToken).ConfigureAwait(false);
+        await GenerateContentTypesAsync(cancellationToken).ConfigureAwait(false);
 
         return rowsWritten.ToArray();
     }
@@ -159,11 +159,11 @@ internal sealed partial class OpenXmlWriter : IMiniExcelWriter
         await GenerateSharedStringsAsync(cancellationToken).ConfigureAwait(false);
 
         _archive.Entries.SingleOrDefault(s => s.FullName == ExcelFileNames.DrawingRels(_currentSheetIndex))?.Delete();
-        await GenerateDrawingRelXmlAsync(_currentSheetIndex, cancellationToken).ConfigureAwait(false);
+        await GenerateDrawingRelAsync(_currentSheetIndex, cancellationToken).ConfigureAwait(false);
 
         _archive.Entries.SingleOrDefault(s => s.FullName == ExcelFileNames.Drawing(_currentSheetIndex))?.Delete();
         await GenerateDrawingXmlAsync(_currentSheetIndex, cancellationToken).ConfigureAwait(false);
-        await GenerateWorkbookXmlAsync(true, cancellationToken).ConfigureAwait(false);
+        await GenerateWorkbookAsync(true, cancellationToken).ConfigureAwait(false);
         await InsertContentTypesXmlAsync(cancellationToken).ConfigureAwait(false);
 
         return rowsWritten;
@@ -523,28 +523,28 @@ internal sealed partial class OpenXmlWriter : IMiniExcelWriter
     }
 
     [CreateSyncVersion]
-    private async Task GenerateDrawingRelXmlAsync(CancellationToken cancellationToken)
+    private async Task GenerateDrawingRelsAsync(CancellationToken cancellationToken)
     {
         for (int sheetIndex = 1; sheetIndex <= _sheets.Count; sheetIndex++)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            await GenerateDrawingRelXmlAsync(sheetIndex, cancellationToken).ConfigureAwait(false);
+            await GenerateDrawingRelAsync(sheetIndex, cancellationToken).ConfigureAwait(false);
         }
     }
 
     [CreateSyncVersion]
-    private async Task GenerateDrawingRelXmlAsync(int sheetIndex, CancellationToken cancellationToken)
+    private async Task GenerateDrawingRelAsync(int sheetIndex, CancellationToken cancellationToken)
     {
         var drawing = GetDrawingRelationshipXml(sheetIndex);
         await CreateZipEntryAsync(
             ExcelFileNames.DrawingRels(sheetIndex),
             string.Empty,
-            ExcelXml.DefaultDrawingXmlRels.Replace("{{format}}", drawing),
+            ExcelXml.DefaultDrawingXmlRels(drawing),
             cancellationToken).ConfigureAwait(false);
     }
 
     [CreateSyncVersion]
-    private async Task GenerateDrawingXmlAsync(CancellationToken cancellationToken)
+    private async Task GenerateDrawingsAsync(CancellationToken cancellationToken)
     {
         for (int sheetIndex = 1; sheetIndex <= _sheets.Count; sheetIndex++)
         {
@@ -560,24 +560,24 @@ internal sealed partial class OpenXmlWriter : IMiniExcelWriter
         await CreateZipEntryAsync(
             ExcelFileNames.Drawing(sheetIndex),
             ExcelContentTypes.Drawing,
-            ExcelXml.DefaultDrawing.Replace("{{format}}", drawing),
+            ExcelXml.DefaultDrawing(drawing),
             cancellationToken).ConfigureAwait(false);
     }
 
     [CreateSyncVersion]
-    private async Task GenerateWorkbookXmlAsync(bool removeOriginalEntry = false, CancellationToken cancellationToken = default)
+    private async Task GenerateWorkbookAsync(bool removeOriginalEntry = false, CancellationToken cancellationToken = default)
     {
-        var (workbookXml, workbookRelsXml, sheetsRelsXml) = GenerateWorkbookXmls();
-        foreach (var (key, value) in sheetsRelsXml)
+        var (workbookXml, workbookRelsXml, sheetsRelsXml) = GenerateWorkbookItems();
+        foreach (var (index, contents) in sheetsRelsXml)
         {
-            var sheetRelsXmlPath = ExcelFileNames.SheetRels(key);
+            var sheetRelsXmlPath = ExcelFileNames.SheetRels(index);
             if (removeOriginalEntry)
                 _archive.Entries.SingleOrDefault(s => s.FullName == sheetRelsXmlPath)?.Delete();
 
             await CreateZipEntryAsync(
                 sheetRelsXmlPath,
                 null,
-                ExcelXml.DefaultSheetRelXml.Replace("{{format}}", value),
+                ExcelXml.DefaultSheetRelXml(contents),
                 cancellationToken).ConfigureAwait(false);
         }
 
@@ -587,7 +587,7 @@ internal sealed partial class OpenXmlWriter : IMiniExcelWriter
         await CreateZipEntryAsync(
             ExcelFileNames.Workbook,
             ExcelContentTypes.Workbook,
-            ExcelXml.DefaultWorkbookXml.Replace("{{sheets}}", workbookXml),
+            ExcelXml.DefaultWorkbookXml(workbookXml),
             cancellationToken).ConfigureAwait(false);
 
         if(removeOriginalEntry)
@@ -596,7 +596,7 @@ internal sealed partial class OpenXmlWriter : IMiniExcelWriter
         await CreateZipEntryAsync(
             ExcelFileNames.WorkbookRels,
             null,
-            ExcelXml.DefaultWorkbookXmlRels.Replace("{{sheets}}", workbookRelsXml),
+            ExcelXml.DefaultWorkbookXmlRels(workbookRelsXml),
             cancellationToken).ConfigureAwait(false);
     }
 
@@ -611,9 +611,9 @@ internal sealed partial class OpenXmlWriter : IMiniExcelWriter
     }
     
     [CreateSyncVersion]
-    private async Task GenerateContentTypesXmlAsync(CancellationToken cancellationToken)
+    private async Task GenerateContentTypesAsync(CancellationToken cancellationToken)
     {
-        var contentTypes = GetContentTypesXml();
+        var contentTypes = ExcelXml.ContentTypes(_zipContentsMap);
         await CreateZipEntryAsync(ExcelFileNames.ContentTypes, null, contentTypes, cancellationToken).ConfigureAwait(false);
     }
 
@@ -623,7 +623,7 @@ internal sealed partial class OpenXmlWriter : IMiniExcelWriter
         var contentTypesZipEntry = _archive.Entries.SingleOrDefault(s => s.FullName == ExcelFileNames.ContentTypes);
         if (contentTypesZipEntry is null)
         {
-            await GenerateContentTypesXmlAsync(cancellationToken).ConfigureAwait(false);
+            await GenerateContentTypesAsync(cancellationToken).ConfigureAwait(false);
             return;
         }
 

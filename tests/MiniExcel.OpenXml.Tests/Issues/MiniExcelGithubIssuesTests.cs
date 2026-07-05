@@ -1573,7 +1573,7 @@ public class MiniExcelGithubIssuesTests(ITestOutputHelper output)
         _excelExporter.Export(path.ToString(), value);
 
         var xml = SheetHelper.GetZipFileContent(path.ToString(), "xl/worksheets/_rels/sheet2.xml.rels");
-        var cnt = Regex.Matches(xml, "Id=\"drawing2\"").Count;
+        var cnt = Regex.Matches(xml, "Id=\"rDrawing2\"").Count;
         Assert.True(cnt == 1);
     }
 
@@ -2991,5 +2991,42 @@ public class MiniExcelGithubIssuesTests(ITestOutputHelper output)
 
         // must not throw
         _excelTemplater.FillTemplate(path.ToString(), templatePath, value);
+    }
+    
+    [Fact]
+    public void TestIssue980() // deterministic file generation
+    {
+        using var path1 = AutoDeletingPath.Create();
+        using var path2 = AutoDeletingPath.Create();
+        
+        var value = new[]
+        {
+            new { Name = "Jack", CreateDate = new DateTime(2021, 01, 01), VIP = true, Points = 123 },
+            new { Name = "John", CreateDate = new DateTime(2022, 02, 02), VIP = false, Points = 321 }
+        };
+        
+        _excelExporter.Export(path1.FilePath, value);
+        Thread.Sleep(TimeSpan.FromSeconds(1));
+        _excelExporter.Export(path2.FilePath, value);
+
+        using (var fs1 = File.OpenRead(path1.FilePath))
+        {
+            using var fs2 = File.Open(path2.FilePath, FileMode.Open, FileAccess.ReadWrite);
+
+            using var zip1 = new ZipArchive(fs1);
+            using var zip2 = new ZipArchive(fs2, ZipArchiveMode.Update);
+
+            foreach (var entry in zip1.Entries)
+            {
+                if (zip2.GetEntry(entry.FullName) is { } e)
+                {
+                    e.LastWriteTime = entry.LastWriteTime;
+                }
+            }
+        }
+
+        var bytes1 = File.ReadAllBytes(path1.FilePath); 
+        var bytes2 = File.ReadAllBytes(path2.FilePath); 
+        Assert.True(bytes1.SequenceEqual(bytes2));
     }
 }

@@ -613,7 +613,7 @@ internal sealed partial class OpenXmlWriter : IMiniExcelWriter
     [CreateSyncVersion]
     private async Task GenerateContentTypesAsync(CancellationToken cancellationToken)
     {
-        var contentTypes = GetContentTypesXml();
+        var contentTypes = ExcelXml.ContentTypes(_zipContentsMap);
         await CreateZipEntryAsync(ExcelFileNames.ContentTypes, null, contentTypes, cancellationToken).ConfigureAwait(false);
     }
 

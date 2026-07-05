@@ -1271,4 +1271,46 @@ public class MiniExcelGithubIssuesAsyncTests(ITestOutputHelper output)
         // must not throw because of indexer
         await _excelTemplater.FillTemplateAsync(path.ToString(), templatePath, value);
     }
+
+    [Fact]
+    public async Task TestIssue980() // deterministic file generation
+    {
+        using var path1 = AutoDeletingPath.Create();
+        using var path2 = AutoDeletingPath.Create();
+        
+        var value = new[]
+        {
+            new { Name = "Jack", CreateDate = new DateTime(2021, 01, 01), VIP = true, Points = 123 },
+            new { Name = "John", CreateDate = new DateTime(2022, 02, 02), VIP = false, Points = 321 }
+        };
+        
+        await _excelExporter.ExportAsync(path1.FilePath, value);
+        await Task.Delay(TimeSpan.FromSeconds(1));
+        await _excelExporter.ExportAsync(path2.FilePath, value);
+
+        await using (var fs1 = File.OpenRead(path1.FilePath))
+        {
+            await using var fs2 = File.Open(path2.FilePath, FileMode.Open, FileAccess.ReadWrite);
+
+#if NET10_0_OR_GREATER
+            await using var zip1 = new ZipArchive(fs1);
+            await using var zip2 = new ZipArchive(fs2, ZipArchiveMode.Update);
+#else
+            using var zip1 = new ZipArchive(fs1);
+            using var zip2 = new ZipArchive(fs2, ZipArchiveMode.Update);
+#endif
+
+            foreach (var entry in zip1.Entries)
+            {
+                if (zip2.GetEntry(entry.FullName) is { } e)
+                {
+                    e.LastWriteTime = entry.LastWriteTime;
+                }
+            }
+        }
+
+        var bytes1 = await File.ReadAllBytesAsync(path1.FilePath); 
+        var bytes2 = await File.ReadAllBytesAsync(path2.FilePath); 
+        Assert.True(bytes1.SequenceEqual(bytes2));
+    }
 }

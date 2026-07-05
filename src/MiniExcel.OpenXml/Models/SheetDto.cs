@@ -2,10 +2,9 @@
 
 internal class SheetDto
 {
-    internal string ID { get; set; } = $"R{Guid.NewGuid():N}";
-    internal string? Name { get; set; }
     internal int SheetIdx { get; set; }
+    internal string Id => $"rSheetId{SheetIdx}";
+    internal string? Name { get; set; }
     internal string Path => ExcelFileNames.Worksheet(SheetIdx);
-
     internal string State { get; set; }
 }

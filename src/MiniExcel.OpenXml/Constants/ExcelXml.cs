@@ -2,16 +2,28 @@
 
 internal static class ExcelXml
 {
-    internal const string EmptySheetXml = """<?xml version="1.0" encoding="utf-8"?><x:worksheet xmlns:x="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><x:dimension ref="A1"/><x:sheetData></x:sheetData></x:worksheet>""";
-    internal const string DefaultRels = """<?xml version="1.0" encoding="utf-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml" Id="Rfc2254092b6248a9" /></Relationships>""";
+    internal static readonly string EmptySheetXml = XmlHelper.MinifyXml("""
+        <?xml version="1.0" encoding="utf-8"?>
+        <x:worksheet xmlns:x="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+            <x:dimension ref="A1"/>
+            <x:sheetData></x:sheetData>
+        </x:worksheet>
+        """);
+
+    internal static readonly string DefaultRels = XmlHelper.MinifyXml("""
+        <?xml version="1.0" encoding="utf-8"?>
+        <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+            <Relationship Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml" Id="rId1" />
+        </Relationships>
+        """);
 
     internal static string DefaultWorkbookXmlRels(string sheets) => XmlHelper.MinifyXml(
         $"""
         <?xml version="1.0" encoding="utf-8"?>
         <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
             {sheets}
-            <Relationship Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="/xl/styles.xml" Id="R3db9602ace774fdb" />
-            <Relationship Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings" Target="/xl/sharedStrings.xml" Id="R3db9602ace778fdb" />
+            <Relationship Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="/xl/styles.xml" Id="rStylesId" />
+            <Relationship Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings" Target="/xl/sharedStrings.xml" Id="rsharedStringsId" />
         </Relationships>
         """);
 
@@ -72,21 +84,37 @@ internal static class ExcelXml
         return sb.ToString();
     }
 
-    internal const string StartTypes = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.printerSettings" Extension="bin"/><Default ContentType="application/xml" Extension="xml"/><Default ContentType="image/jpeg" Extension="jpg"/><Default ContentType="image/png" Extension="png"/><Default ContentType="image/gif" Extension="gif"/><Default ContentType="application/vnd.openxmlformats-package.relationships+xml" Extension="rels"/>""";
-    internal static string ContentType(string contentType, string partName) => $"<Override ContentType=\"{contentType}\" PartName=\"/{partName}\" />";
-    internal const string EndTypes = "</Types>";
+    internal static string ContentTypes(Dictionary<string, string> contentTypes)
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine("""
+            <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+            <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+                <Default ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.printerSettings" Extension="bin"/>
+                <Default ContentType="application/xml" Extension="xml"/><Default ContentType="image/jpeg" Extension="jpg"/>
+                <Default ContentType="image/png" Extension="png"/>
+                <Default ContentType="image/gif" Extension="gif"/>
+                <Default ContentType="application/vnd.openxmlformats-package.relationships+xml" Extension="rels"/>
+            """);
+
+        foreach (var (name, type) in contentTypes)
+            sb.AppendLine($"""<Override ContentType="{type}" PartName="/{name}" />""");
+
+        sb.Append("</Types>");
+        return XmlHelper.MinifyXml(sb.ToString());
+    }
 
     internal static string WorksheetRelationship(SheetDto sheetDto)
-        => $"""<Relationship Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="/{sheetDto.Path}" Id="{sheetDto.ID}" />""";
+        => $"""<Relationship Id="{sheetDto.Id}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="/{sheetDto.Path}" />""";
 
     internal static string ImageRelationship(FileDto image)
-        => $"""<Relationship Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="{image.Path2}" Id="{image.ID}" />""";
+        => $"""<Relationship Id="{image.Id}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="/{image.Path}" />""";
 
     internal static string DrawingRelationship(int sheetIndex)
-        => $"""<Relationship Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing" Target="../drawings/drawing{sheetIndex}.xml" Id="drawing{sheetIndex}" />""";
+        => $"""<Relationship Id="rDrawing{sheetIndex}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing" Target="../drawings/drawing{sheetIndex}.xml" />""";
 
     internal static string TableRelationship(int sheetIndex)
-        => $"""<Relationship Id="table{sheetIndex}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/table" Target="../tables/table{sheetIndex}.xml"/>""";
+        => $"""<Relationship Id="rTable{sheetIndex}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/table" Target="../tables/table{sheetIndex}.xml"/>""";
 
     internal static string DrawingXml(FileDto file, int fileIndex)
         => $"""
@@ -106,7 +134,7 @@ internal static class ExcelXml
                             </xdr:cNvPicPr>
                         </xdr:nvPicPr>
                         <xdr:blipFill>
-                            <a:blip r:embed="{file.ID}" cstate="print" />
+                            <a:blip r:embed="{file.Id}" cstate="print" />
                             <a:stretch>
                                 <a:fillRect />
                             </a:stretch>
@@ -126,5 +154,5 @@ internal static class ExcelXml
             """;
 
     internal static string Sheet(SheetDto sheetDto, int sheetId)
-        => $"""<x:sheet name="{XmlHelper.EncodeXml(sheetDto.Name)}" sheetId="{sheetId}"{(string.IsNullOrWhiteSpace(sheetDto.State) ? string.Empty : $" state=\"{sheetDto.State}\"")} r:id="{sheetDto.ID}" />""";
+        => $"""<x:sheet name="{XmlHelper.EncodeXml(sheetDto.Name)}" sheetId="{sheetId}"{(string.IsNullOrWhiteSpace(sheetDto.State) ? string.Empty : $" state=\"{sheetDto.State}\"")} r:id="{sheetDto.Id}" />""";
 }

@@ -302,7 +302,7 @@ internal partial class OpenXmlWriter
             Contents = bytes,
             RowIndex = rowIndex,
             CellIndex = cellIndex,
-            SheetId = _currentSheetIndex
+            SheetIndex = _currentSheetIndex
         };
 
         if (format != ImageFormat.Unknown)
@@ -380,7 +380,7 @@ internal partial class OpenXmlWriter
     private string GetDrawingRelationshipXml(int sheetIndex)
     {
         var drawing = new StringBuilder();
-        foreach (var image in _files.Where(w => w.IsImage && w.SheetId == sheetIndex))
+        foreach (var image in _files.Where(w => w.IsImage && w.SheetIndex == sheetIndex))
         {
             drawing.AppendLine(ExcelXml.ImageRelationship(image));
         }
@@ -395,7 +395,7 @@ internal partial class OpenXmlWriter
         for (int fileIndex = 0; fileIndex < _files.Count; fileIndex++)
         {
             var file = _files[fileIndex];
-            if (file.IsImage && file.SheetId == sheetIndex)
+            if (file.IsImage && file.SheetIndex == sheetIndex)
             {
                 drawing.Append(ExcelXml.DrawingXml(file, fileIndex));
             }
@@ -425,17 +425,5 @@ internal partial class OpenXmlWriter
         }
 
         return (workbookContents.ToString(), workbookRelsContents.ToString(), sheetsRelsDict);
-    }
-
-    private string GetContentTypesXml()
-    {
-        var sb = new StringBuilder(ExcelXml.StartTypes);
-        foreach (var p in _zipContentsMap)
-        {
-            sb.Append(ExcelXml.ContentType(p.Value, p.Key));
-        }
-
-        sb.Append(ExcelXml.EndTypes);
-        return sb.ToString();
     }
 }

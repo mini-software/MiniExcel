@@ -408,7 +408,6 @@ internal partial class OpenXmlWriter
     {
         var workbookContents = new StringBuilder();
         var workbookRelsContents = new StringBuilder();
-        var sheetsRelsContents = new StringBuilder();
         var sheetsRelsDict = new Dictionary<int, string>();
 
         var sheetId = 0;
@@ -418,10 +417,9 @@ internal partial class OpenXmlWriter
 
             workbookContents.AppendLine(ExcelXml.Sheet(sheetDto, sheetId));
             workbookRelsContents.AppendLine(ExcelXml.WorksheetRelationship(sheetDto));
-            sheetsRelsContents.AppendLine(ExcelXml.DrawingRelationship(sheetId));
             
             //TODO: support multiple drawing
-            sheetsRelsDict.Add(sheetDto.SheetIdx, sheetsRelsContents.ToString());
+            sheetsRelsDict.Add(sheetDto.SheetIdx, ExcelXml.DrawingRelationship(sheetId));
         }
 
         return (workbookContents.ToString(), workbookRelsContents.ToString(), sheetsRelsDict);

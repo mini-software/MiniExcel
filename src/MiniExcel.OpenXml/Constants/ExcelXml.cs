@@ -23,7 +23,7 @@ internal static class ExcelXml
         <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
             {sheets}
             <Relationship Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="/xl/styles.xml" Id="rStylesId" />
-            <Relationship Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings" Target="/xl/sharedStrings.xml" Id="rsharedStringsId" />
+            <Relationship Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings" Target="/xl/sharedStrings.xml" Id="rSharedStringsId" />
         </Relationships>
         """);
 
@@ -97,7 +97,7 @@ internal static class ExcelXml
                 <Default ContentType="application/vnd.openxmlformats-package.relationships+xml" Extension="rels"/>
             """);
 
-        foreach (var (name, type) in contentTypes)
+        foreach (var (name, type) in contentTypes.OrderBy(x => x.Key, StringComparer.OrdinalIgnoreCase))
             sb.AppendLine($"""<Override ContentType="{type}" PartName="/{name}" />""");
 
         sb.Append("</Types>");

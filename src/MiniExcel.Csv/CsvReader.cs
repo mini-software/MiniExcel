@@ -33,14 +33,14 @@ internal sealed partial class CsvReader : IMiniExcelReader
 
         using var reader = _config.StreamReaderFunc(_stream);
         var firstRow = true;
-        var headRows = new Dictionary<int, string>();
+        var headerRow = new Dictionary<int, string>();
 
         var rowIndex = 0;
         while (await reader.ReadLineAsync(
 #if NET
             cancellationToken
 #endif
-            ).ConfigureAwait(false) is { } row)
+        ).ConfigureAwait(false) is { } row)
         {
             rowIndex++;
             if (string.IsNullOrWhiteSpace(row))
@@ -64,61 +64,73 @@ internal sealed partial class CsvReader : IMiniExcelReader
                     finalRow = string.Concat(finalRow, _config.NewLine, nextPart);
                 }
             }
-            var read = Split(finalRow);
+            var fields = Split(finalRow);
 
             // invalid row check
-            if (read.Length < headRows.Count)
+            if (fields.Length < headerRow.Count && !_config.AllowFieldCountMismatch)
             {
-                var colIndex = read.Length;
-                var headers = headRows.ToDictionary(x => x.Value, x => x.Key);
-                var rowValues = read
-                    .Select((x, i) => new KeyValuePair<string, object>(headRows[i], x))
+                var colIndex = fields.Length;
+                var headers = headerRow.ToDictionary(x => x.Value, x => x.Key);
+                var rowValues = fields
+                    .Select((x, i) => new KeyValuePair<string, object>(headerRow[i], x))
                     .ToDictionary(x => x.Key, x => x.Value);
 
-                throw new ColumnNotFoundException(columnIndex: null, headRows[colIndex], [], rowIndex, headers, rowValues, $"Csv read error: Column {colIndex} not found in Row {rowIndex}");
+                throw new ColumnNotFoundException(columnIndex: null, headerRow[colIndex], [], rowIndex, headers, rowValues, $"Csv read error: Column {colIndex} not found in Row {rowIndex}");
             }
 
-            //header
+            // with header
             if (hasHeaderRow)
             {
                 if (firstRow)
                 {
                     firstRow = false;
-                    for (int i = 0; i <= read.Length - 1; i++)
-                        headRows.Add(i, read[i]);
+                    for (int i = 0; i < fields.Length; i++) 
+                        headerRow.Add(i, fields[i]);
+                    
                     continue;
                 }
 
-                var headCell = ExpandoHelper.CreateEmptyByHeaders(headRows);
-                for (int i = 0; i <= read.Length - 1; i++)
-                    headCell[headRows[i]] = read[i];
+                var resultRow = ExpandoHelper.CreateEmptyByHeaders(headerRow);
+                for (int i = 0; i < fields.Length; i++)
+                {
+                    if (i >= headerRow.Count && _config.AllowFieldCountMismatch)
+                        headerRow.Add(i, $"Col{i + 1}");
 
-                yield return headCell;
-                continue;
-            }
+                    var isFillerField = i >= headerRow.Count && _config.AllowFieldCountMismatch;
+                    var field = isFillerField ? "" : fields[i];
 
-            //body
-            if (firstRow) // record first row as reference
-            {
-                firstRow = false;
-                for (int i = 0; i <= read.Length - 1; i++)
-                    headRows.Add(i, $"c{i + 1}");
-            }
+                    var treatEmptyFieldAsNull = _config.ReadEmptyFieldsAsDefault && field is "";
+                    resultRow[headerRow[i]] = treatEmptyFieldAsNull ? null : field;
+                }
 
-            // todo: can we find a way to remove the redundant cell conversions for CSV?
-            var cell = ExpandoHelper.CreateEmptyByIndices(read.Length - 1, 0);
-            if (_config.ReadEmptyStringAsNull)
-            {
-                for (int i = 0; i <= read.Length - 1; i++)
-                    cell[CellReferenceConverter.GetAlphabeticalIndex(i)] = read[i] is var value and not "" ? value : null;
+                yield return resultRow;
             }
             else
             {
-                for (int i = 0; i <= read.Length - 1; i++)
-                    cell[CellReferenceConverter.GetAlphabeticalIndex(i)] = read[i];
-            }
+                if (firstRow) // use first row as reference
+                {
+                    firstRow = false;
+                    for (int i = 0; i < fields.Length; i++)
+                        headerRow.Add(i, $"Col{i + 1}");
+                }
 
-            yield return cell;
+                // todo: can we find a way to remove the redundant cell conversions for CSV?
+                var resultRow = ExpandoHelper.CreateEmptyByIndices(fields.Length - 1, 0);
+                for (int i = 0; i < fields.Length; i++)
+                {
+                    if (i >= headerRow.Count && _config.AllowFieldCountMismatch)
+                        headerRow.Add(i, $"Col{i + 1}");
+
+                    var isFillerField = i >= headerRow.Count && _config.AllowFieldCountMismatch;
+                    var field = isFillerField ? "" : fields[i];
+
+                    var index = CellReferenceConverter.GetAlphabeticalIndex(i);
+                    var treatEmptyFieldAsNull = _config.ReadEmptyFieldsAsDefault && field is "";
+                    resultRow[index] = treatEmptyFieldAsNull ? null : field;
+                }
+
+                yield return resultRow;
+            }
         }
     }
 

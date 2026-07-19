@@ -11,7 +11,24 @@ public class CsvConfiguration : MiniExcelBaseConfiguration
     public char Seperator { get; set; } = ',';
     public string NewLine { get; set; } = "\r\n";
     public bool ReadLineBreaksWithinQuotes { get; set; } = true;
-    public bool ReadEmptyStringAsNull { get; set; } = false;
+    
+    /// <summary>
+    /// Empty fields will be converted to null when queried as strings, or to the default value of the corresponding mapped type. 
+    /// </summary>
+    public bool ReadEmptyFieldsAsDefault { get; set; } = false;
+    
+    [Obsolete("Please use the ReadEmptyFieldsAsDefault property instead")]
+    public bool ReadEmptyStringAsNull
+    {
+        get => ReadEmptyFieldsAsDefault;
+        set => ReadEmptyFieldsAsDefault = value;
+    }
+    
+    /// <summary>
+    /// When set to true if the rows have different lengths they will be returned as jagged data instead of throwing an exception.
+    /// </summary>
+    public bool AllowFieldCountMismatch { get; set; } = false;
+    
     public bool AlwaysQuote { get; set; } = false;
     public bool QuoteWhitespaces { get; set; } = true;
     public Func<string, string[]>? SplitFn { get; set; }

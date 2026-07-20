@@ -604,7 +604,7 @@ public class MiniExcelCsvTests
         using var reader = new StreamReader(path);
         using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
         var records = csv.GetRecords<dynamic>().ToList();
-        var first = records[0] as IDictionary<string, object>;
+        var first = (IDictionary<string, object>)records[0];
 
         Assert.Contains("F1", first.Keys);
         Assert.Contains("P1", first.Keys);
@@ -622,7 +622,7 @@ public class MiniExcelCsvTests
         using var reader = new StreamReader(path);
         using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
         var records = csv.GetRecords<dynamic>().ToList();
-        var first = records[0] as IDictionary<string, object>;
+        var first = (IDictionary<string, object>)records[0];
 
         Assert.Contains("Mapped", first.Keys);
         Assert.DoesNotContain("NotMappedField", first.Keys);

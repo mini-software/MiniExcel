@@ -2,7 +2,7 @@ namespace MiniExcelLib.OpenXml.Tests.Templates;
 
 internal class TestIEnumerableTypePoco
 {
-    public string @string { get; set; }
+    public string? @string { get; set; }
     public int? @int { get; set; }
     public decimal? @decimal { get; set; }
     public double? @double { get; set; }
@@ -13,8 +13,8 @@ internal class TestIEnumerableTypePoco
 
 internal class Employee
 {
-    public string name { get; set; }
-    public string department { get; set; }
+    public string? name { get; set; }
+    public string? department { get; set; }
 }
 
 internal record struct Identity(int Type, string Id);

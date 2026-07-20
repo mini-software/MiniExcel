@@ -47,10 +47,10 @@ public class InputValueExtractorTests
 
         var sut = new OpenXmlValueExtractor();
         var extracted = sut.ToValueDictionary(valueDictionary);
-        var result = (List<IDictionary<string, object>>)extracted["DataReader"];
+        var result = (List<IDictionary<string, object>>?)extracted["DataReader"];
 
-        Assert.Equal(result.Count, expectedOutput.Count);
-        for (int i = 0; i < result.Count; i++)
+        Assert.Equal(result?.Count, expectedOutput.Count);
+        for (int i = 0; i < result?.Count; i++)
         {
             var row = result[i];
             var expected = expectedOutput[i];
@@ -114,8 +114,8 @@ public class InputValueExtractorTests
     private record PocoRecord(string Name, int Age, IEnumerable<string> Fruits);
     private class PocoClass
     {
-        public string Name { get; set; }
+        public string? Name { get; set; }
         public int Age { get; set; }
-        public IEnumerable<string> Fruits; // Field
-    };
+        public IEnumerable<string>? Fruits; // Field
+    }
 }

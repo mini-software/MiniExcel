@@ -8,6 +8,7 @@
 		<LangVersion>latest</LangVersion>
 		<RootNamespace>MiniExcelLib.Benchmarks</RootNamespace>
 		<NoWarn>$(NoWarn);CA2000;CA2007</NoWarn>
+        <AcceptNPOIOSMFLicense>true</AcceptNPOIOSMFLicense>
 	</PropertyGroup>
 
 	<ItemGroup>

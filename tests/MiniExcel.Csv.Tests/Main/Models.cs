@@ -9,7 +9,7 @@ internal class TestDto
 internal class CsvFieldMappingTest
 {
     [MiniExcelColumnName("Column1")]
-    public string Test1;
+    public string? Test1;
 
     [MiniExcelColumnName("Column2")]
     public int Test2;
@@ -21,18 +21,18 @@ internal class CsvFieldMappingTest
 internal class MixedFieldPropertyTest
 {
     [MiniExcelColumnName("F1")]
-    public string Field1;
+    public string? Field1;
 
     [MiniExcelColumnName("P1")]
-    public string Prop1 { get; set; }
+    public string? Prop1 { get; set; }
 }
 
 internal class CsvFieldsWithoutAttributeDemo
 {
-    public string NotMappedField;
+    public string? NotMappedField;
 
     [MiniExcelColumnName("Mapped")]
-    public string MappedField;
+    public string? MappedField;
 }
 
 internal class TestWithAlias

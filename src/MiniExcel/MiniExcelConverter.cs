@@ -23,14 +23,14 @@ public static partial class MiniExcelConverter
     [CreateSyncVersion]
     public static async Task ConvertCsvToXlsxAsync(string csvPath, string xlsxPath, bool csvHasHeader = false, CancellationToken cancellationToken = default)
     {
-        var csvStream = FileHelper.OpenSharedRead(csvPath);
-        var xlsxStream = new FileStream(xlsxPath, FileMode.CreateNew);
-
 #if SYNC_ONLY
-        using var disposableCsvStream = csvStream;
-        using var disposableXlsxStream = xlsxStream;
+        using var csvStream = MiniExcelLib.Core.Helpers.FileHelper.OpenSharedRead(csvPath);
+        using var xlsxStream = new FileStream(xlsxPath, FileMode.CreateNew);
 #else
+        var csvStream = FileHelper.OpenSharedRead(csvPath);
         await using var disposableCsvStream = csvStream.ConfigureAwait(false);
+
+        var xlsxStream = new FileStream(xlsxPath, FileMode.CreateNew);
         await using var disposableXlsxStream = xlsxStream.ConfigureAwait(false);
 #endif
 
@@ -38,7 +38,7 @@ public static partial class MiniExcelConverter
     }
 
     /// <summary>
-    /// Converts CSV data from a stream to OpenXml (XLSX) format in another stream asynchronously.
+    /// Converts CSV data from a stream to OpenXml (XLSX) format in another stream.
     /// </summary>
     /// <param name="csvStream">A readable stream containing CSV data.</param>
     /// <param name="xlsxStream">A writable stream where the Excel data will be written.</param>
@@ -75,14 +75,14 @@ public static partial class MiniExcelConverter
     [CreateSyncVersion]
     public static async Task ConvertXlsxToCsvAsync(string xlsxPath, string csvPath, bool xlsxHasHeader = true, CancellationToken cancellationToken = default)
     {
-        var xlsxStream = FileHelper.OpenSharedRead(xlsxPath);
-        var csvStream = new FileStream(csvPath, FileMode.CreateNew);
-
 #if SYNC_ONLY
-        using var disposableXlsxStream = xlsxStream;
-        using var disposableCsvStream = csvStream;
+        using var xlsxStream = MiniExcelLib.Core.Helpers.FileHelper.OpenSharedRead(xlsxPath);
+        using var csvStream = new FileStream(csvPath, FileMode.CreateNew);
 #else
+        var xlsxStream = FileHelper.OpenSharedRead(xlsxPath);
         await using var disposableXlsxStream = xlsxStream.ConfigureAwait(false);
+
+        var csvStream = new FileStream(csvPath, FileMode.CreateNew);
         await using var disposableCsvStream = csvStream.ConfigureAwait(false);
 #endif
 
@@ -90,7 +90,7 @@ public static partial class MiniExcelConverter
     }
 
     /// <summary>
-    /// Converts CSV data from a stream to OpenXml (XLSX) format in another stream asynchronously.
+    /// Converts OpenXml (XLSX) data from a stream to CSV format in another stream.
     /// </summary>
     /// <param name="xlsxStream">A readable stream containing the OpenXml data.</param>
     /// <param name="csvStream">A writable stream where the CSV data will be written.</param>

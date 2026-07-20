@@ -20,7 +20,8 @@ internal static partial class MiniExcelPictureImplement
         var excelArchive = await OpenXmlZip.CreateAsync(excelStream, cancellationToken: cancellationToken).ConfigureAwait(false);
         await using var disposableExcelArchive = excelArchive.ConfigureAwait(false);
 
-        using var reader = await OpenXmlReader.CreateAsync(excelStream, null, false, cancellationToken).ConfigureAwait(false);
+        var reader = await OpenXmlReader.CreateAsync(excelStream, null, false, cancellationToken).ConfigureAwait(false);
+        await using var dispoableReader = reader.ConfigureAwait(false);
 
 #if NET10_0_OR_GREATER
         var archive = await ZipArchive.CreateAsync(excelStream, ZipArchiveMode.Update, true, null, cancellationToken).ConfigureAwait(false);

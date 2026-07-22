@@ -49,3 +49,6 @@
 *.fsproj -text merge=union
 *.dbproj -text merge=union
 *.sln -text merge=union
+*.slnx -text merge=union
+
+tests/data/** binary

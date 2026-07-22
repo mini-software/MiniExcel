@@ -37,7 +37,7 @@ public class TemplateExcelBenchmark : BenchmarkBase
     [Benchmark(Description = "MiniExcel Fill Template")]
     public void MiniExcel_Template_Generate_Test()
     {
-        const string templatePath = "TestTemplateBasicIEmumerableFill.xlsx";
+        const string templatePath = "data/TestTemplateBasicIEmumerableFill.xlsx";
         
         using var path = AutoDeletingPath.Create();
         var value = new
@@ -56,7 +56,7 @@ public class TemplateExcelBenchmark : BenchmarkBase
     [Benchmark(Description = "ClosedXml.Report Generate Template")]
     public void ClosedXml_Report_Template_Generate_Test()
     {
-        const string templatePath = "TestTemplateBasicIEmumerableFill_ClosedXML_Report.xlsx";
+        const string templatePath = "data/TestTemplateBasicIEmumerableFill_ClosedXML_Report.xlsx";
         
         using var path = AutoDeletingPath.Create();
         var value = new

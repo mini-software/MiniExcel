@@ -24,11 +24,6 @@ internal class Demo
     public decimal Column2 { get; set; }
 }
 
-internal class DemoPocoHelloWorld
-{
-    public string? HelloWorld1 { get; set; }
-}
-
 internal class ExcelUriDemo
 {
     public string? Name { get; set; }

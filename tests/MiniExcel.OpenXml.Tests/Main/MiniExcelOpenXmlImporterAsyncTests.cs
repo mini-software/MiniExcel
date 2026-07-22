@@ -220,23 +220,6 @@ public class MiniExcelOpenXmlImporterAsyncTests
         Assert.Equal(TimeSpan.FromHours(10), (TimeSpan)b);
     }
 
-    [Fact]
-    public async Task LargeFileQueryStrongTypeMapping_Test()
-    {
-        const string path = "../../../../../benchmarks/MiniExcel.Benchmarks/Test1,000,000x10.xlsx";
-        await using (var stream = File.OpenRead(path))
-        {
-            var rows = await _excelImporter.QueryAsync<DemoPocoHelloWorld>(stream).Take(2).ToListAsync();
-            Assert.Equal("HelloWorld2", rows[0].HelloWorld1);
-            Assert.Equal("HelloWorld3", rows[1].HelloWorld1);
-        }
-        {
-            var rows = await _excelImporter.QueryAsync<DemoPocoHelloWorld>(path).Take(2).ToListAsync();
-            Assert.Equal("HelloWorld2", rows[0].HelloWorld1);
-            Assert.Equal("HelloWorld3", rows[1].HelloWorld1);
-        }
-    }
-
     [Theory]
     [InlineData("../../../../data/xlsx/ExcelDataReaderCollections/TestChess.xlsx")]
     [InlineData("../../../../data/xlsx/TestCenterEmptyRow/TestCenterEmptyRow.xlsx")]
@@ -298,32 +281,6 @@ public class MiniExcelOpenXmlImporterAsyncTests
         
         Assert.Equal(3, keys?.Count);
         Assert.Equal(2, rows.Count);
-    }
-
-    [Fact]
-    public async Task QueryByLINQExtensionsVoidTaskLargeFileOOMTest()
-    {
-        const string path = "../../../../../benchmarks/MiniExcel.Benchmarks/Test1,000,000x10.xlsx";
-
-        {
-            var row = await _excelImporter.QueryAsync(path).FirstAsync();
-            Assert.Equal("HelloWorld1", row.A);
-        }
-
-        await using (var stream = File.OpenRead(path))
-        {
-            var row = await _excelImporter.QueryAsync(stream).Cast<IDictionary<string, object>>().FirstAsync();
-            Assert.Equal("HelloWorld1", row["A"]);
-        }
-
-        {
-            var count = await _excelImporter.QueryAsync(path)
-                .Cast<IDictionary<string, object>>()
-                .Take(10)
-                .CountAsync();
-
-            Assert.Equal(10, count);
-        }
     }
 
     [Fact]

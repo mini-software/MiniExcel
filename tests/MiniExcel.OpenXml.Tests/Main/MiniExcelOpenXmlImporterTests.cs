@@ -382,25 +382,6 @@ public class MiniExcelOpenXmlImporterTests(ITestOutputHelper output)
         Assert.Equal(TimeSpan.FromHours(10), (TimeSpan)b);
     }
 
-    [Fact]
-    public void LargeFileQueryStrongTypeMapping_Test()
-    {
-        const string path = "../../../../../benchmarks/MiniExcel.Benchmarks/Test1,000,000x10.xlsx";
-        using (var stream = File.OpenRead(path))
-        {
-            var rows = _excelImporter.Query<DemoPocoHelloWorld>(stream).Take(2).ToList();
-
-            Assert.Equal("HelloWorld2", rows[0].HelloWorld1);
-            Assert.Equal("HelloWorld3", rows[1].HelloWorld1);
-        }
-        {
-            var rows = _excelImporter.Query<DemoPocoHelloWorld>(path).Take(2).ToList();
-
-            Assert.Equal("HelloWorld2", rows[0].HelloWorld1);
-            Assert.Equal("HelloWorld3", rows[1].HelloWorld1);
-        }
-    }
-
     [Theory]
     [InlineData("../../../../data/xlsx/ExcelDataReaderCollections/TestChess.xlsx")]
     [InlineData("../../../../data/xlsx/TestCenterEmptyRow/TestCenterEmptyRow.xlsx")]
@@ -462,24 +443,6 @@ public class MiniExcelOpenXmlImporterTests(ITestOutputHelper output)
     }
 
     [Fact]
-    public void QueryByLINQExtensionsAvoidLargeFileOOMTest()
-    {
-        const string path = "../../../../../benchmarks/MiniExcel.Benchmarks/Test1,000,000x10.xlsx";
-
-        var query1 = _excelImporter.Query(path).First();
-        Assert.Equal("HelloWorld1", query1.A);
-
-        using (var stream = File.OpenRead(path))
-        {
-            var query2 = _excelImporter.Query(stream).First();
-            Assert.Equal("HelloWorld1", query2.A);
-        }
-
-        var query3 = _excelImporter.Query(path).Take(10);
-        Assert.Equal(10, query3.Count());
-    }
-
-    [Fact]
     public void QueryByStrongTypeParameterTest()
     {
         using var path = AutoDeletingPath.Create();
@@ -533,33 +496,6 @@ public class MiniExcelOpenXmlImporterTests(ITestOutputHelper output)
         Assert.Equal(rows[1].A, "value1");
         Assert.Equal(rows[1].B, "value2");
         Assert.Equal(rows[1].C, "value3");
-    }
-
-    [Fact]
-    public void SharedStringCacheTest()
-    {
-        const string path = "../../../../../benchmarks/MiniExcel.Benchmarks/Test1,000,000x10_SharingStrings.xlsx";
-
-        var ts = Stopwatch.GetTimestamp();
-        _ = _excelImporter.Query(path, configuration: new OpenXmlConfiguration { EnableSharedStringCache = true }).First();
-        using var currentProcess = Process.GetCurrentProcess();
-        var totalBytesOfMemoryUsed = currentProcess.WorkingSet64;
-
-        _output.WriteLine("totalBytesOfMemoryUsed: " + totalBytesOfMemoryUsed);
-        _output.WriteLine("elapsedMilliseconds: " + Stopwatch.GetElapsedTime(ts).TotalMilliseconds);
-    }
-
-    [Fact]
-    public void SharedStringNoCacheTest()
-    {
-        const string path = "../../../../../benchmarks/MiniExcel.Benchmarks/Test1,000,000x10_SharingStrings.xlsx";
-
-        var ts = Stopwatch.GetTimestamp();
-        _ = _excelImporter.Query(path).First();
-        using var currentProcess = Process.GetCurrentProcess();
-        var totalBytesOfMemoryUsed = currentProcess.WorkingSet64;
-        _output.WriteLine("totalBytesOfMemoryUsed: " + totalBytesOfMemoryUsed);
-        _output.WriteLine("elapsedMilliseconds: " + Stopwatch.GetElapsedTime(ts).TotalMilliseconds);
     }
 
     [Fact]

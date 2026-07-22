@@ -126,8 +126,7 @@ public class CreateExcelBenchmark : BenchmarkBase
 
         sheets.Append(new Sheet
         {
-            Id = spreadsheetDocument.WorkbookPart.
-             GetIdOfPart(worksheetPart),
+            Id = spreadsheetDocument.WorkbookPart.GetIdOfPart(worksheetPart),
             SheetId = 1,
             Name = "Sheet1"
         });

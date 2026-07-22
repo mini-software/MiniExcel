@@ -2,7 +2,7 @@
 
 public abstract class BenchmarkBase
 {
-    protected const string FilePath = @"data\Test100,000x10.xlsx";
+    protected const string FilePath = "data/Test100,000x10.xlsx";
     protected const int RowCount = 100_000;
 
     protected IEnumerable<DemoDto> GetValue() => Enumerable.Range(1, RowCount).Select(_ => new DemoDto());

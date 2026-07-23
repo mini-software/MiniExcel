@@ -21,9 +21,9 @@
 		<PackageReference Include="ExcelDataReader.DataSet" Version="3.8.0" />
 		<PackageReference Include="NPOI" Version="2.8.0" />
         <PackageReference Include="System.Linq.AsyncEnumerable" Version="10.0.9" Condition="'$(TargetFramework)' == 'net8.0' OR '$(TargetFramework)' == 'net9.0'" />
+		<PackageReference Include="System.Security.Cryptography.Xml" Version="10.0.10" />
 
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.1" />
-
 		<PackageReference Include="xunit" Version="2.9.3" />
 		<PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -34,6 +34,7 @@
 	<ItemGroup>
 		<ProjectReference Include="..\..\src\MiniExcel.Core\MiniExcel.Core.csproj" />
 		<ProjectReference Include="..\..\src\MiniExcel.OpenXml\MiniExcel.OpenXml.csproj" />
+		<ProjectReference Include="..\..\src\MiniExcel.OpenXml.FluentMapping\MiniExcel.OpenXml.FluentMapping.csproj" />
 		<ProjectReference Include="..\MiniExcel.Tests.Common\MiniExcel.Tests.Common.csproj" />
 	</ItemGroup>
 	

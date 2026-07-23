@@ -5,20 +5,21 @@ using XmlReaderHelper = MiniExcelLib.OpenXml.Utils.XmlReaderHelper;
 
 namespace MiniExcelLib.OpenXml.Reader;
 
-internal sealed partial class OpenXmlReader : IMiniExcelReader
+internal partial class OpenXmlReader : IMiniExcelReader
 {
-    private static readonly string[] Ns = [Schemas.SpreadsheetmlXmlMain, Schemas.SpreadsheetmlXmlStrictNs];
     private static readonly string[] RelationshiopNs = [Schemas.SpreadsheetmlXmlRelationships, Schemas.SpreadsheetmlXmlStrictRelationships];
-    private readonly OpenXmlConfiguration _config;
+    
+    protected static readonly string[] Ns = [Schemas.SpreadsheetmlXmlMain, Schemas.SpreadsheetmlXmlStrictNs];
+    protected readonly OpenXmlConfiguration _config;
+    protected OpenXmlStyles? _style;
     
     private List<SheetRecord>? _sheetRecords;
-    private OpenXmlStyles? _style;
     private bool _disposed;
     
     internal readonly OpenXmlZip Archive;
     internal IDictionary<int, string> SharedStrings = new Dictionary<int, string>();
     
-    private OpenXmlReader(OpenXmlZip archive, IMiniExcelConfiguration? configuration)
+    protected OpenXmlReader(OpenXmlZip archive, IMiniExcelConfiguration? configuration)
     {
         Archive = archive;
         _config = (OpenXmlConfiguration?)configuration ?? OpenXmlConfiguration.Default;
@@ -362,7 +363,7 @@ internal sealed partial class OpenXmlReader : IMiniExcelReader
         yield return cell;
     }
     
-    private ZipArchiveEntry GetSheetEntry(string? sheetName)
+    protected ZipArchiveEntry GetSheetEntry(string? sheetName)
     {
         // if sheets count > 1 need to read xl/_rels/workbook.xml.rels
         var sheets = Archive.EntryCollection
@@ -429,7 +430,7 @@ internal sealed partial class OpenXmlReader : IMiniExcelReader
     }
 
     [CreateSyncVersion]
-    private async Task SetSharedStringsAsync(CancellationToken cancellationToken = default)
+    protected async Task SetSharedStringsAsync(CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
@@ -606,7 +607,7 @@ internal sealed partial class OpenXmlReader : IMiniExcelReader
     }
 
     [CreateSyncVersion]
-    private async Task<CellAndColumn> ReadCellAndSetColumnIndexAsync(XmlReader reader, int columnIndex, bool withoutCr, int startColumnIndex, string aR, string aT, CancellationToken cancellationToken = default)
+    protected async Task<CellAndColumn> ReadCellAndSetColumnIndexAsync(XmlReader reader, int columnIndex, bool withoutCr, int startColumnIndex, string aR, string aT, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
 

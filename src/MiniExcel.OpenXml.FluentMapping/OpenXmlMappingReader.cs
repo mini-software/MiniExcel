@@ -1,10 +1,48 @@
-using MiniExcelLib.OpenXml.FluentMapping;
+using MiniExcelLib.OpenXml.Reader;
 using MiniExcelLib.OpenXml.Styles;
 
-namespace MiniExcelLib.OpenXml.Reader;
+namespace MiniExcelLib.OpenXml.FluentMapping;
 
-internal partial class OpenXmlReader
+internal partial class OpenXmlMappingReader(OpenXmlZip archive, IMiniExcelConfiguration? configuration) : OpenXmlReader(archive, configuration)
 {
+    [CreateSyncVersion]
+    internal new static async Task<OpenXmlMappingReader> CreateAsync(Stream stream, IMiniExcelConfiguration? configuration, bool leaveOpen = false, CancellationToken cancellationToken = default)
+    {
+        OpenXmlZip? archive = null;
+        OpenXmlMappingReader? reader = null;
+
+        try
+        {
+            ThrowHelper.ThrowIfInvalidOpenXml(stream);
+    
+            archive = await OpenXmlZip.CreateAsync(stream, leaveOpen: leaveOpen, cancellationToken: cancellationToken).ConfigureAwait(false);
+            reader = new OpenXmlMappingReader(archive, configuration);
+            await reader.SetSharedStringsAsync(cancellationToken).ConfigureAwait(false);
+
+            var result = reader;
+            reader = null;
+            archive = null;
+            stream = null!;
+            
+            return result;
+        }
+        finally
+        {
+#if SYNC_ONLY
+            reader?.Dispose();
+#else
+            if (reader?.DisposeAsync() is { } disposeTask)
+                await disposeTask.ConfigureAwait(false);
+#endif
+
+            if (archive is not null)
+                await archive.DisposeAsync().ConfigureAwait(false);
+            
+            if (!leaveOpen && (Stream?)stream is not null)
+                await stream.DisposeAsync().ConfigureAwait(false);
+        }
+    }
+    
     /// <summary>
     /// Direct mapped query that bypasses dictionary creation for better performance
     /// </summary>

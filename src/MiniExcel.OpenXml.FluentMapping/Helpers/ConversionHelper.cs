@@ -10,8 +10,15 @@ internal static class ConversionHelper
     // Cache compiled conversion delegates
     private static readonly ConcurrentDictionary<(Type Source, Type Target), Func<object, object?>> ConversionCache = new();
     
-    public static object? ConvertValue(object value, Type targetType, string? format = null)
+    public static object? ConvertValue(object? value, Type targetType, string? format = null)
     {
+        if (value is null)
+        {
+            return targetType.IsValueType && Nullable.GetUnderlyingType(targetType) is null
+                ? Activator.CreateInstance(targetType)
+                : null;
+        }
+
         var sourceType = value.GetType();
         
         // Fast path: no conversion needed

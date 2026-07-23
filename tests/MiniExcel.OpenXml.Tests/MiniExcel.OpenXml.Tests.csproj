@@ -34,6 +34,7 @@
 	<ItemGroup>
 		<ProjectReference Include="..\..\src\MiniExcel.Core\MiniExcel.Core.csproj" />
 		<ProjectReference Include="..\..\src\MiniExcel.OpenXml\MiniExcel.OpenXml.csproj" />
+		<ProjectReference Include="..\..\src\MiniExcel.OpenXml.FluentMapping\MiniExcel.OpenXml.FluentMapping.csproj" />
 		<ProjectReference Include="..\MiniExcel.Tests.Common\MiniExcel.Tests.Common.csproj" />
 	</ItemGroup>
 	

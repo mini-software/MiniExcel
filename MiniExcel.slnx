@@ -30,6 +30,7 @@
     <Project Path="src\MiniExcel.Core\MiniExcel.Core.csproj" />
     <Project Path="src\MiniExcel.Csv\MiniExcel.Csv.csproj" />
     <Project Path="src\MiniExcel.OpenXml/MiniExcel.OpenXml.csproj" />
+    <Project Path="src/MiniExcel.OpenXml.FluentMapping/MiniExcel.OpenXml.FluentMapping.csproj" />
     <Project Path="src\MiniExcel\MiniExcel.csproj" />
   </Folder>
   <Folder Name="/tests/">

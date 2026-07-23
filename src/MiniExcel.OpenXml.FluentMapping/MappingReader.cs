@@ -26,11 +26,12 @@ internal static partial class MappingReader<T> where T : class, new()
         var cellGrid = mapping.OptimizedCellGrid!;
         
         // Read the Excel file using OpenXmlReader's direct mapping path
-        using var reader = await OpenXmlReader.CreateAsync(stream, new OpenXmlConfiguration
+        var reader = await OpenXmlMappingReader.CreateAsync(stream, new OpenXmlConfiguration
         {
             FillMergedCells = false,
             FastMode = false
         }, leaveOpen, cancellationToken).ConfigureAwait(false);
+        await using var disposableReader = reader.ConfigureAwait(false);
         
         // If we have collections, we need to handle multiple items with collections
         if (mapping.Collections.Any())

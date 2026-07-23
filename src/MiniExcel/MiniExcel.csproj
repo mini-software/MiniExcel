@@ -13,6 +13,7 @@
       <ProjectReference Include="..\MiniExcel.Core\MiniExcel.Core.csproj" />
       <ProjectReference Include="..\MiniExcel.Csv\MiniExcel.Csv.csproj" />
       <ProjectReference Include="..\MiniExcel.OpenXml\MiniExcel.OpenXml.csproj" />
+      <ProjectReference Include="..\MiniExcel.OpenXml.FluentMapping\MiniExcel.OpenXml.FluentMapping.csproj" />
     </ItemGroup>
 
 </Project>

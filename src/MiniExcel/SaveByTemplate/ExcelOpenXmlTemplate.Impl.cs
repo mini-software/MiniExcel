@@ -1006,12 +1006,21 @@ internal partial class ExcelOpenXmlTemplate
                     if (!v.InnerText.StartsWith("$="))
                         continue;
 
-                    var fNode = c.OwnerDocument.CreateElement("f", Config.SpreadsheetmlXmlns);
+                    // create the f element with the document's prefix: an unprefixed element would rely on a
+                    // default xmlns declaration that CleanXml strips, leaving <f> in no namespace (invalid for Excel)
+                    var fNode = c.OwnerDocument.CreateElement(c.Prefix, "f", Config.SpreadsheetmlXmlns);
                     fNode.InnerText = v.InnerText.Substring(2);
                     c.InsertBefore(fNode, v);
                     c.RemoveChild(v);
+                    // the cell no longer holds an inline string; keeping t="inlineStr" without <is> is invalid
+                    c.RemoveAttribute("t");
 
-                    var celRef = ExcelOpenXmlUtils.ConvertXyToCell(ci + 1, rowIndex);
+                    // take the column from the cell's own reference — the position in the child list is wrong
+                    // for sparse rows (cells without content are not emitted)
+                    var columnLetters = new string(c.GetAttribute("r").TakeWhile(char.IsLetter).ToArray());
+                    var celRef = string.IsNullOrEmpty(columnLetters)
+                        ? ExcelOpenXmlUtils.ConvertXyToCell(ci + 1, rowIndex)
+                        : $"{columnLetters}{rowIndex}";
                     _calcChainCellRefs.Add(celRef);
                 }
             }

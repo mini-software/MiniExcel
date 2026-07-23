@@ -128,12 +128,18 @@ internal partial class ExcelOpenXmlTemplate : IExcelTemplate, IExcelTemplateAsyn
                     // disposing writer disposes streams as well. read and parse calc functions before that
                     sheetIdx++;
                     _calcChainContent.Append(CalcChainHelper.GetCalcChainContent(_calcChainCellRefs, sheetIdx));
+                    _calcChainCellRefs.Clear();
                 }
             }
 
             // create mode we need to not create first then create here
+            // The template's own calcChain cannot be reused: row insertion shifts formula cells and its
+            // entries would point at the old addresses. It is regenerated from the rendered formulas —
+            // and when none were rendered, dropped entirely, because a calcChain with no <c> entries is
+            // schema-invalid and Excel rejects the whole package either way. Excel rebuilds the chain
+            // on open, so dropping it is always safe.
             var calcChain = outputFileArchive.entries.FirstOrDefault(e => e.FullName.Contains("xl/calcChain.xml"));
-            if (calcChain != null)
+            if (calcChain != null && _calcChainContent.Length > 0)
             {
                 var calcChainPathName = calcChain.FullName;
                 //calcChain.Delete();
@@ -142,23 +148,6 @@ internal partial class ExcelOpenXmlTemplate : IExcelTemplate, IExcelTemplateAsyn
                 using (var calcChainStream = calcChainEntry.Open())
                 {
                     CalcChainHelper.GenerateCalcChainSheet(calcChainStream, _calcChainContent.ToString());
-                }
-            }
-            else
-            {
-                foreach (ZipArchiveEntry entry in originalArchive.Entries)
-                {
-                    if (entry.FullName.Contains("xl/calcChain.xml"))
-                    {
-                        var newEntry = outputFileArchive.zipFile.CreateEntry(entry.FullName);
-
-                        // Copy the content of the original entry to the new entry
-                        using (Stream originalEntryStream = entry.Open())
-                        using (Stream newEntryStream = newEntry.Open())
-                        {
-                            originalEntryStream.CopyTo(newEntryStream);
-                        }
-                    }
                 }
             }
 

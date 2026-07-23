@@ -19,7 +19,7 @@
 		<PackageReference Include="EPPlus" Version="7.7.3" />
 		<PackageReference Include="ExcelDataReader" Version="3.8.0" />
 		<PackageReference Include="NPOI" Version="2.8.0" />
-		<PackageReference Include="System.Security.Cryptography.Xml" Version="8.0.3" />
+		<PackageReference Include="System.Security.Cryptography.Xml" Version="10.0.10" />
 	</ItemGroup>
 
 	<ItemGroup>

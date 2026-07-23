@@ -53,7 +53,8 @@ internal static class MappingCompiler
             if (prop.CellAddress is null) 
                 continue;
             
-            CellReferenceConverter.TryParseCellReference(prop.CellAddress, out int cellCol, out int cellRow);
+            if (!CellReferenceConverter.TryParseCellReference(prop.CellAddress, out int cellCol, out int cellRow))
+                throw new InvalidOperationException($"Invalid cell address '{prop.CellAddress}' for property '{propertyName}'.");
 
             properties.Add(new CompiledPropertyMapping
             {

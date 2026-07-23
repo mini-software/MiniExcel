@@ -23,7 +23,7 @@ internal static partial class MappingTemplateApplicator<T> where T : class
         if (!templateStream.CanSeek)
         {
             // Copy to memory stream if not seekable
-            var memStream = new MemoryStream();
+            using var memStream = new MemoryStream();
             await templateStream.CopyToAsync(memStream
 #if NET
                 , cancellationToken

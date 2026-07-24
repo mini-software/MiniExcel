@@ -1,10 +1,5 @@
 ## MiniExcel
-[![NuGet Version](https://img.shields.io/nuget/v/MiniExcel.svg)](https://www.nuget.org/packages/MiniExcel)&nbsp;
-[![NuGet Downloads](https://img.shields.io/nuget/dt/MiniExcel.svg)](https://www.nuget.org/packages/MiniExcel)&nbsp;
-[![GitHub Stars](https://img.shields.io/github/stars/mini-software/MiniExcel?logo=github)](https://github.com/mini-software/MiniExcel)&nbsp;
-[![Gitee Stars](https://gitee.com/dotnetchina/MiniExcel/badge/star.svg)](https://gitee.com/dotnetchina/MiniExcel)&nbsp;
-[![.NET Version](https://img.shields.io/badge/.NET-%3E%3D%204.5-red.svg)](https://www.nuget.org/packages/MiniExcel)&nbsp;
-[![DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/mini-software/MiniExcel)
+[![NuGet Version](https://img.shields.io/nuget/v/MiniExcel.svg)](https://www.nuget.org/packages/MiniExcel)&nbsp;[![NuGet Downloads](https://img.shields.io/nuget/dt/MiniExcel.svg)](https://www.nuget.org/packages/MiniExcel)&nbsp;[![GitHub Stars](https://img.shields.io/github/stars/mini-software/MiniExcel?logo=github)](https://github.com/mini-software/MiniExcel)&nbsp;[![Gitee Stars](https://gitee.com/dotnetchina/MiniExcel/badge/star.svg)](https://gitee.com/dotnetchina/MiniExcel)&nbsp;[![.NET Version](https://img.shields.io/badge/.NET-%3E%3D%204.5-red.svg)](https://www.nuget.org/packages/MiniExcel)&nbsp;[![DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/mini-software/MiniExcel)
 
 This project is part of the [.NET Foundation](https://dotnetfoundation.org/projects/project-detail/miniexcel) and operates under their code of conduct.
 

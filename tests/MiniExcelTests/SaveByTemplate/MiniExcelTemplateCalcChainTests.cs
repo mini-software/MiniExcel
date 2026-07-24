@@ -33,7 +33,16 @@ public class MiniExcelTemplateCalcChainTests
         }
 
         using var path = AutoDeletingPath.Create();
-        MiniExcel.SaveAsByTemplate(path.ToString(), template.FilePath, TwoItemValues());
+        Dictionary<string, object?> data = new()
+        {
+            ["title"] = "FooCompany",
+            ["items"] = new[]
+            {
+                new { Name = "A", Qty = 1 },
+                new { Name = "B", Qty = 2 },
+            }
+        };
+        MiniExcel.SaveAsByTemplate(path.ToString(), template.FilePath, data);
 
         using var zip = ZipFile.OpenRead(path.ToString());
         var calcChain = zip.GetEntry("xl/calcChain.xml");
@@ -41,7 +50,7 @@ public class MiniExcelTemplateCalcChainTests
         {
             using var reader = new StreamReader(calcChain.Open());
             var content = reader.ReadToEnd();
-            Assert.Contains("<c ", content);       // an empty calcChain is schema-invalid
+            Assert.Contains("<c ", content); // an empty calcChain is schema-invalid
             Assert.DoesNotContain(@"r=""B5""", content); // the pre-render address is stale after the row shift
         }
     }
@@ -68,14 +77,26 @@ public class MiniExcelTemplateCalcChainTests
         }
 
         using var path = AutoDeletingPath.Create();
-        MiniExcel.SaveAsByTemplate(path.ToString(), template.FilePath, TwoItemValues());
+        Dictionary<string, object?> data = new()
+        {
+            ["title"] = "FooCompany",
+            ["items"] = new[]
+            {
+                new { Name = "A", Qty = 1 },
+                new { Name = "B", Qty = 2 },
+            }
+        };
+        MiniExcel.SaveAsByTemplate(path.ToString(), template.FilePath, data);
 
         using var zip = ZipFile.OpenRead(path.ToString());
 
         // the formula cell: <c r="D8"> (two items shift row 7 to 8) with a namespaced <f> child and no inlineStr type
         var doc = new XmlDocument();
         using (var sheet = zip.GetEntry("xl/worksheets/sheet1.xml")!.Open())
+        {
             doc.Load(sheet);
+        }
+
         var ns = new XmlNamespaceManager(doc.NameTable);
         ns.AddNamespace("x", "http://schemas.openxmlformats.org/spreadsheetml/2006/main");
         var formulaCell = doc.SelectSingleNode("//x:c[@r='D8']", ns) as XmlElement;
@@ -90,14 +111,4 @@ public class MiniExcelTemplateCalcChainTests
         Assert.Contains(@"r=""D8""", chain);
         Assert.DoesNotContain(@"r=""B8""", chain);
     }
-
-    private static Dictionary<string, object> TwoItemValues() => new()
-    {
-        ["title"] = "FooCompany",
-        ["items"] = new[]
-        {
-            new { Name = "A", Qty = 1 },
-            new { Name = "B", Qty = 2 },
-        },
-    };
 }

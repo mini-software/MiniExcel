@@ -58,6 +58,7 @@ internal partial class ExcelOpenXmlTemplate : IExcelTemplate, IExcelTemplateAsyn
             
         var templateReader = new ExcelOpenXmlSheetReader(templateStream, null);
         var outputFileArchive = new ExcelOpenXmlZip(_outputFileStream, mode: ZipArchiveMode.Create, true, Encoding.UTF8, isUpdateMode: false);
+
         try
         {
             outputFileArchive.entries = templateReader._archive.zipFile.Entries; //TODO:need to remove
@@ -71,14 +72,10 @@ internal partial class ExcelOpenXmlTemplate : IExcelTemplate, IExcelTemplateAsyn
         {
             outputFileArchive._entries.Add(entry.FullName.Replace('\\', '/'), entry);
         }
-            
+
         templateStream.Position = 0;
         using (var originalArchive = new ZipArchive(templateStream, ZipArchiveMode.Read))
         {
-            // Create a new zip file for writing
-            //using (FileStream newZipStream = new FileStream(newZipPath, FileMode.Create))
-            //using (ZipArchive newArchive = new ZipArchive(_outputFileStream, ZipArchiveMode.Create))
-                
             // Iterate through each entry in the original archive
             foreach (ZipArchiveEntry entry in originalArchive.Entries)
             {
@@ -87,7 +84,7 @@ internal partial class ExcelOpenXmlTemplate : IExcelTemplate, IExcelTemplateAsyn
                     entry.FullName.Contains("workbook.xml.rels") ||
                     entry.FullName.Contains("[Content_Types].xml"))
                     continue;
-                    
+
                 // Create a new entry in the new archive with the same name
                 var newEntry = outputFileArchive.zipFile.CreateEntry(entry.FullName);
 
@@ -105,9 +102,7 @@ internal partial class ExcelOpenXmlTemplate : IExcelTemplate, IExcelTemplateAsyn
 
             //read all xlsx sheets
             var templateSheets = templateReader._archive.zipFile.Entries
-                .Where(w =>
-                    w.FullName.StartsWith("xl/worksheets/sheet", StringComparison.OrdinalIgnoreCase) ||
-                    w.FullName.StartsWith("/xl/worksheets/sheet", StringComparison.OrdinalIgnoreCase));
+                .Where(w => w.FullName.TrimStart('/').StartsWith("xl/worksheets/sheet", StringComparison.OrdinalIgnoreCase));
 
             int sheetIdx = 0;
             foreach (var templateSheet in templateSheets)
@@ -151,14 +146,12 @@ internal partial class ExcelOpenXmlTemplate : IExcelTemplate, IExcelTemplateAsyn
             // The template's own calcChain cannot be reused: row insertion shifts formula cells and its
             // entries would point at the old addresses. It is regenerated from the rendered formulas —
             // and when none were rendered, dropped entirely, because a calcChain with no <c> entries is
-            // schema-invalid and Excel rejects the whole package either way. Excel rebuilds the chain
-            // on open, so dropping it is always safe.
+            // schema-invalid and Excel rejects the whole package either way.
+            // Excel rebuilds the chain on open, so dropping it is always safe.
             var calcChain = outputFileArchive.entries.FirstOrDefault(e => e.FullName.Contains("xl/calcChain.xml"));
             if (calcChain != null && _calcChainContent.Length > 0)
             {
                 var calcChainPathName = calcChain.FullName;
-                //calcChain.Delete();
-
                 var calcChainEntry = outputFileArchive.zipFile.CreateEntry(calcChainPathName);
                 using var calcChainStream = calcChainEntry.Open();
                 CalcChainHelper.GenerateCalcChainSheet(calcChainStream, _calcChainContent.ToString());

@@ -4,6 +4,7 @@ using System.IO.Compression;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml;
+using System.Xml.Linq;
 
 namespace MiniExcelLibs.OpenXml.SaveByTemplate;
 
@@ -81,10 +82,10 @@ internal partial class ExcelOpenXmlTemplate : IExcelTemplate, IExcelTemplateAsyn
             // Iterate through each entry in the original archive
             foreach (ZipArchiveEntry entry in originalArchive.Entries)
             {
-                if (entry.FullName.StartsWith("xl/worksheets/sheet", StringComparison.OrdinalIgnoreCase) ||
-                    entry.FullName.StartsWith("/xl/worksheets/sheet", StringComparison.OrdinalIgnoreCase) ||
-                    entry.FullName.Contains("xl/calcChain.xml")
-                   )
+                if (entry.FullName.TrimStart('/').StartsWith("xl/worksheets/sheet", StringComparison.OrdinalIgnoreCase) ||
+                    entry.FullName.Contains("xl/calcChain.xml") ||
+                    entry.FullName.Contains("workbook.xml.rels") ||
+                    entry.FullName.Contains("[Content_Types].xml"))
                     continue;
                     
                 // Create a new entry in the new archive with the same name
@@ -132,7 +133,21 @@ internal partial class ExcelOpenXmlTemplate : IExcelTemplate, IExcelTemplateAsyn
                 }
             }
 
-            // create mode we need to not create first then create here
+            // loading [Content_Types] and workbook.rels for later editing and saving
+            XDocument wbRelsDoc;
+            var wbRelsEntry = originalArchive.Entries.First(e => e.FullName.Contains("workbook.xml.rels"));
+            using (var wbRelsStream = wbRelsEntry.Open())
+            {
+                wbRelsDoc = XDocument.Load(wbRelsStream);
+            }
+
+            XDocument cTypesDoc;
+            var cTypesEntry = originalArchive.Entries.First(e => e.FullName.Contains("[Content_Types].xml"));
+            using (var cTypesStream = cTypesEntry.Open())
+            {
+                cTypesDoc = XDocument.Load(cTypesStream);
+            }
+            
             // The template's own calcChain cannot be reused: row insertion shifts formula cells and its
             // entries would point at the old addresses. It is regenerated from the rendered formulas —
             // and when none were rendered, dropped entirely, because a calcChain with no <c> entries is
@@ -145,10 +160,31 @@ internal partial class ExcelOpenXmlTemplate : IExcelTemplate, IExcelTemplateAsyn
                 //calcChain.Delete();
 
                 var calcChainEntry = outputFileArchive.zipFile.CreateEntry(calcChainPathName);
-                using (var calcChainStream = calcChainEntry.Open())
-                {
-                    CalcChainHelper.GenerateCalcChainSheet(calcChainStream, _calcChainContent.ToString());
-                }
+                using var calcChainStream = calcChainEntry.Open();
+                CalcChainHelper.GenerateCalcChainSheet(calcChainStream, _calcChainContent.ToString());
+            }
+            else
+            {
+                // removing calcChain.xml entry from [Content_Types] and workbook.rels
+                wbRelsDoc.Root?.Elements()
+                    .FirstOrDefault(x => x.Attribute("Target")?.Value.Contains("calcChain.xml") is true)
+                    ?.Remove();
+                
+                cTypesDoc.Root?.Elements()
+                    .FirstOrDefault(x => x.Attribute("PartName")?.Value.Contains("calcChain.xml") is true)
+                    ?.Remove();
+            }
+            
+            var newWbRelsEntry = outputFileArchive.zipFile.CreateEntry(wbRelsEntry.FullName);
+            using (var newWbRelsEntryStream = newWbRelsEntry.Open())
+            {
+                wbRelsDoc.Save(newWbRelsEntryStream);
+            }
+            
+            var newCTypesEntry = outputFileArchive.zipFile.CreateEntry(cTypesEntry.FullName);
+            using (var newCTypesEntryStream = newCTypesEntry.Open())
+            {
+                cTypesDoc.Save(newCTypesEntryStream);
             }
 
             outputFileArchive.zipFile.Dispose();

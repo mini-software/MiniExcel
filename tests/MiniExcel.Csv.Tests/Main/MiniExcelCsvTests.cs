@@ -402,7 +402,7 @@ public class MiniExcelCsvTests
         {
             var exception = Assert.Throws<ColumnNotFoundException>(() => _csvImporter.Query<TestDto>(stream).ToList());
 
-            Assert.Equal("c2", exception.ColumnName);
+            Assert.Equal("Col2", exception.ColumnName);
             Assert.Equal(2, exception.RowIndex);
             Assert.Null(exception.ColumnIndex);
             Assert.True(exception.RowValues is IDictionary<string, object>);
@@ -412,7 +412,7 @@ public class MiniExcelCsvTests
         {
             var exception = Assert.Throws<ColumnNotFoundException>(() => _csvImporter.Query<TestDto>(path).ToList());
 
-            Assert.Equal("c2", exception.ColumnName);
+            Assert.Equal("Col2", exception.ColumnName);
             Assert.Equal(2, exception.RowIndex);
             Assert.Null(exception.ColumnIndex);
             Assert.True(exception.RowValues is IDictionary<string, object>);
@@ -431,7 +431,7 @@ public class MiniExcelCsvTests
         {
             var exception = Assert.Throws<ColumnNotFoundException>(() => _csvImporter.Query<TestWithAlias>(stream).ToList());
 
-            Assert.Equal("c2", exception.ColumnName);
+            Assert.Equal("Col2", exception.ColumnName);
             Assert.Equal(2, exception.RowIndex);
             Assert.Null(exception.ColumnIndex);
             Assert.True(exception.RowValues is IDictionary<string, object>);
@@ -441,7 +441,7 @@ public class MiniExcelCsvTests
         {
             var exception = Assert.Throws<ColumnNotFoundException>(() => _csvImporter.Query<TestWithAlias>(path).ToList());
 
-            Assert.Equal("c2", exception.ColumnName);
+            Assert.Equal("Col2", exception.ColumnName);
             Assert.Equal(2, exception.RowIndex);
             Assert.Null(exception.ColumnIndex);
             Assert.True(exception.RowValues is IDictionary<string, object>);
@@ -468,7 +468,7 @@ public class MiniExcelCsvTests
         var path = file.ToString();
 
         using (var writer = new StreamWriter(path))
-        using (var csv = new global::CsvHelper.CsvWriter(writer, CultureInfo.InvariantCulture))
+        using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
         {
             var records = Enumerable.Range(1, 1).Select(_ => new { v1 = value, v2 = value });
             csv.WriteRecords(records);
@@ -603,6 +603,7 @@ public class MiniExcelCsvTests
 
         using var reader = new StreamReader(path);
         using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
+
         var records = csv.GetRecords<dynamic>().ToList();
         var first = (IDictionary<string, object>)records[0];
 
@@ -621,6 +622,7 @@ public class MiniExcelCsvTests
 
         using var reader = new StreamReader(path);
         using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
+
         var records = csv.GetRecords<dynamic>().ToList();
         var first = (IDictionary<string, object>)records[0];
 
@@ -643,5 +645,85 @@ public class MiniExcelCsvTests
         using var ms = new MemoryStream();
         var cols = _csvImporter.GetColumnNames(ms);
         Assert.Empty(cols);
+    }
+    
+        [Fact]
+    public void JaggedRowsWithoutHeaderTest()
+    {
+        var csvConfig = new CsvConfiguration
+        {
+            AlwaysQuote = true,
+            ReadEmptyFieldsAsDefault = true,
+            AllowFieldCountMismatch =  true
+        };
+
+        var data = """
+           0,"V","4000","6","26",10000001,"Test123" ,"220626",,1001200,,,5769.00  ,N,"EUR",,,,,,,        ,,,,,  ,  ,,,,,,,,,,,,0,
+           1,"V","4000","" ,"26",10000001,"Test457" ,"220626",,       ,,,5769.00  , ,""   ,,,,,,,0.00    ,,,,,"","",,,,
+           0,"V","4000","6","26",10000002,"Test789" ,"220626",,1104500,,,26550.00 ,N,"EUR",,,,,,,        ,,,,,  ,  ,,,,,,,,,,,,7,
+           1,"V","4000","" ,"26",10000002,"Test11X" ,"220626",,       ,,,26550.00 , ,""   ,,,,,,,0.00    ,,,,,"","",,,,
+           """u8.ToArray();
+
+        using var ms = new MemoryStream();
+        ms.Write(data.ToArray());
+        
+        var result = _csvImporter.Query(ms, configuration: csvConfig).ToList();
+        
+        Assert.Equal(4, result.Count);
+        Assert.Equal(41, ((IDictionary<string, object?>)result[0]).Count);
+        Assert.Equal(32, ((IDictionary<string, object?>)result[1]).Count);
+    }
+    
+    [Fact]
+    public void JaggedRowsWithHeaderTest()
+    {
+        var csvConfig = new CsvConfiguration
+        {
+            AlwaysQuote = true,
+            ReadEmptyFieldsAsDefault = true,
+            AllowFieldCountMismatch =  true
+        };
+
+        var data = """
+            C1,C2,C3,C4,C5,C6,C7,C8,C9,C10,C11,C12,C13,C14,C15,C16,C17,C18,C19,C20,C21,C22,C23,C24,C25,C26,C27,C28,C29,C30,C31,C32,C33,C34
+            1,"V","4000","" ,"26",10000001,"Test457" ,"220626",,       ,,,5769.00  , ,""   ,,,,,,,0.00    ,,,,,"","",,,,
+            0,"V","4000","6","26",10000001,"Test123" ,"220626",,1001200,,,5769.00  ,N,"EUR",,,,,,,        ,,,,,  ,  ,,,,,,,,,,,,0,
+            0,"V","4000","6","26",10000002,"Test789" ,"220626",,1104500,,,26550.00 ,N,"EUR",,,,,,,        ,,,,,  ,  ,,,,,,,,,,,,7,
+            1,"V","4000","" ,"26",10000002,"Test11X" ,"220626",,       ,,,26550.00 , ,""   ,,,,,,,0.00    ,,,,,"","",,,,
+            """u8.ToArray();
+
+        using var ms = new MemoryStream();
+        ms.Write(data.ToArray());
+        
+        var result = _csvImporter.Query(ms, true, configuration: csvConfig).ToList();
+        
+        Assert.Equal(4, result.Count);
+        Assert.Equal(34, ((IDictionary<string, object?>)result[0]).Count);
+        Assert.Equal(41, ((IDictionary<string, object?>)result[1]).Count);
+    }
+
+    [Fact]
+    public void MappedJaggedRowsTest()
+    {
+        var csvConfig = new CsvConfiguration
+        {
+            AlwaysQuote = true,
+            ReadEmptyFieldsAsDefault = true,
+            AllowFieldCountMismatch =  true
+        };
+
+        var data = """
+            C1,C2,C3,C4,C5,C6,C7,C8,C9,C10,C11,C12,C13,C14,C15,C16,C17,C18,C19,C20,C21,C22,C23,C24,C25,C26,C27,C28,C29,C30,C31,C32,C33,C34
+            1,"V","4000","" ,"26",10000001,"Test457" ,"220626",,       ,,,5769.00  , ,""   ,,,,,,,0.00    ,,,,,"","",,,,
+            0,"V","4000","6","26",10000001,"Test123" ,"220626",,1001200,,,5769.00  ,N,"EUR",,,,,,,        ,,,,,  ,  ,,,,,,,,,,,,0,
+            0,"V","4000","6","26",10000002,"Test789" ,"220626",,1104500,,,26550.00 ,N,"EUR",,,,,,,        ,,,,,  ,  ,,,,,,,,,,,,7,
+            1,"V","4000","" ,"26",10000002,"Test11X" ,"220626",,       ,,,26550.00 , ,""   ,,,,,,,0.00    ,,,,,"","",,,,
+            """u8.ToArray();
+
+        using var ms = new MemoryStream();
+        ms.Write(data.ToArray());
+        
+        var result = _csvImporter.Query<JaggedRowsMappingTest>(ms, configuration: csvConfig).ToList();
+        Assert.Equal(4, result.Count);
     }
 }

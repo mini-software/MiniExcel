@@ -328,7 +328,7 @@ public class MiniExcelCsvAsyncTests
             Assert.Equal(string.Empty, rows[1].C2);
         }
 
-        var config = new CsvConfiguration { ReadEmptyStringAsNull = true };
+        var config = new CsvConfiguration { ReadEmptyFieldsAsDefault = true };
         await using (var stream = File.OpenRead(path))
         {
             var rows = _csvImporter.Query<TestDto>(stream, configuration: config).ToList();
@@ -490,5 +490,85 @@ public class MiniExcelCsvAsyncTests
         await using var ms = new MemoryStream();
         var cols = await _csvImporter.GetColumnNamesAsync(ms);
         Assert.Empty(cols);
+    }
+
+    [Fact]
+    public async Task JaggedRowsWithoutHeaderTest()
+    {
+        var csvConfig = new CsvConfiguration
+        {
+            AlwaysQuote = true,
+            ReadEmptyFieldsAsDefault = true,
+            AllowFieldCountMismatch =  true
+        };
+
+        var data = """
+           0,"V","4000","6","26",10000001,"Test123" ,"220626",,1001200,,,5769.00  ,N,"EUR",,,,,,,        ,,,,,  ,  ,,,,,,,,,,,,0,
+           1,"V","4000","" ,"26",10000001,"Test457" ,"220626",,       ,,,5769.00  , ,""   ,,,,,,,0.00    ,,,,,"","",,,,
+           0,"V","4000","6","26",10000002,"Test789" ,"220626",,1104500,,,26550.00 ,N,"EUR",,,,,,,        ,,,,,  ,  ,,,,,,,,,,,,7,
+           1,"V","4000","" ,"26",10000002,"Test11X" ,"220626",,       ,,,26550.00 , ,""   ,,,,,,,0.00    ,,,,,"","",,,,
+           """u8.ToArray();
+
+        await using var ms = new MemoryStream();
+        await ms.WriteAsync(data.ToArray());
+        
+        var result = await _csvImporter.QueryAsync(ms, configuration: csvConfig).ToListAsync();
+        
+        Assert.Equal(4, result.Count);
+        Assert.Equal(41, ((IDictionary<string, object?>)result[0]).Count);
+        Assert.Equal(32, ((IDictionary<string, object?>)result[1]).Count);
+    }
+    
+    [Fact]
+    public async Task JaggedRowsWithHeaderTest()
+    {
+        var csvConfig = new CsvConfiguration
+        {
+            AlwaysQuote = true,
+            ReadEmptyFieldsAsDefault = true,
+            AllowFieldCountMismatch =  true
+        };
+
+        var data = """
+            C1,C2,C3,C4,C5,C6,C7,C8,C9,C10,C11,C12,C13,C14,C15,C16,C17,C18,C19,C20,C21,C22,C23,C24,C25,C26,C27,C28,C29,C30,C31,C32,C33,C34
+            1,"V","4000","" ,"26",10000001,"Test457" ,"220626",,       ,,,5769.00  , ,""   ,,,,,,,0.00    ,,,,,"","",,,,
+            0,"V","4000","6","26",10000001,"Test123" ,"220626",,1001200,,,5769.00  ,N,"EUR",,,,,,,        ,,,,,  ,  ,,,,,,,,,,,,0,
+            0,"V","4000","6","26",10000002,"Test789" ,"220626",,1104500,,,26550.00 ,N,"EUR",,,,,,,        ,,,,,  ,  ,,,,,,,,,,,,7,
+            1,"V","4000","" ,"26",10000002,"Test11X" ,"220626",,       ,,,26550.00 , ,""   ,,,,,,,0.00    ,,,,,"","",,,,
+            """u8.ToArray();
+
+        await using var ms = new MemoryStream();
+        await ms.WriteAsync(data.ToArray());
+        
+        var result = await _csvImporter.QueryAsync(ms, true, configuration: csvConfig).ToListAsync();
+        
+        Assert.Equal(4, result.Count);
+        Assert.Equal(34, ((IDictionary<string, object?>)result[0]).Count);
+        Assert.Equal(41, ((IDictionary<string, object?>)result[1]).Count);
+    }
+
+    [Fact]
+    public async Task MappedJaggedRowsTest()
+    {
+        var csvConfig = new CsvConfiguration
+        {
+            AlwaysQuote = true,
+            ReadEmptyFieldsAsDefault = true,
+            AllowFieldCountMismatch =  true
+        };
+
+        var data = """
+            C1,C2,C3,C4,C5,C6,C7,C8,C9,C10,C11,C12,C13,C14,C15,C16,C17,C18,C19,C20,C21,C22,C23,C24,C25,C26,C27,C28,C29,C30,C31,C32,C33,C34
+            1,"V","4000","" ,"26",10000001,"Test457" ,"220626",,       ,,,5769.00  , ,""   ,,,,,,,0.00    ,,,,,"","",,,,
+            0,"V","4000","6","26",10000001,"Test123" ,"220626",,1001200,,,5769.00  ,N,"EUR",,,,,,,        ,,,,,  ,  ,,,,,,,,,,,,0,
+            0,"V","4000","6","26",10000002,"Test789" ,"220626",,1104500,,,26550.00 ,N,"EUR",,,,,,,        ,,,,,  ,  ,,,,,,,,,,,,7,
+            1,"V","4000","" ,"26",10000002,"Test11X" ,"220626",,       ,,,26550.00 , ,""   ,,,,,,,0.00    ,,,,,"","",,,,
+            """u8.ToArray();
+
+        await using var ms = new MemoryStream();
+        await ms.WriteAsync(data.ToArray());
+        
+        var result = await _csvImporter.QueryAsync<JaggedRowsMappingTest>(ms, configuration: csvConfig).ToListAsync();
+        Assert.Equal(4, result.Count);
     }
 }

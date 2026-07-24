@@ -4,6 +4,7 @@ using System.IO.Compression;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml;
+using System.Xml.Linq;
 
 namespace MiniExcelLibs.OpenXml.SaveByTemplate;
 
@@ -57,6 +58,7 @@ internal partial class ExcelOpenXmlTemplate : IExcelTemplate, IExcelTemplateAsyn
             
         var templateReader = new ExcelOpenXmlSheetReader(templateStream, null);
         var outputFileArchive = new ExcelOpenXmlZip(_outputFileStream, mode: ZipArchiveMode.Create, true, Encoding.UTF8, isUpdateMode: false);
+
         try
         {
             outputFileArchive.entries = templateReader._archive.zipFile.Entries; //TODO:need to remove
@@ -70,23 +72,19 @@ internal partial class ExcelOpenXmlTemplate : IExcelTemplate, IExcelTemplateAsyn
         {
             outputFileArchive._entries.Add(entry.FullName.Replace('\\', '/'), entry);
         }
-            
+
         templateStream.Position = 0;
         using (var originalArchive = new ZipArchive(templateStream, ZipArchiveMode.Read))
         {
-            // Create a new zip file for writing
-            //using (FileStream newZipStream = new FileStream(newZipPath, FileMode.Create))
-            //using (ZipArchive newArchive = new ZipArchive(_outputFileStream, ZipArchiveMode.Create))
-                
             // Iterate through each entry in the original archive
             foreach (ZipArchiveEntry entry in originalArchive.Entries)
             {
-                if (entry.FullName.StartsWith("xl/worksheets/sheet", StringComparison.OrdinalIgnoreCase) ||
-                    entry.FullName.StartsWith("/xl/worksheets/sheet", StringComparison.OrdinalIgnoreCase) ||
-                    entry.FullName.Contains("xl/calcChain.xml")
-                   )
+                if (entry.FullName.TrimStart('/').StartsWith("xl/worksheets/sheet", StringComparison.OrdinalIgnoreCase) ||
+                    entry.FullName.Contains("xl/calcChain.xml") ||
+                    entry.FullName.Contains("workbook.xml.rels") ||
+                    entry.FullName.Contains("[Content_Types].xml"))
                     continue;
-                    
+
                 // Create a new entry in the new archive with the same name
                 var newEntry = outputFileArchive.zipFile.CreateEntry(entry.FullName);
 
@@ -104,9 +102,7 @@ internal partial class ExcelOpenXmlTemplate : IExcelTemplate, IExcelTemplateAsyn
 
             //read all xlsx sheets
             var templateSheets = templateReader._archive.zipFile.Entries
-                .Where(w =>
-                    w.FullName.StartsWith("xl/worksheets/sheet", StringComparison.OrdinalIgnoreCase) ||
-                    w.FullName.StartsWith("/xl/worksheets/sheet", StringComparison.OrdinalIgnoreCase));
+                .Where(w => w.FullName.TrimStart('/').StartsWith("xl/worksheets/sheet", StringComparison.OrdinalIgnoreCase));
 
             int sheetIdx = 0;
             foreach (var templateSheet in templateSheets)
@@ -128,38 +124,60 @@ internal partial class ExcelOpenXmlTemplate : IExcelTemplate, IExcelTemplateAsyn
                     // disposing writer disposes streams as well. read and parse calc functions before that
                     sheetIdx++;
                     _calcChainContent.Append(CalcChainHelper.GetCalcChainContent(_calcChainCellRefs, sheetIdx));
+                    _calcChainCellRefs.Clear();
                 }
             }
 
-            // create mode we need to not create first then create here
+            // loading [Content_Types] and workbook.rels for later editing and saving
+            XDocument wbRelsDoc;
+            var wbRelsEntry = originalArchive.Entries.First(e => e.FullName.Contains("workbook.xml.rels"));
+            using (var wbRelsStream = wbRelsEntry.Open())
+            {
+                wbRelsDoc = XDocument.Load(wbRelsStream);
+            }
+
+            XDocument cTypesDoc;
+            var cTypesEntry = originalArchive.Entries.First(e => e.FullName.Contains("[Content_Types].xml"));
+            using (var cTypesStream = cTypesEntry.Open())
+            {
+                cTypesDoc = XDocument.Load(cTypesStream);
+            }
+            
+            // The template's own calcChain cannot be reused: row insertion shifts formula cells and its
+            // entries would point at the old addresses. It is regenerated from the rendered formulas —
+            // and when none were rendered, dropped entirely, because a calcChain with no <c> entries is
+            // schema-invalid and Excel rejects the whole package either way.
+            // Excel rebuilds the chain on open, so dropping it is always safe.
             var calcChain = outputFileArchive.entries.FirstOrDefault(e => e.FullName.Contains("xl/calcChain.xml"));
-            if (calcChain != null)
+            if (calcChain != null && _calcChainContent.Length > 0)
             {
                 var calcChainPathName = calcChain.FullName;
-                //calcChain.Delete();
-
                 var calcChainEntry = outputFileArchive.zipFile.CreateEntry(calcChainPathName);
-                using (var calcChainStream = calcChainEntry.Open())
-                {
-                    CalcChainHelper.GenerateCalcChainSheet(calcChainStream, _calcChainContent.ToString());
-                }
+                using var calcChainStream = calcChainEntry.Open();
+                CalcChainHelper.GenerateCalcChainSheet(calcChainStream, _calcChainContent.ToString());
             }
             else
             {
-                foreach (ZipArchiveEntry entry in originalArchive.Entries)
-                {
-                    if (entry.FullName.Contains("xl/calcChain.xml"))
-                    {
-                        var newEntry = outputFileArchive.zipFile.CreateEntry(entry.FullName);
-
-                        // Copy the content of the original entry to the new entry
-                        using (Stream originalEntryStream = entry.Open())
-                        using (Stream newEntryStream = newEntry.Open())
-                        {
-                            originalEntryStream.CopyTo(newEntryStream);
-                        }
-                    }
-                }
+                // removing calcChain.xml entry from [Content_Types] and workbook.rels
+                wbRelsDoc.Root?.Elements()
+                    .FirstOrDefault(x => x.Attribute("Target")?.Value.Contains("calcChain.xml") is true)
+                    ?.Remove();
+                
+                cTypesDoc.Root?.Elements()
+                    .FirstOrDefault(x => x.Attribute("PartName")?.Value.Contains("calcChain.xml") is true)
+                    ?.Remove();
+            }
+            
+            var newWbRelsEntry = outputFileArchive.zipFile.CreateEntry(wbRelsEntry.FullName);
+            using (var newWbRelsEntryStream = newWbRelsEntry.Open())
+            {
+                wbRelsDoc.Save(newWbRelsEntryStream);
+            }
+            
+            var newCTypesEntry = outputFileArchive.zipFile.CreateEntry(cTypesEntry.FullName);
+            using (var newCTypesEntryStream = newCTypesEntry.Open())
+            {
+                cTypesDoc.Save(newCTypesEntryStream);
             }
 
             outputFileArchive.zipFile.Dispose();

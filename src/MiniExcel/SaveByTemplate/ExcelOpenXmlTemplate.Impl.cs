@@ -1006,12 +1006,23 @@ internal partial class ExcelOpenXmlTemplate
                     if (!v.InnerText.StartsWith("$="))
                         continue;
 
-                    var fNode = c.OwnerDocument.CreateElement("f", Config.SpreadsheetmlXmlns);
+                    // create the f element with the document's prefix: an unprefixed element would rely on a
+                    // default xmlns declaration that CleanXml strips, leaving <f> in no namespace (invalid for Excel)
+                    var fNode = c.OwnerDocument!.CreateElement(c.Prefix, "f", Config.SpreadsheetmlXmlns);
                     fNode.InnerText = v.InnerText.Substring(2);
                     c.InsertBefore(fNode, v);
                     c.RemoveChild(v);
 
-                    var celRef = ExcelOpenXmlUtils.ConvertXyToCell(ci + 1, rowIndex);
+                    // the cell no longer holds an inline string; keeping t="inlineStr" without <is> is invalid
+                    c.RemoveAttribute("t");
+
+                    // take the column from the cell's own reference —
+                    // the position in the child list is wrong for sparse rows (cells without content are not emitted)
+                    var rAttr = c.GetAttribute("r");
+                    var celRef = string.IsNullOrEmpty(rAttr)
+                        ? ExcelOpenXmlUtils.ConvertXyToCell(ci + 1, rowIndex)
+                        : rAttr;
+
                     _calcChainCellRefs.Add(celRef);
                 }
             }
@@ -1075,7 +1086,8 @@ internal partial class ExcelOpenXmlTemplate
                 c.AppendChild(isNode);
 
                 c.RemoveAttribute("t");
-                c.SetAttribute("t", "inlineStr");                }
+                c.SetAttribute("t", "inlineStr");
+            }
         }
     }
 

@@ -196,7 +196,7 @@ await exporter.ExportAsync(outputPath, values);
 
 ### Release Notes
 
-If you're migrating from a `1.x` version, please check the [upgrade notes](V2-upgrade-notes.md).
+If you're migrating from a `1.x` version, please check the [upgrade notes](V2-Upgrade-Notes.md).
 
 You can check the full release notes [here](docs).
 
@@ -208,12 +208,12 @@ Check what we are planning for future versions [here](https://github.com/mini-so
 
 The code for the benchmarks can be found in [MiniExcel.Benchmarks](benchmarks/MiniExcel.Benchmarks/Program.cs).
 
-The main file used to test performance is [**Test100,000x10.xlsx**](benchmarks/MiniExcel.Benchmarks/Test1%2C000%2C000x10.xlsx), a document containing 100,000 rows * 10 columns whose cells are filled with unique strings.
+The main file used to test performance is [**Test100,000x10.xlsx**](benchmarks/MiniExcel.Benchmarks/Test100%2C000x10.xlsx), a document containing 100,000 rows * 10 columns whose cells are filled with unique strings.
 
 To run all the benchmarks use:
 
 ```bash
-dotnet run -project .\benchmarks\MiniExcel.Benchmarks -c Release -f net9.0 -filter * --join
+dotnet run --project .\benchmarks\MiniExcel.Benchmarks -c Release -f net9.0 -filter "*" --join
 ```
 
 You can find the benchmarks' results for the latest release [here](benchmarks/results).
@@ -385,7 +385,7 @@ Under the hood the dynamic objects returned in a query are implemented using `Ex
 making it possible to cast them to `IDictionary<string,object>`:
 
 ```csharp
-var excelimporter = MiniExcel.Importers.GetOpenXmlImporter();
+var excelImporter = MiniExcel.Importers.GetOpenXmlImporter();
 
 var rows = excelImporter.Query(path).Cast<IDictionary<string,object>>();
 
@@ -509,7 +509,7 @@ exporter.Export(path, values);
 
 ```csharp
 var exporter = MiniExcel.Exporters.GetOpenXmlExporter();
-List<Dictionary<string, object>>() values =
+List<Dictionary<string, object>> values =
 [
     new() { { "Column1", "MiniExcel" }, { "Column2", 1 } },
     new() { { "Column1", "Github" }, { "Column2", 2 } }
@@ -567,7 +567,7 @@ using var connection = YourDbConnection();
 
 var cmd = new CommandDefinition(
     "SELECT 'MiniExcel' AS Column1, 1 as Column2 UNION ALL SELECT 'Github', 2",
-    flags: CommandFlags.NoCache)
+    flags: CommandFlags.NoCache
 );
 
 // Note: QueryAsync will throw a closed connection exception
@@ -716,7 +716,7 @@ Dictionary<string, object?>[] value =
 ];
 
 var exporter = MiniExcel.Exporters.GetOpenXmlExporter();
-exporter.Export("test.xlsx", value, configuration: config);
+exporter.Export("test.xlsx", value);
 ```
 
 ![image](https://user-images.githubusercontent.com/31481586/241419455-3c0aec8a-4e5f-4d83-b7ec-6572124c165d.png)
@@ -1149,7 +1149,7 @@ var config = new OpenXmlConfiguration
 };
 
 var templater = MiniExcel.Templaters.GetOpenXmlTemplater();
-templater.ApplyTemplate(path, templatePath, value, config)
+templater.ApplyTemplate(path, templatePath, value, config);
 ```
 
 ![image](https://user-images.githubusercontent.com/12729184/157464332-e316f829-54aa-4c84-a5aa-9aef337b668d.png)
@@ -1252,11 +1252,11 @@ public class Dto
     public DateTime InDate { get; set; }
 }
 
-var value = new Dto[] 
-{
-    new Issue241Dto{ Name = "Jack", InDate = new DateTime(2021, 01, 04) },
-    new Issue241Dto{ Name = "Henry", InDate = new DateTime(2020, 04, 05) }
-};
+Dto[] value = 
+[
+    new() { Name = "Jack", InDate = new DateTime(2021, 01, 04) },
+    new() { Name = "Henry", InDate = new DateTime(2020, 04, 05) }
+];
 
 var exporter = MiniExcel.Exporters.GetOpenXmlExporter();
 exporter.Export(path, value);
@@ -1589,7 +1589,7 @@ var config = new CsvConfiguration
         .ToArray()
 };
 
-var importer = MiniExcel.Exporters.GetCsvImporter();
+var importer = MiniExcel.Importers.GetCsvImporter();
 var rows = importer.Query(path, configuration: config).ToList();
 ```
 

@@ -43,10 +43,10 @@ The use of AI agents is allowed for generating bugfixes, unit tests and document
 Please make sure to review all AI contributions submitted on your behalf.
 
 We kindly ask you to refrain from using AI to generate new features, 
-as it becomes increasingly difficult and time-consuming for the mantainers to review them, integrate them appropriately into the codebase, and ultimately mantain them indefinitely.
+as it becomes increasingly difficult and time-consuming for the maintainers to review them, integrate them appropriately into the codebase, and ultimately maintain them indefinitely.
 
 ## Questions?
 
-Feel free to open a discussion or contact the mantainers directly via email if you have further inquiries.
+Feel free to open a discussion or contact the maintainers directly via email if you have further inquiries.
 
 Finally, when contributing please keep in mind our [Code of Conduct](CODE_OF_CONDUCT.md).

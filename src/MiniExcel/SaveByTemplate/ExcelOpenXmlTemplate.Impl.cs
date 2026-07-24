@@ -1017,10 +1017,10 @@ internal partial class ExcelOpenXmlTemplate
 
                     // take the column from the cell's own reference — the position in the child list is wrong
                     // for sparse rows (cells without content are not emitted)
-                    var columnLetters = new string(c.GetAttribute("r").TakeWhile(char.IsLetter).ToArray());
-                    var celRef = string.IsNullOrEmpty(columnLetters)
+                    var rAttr = c.GetAttribute("r");
+                    var celRef = string.IsNullOrEmpty(rAttr)
                         ? ExcelOpenXmlUtils.ConvertXyToCell(ci + 1, rowIndex)
-                        : $"{columnLetters}{rowIndex}";
+                        : rAttr;
                     _calcChainCellRefs.Add(celRef);
                 }
             }

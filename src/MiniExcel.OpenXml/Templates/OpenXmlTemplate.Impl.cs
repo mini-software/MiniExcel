@@ -936,8 +936,17 @@ internal partial class OpenXmlTemplate
                     fNode.SetValue(str.Value[2..]);
                     str.AddBeforeSelf(fNode);
                     str.Remove();
+                    // the cell no longer holds an inline string; keeping t="inlineStr" without an <is>
+                    // child is schema-invalid and Excel rejects the package
+                    cell.Attribute("t")?.Remove();
 
-                    var celRef = CellReferenceConverter.GetCellFromCoordinates(index, rowIndex);
+                    // take the column from the cell's own reference — the running index is wrong for
+                    // sparse rows (cells without content are not emitted, so position != column)
+                    var cellRef = cell.Attribute("r")?.Value;
+                    var columnLetters = cellRef is null ? "" : new string(cellRef.TakeWhile(char.IsLetter).ToArray());
+                    var celRef = string.IsNullOrEmpty(columnLetters)
+                        ? CellReferenceConverter.GetCellFromCoordinates(index, rowIndex)
+                        : $"{columnLetters}{rowIndex}";
                     _calcChainCellRefs.Add(celRef);
                 }
             }

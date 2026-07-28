@@ -158,40 +158,22 @@ internal partial class OpenXmlTemplate : IMiniExcelTemplate
         // batch add sheet
         await BatchAddSheetsToWorkbookAsync(outputFileArchive.ZipFile, originalArchive, allSheetInfos, cancellationToken).ConfigureAwait(false);
 
-        // create mode we need to not create first then create here
-        var calcChain = outputFileArchive.EntryCollection.FirstOrDefault(e 
+        // The template's own calcChain cannot be reused: row insertion shifts formula cells and its
+        // entries would point at the old addresses. It is regenerated from the rendered formulas —
+        // and when none were rendered, dropped entirely, because a calcChain with no <c> entries is
+        // schema-invalid and Excel rejects the whole package. Excel rebuilds the chain on open, so
+        // dropping it is always safe. (The stale-template copy that used to run when no chain entry
+        // was created here is intentionally gone for the same reason.)
+        var calcChain = outputFileArchive.EntryCollection.FirstOrDefault(e
             => e.FullName.TrimStart('/').Equals(ExcelFileNames.CalcChain, StringComparison.OrdinalIgnoreCase));
 
-        if (calcChain is not null)
+        if (calcChain is not null && _calcChainContent.Length > 0)
         {
             var calcChainEntry = outputFileArchive.ZipFile.CreateEntry(calcChain.FullName);
             var calcChainStream = await calcChainEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
             await using var disposableChainEntryStream = calcChainStream.ConfigureAwait(false);
 
             await CalcChainHelper.GenerateCalcChainSheetAsync(calcChainStream, _calcChainContent.ToString(), cancellationToken).ConfigureAwait(false);
-        }
-        else
-        {
-            foreach (var entry in originalArchive.Entries)
-            {
-                if (entry.FullName.TrimStart('/').Equals(ExcelFileNames.CalcChain, StringComparison.OrdinalIgnoreCase))
-                {
-                    var newEntry = outputFileArchive.ZipFile.CreateEntry(entry.FullName);
-
-                    // Copy the content of the original entry to the new entry
-                    var originalEntryStream = await entry.OpenAsync(cancellationToken).ConfigureAwait(false);
-                    await using var disposableEntryStream = originalEntryStream.ConfigureAwait(false);
-
-                    var newEntryStream = await newEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
-                    await using var disposableNewEntryStream = newEntryStream.ConfigureAwait(false);
-
-                    await originalEntryStream.CopyToAsync(newEntryStream
-#if NET
-                        , cancellationToken
-#endif
-                    ).ConfigureAwait(false);
-                }
-            }
         }
 
 #if NET10_0_OR_GREATER

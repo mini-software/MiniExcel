@@ -87,6 +87,7 @@ internal partial class OpenXmlTemplate : IMiniExcelTemplate
             var entryName = entry.FullName.TrimStart('/');
             if (entryName.StartsWith(ExcelFileNames.WorksheetBase, StringComparison.OrdinalIgnoreCase) || 
                 entryName.Equals(ExcelFileNames.CalcChain, StringComparison.OrdinalIgnoreCase) ||
+                entryName.Equals(ExcelFileNames.ContentTypes, StringComparison.OrdinalIgnoreCase) ||
                 entryName.Equals(ExcelFileNames.Workbook, StringComparison.OrdinalIgnoreCase) ||
                 entryName.Equals(ExcelFileNames.WorkbookRels, StringComparison.OrdinalIgnoreCase))
             {
@@ -124,7 +125,7 @@ internal partial class OpenXmlTemplate : IMiniExcelTemplate
 
         foreach (var templateSheet in templateSheets)
         {
-            // XRowInfos musy be cleared for every sheet or it'll cause duplicates: https://user-images.githubusercontent.com/12729184/115003101-0fcab700-9ed8-11eb-9151-ca4d7b86d59e.png
+            // XRowInfos must be cleared for every sheet or it'll cause duplicates: https://user-images.githubusercontent.com/12729184/115003101-0fcab700-9ed8-11eb-9151-ca4d7b86d59e.png
             _xRowInfos.Clear();
             _xMergeCellInfos.Clear();
             _newXMergeCellInfos.Clear();
@@ -155,26 +156,37 @@ internal partial class OpenXmlTemplate : IMiniExcelTemplate
             }
         }
 
-        // batch add sheet
-        await BatchAddSheetsToWorkbookAsync(outputFileArchive.ZipFile, originalArchive, allSheetInfos, cancellationToken).ConfigureAwait(false);
-
         // The template's own calcChain cannot be reused: row insertion shifts formula cells and its
         // entries would point at the old addresses. It is regenerated from the rendered formulas —
         // and when none were rendered, dropped entirely, because a calcChain with no <c> entries is
-        // schema-invalid and Excel rejects the whole package. Excel rebuilds the chain on open, so
-        // dropping it is always safe. (The stale-template copy that used to run when no chain entry
-        // was created here is intentionally gone for the same reason.)
+        // schema-invalid and Excel rejects the whole package either way.
+        // Excel rebuilds the chain on open, so dropping it is always safe.
         var calcChain = outputFileArchive.EntryCollection.FirstOrDefault(e
             => e.FullName.TrimStart('/').Equals(ExcelFileNames.CalcChain, StringComparison.OrdinalIgnoreCase));
 
-        if (calcChain is not null && _calcChainContent.Length > 0)
+        var contentTypesDoc = await LoadXmlAsync(originalArchive, ExcelFileNames.ContentTypes, cancellationToken).ConfigureAwait(false);
+        var isValidCalcChain = calcChain is not null && _calcChainContent.Length > 0; 
+
+        if (isValidCalcChain)
         {
-            var calcChainEntry = outputFileArchive.ZipFile.CreateEntry(calcChain.FullName);
+            var calcChainEntry = outputFileArchive.ZipFile.CreateEntry(calcChain!.FullName);
             var calcChainStream = await calcChainEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
             await using var disposableChainEntryStream = calcChainStream.ConfigureAwait(false);
 
             await CalcChainHelper.GenerateCalcChainSheetAsync(calcChainStream, _calcChainContent.ToString(), cancellationToken).ConfigureAwait(false);
         }
+        else
+        {
+            var elements = contentTypesDoc.Root?.Elements();
+            var calcChainRecord = elements?.FirstOrDefault(x => x.Attribute("PartName")?.Value.Equals(ExcelFileNames.CalcChain, StringComparison.OrdinalIgnoreCase) is true);
+            calcChainRecord?.Remove();
+        }
+        
+        // saving the (possibly edited) [Content_Types].xml entry 
+        await SaveXmlToZipAsync(outputFileArchive.ZipFile, ExcelFileNames.ContentTypes, contentTypesDoc, cancellationToken).ConfigureAwait(false);
+
+        // editing the workbook and its rels to reflect the new worksheets' metadata
+        await BatchAddSheetsToWorkbookAsync(outputFileArchive.ZipFile, originalArchive, allSheetInfos, !isValidCalcChain, cancellationToken).ConfigureAwait(false);
 
 #if NET10_0_OR_GREATER
         await outputFileArchive.ZipFile.DisposeAsync().ConfigureAwait(false);

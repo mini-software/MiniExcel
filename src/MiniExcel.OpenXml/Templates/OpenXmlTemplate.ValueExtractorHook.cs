@@ -169,7 +169,7 @@ internal partial class OpenXmlTemplate
     /// Adds worksheets to the workbook and register them int workbook.xml and workbook.xml.rels
     /// </summary>
     [CreateSyncVersion]
-    private static async Task BatchAddSheetsToWorkbookAsync(ZipArchive outputZip, ZipArchive templateArchive, List<(int Index, string Name)> sheetInfos, CancellationToken cancellationToken)
+    private static async Task BatchAddSheetsToWorkbookAsync(ZipArchive outputZip, ZipArchive templateArchive, List<(int Index, string Name)> sheetInfos, bool removeCalcCahinFromRels, CancellationToken cancellationToken)
     {
         // Load the workbook and its relationships from the template
         var relDoc = await LoadXmlAsync(templateArchive, ExcelFileNames.WorkbookRels, cancellationToken).ConfigureAwait(false);
@@ -190,22 +190,30 @@ internal partial class OpenXmlTemplate
         // 2.  Clean up all relationship records pointing to worksheets in workbook.xml.rels
         if (relDoc.Root is { } relsRoot)
         {
-            // Only delete relationships of Type 'worksheet', preserving core relationships like sharedStrings/styles/theme
+            // Remove the calcChain relationship if the contents have been invalidated upstream
+            if (removeCalcCahinFromRels)
+            {
+                relsRoot.Elements()
+                    .FirstOrDefault(x => x.Attribute("Target")?.Value.Equals(ExcelFileNames.CalcChain, StringComparison.OrdinalIgnoreCase) is true)
+                    ?.Remove();
+            }
+
+            // Delete relationships of Type 'worksheet', preserving core relationships like sharedStrings/styles/theme
             var worksheetRels = relsRoot.Elements(PackageRelNs + "Relationship")
                 .Where(r => r.Attribute("Type")?.Value == Schemas.SpreadsheetmlXmlWorksheetRelationship);
 
             // Remove the filtered worksheet relationships
             foreach (var rel in worksheetRels) 
                 rel.Remove();
-        }
 
-        // Batch add new relationship records for each generated sheet
-        foreach (var sheet in sheetInfos)
-        {
-            relDoc.Root!.Add(new XElement(PackageRelNs + "Relationship",
-                new XAttribute("Id", $"rIdSheet{sheet.Index}"),
-                new XAttribute("Type", Schemas.SpreadsheetmlXmlWorksheetRelationship),
-                new XAttribute("Target", $"worksheets/sheet{sheet.Index}.xml")));
+            // Batch add new relationship records for each generated sheet
+            foreach (var sheet in sheetInfos)
+            {
+                relsRoot.Add(new XElement(PackageRelNs + "Relationship",
+                    new XAttribute("Id", $"rIdSheet{sheet.Index}"),
+                    new XAttribute("Type", Schemas.SpreadsheetmlXmlWorksheetRelationship),
+                    new XAttribute("Target", $"worksheets/sheet{sheet.Index}.xml")));
+            }
         }
 
         // Batch add new sheet definitions to the workbook

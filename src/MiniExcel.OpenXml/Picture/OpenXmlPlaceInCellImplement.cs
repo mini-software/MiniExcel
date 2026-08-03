@@ -45,8 +45,23 @@ internal static partial class OpenXmlPlaceInCellImplement
         if (sheetEntries.Count == 0)
             throw new InvalidOperationException("Workbook has no worksheets.");
 
+        // Validate once up-front; collect content-type defaults without touching the zip repeatedly.
+        var imageFormats = new HashSet<(string Ext, string ContentType)>();
+        for (var i = 0; i < images.Count; i++)
+        {
+            var image = images[i];
+            if (image.ImageBytes is null || image.ImageBytes.Length == 0)
+                throw new InvalidDataException($"ImageBytes is required for PlaceInCell image at index {i}.");
+            if (string.IsNullOrWhiteSpace(image.CellAddress))
+                throw new InvalidDataException($"CellAddress is required for PlaceInCell image at index {i}.");
+            if (!CellReferenceConverter.TryParseCellReference(image.CellAddress, out _, out _))
+                throw new InvalidDataException($"Value {image.CellAddress} is not a valid cell reference.");
+
+            imageFormats.Add(ResolveImageFormat(image.PictureType));
+        }
+
         EnsureWorkbookRichDataRelationships(archive);
-        EnsureContentTypes(archive);
+        EnsureContentTypes(archive, imageFormats);
 
         var structureDoc = LoadOrCreateXml(archive, RdRichValueStructurePath, CreateRichValueStructureXml);
         EnsureLocalImageStructure(structureDoc);
@@ -65,32 +80,28 @@ internal static partial class OpenXmlPlaceInCellImplement
         var nextMediaIndex = GetNextMediaIndex(archive);
         var existingRelCount = CountChildElements(richValueRelDoc.DocumentElement, "rel");
         var existingRvCount = CountChildElements(rvDataDoc.DocumentElement, "rv");
+        var nextRelIdNumber = GetMaxRelationshipIdNumber(richValueRelsDoc.DocumentElement) + 1;
         EnsureXlRichValueMetadataType(metadataDoc);
         var xlRichValueTypeIndex = GetMetadataTypeIndex(metadataDoc, "XLRICHVALUE");
 
-        var sheetDocs = new Dictionary<string, (XmlDocument Doc, ZipArchiveEntry Entry)>(StringComparer.OrdinalIgnoreCase);
+        var sheetDocs = new Dictionary<string, (XmlDocument Doc, ZipArchiveEntry Entry, int MaxCol, int MaxRow)>(
+            StringComparer.OrdinalIgnoreCase);
 
         for (var i = 0; i < images.Count; i++)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
             var image = images[i];
-            if (string.IsNullOrWhiteSpace(image.CellAddress))
-                throw new InvalidDataException("CellAddress is required for PlaceInCell images.");
-
-            if (!CellReferenceConverter.TryParseCellReference(image.CellAddress, out _, out _))
-                throw new InvalidDataException($"Value {image.CellAddress} is not a valid cell reference.");
-
             var cellAddress = image.CellAddress!.ToUpperInvariant();
-            var (ext, contentType) = ResolveImageFormat(image.PictureType);
-            EnsureImageContentTypeDefault(archive, ext, contentType);
+            CellReferenceConverter.TryParseCellReference(cellAddress, out var column, out var row);
 
+            var (ext, _) = ResolveImageFormat(image.PictureType);
             var mediaFileName = $"image{nextMediaIndex++}.{ext}";
             var mediaPath = $"xl/media/{mediaFileName}";
             await WriteMediaAsync(archive, mediaPath, image.ImageBytes, cancellationToken).ConfigureAwait(false);
 
-            var relIndex = existingRelCount + i; // 0-based
-            var relId = $"rId{relIndex + 1}";
+            var relIndex = existingRelCount + i; // 0-based LocalImageIdentifier
+            var relId = $"rId{nextRelIdNumber++}";
             var rvIndex = existingRvCount + i; // 0-based
             var vm = AppendValueMetadata(metadataDoc, rvIndex, xlRichValueTypeIndex); // 1-based
 
@@ -107,10 +118,20 @@ internal static partial class OpenXmlPlaceInCellImplement
             {
                 var sheetEntry = archive.GetEntry(sheetPath)
                                  ?? throw new InvalidOperationException($"Worksheet part '{sheetPath}' was not found.");
-                sheetInfo = (LoadXml(sheetEntry), sheetEntry);
+                sheetInfo = (LoadXml(sheetEntry), sheetEntry, column, row);
+                sheetDocs[sheetPath] = sheetInfo;
+            }
+            else
+            {
+                sheetInfo = (
+                    sheetInfo.Doc,
+                    sheetInfo.Entry,
+                    Math.Max(sheetInfo.MaxCol, column),
+                    Math.Max(sheetInfo.MaxRow, row));
                 sheetDocs[sheetPath] = sheetInfo;
             }
 
+            // Overwrites any existing value/formula in the target cell (Place in Cell is the cell value).
             UpsertImageCell(sheetInfo.Doc, cellAddress, vm);
         }
 
@@ -120,7 +141,10 @@ internal static partial class OpenXmlPlaceInCellImplement
         SaveXml(metadataDoc, GetOrCreateEntry(archive, MetadataPath));
 
         foreach (var pair in sheetDocs)
+        {
+            ExpandDimension(pair.Value.Doc, pair.Value.MaxCol, pair.Value.MaxRow);
             SaveXml(pair.Value.Doc, pair.Value.Entry);
+        }
     }
 
     private static string ResolveSheetPath(SheetRecord sheetEnt)
@@ -226,8 +250,15 @@ internal static partial class OpenXmlPlaceInCellImplement
     }
 
     private static string GetNextRelationshipId(XmlElement root)
+        => $"rId{GetMaxRelationshipIdNumber(root) + 1}";
+
+    /// <summary>Returns the highest numeric suffix among rIdN relationships (0 if none).</summary>
+    private static int GetMaxRelationshipIdNumber(XmlElement? root)
     {
         var max = 0;
+        if (root is null)
+            return max;
+
         foreach (XmlElement rel in root.ChildNodes.OfType<XmlElement>())
         {
             var id = rel.GetAttribute("Id");
@@ -238,10 +269,10 @@ internal static partial class OpenXmlPlaceInCellImplement
             }
         }
 
-        return $"rId{max + 1}";
+        return max;
     }
 
-    private static void EnsureContentTypes(ZipArchive archive)
+    private static void EnsureContentTypes(ZipArchive archive, HashSet<(string Ext, string ContentType)> imageFormats)
     {
         var entry = archive.GetEntry(ContentTypesPath)
                     ?? throw new InvalidOperationException("[Content_Types].xml was not found.");
@@ -256,26 +287,28 @@ internal static partial class OpenXmlPlaceInCellImplement
         EnsureOverride(root, "/xl/richData/rdRichValueTypes.xml", "application/vnd.ms-excel.rdrichvaluetypes+xml");
         EnsureOverride(root, "/xl/richData/richValueRel.xml", "application/vnd.ms-excel.richvaluerel+xml");
 
-        SaveXml(doc, entry);
-    }
-
-    private static void EnsureImageContentTypeDefault(ZipArchive archive, string ext, string contentType)
-    {
-        var entry = archive.GetEntry(ContentTypesPath)!;
-        var doc = LoadXml(entry);
-        var root = doc.DocumentElement!;
-
-        var exists = root.ChildNodes.OfType<XmlElement>()
-            .Any(n => n.LocalName == "Default"
-                      && string.Equals(n.GetAttribute("Extension"), ext, StringComparison.OrdinalIgnoreCase));
-        if (!exists)
+        // Single pass over Defaults for all image extensions used in this batch.
+        var existingDefaults = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (XmlElement child in root.ChildNodes.OfType<XmlElement>())
         {
+            if (child.LocalName == "Default")
+                existingDefaults.Add(child.GetAttribute("Extension"));
+        }
+
+        foreach (var (ext, contentType) in imageFormats)
+        {
+            if (existingDefaults.Contains(ext))
+                continue;
+
             var node = doc.CreateElement("Default", ContentTypesNs);
             node.SetAttribute("Extension", ext);
             node.SetAttribute("ContentType", contentType);
             root.AppendChild(node);
-            SaveXml(doc, entry);
+            existingDefaults.Add(ext);
         }
+
+        // One save for Overrides + any new image Defaults.
+        SaveXml(doc, entry);
     }
 
     private static void EnsureOverride(XmlElement root, string partName, string contentType)
@@ -491,6 +524,10 @@ internal static partial class OpenXmlPlaceInCellImplement
         root.AppendChild(node);
     }
 
+    /// <summary>
+    /// Writes an in-cell image placeholder into the sheet.
+    /// Replaces any existing cell value/formula; keeps style index <c>s</c> when present.
+    /// </summary>
     private static void UpsertImageCell(XmlDocument sheetDoc, string cellAddress, int vm)
     {
         var ns = sheetDoc.DocumentElement?.NamespaceURI ?? SpreadsheetMlNs;
@@ -509,8 +546,8 @@ internal static partial class OpenXmlPlaceInCellImplement
             InsertSheetData(worksheet, sheetData, nsMgr);
         }
 
-            var row = FindOrCreateRow(sheetDoc, sheetData, rowNumber, ns);
-            var cell = FindCell(row, cellAddress);
+        var row = FindOrCreateRow(sheetDoc, sheetData, rowNumber, ns);
+        var cell = FindCell(row, cellAddress);
 
         if (cell is null)
         {
@@ -527,13 +564,70 @@ internal static partial class OpenXmlPlaceInCellImplement
         cell.SetAttribute("t", "e");
         cell.SetAttribute("vm", vm.ToString());
 
-        // clear children and set value
         while (cell.HasChildNodes)
             cell.RemoveChild(cell.FirstChild!);
 
         var v = sheetDoc.CreateElement("v", ns);
         v.InnerText = "#VALUE!";
         cell.AppendChild(v);
+    }
+
+    /// <summary>
+    /// Expands worksheet dimension to include the given 1-based cell when needed (O(1)).
+    /// </summary>
+    private static void ExpandDimension(XmlDocument sheetDoc, int maxCol, int maxRow)
+    {
+        var ns = sheetDoc.DocumentElement?.NamespaceURI ?? SpreadsheetMlNs;
+        var nsMgr = CreateNs(sheetDoc, "x", ns);
+        var worksheet = sheetDoc.DocumentElement;
+        if (worksheet is null)
+            return;
+
+        var dimension = worksheet.SelectSingleNode("x:dimension", nsMgr) as XmlElement;
+        var endRef = CellReferenceConverter.GetCellFromCoordinates(maxCol, maxRow);
+
+        if (dimension is null)
+        {
+            dimension = sheetDoc.CreateElement("dimension", ns);
+            dimension.SetAttribute("ref", $"A1:{endRef}");
+            var sheetData = worksheet.SelectSingleNode("x:sheetData", nsMgr);
+            if (sheetData is not null)
+                worksheet.InsertBefore(dimension, sheetData);
+            else
+                worksheet.AppendChild(dimension);
+            return;
+        }
+
+        var current = dimension.GetAttribute("ref");
+        if (string.IsNullOrEmpty(current))
+        {
+            dimension.SetAttribute("ref", $"A1:{endRef}");
+            return;
+        }
+
+        var parts = current.Split(':');
+        var start = parts[0];
+        var end = parts.Length > 1 ? parts[1] : parts[0];
+
+        if (!CellReferenceConverter.TryParseCellReference(start, out var startCol, out var startRow)
+            || !CellReferenceConverter.TryParseCellReference(end, out var endCol, out var endRow))
+        {
+            dimension.SetAttribute("ref", $"A1:{endRef}");
+            return;
+        }
+
+        var newEndCol = Math.Max(endCol, maxCol);
+        var newEndRow = Math.Max(endRow, maxRow);
+        if (newEndCol == endCol && newEndRow == endRow)
+            return;
+
+        var newStart = CellReferenceConverter.GetCellFromCoordinates(Math.Min(startCol, maxCol), Math.Min(startRow, maxRow));
+        // Keep original start if image is within/after the existing range start
+        if (startCol <= maxCol && startRow <= maxRow)
+            newStart = start;
+
+        var newEnd = CellReferenceConverter.GetCellFromCoordinates(newEndCol, newEndRow);
+        dimension.SetAttribute("ref", newStart == newEnd ? newStart : $"{newStart}:{newEnd}");
     }
 
     private static void InsertSheetData(XmlElement worksheet, XmlElement sheetData, XmlNamespaceManager nsMgr)

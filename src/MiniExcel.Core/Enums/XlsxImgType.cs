@@ -17,7 +17,8 @@ public enum XlsxImgType
     AbsoluteAnchor,
 
     /// <summary>
-    /// The image is embedded in the cell and moves and scales with the cell (TwoCellAnchor).
+    /// Drawing anchored between two cells; moves and scales with the cells (TwoCellAnchor).
+    /// Still a floating drawing — not Excel 365 Place in Cell. Prefer <see cref="PlaceInCell"/> for true in-cell images.
     /// </summary>
     TwoCellAnchor,
 

@@ -90,6 +90,12 @@ public class MiniExcelPlaceInCellTests
         Assert.Equal("1", (string?)cell.Attribute("vm"));
         Assert.Equal("#VALUE!", (string?)cell.Element(ns + "v"));
 
+        var dimension = sheet.Root!.Element(ns + "dimension");
+        Assert.NotNull(dimension);
+        var dimRef = (string?)dimension.Attribute("ref");
+        Assert.False(string.IsNullOrEmpty(dimRef));
+        Assert.Contains("C3", dimRef, StringComparison.OrdinalIgnoreCase);
+
         var structure = XDocument.Load(zip.GetEntry("xl/richData/rdrichvaluestructure.xml")!.Open());
         XNamespace rd = "http://schemas.microsoft.com/office/spreadsheetml/2017/richdata";
         Assert.Contains(structure.Root!.Elements(rd + "s"),

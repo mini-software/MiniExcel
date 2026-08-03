@@ -27,6 +27,13 @@ internal partial class OpenXmlReader : IMiniExcelReader
         _config = (OpenXmlConfiguration?)configuration ?? OpenXmlConfiguration.Default;
     }
 
+    /// <summary>
+    /// Create a reader over an already-opened archive without loading shared strings.
+    /// Used by AddPicture to resolve sheet paths without closing the caller's stream.
+    /// </summary>
+    internal static OpenXmlReader CreateFromArchive(OpenXmlZip archive, IMiniExcelConfiguration? configuration)
+        => new(archive, configuration);
+
     [CreateSyncVersion]
     internal static async Task<OpenXmlReader> CreateAsync(Stream stream, IMiniExcelConfiguration? configuration, CancellationToken cancellationToken = default)
     {

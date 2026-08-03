@@ -19,5 +19,12 @@ public enum XlsxImgType
     /// <summary>
     /// The image is embedded in the cell and moves and scales with the cell (TwoCellAnchor).
     /// </summary>
-    TwoCellAnchor
+    TwoCellAnchor,
+
+    /// <summary>
+    /// Excel 365 "Place in Cell": the image is stored as the cell value via richData (not a drawing).
+    /// Requires Microsoft 365; older Excel versions show #VALUE! in the cell.
+    /// WidthPx, HeightPx, and Location are ignored — size follows the cell.
+    /// </summary>
+    PlaceInCell
 }

@@ -1728,9 +1728,21 @@ MiniExcelPicture[] images =
     },
 ];
 
-var templater = MiniExcel.Exporters.GetOpenXmlExporter();
+var templater = MiniExcel.Templaters.GetOpenXmlTemplater();
 templater.AddPicture(path, images);
 ```
+
+To embed an image **inside** a cell (Excel 365 "Place in Cell"), set `ImgType = XlsxImgType.PlaceInCell`. The image becomes the cell value and resizes with the cell. This requires Microsoft 365; older Excel versions show `#VALUE!`. `WidthPx`, `HeightPx`, and `Location` are ignored in this mode:
+
+```csharp
+templater.AddPicture(path, new MiniExcelPicture
+{
+    ImageBytes = File.ReadAllBytes("logo.png"),
+    CellAddress = "C3",
+    ImgType = XlsxImgType.PlaceInCell,
+});
+```
+
 ![Image](https://github.com/user-attachments/assets/19c4d241-9753-4ede-96c8-f810c1a22247)
 
 #### 7. Get Sheets Dimensions

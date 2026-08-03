@@ -16,11 +16,25 @@ internal static partial class MiniExcelPictureImplement
     [CreateSyncVersion]
     public static async Task AddPictureAsync(Stream excelStream, CancellationToken cancellationToken = default, params MiniExcelPicture[] images)
     {
-        // get sheets
-        var excelArchive = await OpenXmlZip.CreateAsync(excelStream, cancellationToken: cancellationToken).ConfigureAwait(false);
-        await using var disposableExcelArchive = excelArchive.ConfigureAwait(false);
+        if (images.Length == 0)
+            return;
 
-        using var reader = await OpenXmlReader.CreateAsync(excelStream, null, cancellationToken).ConfigureAwait(false);
+        var placeInCellImages = images.Where(i => i.ImgType == XlsxImgType.PlaceInCell).ToArray();
+        var drawingImages = images.Where(i => i.ImgType != XlsxImgType.PlaceInCell).ToArray();
+
+        // Read sheet list first (leaveOpen so callers can keep using MemoryStream)
+        List<SheetRecord> sheetEntries;
+        {
+            var excelArchive = await OpenXmlZip.CreateAsync(excelStream, leaveOpen: true, cancellationToken: cancellationToken)
+                .ConfigureAwait(false);
+            await using var disposableExcelArchive = excelArchive.ConfigureAwait(false);
+            using var reader = OpenXmlReader.CreateFromArchive(excelArchive, null);
+            var rels = await reader.GetWorkbookRelsAsync(excelArchive.EntryCollection, cancellationToken).ConfigureAwait(false);
+            sheetEntries = rels?.ToList() ?? [];
+        }
+
+        if (excelStream.CanSeek)
+            excelStream.Position = 0;
 
 #if NET10_0_OR_GREATER
         var archive = await ZipArchive.CreateAsync(excelStream, ZipArchiveMode.Update, true, null, cancellationToken).ConfigureAwait(false);
@@ -28,11 +42,18 @@ internal static partial class MiniExcelPictureImplement
 #else
         using var archive = new ZipArchive(excelStream, ZipArchiveMode.Update, true);
 #endif
-		var rels = await reader.GetWorkbookRelsAsync(excelArchive.EntryCollection, cancellationToken).ConfigureAwait(false);
-        var sheetEntries = rels?.ToList() ?? [];
 
-        // Group images by sheet
-        var imagesBySheet = images.GroupBy(img => img.SheetName ?? sheetEntries[0].Name);
+        if (placeInCellImages.Length > 0)
+        {
+            await OpenXmlPlaceInCellImplement.AddAsync(archive, sheetEntries, placeInCellImages, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        if (drawingImages.Length == 0)
+            return;
+
+        // Group drawing images by sheet
+        var imagesBySheet = drawingImages.GroupBy(img => img.SheetName ?? sheetEntries[0].Name);
         foreach (var sheetGroup in imagesBySheet)
         {
             var sheetName = sheetGroup.Key;

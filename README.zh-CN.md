@@ -1662,6 +1662,18 @@ var images = new[]
 };
 MiniExcel.AddPicture(path, images);
 ```
+
+若要真正**嵌入单元格**（Excel 365「Place in Cell」），设置 `ImgType = XlsxImgType.PlaceInCell`。图片会作为单元格值，并随单元格缩放。需要 Microsoft 365；旧版 Excel 会显示 `#VALUE!`。此模式下 `WidthPx` / `HeightPx` / `Location` 无效：
+
+```csharp
+MiniExcel.AddPicture(path, new MiniExcelPicture
+{
+    ImageBytes = File.ReadAllBytes("logo.png"),
+    CellAddress = "C3",
+    ImgType = XlsxImgType.PlaceInCell,
+});
+```
+
 ![Image](https://github.com/user-attachments/assets/19c4d241-9753-4ede-96c8-f810c1a22247)
 
 #### 7. Get Sheets Dimension

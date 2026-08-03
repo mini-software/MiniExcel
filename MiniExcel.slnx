@@ -36,5 +36,6 @@
     <Project Path="tests/MiniExcel.Csv.Tests/MiniExcel.Csv.Tests.csproj" />
     <Project Path="tests/MiniExcel.OpenXml.Tests/MiniExcel.OpenXml.Tests.csproj" />
     <Project Path="tests/MiniExcel.Tests.Common/MiniExcel.Tests.Common.csproj" />
+    <Project Path="tests/MiniExcel.PlaceInCell.MinimalApis/MiniExcel.PlaceInCell.MinimalApis.csproj" />
   </Folder>
 </Solution>

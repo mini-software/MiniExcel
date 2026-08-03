@@ -2,81 +2,101 @@ using MiniExcelLib.Core;
 using MiniExcelLib.Core.Enums;
 using MiniExcelLib.OpenXml.Api;
 using MiniExcelLib.OpenXml.Picture;
-using CoreMiniExcel = MiniExcelLib.Core.MiniExcel;
 
 namespace MiniExcel.PlaceInCell.MinimalApis;
 
 internal static class Endpoints
 {
-    private static readonly OpenXmlExporter Exporter = CoreMiniExcel.Exporters.GetOpenXmlExporter();
-    private static readonly OpenXmlTemplater Templater = CoreMiniExcel.Templaters.GetOpenXmlTemplater();
+    private static readonly OpenXmlExporter Exporter = MiniExcelLib.Core.MiniExcel.Exporters.GetOpenXmlExporter();
+    private static readonly OpenXmlTemplater Templater = MiniExcelLib.Core.MiniExcel.Templaters.GetOpenXmlTemplater();
 
-    private static readonly string ExcelContentType =
+    private const string ExcelContentType =
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 
     internal static RouteGroupBuilder MapPlaceInCellApi(this IEndpointRouteBuilder builder)
     {
         var group = builder.MapGroup("api/place-in-cell");
 
-        group.MapGet("stream", GenerateInMemoryAsync);
-        group.MapGet("save", SaveToDiskAsync);
+        group.MapStreamExport();
+        group.MapSaveToDisk();
 
         return group;
     }
 
     /// <summary>
-    /// 不落地：内存生成 xlsx（Place in Cell），直接作为文件流下载。
+    /// Generate xlsx in memory (no disk) and return as download stream.
     /// </summary>
-    private static async Task<IResult> GenerateInMemoryAsync()
+    private static RouteHandlerBuilder MapStreamExport(this IEndpointRouteBuilder builder)
     {
-        var stream = await CreatePlaceInCellWorkbookAsync().ConfigureAwait(false);
-        stream.Position = 0;
-        return Results.File(stream, ExcelContentType, "place-in-cell-stream.xlsx");
+        return builder.MapGet("stream", async (CancellationToken cancellationToken) =>
+        {
+            var memoryStream = new MemoryStream();
+            await CreatePlaceInCellWorkbookAsync(memoryStream, cancellationToken);
+
+            memoryStream.Seek(0, SeekOrigin.Begin);
+            return Results.Stream(memoryStream, ExcelContentType, "place-in-cell-stream.xlsx");
+        })
+        .WithName("PlaceInCellStream")
+        .WithSummary("Generate Place in Cell xlsx in memory and download")
+        .WithDescription("Exports a workbook with PlaceInCell images using MemoryStream only (no file on disk).")
+        .Produces(StatusCodes.Status200OK, contentType: ExcelContentType);
     }
 
     /// <summary>
-    /// 落地：保存 xlsx 到桌面，返回保存路径（可用 Excel 365 打开验证嵌入效果）。
+    /// Save xlsx to the desktop and return the file path.
     /// </summary>
-    private static async Task<IResult> SaveToDiskAsync()
+    private static RouteHandlerBuilder MapSaveToDisk(this IEndpointRouteBuilder builder)
     {
-        var desktop = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
-        var fileName = $"place-in-cell-{DateTime.Now:yyyyMMdd-HHmmss}.xlsx";
-        var path = Path.Combine(desktop, fileName);
-
-        await using (var fileStream = File.Create(path))
+        return builder.MapGet("save", async (CancellationToken cancellationToken) =>
         {
-            await using var workbook = await CreatePlaceInCellWorkbookAsync().ConfigureAwait(false);
-            workbook.Position = 0;
-            await workbook.CopyToAsync(fileStream).ConfigureAwait(false);
-        }
+            var desktop = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
+            var path = Path.Combine(desktop, $"place-in-cell-{DateTime.Now:yyyyMMdd-HHmmss}.xlsx");
 
-        return Results.Ok(new
-        {
-            message = "已保存到桌面，请用 Microsoft 365 Excel 打开查看 Place in Cell 效果。",
-            path
-        });
+            // Prefer path-based APIs (same pattern as unit tests / OpenXmlTemplater file overloads)
+            var rows = CreateDemoRows();
+            await Exporter.ExportAsync(path, rows, cancellationToken: cancellationToken);
+
+            var images = await CreateDemoPicturesAsync(cancellationToken);
+            await Templater.AddPictureAsync(path, cancellationToken, images);
+
+            return Results.Ok(new
+            {
+                message = "Saved to desktop. Open with Microsoft 365 Excel to verify Place in Cell.",
+                path
+            });
+        })
+        .WithName("PlaceInCellSave")
+        .WithSummary("Save Place in Cell xlsx to desktop")
+        .WithDescription("Writes the workbook to the desktop via file-path Export + AddPicture, then returns the saved path.")
+        .Produces(StatusCodes.Status200OK);
     }
 
-    private static async Task<MemoryStream> CreatePlaceInCellWorkbookAsync()
+    private static async Task CreatePlaceInCellWorkbookAsync(Stream stream, CancellationToken cancellationToken)
     {
-        var stream = new MemoryStream();
-        var rows = new[]
-        {
-            new { Product = "GitHub", Note = "logo in C2" },
-            new { Product = "Google", Note = "logo in C3" }
-        };
+        var rows = CreateDemoRows();
+        await Exporter.ExportAsync(stream, rows, cancellationToken: cancellationToken);
+        stream.Seek(0, SeekOrigin.Begin);
 
-        await Exporter.ExportAsync(stream, rows).ConfigureAwait(false);
-        stream.Position = 0;
+        var images = await CreateDemoPicturesAsync(cancellationToken);
+        await Templater.AddPictureAsync(stream, cancellationToken, images);
+        stream.Seek(0, SeekOrigin.Begin);
+    }
 
-        var github = await File.ReadAllBytesAsync(Path.Combine(AppContext.BaseDirectory, "images", "github_logo.png"))
-            .ConfigureAwait(false);
-        var google = await File.ReadAllBytesAsync(Path.Combine(AppContext.BaseDirectory, "images", "google_logo.png"))
-            .ConfigureAwait(false);
+    private static object[] CreateDemoRows() =>
+    [
+        new { Product = "GitHub", Note = "logo in C2" },
+        new { Product = "Google", Note = "logo in C3" }
+    ];
 
-        await Templater.AddPictureAsync(
-            stream,
-            CancellationToken.None,
+    private static async Task<MiniExcelPicture[]> CreateDemoPicturesAsync(CancellationToken cancellationToken)
+    {
+        var github = await File.ReadAllBytesAsync(
+            Path.Combine(AppContext.BaseDirectory, "images", "github_logo.png"), cancellationToken);
+        var google = await File.ReadAllBytesAsync(
+            Path.Combine(AppContext.BaseDirectory, "images", "google_logo.png"), cancellationToken);
+
+        return
+        [
             new MiniExcelPicture
             {
                 ImageBytes = github,
@@ -90,9 +110,7 @@ internal static class Endpoints
                 CellAddress = "C3",
                 ImgType = XlsxImgType.PlaceInCell,
                 PictureType = "image/png"
-            }).ConfigureAwait(false);
-
-        stream.Position = 0;
-        return stream;
+            }
+        ];
     }
 }

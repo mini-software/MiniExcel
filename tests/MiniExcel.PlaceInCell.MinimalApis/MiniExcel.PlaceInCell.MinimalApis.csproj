@@ -6,7 +6,13 @@
     <Nullable>enable</Nullable>
     <RootNamespace>MiniExcel.PlaceInCell.MinimalApis</RootNamespace>
     <IsPackable>false</IsPackable>
+    <!-- Transitive OpenApi advisory from Swashbuckle; local demo only -->
+    <NoWarn>$(NoWarn);NU1903</NoWarn>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.6" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\MiniExcel.Core\MiniExcel.Core.csproj" />

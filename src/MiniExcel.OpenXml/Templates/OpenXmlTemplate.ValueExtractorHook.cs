@@ -188,8 +188,7 @@ internal partial class OpenXmlTemplate
         }
 
         // 2.  Clean up all relationship records pointing to worksheets in workbook.xml.rels
-        var relsRoot = relDoc.Root;
-        if (relsRoot != null)
+        if (relDoc.Root is { } relsRoot)
         {
             // Only delete relationships of Type 'worksheet', preserving core relationships like sharedStrings/styles/theme
             var worksheetRels = relsRoot.Elements(PackageRelNs + "Relationship")
@@ -245,10 +244,11 @@ internal partial class OpenXmlTemplate
             if (rel.Attribute("Id")?.Value is { } rid)
             {
                 var target = rel.Attribute("Target")?.Value;
-                if (string.IsNullOrEmpty(rid) || string.IsNullOrEmpty(target)) continue;
+                if (string.IsNullOrEmpty(rid) || string.IsNullOrEmpty(target)) 
+                    continue;
 
                 // Construct the full internal path (ensure forward slashes for consistency)
-                var fullSheetPath = Path.Combine("xl", target).Replace("\\", "/");
+                var fullSheetPath = Path.Combine("xl", target).Replace("\\", "/").TrimStart('/');
                 ridToSheetPath[rid] = fullSheetPath;
             }
         }

@@ -973,11 +973,11 @@ internal partial class OpenXmlTemplate
     private static StringBuilder CleanXml(StringBuilder xml, string? prefix = null)
     {
         var sb = xml
-            .Replace("xmlns:x14ac=\"http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac\"", "")
-            .Replace("xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"", "");
+            .Replace($"xmlns:x14ac={Schemas.SpreadsheetmlXmlX14Ac}", "")
+            .Replace($"xmlns={Schemas.SpreadsheetmlXmlMain}", "");
 
         return !string.IsNullOrEmpty(prefix) 
-            ? sb.Replace($"xmlns:{prefix}=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\"", "") 
+            ? sb.Replace($"xmlns:{prefix}={Schemas.SpreadsheetmlXmlMain}", "") 
             : sb;
     }
 
@@ -991,7 +991,7 @@ internal partial class OpenXmlTemplate
                 var t = cell.Attribute("t");
                 var v = cell.Element(SpreadsheetNs + "v");
                 
-                if (v?.Value is null || t?.Value != "s")
+                if (v?.Value is null || t?.Value != ExcelDataTypes.SharedString)
                     continue;
 
                 //needs to check if sharedstring exists or not
@@ -1004,7 +1004,7 @@ internal partial class OpenXmlTemplate
                 var tNode = new XElement(SpreadsheetNs + "t", shared);
                 var isNode = new XElement(SpreadsheetNs + "is", tNode);
                 cell.Add(isNode);
-                cell.SetAttributeValue("t", "inlineStr");
+                cell.SetAttributeValue("t", ExcelDataTypes.InlineString);
             }
         }
     }
@@ -1012,13 +1012,13 @@ internal partial class OpenXmlTemplate
     private static void SetCellType(XElement cell, string type)
     {
         // Force inlineStr for strings
-        if (type == "str") 
-            type = "inlineStr";
+        if (type == ExcelDataTypes.CalculatedString) 
+            type = ExcelDataTypes.InlineString;
 
-        if (type == "inlineStr")
+        if (type == ExcelDataTypes.InlineString)
         {
             // Ensure <is><t>...</t></is>
-            cell.SetAttributeValue("t", "inlineStr");
+            cell.SetAttributeValue("t", ExcelDataTypes.InlineString);
 
             if (cell.Element(SpreadsheetNs + "v") is { } v)
             {
@@ -1029,7 +1029,7 @@ internal partial class OpenXmlTemplate
                 var isNode = new XElement(SpreadsheetNs + "is", tNode);
 
                 cell.Add(isNode);
-                cell.SetAttributeValue("t", "inlineStr");
+                cell.SetAttributeValue("t", ExcelDataTypes.InlineString);
             }
             else if (cell.Element(SpreadsheetNs + "is") is null)
             {
@@ -1045,8 +1045,8 @@ internal partial class OpenXmlTemplate
             // Ensure <v>...</v>
             // For numbers/booleans, we remove 't' attribute to let it be default (number) 
             // or we could set it to 'n' explicitly, but removing is safer for general number types
-            if (type == "b")
-                cell.SetAttributeValue("t", "b");
+            if (type == ExcelDataTypes.Boolean)
+                cell.SetAttributeValue("t", ExcelDataTypes.Boolean);
             else
                 cell.Attribute("t")?.Remove();
 

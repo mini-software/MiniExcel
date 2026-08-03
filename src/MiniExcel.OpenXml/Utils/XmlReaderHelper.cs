@@ -1,5 +1,3 @@
-using MiniExcelLib.OpenXml.Constants;
-
 namespace MiniExcelLib.OpenXml.Utils;
 
 internal static partial class XmlReaderHelper
@@ -13,7 +11,7 @@ internal static partial class XmlReaderHelper
         if (reader.IsEmptyElement)
         {
             await reader.ReadAsync()
-#if NET6_0_OR_GREATER
+#if NET
                 .WaitAsync(cancellationToken)
 #endif
                 .ConfigureAwait(false);
@@ -21,13 +19,13 @@ internal static partial class XmlReaderHelper
         }
 
         await reader.MoveToContentAsync()
-#if NET6_0_OR_GREATER
+#if NET
             .WaitAsync(cancellationToken)
 #endif
             .ConfigureAwait(false);
 
         await reader.ReadAsync()
-#if NET6_0_OR_GREATER
+#if NET
             .WaitAsync(cancellationToken)
 #endif
             .ConfigureAwait(false);
@@ -41,7 +39,7 @@ internal static partial class XmlReaderHelper
         if (reader.NodeType == XmlNodeType.EndElement)
         {
             await reader.ReadAsync()
-#if NET6_0_OR_GREATER
+#if NET
                 .WaitAsync(cancellationToken)
 #endif
                 .ConfigureAwait(false);
@@ -49,7 +47,7 @@ internal static partial class XmlReaderHelper
         }
 
         await reader.SkipAsync()
-#if NET6_0_OR_GREATER
+#if NET
             .WaitAsync(cancellationToken)
 #endif
             .ConfigureAwait(false);
@@ -95,7 +93,7 @@ internal static partial class XmlReaderHelper
             {
                 // There are multiple <t> in a <si>. Concatenate <t> within an <si>.
                 result.Append(await reader.ReadElementContentAsStringAsync()
-#if NET6_0_OR_GREATER
+#if NET
                     .WaitAsync(cancellationToken)
 #endif
                     .ConfigureAwait(false));
@@ -126,8 +124,8 @@ internal static partial class XmlReaderHelper
             if (reader.IsStartElement("t", Ns))
             {
                 result.Append(await reader.ReadElementContentAsStringAsync()
-#if NET6_0_OR_GREATER
-                        .WaitAsync(cancellationToken)
+#if NET
+                    .WaitAsync(cancellationToken)
 #endif
                     .ConfigureAwait(false));
             }
@@ -143,13 +141,7 @@ internal static partial class XmlReaderHelper
     [CreateSyncVersion]
     public static async IAsyncEnumerable<string> GetSharedStringsAsync(Stream stream, [EnumeratorCancellation]CancellationToken cancellationToken = default, params string[] nss)
     {
-        var xmlSettings = GetXmlReaderSettings(
-#if SYNC_ONLY
-            false
-#else
-            true
-#endif
-        );
+        var xmlSettings = GetXmlReaderSettings();
         
         using var reader = XmlReader.Create(stream, xmlSettings);
         if (!reader.IsStartElement("sst", nss))
@@ -172,11 +164,14 @@ internal static partial class XmlReaderHelper
         }
     }
 
-    internal static XmlReaderSettings GetXmlReaderSettings(bool async) => new()
+    internal static XmlReaderSettings GetXmlReaderSettings(bool forceSynchronous = false) => new()
     {
+        CheckCharacters = false,
         IgnoreComments = true,
         IgnoreWhitespace = true,
         XmlResolver = null,
-        Async = async
+#if !SYNC_ONLY
+        Async = !forceSynchronous
+#endif
     };
 }

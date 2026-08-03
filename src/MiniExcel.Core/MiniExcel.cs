@@ -1,4 +1,7 @@
-namespace MiniExcelLib.Core;
+using MiniExcelLib.Core;
+
+// ReSharper disable once CheckNamespace
+namespace MiniExcelLib;
 
 public static class MiniExcel
 {

@@ -1,5 +1,3 @@
-using MiniExcelLib.Core;
-
 namespace MiniExcelLib.OpenXml.Utils;
 
 internal static class MiniExcelPropertyHelper

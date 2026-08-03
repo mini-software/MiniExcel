@@ -1,9 +1,6 @@
 ﻿namespace MiniExcelLib.Core.Helpers;
 
-public sealed partial class MiniExcelStreamWriter(Stream stream, Encoding encoding, int bufferSize) : IDisposable
-#if NET8_0_OR_GREATER
-    , IAsyncDisposable
-#endif
+public sealed partial class MiniExcelStreamWriter(Stream stream, Encoding encoding, int bufferSize) : IDisposable, IAsyncDisposable
 {
     // if leaveOpen is set to false, the StreamWriter closes the underlying stream synchronously in a finally block.
     // Since we want to avoid all synchronous operations when dealing with streams we leave it open here, as it will disposed from the caller anyways 
@@ -15,13 +12,12 @@ public sealed partial class MiniExcelStreamWriter(Stream stream, Encoding encodi
     {
         if (!string.IsNullOrEmpty(content))
         {
-#if NET8_0_OR_GREATER
-            await _streamWriter.WriteAsync(content.AsMemory(), cancellationToken)
+#if NET
+            await _streamWriter.WriteAsync(content.AsMemory(), cancellationToken).ConfigureAwait(false);
 #else
             cancellationToken.ThrowIfCancellationRequested();
-            await _streamWriter.WriteAsync(content)
+            await _streamWriter.WriteAsync(content).ConfigureAwait(false);
 #endif
-                .ConfigureAwait(false);
         }
     }
 
@@ -36,7 +32,7 @@ public sealed partial class MiniExcelStreamWriter(Stream stream, Encoding encodi
     public async Task<long> FlushAndGetPositionAsync(CancellationToken cancellationToken = default)
     {
         await _streamWriter.FlushAsync(
-#if NET8_0_OR_GREATER
+#if NET
             cancellationToken
 #endif
         ).ConfigureAwait(false);
@@ -57,14 +53,20 @@ public sealed partial class MiniExcelStreamWriter(Stream stream, Encoding encodi
         }
     }
 
-#if NET8_0_OR_GREATER
     public async ValueTask DisposeAsync()
     {
         if (!_disposed)
         {
-            await _streamWriter.DisposeAsync().ConfigureAwait(false);
+            await CastAndDispose(_streamWriter).ConfigureAwait(false);
             _disposed = true;
         }
+        
+        static async ValueTask CastAndDispose(IDisposable? resource)
+        {
+            if (resource is IAsyncDisposable asyncDisposable)
+                await asyncDisposable.DisposeAsync().ConfigureAwait(false);
+            else
+                resource?.Dispose();
+        }
     }
-#endif
 }

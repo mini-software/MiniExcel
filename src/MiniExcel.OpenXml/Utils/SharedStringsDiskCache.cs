@@ -1,6 +1,8 @@
-﻿namespace MiniExcelLib.OpenXml.Utils;
+﻿using System.Buffers;
 
-internal class SharedStringsDiskCache : IDictionary<int, string>, IDisposable
+namespace MiniExcelLib.OpenXml.Utils;
+
+internal sealed class SharedStringsDiskCache : IDictionary<int, string>, IDisposable
 {
     private const int ExcelCellMaxLength = 32767;
     private static readonly Encoding Encoding = new UTF8Encoding(true);
@@ -34,7 +36,7 @@ internal class SharedStringsDiskCache : IDictionary<int, string>, IDisposable
     }
 
     // index must start with 0-N
-    private void Add(int index, string value)
+    public void Add(int index, string value)
     {
         if (index > _maxIndex)
             _maxIndex = index;
@@ -50,59 +52,103 @@ internal class SharedStringsDiskCache : IDictionary<int, string>, IDisposable
 
     private string GetValue(int index)
     {
-        _positionFs.Position = index * 4;
-        var bytes = new byte[4];
-        _ = _positionFs.Read(bytes, 0, 4);
-        var position = BitConverter.ToInt32(bytes, 0);
-            
-        bytes = new byte[4];
-        _lengthFs.Position = index * 4;
-        _ = _lengthFs.Read(bytes, 0, 4);
-        var length = BitConverter.ToInt32(bytes, 0);
-            
-        bytes = new byte[length];
-        _valueFs.Position = position;
-        _ = _valueFs.Read(bytes, 0, length);
+        if (index > _maxIndex)
+            throw new KeyNotFoundException();
+        
+        _positionFs.Seek(index * 4, SeekOrigin.Begin);
+#if NET
+        Span<byte> bytes = stackalloc byte[4];
+        _ = _positionFs.Read(bytes);
+        var position = BitConverter.ToInt32(bytes);
 
-        return Encoding.GetString(bytes);
+        bytes.Clear();
+        _lengthFs.Seek(index * 4, SeekOrigin.Begin);
+        _ = _lengthFs.Read(bytes);
+        var length = BitConverter.ToInt32(bytes);
+
+        byte[] rented = [];
+        if (length <= 1024)
+        {
+            bytes = stackalloc byte[length];
+        }
+        else
+        {
+            rented = ArrayPool<byte>.Shared.Rent(length);
+            bytes = rented;
+        }
+
+        try
+        {
+            _valueFs.Seek(position, SeekOrigin.Begin);
+            _ = _valueFs.Read(bytes);
+
+            return Encoding.GetString(bytes[..length]);
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(rented);
+        }
+#else
+        var bytes1 = ArrayPool<byte>.Shared.Rent(4);
+        byte[] bytes2 = [];
+
+        try
+        {
+            _ = _positionFs.Read(bytes1, 0, 4);
+            var position = BitConverter.ToInt32(bytes1, 0);
+
+            Array.Clear(bytes1, 0, 4);
+            _lengthFs.Position = index * 4;
+            _ = _lengthFs.Read(bytes1, 0, 4);
+            var length = BitConverter.ToInt32(bytes1, 0);
+
+            bytes2 = ArrayPool<byte>.Shared.Rent(length);
+            _valueFs.Position = position;
+            _ = _valueFs.Read(bytes2, 0, length);
+
+            return Encoding.GetString(bytes2);
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(bytes1);
+            ArrayPool<byte>.Shared.Return(bytes2);
+        }
+#endif
     }
 
-    public ICollection<int> Keys => throw new NotImplementedException();
-    public ICollection<string> Values => throw new NotImplementedException();
+    public ICollection<int> Keys => throw new NotSupportedException();
+    public ICollection<string> Values => throw new NotSupportedException();
     public bool IsReadOnly => throw new NotImplementedException();
     public bool Remove(int key)
     {
-        throw new NotImplementedException();
+        throw new NotSupportedException();
     }
 
     public bool TryGetValue(int key, out string value)
     {
-        throw new NotImplementedException();
+        throw new NotSupportedException();
     }
 
-    public void Add(KeyValuePair<int, string> item)
-    {
-        throw new NotImplementedException();
-    }
+    public void Add(KeyValuePair<int, string> item) => Add(item.Key, item.Value);
 
     public void Clear()
     {
-        throw new NotImplementedException();
+        throw new NotSupportedException();
     }
 
     public bool Contains(KeyValuePair<int, string> item)
     {
-        throw new NotImplementedException();
+        throw new NotSupportedException();
     }
 
     public void CopyTo(KeyValuePair<int, string>[] array, int arrayIndex)
     {
-        throw new NotImplementedException();
+        throw new NotSupportedException();
     }
 
     public bool Remove(KeyValuePair<int, string> item)
     {
-        throw new NotImplementedException();
+        throw new NotSupportedException();
     }
 
     public IEnumerator<KeyValuePair<int, string>> GetEnumerator()
@@ -111,51 +157,25 @@ internal class SharedStringsDiskCache : IDictionary<int, string>, IDisposable
             yield return new KeyValuePair<int, string>(i, this[i]);
     }
 
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-        for (int i = 0; i <= _maxIndex; i++)
-            yield return this[i];
-    }
-
-    void IDictionary<int, string>.Add(int key, string value)
-    {
-        throw new NotImplementedException();
-    }
-    
-    
-    ~SharedStringsDiskCache()
-    {
-        Dispose(disposing: false);
-    }
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
     public void Dispose()
     {
-        Dispose(disposing: true);
-        GC.SuppressFinalize(this);
-    }
-    
-    protected virtual void Dispose(bool disposing)
-    {
-        if (!_disposedValue)
-        {
-            if (disposing)
-            {
-                // TODO: dispose managed state (managed objects)
-            }
+        if (_disposedValue)
+            return;
+
+        _positionFs.Dispose();
+        if (File.Exists(_positionFs.Name))
+            File.Delete(_positionFs.Name);
                 
-            _positionFs.Dispose();
-            if (File.Exists(_positionFs.Name))
-                File.Delete(_positionFs.Name);
+        _lengthFs.Dispose();
+        if (File.Exists(_lengthFs.Name))
+            File.Delete(_lengthFs.Name);
                 
-            _lengthFs.Dispose();
-            if (File.Exists(_lengthFs.Name))
-                File.Delete(_lengthFs.Name);
+        _valueFs.Dispose();
+        if (File.Exists(_valueFs.Name))
+            File.Delete(_valueFs.Name);
                 
-            _valueFs.Dispose();
-            if (File.Exists(_valueFs.Name))
-                File.Delete(_valueFs.Name);
-                
-            _disposedValue = true;
-        }
+        _disposedValue = true;
     }
 }

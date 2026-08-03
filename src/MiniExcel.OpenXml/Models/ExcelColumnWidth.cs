@@ -53,7 +53,7 @@ public sealed class ExcelColumnWidthCollection : IReadOnlyCollection<ExcelColumn
         return new ExcelColumnWidthCollection(columnWidths, maxWidth);
     }
 
-    internal void AdjustWidth(int columnIndex, string columnValue)
+    internal void AdjustWidth(int columnIndex, string? columnValue)
     {
         if (!string.IsNullOrEmpty(columnValue) && _columnWidths.TryGetValue(columnIndex, out var currentWidth))
         {

@@ -15,6 +15,8 @@ public class CsvConfiguration : MiniExcelBaseConfiguration
     public bool AlwaysQuote { get; set; } = false;
     public bool QuoteWhitespaces { get; set; } = true;
     public Func<string, string[]>? SplitFn { get; set; }
-    public Func<Stream, StreamReader> StreamReaderFunc { get; set; } = stream => new StreamReader(stream, DefaultEncoding);
+
+    // we leave the stream open by default and close it in the CsvReader unless the consumer decides to keep it open.
+    public Func<Stream, StreamReader> StreamReaderFunc { get; set; } = stream => new StreamReader(stream, DefaultEncoding, true, 1024, true);
     public Func<Stream, StreamWriter> StreamWriterFunc { get; set; } = stream => new StreamWriter(stream, DefaultEncoding);
 }

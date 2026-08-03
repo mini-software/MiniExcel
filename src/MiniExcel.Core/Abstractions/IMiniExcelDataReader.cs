@@ -4,4 +4,5 @@ public interface IMiniExcelDataReader : IDataReader, IAsyncDisposable
 {
     Task CloseAsync();
     Task<bool> ReadAsync(CancellationToken cancellationToken = default);
+    Task<bool> NextResultAsync(CancellationToken cancellationToken = default);
 }

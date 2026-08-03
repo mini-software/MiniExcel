@@ -3,7 +3,7 @@
 /// <summary> XmlEncoder MIT Copyright ©2021 from https://github.com/ClosedXML </summary>
 internal static partial class XmlHelper
 {
-#if NET7_0_OR_GREATER
+#if NET
     [GeneratedRegex("_(x[\\dA-Fa-f]{4})_", RegexOptions.Compiled)] private static partial Regex X4LRegexImpl();
     private static readonly Regex X4LRegex = X4LRegexImpl();
     

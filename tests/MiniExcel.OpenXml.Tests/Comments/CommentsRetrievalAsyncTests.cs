@@ -9,7 +9,7 @@ public class CommentsRetrievalAsyncTests
     [Fact]
     public async Task SheetWithCommentsAndNotesTestAsync()
     {
-        var commentSet = await _excelImporter.RetrieveCommentsAsync(PathHelper.GetFile("xlsx/TestCommentsAndNotes.xlsx"), "sheet1");
+        var commentSet = await _excelImporter.RetrieveCommentsAsync(PathHelper.GetFile("xlsx/TestCommentsAndNotes.xlsx"));
         var (firstComment, secondComment) = (commentSet.Comments[0], commentSet.Comments[1]);
         
         Assert.Equal("sheet1", commentSet.SheetName, ignoreCase: true);

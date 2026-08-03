@@ -19,8 +19,8 @@ public class ExcelRangeElement
 
 public class ExcelRange(int maxRow, int maxColumn)
 {
-    public string StartCell { get; internal set; }
-    public string EndCell { get; internal set; }
+    public string? StartCell { get; internal set; }
+    public string? EndCell { get; internal set; }
 
     public ExcelRangeElement Rows { get; } = new(1, maxRow);
     public ExcelRangeElement Columns { get; } = new(1, maxColumn);

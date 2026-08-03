@@ -56,11 +56,11 @@ public static partial class MiniExcelMapper
 
                 //Q: Why need to check every time? A: it needs to check everytime, because it's dictionary
                 object? itemValue = null;
-                if (map.ExcelIndexName is not null && (keys?.Contains(map.ExcelIndexName) is true))
+                if (map.ExcelIndexName is not null && keys?.Contains(map.ExcelIndexName) is true)
                 {
                     item.TryGetValue(map.ExcelIndexName, out itemValue);
                 }
-                else if (map.ExcelColumnName is not null && (headersDic?.TryGetValue(map.ExcelColumnName, out var columnId) is true))
+                else if (map.ExcelColumnName is not null && headersDic?.TryGetValue(map.ExcelColumnName, out var columnId) is true)
                 {
                     var columnName = keys[columnId];
                     item.TryGetValue(columnName, out itemValue);
@@ -77,7 +77,7 @@ public static partial class MiniExcelMapper
         }
     }
     
-    public static object? MapValue<T>(T v, MiniExcelColumnMapping map, object itemValue, int rowIndex, MiniExcelBaseConfiguration config, Func<string?, string?>? stringDecoderFunc = null) where T : class, new()
+    public static object? MapValue<T>(T v, MiniExcelColumnMapping map, object? itemValue, int rowIndex, MiniExcelBaseConfiguration config, Func<string?, string?>? stringDecoderFunc = null) where T : class, new()
     {
         try
         {
@@ -145,8 +145,8 @@ public static partial class MiniExcelMapper
                 else
                     throw new InvalidCastException($"{vs} cannot be cast to DateTime");
             }
-            
-#if NET6_0_OR_GREATER
+
+#if NET
             else if (map.ExcludeNullableType == typeof(DateOnly))
             {
                 if (itemValue is DateOnly)

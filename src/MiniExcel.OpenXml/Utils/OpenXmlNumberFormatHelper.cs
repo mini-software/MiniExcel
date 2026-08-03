@@ -59,12 +59,10 @@ internal static class Evaluator
         // Positive;Negative;Zero;Text
         return value switch
         {
-            string s => sections.Count >= 4 ? sections[3] : null,
-            DateTime dt => GetFirstSection(sections, SectionType.Date), // TODO: Check date conditions need date helpers and Date1904 knowledge
-            TimeSpan ts => GetNumericSection(sections),
-            double d => GetNumericSection(sections),
-            int i => GetNumericSection(sections),
-            short s => GetNumericSection(sections),
+            string => sections.Count >= 4 ? sections[3] : null,
+            DateTime => GetFirstSection(sections, SectionType.Date), // TODO: Check date conditions need date helpers and Date1904 knowledge
+            TimeSpan => GetNumericSection(sections),
+            double or int or short => GetNumericSection(sections),
             _ => null
         };
     }
@@ -365,7 +363,7 @@ internal class DecimalSection
     private static double GetPercentMultiplier(List<string> tokens)
     {
         // If there is a percentage literal in the part list, multiply the result by 100
-        return tokens.Any(token => token == "%") ? 100 : 1;
+        return tokens.Exists(token => token == "%") ? 100 : 1;
     }
 
     private static double GetTrailingCommasDivisor(List<string> tokens, out bool thousandSeparator)
@@ -699,7 +697,7 @@ internal static class Parser
         decimalSeparator = false;
 
         List<string> remainder = [];
-        var index = 0;
+        int index;
         for (index = 0; index < tokens.Count; ++index)
         {
             var token = tokens[index];
@@ -770,8 +768,7 @@ internal static class Parser
     private static string? ReadToken(Tokenizer reader, out bool syntaxError)
     {
         var offset = reader.Position;
-        if (
-            ReadLiteral(reader) ||
+        if (ReadLiteral(reader) ||
             reader.ReadEnclosed('[', ']') ||
 
             // Symbols
@@ -815,6 +812,14 @@ internal static class Parser
 
         if (reader.ReadEnclosed('"', '"'))
         {
+            return true;
+        }
+
+        // Treat any unrecognized character as a literal
+        // This allows international currency symbols and other characters
+        if (reader.Peek() is var currentChar and not -1 && !Token.IsFormatSpecifier((char)currentChar))
+        {
+            reader.Advance();
             return true;
         }
 
@@ -935,50 +940,45 @@ internal class Tokenizer(string? fmt)
 
 internal static class Token
 {
+    // Characters that Excel uses for formatting logic
+    private static readonly HashSet<char> ReservedChars =
+    [
+        '0', '#', '?', '.', ',', '%', ';', 
+
+        // Scientific notation
+        'e', 'E',
+
+        // Date and Time codes
+        'm', 'M', 'd', 'D', 'y', 'Y', 'h', 'H', 's', 'S',
+
+        // AM/PM indicators
+        'a', 'A', 'p', 'P',
+
+        // Text placeholder
+        '@',
+
+        // Control & Structural characters
+        '[', ']', // Colors, conditions, or elapsed time
+        '"', // String wrapper
+        '\\', // Escape character
+        '*', // Fill space character
+        '_'
+    ];
+    
     public static bool IsExponent(string token) =>
         string.Compare(token, "e+", StringComparison.OrdinalIgnoreCase) == 0 ||
         string.Compare(token, "e-", StringComparison.OrdinalIgnoreCase) == 0;
 
-    public static bool IsLiteral(string token) =>
-        token.StartsWith("_", StringComparison.Ordinal) ||
-        token.StartsWith("\\", StringComparison.Ordinal) ||
-        token.StartsWith("\"", StringComparison.Ordinal) ||
-        token.StartsWith("*", StringComparison.Ordinal) ||
-        token == "," ||
-        token == "!" ||
-        token == "&" ||
-        token == "%" ||
-        token == "+" ||
-        token == "-" ||
-        token == "$" ||
-        token == "€" ||
-        token == "£" ||
-        token == "1" ||
-        token == "2" ||
-        token == "3" ||
-        token == "4" ||
-        token == "5" ||
-        token == "6" ||
-        token == "7" ||
-        token == "8" ||
-        token == "9" ||
-        token == "{" ||
-        token == "}" ||
-        token == "(" ||
-        token == ")" ||
-        token == " ";
-
     public static bool IsNumberLiteral(string token) =>
         IsPlaceholder(token) ||
-        IsLiteral(token) ||
+        (!IsDatePart(token) && !IsDurationPart(token)) ||
         token == ".";
 
-    public static bool IsPlaceholder(string token) => token is "0" or "#" or "?";
+    public static bool IsPlaceholder(string token)
+        => token is "0" or "#" or "?";
 
-    public static bool IsGeneral(string token)
-    {
-        return string.Compare(token, "general", StringComparison.OrdinalIgnoreCase) == 0;
-    }
+    public static bool IsGeneral(string token) 
+        => string.Compare(token, "general", StringComparison.OrdinalIgnoreCase) == 0;
 
     public static bool IsDatePart(string token) =>
         token.StartsWith("y", StringComparison.OrdinalIgnoreCase) ||
@@ -996,14 +996,14 @@ internal static class Token
         token.StartsWith("[m", StringComparison.OrdinalIgnoreCase) ||
         token.StartsWith("[s", StringComparison.OrdinalIgnoreCase);
 
-    public static bool IsDigit09(string token)
-    {
-        return token == "0" || IsDigit19(token);
-    }
+    public static bool IsDigit09(string token) => token == "0" || IsDigit19(token);
 
     public static bool IsDigit19(string token) => token switch
     {
         "1" or "2" or "3" or "4" or "5" or "6" or "7" or "8" or "9" => true,
         _ => false
     };
+
+    // Check if character is a known format specifier that should NOT be treated as literal
+    public static bool IsFormatSpecifier(char @char) => ReservedChars.Contains(@char);
 }

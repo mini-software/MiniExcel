@@ -10,12 +10,7 @@ public static class ExpandoHelper
         for (int i = startCellIndex; i <= maxColumnIndex; i++)
         {
             var key = CellReferenceConverter.GetAlphabeticalIndex(i);
-#if NETCOREAPP2_0_OR_GREATER
             cell.TryAdd(key, null);
-#else
-            if (!cell.ContainsKey(key))
-                cell.Add(key, null);
-#endif
         }
 
         return cell;
@@ -26,12 +21,7 @@ public static class ExpandoHelper
         IDictionary<string, object?> cell = new ExpandoObject();
         foreach (var hr in headers)
         {
-#if NETCOREAPP2_0_OR_GREATER
             cell.TryAdd(hr.Value, null);
-#else
-            if (!cell.ContainsKey(hr.Value))
-                cell.Add(hr.Value, null);
-#endif
         }
 
         return cell;

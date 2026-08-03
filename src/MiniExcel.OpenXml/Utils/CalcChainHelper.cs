@@ -24,13 +24,13 @@ internal static partial class CalcChainHelper
 	{
 		var content = $"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><calcChain xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\">{calcChainContent}</calcChain>";
 
-#if NET8_0_OR_GREATER
+#if NET
 		var writer = new StreamWriter(calcChainStream, Encoding.UTF8);
 		await using var disposableWriter = writer.ConfigureAwait(false);
 		await writer.WriteAsync(content.AsMemory(), cancellationToken).ConfigureAwait(false);
-	#else
+#else
 		using var writer = new StreamWriter(calcChainStream, Encoding.UTF8);
 		await writer.WriteAsync(content).ConfigureAwait(false);
-	#endif
+#endif
 	}
 }

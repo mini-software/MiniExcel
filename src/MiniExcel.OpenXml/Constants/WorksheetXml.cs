@@ -1,6 +1,4 @@
-﻿using MiniExcelLib.Core.Attributes;
-
-namespace MiniExcelLib.OpenXml.Constants;
+﻿namespace MiniExcelLib.OpenXml.Constants;
 
 internal static class WorksheetXml
 {
@@ -52,10 +50,22 @@ internal static class WorksheetXml
     internal const string EndCols = "</x:cols>";
 
     internal static string EmptyCell(string cellReference, string styleIndex) => $"<x:c r=\"{cellReference}\" s=\"{styleIndex}\"></x:c>";
-        
-    //t check avoid format error ![image](https://user-images.githubusercontent.com/12729184/118770190-9eee3480-b8b3-11eb-9f5a-87a439f5e320.png)
     internal static string Cell(string cellReference, string? cellType, string styleIndex, string? cellValue, bool preserveSpace = false, ColumnType columnType = ColumnType.Value)
-        => $"<x:c r=\"{cellReference}\"{(cellType is null ? string.Empty : $" t=\"{cellType}\"")} s=\"{styleIndex}\"{(preserveSpace ? " xml:space=\"preserve\"" : string.Empty)}><x:{(columnType == ColumnType.Formula ? "f" : "v")}>{cellValue}</x:{(columnType == ColumnType.Formula ? "f" : "v")}></x:c>";
+    {
+        return cellType switch
+        {
+            _ when columnType == ColumnType.Formula 
+                => $"""<x:c r="{cellReference}" t="{ExcelDataTypes.CalculatedString}" s="{styleIndex}"{(preserveSpace ? " xml:space=\"preserve\"" : "")}><x:f>{XmlHelper.EncodeXml(cellValue)}</x:f></x:c>""", 
+            
+            ExcelDataTypes.InlineString
+                => $"""<x:c r="{cellReference}" t="{ExcelDataTypes.InlineString}" s="{styleIndex}"><x:is><x:t{(preserveSpace ? " xml:space=\"preserve\"" : "")}>{XmlHelper.EncodeXml(cellValue)}</x:t></x:is></x:c>""",
+
+            ExcelDataTypes.SharedString
+                => $"""<x:c r="{cellReference}" t="{ExcelDataTypes.SharedString}" s="{styleIndex}"><x:v>{cellValue}</x:v></x:c>""",
+            
+            _ => $"""<x:c r="{cellReference}" t="{cellType}" s="{styleIndex}"><x:v>{cellValue}</x:v></x:c>"""
+        };
+    }
 
     internal static string Autofilter(string dimensionRef) => $"<x:autoFilter ref=\"{dimensionRef}\" />";
     internal static string Drawing(int sheetIndex) => $"<x:drawing r:id=\"drawing{sheetIndex}\" />";

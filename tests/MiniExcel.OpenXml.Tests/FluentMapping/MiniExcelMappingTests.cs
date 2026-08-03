@@ -1251,7 +1251,7 @@ namespace MiniExcelLib.OpenXml.Tests.FluentMapping
             {
                 var boundaries = mapping.OptimizedBoundaries;
                 // Pattern detection for multiple items
-                Assert.True(boundaries.PatternHeight > 0 || !boundaries.IsMultiItemPattern);
+                Assert.True(boundaries?.PatternHeight > 0 || boundaries?.IsMultiItemPattern is false);
             }
         }
 

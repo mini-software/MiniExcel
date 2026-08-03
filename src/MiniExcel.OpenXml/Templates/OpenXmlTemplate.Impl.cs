@@ -1,8 +1,3 @@
-using MiniExcelLib.Core.Attributes;
-using System.ComponentModel;
-using System.Xml.Linq;
-using  MiniExcelLib.OpenXml.Constants;
-
 namespace MiniExcelLib.OpenXml.Templates;
 
 internal partial class OpenXmlTemplate
@@ -15,17 +10,8 @@ internal partial class OpenXmlTemplate
         Async = true
 #endif
     };
-    
-    private static readonly XmlWriterSettings FragXmlWriterSettings = new()
-    {
-        OmitXmlDeclaration = true,
-        ConformanceLevel =  ConformanceLevel.Fragment,
-#if !SYNC_ONLY
-        Async = true
-#endif
-    };
 
-#if NET8_0_OR_GREATER
+#if NET
     [GeneratedRegex("(?<={{).*?(?=}})")] private static partial Regex ExpressionRegex();
     private static readonly Regex IsExpressionRegex = ExpressionRegex();
     [GeneratedRegex("([A-Z]+)([0-9]+)")] private static partial Regex CellRegexImpl();
@@ -37,7 +23,7 @@ internal partial class OpenXmlTemplate
     [GeneratedRegex(@"<(?:x:)?v>\s*</(?:x:)?v>")] private static partial Regex EmptyVTagRegexImpl();
     private static readonly Regex EmptyVTagRegex = EmptyVTagRegexImpl();
 #else
-    private static readonly Regex IsExpressionRegex = new("(?<={{).*?(?=}})");
+    private static readonly Regex IsExpressionRegex = new("(?<={{).*?(?=}})", RegexOptions.Compiled);
     private static readonly Regex CellRegex = new("([A-Z]+)([0-9]+)", RegexOptions.Compiled);
     private static readonly Regex TemplateRegex = new(@"\{\{(.*?)\}\}", RegexOptions.Compiled);
     private static readonly Regex NonTemplateRegex = new(@".*?\{\{.*?\}\}.*?", RegexOptions.Compiled);
@@ -53,13 +39,8 @@ internal partial class OpenXmlTemplate
     [CreateSyncVersion]
     private async Task GenerateSheetByUpdateModeAsync(ZipArchiveEntry sheetZipEntry, Stream stream, Stream sheetStream, IDictionary<string, object> inputMaps, IDictionary<int, string> sharedStrings, bool mergeCells = false, CancellationToken cancellationToken = default)
     {
-#if NET8_0_OR_GREATER
         var doc = await XDocument.LoadAsync(sheetStream, LoadOptions.None, cancellationToken).ConfigureAwait(false);
         await sheetStream.DisposeAsync().ConfigureAwait(false);
-#else
-        var doc = XDocument.Load(sheetStream);
-        sheetStream.Dispose();
-#endif
 
         // we can't update ZipArchiveEntry directly, so we delete the original entry and recreate it
         sheetZipEntry.Delete();
@@ -73,7 +54,7 @@ internal partial class OpenXmlTemplate
         GetMergeCells(worksheet);
         UpdateDimensionAndGetRowsInfo(inputMaps, worksheet, rows, !mergeCells);
 
-#if NET8_0_OR_GREATER
+#if NET
         var writer = XmlWriter.Create(stream, DocXmlWriterSettings);
         await using var disposableWriter = writer.ConfigureAwait(false);
 #else
@@ -86,14 +67,10 @@ internal partial class OpenXmlTemplate
     [CreateSyncVersion]
     private async Task GenerateSheetByCreateModeAsync(ZipArchiveEntry templateSheetZipEntry, Stream outputZipSheetEntryStream, IDictionary<string, object?> inputMaps, IDictionary<int, string> sharedStrings, bool mergeCells = false, CancellationToken cancellationToken = default)
     {
-#if NET8_0_OR_GREATER
         var newTemplateStream = await templateSheetZipEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
         await using var disposableNewTemplateStream = newTemplateStream.ConfigureAwait(false);
         var doc = await XDocument.LoadAsync(newTemplateStream, LoadOptions.None, cancellationToken).ConfigureAwait(false);
-#else
-        using var newTemplateStream = templateSheetZipEntry.Open();
-        var doc = XDocument.Load(newTemplateStream);
-#endif
+
         var worksheet = doc.Element(SpreadsheetNs + "worksheet");
         var prefix = worksheet?.GetPrefixOfNamespace(SpreadsheetNs);
         if (!string.IsNullOrEmpty(prefix))
@@ -111,7 +88,7 @@ internal partial class OpenXmlTemplate
         GetMergeCells(worksheet);
         UpdateDimensionAndGetRowsInfo(inputMaps, worksheet, rows, !mergeCells);
 
-#if NET8_0_OR_GREATER
+#if NET
         var writer = XmlWriter.Create(outputZipSheetEntryStream, DocXmlWriterSettings);
         await using var disposableWriter = writer.ConfigureAwait(false);
 #else
@@ -135,7 +112,7 @@ internal partial class OpenXmlTemplate
         }
     }
 
-    private static IEnumerable<ConditionalFormatRange> NewParseConditionalFormatRanges(XElement worksheet)
+    private static IEnumerable<ConditionalFormatRange> ParseConditionalFormatRanges(XElement worksheet)
     {
         var conditionalFormatting = worksheet.Element(SpreadsheetNs + "conditionalFormatting");
         if (conditionalFormatting is null)
@@ -196,7 +173,7 @@ internal partial class OpenXmlTemplate
     {
         // TODO: Can we make this less complex?
 
-        var conditionalFormatRanges = NewParseConditionalFormatRanges(worksheet).ToList();
+        var conditionalFormatRanges = ParseConditionalFormatRanges(worksheet).ToList();
         var newConditionalFormatRanges = new List<ConditionalFormatRange>();
         newConditionalFormatRanges.AddRange(conditionalFormatRanges);
 
@@ -236,7 +213,7 @@ internal partial class OpenXmlTemplate
 
         foreach (var beforeElement in beforeSheetData)
         {
-#if NET8_0_OR_GREATER
+#if NET
             await beforeElement.WriteToAsync(writer, cancellationToken).ConfigureAwait(false);
 #else
             beforeElement.WriteTo(writer);
@@ -493,7 +470,7 @@ internal partial class OpenXmlTemplate
 
         foreach (var afterElement in afterSheetData)
         {
-#if NET8_0_OR_GREATER
+#if NET
             await afterElement.WriteToAsync(writer, cancellationToken).ConfigureAwait(false);
 #else
             afterElement.WriteTo(writer);
@@ -633,11 +610,8 @@ internal partial class OpenXmlTemplate
             else
             {
                 var replacements = new Dictionary<string, string>();
-#if NET8_0_OR_GREATER
                 string MatchDelegate(Match x) => replacements.GetValueOrDefault(x.Groups[1].Value, "");
-#else
-                string MatchDelegate(Match x) => replacements.TryGetValue(x.Groups[1].Value, out var repl) ? repl : "";
-#endif
+
                 foreach (var prop in rowInfo.PropsMap)
                 {
                     var propInfo = prop.Value.PropertyInfo;
@@ -666,46 +640,16 @@ internal partial class OpenXmlTemplate
                         ? prop.Value.UnderlyingMemberType
                         : Nullable.GetUnderlyingType(propInfo.PropertyType) ?? propInfo.PropertyType;
 
-                    string? cellValueStr;
-                    if (type == typeof(bool))
-                    {
-                        cellValueStr = (bool)cellValue ? "1" : "0";
-                    }
-                    else if (type == typeof(DateTime))
-                    {
-                        cellValueStr = ConvertToDateTimeString(propInfo, cellValue);
-                    }
-                    else if (type?.IsEnum is true)
-                    {
-                        var stringValue = Enum.GetName(type, cellValue) ?? "";
-
-                        var attr = type.GetField(stringValue)?.GetCustomAttribute<DescriptionAttribute>();
-                        var description = attr?.Description ?? stringValue;
-
-                        cellValueStr = XmlHelper.EncodeXml(description);
-                    }
-                    else
-                    {
-                        cellValueStr = XmlHelper.EncodeXml(cellValue?.ToString());
-                        if (TypeHelper.IsNumericType(type))
-                        {
-                            if (decimal.TryParse(cellValueStr, out var decimalValue))
-                                cellValueStr = decimalValue.ToString(CultureInfo.InvariantCulture);
-                        }
-                    }
-
-                    // escaping formulas
-                    var tempReplacement = cellValueStr ?? "";
-                    var replacementValue = tempReplacement.StartsWith("$=") || tempReplacement.StartsWith("=")
-                        ? $"&apos;{tempReplacement}" 
-                        : tempReplacement;
+                    var replacementValue = GetFormattedValue(propInfo, cellValue, type);
                     
                     replacements[key] = replacementValue;
+                    FlattenAndFormatValues(replacements, key, cellValue, _configuration.RecursivePropertiesMaxDepth, propInfo);
+
                     rowXml.Replace($"@header{{{{{key}}}}}", replacementValue);
 
                     if (isHeaderRow && row.Value.Contains(key))
                     {
-                        currentHeader += cellValueStr;
+                        currentHeader += replacementValue;
                     }
                 }
 
@@ -808,6 +752,47 @@ internal partial class OpenXmlTemplate
             PrevHeader = prevHeader,
             RowIndexDiff = rowIndexDiff,
         };
+    }
+
+    /// <summary>
+    /// Formats the given cell value into a string representation suitable for OpenXml injection.
+    /// Handles specific types like booleans, dates, enums, and numeric values.
+    /// </summary>
+    private static string GetFormattedValue(PropertyInfo? propInfo, object? cellValue, Type? type)
+    {
+        string? cellValueStr;
+        if (type == typeof(bool))
+        {
+            cellValueStr = (bool)cellValue! ? "1" : "0";
+        }
+        else if (type == typeof(DateTime))
+        {
+            cellValueStr = ConvertToDateTimeString(propInfo, cellValue);
+        }
+        else if (type?.IsEnum is true)
+        {
+            // Use the DescriptionAttribute value if it exists, otherwise fallback to the enum string name.
+            var stringValue = Enum.GetName(type, cellValue!) ?? "";
+            var attr = type.GetField(stringValue)?.GetCustomAttribute<DescriptionAttribute>();
+            var description = attr?.Description ?? stringValue;
+            
+            // Encode the final string to ensure it is safe for XML.
+            cellValueStr = XmlHelper.EncodeXml(description);
+        }
+        else
+        {
+            cellValueStr = XmlHelper.EncodeXml(cellValue?.ToString());
+            if (TypeHelper.IsNumericType(type) && decimal.TryParse(cellValueStr, out var decimalValue))
+            {
+                cellValueStr = decimalValue.ToString(CultureInfo.InvariantCulture);
+            }
+        }
+
+        // escaping formulas
+        var tempReplacement = cellValueStr ?? "";
+        return tempReplacement.StartsWith("$=") || tempReplacement.StartsWith("=")
+            ? $"&apos;{tempReplacement}"
+            : tempReplacement;
     }
 
     private static void MergeCells(List<XRowInfo> xRowInfos)
@@ -964,7 +949,7 @@ internal partial class OpenXmlTemplate
         rowXml.Append(rowElement.FirstNode);
     }
 
-    private static string? ConvertToDateTimeString(PropertyInfo? propInfo, object cellValue)
+    private static string? ConvertToDateTimeString(PropertyInfo? propInfo, object? cellValue)
     {
         //TODO:c.SetAttribute("t", "d"); and custom format
         var format = propInfo?.GetAttributeValue((MiniExcelFormatAttribute x) => x.Format)
@@ -1230,8 +1215,38 @@ internal partial class OpenXmlTemplate
                             v?.Value = v.Value.Replace($"{{{{{propNames[0]}.{propNames[1]}}}}}", "");
                             continue;
                         }
+
                         // auto check type https://github.com/mini-software/MiniExcel/issues/177
-                        var type = prop.UnderlyingMemberType; //avoid nullable
+                        var currentType = prop.UnderlyingMemberType;
+
+                        // If the template expression exceeds two levels down the property chain to retrieve the deepest actual type.
+                        for (int i = 2; i < propNames.Length; i++)
+                        {
+                            if (currentType == null) 
+                                break;
+
+                            var searchType = Nullable.GetUnderlyingType(currentType) ?? currentType;
+
+                            // Try to find a property first
+                            var deepProp = searchType.GetProperty(propNames[i]);
+                            if (deepProp != null)
+                            {
+                                currentType = Nullable.GetUnderlyingType(deepProp.PropertyType) ?? deepProp.PropertyType;
+                                continue;
+                            }
+
+                            // Fallback to finding a field (for records or public fields)
+                            if (searchType.GetField(propNames[i]) is { } deepField)
+                            {
+                                currentType = Nullable.GetUnderlyingType(deepField.FieldType) ?? deepField.FieldType;
+                                continue;
+                            }
+
+                            // Break if neither property nor field is found
+                            currentType = null; 
+                        }
+
+                        var type = currentType;
 
                         if (isMultiMatch)
                         {

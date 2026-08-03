@@ -3,5 +3,5 @@
 internal partial interface ISheetStyleBuilder
 {
     [CreateSyncVersion]
-    Task<SheetStyleBuildResult> BuildAsync(CancellationToken cancellationToken = default);
+    Task BuildAsync(CancellationToken cancellationToken = default);
 }

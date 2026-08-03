@@ -1,8 +1,7 @@
 using BenchmarkDotNet.Attributes;
 using ClosedXML.Report;
 using MiniExcelLib.Benchmarks.Utils;
-using MiniExcelLib.Core;
-using MiniExcelLib.OpenXml.Api;
+using MiniExcelLib.OpenXml;
 using MiniExcelLib.OpenXml.FluentMapping;
 using MiniExcelLib.OpenXml.FluentMapping.Api;
 
@@ -10,9 +9,9 @@ namespace MiniExcelLib.Benchmarks.BenchmarkSections;
 
 public class TemplateExcelBenchmark : BenchmarkBase
 {
-    private OpenXmlTemplater _templater;
-    private MappingTemplater _mappingTemplater;
-    private OpenXmlExporter _exporter;
+    private OpenXmlTemplater _templater = null!;
+    private MappingTemplater _mappingTemplater = null!;
+    private OpenXmlExporter _exporter = null!;
 
     public class Employee
     {
@@ -38,13 +37,13 @@ public class TemplateExcelBenchmark : BenchmarkBase
     [Benchmark(Description = "MiniExcel Fill Template")]
     public void MiniExcel_Template_Generate_Test()
     {
-        const string templatePath = "TestTemplateBasicIEmumerableFill.xlsx";
+        const string templatePath = "data/TestTemplateBasicIEmumerableFill.xlsx";
         
         using var path = AutoDeletingPath.Create();
         var value = new
         {
             employees = Enumerable.Range(1, RowCount)
-                .Select(s => new
+                .Select(_ => new
                 {
                     name = "Jack",
                     department = "HR"
@@ -57,7 +56,7 @@ public class TemplateExcelBenchmark : BenchmarkBase
     [Benchmark(Description = "ClosedXml.Report Generate Template")]
     public void ClosedXml_Report_Template_Generate_Test()
     {
-        const string templatePath = "TestTemplateBasicIEmumerableFill_ClosedXML_Report.xlsx";
+        const string templatePath = "data/TestTemplateBasicIEmumerableFill_ClosedXML_Report.xlsx";
         
         using var path = AutoDeletingPath.Create();
         var value = new
@@ -90,7 +89,7 @@ public class TemplateExcelBenchmark : BenchmarkBase
         
         using var outputPath = AutoDeletingPath.Create();
         var employees = Enumerable.Range(1, RowCount)
-            .Select(s => new Employee
+            .Select(_ => new Employee
             {
                 Name = "Jack",
                 Department = "HR"

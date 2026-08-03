@@ -1,4 +1,4 @@
-using MiniExcel.Samples.MinimalApis;
+using MiniExcelLib.Samples.MinimalApis;
 
 var builder = WebApplication.CreateBuilder(args);
 var app = builder.Build();

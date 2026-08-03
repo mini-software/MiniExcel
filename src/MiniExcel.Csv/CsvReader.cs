@@ -5,19 +5,23 @@ using MiniExcelMapper = MiniExcelLib.Core.Reflection.MiniExcelMapper;
 
 namespace MiniExcelLib.Csv;
 
-internal partial class CsvReader : IMiniExcelReader
+internal sealed partial class CsvReader : IMiniExcelReader
 {
     private readonly Stream _stream;
+    private readonly bool _leaveOpen;
     private readonly CsvConfiguration _config;
 
-    internal CsvReader(Stream stream, IMiniExcelConfiguration? configuration)
+    private bool _disposed;
+
+    internal CsvReader(Stream stream, IMiniExcelConfiguration? configuration, bool leaveOpen = false)
     {
         _stream = stream;
+        _leaveOpen = leaveOpen;
         _config = configuration as CsvConfiguration ?? CsvConfiguration.Default;
     }
 
     [CreateSyncVersion]
-    public async IAsyncEnumerable<IDictionary<string, object?>> QueryAsync(bool useHeaderRow, string? sheetName, string startCell, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    public async IAsyncEnumerable<IDictionary<string, object?>> QueryAsync(bool hasHeaderRow, string? sheetName, string startCell, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
@@ -27,13 +31,13 @@ internal partial class CsvReader : IMiniExcelReader
         if (_stream.CanSeek)
             _stream.Position = 0;
 
-        var reader = _config.StreamReaderFunc(_stream);
+        using var reader = _config.StreamReaderFunc(_stream);
         var firstRow = true;
         var headRows = new Dictionary<int, string>();
 
         var rowIndex = 0;
         while (await reader.ReadLineAsync(
-#if NET7_0_OR_GREATER
+#if NET
             cancellationToken
 #endif
             ).ConfigureAwait(false) is { } row)
@@ -49,7 +53,7 @@ internal partial class CsvReader : IMiniExcelReader
                 while (finalRow.Count(c => c == '"') % 2 != 0)
                 {
                     var nextPart = await reader.ReadLineAsync(
-#if NET7_0_OR_GREATER
+#if NET
                         cancellationToken
 #endif
                     ).ConfigureAwait(false);
@@ -75,7 +79,7 @@ internal partial class CsvReader : IMiniExcelReader
             }
 
             //header
-            if (useHeaderRow)
+            if (hasHeaderRow)
             {
                 if (firstRow)
                 {
@@ -121,13 +125,12 @@ internal partial class CsvReader : IMiniExcelReader
     [CreateSyncVersion]
     public IAsyncEnumerable<T> QueryAsync<T>(string? sheetName, string startCell, bool mapHeaderAsData, CancellationToken cancellationToken = default) where T : class, new()
     {
-        const int rowOffset = 0; // ranged queries are not supported for csv
         var records = QueryAsync(false, sheetName, startCell, cancellationToken);
         return MiniExcelMapper.MapQueryAsync<T>(records, 0, mapHeaderAsData, false, _config, null, cancellationToken);
     }
 
     [CreateSyncVersion]
-    public IAsyncEnumerable<IDictionary<string, object?>> QueryRangeAsync(bool useHeaderRow, string? sheetName, string startCell, string endCell, CancellationToken cancellationToken = default)
+    public IAsyncEnumerable<IDictionary<string, object?>> QueryRangeAsync(bool hasHeaderRow, string? sheetName, string startCell, string endCell, CancellationToken cancellationToken = default)
     {
         throw new NotSupportedException("Ranged queries are not supported for csv file");
     }
@@ -140,7 +143,7 @@ internal partial class CsvReader : IMiniExcelReader
     }
 
     [CreateSyncVersion]
-    public IAsyncEnumerable<IDictionary<string, object?>> QueryRangeAsync(bool useHeaderRow, string? sheetName, int startRowIndex, int startColumnIndex, int? endRowIndex, int? endColumnIndex, CancellationToken cancellationToken = default)
+    public IAsyncEnumerable<IDictionary<string, object?>> QueryRangeAsync(bool hasHeaderRow, string? sheetName, int startRowIndex, int startColumnIndex, int? endRowIndex, int? endColumnIndex, CancellationToken cancellationToken = default)
     {
         throw new NotSupportedException("Ranged queries are not supported for csv file");
     }
@@ -159,12 +162,33 @@ internal partial class CsvReader : IMiniExcelReader
         
         //this code from S.O : https://stackoverflow.com/a/11365961/9131476
         return Regex.Split(row, $"[\t{_config.Seperator}](?=(?:[^\"]|\"[^\"]*\")*$)")
-            .Select(s => Regex.Replace(s.Replace("\"\"", "\""), "^\"|\"$", ""))
+            .Select(s => DoubleQuotesRegexImpl.Replace(s.Replace("\"\"", "\""), ""))
             .ToArray();
     }
 
+#if NET
+    [GeneratedRegex("^\"|\"$")]
+    private static partial Regex DoubleQuotesRegex();
+    private static readonly Regex DoubleQuotesRegexImpl = DoubleQuotesRegex();
+#else
+    private static readonly Regex DoubleQuotesRegexImpl = new Regex("^\"|\"$",  RegexOptions.Compiled);
+#endif
+
     public void Dispose()
     {
-        ((Stream?)_stream)?.Dispose();
+        if (!_leaveOpen && !_disposed)
+        {
+            _stream.Dispose();
+            _disposed = true;
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (!_leaveOpen && !_disposed)
+        {
+            await _stream.DisposeAsync().ConfigureAwait(false);
+            _disposed = true;
+        }
     }
 }

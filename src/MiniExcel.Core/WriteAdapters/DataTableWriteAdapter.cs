@@ -16,7 +16,7 @@ internal class DataTableWriteAdapter(DataTable dataTable, MiniExcelBaseConfigura
         var mappings = new List<MiniExcelColumnMapping>();
         for (var i = 0; i < _dataTable.Columns.Count; i++)
         {
-            var columnName = _dataTable.Columns[i].Caption ?? _dataTable.Columns[i].ColumnName;
+            var columnName = _dataTable.Columns[i].Caption;
             var map = ColumnMappingsProvider.GetColumnMappingFromDynamicConfiguration(columnName, _configuration);
             mappings.Add(map);
         }

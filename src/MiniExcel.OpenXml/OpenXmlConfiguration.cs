@@ -15,6 +15,14 @@ public class OpenXmlConfiguration : MiniExcelBaseConfiguration
     public int FreezeColumnCount { get; set; } = 0;
     public bool EnableConvertByteArray { get; set; } = true;
     public bool EnableWriteFilePath{ get; set; } = true;
+
+    /// <summary>
+    /// When true, <c>byte[]</c> image columns are written as Excel 365 Place in Cell
+    /// (embedded cell values via richData) instead of floating Drawing pictures.
+    /// Requires <see cref="EnableConvertByteArray"/> = true and <see cref="MiniExcelBaseConfiguration.FastMode"/> = true.
+    /// Needs Microsoft 365; older Excel may show <c>#VALUE!</c>.
+    /// </summary>
+    public bool EmbedImagesInCell { get; set; }
     public bool IgnoreTemplateParameterMissing { get; set; } = true;
     public bool EnableWriteNullValueCell { get; set; } = true;
     public bool WriteEmptyStringAsNull { get; set; } = false;

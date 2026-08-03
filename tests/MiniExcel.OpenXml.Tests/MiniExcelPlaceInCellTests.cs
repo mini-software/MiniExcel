@@ -191,4 +191,60 @@ public class MiniExcelPlaceInCellTests
         Assert.Equal("e", (string?)c3.Attribute("t"));
         Assert.NotNull(sheet.Root!.Element(ns + "drawing"));
     }
+
+    [Fact]
+    public void EmbedImagesInCell_ExportConfig_WritesPlaceInCellNotDrawing()
+    {
+        using var stream = new MemoryStream();
+        var value = new[]
+        {
+            new { Name = "github", Image = File.ReadAllBytes(PathHelper.GetFile("images/github_logo.png")) },
+            new { Name = "google", Image = File.ReadAllBytes(PathHelper.GetFile("images/google_logo.png")) },
+        };
+
+        _excelExporter.Export(stream, value, configuration: new OpenXmlConfiguration
+        {
+            FastMode = true,
+            EnableConvertByteArray = true,
+            EmbedImagesInCell = true
+        });
+
+        stream.Position = 0;
+        using var zip = new ZipArchive(stream, ZipArchiveMode.Read, leaveOpen: true);
+
+        Assert.NotNull(zip.GetEntry("xl/metadata.xml"));
+        Assert.NotNull(zip.GetEntry("xl/richData/rdrichvalue.xml"));
+        Assert.DoesNotContain(zip.Entries, e => e.FullName.StartsWith("xl/drawings/", StringComparison.OrdinalIgnoreCase));
+
+        XNamespace ns = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
+        var sheet = XDocument.Load(zip.GetEntry("xl/worksheets/sheet1.xml")!.Open());
+        Assert.Null(sheet.Root!.Element(ns + "drawing"));
+
+        var b2 = sheet.Descendants(ns + "c").First(c => (string?)c.Attribute("r") == "B2");
+        Assert.Equal("e", (string?)b2.Attribute("t"));
+        Assert.Equal("#VALUE!", (string?)b2.Element(ns + "v"));
+    }
+
+    [Fact]
+    public void EmbedImagesInCell_False_KeepsFloatingDrawing()
+    {
+        using var stream = new MemoryStream();
+        var value = new[]
+        {
+            new { Name = "github", Image = File.ReadAllBytes(PathHelper.GetFile("images/github_logo.png")) },
+        };
+
+        _excelExporter.Export(stream, value, configuration: new OpenXmlConfiguration
+        {
+            FastMode = true,
+            EnableConvertByteArray = true,
+            EmbedImagesInCell = false
+        });
+
+        stream.Position = 0;
+        using var zip = new ZipArchive(stream, ZipArchiveMode.Read, leaveOpen: true);
+
+        Assert.Null(zip.GetEntry("xl/metadata.xml"));
+        Assert.Contains(zip.Entries, e => e.FullName.StartsWith("xl/drawings/", StringComparison.OrdinalIgnoreCase));
+    }
 }

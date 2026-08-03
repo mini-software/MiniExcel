@@ -1,8 +1,10 @@
 using System.ComponentModel;
 using System.Xml.Linq;
 using MiniExcelLib.Core;
+using MiniExcelLib.Core.Enums;
 using MiniExcelLib.Core.WriteAdapters;
 using MiniExcelLib.OpenXml.Constants;
+using MiniExcelLib.OpenXml.Picture;
 using MiniExcelLib.OpenXml.Styles.Builder;
 
 namespace MiniExcelLib.OpenXml;
@@ -43,6 +45,10 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
         var conf = configuration as OpenXmlConfiguration ?? OpenXmlConfiguration.Default;
         if (conf is { EnableAutoWidth: true, FastMode: false })
             throw new InvalidOperationException("Auto width requires fast mode to be enabled");
+
+        // Place-in-cell rewriting needs ZipArchiveMode.Update (seekable entry rewrite).
+        if (conf is { EmbedImagesInCell: true, FastMode: false })
+            throw new InvalidOperationException("EmbedImagesInCell requires FastMode to be enabled");
 
         // A. Why ZipArchiveMode.Update and not ZipArchiveMode.Create?
         // R. ZipArchiveEntry does not support seeking when Mode is Create.
@@ -338,7 +344,10 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
                 await writer.WriteAsync(WorksheetXml.Autofilter(GetDimensionRef(maxRowIndex, maxColumnIndex)), cancellationToken).ConfigureAwait(false);
             }
 
-            await writer.WriteAsync(WorksheetXml.Drawing(_currentSheetIndex), cancellationToken).ConfigureAwait(false);
+            // Place-in-cell images are cell values (richData), not Drawing anchors.
+            if (!_configuration.EmbedImagesInCell)
+                await writer.WriteAsync(WorksheetXml.Drawing(_currentSheetIndex), cancellationToken).ConfigureAwait(false);
+
             await writer.WriteAsync(WorksheetXml.EndWorksheet, cancellationToken).ConfigureAwait(false);
 
             if (_configuration.FastMode && dimensionPlaceholderPostition != 0)
@@ -482,11 +491,63 @@ internal partial class OpenXmlWriter : IMiniExcelWriter
     [CreateSyncVersion]
     private async Task GenerateEndXmlAsync(CancellationToken cancellationToken)
     {
+        if (_configuration.EmbedImagesInCell)
+        {
+            // Non-image binaries still go into the package; images are written by PlaceInCell.
+            foreach (var item in _files.Where(f => !f.IsImage))
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                await CreateZipEntryAsync(item.Path, item.Byte, cancellationToken).ConfigureAwait(false);
+            }
+
+            await GenerateWorkbookXmlAsync(cancellationToken).ConfigureAwait(false);
+            await GenerateContentTypesXmlAsync(cancellationToken).ConfigureAwait(false);
+            await GeneratePlaceInCellImagesAsync(cancellationToken).ConfigureAwait(false);
+            return;
+        }
+
         await AddFilesToZipAsync(cancellationToken).ConfigureAwait(false);
         await GenerateDrawinRelXmlAsync(cancellationToken).ConfigureAwait(false);
         await GenerateDrawingXmlAsync(cancellationToken).ConfigureAwait(false);
         await GenerateWorkbookXmlAsync(cancellationToken).ConfigureAwait(false);
         await GenerateContentTypesXmlAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    [CreateSyncVersion]
+    private async Task GeneratePlaceInCellImagesAsync(CancellationToken cancellationToken)
+    {
+        var images = _files
+            .Where(f => f.IsImage)
+            .Select(f =>
+            {
+                var sheetName = _sheets.FirstOrDefault(s => s.SheetIdx == f.SheetId)?.Name;
+                var ext = (f.Extension ?? "png").ToLowerInvariant();
+                if (ext == "jpg")
+                    ext = "jpeg";
+
+                return new MiniExcelPicture
+                {
+                    ImageBytes = f.Byte,
+                    CellAddress = CellReferenceConverter.GetCellFromCoordinates(f.CellIndex, f.RowIndex),
+                    SheetName = sheetName,
+                    ImgType = XlsxImgType.PlaceInCell,
+                    PictureType = $"image/{ext}"
+                };
+            })
+            .ToArray();
+
+        if (images.Length == 0)
+            return;
+
+        var sheetEntries = _sheets
+            .Select(s => new SheetRecord(s.Name ?? "Sheet1", s.State ?? string.Empty, (uint)s.SheetIdx, s.ID, false)
+            {
+                Path = s.Path
+            })
+            .ToList();
+
+        await OpenXmlPlaceInCellImplement.AddAsync(_archive, sheetEntries, images, cancellationToken)
+            .ConfigureAwait(false);
     }
 
     [CreateSyncVersion]

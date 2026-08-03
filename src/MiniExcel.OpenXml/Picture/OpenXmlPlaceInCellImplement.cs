@@ -734,8 +734,20 @@ internal static partial class OpenXmlPlaceInCellImplement
     private static XmlDocument LoadOrCreateXml(ZipArchive archive, string path, Func<XmlDocument> factory)
     {
         var entry = archive.GetEntry(path);
-        if (entry is null || entry.Length == 0)
+        if (entry is null)
             return factory();
+
+        // Length is unavailable after an entry was opened for write in Update mode.
+        try
+        {
+            if (entry.Length == 0)
+                return factory();
+        }
+        catch (InvalidOperationException)
+        {
+            // Fall through and try to load from the entry stream.
+        }
+
         return LoadXml(entry);
     }
 

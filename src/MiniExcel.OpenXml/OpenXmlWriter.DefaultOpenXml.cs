@@ -209,6 +209,13 @@ internal partial class OpenXmlWriter
 
         if (type == typeof(byte[]) && _configuration.EnableConvertByteArray)
         {
+            if (_configuration.EmbedImagesInCell)
+            {
+                // Collect image; Place in Cell richData is written in GenerateEndXml.
+                GetFileValue(rowIndex, cellIndex, value);
+                return ("2", "str", "");
+            }
+
             if (!_configuration.EnableWriteFilePath) 
                 return ("4", "str", "");
             
@@ -391,7 +398,9 @@ internal partial class OpenXmlWriter
 
             //TODO: support multiple drawing
             //TODO: ../drawings/drawing1.xml or /xl/drawings/drawing1.xml
-            sheetsRelsXml.Add(sheetDto.SheetIdx, ExcelXml.DrawingRelationship(sheetId));
+            // Place-in-cell images do not use Drawing parts.
+            if (!_configuration.EmbedImagesInCell)
+                sheetsRelsXml.Add(sheetDto.SheetIdx, ExcelXml.DrawingRelationship(sheetId));
         }
     }
 

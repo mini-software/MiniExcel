@@ -169,7 +169,7 @@ internal partial class OpenXmlTemplate
     /// Adds worksheets to the workbook and register them int workbook.xml and workbook.xml.rels
     /// </summary>
     [CreateSyncVersion]
-    private static async Task BatchAddSheetsToWorkbookAsync(ZipArchive outputZip, ZipArchive templateArchive, List<(int Index, string Name)> sheetInfos, bool removeCalcCahinFromRels, CancellationToken cancellationToken)
+    private static async Task BatchAddSheetsToWorkbookAsync(ZipArchive outputZip, ZipArchive templateArchive, List<(int Index, string Name)> sheetInfos, bool removeCalcChainFromRels, CancellationToken cancellationToken)
     {
         // Load the workbook and its relationships from the template
         var relDoc = await LoadXmlAsync(templateArchive, ExcelFileNames.WorkbookRels, cancellationToken).ConfigureAwait(false);
@@ -191,11 +191,13 @@ internal partial class OpenXmlTemplate
         if (relDoc.Root is { } relsRoot)
         {
             // Remove the calcChain relationship if the contents have been invalidated upstream
-            if (removeCalcCahinFromRels)
+            if (removeCalcChainFromRels)
             {
-                relsRoot.Elements()
-                    .FirstOrDefault(x => x.Attribute("Target")?.Value.Equals(ExcelFileNames.CalcChain, StringComparison.OrdinalIgnoreCase) is true)
-                    ?.Remove();
+                var calcChainRecord = relsRoot.Elements().FirstOrDefault(x => 
+                    x.Attribute("Target")?.Value
+                        .EndsWith("calcChain.xml", StringComparison.OrdinalIgnoreCase) is true
+                );
+                calcChainRecord?.Remove();
             }
 
             // Delete relationships of Type 'worksheet', preserving core relationships like sharedStrings/styles/theme

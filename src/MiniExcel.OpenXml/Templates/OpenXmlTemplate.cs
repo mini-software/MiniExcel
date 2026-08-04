@@ -178,7 +178,10 @@ internal partial class OpenXmlTemplate : IMiniExcelTemplate
         else
         {
             var elements = contentTypesDoc.Root?.Elements();
-            var calcChainRecord = elements?.FirstOrDefault(x => x.Attribute("PartName")?.Value.Equals(ExcelFileNames.CalcChain, StringComparison.OrdinalIgnoreCase) is true);
+            var calcChainRecord = elements?.FirstOrDefault(x => 
+                x.Attribute("PartName")?.Value.TrimStart('/')
+                    .Equals(ExcelFileNames.CalcChain, StringComparison.OrdinalIgnoreCase) is true
+            );
             calcChainRecord?.Remove();
         }
         

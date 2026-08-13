@@ -14,6 +14,7 @@ The Rust MVP implements the smallest useful MiniExcel-style XLSX read/write surf
 | `chrono` | 0.4 | Timezone-free Excel date/time values | MIT OR Apache-2.0 | Resolved by the workspace lockfile |
 | `indexmap` | 2.x | Stable dynamic column ordering | MIT OR Apache-2.0 | Resolved by the workspace lockfile |
 | `quick-xml` | 0.39 | Incremental OOXML parsing | MIT | Locked and checked with Rust 1.85 |
+| `serde_json` | 1.x | Shared parity contract tests only | MIT OR Apache-2.0 | Dev dependency checked with Rust 1.85 |
 | `thiserror` | 2.x | Public error composition | MIT OR Apache-2.0 | Resolved by the workspace lockfile |
 | `zip` | 7.2 | Incremental worksheet entry decompression | MIT | Locked and checked with Rust 1.85 |
 
@@ -69,7 +70,7 @@ For typed writing, chrono values must use the matching MiniExcel helper (`serial
 
 `MiniExcel::query()` and `query_as()` use a dedicated path-streaming backend. A worker owns the ZIP archive, reads workbook relationships, styles, and shared strings, then processes worksheet XML with quick-xml. A bounded channel holds at most eight parsed rows. Dropping the public iterator disconnects the channel and joins the worker, so an early `take` or `find` stops further work.
 
-The backend makes two sequential, bounded-memory passes over the selected worksheet entry. The first records only the maximum used column and final row containing a cell. This is required for MiniExcel-compatible stable dynamic schemas when legal files omit `<dimension>`, and to avoid exposing trailing style-only row elements. The second pass emits rows. Worksheet XML and prior rows are never retained; memory consists primarily of shared strings, styles, parser buffers, the current row, and the bounded channel.
+The backend makes two sequential, bounded-memory passes over the selected worksheet entry. The first records only the maximum used column and final explicitly declared row. This is required for MiniExcel-compatible stable dynamic schemas when legal files omit `<dimension>`, and to preserve style-only row elements like the .NET reader. The second pass emits rows. Worksheet XML and prior rows are never retained; memory consists primarily of shared strings, styles, parser buffers, the current row, and the bounded channel.
 
 The internal writer assembles a new ZIP package. The public facade writes to paths and cannot patch or insert sheets into an existing workbook.
 
@@ -86,6 +87,26 @@ Rust integration tests reuse the repository's existing files under `tests/data/x
 - Strict streaming A1 starts, empty-row filtering, dates, trimmed headers, and early typed errors.
 
 Writer tests generate temporary workbooks through `MiniExcel::save_as*()` and read them back through `MiniExcel::query*()`, covering dynamic and typed values, dates, empty schemas, path overwrite behavior, and worksheet-name validation.
+
+## .NET Parity Contract
+
+Behavior shared by .NET and Rust is defined in `tests/data/contracts/xlsx-parity-v1.json`. This file is the single expected-data source for:
+
+- `tests/MiniExcel.OpenXml.Tests/Compatibility/RustParityContractTests.cs`
+- `rust/miniexcel/tests/parity_contract.rs`
+
+Both adapters use their public APIs, query the same XLSX fixtures, normalize language-specific representations, and compare sheet order, row counts, column order, selected values, and common conversion-error context. Normalization maps null/empty cells, booleans, numbers, GUIDs, datetimes, durations, and strings to stable tagged text. In particular, integral .NET `double` and Rust `CellValue::Int` values compare as the same number, and ISO date strings compare with chrono date/time values.
+
+Run both sides from the repository root:
+
+```bash
+cargo +1.85.0 test --manifest-path rust/Cargo.toml -p miniexcel --test parity_contract --locked
+dotnet test tests/MiniExcel.OpenXml.Tests/MiniExcel.OpenXml.Tests.csproj --framework net10.0 --filter "FullyQualifiedName~RustParityContractTests"
+```
+
+The Rust workflow runs the Rust contract on Linux and Windows and runs the .NET contract on Linux. The regular .NET workflow also discovers the parity tests. A compatibility change is complete only when the shared contract is updated deliberately and both adapters pass it.
+
+The contract covers only the current common surface: dynamic/typed path queries, header behavior, sheet selection/order, A1 starts, empty/style-only rows, inferred cell references, scalar/date/duration mapping, trimmed typed headers, and conversion-error row/value context. Async APIs, DataReader, range-end queries, templates, and writing parity remain outside version 1 and must not be described as equivalent yet.
 
 ## Deferred Work
 

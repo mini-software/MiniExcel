@@ -5,12 +5,16 @@ on:
     paths:
       - "rust/**"
       - "tests/data/xlsx/**"
+      - "tests/data/contracts/**"
+      - "tests/MiniExcel.OpenXml.Tests/Compatibility/RustParityContractTests.cs"
       - ".github/workflows/rust.yml"
   push:
     branches: [master]
     paths:
       - "rust/**"
       - "tests/data/xlsx/**"
+      - "tests/data/contracts/**"
+      - "tests/MiniExcel.OpenXml.Tests/Compatibility/RustParityContractTests.cs"
       - ".github/workflows/rust.yml"
 
 permissions:
@@ -54,6 +58,21 @@ jobs:
           workspaces: rust -> target
       - name: Run tests
         run: cargo test --manifest-path rust/Cargo.toml --workspace --all-targets --locked
+
+  dotnet-parity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Run shared XLSX parity contract
+        run: >-
+          dotnet test tests/MiniExcel.OpenXml.Tests/MiniExcel.OpenXml.Tests.csproj
+          --framework net10.0
+          --filter "FullyQualifiedName~RustParityContractTests"
+          --verbosity minimal
 
   msrv:
     runs-on: ubuntu-latest

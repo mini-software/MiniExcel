@@ -29,6 +29,17 @@ cargo test --manifest-path rust/Cargo.toml --workspace --all-targets --locked
 
 仓库会提交 workspace 的 `Cargo.lock`，确保本地研究与 CI 使用同一依赖图。
 
+## .NET 等价验证
+
+.NET 与 Rust 共同消费版本化行为契约 `tests/data/contracts/xlsx-parity-v1.json`，对相同 XLSX fixture、动态/类型化 query 和规范化预期值进行比较。
+
+```bash
+cargo +1.85.0 test --manifest-path rust/Cargo.toml -p miniexcel --test parity_contract --locked
+dotnet test tests/MiniExcel.OpenXml.Tests/MiniExcel.OpenXml.Tests.csproj --framework net10.0 --filter "FullyQualifiedName~RustParityContractTests"
+```
+
+只有两条命令都通过，相关行为才视为等价。规范化规则和 v1 明确范围请查看[兼容性研究记录](docs/compatibility.md#net-parity-contract)。
+
 ## 公开 API
 
 `MiniExcel` 是唯一公开的行为入口。reader、writer、ZIP/XML parser 和 iterator 具体类型全部保留在 crate 内部。crate 根其余导出仅为数据与配置契约：`CellValue`、`DynamicRow`、`CellReference`、`ReadOptions`、`WriteOptions`、`HeaderMode`、`Error` 和 `Result`。日期/时间 Serde adapter 位于 `serde_helpers`。
@@ -69,7 +80,7 @@ for record in MiniExcel::query_as::<Record>("book.xlsx")? {
 
 `MiniExcel::query()` 和 `query_as()` 接收路径，因为迭代器存活期间由 worker 持有 ZIP archive。具体 iterator 类型刻意隐藏在 crate 内部。
 
-> **内存边界：** 流式路径会在内存中保留工作簿元数据、样式、shared-string table、少量行 channel 和 parser buffer，但不会保留完整 worksheet XML 或所有行。为了在 `<dimension>` 缺失/过期时仍提供稳定的全局列 schema，并排除末尾仅带样式的空行，它会先做一次有界内存元数据扫描，再进行流式输出。峰值内存仍可能随 shared-string table 或单个超大行增长，但不会随 worksheet 总行数增长。
+> **内存边界：** 流式路径会在内存中保留工作簿元数据、样式、shared-string table、少量行 channel 和 parser buffer，但不会保留完整 worksheet XML 或所有行。为了在 `<dimension>` 缺失/过期时仍提供稳定的全局列 schema，并保留 XML 中明确声明的仅样式空行，它会先做一次有界内存元数据扫描，再进行流式输出。峰值内存仍可能随 shared-string table 或单个超大行增长，但不会随 worksheet 总行数增长。
 
 ## 动态读取
 

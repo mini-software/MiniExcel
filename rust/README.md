@@ -31,6 +31,17 @@ cargo test --manifest-path rust/Cargo.toml --workspace --all-targets --locked
 
 The workspace lockfile is committed so CI and local research use the same dependency graph.
 
+## .NET Parity
+
+.NET and Rust consume the same versioned behavior contract at `tests/data/contracts/xlsx-parity-v1.json`. It covers the common dynamic and typed query surface with the same XLSX fixtures and canonical expected values.
+
+```bash
+cargo +1.85.0 test --manifest-path rust/Cargo.toml -p miniexcel --test parity_contract --locked
+dotnet test tests/MiniExcel.OpenXml.Tests/MiniExcel.OpenXml.Tests.csproj --framework net10.0 --filter "FullyQualifiedName~RustParityContractTests"
+```
+
+Both commands must pass for a behavior to be considered equivalent. See [Compatibility and research notes](docs/compatibility.md#net-parity-contract) for normalization rules and the explicit version 1 scope.
+
 ## Public API
 
 `MiniExcel` is the only public behavior entry point. Reader, writer, ZIP/XML parser, and iterator implementation types are internal. The remaining root exports are data and configuration contracts: `CellValue`, `DynamicRow`, `CellReference`, `ReadOptions`, `WriteOptions`, `HeaderMode`, `Error`, and `Result`. Date/time Serde adapters are available under `serde_helpers`.
@@ -71,7 +82,7 @@ for record in MiniExcel::query_as::<Record>("book.xlsx")? {
 
 `MiniExcel::query()` and `query_as()` accept paths because a worker owns the ZIP archive while the iterator is alive. Their concrete iterator types are intentionally hidden.
 
-> **Memory boundary:** the streaming path keeps workbook metadata, styles, and the shared-string table in memory, plus a small row channel and parser buffers. It does not retain worksheet XML or all worksheet rows. It performs one bounded-memory metadata pass before the streaming pass so every dynamic row has a stable global column schema and trailing style-only rows are excluded even when `<dimension>` is missing or stale. Peak memory can still grow with the shared-string table or a single exceptionally large row, but not with the full worksheet row count.
+> **Memory boundary:** the streaming path keeps workbook metadata, styles, and the shared-string table in memory, plus a small row channel and parser buffers. It does not retain worksheet XML or all worksheet rows. It performs one bounded-memory metadata pass before the streaming pass so every dynamic row has a stable global column schema and explicitly declared style-only rows are preserved even when `<dimension>` is missing or stale. Peak memory can still grow with the shared-string table or a single exceptionally large row, but not with the full worksheet row count.
 
 ## Dynamic Reading
 

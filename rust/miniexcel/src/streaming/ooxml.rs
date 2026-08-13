@@ -441,6 +441,7 @@ where
                 let row = row_index(&event, xml.decoder(), last_declared_row)?;
                 current_row = Some(row);
                 last_declared_row = Some(row);
+                extent.end_row = Some(extent.end_row.map_or(row, |end| end.max(row)));
                 next_column = 0;
             }
             Event::Start(event) | Event::Empty(event)
@@ -450,7 +451,6 @@ where
                     .and_then(|reference| parse_column(&reference))
                     .unwrap_or(next_column);
                 next_column = column.saturating_add(1);
-                extent.end_row = current_row;
                 extent.end_column = Some(extent.end_column.map_or(column, |end| end.max(column)));
             }
             Event::End(event) if is_name(event.name().as_ref(), b"row") => {

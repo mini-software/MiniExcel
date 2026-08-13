@@ -29,13 +29,14 @@ fn streaming_query_preserves_self_closing_empty_rows() {
         .collect::<miniexcel::Result<Vec<_>>>()
         .expect("stream rows");
 
-    assert_eq!(rows.len(), 10);
+    assert_eq!(rows.len(), 30);
     assert!(rows[0]["A"].is_empty());
     assert_eq!(rows[1]["A"], CellValue::Int(1));
     assert!(rows[2]["A"].is_empty());
     assert_eq!(rows[3]["A"], CellValue::Int(2));
     assert!(rows[4..9].iter().all(|row| row["A"].is_empty()));
     assert_eq!(rows[9]["A"], CellValue::Int(1));
+    assert!(rows[10..].iter().all(|row| row["A"].is_empty()));
 }
 
 #[test]
@@ -169,13 +170,14 @@ fn preserves_self_closing_empty_rows() {
         .collect::<miniexcel::Result<Vec<_>>>()
         .expect("read rows");
 
-    assert_eq!(rows.len(), 10);
+    assert_eq!(rows.len(), 30);
     assert!(rows[0]["A"].is_empty());
     assert_eq!(rows[1]["A"], CellValue::Int(1));
     assert!(rows[2]["A"].is_empty());
     assert_eq!(rows[3]["A"], CellValue::Int(2));
     assert!(rows[4..9].iter().all(|row| row["A"].is_empty()));
     assert_eq!(rows[9]["A"], CellValue::Int(1));
+    assert!(rows[10..].iter().all(|row| row["A"].is_empty()));
 }
 
 #[test]

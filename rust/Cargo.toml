@@ -1,0 +1,23 @@
+[workspace]
+members = ["miniexcel"]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+license = "Apache-2.0"
+repository = "https://github.com/mini-software/MiniExcel"
+homepage = "https://github.com/mini-software/MiniExcel"
+
+[workspace.dependencies]
+calamine = { version = "0.35.0", features = ["chrono"] }
+chrono = { version = "0.4.42", features = ["serde"] }
+indexmap = "2.12.1"
+rust_xlsxwriter = { version = "0.96.0", features = ["chrono", "serde"] }
+serde = { version = "1.0.228", features = ["derive"] }
+tempfile = "3.23.0"
+thiserror = "2.0.17"
+
+[workspace.lints.rust]
+unsafe_code = "forbid"

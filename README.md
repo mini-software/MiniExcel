@@ -34,6 +34,8 @@
 
 MiniExcel is a simple and efficient Excel processing tool for .NET, specifically designed to minimize memory usage.
 
+> **Experimental Rust XLSX MVP:** See the [Rust implementation and usage guide](rust/README.md).
+
 At present, most popular frameworks need to load all the data from an Excel document into memory to facilitate operations, but this may cause memory consumption problems. MiniExcel's approach is different: the data is processed row by row in a streaming manner, reducing the original consumption from potentially hundreds of megabytes to just a few megabytes, effectively preventing out-of-memory(OOM) issues.
 
 ```mermaid

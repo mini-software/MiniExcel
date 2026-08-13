@@ -403,3 +403,6 @@ FodyWeavers.xsd
 /tests/MiniExcel.Tests/TemplateOptimization
 /tests/data/xlsx/Test_EnableWriteFilePath.xlsx
 samples/xlsx/Test_EnableWriteFilePath.xlsx
+
+# Rust
+/rust/target/

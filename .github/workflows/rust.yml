@@ -1,0 +1,69 @@
+name: Rust
+
+on:
+  pull_request:
+    paths:
+      - "rust/**"
+      - "tests/data/xlsx/**"
+      - ".github/workflows/rust.yml"
+  push:
+    branches: [master]
+    paths:
+      - "rust/**"
+      - "tests/data/xlsx/**"
+      - ".github/workflows/rust.yml"
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install stable Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust -> target
+      - name: Check formatting
+        run: cargo fmt --manifest-path rust/Cargo.toml --all -- --check
+      - name: Run Clippy
+        run: cargo clippy --manifest-path rust/Cargo.toml --workspace --all-targets --locked -- -D warnings
+      - name: Build documentation
+        run: cargo doc --manifest-path rust/Cargo.toml --workspace --no-deps --locked
+        env:
+          RUSTDOCFLAGS: -D warnings
+
+  test:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install stable Rust
+        uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust -> target
+      - name: Run tests
+        run: cargo test --manifest-path rust/Cargo.toml --workspace --all-targets --locked
+
+  msrv:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Rust 1.85.0
+        uses: dtolnay/rust-toolchain@1.85.0
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust -> target
+          key: msrv
+      - name: Check minimum supported Rust version
+        run: cargo check --manifest-path rust/Cargo.toml --workspace --all-targets --locked

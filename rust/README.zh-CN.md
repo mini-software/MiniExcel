@@ -6,14 +6,14 @@
 
 ## 当前能力
 
-- 从路径或 `Read + Seek` 数据源读取 `.xlsx`。
+- 从路径读取 `.xlsx`。
 - 通过 `MiniExcel::query()` 和 `MiniExcel::query_as()` 以有界内存流式读取 worksheet。
 - 枚举工作表并按名称选择工作表。
 - 使用稳定列顺序的动态行，可选首行表头。
 - 通过 Serde 将行反序列化为 Rust 结构体。
 - 支持 A1 起始单元格、表头修剪和可选空行过滤。
 - 从动态行或 Serde 结构体创建新的 `.xlsx` 工作簿。
-- 支持多工作表，并可输出到路径、字节缓冲区或 `Write + Send` 目标。
+- 读取时可选择工作表，写入输出到文件路径。
 - 支持字符串、布尔值、整数、浮点数、空单元格、Excel 错误、日期、时间、日期时间和时长。
 
 项目使用 Rust 2024，最低支持 Rust 1.85.0。
@@ -28,6 +28,10 @@ cargo test --manifest-path rust/Cargo.toml --workspace --all-targets --locked
 ```
 
 仓库会提交 workspace 的 `Cargo.lock`，确保本地研究与 CI 使用同一依赖图。
+
+## 公开 API
+
+`MiniExcel` 是唯一公开的行为入口。reader、writer、ZIP/XML parser 和 iterator 具体类型全部保留在 crate 内部。crate 根其余导出仅为数据与配置契约：`CellValue`、`DynamicRow`、`CellReference`、`ReadOptions`、`WriteOptions`、`HeaderMode`、`Error` 和 `Result`。日期/时间 Serde adapter 位于 `serde_helpers`。
 
 ## 简洁的流式 Query
 
@@ -63,26 +67,26 @@ for record in MiniExcel::query_as::<Record>("book.xlsx")? {
 # Ok::<(), miniexcel::Error>(())
 ```
 
-`MiniExcel::query()` 和 `query_as()` 目前接收路径，因为迭代器存活期间由 worker 持有 ZIP archive。任意 `Read + Seek` 输入仍可使用 `XlsxReader::from_reader()`，但该兼容路径由 calamine 实现，会 materialize 所选工作表。
+`MiniExcel::query()` 和 `query_as()` 接收路径，因为迭代器存活期间由 worker 持有 ZIP archive。具体 iterator 类型刻意隐藏在 crate 内部。
 
 > **内存边界：** 流式路径会在内存中保留工作簿元数据、样式、shared-string table、少量行 channel 和 parser buffer，但不会保留完整 worksheet XML 或所有行。为了在 `<dimension>` 缺失/过期时仍提供稳定的全局列 schema，并排除末尾仅带样式的空行，它会先做一次有界内存元数据扫描，再进行流式输出。峰值内存仍可能随 shared-string table 或单个超大行增长，但不会随 worksheet 总行数增长。
 
 ## 动态读取
 
 ```rust
-use miniexcel::{HeaderMode, ReadOptions, XlsxReader};
+use miniexcel::{HeaderMode, MiniExcel, ReadOptions};
 
-let mut reader = XlsxReader::open("book.xlsx")?;
 let options = ReadOptions::new()
     .with_sheet_name("Data")
     .with_header_mode(HeaderMode::FirstRow);
 
-let rows = reader.read_rows(&options)?;
-println!("{:?}", rows[0]["Name"]);
+for row in MiniExcel::query_with_options("book.xlsx", &options)? {
+    println!("{:?}", row?["Name"]);
+}
 # Ok::<(), miniexcel::Error>(())
 ```
 
-默认的 `HeaderMode::Auto` 表示：`read_rows()` 默认没有表头，`deserialize()` 默认使用第一行作为表头。
+默认的 `HeaderMode::Auto` 表示：`query()` 默认没有表头，`query_as()` 默认使用第一行作为表头。
 
 没有表头时，动态键使用真实 Excel 列名，例如 `A`、`B`、`AA`。为了兼容 MiniExcel，默认保留空行；可通过 `with_ignore_empty_rows(true)` 删除所有单元格都为空的行。
 
@@ -90,7 +94,7 @@ println!("{:?}", rows[0]["Name"]);
 
 ```rust
 use chrono::NaiveDate;
-use miniexcel::{ReadOptions, XlsxReader};
+use miniexcel::MiniExcel;
 use serde::Deserialize;
 
 #[derive(Deserialize)]
@@ -102,8 +106,8 @@ struct Release {
     released_on: NaiveDate,
 }
 
-let mut reader = XlsxReader::open("book.xlsx")?;
-let rows: Vec<Release> = reader.deserialize(&ReadOptions::default())?;
+let rows = MiniExcel::query_as::<Release>("book.xlsx")?
+    .collect::<miniexcel::Result<Vec<_>>>()?;
 # Ok::<(), miniexcel::Error>(())
 ```
 
@@ -112,32 +116,34 @@ let rows: Vec<Release> = reader.deserialize(&ReadOptions::default())?;
 ## 动态写入
 
 ```rust
-use miniexcel::{CellValue, DynamicRow, WriteOptions, XlsxWriter};
+use miniexcel::{CellValue, DynamicRow, MiniExcel, WriteOptions};
 
 let mut row = DynamicRow::new();
 row.insert("Name".to_owned(), CellValue::String("MiniExcel".to_owned()));
 row.insert("Version".to_owned(), CellValue::Int(2));
 
-let mut writer = XlsxWriter::new();
-writer.add_rows(&[row], &WriteOptions::new().with_sheet_name("Data"))?;
-writer.save("book.xlsx")?;
+MiniExcel::save_as_with_options(
+    "book.xlsx",
+    &[row],
+    &WriteOptions::new().with_sheet_name("Data"),
+)?;
 # Ok::<(), miniexcel::Error>(())
 ```
 
-动态 schema 按所有行中键第一次出现的顺序合并，缺失值写为空单元格。需要显式 schema 或仅写表头时，请使用 `add_rows_with_schema()`。
+动态 schema 按所有行中键第一次出现的顺序合并，缺失值写为空单元格。需要显式 schema 或仅写表头时，请使用 `MiniExcel::save_as_with_schema()`。
 
 ## 类型化写入
 
 ```rust
 use chrono::NaiveDate;
-use miniexcel::{WriteOptions, XlsxWriter};
+use miniexcel::{MiniExcel, WriteOptions};
 use serde::Serialize;
 
 #[derive(Serialize)]
 #[serde(rename_all = "PascalCase")]
 struct Release {
     name: String,
-    #[serde(serialize_with = "miniexcel::serde_helpers::serialize_datetime_to_excel")]
+    #[serde(serialize_with = "miniexcel::serde_helpers::serialize_date_to_excel")]
     released_on: NaiveDate,
 }
 
@@ -149,9 +155,7 @@ let options = WriteOptions::new()
     .with_sheet_name("Releases")
     .with_column_format("ReleasedOn", "yyyy-mm-dd");
 
-let mut writer = XlsxWriter::new();
-writer.add_serialized(&values, &options)?;
-let bytes = writer.to_bytes()?;
+MiniExcel::save_as_serialized_with_options("releases.xlsx", &values, &options)?;
 # Ok::<(), miniexcel::Error>(())
 ```
 
@@ -163,7 +167,7 @@ let bytes = writer.to_bytes()?;
 - 能精确表示为 `i64` 的 XLSX 数值返回 `CellValue::Int`，其他数值返回 `Float`。
 - Excel 序列日期不总能区分纯日期、纯时间和日期时间，因此动态读取统一为 `CellValue::DateTime`；ISO 值会尽量保留更具体的类型。
 - 公式只读取缓存值，不返回公式表达式。
-- `MiniExcel::query()` 和 `query_as()` 会从路径严格流式解析 worksheet XML；`XlsxReader` 则保留为支持任意 `Read + Seek` 输入的 calamine 整表兼容 API。
+- `MiniExcel::query()` 和 `query_as()` 会从路径严格流式解析 worksheet XML。
 - 流式查询是同步接口，每个活动 query 使用一个 worker thread；首期不包含 async I/O。
 - 写入只创建新工作簿并覆盖目标路径，不能修改已有工作簿。
 

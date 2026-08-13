@@ -18,7 +18,7 @@ enum Headers {
 }
 
 /// A bounded-memory iterator over dynamic XLSX rows.
-pub struct StreamingRows {
+pub(crate) struct StreamingRows {
     rows: StreamingRawRows,
     headers: Headers,
 }
@@ -66,7 +66,7 @@ impl Iterator for StreamingRows {
 impl FusedIterator for StreamingRows {}
 
 /// A bounded-memory iterator that deserializes XLSX rows through Serde.
-pub struct StreamingTypedRows<T> {
+pub(crate) struct StreamingTypedRows<T> {
     rows: StreamingRawRows,
     headers: Option<Vec<Data>>,
     sheet_name: String,
@@ -117,11 +117,7 @@ where
                     ))
                 })
             })
-            .map_err(|source| Error::Deserialize {
-                sheet: self.sheet_name.clone(),
-                row: row.excel_row + 1,
-                source,
-            });
+            .map_err(|source| Error::deserialize(&self.sheet_name, row.excel_row + 1, source));
         Some(result)
     }
 }

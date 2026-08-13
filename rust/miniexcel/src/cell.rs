@@ -44,7 +44,7 @@ impl CellReference {
 
     pub fn new(row: usize, column: usize) -> Result<Self> {
         if row > MAX_EXCEL_ROW || column > MAX_EXCEL_COLUMN {
-            return Err(Error::InvalidCellReference(format!(
+            return Err(Error::invalid_cell_reference(format!(
                 "row {}, column {}",
                 row + 1,
                 column + 1
@@ -55,12 +55,12 @@ impl CellReference {
     }
 
     #[must_use]
-    pub const fn row(self) -> usize {
+    pub(crate) const fn row(self) -> usize {
         self.row
     }
 
     #[must_use]
-    pub const fn column(self) -> usize {
+    pub(crate) const fn column(self) -> usize {
         self.column
     }
 }
@@ -116,12 +116,12 @@ impl FromStr for CellReference {
                 .and_then(|current| {
                     current.checked_add(usize::from(byte.to_ascii_uppercase() - b'A' + 1))
                 })
-                .ok_or_else(|| Error::InvalidCellReference(reference.to_owned()))?;
+                .ok_or_else(|| Error::invalid_cell_reference(reference))?;
             index += 1;
         }
 
         if index == column_start || column == 0 || column - 1 > MAX_EXCEL_COLUMN {
-            return Err(Error::InvalidCellReference(reference.to_owned()));
+            return Err(Error::invalid_cell_reference(reference));
         }
 
         if bytes.get(index) == Some(&b'$') {
@@ -134,14 +134,14 @@ impl FromStr for CellReference {
         }
 
         if index == row_start || index != bytes.len() {
-            return Err(Error::InvalidCellReference(reference.to_owned()));
+            return Err(Error::invalid_cell_reference(reference));
         }
 
         let row = reference[row_start..]
             .parse::<usize>()
-            .map_err(|_| Error::InvalidCellReference(reference.to_owned()))?;
+            .map_err(|_| Error::invalid_cell_reference(reference))?;
         if row == 0 || row - 1 > MAX_EXCEL_ROW {
-            return Err(Error::InvalidCellReference(reference.to_owned()));
+            return Err(Error::invalid_cell_reference(reference));
         }
 
         Ok(Self { row: row - 1, column: column - 1 })

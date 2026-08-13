@@ -51,7 +51,7 @@ impl StreamingRawRows {
 
         let ready = match ready_receiver.recv() {
             Ok(ready) => ready,
-            Err(_) => Err(Error::Stream(
+            Err(_) => Err(Error::stream(
                 "the XLSX streaming worker stopped during initialization".to_owned(),
             )),
         };
@@ -178,8 +178,8 @@ where
             .sheets
             .iter()
             .find(|sheet| sheet.name == sheet_name)
-            .ok_or_else(|| Error::SheetNotFound(sheet_name.to_owned()))?,
-        None => workbook.sheets.first().ok_or(Error::NoWorksheets)?,
+            .ok_or_else(|| Error::sheet_not_found(sheet_name))?,
+        None => workbook.sheets.first().ok_or_else(Error::no_worksheets)?,
     };
     let sheet_path = read_relationship_target(archive, &sheet.relationship_id)?;
     let shared_strings = read_shared_strings(archive)?;
@@ -254,7 +254,7 @@ where
             {
                 if attribute(&event, xml.decoder(), b"Id")?.as_deref() == Some(relationship_id) {
                     let target = attribute(&event, xml.decoder(), b"Target")?.ok_or_else(|| {
-                        Error::Stream(format!(
+                        Error::stream(format!(
                             "worksheet relationship '{relationship_id}' has no target"
                         ))
                     })?;
@@ -266,7 +266,7 @@ where
         }
         buffer.clear();
     }
-    Err(Error::Stream(format!("worksheet relationship '{relationship_id}' was not found")))
+    Err(Error::stream(format!("worksheet relationship '{relationship_id}' was not found")))
 }
 
 fn read_shared_strings<R>(archive: &mut ZipArchive<R>) -> Result<Vec<String>>
@@ -638,7 +638,7 @@ fn finish_cell(cell: CellState, row: &mut RowState, context: &WorkbookContext) -
                     .parse::<usize>()
                     .map_err(|error| stream_error("invalid shared string index:", error))?;
                 Data::String(context.shared_strings.get(index).cloned().ok_or_else(|| {
-                    Error::Stream(format!("shared string index {index} is out of range"))
+                    Error::stream(format!("shared string index {index} is out of range"))
                 })?)
             }
         }
@@ -767,7 +767,7 @@ fn append_reference(reference: &BytesRef<'_>, target: &mut String) -> Result<()>
             {
                 target.push(value);
             } else {
-                return Err(Error::Stream(format!("unrecognized XML entity '&{decoded};'")));
+                return Err(Error::stream(format!("unrecognized XML entity '&{decoded};'")));
             }
         }
     }
@@ -841,7 +841,7 @@ fn parse_cell_error(value: &str) -> Result<CellErrorType> {
         "#REF!" => Ok(CellErrorType::Ref),
         "#VALUE!" => Ok(CellErrorType::Value),
         "#DATA!" | "#GETTING_DATA" => Ok(CellErrorType::GettingData),
-        _ => Err(Error::Stream(format!("unknown Excel cell error '{value}'"))),
+        _ => Err(Error::stream(format!("unknown Excel cell error '{value}'"))),
     }
 }
 
@@ -918,7 +918,7 @@ fn decode_excel_escapes(value: &str) -> String {
 }
 
 fn stream_error(context: impl std::fmt::Display, error: impl std::fmt::Display) -> Error {
-    Error::Stream(format!("{context} {error}"))
+    Error::stream(format!("{context} {error}"))
 }
 
 #[cfg(test)]

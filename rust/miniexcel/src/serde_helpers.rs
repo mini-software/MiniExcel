@@ -1,13 +1,6 @@
 use chrono::{Duration, NaiveDate, NaiveDateTime, NaiveTime};
+use serde::Serializer;
 use serde::de::{Deserializer, Error as _};
-
-pub use calamine::{
-    deserialize_as_date_or_none, deserialize_as_datetime_or_none, deserialize_as_duration_or_none,
-    deserialize_as_f64_or_none, deserialize_as_i64_or_none, deserialize_as_time_or_none,
-};
-pub use rust_xlsxwriter::utility::{
-    serialize_datetime_to_excel, serialize_option_datetime_to_excel,
-};
 
 pub fn deserialize_date<'de, D>(deserializer: D) -> std::result::Result<NaiveDate, D::Error>
 where
@@ -35,4 +28,34 @@ where
     D: Deserializer<'de>,
 {
     calamine::deserialize_as_duration_or_string(deserializer)?.map_err(D::Error::custom)
+}
+
+pub fn serialize_date_to_excel<S>(
+    value: &NaiveDate,
+    serializer: S,
+) -> std::result::Result<S::Ok, S::Error>
+where
+    S: Serializer,
+{
+    rust_xlsxwriter::utility::serialize_datetime_to_excel(value, serializer)
+}
+
+pub fn serialize_datetime_to_excel<S>(
+    value: &NaiveDateTime,
+    serializer: S,
+) -> std::result::Result<S::Ok, S::Error>
+where
+    S: Serializer,
+{
+    rust_xlsxwriter::utility::serialize_datetime_to_excel(value, serializer)
+}
+
+pub fn serialize_time_to_excel<S>(
+    value: &NaiveTime,
+    serializer: S,
+) -> std::result::Result<S::Ok, S::Error>
+where
+    S: Serializer,
+{
+    rust_xlsxwriter::utility::serialize_datetime_to_excel(value, serializer)
 }

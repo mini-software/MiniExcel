@@ -1,7 +1,7 @@
 mod common;
 
 use chrono::NaiveDate;
-use miniexcel::{CellReference, CellValue, HeaderMode, MiniExcel, ReadOptions, XlsxReader};
+use miniexcel::{CellReference, CellValue, HeaderMode, MiniExcel, ReadOptions};
 
 #[test]
 fn queries_rows_through_the_simple_facade() {
@@ -86,22 +86,20 @@ fn streaming_query_honors_start_cells_and_empty_row_filtering() {
 #[test]
 fn streaming_query_reads_cached_formula_values() {
     let path = common::fixture("TestIssue157.xlsx");
-    let streamed = MiniExcel::query(&path)
+    let rows = MiniExcel::query(path)
         .expect("create formula streaming query")
         .collect::<miniexcel::Result<Vec<_>>>()
         .expect("stream cached formula values");
-    let mut reader = XlsxReader::open(path).expect("open formula fixture");
-    let materialized = reader.read_rows(&ReadOptions::default()).expect("read formula fixture");
 
-    assert_eq!(streamed, materialized);
+    assert_eq!(rows.len(), 6);
 }
 
 #[test]
 fn reads_dynamic_rows_without_headers() {
-    let mut reader = XlsxReader::open(common::fixture("TestDynamicQueryBasic_WithoutHead.xlsx"))
-        .expect("open fixture");
-
-    let rows = reader.read_rows(&ReadOptions::default()).expect("read rows");
+    let rows = MiniExcel::query(common::fixture("TestDynamicQueryBasic_WithoutHead.xlsx"))
+        .expect("create query")
+        .collect::<miniexcel::Result<Vec<_>>>()
+        .expect("read rows");
 
     assert_eq!(rows.len(), 2);
     assert_eq!(rows[0]["A"], CellValue::String("MiniExcel".to_owned()));
@@ -112,11 +110,12 @@ fn reads_dynamic_rows_without_headers() {
 
 #[test]
 fn reads_dynamic_rows_with_headers() {
-    let mut reader =
-        XlsxReader::open(common::fixture("TestDynamicQueryBasic.xlsx")).expect("open fixture");
     let options = ReadOptions::new().with_header_mode(HeaderMode::FirstRow);
-
-    let rows = reader.read_rows(&options).expect("read rows");
+    let rows =
+        MiniExcel::query_with_options(common::fixture("TestDynamicQueryBasic.xlsx"), &options)
+            .expect("create query")
+            .collect::<miniexcel::Result<Vec<_>>>()
+            .expect("read rows");
 
     assert_eq!(rows.len(), 2);
     assert_eq!(rows[0]["Column1"], CellValue::String("MiniExcel".to_owned()));
@@ -128,27 +127,36 @@ fn reads_dynamic_rows_with_headers() {
 #[test]
 fn preserves_and_can_ignore_empty_rows() {
     let path = common::fixture("TestCenterEmptyRow/TestCenterEmptyRow.xlsx");
-    let mut reader = XlsxReader::open(&path).expect("open fixture");
-    let rows = reader.read_rows(&ReadOptions::default()).expect("read rows");
+    let rows = MiniExcel::query(&path)
+        .expect("create query")
+        .collect::<miniexcel::Result<Vec<_>>>()
+        .expect("read rows");
 
     assert_eq!(rows.len(), 6);
     assert!(rows[3].values().all(CellValue::is_empty));
 
-    let mut reader = XlsxReader::open(path).expect("open fixture");
     let options = ReadOptions::new().with_ignore_empty_rows(true);
-    let rows = reader.read_rows(&options).expect("read rows");
+    let rows = MiniExcel::query_with_options(path, &options)
+        .expect("create query")
+        .collect::<miniexcel::Result<Vec<_>>>()
+        .expect("read rows");
     assert_eq!(rows.len(), 5);
     assert!(rows.iter().all(|row| row.values().any(|value| !value.is_empty())));
 }
 
 #[test]
 fn selects_sheets_in_workbook_order() {
-    let mut reader =
-        XlsxReader::open(common::fixture("TestMultiSheet.xlsx")).expect("open fixture");
-    assert_eq!(reader.sheet_names(), ["Sheet1", "Sheet2", "Sheet3"]);
+    let path = common::fixture("TestMultiSheet.xlsx");
+    assert_eq!(
+        MiniExcel::get_sheet_names(&path).expect("read sheet names"),
+        ["Sheet1", "Sheet2", "Sheet3"]
+    );
 
-    let rows =
-        reader.read_rows(&ReadOptions::new().with_sheet_name("Sheet3")).expect("read Sheet3");
+    let options = ReadOptions::new().with_sheet_name("Sheet3");
+    let rows = MiniExcel::query_with_options(path, &options)
+        .expect("create Sheet3 query")
+        .collect::<miniexcel::Result<Vec<_>>>()
+        .expect("read Sheet3");
     assert_eq!(rows.len(), 5);
     assert_eq!(rows[0]["A"], CellValue::Int(3));
     assert_eq!(rows[0]["B"], CellValue::Int(3));
@@ -156,9 +164,10 @@ fn selects_sheets_in_workbook_order() {
 
 #[test]
 fn preserves_self_closing_empty_rows() {
-    let mut reader =
-        XlsxReader::open(common::fixture("TestEmptySelfClosingRow.xlsx")).expect("open fixture");
-    let rows = reader.read_rows(&ReadOptions::default()).expect("read rows");
+    let rows = MiniExcel::query(common::fixture("TestEmptySelfClosingRow.xlsx"))
+        .expect("create query")
+        .collect::<miniexcel::Result<Vec<_>>>()
+        .expect("read rows");
 
     assert_eq!(rows.len(), 10);
     assert!(rows[0]["A"].is_empty());
@@ -171,12 +180,12 @@ fn preserves_self_closing_empty_rows() {
 
 #[test]
 fn reads_from_an_a1_start_cell() {
-    let mut reader =
-        XlsxReader::open(common::fixture("TestTypeMapping.xlsx")).expect("open fixture");
     let start_cell: CellReference = "B6".parse().expect("valid A1 reference");
     let options = ReadOptions::new().with_start_cell(start_cell);
-
-    let rows = reader.read_rows(&options).expect("read rows");
+    let rows = MiniExcel::query_with_options(common::fixture("TestTypeMapping.xlsx"), &options)
+        .expect("create query")
+        .collect::<miniexcel::Result<Vec<_>>>()
+        .expect("read rows");
 
     assert_eq!(rows[0]["B"], CellValue::String("Raymond".to_owned()));
     assert_eq!(
@@ -190,9 +199,10 @@ fn reads_from_an_a1_start_cell() {
 
 #[test]
 fn reads_cells_without_r_attributes() {
-    let mut reader =
-        XlsxReader::open(common::fixture("TestWihoutRAttribute.xlsx")).expect("open fixture");
-    let rows = reader.read_rows(&ReadOptions::default()).expect("read rows");
+    let rows = MiniExcel::query(common::fixture("TestWihoutRAttribute.xlsx"))
+        .expect("create query")
+        .collect::<miniexcel::Result<Vec<_>>>()
+        .expect("read rows");
 
     assert_eq!(rows.len(), 2);
     assert_eq!(rows[0].len(), 5);

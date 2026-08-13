@@ -1,7 +1,7 @@
 mod common;
 
 use chrono::NaiveDate;
-use miniexcel::{Error, MiniExcel, ReadOptions, XlsxReader};
+use miniexcel::{MiniExcel, ReadOptions};
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
@@ -29,11 +29,10 @@ struct SimpleAccount {
 
 #[test]
 fn deserializes_typed_rows_with_dates() {
-    let mut reader =
-        XlsxReader::open(common::fixture("TestTypeMapping.xlsx")).expect("open fixture");
-
-    let rows: Vec<UserAccount> =
-        reader.deserialize(&ReadOptions::default()).expect("deserialize rows");
+    let rows = MiniExcel::query_as::<UserAccount>(common::fixture("TestTypeMapping.xlsx"))
+        .expect("create typed query")
+        .collect::<miniexcel::Result<Vec<_>>>()
+        .expect("deserialize rows");
 
     assert_eq!(rows.len(), 100);
     assert_eq!(rows[0].id, "78DE23D2-DCB6-BD3D-EC67-C112BBC322A2");
@@ -46,11 +45,10 @@ fn deserializes_typed_rows_with_dates() {
 
 #[test]
 fn trims_headers_for_typed_rows_by_default() {
-    let mut reader =
-        XlsxReader::open(common::fixture("TestTrimColumnNames.xlsx")).expect("open fixture");
-
-    let rows: Vec<SimpleAccount> =
-        reader.deserialize(&ReadOptions::default()).expect("deserialize rows");
+    let rows = MiniExcel::query_as::<SimpleAccount>(common::fixture("TestTrimColumnNames.xlsx"))
+        .expect("create typed query")
+        .collect::<miniexcel::Result<Vec<_>>>()
+        .expect("deserialize rows");
 
     assert_eq!(rows[4].name.as_deref(), Some("Raymond"));
     assert_eq!(rows[4].age, 18);
@@ -60,11 +58,13 @@ fn trims_headers_for_typed_rows_by_default() {
 
 #[test]
 fn reports_missing_sheets() {
-    let mut reader =
-        XlsxReader::open(common::fixture("TestMultiSheet.xlsx")).expect("open fixture");
-    let error = reader
-        .read_rows(&ReadOptions::new().with_sheet_name("missing"))
-        .expect_err("missing sheet should fail");
+    let error = match MiniExcel::query_with_options(
+        common::fixture("TestMultiSheet.xlsx"),
+        &ReadOptions::new().with_sheet_name("missing"),
+    ) {
+        Ok(_) => panic!("missing sheet should fail"),
+        Err(error) => error,
+    };
 
     assert!(error.to_string().contains("missing"));
 }
@@ -82,19 +82,15 @@ struct InvalidSequence {
 
 #[test]
 fn reports_sheet_and_excel_row_for_mapping_errors() {
-    let mut reader = XlsxReader::open(common::fixture("TestIssue309.xlsx")).expect("open fixture");
-    let error = reader
-        .deserialize::<InvalidSequence>(&ReadOptions::default())
+    let error = MiniExcel::query_as::<InvalidSequence>(common::fixture("TestIssue309.xlsx"))
+        .expect("create typed query")
+        .collect::<miniexcel::Result<Vec<_>>>()
         .expect_err("invalid sequence should fail");
 
-    match error {
-        Error::Deserialize { sheet, row, source } => {
-            assert_eq!(sheet, "Sheet1");
-            assert_eq!(row, 4);
-            assert!(source.to_string().contains("SEQ") || source.to_string().contains("Error"));
-        }
-        other => panic!("unexpected error: {other}"),
-    }
+    let message = error.to_string();
+    assert!(message.contains("Sheet1"));
+    assert!(message.contains("row 4"));
+    assert!(message.contains("SEQ") || message.contains("Error"));
 }
 
 #[test]
@@ -106,13 +102,9 @@ fn typed_query_maps_rows_lazily() {
     assert!(rows.next().expect("Excel row 3").is_ok());
     let error = rows.next().expect("Excel row 4").expect_err("row 4 should fail");
 
-    match error {
-        Error::Deserialize { sheet, row, .. } => {
-            assert_eq!(sheet, "Sheet1");
-            assert_eq!(row, 4);
-        }
-        other => panic!("unexpected error: {other}"),
-    }
+    let message = error.to_string();
+    assert!(message.contains("Sheet1"));
+    assert!(message.contains("row 4"));
 }
 
 #[test]

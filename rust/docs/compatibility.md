@@ -2,7 +2,7 @@
 
 ## Goal
 
-The Rust MVP implements the smallest useful MiniExcel-style XLSX read/write surface while keeping an idiomatic Rust API. It uses a focused OOXML pull parser for bounded-memory path queries, calamine for the general `Read + Seek` compatibility reader and Serde conversion, and rust_xlsxwriter for workbook generation.
+The Rust MVP implements the smallest useful MiniExcel-style XLSX read/write surface behind one `MiniExcel` facade. It uses a focused OOXML pull parser for bounded-memory path queries, calamine data and Serde conversion internally, and rust_xlsxwriter for workbook generation.
 
 ## Dependency Baseline
 
@@ -23,24 +23,22 @@ The latest `calamine 0.36` and `rust_xlsxwriter 0.97` require Rust 1.88. The MVP
 
 | MiniExcel V2 concept | Rust MVP | Notes |
 | --- | --- | --- |
-| OpenXML importer | `MiniExcel` / `XlsxReader<R>` | Strict path streaming or materialized `Read + Seek` compatibility mode |
+| OpenXML importer | `MiniExcel` | Concrete reader/parser types are internal |
 | Dynamic `Query` | `MiniExcel::query()` | Streams owned `IndexMap<String, CellValue>` rows with bounded buffering |
 | Typed `Query<T>` | `MiniExcel::query_as<T>()` | Streams rows and applies Serde mapping one row at a time |
-| General reader query | `XlsxReader::query()` / `query_as<T>()` | Lazy mapping over a calamine-materialized worksheet `Range` |
-| `GetSheetNames` | `sheet_names()` | Workbook order is preserved |
+| `GetSheetNames` | `MiniExcel::get_sheet_names()` | Workbook order is preserved |
 | `startCell` | `ReadOptions::with_start_cell()` | A1 start only; no end coordinate in M1 |
 | `IgnoreEmptyRows` | `ReadOptions::with_ignore_empty_rows()` | Defaults to `false` for MiniExcel compatibility |
-| OpenXML exporter | `XlsxWriter` | Creates new workbooks only |
-| Dynamic export | `add_rows()` / `add_rows_with_schema()` | Map serialization is implemented manually |
-| Typed export | `add_serialized<T>()` | Uses `rust_xlsxwriter` Serde support |
-| Path/stream export | `save()`, `to_bytes()`, `save_to_writer()` | Writer output does not require `Seek` |
+| OpenXML exporter | `MiniExcel::save_as*()` | Concrete writer type is internal; creates new workbooks only |
+| Dynamic export | `save_as()` / `save_as_with_schema()` | Map serialization is implemented internally |
+| Typed export | `save_as_serialized<T>()` | Uses Serde mapping internally |
 
-`MiniExcel` provides the simple static path facade familiar to .NET users. `XlsxReader` and `XlsxWriter` remain available when callers need explicit ownership and state. Options use builder methods and all failures return `Result`.
+`MiniExcel` is the only public behavior entry point. Reader, writer, parser, and concrete iterator types are crate-internal. Public supporting types are limited to row/cell values, options, errors/results, and Serde date/time helpers.
 
 ## Compatibility Defaults
 
-- `read_rows()` with `HeaderMode::Auto` uses column letters and treats the first row as data.
-- `deserialize()` with `HeaderMode::Auto` consumes the first selected row as headers.
+- `MiniExcel::query()` with `HeaderMode::Auto` uses column letters and treats the first row as data.
+- `MiniExcel::query_as()` with `HeaderMode::Auto` consumes the first selected row as headers.
 - The first worksheet in workbook order is selected when no name is supplied.
 - Empty rows between the selected start and last used cell are retained by default.
 - Typed header strings are trimmed by default. Dynamic headers follow the .NET behavior and retain non-blank text as stored.
@@ -65,7 +63,7 @@ The latest `calamine 0.36` and `rust_xlsxwriter 0.97` require Rust 1.88. The MVP
 
 Typed conversions are delegated to calamine's Serde deserializer. The public `serde_helpers` module adds strict chrono helpers that convert an invalid value into the library's contextual `Error::Deserialize` path.
 
-For typed writing, chrono values must use `serialize_datetime_to_excel` (or its optional variant) and a corresponding `WriteOptions::with_column_format()` entry. Otherwise standard chrono Serde behavior writes text rather than an Excel serial date.
+For typed writing, chrono values must use the matching MiniExcel helper (`serialize_date_to_excel`, `serialize_datetime_to_excel`, or `serialize_time_to_excel`) and a corresponding `WriteOptions::with_column_format()` entry. Otherwise standard chrono Serde behavior writes text rather than an Excel serial value.
 
 ## Memory And I/O Model
 
@@ -73,9 +71,7 @@ For typed writing, chrono values must use `serialize_datetime_to_excel` (or its 
 
 The backend makes two sequential, bounded-memory passes over the selected worksheet entry. The first records only the maximum used column and final row containing a cell. This is required for MiniExcel-compatible stable dynamic schemas when legal files omit `<dimension>`, and to avoid exposing trailing style-only row elements. The second pass emits rows. Worksheet XML and prior rows are never retained; memory consists primarily of shared strings, styles, parser buffers, the current row, and the bounded channel.
 
-`XlsxReader<R>` is the compatibility path for arbitrary `Read + Seek` inputs and sheet-name inspection. Its `query()` / `query_as()` map rows lazily, but calamine materializes the selected worksheet first. `read_rows()` and `deserialize()` collect those iterators.
-
-`XlsxWriter` can emit to a non-seekable `Write + Send` target, but rust_xlsxwriter assembles a new ZIP package. It cannot patch or insert sheets into an existing workbook.
+The internal writer assembles a new ZIP package. The public facade writes to paths and cannot patch or insert sheets into an existing workbook.
 
 ## Test Sources
 
@@ -89,7 +85,7 @@ Rust integration tests reuse the repository's existing files under `tests/data/x
 - A typed conversion failure with a verified Excel row number.
 - Strict streaming A1 starts, empty-row filtering, dates, trimmed headers, and early typed errors.
 
-Writer tests generate temporary workbooks and read them back through `XlsxReader`, covering dynamic and typed values, dates, multiple output targets, empty schemas, path overwrite behavior, and worksheet-name validation.
+Writer tests generate temporary workbooks through `MiniExcel::save_as*()` and read them back through `MiniExcel::query*()`, covering dynamic and typed values, dates, empty schemas, path overwrite behavior, and worksheet-name validation.
 
 ## Deferred Work
 

@@ -56,27 +56,22 @@ impl ReadOptions {
     }
 
     #[must_use]
-    pub fn sheet_name(&self) -> Option<&str> {
+    pub(crate) fn sheet_name(&self) -> Option<&str> {
         self.sheet_name.as_deref()
     }
 
     #[must_use]
-    pub const fn start_cell(&self) -> CellReference {
+    pub(crate) const fn start_cell(&self) -> CellReference {
         self.start_cell
     }
 
     #[must_use]
-    pub const fn header_mode(&self) -> HeaderMode {
-        self.header_mode
-    }
-
-    #[must_use]
-    pub const fn ignore_empty_rows(&self) -> bool {
+    pub(crate) const fn ignore_empty_rows(&self) -> bool {
         self.ignore_empty_rows
     }
 
     #[must_use]
-    pub const fn trim_headers(&self) -> bool {
+    pub(crate) const fn trim_headers(&self) -> bool {
         self.trim_headers
     }
 
@@ -165,37 +160,37 @@ impl WriteOptions {
     }
 
     #[must_use]
-    pub fn sheet_name(&self) -> &str {
+    pub(crate) fn sheet_name(&self) -> &str {
         &self.sheet_name
     }
 
     #[must_use]
-    pub const fn print_header(&self) -> bool {
+    pub(crate) const fn print_header(&self) -> bool {
         self.print_header
     }
 
     #[must_use]
-    pub fn date_format(&self) -> &str {
+    pub(crate) fn date_format(&self) -> &str {
         &self.date_format
     }
 
     #[must_use]
-    pub fn time_format(&self) -> &str {
+    pub(crate) fn time_format(&self) -> &str {
         &self.time_format
     }
 
     #[must_use]
-    pub fn datetime_format(&self) -> &str {
+    pub(crate) fn datetime_format(&self) -> &str {
         &self.datetime_format
     }
 
     #[must_use]
-    pub fn duration_format(&self) -> &str {
+    pub(crate) fn duration_format(&self) -> &str {
         &self.duration_format
     }
 
     #[must_use]
-    pub fn column_formats(&self) -> &IndexMap<String, String> {
+    pub(crate) fn column_formats(&self) -> &IndexMap<String, String> {
         &self.column_formats
     }
 }
@@ -211,27 +206,5 @@ impl Default for WriteOptions {
             duration_format: "[h]:mm:ss".to_owned(),
             column_formats: IndexMap::new(),
         }
-    }
-}
-
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct WriteSummary {
-    sheet_name: String,
-    rows_written: usize,
-}
-
-impl WriteSummary {
-    pub(crate) fn new(sheet_name: String, rows_written: usize) -> Self {
-        Self { sheet_name, rows_written }
-    }
-
-    #[must_use]
-    pub fn sheet_name(&self) -> &str {
-        &self.sheet_name
-    }
-
-    #[must_use]
-    pub const fn rows_written(&self) -> usize {
-        self.rows_written
     }
 }

@@ -8,14 +8,14 @@ This directory contains an experimental Rust implementation of MiniExcel's basic
 
 The MVP currently supports:
 
-- Reading `.xlsx` files from paths or `Read + Seek` sources.
+- Reading `.xlsx` files from paths.
 - Bounded-memory worksheet streaming through `MiniExcel::query()` and `MiniExcel::query_as()`.
 - Listing worksheets and selecting a worksheet by name.
 - Dynamic rows with stable column order and optional header rows.
 - Typed row deserialization through Serde.
 - A1 start cells, header trimming, and optional empty-row filtering.
 - Creating new `.xlsx` workbooks from dynamic rows or Serde structs.
-- Multiple worksheets and output to paths, byte buffers, or `Write + Send` targets.
+- Worksheet selection for reads and path-based workbook output.
 - Strings, booleans, integers, floating-point values, empty cells, Excel errors, dates, times, datetimes, and durations.
 
 The implementation uses Rust 2024 with an MSRV of Rust 1.85.0.
@@ -30,6 +30,10 @@ cargo test --manifest-path rust/Cargo.toml --workspace --all-targets --locked
 ```
 
 The workspace lockfile is committed so CI and local research use the same dependency graph.
+
+## Public API
+
+`MiniExcel` is the only public behavior entry point. Reader, writer, ZIP/XML parser, and iterator implementation types are internal. The remaining root exports are data and configuration contracts: `CellValue`, `DynamicRow`, `CellReference`, `ReadOptions`, `WriteOptions`, `HeaderMode`, `Error`, and `Result`. Date/time Serde adapters are available under `serde_helpers`.
 
 ## Simple Streaming Query
 
@@ -65,26 +69,26 @@ for record in MiniExcel::query_as::<Record>("book.xlsx")? {
 # Ok::<(), miniexcel::Error>(())
 ```
 
-`MiniExcel::query()` and `query_as()` currently accept paths because a worker owns the ZIP archive while the iterator is alive. `XlsxReader::from_reader()` remains available for arbitrary `Read + Seek` sources, but that compatibility path uses calamine and materializes the selected worksheet.
+`MiniExcel::query()` and `query_as()` accept paths because a worker owns the ZIP archive while the iterator is alive. Their concrete iterator types are intentionally hidden.
 
 > **Memory boundary:** the streaming path keeps workbook metadata, styles, and the shared-string table in memory, plus a small row channel and parser buffers. It does not retain worksheet XML or all worksheet rows. It performs one bounded-memory metadata pass before the streaming pass so every dynamic row has a stable global column schema and trailing style-only rows are excluded even when `<dimension>` is missing or stale. Peak memory can still grow with the shared-string table or a single exceptionally large row, but not with the full worksheet row count.
 
 ## Dynamic Reading
 
 ```rust
-use miniexcel::{HeaderMode, ReadOptions, XlsxReader};
+use miniexcel::{HeaderMode, MiniExcel, ReadOptions};
 
-let mut reader = XlsxReader::open("book.xlsx")?;
 let options = ReadOptions::new()
     .with_sheet_name("Data")
     .with_header_mode(HeaderMode::FirstRow);
 
-let rows = reader.read_rows(&options)?;
-println!("{:?}", rows[0]["Name"]);
+for row in MiniExcel::query_with_options("book.xlsx", &options)? {
+    println!("{:?}", row?["Name"]);
+}
 # Ok::<(), miniexcel::Error>(())
 ```
 
-`HeaderMode::Auto` is the default. It means no header for `read_rows()` and a first-row header for `deserialize()`.
+`HeaderMode::Auto` is the default. It means no header for `query()` and a first-row header for `query_as()`.
 
 Without headers, dynamic keys use the actual Excel column names such as `A`, `B`, and `AA`. Empty rows are retained by default to match MiniExcel. Use `with_ignore_empty_rows(true)` to filter rows whose cells are all empty.
 
@@ -92,7 +96,7 @@ Without headers, dynamic keys use the actual Excel column names such as `A`, `B`
 
 ```rust
 use chrono::NaiveDate;
-use miniexcel::{ReadOptions, XlsxReader};
+use miniexcel::MiniExcel;
 use serde::Deserialize;
 
 #[derive(Deserialize)]
@@ -104,8 +108,8 @@ struct Release {
     released_on: NaiveDate,
 }
 
-let mut reader = XlsxReader::open("book.xlsx")?;
-let rows: Vec<Release> = reader.deserialize(&ReadOptions::default())?;
+let rows = MiniExcel::query_as::<Release>("book.xlsx")?
+    .collect::<miniexcel::Result<Vec<_>>>()?;
 # Ok::<(), miniexcel::Error>(())
 ```
 
@@ -114,32 +118,34 @@ Serde `rename`, `alias`, `default`, `skip`, and `Option` semantics are supported
 ## Dynamic Writing
 
 ```rust
-use miniexcel::{CellValue, DynamicRow, WriteOptions, XlsxWriter};
+use miniexcel::{CellValue, DynamicRow, MiniExcel, WriteOptions};
 
 let mut row = DynamicRow::new();
 row.insert("Name".to_owned(), CellValue::String("MiniExcel".to_owned()));
 row.insert("Version".to_owned(), CellValue::Int(2));
 
-let mut writer = XlsxWriter::new();
-writer.add_rows(&[row], &WriteOptions::new().with_sheet_name("Data"))?;
-writer.save("book.xlsx")?;
+MiniExcel::save_as_with_options(
+    "book.xlsx",
+    &[row],
+    &WriteOptions::new().with_sheet_name("Data"),
+)?;
 # Ok::<(), miniexcel::Error>(())
 ```
 
-Dynamic schemas are the union of row keys in first-seen order. Missing values are written as blank cells. Use `add_rows_with_schema()` when an explicit schema is required, including header-only exports.
+Dynamic schemas are the union of row keys in first-seen order. Missing values are written as blank cells. Use `MiniExcel::save_as_with_schema()` when an explicit schema is required, including header-only exports.
 
 ## Typed Writing
 
 ```rust
 use chrono::NaiveDate;
-use miniexcel::{WriteOptions, XlsxWriter};
+use miniexcel::{MiniExcel, WriteOptions};
 use serde::Serialize;
 
 #[derive(Serialize)]
 #[serde(rename_all = "PascalCase")]
 struct Release {
     name: String,
-    #[serde(serialize_with = "miniexcel::serde_helpers::serialize_datetime_to_excel")]
+    #[serde(serialize_with = "miniexcel::serde_helpers::serialize_date_to_excel")]
     released_on: NaiveDate,
 }
 
@@ -151,9 +157,7 @@ let options = WriteOptions::new()
     .with_sheet_name("Releases")
     .with_column_format("ReleasedOn", "yyyy-mm-dd");
 
-let mut writer = XlsxWriter::new();
-writer.add_serialized(&values, &options)?;
-let bytes = writer.to_bytes()?;
+MiniExcel::save_as_serialized_with_options("releases.xlsx", &values, &options)?;
 # Ok::<(), miniexcel::Error>(())
 ```
 
@@ -165,7 +169,7 @@ The column-format key is the final Serde field/header name. Typed Serde writing 
 - Dynamic XLSX numbers with an exact `i64` representation are returned as `CellValue::Int`; other numeric values remain `Float`.
 - Excel serial dates cannot always distinguish date-only, time-only, and datetime intent. Dynamic serial values are normalized to `CellValue::DateTime`; ISO values retain the more specific variant when possible.
 - Formula expressions are not returned. Reading uses their cached values.
-- `MiniExcel::query()` and `query_as()` strictly stream worksheet XML from paths. `XlsxReader` remains a calamine-backed, materialized compatibility API for arbitrary `Read + Seek` inputs.
+- `MiniExcel::query()` and `query_as()` strictly stream worksheet XML from paths.
 - Streaming is synchronous and uses one worker thread per active query. Async I/O is not part of the MVP.
 - Writing creates new workbooks and overwrites target paths. It cannot modify an existing workbook.
 

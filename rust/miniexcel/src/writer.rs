@@ -1,51 +1,46 @@
 use std::collections::HashSet;
-use std::io::Write;
 use std::path::Path;
 
 use indexmap::IndexSet;
 use rust_xlsxwriter::{CustomSerializeField, Format, SerializeFieldOptions, Workbook, Worksheet};
 use serde::Serialize;
 
-use crate::{CellValue, DynamicRow, Error, Result, WriteOptions, WriteSummary};
+use crate::{CellValue, DynamicRow, Error, Result, WriteOptions};
 
 const MAX_EXCEL_ROWS: usize = 1_048_576;
 const MAX_EXCEL_COLUMNS: usize = 16_384;
 
-pub struct XlsxWriter {
+pub(crate) struct XlsxWriter {
     workbook: Workbook,
     sheet_names: HashSet<String>,
 }
 
 impl XlsxWriter {
     #[must_use]
-    pub fn new() -> Self {
+    pub(crate) fn new() -> Self {
         Self::default()
     }
 
-    pub fn add_rows(
-        &mut self,
-        rows: &[DynamicRow],
-        options: &WriteOptions,
-    ) -> Result<WriteSummary> {
+    pub(crate) fn add_rows(&mut self, rows: &[DynamicRow], options: &WriteOptions) -> Result<()> {
         let mut schema = IndexSet::new();
         for row in rows {
             schema.extend(row.keys().cloned());
         }
 
         if schema.is_empty() && (!rows.is_empty() || options.print_header()) {
-            return Err(Error::MissingSchema);
+            return Err(Error::missing_schema());
         }
 
         let schema: Vec<String> = schema.into_iter().collect();
         self.add_rows_with_schema(&schema, rows, options)
     }
 
-    pub fn add_rows_with_schema(
+    pub(crate) fn add_rows_with_schema(
         &mut self,
         schema: &[String],
         rows: &[DynamicRow],
         options: &WriteOptions,
-    ) -> Result<WriteSummary> {
+    ) -> Result<()> {
         validate_sheet_name(options.sheet_name(), &self.sheet_names)?;
         validate_schema(schema)?;
         validate_dimensions(rows.len(), schema.len(), options.print_header())?;
@@ -72,27 +67,15 @@ impl XlsxWriter {
 
         self.workbook.push_worksheet(worksheet);
         self.sheet_names.insert(normalized_sheet_name(options.sheet_name()));
-        Ok(WriteSummary::new(options.sheet_name().to_owned(), rows.len()))
+        Ok(())
     }
 
-    pub fn save(&mut self, path: impl AsRef<Path>) -> Result<()> {
+    pub(crate) fn save(&mut self, path: impl AsRef<Path>) -> Result<()> {
         self.workbook.save(path)?;
         Ok(())
     }
 
-    pub fn to_bytes(&mut self) -> Result<Vec<u8>> {
-        Ok(self.workbook.save_to_buffer()?)
-    }
-
-    pub fn save_to_writer<W>(&mut self, writer: W) -> Result<()>
-    where
-        W: Write + Send,
-    {
-        self.workbook.save_to_writer(writer)?;
-        Ok(())
-    }
-
-    pub fn add_serialized<T>(&mut self, rows: &[T], options: &WriteOptions) -> Result<WriteSummary>
+    pub(crate) fn add_serialized<T>(&mut self, rows: &[T], options: &WriteOptions) -> Result<()>
     where
         T: Serialize,
     {
@@ -100,14 +83,14 @@ impl XlsxWriter {
         validate_dimensions(rows.len(), 1, options.print_header())?;
         let Some(first) = rows.first() else {
             if options.print_header() {
-                return Err(Error::MissingSchema);
+                return Err(Error::missing_schema());
             }
 
             let mut worksheet = Worksheet::new();
             worksheet.set_name(options.sheet_name())?;
             self.workbook.push_worksheet(worksheet);
             self.sheet_names.insert(normalized_sheet_name(options.sheet_name()));
-            return Ok(WriteSummary::new(options.sheet_name().to_owned(), 0));
+            return Ok(());
         };
 
         let mut worksheet = Worksheet::new();
@@ -131,7 +114,7 @@ impl XlsxWriter {
 
         self.workbook.push_worksheet(worksheet);
         self.sheet_names.insert(normalized_sheet_name(options.sheet_name()));
-        Ok(WriteSummary::new(options.sheet_name().to_owned(), rows.len()))
+        Ok(())
     }
 }
 
@@ -215,13 +198,13 @@ fn validate_sheet_name(name: &str, existing_names: &HashSet<String>) -> Result<(
         return Err(invalid_sheet_name(name, "name cannot start or end with an apostrophe"));
     }
     if existing_names.contains(&normalized_sheet_name(name)) {
-        return Err(Error::DuplicateSheetName(name.to_owned()));
+        return Err(Error::duplicate_sheet_name(name));
     }
     Ok(())
 }
 
 fn invalid_sheet_name(name: &str, reason: &'static str) -> Error {
-    Error::InvalidSheetName { name: name.to_owned(), reason }
+    Error::invalid_sheet_name(name, reason)
 }
 
 fn normalized_sheet_name(name: &str) -> String {
@@ -232,7 +215,7 @@ fn validate_schema(schema: &[String]) -> Result<()> {
     let mut names = HashSet::with_capacity(schema.len());
     for name in schema {
         if !names.insert(name) {
-            return Err(Error::DuplicateColumnName(name.clone()));
+            return Err(Error::duplicate_column_name(name));
         }
     }
     Ok(())
@@ -241,7 +224,7 @@ fn validate_schema(schema: &[String]) -> Result<()> {
 fn validate_dimensions(rows: usize, columns: usize, print_header: bool) -> Result<()> {
     let output_rows = rows.saturating_add(usize::from(print_header));
     if output_rows > MAX_EXCEL_ROWS || columns > MAX_EXCEL_COLUMNS {
-        return Err(Error::WorksheetLimit { rows: output_rows, columns });
+        return Err(Error::worksheet_limit(output_rows, columns));
     }
     Ok(())
 }

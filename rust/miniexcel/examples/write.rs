@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
 use chrono::NaiveDate;
-use miniexcel::{CellValue, DynamicRow, WriteOptions, XlsxWriter};
+use miniexcel::{CellValue, DynamicRow, MiniExcel, WriteOptions};
 
 fn main() -> miniexcel::Result<()> {
     let output = std::env::args()
@@ -20,16 +20,11 @@ fn main() -> miniexcel::Result<()> {
     second.insert("Name".to_owned(), CellValue::String("MiniExcel Rust".to_owned()));
     second.insert("Version".to_owned(), CellValue::Int(1));
 
-    let mut writer = XlsxWriter::new();
-    let summary =
-        writer.add_rows(&[first, second], &WriteOptions::new().with_sheet_name("Releases"))?;
-    writer.save(&output)?;
+    let rows = [first, second];
+    let sheet_name = "Releases";
+    let options = WriteOptions::new().with_sheet_name(sheet_name);
+    MiniExcel::save_as_with_options(&output, &rows, &options)?;
 
-    println!(
-        "Wrote {} rows to '{}' in {}",
-        summary.rows_written(),
-        summary.sheet_name(),
-        output.display()
-    );
+    println!("Wrote {} rows to '{sheet_name}' in {}", rows.len(), output.display());
     Ok(())
 }

@@ -9,6 +9,7 @@ This directory contains an experimental Rust implementation of MiniExcel's basic
 The MVP currently supports:
 
 - Reading `.xlsx` files from paths or `Read + Seek` sources.
+- Bounded-memory worksheet streaming through `MiniExcel::query()` and `MiniExcel::query_as()`.
 - Listing worksheets and selecting a worksheet by name.
 - Dynamic rows with stable column order and optional header rows.
 - Typed row deserialization through Serde.
@@ -29,6 +30,44 @@ cargo test --manifest-path rust/Cargo.toml --workspace --all-targets --locked
 ```
 
 The workspace lockfile is committed so CI and local research use the same dependency graph.
+
+## Simple Streaming Query
+
+The closest Rust equivalent to `MiniExcel.Query` is an iterator:
+
+```rust
+use miniexcel::MiniExcel;
+
+for row in MiniExcel::query("book.xlsx")? {
+    let row = row?;
+    println!("{:?}", row["A"]);
+}
+# Ok::<(), miniexcel::Error>(())
+```
+
+Worksheet XML is decompressed and parsed incrementally. Rows are delivered through a bounded channel and mapped as the iterator advances, so callers can use operations such as `take`, `filter`, and `find` without collecting every row. Dropping the iterator stops its worker. Use `MiniExcel::query_with_options()` for worksheet, header, start-cell, and empty-row options.
+
+Typed rows use the same model:
+
+```rust
+# use serde::Deserialize;
+use miniexcel::MiniExcel;
+
+#[derive(Deserialize)]
+#[serde(rename_all = "PascalCase")]
+struct Record {
+    name: String,
+}
+
+for record in MiniExcel::query_as::<Record>("book.xlsx")? {
+    println!("{}", record?.name);
+}
+# Ok::<(), miniexcel::Error>(())
+```
+
+`MiniExcel::query()` and `query_as()` currently accept paths because a worker owns the ZIP archive while the iterator is alive. `XlsxReader::from_reader()` remains available for arbitrary `Read + Seek` sources, but that compatibility path uses calamine and materializes the selected worksheet.
+
+> **Memory boundary:** the streaming path keeps workbook metadata, styles, and the shared-string table in memory, plus a small row channel and parser buffers. It does not retain worksheet XML or all worksheet rows. It performs one bounded-memory metadata pass before the streaming pass so every dynamic row has a stable global column schema and trailing style-only rows are excluded even when `<dimension>` is missing or stale. Peak memory can still grow with the shared-string table or a single exceptionally large row, but not with the full worksheet row count.
 
 ## Dynamic Reading
 
@@ -126,7 +165,8 @@ The column-format key is the final Serde field/header name. Typed Serde writing 
 - Dynamic XLSX numbers with an exact `i64` representation are returned as `CellValue::Int`; other numeric values remain `Float`.
 - Excel serial dates cannot always distinguish date-only, time-only, and datetime intent. Dynamic serial values are normalized to `CellValue::DateTime`; ISO values retain the more specific variant when possible.
 - Formula expressions are not returned. Reading uses their cached values.
-- Reading is iterator-shaped at the API boundary, but `calamine` loads worksheet ranges into memory. The MVP does not claim true streaming or async I/O.
+- `MiniExcel::query()` and `query_as()` strictly stream worksheet XML from paths. `XlsxReader` remains a calamine-backed, materialized compatibility API for arbitrary `Read + Seek` inputs.
+- Streaming is synchronous and uses one worker thread per active query. Async I/O is not part of the MVP.
 - Writing creates new workbooks and overwrites target paths. It cannot modify an existing workbook.
 
 ## Non-Goals For This MVP

@@ -2,7 +2,7 @@ use std::io::Cursor;
 
 use chrono::{Duration, NaiveDate, NaiveDateTime, NaiveTime};
 use miniexcel::{
-    CellValue, DynamicRow, HeaderMode, ReadOptions, WriteOptions, XlsxReader, XlsxWriter,
+    CellValue, DynamicRow, HeaderMode, MiniExcel, ReadOptions, WriteOptions, XlsxReader, XlsxWriter,
 };
 use serde::{Deserialize, Serialize};
 
@@ -49,6 +49,8 @@ fn writes_dynamic_rows_and_reads_them_back() {
     assert_eq!(summary.rows_written(), 2);
 
     let bytes = writer.to_bytes().expect("write workbook");
+    let temp_file = tempfile::NamedTempFile::new().expect("create temporary XLSX path");
+    std::fs::write(temp_file.path(), &bytes).expect("write temporary XLSX file");
     let mut reader = XlsxReader::from_reader(Cursor::new(bytes)).expect("open generated workbook");
     assert_eq!(reader.sheet_names(), ["Data"]);
 
@@ -65,6 +67,15 @@ fn writes_dynamic_rows_and_reads_them_back() {
     assert!(rows[1]["Count"].is_empty());
     assert_eq!(rows[1]["Later"], CellValue::String("union column".to_owned()));
     assert_eq!(rows[0].keys().last().map(String::as_str), Some("Later"));
+
+    let streamed = MiniExcel::query_with_options(temp_file.path(), &options)
+        .expect("create strict streaming query")
+        .collect::<miniexcel::Result<Vec<_>>>()
+        .expect("stream generated workbook");
+    assert_eq!(streamed.len(), 2);
+    assert_eq!(streamed[0]["Date"], CellValue::DateTime(date.and_hms_opt(0, 0, 0).unwrap()));
+    assert_eq!(streamed[0]["Created"], CellValue::DateTime(datetime));
+    assert_eq!(streamed[0]["Elapsed"], CellValue::Duration(Duration::hours(27)));
 }
 
 #[test]

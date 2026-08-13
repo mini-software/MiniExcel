@@ -8,6 +8,9 @@ pub enum Error {
     #[error("failed to read XLSX data: {0}")]
     Read(#[from] calamine::XlsxError),
 
+    #[error("failed to stream XLSX data: {0}")]
+    Stream(String),
+
     #[error("failed to write XLSX data: {0}")]
     Write(#[from] rust_xlsxwriter::XlsxError),
 

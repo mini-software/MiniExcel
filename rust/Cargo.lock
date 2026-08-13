@@ -298,10 +298,12 @@ dependencies = [
  "calamine",
  "chrono",
  "indexmap",
+ "quick-xml",
  "rust_xlsxwriter",
  "serde",
  "tempfile",
  "thiserror",
+ "zip",
 ]
 
 [[package]]

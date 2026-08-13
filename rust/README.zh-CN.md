@@ -7,6 +7,7 @@
 ## 当前能力
 
 - 从路径或 `Read + Seek` 数据源读取 `.xlsx`。
+- 通过 `MiniExcel::query()` 和 `MiniExcel::query_as()` 以有界内存流式读取 worksheet。
 - 枚举工作表并按名称选择工作表。
 - 使用稳定列顺序的动态行，可选首行表头。
 - 通过 Serde 将行反序列化为 Rust 结构体。
@@ -27,6 +28,44 @@ cargo test --manifest-path rust/Cargo.toml --workspace --all-targets --locked
 ```
 
 仓库会提交 workspace 的 `Cargo.lock`，确保本地研究与 CI 使用同一依赖图。
+
+## 简洁的流式 Query
+
+最接近 `MiniExcel.Query` 的 Rust 写法是返回迭代器：
+
+```rust
+use miniexcel::MiniExcel;
+
+for row in MiniExcel::query("book.xlsx")? {
+    let row = row?;
+    println!("{:?}", row["A"]);
+}
+# Ok::<(), miniexcel::Error>(())
+```
+
+worksheet XML 会被增量解压和解析，行数据通过有界 channel 交给迭代器，并随迭代逐行映射。因此可直接使用 `take`、`filter`、`find` 等操作，不必收集全部行；丢弃迭代器会停止其 worker。工作表、表头、起始单元格和空行选项可通过 `MiniExcel::query_with_options()` 设置。
+
+类型化查询使用同一模式：
+
+```rust
+# use serde::Deserialize;
+use miniexcel::MiniExcel;
+
+#[derive(Deserialize)]
+#[serde(rename_all = "PascalCase")]
+struct Record {
+    name: String,
+}
+
+for record in MiniExcel::query_as::<Record>("book.xlsx")? {
+    println!("{}", record?.name);
+}
+# Ok::<(), miniexcel::Error>(())
+```
+
+`MiniExcel::query()` 和 `query_as()` 目前接收路径，因为迭代器存活期间由 worker 持有 ZIP archive。任意 `Read + Seek` 输入仍可使用 `XlsxReader::from_reader()`，但该兼容路径由 calamine 实现，会 materialize 所选工作表。
+
+> **内存边界：** 流式路径会在内存中保留工作簿元数据、样式、shared-string table、少量行 channel 和 parser buffer，但不会保留完整 worksheet XML 或所有行。为了在 `<dimension>` 缺失/过期时仍提供稳定的全局列 schema，并排除末尾仅带样式的空行，它会先做一次有界内存元数据扫描，再进行流式输出。峰值内存仍可能随 shared-string table 或单个超大行增长，但不会随 worksheet 总行数增长。
 
 ## 动态读取
 
@@ -124,7 +163,8 @@ let bytes = writer.to_bytes()?;
 - 能精确表示为 `i64` 的 XLSX 数值返回 `CellValue::Int`，其他数值返回 `Float`。
 - Excel 序列日期不总能区分纯日期、纯时间和日期时间，因此动态读取统一为 `CellValue::DateTime`；ISO 值会尽量保留更具体的类型。
 - 公式只读取缓存值，不返回公式表达式。
-- `calamine` 会把工作表 range 装入内存，因此首期不宣称真正的流式或异步读取。
+- `MiniExcel::query()` 和 `query_as()` 会从路径严格流式解析 worksheet XML；`XlsxReader` 则保留为支持任意 `Read + Seek` 输入的 calamine 整表兼容 API。
+- 流式查询是同步接口，每个活动 query 使用一个 worker thread；首期不包含 async I/O。
 - 写入只创建新工作簿并覆盖目标路径，不能修改已有工作簿。
 
 ## 首期不包含

@@ -1,15 +1,13 @@
 use std::path::PathBuf;
 
-use miniexcel::{HeaderMode, ReadOptions, XlsxReader};
+use miniexcel::{HeaderMode, MiniExcel, ReadOptions};
 
 fn main() -> miniexcel::Result<()> {
     let path = std::env::args().nth(1).map_or_else(default_fixture, PathBuf::from);
-    let mut reader = XlsxReader::open(&path)?;
     let options = ReadOptions::new().with_header_mode(HeaderMode::FirstRow);
 
-    println!("Sheets: {:?}", reader.sheet_names());
-    for row in reader.read_rows(&options)?.into_iter().take(5) {
-        println!("{row:?}");
+    for row in MiniExcel::query_with_options(path, &options)?.take(5) {
+        println!("{:?}", row?);
     }
     Ok(())
 }

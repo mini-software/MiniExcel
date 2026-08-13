@@ -13,9 +13,11 @@ publish = false
 calamine.workspace = true
 chrono.workspace = true
 indexmap.workspace = true
+quick-xml.workspace = true
 rust_xlsxwriter.workspace = true
 serde.workspace = true
 thiserror.workspace = true
+zip.workspace = true
 
 [dev-dependencies]
 tempfile.workspace = true

@@ -1,7 +1,7 @@
 mod common;
 
 use chrono::NaiveDate;
-use miniexcel::{Error, ReadOptions, XlsxReader};
+use miniexcel::{Error, MiniExcel, ReadOptions, XlsxReader};
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
@@ -95,4 +95,49 @@ fn reports_sheet_and_excel_row_for_mapping_errors() {
         }
         other => panic!("unexpected error: {other}"),
     }
+}
+
+#[test]
+fn typed_query_maps_rows_lazily() {
+    let mut rows = MiniExcel::query_as::<InvalidSequence>(common::fixture("TestIssue309.xlsx"))
+        .expect("create typed query");
+
+    assert!(rows.next().expect("Excel row 2").is_ok());
+    assert!(rows.next().expect("Excel row 3").is_ok());
+    let error = rows.next().expect("Excel row 4").expect_err("row 4 should fail");
+
+    match error {
+        Error::Deserialize { sheet, row, .. } => {
+            assert_eq!(sheet, "Sheet1");
+            assert_eq!(row, 4);
+        }
+        other => panic!("unexpected error: {other}"),
+    }
+}
+
+#[test]
+fn typed_streaming_query_deserializes_dates() {
+    let mut rows = MiniExcel::query_as::<UserAccount>(common::fixture("TestTypeMapping.xlsx"))
+        .expect("create typed streaming query");
+
+    let first = rows.next().expect("first row").expect("deserialize first row");
+    assert_eq!(first.id, "78DE23D2-DCB6-BD3D-EC67-C112BBC322A2");
+    assert_eq!(first.name, "Wade");
+    assert_eq!(first.born_on, NaiveDate::from_ymd_opt(2020, 9, 27).unwrap());
+    assert_eq!(first.age, 36);
+    assert!(!first.vip);
+    assert_eq!(first.points, 5019.12);
+}
+
+#[test]
+fn typed_streaming_query_trims_headers() {
+    let rows = MiniExcel::query_as::<SimpleAccount>(common::fixture("TestTrimColumnNames.xlsx"))
+        .expect("create trimmed-header query")
+        .collect::<miniexcel::Result<Vec<_>>>()
+        .expect("deserialize trimmed-header rows");
+
+    assert_eq!(rows[4].name.as_deref(), Some("Raymond"));
+    assert_eq!(rows[4].age, 18);
+    assert_eq!(rows[4].mail.as_deref(), Some("sagittis.lobortis@leoMorbi.com"));
+    assert_eq!(rows[4].points, 8209.76);
 }

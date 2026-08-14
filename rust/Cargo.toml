@@ -1,5 +1,5 @@
 [workspace]
-members = ["miniexcel"]
+members = ["miniexcel", "miniexcel-cli"]
 resolver = "2"
 
 [workspace.package]
@@ -13,6 +13,7 @@ homepage = "https://github.com/mini-software/MiniExcel"
 [workspace.dependencies]
 calamine = { version = "0.35.0", features = ["chrono"] }
 chrono = { version = "0.4.42", features = ["serde"] }
+clap = { version = "4.6.6", features = ["derive"] }
 indexmap = "2.12.1"
 quick-xml = "0.39.4"
 rust_xlsxwriter = { version = "0.96.0", features = ["chrono", "serde"] }

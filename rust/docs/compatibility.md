@@ -9,12 +9,13 @@ The Rust MVP implements the smallest useful MiniExcel-style XLSX read/write surf
 | Dependency | Locked API line | Role | License | MSRV note |
 | --- | --- | --- | --- | --- |
 | `calamine` | 0.35 | XLSX parsing and Serde row deserialization | MIT | 0.35 declares Rust 1.83 |
+| `clap` | 4.6 | Local CLI argument parsing | MIT OR Apache-2.0 | 4.6 declares Rust 1.85 |
 | `rust_xlsxwriter` | 0.96 | New XLSX workbook generation and Serde serialization | MIT OR Apache-2.0 | 0.96 declares Rust 1.83 |
 | `serde` | 1.x | Typed mapping | MIT OR Apache-2.0 | Resolved by the workspace lockfile |
 | `chrono` | 0.4 | Timezone-free Excel date/time values | MIT OR Apache-2.0 | Resolved by the workspace lockfile |
 | `indexmap` | 2.x | Stable dynamic column ordering | MIT OR Apache-2.0 | Resolved by the workspace lockfile |
 | `quick-xml` | 0.39 | Incremental OOXML parsing | MIT | Locked and checked with Rust 1.85 |
-| `serde_json` | 1.x | Shared parity contract tests only | MIT OR Apache-2.0 | Dev dependency checked with Rust 1.85 |
+| `serde_json` | 1.x | Shared parity contracts and CLI JSON output | MIT OR Apache-2.0 | Checked with Rust 1.85 |
 | `thiserror` | 2.x | Public error composition | MIT OR Apache-2.0 | Resolved by the workspace lockfile |
 | `zip` | 7.2 | Incremental worksheet entry decompression | MIT | Locked and checked with Rust 1.85 |
 

@@ -29,6 +29,58 @@ cargo test --manifest-path rust/Cargo.toml --workspace --all-targets --locked
 
 仓库会提交 workspace 的 `Cargo.lock`，确保本地研究与 CI 使用同一依赖图。
 
+## 本地 CLI
+
+在仓库根目录运行 CLI：
+
+```bash
+cargo +1.85.0 run --manifest-path rust/Cargo.toml -p miniexcel-cli -- --help
+```
+
+如果当前目录已经是 `rust/miniexcel-cli`，Cargo 会自动找到该 package 和上级 workspace，直接运行：
+
+```bash
+cargo +1.85.0 run -- --help
+```
+
+`--manifest-path` 始终相对于当前目录解析，因此不要在 `rust/miniexcel-cli` 下继续使用 `rust/Cargo.toml`。如需显式指定 workspace manifest，可使用 `--manifest-path ../Cargo.toml`。
+
+列出工作表并检查行数据：
+
+```bash
+cargo +1.85.0 run --manifest-path rust/Cargo.toml -p miniexcel-cli -- sheets tests/data/xlsx/TestMultiSheet.xlsx
+
+cargo +1.85.0 run --manifest-path rust/Cargo.toml -p miniexcel-cli -- query tests/data/xlsx/TestDynamicQueryBasic.xlsx --header --limit 5
+```
+
+在 `rust/miniexcel-cli` 目录下，对应命令为：
+
+```bash
+cargo +1.85.0 run -- sheets ../../tests/data/xlsx/TestMultiSheet.xlsx
+
+cargo +1.85.0 run -- query ../../tests/data/xlsx/TestDynamicQueryBasic.xlsx --header --limit 5
+```
+
+`query` 支持 `--sheet`、`--header`、`--start-cell`、`--ignore-empty-rows` 和 `--format table|json|jsonl`。默认最多显示 20 行；使用 `--limit 0 --format jsonl` 可持续流式输出全部行，JSON 和 table 格式则会先收集选中的行再渲染。
+
+创建并回读工作簿，或同时运行 Rust/.NET 等价契约：
+
+```bash
+cargo +1.85.0 run --manifest-path rust/Cargo.toml -p miniexcel-cli -- write-demo ./tmp/miniexcel-demo.xlsx
+
+cargo +1.85.0 run --manifest-path rust/Cargo.toml -p miniexcel-cli -- parity
+```
+
+在 `rust/miniexcel-cli` 目录下可简化为：
+
+```bash
+cargo +1.85.0 run -- write-demo ./tmp/miniexcel-demo.xlsx
+
+cargo +1.85.0 run -- parity
+```
+
+完成一次构建后，可直接使用 `rust/target/debug/miniexcel`（Windows 为 `.exe`）。
+
 ## .NET 等价验证
 
 .NET 与 Rust 共同消费版本化行为契约 `tests/data/contracts/xlsx-parity-v1.json`，对相同 XLSX fixture、动态/类型化 query 和规范化预期值进行比较。

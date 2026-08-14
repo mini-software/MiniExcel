@@ -1,0 +1,24 @@
+[package]
+name = "miniexcel-cli"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "Local command-line tester for MiniExcel Rust"
+publish = false
+
+[[bin]]
+name = "miniexcel"
+path = "src/main.rs"
+doc = false
+
+[dependencies]
+chrono.workspace = true
+clap.workspace = true
+miniexcel = { path = "../miniexcel" }
+serde_json.workspace = true
+
+[lints]
+workspace = true

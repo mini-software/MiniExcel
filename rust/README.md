@@ -31,6 +31,58 @@ cargo test --manifest-path rust/Cargo.toml --workspace --all-targets --locked
 
 The workspace lockfile is committed so CI and local research use the same dependency graph.
 
+## Local CLI
+
+Run the CLI from the repository root:
+
+```bash
+cargo +1.85.0 run --manifest-path rust/Cargo.toml -p miniexcel-cli -- --help
+```
+
+If the current directory is already `rust/miniexcel-cli`, Cargo discovers the package and its parent workspace automatically:
+
+```bash
+cargo +1.85.0 run -- --help
+```
+
+`--manifest-path` is always resolved relative to the current directory, so do not use `rust/Cargo.toml` from inside `rust/miniexcel-cli`. To name the workspace manifest explicitly from there, use `--manifest-path ../Cargo.toml`.
+
+List sheets and inspect rows:
+
+```bash
+cargo +1.85.0 run --manifest-path rust/Cargo.toml -p miniexcel-cli -- sheets tests/data/xlsx/TestMultiSheet.xlsx
+
+cargo +1.85.0 run --manifest-path rust/Cargo.toml -p miniexcel-cli -- query tests/data/xlsx/TestDynamicQueryBasic.xlsx --header --limit 5
+```
+
+From `rust/miniexcel-cli`, the equivalent commands are:
+
+```bash
+cargo +1.85.0 run -- sheets ../../tests/data/xlsx/TestMultiSheet.xlsx
+
+cargo +1.85.0 run -- query ../../tests/data/xlsx/TestDynamicQueryBasic.xlsx --header --limit 5
+```
+
+`query` supports `--sheet`, `--header`, `--start-cell`, `--ignore-empty-rows`, and `--format table|json|jsonl`. It prints at most 20 rows by default. Use `--limit 0 --format jsonl` for unbounded streaming output; JSON and table output collect the selected rows before rendering.
+
+Create and read back a workbook, or run both parity adapters:
+
+```bash
+cargo +1.85.0 run --manifest-path rust/Cargo.toml -p miniexcel-cli -- write-demo ./tmp/miniexcel-demo.xlsx
+
+cargo +1.85.0 run --manifest-path rust/Cargo.toml -p miniexcel-cli -- parity
+```
+
+From `rust/miniexcel-cli`, these become:
+
+```bash
+cargo +1.85.0 run -- write-demo ./tmp/miniexcel-demo.xlsx
+
+cargo +1.85.0 run -- parity
+```
+
+After one build, the executable is `rust/target/debug/miniexcel` (`.exe` on Windows).
+
 ## .NET Parity
 
 .NET and Rust consume the same versioned behavior contract at `tests/data/contracts/xlsx-parity-v1.json`. It covers the common dynamic and typed query surface with the same XLSX fixtures and canonical expected values.

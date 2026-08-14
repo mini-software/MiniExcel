@@ -11,12 +11,14 @@ The MVP currently supports:
 - Reading `.xlsx` files from paths.
 - Bounded-memory worksheet streaming through `MiniExcel::query()` and `MiniExcel::query_as()`.
 - Listing worksheets and selecting a worksheet by name.
+- Listing selected column names with header and A1 start-cell semantics.
 - Dynamic rows with stable column order and optional header rows.
 - Typed row deserialization through Serde.
-- A1 start cells, header trimming, and optional empty-row filtering.
+- Inclusive A1 start/end ranges, header trimming, and optional empty-row filtering.
 - Creating new `.xlsx` workbooks from dynamic rows or Serde structs.
 - Worksheet selection for reads and path-based workbook output.
 - Strings, booleans, integers, floating-point values, empty cells, Excel errors, dates, times, datetimes, and durations.
+- An in-browser WebAssembly adapter and Browser Lab for local XLSX inspection and generation.
 
 The implementation uses Rust 2024 with an MSRV of Rust 1.85.0.
 
@@ -63,7 +65,19 @@ cargo +1.85.0 run -- sheets ../../tests/data/xlsx/TestMultiSheet.xlsx
 cargo +1.85.0 run -- query ../../tests/data/xlsx/TestDynamicQueryBasic.xlsx --header --limit 5
 ```
 
-`query` supports `--sheet`, `--header`, `--start-cell`, `--ignore-empty-rows`, and `--format table|json|jsonl`. It prints at most 20 rows by default. Use `--limit 0 --format jsonl` for unbounded streaming output; JSON and table output collect the selected rows before rendering.
+`query` supports `--sheet`, `--header`, `--start-cell`, `--end-cell`, `--ignore-empty-rows`, and `--format table|json|jsonl`. It prints at most 20 rows by default. Use `--limit 0 --format jsonl` for unbounded streaming output; JSON and table output collect the selected rows before rendering.
+
+## Browser WebAssembly
+
+The Browser Lab uses `miniexcel-wasm` to inspect uploaded XLSX bytes and generate a demo workbook entirely in the browser. Build and test it from `rust/web-demo`:
+
+```bash
+npm ci
+npm run build
+npm run test:e2e
+```
+
+The build requires the `wasm32-unknown-unknown` target and `wasm-bindgen-cli 0.2.127`. The Rust workflow validates the WASM build and Playwright desktop/mobile behavior.
 
 Create and read back a workbook, or run both parity adapters:
 
@@ -143,6 +157,8 @@ use miniexcel::{HeaderMode, MiniExcel, ReadOptions};
 
 let options = ReadOptions::new()
     .with_sheet_name("Data")
+    .with_start_cell("B2".parse()?)
+    .with_end_cell("E20".parse()?)
     .with_header_mode(HeaderMode::FirstRow);
 
 for row in MiniExcel::query_with_options("book.xlsx", &options)? {
@@ -238,6 +254,6 @@ The column-format key is the final Serde field/header name. Typed Serde writing 
 
 ## Non-Goals For This MVP
 
-CSV, `.xls`, `.xlsb`, `.ods`, templates, macros, images, merged-cell operations, arbitrary range end coordinates, formula authoring, a general style system, WASM, and editing existing workbooks are deferred.
+CSV, `.xls`, `.xlsb`, `.ods`, templates, macros, images, merged-cell operations, formula authoring, a general style system, and editing existing workbooks are deferred.
 
 See [Compatibility and research notes](docs/compatibility.md) for dependency choices and behavior mapping.

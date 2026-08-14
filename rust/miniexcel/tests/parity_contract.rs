@@ -25,6 +25,7 @@ struct DynamicCase {
     has_header: bool,
     sheet_name: Option<String>,
     start_cell: String,
+    end_cell: Option<String>,
     ignore_empty_rows: bool,
     expected_sheet_names: Option<Vec<String>>,
     row_count: usize,
@@ -121,6 +122,12 @@ fn dynamic_queries_match_dotnet_contract() {
         if let Some(sheet_name) = &test_case.sheet_name {
             options = options.with_sheet_name(sheet_name);
         }
+        if let Some(end_cell) = &test_case.end_cell {
+            options =
+                options.with_end_cell(end_cell.parse().unwrap_or_else(|error| {
+                    panic!("{}: invalid end cell: {error}", test_case.name)
+                }));
+        }
 
         let rows = MiniExcel::query_with_options(path, &options)
             .unwrap_or_else(|error| panic!("{}: create query: {error}", test_case.name))
@@ -136,6 +143,13 @@ fn dynamic_queries_match_dotnet_contract() {
                 .cloned()
                 .collect::<Vec<_>>();
             assert_eq!(&actual, expected, "{}: column order", test_case.name);
+            if test_case.end_cell.is_none() {
+                let actual = MiniExcel::get_columns(common::fixture(&test_case.fixture), &options)
+                    .unwrap_or_else(|error| {
+                        panic!("{}: get column names: {error}", test_case.name)
+                    });
+                assert_eq!(&actual, expected, "{}: get column names", test_case.name);
+            }
         }
 
         for sample in &test_case.samples {

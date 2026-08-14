@@ -4,6 +4,8 @@
 <a href="https://www.nuget.org/packages/MiniExcel"><img src="https://img.shields.io/badge/.NET-%3E%3D%204.5-red.svg" alt="version"></a>
 <a href="https://deepwiki.com/mini-software/MiniExcel"><img src="https://deepwiki.com/badge.svg" alt="Ask DeepWiki"></a>
 </p>
+
+<p><a href="https://trendshift.io/repositories/3859?utm_source=repository-badge&amp;utm_medium=badge&amp;utm_campaign=badge-repository-3859" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/repositories/3859" alt="mini-software%2FMiniExcel | Trendshift" width="250" height="55"/></a></p>
 </div>
 
 ---
@@ -33,8 +35,6 @@
 ### Introduction
 
 MiniExcel is a simple and efficient Excel processing tool for .NET, specifically designed to minimize memory usage.
-
-> **Experimental Rust XLSX MVP:** See the [Rust implementation and usage guide](rust/README.md).
 
 At present, most popular frameworks need to load all the data from an Excel document into memory to facilitate operations, but this may cause memory consumption problems. MiniExcel's approach is different: the data is processed row by row in a streaming manner, reducing the original consumption from potentially hundreds of megabytes to just a few megabytes, effectively preventing out-of-memory(OOM) issues.
 

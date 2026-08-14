@@ -16,6 +16,7 @@ use quick_xml::events::{BytesRef, BytesStart, Event};
 use zip::ZipArchive;
 use zip::result::ZipError;
 
+use crate::cell::MAX_EXCEL_COLUMN;
 use crate::reader::SelectedRow;
 use crate::{Error, ReadOptions, Result};
 
@@ -33,6 +34,7 @@ pub(super) struct CollectedRawRows {
 }
 
 pub(super) fn collect_raw_rows(bytes: &[u8], options: &ReadOptions) -> Result<CollectedRawRows> {
+    validate_range(options)?;
     let mut archive = ZipArchive::new(Cursor::new(bytes))
         .map_err(|error| stream_error("cannot open in-memory XLSX data:", error))?;
     let context = prepare_workbook(&mut archive, options)?;
@@ -54,6 +56,7 @@ pub(super) fn sheet_names_from_bytes(bytes: &[u8]) -> Result<Vec<String>> {
 
 impl StreamingRawRows {
     pub(super) fn open(path: impl AsRef<Path>, options: &ReadOptions) -> Result<Self> {
+        validate_range(options)?;
         let path = path.as_ref().to_owned();
         let file = File::open(&path)?;
         let (ready_sender, ready_receiver) = mpsc::sync_channel(0);
@@ -511,6 +514,8 @@ where
     let mut last_declared_row = None;
     let mut next_output_row = options.start_cell().row();
     let mut in_sheet_data = false;
+    let end_row = options.end_cell().map_or(extent.end_row, |cell| Some(cell.row()));
+    let end_column = options.end_cell().map_or(extent.end_column, |cell| Some(cell.column()));
 
     loop {
         if cancelled.load(Ordering::Relaxed) {
@@ -526,16 +531,10 @@ where
             Event::End(event) if is_name(event.name().as_ref(), b"sheetData") => break,
             Event::Start(event) if in_sheet_data && is_name(event.name().as_ref(), b"row") => {
                 let excel_row = row_index(&event, xml.decoder(), last_declared_row)?;
-                if extent.end_row.is_none_or(|end_row| excel_row > end_row) {
+                if end_row.is_none_or(|end_row| excel_row > end_row) {
                     break;
                 }
-                if !emit_missing_rows(
-                    &mut next_output_row,
-                    excel_row,
-                    extent.end_column,
-                    options,
-                    emit,
-                ) {
+                if !emit_missing_rows(&mut next_output_row, excel_row, end_column, options, emit) {
                     return Ok(());
                 }
                 last_declared_row = Some(excel_row);
@@ -543,21 +542,15 @@ where
             }
             Event::Empty(event) if in_sheet_data && is_name(event.name().as_ref(), b"row") => {
                 let excel_row = row_index(&event, xml.decoder(), last_declared_row)?;
-                if extent.end_row.is_none_or(|end_row| excel_row > end_row) {
+                if end_row.is_none_or(|end_row| excel_row > end_row) {
                     break;
                 }
-                if !emit_missing_rows(
-                    &mut next_output_row,
-                    excel_row,
-                    extent.end_column,
-                    options,
-                    emit,
-                ) {
+                if !emit_missing_rows(&mut next_output_row, excel_row, end_column, options, emit) {
                     return Ok(());
                 }
                 last_declared_row = Some(excel_row);
                 let row = RowState { excel_row, cells: Vec::new(), next_column: 0 };
-                if !emit_row(row, &mut next_output_row, extent.end_column, options, emit) {
+                if !emit_row(row, &mut next_output_row, end_column, options, emit) {
                     return Ok(());
                 }
             }
@@ -614,7 +607,7 @@ where
             }
             Event::End(event) if is_name(event.name().as_ref(), b"row") => {
                 if let Some(row) = current_row.take() {
-                    if !emit_row(row, &mut next_output_row, extent.end_column, options, emit) {
+                    if !emit_row(row, &mut next_output_row, end_column, options, emit) {
                         return Ok(());
                     }
                 }
@@ -734,17 +727,12 @@ where
         return true;
     }
     let start_column = options.start_cell().column();
-    let mut width = end_column
+    let width = end_column
         .filter(|column| *column >= start_column)
         .map_or(0, |column| column - start_column + 1);
-    if let Some(max_column) = row.cells.iter().map(|(column, _)| *column).max() {
-        if max_column >= start_column {
-            width = width.max(max_column - start_column + 1);
-        }
-    }
     let mut values = vec![Data::Empty; width];
     for (column, value) in row.cells {
-        if column >= start_column {
+        if column >= start_column && end_column.is_some_and(|end| column <= end) {
             values[column - start_column] = value;
         }
     }
@@ -752,6 +740,17 @@ where
         return true;
     }
     emit(SelectedRow { excel_row: row.excel_row, values })
+}
+
+fn validate_range(options: &ReadOptions) -> Result<()> {
+    let Some(end_cell) = options.end_cell() else {
+        return Ok(());
+    };
+    let start_cell = options.start_cell();
+    if end_cell.row() < start_cell.row() || end_cell.column() < start_cell.column() {
+        return Err(Error::invalid_cell_range(start_cell.to_string(), end_cell.to_string()));
+    }
+    Ok(())
 }
 
 fn row_index(event: &BytesStart<'_>, decoder: Decoder, previous: Option<usize>) -> Result<usize> {
@@ -860,7 +859,7 @@ fn parse_column(reference: &str) -> Option<usize> {
             .checked_mul(26)?
             .checked_add(usize::from(byte.to_ascii_uppercase() - b'A' + 1))?;
     }
-    found.then(|| column - 1)
+    found.then(|| column - 1).filter(|column| *column <= MAX_EXCEL_COLUMN)
 }
 
 fn parse_cell_error(value: &str) -> Result<CellErrorType> {
@@ -955,7 +954,7 @@ fn stream_error(context: impl std::fmt::Display, error: impl std::fmt::Display) 
 
 #[cfg(test)]
 mod tests {
-    use super::{CellFormat, classify_custom_format};
+    use super::{CellFormat, classify_custom_format, parse_column};
 
     #[test]
     fn classifies_custom_excel_number_formats() {
@@ -965,5 +964,12 @@ mod tests {
         assert_eq!(classify_custom_format("0.00"), CellFormat::Other);
         assert_eq!(classify_custom_format("[Red][>=100]0.00"), CellFormat::Other);
         assert_eq!(classify_custom_format("\"days\" 0"), CellFormat::Other);
+    }
+
+    #[test]
+    fn rejects_columns_beyond_excel_limits() {
+        assert_eq!(parse_column("XFD1048576"), Some(16_383));
+        assert_eq!(parse_column("XFE1"), None);
+        assert_eq!(parse_column("ZZZZ1"), None);
     }
 }

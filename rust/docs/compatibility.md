@@ -28,8 +28,10 @@ The latest `calamine 0.36` and `rust_xlsxwriter 0.97` require Rust 1.88. The MVP
 | OpenXML importer | `MiniExcel` | Concrete reader/parser types are internal |
 | Dynamic `Query` | `MiniExcel::query()` | Streams owned `IndexMap<String, CellValue>` rows with bounded buffering |
 | Typed `Query<T>` | `MiniExcel::query_as<T>()` | Streams rows and applies Serde mapping one row at a time |
+| `QueryRange` | `ReadOptions::with_start_cell()` / `with_end_cell()` | Inclusive A1 range for dynamic and typed reads |
 | `GetSheetNames` | `MiniExcel::get_sheet_names()` | Workbook order is preserved |
-| `startCell` | `ReadOptions::with_start_cell()` | A1 start only; no end coordinate in M1 |
+| `GetColumns` | `MiniExcel::get_columns()` | Returns selected dynamic keys or an empty vector |
+| `startCell` | `ReadOptions::with_start_cell()` | A1 start coordinate |
 | `IgnoreEmptyRows` | `ReadOptions::with_ignore_empty_rows()` | Defaults to `false` for MiniExcel compatibility |
 | OpenXML exporter | `MiniExcel::save_as*()` | Concrete writer type is internal; creates new workbooks only |
 | Dynamic export | `save_as()` / `save_as_with_schema()` | Map serialization is implemented internally |
@@ -87,7 +89,7 @@ Rust integration tests reuse the repository's existing files under `tests/data/x
 - A typed conversion failure with a verified Excel row number.
 - Strict streaming A1 starts, empty-row filtering, dates, trimmed headers, and early typed errors.
 
-Writer tests generate temporary workbooks through `MiniExcel::save_as*()` and read them back through `MiniExcel::query*()`, covering dynamic and typed values, dates, empty schemas, path overwrite behavior, and worksheet-name validation.
+Writer tests generate temporary workbooks through `MiniExcel::save_as*()` and read them back through `MiniExcel::query*()`, covering dynamic and typed values, dates, empty schemas, path overwrite behavior, and worksheet-name validation. The WASM adapter has native unit tests, while Browser Lab Playwright tests cover generated-workbook rendering, query controls, inclusive end ranges, and desktop/mobile viewports.
 
 ## .NET Parity Contract
 
@@ -107,8 +109,24 @@ dotnet test tests/MiniExcel.OpenXml.Tests/MiniExcel.OpenXml.Tests.csproj --frame
 
 The Rust workflow runs the Rust contract on Linux and Windows and runs the .NET contract on Linux. The regular .NET workflow also discovers the parity tests. A compatibility change is complete only when the shared contract is updated deliberately and both adapters pass it.
 
-The contract covers only the current common surface: dynamic/typed path queries, header behavior, sheet selection/order, A1 starts, empty/style-only rows, inferred cell references, scalar/date/duration mapping, trimmed typed headers, and conversion-error row/value context. Async APIs, DataReader, range-end queries, templates, and writing parity remain outside version 1 and must not be described as equivalent yet.
+The contract covers only the current common surface: dynamic/typed path queries, inclusive range queries, column-name discovery, header behavior, sheet selection/order, A1 starts, empty/style-only rows, inferred cell references, scalar/date/duration mapping, trimmed typed headers, and conversion-error row/value context. Async APIs, DataReader, templates, and writing parity remain outside version 1 and must not be described as equivalent yet.
+
+## .NET Coverage Boundary
+
+| .NET surface | Rust status | Shared contract |
+| --- | --- | --- |
+| Dynamic and typed XLSX query | Implemented | Yes |
+| `QueryRange` with A1 coordinates | Implemented | Yes |
+| `GetSheetNames` and `GetColumns` | Implemented | Yes |
+| New-workbook `SaveAs` | Implemented and roundtrip-tested | Not yet |
+| Byte-array query/write for WASM | Implemented | Rust/browser tests |
+| Async APIs, DataReader, stream ownership | Deferred | No |
+| Sheet information/dimensions, insert/edit | Deferred | No |
+| CSV and legacy formats | Deferred | No |
+| Templates, pictures, merges, comments | Deferred | No |
+
+This matrix is the coverage claim: Rust does not yet provide complete API parity with the current .NET packages.
 
 ## Deferred Work
 
-CSV providers, old Excel formats, templates, images, merged-cell APIs, formula authoring, general styling, modifying existing workbooks, async I/O, streaming from caller-owned readers, WASM, and publication policy require separate design and acceptance milestones.
+CSV providers, old Excel formats, templates, images, merged-cell APIs, formula authoring, general styling, modifying existing workbooks, async I/O, streaming from caller-owned readers, and publication policy require separate design and acceptance milestones.

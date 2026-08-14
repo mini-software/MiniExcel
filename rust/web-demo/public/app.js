@@ -22,6 +22,7 @@ const elements = {
   fileSize: byId("fileSize"),
   sheetSelect: byId("sheetSelect"),
   startCellInput: byId("startCellInput"),
+  endCellInput: byId("endCellInput"),
   rowLimitInput: byId("rowLimitInput"),
   headerToggle: byId("headerToggle"),
   emptyRowsToggle: byId("emptyRowsToggle"),
@@ -97,6 +98,9 @@ function bindEvents() {
   elements.startCellInput.addEventListener("keydown", (event) => {
     if (event.key === "Enter") refreshPreview();
   });
+  elements.endCellInput.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") refreshPreview();
+  });
   elements.rowLimitInput.addEventListener("keydown", (event) => {
     if (event.key === "Enter") refreshPreview();
   });
@@ -157,6 +161,12 @@ async function refreshPreview(resetSheet = false) {
     elements.startCellInput.focus();
     return;
   }
+  const endCell = elements.endCellInput.value.trim().toUpperCase();
+  if (endCell && !/^\$?[A-Z]{1,3}\$?[1-9]\d*$/.test(endCell)) {
+    showToast("End cell must use A1 notation, for example E20.", true);
+    elements.endCellInput.focus();
+    return;
+  }
   const rowLimit = Number.parseInt(elements.rowLimitInput.value, 10);
   if (!Number.isInteger(rowLimit) || rowLimit < 1 || rowLimit > 2000) {
     showToast("Row limit must be between 1 and 2000.", true);
@@ -172,6 +182,7 @@ async function refreshPreview(resetSheet = false) {
       sheetName: resetSheet ? null : elements.sheetSelect.value || null,
       hasHeader: elements.headerToggle.checked,
       startCell,
+      endCell: endCell || null,
       ignoreEmptyRows: elements.emptyRowsToggle.checked,
       limit: rowLimit,
     };

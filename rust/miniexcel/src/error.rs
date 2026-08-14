@@ -21,6 +21,9 @@ enum ErrorKind {
     #[error("invalid A1 cell reference: {0}")]
     InvalidCellReference(String),
 
+    #[error("invalid cell range: end cell {end} precedes start cell {start}")]
+    InvalidCellRange { start: String, end: String },
+
     #[error("worksheet '{0}' was not found")]
     SheetNotFound(String),
 
@@ -58,6 +61,10 @@ impl Error {
 
     pub(crate) fn invalid_cell_reference(reference: impl Into<String>) -> Self {
         ErrorKind::InvalidCellReference(reference.into()).into()
+    }
+
+    pub(crate) fn invalid_cell_range(start: impl Into<String>, end: impl Into<String>) -> Self {
+        ErrorKind::InvalidCellRange { start: start.into(), end: end.into() }.into()
     }
 
     pub(crate) fn sheet_not_found(sheet_name: impl Into<String>) -> Self {

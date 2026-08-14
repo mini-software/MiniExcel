@@ -30,24 +30,38 @@ public class RustParityContractTests
             var configuration = testCase.IgnoreEmptyRows
                 ? new OpenXmlConfiguration { IgnoreEmptyRows = true }
                 : null;
-            var rows = _excelImporter
-                .Query(
+            var rows = (testCase.EndCell is null
+                ? _excelImporter.Query(
                     path,
                     hasHeaderRow: testCase.HasHeader,
                     sheetName: testCase.SheetName,
                     startCell: testCase.StartCell,
                     configuration: configuration)
+                : _excelImporter.QueryRange(
+                    path,
+                    hasHeaderRow: testCase.HasHeader,
+                    sheetName: testCase.SheetName,
+                    startCell: testCase.StartCell,
+                    endCell: testCase.EndCell,
+                    configuration: configuration))
                 .Cast<IDictionary<string, object?>>()
                 .ToList();
 
             using var stream = File.OpenRead(path);
-            var streamRows = _excelImporter
-                .Query(
+            var streamRows = (testCase.EndCell is null
+                ? _excelImporter.Query(
                     stream,
                     hasHeaderRow: testCase.HasHeader,
                     sheetName: testCase.SheetName,
                     startCell: testCase.StartCell,
                     configuration: configuration)
+                : _excelImporter.QueryRange(
+                    stream,
+                    hasHeaderRow: testCase.HasHeader,
+                    sheetName: testCase.SheetName,
+                    startCell: testCase.StartCell,
+                    endCell: testCase.EndCell,
+                    configuration: configuration))
                 .Cast<IDictionary<string, object?>>()
                 .ToList();
             Assert.True(
@@ -62,6 +76,16 @@ public class RustParityContractTests
             {
                 Assert.NotEmpty(rows);
                 Assert.Equal(testCase.ExpectedColumns, rows[0].Keys);
+                if (testCase.EndCell is null)
+                {
+                    Assert.Equal(
+                        testCase.ExpectedColumns,
+                        _excelImporter.GetColumnNames(
+                            path,
+                            hasHeaderRow: testCase.HasHeader,
+                            sheetName: testCase.SheetName,
+                            startCell: testCase.StartCell));
+                }
             }
 
             AssertSamples(testCase.Name, rows, testCase.Samples);
@@ -229,6 +253,7 @@ public class RustParityContractTests
         public bool HasHeader { get; set; }
         public string? SheetName { get; set; }
         public string StartCell { get; set; } = "A1";
+        public string? EndCell { get; set; }
         public bool IgnoreEmptyRows { get; set; }
         public string[]? ExpectedSheetNames { get; set; }
         public int RowCount { get; set; }

@@ -38,6 +38,12 @@ impl MiniExcel {
         Ok(Box::new(StreamingRows::open(path, options)?))
     }
 
+    /// Returns the selected dynamic column names, or an empty vector when no data rows exist.
+    pub fn get_columns(path: impl AsRef<Path>, options: &ReadOptions) -> Result<Vec<String>> {
+        let mut rows = Self::query_with_options(path, options)?;
+        Ok(rows.next().transpose()?.map_or_else(Vec::new, |row| row.into_keys().collect()))
+    }
+
     /// Reads dynamic rows from an in-memory XLSX workbook.
     ///
     /// Unlike path queries, this method materializes the selected rows and is intended for

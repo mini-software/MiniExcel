@@ -57,6 +57,10 @@ struct QueryArgs {
     #[arg(long, default_value = "A1")]
     start_cell: CellReference,
 
+    /// Last cell to read, in A1 notation. Reads to the worksheet end when omitted.
+    #[arg(long)]
+    end_cell: Option<CellReference>,
+
     /// Omit rows whose selected cells are all empty.
     #[arg(long)]
     ignore_empty_rows: bool,
@@ -129,6 +133,9 @@ fn query(arguments: QueryArgs) -> CliResult<()> {
         .with_ignore_empty_rows(arguments.ignore_empty_rows);
     if let Some(sheet_name) = arguments.sheet {
         options = options.with_sheet_name(sheet_name);
+    }
+    if let Some(end_cell) = arguments.end_cell {
+        options = options.with_end_cell(end_cell);
     }
 
     let rows = MiniExcel::query_with_options(&arguments.file, &options)?;

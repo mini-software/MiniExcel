@@ -195,6 +195,34 @@
       ]
     },
     {
+      "name": "inclusive-cell-range",
+      "fixture": "TestQueryRange.xlsx",
+      "hasHeader": true,
+      "startCell": "C3",
+      "endCell": "E6",
+      "ignoreEmptyRows": false,
+      "rowCount": 3,
+      "expectedColumns": ["Name", "BoD", "Age"],
+      "samples": [
+        {
+          "rowIndex": 0,
+          "cells": {
+            "Name": "string:Wade",
+            "BoD": "datetime:2020-09-27T00:00:00",
+            "Age": "number:36"
+          }
+        },
+        {
+          "rowIndex": 2,
+          "cells": {
+            "Name": "string:Phelan",
+            "BoD": "datetime:2021-04-10T00:00:00",
+            "Age": "number:33"
+          }
+        }
+      ]
+    },
+    {
       "name": "missing-cell-references",
       "fixture": "TestWihoutRAttribute.xlsx",
       "hasHeader": false,

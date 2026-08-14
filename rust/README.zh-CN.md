@@ -9,12 +9,14 @@
 - 从路径读取 `.xlsx`。
 - 通过 `MiniExcel::query()` 和 `MiniExcel::query_as()` 以有界内存流式读取 worksheet。
 - 枚举工作表并按名称选择工作表。
+- 按表头和 A1 起点语义列出选中列名。
 - 使用稳定列顺序的动态行，可选首行表头。
 - 通过 Serde 将行反序列化为 Rust 结构体。
-- 支持 A1 起始单元格、表头修剪和可选空行过滤。
+- 支持包含结束点的 A1 起止范围、表头修剪和可选空行过滤。
 - 从动态行或 Serde 结构体创建新的 `.xlsx` 工作簿。
 - 读取时可选择工作表，写入输出到文件路径。
 - 支持字符串、布尔值、整数、浮点数、空单元格、Excel 错误、日期、时间、日期时间和时长。
+- 提供浏览器 WebAssembly adapter 和本地 XLSX 检查/生成 Browser Lab。
 
 项目使用 Rust 2024，最低支持 Rust 1.85.0。
 
@@ -61,7 +63,19 @@ cargo +1.85.0 run -- sheets ../../tests/data/xlsx/TestMultiSheet.xlsx
 cargo +1.85.0 run -- query ../../tests/data/xlsx/TestDynamicQueryBasic.xlsx --header --limit 5
 ```
 
-`query` 支持 `--sheet`、`--header`、`--start-cell`、`--ignore-empty-rows` 和 `--format table|json|jsonl`。默认最多显示 20 行；使用 `--limit 0 --format jsonl` 可持续流式输出全部行，JSON 和 table 格式则会先收集选中的行再渲染。
+`query` 支持 `--sheet`、`--header`、`--start-cell`、`--end-cell`、`--ignore-empty-rows` 和 `--format table|json|jsonl`。默认最多显示 20 行；使用 `--limit 0 --format jsonl` 可持续流式输出全部行，JSON 和 table 格式则会先收集选中的行再渲染。
+
+## 浏览器 WebAssembly
+
+Browser Lab 通过 `miniexcel-wasm` 在浏览器本地检查上传的 XLSX 字节并生成演示工作簿。在 `rust/web-demo` 运行：
+
+```bash
+npm ci
+npm run build
+npm run test:e2e
+```
+
+构建需要 `wasm32-unknown-unknown` target 和 `wasm-bindgen-cli 0.2.127`。Rust workflow 会验证 WASM 构建及 Playwright 桌面/移动端行为。
 
 创建并回读工作簿，或同时运行 Rust/.NET 等价契约：
 
@@ -141,6 +155,8 @@ use miniexcel::{HeaderMode, MiniExcel, ReadOptions};
 
 let options = ReadOptions::new()
     .with_sheet_name("Data")
+    .with_start_cell("B2".parse()?)
+    .with_end_cell("E20".parse()?)
     .with_header_mode(HeaderMode::FirstRow);
 
 for row in MiniExcel::query_with_options("book.xlsx", &options)? {
@@ -236,6 +252,6 @@ MiniExcel::save_as_serialized_with_options("releases.xlsx", &values, &options)?;
 
 ## 首期不包含
 
-CSV、`.xls`、`.xlsb`、`.ods`、模板、宏、图片、合并单元格操作、结束范围坐标、公式写入、通用样式系统、WASM 和修改已有工作簿均延后实现。
+CSV、`.xls`、`.xlsb`、`.ods`、模板、宏、图片、合并单元格操作、公式写入、通用样式系统和修改已有工作簿均延后实现。
 
 依赖选择和行为对照请查看[兼容性研究记录](docs/compatibility.md)。

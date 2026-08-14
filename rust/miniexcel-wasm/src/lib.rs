@@ -19,6 +19,7 @@ struct PreviewOptions {
     sheet_name: Option<String>,
     has_header: bool,
     start_cell: Option<String>,
+    end_cell: Option<String>,
     ignore_empty_rows: bool,
     limit: Option<usize>,
 }
@@ -74,6 +75,9 @@ fn inspect(bytes: &[u8], options: PreviewOptions) -> miniexcel::Result<String> {
         .with_ignore_empty_rows(options.ignore_empty_rows);
     if !selected_sheet.is_empty() {
         read_options = read_options.with_sheet_name(&selected_sheet);
+    }
+    if let Some(end_cell) = options.end_cell.as_deref() {
+        read_options = read_options.with_end_cell(CellReference::from_str(end_cell)?);
     }
 
     let mut source_rows = MiniExcel::query_bytes(bytes, &read_options)?;
@@ -171,6 +175,7 @@ fn js_error(message: impl AsRef<str>) -> JsValue {
 #[cfg(test)]
 mod tests {
     use super::{PreviewOptions, create_demo, inspect};
+    use serde_json::Value;
 
     #[test]
     fn generated_demo_can_be_inspected() {
@@ -182,5 +187,24 @@ mod tests {
         assert!(response.contains("BrowserDemo"));
         assert!(response.contains("MiniExcel"));
         assert!(response.contains("ReleasedOn"));
+    }
+
+    #[test]
+    fn preview_honors_an_inclusive_end_cell() {
+        let bytes = create_demo().expect("create demo workbook");
+        let response = inspect(
+            &bytes,
+            PreviewOptions {
+                has_header: true,
+                end_cell: Some("B2".to_owned()),
+                ..PreviewOptions::default()
+            },
+        )
+        .expect("inspect bounded demo range");
+        let response: Value = serde_json::from_str(&response).expect("parse preview response");
+
+        assert_eq!(response["columns"], serde_json::json!(["Name", "Version"]));
+        assert_eq!(response["totalRows"], 1);
+        assert_eq!(response["rows"][0], serde_json::json!(["MiniExcel", 2]));
     }
 }

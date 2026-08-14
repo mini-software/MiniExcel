@@ -164,6 +164,34 @@ fn selects_sheets_in_workbook_order() {
 }
 
 #[test]
+fn gets_columns_with_headers_start_cells_and_empty_sheets() {
+    let path = common::fixture("TestTypeMapping.xlsx");
+    assert_eq!(
+        MiniExcel::get_columns(&path, &ReadOptions::default()).expect("get letter columns"),
+        ["A", "B", "C", "D", "E", "F", "G", "H"]
+    );
+
+    let options = ReadOptions::new().with_header_mode(HeaderMode::FirstRow);
+    assert_eq!(
+        MiniExcel::get_columns(&path, &options).expect("get header columns"),
+        ["ID", "Name", "BoD", "Age", "VIP", "Mail", "Points", "IgnoredProperty"]
+    );
+
+    let options = ReadOptions::new().with_start_cell("C3".parse().expect("valid start cell"));
+    assert_eq!(
+        MiniExcel::get_columns(common::fixture("TestIssue147.xlsx"), &options)
+            .expect("get columns from start cell"),
+        ["C", "D", "E"]
+    );
+
+    assert!(
+        MiniExcel::get_columns(common::fixture("TestEmpty.xlsx"), &ReadOptions::default())
+            .expect("get empty columns")
+            .is_empty()
+    );
+}
+
+#[test]
 fn preserves_self_closing_empty_rows() {
     let rows = MiniExcel::query(common::fixture("TestEmptySelfClosingRow.xlsx"))
         .expect("create query")
@@ -197,6 +225,45 @@ fn reads_from_an_a1_start_cell() {
         )
     );
     assert_eq!(rows[0]["D"], CellValue::Int(18));
+}
+
+#[test]
+fn reads_an_inclusive_cell_range_with_headers() {
+    let options = ReadOptions::new()
+        .with_start_cell("C3".parse().expect("valid start cell"))
+        .with_end_cell("E6".parse().expect("valid end cell"))
+        .with_header_mode(HeaderMode::FirstRow);
+    let rows = MiniExcel::query_with_options(common::fixture("TestQueryRange.xlsx"), &options)
+        .expect("create range query")
+        .collect::<miniexcel::Result<Vec<_>>>()
+        .expect("read range");
+
+    assert_eq!(rows.len(), 3);
+    assert_eq!(rows[0].len(), 3);
+    assert_eq!(rows[0]["Name"], CellValue::String("Wade".to_owned()));
+    assert_eq!(
+        rows[0]["BoD"],
+        CellValue::DateTime(
+            NaiveDate::from_ymd_opt(2020, 9, 27).unwrap().and_hms_opt(0, 0, 0).unwrap()
+        )
+    );
+    assert_eq!(rows[0]["Age"], CellValue::Int(36));
+    assert_eq!(rows[2]["Name"], CellValue::String("Phelan".to_owned()));
+    assert_eq!(rows[2]["Age"], CellValue::Int(33));
+}
+
+#[test]
+fn rejects_a_range_ending_before_its_start() {
+    let options = ReadOptions::new()
+        .with_start_cell("C3".parse().expect("valid start cell"))
+        .with_end_cell("B6".parse().expect("valid end cell"));
+    let error =
+        match MiniExcel::query_with_options(common::fixture("TestQueryRange.xlsx"), &options) {
+            Ok(_) => panic!("reverse range should fail"),
+            Err(error) => error,
+        };
+
+    assert!(error.to_string().contains("end cell B6 precedes start cell C3"));
 }
 
 #[test]

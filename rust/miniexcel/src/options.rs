@@ -14,6 +14,7 @@ pub enum HeaderMode {
 pub struct ReadOptions {
     sheet_name: Option<String>,
     start_cell: CellReference,
+    end_cell: Option<CellReference>,
     header_mode: HeaderMode,
     ignore_empty_rows: bool,
     trim_headers: bool,
@@ -34,6 +35,12 @@ impl ReadOptions {
     #[must_use]
     pub const fn with_start_cell(mut self, start_cell: CellReference) -> Self {
         self.start_cell = start_cell;
+        self
+    }
+
+    #[must_use]
+    pub const fn with_end_cell(mut self, end_cell: CellReference) -> Self {
+        self.end_cell = Some(end_cell);
         self
     }
 
@@ -66,6 +73,11 @@ impl ReadOptions {
     }
 
     #[must_use]
+    pub(crate) const fn end_cell(&self) -> Option<CellReference> {
+        self.end_cell
+    }
+
+    #[must_use]
     pub(crate) const fn ignore_empty_rows(&self) -> bool {
         self.ignore_empty_rows
     }
@@ -89,6 +101,7 @@ impl Default for ReadOptions {
         Self {
             sheet_name: None,
             start_cell: CellReference::A1,
+            end_cell: None,
             header_mode: HeaderMode::Auto,
             ignore_empty_rows: false,
             trim_headers: true,

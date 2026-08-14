@@ -59,6 +59,39 @@ jobs:
       - name: Run tests
         run: cargo test --manifest-path rust/Cargo.toml --workspace --all-targets --locked
 
+  browser-wasm:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Rust 1.85.0
+        uses: dtolnay/rust-toolchain@1.85.0
+        with:
+          targets: wasm32-unknown-unknown
+      - name: Install stable Rust
+        uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust -> target
+          key: browser-wasm
+      - name: Install wasm-bindgen CLI
+        run: cargo +stable install wasm-bindgen-cli --version 0.2.127 --locked
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install browser test dependencies
+        working-directory: rust/web-demo
+        run: npm ci
+      - name: Build browser demo
+        working-directory: rust/web-demo
+        run: npm run build
+      - name: Install Playwright Chromium
+        working-directory: rust/web-demo
+        run: npx playwright install --with-deps chromium
+      - name: Run browser tests
+        working-directory: rust/web-demo
+        run: npm run test:e2e
+
   dotnet-parity:
     runs-on: ubuntu-latest
     steps:

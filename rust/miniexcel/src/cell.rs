@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{Error, Result};
 
-const MAX_EXCEL_COLUMN: usize = 16_383;
+pub(crate) const MAX_EXCEL_COLUMN: usize = 16_383;
 const MAX_EXCEL_ROW: usize = 1_048_575;
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

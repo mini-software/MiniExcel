@@ -216,3 +216,21 @@ fn reads_cells_without_r_attributes() {
     assert_eq!(rows[1]["B"], CellValue::String("\"<>+}{\\nHello World".to_owned()));
     assert_eq!(rows[1]["C"], CellValue::Bool(true));
 }
+
+#[test]
+fn in_memory_query_matches_path_query() {
+    let path = common::fixture("TestWihoutRAttribute.xlsx");
+    let bytes = std::fs::read(&path).expect("read fixture bytes");
+    let path_rows = MiniExcel::query(&path)
+        .expect("create path query")
+        .collect::<miniexcel::Result<Vec<_>>>()
+        .expect("read path rows");
+    let memory_rows =
+        MiniExcel::query_bytes(&bytes, &ReadOptions::default()).expect("read in-memory rows");
+
+    assert_eq!(
+        MiniExcel::get_sheet_names_from_bytes(&bytes).unwrap(),
+        MiniExcel::get_sheet_names(&path).unwrap()
+    );
+    assert_eq!(memory_rows, path_rows);
+}

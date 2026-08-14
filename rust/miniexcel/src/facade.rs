@@ -18,6 +18,11 @@ impl MiniExcel {
         Ok(workbook.sheet_names())
     }
 
+    /// Returns worksheet names from an in-memory XLSX workbook.
+    pub fn get_sheet_names_from_bytes(bytes: &[u8]) -> Result<Vec<String>> {
+        crate::streaming::sheet_names_from_bytes(bytes)
+    }
+
     /// Streams dynamic rows from the first worksheet without a header row.
     pub fn query(
         path: impl AsRef<Path>,
@@ -31,6 +36,14 @@ impl MiniExcel {
         options: &ReadOptions,
     ) -> Result<Box<dyn Iterator<Item = Result<DynamicRow>> + Send>> {
         Ok(Box::new(StreamingRows::open(path, options)?))
+    }
+
+    /// Reads dynamic rows from an in-memory XLSX workbook.
+    ///
+    /// Unlike path queries, this method materializes the selected rows and is intended for
+    /// browser uploads and other environments without filesystem access.
+    pub fn query_bytes(bytes: &[u8], options: &ReadOptions) -> Result<Vec<DynamicRow>> {
+        crate::streaming::query_bytes(bytes, options)
     }
 
     /// Streams and deserializes rows from the first worksheet through Serde.
@@ -66,6 +79,13 @@ impl MiniExcel {
         let mut writer = XlsxWriter::new();
         writer.add_rows(rows, options)?;
         writer.save(path)
+    }
+
+    /// Creates an in-memory XLSX workbook from dynamic rows.
+    pub fn save_as_bytes(rows: &[DynamicRow], options: &WriteOptions) -> Result<Vec<u8>> {
+        let mut writer = XlsxWriter::new();
+        writer.add_rows(rows, options)?;
+        writer.save_to_bytes()
     }
 
     /// Creates a new XLSX workbook using an explicit dynamic schema.

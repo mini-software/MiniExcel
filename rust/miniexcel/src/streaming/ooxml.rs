@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::fs::File;
-use std::io::{BufReader, Read, Seek};
+use std::io::{BufReader, Cursor, Read, Seek};
 use std::path::{Path, PathBuf};
 use std::sync::mpsc::{self, Receiver, SyncSender};
 use std::sync::{
@@ -26,6 +26,30 @@ pub(super) struct StreamingRawRows {
     worker: Option<JoinHandle<()>>,
     sheet_name: String,
     cancelled: Arc<AtomicBool>,
+}
+
+pub(super) struct CollectedRawRows {
+    pub(super) rows: Vec<SelectedRow>,
+}
+
+pub(super) fn collect_raw_rows(bytes: &[u8], options: &ReadOptions) -> Result<CollectedRawRows> {
+    let mut archive = ZipArchive::new(Cursor::new(bytes))
+        .map_err(|error| stream_error("cannot open in-memory XLSX data:", error))?;
+    let context = prepare_workbook(&mut archive, options)?;
+    let cancelled = AtomicBool::new(false);
+    let extent = scan_worksheet_extent(&mut archive, &context.sheet_path, &cancelled)?;
+    let mut rows = Vec::new();
+    stream_worksheet(&mut archive, context, extent, options, &cancelled, &mut |row| {
+        rows.push(row);
+        true
+    })?;
+    Ok(CollectedRawRows { rows })
+}
+
+pub(super) fn sheet_names_from_bytes(bytes: &[u8]) -> Result<Vec<String>> {
+    let mut archive = ZipArchive::new(Cursor::new(bytes))
+        .map_err(|error| stream_error("cannot open in-memory XLSX data:", error))?;
+    Ok(read_workbook_info(&mut archive)?.sheets.into_iter().map(|sheet| sheet.name).collect())
 }
 
 impl StreamingRawRows {
@@ -158,8 +182,9 @@ fn worker_main<R>(
     if cancelled.load(Ordering::Relaxed) {
         return;
     }
+    let mut emit = |row| row_sender.send(Ok(row)).is_ok();
     if let Err(error) =
-        stream_worksheet(&mut archive, context, extent, &options, &cancelled, &row_sender)
+        stream_worksheet(&mut archive, context, extent, &options, &cancelled, &mut emit)
     {
         let _ = row_sender.send(Err(error));
     }
@@ -464,16 +489,17 @@ where
     Ok(extent)
 }
 
-fn stream_worksheet<R>(
+fn stream_worksheet<R, F>(
     archive: &mut ZipArchive<R>,
     context: WorkbookContext,
     extent: WorksheetExtent,
     options: &ReadOptions,
     cancelled: &AtomicBool,
-    sender: &SyncSender<Result<SelectedRow>>,
+    emit: &mut F,
 ) -> Result<()>
 where
     R: Read + Seek,
+    F: FnMut(SelectedRow) -> bool,
 {
     let file = archive
         .by_name(&context.sheet_path)
@@ -508,7 +534,7 @@ where
                     excel_row,
                     extent.end_column,
                     options,
-                    sender,
+                    emit,
                 ) {
                     return Ok(());
                 }
@@ -525,13 +551,13 @@ where
                     excel_row,
                     extent.end_column,
                     options,
-                    sender,
+                    emit,
                 ) {
                     return Ok(());
                 }
                 last_declared_row = Some(excel_row);
                 let row = RowState { excel_row, cells: Vec::new(), next_column: 0 };
-                if !emit_row(row, &mut next_output_row, extent.end_column, options, sender) {
+                if !emit_row(row, &mut next_output_row, extent.end_column, options, emit) {
                     return Ok(());
                 }
             }
@@ -588,7 +614,7 @@ where
             }
             Event::End(event) if is_name(event.name().as_ref(), b"row") => {
                 if let Some(row) = current_row.take() {
-                    if !emit_row(row, &mut next_output_row, extent.end_column, options, sender) {
+                    if !emit_row(row, &mut next_output_row, extent.end_column, options, emit) {
                         return Ok(());
                     }
                 }
@@ -674,29 +700,35 @@ fn finish_cell(cell: CellState, row: &mut RowState, context: &WorkbookContext) -
     Ok(())
 }
 
-fn emit_missing_rows(
+fn emit_missing_rows<F>(
     next_output_row: &mut usize,
     target_row: usize,
     end_column: Option<usize>,
     options: &ReadOptions,
-    sender: &SyncSender<Result<SelectedRow>>,
-) -> bool {
+    emit: &mut F,
+) -> bool
+where
+    F: FnMut(SelectedRow) -> bool,
+{
     while *next_output_row < target_row {
         let row = RowState { excel_row: *next_output_row, cells: Vec::new(), next_column: 0 };
-        if !emit_row(row, next_output_row, end_column, options, sender) {
+        if !emit_row(row, next_output_row, end_column, options, emit) {
             return false;
         }
     }
     true
 }
 
-fn emit_row(
+fn emit_row<F>(
     row: RowState,
     next_output_row: &mut usize,
     end_column: Option<usize>,
     options: &ReadOptions,
-    sender: &SyncSender<Result<SelectedRow>>,
-) -> bool {
+    emit: &mut F,
+) -> bool
+where
+    F: FnMut(SelectedRow) -> bool,
+{
     *next_output_row = (*next_output_row).max(row.excel_row.saturating_add(1));
     if row.excel_row < options.start_cell().row() {
         return true;
@@ -719,7 +751,7 @@ fn emit_row(
     if options.ignore_empty_rows() && values.iter().all(DataType::is_empty) {
         return true;
     }
-    sender.send(Ok(SelectedRow { excel_row: row.excel_row, values })).is_ok()
+    emit(SelectedRow { excel_row: row.excel_row, values })
 }
 
 fn row_index(event: &BytesStart<'_>, decoder: Decoder, previous: Option<usize>) -> Result<usize> {

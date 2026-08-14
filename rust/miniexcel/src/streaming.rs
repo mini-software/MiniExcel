@@ -17,6 +17,17 @@ enum Headers {
     ColumnLetters { start_column: usize, headers: Option<Vec<Option<String>>> },
 }
 
+impl Headers {
+    fn for_width(&mut self, width: usize) -> &[Option<String>] {
+        match self {
+            Self::FirstRow(headers) => headers,
+            Self::ColumnLetters { start_column, headers } => {
+                headers.get_or_insert_with(|| column_names(*start_column, width))
+            }
+        }
+    }
+}
+
 /// A bounded-memory iterator over dynamic XLSX rows.
 pub(crate) struct StreamingRows {
     rows: StreamingRawRows,
@@ -45,25 +56,41 @@ impl Iterator for StreamingRows {
             Ok(row) => row,
             Err(error) => return Some(Err(error)),
         };
-        let headers = match &mut self.headers {
-            Headers::FirstRow(headers) => headers,
-            Headers::ColumnLetters { start_column, headers } => headers
-                .get_or_insert_with(|| column_names(*start_column, selected_row.values.len())),
-        };
-        let mut row = DynamicRow::with_capacity(headers.len());
-        for (column, header) in headers.iter().enumerate() {
-            let Some(header) = header else {
-                continue;
-            };
-            let value =
-                selected_row.values.get(column).map_or(crate::CellValue::Empty, to_cell_value);
-            row.insert(header.clone(), value);
-        }
-        Some(Ok(row))
+        Some(Ok(to_dynamic_row(&mut self.headers, selected_row)))
     }
 }
 
 impl FusedIterator for StreamingRows {}
+
+pub(crate) fn query_bytes(bytes: &[u8], options: &ReadOptions) -> Result<Vec<DynamicRow>> {
+    let collected = ooxml::collect_raw_rows(bytes, options)?;
+    let mut rows = collected.rows.into_iter();
+    let mut headers = if options.uses_headers(false) {
+        let headers = rows.next().map_or_else(Vec::new, |row| header_names(&row.values));
+        Headers::FirstRow(headers)
+    } else {
+        Headers::ColumnLetters { start_column: options.start_cell().column(), headers: None }
+    };
+
+    Ok(rows.map(|row| to_dynamic_row(&mut headers, row)).collect())
+}
+
+pub(crate) fn sheet_names_from_bytes(bytes: &[u8]) -> Result<Vec<String>> {
+    ooxml::sheet_names_from_bytes(bytes)
+}
+
+fn to_dynamic_row(headers: &mut Headers, selected_row: crate::reader::SelectedRow) -> DynamicRow {
+    let headers = headers.for_width(selected_row.values.len());
+    let mut row = DynamicRow::with_capacity(headers.len());
+    for (column, header) in headers.iter().enumerate() {
+        let Some(header) = header else {
+            continue;
+        };
+        let value = selected_row.values.get(column).map_or(crate::CellValue::Empty, to_cell_value);
+        row.insert(header.clone(), value);
+    }
+    row
+}
 
 /// A bounded-memory iterator that deserializes XLSX rows through Serde.
 pub(crate) struct StreamingTypedRows<T> {

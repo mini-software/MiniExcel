@@ -75,6 +75,10 @@ impl XlsxWriter {
         Ok(())
     }
 
+    pub(crate) fn save_to_bytes(&mut self) -> Result<Vec<u8>> {
+        Ok(self.workbook.save_to_buffer()?)
+    }
+
     pub(crate) fn add_serialized<T>(&mut self, rows: &[T], options: &WriteOptions) -> Result<()>
     where
         T: Serialize,

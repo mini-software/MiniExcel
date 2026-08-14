@@ -406,3 +406,8 @@ samples/xlsx/Test_EnableWriteFilePath.xlsx
 
 # Rust
 /rust/target/
+/rust/web-demo/dist/
+/rust/web-demo/blob-report/
+/rust/web-demo/playwright-report/
+/rust/web-demo/playwright/.cache/
+/rust/web-demo/test-results/

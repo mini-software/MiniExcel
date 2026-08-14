@@ -173,3 +173,20 @@ fn requires_schema_for_empty_default_exports() {
     assert!(MiniExcel::save_as(temp_file.path(), &[]).is_err());
     assert!(MiniExcel::save_as_serialized::<Release>(temp_file.path(), &[]).is_err());
 }
+
+#[test]
+fn writes_and_reads_an_in_memory_workbook() {
+    let mut row = DynamicRow::new();
+    row.insert("Name".to_owned(), CellValue::String("Browser".to_owned()));
+    row.insert("Count".to_owned(), CellValue::Int(1));
+    let write_options = WriteOptions::new().with_sheet_name("Memory");
+
+    let bytes = MiniExcel::save_as_bytes(&[row], &write_options).expect("write workbook bytes");
+    let read_options =
+        ReadOptions::new().with_sheet_name("Memory").with_header_mode(HeaderMode::FirstRow);
+    let rows = MiniExcel::query_bytes(&bytes, &read_options).expect("read workbook bytes");
+
+    assert_eq!(MiniExcel::get_sheet_names_from_bytes(&bytes).unwrap(), ["Memory"]);
+    assert_eq!(rows[0]["Name"], CellValue::String("Browser".to_owned()));
+    assert_eq!(rows[0]["Count"], CellValue::Int(1));
+}

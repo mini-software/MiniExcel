@@ -18,6 +18,102 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
 {
     private readonly ITestOutputHelper _output = output;
 
+    [Fact]
+    public async Task Issue997()
+    {
+        using var xlsx = new MemoryStream();
+        var sheets = new Dictionary<string, object>
+        {
+            ["Orders"] = new[]
+            {
+                new { Name = "Name", Amount = "Amount" },
+                new { Name = "Alice | Admin", Amount = "120" },
+                new { Name = "<Bob>\nSmith [link](https://example.com)", Amount = "95" }
+            },
+            ["Empty cells"] = new[]
+            {
+                new { Name = "Name", Amount = "Amount" },
+                new { Name = "Charlie", Amount = (string)null }
+            }
+        };
+        MiniExcel.SaveAs(xlsx, sheets, printHeader: false);
+
+        xlsx.Position = 0;
+        using var simpleOutput = new MemoryStream();
+        await MiniExcel.ConvertXlsxToMarkdownAsync(xlsx, simpleOutput);
+        var simple = Encoding.UTF8.GetString(simpleOutput.ToArray());
+        Assert.Contains("## Worksheet: Orders", simple);
+        Assert.Contains("| Alice \\| Admin | 120 |", simple);
+        Assert.Contains("| &lt;Bob&gt;<br>Smith \\[link\\]\\(https://example.com\\) | 95 |", simple);
+        Assert.Contains("## Worksheet: Empty cells", simple);
+        Assert.Contains("| Charlie |  |", simple);
+
+        xlsx.Position = 0;
+        using var llmOutput = new MemoryStream();
+        await MiniExcel.ConvertXlsxToMarkdownAsync(xlsx, llmOutput, MarkdownFormat.LlmFriendly, sheetName: "Orders");
+        var llm = Encoding.UTF8.GetString(llmOutput.ToArray());
+        Assert.StartsWith("# stream", llm);
+        Assert.Contains("<!-- miniexcel:chunk range=\"A2:B3\" -->", llm);
+        Assert.Contains("| Row | A: Name | B: Amount |", llm);
+        Assert.Contains("| 2 | Alice \\| Admin | 120 |", llm);
+        Assert.DoesNotContain("Empty cells", llm);
+
+        using var largeXlsx = new MemoryStream();
+        MiniExcel.SaveAs(largeXlsx, Enumerable.Range(1, 101).Select(index => new { Value = index }));
+        largeXlsx.Position = 0;
+        using var largeOutput = new MemoryStream();
+        await MiniExcel.ConvertXlsxToMarkdownAsync(largeXlsx, largeOutput, MarkdownFormat.LlmFriendly);
+        var largeMarkdown = Encoding.UTF8.GetString(largeOutput.ToArray());
+        Assert.Contains("range=\"A2:A101\"", largeMarkdown);
+        Assert.Contains("range=\"A102:A102\"", largeMarkdown);
+        Assert.Contains("| 102 | 101 |", largeMarkdown);
+
+        xlsx.Position = 0;
+        using var cancelledOutput = new MemoryStream();
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
+            MiniExcel.ConvertXlsxToMarkdownAsync(xlsx, cancelledOutput, cancellationToken: new CancellationToken(true)));
+        Assert.Empty(cancelledOutput.ToArray());
+
+        using var formulaXlsx = new MemoryStream();
+        using (var package = new ExcelPackage())
+        {
+            var worksheet = package.Workbook.Worksheets.Add("Formulas");
+            worksheet.Cells["A1"].Value = "First";
+            worksheet.Cells["B1"].Value = "Second";
+            worksheet.Cells["C1"].Value = "Total";
+            worksheet.Cells["A2"].Value = 40;
+            worksheet.Cells["B2"].Value = 2;
+            worksheet.Cells["C2"].Formula = "SUM(A2:B2)";
+            worksheet.Calculate();
+            package.SaveAs(formulaXlsx);
+        }
+        formulaXlsx.Position = 0;
+        using var formulaOutput = new MemoryStream();
+        await MiniExcel.ConvertXlsxToMarkdownAsync(formulaXlsx, formulaOutput, MarkdownFormat.LlmFriendly);
+        var formulaMarkdown = Encoding.UTF8.GetString(formulaOutput.ToArray());
+        Assert.Contains("42 \\(formula: =SUM\\(A2:B2\\)\\)", formulaMarkdown);
+        Assert.True(formulaXlsx.CanRead);
+        Assert.True(formulaOutput.CanWrite);
+
+        using var sparseXlsx = new MemoryStream();
+        using (var package = new ExcelPackage())
+        {
+            package.Workbook.Worksheets.Add("Empty");
+            var headerOnly = package.Workbook.Worksheets.Add("Header only");
+            headerOnly.Cells["A1"].Value = "名称";
+            package.SaveAs(sparseXlsx);
+        }
+        sparseXlsx.Position = 0;
+        using var sparseOutput = new MemoryStream();
+        await MiniExcel.ConvertXlsxToMarkdownAsync(sparseXlsx, sparseOutput, MarkdownFormat.LlmFriendly);
+        var sparseMarkdown = Encoding.UTF8.GetString(sparseOutput.ToArray());
+        Assert.StartsWith("# stream", sparseMarkdown);
+        Assert.Contains("## Worksheet: Empty", sparseMarkdown);
+        Assert.Contains("## Worksheet: Header only", sparseMarkdown);
+        Assert.Contains("range=\"A1:A1\"", sparseMarkdown);
+        Assert.Contains("| Row | A: 名称 |", sparseMarkdown);
+    }
+
     /// <summary>
     /// [SaveAsByTemplate support DateTime custom format · Issue #255 · mini-software/MiniExcel]
     /// (https://github.com/mini-software/MiniExcel/issues/255)

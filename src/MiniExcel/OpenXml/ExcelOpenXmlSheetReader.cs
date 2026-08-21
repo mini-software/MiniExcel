@@ -27,9 +27,9 @@ internal partial class ExcelOpenXmlSheetReader : IExcelReader
         XmlResolver = null
     };
 
-    public ExcelOpenXmlSheetReader(Stream stream, IConfiguration configuration, bool isUpdateMode = true)
+    public ExcelOpenXmlSheetReader(Stream stream, IConfiguration configuration, bool isUpdateMode = true, bool leaveOpen = false)
     {
-        _archive = new ExcelOpenXmlZip(stream);
+        _archive = new ExcelOpenXmlZip(stream, leaveOpen: leaveOpen);
         _config = (OpenXmlConfiguration)configuration ?? OpenXmlConfiguration.DefaultConfig;
         SetSharedStrings();
     }
@@ -180,7 +180,7 @@ internal partial class ExcelOpenXmlSheetReader : IExcelReader
                                 {
                                     XmlReaderHelper.SkipToNextSameLevelDom(reader);
                                 }
-                                    
+
                                 continue;
                             }
                             if (endRowIndex.HasValue && rowIndex > endRowIndex.Value)
@@ -235,7 +235,7 @@ internal partial class ExcelOpenXmlSheetReader : IExcelReader
             {
                 for (int i = expectedRowIndex; i < rowIndex; i++)
                 {
-                    yield return GetCell(useHeaderRow, maxColumnIndex, headRows, startColumnIndex);
+                    yield return GetCell(useHeaderRow, maxColumnIndex, headRows, startColumnIndex, i + 1);
                 }
             }
         }
@@ -244,11 +244,11 @@ internal partial class ExcelOpenXmlSheetReader : IExcelReader
         if (!XmlReaderHelper.ReadFirstContent(reader) && !_config.IgnoreEmptyRows)
         {
             //Fill in case of self closed empty row tag eg. <row r="1"/>
-            yield return GetCell(useHeaderRow, maxColumnIndex, headRows, startColumnIndex);
+            yield return GetCell(useHeaderRow, maxColumnIndex, headRows, startColumnIndex, rowIndex + 1);
             yield break;
         }
 
-        var cell = GetCell(useHeaderRow, maxColumnIndex, headRows, startColumnIndex);
+        var cell = GetCell(useHeaderRow, maxColumnIndex, headRows, startColumnIndex, rowIndex + 1);
         var columnIndex = withoutCR ? -1 : 0;
         while (!reader.EOF)
         {
@@ -261,6 +261,9 @@ internal partial class ExcelOpenXmlSheetReader : IExcelReader
 
                 var cellValue = cellAndColumn.CellValue;
                 columnIndex = cellAndColumn.ColumnIndex;
+
+                if (!string.IsNullOrEmpty(cellAndColumn.Formula) && cell is ExcelRow excelRow)
+                    excelRow.Formulas[ColumnHelper.GetAlphabetColumnName(columnIndex)] = cellAndColumn.Formula;
 
                 if (_config.FillMergedCells)
                 {
@@ -403,9 +406,10 @@ internal partial class ExcelOpenXmlSheetReader : IExcelReader
         return sheetEntry;
     }
 
-    private static IDictionary<string, object> GetCell(bool useHeaderRow, int maxColumnIndex, Dictionary<int, string> headRows, int startColumnIndex)
+    private static IDictionary<string, object> GetCell(bool useHeaderRow, int maxColumnIndex, Dictionary<int, string> headRows, int startColumnIndex, int rowNumber)
     {
-        return useHeaderRow ? CustomPropertyHelper.GetEmptyExpandoObject(headRows) : CustomPropertyHelper.GetEmptyExpandoObject(maxColumnIndex, startColumnIndex);
+        var values = useHeaderRow ? CustomPropertyHelper.GetEmptyExpandoObject(headRows) : CustomPropertyHelper.GetEmptyExpandoObject(maxColumnIndex, startColumnIndex);
+        return new ExcelRow(values, rowNumber);
     }
 
     private static void SetCellsValueAndHeaders(object cellValue, bool useHeaderRow, Dictionary<int, string> headRows, bool isFirstRow, IDictionary<string, object> cell, int columnIndex)
@@ -573,12 +577,25 @@ internal partial class ExcelOpenXmlSheetReader : IExcelReader
     {
         public object CellValue { get; }
         public int ColumnIndex { get; } = -1;
+        public string Formula { get; }
 
-        public CellAndColumn(object cellValue, int columnIndex)
+        public CellAndColumn(object cellValue, int columnIndex, string formula = null)
         {
             CellValue = cellValue;
             ColumnIndex = columnIndex;
+            Formula = formula;
         }
+    }
+
+    internal sealed class ExcelRow : Dictionary<string, object>
+    {
+        internal ExcelRow(IDictionary<string, object> values, int rowNumber) : base(values)
+        {
+            RowNumber = rowNumber;
+        }
+
+        internal int RowNumber { get; }
+        internal Dictionary<string, string> Formulas { get; } = new Dictionary<string, string>();
     }
 
     private CellAndColumn ReadCellAndSetColumnIndex(XmlReader reader, int columnIndex, bool withoutCR, int startColumnIndex, string aR, string aT)
@@ -613,9 +630,14 @@ internal partial class ExcelOpenXmlSheetReader : IExcelReader
             return new CellAndColumn(null, columnIndex);
 
         object value = null;
+        string formula = null;
         while (!reader.EOF)
         {
-            if (XmlReaderHelper.IsStartElement(reader, "v", _ns))
+            if (XmlReaderHelper.IsStartElement(reader, "f", _ns))
+            {
+                formula = reader.ReadElementContentAsString();
+            }
+            else if (XmlReaderHelper.IsStartElement(reader, "v", _ns))
             {
                 var rawValue = reader.ReadElementContentAsString();
                 if (!string.IsNullOrEmpty(rawValue))
@@ -633,7 +655,7 @@ internal partial class ExcelOpenXmlSheetReader : IExcelReader
             }
         }
 
-        return new CellAndColumn(value, columnIndex);
+        return new CellAndColumn(value, columnIndex, formula);
     }
 
     private void ConvertCellValue(string rawValue, string aT, int xfIndex, out object value)
@@ -894,7 +916,7 @@ internal partial class ExcelOpenXmlSheetReader : IExcelReader
             }
         }
 
-        if (!withoutCr) 
+        if (!withoutCr)
             return true;
 
         using var noCrSheetStream = sheetEntry.Open();

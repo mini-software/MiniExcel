@@ -1,0 +1,10 @@
+<Router AppAssembly="typeof(App).Assembly">
+    <Found Context="routeData">
+        <RouteView RouteData="routeData" />
+        <FocusOnNavigate RouteData="routeData" Selector="h1" />
+    </Found>
+    <NotFound>
+        <PageTitle>MiniExcel Browser Lab</PageTitle>
+        <main class="not-found"><h1>Page not found</h1><a href="./">Return to the Browser Lab</a></main>
+    </NotFound>
+</Router>

@@ -20,6 +20,9 @@
     <File Path="docs/README.zh-CN.md" />
     <File Path="docs/README.zh-Hant.md" />
   </Folder>
+  <Folder Name="/samples/">
+    <Project Path="samples/MiniExcel.Samples.Blazor/MiniExcel.Samples.Blazor.csproj" />
+  </Folder>
   <Folder Name="/src/">
     <Project Path="src/MiniExcel/MiniExcelLibs.csproj" />
   </Folder>

@@ -3,14 +3,7 @@ name: Browser Lab Pages
 on:
   push:
     branches: [v1.x-maintenance]
-  schedule:
-    - cron: '17 3 * * *'
   workflow_dispatch:
-    inputs:
-      rust_ref:
-        description: MiniExcel-Rust branch, tag, or commit to deploy
-        required: false
-        default: main
 
 permissions:
   contents: read
@@ -25,38 +18,24 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Browser Lab source
+      - name: Checkout MiniExcel
         uses: actions/checkout@v4
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
         with:
-          repository: mini-software/MiniExcel-Rust
-          ref: ${{ inputs.rust_ref || 'main' }}
-      - name: Install Rust 1.85.0
-        uses: dtolnay/rust-toolchain@1.85.0
-        with:
-          targets: wasm32-unknown-unknown
-      - name: Install stable Rust
-        uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@v2
-      - name: Install wasm-bindgen CLI
-        run: cargo +stable install wasm-bindgen-cli --version 0.2.127 --locked
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: web-demo/package-lock.json
-      - name: Install browser dependencies
-        working-directory: web-demo
-        run: npm ci
-      - name: Build Browser Lab
-        working-directory: web-demo
-        run: npm run build
+          dotnet-version: 10.0.x
+      - name: Publish .NET Browser Lab
+        run: dotnet publish samples/MiniExcel.Samples.Blazor/MiniExcel.Samples.Blazor.csproj --configuration Release --output artifacts/blazor-pages
+      - name: Prepare GitHub Pages files
+        run: |
+          touch artifacts/blazor-pages/wwwroot/.nojekyll
+          cp artifacts/blazor-pages/wwwroot/index.html artifacts/blazor-pages/wwwroot/404.html
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: web-demo/dist
+          path: artifacts/blazor-pages/wwwroot
 
   deploy:
     environment:

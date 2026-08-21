@@ -15,6 +15,7 @@ internal static class ExcelMarkdownWriter
         bool hasHeader,
         string sheetName,
         string sourceName,
+        OpenXmlConfiguration configuration,
         CancellationToken cancellationToken)
     {
         if (xlsxStream == null)
@@ -29,7 +30,7 @@ internal static class ExcelMarkdownWriter
             throw new ArgumentOutOfRangeException(nameof(format));
 
         cancellationToken.ThrowIfCancellationRequested();
-        using var reader = new ExcelOpenXmlSheetReader(xlsxStream, OpenXmlConfiguration.DefaultConfig, leaveOpen: true);
+        using var reader = new ExcelOpenXmlSheetReader(xlsxStream, configuration ?? OpenXmlConfiguration.DefaultConfig, leaveOpen: true);
         using var archive = reader._archive;
         var sheets = reader.GetWorkbookRels(reader._archive.entries)
             .Where(sheet => sheetName == null || sheet.Name == sheetName)

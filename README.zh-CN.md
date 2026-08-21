@@ -38,8 +38,9 @@
 
 MiniExcel简单、高效避免OOM的.NET处理Excel查、写、填充数据工具。
 
-> **实验性 Rust XLSX MVP：** 请查看独立仓库 [MiniExcel-Rust](https://github.com/mini-software/MiniExcel-Rust/blob/main/README.zh-CN.md)。
+### MiniExcel Rust
 
+MiniExcel 现已支持 Rust，提供更底层的控制和高效的 XLSX 处理。详见 [MiniExcel-Rust](https://github.com/mini-software/MiniExcel-Rust/blob/main/README.zh-CN.md)。
 
 目前主流框架大多需要将数据全载入到内存方便操作，但这会导致内存消耗问题，MiniExcel 尝试以 Stream 角度写底层算法逻辑，能让原本1000多MB占用降低到几MB，避免内存不够情况。
 

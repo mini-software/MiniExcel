@@ -1429,7 +1429,28 @@ using (var csvStream = new MemoryStream())
 }
 ```
 
-#### 3. Custom CultureInfo
+#### 3. Convert XLSX to Markdown
+
+Write XLSX or XLSM worksheets incrementally as UTF-8 Markdown without creating a workbook-sized collection or output string:
+
+```csharp
+await MiniExcel.ConvertXlsxToMarkdownAsync(
+    xlsxPath,
+    markdownPath,
+    MarkdownFormat.Simple,
+    cancellationToken: cancellationToken);
+
+await MiniExcel.ConvertXlsxToMarkdownAsync(
+    xlsxStream,
+    markdownStream,
+    MarkdownFormat.LlmFriendly,
+    sheetName: "Orders",
+    cancellationToken: cancellationToken);
+```
+
+`MarkdownFormat.Simple` writes compact GitHub-Flavored Markdown tables. `MarkdownFormat.LlmFriendly` writes independently understandable chunks of up to 100 rows with the source, worksheet, A1 range, row number, column address, and formula context. The first row is used as the header by default; pass `hasHeader: false` to keep it as data. A null `sheetName` converts every worksheet in workbook order.
+
+#### 4. Custom CultureInfo
 
 Since 1.22.0, you can custom CultureInfo like below, system default `CultureInfo.InvariantCulture`.
 

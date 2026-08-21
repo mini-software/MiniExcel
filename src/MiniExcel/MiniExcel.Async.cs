@@ -2,11 +2,24 @@
 using System.Collections;
 using System.Data;
 using MiniExcelLibs.Utils;
+using MiniExcelLibs.Markdown;
 
 namespace MiniExcelLibs;
 
 public static partial class MiniExcel
 {
+    public static async Task ConvertXlsxToMarkdownAsync(string xlsx, string markdown, MarkdownFormat format = MarkdownFormat.Simple, bool hasHeader = true, string sheetName = null, CancellationToken cancellationToken = default)
+    {
+        using var xlsxStream = FileHelper.OpenSharedRead(xlsx);
+        using var markdownStream = new FileStream(markdown, FileMode.CreateNew);
+        await ExcelMarkdownWriter.WriteAsync(xlsxStream, markdownStream, format, hasHeader, sheetName, Path.GetFileName(xlsx), cancellationToken).ConfigureAwait(false);
+    }
+
+    public static Task ConvertXlsxToMarkdownAsync(Stream xlsxStream, Stream markdownStream, MarkdownFormat format = MarkdownFormat.Simple, bool hasHeader = true, string sheetName = null, CancellationToken cancellationToken = default)
+    {
+        return ExcelMarkdownWriter.WriteAsync(xlsxStream, markdownStream, format, hasHeader, sheetName, "stream", cancellationToken);
+    }
+
     public static async Task<int> InsertAsync(string path, object value, string sheetName = "Sheet1", ExcelType excelType = ExcelType.UNKNOWN, IConfiguration configuration = null, bool printHeader = true, bool overwriteSheet = false, CancellationToken cancellationToken = default)
     {
         if (Path.GetExtension(path).ToLowerInvariant() == ".xlsm")
@@ -112,7 +125,7 @@ public static partial class MiniExcel
 
         return await tcs.Task;
     }
-        
+
     public static async Task SaveAsByTemplateAsync(this Stream stream, string templatePath, object value, IConfiguration configuration = null, CancellationToken cancellationToken = default)
     {
         await ExcelTemplateFactory.GetProvider(stream, configuration).SaveAsByTemplateAsync(templatePath, value, cancellationToken).ConfigureAwait(false);

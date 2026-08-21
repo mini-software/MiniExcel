@@ -1,0 +1,197 @@
+@page "/"
+@inject IJSRuntime JS
+@using MiniExcelLibs.OpenXml
+
+<PageTitle>MiniExcel .NET Browser Lab</PageTitle>
+
+<div class="app-shell">
+    <header class="topbar">
+        <div class="brand-lockup">
+            <span class="workbook-mark" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></span>
+            <span class="brand-copy"><strong>MiniExcel</strong><span>.NET Browser Lab</span></span>
+        </div>
+        <div class="topbar-actions">
+            <span class="runtime-badge">.NET 10 · Blazor WASM</span>
+            <nav class="implementation-switch" aria-label="Implementation">
+                <a href="/MiniExcel/" aria-current="page">.NET</a>
+                <a href="/MiniExcel-Rust/">Rust</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="workspace">
+        <aside class="control-rail" aria-label="Workbook controls">
+            <section class="control-section">
+                <div class="section-heading"><span>Workbook</span><span class="local-pill">Local only</span></div>
+                <label class="drop-zone">
+                    <InputFile OnChange="LoadFileAsync" accept=".xlsx,.xlsm" />
+                    <span class="drop-icon" aria-hidden="true">↑</span>
+                    <strong>Open an XLSX or XLSM file</strong>
+                    <small>Processed only in this browser</small>
+                </label>
+                <button class="button button-secondary full-button" type="button" @onclick="LoadDemoAsync">Reset demo</button>
+                <dl class="file-facts">
+                    <div><dt>File</dt><dd data-testid="file-name">@fileName</dd></div>
+                    <div><dt>Size</dt><dd>@FormatBytes(workbookBytes.LongLength)</dd></div>
+                </dl>
+            </section>
+
+            <section class="control-section">
+                <div class="section-heading"><span>Markdown</span></div>
+                <div class="segmented-control" role="radiogroup" aria-label="Markdown format">
+                    <button class="segment @(format == MarkdownFormat.Simple ? "is-active" : null)" role="radio" aria-checked="@(format == MarkdownFormat.Simple)" @onclick="async () => await SelectFormatAsync(MarkdownFormat.Simple)">Simple</button>
+                    <button class="segment @(format == MarkdownFormat.LlmFriendly ? "is-active" : null)" role="radio" aria-checked="@(format == MarkdownFormat.LlmFriendly)" @onclick="async () => await SelectFormatAsync(MarkdownFormat.LlmFriendly)">LLM-friendly</button>
+                </div>
+                <label class="toggle-row"><span><strong>Header row</strong><small>Use the first row as columns</small></span><input type="checkbox" @bind="hasHeader" @bind:after="ConvertAsync" /></label>
+                <button class="button button-primary full-button" type="button" disabled="@isBusy" @onclick="ConvertAsync">@(isBusy ? "Converting…" : "Convert to Markdown")</button>
+            </section>
+
+            <section class="control-section export-section">
+                <div class="section-heading"><span>Export</span></div>
+                <div class="command-row">
+                    <button class="button button-secondary" type="button" disabled="@(markdown.Length == 0)" @onclick="CopyAsync">Copy</button>
+                    <button class="button button-secondary" type="button" disabled="@(markdown.Length == 0)" @onclick="DownloadAsync">↓ Markdown</button>
+                </div>
+                <div class="memory-strip"><span class="memory-dot" aria-hidden="true"></span><span>Blazor WASM · browser memory</span></div>
+            </section>
+        </aside>
+
+        <section class="preview-panel" aria-label="Markdown result">
+            <div class="preview-toolbar">
+                <div class="preview-title"><span class="eyebrow">Markdown conversion</span><h1>@fileName</h1></div>
+                <div class="metrics" aria-label="Result metrics">
+                    <div><strong>@FormatBytes(workbookBytes.LongLength)</strong><span>input</span></div>
+                    <div><strong>@markdown.Length</strong><span>characters</span></div>
+                    <div><strong>@elapsed</strong><span>convert</span></div>
+                </div>
+            </div>
+            <div class="preview-subbar">
+                <span class="format-label">@(format == MarkdownFormat.Simple ? "Simple GFM" : "LLM-friendly chunks")</span>
+                <span class="result-notice">@status</span>
+            </div>
+            @if (error is not null)
+            {
+                <div class="error-state" role="alert">@error</div>
+            }
+            else if (isBusy)
+            {
+                <div class="loading-state"><span class="loader" aria-hidden="true"></span><span>Converting workbook…</span></div>
+            }
+            else
+            {
+                <pre class="markdown-view" aria-label="Generated Markdown">@markdown</pre>
+            }
+        </section>
+    </main>
+</div>
+
+@code {
+    private const long MaxFileSize = 16 * 1024 * 1024;
+    private byte[] workbookBytes = [];
+    private string fileName = "miniexcel-dotnet-demo.xlsx";
+    private string markdown = string.Empty;
+    private string status = "Starting .NET…";
+    private string elapsed = "—";
+    private string? error;
+    private MarkdownFormat format = MarkdownFormat.Simple;
+    private bool hasHeader = true;
+    private bool isBusy;
+
+    protected override async Task OnInitializedAsync() => await LoadDemoAsync();
+
+    private async Task LoadDemoAsync()
+    {
+        using var stream = new MemoryStream();
+        MiniExcel.SaveAs(stream, new[]
+        {
+            new DemoRow("MiniExcel", ".NET", "Ready", 1200, true),
+            new DemoRow("Blazor WASM", "Browser", "Ready", 850, true),
+            new DemoRow("Markdown", "Export", "Review", 650, false),
+        });
+        workbookBytes = stream.ToArray();
+        fileName = "miniexcel-dotnet-demo.xlsx";
+        await ConvertAsync();
+    }
+
+    private async Task LoadFileAsync(InputFileChangeEventArgs args)
+    {
+        error = null;
+        try
+        {
+            var file = args.File;
+            await using var input = file.OpenReadStream(MaxFileSize);
+            using var buffer = new MemoryStream();
+            await input.CopyToAsync(buffer);
+            workbookBytes = buffer.ToArray();
+            fileName = file.Name;
+            await ConvertAsync();
+        }
+        catch (Exception exception)
+        {
+            error = exception.Message;
+            status = "Workbook could not be opened";
+        }
+    }
+
+    private async Task SelectFormatAsync(MarkdownFormat selected)
+    {
+        format = selected;
+        await ConvertAsync();
+    }
+
+    private async Task ConvertAsync()
+    {
+        if (workbookBytes.Length == 0)
+            return;
+
+        isBusy = true;
+        error = null;
+        status = "Working locally";
+        await Task.Yield();
+        var started = DateTime.UtcNow;
+        try
+        {
+            using var input = new MemoryStream(workbookBytes, writable: false);
+            using var output = new MemoryStream();
+            await MiniExcel.ConvertXlsxToMarkdownAsync(
+                input,
+                output,
+                new OpenXmlConfiguration { EnableSharedStringCache = false },
+                format,
+                hasHeader,
+                sheetName: null);
+            markdown = Encoding.UTF8.GetString(output.ToArray());
+            elapsed = $"{(DateTime.UtcNow - started).TotalMilliseconds:0.0} ms";
+            status = "Ready to copy or download";
+        }
+        catch (Exception exception)
+        {
+            error = exception.Message;
+            status = "Conversion failed";
+        }
+        finally
+        {
+            isBusy = false;
+        }
+    }
+
+    private async Task CopyAsync() => await JS.InvokeVoidAsync("miniExcelLab.copyText", markdown);
+
+    private async Task DownloadAsync()
+    {
+        var baseName = Path.GetFileNameWithoutExtension(fileName);
+        var suffix = format == MarkdownFormat.Simple ? "simple" : "llm-friendly";
+        await JS.InvokeVoidAsync("miniExcelLab.downloadText", $"{baseName}.{suffix}.md", markdown);
+    }
+
+    private static string FormatBytes(long bytes)
+    {
+        if (bytes >= 1024 * 1024)
+            return $"{bytes / 1024d / 1024d:0.0} MB";
+        if (bytes >= 1024)
+            return $"{bytes / 1024d:0.0} KB";
+        return $"{bytes} B";
+    }
+
+    private sealed record DemoRow(string Name, string Runtime, string Status, int Amount, bool Active);
+}

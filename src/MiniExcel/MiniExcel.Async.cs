@@ -12,12 +12,17 @@ public static partial class MiniExcel
     {
         using var xlsxStream = FileHelper.OpenSharedRead(xlsx);
         using var markdownStream = new FileStream(markdown, FileMode.CreateNew);
-        await ExcelMarkdownWriter.WriteAsync(xlsxStream, markdownStream, format, hasHeader, sheetName, Path.GetFileName(xlsx), cancellationToken).ConfigureAwait(false);
+        await ExcelMarkdownWriter.WriteAsync(xlsxStream, markdownStream, format, hasHeader, sheetName, Path.GetFileName(xlsx), null, cancellationToken).ConfigureAwait(false);
     }
 
     public static Task ConvertXlsxToMarkdownAsync(Stream xlsxStream, Stream markdownStream, MarkdownFormat format = MarkdownFormat.Simple, bool hasHeader = true, string sheetName = null, CancellationToken cancellationToken = default)
     {
-        return ExcelMarkdownWriter.WriteAsync(xlsxStream, markdownStream, format, hasHeader, sheetName, "stream", cancellationToken);
+        return ExcelMarkdownWriter.WriteAsync(xlsxStream, markdownStream, format, hasHeader, sheetName, "stream", null, cancellationToken);
+    }
+
+    public static Task ConvertXlsxToMarkdownAsync(Stream xlsxStream, Stream markdownStream, OpenXmlConfiguration configuration, MarkdownFormat format = MarkdownFormat.Simple, bool hasHeader = true, string sheetName = null, CancellationToken cancellationToken = default)
+    {
+        return ExcelMarkdownWriter.WriteAsync(xlsxStream, markdownStream, format, hasHeader, sheetName, "stream", configuration, cancellationToken);
     }
 
     public static async Task<int> InsertAsync(string path, object value, string sheetName = "Sheet1", ExcelType excelType = ExcelType.UNKNOWN, IConfiguration configuration = null, bool printHeader = true, bool overwriteSheet = false, CancellationToken cancellationToken = default)

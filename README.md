@@ -32,7 +32,7 @@ At present, most popular frameworks need to load all the data from an Excel docu
 
 ### MiniExcel for Rust
 
-MiniExcel is now available for Rust, offering lower-level control and efficient XLSX processing. See [MiniExcel-Rust](https://github.com/mini-software/MiniExcel-Rust).
+MiniExcel is now available for Rust, offering lower-level control and efficient XLSX processing. See [MiniExcel-Rust](https://github.com/mini-software/MiniExcel-Rust) and the [Rust/.NET stress test](#rust-and-net-stress-test).
 
 ```mermaid
 flowchart LR
@@ -106,6 +106,25 @@ dotnet run -project .\benchmarks\MiniExcel.Benchmarks -c Release -f net9.0 -filt
 ```
 
 You can find the benchmarks' results for the latest release [here](benchmarks/results).
+
+#### Rust and .NET stress test
+
+This benchmark compares dynamic streaming Query performance: .NET uses `OpenXmlImporter.Query`, and Rust uses `MiniExcel::query`. Save performance is not included. With `MiniExcel` and `MiniExcel-Rust` checked out as sibling directories, run both implementations against the same 100,000-row XLSX workbook:
+
+```powershell
+pwsh ./benchmarks/compare-rust-dotnet.ps1
+```
+
+The test performs three full streaming passes per iteration and repeats each runtime three times. It verifies matching row counts and reports elapsed time and peak working set. Results vary by hardware, operating system, filesystem cache, and runtime version; use `-Passes` and `-Iterations` to adjust the load.
+
+Results from AMD Ryzen 5 5600X, Windows 10 22H2, .NET SDK 10.0.103, and Rust 1.85.0:
+
+| Runtime | Method | Rows per iteration | Average elapsed | Average peak working set | Maximum peak working set |
+|---------|--------|-------------------:|----------------:|-------------------------:|-------------------------:|
+| .NET    | `OpenXmlImporter.Query` | 300,000 | 6,282.31 ms | 70.65 MB | 70.71 MB |
+| Rust    | `MiniExcel::query` | 300,000 | 3,814.61 ms | 9.79 MB | 9.83 MB |
+
+These results are a single-machine reference, not a general performance guarantee.
 
 
 ### Excel Query/Import  <a name="getstart1"></a>

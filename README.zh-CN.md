@@ -40,7 +40,7 @@ MiniExcel简单、高效避免OOM的.NET处理Excel查、写、填充数据工�
 
 ### MiniExcel Rust
 
-MiniExcel 现已支持 Rust，提供更底层的控制和高效的 XLSX 处理。详见 [MiniExcel-Rust](https://github.com/mini-software/MiniExcel-Rust/blob/main/README.zh-CN.md)。
+MiniExcel 现已支持 Rust，提供更底层的控制和高效的 XLSX 处理。详见 [MiniExcel-Rust](https://github.com/mini-software/MiniExcel-Rust/blob/main/README.zh-CN.md) 与 [Rust/.NET 压力测试](#rust-与-net-压力测试)。
 
 目前主流框架大多需要将数据全载入到内存方便操作，但这会导致内存消耗问题，MiniExcel 尝试以 Stream 角度写底层算法逻辑，能让原本1000多MB占用降低到几MB，避免内存不够情况。
 
@@ -94,6 +94,25 @@ IterationCount=3  LaunchCount=3  WarmupCount=3
 ```
 
 Benchmark History :  [Link](https://github.com/mini-software/MiniExcel/issues/276)
+
+#### Rust 与 .NET 压力测试
+
+本测试比较动态流式 Query 性能：.NET 使用 `OpenXmlImporter.Query`，Rust 使用 `MiniExcel::query`，不包含 Save 性能。将 `MiniExcel` 与 `MiniExcel-Rust` 放在同级目录后，可使用同一份 100,000 行 XLSX 工作簿测试两种实现：
+
+```powershell
+pwsh ./benchmarks/compare-rust-dotnet.ps1
+```
+
+默认每轮完整流式读取 3 次，并对每个运行时重复测试 3 轮。脚本会校验两端读取行数一致，并输出耗时与峰值工作集。结果会受硬件、操作系统、文件缓存及运行时版本影响，可通过 `-Passes` 和 `-Iterations` 调整压力。
+
+测试环境：AMD Ryzen 5 5600X、Windows 10 22H2、.NET SDK 10.0.103、Rust 1.85.0。
+
+| 运行时 | 方法 | 每轮读取行数 | 平均耗时 | 平均峰值工作集 | 最大峰值工作集 |
+|--------|------|-------------:|---------:|---------------:|---------------:|
+| .NET   | `OpenXmlImporter.Query` | 300,000 | 6,282.31 ms | 70.65 MB | 70.71 MB |
+| Rust   | `MiniExcel::query` | 300,000 | 3,814.61 ms | 9.79 MB | 9.83 MB |
+
+以上结果仅供同机环境参考，不代表所有环境下的性能表现。
 
 
 #### 导入、查询 Excel 比较

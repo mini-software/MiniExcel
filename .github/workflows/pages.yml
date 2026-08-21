@@ -1,0 +1,70 @@
+name: Browser Lab Pages
+
+on:
+  push:
+    branches: [v1.x-maintenance]
+  schedule:
+    - cron: '17 3 * * *'
+  workflow_dispatch:
+    inputs:
+      rust_ref:
+        description: MiniExcel-Rust branch, tag, or commit to deploy
+        required: false
+        default: main
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Browser Lab source
+        uses: actions/checkout@v4
+        with:
+          repository: mini-software/MiniExcel-Rust
+          ref: ${{ inputs.rust_ref || 'main' }}
+      - name: Install Rust 1.85.0
+        uses: dtolnay/rust-toolchain@1.85.0
+        with:
+          targets: wasm32-unknown-unknown
+      - name: Install stable Rust
+        uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Install wasm-bindgen CLI
+        run: cargo +stable install wasm-bindgen-cli --version 0.2.127 --locked
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web-demo/package-lock.json
+      - name: Install browser dependencies
+        working-directory: web-demo
+        run: npm ci
+      - name: Build Browser Lab
+        working-directory: web-demo
+        run: npm run build
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: web-demo/dist
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

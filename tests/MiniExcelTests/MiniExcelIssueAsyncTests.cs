@@ -112,6 +112,38 @@ public class MiniExcelIssueAsyncTests(ITestOutputHelper output)
         Assert.Contains("## Worksheet: Header only", sparseMarkdown);
         Assert.Contains("range=\"A1:A1\"", sparseMarkdown);
         Assert.Contains("| Row | A: 名称 |", sparseMarkdown);
+
+        using var headerFormulaXlsx = new MemoryStream();
+        using (var package = new ExcelPackage())
+        {
+            var worksheet = package.Workbook.Worksheets.Add("Formula header");
+            worksheet.Cells["A1"].Formula = "1+1";
+            worksheet.Cells["A2"].Value = "value";
+            worksheet.Calculate();
+            package.SaveAs(headerFormulaXlsx);
+        }
+        headerFormulaXlsx.Position = 0;
+        using var headerFormulaOutput = new MemoryStream();
+        await MiniExcel.ConvertXlsxToMarkdownAsync(headerFormulaXlsx, headerFormulaOutput, MarkdownFormat.LlmFriendly);
+        var headerFormulaMarkdown = Encoding.UTF8.GetString(headerFormulaOutput.ToArray());
+        Assert.Contains("| Row | A: 2 \\(formula: =1\\+1\\) |", headerFormulaMarkdown);
+
+        var xlsmPath = PathHelper.GetFile("xlsx/TestIssue227.xlsm");
+        using var markdownPath = AutoDeletingPath.Create(Path.GetTempPath(), $"{Guid.NewGuid()}.md");
+        await MiniExcel.ConvertXlsxToMarkdownAsync(xlsmPath, markdownPath.ToString(), MarkdownFormat.Simple);
+        var xlsmMarkdown = await File.ReadAllTextAsync(markdownPath.ToString());
+        Assert.NotEmpty(xlsmMarkdown);
+        Assert.Contains("|", xlsmMarkdown);
+
+        using var invalidXlsx = new MemoryStream("not an Open XML workbook"u8.ToArray());
+        using var invalidOutput = new MemoryStream();
+        await Assert.ThrowsAnyAsync<InvalidDataException>(() =>
+            MiniExcel.ConvertXlsxToMarkdownAsync(invalidXlsx, invalidOutput));
+
+        xlsx.Position = 0;
+        using var readOnlyOutput = new MemoryStream(Array.Empty<byte>(), writable: false);
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            MiniExcel.ConvertXlsxToMarkdownAsync(xlsx, readOnlyOutput));
     }
 
     /// <summary>

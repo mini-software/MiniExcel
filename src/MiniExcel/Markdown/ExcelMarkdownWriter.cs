@@ -63,7 +63,7 @@ internal static class ExcelMarkdownWriter
                 var firstRow = rows.Current;
                 var columns = firstRow.Keys.ToList();
                 var headers = hasHeader
-                    ? columns.Select(column => FormatValue(firstRow[column])).ToList()
+                    ? columns.Select(column => FormatCellValue(firstRow, column)).ToList()
                     : columns.ToList();
                 var firstDataRow = hasHeader ? null : firstRow;
 
@@ -164,17 +164,18 @@ internal static class ExcelMarkdownWriter
 
     private static Task WriteRowAsync(StreamWriter writer, IDictionary<string, object> row, IList<string> columns, int? rowNumber)
     {
-        var excelRow = row as ExcelOpenXmlSheetReader.ExcelRow;
-        var values = columns.Select(column =>
-        {
-            var value = FormatValue(row[column]);
-            if (excelRow != null && excelRow.Formulas.TryGetValue(column, out var formula))
-                value = string.IsNullOrEmpty(value) ? $"={formula}" : $"{value} (formula: ={formula})";
-            return EscapeCell(value);
-        }).ToList();
+        var values = columns.Select(column => EscapeCell(FormatCellValue(row, column))).ToList();
         if (rowNumber.HasValue)
             values.Insert(0, rowNumber.Value.ToString(CultureInfo.InvariantCulture));
         return writer.WriteLineAsync($"| {string.Join(" | ", values)} |");
+    }
+
+    private static string FormatCellValue(IDictionary<string, object> row, string column)
+    {
+        var value = FormatValue(row[column]);
+        if (row is ExcelOpenXmlSheetReader.ExcelRow excelRow && excelRow.Formulas.TryGetValue(column, out var formula))
+            return string.IsNullOrEmpty(value) ? $"={formula}" : $"{value} (formula: ={formula})";
+        return value;
     }
 
     private static string FormatValue(object value)

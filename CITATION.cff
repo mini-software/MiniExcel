@@ -3,11 +3,12 @@ message: "If you use MiniExcel in your research, please cite it using the metada
 title: MiniExcel
 type: software
 version: 1.46.1
-date-released: 2026-08-22
+date-released: "2026-08-22"
+doi: 10.5281/zenodo.22054705
 abstract: "A lightweight, fast, and simple .NET library for importing, exporting, and templating spreadsheets."
 authors:
   - family-names: Lin
-    given-names: Wei
+    given-names: WEI-HAN
   - family-names: Bastione
     given-names: Michele
   - family-names: SHIH

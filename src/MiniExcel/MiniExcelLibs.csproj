@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFrameworks>net45;net461;netstandard2.0;net8.0;net9.0;net10.0</TargetFrameworks>
-		<Version>1.46.0</Version>
+		<Version>1.46.1</Version>
 		<LangVersion>14</LangVersion>
         <ImplicitUsings>enable</ImplicitUsings>
 		<RootNamespace>MiniExcelLibs</RootNamespace>

@@ -1,0 +1,28 @@
+cff-version: 1.2.0
+message: "If you use MiniExcel in your research, please cite it using the metadata from this file."
+title: MiniExcel
+type: software
+version: 1.46.1
+date-released: 2026-08-22
+abstract: "A lightweight, fast, and simple .NET library for importing, exporting, and templating spreadsheets."
+authors:
+  - family-names: Lin
+    given-names: Wei
+  - family-names: Bastione
+    given-names: Michele
+  - family-names: SHIH
+    given-names: PING-HSIU
+  - name: "Amos (izanhzh)"
+  - name: eynarhaji
+  - name: "Mini-Software team"
+repository-code: "https://github.com/mini-software/MiniExcel"
+repository-artifact: "https://www.nuget.org/packages/MiniExcel"
+url: "https://miniexcel.github.io/"
+license: Apache-2.0
+keywords:
+  - dotnet
+  - excel
+  - spreadsheet
+  - xlsx
+  - csv
+  - openxml

@@ -1,0 +1,134 @@
+name: Release v1
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Stable semantic version (for example, 1.46.2)
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-v1
+  cancel-in-progress: false
+
+env:
+  RELEASE_BRANCH: v1.x-maintenance
+  PROJECT_PATH: src/MiniExcel/MiniExcelLibs.csproj
+  OUTPUT_PATH: artifacts/release
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out v1 maintenance branch
+        uses: actions/checkout@v4
+        with:
+          ref: v1.x-maintenance
+          fetch-depth: 0
+
+      - name: Validate version
+        shell: pwsh
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          if ($env:VERSION -notmatch '^\d+\.\d+\.\d+$') {
+            throw "Version must use stable semantic version format, for example 1.46.2."
+          }
+
+          if (git tag --list $env:VERSION) {
+            throw "Tag $env:VERSION already exists."
+          }
+
+      - name: Update package and citation metadata
+        shell: pwsh
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          $utf8WithBom = [Text.UTF8Encoding]::new($true)
+          $utf8WithoutBom = [Text.UTF8Encoding]::new($false)
+
+          $project = [IO.File]::ReadAllText($env:PROJECT_PATH)
+          $projectVersionPattern = [regex]::new('(?m)(<Version>)[^<]+(</Version>)')
+          $project = $projectVersionPattern.Replace(
+            $project, "`${1}$env:VERSION`${2}", 1)
+          [IO.File]::WriteAllText($env:PROJECT_PATH, $project, $utf8WithBom)
+
+          $citationPath = 'CITATION.cff'
+          $citation = [IO.File]::ReadAllText($citationPath)
+          $citationVersionPattern = [regex]::new('(?m)^version:\s*.*$')
+          $citationDatePattern = [regex]::new('(?m)^date-released:\s*.*$')
+          $citation = $citationVersionPattern.Replace(
+            $citation, "version: $env:VERSION", 1)
+          $citation = $citationDatePattern.Replace(
+            $citation,
+            "date-released: `"$([DateTime]::UtcNow.ToString('yyyy-MM-dd'))`"",
+            1)
+          [IO.File]::WriteAllText($citationPath, $citation, $utf8WithoutBom)
+
+          $changedFiles = @(git diff --name-only)
+          $expectedFiles = @('CITATION.cff', $env:PROJECT_PATH)
+          $unexpectedFiles = @($changedFiles | Where-Object { $_ -notin $expectedFiles })
+
+          if ($unexpectedFiles.Count -gt 0) {
+            throw "Unexpected files changed: $($unexpectedFiles -join ', ')"
+          }
+
+          foreach ($expectedFile in $expectedFiles) {
+            if ($expectedFile -notin $changedFiles) {
+              throw "Expected metadata update missing for $expectedFile."
+            }
+          }
+
+          git diff --check
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            8.0.x
+            9.0.x
+            10.0.x
+
+      - name: Restore dependencies
+        run: dotnet restore MiniExcel.slnx
+
+      - name: Test release candidate
+        run: dotnet test MiniExcel.slnx --configuration Release --no-restore --verbosity normal
+
+      - name: Pack release assets
+        run: dotnet pack "$PROJECT_PATH" --configuration Release --no-restore --output "$OUTPUT_PATH"
+
+      - name: Commit release metadata
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add CITATION.cff "$PROJECT_PATH"
+          git commit -m "chore: prepare $VERSION release"
+          git push origin "HEAD:$RELEASE_BRANCH"
+
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ inputs.version }}
+        run: |
+          gh release create "$VERSION" "$OUTPUT_PATH"/*.nupkg \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$RELEASE_BRANCH" \
+            --title "MiniExcel $VERSION" \
+            --generate-notes \
+            --latest
+
+      - name: Summarize release
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          echo "### MiniExcel $VERSION published" >> "$GITHUB_STEP_SUMMARY"
+          echo "Zenodo will archive this release and assign its version DOI automatically." >> "$GITHUB_STEP_SUMMARY"
+          echo "Concept DOI: https://doi.org/10.5281/zenodo.22054705" >> "$GITHUB_STEP_SUMMARY"

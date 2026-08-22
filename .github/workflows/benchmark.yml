@@ -3,7 +3,6 @@ name: MiniExcel Benchmarks
 on:
   workflow_dispatch:
   release:
-    branches: [master, v1.x-maintenance]
     types: [published]
 
 permissions:
@@ -107,6 +106,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: master
           fetch-depth: 0
       - name: Fetch benchmark results
         uses: actions/download-artifact@v4
@@ -120,4 +120,4 @@ jobs:
           git config user.email github-actions@github.com
           git add ./*.md
           git commit -am "Automated benchmark report - ${{ github.ref_name }}"
-          git push origin HEAD:master --force-with-lease
+          git push origin HEAD:master

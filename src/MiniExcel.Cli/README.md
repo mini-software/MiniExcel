@@ -36,6 +36,25 @@ GitHub releases include self-contained archives that do not require a .NET runti
 
 Extract the archive and place `miniexcel` (or `miniexcel.exe` on Windows) on your `PATH`.
 
+### Use from other languages
+
+The NativeAOT executable can be invoked from any language that can start a process, including Python, Node.js, Rust, Go, Java, and PHP. Use files for input and consume the JSON written by `query` on standard output. No .NET runtime or .NET language binding is required.
+
+```python
+import json
+import subprocess
+
+result = subprocess.run(
+    ["miniexcel", "query", "--input", "input.xlsx"],
+    check=True,
+    capture_output=True,
+    text=True,
+)
+rows = json.loads(result.stdout)
+```
+
+This is command-line process integration, not a native library ABI or direct FFI API.
+
 ## Usage
 
 Convert CSV to Excel or Excel to CSV:

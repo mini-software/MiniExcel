@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>MiniExcel.Cli</AssemblyName>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>miniexcel</ToolCommandName>
+    <PackageId>MiniExcel.Cli</PackageId>
+    <Version>1.46.1</Version>
+    <Authors>Mini-Software team</Authors>
+    <Description>Command-line tools for querying and converting Excel and CSV files with MiniExcel.</Description>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/mini-software/MiniExcel</RepositoryUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PublishAot>true</PublishAot>
+    <InvariantGlobalization>false</InvariantGlobalization>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.CommandLine" Version="2.0.0" />
+    <ProjectReference Include="..\MiniExcel\MiniExcelLibs.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+</Project>

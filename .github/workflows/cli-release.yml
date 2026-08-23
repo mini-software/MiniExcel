@@ -1,0 +1,122 @@
+name: CLI Release
+
+on:
+  push:
+    tags:
+      - "[0-9]*.[0-9]*.[0-9]*"
+      - "v[0-9]*.[0-9]*.[0-9]*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Package version without the v prefix
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  native:
+    name: NativeAOT ${{ matrix.rid }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            rid: win-x64
+            executable: MiniExcel.Cli.exe
+            published-name: miniexcel.exe
+          - os: ubuntu-latest
+            rid: linux-x64
+            executable: MiniExcel.Cli
+            published-name: miniexcel
+          - os: macos-15-intel
+            rid: osx-x64
+            executable: MiniExcel.Cli
+            published-name: miniexcel
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Resolve version
+        id: version
+        shell: pwsh
+        run: |
+          $version = if ('${{ github.event_name }}' -eq 'workflow_dispatch') { '${{ inputs.version }}' } else { '${{ github.ref_name }}'.TrimStart('v') }
+          "value=$version" >> $env:GITHUB_OUTPUT
+      - name: Publish NativeAOT executable
+        shell: pwsh
+        run: >-
+          dotnet publish src/MiniExcel.Cli/MiniExcel.Cli.csproj
+          --configuration Release
+          --runtime ${{ matrix.rid }}
+          --output artifacts/publish
+          -p:Version=${{ steps.version.outputs.value }}
+      - name: Smoke test NativeAOT executable
+        shell: pwsh
+        run: |
+          & "artifacts/publish/${{ matrix.executable }}" query --input samples/csv/Test5x2.csv | Out-Null
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Stage executable
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Path artifacts/package | Out-Null
+          Move-Item "artifacts/publish/${{ matrix.executable }}" "artifacts/package/${{ matrix.published-name }}"
+          Copy-Item LICENSE,src/MiniExcel.Cli/README.md artifacts/package
+      - name: Package Windows executable
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: Compress-Archive -Path artifacts/package/* -DestinationPath "artifacts/miniexcel-${{ steps.version.outputs.value }}-${{ matrix.rid }}.zip"
+      - name: Package Unix executable
+        if: runner.os != 'Windows'
+        run: tar -czf "artifacts/miniexcel-${{ steps.version.outputs.value }}-${{ matrix.rid }}.tar.gz" -C artifacts/package .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: miniexcel-${{ matrix.rid }}
+          path: artifacts/miniexcel-*
+          if-no-files-found: error
+
+  tool:
+    name: .NET tool package
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Resolve version
+        id: version
+        shell: pwsh
+        run: |
+          $version = if ('${{ github.event_name }}' -eq 'workflow_dispatch') { '${{ inputs.version }}' } else { '${{ github.ref_name }}'.TrimStart('v') }
+          "value=$version" >> $env:GITHUB_OUTPUT
+      - name: Test CLI
+        run: dotnet test tests/MiniExcel.Cli.Tests/MiniExcel.Cli.Tests.csproj --configuration Release
+      - name: Pack .NET tool
+        run: >-
+          dotnet pack src/MiniExcel.Cli/MiniExcel.Cli.csproj
+          --configuration Release
+          --output artifacts/tool
+          -p:Version=${{ steps.version.outputs.value }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: miniexcel-dotnet-tool
+          path: artifacts/tool/*.nupkg
+          if-no-files-found: error
+
+  release:
+    name: Publish GitHub release
+    if: github.event_name == 'push'
+    needs: [native, tool]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts/release
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: artifacts/release/*

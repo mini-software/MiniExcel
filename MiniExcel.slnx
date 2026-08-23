@@ -6,6 +6,7 @@
     <File Path=".gitattributes" />
     <File Path=".github/workflows/benchmark.yml" />
     <File Path=".github/workflows/codeql-analysis.yml" />
+    <File Path=".github/workflows/cli-release.yml" />
     <File Path=".github/workflows/dotnet.yml" />
     <File Path=".gitignore" />
     <File Path="appveyor.yml" />
@@ -24,9 +25,11 @@
     <Project Path="samples/MiniExcel.Samples.Blazor/MiniExcel.Samples.Blazor.csproj" />
   </Folder>
   <Folder Name="/src/">
+    <Project Path="src/MiniExcel.Cli/MiniExcel.Cli.csproj" />
     <Project Path="src/MiniExcel/MiniExcelLibs.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/MiniExcel.Cli.Tests/MiniExcel.Cli.Tests.csproj" />
     <Project Path="tests/MiniExcelTests/MiniExcelTests.csproj" />
   </Folder>
 </Solution>

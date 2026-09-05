@@ -1,7 +1,6 @@
 <Solution>
 
   <Folder Name="/benchmarks/">
-    <Project Path="benchmarks/MiniExcel.Rust.PackageTests/MiniExcel.Rust.PackageTests.csproj" />
     <Project Path="benchmarks\MiniExcel.Benchmarks\MiniExcel.Benchmarks.csproj" />
   </Folder>
 

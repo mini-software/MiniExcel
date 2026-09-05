@@ -47,6 +47,5 @@
     <Project Path="tests/MiniExcel.OpenXml.Tests/MiniExcel.OpenXml.Tests.csproj" />
     <Project Path="tests/MiniExcel.Tests.Common/MiniExcel.Tests.Common.csproj" />
   </Folder>
-  <Project Path="../MiniExcelRust/tests/MiniExcelRust.PackageTests/MiniExcelRust.PackageTests.csproj" />
 
 </Solution>

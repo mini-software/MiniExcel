@@ -29,11 +29,11 @@
 
 MiniExcel is a simple and efficient Excel processing tool for .NET, specifically designed to minimize memory usage.
 
-At present, most popular frameworks need to load all the data from an Excel document into memory to facilitate operations, but this may cause memory consumption problems. MiniExcel's approach is different: the data is processed row by row in a streaming manner, reducing the original consumption from potentially hundreds of megabytes to just a few megabytes, effectively preventing out-of-memory(OOM) issues.
+At present, most popular frameworks need to load all the data from an Excel document into memory to facilitate operations, but this may cause memory consumption problems. MiniExcel's approach is different: the data is processed row by row in a streaming manner, reducing the original consumption from potentially hundreds of megabytes to just a few megabytes, effectively preventing out-of-memory (OOM) issues.
 
 ### MiniExcel for Rust
 
-MiniExcel is now available for Rust, offering lower-level control and efficient XLSX processing. See [MiniExcel-Rust](https://github.com/mini-software/MiniExcel-Rust) and the [Rust/.NET stress test](#rust-and-net-stress-test).
+MiniExcel is also available for Rust, offering lower-level control and efficient XLSX processing. See [MiniExcel-Rust](https://github.com/mini-software/MiniExcel-Rust) and the [Rust vs. .NET query benchmark](#rust-vs-net-query-benchmark).
 
 ```mermaid
 flowchart LR
@@ -57,16 +57,16 @@ flowchart LR
 - Minimizes memory consumption, preventing out-of-memory (OOM) errors and avoiding full garbage collections
 - Enables real-time, row-level data operations for better performance on large datasets
 - Supports LINQ with deferred execution, allowing for fast, memory-efficient paging and complex queries
-- Lightweight, without the need for Microsoft Office or COM+ components, and a DLL size under 500KB
-- Simple and intuitive API style to read/write/fill excel
+- Lightweight, with no dependency on Microsoft Office or COM+ components and a DLL size under 500 KB
+- Provides a simple, intuitive API for reading, writing, and filling Excel files
 
 ### Version 2.0 preview
 
-We are working on a future MiniExcel version, with a new modular and focused API, 
-separate nuget packages for Core and Csv funcionalities, full support for asynchronously streamed queries through `IAsyncEnumerable`,
-and more to come soon! The packages are gonna be available in pre-release, so feel free to check them out and give us some feedback!
+We are working on a future version of MiniExcel with a new, modular, focused API,
+separate NuGet packages for Core and CSV functionality, full support for asynchronous streaming queries through `IAsyncEnumerable`,
+and more. The packages will be available as prereleases, so feel free to try them and share your feedback.
 
-If you do, make sure to also check out the [new docs](README-V2.md) and the [upgrade notes](V2-Upgrade-Notes.md).
+For more information, see the [new documentation](README_V2.md) and the [upgrade notes](V2-Upgrade-Notes.md).
 
 
 ### Get Started
@@ -115,44 +115,25 @@ Run `miniexcel <command> --help` for all options.
 
 ### Release Notes
 
-Please Check [Release Notes](docs)
+See the [release notes](docs).
 
 ### TODO
 
-Please Check  [TODO](https://github.com/mini-software/MiniExcel/projects/1?fullscreen=true)
+See the [project roadmap](https://github.com/mini-software/MiniExcel/projects/1?fullscreen=true).
 
 ### Performance
 
-The code for the benchmarks can be found in [MiniExcel.Benchmarks](benchmarks/MiniExcel.Benchmarks/Program.cs).
+The benchmark source code is available in [MiniExcel.Benchmarks](benchmarks/MiniExcel.Benchmarks/Program.cs).
 
-The file used to test performance is [**Test1,000,000x10.xlsx**](benchmarks/MiniExcel.Benchmarks/Test1%2C000%2C000x10.xlsx), a 32MB document containing 1,000,000 rows * 10 columns whose cells are filled with the string "HelloWorld".
+The primary benchmark file is [**Test100,000x10.xlsx**](benchmarks/MiniExcel.Benchmarks/data/Test100%2C000x10.xlsx), which contains 100,000 rows and 10 columns filled with unique strings.
 
-To run all the benchmarks use:
+To run all benchmarks, use:
 
 ```bash
-dotnet run -project .\benchmarks\MiniExcel.Benchmarks -c Release -f net9.0 -filter * --join
+dotnet run --project .\benchmarks\MiniExcel.Benchmarks -c Release -f net9.0 -- --filter "*" --join
 ```
 
 You can find the benchmarks' results for the latest release [here](benchmarks/results).
-
-#### Rust and .NET stress test
-
-This benchmark compares dynamic streaming Query performance: .NET uses `OpenXmlImporter.Query`, and Rust uses `MiniExcel::query`. Save performance is not included. With `MiniExcel` and `MiniExcel-Rust` checked out as sibling directories, run both implementations against the same 100,000-row XLSX workbook:
-
-```powershell
-pwsh ./benchmarks/compare-rust-dotnet.ps1
-```
-
-The test performs three full streaming passes per iteration and repeats each runtime three times. It verifies matching row counts and reports elapsed time and peak working set. Results vary by hardware, operating system, filesystem cache, and runtime version; use `-Passes` and `-Iterations` to adjust the load.
-
-Results from AMD Ryzen 5 5600X, Windows 10 22H2, .NET SDK 10.0.103, and Rust 1.85.0:
-
-| Runtime | Method | Rows per iteration | Average elapsed | Average peak working set | Maximum peak working set |
-|---------|--------|-------------------:|----------------:|-------------------------:|-------------------------:|
-| .NET    | `OpenXmlImporter.Query` | 300,000 | 6,282.31 ms | 70.65 MB | 70.71 MB |
-| Rust    | `MiniExcel::query` | 300,000 | 3,814.61 ms | 9.79 MB | 9.83 MB |
-
-These results are a single-machine reference, not a general performance guarantee.
 
 
 ### Excel Query/Import  <a name="getstart1"></a>

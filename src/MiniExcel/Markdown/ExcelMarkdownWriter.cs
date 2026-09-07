@@ -173,7 +173,7 @@ internal static class ExcelMarkdownWriter
     private static string FormatCellValue(IDictionary<string, object> row, string column)
     {
         var value = FormatValue(row[column]);
-        if (row is ExcelOpenXmlSheetReader.ExcelRow excelRow && excelRow.Formulas.TryGetValue(column, out var formula))
+        if (row is ExcelOpenXmlSheetReader.ExcelRow excelRow && excelRow.TryGetFormula(column, out var formula))
             return string.IsNullOrEmpty(value) ? $"={formula}" : $"{value} (formula: ={formula})";
         return value;
     }

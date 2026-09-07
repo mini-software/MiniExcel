@@ -1,6 +1,4 @@
-﻿using System.Globalization;
-
-namespace MiniExcelLibs.Utils;
+﻿namespace MiniExcelLibs.Utils;
 
 internal static class ReferenceHelper
 {
@@ -91,6 +89,22 @@ internal static class ReferenceHelper
         if (position == 0)
             return false;
 
-        return int.TryParse(value.Substring(position), NumberStyles.None, CultureInfo.InvariantCulture, out row) && row > 0;
+        for (; position < value.Length; position++)
+        {
+            var c = value[position];
+            if (c < '0' || c > '9')
+                return false;
+
+            var digit = c - '0';
+            if (row > (int.MaxValue - digit) / 10)
+            {
+                row = 0;
+                return false;
+            }
+
+            row = row * 10 + digit;
+        }
+
+        return row > 0;
     }
 }

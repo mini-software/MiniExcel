@@ -151,6 +151,26 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
         }
     }
 
+    [Theory]
+    [InlineData("A1", 1, 1)]
+    [InlineData("XFD1048576", 16384, 1048576)]
+    [InlineData("aa42", 27, 42)]
+    public void ParseValidCellReference(string reference, int expectedColumn, int expectedRow)
+    {
+        Assert.True(MiniExcelLibs.Utils.ReferenceHelper.ParseReference(reference, out var column, out var row));
+        Assert.Equal(expectedColumn, column);
+        Assert.Equal(expectedRow, row);
+    }
+
+    [Theory]
+    [InlineData("A0")]
+    [InlineData("A1x")]
+    [InlineData("A2147483648")]
+    public void RejectInvalidCellReference(string reference)
+    {
+        Assert.False(MiniExcelLibs.Utils.ReferenceHelper.ParseReference(reference, out _, out _));
+    }
+
     [Fact]
     public void QueryRangeToIDictionary()
     {

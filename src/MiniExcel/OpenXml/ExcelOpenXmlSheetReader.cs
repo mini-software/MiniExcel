@@ -263,7 +263,7 @@ internal partial class ExcelOpenXmlSheetReader : IExcelReader
                 columnIndex = cellAndColumn.ColumnIndex;
 
                 if (!string.IsNullOrEmpty(cellAndColumn.Formula) && cell is ExcelRow excelRow)
-                    excelRow.Formulas[ColumnHelper.GetAlphabetColumnName(columnIndex)] = cellAndColumn.Formula;
+                    excelRow.SetFormula(ColumnHelper.GetAlphabetColumnName(columnIndex), cellAndColumn.Formula);
 
                 if (_config.FillMergedCells)
                 {
@@ -408,8 +408,26 @@ internal partial class ExcelOpenXmlSheetReader : IExcelReader
 
     private static IDictionary<string, object> GetCell(bool useHeaderRow, int maxColumnIndex, Dictionary<int, string> headRows, int startColumnIndex, int rowNumber)
     {
-        var values = useHeaderRow ? CustomPropertyHelper.GetEmptyExpandoObject(headRows) : CustomPropertyHelper.GetEmptyExpandoObject(maxColumnIndex, startColumnIndex);
-        return new ExcelRow(values, rowNumber);
+        var capacity = useHeaderRow ? headRows.Count : Math.Max(0, maxColumnIndex - startColumnIndex + 1);
+        var cell = new ExcelRow(capacity, rowNumber);
+
+        if (useHeaderRow)
+        {
+            foreach (var header in headRows)
+                if (!cell.ContainsKey(header.Value))
+                    cell.Add(header.Value, null);
+        }
+        else
+        {
+            for (var i = startColumnIndex; i <= maxColumnIndex; i++)
+            {
+                var key = ColumnHelper.GetAlphabetColumnName(i);
+                if (!cell.ContainsKey(key))
+                    cell.Add(key, null);
+            }
+        }
+
+        return cell;
     }
 
     private static void SetCellsValueAndHeaders(object cellValue, bool useHeaderRow, Dictionary<int, string> headRows, bool isFirstRow, IDictionary<string, object> cell, int columnIndex)
@@ -573,7 +591,7 @@ internal partial class ExcelOpenXmlSheetReader : IExcelReader
         return sheetRecords;
     }
 
-    internal class CellAndColumn
+    internal readonly struct CellAndColumn
     {
         public object CellValue { get; }
         public int ColumnIndex { get; } = -1;
@@ -589,13 +607,29 @@ internal partial class ExcelOpenXmlSheetReader : IExcelReader
 
     internal sealed class ExcelRow : Dictionary<string, object>
     {
-        internal ExcelRow(IDictionary<string, object> values, int rowNumber) : base(values)
+        private Dictionary<string, string> _formulas;
+
+        internal ExcelRow(int capacity, int rowNumber) : base(capacity)
         {
             RowNumber = rowNumber;
         }
 
         internal int RowNumber { get; }
-        internal Dictionary<string, string> Formulas { get; } = new Dictionary<string, string>();
+
+        internal void SetFormula(string column, string formula)
+        {
+            if (_formulas == null)
+                _formulas = new Dictionary<string, string>();
+            _formulas[column] = formula;
+        }
+
+        internal bool TryGetFormula(string column, out string formula)
+        {
+            if (_formulas != null)
+                return _formulas.TryGetValue(column, out formula);
+            formula = null;
+            return false;
+        }
     }
 
     private CellAndColumn ReadCellAndSetColumnIndex(XmlReader reader, int columnIndex, bool withoutCR, int startColumnIndex, string aR, string aT)

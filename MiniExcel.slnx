@@ -8,7 +8,6 @@
     <File Path=".editorconfig" />
     <File Path=".gitattributes" />
     <File Path=".gitignore" />
-    <File Path=".github\workflows\dotnet.yml" />
     <File Path=".runsettings" />
     <File Path="LICENSE" />
     <File Path="README.md" />
@@ -17,10 +16,20 @@
     <File Path="V2-Upgrade-Notes.md" />
     <File Path="CODE_OF_CONDUCT.md" />
     <File Path="CONTRIBUTING.md" />
-    <File Path=".github\workflows\benchmark.yml" />
-    <File Path=".github\workflows\codeql-analysis.yml" />
     <File Path="miniexcel.publickey" />
     <File Path="src\icon.png" />
+  </Folder>
+  <Folder Name="/Docs and settings/github/" />
+  <Folder Name="/Docs and settings/github/templates/">
+    <File Path=".github/ISSUE_TEMPLATE/bug_report.md" />
+    <File Path=".github/ISSUE_TEMPLATE/feature_request.md" />
+  </Folder>
+  <Folder Name="/Docs and settings/github/workflows/">
+    <File Path=".github/workflows/cli-release.yml" />
+    <File Path=".github/workflows/release-v1.yml" />
+    <File Path=".github\workflows\benchmark.yml" />
+    <File Path=".github\workflows\codeql-analysis.yml" />
+    <File Path=".github\workflows\dotnet.yml" />
   </Folder>
 
   <Folder Name="/Releases/">

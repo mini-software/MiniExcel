@@ -8,6 +8,42 @@ public class GithubIssuesTests
     private readonly OpenXmlExporter _openXmlExporter = MiniExcel.Exporters.GetOpenXmlExporter();
     private readonly OpenXmlImporter _openXmlImporter = MiniExcel.Importers.GetOpenXmlImporter();
 
+
+    /// <summary>
+    /// Enumerates the CSV rows at <paramref name="path"/> with the default configuration
+    /// (throws ColumnNotFoundException for rows with fewer columns than the header).
+    /// </summary>
+    private async Task EnumerateDefault(string path)
+    {
+        await foreach (var _ in _csvImporter.QueryAsync(path, hasHeaderRow: true)) { }
+    }
+
+    /// <summary>
+    /// Rows with fewer columns than the header throw by default; with
+    /// FillMissingColumnsWithNull enabled they are padded with null instead (issue #979).
+    /// </summary>
+    [Fact]
+    public async Task Issue979()
+    {
+        const string text = "A,B,C\n1,2\n";
+        using var path = AutoDeletingPath.Create(ExcelType.Csv);
+        File.WriteAllText(path.ToString(), text);
+
+        // default behavior: a row with fewer columns than the header throws
+        await Assert.ThrowsAsync<ColumnNotFoundException>(() => EnumerateDefault(path.ToString()));
+
+        // with FillMissingColumnsWithNull, missing columns are padded with null
+        var config = new CsvConfiguration { FillMissingColumnsWithNull = true };
+        var rows = new List<dynamic>();
+        await foreach (var row in _csvImporter.QueryAsync(path.ToString(), hasHeaderRow: true, configuration: config))
+            rows.Add(row);
+
+        var casted = (IDictionary<string, object?>)rows[0];
+        Assert.Equal("1", casted["A"]?.ToString());
+        Assert.Equal("2", casted["B"]?.ToString());
+        Assert.Null(casted["C"]);
+    }
+
     // Support for Enum Mapping
     [Fact]
     public void Issue89()

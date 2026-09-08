@@ -20,6 +20,10 @@ internal sealed partial class CsvReader : IMiniExcelReader
         _config = configuration as CsvConfiguration ?? CsvConfiguration.Default;
     }
 
+    /// <summary>
+    /// Reads CSV rows as dynamic objects. When FillMissingColumnsWithNull is enabled,
+    /// rows with fewer columns than the header are padded with null values instead of throwing.
+    /// </summary>
     [CreateSyncVersion]
     public async IAsyncEnumerable<IDictionary<string, object?>> QueryAsync(bool hasHeaderRow, string? sheetName, string startCell, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
@@ -67,7 +71,7 @@ internal sealed partial class CsvReader : IMiniExcelReader
             var read = Split(finalRow);
 
             // invalid row check
-            if (read.Length < headRows.Count)
+            if (read.Length < headRows.Count && !_config.FillMissingColumnsWithNull)
             {
                 var colIndex = read.Length;
                 var headers = headRows.ToDictionary(x => x.Value, x => x.Key);

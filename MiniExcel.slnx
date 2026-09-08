@@ -1,7 +1,6 @@
 <Solution>
   <Folder Name="/benchmarks/">
     <Project Path="benchmarks/MiniExcel.Benchmarks/MiniExcel.Benchmarks.csproj" />
-    <Project Path="benchmarks/MiniExcel.MemoryValidation/MiniExcel.MemoryValidation.csproj" />
   </Folder>
   <Folder Name="/Docs and setting/">
     <File Path=".gitattributes" />

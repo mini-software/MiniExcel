@@ -25,6 +25,8 @@ public class Config : ManualConfig
         AddExporter(HtmlExporter.Default);
 
         AddDiagnoser(MemoryDiagnoser.Default);
+        if (string.Equals(Environment.GetEnvironmentVariable("BenchmarkPeakMemory"), "true", StringComparison.OrdinalIgnoreCase))
+            AddDiagnoser(new PeakMemoryDiagnoser());
         AddColumn(TargetMethodColumn.Method);
         AddColumn(StatisticColumn.Mean);
         AddColumn(StatisticColumn.StdDev);

@@ -30,6 +30,7 @@ jobs:
         env:
           BenchmarkMode: Automatic
           BenchmarkSection: query
+          BenchmarkPeakMemory: true
       - name: Renaming result file
         run: mv MiniExcelLibs.Benchmarks.BenchmarkSections.QueryXlsxBenchmark-report-github.md query-benchmark.md
         working-directory: ./benchmarks/MiniExcel.Benchmarks/BenchmarkDotNet.Artifacts/results

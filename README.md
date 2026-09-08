@@ -33,7 +33,7 @@ At present, most popular frameworks need to load all the data from an Excel docu
 
 ### MiniExcel for Rust
 
-MiniExcel is also available for Rust, offering lower-level control and efficient XLSX processing. See [MiniExcel-Rust](https://github.com/mini-software/MiniExcel-Rust) and the [Rust vs. .NET query benchmark](#rust-vs-net-query-benchmark).
+MiniExcel is also available for Rust, offering lower-level control and efficient XLSX processing. See [MiniExcel-Rust](https://github.com/mini-software/MiniExcel-Rust).
 
 ```mermaid
 flowchart LR

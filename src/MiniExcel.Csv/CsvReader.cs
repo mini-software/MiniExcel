@@ -108,7 +108,7 @@ internal sealed partial class CsvReader : IMiniExcelReader
             // todo: can we find a way to remove the redundant cell conversions for CSV?
             var maxCol = (_config.FillMissingColumns ? headRows.Count : read.Length) - 1;
             var cell = ExpandoHelper.CreateEmptyByIndices(maxCol, 0);
-            if (_config.ReadEmptyStringAsNull)
+            if (_config.ReadEmptyFieldsAsDefault)
             {
                 for (int i = 0; i <= read.Length - 1; i++)
                     cell[CellReferenceConverter.GetAlphabeticalIndex(i)] = read[i] is var value and not "" ? value : null;

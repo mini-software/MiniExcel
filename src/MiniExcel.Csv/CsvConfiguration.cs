@@ -11,7 +11,18 @@ public class CsvConfiguration : MiniExcelBaseConfiguration
     public char Seperator { get; set; } = ',';
     public string NewLine { get; set; } = "\r\n";
     public bool ReadLineBreaksWithinQuotes { get; set; } = true;
-    public bool ReadEmptyStringAsNull { get; set; } = false;
+
+    /// <summary>
+    /// Empty fields will be converted to null when queried as strings, or to the default value of the corresponding mapped type. 
+    /// </summary>
+    public bool ReadEmptyFieldsAsDefault { get; set; } = false;
+    
+    [Obsolete("Please use the ReadEmptyFieldsAsDefault property instead")]
+    public bool ReadEmptyStringAsNull
+    {
+        get => ReadEmptyFieldsAsDefault;
+        set => ReadEmptyFieldsAsDefault = value;
+    }
 
     /// <summary>
     /// When set to true, rows with fewer columns than the header are padded with default values

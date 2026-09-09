@@ -328,7 +328,7 @@ public class MiniExcelCsvAsyncTests
             Assert.Equal(string.Empty, rows[1].C2);
         }
 
-        var config = new CsvConfiguration { ReadEmptyStringAsNull = true };
+        var config = new CsvConfiguration { ReadEmptyFieldsAsDefault = true };
         await using (var stream = File.OpenRead(path))
         {
             var rows = _csvImporter.Query<TestDto>(stream, configuration: config).ToList();

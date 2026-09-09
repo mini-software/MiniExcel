@@ -695,7 +695,7 @@ public class GithubIssuesTests
         var csvConfig = new CsvConfiguration
         {
             AlwaysQuote = true,
-            ReadEmptyStringAsNull =  true
+            ReadEmptyFieldsAsDefault =  true
         };
 
         var data = """

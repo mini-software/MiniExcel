@@ -113,10 +113,13 @@ public static partial class MiniExcel
     public static IAsyncEnumerable<T> QueryAsync<T>(string path, string? sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration? configuration = null, bool hasHeader = true, CancellationToken cancellationToken = default) where T : class, new()
     {
         var type = path.GetExcelType(excelType);
+
+        // the hasHeader parameter is inverted before being forwarded to the importers' methods
+        // as the treatHeaderAsData parameter because they have opposite semantics and defaults
         return type switch
         {
-            ExcelType.XLSX => ExcelImporter.QueryAsync<T>(path, sheetName, startCell, hasHeader, configuration as NewOpenXmlConfiguration, cancellationToken),
-            ExcelType.CSV => CsvImporter.QueryAsync<T>(path, hasHeader, configuration as Csv.CsvConfiguration, cancellationToken),
+            ExcelType.XLSX => ExcelImporter.QueryAsync<T>(path, sheetName, startCell, !hasHeader, configuration as NewOpenXmlConfiguration, cancellationToken),
+            ExcelType.CSV => CsvImporter.QueryAsync<T>(path, !hasHeader, configuration as Csv.CsvConfiguration, cancellationToken),
             _ => throw new InvalidDataException($"Type {type} is not a valid Excel type")
         };
     }
@@ -125,10 +128,13 @@ public static partial class MiniExcel
     public static IAsyncEnumerable<T> QueryAsync<T>(this Stream stream, string? sheetName = null, ExcelType excelType = ExcelType.UNKNOWN, string startCell = "A1", IConfiguration? configuration = null, bool hasHeader = true, CancellationToken cancellationToken = default) where T : class, new()
     {
         var type = stream.GetExcelType(excelType);
+
+        // the hasHeader parameter is inverted before being forwarded to the importers' methods
+        // as the treatHeaderAsData parameter because they have opposite semantics and defaults
         return type switch
         {
-            ExcelType.XLSX => ExcelImporter.QueryAsync<T>(stream, sheetName, startCell, hasHeader, configuration as NewOpenXmlConfiguration, leaveOpen: true, cancellationToken),
-            ExcelType.CSV => CsvImporter.QueryAsync<T>(stream, hasHeader, configuration as Csv.CsvConfiguration, leaveOpen: true, cancellationToken),
+            ExcelType.XLSX => ExcelImporter.QueryAsync<T>(stream, sheetName, startCell, !hasHeader, configuration as NewOpenXmlConfiguration, leaveOpen: true, cancellationToken),
+            ExcelType.CSV => CsvImporter.QueryAsync<T>(stream, !hasHeader, configuration as Csv.CsvConfiguration, leaveOpen: true, cancellationToken),
             _ => throw new InvalidDataException($"Type {type} is not a valid Excel type")
         };
     }

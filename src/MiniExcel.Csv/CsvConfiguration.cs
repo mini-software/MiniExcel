@@ -14,10 +14,10 @@ public class CsvConfiguration : MiniExcelBaseConfiguration
     public bool ReadEmptyStringAsNull { get; set; } = false;
 
     /// <summary>
-    /// When true, rows with fewer columns than the header are padded with null values
-    /// instead of throwing a ColumnNotFoundException. Default is false.
+    /// When set to true, rows with fewer columns than the header are padded with default values
+    /// instead of throwing ColumnNotFoundException. Default is false.
     /// </summary>
-    public bool FillMissingColumnsWithNull { get; set; } = false;
+    public bool FillMissingColumns { get; set; } = false;
     public bool AlwaysQuote { get; set; } = false;
     public bool QuoteWhitespaces { get; set; } = true;
     public Func<string, string[]>? SplitFn { get; set; }

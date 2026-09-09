@@ -9,41 +9,6 @@ public class GithubIssuesTests
     private readonly OpenXmlImporter _openXmlImporter = MiniExcel.Importers.GetOpenXmlImporter();
 
 
-    /// <summary>
-    /// Enumerates the CSV rows at <paramref name="path"/> with the default configuration
-    /// (throws ColumnNotFoundException for rows with fewer columns than the header).
-    /// </summary>
-    private async Task EnumerateDefault(string path)
-    {
-        await foreach (var _ in _csvImporter.QueryAsync(path, hasHeaderRow: true)) { }
-    }
-
-    /// <summary>
-    /// Rows with fewer columns than the header throw by default; with
-    /// FillMissingColumnsWithNull enabled they are padded with null instead (issue #979).
-    /// </summary>
-    [Fact]
-    public async Task Issue979()
-    {
-        const string text = "A,B,C\n1,2\n";
-        using var path = AutoDeletingPath.Create(ExcelType.Csv);
-        File.WriteAllText(path.ToString(), text);
-
-        // default behavior: a row with fewer columns than the header throws
-        await Assert.ThrowsAsync<ColumnNotFoundException>(() => EnumerateDefault(path.ToString()));
-
-        // with FillMissingColumnsWithNull, missing columns are padded with null
-        var config = new CsvConfiguration { FillMissingColumnsWithNull = true };
-        var rows = new List<dynamic>();
-        await foreach (var row in _csvImporter.QueryAsync(path.ToString(), hasHeaderRow: true, configuration: config))
-            rows.Add(row);
-
-        var casted = (IDictionary<string, object?>)rows[0];
-        Assert.Equal("1", casted["A"]?.ToString());
-        Assert.Equal("2", casted["B"]?.ToString());
-        Assert.Null(casted["C"]);
-    }
-
     // Support for Enum Mapping
     [Fact]
     public void Issue89()
@@ -702,5 +667,59 @@ public class GithubIssuesTests
         Assert.Equal(3, result.Count);
         Assert.Equal("Sam", result[1].Name);
         Assert.Equal("44", result[2].Age);
+    }
+
+    [Fact]
+    public void Issue979WithHeader()
+    {
+        const string text = "A,B,C\n1,2\n";
+
+        using var path = AutoDeletingPath.Create(ExcelType.Csv);
+        File.WriteAllText(path.ToString(), text);
+
+        // default behavior: a row with fewer columns than the header throws
+        Assert.Throws<ColumnNotFoundException>(() => _csvImporter.Query(path.ToString(), hasHeaderRow: true).ToList());
+
+        // with FillMissingColumns, missing columns are padded with default values or null
+        var config = new CsvConfiguration { FillMissingColumns = true };
+        var rows = _csvImporter.Query(path.ToString(), hasHeaderRow: true, configuration: config).ToList();
+
+        Assert.Equal("1", rows[0].A);
+        Assert.Equal("2", rows[0].B);
+        Assert.Null(rows[0].C);
+    }
+
+    [Fact]
+    public void Issue979NoHeader()
+    {
+        var csvConfig = new CsvConfiguration
+        {
+            AlwaysQuote = true,
+            ReadEmptyStringAsNull =  true
+        };
+
+        var data = """
+                   0,"V","4000","6","26",10000001,"Test123" ,"220626",,1001200,,,5769.00  ,N,"EUR",,,,,,,        ,,,,,  ,  ,,,,,,,,,,,,0,
+                   1,"V","4000","" ,"26",10000001,"Test457" ,"220626",,       ,,,5769.00  , ,""   ,,,,,,,0.00    ,,,,,"","",,,,
+                   0,"V","4000","6","26",10000002,"Test789" ,"220626",,1104500,,,26550.00 ,N,"EUR",,,,,,,        ,,,,,  ,  ,,,,,,,,,,,,7,
+                   1,"V","4000","" ,"26",10000002,"Test11X" ,"220626",,       ,,,26550.00 , ,""   ,,,,,,,0.00    ,,,,,"","",,,,
+                   """u8.ToArray();
+
+        
+        using var ms = new MemoryStream();
+        ms.Write(data);
+        
+        // default behavior: a row with fewer columns than the header throws
+        Assert.Throws<ColumnNotFoundException>(() => _csvImporter.Query(ms, configuration: csvConfig, leaveOpen: true).ToList());
+
+        csvConfig.FillMissingColumns = true;
+        ms.Seek(0, SeekOrigin.Begin);
+        // with FillMissingColumns, missing columns are padded with default values or null
+        var result = _csvImporter.Query(ms, configuration: csvConfig).Cast<IDictionary<string, object?>>().ToList();
+        
+        Assert.Equal("0", result[0]["AN"]);
+        Assert.Null(result[1]["AN"]);
+        Assert.Equal("7", result[2]["AN"]);
+        Assert.Null(result[3]["AN"]);
     }
 }

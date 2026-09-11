@@ -68,5 +68,5 @@ internal static class WorksheetXml
     }
 
     internal static string Autofilter(string dimensionRef) => $"<x:autoFilter ref=\"{dimensionRef}\" />";
-    internal static string Drawing(int sheetIndex) => $"<x:drawing r:id=\"drawing{sheetIndex}\" />";
+    internal static string Drawing(int sheetIndex) => $"<x:drawing r:id=\"rDrawing{sheetIndex}\" />";
 }

@@ -316,13 +316,13 @@ public class MiniExcelGiteeIssuesTests
             Assert.Contains("/xl/media/", SheetHelper.GetZipFileContent(path, "xl/drawings/_rels/drawing1.xml.rels"));
             Assert.Contains("ext cx=\"609600\" cy=\"190500\"", SheetHelper.GetZipFileContent(path, "xl/drawings/drawing1.xml"));
             Assert.Contains("/xl/drawings/drawing1.xml", SheetHelper.GetZipFileContent(path, "[Content_Types].xml"));
-            Assert.Contains("drawing r:id=\"drawing1\"", SheetHelper.GetZipFileContent(path, "xl/worksheets/sheet1.xml"));
+            Assert.Contains("drawing r:id=\"rDrawing1\"", SheetHelper.GetZipFileContent(path, "xl/worksheets/sheet1.xml"));
             Assert.Contains("../drawings/drawing1.xml", SheetHelper.GetZipFileContent(path, "xl/worksheets/_rels/sheet1.xml.rels"));
 
             Assert.Contains("/xl/media/", SheetHelper.GetZipFileContent(path, "xl/drawings/_rels/drawing2.xml.rels"));
             Assert.Contains("ext cx=\"609600\" cy=\"190500\"", SheetHelper.GetZipFileContent(path, "xl/drawings/drawing2.xml"));
             Assert.Contains("/xl/drawings/drawing1.xml", SheetHelper.GetZipFileContent(path, "[Content_Types].xml"));
-            Assert.Contains("drawing r:id=\"drawing2\"", SheetHelper.GetZipFileContent(path, "xl/worksheets/sheet2.xml"));
+            Assert.Contains("drawing r:id=\"rDrawing2\"", SheetHelper.GetZipFileContent(path, "xl/worksheets/sheet2.xml"));
             Assert.Contains("../drawings/drawing2.xml", SheetHelper.GetZipFileContent(path, "xl/worksheets/_rels/sheet2.xml.rels"));
         }
     }

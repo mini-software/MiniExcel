@@ -14,3 +14,8 @@ public sealed class MiniExcelTemplaterProvider
 {
     internal MiniExcelTemplaterProvider() { }
 }
+
+public sealed class MiniExcelEditorProvider
+{
+    internal MiniExcelEditorProvider() { }
+}

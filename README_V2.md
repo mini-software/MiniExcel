@@ -171,6 +171,17 @@ The exporters also fully support asynchronous operations:
 await exporter.ExportAsync(outputPath, values);
 ```
 
+#### Editing cell styles
+
+Cell style updates are queued and applied in worksheet and cell order when `Save` is called. If the same cell is updated more than once, the last update wins.
+
+```csharp
+MiniExcel.Editors.GetOpenXmlEditor(path)
+    .UpdateCellStyle("A1", style => style.FontColor = Color.Red)
+    .UpdateCellStyle("X100", style => style.FontColor = Color.Blue)
+    .Save();
+```
+
 ### Release Notes
 
 If you're migrating from a `1.x` version, please check the [upgrade notes](V2-Upgrade-Notes.md).

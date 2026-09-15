@@ -2,7 +2,7 @@ namespace MiniExcelLib.Csv.Tests.Issues;
 
 public class GiteeIssuesTests
 {
-    private readonly CsvExporter _csvExporter = MiniExcel.Exporters.GetCsvExporter();
+    private readonly CsvExporter _csvExporter = MiniExcelV2.Exporters.GetCsvExporter();
 
     // https://gitee.com/dotnetchina/MiniExcel/issues/I4X92G
     [Fact]

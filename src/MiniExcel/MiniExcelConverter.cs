@@ -53,11 +53,11 @@ public static partial class MiniExcelConverter
     [CreateSyncVersion]
     public static async Task ConvertCsvToXlsxAsync(Stream csvStream, Stream xlsxStream, bool csvHasHeader = false, CancellationToken cancellationToken = default)
     {
-        var value = MiniExcel.Importers.GetCsvImporter()
+        var value = MiniExcelV2.Importers.GetCsvImporter()
             .QueryAsync(csvStream, hasHeaderRow: csvHasHeader, leaveOpen: true, cancellationToken: cancellationToken)
             .ConfigureAwait(false);
 
-        await MiniExcel.Exporters.GetOpenXmlExporter()
+        await MiniExcelV2.Exporters.GetOpenXmlExporter()
             .ExportAsync(xlsxStream, value, printHeader: csvHasHeader, cancellationToken: cancellationToken)
             .ConfigureAwait(false);
     }
@@ -105,11 +105,11 @@ public static partial class MiniExcelConverter
     [CreateSyncVersion]
     public static async Task ConvertXlsxToCsvAsync(Stream xlsxStream, Stream csvStream, bool xlsxHasHeader = true, CancellationToken cancellationToken = default)
     {
-        var value = MiniExcel.Importers.GetOpenXmlImporter()
+        var value = MiniExcelV2.Importers.GetOpenXmlImporter()
             .QueryAsync(xlsxStream, hasHeaderRow: xlsxHasHeader, leaveOpen: true, cancellationToken: cancellationToken)
             .ConfigureAwait(false);
         
-        await MiniExcel.Exporters.GetCsvExporter()
+        await MiniExcelV2.Exporters.GetCsvExporter()
             .ExportAsync(csvStream, value, printHeader: xlsxHasHeader, cancellationToken: cancellationToken)
             .ConfigureAwait(false);
     }

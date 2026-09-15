@@ -4,8 +4,8 @@ namespace MiniExcelLib.OpenXml.Tests.Issues;
 
 public class MiniExcelGiteeIssuesAsyncTests
 {
-    private readonly OpenXmlImporter _excelImporter =  MiniExcel.Importers.GetOpenXmlImporter();
-    private readonly OpenXmlExporter _excelExporter =  MiniExcel.Exporters.GetOpenXmlExporter();
+    private readonly OpenXmlImporter _excelImporter =  MiniExcelV2.Importers.GetOpenXmlImporter();
+    private readonly OpenXmlExporter _excelExporter =  MiniExcelV2.Exporters.GetOpenXmlExporter();
 
     // https://gitee.com/dotnetchina/MiniExcel/issues/I3OSKV
     // When exporting, the pure numeric string will be forcibly converted to a numeric type, resulting in the loss of the end data

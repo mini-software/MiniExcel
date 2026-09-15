@@ -6,7 +6,7 @@ namespace MiniExcelLib.OpenXml.Tests.AlterSheets;
 
 public class MiniExcelAlterSheetTests
 {
-    private readonly OpenXmlExporter _excelExporter = MiniExcel.Exporters.GetOpenXmlExporter();
+    private readonly OpenXmlExporter _excelExporter = MiniExcelV2.Exporters.GetOpenXmlExporter();
     
     [Fact]
     public void AlterSheet_WhenNewNameProvided_RenamesWorksheet()

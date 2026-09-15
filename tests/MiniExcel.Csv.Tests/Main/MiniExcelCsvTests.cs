@@ -2,8 +2,8 @@
 
 public class MiniExcelCsvTests
 {
-    private readonly CsvExporter _csvExporter = MiniExcel.Exporters.GetCsvExporter();
-    private readonly CsvImporter _csvImporter = MiniExcel.Importers.GetCsvImporter();
+    private readonly CsvExporter _csvExporter = MiniExcelV2.Exporters.GetCsvExporter();
+    private readonly CsvImporter _csvImporter = MiniExcelV2.Importers.GetCsvImporter();
     
     [Fact]
     public void gb2312_Encoding_Read_Test()
@@ -486,7 +486,7 @@ public class MiniExcelCsvTests
         using (var stream = File.Create(path))
         {
             IEnumerable<object> records = [new { v1 = value, v2 = value }];
-            var rowsWritten = MiniExcel.Exporters.GetCsvExporter().Export(stream, records);
+            var rowsWritten = MiniExcelV2.Exporters.GetCsvExporter().Export(stream, records);
             Assert.Equal(1, rowsWritten);
         }
 

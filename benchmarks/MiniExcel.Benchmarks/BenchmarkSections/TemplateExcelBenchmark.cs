@@ -22,8 +22,8 @@ public class TemplateExcelBenchmark : BenchmarkBase
     [GlobalSetup]
     public void Setup()
     {
-        _templater = MiniExcel.Templaters.GetOpenXmlTemplater();
-        _exporter = MiniExcel.Exporters.GetOpenXmlExporter();
+        _templater = MiniExcelV2.Templaters.GetOpenXmlTemplater();
+        _exporter = MiniExcelV2.Exporters.GetOpenXmlExporter();
         
         var registry = new MappingRegistry();
         registry.Configure<Employee>(config =>
@@ -31,7 +31,7 @@ public class TemplateExcelBenchmark : BenchmarkBase
             config.Property(x => x.Name).ToCell("A2");
             config.Property(x => x.Department).ToCell("B2");
         });
-        _mappingTemplater = MiniExcel.Templaters.GetMappingTemplater(registry);
+        _mappingTemplater = MiniExcelV2.Templaters.GetMappingTemplater(registry);
     }
     
     [Benchmark(Description = "MiniExcel Fill Template")]

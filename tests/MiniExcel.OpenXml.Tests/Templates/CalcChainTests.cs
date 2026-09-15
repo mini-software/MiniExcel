@@ -14,7 +14,7 @@ namespace MiniExcelLib.OpenXml.Tests.Templates;
 /// </summary>
 public class CalcChainTests
 {
-    private readonly OpenXmlTemplater _templater = MiniExcel.Templaters.GetOpenXmlTemplater();
+    private readonly OpenXmlTemplater _templater = MiniExcelV2.Templaters.GetOpenXmlTemplater();
     
     [Fact]
     public void TemplateWithStaticFormula_DoesNotWriteStaleOrEmptyCalcChain()

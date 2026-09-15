@@ -4,7 +4,7 @@ namespace MiniExcelLib.OpenXml.Tests.Comments;
 
 public class CommentsRetrievalTests
 {
-    private readonly OpenXmlImporter _excelImporter =  MiniExcel.Importers.GetOpenXmlImporter();
+    private readonly OpenXmlImporter _excelImporter =  MiniExcelV2.Importers.GetOpenXmlImporter();
 
     [Fact]
     public void SheetWithNotesAndCommentsWithRepliesTest()

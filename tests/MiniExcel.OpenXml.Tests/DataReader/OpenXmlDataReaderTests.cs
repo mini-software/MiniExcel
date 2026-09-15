@@ -4,7 +4,7 @@ namespace MiniExcelLib.OpenXml.Tests.DataReader;
 
 public class OpenXmlDataReaderTests
 {
-    private readonly OpenXmlImporter _excelImporter = MiniExcel.Importers.GetOpenXmlImporter();
+    private readonly OpenXmlImporter _excelImporter = MiniExcelV2.Importers.GetOpenXmlImporter();
 
     static OpenXmlDataReaderTests()
     {

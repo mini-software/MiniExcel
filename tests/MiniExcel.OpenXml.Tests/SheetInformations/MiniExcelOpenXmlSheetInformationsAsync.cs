@@ -1,14 +1,11 @@
-﻿using DocumentFormat.OpenXml.Office2010.Excel;
-using DocumentFormat.OpenXml.Spreadsheet;
-using DocumentFormat.OpenXml.Wordprocessing;
-using MiniExcelLib.OpenXml.Models;
+﻿using MiniExcelLib.OpenXml.Models;
 using MiniExcelLib.Tests.Common.Utils;
 
 namespace MiniExcelLib.OpenXml.Tests.SheetInformations;
 
 public class MiniExcelOpenXmlSheetInformationsAsync
 {
-    private readonly OpenXmlImporter _excelImporter = MiniExcel.Importers.GetOpenXmlImporter();
+    private readonly OpenXmlImporter _excelImporter = MiniExcelV2.Importers.GetOpenXmlImporter();
 
     [Fact]
     public async Task GetSheetDimensionsAsyncTest()

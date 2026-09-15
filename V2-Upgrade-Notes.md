@@ -1,19 +1,18 @@
 ## MiniExcel 2.0 Upgrade Notes
 
 - Support for .NET Framework 4.5 was dropped, the minimum supported Framework version is now 4.6.2. 
-- The root namespace was changed from `MiniExcelLibs` to `MiniExcelLib`.  
-- Instead of having all methods being part of the `MiniExcel` static class, the functionalities are now split into 3 providers:
-`MiniExcel.Importers`, `MiniExcel.Exporters` and `MiniExcel.Templaters` will give you access to, respectively, the `MiniExcelImporterProvider`, `MiniExcelExporterProvider` and `MiniExcelTemplaterProvider`.
+- The root namespace was changed from `MiniExcelLibs` to `MiniExcelLib`; there is also a new entry point to the library, the static class `MiniExcelV2`. The original class has been turned into a facade for backwards compatibility reasons (more on that later).   
+- Instead of having all methods being part of a single static class, the functionalities are now split into 3 providers:
+`MiniExcelV2.Importers`, `MiniExcelV2.Exporters` and `MiniExcelV2.Templaters` will give you access to, respectively, the `MiniExcelImporterProvider`, `MiniExcelExporterProvider` and `MiniExcelTemplaterProvider`.
 - This way Excel and Csv query methods are split between the `OpenXmlImporter` and the `CsvImporter`, accessible from the `MiniExcelImporterProvider`.
 - The same structure was adopted for export methods through `OpenXmlExporter` and `CsvExporter`, while template methods are instead currently only found in `OpenXmlTemplater`.
 - OpenXml and Csv methods are only available if the respective `MiniExcel.OpenXml` and `MiniExcel.Csv` packages are downloaded, or if the complete `MiniExcel` package is installed.
 - You can only access the conversion methods `ConvertCsvToXlsx` and `ConvertXlsxToCsv` from the `MiniExcelConverter` utility class, which is part of the full MiniExcel package.
-- If the full MiniExcel package is downloaded, the previous namespace will coexist along the new one, containing the original static methods' signatures, which have become a facade for the aferomentioned providers.
+- If the full MiniExcel package is downloaded, the previous namespace will coexist along the new one, containing a facade `MiniExcel` static class with all the original methods' signatures for backwards compatibility.
 - `IConfiguration` is now `IMiniExcelConfiguration`, but most methods now require the proper implementation (`OpenXmlConfiguration` or `CsvConfiguration`) to be provided rather than the interface
-- MiniExcel now fully supports asynchronous streaming the queries, 
+- MiniExcel now fully supports asynchronously streaming the queries, 
 so the return type for `OpenXmlImporter.QueryAsync` is `IAsyncEnumerable<T>` instead of `Task<IEnumerable<T>>`
 - When applying a template, unlike version 1.x, the flag for overwriting an already existing file must be provided explicitly.
-- `leaveOpen` parameter has been added to most methods that take a stream as input in both `OpenXmlImporter` and `CsvImporter` to configure whether the stream must be disposed after the operation performed is completed.   
-- `useHeaderRow` parameter in multiple `OpenXmlImporter` methods has been renamed to `hasHeaderRow` for making its usage clearer.
+- A `leaveOpen` parameter has been added to most methods that take a stream as input in both `OpenXmlImporter` and `CsvImporter` to configure whether the stream must be disposed after the operation performed is completed.   
+- The `useHeaderRow` parameter in multiple `OpenXmlImporter` and `CsvImporter` methods has been renamed to `hasHeaderRow` for making its usage clearer.
 - `CsvExporter.Export` API methods, not being required to return the same type of `OpenXmlExporter.Export`, now return `int` instead of `int[]`.
-- Most `OpenXmlImporter` and `CsvImporter` methods that take a stream as input now take an additional `leaveOpen` boolean parameter, to set to `true` explicitly if you want the stream to be left open at the of the operation.

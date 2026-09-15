@@ -5,9 +5,9 @@ namespace MiniExcelLib.OpenXml.Tests.Issues;
 
 public class MiniExcelGiteeIssuesTests
 {
-    private readonly OpenXmlImporter _excelImporter =  MiniExcel.Importers.GetOpenXmlImporter();
-    private readonly OpenXmlExporter _excelExporter =  MiniExcel.Exporters.GetOpenXmlExporter();
-    private readonly OpenXmlTemplater _excelTemplater =  MiniExcel.Templaters.GetOpenXmlTemplater();
+    private readonly OpenXmlImporter _excelImporter =  MiniExcelV2.Importers.GetOpenXmlImporter();
+    private readonly OpenXmlExporter _excelExporter =  MiniExcelV2.Exporters.GetOpenXmlExporter();
+    private readonly OpenXmlTemplater _excelTemplater =  MiniExcelV2.Templaters.GetOpenXmlTemplater();
 
     [Fact]
     public void TestIssueI4ZYUU()

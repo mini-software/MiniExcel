@@ -6,8 +6,8 @@ namespace MiniExcelLib.OpenXml.Tests.Templates;
 
 public class MiniExcelTemplateAsyncTests
 {
-    private readonly OpenXmlImporter _excelImporter =  MiniExcel.Importers.GetOpenXmlImporter();
-    private readonly OpenXmlTemplater _excelTemplater =  MiniExcel.Templaters.GetOpenXmlTemplater();
+    private readonly OpenXmlImporter _excelImporter =  MiniExcelV2.Importers.GetOpenXmlImporter();
+    private readonly OpenXmlTemplater _excelTemplater =  MiniExcelV2.Templaters.GetOpenXmlTemplater();
     
     static MiniExcelTemplateAsyncTests()
     {
@@ -962,7 +962,7 @@ public class MiniExcelTemplateAsyncTests
         ];
 
         using var path = AutoDeletingPath.Create();
-        await MiniExcel.Exporters.GetOpenXmlExporter().ExportAsync(path.ToString(), Array.Empty<Dictionary<string, object>>());
+        await MiniExcelV2.Exporters.GetOpenXmlExporter().ExportAsync(path.ToString(), Array.Empty<Dictionary<string, object>>());
 
         await _excelTemplater.AddPictureAsync(path.ToString(), images: pictures);
     }

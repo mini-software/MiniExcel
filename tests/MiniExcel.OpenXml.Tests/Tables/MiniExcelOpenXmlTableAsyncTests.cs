@@ -4,7 +4,7 @@ namespace MiniExcelLib.OpenXml.Tests.Tables;
 
 public class MiniExcelOpenXmlTableAsyncTests
 {
-    private readonly OpenXmlImporter _excelImporter =  MiniExcel.Importers.GetOpenXmlImporter();
+    private readonly OpenXmlImporter _excelImporter =  MiniExcelV2.Importers.GetOpenXmlImporter();
 
     /// <summary>
     /// Tests querying a named table from a file path with dynamic results.

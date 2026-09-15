@@ -23,7 +23,7 @@ public class QueryExcelBenchmark : BenchmarkBase
         ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
         
-        _importer = MiniExcel.Importers.GetOpenXmlImporter();
+        _importer = MiniExcelV2.Importers.GetOpenXmlImporter();
         
         // Setup mapping for query (matches CreateExcelBenchmark mapping)
         var registry = new MappingRegistry();
@@ -40,7 +40,7 @@ public class QueryExcelBenchmark : BenchmarkBase
             config.Property(x => x.Column9).ToCell("I1");
             config.Property(x => x.Column10).ToCell("J1");
         });
-        _mappingImporter = MiniExcel.Importers.GetMappingImporter(registry);
+        _mappingImporter = MiniExcelV2.Importers.GetMappingImporter(registry);
     }
 
     [Benchmark(Description = "MiniExcel QueryFirst")]

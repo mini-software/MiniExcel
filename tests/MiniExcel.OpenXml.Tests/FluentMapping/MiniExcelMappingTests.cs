@@ -131,12 +131,12 @@ namespace MiniExcelLib.OpenXml.Tests.FluentMapping
             var testData = new[] { new TestModel { Name = "Test", Value = 42 } };
             using var stream = new MemoryStream();
             
-            var exporter = MiniExcel.Exporters.GetMappingExporter(registry);
+            var exporter = MiniExcelV2.Exporters.GetMappingExporter(registry);
             await exporter.ExportAsync(stream, testData);
             stream.Position = 0;
 
             // Act
-            var importer = MiniExcel.Importers.GetMappingImporter(registry);
+            var importer = MiniExcelV2.Importers.GetMappingImporter(registry);
             var resultList = new List<TestModel>();
             await foreach (var item in importer.QueryAsync<TestModel>(stream))
             {
@@ -167,7 +167,7 @@ namespace MiniExcelLib.OpenXml.Tests.FluentMapping
                 cfg.ToWorksheet("People");
             });
 
-            var exporter = MiniExcel.Exporters.GetMappingExporter(registry);
+            var exporter = MiniExcelV2.Exporters.GetMappingExporter(registry);
 
             // Act & Assert
             using var stream = new MemoryStream();
@@ -193,7 +193,7 @@ namespace MiniExcelLib.OpenXml.Tests.FluentMapping
                 cfg.ToWorksheet("Employees");
             });
 
-            var exporter = MiniExcel.Exporters.GetMappingExporter(registry);
+            var exporter = MiniExcelV2.Exporters.GetMappingExporter(registry);
 
             // Act & Assert
             using var stream = new MemoryStream();
@@ -221,8 +221,8 @@ namespace MiniExcelLib.OpenXml.Tests.FluentMapping
                 cfg.Property(p => p.Salary).ToCell("E1");
             });
 
-            var exporter = MiniExcel.Exporters.GetMappingExporter(registry);
-            var importer = MiniExcel.Importers.GetMappingImporter(registry);
+            var exporter = MiniExcelV2.Exporters.GetMappingExporter(registry);
+            var importer = MiniExcelV2.Importers.GetMappingImporter(registry);
 
             // Act
             using var stream = new MemoryStream();
@@ -308,8 +308,8 @@ namespace MiniExcelLib.OpenXml.Tests.FluentMapping
                 }
             };
 
-            var exporter = MiniExcel.Exporters.GetMappingExporter(registry);
-            var importer = MiniExcel.Importers.GetMappingImporter(registry);
+            var exporter = MiniExcelV2.Exporters.GetMappingExporter(registry);
+            var importer = MiniExcelV2.Importers.GetMappingImporter(registry);
 
             using var stream = new MemoryStream();
             await exporter.ExportAsync(stream, testData);
@@ -354,8 +354,8 @@ namespace MiniExcelLib.OpenXml.Tests.FluentMapping
                     });
             });
 
-            var exporter = MiniExcel.Exporters.GetMappingExporter(registry);
-            var importer = MiniExcel.Importers.GetMappingImporter(registry);
+            var exporter = MiniExcelV2.Exporters.GetMappingExporter(registry);
+            var importer = MiniExcelV2.Importers.GetMappingImporter(registry);
 
             var compiled = registry.GetMapping<Department>();
             var boundaries = compiled.OptimizedBoundaries!;
@@ -418,8 +418,8 @@ namespace MiniExcelLib.OpenXml.Tests.FluentMapping
                     });
             });
 
-            var exporter = MiniExcel.Exporters.GetMappingExporter(registry);
-            var importer = MiniExcel.Importers.GetMappingImporter(registry);
+            var exporter = MiniExcelV2.Exporters.GetMappingExporter(registry);
+            var importer = MiniExcelV2.Importers.GetMappingImporter(registry);
 
             using var stream = new MemoryStream();
             await exporter.ExportAsync(stream, departments);
@@ -591,8 +591,8 @@ namespace MiniExcelLib.OpenXml.Tests.FluentMapping
                     });
             });
 
-            var exporter = MiniExcel.Exporters.GetMappingExporter(registry);
-            var importer = MiniExcel.Importers.GetMappingImporter(registry);
+            var exporter = MiniExcelV2.Exporters.GetMappingExporter(registry);
+            var importer = MiniExcelV2.Importers.GetMappingImporter(registry);
 
             // Act
             using var stream = new MemoryStream();
@@ -671,8 +671,8 @@ namespace MiniExcelLib.OpenXml.Tests.FluentMapping
                     });
             });
 
-            var exporter = MiniExcel.Exporters.GetMappingExporter(registry);
-            var importer = MiniExcel.Importers.GetMappingImporter(registry);
+            var exporter = MiniExcelV2.Exporters.GetMappingExporter(registry);
+            var importer = MiniExcelV2.Importers.GetMappingImporter(registry);
 
             // Act
             using var stream = new MemoryStream();
@@ -719,7 +719,7 @@ namespace MiniExcelLib.OpenXml.Tests.FluentMapping
                 new Product { Id = 1, Price = 10.50m, Stock = 100 }
             };
 
-            var exporter = MiniExcel.Exporters.GetMappingExporter(registry);
+            var exporter = MiniExcelV2.Exporters.GetMappingExporter(registry);
             
             using var stream = new MemoryStream();
             await exporter.ExportAsync(stream, testData);
@@ -748,7 +748,7 @@ namespace MiniExcelLib.OpenXml.Tests.FluentMapping
                 }
             };
 
-            var exporter = MiniExcel.Exporters.GetMappingExporter(registry);
+            var exporter = MiniExcelV2.Exporters.GetMappingExporter(registry);
             
             using var stream = new MemoryStream();
             await exporter.ExportAsync(stream, testData);
@@ -778,7 +778,7 @@ namespace MiniExcelLib.OpenXml.Tests.FluentMapping
                 cfg.ToWorksheet("Products");
             });
 
-            var exporter = MiniExcel.Exporters.GetMappingExporter(registry);
+            var exporter = MiniExcelV2.Exporters.GetMappingExporter(registry);
             using var stream = new MemoryStream();
             await exporter.ExportAsync(stream, products);
             
@@ -787,7 +787,7 @@ namespace MiniExcelLib.OpenXml.Tests.FluentMapping
             
             // Read back and verify
             stream.Position = 0;
-            var importer = MiniExcel.Importers.GetOpenXmlImporter();
+            var importer = MiniExcelV2.Importers.GetOpenXmlImporter();
             var data = importer.QueryAsync(stream);
             var firstRow = await data.FirstOrDefaultAsync();
             Assert.NotNull(firstRow);
@@ -816,7 +816,7 @@ namespace MiniExcelLib.OpenXml.Tests.FluentMapping
                 cfg.ToWorksheet("Formatted");
             });
 
-            var exporter = MiniExcel.Exporters.GetMappingExporter(registry);
+            var exporter = MiniExcelV2.Exporters.GetMappingExporter(registry);
             using var stream = new MemoryStream();
             await exporter.ExportAsync(stream, products);
             
@@ -845,7 +845,7 @@ namespace MiniExcelLib.OpenXml.Tests.FluentMapping
                 cfg.ToWorksheet("DateFormats");
             });
 
-            var exporter = MiniExcel.Exporters.GetMappingExporter(registry);
+            var exporter = MiniExcelV2.Exporters.GetMappingExporter(registry);
             using var stream = new MemoryStream();
             await exporter.ExportAsync(stream, products);
             
@@ -869,7 +869,7 @@ namespace MiniExcelLib.OpenXml.Tests.FluentMapping
                 cfg.ToWorksheet("Booleans");
             });
 
-            var exporter = MiniExcel.Exporters.GetMappingExporter(registry);
+            var exporter = MiniExcelV2.Exporters.GetMappingExporter(registry);
             using var stream = new MemoryStream();
             await exporter.ExportAsync(stream, products);
             
@@ -895,7 +895,7 @@ namespace MiniExcelLib.OpenXml.Tests.FluentMapping
                 cfg.ToWorksheet("Overwrite");
             });
 
-            var exporter = MiniExcel.Exporters.GetMappingExporter(registry);
+            var exporter = MiniExcelV2.Exporters.GetMappingExporter(registry);
             using var stream = new MemoryStream();
             await exporter.ExportAsync(stream, products);
             
@@ -930,7 +930,7 @@ namespace MiniExcelLib.OpenXml.Tests.FluentMapping
                 cfg.ToWorksheet("ComplexTypes");
             });
 
-            var exporter = MiniExcel.Exporters.GetMappingExporter(registry);
+            var exporter = MiniExcelV2.Exporters.GetMappingExporter(registry);
             using var stream = new MemoryStream();
             await exporter.ExportAsync(stream, items);
             
@@ -963,7 +963,7 @@ namespace MiniExcelLib.OpenXml.Tests.FluentMapping
                 cfg.ToWorksheet("Second");
             });
 
-            var exporter = MiniExcel.Exporters.GetMappingExporter(registry);
+            var exporter = MiniExcelV2.Exporters.GetMappingExporter(registry);
             using var stream = new MemoryStream();
             await exporter.ExportAsync(stream, products);
             
@@ -1002,7 +1002,7 @@ namespace MiniExcelLib.OpenXml.Tests.FluentMapping
                 cfg.ToWorksheet("Enumerable");
             });
 
-            var exporter = MiniExcel.Exporters.GetMappingExporter(registry);
+            var exporter = MiniExcelV2.Exporters.GetMappingExporter(registry);
             
             // Test with array
             var array = new[] { new Product { Name = "Array", Price = 10 } };
@@ -1084,7 +1084,7 @@ namespace MiniExcelLib.OpenXml.Tests.FluentMapping
                 cfg.ToWorksheet("FileOutput");
             });
 
-            var exporter = MiniExcel.Exporters.GetMappingExporter(registry);
+            var exporter = MiniExcelV2.Exporters.GetMappingExporter(registry);
             
             var filePath = Path.GetTempFileName() + ".xlsx";
             try
@@ -1140,7 +1140,7 @@ namespace MiniExcelLib.OpenXml.Tests.FluentMapping
                 new ComplexEntity { Id = 1, Tags = [] } // Empty collection
             };
 
-            var exporter = MiniExcel.Exporters.GetMappingExporter(registry);
+            var exporter = MiniExcelV2.Exporters.GetMappingExporter(registry);
             
             using var stream = new MemoryStream();
             await exporter.ExportAsync(stream, testData);
@@ -1168,7 +1168,7 @@ namespace MiniExcelLib.OpenXml.Tests.FluentMapping
                 }
             };
 
-            var exporter = MiniExcel.Exporters.GetMappingExporter(registry);
+            var exporter = MiniExcelV2.Exporters.GetMappingExporter(registry);
             
             using var stream = new MemoryStream();
             await exporter.ExportAsync(stream, testData);
@@ -1221,7 +1221,7 @@ namespace MiniExcelLib.OpenXml.Tests.FluentMapping
                 Price = i * 10.5m
             });
 
-            var exporter = MiniExcel.Exporters.GetMappingExporter(registry);
+            var exporter = MiniExcelV2.Exporters.GetMappingExporter(registry);
             
             using var stream = new MemoryStream();
             await exporter.ExportAsync(stream, testData);

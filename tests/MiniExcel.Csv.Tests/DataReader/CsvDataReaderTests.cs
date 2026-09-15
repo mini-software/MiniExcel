@@ -2,7 +2,7 @@ namespace MiniExcelLib.Csv.Tests.DataReader;
 
 public class CsvDataReaderTests
 {
-    private readonly CsvImporter _csvImporter = MiniExcel.Importers.GetCsvImporter();
+    private readonly CsvImporter _csvImporter = MiniExcelV2.Importers.GetCsvImporter();
 
     [Fact]
     public void GetDataReader_WithSimpleData_ReturnsValidDataReader()

@@ -2,8 +2,8 @@
 
 public class GithubIssuesAsyncTests
 {
-    private readonly CsvExporter _csvExporter = MiniExcel.Exporters.GetCsvExporter();
-    private readonly CsvImporter _csvImporter = MiniExcel.Importers.GetCsvImporter();
+    private readonly CsvExporter _csvExporter = MiniExcelV2.Exporters.GetCsvExporter();
+    private readonly CsvImporter _csvImporter = MiniExcelV2.Importers.GetCsvImporter();
 
     // Support Enum Mapping
     [Fact]
@@ -31,11 +31,11 @@ public class GithubIssuesAsyncTests
         Assert.Equal(Issue89Dto.WorkState.Leave, rows1[2].State);
 
         using var outputPath = AutoDeletingPath.Create();
-        var rowsWritten = await MiniExcel.Exporters.GetOpenXmlExporter().ExportAsync(outputPath.ToString(), rows1);
+        var rowsWritten = await MiniExcelV2.Exporters.GetOpenXmlExporter().ExportAsync(outputPath.ToString(), rows1);
         Assert.Single(rowsWritten);
         Assert.Equal(3, rowsWritten[0]);
 
-        var rows2 = await MiniExcel.Importers.GetOpenXmlImporter().QueryAsync<Issue89Dto>(outputPath.ToString()).ToListAsync();
+        var rows2 = await MiniExcelV2.Importers.GetOpenXmlImporter().QueryAsync<Issue89Dto>(outputPath.ToString()).ToListAsync();
         Assert.Equal(Issue89Dto.WorkState.OnDuty, rows2[0].State);
         Assert.Equal(Issue89Dto.WorkState.Fired, rows2[1].State);
         Assert.Equal(Issue89Dto.WorkState.Leave, rows2[2].State);

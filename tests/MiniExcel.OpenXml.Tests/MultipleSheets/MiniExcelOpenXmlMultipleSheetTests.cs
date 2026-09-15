@@ -5,7 +5,7 @@ namespace MiniExcelLib.OpenXml.Tests.MultipleSheets;
 
 public class MiniExcelOpenXmlMultipleSheetTests
 {
-    private readonly OpenXmlImporter _excelImporter =  MiniExcel.Importers.GetOpenXmlImporter();
+    private readonly OpenXmlImporter _excelImporter =  MiniExcelV2.Importers.GetOpenXmlImporter();
     
     [Fact]
     public void SpecifySheetNameQueryTest()
@@ -227,7 +227,7 @@ public class MiniExcelOpenXmlMultipleSheetTests
         using var file = AutoDeletingPath.Create();
         var path = file.ToString();
 
-        var rowsWritten =  MiniExcel.Exporters.GetOpenXmlExporter().Export(path, sheets, configuration: configuration);
+        var rowsWritten =  MiniExcelV2.Exporters.GetOpenXmlExporter().Export(path, sheets, configuration: configuration);
         Assert.Equal(2, rowsWritten.Length);
         Assert.Equal(2, rowsWritten[0]);
 

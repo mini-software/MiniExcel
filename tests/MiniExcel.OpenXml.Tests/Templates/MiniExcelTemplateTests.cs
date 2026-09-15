@@ -8,8 +8,8 @@ namespace MiniExcelLib.OpenXml.Tests.Templates;
 
 public class MiniExcelTemplateTests
 {
-    private readonly OpenXmlImporter _excelImporter = MiniExcel.Importers.GetOpenXmlImporter();
-    private readonly OpenXmlTemplater _excelTemplater = MiniExcel.Templaters.GetOpenXmlTemplater();
+    private readonly OpenXmlImporter _excelImporter = MiniExcelV2.Importers.GetOpenXmlImporter();
+    private readonly OpenXmlTemplater _excelTemplater = MiniExcelV2.Templaters.GetOpenXmlTemplater();
 
     [Fact]
     public void TestImageType()

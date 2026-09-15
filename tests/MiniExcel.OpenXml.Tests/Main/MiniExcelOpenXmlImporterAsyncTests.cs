@@ -7,8 +7,8 @@ namespace MiniExcelLib.OpenXml.Tests.Main;
 
 public class MiniExcelOpenXmlImporterAsyncTests
 {
-    private readonly OpenXmlImporter _excelImporter =  MiniExcel.Importers.GetOpenXmlImporter();
-    private readonly OpenXmlExporter _excelExporter =  MiniExcel.Exporters.GetOpenXmlExporter();
+    private readonly OpenXmlImporter _excelImporter =  MiniExcelV2.Importers.GetOpenXmlImporter();
+    private readonly OpenXmlExporter _excelExporter =  MiniExcelV2.Exporters.GetOpenXmlExporter();
    
     static MiniExcelOpenXmlImporterAsyncTests()
     {

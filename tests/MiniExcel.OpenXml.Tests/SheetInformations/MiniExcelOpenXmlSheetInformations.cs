@@ -7,7 +7,7 @@ namespace MiniExcelLib.OpenXml.Tests.SheetInformations;
 
 public class MiniExcelOpenXmlSheetInformations
 {
-    private readonly OpenXmlImporter _excelImporter = MiniExcel.Importers.GetOpenXmlImporter();
+    private readonly OpenXmlImporter _excelImporter = MiniExcelV2.Importers.GetOpenXmlImporter();
 
     [Fact]
     public void GetSheetDimensionsTest()

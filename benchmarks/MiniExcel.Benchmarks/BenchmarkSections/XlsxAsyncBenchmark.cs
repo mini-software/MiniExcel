@@ -12,8 +12,8 @@ public class XlsxAsyncBenchmark : BenchmarkBase
     [GlobalSetup]
     public void Setup()
     {
-        _exporter = MiniExcel.Exporters.GetOpenXmlExporter();
-        _templater = MiniExcel.Templaters.GetOpenXmlTemplater();
+        _exporter = MiniExcelV2.Exporters.GetOpenXmlExporter();
+        _templater = MiniExcelV2.Templaters.GetOpenXmlTemplater();
     }
     
     [Benchmark(Description = "MiniExcel Create Xlsx Async")]

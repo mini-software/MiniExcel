@@ -6,8 +6,8 @@ namespace MiniExcelLib.OpenXml.Tests.FluentMapping;
 
 public class MiniExcelMappingTemplateTests
 {
-    private readonly OpenXmlImporter _importer = MiniExcel.Importers.GetOpenXmlImporter();
-    private readonly OpenXmlExporter _exporter = MiniExcel.Exporters.GetOpenXmlExporter();
+    private readonly OpenXmlImporter _importer = MiniExcelV2.Importers.GetOpenXmlImporter();
+    private readonly OpenXmlExporter _exporter = MiniExcelV2.Exporters.GetOpenXmlExporter();
     
     private static DateTime ParseDateValue(object? value)
     {
@@ -70,7 +70,7 @@ public class MiniExcelMappingTemplateTests
         };
         
         using var outputPath = AutoDeletingPath.Create();
-        var templater = MiniExcel.Templaters.GetMappingTemplater(registry);
+        var templater = MiniExcelV2.Templaters.GetMappingTemplater(registry);
         await templater.FillTemplateAsync(outputPath.ToString(), templatePath.ToString(), [data]);
         
         var rows = _importer.Query(outputPath.ToString(), hasHeaderRow: false).ToList();
@@ -129,7 +129,7 @@ public class MiniExcelMappingTemplateTests
         using (var outputStream = File.Create(outputPath.ToString()))
         using (var templateStream = File.OpenRead(templatePath.ToString()))
         {
-            var templater = MiniExcel.Templaters.GetMappingTemplater(registry);
+            var templater = MiniExcelV2.Templaters.GetMappingTemplater(registry);
             await templater.FillTemplateAsync(outputStream, templateStream, [data]);
         }
         
@@ -170,7 +170,7 @@ public class MiniExcelMappingTemplateTests
         using var outputPath = AutoDeletingPath.Create();
         using (var outputStream = File.Create(outputPath.ToString()))
         {
-            var templater = MiniExcel.Templaters.GetMappingTemplater(registry);
+            var templater = MiniExcelV2.Templaters.GetMappingTemplater(registry);
             await templater.FillTemplateAsync(outputStream, templateBytes, [data]);
         }
         
@@ -235,7 +235,7 @@ public class MiniExcelMappingTemplateTests
         };
         
         using var outputPath = AutoDeletingPath.Create();
-        var templater = MiniExcel.Templaters.GetMappingTemplater(registry);
+        var templater = MiniExcelV2.Templaters.GetMappingTemplater(registry);
         await templater.FillTemplateAsync(outputPath.ToString(), templatePath.ToString(), [dept]);
         
         var rows = _importer.Query(outputPath.ToString(), hasHeaderRow: false).ToList();
@@ -283,7 +283,7 @@ public class MiniExcelMappingTemplateTests
         });
         
         using var outputPath = AutoDeletingPath.Create();
-        var templater = MiniExcel.Templaters.GetMappingTemplater(registry);
+        var templater = MiniExcelV2.Templaters.GetMappingTemplater(registry);
         await templater.FillTemplateAsync(outputPath.ToString(), templatePath.ToString(), Array.Empty<TestEntity>());
         
         var rows = _importer.Query(outputPath.ToString(), hasHeaderRow: false).ToList();
@@ -327,7 +327,7 @@ public class MiniExcelMappingTemplateTests
         
         // Apply template
         using var outputPath = AutoDeletingPath.Create();
-        var templater = MiniExcel.Templaters.GetMappingTemplater(registry);
+        var templater = MiniExcelV2.Templaters.GetMappingTemplater(registry);
         await templater.FillTemplateAsync(outputPath.ToString(), templatePath.ToString(), [data]);
         
         // Verify null handling
@@ -372,7 +372,7 @@ public class MiniExcelMappingTemplateTests
         
         // Apply template
         using var outputPath = AutoDeletingPath.Create();
-        var templater = MiniExcel.Templaters.GetMappingTemplater(registry);
+        var templater = MiniExcelV2.Templaters.GetMappingTemplater(registry);
         await templater.FillTemplateAsync(outputPath.ToString(), templatePath.ToString(), data);
         
         // Verify - should only update first item since mapping is for specific cells

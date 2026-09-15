@@ -99,11 +99,11 @@ dotnet add package MiniExcel.Csv
 
 Firstly, you have to get an importer. The available ones are the `OpenXmlImporter` and the `CsvImporter`:
 ```csharp
-var importer = MiniExcel.Importers.GetOpenXmlImporter();
+var importer = MiniExcelV2.Importers.GetOpenXmlImporter();
 
 // or
 
-var importer = MiniExcel.Importers.GetCsvImporter();
+var importer = MiniExcelV2.Importers.GetCsvImporter();
 ```
 
 You can then use it to query Excel or csv documents as dynamic objects, or map them directly to a suitable strong type:
@@ -140,11 +140,11 @@ await foreach (var row in query)
 
 Similarly to what was described before, the first thing you need to do is getting an exporter:
 ```csharp
-var exporter = MiniExcel.Exporters.GetOpenXmlExporter();
+var exporter = MiniExcelV2.Exporters.GetOpenXmlExporter();
 
 // or
 
-var exporter = MiniExcel.Exporters.GetCsvExporter();
+var exporter = MiniExcelV2.Exporters.GetCsvExporter();
 ```
 
 You can then use it to create an Excel or csv document from a `IEnumerable` whose generic type can be some strong type, anonymous type or even a `IDictionary<string, object>`:
@@ -224,7 +224,7 @@ public class UserAccount
     public decimal Points { get; set; }
 }
 
-var importer = MiniExcel.Importers.GetOpenXmlImporter();
+var importer = MiniExcelV2.Importers.GetOpenXmlImporter();
 var rows = importer.Query<UserAccount>(path);
 
 // or 
@@ -253,7 +253,7 @@ public class UserAccount
     public decimal Points { get; set; }
 }
 
-var importer = MiniExcel.Importers.GetOpenXmlImporter();
+var importer = MiniExcelV2.Importers.GetOpenXmlImporter();
 var rows = importer.Query<UserAccount>(path);
 ```
 
@@ -266,7 +266,7 @@ By default no header will be used and the dynamic keys will be `.A`, `.B`, `.C`,
 | Github    | 2 |
 
 ```csharp
-var importer = MiniExcel.Importers.GetOpenXmlImporter();
+var importer = MiniExcelV2.Importers.GetOpenXmlImporter();
 var rows = importer.Query(path).ToList();
 
 // rows[0].A = "MiniExcel"
@@ -284,8 +284,8 @@ You can also specify that a header must be used, in which case the dynamic keys 
 
 
 ```csharp
-var importer = MiniExcel.Importers.GetOpenXmlImporter();
-var rows = importer.Query(path, useHeaderRow: true).ToList();
+var importer = MiniExcelV2.Importers.GetOpenXmlImporter();
+var rows = importer.Query(path, hasHeaderRow: true).ToList();
 
 // rows[0].Name = "MiniExcel"
 // rows[0].Value = 1
@@ -298,28 +298,28 @@ var rows = importer.Query(path, useHeaderRow: true).ToList();
 e.g: Query the tenth row by skipping the first 9 and taking the first
 
 ```csharp
-var importer = MiniExcel.Importers.GetOpenXmlImporter();
+var importer = MiniExcelV2.Importers.GetOpenXmlImporter();
 var tenthRow = importer.Query(path).Skip(9).First();
 ```
 
 #### 4. Specify the Excel sheet to query from
 
 ```csharp
-var excelImporter = MiniExcel.Importers.GetOpenXmlImporter();
+var excelImporter = MiniExcelV2.Importers.GetOpenXmlImporter();
 excelImporter.Query(path, sheetName: "SheetName");
 ```
 
 #### 5. Get the sheets' names from an Excel workbook
 
 ```csharp
-var excelImporter = MiniExcel.Importers.GetOpenXmlImporter();
+var excelImporter = MiniExcelV2.Importers.GetOpenXmlImporter();
 var sheetNames = excelImporter.GetSheetNames(path);
 ```
 
 #### 6. Get the columns' names from an Excel worksheet
 
 ```csharp
-var excelImporter = MiniExcel.Importers.GetOpenXmlImporter();
+var excelImporter = MiniExcelV2.Importers.GetOpenXmlImporter();
 var columns = excelImporter.GetColumnNames(path); 
 
 // columns = [ColumnName1, ColumnName2, ...] when there is a header row
@@ -331,7 +331,7 @@ var columns = excelImporter.GetColumnNames(path);
 You can extract threaded comments and their replies from a worksheet using the `RetrieveComments` method:
 
 ```csharp
-var excelImporter = MiniExcel.Importers.GetOpenXmlImporter(); 
+var excelImporter = MiniExcelV2.Importers.GetOpenXmlImporter(); 
 var comments = excelImporter.RetrieveComments(path, sheetName: "Sheet1").Comments;
 
 foreach (var comment in comments) 
@@ -362,7 +362,7 @@ Under the hood the dynamic objects returned in a query are implemented using `Ex
 making it possible to cast them to `IDictionary<string,object>`:
 
 ```csharp
-var excelImporter = MiniExcel.Importers.GetOpenXmlImporter();
+var excelImporter = MiniExcelV2.Importers.GetOpenXmlImporter();
 
 var rows = excelImporter.Query(path).Cast<IDictionary<string,object>>();
 
@@ -379,14 +379,14 @@ foreach(IDictionary<string,object> row in excelImporter.Query(path))
 This is not recommended, as `DataTable` will forcibly load all data into memory, effectively losing the advantages MiniExcel offers.
 
 ```csharp
-var excelImporter = MiniExcel.Importers.GetOpenXmlImporter();
+var excelImporter = MiniExcelV2.Importers.GetOpenXmlImporter();
 var table = excelImporter.QueryAsDataTable(path);
 ```
 
 #### 10. Specify what cell to start reading data from
 
 ```csharp
-var excelImporter = MiniExcel.Importers.GetOpenXmlImporter();
+var excelImporter = MiniExcelV2.Importers.GetOpenXmlImporter();
 excelImporter.Query(path, startCell: "B3")
 ```
 ![image](https://user-images.githubusercontent.com/12729184/117260316-8593c400-ae81-11eb-9877-c087b7ac2b01.png)
@@ -401,7 +401,7 @@ var config = new OpenXmlConfiguration
     FillMergedCells = true
 };
 
-var importer = MiniExcel.Importers.GetOpenXmlImporter();
+var importer = MiniExcelV2.Importers.GetOpenXmlImporter();
 var rows = importer.Query(path, configuration: config);
 ```
 
@@ -428,7 +428,7 @@ var config = new OpenXmlConfiguration
     EnableSharedStringCache = false
 };
 
-var importer = MiniExcel.Importers.GetOpenXmlImporter();
+var importer = MiniExcelV2.Importers.GetOpenXmlImporter();
 importer.Query(path, configuration: config)
 ```
 
@@ -441,7 +441,7 @@ var config = new OpenXmlConfiguration
     SharedStringCacheSize = 10 * 1024 * 1024 
 };
 
-var importer = MiniExcel.Importers.GetOpenXmlImporter();
+var importer = MiniExcelV2.Importers.GetOpenXmlImporter();
 importer.Query(path, configuration: config)
 ```
 
@@ -455,7 +455,7 @@ There are various ways to export data to an Excel document using MiniExcel.
 When using an anonymous type:
 
 ```csharp
-var exporter = MiniExcel.Exporters.GetOpenXmlExporter();
+var exporter = MiniExcelV2.Exporters.GetOpenXmlExporter();
 var values = new[] 
 {
     new { Column1 = "MiniExcel", Column2 = 1 },
@@ -473,7 +473,7 @@ class ExportTest
     public int Column2 { get; set; }
 }
 
-var exporter = MiniExcel.Exporters.GetOpenXmlExporter();
+var exporter = MiniExcelV2.Exporters.GetOpenXmlExporter();
 ExportTest[] values =
 [
     new() { Column1 = "MiniExcel", Column2 = 1 },
@@ -485,7 +485,7 @@ exporter.Export(path, values);
 #### 2. From a IEnumerable<IDictionary<string, object>>
 
 ```csharp
-var exporter = MiniExcel.Exporters.GetOpenXmlExporter();
+var exporter = MiniExcelV2.Exporters.GetOpenXmlExporter();
 List<Dictionary<string, object>> values =
 [
     new() { { "Column1", "MiniExcel" }, { "Column2", 1 } },
@@ -512,7 +512,7 @@ using var connection = YourDbConnection();
 connection.Open();
 var reader = connection.ExecuteReader("SELECT 'MiniExcel' AS Column1, 1 as Column2 UNION ALL SELECT 'Github', 2");
 
-var exporter = MiniExcel.Exporters.GetOpenXmlExporter();
+var exporter = MiniExcelV2.Exporters.GetOpenXmlExporter();
 exporter.Export("Demo.xlsx", reader);
 ```
 
@@ -531,7 +531,7 @@ table.Columns.Add("Column2", typeof(decimal));
 table.Rows.Add("MiniExcel", 1);
 table.Rows.Add("Github", 2);
 
-var exporter = MiniExcel.Exporters.GetOpenXmlExporter();
+var exporter = MiniExcelV2.Exporters.GetOpenXmlExporter();
 exporter.Export("test.xlsx", table);
 ```
 
@@ -550,7 +550,7 @@ var cmd = new CommandDefinition(
 // Note: QueryAsync will throw a closed connection exception
 var rows = connection.Query(cmd);
 
-var exporter = MiniExcel.Exporters.GetOpenXmlExporter();
+var exporter = MiniExcelV2.Exporters.GetOpenXmlExporter();
 exporter.Export("dapper_test.xlsx", rows);
 ```
 > **WARNING**: If you simply use `var rows = connection.Query(sql)` all data will be loaded into memory instead!
@@ -580,7 +580,7 @@ var sheets = new Dictionary<string, object>
     ["department"] = department
 };
 
-var exporter = MiniExcel.Exporters.GetOpenXmlExporter();
+var exporter = MiniExcelV2.Exporters.GetOpenXmlExporter();
 exporter.Export(path, sheets);
 ```
 
@@ -590,7 +590,7 @@ var sheets = new DataSet();
 sheets.Tables.Add(UsersDataTable);
 sheets.Tables.Add(DepartmentDataTable);
 
-var exporter = MiniExcel.Exporters.GetOpenXmlExporter();
+var exporter = MiniExcelV2.Exporters.GetOpenXmlExporter();
 exporter.Export(path, sheets);
 ```
 
@@ -604,7 +604,7 @@ MiniExcel supports the functionality of inserting a new sheet into an existing E
 var config = new OpenXmlConfiguration { FastMode = true };    
 var value = new { ID = 3, Name = "Mike", InDate = new DateTime(2021, 04, 23) };
 
-var exporter = MiniExcel.Exporters.GetOpenXmlExporter();
+var exporter = MiniExcelV2.Exporters.GetOpenXmlExporter();
 exporter.InsertSheet(path, value, sheetName: "Sheet2", configuration: config);
 ```
 > **Note**: In order to insert worksheets FastMode must be enabled!
@@ -615,7 +615,7 @@ exporter.InsertSheet(path, value, sheetName: "Sheet2", configuration: config);
 You can export data directly to a `MemoryStream`, `FileStream`, and generally any stream that supports seeking:
 
 ```csharp
-var exporter = MiniExcel.Exporters.GetOpenXmlExporter();
+var exporter = MiniExcelV2.Exporters.GetOpenXmlExporter();
 
 using var stream = new MemoryStream();
 exporter.Export(stream, values);
@@ -630,7 +630,7 @@ Default style
 Without style configuration
 
 ```csharp
-var exporter = MiniExcel.Exporters.GetOpenXmlExporter();
+var exporter = MiniExcelV2.Exporters.GetOpenXmlExporter();
 
 var config = new OpenXmlConfiguration
 {
@@ -649,7 +649,7 @@ By default, autofilter is enabled on the headers of exported Excel documents.
 You can disable this by setting the `AutoFilter` property of the configuration to `false`:
 
 ```csharp
-var exporter = MiniExcel.Exporters.GetOpenXmlExporter();
+var exporter = MiniExcelV2.Exporters.GetOpenXmlExporter();
 var config = new OpenXmlConfiguration { AutoFilter = false };
 exporter.Export(path, value, configuration: config);
 ```
@@ -657,7 +657,7 @@ exporter.Export(path, value, configuration: config);
 #### 11. Creating images
 
 ```csharp
-var exporter = MiniExcel.Exporters.GetOpenXmlExporter();
+var exporter = MiniExcelV2.Exporters.GetOpenXmlExporter();
 var value = new[] 
 {
     new { Name = "github", Image = File.ReadAllBytes("images/github_logo.png") },
@@ -692,7 +692,7 @@ Dictionary<string, object?>[] value =
     }
 ];
 
-var exporter = MiniExcel.Exporters.GetOpenXmlExporter();
+var exporter = MiniExcelV2.Exporters.GetOpenXmlExporter();
 exporter.Export("test.xlsx", value);
 ```
 
@@ -706,7 +706,7 @@ var config = new OpenXmlConfiguration
     EnableWriteNullValueCell = false // Default value is true
 };
 
-var exporter = MiniExcel.Exporters.GetOpenXmlExporter();
+var exporter = MiniExcelV2.Exporters.GetOpenXmlExporter();
 exporter.Export("test.xlsx", value, configuration: config);
 ```
 
@@ -720,7 +720,7 @@ var config = new OpenXmlConfiguration
     WriteEmptyStringAsNull = true // Default value is false
 };
 
-var exporter = MiniExcel.Exporters.GetOpenXmlExporter();
+var exporter = MiniExcelV2.Exporters.GetOpenXmlExporter();
 exporter.Export("test.xlsx", value, configuration: config);
 ```
 
@@ -731,7 +731,7 @@ Both properties work with `null` and `DBNull` values.
 MiniExcel allows you to freeze both rows and columns in place:
 
 ```csharp
-var exporter = MiniExcel.Exporters.GetOpenXmlExporter();
+var exporter = MiniExcelV2.Exporters.GetOpenXmlExporter();
 var config = new OpenXmlConfiguration
 {
     FreezeRowCount = 1,     // default is 1
@@ -794,7 +794,7 @@ Template:
 Code:
 ```csharp
 //1. By POCO
-var templater = MiniExcel.Templaters.GetOpenXmlTemplater();
+var templater = MiniExcelV2.Templaters.GetOpenXmlTemplater();
 var value = new
 {
     employees = new[] 
@@ -810,7 +810,7 @@ var value = new
 templater.ApplyTemplate(path, templatePath, value);
 
 //2. By Dictionary
-var templater = MiniExcel.Templaters.GetOpenXmlTemplater();
+var templater = MiniExcelV2.Templaters.GetOpenXmlTemplater();
 var value = new Dictionary<string, object>()
 {
     ["employees"] = new[] 
@@ -842,7 +842,7 @@ Code:
 
 ```csharp
 // 1. By POCO
-var templater = MiniExcel.Templaters.GetOpenXmlTemplater();
+var templater = MiniExcelV2.Templaters.GetOpenXmlTemplater();
 var value = new
 {
     title = "FooCompany",
@@ -862,7 +862,7 @@ var value = new
 templater.ApplyTemplate(path, templatePath, value);
 
 // 2. By Dictionary
-var templater = MiniExcel.Templaters.GetOpenXmlTemplater();
+var templater = MiniExcelV2.Templaters.GetOpenXmlTemplater();
 var value = new Dictionary<string, object>()
 {
     ["title"] = "FooCompany",
@@ -933,7 +933,7 @@ var value = new
     }
 };
 
-var templater = MiniExcel.Templaters.GetOpenXmlTemplater();
+var templater = MiniExcelV2.Templaters.GetOpenXmlTemplater();
 templater.ApplyTemplate(path, templatePath, value);
 ```
 
@@ -965,7 +965,7 @@ var value = new
     TotalStar = projects.Sum(s => s.Star)
 };
 
-var templater = MiniExcel.Templaters.GetOpenXmlTemplater();
+var templater = MiniExcelV2.Templaters.GetOpenXmlTemplater();
 templater.ApplyTemplate(path, templatePath, value);
 ```
 
@@ -990,7 +990,7 @@ var value = new Dictionary<string, object>()
     }
 };
 
-var templater = MiniExcel.Templaters.GetOpenXmlTemplater();
+var templater = MiniExcelV2.Templaters.GetOpenXmlTemplater();
 templater.ApplyTemplate(path, templatePath, value);
 ```
 - Without `@group` tag
@@ -1058,7 +1058,7 @@ This functionality merges cells vertically between the tags `@merge` and `@endme
 You can use `@mergelimit` to limit boundaries of merging cells vertically.
 
 ```csharp
-var templater = MiniExcel.Templaters.GetOpenXmlTemplater();
+var templater = MiniExcelV2.Templaters.GetOpenXmlTemplater();
 templater.MergeSameCells(mergedFilePath, templatePath);
 ```
 
@@ -1092,7 +1092,7 @@ var value = new Dictionary<string, object>()
     ["managers"] = managers,
 };
 
-var templater = MiniExcel.Templaters.GetOpenXmlTemplater();
+var templater = MiniExcelV2.Templaters.GetOpenXmlTemplater();
 templater.ApplyTemplate(path, templatePath, value);
 ```
 
@@ -1125,7 +1125,7 @@ var config = new OpenXmlConfiguration
     IgnoreTemplateParameterMissing = false,
 };
 
-var templater = MiniExcel.Templaters.GetOpenXmlTemplater();
+var templater = MiniExcelV2.Templaters.GetOpenXmlTemplater();
 templater.ApplyTemplate(path, templatePath, value, config);
 ```
 
@@ -1205,7 +1205,7 @@ public class ExcelAttributeDemo
     public string Test7 { get; set; }
 }
 
-var importer = MiniExcel.Importers.GetOpenXmlImporter();
+var importer = MiniExcelV2.Importers.GetOpenXmlImporter();
 var rows = importer.Query<ExcelAttributeDemo>(path).ToList();
 
 // rows[0].Test1 = "Column1"
@@ -1235,7 +1235,7 @@ Dto[] value =
     new() { Name = "Henry", InDate = new DateTime(2020, 04, 05) }
 ];
 
-var exporter = MiniExcel.Exporters.GetOpenXmlExporter();
+var exporter = MiniExcelV2.Exporters.GetOpenXmlExporter();
 exporter.Export(path, value);
 ```
 
@@ -1350,7 +1350,7 @@ var config = new OpenXmlConfiguration
 
 var value = new[] { new { id = 1, name = "Jack", createdate = new DateTime(2022, 04, 12), point = 123.456 } };
 
-var exporter = MiniExcel.Exporters.GetOpenXmlExporter();
+var exporter = MiniExcelV2.Exporters.GetOpenXmlExporter();
 exporter.Export(path, value, configuration: config);
 ```
 
@@ -1398,7 +1398,7 @@ var sheets = new Dictionary<string, object>
     ["departmentSheet"] = department
 };
 
-var exporter = MiniExcel.Exporters.GetOpenXmlExporter();
+var exporter = MiniExcelV2.Exporters.GetOpenXmlExporter();
 exporter.Export(path, sheets, configuration: configuration);
 ```
 
@@ -1428,7 +1428,7 @@ registry.Configure<Person>(cfg =>
     cfg.ToWorksheet("Employees");
 });
 
-var exporter = MiniExcel.Exporters.GetMappingExporter(registry);
+var exporter = MiniExcelV2.Exporters.GetMappingExporter(registry);
 await exporter.ExportAsync(stream, people);
 ```
 
@@ -1445,7 +1445,7 @@ registry.Configure<Person>(cfg =>
 });
 
 // Read data using the mapping
-var importer = MiniExcel.Importers.GetMappingImporter(registry);
+var importer = MiniExcelV2.Importers.GetMappingImporter(registry);
 var people = importer.Query<Person>(stream).ToList();
 ```
 
@@ -1513,7 +1513,7 @@ var data = new TestEntity
     Points = 123
 };
 
-var termplater = MiniExcel.Templaters.GetMappingTemplater(registry);
+var termplater = MiniExcelV2.Templaters.GetMappingTemplater(registry);
 await termplater.ApplyTemplateAsync(outputPath, templatePath, new[] { data });
 ```
 
@@ -1551,7 +1551,7 @@ var config = new CsvConfiguration
     Seperator=';'
 };
 
-var exporter = MiniExcel.Exporters.GetCsvExporter();
+var exporter = MiniExcelV2.Exporters.GetCsvExporter();
 exporter.Export(path, values, configuration: config);
 ```
 
@@ -1566,7 +1566,7 @@ var config = new CsvConfiguration
         .ToArray()
 };
 
-var importer = MiniExcel.Importers.GetCsvImporter();
+var importer = MiniExcelV2.Importers.GetCsvImporter();
 var rows = importer.Query(path, configuration: config).ToList();
 ```
 
@@ -1580,7 +1580,7 @@ var config = new CsvConfiguration
     NewLine='\n'
 };
 
-var exporter = MiniExcel.Exporters.GetCsvExporter();
+var exporter = MiniExcelV2.Exporters.GetCsvExporter();
 exporter.Export(path, values,configuration: config);
 ```
 
@@ -1595,8 +1595,8 @@ var config = new CsvConfiguration
     StreamReaderFunc = stream => new StreamReader(stream,Encoding.GetEncoding("gb2312"))
 };
 
-var importer = MiniExcel.Importers.GetCsvImporter();
-var rows = importer.Query(path, useHeaderRow: true, configuration: config);
+var importer = MiniExcelV2.Importers.GetCsvImporter();
+var rows = importer.Query(path, hasHeaderRow: true, configuration: config);
 
 // Write
 var config = new CsvConfiguration
@@ -1604,7 +1604,7 @@ var config = new CsvConfiguration
     StreamWriterFunc = stream => new StreamWriter(stream, Encoding.GetEncoding("gb2312"))
 };
 
-var exporter = MiniExcel.Exporters.GetCsvExporter();
+var exporter = MiniExcelV2.Exporters.GetCsvExporter();
 exporter.Export(path, value, configuration: config);
 ```
 
@@ -1626,12 +1626,12 @@ var config = new CsvConfiguration
 There is support for reading one cell at a time using a custom `IDataReader`:
 
 ```csharp
-var importer = MiniExcel.Importers.GetOpenXmlImporter();
+var importer = MiniExcelV2.Importers.GetOpenXmlImporter();
 using OpenXmlDataReader reader = importer.GetDataReader(path, hasHeaderRow: true);
 
 // or
 
-var importer = MiniExcel.Importers.GetCsvImporter();
+var importer = MiniExcelV2.Importers.GetCsvImporter();
 using CsvDataReader reader = importer.GetDataReader(path, hasHeaderRow: true);
 
 
@@ -1652,7 +1652,7 @@ Calling the `NextResult` method on the `CsvDataReader` will always raise a `NotS
 It is possible to append an arbitrary number of rows to a csv document: 
 
 ```csharp
-var exporter = MiniExcel.Exporters.GetCsvExporter();
+var exporter = MiniExcelV2.Exporters.GetCsvExporter();
 
 // Insert 1 rows after last
 var value = new { ID = 3, Name = "Mike", InDate = new DateTime(2021, 04, 23) };
@@ -1739,7 +1739,7 @@ You can set the configuration property `FastMode` to achieve faster saving speed
 ```csharp
 var config = new OpenXmlConfiguration { FastMode = true };
 
-var exporter = MiniExcel.Exporters.GetOpenXmlExporter();
+var exporter = MiniExcelV2.Exporters.GetOpenXmlExporter();
 exporter.Export(path, reader, configuration: config);
 ```
 
@@ -1767,7 +1767,7 @@ MiniExcelPicture[] images =
     },
 ];
 
-var templater = MiniExcel.Exporters.GetOpenXmlExporter();
+var templater = MiniExcelV2.Templaters.GetOpenXmlTemplater();
 templater.AddPicture(path, images);
 ```
 ![Image](https://github.com/user-attachments/assets/19c4d241-9753-4ede-96c8-f810c1a22247)
@@ -1777,7 +1777,7 @@ templater.AddPicture(path, images);
 You can easily retrieve the dimensions of all worksheets of an Excel file:
 
 ```csharp
-var importer = MiniExcel.Importers.GetOpenXmlImporter();
+var importer = MiniExcelV2.Importers.GetOpenXmlImporter();
 var dim = importer.GetSheetDimensions(path);
 ```
 
@@ -1787,7 +1787,7 @@ It is possible to query arbitrary tables from any worksheet.
 You can either keep it dynamic or map it to a strong-typed object like reqular queries: 
 
 ```csharp
-var importer = MiniExcel.Importers.GetOpenXmlImporter();
+var importer = MiniExcelV2.Importers.GetOpenXmlImporter();
 
 var rows = importer.QueryTable(yourPath, "Sheet1", "YourTable").ToList();
 // or
@@ -1842,7 +1842,7 @@ If you need template styling, one workaround is to use scalar placeholders (e.g.
 A. You can retrieve the sheet names with the `GetSheetNames` method and then Query them using the `sheetName` parameter:
 
 ```csharp
-var importer = MiniExcel.Importers.GetOpenXmlImporter();
+var importer = MiniExcelV2.Importers.GetOpenXmlImporter();
 var sheetNames = importer.GetSheetNames(path);
 
 var rows = new Dictionary<string, List<dynamic>>();
@@ -1857,7 +1857,7 @@ foreach (var sheet in sheetNames)
 A. You can use the `GetSheetInformations` method:
 
 ```csharp
-var importer = MiniExcel.Importers.GetOpenXmlImporter();
+var importer = MiniExcelV2.Importers.GetOpenXmlImporter();
 var sheets = importer.GetSheetInformations(path);
 
 foreach (var sheetInfo in sheets)
@@ -1874,7 +1874,7 @@ foreach (var sheetInfo in sheets)
 A. Yes, you can use the method `GetSheetDimensions`:
 
 ```csharp
-var excelImporter = MiniExcel.Importers.GetOpenXmlImporter();
+var excelImporter = MiniExcelV2.Importers.GetOpenXmlImporter();
 var dimensions = excelImporter.GetSheetDimensions(path);
 
 Console.WriteLine($"Total rows: {dimensions[0].Rows.Count}");
@@ -1929,14 +1929,14 @@ A. Yes, simply set the `IgnoreEmptyRows` property of the `OpenXmlConfiguration`.
 A. You have to use the `overwriteFile` parameter for overwriting an existing file on disk:
 
 ```csharp
-var excelExporter = MiniExcel.Exporters.GetOpenXmlExporter();
+var excelExporter = MiniExcelV2.Exporters.GetOpenXmlExporter();
 excelExporter.Export(path, value, overwriteFile: true);
 ```
 
 You can also implement your own stream for finer grained control:
 
 ```csharp
-var excelExporter = MiniExcel.Exporters.GetOpenXmlExporter();
+var excelExporter = MiniExcelV2.Exporters.GetOpenXmlExporter();
 
 using var stream = File.Create("Demo.xlsx");
 excelExporter.Export(stream,value);

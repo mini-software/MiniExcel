@@ -24,7 +24,7 @@ public class CreateExcelBenchmark : BenchmarkBase
         ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
         
-        _exporter = MiniExcel.Exporters.GetOpenXmlExporter();
+        _exporter = MiniExcelV2.Exporters.GetOpenXmlExporter();
         
         var simpleRegistry = new MappingRegistry();
         simpleRegistry.Configure<DemoDto>(config =>
@@ -40,7 +40,7 @@ public class CreateExcelBenchmark : BenchmarkBase
             config.Property(x => x.Column9).ToCell("I1");
             config.Property(x => x.Column10).ToCell("J1");
         });
-        _simpleMappingExporter = MiniExcel.Exporters.GetMappingExporter(simpleRegistry);
+        _simpleMappingExporter = MiniExcelV2.Exporters.GetMappingExporter(simpleRegistry);
     }
 
     [Benchmark(Description = "MiniExcel Create Xlsx")]

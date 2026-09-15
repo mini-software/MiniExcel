@@ -23,7 +23,7 @@ public class OpenXmlEditorTests
             workbook.SaveAs(path.ToString());
         }
 
-        MiniExcel.Editors.GetOpenXmlEditor(path.ToString())
+        MiniExcelV2.Editors.GetOpenXmlEditor(path.ToString())
             .UpdateCellStyle("X100", style => style.FontColor = Color.Blue, "Data")
             .UpdateCellStyle("A1", style => style.FontColor = Color.Red, "Data")
             .Save();
@@ -46,7 +46,7 @@ public class OpenXmlEditorTests
         using var path = AutoDeletingPath.Create();
         CreateWorkbook(path.ToString());
 
-        MiniExcel.Editors.GetOpenXmlEditor(path.ToString())
+        MiniExcelV2.Editors.GetOpenXmlEditor(path.ToString())
             .UpdateCellStyle("A1", style => style.FontColor = Color.Red)
             .UpdateCellStyle("A1", style => style.FontColor = Color.Blue)
             .Save();
@@ -66,7 +66,7 @@ public class OpenXmlEditorTests
             workbook.SaveAs(stream);
         }
 
-        await MiniExcel.Editors.GetOpenXmlEditor(stream)
+        await MiniExcelV2.Editors.GetOpenXmlEditor(stream)
             .UpdateCellStyle("A1", style => style.FontColor = Color.Blue, "Second")
             .SaveAsync();
 
@@ -80,7 +80,7 @@ public class OpenXmlEditorTests
     public void UpdateCellStyleRejectsInvalidReferences()
     {
         using var stream = new MemoryStream();
-        var editor = MiniExcel.Editors.GetOpenXmlEditor(stream);
+        var editor = MiniExcelV2.Editors.GetOpenXmlEditor(stream);
 
         Assert.Throws<ArgumentException>(() =>
             editor.UpdateCellStyle("1A", style => style.FontColor = Color.Red));
@@ -96,7 +96,7 @@ public class OpenXmlEditorTests
         using var path = AutoDeletingPath.Create();
         CreateWorkbook(path.ToString());
 
-        var editor = MiniExcel.Editors.GetOpenXmlEditor(path.ToString())
+        var editor = MiniExcelV2.Editors.GetOpenXmlEditor(path.ToString())
             .UpdateCellStyle("A1", style => style.FontColor = Color.Red)
             .UpdateCellStyle("A2", style => style.FontColor = Color.Blue);
 

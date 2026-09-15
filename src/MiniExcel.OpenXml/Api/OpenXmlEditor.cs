@@ -84,9 +84,7 @@ public sealed class OpenXmlEditor
             using (var source = new FileStream(_path!, FileMode.Open, FileAccess.Read, FileShare.Read))
             using (var temporaryStream = new FileStream(temporaryPath, FileMode.CreateNew, FileAccess.ReadWrite, FileShare.None))
             {
-                await source.CopyToAsync(temporaryStream, 81920, cancellationToken).ConfigureAwait(false);
-                temporaryStream.Position = 0;
-                await ApplyUpdatesAsync(temporaryStream, cancellationToken).ConfigureAwait(false);
+                await ApplyUpdatesAsync(source, temporaryStream, cancellationToken).ConfigureAwait(false);
                 await temporaryStream.FlushAsync(cancellationToken).ConfigureAwait(false);
             }
 
@@ -109,9 +107,7 @@ public sealed class OpenXmlEditor
         try
         {
             using var temporaryStream = new FileStream(temporaryPath, FileMode.Create, FileAccess.ReadWrite, FileShare.None);
-            await stream.CopyToAsync(temporaryStream, 81920, cancellationToken).ConfigureAwait(false);
-            temporaryStream.Position = 0;
-            await ApplyUpdatesAsync(temporaryStream, cancellationToken).ConfigureAwait(false);
+            await ApplyUpdatesAsync(stream, temporaryStream, cancellationToken).ConfigureAwait(false);
 
             temporaryStream.Position = 0;
             stream.Position = 0;
@@ -125,49 +121,49 @@ public sealed class OpenXmlEditor
         }
     }
 
-    private async Task ApplyUpdatesAsync(Stream stream, CancellationToken cancellationToken)
+    private async Task ApplyUpdatesAsync(Stream inputStream, Stream outputStream, CancellationToken cancellationToken)
     {
-        stream.Seek(0, SeekOrigin.Begin);
-        using var archive = new ZipArchive(stream, ZipArchiveMode.Update, leaveOpen: true);
+        inputStream.Seek(0, SeekOrigin.Begin);
+        using var inputArchive = new ZipArchive(inputStream, ZipArchiveMode.Read, leaveOpen: true);
 
-        var contentTypes = await LoadDocumentAsync(GetRequiredEntry(archive, ExcelFileNames.ContentTypes), cancellationToken).ConfigureAwait(false);
+        var contentTypes = await LoadDocumentAsync(GetRequiredEntry(inputArchive, ExcelFileNames.ContentTypes), cancellationToken).ConfigureAwait(false);
         if (contentTypes.Descendants().Attributes("ContentType")
             .Any(attribute => attribute.Value.IndexOf("macroEnabled", StringComparison.OrdinalIgnoreCase) >= 0))
             throw new NotSupportedException("MiniExcel's OpenXml editor does not support the .xlsm format.");
 
-        var workbook = await LoadDocumentAsync(GetRequiredEntry(archive, ExcelFileNames.Workbook), cancellationToken).ConfigureAwait(false);
-        var workbookRelationships = await LoadDocumentAsync(GetRequiredEntry(archive, ExcelFileNames.WorkbookRels), cancellationToken).ConfigureAwait(false);
+        var workbook = await LoadDocumentAsync(GetRequiredEntry(inputArchive, ExcelFileNames.Workbook), cancellationToken).ConfigureAwait(false);
+        var workbookRelationships = await LoadDocumentAsync(GetRequiredEntry(inputArchive, ExcelFileNames.WorkbookRels), cancellationToken).ConfigureAwait(false);
         var sheets = GetSheets(workbook, workbookRelationships);
         var pendingUpdates = ResolveUpdates(sheets);
 
-        var stylesEntry = GetRequiredEntry(archive, ExcelFileNames.Styles);
+        var stylesEntry = GetRequiredEntry(inputArchive, ExcelFileNames.Styles);
         var styles = await LoadDocumentAsync(stylesEntry, cancellationToken).ConfigureAwait(false);
         var styleContext = new StyleUpdateContext(styles);
-        var worksheetDocuments = new Dictionary<string, XDocument>(StringComparer.OrdinalIgnoreCase);
+        var updatesBySheet = pendingUpdates
+            .GroupBy(update => update.Sheet.Path, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+        var worksheetPaths = new HashSet<string>(
+            updatesBySheet.Select(group => group.Key),
+            StringComparer.OrdinalIgnoreCase);
 
-        foreach (var update in pendingUpdates)
+        using var outputArchive = new ZipArchive(outputStream, ZipArchiveMode.Create, leaveOpen: true);
+        foreach (var inputEntry in inputArchive.Entries)
         {
-            cancellationToken.ThrowIfCancellationRequested();
+            if (inputEntry.FullName.Equals(ExcelFileNames.Styles, StringComparison.OrdinalIgnoreCase)
+                || worksheetPaths.Contains(inputEntry.FullName))
+                continue;
 
-            if (!worksheetDocuments.TryGetValue(update.Sheet.Path, out var worksheet))
-            {
-                worksheet = await LoadDocumentAsync(GetRequiredEntry(archive, update.Sheet.Path), cancellationToken).ConfigureAwait(false);
-                worksheetDocuments.Add(update.Sheet.Path, worksheet);
-            }
-
-            var worksheetNamespace = worksheet.Root?.Name.Namespace
-                ?? throw new InvalidDataException($"Worksheet '{update.Sheet.Name}' has no root element.");
-            var cell = worksheet.Descendants(worksheetNamespace + "c")
-                .FirstOrDefault(element => string.Equals(element.Attribute("r")?.Value, update.CellReference, StringComparison.OrdinalIgnoreCase))
-                ?? throw new InvalidDataException($"Cell '{update.CellReference}' does not exist in worksheet '{update.Sheet.Name}'.");
-
-            var originalStyleIndex = ParseStyleIndex(cell.Attribute("s")?.Value, update.CellReference);
-            cell.SetAttributeValue("s", styleContext.GetStyleIndex(originalStyleIndex, update.FontColor));
+            await CopyEntryAsync(inputEntry, outputArchive, cancellationToken).ConfigureAwait(false);
         }
 
-        await ReplaceEntryAsync(archive, ExcelFileNames.Styles, styles, cancellationToken).ConfigureAwait(false);
-        foreach (var worksheet in worksheetDocuments)
-            await ReplaceEntryAsync(archive, worksheet.Key, worksheet.Value, cancellationToken).ConfigureAwait(false);
+        foreach (var sheetUpdates in updatesBySheet)
+        {
+            var inputEntry = GetRequiredEntry(inputArchive, sheetUpdates.Key);
+            var outputEntry = CreateEntry(outputArchive, inputEntry);
+            await RewriteWorksheetAsync(inputEntry, outputEntry, sheetUpdates, styleContext, cancellationToken).ConfigureAwait(false);
+        }
+
+        await WriteDocumentEntryAsync(outputArchive, stylesEntry, styles, cancellationToken).ConfigureAwait(false);
     }
 
     private static void ReplaceFile(string sourcePath, string destinationPath)
@@ -253,12 +249,157 @@ public sealed class OpenXmlEditor
         return await XDocument.LoadAsync(stream, LoadOptions.PreserveWhitespace, cancellationToken).ConfigureAwait(false);
     }
 
-    private static async Task ReplaceEntryAsync(ZipArchive archive, string path, XDocument document, CancellationToken cancellationToken)
+    private static async Task CopyEntryAsync(ZipArchiveEntry inputEntry, ZipArchive outputArchive, CancellationToken cancellationToken)
     {
-        archive.GetEntry(path)?.Delete();
-        var entry = archive.CreateEntry(path, CompressionLevel.Optimal);
-        using var stream = await entry.OpenAsync(cancellationToken).ConfigureAwait(false);
-        await document.SaveAsync(stream, SaveOptions.DisableFormatting, cancellationToken).ConfigureAwait(false);
+        var outputEntry = CreateEntry(outputArchive, inputEntry);
+        if (inputEntry.FullName.EndsWith("/", StringComparison.Ordinal))
+            return;
+
+        using var inputStream = await inputEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
+        using var outputStream = await outputEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
+        await inputStream.CopyToAsync(outputStream, 81920, cancellationToken).ConfigureAwait(false);
+    }
+
+    private static async Task RewriteWorksheetAsync(ZipArchiveEntry inputEntry, ZipArchiveEntry outputEntry,
+        IEnumerable<ResolvedStyleUpdate> updates, StyleUpdateContext styleContext, CancellationToken cancellationToken)
+    {
+        var pendingUpdates = updates.ToDictionary(update => update.CellReference, StringComparer.OrdinalIgnoreCase);
+        using var inputStream = await inputEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
+        using var outputStream = await outputEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
+        using var reader = XmlReader.Create(inputStream, new XmlReaderSettings
+        {
+            Async = true,
+            CloseInput = false,
+            DtdProcessing = DtdProcessing.Prohibit
+        });
+        using var writer = XmlWriter.Create(outputStream, new XmlWriterSettings
+        {
+            Async = true,
+            CloseOutput = false,
+            Encoding = new UTF8Encoding(false),
+            Indent = false
+        });
+
+        while (await reader.ReadAsync().ConfigureAwait(false))
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            if (reader.NodeType == XmlNodeType.Element && reader.LocalName == "c"
+                && reader.GetAttribute("r") is { } cellReference
+                && pendingUpdates.TryGetValue(cellReference, out var update))
+            {
+                var originalStyleIndex = ParseStyleIndex(reader.GetAttribute("s"), cellReference);
+                var styleIndex = styleContext.GetStyleIndex(originalStyleIndex, update.FontColor);
+                await WriteCellStartElementAsync(reader, writer, styleIndex).ConfigureAwait(false);
+                pendingUpdates.Remove(cellReference);
+                continue;
+            }
+
+            await WriteCurrentNodeAsync(reader, writer).ConfigureAwait(false);
+        }
+
+        if (pendingUpdates.Count > 0)
+        {
+            var missingCell = pendingUpdates.Values.OrderBy(update => update.Row).ThenBy(update => update.Column).First();
+            throw new InvalidDataException($"Cell '{missingCell.CellReference}' does not exist in worksheet '{missingCell.Sheet.Name}'.");
+        }
+
+        await writer.FlushAsync().ConfigureAwait(false);
+    }
+
+    private static async Task WriteCellStartElementAsync(XmlReader reader, XmlWriter writer, int styleIndex)
+    {
+        await writer.WriteStartElementAsync(reader.Prefix, reader.LocalName, reader.NamespaceURI).ConfigureAwait(false);
+        var wroteStyle = false;
+        if (reader.MoveToFirstAttribute())
+        {
+            do
+            {
+                if (reader.LocalName == "s" && reader.NamespaceURI.Length == 0)
+                {
+                    await writer.WriteAttributeStringAsync(null, "s", null, styleIndex.ToString(CultureInfo.InvariantCulture)).ConfigureAwait(false);
+                    wroteStyle = true;
+                }
+                else
+                {
+                    await writer.WriteAttributeStringAsync(reader.Prefix, reader.LocalName, reader.NamespaceURI, reader.Value).ConfigureAwait(false);
+                }
+            }
+            while (reader.MoveToNextAttribute());
+
+            reader.MoveToElement();
+        }
+
+        if (!wroteStyle)
+            await writer.WriteAttributeStringAsync(null, "s", null, styleIndex.ToString(CultureInfo.InvariantCulture)).ConfigureAwait(false);
+
+        if (reader.IsEmptyElement)
+            await writer.WriteEndElementAsync().ConfigureAwait(false);
+    }
+
+    private static async Task WriteCurrentNodeAsync(XmlReader reader, XmlWriter writer)
+    {
+        switch (reader.NodeType)
+        {
+            case XmlNodeType.Element:
+                await writer.WriteStartElementAsync(reader.Prefix, reader.LocalName, reader.NamespaceURI).ConfigureAwait(false);
+                if (reader.MoveToFirstAttribute())
+                {
+                    do
+                    {
+                        await writer.WriteAttributeStringAsync(reader.Prefix, reader.LocalName, reader.NamespaceURI, reader.Value).ConfigureAwait(false);
+                    }
+                    while (reader.MoveToNextAttribute());
+
+                    reader.MoveToElement();
+                }
+                if (reader.IsEmptyElement)
+                    await writer.WriteEndElementAsync().ConfigureAwait(false);
+                break;
+            case XmlNodeType.EndElement:
+                await writer.WriteFullEndElementAsync().ConfigureAwait(false);
+                break;
+            case XmlNodeType.Text:
+                await writer.WriteStringAsync(reader.Value).ConfigureAwait(false);
+                break;
+            case XmlNodeType.CDATA:
+                await writer.WriteCDataAsync(reader.Value).ConfigureAwait(false);
+                break;
+            case XmlNodeType.Whitespace:
+            case XmlNodeType.SignificantWhitespace:
+                await writer.WriteWhitespaceAsync(reader.Value).ConfigureAwait(false);
+                break;
+            case XmlNodeType.Comment:
+                await writer.WriteCommentAsync(reader.Value).ConfigureAwait(false);
+                break;
+            case XmlNodeType.ProcessingInstruction:
+                await writer.WriteProcessingInstructionAsync(reader.Name, reader.Value).ConfigureAwait(false);
+                break;
+            case XmlNodeType.XmlDeclaration:
+                await writer.WriteStartDocumentAsync().ConfigureAwait(false);
+                break;
+            case XmlNodeType.DocumentType:
+                await writer.WriteDocTypeAsync(reader.Name, reader.GetAttribute("PUBLIC"), reader.GetAttribute("SYSTEM"), reader.Value).ConfigureAwait(false);
+                break;
+            case XmlNodeType.EntityReference:
+                await writer.WriteEntityRefAsync(reader.Name).ConfigureAwait(false);
+                break;
+        }
+    }
+
+    private static async Task WriteDocumentEntryAsync(ZipArchive outputArchive, ZipArchiveEntry inputEntry,
+        XDocument document, CancellationToken cancellationToken)
+    {
+        var outputEntry = CreateEntry(outputArchive, inputEntry);
+        using var outputStream = await outputEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
+        await document.SaveAsync(outputStream, SaveOptions.DisableFormatting, cancellationToken).ConfigureAwait(false);
+    }
+
+    private static ZipArchiveEntry CreateEntry(ZipArchive archive, ZipArchiveEntry sourceEntry)
+    {
+        var entry = archive.CreateEntry(sourceEntry.FullName, CompressionLevel.Optimal);
+        entry.LastWriteTime = sourceEntry.LastWriteTime;
+        return entry;
     }
 
     private sealed class StyleUpdateContext

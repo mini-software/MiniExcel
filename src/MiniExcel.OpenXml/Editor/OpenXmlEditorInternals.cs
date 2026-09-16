@@ -41,11 +41,11 @@ public sealed partial class OpenXmlEditorInternals
     [CreateSyncVersion]
     public async Task SaveAsync(CancellationToken cancellationToken = default)
     {
-        if (_styleUpdates.Count == 0)
-            return;
-
         try
         {
+            if (_styleUpdates.Count == 0)
+                return;
+
             _stream.Seek(0, SeekOrigin.Begin);
 
             var tempStream = new MemoryStream();
@@ -53,13 +53,13 @@ public sealed partial class OpenXmlEditorInternals
 
             await ApplyUpdatesAsync(_stream, tempStream, cancellationToken).ConfigureAwait(false);
 
-            _stream.Seek(0, SeekOrigin.Begin);
-            _stream.SetLength(0);
-
             cancellationToken.ThrowIfCancellationRequested();
             // We cannot honor the cancellation of the task after this point because
             // the workbook would be only partially written to the stream and get corrupted
 
+            _stream.Seek(0, SeekOrigin.Begin);
+            _stream.SetLength(0);
+            
             tempStream.Seek(0, SeekOrigin.Begin);
             await tempStream.CopyToAsync(_stream, 81920, CancellationToken.None).ConfigureAwait(false);
             await _stream.FlushAsync(CancellationToken.None).ConfigureAwait(false);

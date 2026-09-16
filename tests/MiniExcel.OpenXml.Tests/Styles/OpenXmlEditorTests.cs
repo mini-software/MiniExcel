@@ -23,10 +23,11 @@ public class OpenXmlEditorTests
             workbook.SaveAs(path.ToString());
         }
 
-        MiniExcelV2.Editors.GetOpenXmlEditor(path.ToString())
+        MiniExcelV2.Editors.GetOpenXmlEditor()
+            .StartEditingPipeline(path.ToString())
             .UpdateCellStyle("X100", style => style.FontColor = Color.Blue, "Data")
             .UpdateCellStyle("A1", style => style.FontColor = Color.Red, "Data")
-            .Save();
+            .SaveChanges();
 
         using var updatedWorkbook = new XLWorkbook(path.ToString());
         var updatedWorksheet = updatedWorkbook.Worksheet("Data");
@@ -46,10 +47,11 @@ public class OpenXmlEditorTests
         using var path = AutoDeletingPath.Create();
         CreateWorkbook(path.ToString());
 
-        MiniExcelV2.Editors.GetOpenXmlEditor(path.ToString())
+        MiniExcelV2.Editors.GetOpenXmlEditor()
+            .StartEditingPipeline(path.ToString())
             .UpdateCellStyle("A1", style => style.FontColor = Color.Red)
             .UpdateCellStyle("A1", style => style.FontColor = Color.Blue)
-            .Save();
+            .SaveChanges();
 
         using var workbook = new XLWorkbook(path.ToString());
         Assert.Equal(Color.Blue.ToArgb(), workbook.Worksheet(1).Cell("A1").Style.Font.FontColor.Color.ToArgb());
@@ -66,9 +68,10 @@ public class OpenXmlEditorTests
             workbook.SaveAs(stream);
         }
 
-        await MiniExcelV2.Editors.GetOpenXmlEditor(stream)
+        await MiniExcelV2.Editors.GetOpenXmlEditor()
+            .StartEditingPipeline(stream, leaveOpen: true)
             .UpdateCellStyle("A1", style => style.FontColor = Color.Blue, "Second")
-            .SaveAsync();
+            .SaveChangesAsync();
 
         stream.Position = 0;
         using var updatedWorkbook = new XLWorkbook(stream);
@@ -80,14 +83,11 @@ public class OpenXmlEditorTests
     public void UpdateCellStyleRejectsInvalidReferences()
     {
         using var stream = new MemoryStream();
-        var editor = MiniExcelV2.Editors.GetOpenXmlEditor(stream);
+        var pipeline = MiniExcelV2.Editors.GetOpenXmlEditor().StartEditingPipeline(stream);
 
-        Assert.Throws<ArgumentException>(() =>
-            editor.UpdateCellStyle("1A", style => style.FontColor = Color.Red));
-        Assert.Throws<ArgumentException>(() =>
-            editor.UpdateCellStyle("XFE1", style => style.FontColor = Color.Red));
-        Assert.Throws<ArgumentException>(() =>
-            editor.UpdateCellStyle("A1048577", style => style.FontColor = Color.Red));
+        Assert.Throws<ArgumentException>(() => pipeline.UpdateCellStyle("1A", style => style.FontColor = Color.Red));
+        Assert.Throws<ArgumentException>(() => pipeline.UpdateCellStyle("XFE1", style => style.FontColor = Color.Red));
+        Assert.Throws<ArgumentException>(() => pipeline.UpdateCellStyle("A1048577", style => style.FontColor = Color.Red));
     }
 
     [Fact]
@@ -96,11 +96,12 @@ public class OpenXmlEditorTests
         using var path = AutoDeletingPath.Create();
         CreateWorkbook(path.ToString());
 
-        var editor = MiniExcelV2.Editors.GetOpenXmlEditor(path.ToString())
+        var editor = MiniExcelV2.Editors.GetOpenXmlEditor()
+            .StartEditingPipeline(path.ToString())
             .UpdateCellStyle("A1", style => style.FontColor = Color.Red)
             .UpdateCellStyle("A2", style => style.FontColor = Color.Blue);
 
-        Assert.Throws<InvalidDataException>(() => editor.Save());
+        Assert.Throws<InvalidDataException>(editor.SaveChanges);
 
         using var workbook = new XLWorkbook(path.ToString());
         Assert.NotEqual(Color.Red.ToArgb(), workbook.Worksheet(1).Cell("A1").Style.Font.FontColor.Color.ToArgb());

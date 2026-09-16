@@ -2,12 +2,12 @@ using System.Drawing;
 using ClosedXML.Excel;
 using MiniExcelLib.Tests.Common.Utils;
 
-namespace MiniExcelLib.OpenXml.Tests.Styles;
+namespace MiniExcelLib.OpenXml.Tests.Editor;
 
-public class OpenXmlEditorTests
+public class OpenXmlEditorTestsAsync
 {
     [Fact]
-    public void SaveAppliesUpdatesInCellOrderAndPreservesExistingStyle()
+    public async Task SaveAppliesUpdatesInCellOrderAndPreservesExistingStyle()
     {
         using var path = AutoDeletingPath.Create();
         using (var workbook = new XLWorkbook())
@@ -23,11 +23,11 @@ public class OpenXmlEditorTests
             workbook.SaveAs(path.ToString());
         }
 
-        MiniExcelV2.Editors.GetOpenXmlEditor()
+        await MiniExcelV2.Editors.GetOpenXmlEditor()
             .StartEditingPipeline(path.ToString())
             .UpdateCellStyle("X100", style => style.FontColor = Color.Blue, "Data")
             .UpdateCellStyle("A1", style => style.FontColor = Color.Red, "Data")
-            .SaveChanges();
+            .SaveChangesAsync();
 
         using var updatedWorkbook = new XLWorkbook(path.ToString());
         var updatedWorksheet = updatedWorkbook.Worksheet("Data");
@@ -42,16 +42,16 @@ public class OpenXmlEditorTests
     }
 
     [Fact]
-    public void LastUpdateWinsForTheSameCell()
+    public async Task LastUpdateWinsForTheSameCell()
     {
         using var path = AutoDeletingPath.Create();
         CreateWorkbook(path.ToString());
 
-        MiniExcelV2.Editors.GetOpenXmlEditor()
+        await MiniExcelV2.Editors.GetOpenXmlEditor()
             .StartEditingPipeline(path.ToString())
             .UpdateCellStyle("A1", style => style.FontColor = Color.Red)
             .UpdateCellStyle("A1", style => style.FontColor = Color.Blue)
-            .SaveChanges();
+            .SaveChangesAsync();
 
         using var workbook = new XLWorkbook(path.ToString());
         Assert.Equal(Color.Blue.ToArgb(), workbook.Worksheet(1).Cell("A1").Style.Font.FontColor.Color.ToArgb());
@@ -80,18 +80,7 @@ public class OpenXmlEditorTests
     }
 
     [Fact]
-    public void UpdateCellStyleRejectsInvalidReferences()
-    {
-        using var stream = new MemoryStream();
-        var pipeline = MiniExcelV2.Editors.GetOpenXmlEditor().StartEditingPipeline(stream);
-
-        Assert.Throws<ArgumentException>(() => pipeline.UpdateCellStyle("1A", style => style.FontColor = Color.Red));
-        Assert.Throws<ArgumentException>(() => pipeline.UpdateCellStyle("XFE1", style => style.FontColor = Color.Red));
-        Assert.Throws<ArgumentException>(() => pipeline.UpdateCellStyle("A1048577", style => style.FontColor = Color.Red));
-    }
-
-    [Fact]
-    public void FailedSaveLeavesTheOriginalWorkbookUnchanged()
+    public async Task FailedSaveLeavesTheOriginalWorkbookUnchanged()
     {
         using var path = AutoDeletingPath.Create();
         CreateWorkbook(path.ToString());
@@ -101,7 +90,7 @@ public class OpenXmlEditorTests
             .UpdateCellStyle("A1", style => style.FontColor = Color.Red)
             .UpdateCellStyle("A2", style => style.FontColor = Color.Blue);
 
-        Assert.Throws<InvalidDataException>(editor.SaveChanges);
+        await Assert.ThrowsAsync<InvalidDataException>(() => editor.SaveChangesAsync());
 
         using var workbook = new XLWorkbook(path.ToString());
         Assert.NotEqual(Color.Red.ToArgb(), workbook.Worksheet(1).Cell("A1").Style.Font.FontColor.Color.ToArgb());

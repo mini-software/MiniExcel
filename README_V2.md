@@ -1190,7 +1190,7 @@ var editor = MiniExcelV2.Editors.GetOpenXmlEditor();
 editor.StartEditingPipeline(path)
     .UpdateCellStyle("A1", style => style.FontColor = Color.Red)
     .UpdateCellStyle("X100", style => style.FontColor = Color.Blue)
-    .Save();
+    .SaveChanges();
 ```
 
 

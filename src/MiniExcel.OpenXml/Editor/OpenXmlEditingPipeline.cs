@@ -2,6 +2,9 @@ using MiniExcelLib.OpenXml.Styles;
 
 namespace MiniExcelLib.OpenXml.Editor;
 
+/// <summary>
+/// Represents a pipeline for editing Excel files with a fluent API.
+/// </summary>
 public sealed partial class OpenXmlEditingPipeline
 {
     private readonly OpenXmlEditorInternals _internals;
@@ -21,7 +24,7 @@ public sealed partial class OpenXmlEditingPipeline
     /// Returns this <see cref="OpenXmlEditingPipeline"/> instance to enable method chaining.
     /// </returns>
     /// <remarks>
-    /// Modifications are queued in the pipeline and not written to the file until <see cref="SaveChanges"/> or <see cref="SaveChangesAsync"/> are called.
+    /// Modifications are queued in the pipeline and not written to the file until SaveChanges or SaveChangesAsync is called.
     /// </remarks>
     public OpenXmlEditingPipeline UpdateCellStyle(string cellReference, Action<OpenXmlCellStyle> updateCellCallback, string? sheetName = null)
     {
@@ -44,7 +47,7 @@ public sealed partial class OpenXmlEditingPipeline
     /// Returns this <see cref="OpenXmlEditingPipeline"/> instance to enable method chaining.
     /// </returns>
     /// <remarks>
-    /// Modifications are queued in the pipeline and not written to the file until <see cref="SaveChanges"/> or <see cref="SaveChangesAsync"/> are called.
+    /// Modifications are queued in the pipeline and not written to the file until SaveChanges or SaveChangesAsync is called.
     /// </remarks>
     public OpenXmlEditingPipeline UpdateCellStyle(string cellReference, OpenXmlCellStyle cellStyle, string? sheetName = null)
     {
@@ -53,16 +56,50 @@ public sealed partial class OpenXmlEditingPipeline
     }
 
     /// <summary>
-    /// Applies all queued modifications to the Excel file.
+    /// Applies all queued modifications to the Excel document and saves it to the original stream or file.
+    /// The pipeline cannot be reused afterwards.
     /// </summary>
     /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
     /// <remarks>
-    /// This method must be called to persist any modifications made through the pipeline.
     /// If the pipeline was created from a stream with <c>leaveOpen: true</c>, the caller is responsible for its disposal.
     /// </remarks>
     [CreateSyncVersion]
     public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         await _internals.SaveAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Applies all queued modifications to the Excel document and saves it to the provided path.
+    /// The pipeline cannot be reused afterwards.
+    /// </summary>
+    /// <param name="outputPath">The path to save the modified Excel document to.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
+    /// <remarks>
+    /// If the pipeline was created from a stream with <c>leaveOpen: true</c>, the caller is responsible for its disposal.
+    /// </remarks>
+    [CreateSyncVersion]
+    public async Task SaveChangesAsync(string outputPath, CancellationToken cancellationToken = default)
+    {
+        var stream = File.OpenWrite(outputPath);
+        await using var disposableStream = stream.ConfigureAwait(false);
+
+        await SaveChangesAsync(stream, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Applies all queued modifications to the Excel document and saves it to the provided stream.
+    /// The pipeline cannot be reused afterwards.
+    /// </summary>
+    /// <param name="outputStream">The stream to save the modified Excel document to.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
+    /// <remarks>
+    /// If the pipeline was created from a stream with <c>leaveOpen: true</c>, the caller is responsible for its disposal.
+    /// The caller is always responsible for disposing the output stream.
+    /// </remarks>
+    [CreateSyncVersion]
+    public async Task SaveChangesAsync(Stream outputStream, CancellationToken cancellationToken = default)
+    {
+        await _internals.SaveAsync(outputStream, cancellationToken).ConfigureAwait(false);
     }
 }

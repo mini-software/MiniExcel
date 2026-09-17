@@ -37,7 +37,31 @@ public sealed partial class OpenXmlEditorInternals
         _styleUpdates.Add(new CellStyleUpdate(normalizedReference, column, row, sheetName, fontColor));
     }
 
-    /// <summary>Applies all queued updates to the workbook.</summary>
+    /// <summary>Applies all queued updates to the workbook and saves it to an output stream.</summary>
+    [CreateSyncVersion]
+    public async Task SaveAsync(Stream outputStream, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            if (_styleUpdates.Count == 0)
+                return;
+
+            _stream.Seek(0, SeekOrigin.Begin);
+            await ApplyUpdatesAsync(_stream, outputStream, cancellationToken).ConfigureAwait(false);
+            await outputStream.FlushAsync(cancellationToken).ConfigureAwait(false);
+
+            _styleUpdates.Clear();
+        }
+        finally
+        {
+            if (!_leaveOpen)
+            {
+                await _stream.DisposeAsync().ConfigureAwait(false);
+            }
+        }
+    }
+
+    /// <summary>Applies all queued updates to the workbook and replaces the original stream.</summary>
     [CreateSyncVersion]
     public async Task SaveAsync(CancellationToken cancellationToken = default)
     {
@@ -55,7 +79,7 @@ public sealed partial class OpenXmlEditorInternals
 
             cancellationToken.ThrowIfCancellationRequested();
             // We cannot honor the cancellation of the task after this point because
-            // the workbook would be only partially written to the stream and get corrupted
+            // the workbook would be only partially written to the stream thus corrupting the original document
 
             _stream.Seek(0, SeekOrigin.Begin);
             _stream.SetLength(0);

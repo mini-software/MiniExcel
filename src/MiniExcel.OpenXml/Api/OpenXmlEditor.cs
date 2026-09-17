@@ -15,8 +15,8 @@ public sealed class OpenXmlEditor
     /// An <see cref="OpenXmlEditingPipeline"/> instance that can be used to apply modifications to the document.
     /// </returns>
     /// <remarks>
-    /// This method opens the file for exclusive read-write access.The file is locked until 
-    /// <see cref="OpenXmlEditingPipeline.SaveChangesAsync"/> is called.
+    /// This method opens the file for exclusive read-write access. The file is locked until 
+    /// SaveChanges or SaveChangesAsync is called.
     /// </remarks>
     public OpenXmlEditingPipeline StartEditingPipeline(string path)
     {
@@ -40,7 +40,7 @@ public sealed class OpenXmlEditor
     /// </returns>
     /// <remarks>
     /// Even with parameter <c>leaveOpen: false</c>, the underlying stream will not be disposed until
-    /// <see cref="OpenXmlEditingPipeline.SaveChanges"/> or <see cref="OpenXmlEditingPipeline.SaveChangesAsync"/> are called.
+    /// SaveChanges or SaveChangesAsync are called.
     /// </remarks>
     public OpenXmlEditingPipeline StartEditingPipeline(Stream stream, bool leaveOpen = false)
     {

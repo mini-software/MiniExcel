@@ -495,6 +495,94 @@ public sealed partial class OpenXmlEditorInternals
         }
     }
 
+    [CreateSyncVersion]
+    /* Todo: this method is not very efficient, but workbook.xml is generally a very small file so at the moment it's not worth over-optimizing it.
+     Also, consider adding active sheet as one of the editable properties.*/
+    internal async Task AlterWorksheetAsync(string sheetName, string? newSheetName, int? newSheetIndex, SheetState? newSheetState, CancellationToken cancellationToken = default)
+    {
+        if (newSheetName is null && newSheetIndex is null && newSheetState is null)
+            return;
+
+        var archive = await ZipArchive.CreateAsync(_stream, ZipArchiveMode.Update, true, new UTF8Encoding(true), cancellationToken).ConfigureAwait(false);
+        var oldWorkbookEntry = archive.GetEntry(ExcelFileNames.Workbook)!;
+ 
+        try
+        {
+            var xmlDoc = await LoadWorkbook().ConfigureAwait(false);
+
+            oldWorkbookEntry.Delete();
+            // We cannot honor the cancellation of the task after this point because the worbook would get corrputed
+            var newWorkbookEntry = archive.CreateEntry(ExcelFileNames.Workbook, CompressionLevel.Fastest);
+            
+            var newZipStream = await newWorkbookEntry.OpenAsync(CancellationToken.None).ConfigureAwait(false);
+            await using var newDisposableZipStream = newZipStream.ConfigureAwait(false);
+#if NET
+            var writer = XmlWriter.Create(newZipStream, new XmlWriterSettings
+            {
+#if !SYNC_ONLY
+                Async = true
+#endif
+            });
+            await using var disposableWriter = writer.ConfigureAwait(false);
+            await xmlDoc.WriteToAsync(writer, CancellationToken.None).ConfigureAwait(false);
+#else
+            using var writer = XmlWriter.Create(newZipStream, new XmlWriterSettings { Async = false });
+            xmlDoc.WriteTo(writer);
+#endif
+        }
+        finally
+        {
+#if NET10_0_OR_GREATER
+            await archive.DisposeAsync().ConfigureAwait(false);
+#else
+            archive.Dispose();
+#endif
+        }
+        return;
+
+        async Task<XDocument> LoadWorkbook()
+        {
+            var zipStream = await oldWorkbookEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
+            await using var disposableZipStream = zipStream.ConfigureAwait(false);
+
+            var workbookDoc = await XDocument.LoadAsync(zipStream, LoadOptions.None, cancellationToken).ConfigureAwait(false);
+            var sheetsContainer = workbookDoc.Root?.Element((XNamespace)Schemas.SpreadsheetmlXmlMain + "sheets")!;
+            var sheets = sheetsContainer.Elements().ToList();
+
+            if (sheets.Find(s => s.Attribute("name")?.Value.Equals(sheetName, StringComparison.OrdinalIgnoreCase) is true) is not { } sheet)
+                throw new InvalidDataException($"Sheet {sheetName} not found");
+
+            if (newSheetName is not null)
+            {
+                ThrowHelper.ThrowIfInvalidSheetName(newSheetName);
+                sheet.SetAttributeValue("name", newSheetName);
+            }
+
+            if (newSheetIndex is not null)
+            {
+                var newIndex = Math.Clamp(newSheetIndex.Value, 0, sheets.Count - 1);
+                sheets.Remove(sheet);
+                sheets.Insert(newIndex, sheet);
+
+                sheetsContainer.RemoveAll();
+                sheetsContainer.Add(sheets);
+            }
+
+            if (newSheetState is not null)
+            {
+                sheet.SetAttributeValue("state", newSheetState switch
+                {
+                    SheetState.Visible => "visible",
+                    SheetState.Hidden => "hidden",
+                    SheetState.VeryHidden => "veryHidden",
+                    _ => "visible"
+                });
+            }
+
+            return workbookDoc;
+        }
+    }
+    
     private sealed class CellStyleUpdate(string cellReference, int column, int row, string? sheetName, Color fontColor)
     {
         internal string CellReference { get; } = cellReference;

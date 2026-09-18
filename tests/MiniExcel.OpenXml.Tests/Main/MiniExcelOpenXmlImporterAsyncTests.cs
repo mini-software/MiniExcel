@@ -468,7 +468,7 @@ public class MiniExcelOpenXmlImporterAsyncTests
         await package.SaveAsync();
         
         ms1.Seek(0, SeekOrigin.Begin);
-        await Assert.ThrowsAsync<ArgumentException>(() => _excelExporter.AlterSheetAsync(ms3, "Sheet1", "Sheet*"));
+        await Assert.ThrowsAsync<ArgumentException>(() => MiniExcelV2.Editors.GetOpenXmlEditor().AlterSheetInfoAsync(ms3, "Sheet1", "Sheet*"));
     }
 
     [Fact]

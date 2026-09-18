@@ -200,12 +200,10 @@ public sealed partial class OpenXmlExporter
     /// <param name="newSheetState">The visibility state to assign to the worksheet, or <c>null</c> to leave as is.</param>
     /// <param name="cancellationToken">The token to monitor for cancellation requests</param>
     [CreateSyncVersion]
+    [Obsolete("This method will be removed in the full release, please use MiniExcelV2.Editors.GetOpenXmlEditor().AlterSheetInfo instead.")]
     public async Task AlterSheetAsync(string path, string sheetName, string? newSheetName = null, int? newSheetIndex = null, SheetState? newSheetState = null, CancellationToken cancellationToken = default)
     {
-        var stream = new FileStream(path, FileMode.Open, FileAccess.ReadWrite, FileShare.Read);
-        await using var disposableStream = stream.ConfigureAwait(false); 
-
-        await AlterSheetAsync(stream, sheetName, newSheetName, newSheetIndex, newSheetState, cancellationToken).ConfigureAwait(false);
+        await new OpenXmlEditor().AlterSheetInfoAsync(path, sheetName, newSheetName, newSheetIndex, newSheetState, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -218,12 +216,9 @@ public sealed partial class OpenXmlExporter
     /// <param name="newSheetState">The visibility state to assign to the worksheet, or <c>null</c> to leave as is.</param>
     /// <param name="cancellationToken">The token to monitor for cancellation requests</param>
     [CreateSyncVersion]
+    [Obsolete("This method will be removed in the full release, please use MiniExcelV2.Editors.GetOpenXmlEditor().AlterSheetInfo instead.")]
     public async Task AlterSheetAsync(Stream stream, string sheetName, string? newSheetName = null, int? newSheetIndex = null, SheetState? newSheetState = null, CancellationToken cancellationToken = default)
     {
-        var writer = await OpenXmlWriter
-            .CreateAsync(stream, null, sheetName, false, new OpenXmlConfiguration { FastMode = true }, cancellationToken)
-            .ConfigureAwait(false);
-
-        await writer.AlterWorksheetAsync(sheetName, newSheetName, newSheetIndex, newSheetState, cancellationToken).ConfigureAwait(false);
+        await new OpenXmlEditor().AlterSheetInfoAsync(stream, sheetName, newSheetName, newSheetIndex, newSheetState, cancellationToken).ConfigureAwait(false);
     }
 }

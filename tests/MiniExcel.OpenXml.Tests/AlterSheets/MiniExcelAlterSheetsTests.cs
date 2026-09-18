@@ -6,7 +6,7 @@ namespace MiniExcelLib.OpenXml.Tests.AlterSheets;
 
 public class MiniExcelAlterSheetTests
 {
-    private readonly OpenXmlExporter _excelExporter = MiniExcelV2.Exporters.GetOpenXmlExporter();
+    private readonly OpenXmlEditor _excelEditor = MiniExcelV2.Editors.GetOpenXmlEditor();
     
     [Fact]
     public void AlterSheet_WhenNewNameProvided_RenamesWorksheet()
@@ -17,7 +17,7 @@ public class MiniExcelAlterSheetTests
         using var stream = CreateTestWorkbookStream();
 
         // Act
-        _excelExporter.AlterSheet(stream, originalName, newSheetName: newName);
+        _excelEditor.AlterSheetInfo(stream, originalName, newSheetName: newName);
 
         // Assert
         stream.Position = 0;
@@ -36,7 +36,7 @@ public class MiniExcelAlterSheetTests
         using var stream = CreateTestWorkbookStream();
 
         // Act
-        _excelExporter.AlterSheet(stream, targetSheet, newSheetIndex: newIndex);
+        _excelEditor.AlterSheetInfo(stream, targetSheet, newSheetIndex: newIndex);
 
         // Assert
         stream.Position = 0;
@@ -54,7 +54,7 @@ public class MiniExcelAlterSheetTests
         using var stream = CreateTestWorkbookStream();
         
         // Act
-        _excelExporter.AlterSheet(stream, targetSheet, newSheetState: SheetState.Hidden);
+        _excelEditor.AlterSheetInfo(stream, targetSheet, newSheetState: SheetState.Hidden);
 
         // Assert
         stream.Position = 0;
@@ -75,7 +75,7 @@ public class MiniExcelAlterSheetTests
         using var stream = CreateTestWorkbookStream();
 
         // Act
-        _excelExporter.AlterSheet(
+        _excelEditor.AlterSheetInfo(
             stream, 
             originalName, 
             newSheetName: newName, 
@@ -112,7 +112,7 @@ public class MiniExcelAlterSheetTests
         }
 
         // Act
-        _excelExporter.AlterSheet(path.FilePath, targetSheet);
+        _excelEditor.AlterSheetInfo(path.FilePath, targetSheet);
 
         // Assert
         using var package = new ExcelPackage(path.FilePath);

@@ -171,6 +171,7 @@ The exporters also fully support asynchronous operations:
 await exporter.ExportAsync(outputPath, values);
 ```
 
+
 ### Release Notes
 
 If you're migrating from a `1.x` version, please check the [upgrade notes](V2-Upgrade-Notes.md).
@@ -201,6 +202,7 @@ You can find the benchmarks' results for the latest release [here](benchmarks/re
 - [Query/Import](#docs-import)
 - [Create/Export](#docs-export)
 - [Excel Template](#docs-template)
+- [Excel Editor](#docs-editing)
 - [Attributes and configuration](#docs-attributes)
 - [CSV specifics](#docs-csv)
 - [Other functionalities](#docs-other)
@@ -1177,6 +1179,21 @@ Result:
 <img width="890" height="999" alt="image" src="https://github.com/user-attachments/assets/fae209ec-b3e2-4f2e-94e4-3b52a37dc364" />
 
 
+### Editing existing workbooks <a name="docs-editing" />
+
+> Warning: this feature is a work in progress and currently very limited!
+
+Cell style updates are queued and applied in worksheet and cell order when `Save` is called. If the same cell is updated more than once, the last update wins.
+
+```csharp
+var editor = MiniExcelV2.Editors.GetOpenXmlEditor();
+editor.StartEditingPipeline(path)
+    .UpdateCellStyle("A1", style => style.FontColor = Color.Red)
+    .UpdateCellStyle("X100", style => style.FontColor = Color.Blue)
+    .SaveChanges();
+```
+
+
 ### Attributes and configuration <a name="docs-attributes" />
 
 #### 1. Specify the column name, column index, or ignore the column entirely.
@@ -1611,12 +1628,12 @@ exporter.Export(path, value, configuration: config);
 #### Read empty string as null
 
 By default, empty values are mapped to `string.Empty`. 
-You can modify this behavior and map them to `null` using the `CsvConfiguration.ReadEmptyStringAsNull` property:
+You can modify this behavior and map them to `null` using the `CsvConfiguration.ReadEmptyFieldsAsDefault` property:
 
 ```csharp
 var config = new CsvConfiguration
 {
-   ReadEmptyStringAsNull = true
+   ReadEmptyFieldsAsDefault = true
 };
 ```
 

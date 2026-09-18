@@ -6,7 +6,7 @@ namespace MiniExcelLib.OpenXml.Tests.AlterSheets;
 
 public class MiniExcelAlterSheetsTestAsync
 {
-    private readonly OpenXmlExporter _excelExporter = MiniExcelV2.Exporters.GetOpenXmlExporter();
+    private readonly OpenXmlEditor _excelEditor = MiniExcelV2.Editors.GetOpenXmlEditor();
     
     [Fact]
     public async Task AlterSheetAsync_WhenNewNameProvided_RenamesWorksheet()
@@ -17,7 +17,7 @@ public class MiniExcelAlterSheetsTestAsync
         await using var stream = CreateTestWorkbookStream();
 
         // Act
-        await _excelExporter.AlterSheetAsync(stream, originalName, newSheetName: newName);
+        await _excelEditor.AlterSheetInfoAsync(stream, originalName, newSheetName: newName);
 
         // Assert
         stream.Position = 0; // Reset to read the saved results
@@ -36,7 +36,7 @@ public class MiniExcelAlterSheetsTestAsync
         await using var stream = CreateTestWorkbookStream();
 
         // Act
-        await _excelExporter.AlterSheetAsync(stream, targetSheet, newSheetIndex: newIndex);
+        await _excelEditor.AlterSheetInfoAsync(stream, targetSheet, newSheetIndex: newIndex);
 
         // Assert
         stream.Position = 0;
@@ -54,7 +54,7 @@ public class MiniExcelAlterSheetsTestAsync
         await using var stream = CreateTestWorkbookStream();
         
         // Act
-        await _excelExporter.AlterSheetAsync(stream, targetSheet, newSheetState: SheetState.Hidden);
+        await _excelEditor.AlterSheetInfoAsync(stream, targetSheet, newSheetState: SheetState.Hidden);
 
         // Assert
         stream.Position = 0;
@@ -75,7 +75,7 @@ public class MiniExcelAlterSheetsTestAsync
         await using var stream = CreateTestWorkbookStream();
 
         // Act
-        await _excelExporter.AlterSheetAsync(
+        await _excelEditor.AlterSheetInfoAsync(
             stream, 
             originalName, 
             newSheetName: newName, 
@@ -112,7 +112,7 @@ public class MiniExcelAlterSheetsTestAsync
         }
 
         // Act
-        await _excelExporter.AlterSheetAsync(path.FilePath, targetSheet);
+        await _excelEditor.AlterSheetInfoAsync(path.FilePath, targetSheet);
 
         // Assert
         using var package = new ExcelPackage(path.FilePath);

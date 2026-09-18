@@ -1114,21 +1114,21 @@ public class MiniExcelOpenXmlExporterTests(ITestOutputHelper output)
     }
     
     [Fact]
-    public async Task InvalidSheetNameCharactersShouldThrow()
+    public void InvalidSheetNameCharactersShouldThrow()
     {
-        await using var ms1 = new MemoryStream();
+        using var ms1 = new MemoryStream();
         Assert.Throws<ArgumentException>(() => _excelExporter.Export(ms1, Array.Empty<object>(), sheetName: "Sheet?"));
         
-        await using var ms2 = new MemoryStream();
+        using var ms2 = new MemoryStream();
         Assert.Throws<ArgumentException>(() => _excelExporter.InsertSheet(ms2, Array.Empty<object>(), sheetName: "Sheet[]"));
         
-        await using var ms3 = new MemoryStream();
+        using var ms3 = new MemoryStream();
         using var package = new ExcelPackage(ms3);
         package.Workbook.Worksheets.Add("Sheet1");
         package.Save();
         
         ms1.Seek(0, SeekOrigin.Begin);
-        Assert.Throws<ArgumentException>(() => _excelExporter.AlterSheet(ms3, "Sheet1", "Sheet*"));
+        Assert.Throws<ArgumentException>(() => MiniExcelV2.Editors.GetOpenXmlEditor().AlterSheetInfo(ms3, "Sheet1", "Sheet*"));
     }
     
     [Theory]

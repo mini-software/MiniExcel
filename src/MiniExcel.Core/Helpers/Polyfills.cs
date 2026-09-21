@@ -155,6 +155,26 @@ public static class Polyfills
         }
     }
 #endif
+    
+#if NET11_0_OR_GREATER
+    extension(Convert)
+    {
+        /// <summary>Converts the specified double value to decimal using the same approximation applied by versions of .NET no greater than 10.</summary>
+        /// <remarks>
+        /// In .NET 11 conversion APIs such as <see cref="Decimal(double)" /> and <see cref="Convert.ToDecimal(double)" /> among others
+        /// have been changed to approximate the resulting value more accurately. Unfortunately this is a significant breaking change for us
+        /// as we relied upon this truncation to discard unwanted decimal digits when mapping doubles (our default numeric type) to decimals.
+        /// This method is therefore a workaround to ensure backwards compatibility with previous versions of the library.
+        /// </remarks>
+        [EditorBrowsable(EditorBrowsableState.Advanced)]
+        public static decimal ToDecimalWithLegacyApproximation(double value)
+        {
+            Span<char> text = stackalloc char[32];
+            value.TryFormat(text, out var length, "G15", CultureInfo.InvariantCulture);
+            return decimal.Parse(text[..length], NumberStyles.Float, CultureInfo.InvariantCulture);
+        }
+    }
+#endif
 }
 
 #if NETSTANDARD2_0

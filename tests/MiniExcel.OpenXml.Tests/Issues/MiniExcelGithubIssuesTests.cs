@@ -3029,4 +3029,49 @@ public class MiniExcelGithubIssuesTests(ITestOutputHelper output)
         var bytes2 = File.ReadAllBytes(path2.FilePath); 
         Assert.True(bytes1.SequenceEqual(bytes2));
     }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void TestIssue863(bool keepRowReferences) // template rows and cells without the optional "r" reference
+    {
+        var original = PathHelper.GetFile("xlsx/TestTemplateComplex.xlsx");
+        using var withoutReferences = AutoDeletingPath.Create();
+        SheetHelper.CopyWithoutCellReferences(original, withoutReferences.FilePath, keepRowReferences);
+
+        var value = new Dictionary<string, object>
+        {
+            ["title"] = "FooCompany",
+            ["managers"] = new[] { new { name = "Jack", department = "HR" }, new { name = "Loan", department = "IT" } },
+            ["employees"] = new[] { new { name = "Wade", department = "HR" }, new { name = "Keaton", department = "IT" } }
+        };
+
+        using var expected = AutoDeletingPath.Create();
+        using var actual = AutoDeletingPath.Create();
+        _excelTemplater.FillTemplate(expected.FilePath, original, value);
+        _excelTemplater.FillTemplate(actual.FilePath, withoutReferences.FilePath, value);
+
+        var actualRows = ReadValues(actual.FilePath);
+        Assert.Equal("A1:C7", SheetHelper.GetFirstSheetDimensionRefValue(actual.FilePath));
+        Assert.Equal(ReadValues(expected.FilePath), actualRows);
+        Assert.Equal("Keaton", actualRows[6][1]);
+    }
+
+    [Fact]
+    public void TestIssue863_MergeSameCells()
+    {
+        using var withoutReferences = AutoDeletingPath.Create();
+        SheetHelper.CopyWithoutCellReferences(PathHelper.GetFile("xlsx/TestMergeWithTag.xlsx"), withoutReferences.FilePath);
+        using var merged = AutoDeletingPath.Create();
+
+        _excelTemplater.MergeSameCells(merged.FilePath, withoutReferences.FilePath);
+
+        var mergedCells = SheetHelper.GetFirstSheetMergedCells(merged.FilePath);
+        Assert.Equal("A2:A4", mergedCells[0]);
+        Assert.Equal("C3:C4", mergedCells[1]);
+        Assert.Equal("A7:A8", mergedCells[2]);
+    }
+
+    private List<object?[]> ReadValues(string path) =>
+        _excelImporter.Query(path).Select(row => ((IDictionary<string, object?>)row).Values.ToArray()).ToList();
 }

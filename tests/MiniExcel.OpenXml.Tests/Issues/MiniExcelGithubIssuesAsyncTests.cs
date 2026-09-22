@@ -1313,4 +1313,30 @@ public class MiniExcelGithubIssuesAsyncTests(ITestOutputHelper output)
         var bytes2 = await File.ReadAllBytesAsync(path2.FilePath); 
         Assert.True(bytes1.SequenceEqual(bytes2));
     }
+
+    [Fact]
+    public async Task TestIssue863() // template rows and cells without the optional "r" reference
+    {
+        var original = PathHelper.GetFile("xlsx/TestTemplateComplex.xlsx");
+        using var withoutReferences = AutoDeletingPath.Create();
+        SheetHelper.CopyWithoutCellReferences(original, withoutReferences.FilePath);
+
+        var value = new Dictionary<string, object>
+        {
+            ["title"] = "FooCompany",
+            ["managers"] = new[] { new { name = "Jack", department = "HR" }, new { name = "Loan", department = "IT" } },
+            ["employees"] = new[] { new { name = "Wade", department = "HR" }, new { name = "Keaton", department = "IT" } }
+        };
+
+        using var expected = AutoDeletingPath.Create();
+        using var actual = AutoDeletingPath.Create();
+        await _excelTemplater.FillTemplateAsync(expected.FilePath, original, value);
+        await _excelTemplater.FillTemplateAsync(actual.FilePath, withoutReferences.FilePath, value);
+
+        var expectedRows = _excelImporter.Query(expected.FilePath).Select(row => ((IDictionary<string, object?>)row).Values.ToArray()).ToList();
+        var actualRows = _excelImporter.Query(actual.FilePath).Select(row => ((IDictionary<string, object?>)row).Values.ToArray()).ToList();
+        Assert.Equal("A1:C7", SheetHelper.GetFirstSheetDimensionRefValue(actual.FilePath));
+        Assert.Equal(expectedRows, actualRows);
+        Assert.Equal("Keaton", actualRows[6][1]);
+    }
 }

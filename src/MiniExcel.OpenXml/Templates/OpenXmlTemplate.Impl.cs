@@ -49,6 +49,7 @@ internal partial class OpenXmlTemplate
         var sheetData = worksheet?.Element(SpreadsheetNs + "sheetData");
         var newSheetData = new XElement(sheetData);
         var rows = newSheetData.Elements(SpreadsheetNs + "row");
+        FillMissingReferences(rows);
 
         InjectSharedStrings(sharedStrings, rows);
         GetMergeCells(worksheet);
@@ -83,6 +84,7 @@ internal partial class OpenXmlTemplate
         var newSheetData = new XElement(sheetData);
     
         var rows = newSheetData.Elements(SpreadsheetNs + "row");
+        FillMissingReferences(rows);
 
         InjectSharedStrings(sharedStrings, rows);
         GetMergeCells(worksheet);
@@ -95,6 +97,39 @@ internal partial class OpenXmlTemplate
         using var writer = XmlWriter.Create(outputZipSheetEntryStream, DocXmlWriterSettings);
 #endif
         await WriteSheetXmlAsync(writer, worksheet, sheetData, mergeCells, cancellationToken).ConfigureAwait(false);
+    }
+
+    // "r" is optional on rows and cells (ECMA-376 18.3.1.73, 18.3.1.4); without it they follow the previous one,
+    // which is also how OpenXmlReader reads them. The rest of the template code keys on "r", so fill it in first.
+    private static void FillMissingReferences(IEnumerable<XElement> rows)
+    {
+        var rowIndex = 0;
+        foreach (var row in rows)
+        {
+            if (row.Attribute("r") is not { } rowReference)
+            {
+                rowIndex++;
+                row.SetAttributeValue("r", rowIndex.ToString());
+            }
+            else if (int.TryParse(rowReference.Value, out var explicitRowIndex))
+            {
+                rowIndex = explicitRowIndex;
+            }
+
+            var columnIndex = 0;
+            foreach (var cell in row.Elements(SpreadsheetNs + "c"))
+            {
+                if (cell.Attribute("r") is not { } cellReference)
+                {
+                    columnIndex++;
+                    cell.SetAttributeValue("r", CellReferenceConverter.GetCellFromCoordinates(columnIndex, rowIndex));
+                }
+                else if (CellReferenceConverter.TryParseCellReference(cellReference.Value, out var explicitColumnIndex, out _))
+                {
+                    columnIndex = explicitColumnIndex;
+                }
+            }
+        }
     }
 
     private void GetMergeCells(XElement worksheet)
@@ -334,7 +369,6 @@ internal partial class OpenXmlTemplate
                 }
             }
 
-            //TODO: Fix parsing for documents that don't have the "r" attribute on rows
             if (row.Attribute("r")?.Value is not { } rVal || !int.TryParse(rVal, out var originRowIndex))
                 throw new NotSupportedException("The format of the chosen template is not currently supported.");
 

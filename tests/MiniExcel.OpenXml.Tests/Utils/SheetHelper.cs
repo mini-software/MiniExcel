@@ -133,4 +133,25 @@ internal static class SheetHelper
         stream.Position = 0; 
         return stream;
     }
+
+    // Copy of the workbook without "r" on its cells, and on its rows unless keepRowReferences (ECMA-376 allows both)
+    internal static void CopyWithoutCellReferences(string source, string target, bool keepRowReferences = false)
+    {
+        File.Copy(source, target, overwrite: true);
+        using var zip = ZipFile.Open(target, ZipArchiveMode.Update);
+        foreach (var entry in zip.Entries.Where(e => e.FullName.StartsWith("xl/worksheets/sheet")).ToList())
+        {
+            XDocument doc;
+            using (var stream = entry.Open())
+                doc = XDocument.Load(stream);
+
+            foreach (var element in doc.Descendants().Where(e => e.Name.LocalName == "c" || (e.Name.LocalName == "row" && !keepRowReferences)))
+                element.Attribute("r")?.Remove();
+
+            var name = entry.FullName;
+            entry.Delete();
+            using var output = zip.CreateEntry(name).Open();
+            doc.Save(output);
+        }
+    }
 }

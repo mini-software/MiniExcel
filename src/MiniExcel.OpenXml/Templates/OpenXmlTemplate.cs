@@ -48,6 +48,7 @@ internal partial class OpenXmlTemplate : IMiniExcelTemplate
         if (!templateStream.CanSeek)
             throw new ArgumentException("The template stream must be seekable");
 
+        ResetImageState();
         templateStream.Seek(0, SeekOrigin.Begin);
         var templateReader = await OpenXmlReader.CreateAsync(templateStream, null, cancellationToken: cancellationToken).ConfigureAwait(false);
         await using var disposableTemplateReader = templateReader.ConfigureAwait(false);
@@ -80,6 +81,29 @@ internal partial class OpenXmlTemplate : IMiniExcelTemplate
 #endif
         // sheet name map
         var sheetNamesMap = await GetSheetNameMapAsync(originalArchive, cancellationToken).ConfigureAwait(false);
+        var templateDrawings = await GetTemplateDrawingPathsAsync(originalArchive, sheetNamesMap, cancellationToken).ConfigureAwait(false);
+        var replacedPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var templateDrawing in templateDrawings.Values)
+        {
+            replacedPaths.Add(templateDrawing.DrawingPath);
+            replacedPaths.Add(templateDrawing.DrawingRelsPath);
+        }
+
+        // Template worksheet rels are merged with our drawing relationship (or written back verbatim),
+        // so they must not be copied as-is.
+        var templateSheetRels = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var (sheetPath, sheetName) in sheetNamesMap)
+        {
+            if (ParametrizedSheetRegexImpl.IsMatch(sheetName))
+                continue;
+
+            var relsPath = $"xl/worksheets/_rels/{Path.GetFileName(sheetPath)}.rels";
+            if (originalArchive.GetEntry(relsPath) is not null)
+            {
+                templateSheetRels.Add(relsPath);
+                replacedPaths.Add(relsPath);
+            }
+        }
 
         // Iterate through each entry in the original archive
         foreach (var entry in originalArchive.Entries)
@@ -89,7 +113,8 @@ internal partial class OpenXmlTemplate : IMiniExcelTemplate
                 entryName.Equals(ExcelFileNames.CalcChain, StringComparison.OrdinalIgnoreCase) ||
                 entryName.Equals(ExcelFileNames.ContentTypes, StringComparison.OrdinalIgnoreCase) ||
                 entryName.Equals(ExcelFileNames.Workbook, StringComparison.OrdinalIgnoreCase) ||
-                entryName.Equals(ExcelFileNames.WorkbookRels, StringComparison.OrdinalIgnoreCase))
+                entryName.Equals(ExcelFileNames.WorkbookRels, StringComparison.OrdinalIgnoreCase) ||
+                replacedPaths.Contains(entryName))
             {
                 continue;
             }
@@ -148,6 +173,12 @@ internal partial class OpenXmlTemplate : IMiniExcelTemplate
                 var outputZipSheetEntryStream = await outputZipEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
                 await using var disposableSheetEntryStream = outputZipSheetEntryStream.ConfigureAwait(false);
 
+                _currentSheetIndex = sheetIdx;
+                if (templateDrawings.TryGetValue(templateSheetPath, out var templateDrawing))
+                    _sheetTemplateDrawings[sheetIdx] = templateDrawing;
+                var templateRelsPath = $"xl/worksheets/_rels/{Path.GetFileName(templateSheetPath)}.rels";
+                if (templateSheetRels.Contains(templateRelsPath))
+                    _sheetTemplateRels[sheetIdx] = templateRelsPath;
                 await GenerateSheetByCreateModeAsync(templateSheet, outputZipSheetEntryStream, inputValues, templateSharedStrings, cancellationToken: cancellationToken).ConfigureAwait(false);
                 // disposing writer disposes streams as well, read and parse calc functions before that
 
@@ -155,6 +186,8 @@ internal partial class OpenXmlTemplate : IMiniExcelTemplate
                 _calcChainContent.Append(CalcChainHelper.GetCalcChainContent(_calcChainCellRefs, sheetIdx));
             }
         }
+
+        await EmitTemplateImagesAsync(originalArchive, outputFileArchive, templateDrawings, templateSheetRels, cancellationToken).ConfigureAwait(false);
 
         // The template's own calcChain cannot be reused: row insertion shifts formula cells and its
         // entries would point at the old addresses. It is regenerated from the rendered formulas —
@@ -186,6 +219,7 @@ internal partial class OpenXmlTemplate : IMiniExcelTemplate
         }
         
         // saving the (possibly edited) [Content_Types].xml entry 
+        EnsureImageContentTypes(contentTypesDoc);
         await SaveXmlToZipAsync(outputFileArchive.ZipFile, ExcelFileNames.ContentTypes, contentTypesDoc, cancellationToken).ConfigureAwait(false);
 
         // editing the workbook and its rels to reflect the new worksheets' metadata

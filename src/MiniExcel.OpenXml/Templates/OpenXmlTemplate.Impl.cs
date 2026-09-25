@@ -450,7 +450,8 @@ internal partial class OpenXmlTemplate
                     .Append($"</{fullPrefix}{row.Name.LocalName}>");
 
                 ProcessFormulas(rowXml, newRowIndex);
-                await writer.WriteRawAsync(CleanXml(rowXml, prefix).ToString()).ConfigureAwait(false);
+                var capturedRowXml = CaptureAndClearImageMarkers(rowXml.ToString(), _currentSheetIndex);
+                await writer.WriteRawAsync(CleanXml(capturedRowXml, prefix)).ConfigureAwait(false);
 
                 //mergecells
                 if (rowInfo.RowMercells is null)
@@ -502,13 +503,27 @@ internal partial class OpenXmlTemplate
             await writer.WriteRawAsync(CleanXml(string.Join("", nodes), prefix)).ConfigureAwait(false);
         }
 
+        var shouldWriteDrawing = HasImagesForSheet(_currentSheetIndex) && !worksheet.Elements(SpreadsheetNs + "drawing").Any();
+        var drawingWritten = false;
+
         foreach (var afterElement in afterSheetData)
         {
+            if (shouldWriteDrawing && !drawingWritten && IsDrawingPrecedingElement(afterElement))
+            {
+                await WriteDrawingReferenceAsync(writer, prefix, _currentSheetIndex).ConfigureAwait(false);
+                drawingWritten = true;
+            }
+
 #if NET
             await afterElement.WriteToAsync(writer, cancellationToken).ConfigureAwait(false);
 #else
             afterElement.WriteTo(writer);
 #endif
+        }
+
+        if (shouldWriteDrawing && !drawingWritten)
+        {
+            await WriteDrawingReferenceAsync(writer, prefix, _currentSheetIndex).ConfigureAwait(false);
         }
 
         await writer.WriteEndElementAsync().ConfigureAwait(false);
@@ -674,10 +689,11 @@ internal partial class OpenXmlTemplate
                         ? prop.Value.UnderlyingMemberType
                         : Nullable.GetUnderlyingType(propInfo.PropertyType) ?? propInfo.PropertyType;
 
-                    var replacementValue = GetFormattedValue(propInfo, cellValue, type);
+                    var replacementValue = GetFormattedValueWithImages(propInfo, cellValue, type);
                     
                     replacements[key] = replacementValue;
-                    FlattenAndFormatValues(replacements, key, cellValue, _configuration.RecursivePropertiesMaxDepth, propInfo);
+                    if (cellValue is not byte[])
+                        FlattenAndFormatValues(replacements, key, cellValue, _configuration.RecursivePropertiesMaxDepth, propInfo);
 
                     rowXml.Replace($"@header{{{{{key}}}}}", replacementValue);
 
@@ -729,7 +745,7 @@ internal partial class OpenXmlTemplate
 
             // replace formulas
             ProcessFormulas(rowXml, newRowIndex);
-            var finalXml = CleanXml(rowXml, endPrefix).ToString();
+            var finalXml = CaptureAndClearImageMarkers(CleanXml(rowXml, endPrefix).ToString(), _currentSheetIndex);
             await writer.WriteRawAsync(finalXml).ConfigureAwait(false);
 
             //mergecells
@@ -1174,7 +1190,7 @@ internal partial class OpenXmlTemplate
                     }
 
                     //cellValue = inputMaps[propNames[0]] - 1. From left to right, only the first set is used as the basis for the list
-                    if (cellValue is IEnumerable value and not string)
+                    if (cellValue is IEnumerable value and not string and not byte[])
                     {
                         if (xRowInfo.IEnumerableMercell is null && _xMergeCellInfos.TryGetValue(r, out var info))
                         {
@@ -1362,8 +1378,21 @@ internal partial class OpenXmlTemplate
                     }
                     else
                     {
-                        var cellValueStr = cellValue?.ToString(); // value did encodexml, so don't duplicate encode value (https://gitee.com/dotnetchina/MiniExcel/issues/I4DQUN)
-                        if (isMultiMatch || cellValue is string) // if matchs count over 1 need to set type=str (https://user-images.githubusercontent.com/12729184/114530109-39d46d00-9c7d-11eb-8f6b-52ad8600aca3.png)
+                        // Resolve the full property path so that nested scalars such as {{Company.Logo}} work.
+                        var resolvedValue = cellValue;
+                        if (propNames.Length > 1 && !TryResolvePropertyPath(cellValue, propNames, out resolvedValue))
+                            continue;
+
+                        if (GetImageMarker(resolvedValue) is { } imageMarker)
+                        {
+                            SetCellType(cell, "str");
+                            v = cell.Element(SpreadsheetNs + "v") ?? cell.Element(SpreadsheetNs + "is")?.Element(SpreadsheetNs + "t");
+                            v?.SetValue(v.Value.Replace($"{{{{{formatText}}}}}", imageMarker));
+                            continue;
+                        }
+
+                        var cellValueStr = resolvedValue?.ToString(); // value did encodexml, so don't duplicate encode value (https://gitee.com/dotnetchina/MiniExcel/issues/I4DQUN)
+                        if (isMultiMatch || resolvedValue is string) // if matchs count over 1 need to set type=str (https://user-images.githubusercontent.com/12729184/114530109-39d46d00-9c7d-11eb-8f6b-52ad8600aca3.png)
                         {
                             SetCellType(cell, "str");
                         }
@@ -1372,12 +1401,12 @@ internal partial class OpenXmlTemplate
                             SetCellType(cell, "n");
                             cellValueStr = outV.ToString(CultureInfo.InvariantCulture);
                         }
-                        else if (cellValue is bool b)
+                        else if (resolvedValue is bool b)
                         {
                             SetCellType(cell, "b");
                             cellValueStr = b ? "1" : "0";
                         }
-                        else if (cellValue is DateTime timestamp)
+                        else if (resolvedValue is DateTime timestamp)
                         {
                             //c.SetAttribute("t", "d");
                             cellValueStr = timestamp.ToString("yyyy-MM-dd HH:mm:ss");
@@ -1390,7 +1419,7 @@ internal partial class OpenXmlTemplate
 
                         // Re-acquire v after SetCellType may have changed DOM structure
                         v = cell.Element(SpreadsheetNs + "v") ?? cell.Element(SpreadsheetNs + "is")?.Element(SpreadsheetNs + "t");
-                        v?.SetValue(v.Value.Replace($"{{{{{propNames[0]}}}}}", cellValueStr)); //TODO: auto check type and set value
+                        v?.SetValue(v.Value.Replace($"{{{{{formatText}}}}}", cellValueStr)); //TODO: auto check type and set value
                     }
                 }
                 //if (xRowInfo.CellIEnumerableValues is not null) //2. From left to right, only the first set is used as the basis for the list

@@ -136,7 +136,12 @@ public abstract class MiniExcelDataReaderBase : IMiniExcelDataReader
 
     public virtual decimal GetDecimal(int i) => GetValue(i) switch
     {
-        decimal d => d,
+        decimal dec => dec,
+#if NET11_0_OR_GREATER
+        double f64 => Convert.ToDecimalWithLegacyApproximation(f64),
+#else
+        double f64 => Convert.ToDecimal(f64, CultureInfo.InvariantCulture),
+#endif
         null => throw new InvalidOperationException("The value is null"),
         var value => Convert.ToDecimal(value, MiniExcelConfiguration.Culture)
     };

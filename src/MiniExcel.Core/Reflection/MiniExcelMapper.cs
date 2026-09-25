@@ -214,7 +214,11 @@ public static partial class MiniExcelMapper
             
             else if (map.ExcludeNullableType == typeof(double))
             {
-                if (double.TryParse(Convert.ToString(itemValue, config.Culture), NumberStyles.Any, config.Culture, out var doubleValue))
+                if (itemValue is double f64)
+                {
+                    newValue = f64;
+                }
+                else if (double.TryParse(Convert.ToString(itemValue, config.Culture), NumberStyles.Any, config.Culture, out var doubleValue))
                 {
                     newValue = doubleValue;
                 }
@@ -222,6 +226,33 @@ public static partial class MiniExcelMapper
                 {
                     var invariantString = Convert.ToString(itemValue, CultureInfo.InvariantCulture);
                     newValue = double.TryParse(invariantString, NumberStyles.Any, CultureInfo.InvariantCulture, out var value) 
+                        ? value 
+                        : throw new InvalidCastException();
+                }
+            }
+            
+            else if (map.ExcludeNullableType == typeof(decimal))
+            {
+                if (itemValue is decimal dec)
+                {
+                    newValue = dec;
+                }
+                else if (itemValue is double f64)
+                {
+#if NET11_0_OR_GREATER
+                    newValue = Convert.ToDecimalWithLegacyApproximation(f64);
+#else
+                    newValue = Convert.ToDecimal(f64, CultureInfo.InvariantCulture);
+#endif
+                }
+                else if (decimal.TryParse(Convert.ToString(itemValue, config.Culture), NumberStyles.Any, config.Culture, out var decimalValue))
+                {
+                    newValue = decimalValue;
+                }
+                else
+                {
+                    var invariantString = Convert.ToString(itemValue, CultureInfo.InvariantCulture);
+                    newValue = decimal.TryParse(invariantString, NumberStyles.Any, CultureInfo.InvariantCulture, out var value) 
                         ? value 
                         : throw new InvalidCastException();
                 }

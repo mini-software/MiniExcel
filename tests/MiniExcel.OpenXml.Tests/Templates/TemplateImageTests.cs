@@ -365,6 +365,35 @@ public class TemplateImageTests(ITestOutputHelper output)
     }
 
     [Fact]
+    public void TemplateWithExistingPictures_AssignsUniquePictureIds()
+    {
+        using var template = AutoDeletingPath.Create();
+        using (var wb = new XLWorkbook())
+        {
+            var ws = wb.AddWorksheet("Sheet1");
+            ws.Cell("A1").Value = "{{Logo}}";
+            using (var first = new MemoryStream(TestPng()))
+                ws.AddPicture(first).MoveTo(ws.Cell("D10"));
+            using (var second = new MemoryStream(TestPng()))
+                ws.AddPicture(second).MoveTo(ws.Cell("D20"));
+            wb.SaveAs(template.FilePath);
+        }
+
+        using var path = AutoDeletingPath.Create();
+        _templater.FillTemplate(path.ToString(), template.FilePath, new { Logo = TestPng() });
+
+        using var zip = ZipFile.OpenRead(path.ToString());
+        using var drawingStream = zip.GetEntry("xl/drawings/drawing1.xml")!.Open();
+        var pictureIds = XDocument.Load(drawingStream).Descendants()
+            .Where(element => element.Name.LocalName == "cNvPr")
+            .Select(element => (int)element.Attribute("id")!)
+            .ToList();
+
+        Assert.Equal(3, pictureIds.Count);
+        Assert.Equal(pictureIds.Count, pictureIds.Distinct().Count());
+    }
+
+    [Fact]
     public void ParametrizedSheets_RenderImagesPerGeneratedSheet()
     {
         using var template = AutoDeletingPath.Create();

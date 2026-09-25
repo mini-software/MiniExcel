@@ -344,8 +344,11 @@ internal partial class OpenXmlTemplate
         if (drawingRoot is null)
             return;
 
-        var existingAnchorCount = drawingRoot.Elements()
-            .Count(element => element.Name.LocalName is "oneCellAnchor" or "twoCellAnchor" or "absoluteAnchor");
+        var maxPictureId = drawingRoot.Descendants()
+            .Where(element => element.Name.LocalName == "cNvPr")
+            .Select(element => int.TryParse(element.Attribute("id")?.Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var id) ? id : 0)
+            .DefaultIfEmpty(0)
+            .Max();
 
         var anchors = new StringBuilder();
         var drawingRels = new StringBuilder();
@@ -353,7 +356,7 @@ internal partial class OpenXmlTemplate
         foreach (var file in files)
         {
             await WriteBinaryEntryAsync(outputArchive.ZipFile, file.Path, file.Contents, cancellationToken).ConfigureAwait(false);
-            anchors.Append(ExcelXml.DrawingXml(file, existingAnchorCount + index));
+            anchors.Append(ExcelXml.DrawingXml(file, maxPictureId + index));
             index++;
             drawingRels.AppendLine(ExcelXml.ImageRelationship(file));
         }

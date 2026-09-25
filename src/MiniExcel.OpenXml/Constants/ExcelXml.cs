@@ -2,6 +2,10 @@
 
 internal static class ExcelXml
 {
+    /// <summary>Default picture anchor size used when no explicit size is provided (64x20 px).</summary>
+    internal const long DefaultImageWidthEmu = 609600;
+    internal const long DefaultImageHeightEmu = 190500;
+
     internal static readonly string EmptySheetXml = XmlHelper.MinifyXml("""
         <?xml version="1.0" encoding="utf-8"?>
         <x:worksheet xmlns:x="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
@@ -125,7 +129,7 @@ internal static class ExcelXml
                         <xdr:row>{file.RowIndex - 1}</xdr:row>
                         <xdr:rowOff>0</xdr:rowOff>
                     </xdr:from>
-                    <xdr:ext cx="609600" cy="190500" />
+                    <xdr:ext cx="{file.ImageWidthEmu ?? DefaultImageWidthEmu}" cy="{file.ImageHeightEmu ?? DefaultImageHeightEmu}" />
                     <xdr:pic>
                         <xdr:nvPicPr>
                             <xdr:cNvPr id="{fileIndex + 1}" descr="" name="2a3f9147-58ea-4a79-87da-7d6114c4877b" />

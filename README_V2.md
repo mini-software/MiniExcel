@@ -1228,7 +1228,9 @@ var config = new OpenXmlConfiguration { EnableConvertByteArray = false };
 templater.FillTemplate(path, templatePath, value, configuration: config);
 ```
 
-> Note: images are anchored to the cell with a default size. Configurable width and height are not available yet.
+Images are scaled to the height of the row they are anchored to, preserving their aspect ratio, so
+setting a row height in the template controls how large the picture is rendered. Rows without an
+explicit height keep a default anchor size of 64x20 pixels.
 
 
 ### Editing existing workbooks <a name="docs-editing" />

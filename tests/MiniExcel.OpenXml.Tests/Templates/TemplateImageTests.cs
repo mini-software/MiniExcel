@@ -75,6 +75,14 @@ public class TemplateImageTests(ITestOutputHelper output)
         Assert.Equal("application/vnd.openxmlformats-officedocument.drawing+xml", drawingPart.ContentType);
     }
 
+    private static (long Width, long Height) GetAnchorSize(string xlsxPath)
+    {
+        using var zip = ZipFile.OpenRead(xlsxPath);
+        using var drawingStream = zip.GetEntry("xl/drawings/drawing1.xml")!.Open();
+        var ext = XDocument.Load(drawingStream).Descendants(DrawingNs + "ext").First();
+        return ((long)ext.Attribute("cx")!, (long)ext.Attribute("cy")!);
+    }
+
     [Fact]
     public void ScalarByteArray_IsRenderedAsImage()
     {
@@ -96,6 +104,84 @@ public class TemplateImageTests(ITestOutputHelper output)
         Assert.DoesNotContain("System.Byte[]", sheet);
         Assert.DoesNotContain("{{Logo}}", sheet);
         AssertPackageIsValidAndHasImages(path.ToString(), expectedImages: 1);
+    }
+
+    [Fact]
+    public void DefaultImageSize_IsUsedWhenRowHasNoExplicitHeight()
+    {
+        using var template = AutoDeletingPath.Create();
+        using (var wb = new XLWorkbook())
+        {
+            var ws = wb.AddWorksheet("Sheet1");
+            ws.Cell("A1").Value = "{{Logo}}";
+            wb.SaveAs(template.FilePath);
+        }
+
+        using var path = AutoDeletingPath.Create();
+        _templater.FillTemplate(path.ToString(), template.FilePath, new { Logo = TestPng() });
+
+        var (width, height) = GetAnchorSize(path.ToString());
+        Assert.Equal(609600L, width);
+        Assert.Equal(190500L, height);
+    }
+
+    [Fact]
+    public void RowHeight_ScalesImagePreservingAspectRatio()
+    {
+        using var template = AutoDeletingPath.Create();
+        using (var wb = new XLWorkbook())
+        {
+            var ws = wb.AddWorksheet("Sheet1");
+            ws.Cell("A1").Value = "{{Logo}}";
+            ws.Row(1).Height = 30;
+            wb.SaveAs(template.FilePath);
+        }
+
+        using var path = AutoDeletingPath.Create();
+        _templater.FillTemplate(path.ToString(), template.FilePath, new { Logo = TestPng() });
+
+        Assert.Single(GetMediaEntries(path.ToString()));
+
+        // The fixture is 1920x1032; a 30pt row is 30 * 12700 = 381000 EMU tall and the width keeps the ratio.
+        var (width, height) = GetAnchorSize(path.ToString());
+        Assert.Equal(381000L, height);
+        Assert.Equal((long)Math.Round(381000 * (1920.0 / 1032.0)), width);
+
+        AssertPackageIsValidAndHasImages(path.ToString(), expectedImages: 1);
+    }
+
+    [Fact]
+    public void CollectionRowHeight_ScalesEachImage()
+    {
+        using var template = AutoDeletingPath.Create();
+        using (var wb = new XLWorkbook())
+        {
+            var ws = wb.AddWorksheet("Sheet1");
+            ws.Cell("A1").Value = "{{Products.Name}}";
+            ws.Cell("B1").Value = "{{Products.Image}}";
+            ws.Row(1).Height = 40;
+            wb.SaveAs(template.FilePath);
+        }
+
+        using var path = AutoDeletingPath.Create();
+        var image = TestPng();
+        _templater.FillTemplate(path.ToString(), template.FilePath, new
+        {
+            Products = new[]
+            {
+                new { Name = "A", Image = image },
+                new { Name = "B", Image = image },
+            }
+        });
+
+        using var zip = ZipFile.OpenRead(path.ToString());
+        using var drawingStream = zip.GetEntry("xl/drawings/drawing1.xml")!.Open();
+        var sizes = XDocument.Load(drawingStream).Descendants(DrawingNs + "ext")
+            .Select(ext => ((long)ext.Attribute("cx")!, (long)ext.Attribute("cy")!))
+            .ToList();
+
+        Assert.Equal(2, sizes.Count);
+        Assert.All(sizes, size => Assert.Equal(40L * 12700, size.Item2));
     }
 
     [Fact]

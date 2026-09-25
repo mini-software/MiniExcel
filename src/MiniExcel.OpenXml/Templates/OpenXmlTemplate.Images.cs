@@ -17,22 +17,33 @@ internal partial class OpenXmlTemplate
     private int _currentSheetIndex;
     private int _nextImageId;
 
-    private sealed class PendingImage(byte[] bytes, string extension)
+    private sealed class PendingImage(byte[] bytes, string extension, (int Width, int Height)? size)
     {
         internal byte[] Bytes { get; } = bytes;
         internal string Extension { get; } = extension;
+        internal (int Width, int Height)? Size { get; } = size;
     }
 
 #if NET
     [GeneratedRegex(@"<[A-Za-z0-9:]*c\b[^>]*\br=""(?<ref>[A-Z]+[0-9]+)""[^>]*>(?:(?!</[A-Za-z0-9:]*c>).)*?@@@imageid@@@,(?<id>[0-9]+)(?:(?!</[A-Za-z0-9:]*c>).)*?</[A-Za-z0-9:]*c>", RegexOptions.Singleline)]
     private static partial Regex ImageMarkerCellRegex();
 
+    [GeneratedRegex(@"^\s*<[A-Za-z0-9:]*row\b[^>]*\sht=""(?<ht>[0-9]+(?:\.[0-9]+)?)""")]
+    private static partial Regex ImageRowHeightRegex();
+
     private static readonly Regex ImageMarkerCellRegexImpl = ImageMarkerCellRegex();
+    private static readonly Regex ImageRowHeightRegexImpl = ImageRowHeightRegex();
 #else
     private static readonly Regex ImageMarkerCellRegexImpl = new(
         @"<[A-Za-z0-9:]*c\b[^>]*\br=""(?<ref>[A-Z]+[0-9]+)""[^>]*>(?:(?!</[A-Za-z0-9:]*c>).)*?@@@imageid@@@,(?<id>[0-9]+)(?:(?!</[A-Za-z0-9:]*c>).)*?</[A-Za-z0-9:]*c>",
         RegexOptions.Compiled | RegexOptions.Singleline);
+
+    private static readonly Regex ImageRowHeightRegexImpl = new(
+        @"^\s*<[A-Za-z0-9:]*row\b[^>]*\sht=""(?<ht>[0-9]+(?:\.[0-9]+)?)""",
+        RegexOptions.Compiled);
 #endif
+
+    private const long EmuPerPoint = 12700;
 
     private void ResetImageState()
     {
@@ -61,7 +72,7 @@ internal partial class OpenXmlTemplate
 
         var id = _nextImageId.ToString(CultureInfo.InvariantCulture);
         _nextImageId++;
-        _pendingImages[id] = new PendingImage(bytes, format.ToString().ToLowerInvariant());
+        _pendingImages[id] = new PendingImage(bytes, format.ToString().ToLowerInvariant(), ImageHelper.GetImageSize(bytes));
         return ImageMarkerPrefix + id;
     }
 
@@ -116,6 +127,8 @@ internal partial class OpenXmlTemplate
         if (_pendingImages.Count == 0 || !rowXml.Contains(ImageMarkerPrefix))
             return rowXml;
 
+        var rowHeightPoints = GetRowHeightPoints(rowXml);
+
         while (true)
         {
             var match = ImageMarkerCellRegexImpl.Match(rowXml);
@@ -126,7 +139,7 @@ internal partial class OpenXmlTemplate
             if (CellReferenceConverter.TryParseCellReference(match.Groups["ref"].Value, out var column, out var row) &&
                 _pendingImages.TryGetValue(id, out var pending))
             {
-                _files.Add(new FileDto
+                var file = new FileDto
                 {
                     SheetIndex = sheetIndex,
                     RowIndex = row,
@@ -134,12 +147,39 @@ internal partial class OpenXmlTemplate
                     Contents = pending.Bytes,
                     Extension = pending.Extension,
                     IsImage = true
-                });
+                };
+
+                ApplyRowHeightSize(file, pending, rowHeightPoints);
+                _files.Add(file);
             }
 
             var clearedCell = match.Value.Replace(ImageMarkerPrefix + id, string.Empty);
             rowXml = rowXml.Remove(match.Index, match.Length).Insert(match.Index, clearedCell);
         }
+    }
+
+    /// <summary>
+    /// Sizes an image to the height of the row it is anchored to, preserving its aspect ratio. Rows
+    /// without an explicit height keep the default anchor size.
+    /// </summary>
+    private static void ApplyRowHeightSize(FileDto file, PendingImage pending, double rowHeightPoints)
+    {
+        if (pending.Size is not { } size || size.Width <= 0 || size.Height <= 0 || rowHeightPoints <= 0)
+            return;
+
+        var heightEmu = (long)Math.Round(rowHeightPoints * EmuPerPoint);
+        var widthEmu = (long)Math.Round(heightEmu * (size.Width / (double)size.Height));
+        file.ImageWidthEmu = widthEmu;
+        file.ImageHeightEmu = heightEmu;
+    }
+
+    private static double GetRowHeightPoints(string rowXml)
+    {
+        var match = ImageRowHeightRegexImpl.Match(rowXml);
+        return match.Success &&
+               double.TryParse(match.Groups["ht"].Value, NumberStyles.Float, CultureInfo.InvariantCulture, out var height)
+            ? height
+            : 0;
     }
 
     private static bool IsDrawingPrecedingElement(XElement element)

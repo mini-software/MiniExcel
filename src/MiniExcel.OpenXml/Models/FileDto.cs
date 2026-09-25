@@ -10,4 +10,10 @@ internal class FileDto
     internal bool IsImage { get; set; }
     internal string Extension { get; set; }
     internal byte[] Contents { get; set; }
+
+    /// <summary>
+    /// Anchor size in EMUs. When unset, the drawing falls back to the default image size.
+    /// </summary>
+    internal long? ImageWidthEmu { get; set; }
+    internal long? ImageHeightEmu { get; set; }
 }

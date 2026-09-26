@@ -19,6 +19,12 @@ public class OpenXmlConfiguration : MiniExcelBaseConfiguration
     public bool WriteEmptyStringAsNull { get; set; } = false;
     public bool TrimColumnNames { get; set; } = true;
     public bool IgnoreEmptyRows { get; set; } = false;
+
+    /// <summary>
+    /// Maximum number of cells that may be synthesized for implicit empty rows during a query.
+    /// Each synthesized row counts as at least one cell. Set to <see langword="null" /> to disable the limit.
+    /// </summary>
+    public long? MaxSynthesizedCells { get; set; } = 100_000;
     
     public StringStorageMode StringStorageMode { get; set; } =  StringStorageMode.Inline;
     public bool EnableSharedStringCache { get; set; } = true;

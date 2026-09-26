@@ -18,6 +18,25 @@ public class MiniExcelGithubIssuesAsyncTests(ITestOutputHelper output)
     }
 
     [Fact]
+    public async Task QueryAsyncRejectsRowIndexOutsideWorksheetLimits()
+    {
+        using var path = AutoDeletingPath.Create();
+        await _excelExporter.ExportAsync(path.FilePath, new[] { new { Value = "control" } });
+        SheetHelper.ReplaceFirstSheetXml(path.FilePath, """
+            <?xml version="1.0" encoding="utf-8"?>
+            <worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+                <dimension ref="A1" />
+                <sheetData>
+                    <row r="2000000000"><c r="A2000000000" t="str"><v>x</v></c></row>
+                </sheetData>
+            </worksheet>
+            """);
+
+        await Assert.ThrowsAsync<InvalidDataException>(async () =>
+            await _excelImporter.QueryAsync(path.FilePath).FirstAsync());
+    }
+
+    [Fact]
     public async Task EmptyDataReaderIssue()
     {
         using var path = AutoDeletingPath.Create();

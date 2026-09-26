@@ -1,5 +1,7 @@
+using System.Reflection;
 using System.Xml.Linq;
 using ClosedXML.Excel;
+using MiniExcelLib.OpenXml.Templates;
 using MiniExcelLib.Tests.Common.Utils;
 using OfficeOpenXml.Drawing;
 
@@ -360,6 +362,70 @@ public class TemplateImageTests(ITestOutputHelper output)
 
         AssertDrawingReferencesIntegrity(path.ToString());
         AssertPackageIsValidAndHasImages(path.ToString(), expectedImages: 4);
+    }
+
+    [Fact]
+    public void LargeCollectionWithImages_EmitsEveryImage()
+    {
+        using var template = AutoDeletingPath.Create();
+        using (var wb = new XLWorkbook())
+        {
+            var ws = wb.AddWorksheet("Sheet1");
+            ws.Cell("A1").Value = "{{Products.Name}}";
+            ws.Cell("B1").Value = "{{Products.Image}}";
+            wb.SaveAs(template.FilePath);
+        }
+
+        var image = TestPng();
+        var products = Enumerable.Range(0, 64)
+            .Select(i => new { Name = $"P{i}", Image = image })
+            .ToArray();
+
+        using var path = AutoDeletingPath.Create();
+        _templater.FillTemplate(path.ToString(), template.FilePath, new { Products = products });
+
+        // Progressive collection expansion must not drop or overwrite any image.
+        Assert.Equal(64, GetMediaEntries(path.ToString()).Count());
+
+        var sheet = GetSheetXml(path.ToString());
+        Assert.DoesNotContain("@@@imageid@@@", sheet);
+
+        AssertDrawingReferencesIntegrity(path.ToString());
+        AssertPackageIsValidAndHasImages(path.ToString(), expectedImages: 64);
+    }
+
+    [Fact]
+    public void ImageState_IsReleasedWhenTheCallCompletes()
+    {
+        using var template = AutoDeletingPath.Create();
+        using (var wb = new XLWorkbook())
+        {
+            var ws = wb.AddWorksheet("Sheet1");
+            ws.Cell("A1").Value = "{{Products.Name}}";
+            ws.Cell("B1").Value = "{{Products.Image}}";
+            wb.SaveAs(template.FilePath);
+        }
+
+        var image = TestPng();
+        var products = Enumerable.Range(0, 8).Select(i => new { Name = $"P{i}", Image = image }).ToArray();
+
+        using var output = new MemoryStream();
+        var openXmlTemplate = new OpenXmlTemplate(output, null, new OpenXmlValueExtractor());
+        openXmlTemplate.SaveAsByTemplate(template.FilePath, new { Products = products });
+
+        // Exactly measuring peak memory is not reliable in a test; instead this checks the ownership
+        // invariant of the image pipeline: once the call returns, the pending, reuse and emission
+        // collections are empty, so the template instance no longer pins any image bytes.
+        var type = typeof(OpenXmlTemplate);
+        foreach (var fieldName in new[] { "_pendingImages", "_capturedImages", "_files" })
+        {
+            var field = type.GetField(fieldName, BindingFlags.NonPublic | BindingFlags.Instance);
+            Assert.NotNull(field);
+
+            var collection = field!.GetValue(openXmlTemplate);
+            Assert.NotNull(collection);
+            Assert.Equal(0, (int)collection!.GetType().GetProperty("Count")!.GetValue(collection)!);
+        }
     }
 
     [Fact]

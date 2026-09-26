@@ -63,6 +63,7 @@ internal partial class OpenXmlTemplate
 #endif
 
         await WriteSheetXmlAsync(writer, worksheet, sheetData, mergeCells, cancellationToken).ConfigureAwait(false);
+        ReleaseSheetImageState();
     }
 
     [CreateSyncVersion]
@@ -97,6 +98,7 @@ internal partial class OpenXmlTemplate
         using var writer = XmlWriter.Create(outputZipSheetEntryStream, DocXmlWriterSettings);
 #endif
         await WriteSheetXmlAsync(writer, worksheet, sheetData, mergeCells, cancellationToken).ConfigureAwait(false);
+        ReleaseSheetImageState();
     }
 
     // "r" is optional on rows and cells (ECMA-376 18.3.1.73, 18.3.1.4); without it they follow the previous one,

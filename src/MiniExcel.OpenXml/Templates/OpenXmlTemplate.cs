@@ -49,6 +49,7 @@ internal partial class OpenXmlTemplate : IMiniExcelTemplate
             throw new ArgumentException("The template stream must be seekable");
 
         ResetImageState();
+        using var imageStateScope = BeginImageStateScope();
         templateStream.Seek(0, SeekOrigin.Begin);
         var templateReader = await OpenXmlReader.CreateAsync(templateStream, null, cancellationToken: cancellationToken).ConfigureAwait(false);
         await using var disposableTemplateReader = templateReader.ConfigureAwait(false);

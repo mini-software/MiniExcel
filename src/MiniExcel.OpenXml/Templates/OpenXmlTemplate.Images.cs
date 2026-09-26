@@ -11,6 +11,7 @@ internal partial class OpenXmlTemplate
 
     private readonly List<FileDto> _files = [];
     private readonly Dictionary<string, PendingImage> _pendingImages = [];
+    private readonly Dictionary<string, FileDto> _capturedImages = [];
     private readonly Dictionary<int, (string DrawingPath, string DrawingRelsPath)> _sheetTemplateDrawings = [];
     private readonly Dictionary<int, string> _sheetTemplateRels = [];
     private readonly List<string> _createdDrawingParts = [];
@@ -49,11 +50,34 @@ internal partial class OpenXmlTemplate
     {
         _files.Clear();
         _pendingImages.Clear();
+        _capturedImages.Clear();
         _sheetTemplateDrawings.Clear();
         _sheetTemplateRels.Clear();
         _createdDrawingParts.Clear();
         _nextImageId = 0;
         _currentSheetIndex = 0;
+    }
+
+    /// <summary>
+    /// Releases the per-sheet image bookkeeping once a worksheet has been rendered. Image bytes that
+    /// were never captured (values resolved speculatively but not emitted) are dropped here, and
+    /// captured entries are no longer needed because markers never cross worksheets.
+    /// </summary>
+    private void ReleaseSheetImageState()
+    {
+        _pendingImages.Clear();
+        _capturedImages.Clear();
+    }
+
+    /// <summary>
+    /// Clears the per-run image state when the template call ends, so a reused templater does not keep
+    /// the last run's image bytes alive.
+    /// </summary>
+    private ImageStateScope BeginImageStateScope() => new(this);
+
+    private sealed class ImageStateScope(OpenXmlTemplate template) : IDisposable
+    {
+        public void Dispose() => template.ResetImageState();
     }
 
     /// <summary>
@@ -124,7 +148,7 @@ internal partial class OpenXmlTemplate
     /// </summary>
     private string CaptureAndClearImageMarkers(string rowXml, int sheetIndex)
     {
-        if (_pendingImages.Count == 0 || !rowXml.Contains(ImageMarkerPrefix))
+        if ((_pendingImages.Count == 0 && _capturedImages.Count == 0) || !rowXml.Contains(ImageMarkerPrefix))
             return rowXml;
 
         var rowHeightPoints = GetRowHeightPoints(rowXml);
@@ -137,7 +161,7 @@ internal partial class OpenXmlTemplate
 
             var id = match.Groups["id"].Value;
             if (CellReferenceConverter.TryParseCellReference(match.Groups["ref"].Value, out var column, out var row) &&
-                _pendingImages.TryGetValue(id, out var pending))
+                TryResolvePendingImage(id, out var pending))
             {
                 var file = new FileDto
                 {
@@ -156,11 +180,37 @@ internal partial class OpenXmlTemplate
 
                 ApplyRowHeightSize(file, pending, rowHeightPoints);
                 _files.Add(file);
+                _capturedImages[id] = file;
             }
 
             var clearedCell = match.Value.Replace(ImageMarkerPrefix + id, string.Empty);
             rowXml = rowXml.Remove(match.Index, match.Length).Insert(match.Index, clearedCell);
         }
+    }
+
+    /// <summary>
+    /// Resolves a pending marker to its image. The bytes are owned by <c>_pendingImages</c> until the
+    /// first capture and are then released to the created <see cref="FileDto"/>; repeated captures
+    /// (for example a grouped row rendered several times) reuse them through <c>_capturedImages</c>
+    /// rather than keeping a second copy alive.
+    /// </summary>
+    private bool TryResolvePendingImage(string id, out PendingImage pending)
+    {
+        if (_pendingImages.TryGetValue(id, out var registered))
+        {
+            _pendingImages.Remove(id);
+            pending = registered;
+            return true;
+        }
+
+        if (_capturedImages.TryGetValue(id, out var captured))
+        {
+            pending = new PendingImage(captured.Contents, captured.Extension, ImageHelper.GetImageSize(captured.Contents));
+            return true;
+        }
+
+        pending = null!;
+        return false;
     }
 
     /// <summary>

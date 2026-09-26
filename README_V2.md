@@ -1181,7 +1181,7 @@ Result:
 
 #### 13. Images
 
-Since v2.0.0, when a template placeholder resolves to a `byte[]` whose bytes are a recognised image,
+When a template placeholder resolves to a `byte[]` whose bytes are a recognised image,
 MiniExcel inserts it as a picture anchored to that cell instead of writing the value as text. The
 formats detected from the bytes are PNG, JPEG, GIF, BMP and TIFF. This mirrors the behaviour of
 `SaveAs`, so the datasource does not need any MiniExcel-specific type:

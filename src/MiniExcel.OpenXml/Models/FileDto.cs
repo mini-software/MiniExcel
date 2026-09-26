@@ -7,9 +7,9 @@ internal class FileDto
     internal int CellIndex { get; set; }
 
     /// <summary>
-    /// Disambiguates the derived part and relationship ids when more than one image shares the same
-    /// anchor cell (for example two placeholders in a single cell, or the same placeholder repeated).
-    /// Left unset by the regular <c>SaveAs</c> pipeline, which never places two images on one cell.
+    /// Disambiguates the generated media and relationship ids when multiple image values share the same
+    /// anchor cell. Left unset by the regular <c>SaveAs</c> pipeline, which never places two images on
+    /// one cell.
     /// </summary>
     internal string? IdSuffix { get; set; }
 

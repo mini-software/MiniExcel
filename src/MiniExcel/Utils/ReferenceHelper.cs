@@ -2,6 +2,9 @@
 
 internal static class ReferenceHelper
 {
+    public const int MaxColumnNumber = 16_384;
+    public const int MaxRowNumber = 1_048_576;
+
     public static string GetCellNumber(string cell)
     {
         return cell
@@ -70,6 +73,8 @@ internal static class ReferenceHelper
                 position++;
                 column *= 26;
                 column += c - offset;
+                if (column > MaxColumnNumber)
+                    return false;
                 continue;
             }
 
@@ -105,6 +110,6 @@ internal static class ReferenceHelper
             row = row * 10 + digit;
         }
 
-        return row > 0;
+        return row is > 0 and <= MaxRowNumber;
     }
 }

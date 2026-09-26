@@ -166,6 +166,8 @@ public class MiniExcelOpenXmlTests(ITestOutputHelper output)
     [InlineData("A0")]
     [InlineData("A1x")]
     [InlineData("A2147483648")]
+    [InlineData("A1048577")]
+    [InlineData("XFE1")]
     public void RejectInvalidCellReference(string reference)
     {
         Assert.False(MiniExcelLibs.Utils.ReferenceHelper.ParseReference(reference, out _, out _));

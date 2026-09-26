@@ -16,7 +16,7 @@ internal partial class OpenXmlTemplate
     /// Recursively flattens an object graph into a dictionary of "key.subkey" pairs and fully formats the values.
     /// Includes protection against circular references and stack overflow via depth limiting.
     /// </summary>
-    private static void FlattenAndFormatValues(Dictionary<string, string> replacements, string key, object? value, int maxDepth, PropertyInfo? propInfo = null)
+    private void FlattenAndFormatValues(Dictionary<string, string> replacements, string key, object? value, int maxDepth, PropertyInfo? propInfo = null)
     {
         // Initialize a HashSet with reference equality comparer to track visited objects and prevent infinite loops from circular references.
         var visited = new HashSet<object>(ReferenceEqualityComparer.Instance); 
@@ -28,7 +28,7 @@ internal partial class OpenXmlTemplate
         // <summary>
         // The internal recursive method that performs the actual object traversal, flattening, and formatting.
         // </summary>
-        static void TraverseAndFlatten(
+        void TraverseAndFlatten(
             Dictionary<string, string> replacements,
             string key,
             object? value,
@@ -48,9 +48,10 @@ internal partial class OpenXmlTemplate
             if (type.IsPrimitive || type.IsEnum ||
                 type == typeof(string) || type == typeof(decimal) ||
                 type == typeof(DateTime) || type == typeof(Guid) ||
+                type == typeof(byte[]) ||
                 Nullable.GetUnderlyingType(type) != null)
             {
-                replacements[key] = GetFormattedValue(propInfo, value, type);
+                replacements[key] = GetFormattedValueWithImages(propInfo, value, type);
                 return;
             }
 
@@ -76,7 +77,7 @@ internal partial class OpenXmlTemplate
                     return;
                 }
 
-                replacements[key] = GetFormattedValue(propInfo, value, type);
+                replacements[key] = GetFormattedValueWithImages(propInfo, value, type);
 
                 // 5. Object property recursion: Get public instance properties filtering out indexers and write-only properties.
                 var properties = type
@@ -156,6 +157,7 @@ internal partial class OpenXmlTemplate
             await using var disposableSheetStream = newSheetStream.ConfigureAwait(false);
 
             // Generate the sheet content based on the template and current sub-values
+            _currentSheetIndex = sheetIndex;
             await GenerateSheetByCreateModeAsync(templateSheet, newSheetStream, subValues, templateSharedStrings, cancellationToken: cancellationToken).ConfigureAwait(false);
 
             // Append calculation chain content for the newly created sheet

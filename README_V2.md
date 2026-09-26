@@ -1179,6 +1179,60 @@ Result:
 <img width="890" height="999" alt="image" src="https://github.com/user-attachments/assets/fae209ec-b3e2-4f2e-94e4-3b52a37dc364" />
 
 
+#### 13. Images
+
+When a template placeholder resolves to a `byte[]` whose bytes are a recognised image,
+MiniExcel inserts it as a picture anchored to that cell instead of writing the value as text. The
+formats detected from the bytes are PNG, JPEG, GIF, BMP and TIFF. This mirrors the behaviour of
+`SaveAs`, so the datasource does not need any MiniExcel-specific type:
+
+```csharp
+public class Company
+{
+    public string Name { get; set; }
+    public byte[] Logo { get; set; }
+}
+```
+
+```csharp
+var templater = MiniExcelV2.Templaters.GetOpenXmlTemplater();
+var value = new { Company = new { Name = "MiniExcel", Logo = File.ReadAllBytes("logo.png") } };
+
+// Template cell: {{Company.Logo}}
+templater.FillTemplate(path, templatePath, value);
+```
+
+The same applies to nested paths (`{{Customer.Profile.Avatar}}`) and to collection placeholders,
+where each generated row gets its own image:
+
+```csharp
+// Template cells: {{Products.Name}} and {{Products.Image}}
+var templater = MiniExcelV2.Templaters.GetOpenXmlTemplater();
+var value = new
+{
+    Products = new[]
+    {
+        new { Name = "A", Image = File.ReadAllBytes("a.png") },
+        new { Name = "B", Image = File.ReadAllBytes("b.png") }
+    }
+};
+templater.FillTemplate(path, templatePath, value);
+```
+
+A `byte[]` that is not a recognised image keeps the previous behaviour, so existing templates are
+unaffected. To disable image embedding and keep `byte[]` values as regular values, set
+`EnableConvertByteArray` to `false`:
+
+```csharp
+var config = new OpenXmlConfiguration { EnableConvertByteArray = false };
+templater.FillTemplate(path, templatePath, value, configuration: config);
+```
+
+Images are scaled to the height of the row they are anchored to, preserving their aspect ratio, so
+setting a row height in the template controls how large the picture is rendered. Rows without an
+explicit height keep a default anchor size of 64x20 pixels.
+
+
 ### Editing existing workbooks <a name="docs-editing" />
 
 > Warning: this feature is a work in progress and currently very limited!

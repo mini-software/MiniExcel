@@ -128,6 +128,7 @@ internal partial class OpenXmlReader : IMiniExcelReader
 
         if (startRowIndex is <= 0 or > CellReferenceConverter.MaxRowNumber)
             throw new ArgumentOutOfRangeException(nameof(startRowIndex), $"Start row index must be between 1 and {CellReferenceConverter.MaxRowNumber}.");
+
         if (startColumnIndex is <= 0 or > CellReferenceConverter.MaxColumnNumber)
             throw new ArgumentOutOfRangeException(nameof(startColumnIndex), $"Start column index must be between 1 and {CellReferenceConverter.MaxColumnNumber}.");
         
@@ -143,17 +144,14 @@ internal partial class OpenXmlReader : IMiniExcelReader
             // convert to 0-based
             endRowIndex--;
         }
+
         if (endColumnIndex.HasValue)
         {
-            if (endColumnIndex.Value is > 0 and <= CellReferenceConverter.MaxColumnNumber)
-            {
-                // convert to 0-based
-                endColumnIndex--;
-            }
-            else
-            {
+            if (endColumnIndex.Value is <= 0 or > CellReferenceConverter.MaxColumnNumber)
                 throw new ArgumentOutOfRangeException(nameof(endColumnIndex), $"End column index must be between 1 and {CellReferenceConverter.MaxColumnNumber}.");
-            }
+
+            // convert to 0-based
+            endColumnIndex--;
         }
 
         return InternalQueryRangeAsync(hasHeaderRow, sheetName, startRowIndex, startColumnIndex, endRowIndex, endColumnIndex, cancellationToken);
@@ -229,11 +227,10 @@ internal partial class OpenXmlReader : IMiniExcelReader
                     if (reader.IsStartElement("row", Ns))
                     {
                         var nextRowIndex = rowIndex + 1;
-                        var rowAttribute = reader.GetAttribute("r");
-                        if (rowAttribute is not null)
+                        if (reader.GetAttribute("r") is { } rowAttribute)
                         {
-                            if (!int.TryParse(rowAttribute, NumberStyles.None, CultureInfo.InvariantCulture, out var rowNumber)
-                                || rowNumber is < 1 or > CellReferenceConverter.MaxRowNumber)
+                            if (!int.TryParse(rowAttribute, NumberStyles.None, CultureInfo.InvariantCulture, out var rowNumber) ||
+                                rowNumber is < 1 or > CellReferenceConverter.MaxRowNumber)
                             {
                                 throw new InvalidDataException($"Row index '{rowAttribute}' is outside Excel's valid range.");
                             }
@@ -261,20 +258,17 @@ internal partial class OpenXmlReader : IMiniExcelReader
                             break;
                         }
 
-                        if (!_config.IgnoreEmptyRows && _config.MaxSynthesizedCells is { } maxSynthesizedCells)
+                        if (_config is { IgnoreEmptyRows: false, MaxSynthesizedCells: { } maxSynthesizedCells })
                         {
                             var expectedRowIndex = isFirstRow ? startRowIndex : nextRowIndex;
                             var emptyRowCount = Math.Max(0, rowIndex - expectedRowIndex);
                             var columnCount = hasHeaderRow
                                 ? Math.Max(1, headRows.Count)
                                 : Math.Max(1, maxColumnIndex - startColumnIndex + 1);
-                            synthesizedCellCount += (long)emptyRowCount * columnCount;
 
+                            synthesizedCellCount += (long)emptyRowCount * columnCount;
                             if (synthesizedCellCount > maxSynthesizedCells)
-                            {
-                                throw new InvalidDataException(
-                                    $"The worksheet exceeds the configured limit of {maxSynthesizedCells} synthesized empty cells.");
-                            }
+                                throw new InvalidDataException($"The worksheet exceeds the configured limit of {maxSynthesizedCells} synthesized empty cells.");
                         }
 
                         var query = QueryRowAsync(reader, isFirstRow, startRowIndex, nextRowIndex, rowIndex, 
@@ -655,6 +649,9 @@ internal partial class OpenXmlReader : IMiniExcelReader
         }
         else
         {
+            if (!string.IsNullOrEmpty(aR) && referenceColumn > CellReferenceConverter.MaxColumnNumber)
+                throw new InvalidDataException($"Cell reference '{aR}' is invalid.");
+
             newColumnIndex = columnIndex;
         }
 

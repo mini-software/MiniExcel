@@ -7,7 +7,6 @@ public static class CellReferenceConverter
     private const int GeneralColumnIndex = 255;
     public const int MaxColumnNumber = 16_384;
     public const int MaxRowNumber = 1_048_576;
-    private const int MaxColumnIndex = MaxColumnNumber - 1;
 
     private static readonly ConcurrentDictionary<int, string> IntMappingToAlphabet = new();
     private static readonly ConcurrentDictionary<string, int> AlphabetMappingToInt = new();
@@ -37,7 +36,7 @@ public static class CellReferenceConverter
         if (columnIndex < IntMappingToAlphabet.Count)
             return;
 
-        if (columnIndex > MaxColumnIndex)
+        if (columnIndex > MaxColumnNumber - 1)
             throw new InvalidDataException($"Column index {columnIndex} exceeds Excel's maximum valid index.");
 
         for (int i = IntMappingToAlphabet.Count; i <= columnIndex; i++)

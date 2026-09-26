@@ -1,6 +1,7 @@
 ﻿using System.Text.RegularExpressions;
 using MiniExcelLib.Core.Enums;
 using MiniExcelLib.Core.Exceptions;
+using MiniExcelLib.Core.Helpers;
 using MiniExcelLib.OpenXml.Picture;
 using MiniExcelLib.OpenXml.Tests.Utils;
 using MiniExcelLib.Tests.Common.Utils;
@@ -23,6 +24,96 @@ public class MiniExcelGithubIssuesTests(ITestOutputHelper output)
     }
 
     private static bool IsDateFormatString(string formatCode) => DateTimeHelper.IsDateTimeFormat(formatCode);
+
+    [Fact]
+    public void CellReferenceConverterEnforcesWorksheetLimits()
+    {
+        Assert.True(CellReferenceConverter.TryParseCellReference("XFD1048576", out var column, out var row));
+        Assert.Equal(CellReferenceConverter.MaxColumnNumber, column);
+        Assert.Equal(CellReferenceConverter.MaxRowNumber, row);
+        Assert.False(CellReferenceConverter.TryParseCellReference("XFE1", out _, out _));
+        Assert.False(CellReferenceConverter.TryParseCellReference("A1048577", out _, out _));
+    }
+
+    [Fact]
+    public void QueryRangeAcceptsMaximumWorksheetCoordinates()
+    {
+        using var path = AutoDeletingPath.Create();
+        _excelExporter.Export(path.FilePath, new[] { new { Value = "control" } });
+        SheetHelper.ReplaceFirstSheetXml(path.FilePath, """
+            <?xml version="1.0" encoding="utf-8"?>
+            <worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+                <dimension ref="XFD1048576" />
+                <sheetData>
+                    <row r="1048576"><c r="XFD1048576" t="str"><v>x</v></c></row>
+                </sheetData>
+            </worksheet>
+            """);
+
+        var row = _excelImporter.QueryRange(
+            path.FilePath,
+            startRowIndex: CellReferenceConverter.MaxRowNumber,
+            startColumnIndex: CellReferenceConverter.MaxColumnNumber,
+            endRowIndex: CellReferenceConverter.MaxRowNumber,
+            endColumnIndex: CellReferenceConverter.MaxColumnNumber).Single();
+
+        Assert.Equal("x", row.XFD);
+    }
+
+    [Fact]
+    public void QueryRejectsWorksheetExceedingSynthesizedCellLimit()
+    {
+        using var path = AutoDeletingPath.Create();
+        _excelExporter.Export(path.FilePath, new[] { new { Value = "control" } });
+        SheetHelper.ReplaceFirstSheetXml(path.FilePath, """
+            <?xml version="1.0" encoding="utf-8"?>
+            <worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+                <dimension ref="A1:XFD1048576" />
+                <sheetData>
+                    <row r="1048576"><c r="XFD1048576" t="str"><v>x</v></c></row>
+                </sheetData>
+            </worksheet>
+            """);
+
+        var exception = Assert.Throws<InvalidDataException>(() => _excelImporter.Query(path.FilePath).First());
+        Assert.Contains("synthesized empty cells", exception.Message);
+    }
+
+    [Theory]
+    [InlineData("1048577")]
+    [InlineData("2000000000")]
+    public void QueryRejectsRowIndexOutsideWorksheetLimits(string rowNumber)
+    {
+        using var path = AutoDeletingPath.Create();
+        _excelExporter.Export(path.FilePath, new[] { new { Value = "control" } });
+        SheetHelper.ReplaceFirstSheetXml(path.FilePath, $"""
+            <?xml version="1.0" encoding="utf-8"?>
+            <worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+                <dimension ref="A1" />
+                <sheetData>
+                    <row r="{rowNumber}"><c r="A{rowNumber}" t="str"><v>x</v></c></row>
+                </sheetData>
+            </worksheet>
+            """);
+
+        Assert.Throws<InvalidDataException>(() => _excelImporter.Query(path.FilePath).First());
+    }
+
+    [Fact]
+    public void QueryRejectsDimensionOutsideWorksheetLimits()
+    {
+        using var path = AutoDeletingPath.Create();
+        _excelExporter.Export(path.FilePath, new[] { new { Value = "control" } });
+        SheetHelper.ReplaceFirstSheetXml(path.FilePath, """
+            <?xml version="1.0" encoding="utf-8"?>
+            <worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+                <dimension ref="A1:XFE1" />
+                <sheetData><row r="1"><c r="A1" t="str"><v>x</v></c></row></sheetData>
+            </worksheet>
+            """);
+
+        Assert.Throws<InvalidDataException>(() => _excelImporter.Query(path.FilePath).First());
+    }
 
     [Fact]
     public void TestIssue_DataReaderSupportDimension()

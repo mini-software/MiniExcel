@@ -126,10 +126,10 @@ internal partial class OpenXmlReader : IMiniExcelReader
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        if (startRowIndex <= 0)
-            throw new ArgumentOutOfRangeException(nameof(startRowIndex), "Start row index is 1-based and must be greater than 0.");
-        if (startColumnIndex <= 0)
-            throw new ArgumentOutOfRangeException(nameof(startColumnIndex), "Start column index is 1-based and must be greater than 0.");
+        if (startRowIndex is <= 0 or > CellReferenceConverter.MaxRowNumber)
+            throw new ArgumentOutOfRangeException(nameof(startRowIndex), $"Start row index must be between 1 and {CellReferenceConverter.MaxRowNumber}.");
+        if (startColumnIndex is <= 0 or > CellReferenceConverter.MaxColumnNumber)
+            throw new ArgumentOutOfRangeException(nameof(startColumnIndex), $"Start column index must be between 1 and {CellReferenceConverter.MaxColumnNumber}.");
         
         // convert to 0-based
         startColumnIndex--;
@@ -137,22 +137,22 @@ internal partial class OpenXmlReader : IMiniExcelReader
 
         if (endRowIndex.HasValue)
         {
-            if (endRowIndex.Value <= 0)
-                throw new ArgumentOutOfRangeException(nameof(endRowIndex), "End row index is 1-based and must be greater than 0.");
+            if (endRowIndex.Value is <= 0 or > CellReferenceConverter.MaxRowNumber)
+                throw new ArgumentOutOfRangeException(nameof(endRowIndex), $"End row index must be between 1 and {CellReferenceConverter.MaxRowNumber}.");
             
             // convert to 0-based
             endRowIndex--;
         }
         if (endColumnIndex.HasValue)
         {
-            if (endColumnIndex.Value > 0)
+            if (endColumnIndex.Value is > 0 and <= CellReferenceConverter.MaxColumnNumber)
             {
                 // convert to 0-based
                 endColumnIndex--;
             }
             else
             {
-                throw new ArgumentOutOfRangeException(nameof(endColumnIndex), "End column index is 1-based and must be greater than 0.");
+                throw new ArgumentOutOfRangeException(nameof(endColumnIndex), $"End column index must be between 1 and {CellReferenceConverter.MaxColumnNumber}.");
             }
         }
 
@@ -222,16 +222,30 @@ internal partial class OpenXmlReader : IMiniExcelReader
 
                 int rowIndex = -1;
                 bool isFirstRow = true;
+                long synthesizedCellCount = 0;
                 var headRows = new Dictionary<int, string>();
                 while (!reader.EOF)
                 {
                     if (reader.IsStartElement("row", Ns))
                     {
                         var nextRowIndex = rowIndex + 1;
-                        if (int.TryParse(reader.GetAttribute("r"), out int arValue))
-                            rowIndex = arValue - 1; // The row attribute is 1-based
+                        var rowAttribute = reader.GetAttribute("r");
+                        if (rowAttribute is not null)
+                        {
+                            if (!int.TryParse(rowAttribute, NumberStyles.None, CultureInfo.InvariantCulture, out var rowNumber)
+                                || rowNumber is < 1 or > CellReferenceConverter.MaxRowNumber)
+                            {
+                                throw new InvalidDataException($"Row index '{rowAttribute}' is outside Excel's valid range.");
+                            }
+
+                            rowIndex = rowNumber - 1; // The row attribute is 1-based
+                        }
                         else
+                        {
                             rowIndex++;
+                            if (rowIndex >= CellReferenceConverter.MaxRowNumber)
+                                throw new InvalidDataException("The worksheet contains more rows than Excel supports.");
+                        }
 
                         if (rowIndex < startRowIndex)
                         {
@@ -245,6 +259,22 @@ internal partial class OpenXmlReader : IMiniExcelReader
                         if (rowIndex > endRowIndex)
                         {
                             break;
+                        }
+
+                        if (!_config.IgnoreEmptyRows && _config.MaxSynthesizedCells is { } maxSynthesizedCells)
+                        {
+                            var expectedRowIndex = isFirstRow ? startRowIndex : nextRowIndex;
+                            var emptyRowCount = Math.Max(0, rowIndex - expectedRowIndex);
+                            var columnCount = hasHeaderRow
+                                ? Math.Max(1, headRows.Count)
+                                : Math.Max(1, maxColumnIndex - startColumnIndex + 1);
+                            synthesizedCellCount += (long)emptyRowCount * columnCount;
+
+                            if (synthesizedCellCount > maxSynthesizedCells)
+                            {
+                                throw new InvalidDataException(
+                                    $"The worksheet exceeds the configured limit of {maxSynthesizedCells} synthesized empty cells.");
+                            }
                         }
 
                         var query = QueryRowAsync(reader, isFirstRow, startRowIndex, nextRowIndex, rowIndex, 

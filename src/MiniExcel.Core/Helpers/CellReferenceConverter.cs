@@ -5,7 +5,9 @@ namespace MiniExcelLib.Core.Helpers;
 public static class CellReferenceConverter
 {
     private const int GeneralColumnIndex = 255;
-    private const int MaxColumnIndex = 16383;
+    public const int MaxColumnNumber = 16_384;
+    public const int MaxRowNumber = 1_048_576;
+    private const int MaxColumnIndex = MaxColumnNumber - 1;
 
     private static readonly ConcurrentDictionary<int, string> IntMappingToAlphabet = new();
     private static readonly ConcurrentDictionary<string, int> AlphabetMappingToInt = new();
@@ -92,6 +94,8 @@ public static class CellReferenceConverter
             {
                 position++;
                 column = column * 26 + c - offset;
+                if (column > MaxColumnNumber)
+                    return false;
                 continue;
             }
 
@@ -112,6 +116,7 @@ public static class CellReferenceConverter
         if (position == 0)
             return false;
 
-        return int.TryParse(value[position..], NumberStyles.None, CultureInfo.InvariantCulture, out row) && row > 0;
+        return int.TryParse(value[position..], NumberStyles.None, CultureInfo.InvariantCulture, out row)
+            && row is > 0 and <= MaxRowNumber;
     }
 }

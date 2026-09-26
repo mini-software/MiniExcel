@@ -29,6 +29,86 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
 {
     private readonly ITestOutputHelper _output = output;
 
+    [Theory]
+    [InlineData("1048577")]
+    [InlineData("2000000000")]
+    public void QueryRejectsRowIndexOutsideWorksheetLimits(string rowNumber)
+    {
+        using var path = AutoDeletingPath.Create();
+        MiniExcel.SaveAs(path.ToString(), new[] { new { Value = "control" } });
+        Helpers.ReplaceFirstSheetXml(path.ToString(), $"""
+            <?xml version="1.0" encoding="utf-8"?>
+            <worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+                <dimension ref="A1" />
+                <sheetData>
+                    <row r="{rowNumber}"><c r="A{rowNumber}" t="str"><v>x</v></c></row>
+                </sheetData>
+            </worksheet>
+            """);
+
+        Assert.Throws<InvalidDataException>(() => MiniExcel.Query(path.ToString()).First());
+    }
+
+    [Fact]
+    public void QueryRejectsDimensionOutsideWorksheetLimits()
+    {
+        using var path = AutoDeletingPath.Create();
+        MiniExcel.SaveAs(path.ToString(), new[] { new { Value = "control" } });
+        Helpers.ReplaceFirstSheetXml(path.ToString(), """
+            <?xml version="1.0" encoding="utf-8"?>
+            <worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+                <dimension ref="A1:XFE1" />
+                <sheetData><row r="1"><c r="A1" t="str"><v>x</v></c></row></sheetData>
+            </worksheet>
+            """);
+
+        Assert.Throws<InvalidDataException>(() => MiniExcel.Query(path.ToString()).First());
+    }
+
+    [Fact]
+    public void QueryRangeAcceptsMaximumWorksheetCoordinates()
+    {
+        using var path = AutoDeletingPath.Create();
+        MiniExcel.SaveAs(path.ToString(), new[] { new { Value = "control" } });
+        Helpers.ReplaceFirstSheetXml(path.ToString(), """
+            <?xml version="1.0" encoding="utf-8"?>
+            <worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+                <dimension ref="XFD1048576" />
+                <sheetData>
+                    <row r="1048576"><c r="XFD1048576" t="str"><v>x</v></c></row>
+                </sheetData>
+            </worksheet>
+            """);
+
+        var row = MiniExcel.QueryRange(
+            path.ToString(),
+            startRowIndex: ReferenceHelper.MaxRowNumber,
+            startColumnIndex: ReferenceHelper.MaxColumnNumber,
+            endRowIndex: ReferenceHelper.MaxRowNumber,
+            endColumnIndex: ReferenceHelper.MaxColumnNumber).Single();
+
+        Assert.Equal("x", row.XFD);
+    }
+
+    [Fact]
+    public void QueryRejectsWorksheetExceedingSynthesizedCellLimit()
+    {
+        using var path = AutoDeletingPath.Create();
+        MiniExcel.SaveAs(path.ToString(), new[] { new { Value = "control" } });
+        Helpers.ReplaceFirstSheetXml(path.ToString(), """
+            <?xml version="1.0" encoding="utf-8"?>
+            <worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+                <dimension ref="A1:XFD1048576" />
+                <sheetData>
+                    <row r="1048576"><c r="XFD1048576" t="str"><v>x</v></c></row>
+                </sheetData>
+            </worksheet>
+            """);
+
+        var exception = Assert.Throws<InvalidDataException>(() => MiniExcel.Query(path.ToString()).First());
+        Assert.Contains("synthesized empty cells", exception.Message);
+    }
+
     /// <summary>
     /// https://github.com/mini-software/MiniExcel/issues/549
     /// </summary>

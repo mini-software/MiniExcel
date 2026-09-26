@@ -209,7 +209,9 @@ internal partial class ExcelOpenXmlSheetReader : IExcelReader
                                 var columnCount = useHeaderRow
                                     ? Math.Max(1, headRows.Count)
                                     : Math.Max(1, maxColumnIndex - startColumnIndex + 1);
-                                synthesizedCellCount += (long)emptyRowCount * columnCount;
+
+                                var selfClosingRowCount = reader.IsEmptyElement ? 1 : 0;
+                                synthesizedCellCount += (long)(emptyRowCount + selfClosingRowCount) * columnCount;
 
                                 if (synthesizedCellCount > _config.MaxSynthesizedCells.Value)
                                 {
@@ -673,6 +675,8 @@ internal partial class ExcelOpenXmlSheetReader : IExcelReader
         //TODO:need to check only need nextColumnIndex or columnIndex
         else if (ReferenceHelper.ParseReference(aR, out int referenceColumn, out _))
             newColumnIndex = referenceColumn - 1; // ParseReference is 1-based
+        else if (!string.IsNullOrEmpty(aR) && referenceColumn > ReferenceHelper.MaxColumnNumber)
+            throw new InvalidDataException($"Cell reference '{aR}' is invalid.");
         else
             newColumnIndex = columnIndex;
 

@@ -146,7 +146,12 @@ internal partial class OpenXmlTemplate
                     CellIndex = column,
                     Contents = pending.Bytes,
                     Extension = pending.Extension,
-                    IsImage = true
+                    IsImage = true,
+
+                    // Two images can share the same anchor cell (two placeholders in one cell, or the
+                    // same placeholder repeated), which would otherwise derive the same media part and
+                    // relationship id. The per-file suffix keeps every derived identifier unique.
+                    IdSuffix = (_files.Count + 1).ToString(CultureInfo.InvariantCulture)
                 };
 
                 ApplyRowHeightSize(file, pending, rowHeightPoints);

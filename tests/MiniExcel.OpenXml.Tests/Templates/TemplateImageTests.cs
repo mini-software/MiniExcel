@@ -83,6 +83,61 @@ public class TemplateImageTests(ITestOutputHelper output)
         return ((long)ext.Attribute("cx")!, (long)ext.Attribute("cy")!);
     }
 
+    private static byte[] OtherPng() => File.ReadAllBytes(PathHelper.GetFile("images/github_logo.png"));
+
+    private static IReadOnlyList<string?> GetEmbedIds(string xlsxPath, string drawingPath = "xl/drawings/drawing1.xml")
+    {
+        var relationshipNs = XNamespace.Get("http://schemas.openxmlformats.org/officeDocument/2006/relationships");
+        using var zip = ZipFile.OpenRead(xlsxPath);
+        using var drawingStream = zip.GetEntry(drawingPath)!.Open();
+        return XDocument.Load(drawingStream).Descendants()
+            .Where(element => element.Name.LocalName == "blip")
+            .Select(element => (string?)element.Attribute(relationshipNs + "embed"))
+            .ToList();
+    }
+
+    /// <summary>
+    /// Verifies the complete drawing relationship chain for a drawing part: every <c>r:embed</c>
+    /// resolves to a declared relationship, every image relationship targets an existing media part,
+    /// the picture ids are unique and the generated media parts are not overwritten.
+    /// </summary>
+    private static void AssertDrawingReferencesIntegrity(string xlsxPath, string drawingPath = "xl/drawings/drawing1.xml")
+    {
+        using var zip = ZipFile.OpenRead(xlsxPath);
+        var relsPath = $"xl/drawings/_rels/{Path.GetFileName(drawingPath)}.rels";
+        Assert.NotNull(zip.GetEntry(relsPath));
+
+        using (var drawingStream = zip.GetEntry(drawingPath)!.Open())
+        {
+            var pictureIds = XDocument.Load(drawingStream).Descendants()
+                .Where(element => element.Name.LocalName == "cNvPr")
+                .Select(element => (string?)element.Attribute("id"))
+                .ToList();
+            Assert.Equal(pictureIds.Count, pictureIds.Distinct().Count());
+        }
+
+        var embeds = GetEmbedIds(xlsxPath, drawingPath);
+
+        using var relsStream = zip.GetEntry(relsPath)!.Open();
+        var imageRelationships = XDocument.Load(relsStream).Descendants()
+            .Where(element => element.Name.LocalName == "Relationship")
+            .Where(element => element.Attribute("Type")?.Value.EndsWith("/image", StringComparison.Ordinal) is true)
+            .ToList();
+
+        var relationshipIds = imageRelationships.Select(rel => (string?)rel.Attribute("Id")).ToList();
+        Assert.Equal(relationshipIds.Count, relationshipIds.Distinct().Count());
+
+        // Every anchor must resolve to a declared relationship ...
+        Assert.All(embeds, embed => Assert.Contains(embed, relationshipIds));
+
+        // ... and every relationship must resolve to a media part that exists in the package.
+        Assert.Equal(embeds.Count, imageRelationships.Count);
+        foreach (var target in imageRelationships.Select(rel => rel.Attribute("Target")!.Value.TrimStart('/')))
+        {
+            Assert.NotNull(zip.GetEntry(target));
+        }
+    }
+
     [Fact]
     public void ScalarByteArray_IsRenderedAsImage()
     {
@@ -256,6 +311,58 @@ public class TemplateImageTests(ITestOutputHelper output)
     }
 
     [Fact]
+    public void TwoImagesInSameCell_AreRenderedAsDistinctPictures()
+    {
+        using var template = AutoDeletingPath.Create();
+        using (var wb = new XLWorkbook())
+        {
+            var ws = wb.AddWorksheet("Sheet1");
+            ws.Cell("A1").Value = "{{Image1}} {{Image2}}";
+            wb.SaveAs(template.FilePath);
+        }
+
+        using var path = AutoDeletingPath.Create();
+        _templater.FillTemplate(path.ToString(), template.FilePath, new { Image1 = TestPng(), Image2 = OtherPng() });
+
+        // Both images share the same anchor cell; each one must still get its own media part and
+        // relationship instead of overwriting the other.
+        Assert.Equal(2, GetMediaEntries(path.ToString()).Count);
+        Assert.Equal(2, GetEmbedIds(path.ToString()).Distinct().Count());
+
+        AssertDrawingReferencesIntegrity(path.ToString());
+        AssertPackageIsValidAndHasImages(path.ToString(), expectedImages: 2);
+    }
+
+    [Fact]
+    public void CollectionWithMultipleImageColumns_ProducesDistinctParts()
+    {
+        using var template = AutoDeletingPath.Create();
+        using (var wb = new XLWorkbook())
+        {
+            var ws = wb.AddWorksheet("Sheet1");
+            ws.Cell("A1").Value = "{{Products.Name}}";
+            ws.Cell("B1").Value = "{{Products.Image1}}";
+            ws.Cell("C1").Value = "{{Products.Image2}}";
+            wb.SaveAs(template.FilePath);
+        }
+
+        using var path = AutoDeletingPath.Create();
+        _templater.FillTemplate(path.ToString(), template.FilePath, new
+        {
+            Products = new[]
+            {
+                new { Name = "A", Image1 = TestPng(), Image2 = OtherPng() },
+                new { Name = "B", Image1 = OtherPng(), Image2 = TestPng() },
+            }
+        });
+
+        Assert.Equal(4, GetMediaEntries(path.ToString()).Count());
+
+        AssertDrawingReferencesIntegrity(path.ToString());
+        AssertPackageIsValidAndHasImages(path.ToString(), expectedImages: 4);
+    }
+
+    [Fact]
     public void NullImage_DoesNotProduceImageOrPlaceholder()
     {
         using var template = AutoDeletingPath.Create();
@@ -315,6 +422,8 @@ public class TemplateImageTests(ITestOutputHelper output)
         var anchors = XDocument.Load(drawingStream).Descendants(DrawingNs + "oneCellAnchor").ToList();
         Assert.Equal(2, anchors.Count);
         Assert.Equal([0, 1], anchors.Select(a => (int)a.Element(DrawingNs + "from")!.Element(DrawingNs + "col")!).OrderBy(c => c).ToList());
+
+        AssertDrawingReferencesIntegrity(path.ToString());
     }
 
     [Fact]
@@ -391,6 +500,8 @@ public class TemplateImageTests(ITestOutputHelper output)
 
         Assert.Equal(3, pictureIds.Count);
         Assert.Equal(pictureIds.Count, pictureIds.Distinct().Count());
+
+        AssertDrawingReferencesIntegrity(path.ToString());
     }
 
     [Fact]

@@ -140,6 +140,58 @@ public class TemplateImageTests(ITestOutputHelper output)
         }
     }
 
+    /// <summary>
+    /// Resolves the drawing part a worksheet relationship points at, normalizing both the relative
+    /// (<c>../drawings/..</c>) and absolute (<c>/xl/drawings/..</c>) target forms.
+    /// </summary>
+    private static string GetDrawingPartForSheet(string xlsxPath, int sheetIndex)
+    {
+        using var zip = ZipFile.OpenRead(xlsxPath);
+        using var relsStream = zip.GetEntry($"xl/worksheets/_rels/sheet{sheetIndex}.xml.rels")!.Open();
+        var target = XDocument.Load(relsStream).Descendants()
+            .Where(element => element.Name.LocalName == "Relationship")
+            .First(element => element.Attribute("Type")?.Value.EndsWith("/drawing", StringComparison.Ordinal) is true)
+            .Attribute("Target")!.Value
+            .Replace('\\', '/');
+
+        return target.StartsWith("../", StringComparison.Ordinal)
+            ? "xl/" + target[3..]
+            : target.TrimStart('/');
+    }
+
+    private static int GetPictureCount(string xlsxPath, string drawingPath)
+    {
+        using var zip = ZipFile.OpenRead(xlsxPath);
+        using var drawingStream = zip.GetEntry(drawingPath)!.Open();
+        return XDocument.Load(drawingStream).Descendants()
+            .Count(element => element.Name.LocalName == "blip");
+    }
+
+    /// <summary>
+    /// Drops the <c>xmlns:r</c> declaration from a template worksheet that does not otherwise use the
+    /// relationships namespace, to exercise the generated <c>r:id</c> binding.
+    /// </summary>
+    private static void RemoveWorksheetRelationshipsNamespace(string xlsxPath)
+    {
+        using var zip = ZipFile.Open(xlsxPath, ZipArchiveMode.Update);
+        var entry = zip.GetEntry("xl/worksheets/sheet1.xml")!;
+
+        string content;
+        using (var reader = new StreamReader(entry.Open()))
+        {
+            content = reader.ReadToEnd();
+        }
+
+        entry.Delete();
+
+        var updated = zip.CreateEntry("xl/worksheets/sheet1.xml");
+        using var writer = new StreamWriter(updated.Open());
+        writer.Write(content.Replace(
+            " xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\"",
+            string.Empty,
+            StringComparison.Ordinal));
+    }
+
     [Fact]
     public void ScalarByteArray_IsRenderedAsImage()
     {
@@ -640,5 +692,142 @@ public class TemplateImageTests(ITestOutputHelper output)
         var rels = XDocument.Load(relsStream).ToString();
         Assert.Contains("relationships/hyperlink", rels); // pre-existing relationship preserved
         Assert.Contains("relationships/drawing", rels);   // our drawing relationship merged in
+    }
+
+    [Fact]
+    public void ExistingPictureOnAnotherSheet_DoesNotReuseItsDrawingPart()
+    {
+        using var template = AutoDeletingPath.Create();
+        using (var wb = new XLWorkbook())
+        {
+            // Sheet 1 needs a generated drawing while sheet 2 already owns a template drawing
+            // (xl/drawings/drawing1.xml). The generated part must not reuse that filename.
+            var first = wb.AddWorksheet("First");
+            first.Cell("A1").Value = "{{Logo}}";
+
+            var second = wb.AddWorksheet("Second");
+            using (var stream = new MemoryStream(TestPng()))
+                second.AddPicture(stream).MoveTo(second.Cell("A1"));
+
+            wb.SaveAs(template.FilePath);
+        }
+
+        using var path = AutoDeletingPath.Create();
+        _templater.FillTemplate(path.ToString(), template.FilePath, new { Logo = TestPng() });
+
+        var firstDrawing = GetDrawingPartForSheet(path.ToString(), 1);
+        var secondDrawing = GetDrawingPartForSheet(path.ToString(), 2);
+
+        // Each sheet must reference its own drawing part, and both parts must exist.
+        Assert.NotEqual(firstDrawing, secondDrawing);
+        using (var zip = ZipFile.OpenRead(path.ToString()))
+        {
+            Assert.NotNull(zip.GetEntry(firstDrawing));
+            Assert.NotNull(zip.GetEntry(secondDrawing));
+        }
+
+        // The template picture stays on sheet 2 and the generated image lands on sheet 1.
+        Assert.Equal(1, GetPictureCount(path.ToString(), firstDrawing));
+        Assert.Equal(1, GetPictureCount(path.ToString(), secondDrawing));
+
+        AssertDrawingReferencesIntegrity(path.ToString(), firstDrawing);
+        AssertDrawingReferencesIntegrity(path.ToString(), secondDrawing);
+
+        using var package = new ExcelPackage(new FileInfo(path.ToString()));
+        Assert.Single(package.Workbook.Worksheets[0].Drawings.OfType<ExcelPicture>());
+        Assert.Single(package.Workbook.Worksheets[1].Drawings.OfType<ExcelPicture>());
+    }
+
+    [Fact]
+    public void SheetWithComment_PlacesDrawingBeforeLegacyDrawing()
+    {
+        using var template = AutoDeletingPath.Create();
+        using (var wb = new XLWorkbook())
+        {
+            var ws = wb.AddWorksheet("Sheet1");
+            ws.Cell("A1").Value = "{{Logo}}";
+            ws.Cell("A1").GetComment().AddText("a comment");
+            wb.SaveAs(template.FilePath);
+        }
+
+        using var path = AutoDeletingPath.Create();
+        _templater.FillTemplate(path.ToString(), template.FilePath, new { Logo = TestPng() });
+
+        using var zip = ZipFile.OpenRead(path.ToString());
+        using var sheetStream = zip.GetEntry("xl/worksheets/sheet1.xml")!.Open();
+        var worksheet = XDocument.Load(sheetStream).Root!;
+        var afterSheetData = worksheet.Element(SpreadsheetNs + "sheetData")!
+            .ElementsAfterSelf()
+            .Select(element => element.Name.LocalName)
+            .ToList();
+
+        // The worksheet schema requires <drawing> before <legacyDrawing> (used by comments).
+        Assert.Contains("drawing", afterSheetData);
+        Assert.Contains("legacyDrawing", afterSheetData);
+        Assert.True(
+            afterSheetData.IndexOf("drawing") < afterSheetData.IndexOf("legacyDrawing"),
+            $"Expected <drawing> before <legacyDrawing> but got: {string.Join(", ", afterSheetData)}");
+
+        // Both the image and the comment relationship survive.
+        Assert.Single(GetMediaEntries(path.ToString()));
+        using var relsStream = zip.GetEntry("xl/worksheets/_rels/sheet1.xml.rels")!.Open();
+        var rels = XDocument.Load(relsStream).ToString();
+        Assert.Contains("relationships/drawing", rels);
+        Assert.Contains("relationships/vmlDrawing", rels);
+    }
+
+    [Fact]
+    public void WorksheetWithoutRelationshipsNamespace_DeclaresItForGeneratedDrawing()
+    {
+        using var template = AutoDeletingPath.Create();
+        using (var wb = new XLWorkbook())
+        {
+            var ws = wb.AddWorksheet("Sheet1");
+            ws.Cell("A1").Value = "{{Logo}}";
+            wb.SaveAs(template.FilePath);
+        }
+
+        // A template may not declare xmlns:r at all; the generated r:id must still be bound.
+        RemoveWorksheetRelationshipsNamespace(template.FilePath);
+
+        using var path = AutoDeletingPath.Create();
+        _templater.FillTemplate(path.ToString(), template.FilePath, new { Logo = TestPng() });
+
+        var relationshipNs = XNamespace.Get("http://schemas.openxmlformats.org/officeDocument/2006/relationships");
+
+        using var zip = ZipFile.OpenRead(path.ToString());
+        using var sheetStream = zip.GetEntry("xl/worksheets/sheet1.xml")!.Open();
+
+        // XDocument.Load throws on an unbound prefix, so this also proves the declaration is present.
+        var drawing = XDocument.Load(sheetStream).Descendants(SpreadsheetNs + "drawing").Single();
+        Assert.Equal("rDrawing1", (string?)drawing.Attribute(relationshipNs + "id"));
+
+        AssertPackageIsValidAndHasImages(path.ToString(), expectedImages: 1);
+    }
+
+    [Fact]
+    public void MalformedTiffBytes_DoNotAbortTemplateRendering()
+    {
+        using var template = AutoDeletingPath.Create();
+        using (var wb = new XLWorkbook())
+        {
+            var ws = wb.AddWorksheet("Sheet1");
+            ws.Cell("A1").Value = "{{Logo}}";
+            wb.SaveAs(template.FilePath);
+        }
+
+        // TIFF header whose IFD offset is int.MaxValue: the size parser must return null instead of
+        // overflowing, and the export must still complete.
+        byte[] malformedTiff = [(byte)'I', (byte)'I', 0x2A, 0x00, 0xFF, 0xFF, 0xFF, 0x7F];
+
+        using var path = AutoDeletingPath.Create();
+        var exception = Record.Exception(() =>
+            _templater.FillTemplate(path.ToString(), template.FilePath, new { Logo = malformedTiff }));
+
+        Assert.Null(exception);
+
+        // The bytes are still recognised as an image, so a picture is emitted with the default size.
+        Assert.Single(GetMediaEntries(path.ToString()));
+        Assert.DoesNotContain("System.Byte[]", GetSheetXml(path.ToString()));
     }
 }

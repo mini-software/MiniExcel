@@ -115,7 +115,10 @@ internal static class ExcelXml
         => $"""<Relationship Id="{image.Id}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="/{image.Path}" />""";
 
     internal static string DrawingRelationship(int sheetIndex)
-        => $"""<Relationship Id="rDrawing{sheetIndex}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing" Target="../drawings/drawing{sheetIndex}.xml" />""";
+        => DrawingRelationship(sheetIndex, $"drawing{sheetIndex}.xml");
+
+    internal static string DrawingRelationship(int sheetIndex, string drawingFileName)
+        => $"""<Relationship Id="rDrawing{sheetIndex}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing" Target="../drawings/{drawingFileName}" />""";
 
     internal static string TableRelationship(int sheetIndex)
         => $"""<Relationship Id="rTable{sheetIndex}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/table" Target="../tables/table{sheetIndex}.xml"/>""";

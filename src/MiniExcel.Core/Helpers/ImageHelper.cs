@@ -164,7 +164,10 @@ public static class ImageHelper
 
         var littleEndian = bytes[0] == 'I';
         var ifdOffset = ReadInt32(bytes, 4, littleEndian);
-        if (ifdOffset < 8 || ifdOffset + 2 > bytes.Length)
+
+        // IFD offsets come straight from the file. Compare against bytes.Length - required rather than
+        // computing offset + required, so a crafted offset near int.MaxValue cannot overflow the check.
+        if (ifdOffset < 8 || ifdOffset > bytes.Length - 2)
             return null;
 
         var entryCount = ReadUInt16(bytes, ifdOffset, littleEndian);
@@ -173,20 +176,23 @@ public static class ImageHelper
 
         for (var i = 0; i < entryCount; i++)
         {
-            var entryOffset = ifdOffset + 2 + (i * 12);
-            if (entryOffset + 12 > bytes.Length)
+            // Each IFD entry takes 12 bytes. Compute the offset in 64-bit space so the bound check
+            // cannot overflow for a crafted IFD offset or entry count.
+            var entryOffset = (long)ifdOffset + 2 + ((long)i * 12);
+            if (entryOffset > bytes.Length - 12)
                 break;
 
-            var tag = ReadUInt16(bytes, entryOffset, littleEndian);
+            var entry = (int)entryOffset;
+            var tag = ReadUInt16(bytes, entry, littleEndian);
             if (tag != 256 && tag != 257)
                 continue;
 
-            var fieldType = ReadUInt16(bytes, entryOffset + 2, littleEndian);
+            var fieldType = ReadUInt16(bytes, entry + 2, littleEndian);
             int value;
             if (fieldType == 3) // SHORT
-                value = ReadUInt16(bytes, entryOffset + 8, littleEndian);
+                value = ReadUInt16(bytes, entry + 8, littleEndian);
             else if (fieldType == 4) // LONG
-                value = ReadInt32(bytes, entryOffset + 8, littleEndian);
+                value = ReadInt32(bytes, entry + 8, littleEndian);
             else
                 continue;
 

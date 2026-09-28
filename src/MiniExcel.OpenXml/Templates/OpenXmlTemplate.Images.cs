@@ -238,13 +238,17 @@ internal partial class OpenXmlTemplate
     }
 
     private static bool IsDrawingPrecedingElement(XElement element)
-        => element.Name.LocalName is "tableParts" or "oleObjects" or "controls" or "extLst";
+        => element.Name.LocalName is "legacyDrawing" or "legacyDrawingHF" or "drawingHF" or "picture"
+            or "oleObjects" or "controls" or "webPublishItems" or "tableParts" or "extLst";
 
     [CreateSyncVersion]
     private static async Task WriteDrawingReferenceAsync(XmlWriter writer, string? prefix, int sheetIndex)
     {
-        var prefixSeparator = string.IsNullOrEmpty(prefix) ? string.Empty : prefix + ":";
-        await writer.WriteRawAsync($"<{prefixSeparator}drawing r:id=\"rDrawing{sheetIndex}\" />").ConfigureAwait(false);
+        // Use the writer's namespace tracking instead of a raw string so that the r prefix referenced
+        // by r:id is declared on the element whenever the worksheet does not already declare it.
+        await writer.WriteStartElementAsync(prefix, "drawing", Schemas.SpreadsheetmlXmlMain).ConfigureAwait(false);
+        await writer.WriteAttributeStringAsync("r", "id", Schemas.SpreadsheetmlXmlRelationships, $"rDrawing{sheetIndex}").ConfigureAwait(false);
+        await writer.WriteEndElementAsync().ConfigureAwait(false);
     }
 
     /// <summary>
@@ -311,38 +315,49 @@ internal partial class OpenXmlTemplate
     {
         var imageFiles = _files.Where(file => file.IsImage).ToList();
         var wrappedDrawings = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        var templateDrawingPaths = new HashSet<string>(templateDrawings.Values.Select(value => value.DrawingPath), StringComparer.OrdinalIgnoreCase);
         var writtenSheetRels = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        // Drawing parts that already exist in the template keep their filename even when they belong
+        // to a different sheet, so a generated drawing must never reuse one of them.
+        var occupiedDrawingParts = GetTemplateDrawingPartNames(templateArchive);
 
         foreach (var sheetGroup in imageFiles.GroupBy(file => file.SheetIndex))
         {
             var sheetIndex = sheetGroup.Key;
             var files = sheetGroup.ToList();
 
+            string drawingFileName;
             if (_sheetTemplateDrawings.TryGetValue(sheetIndex, out var templateDrawing))
             {
                 wrappedDrawings.Add(templateDrawing.DrawingPath);
                 await MergeIntoExistingDrawingAsync(templateArchive, outputArchive, templateDrawing, files, cancellationToken).ConfigureAwait(false);
+                drawingFileName = Path.GetFileName(templateDrawing.DrawingPath);
             }
-            else if (!templateDrawingPaths.Contains(ExcelFileNames.Drawing(sheetIndex)))
+            else
             {
-                await EmitNewDrawingAsync(outputArchive, sheetIndex, files, cancellationToken).ConfigureAwait(false);
+                // ExcelFileNames.Drawing(sheetIndex) may already be taken by an unrelated template
+                // sheet, so allocate the first free deterministic drawing part name instead.
+                var drawingPath = AllocateDrawingPart(sheetIndex, occupiedDrawingParts);
+                occupiedDrawingParts.Add(drawingPath);
+                drawingFileName = Path.GetFileName(drawingPath);
+                await EmitNewDrawingAsync(outputArchive, drawingPath, files, cancellationToken).ConfigureAwait(false);
             }
 
             // Worksheet relationships: merge the drawing relationship into the template's rels, or
             // create a fresh rels part. Without this the <drawing r:id> would dangle and Excel would
-            // repair the workbook by dropping the drawing.
+            // repair the workbook by dropping the drawing. The relationship id keeps the per-sheet
+            // convention while its target points at the drawing part allocated above.
             var sheetRelsPath = ExcelFileNames.SheetRels(sheetIndex);
             if (_sheetTemplateRels.TryGetValue(sheetIndex, out var templateRelsPath))
             {
                 var relsDoc = await LoadXmlAsync(templateArchive, templateRelsPath, cancellationToken).ConfigureAwait(false);
-                EnsureDrawingRelationship(relsDoc, sheetIndex);
+                EnsureDrawingRelationship(relsDoc, sheetIndex, drawingFileName);
                 await SaveXmlToZipAsync(outputArchive.ZipFile, sheetRelsPath, relsDoc, cancellationToken).ConfigureAwait(false);
                 writtenSheetRels.Add(templateRelsPath);
             }
             else
             {
-                await WriteTextEntryAsync(outputArchive.ZipFile, sheetRelsPath, ExcelXml.DefaultSheetRelXml(ExcelXml.DrawingRelationship(sheetIndex)), cancellationToken).ConfigureAwait(false);
+                await WriteTextEntryAsync(outputArchive.ZipFile, sheetRelsPath, ExcelXml.DefaultSheetRelXml(ExcelXml.DrawingRelationship(sheetIndex, drawingFileName)), cancellationToken).ConfigureAwait(false);
             }
         }
 
@@ -365,9 +380,8 @@ internal partial class OpenXmlTemplate
     }
 
     [CreateSyncVersion]
-    private async Task EmitNewDrawingAsync(OpenXmlZip outputArchive, int sheetIndex, IReadOnlyList<FileDto> files, CancellationToken cancellationToken)
+    private async Task EmitNewDrawingAsync(OpenXmlZip outputArchive, string drawingPath, IReadOnlyList<FileDto> files, CancellationToken cancellationToken)
     {
-        var drawingPath = ExcelFileNames.Drawing(sheetIndex);
         _createdDrawingParts.Add(drawingPath);
 
         var anchors = new StringBuilder();
@@ -383,7 +397,46 @@ internal partial class OpenXmlTemplate
         }
 
         await WriteTextEntryAsync(outputArchive.ZipFile, drawingPath, ExcelXml.DefaultDrawing(anchors.ToString()), cancellationToken).ConfigureAwait(false);
-        await WriteTextEntryAsync(outputArchive.ZipFile, ExcelFileNames.DrawingRels(sheetIndex), ExcelXml.DefaultDrawingXmlRels(drawingRels.ToString()), cancellationToken).ConfigureAwait(false);
+        await WriteTextEntryAsync(outputArchive.ZipFile, ExcelFileNames.DrawingRels(Path.GetFileName(drawingPath)), ExcelXml.DefaultDrawingXmlRels(drawingRels.ToString()), cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Collects the drawing part names already present in the template so generated drawings never
+    /// overwrite a part that belongs to another sheet.
+    /// </summary>
+    private static HashSet<string> GetTemplateDrawingPartNames(ZipArchive templateArchive)
+    {
+        var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var entry in templateArchive.Entries)
+        {
+            var name = entry.FullName.TrimStart('/');
+            if (name.StartsWith("xl/drawings/", StringComparison.OrdinalIgnoreCase) &&
+                name.EndsWith(".xml", StringComparison.OrdinalIgnoreCase))
+            {
+                names.Add(name);
+            }
+        }
+
+        return names;
+    }
+
+    /// <summary>
+    /// Returns the deterministic drawing part name to use for a generated sheet, preferring
+    /// <c>drawing{sheetIndex}.xml</c> and only falling back to the first free number when that name is
+    /// already taken by a template drawing part.
+    /// </summary>
+    private static string AllocateDrawingPart(int sheetIndex, ISet<string> occupied)
+    {
+        var preferred = ExcelFileNames.Drawing(sheetIndex);
+        if (!occupied.Contains(preferred))
+            return preferred;
+
+        for (var candidateIndex = 1; ; candidateIndex++)
+        {
+            var candidate = ExcelFileNames.Drawing(candidateIndex);
+            if (!occupied.Contains(candidate))
+                return candidate;
+        }
     }
 
     [CreateSyncVersion]
@@ -439,7 +492,7 @@ internal partial class OpenXmlTemplate
         await SaveXmlToZipAsync(outputArchive.ZipFile, templateDrawing.DrawingRelsPath, relsDoc, cancellationToken).ConfigureAwait(false);
     }
 
-    private static void EnsureDrawingRelationship(XDocument relsDoc, int sheetIndex)
+    private static void EnsureDrawingRelationship(XDocument relsDoc, int sheetIndex, string drawingFileName)
     {
         var root = relsDoc.Root;
         if (root is null)
@@ -451,7 +504,7 @@ internal partial class OpenXmlTemplate
         if (hasDrawingRelationship)
             return;
 
-        var drawingRelationship = XDocument.Parse(ExcelXml.DefaultSheetRelXml(ExcelXml.DrawingRelationship(sheetIndex)));
+        var drawingRelationship = XDocument.Parse(ExcelXml.DefaultSheetRelXml(ExcelXml.DrawingRelationship(sheetIndex, drawingFileName)));
         if (drawingRelationship.Root is not null)
         {
             foreach (var relationship in drawingRelationship.Root.Elements())

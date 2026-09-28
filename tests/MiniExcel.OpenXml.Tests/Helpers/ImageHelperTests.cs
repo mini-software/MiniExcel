@@ -106,6 +106,48 @@ public class ImageHelperTests
         => Assert.Null(ImageHelper.GetImageSize([1, 2, 3, 4, 5, 6, 7, 8]));
 
     [Fact]
+    public void GetImageSize_ReturnsNullForTiffWithIfdOffsetNearIntegerBoundary()
+    {
+        // Little-endian TIFF ('II', 42) whose IFD offset is int.MaxValue. A naive "offset + 2" bounds
+        // check overflows to a negative value and lets a later out-of-range array access throw.
+        byte[] tiff = [(byte)'I', (byte)'I', 0x2A, 0x00, 0xFF, 0xFF, 0xFF, 0x7F];
+
+        Assert.Null(ImageHelper.GetImageSize(tiff));
+    }
+
+    [Fact]
+    public void GetImageSize_ReturnsNullForTiffWithLargeIfdOffset()
+    {
+        // 0x7FFFFFFE is still far beyond the array and must be rejected without overflow.
+        byte[] tiff = [(byte)'I', (byte)'I', 0x2A, 0x00, 0xFE, 0xFF, 0xFF, 0x7F];
+
+        Assert.Null(ImageHelper.GetImageSize(tiff));
+    }
+
+    [Fact]
+    public void GetImageSize_ReturnsNullForBigEndianTiffWithHugeIfdOffset()
+    {
+        // Big-endian header path (detected from the 'MM' signature) with an int.MaxValue offset.
+        byte[] tiff = [(byte)'M', (byte)'M', 0x2A, 0x00, 0x7F, 0xFF, 0xFF, 0xFF];
+
+        Assert.Null(ImageHelper.GetImageSize(tiff));
+    }
+
+    [Fact]
+    public void GetImageSize_ReturnsNullForTiffWhoseEntryTableExceedsTheData()
+    {
+        var tiff = new byte[16];
+        tiff[0] = (byte)'I';
+        tiff[1] = (byte)'I';
+        tiff[2] = 0x2A;
+        tiff[3] = 0x00;
+        tiff[4] = 0x0F; // valid-looking IFD offset, but the entry table does not fit in the array
+        tiff[15] = 0xFF;
+
+        Assert.Null(ImageHelper.GetImageSize(tiff));
+    }
+
+    [Fact]
     public void GetImageSize_ReturnsNullForNullBytes()
         => Assert.Null(ImageHelper.GetImageSize(null));
 }

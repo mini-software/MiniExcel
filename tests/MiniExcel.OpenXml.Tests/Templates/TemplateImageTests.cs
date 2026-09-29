@@ -87,6 +87,43 @@ public class TemplateImageTests(ITestOutputHelper output)
 
     private static byte[] OtherPng() => File.ReadAllBytes(PathHelper.GetFile("images/github_logo.png"));
 
+    /// <summary>
+    /// Builds a large, unique image payload whose magic bytes classify it as a PNG. The size makes a
+    /// leak meaningful and the uniqueness guarantees the array is not shared with any fixture.
+    /// </summary>
+    private static byte[] CreateLargeRecognisableImage(int size = 1_000_000)
+    {
+        var image = new byte[size];
+        // PNG signature: enough for ImageHelper.GetImageFormat to recognise the bytes as an image.
+        image[0] = 137; image[1] = 80; image[2] = 78; image[3] = 71;
+        image[4] = 13; image[5] = 10; image[6] = 26; image[7] = 10;
+        return image;
+    }
+
+    private static void CollectGarbage()
+    {
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
+        GC.Collect();
+    }
+
+    /// <summary>
+    /// Fills a template with a large image and returns only a <see cref="WeakReference"/> to its
+    /// bytes. Every strong reference to the bytes lives and dies inside this method, so the caller
+    /// can verify through garbage collection that the template pipeline did not retain them.
+    /// </summary>
+    private static WeakReference FillTemplateAndTrackImageBytes(string templatePath)
+    {
+        var image = CreateLargeRecognisableImage();
+        var weakReference = new WeakReference(image);
+
+        using var output = new MemoryStream();
+        var openXmlTemplate = new OpenXmlTemplate(output, null, new OpenXmlValueExtractor());
+        openXmlTemplate.SaveAsByTemplate(templatePath, new { Logo = image });
+
+        return weakReference;
+    }
+
     private static IReadOnlyList<string?> GetEmbedIds(string xlsxPath, string drawingPath = "xl/drawings/drawing1.xml")
     {
         var relationshipNs = XNamespace.Get("http://schemas.openxmlformats.org/officeDocument/2006/relationships");
@@ -478,6 +515,28 @@ public class TemplateImageTests(ITestOutputHelper output)
             Assert.NotNull(collection);
             Assert.Equal(0, (int)collection!.GetType().GetProperty("Count")!.GetValue(collection)!);
         }
+    }
+
+    [Fact]
+    public void ImageBytes_AreCollectableAfterTheCallCompletes()
+    {
+        using var template = AutoDeletingPath.Create();
+        using (var wb = new XLWorkbook())
+        {
+            var ws = wb.AddWorksheet("Sheet1");
+            ws.Cell("A1").Value = "{{Logo}}";
+            wb.SaveAs(template.FilePath);
+        }
+
+        // The helper owns every strong reference to the image bytes and hands back only a weak one.
+        // A leak anywhere in the template pipeline (media capture, pending/captured dictionaries,
+        // emission state, or the output archive) would keep the bytes alive and fail this assertion.
+        var weakReference = FillTemplateAndTrackImageBytes(template.FilePath);
+
+        CollectGarbage();
+
+        Assert.False(weakReference.IsAlive,
+            "The template pipeline retained the image bytes after the call completed.");
     }
 
     [Fact]

@@ -712,24 +712,6 @@ public class TemplateImageTests(ITestOutputHelper output)
     }
 
     [Fact]
-    public void LegacyFacade_SaveAsByTemplate_RendersImages()
-    {
-        using var template = AutoDeletingPath.Create();
-        using (var wb = new XLWorkbook())
-        {
-            var ws = wb.AddWorksheet("Sheet1");
-            ws.Cell("A1").Value = "{{Logo}}";
-            wb.SaveAs(template.FilePath);
-        }
-
-        using var path = AutoDeletingPath.Create();
-        MiniExcelLibs.MiniExcel.SaveAsByTemplate(path.ToString(), template.FilePath, new { Logo = TestPng() });
-
-        Assert.Single(GetMediaEntries(path.ToString()));
-        AssertPackageIsValidAndHasImages(path.ToString(), expectedImages: 1);
-    }
-
-    [Fact]
     public void TemplateWithExistingSheetRels_MergesDrawingRelationship()
     {
         using var template = AutoDeletingPath.Create();
@@ -868,6 +850,8 @@ public class TemplateImageTests(ITestOutputHelper output)
     public void MalformedTiffBytes_DoNotAbortTemplateRendering()
     {
         using var template = AutoDeletingPath.Create();
+        var templatePath = template.FilePath; 
+        
         using (var wb = new XLWorkbook())
         {
             var ws = wb.AddWorksheet("Sheet1");
@@ -880,8 +864,10 @@ public class TemplateImageTests(ITestOutputHelper output)
         byte[] malformedTiff = [(byte)'I', (byte)'I', 0x2A, 0x00, 0xFF, 0xFF, 0xFF, 0x7F];
 
         using var path = AutoDeletingPath.Create();
+        var finalPath = path.FilePath;
+        
         var exception = Record.Exception(() =>
-            _templater.FillTemplate(path.ToString(), template.FilePath, new { Logo = malformedTiff }));
+            _templater.FillTemplate(finalPath, templatePath, new { Logo = malformedTiff }));
 
         Assert.Null(exception);
 

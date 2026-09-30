@@ -3,8 +3,8 @@
 internal static class ExcelXml
 {
     /// <summary>Default picture anchor size used when no explicit size is provided (64x20 px).</summary>
-    internal const long DefaultImageWidthEmu = 609600;
-    internal const long DefaultImageHeightEmu = 190500;
+    private const long DefaultImageWidthEmu = 609600;
+    private const long DefaultImageHeightEmu = 190500;
 
     internal static readonly string EmptySheetXml = XmlHelper.MinifyXml("""
         <?xml version="1.0" encoding="utf-8"?>

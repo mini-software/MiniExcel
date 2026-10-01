@@ -54,8 +54,6 @@ internal partial class OpenXmlTemplate
     /// Clears the per-run image state when the template call ends, so a reused templater does not keep
     /// the last run's image bytes alive.
     /// </summary>
-    private ImageStateScope BeginImageStateScope() => new(this);
-
     private sealed class ImageStateScope(OpenXmlTemplate template) : IDisposable
     {
         public void Dispose() => template.ResetImageState();
@@ -100,7 +98,7 @@ internal partial class OpenXmlTemplate
 
             var type = value.GetType();
             var property = type.GetProperty(segments[i], BindingFlags.Public | BindingFlags.Instance);
-            if (property is not null && property.CanRead && property.GetIndexParameters().Length == 0)
+            if (property is { CanRead: true } && property.GetIndexParameters().Length == 0)
             {
                 value = property.GetValue(value);
                 continue;
@@ -119,9 +117,6 @@ internal partial class OpenXmlTemplate
 
         return true;
     }
-
-    private bool HasImagesForSheet(int sheetIndex)
-        => _files.Exists(file => file.SheetIndex == sheetIndex && file.IsImage);
 
     /// <summary>
     /// Replaces image markers embedded in a rendered row with empty cells, registering each image
@@ -219,10 +214,6 @@ internal partial class OpenXmlTemplate
         file.ImageWidthEmu = widthEmu;
         file.ImageHeightEmu = heightEmu;
     }
-
-    private static bool IsDrawingPrecedingElement(XElement element)
-        => element.Name.LocalName is "legacyDrawing" or "legacyDrawingHF" or "drawingHF" or "picture"
-            or "oleObjects" or "controls" or "webPublishItems" or "tableParts" or "extLst";
 
     [CreateSyncVersion]
     private static async Task WriteDrawingReferenceAsync(XmlWriter writer, string? prefix, int sheetIndex)
@@ -532,9 +523,19 @@ internal partial class OpenXmlTemplate
 
             if (!alreadyDeclared)
             {
+                var imageContentType = extension switch
+                {
+                    "png" => "image/png",
+                    "jpg" => "image/jpeg",
+                    "gif" => "image/gif",
+                    "bmp" => "image/bmp",
+                    "tiff" => "image/tiff",
+                    _ => "application/octet-stream"
+                };
+
                 root.Add(new XElement(ns + "Default",
                     new XAttribute("Extension", extension),
-                    new XAttribute("ContentType", GetImageContentType(extension))));
+                    new XAttribute("ContentType", imageContentType)));
             }
         }
 
@@ -552,16 +553,6 @@ internal partial class OpenXmlTemplate
             }
         }
     }
-
-    private static string GetImageContentType(string extension) => extension.ToLowerInvariant() switch
-    {
-        "png" => "image/png",
-        "jpg" => "image/jpeg",
-        "gif" => "image/gif",
-        "bmp" => "image/bmp",
-        "tiff" => "image/tiff",
-        _ => "application/octet-stream"
-    };
 
     [CreateSyncVersion]
     private static async Task WriteBinaryEntryAsync(ZipArchive zip, string path, byte[] contents, CancellationToken cancellationToken)

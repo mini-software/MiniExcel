@@ -505,15 +505,22 @@ internal partial class OpenXmlTemplate
             await writer.WriteRawAsync(CleanXml(string.Join("", nodes), prefix)).ConfigureAwait(false);
         }
 
-        var shouldWriteDrawing = HasImagesForSheet(_currentSheetIndex) && !worksheet.Elements(SpreadsheetNs + "drawing").Any();
+        var hasImagesForSheet = _files.Exists(file => file.SheetIndex == _currentSheetIndex && file.IsImage);
+        var shouldWriteDrawing = hasImagesForSheet && !worksheet.Elements(SpreadsheetNs + "drawing").Any();
         var drawingWritten = false;
 
         foreach (var afterElement in afterSheetData)
         {
-            if (shouldWriteDrawing && !drawingWritten && IsDrawingPrecedingElement(afterElement))
+            if (shouldWriteDrawing && !drawingWritten)
             {
-                await WriteDrawingReferenceAsync(writer, prefix, _currentSheetIndex).ConfigureAwait(false);
-                drawingWritten = true;
+                var isDrawingPrecedingElement = afterElement.Name.LocalName is "legacyDrawing" or "legacyDrawingHF"
+                    or "drawingHF" or "picture" or "oleObjects" or "controls" or "webPublishItems" or "tableParts" or "extLst";
+
+                if (isDrawingPrecedingElement)
+                {
+                    await WriteDrawingReferenceAsync(writer, prefix, _currentSheetIndex).ConfigureAwait(false);
+                    drawingWritten = true;
+                }
             }
 
 #if NET
@@ -1192,7 +1199,7 @@ internal partial class OpenXmlTemplate
                     }
 
                     //cellValue = inputMaps[propNames[0]] - 1. From left to right, only the first set is used as the basis for the list
-                    if (cellValue is IEnumerable value and not string and not byte[])
+                    if (cellValue is IEnumerable value and not (string or byte[]))
                     {
                         if (xRowInfo.IEnumerableMercell is null && _xMergeCellInfos.TryGetValue(r, out var info))
                         {

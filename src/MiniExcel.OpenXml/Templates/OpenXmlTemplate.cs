@@ -49,7 +49,8 @@ internal partial class OpenXmlTemplate : IMiniExcelTemplate
             throw new ArgumentException("The template stream must be seekable");
 
         ResetImageState();
-        using var imageStateScope = BeginImageStateScope();
+        using var imageStateScope = new ImageStateScope(this);
+
         templateStream.Seek(0, SeekOrigin.Begin);
         var templateReader = await OpenXmlReader.CreateAsync(templateStream, null, cancellationToken: cancellationToken).ConfigureAwait(false);
         await using var disposableTemplateReader = templateReader.ConfigureAwait(false);
@@ -177,9 +178,11 @@ internal partial class OpenXmlTemplate : IMiniExcelTemplate
                 _currentSheetIndex = sheetIdx;
                 if (templateDrawings.TryGetValue(templateSheetPath, out var templateDrawing))
                     _sheetTemplateDrawings[sheetIdx] = templateDrawing;
+
                 var templateRelsPath = $"xl/worksheets/_rels/{Path.GetFileName(templateSheetPath)}.rels";
                 if (templateSheetRels.Contains(templateRelsPath))
                     _sheetTemplateRels[sheetIdx] = templateRelsPath;
+
                 await GenerateSheetByCreateModeAsync(templateSheet, outputZipSheetEntryStream, inputValues, templateSharedStrings, cancellationToken: cancellationToken).ConfigureAwait(false);
                 // disposing writer disposes streams as well, read and parse calc functions before that
 

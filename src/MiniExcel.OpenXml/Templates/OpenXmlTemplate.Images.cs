@@ -140,11 +140,7 @@ internal partial class OpenXmlTemplate
 
         foreach (var col in colElements)
         {
-            var textElement = col.Elements().First();
-            if (textElement.HasElements)
-                textElement = textElement.Elements().First();
-
-            foreach (var imgId in textElement.Value.Split([ImageMarkerPrefix, " "], StringSplitOptions.RemoveEmptyEntries))
+            foreach (var imgId in col.Value.Split([ImageMarkerPrefix, " "], StringSplitOptions.RemoveEmptyEntries))
             {
                 var cellRef = col.Attribute("r")?.Value;
                 if (CellReferenceConverter.TryParseCellReference(cellRef, out var column, out var row) &&
@@ -170,7 +166,7 @@ internal partial class OpenXmlTemplate
                     _capturedImages[imgId] = file;
                 }
             }
-            textElement.SetValue(string.Empty);
+            col.RemoveNodes();
         }
         return rowElement.ToString();
     }

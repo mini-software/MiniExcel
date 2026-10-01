@@ -1318,19 +1318,19 @@ internal partial class OpenXmlTemplate
 
                         if (isMultiMatch)
                         {
-                            SetCellType(cell, "str");
+                            SetCellType(cell, ExcelDataTypes.InlineString);
                         }
-                        else if (TypeHelper.IsNumericType(type) && !type.IsEnum)
+                        else if (TypeHelper.IsNumericType(type) && !type!.IsEnum)
                         {
-                            SetCellType(cell, "n");
+                            SetCellType(cell, ExcelDataTypes.Numeric);
                         }
                         else if (Type.GetTypeCode(type) == TypeCode.Boolean)
                         {
-                            SetCellType(cell, "b");
+                            SetCellType(cell, ExcelDataTypes.Boolean);
                         }
                         else if (Type.GetTypeCode(type) == TypeCode.DateTime)
                         {
-                            SetCellType(cell, "str");
+                            SetCellType(cell, ExcelDataTypes.InlineString);
                         }
 
                         break;
@@ -1370,19 +1370,19 @@ internal partial class OpenXmlTemplate
 
                         if (isMultiMatch)
                         {
-                            SetCellType(cell, "str");
+                            SetCellType(cell, ExcelDataTypes.InlineString);
                         }
                         else if (TypeHelper.IsNumericType(type) && !type.IsEnum)
                         {
-                            SetCellType(cell, "n");
+                            SetCellType(cell, ExcelDataTypes.Numeric);
                         }
                         else if (Type.GetTypeCode(type) == TypeCode.Boolean)
                         {
-                            SetCellType(cell, "b");
+                            SetCellType(cell, ExcelDataTypes.Boolean);
                         }
                         else if (Type.GetTypeCode(type) == TypeCode.DateTime)
                         {
-                            SetCellType(cell, "str");
+                            SetCellType(cell, ExcelDataTypes.InlineString);
                         }
                     }
                     else
@@ -1394,7 +1394,7 @@ internal partial class OpenXmlTemplate
 
                         if (GetImageMarker(resolvedValue) is { } imageMarker)
                         {
-                            SetCellType(cell, "str");
+                            SetCellType(cell, ExcelDataTypes.InlineString);
                             v = cell.Element(SpreadsheetNs + "v") ?? cell.Element(SpreadsheetNs + "is")?.Element(SpreadsheetNs + "t");
                             v?.SetValue(v.Value.Replace($"{{{{{formatText}}}}}", imageMarker));
                             continue;
@@ -1403,16 +1403,16 @@ internal partial class OpenXmlTemplate
                         var cellValueStr = resolvedValue?.ToString(); // value did encodexml, so don't duplicate encode value (https://gitee.com/dotnetchina/MiniExcel/issues/I4DQUN)
                         if (isMultiMatch || resolvedValue is string) // if matchs count over 1 need to set type=str (https://user-images.githubusercontent.com/12729184/114530109-39d46d00-9c7d-11eb-8f6b-52ad8600aca3.png)
                         {
-                            SetCellType(cell, "str");
+                            SetCellType(cell, ExcelDataTypes.InlineString);
                         }
                         else if (decimal.TryParse(cellValueStr, out var outV))
                         {
-                            SetCellType(cell, "n");
+                            SetCellType(cell, ExcelDataTypes.Numeric);
                             cellValueStr = outV.ToString(CultureInfo.InvariantCulture);
                         }
                         else if (resolvedValue is bool b)
                         {
-                            SetCellType(cell, "b");
+                            SetCellType(cell, ExcelDataTypes.Boolean);
                             cellValueStr = b ? "1" : "0";
                         }
                         else if (resolvedValue is DateTime timestamp)
@@ -1423,7 +1423,7 @@ internal partial class OpenXmlTemplate
 
                         if (string.IsNullOrEmpty(cellValueStr) && string.IsNullOrEmpty(cell.Attribute("t")?.Value))
                         {
-                            SetCellType(cell, "str");
+                            SetCellType(cell, ExcelDataTypes.InlineString);
                         }
 
                         // Re-acquire v after SetCellType may have changed DOM structure

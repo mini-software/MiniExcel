@@ -19,6 +19,11 @@ public class TemplateImageTests(ITestOutputHelper output)
     private readonly OpenXmlTemplater _templater = MiniExcelV2.Templaters.GetOpenXmlTemplater();
     private readonly ITestOutputHelper _output = output;
 
+    static TemplateImageTests()
+    {
+        ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+    }
+    
     private static byte[] TestPng() => File.ReadAllBytes(PathHelper.GetFile("xlsx/Issue327/TestIssue327.png"));
 
     private static string GetSheetXml(string xlsxPath, int sheetIndex = 1)

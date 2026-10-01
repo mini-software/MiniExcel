@@ -7,7 +7,8 @@ namespace MiniExcelLib.OpenXml.Templates;
 /// </summary>
 internal partial class OpenXmlTemplate
 {
-    internal const string ImageMarkerPrefix = "@@@imageid@@@,";
+    private const string ImageMarkerPrefix = "@@@imageid@@@,";
+    private const long EmuPerPoint = 12700;
 
     private readonly List<FileDto> _files = [];
     private readonly Dictionary<string, PendingImage> _pendingImages = [];
@@ -15,6 +16,7 @@ internal partial class OpenXmlTemplate
     private readonly Dictionary<int, (string DrawingPath, string DrawingRelsPath)> _sheetTemplateDrawings = [];
     private readonly Dictionary<int, string> _sheetTemplateRels = [];
     private readonly List<string> _createdDrawingParts = [];
+
     private int _currentSheetIndex;
     private int _nextImageId;
 
@@ -24,27 +26,6 @@ internal partial class OpenXmlTemplate
         internal string Extension { get; } = extension;
         internal (int Width, int Height)? Size { get; } = size;
     }
-
-#if NET
-    [GeneratedRegex(@"<[A-Za-z0-9:]*c\b[^>]*\br=""(?<ref>[A-Z]+[0-9]+)""[^>]*>(?:(?!</[A-Za-z0-9:]*c>).)*?@@@imageid@@@,(?<id>[0-9]+)(?:(?!</[A-Za-z0-9:]*c>).)*?</[A-Za-z0-9:]*c>", RegexOptions.Singleline)]
-    private static partial Regex ImageMarkerCellRegex();
-
-    [GeneratedRegex(@"^\s*<[A-Za-z0-9:]*row\b[^>]*\sht=""(?<ht>[0-9]+(?:\.[0-9]+)?)""")]
-    private static partial Regex ImageRowHeightRegex();
-
-    private static readonly Regex ImageMarkerCellRegexImpl = ImageMarkerCellRegex();
-    private static readonly Regex ImageRowHeightRegexImpl = ImageRowHeightRegex();
-#else
-    private static readonly Regex ImageMarkerCellRegexImpl = new(
-        @"<[A-Za-z0-9:]*c\b[^>]*\br=""(?<ref>[A-Z]+[0-9]+)""[^>]*>(?:(?!</[A-Za-z0-9:]*c>).)*?@@@imageid@@@,(?<id>[0-9]+)(?:(?!</[A-Za-z0-9:]*c>).)*?</[A-Za-z0-9:]*c>",
-        RegexOptions.Compiled | RegexOptions.Singleline);
-
-    private static readonly Regex ImageRowHeightRegexImpl = new(
-        @"^\s*<[A-Za-z0-9:]*row\b[^>]*\sht=""(?<ht>[0-9]+(?:\.[0-9]+)?)""",
-        RegexOptions.Compiled);
-#endif
-
-    private const long EmuPerPoint = 12700;
 
     private void ResetImageState()
     {
@@ -97,7 +78,8 @@ internal partial class OpenXmlTemplate
         var id = _nextImageId.ToString(CultureInfo.InvariantCulture);
         _nextImageId++;
         _pendingImages[id] = new PendingImage(bytes, format.ToString().ToLowerInvariant(), ImageHelper.GetImageSize(bytes));
-        return ImageMarkerPrefix + id;
+
+        return $"{ImageMarkerPrefix}{id}";
     }
 
     private string GetFormattedValueWithImages(PropertyInfo? propInfo, object? cellValue, Type? type)
@@ -151,41 +133,51 @@ internal partial class OpenXmlTemplate
         if ((_pendingImages.Count == 0 && _capturedImages.Count == 0) || !rowXml.Contains(ImageMarkerPrefix))
             return rowXml;
 
-        var rowHeightPoints = GetRowHeightPoints(rowXml);
+        var rowElement = XElement.Parse(rowXml);
 
-        while (true)
+        var ht = rowElement.Attribute("ht")?.Value;
+        var rowHeightPoints = double.TryParse(ht, NumberStyles.Float, CultureInfo.InvariantCulture, out var height)
+            ? height 
+            : 0;
+
+        var colElements = rowElement.Elements(SpreadsheetNs  + "c")
+            .Where(c => c.HasElements && c.Value.StartsWith(ImageMarkerPrefix));
+
+        foreach (var col in colElements)
         {
-            var match = ImageMarkerCellRegexImpl.Match(rowXml);
-            if (!match.Success)
-                return rowXml;
+            var textElement = col.Elements().First();
+            if (textElement.HasElements)
+                textElement = textElement.Elements().First();
 
-            var id = match.Groups["id"].Value;
-            if (CellReferenceConverter.TryParseCellReference(match.Groups["ref"].Value, out var column, out var row) &&
-                TryResolvePendingImage(id, out var pending))
+            foreach (var imgId in textElement.Value.Split([ImageMarkerPrefix, " "], StringSplitOptions.RemoveEmptyEntries))
             {
-                var file = new FileDto
+                var cellRef = col.Attribute("r")?.Value;
+                if (CellReferenceConverter.TryParseCellReference(cellRef, out var column, out var row) &&
+                    TryResolvePendingImage(imgId, out var pending))
                 {
-                    SheetIndex = sheetIndex,
-                    RowIndex = row,
-                    CellIndex = column,
-                    Contents = pending.Bytes,
-                    Extension = pending.Extension,
-                    IsImage = true,
-
-                    // Two images can share the same anchor cell (two placeholders in one cell, or the
-                    // same placeholder repeated), which would otherwise derive the same media part and
-                    // relationship id. The per-file suffix keeps every derived identifier unique.
-                    IdSuffix = (_files.Count + 1).ToString(CultureInfo.InvariantCulture)
-                };
-
-                ApplyRowHeightSize(file, pending, rowHeightPoints);
-                _files.Add(file);
-                _capturedImages[id] = file;
+                    var file = new FileDto
+                    {
+                        SheetIndex = sheetIndex,
+                        RowIndex = row,
+                        CellIndex = column,
+                        Contents = pending.Bytes,
+                        Extension = pending.Extension,
+                        IsImage = true,
+        
+                        // Two images can share the same anchor cell (two placeholders in one cell, or the
+                        // same placeholder repeated), which would otherwise derive the same media part and
+                        // relationship id. The per-file suffix keeps every derived identifier unique.
+                        IdSuffix = (_files.Count + 1).ToString(CultureInfo.InvariantCulture)
+                    };
+        
+                    ApplyRowHeightSize(file, pending, rowHeightPoints);
+                    _files.Add(file);
+                    _capturedImages[imgId] = file;
+                }
             }
-
-            var clearedCell = match.Value.Replace(ImageMarkerPrefix + id, string.Empty);
-            rowXml = rowXml.Remove(match.Index, match.Length).Insert(match.Index, clearedCell);
+            textElement.SetValue(string.Empty);
         }
+        return rowElement.ToString();
     }
 
     /// <summary>
@@ -219,22 +211,13 @@ internal partial class OpenXmlTemplate
     /// </summary>
     private static void ApplyRowHeightSize(FileDto file, PendingImage pending, double rowHeightPoints)
     {
-        if (pending.Size is not { } size || size.Width <= 0 || size.Height <= 0 || rowHeightPoints <= 0)
+        if (pending.Size is not { Width: > 0, Height: > 0 } size || rowHeightPoints <= 0)
             return;
 
         var heightEmu = (long)Math.Round(rowHeightPoints * EmuPerPoint);
         var widthEmu = (long)Math.Round(heightEmu * (size.Width / (double)size.Height));
         file.ImageWidthEmu = widthEmu;
         file.ImageHeightEmu = heightEmu;
-    }
-
-    private static double GetRowHeightPoints(string rowXml)
-    {
-        var match = ImageRowHeightRegexImpl.Match(rowXml);
-        return match.Success &&
-               double.TryParse(match.Groups["ht"].Value, NumberStyles.Float, CultureInfo.InvariantCulture, out var height)
-            ? height
-            : 0;
     }
 
     private static bool IsDrawingPrecedingElement(XElement element)
@@ -515,13 +498,13 @@ internal partial class OpenXmlTemplate
     [CreateSyncVersion]
     private static async Task CopyEntryAsync(ZipArchive templateArchive, ZipArchive outputArchive, string path, CancellationToken cancellationToken)
     {
-        var sourceEntry = templateArchive.GetEntry(path);
-        if (sourceEntry is null)
+        if (templateArchive.GetEntry(path) is not { } sourceEntry)
             return;
 
         var targetEntry = outputArchive.CreateEntry(path);
         var sourceStream = await sourceEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
         await using var disposableSource = sourceStream.ConfigureAwait(false);
+
         var targetStream = await targetEntry.OpenAsync(cancellationToken).ConfigureAwait(false);
         await using var disposableTarget = targetStream.ConfigureAwait(false);
         await sourceStream.CopyToAsync(targetStream

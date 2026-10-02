@@ -10,6 +10,14 @@ internal partial class OpenXmlTemplate
     private const string ImageMarkerPrefix = "@@@imageid@@@,";
     private const long EmuPerPoint = 12700;
 
+#if NET
+    [GeneratedRegex($@"{ImageMarkerPrefix}(\d+)")]
+    private static partial Regex ImageMarkerCellRegex();
+    private static readonly Regex ImageMarkerCellRegexImpl = ImageMarkerCellRegex();
+#else
+    private static readonly Regex ImageMarkerCellRegexImpl = new($@"{ImageMarkerPrefix}(\d+)", RegexOptions.Compiled);
+#endif
+    
     private readonly List<FileDto> _files = [];
     private readonly Dictionary<string, PendingImage> _pendingImages = [];
     private readonly Dictionary<string, FileDto> _capturedImages = [];
@@ -136,15 +144,22 @@ internal partial class OpenXmlTemplate
             : 0;
 
         var colElements = rowElement.Elements(SpreadsheetNs  + "c")
-            .Where(c => c.HasElements && c.Value.StartsWith(ImageMarkerPrefix));
+            .Where(c => c.HasElements && c.Value.Contains(ImageMarkerPrefix));
 
         foreach (var col in colElements)
         {
-            foreach (var imgId in col.Value.Split([ImageMarkerPrefix, " "], StringSplitOptions.RemoveEmptyEntries))
+            var cellRef = col.Attribute("r")?.Value;
+            if (!CellReferenceConverter.TryParseCellReference(cellRef, out var column, out var row))
+                continue; // invalid cell reference
+
+            var textElement = col.Elements().First();
+            if (textElement.HasElements)
+                textElement = textElement.Elements().First();
+
+            foreach (Match match in ImageMarkerCellRegexImpl.Matches(textElement.Value))
             {
-                var cellRef = col.Attribute("r")?.Value;
-                if (CellReferenceConverter.TryParseCellReference(cellRef, out var column, out var row) &&
-                    TryResolvePendingImage(imgId, out var pending))
+                var imgId = match.Groups[1].Value;
+                if (TryResolvePendingImage(imgId, out var pending))
                 {
                     var file = new FileDto
                     {
@@ -166,8 +181,11 @@ internal partial class OpenXmlTemplate
                     _capturedImages[imgId] = file;
                 }
             }
-            col.RemoveNodes();
+
+            var newCellValue = ImageMarkerCellRegexImpl.Replace(textElement.Value, "");
+            textElement.SetValue(newCellValue.Trim());
         }
+
         return rowElement.ToString();
     }
 

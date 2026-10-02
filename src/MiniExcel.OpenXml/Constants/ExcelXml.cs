@@ -2,6 +2,10 @@
 
 internal static class ExcelXml
 {
+    /// <summary>Default picture anchor size used when no explicit size is provided (64x20 px).</summary>
+    private const long DefaultImageWidthEmu = 609600;
+    private const long DefaultImageHeightEmu = 190500;
+
     internal static readonly string EmptySheetXml = XmlHelper.MinifyXml("""
         <?xml version="1.0" encoding="utf-8"?>
         <x:worksheet xmlns:x="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
@@ -111,7 +115,10 @@ internal static class ExcelXml
         => $"""<Relationship Id="{image.Id}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="/{image.Path}" />""";
 
     internal static string DrawingRelationship(int sheetIndex)
-        => $"""<Relationship Id="rDrawing{sheetIndex}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing" Target="../drawings/drawing{sheetIndex}.xml" />""";
+        => DrawingRelationship(sheetIndex, $"drawing{sheetIndex}.xml");
+
+    internal static string DrawingRelationship(int sheetIndex, string drawingFileName)
+        => $"""<Relationship Id="rDrawing{sheetIndex}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing" Target="../drawings/{drawingFileName}" />""";
 
     internal static string TableRelationship(int sheetIndex)
         => $"""<Relationship Id="rTable{sheetIndex}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/table" Target="../tables/table{sheetIndex}.xml"/>""";
@@ -125,7 +132,7 @@ internal static class ExcelXml
                         <xdr:row>{file.RowIndex - 1}</xdr:row>
                         <xdr:rowOff>0</xdr:rowOff>
                     </xdr:from>
-                    <xdr:ext cx="609600" cy="190500" />
+                    <xdr:ext cx="{file.ImageWidthEmu ?? DefaultImageWidthEmu}" cy="{file.ImageHeightEmu ?? DefaultImageHeightEmu}" />
                     <xdr:pic>
                         <xdr:nvPicPr>
                             <xdr:cNvPr id="{fileIndex + 1}" descr="" name="2a3f9147-58ea-4a79-87da-7d6114c4877b" />

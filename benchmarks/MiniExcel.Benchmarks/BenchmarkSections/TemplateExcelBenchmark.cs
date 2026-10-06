@@ -3,7 +3,6 @@ using ClosedXML.Report;
 using MiniExcelLib.Benchmarks.Utils;
 using MiniExcelLib.OpenXml;
 using MiniExcelLib.OpenXml.FluentMapping;
-using MiniExcelLib.OpenXml.FluentMapping.Api;
 
 namespace MiniExcelLib.Benchmarks.BenchmarkSections;
 

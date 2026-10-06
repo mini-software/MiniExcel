@@ -33,6 +33,7 @@
 
 	<ItemGroup>
 	  <ProjectReference Include="..\..\src\MiniExcel\MiniExcel.csproj" />
+	  <ProjectReference Include="..\..\src\MiniExcel.OpenXml.FluentMapping\MiniExcel.OpenXml.FluentMapping.csproj" />
 	</ItemGroup>
 
 </Project>

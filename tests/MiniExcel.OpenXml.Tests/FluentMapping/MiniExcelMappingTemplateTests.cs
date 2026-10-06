@@ -1,5 +1,4 @@
 using MiniExcelLib.OpenXml.FluentMapping;
-using MiniExcelLib.OpenXml.FluentMapping.Api;
 using MiniExcelLib.Tests.Common.Utils;
 
 namespace MiniExcelLib.OpenXml.Tests.FluentMapping;

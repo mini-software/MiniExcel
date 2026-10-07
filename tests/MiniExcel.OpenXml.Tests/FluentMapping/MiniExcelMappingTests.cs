@@ -1,6 +1,5 @@
 using System.Reflection;
 using MiniExcelLib.OpenXml.FluentMapping;
-using MiniExcelLib.OpenXml.FluentMapping.Api;
 
 namespace MiniExcelLib.OpenXml.Tests.FluentMapping
 {

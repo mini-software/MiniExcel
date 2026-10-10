@@ -404,6 +404,39 @@ internal partial class OpenXmlWriter
         return drawing.ToString();
     }
 
+    private static readonly Regex TableNameRegex = new(@"^[A-Za-z_\][A-Za-z0-9_.]*$");
+
+    private string? GetTableXml(OpenXmlTableOptions options, List<MiniExcelColumnMapping?> mappings, int maxRowIndex, int maxColumnIndex)
+    {
+        // Null mappings are gaps between columns placed by index, which would leave a table column without a header
+        if (mappings.Any(m => m is null))
+            throw new NotSupportedException("A table needs adjacent columns, so it can't be used with column indexes that leave gaps");
+
+        if (maxColumnIndex == 0 || (!_printHeader && maxRowIndex == 0))
+            return null;
+
+        List<string> columnNames = _printHeader
+            ? [.. mappings.Where(m => !m!.ExcelIgnoreColumn).Select(m => m!.ExcelColumnName ?? "")]
+            : [.. Enumerable.Range(1, maxColumnIndex).Select(i => $"Column{i}")];
+
+        if (columnNames.Any(string.IsNullOrEmpty))
+            throw new InvalidOperationException("Table column names can't be empty");
+        if (columnNames.Distinct(StringComparer.OrdinalIgnoreCase).Count() != columnNames.Count)
+            throw new InvalidOperationException("Table column names must be unique");
+
+        var name = options.Name is null ? $"Table{_currentSheetIndex}"
+            : _currentSheetIndex == 1 ? options.Name
+            : $"{options.Name}{_currentSheetIndex}";
+        if (!TableNameRegex.IsMatch(name))
+            throw new ArgumentException($"'{name}' is not a valid table name");
+
+        // A table needs at least one data row, so a header without data takes in the empty row below it
+        var lastRow = _printHeader ? Math.Max(maxRowIndex, 2) : maxRowIndex;
+        var reference = $"A1:{CellReferenceConverter.GetCellFromCoordinates(maxColumnIndex, lastRow)}";
+
+        return ExcelXml.Table(_currentSheetIndex, name, reference, _printHeader, columnNames, options);
+    }
+
     private (string WorkbookContents, string WorkbookRelsContents, Dictionary<int, string> SheetRelsContents) GenerateWorkbookItems()
     {
         var workbookContents = new StringBuilder();
@@ -419,7 +452,10 @@ internal partial class OpenXmlWriter
             workbookRelsContents.AppendLine(ExcelXml.WorksheetRelationship(sheetDto));
             
             //TODO: support multiple drawing
-            sheetsRelsDict.Add(sheetDto.SheetIdx, ExcelXml.DrawingRelationship(sheetId));
+            var sheetRels = ExcelXml.DrawingRelationship(sheetId);
+            if (_tables.ContainsKey(sheetDto.SheetIdx))
+                sheetRels += ExcelXml.TableRelationship(sheetDto.SheetIdx);
+            sheetsRelsDict.Add(sheetDto.SheetIdx, sheetRels);
         }
 
         return (workbookContents.ToString(), workbookRelsContents.ToString(), sheetsRelsDict);

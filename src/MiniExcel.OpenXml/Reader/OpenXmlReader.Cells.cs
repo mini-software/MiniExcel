@@ -143,6 +143,7 @@ internal partial class OpenXmlReader
         // A cell without an s attribute uses the first cell format, so its font is the workbook default font
         var hasStyleIndex = int.TryParse(aS, NumberStyles.Any, CultureInfo.InvariantCulture, out var xfIndex);
         ExcelColor? fontColor = null;
+        string? numberFormat = null;
         if (hasStyleIndex || Archive.GetEntry(ExcelFileNames.Styles) is not null)
         {
             _style ??= await OpenXmlStyles.CreateAsync(Archive, cancellationToken).ConfigureAwait(false);
@@ -150,9 +151,11 @@ internal partial class OpenXmlReader
                 value = _style.ConvertValueByStyleFormat(xfIndex, value);
 
             fontColor = _style.GetFontColor(xfIndex);
+            if (_style.GetStyleFormat(xfIndex)?.FormatCode is { } formatCode and not "General")
+                numberFormat = formatCode;
         }
 
         var reference = CellReferenceConverter.GetCellFromCoordinates(columnNumber, rowNumber);
-        return new ExcelCell(reference, rowNumber, columnNumber, value, hasFormula, formula, fontColor);
+        return new ExcelCell(reference, rowNumber, columnNumber, value, hasFormula, formula, fontColor, numberFormat);
     }
 }

@@ -5,7 +5,7 @@ namespace MiniExcelLib.OpenXml.Models;
 /// </summary>
 public class ExcelCell
 {
-    internal ExcelCell(string reference, int rowIndex, int columnIndex, object? value, bool hasFormula, string? formula, ExcelColor? fontColor)
+    internal ExcelCell(string reference, int rowIndex, int columnIndex, object? value, bool hasFormula, string? formula, ExcelColor? fontColor, string? numberFormat)
     {
         Reference = reference;
         RowIndex = rowIndex;
@@ -14,6 +14,7 @@ public class ExcelCell
         HasFormula = hasFormula;
         Formula = formula;
         FontColor = fontColor;
+        NumberFormat = numberFormat;
     }
 
     /// <summary>
@@ -51,6 +52,11 @@ public class ExcelCell
     /// The font color applied to the cell, or <see langword="null"/> when its font declares no color.
     /// </summary>
     public ExcelColor? FontColor { get; }
+
+    /// <summary>
+    /// The number format code of the cell, e.g. "0.0%", or <see langword="null"/> for the General format.
+    /// </summary>
+    public string? NumberFormat { get; }
 }
 
 /// <summary>

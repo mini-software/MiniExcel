@@ -98,6 +98,23 @@ public class QueryCellsAsyncTests
     }
 
     [Fact]
+    public async Task QueryCells_ReportsNumberFormatsAsync()
+    {
+        using var package = new ExcelPackage();
+        var sheet = package.Workbook.Worksheets.Add("Sheet1");
+        sheet.Cells["A1"].Value = 0.233;
+        sheet.Cells["A1"].Style.Numberformat.Format = "0.0%";
+        sheet.Cells["A2"].Value = 5;
+        using var stream = new MemoryStream(package.GetAsByteArray());
+
+        var cells = await _excelImporter.QueryCellsAsync(stream).ToDictionaryAsync(c => c.Reference);
+
+        Assert.Equal("0.0%", cells["A1"].NumberFormat);
+        Assert.Equal(0.233, cells["A1"].Value);
+        Assert.Null(cells["A2"].NumberFormat);
+    }
+
+    [Fact]
     public async Task QueryCells_SelectsSheetByNameAsync()
     {
         using var stream = new MemoryStream();

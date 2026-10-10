@@ -440,6 +440,12 @@ internal sealed partial class OpenXmlWriter : IMiniExcelWriter
     [CreateSyncVersion]
     private async Task WriteCellAsync(MiniExcelStreamWriter writer, int rowIndex, int cellIndex, object? value, MiniExcelColumnMapping? columnMapping, ExcelColumnWidthCollection? widthCollection, CancellationToken cancellationToken = default)
     {
+        var cellValueOverride = value as OpenXmlCellValue;
+        if (cellValueOverride is not null)
+        {
+            value = cellValueOverride.Value;
+        }
+
         if (columnMapping?.CustomFormatter is { } formatter)
         {
             try
@@ -455,6 +461,12 @@ internal sealed partial class OpenXmlWriter : IMiniExcelWriter
         var columnReference = CellReferenceConverter.GetCellFromCoordinates(cellIndex, rowIndex);
         var valueIsNull = value is null or DBNull || (_configuration.WriteEmptyStringAsNull && value is "");
 
+        if (cellValueOverride is not null)
+        {
+            await WriteCellValueOverrideAsync(writer, columnReference, rowIndex, cellIndex, value, valueIsNull, cellValueOverride, columnMapping, widthCollection, cancellationToken).ConfigureAwait(false);
+            return;
+        }
+
         if (_configuration.EnableWriteNullValueCell && valueIsNull)
         {
             await writer.WriteAsync(WorksheetXml.EmptyCell(columnReference, DefaultCellStyleIndex), cancellationToken).ConfigureAwait(false);
@@ -465,25 +477,78 @@ internal sealed partial class OpenXmlWriter : IMiniExcelWriter
         var (styleIndex, dataType, cellValue) = GetCellValue(rowIndex, cellIndex, value, columnMapping, valueIsNull);
         widthCollection?.AdjustWidth(cellIndex, cellValue);
 
-        if (_configuration.StringStorageMode == StringStorageMode.Shared && 
-            dataType == ExcelDataTypes.SharedString 
-            && cellValue is not null)
-        {
-            if (_sharedStrings.TryGetValue(cellValue, out var sharedStringIndex))
-            {
-                cellValue = sharedStringIndex.ToString();
-            }
-            else
-            {
-                var count = _sharedStrings.Count;
-                _sharedStrings[cellValue] = count;
-                cellValue = count.ToString();
-            }
-        }
-
         /*Prefix and suffix blank space will lost after SaveAs #294*/
         var preserveSpace = XmlHelper.HasLeadingOrTrailingWhiteSpace(cellValue);
+        cellValue = GetSharedStringIndexIfNeeded(dataType, cellValue);
         await writer.WriteAsync(WorksheetXml.Cell(columnReference, dataType, styleIndex, cellValue, preserveSpace: preserveSpace, columnType: columnType), cancellationToken).ConfigureAwait(false);
+    }
+
+    [CreateSyncVersion]
+    private async Task WriteCellValueOverrideAsync(MiniExcelStreamWriter writer, string columnReference, int rowIndex, int cellIndex, object? value, bool valueIsNull, OpenXmlCellValue cell, MiniExcelColumnMapping? columnMapping, ExcelColumnWidthCollection? widthCollection, CancellationToken cancellationToken)
+    {
+        var numberFormat = cell.NumberFormat;
+        if (numberFormat is not null && !new OpenXmlNumberFormatHelper(numberFormat).IsValid)
+            throw new InvalidOperationException($"The number format '{numberFormat}' of cell {columnReference} is not valid.");
+
+        // The cell's number format replaces the column's, so the value is converted without the column mapping.
+        // The declared type of the column says nothing about a wrapped value, so its runtime type is used.
+        var (styleIndex, dataType, cellValue) = valueIsNull
+            ? (DefaultCellStyleIndex, null, null)
+            : GetCellValue(rowIndex, cellIndex, value!, numberFormat is null ? columnMapping : null, false, useRuntimeType: true);
+
+        if (numberFormat is not null || cell.FontColor is not null)
+        {
+            // Without a number format of its own, the cell keeps the one it would have had
+            var builtInNumberFormatId = 0;
+            if (numberFormat is null)
+            {
+                if (columnMapping?.ExcelFormat is not null && columnMapping.ExcelFormatId != -1 && styleIndex == columnMapping.ExcelFormatId.ToString())
+                    numberFormat = columnMapping.ExcelFormat;
+                else if (styleIndex == DateCellStyleIndex)
+                    builtInNumberFormatId = 14;
+                else if (styleIndex == TimeCellStyleIndex)
+                    builtInNumberFormatId = 21;
+            }
+
+            styleIndex = _sheetStyleBuilderContext.GetCellFormatIndex(numberFormat, builtInNumberFormatId, cell.FontColor).ToString();
+        }
+
+        if (cellValue is not null)
+            widthCollection?.AdjustWidth(cellIndex, cellValue);
+
+        if (cell.Formula is { } formula)
+        {
+            if (formula.StartsWith("="))
+                formula = formula.Substring(1);
+
+            var resultType = dataType is ExcelDataTypes.Numeric or ExcelDataTypes.Boolean ? dataType : ExcelDataTypes.CalculatedString;
+            await writer.WriteAsync(WorksheetXml.FormulaCell(columnReference, resultType, styleIndex, formula, cellValue), cancellationToken).ConfigureAwait(false);
+            return;
+        }
+
+        if (cellValue is null)
+        {
+            await writer.WriteAsync(WorksheetXml.EmptyCell(columnReference, styleIndex), cancellationToken).ConfigureAwait(false);
+            return;
+        }
+
+        var preserveSpace = XmlHelper.HasLeadingOrTrailingWhiteSpace(cellValue);
+        cellValue = GetSharedStringIndexIfNeeded(dataType, cellValue);
+        await writer.WriteAsync(WorksheetXml.Cell(columnReference, dataType, styleIndex, cellValue, preserveSpace: preserveSpace), cancellationToken).ConfigureAwait(false);
+    }
+
+    private string GetSharedStringIndexIfNeeded(string? dataType, string cellValue)
+    {
+        if (_configuration.StringStorageMode != StringStorageMode.Shared || dataType != ExcelDataTypes.SharedString)
+            return cellValue;
+
+        if (!_sharedStrings.TryGetValue(cellValue, out var sharedStringIndex))
+        {
+            sharedStringIndex = _sharedStrings.Count;
+            _sharedStrings[cellValue] = sharedStringIndex;
+        }
+
+        return sharedStringIndex.ToString();
     }
 
     [CreateSyncVersion]

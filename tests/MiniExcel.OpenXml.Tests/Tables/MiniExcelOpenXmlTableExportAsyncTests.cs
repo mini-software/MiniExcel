@@ -1,4 +1,6 @@
 using ClosedXML.Excel;
+using MiniExcelLib.Core.Enums;
+using MiniExcelLib.OpenXml.Styles;
 
 namespace MiniExcelLib.OpenXml.Tests.Tables;
 
@@ -62,6 +64,38 @@ public class MiniExcelOpenXmlTableExportAsyncTests
         var rows = await _importer.QueryTableAsync(stream, tableName: "Welds").ToListAsync();
         Assert.Equal(2, rows.Count);
         Assert.Equal("second", (string)rows[1].Name);
+    }
+
+    [Fact]
+    public async Task HeaderStyleAppliesWithoutCellStylesAsync()
+    {
+        var configuration = new OpenXmlConfiguration
+        {
+            TableStyles = TableStyles.None,
+            StyleOptions = new OpenXmlStyleOptions
+            {
+                HeaderStyle = new OpenXmlHeaderStyle
+                {
+                    WrapText = true,
+                    HorizontalAlignment = HorizontalCellAlignment.Center,
+                    VerticalAlignment = VerticalCellAlignment.Center,
+                    RowHeight = 45,
+                }
+            },
+            Table = new OpenXmlTableOptions { Style = "TableStyleMedium15" }
+        };
+
+        using var stream = await ExportAsync(Welds, configuration);
+        using var workbook = new XLWorkbook(stream);
+        var sheet = workbook.Worksheet(1);
+        var header = sheet.Cell("A1").Style;
+
+        Assert.True(header.Alignment.WrapText);
+        Assert.Equal(XLAlignmentHorizontalValues.Center, header.Alignment.Horizontal);
+        Assert.Equal(XLAlignmentVerticalValues.Center, header.Alignment.Vertical);
+        Assert.Equal(XLFillPatternValues.None, header.Fill.PatternType);
+        Assert.Equal(45, sheet.Row(1).Height);
+        Assert.False(sheet.Cell("A2").Style.Alignment.WrapText);
     }
 
     [Fact]

@@ -296,7 +296,7 @@ internal sealed partial class OpenXmlWriter : IMiniExcelWriter
             var currentRowIndex = 0;
             if (_printHeader)
             {
-                await PrintHeaderAsync(writer, mappings!, cancellationToken).ConfigureAwait(false);
+                await PrintHeaderAsync(writer, mappings!, _configuration.StyleOptions.HeaderStyle?.RowHeight, cancellationToken).ConfigureAwait(false);
                 currentRowIndex++;
             }
 
@@ -427,10 +427,10 @@ internal sealed partial class OpenXmlWriter : IMiniExcelWriter
     }
 
     [CreateSyncVersion]
-    private static async Task PrintHeaderAsync(MiniExcelStreamWriter writer, List<MiniExcelColumnMapping?> mappings, CancellationToken cancellationToken = default)
+    private static async Task PrintHeaderAsync(MiniExcelStreamWriter writer, List<MiniExcelColumnMapping?> mappings, double? rowHeight, CancellationToken cancellationToken = default)
     {
         const int yIndex = 1;
-        await writer.WriteAsync(WorksheetXml.StartRow(yIndex), cancellationToken).ConfigureAwait(false);
+        await writer.WriteAsync(WorksheetXml.StartRow(yIndex, rowHeight), cancellationToken).ConfigureAwait(false);
 
         var xIndex = 1;
         foreach (var map in mappings)
@@ -524,7 +524,7 @@ internal sealed partial class OpenXmlWriter : IMiniExcelWriter
     {
         SheetStyleBuilderBase builder = _configuration.TableStyles switch
         {
-            TableStyles.None => new MinimalSheetStyleBuilder(_sheetStyleBuilderContext),
+            TableStyles.None => new MinimalSheetStyleBuilder(_sheetStyleBuilderContext, _configuration.StyleOptions),
             TableStyles.Default => new DefaultSheetStyleBuilder(_sheetStyleBuilderContext, _configuration.StyleOptions),
             _ => throw new InvalidEnumArgumentException(nameof(_configuration.TableStyles), (int)_configuration.TableStyles, typeof(TableStyles))
         };

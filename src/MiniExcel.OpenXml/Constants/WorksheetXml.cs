@@ -37,6 +37,9 @@ internal static class WorksheetXml
         "/>");
 
     internal static string StartRow(int rowIndex) => $"<x:row r=\"{rowIndex}\">";
+    internal static string StartRow(int rowIndex, double? height) => height is { } ht
+        ? $"<x:row r=\"{rowIndex}\" ht=\"{ht.ToString(CultureInfo.InvariantCulture)}\" customHeight=\"1\">"
+        : StartRow(rowIndex);
     internal const string EndRow = "</x:row>";
     internal const string StartCols = "<x:cols>";
         

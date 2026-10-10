@@ -705,7 +705,7 @@ internal partial class OpenXmlReader : IMiniExcelReader
         return new CellAndColumn(value, columnIndex);
     }
 
-    private void ConvertCellValue(string rawValue, string aT, int xfIndex, out object? value)
+    private void ConvertCellValue(string rawValue, string? aT, int xfIndex, out object? value)
     {
         const NumberStyles style = NumberStyles.Any;
         var invariantCulture = CultureInfo.InvariantCulture;

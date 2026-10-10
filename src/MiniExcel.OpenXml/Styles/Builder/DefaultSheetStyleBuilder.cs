@@ -20,6 +20,20 @@ internal partial class DefaultSheetStyleBuilder(SheetStyleBuilderContext context
 
     private readonly OpenXmlStyleOptions _styleOptions = styleOptions;
 
+    private string CellHorizontalAlignment => _styleOptions.HorizontalAlignment switch
+    {
+        HorizontalCellAlignment.Center => "center",
+        HorizontalCellAlignment.Right => "right",
+        _ => "general"
+    };
+
+    private string CellVerticalAlignment => _styleOptions.VerticalAlignment switch
+    {
+        VerticalCellAlignment.Top => "top",
+        VerticalCellAlignment.Center => "center",
+        _ => "bottom"
+    };
+
     protected internal override SheetStyleElementInfos GetGeneratedElementInfos()
     {
         return GeneratedElementInfos;
@@ -28,20 +42,7 @@ internal partial class DefaultSheetStyleBuilder(SheetStyleBuilderContext context
     [CreateSyncVersion]
     protected override async Task GenerateNumFmtAsync()
     {
-        const int numFmtIndex = 166;
-        var index = 0;
-        foreach (var map in Context.SheetStyleFormatsCache.FormatMappings)
-        {
-            index++;
-
-            /*
-             * <x:numFmt numFmtId="{numFmtIndex + i}" formatCode="{x.Format}"
-             */
-            await NewWriter.WriteStartElementAsync(OldReader.Prefix, "numFmt", OldReader.NamespaceURI).ConfigureAwait(false);
-            await NewWriter.WriteAttributeStringAsync(null, "numFmtId", null, (numFmtIndex + index + Context.OldElementInfos.NumFmtCount).ToString()).ConfigureAwait(false);
-            await NewWriter.WriteAttributeStringAsync(null, "formatCode", null, map.Format).ConfigureAwait(false);
-            await NewWriter.WriteEndElementAsync().ConfigureAwait(false);
-        }
+        await GenerateCustomNumFmtsAsync().ConfigureAwait(false);
     }
 
     [CreateSyncVersion]
@@ -100,6 +101,8 @@ internal partial class DefaultSheetStyleBuilder(SheetStyleBuilderContext context
         await NewWriter.WriteAttributeStringAsync(null, "val", null, "2").ConfigureAwait(false);
         await NewWriter.WriteEndElementAsync().ConfigureAwait(false);
         await NewWriter.WriteEndElementAsync().ConfigureAwait(false);
+
+        await GenerateCustomFontsAsync().ConfigureAwait(false);
     }
 
     [CreateSyncVersion]
@@ -344,20 +347,9 @@ internal partial class DefaultSheetStyleBuilder(SheetStyleBuilderContext context
             _ => "bottom"
         };
 
-        var cellHorizontalAlignment = _styleOptions.HorizontalAlignment switch
-        {
-            HorizontalCellAlignment.Center => "center",
-            HorizontalCellAlignment.Right => "right",
-            _ => "general"
-        };
+        var cellHorizontalAlignment = CellHorizontalAlignment;
+        var cellVerticalAlignment = CellVerticalAlignment;
 
-        var cellVerticalAlignment = _styleOptions.VerticalAlignment switch
-        {
-            VerticalCellAlignment.Top => "top",
-            VerticalCellAlignment.Center => "center",
-            _ => "bottom"
-        };
-        
         /* Empty style is required because Excel always considers the first one to be the default and ignores all its  properties
          * <x:xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" />
          * */
@@ -529,42 +521,77 @@ internal partial class DefaultSheetStyleBuilder(SheetStyleBuilderContext context
         await NewWriter.WriteEndElementAsync().ConfigureAwait(false);
         await NewWriter.WriteEndElementAsync().ConfigureAwait(false);
         
-        const int numFmtIndex = 166;
-        for (var i = 1; i <= Context.CustomFormatCount; i++)
-        {
-            /*
-             * <x:xf numFmtId=""{numFmtIndex + i}"" fontId=""0"" fillId=""0"" borderId=""1"" xfId=""0"" applyNumberFormat=""1"" applyFill=""1"" applyBorder=""1"" applyAlignment=""1"" applyProtection=""1"">
-             *     <x:alignment horizontal=""general"" vertical=""bottom"" textRotation=""0"" wrapText=""0"" indent=""0"" relativeIndent=""0"" justifyLastLine=""0"" shrinkToFit=""0"" readingOrder=""0"" />
-             *     <x:protection locked=""1"" hidden=""0"" />
-             * </x:xf>
-             */
-            await NewWriter.WriteStartElementAsync(OldReader.Prefix, "xf", OldReader.NamespaceURI).ConfigureAwait(false);
-            await NewWriter.WriteAttributeStringAsync(null, "numFmtId", null, (numFmtIndex + i + Context.OldElementInfos.NumFmtCount).ToString()).ConfigureAwait(false);
-            await NewWriter.WriteAttributeStringAsync(null, "fontId", null, $"{Context.OldElementInfos.FontCount}").ConfigureAwait(false);
-            await NewWriter.WriteAttributeStringAsync(null, "fillId", null, $"{Context.OldElementInfos.FillCount}").ConfigureAwait(false);
-            await NewWriter.WriteAttributeStringAsync(null, "borderId", null, $"{Context.OldElementInfos.BorderCount + 1}").ConfigureAwait(false);
-            await NewWriter.WriteAttributeStringAsync(null, "xfId", null, "0").ConfigureAwait(false);
-            await NewWriter.WriteAttributeStringAsync(null, "applyNumberFormat", null, "1").ConfigureAwait(false);
-            await NewWriter.WriteAttributeStringAsync(null, "applyFill", null, "1").ConfigureAwait(false);
-            await NewWriter.WriteAttributeStringAsync(null, "applyBorder", null, "1").ConfigureAwait(false);
-            await NewWriter.WriteAttributeStringAsync(null, "applyAlignment", null, "1").ConfigureAwait(false);
-            await NewWriter.WriteAttributeStringAsync(null, "applyProtection", null, "1").ConfigureAwait(false);
-            await NewWriter.WriteStartElementAsync(OldReader.Prefix, "alignment", OldReader.NamespaceURI).ConfigureAwait(false);
-            await NewWriter.WriteAttributeStringAsync(null, "horizontal", null, cellHorizontalAlignment).ConfigureAwait(false);
-            await NewWriter.WriteAttributeStringAsync(null, "vertical", null, cellVerticalAlignment).ConfigureAwait(false);
-            await NewWriter.WriteAttributeStringAsync(null, "textRotation", null, "0").ConfigureAwait(false);
-            await NewWriter.WriteAttributeStringAsync(null, "wrapText", null, "0").ConfigureAwait(false);
-            await NewWriter.WriteAttributeStringAsync(null, "indent", null, "0").ConfigureAwait(false);
-            await NewWriter.WriteAttributeStringAsync(null, "relativeIndent", null, "0").ConfigureAwait(false);
-            await NewWriter.WriteAttributeStringAsync(null, "justifyLastLine", null, "0").ConfigureAwait(false);
-            await NewWriter.WriteAttributeStringAsync(null, "shrinkToFit", null, "0").ConfigureAwait(false);
-            await NewWriter.WriteAttributeStringAsync(null, "readingOrder", null, "0").ConfigureAwait(false);
-            await NewWriter.WriteEndElementAsync().ConfigureAwait(false);
-            await NewWriter.WriteStartElementAsync(OldReader.Prefix, "protection", OldReader.NamespaceURI).ConfigureAwait(false);
-            await NewWriter.WriteAttributeStringAsync(null, "locked", null, "1").ConfigureAwait(false);
-            await NewWriter.WriteAttributeStringAsync(null, "hidden", null, "0").ConfigureAwait(false);
-            await NewWriter.WriteEndElementAsync().ConfigureAwait(false);
-            await NewWriter.WriteEndElementAsync().ConfigureAwait(false);
-        }
+        await GenerateCustomCellXfsAsync().ConfigureAwait(false);
+    }
+
+    [CreateSyncVersion]
+    protected override async Task GenerateCustomFontAsync(string argb)
+    {
+        /*
+         * <x:font>
+         *     <x:vertAlign val="baseline" />
+         *     <x:sz val="11" />
+         *     <x:color rgb="{argb}" />
+         *     <x:name val="Calibri" />
+         *     <x:family val="2" />
+         * </x:font>
+         */
+        await NewWriter.WriteStartElementAsync(OldReader.Prefix, "font", OldReader.NamespaceURI).ConfigureAwait(false);
+        await NewWriter.WriteStartElementAsync(OldReader.Prefix, "vertAlign", OldReader.NamespaceURI).ConfigureAwait(false);
+        await NewWriter.WriteAttributeStringAsync(null, "val", null, "baseline").ConfigureAwait(false);
+        await NewWriter.WriteEndElementAsync().ConfigureAwait(false);
+        await NewWriter.WriteStartElementAsync(OldReader.Prefix, "sz", OldReader.NamespaceURI).ConfigureAwait(false);
+        await NewWriter.WriteAttributeStringAsync(null, "val", null, "11").ConfigureAwait(false);
+        await NewWriter.WriteEndElementAsync().ConfigureAwait(false);
+        await NewWriter.WriteStartElementAsync(OldReader.Prefix, "color", OldReader.NamespaceURI).ConfigureAwait(false);
+        await NewWriter.WriteAttributeStringAsync(null, "rgb", null, argb).ConfigureAwait(false);
+        await NewWriter.WriteEndElementAsync().ConfigureAwait(false);
+        await NewWriter.WriteStartElementAsync(OldReader.Prefix, "name", OldReader.NamespaceURI).ConfigureAwait(false);
+        await NewWriter.WriteAttributeStringAsync(null, "val", null, "Calibri").ConfigureAwait(false);
+        await NewWriter.WriteEndElementAsync().ConfigureAwait(false);
+        await NewWriter.WriteStartElementAsync(OldReader.Prefix, "family", OldReader.NamespaceURI).ConfigureAwait(false);
+        await NewWriter.WriteAttributeStringAsync(null, "val", null, "2").ConfigureAwait(false);
+        await NewWriter.WriteEndElementAsync().ConfigureAwait(false);
+        await NewWriter.WriteEndElementAsync().ConfigureAwait(false);
+    }
+
+    [CreateSyncVersion]
+    protected override async Task GenerateCustomCellXfAsync(string numFmtId, string? fontId)
+    {
+        /*
+         * <x:xf numFmtId="{numFmtId}" fontId="{fontId}" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyFill="1" applyBorder="1" applyAlignment="1" applyProtection="1">
+         *     <x:alignment horizontal="general" vertical="bottom" textRotation="0" wrapText="0" indent="0" relativeIndent="0" justifyLastLine="0" shrinkToFit="0" readingOrder="0" />
+         *     <x:protection locked="1" hidden="0" />
+         * </x:xf>
+         */
+        await NewWriter.WriteStartElementAsync(OldReader.Prefix, "xf", OldReader.NamespaceURI).ConfigureAwait(false);
+        await NewWriter.WriteAttributeStringAsync(null, "numFmtId", null, numFmtId).ConfigureAwait(false);
+        await NewWriter.WriteAttributeStringAsync(null, "fontId", null, fontId ?? $"{Context.OldElementInfos.FontCount}").ConfigureAwait(false);
+        await NewWriter.WriteAttributeStringAsync(null, "fillId", null, $"{Context.OldElementInfos.FillCount}").ConfigureAwait(false);
+        await NewWriter.WriteAttributeStringAsync(null, "borderId", null, $"{Context.OldElementInfos.BorderCount + 1}").ConfigureAwait(false);
+        await NewWriter.WriteAttributeStringAsync(null, "xfId", null, "0").ConfigureAwait(false);
+        await NewWriter.WriteAttributeStringAsync(null, "applyNumberFormat", null, "1").ConfigureAwait(false);
+        if (fontId is not null)
+            await NewWriter.WriteAttributeStringAsync(null, "applyFont", null, "1").ConfigureAwait(false);
+        await NewWriter.WriteAttributeStringAsync(null, "applyFill", null, "1").ConfigureAwait(false);
+        await NewWriter.WriteAttributeStringAsync(null, "applyBorder", null, "1").ConfigureAwait(false);
+        await NewWriter.WriteAttributeStringAsync(null, "applyAlignment", null, "1").ConfigureAwait(false);
+        await NewWriter.WriteAttributeStringAsync(null, "applyProtection", null, "1").ConfigureAwait(false);
+        await NewWriter.WriteStartElementAsync(OldReader.Prefix, "alignment", OldReader.NamespaceURI).ConfigureAwait(false);
+        await NewWriter.WriteAttributeStringAsync(null, "horizontal", null, CellHorizontalAlignment).ConfigureAwait(false);
+        await NewWriter.WriteAttributeStringAsync(null, "vertical", null, CellVerticalAlignment).ConfigureAwait(false);
+        await NewWriter.WriteAttributeStringAsync(null, "textRotation", null, "0").ConfigureAwait(false);
+        await NewWriter.WriteAttributeStringAsync(null, "wrapText", null, "0").ConfigureAwait(false);
+        await NewWriter.WriteAttributeStringAsync(null, "indent", null, "0").ConfigureAwait(false);
+        await NewWriter.WriteAttributeStringAsync(null, "relativeIndent", null, "0").ConfigureAwait(false);
+        await NewWriter.WriteAttributeStringAsync(null, "justifyLastLine", null, "0").ConfigureAwait(false);
+        await NewWriter.WriteAttributeStringAsync(null, "shrinkToFit", null, "0").ConfigureAwait(false);
+        await NewWriter.WriteAttributeStringAsync(null, "readingOrder", null, "0").ConfigureAwait(false);
+        await NewWriter.WriteEndElementAsync().ConfigureAwait(false);
+        await NewWriter.WriteStartElementAsync(OldReader.Prefix, "protection", OldReader.NamespaceURI).ConfigureAwait(false);
+        await NewWriter.WriteAttributeStringAsync(null, "locked", null, "1").ConfigureAwait(false);
+        await NewWriter.WriteAttributeStringAsync(null, "hidden", null, "0").ConfigureAwait(false);
+        await NewWriter.WriteEndElementAsync().ConfigureAwait(false);
+        await NewWriter.WriteEndElementAsync().ConfigureAwait(false);
     }
 }

@@ -106,12 +106,12 @@ internal abstract partial class SheetStyleBuilderBase(SheetStyleBuilderContext c
                     {
                         var value = element switch
                         {
-                            "numFmts" => (Context.OldElementInfos.NumFmtCount + Context.GeneratedElementInfos.NumFmtCount + Context.CustomFormatCount).ToString(),
-                            "fonts" => (Context.OldElementInfos.FontCount + Context.GeneratedElementInfos.FontCount).ToString(),
+                            "numFmts" => (Context.OldElementInfos.NumFmtCount + Context.GeneratedElementInfos.NumFmtCount + Context.CustomNumberFormatCount).ToString(),
+                            "fonts" => (Context.OldElementInfos.FontCount + Context.GeneratedElementInfos.FontCount + Context.CustomFontCount).ToString(),
                             "fills" => (Context.OldElementInfos.FillCount + Context.GeneratedElementInfos.FillCount).ToString(),
                             "borders" => (Context.OldElementInfos.BorderCount + Context.GeneratedElementInfos.BorderCount).ToString(),
                             "cellStyleXfs" => (Context.OldElementInfos.CellStyleXfCount + Context.GeneratedElementInfos.CellStyleXfCount).ToString(),
-                            "cellXfs" => (Context.OldElementInfos.CellXfCount + Context.GeneratedElementInfos.CellXfCount + Context.CustomFormatCount).ToString(),
+                            "cellXfs" => (Context.OldElementInfos.CellXfCount + Context.GeneratedElementInfos.CellXfCount + Context.CustomCellFormatCount).ToString(),
                             _ => OldReader.Value
                         };
                         await NewWriter.WriteStringAsync(value).ConfigureAwait(false);
@@ -198,7 +198,7 @@ internal abstract partial class SheetStyleBuilderBase(SheetStyleBuilderContext c
     protected virtual async Task GenerateNumFmtsAsync()
     {
         await NewWriter.WriteStartElementAsync(OldReader.Prefix, "numFmts", OldReader.NamespaceURI).ConfigureAwait(false);
-        await NewWriter.WriteAttributeStringAsync(null, "count", null, (Context.OldElementInfos.NumFmtCount + Context.GeneratedElementInfos.NumFmtCount + Context.CustomFormatCount).ToString()).ConfigureAwait(false);
+        await NewWriter.WriteAttributeStringAsync(null, "count", null, (Context.OldElementInfos.NumFmtCount + Context.GeneratedElementInfos.NumFmtCount + Context.CustomNumberFormatCount).ToString()).ConfigureAwait(false);
         await GenerateNumFmtAsync().ConfigureAwait(false);
         await NewWriter.WriteFullEndElementAsync().ConfigureAwait(false);
 
@@ -215,7 +215,7 @@ internal abstract partial class SheetStyleBuilderBase(SheetStyleBuilderContext c
     protected virtual async Task GenerateFontsAsync()
     {
         await NewWriter.WriteStartElementAsync(OldReader.Prefix, "fonts", OldReader.NamespaceURI).ConfigureAwait(false);
-        await NewWriter.WriteAttributeStringAsync(null, "count", null, (Context.OldElementInfos.FontCount + Context.GeneratedElementInfos.FontCount).ToString()).ConfigureAwait(false);
+        await NewWriter.WriteAttributeStringAsync(null, "count", null, (Context.OldElementInfos.FontCount + Context.GeneratedElementInfos.FontCount + Context.CustomFontCount).ToString()).ConfigureAwait(false);
         await GenerateFontAsync().ConfigureAwait(false);
         await NewWriter.WriteFullEndElementAsync().ConfigureAwait(false);
 
@@ -283,11 +283,66 @@ internal abstract partial class SheetStyleBuilderBase(SheetStyleBuilderContext c
     protected virtual async Task GenerateCellXfsAsync()
     {
         await NewWriter.WriteStartElementAsync(OldReader.Prefix, "cellXfs", OldReader.NamespaceURI).ConfigureAwait(false);
-        await NewWriter.WriteAttributeStringAsync(null, "count", null, (Context.OldElementInfos.CellXfCount + Context.GeneratedElementInfos.CellXfCount + Context.CustomFormatCount).ToString()).ConfigureAwait(false);
+        await NewWriter.WriteAttributeStringAsync(null, "count", null, (Context.OldElementInfos.CellXfCount + Context.GeneratedElementInfos.CellXfCount + Context.CustomCellFormatCount).ToString()).ConfigureAwait(false);
         await GenerateCellXfAsync().ConfigureAwait(false);
         await NewWriter.WriteFullEndElementAsync().ConfigureAwait(false);
     }
 
     [CreateSyncVersion]
     protected abstract Task GenerateCellXfAsync();
+
+    // Custom number formats get numFmtIds from 167 upwards, after any the workbook already had
+    private string GetCustomNumberFormatId(int position) => (167 + position + Context.OldElementInfos.NumFmtCount).ToString();
+
+    [CreateSyncVersion]
+    protected async Task GenerateCustomNumFmtsAsync()
+    {
+        var numberFormats = Context.SheetStyleFormatsCache.NumberFormats;
+        for (var i = 0; i < numberFormats.Count; i++)
+        {
+            /*
+             * <x:numFmt numFmtId="{167 + i}" formatCode="{format}" />
+             */
+            await NewWriter.WriteStartElementAsync(OldReader.Prefix, "numFmt", OldReader.NamespaceURI).ConfigureAwait(false);
+            await NewWriter.WriteAttributeStringAsync(null, "numFmtId", null, GetCustomNumberFormatId(i)).ConfigureAwait(false);
+            await NewWriter.WriteAttributeStringAsync(null, "formatCode", null, numberFormats[i]).ConfigureAwait(false);
+            await NewWriter.WriteEndElementAsync().ConfigureAwait(false);
+        }
+    }
+
+    [CreateSyncVersion]
+    protected async Task GenerateCustomFontsAsync()
+    {
+        foreach (var color in Context.SheetStyleFormatsCache.FontColors)
+        {
+            await GenerateCustomFontAsync($"{color.A:X2}{color.R:X2}{color.G:X2}{color.B:X2}").ConfigureAwait(false);
+        }
+    }
+
+    /// <summary>
+    /// Writes a font element in the given ARGB color, otherwise like the builder's default font.
+    /// </summary>
+    [CreateSyncVersion]
+    protected abstract Task GenerateCustomFontAsync(string argb);
+
+    [CreateSyncVersion]
+    protected async Task GenerateCustomCellXfsAsync()
+    {
+        var firstCustomFontId = Context.OldElementInfos.FontCount + Context.GeneratedElementInfos.FontCount;
+        foreach (var format in Context.SheetStyleFormatsCache.CellFormats)
+        {
+            var numFmtId = format.CustomNumberFormat is { } position
+                ? GetCustomNumberFormatId(position)
+                : format.BuiltInNumberFormatId.ToString();
+            var fontId = format.FontColor is { } fontColor ? (firstCustomFontId + fontColor).ToString() : null;
+
+            await GenerateCustomCellXfAsync(numFmtId, fontId).ConfigureAwait(false);
+        }
+    }
+
+    /// <summary>
+    /// Writes an xf element for a regular cell with the given number format and, when not null, font.
+    /// </summary>
+    [CreateSyncVersion]
+    protected abstract Task GenerateCustomCellXfAsync(string numFmtId, string? fontId);
 }

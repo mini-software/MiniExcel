@@ -48,8 +48,8 @@ public class OpenXmlCellValueAsyncTests
     {
         Dictionary<string, object?>[] rows =
         [
-            new() { ["Value"] = new OpenXmlCellValue(0.25) { NumberFormat = "0.0%", FontColor = Color.Red } },
-            new() { ["Value"] = new OpenXmlCellValue("grey") { FontColor = Color.Gray } },
+            new() { ["Value"] = new OpenXmlCellValue(0.25) { NumberFormat = "0.0%", Style = { FontColor = Color.Red } } },
+            new() { ["Value"] = new OpenXmlCellValue("grey") { Style = { FontColor = Color.Gray } } },
             new() { ["Value"] = 1.5 }
         ];
 
@@ -70,7 +70,7 @@ public class OpenXmlCellValueAsyncTests
     {
         Dictionary<string, object?>[] rows =
         [
-            new() { ["Amount"] = new OpenXmlCellValue(1.23456) { FontColor = Color.Blue } },
+            new() { ["Amount"] = new OpenXmlCellValue(1.23456) { Style = { FontColor = Color.Blue } } },
             new() { ["Amount"] = 2.5 }
         ];
         var configuration = new OpenXmlConfiguration { DynamicColumns = [new DynamicExcelColumn("Amount") { Format = "0.000" }] };
@@ -89,7 +89,7 @@ public class OpenXmlCellValueAsyncTests
     {
         FormattedRow[] rows =
         [
-            new() { Amount = new OpenXmlCellValue(1.23456) { FontColor = Color.Blue }, When = new OpenXmlCellValue(new DateTime(2024, 5, 6)) { FontColor = Color.Blue } }
+            new() { Amount = new OpenXmlCellValue(1.23456) { Style = { FontColor = Color.Blue } }, When = new OpenXmlCellValue(new DateTime(2024, 5, 6)) { Style = { FontColor = Color.Blue } } }
         ];
 
         using var workbook = await ExportAsync(rows);
@@ -106,7 +106,7 @@ public class OpenXmlCellValueAsyncTests
     public async Task CellsWithTheSameStyleShareOneFormatAsync()
     {
         var rows = Enumerable.Range(1, 50)
-            .Select(i => new Dictionary<string, object?> { ["Value"] = new OpenXmlCellValue(i) { NumberFormat = "0.00", FontColor = Color.Gray } })
+            .Select(i => new Dictionary<string, object?> { ["Value"] = new OpenXmlCellValue(i) { NumberFormat = "0.00", Style = { FontColor = Color.Gray } } })
             .ToArray();
 
         var stream = new MemoryStream();
@@ -125,7 +125,7 @@ public class OpenXmlCellValueAsyncTests
     [Fact]
     public async Task NullValueKeepsItsStyleAsync()
     {
-        Dictionary<string, object?>[] rows = [new() { ["Value"] = new OpenXmlCellValue(null) { FontColor = Color.Red } }];
+        Dictionary<string, object?>[] rows = [new() { ["Value"] = new OpenXmlCellValue(null) { Style = { FontColor = Color.Red } } }];
 
         using var workbook = await ExportAsync(rows);
         var cell = workbook.Worksheet(1).Cell("A2");
@@ -137,7 +137,7 @@ public class OpenXmlCellValueAsyncTests
     [Fact]
     public async Task MinimalStylesSupportCellValuesAsync()
     {
-        Dictionary<string, object?>[] rows = [new() { ["Value"] = new OpenXmlCellValue(0.5) { NumberFormat = "0%", FontColor = Color.Green } }];
+        Dictionary<string, object?>[] rows = [new() { ["Value"] = new OpenXmlCellValue(0.5) { NumberFormat = "0%", Style = { FontColor = Color.Green } } }];
 
         using var workbook = await ExportAsync(rows, new OpenXmlConfiguration { TableStyles = TableStyles.None });
         var cell = workbook.Worksheet(1).Cell("A2");

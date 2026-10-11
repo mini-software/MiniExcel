@@ -1,4 +1,4 @@
-using System.Drawing;
+using MiniExcelLib.OpenXml.Styles;
 
 namespace MiniExcelLib.OpenXml.Models;
 
@@ -24,7 +24,7 @@ public sealed class OpenXmlCellValue(object? value)
     public string? NumberFormat { get; set; }
 
     /// <summary>
-    /// The font color of the cell.
+    /// The style of the cell, such as its font color.
     /// </summary>
-    public Color? FontColor { get; set; }
+    public OpenXmlCellStyle Style { get; } = new();
 }

@@ -496,7 +496,7 @@ internal sealed partial class OpenXmlWriter : IMiniExcelWriter
             ? (DefaultCellStyleIndex, null, null)
             : GetCellValue(rowIndex, cellIndex, value!, numberFormat is null ? columnMapping : null, false, useRuntimeType: true);
 
-        if (numberFormat is not null || cell.FontColor is not null)
+        if (numberFormat is not null || cell.Style.FontColor is not null)
         {
             // Without a number format of its own, the cell keeps the one it would have had
             var builtInNumberFormatId = 0;
@@ -510,7 +510,7 @@ internal sealed partial class OpenXmlWriter : IMiniExcelWriter
                     builtInNumberFormatId = 21;
             }
 
-            styleIndex = _sheetStyleBuilderContext.GetCellFormatIndex(numberFormat, builtInNumberFormatId, cell.FontColor).ToString();
+            styleIndex = _sheetStyleBuilderContext.GetCellFormatIndex(numberFormat, builtInNumberFormatId, cell.Style.FontColor).ToString();
         }
 
         if (cellValue is not null)

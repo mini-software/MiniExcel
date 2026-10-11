@@ -13,7 +13,7 @@ public class OpenXmlCellValueTests
     {
         Dictionary<string, object?>[] rows =
         [
-            new() { ["A"] = 3, ["B"] = new OpenXmlCellValue(0.6) { Formula = "A2/5", NumberFormat = "0.0%", FontColor = Color.Gray } }
+            new() { ["A"] = 3, ["B"] = new OpenXmlCellValue(0.6) { Formula = "A2/5", NumberFormat = "0.0%", Style = { FontColor = Color.Gray } } }
         ];
 
         var stream = new MemoryStream();

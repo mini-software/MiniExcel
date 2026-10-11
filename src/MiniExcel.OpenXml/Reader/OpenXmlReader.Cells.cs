@@ -92,6 +92,10 @@ internal partial class OpenXmlReader
         {
             columnNumber = referenceColumn;
         }
+        else if (!string.IsNullOrEmpty(aR) && referenceColumn > CellReferenceConverter.MaxColumnNumber)
+        {
+            throw new InvalidDataException($"Cell reference '{aR}' is invalid.");
+        }
         else if (columnNumber > CellReferenceConverter.MaxColumnNumber)
         {
             throw new InvalidDataException("The worksheet contains more columns than Excel supports.");

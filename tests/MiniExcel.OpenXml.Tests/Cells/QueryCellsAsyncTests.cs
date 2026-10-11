@@ -132,4 +132,28 @@ public class QueryCellsAsyncTests
         Assert.Equal(["Value", "second"], cells.Select(c => c.Value));
         Assert.All(cells, c => Assert.False(c.HasFormula));
     }
+
+    [Fact]
+    public async Task QueryCells_RejectsOutOfRangeCellReferenceAsync()
+    {
+        using var stream = new MemoryStream();
+        await _excelExporter.ExportAsync(stream, new[] { new { Value = "value" } });
+
+        using (var archive = new ZipArchive(stream, ZipArchiveMode.Update, leaveOpen: true))
+        {
+            var entry = archive.GetEntry("xl/worksheets/sheet1.xml")!;
+            string xml;
+            using (var reader = new StreamReader(entry.Open()))
+                xml = await reader.ReadToEndAsync();
+
+            Assert.Contains("r=\"A2\"", xml);
+            entry.Delete();
+            using var writer = new StreamWriter(archive.CreateEntry("xl/worksheets/sheet1.xml").Open());
+            await writer.WriteAsync(xml.Replace("r=\"A2\"", "r=\"XFE2\""));
+        }
+        stream.Position = 0;
+
+        var exception = await Assert.ThrowsAsync<InvalidDataException>(() => _excelImporter.QueryCellsAsync(stream).ToListAsync().AsTask());
+        Assert.Contains("XFE2", exception.Message);
+    }
 }

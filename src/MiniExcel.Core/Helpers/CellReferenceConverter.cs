@@ -11,6 +11,10 @@ public static class CellReferenceConverter
     private static readonly ConcurrentDictionary<int, string> IntMappingToAlphabet = new();
     private static readonly ConcurrentDictionary<string, int> AlphabetMappingToInt = new();
 
+    // ConcurrentDictionary.Count takes every internal lock, too slow for a per-cell check.
+    // Entries are only added, contiguously from 0, so a cached count is safe to read.
+    private static volatile int _mappedCount;
+
     static CellReferenceConverter()
     {
         EnsureMappingsUpTo(GeneralColumnIndex);
@@ -33,7 +37,7 @@ public static class CellReferenceConverter
 
     private static void EnsureMappingsUpTo(int columnIndex)
     {
-        if (columnIndex < IntMappingToAlphabet.Count)
+        if (columnIndex < _mappedCount)
             return;
 
         if (columnIndex > MaxColumnNumber - 1)
@@ -46,6 +50,8 @@ public static class CellReferenceConverter
             IntMappingToAlphabet.TryAdd(i, name);
             AlphabetMappingToInt.TryAdd(name, i);
         }
+
+        _mappedCount = IntMappingToAlphabet.Count;
     }
 
     private static string GetColumnFromIndex(int value)

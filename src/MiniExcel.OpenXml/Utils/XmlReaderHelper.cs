@@ -67,16 +67,27 @@ internal static partial class XmlReaderHelper
         }
     }
 
+    // Called for every element and cell, so these loop instead of allocating a LINQ closure per call
     public static bool IsStartElement(this XmlReader reader, string name, params string[] nss)
     {
-        return nss.Any(s => reader.IsStartElement(name, s));
+        foreach (var ns in nss)
+        {
+            if (reader.IsStartElement(name, ns))
+                return true;
+        }
+
+        return false;
     }
 
     public static string? GetAttribute(this XmlReader reader, string name, params string[] nss)
     {
-        return nss
-            .Select(ns => reader.GetAttribute(name, ns))
-            .FirstOrDefault(at => at is not null);
+        foreach (var ns in nss)
+        {
+            if (reader.GetAttribute(name, ns) is { } attribute)
+                return attribute;
+        }
+
+        return null;
     }
 
     // Copied and modified from ExcelDataReader - @MIT License

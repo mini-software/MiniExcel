@@ -118,10 +118,21 @@ public static class CellReferenceConverter
             return false;
         }
 
-        if (position == 0)
+        if (position == 0 || position == value.Length)
             return false;
 
-        return int.TryParse(value[position..], NumberStyles.None, CultureInfo.InvariantCulture, out row)
-            && row is > 0 and <= MaxRowNumber;
+        // Parsed by hand rather than with int.TryParse on a substring, which allocated for every cell
+        for (; position < value.Length; position++)
+        {
+            var digit = value[position] - '0';
+            row = row * 10 + digit;
+            if (digit is < 0 or > 9 || row > MaxRowNumber)
+            {
+                row = 0;
+                return false;
+            }
+        }
+
+        return row > 0;
     }
 }

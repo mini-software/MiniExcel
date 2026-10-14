@@ -35,6 +35,24 @@ public class MiniExcelGithubIssuesTests(ITestOutputHelper output)
         Assert.False(CellReferenceConverter.TryParseCellReference("A1048577", out _, out _));
     }
 
+    [Theory]
+    [InlineData("B3", 2, 3)]
+    [InlineData("b03", 2, 3)]
+    [InlineData("A", 0, 0)]
+    [InlineData("A0", 0, 0)]
+    [InlineData("A1x", 0, 0)]
+    [InlineData("A-1", 0, 0)]
+    [InlineData("A99999999999", 0, 0)]
+    public void CellReferenceConverterParsesRowNumbers(string reference, int expectedColumn, int expectedRow)
+    {
+        var parsed = CellReferenceConverter.TryParseCellReference(reference, out var column, out var row);
+
+        Assert.Equal(expectedRow > 0, parsed);
+        Assert.Equal(expectedRow, row);
+        if (parsed)
+            Assert.Equal(expectedColumn, column);
+    }
+
     [Fact]
     public void QueryRangeAcceptsMaximumWorksheetCoordinates()
     {

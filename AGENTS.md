@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Notes for coding agents and new contributors. [CONTRIBUTING.md](CONTRIBUTING.md) still applies, including its AI usage policy: agents may be used for bug fixes, tests and documentation, not for new features.
+Notes for coding agents and new contributors. [CONTRIBUTING.md](CONTRIBUTING.md) still applies, including its AI usage policy: agents may be used for bugfixes, unit tests and documentation, not for new features.
 
 ## Layout
 

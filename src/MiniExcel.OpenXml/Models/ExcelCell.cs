@@ -3,7 +3,7 @@ namespace MiniExcelLib.OpenXml.Models;
 /// <summary>
 /// A worksheet cell together with the metadata that row queries leave out.
 /// </summary>
-public class ExcelCell
+public readonly struct ExcelCell
 {
     internal ExcelCell(int rowIndex, int columnIndex, object? value, bool hasFormula, string? formula, ExcelColor? fontColor, string? numberFormat)
     {

@@ -1,3 +1,4 @@
+using MiniExcelLib.OpenXml.Charts;
 using MiniExcelLib.OpenXml.Writer;
 
 // ReSharper disable once CheckNamespace
@@ -63,6 +64,9 @@ public sealed partial class OpenXmlExporter
         bool printHeader = true, bool overwriteSheet = false, OpenXmlConfiguration? configuration = null, 
         IProgress<int>? progress = null, CancellationToken cancellationToken = default)
     {
+        if (value is OpenXmlChartSheet)
+            throw new NotSupportedException("Chart sheets can't be inserted into an existing workbook");
+
         stream.Seek(0, SeekOrigin.End);
         configuration ??= new OpenXmlConfiguration { FastMode = true };
 

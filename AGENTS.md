@@ -24,7 +24,7 @@ Notes for coding agents and new contributors. [CONTRIBUTING.md](CONTRIBUTING.md)
 ## Benchmarks
 
 - Query, create and template benchmarks are in `benchmarks/MiniExcel.Benchmarks/BenchmarkSections`. Performance changes should show before and after numbers from these, run on the same machine.
-- Select methods with a filter that includes the class name, e.g. `--filter '*QueryExcelBenchmark.MiniExcel*'`. The namespace contains "MiniExcel", so `*MiniExcel*` alone runs every benchmark.
+- Select methods with a filter that includes the class name, e.g. `--filter '*QueryExcelBenchmark.MiniExcel*'`. The namespace contains "MiniExcel", so `*MiniExcel*` alone runs every benchmark registered in `Program.cs`.
 - The configured job is a short run (3 iterations), which is enough for large differences. For changes of around 10%, add `--iterationCount 15 --launchCount 3`.
 
 ## Documentation

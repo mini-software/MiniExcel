@@ -5,9 +5,8 @@ namespace MiniExcelLib.OpenXml.Models;
 /// </summary>
 public class ExcelCell
 {
-    internal ExcelCell(string reference, int rowIndex, int columnIndex, object? value, bool hasFormula, string? formula, ExcelColor? fontColor, string? numberFormat)
+    internal ExcelCell(int rowIndex, int columnIndex, object? value, bool hasFormula, string? formula, ExcelColor? fontColor, string? numberFormat)
     {
-        Reference = reference;
         RowIndex = rowIndex;
         ColumnIndex = columnIndex;
         Value = value;
@@ -20,7 +19,8 @@ public class ExcelCell
     /// <summary>
     /// The A1-style reference of the cell, e.g. "B3".
     /// </summary>
-    public string Reference { get; }
+    // Built on demand: most callers only need the indices, and a string per cell adds up on large sheets
+    public string Reference => CellReferenceConverter.GetCellFromCoordinates(ColumnIndex, RowIndex);
 
     /// <summary>
     /// The 1-based row number of the cell.

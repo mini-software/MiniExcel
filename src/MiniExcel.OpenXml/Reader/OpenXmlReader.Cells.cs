@@ -159,7 +159,6 @@ internal partial class OpenXmlReader
                 numberFormat = formatCode;
         }
 
-        var reference = CellReferenceConverter.GetCellFromCoordinates(columnNumber, rowNumber);
-        return new ExcelCell(reference, rowNumber, columnNumber, value, hasFormula, formula, fontColor, numberFormat);
+        return new ExcelCell(rowNumber, columnNumber, value, hasFormula, formula, fontColor, numberFormat);
     }
 }

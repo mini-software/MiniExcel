@@ -9,6 +9,7 @@ internal partial class OpenXmlStyles
     private readonly Dictionary<int, StyleRecord> _cellXfs = new();
     private readonly Dictionary<int, StyleRecord> _cellStyleXfs = new();
     private readonly Dictionary<int, NumberFormatString> _customFormats = new();
+    private readonly List<ExcelColor?> _fontColors = [];
 
     private OpenXmlStyles() { }
 
@@ -43,7 +44,8 @@ internal partial class OpenXmlStyles
                     {
                         int.TryParse(reader.GetAttribute("xfId"), out var xfId);
                         int.TryParse(reader.GetAttribute("numFmtId"), out var numFmtId);
-                        openXmlStyles._cellXfs.Add(index, new StyleRecord { XfId = xfId, NumFmtId = numFmtId });
+                        int.TryParse(reader.GetAttribute("fontId"), out var fontId);
+                        openXmlStyles._cellXfs.Add(index, new StyleRecord { XfId = xfId, NumFmtId = numFmtId, FontId = fontId });
                         await reader.SkipAsync().ConfigureAwait(false);
                         index++;
                     }
@@ -67,6 +69,23 @@ internal partial class OpenXmlStyles
                         openXmlStyles._cellStyleXfs.Add(index, new StyleRecord() { XfId = xfId, NumFmtId = numFmtId });
                         await reader.SkipAsync().ConfigureAwait(false);
                         index++;
+                    }
+                    else if (!await reader.SkipContentAsync(cancellationToken).ConfigureAwait(false))
+                    {
+                        break;
+                    }
+                }
+            }
+            else if (reader.IsStartElement("fonts", Ns))
+            {
+                if (!await reader.ReadFirstContentAsync(cancellationToken).ConfigureAwait(false))
+                    continue;
+
+                while (!reader.EOF)
+                {
+                    if (reader.IsStartElement("font", Ns))
+                    {
+                        openXmlStyles._fontColors.Add(await ReadFontColorAsync(reader, cancellationToken).ConfigureAwait(false));
                     }
                     else if (!await reader.SkipContentAsync(cancellationToken).ConfigureAwait(false))
                     {
@@ -109,6 +128,43 @@ internal partial class OpenXmlStyles
         }
 
         return openXmlStyles;
+    }
+
+    [CreateSyncVersion]
+    private static async Task<ExcelColor?> ReadFontColorAsync(XmlReader reader, CancellationToken cancellationToken)
+    {
+        ExcelColor? color = null;
+        if (!await reader.ReadFirstContentAsync(cancellationToken).ConfigureAwait(false))
+            return color;
+
+        while (!reader.EOF)
+        {
+            if (reader.IsStartElement("color", Ns))
+            {
+                color = new ExcelColor(
+                    auto: reader.GetAttribute("auto") is "1" or "true",
+                    rgb: reader.GetAttribute("rgb"),
+                    theme: int.TryParse(reader.GetAttribute("theme"), NumberStyles.Integer, CultureInfo.InvariantCulture, out var theme) ? theme : null,
+                    indexed: int.TryParse(reader.GetAttribute("indexed"), NumberStyles.Integer, CultureInfo.InvariantCulture, out var indexed) ? indexed : null,
+                    tint: double.TryParse(reader.GetAttribute("tint"), NumberStyles.Float, CultureInfo.InvariantCulture, out var tint) ? tint : 0);
+                await reader.SkipAsync().ConfigureAwait(false);
+            }
+            else if (!await reader.SkipContentAsync(cancellationToken).ConfigureAwait(false))
+            {
+                break;
+            }
+        }
+
+        return color;
+    }
+
+    internal ExcelColor? GetFontColor(int index)
+    {
+        if (!_cellXfs.TryGetValue(index, out var styleRecord))
+            return null;
+
+        var fontId = styleRecord.FontId;
+        return fontId >= 0 && fontId < _fontColors.Count ? _fontColors[fontId] : null;
     }
 
     internal NumberFormatString? GetStyleFormat(int index)
@@ -196,4 +252,5 @@ internal class StyleRecord
 {
     public int XfId { get; set; }
     public int NumFmtId { get; set; }
+    public int FontId { get; set; }
 }

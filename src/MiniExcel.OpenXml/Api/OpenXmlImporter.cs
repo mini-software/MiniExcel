@@ -513,6 +513,45 @@ public sealed partial class OpenXmlImporter
     }
 
     /// <summary>
+    /// Queries every cell stored in a worksheet together with its formula and font color.
+    /// </summary>
+    /// <param name="path">The path to the Excel document.</param>
+    /// <param name="sheetName">The name of the worksheet to query. If not specified, the first sheet is used.</param>
+    /// <param name="cancellationToken">A token to cancel the asynchronous operation.</param>
+    /// <remarks>
+    /// Cells are returned in document order, one <see cref="ExcelCell"/> per cell element in the file, so cells that were never written are skipped.
+    /// </remarks>
+    [CreateSyncVersion]
+    public async IAsyncEnumerable<ExcelCell> QueryCellsAsync(string path, string? sheetName = null, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        var stream = FileHelper.OpenSharedRead(path);
+        await using var disposableStream = stream.ConfigureAwait(false);
+
+        await foreach (var cell in QueryCellsAsync(stream, sheetName, false, cancellationToken).ConfigureAwait(false))
+            yield return cell;
+    }
+
+    /// <summary>
+    /// Queries every cell stored in a worksheet together with its formula and font color.
+    /// </summary>
+    /// <param name="stream">The stream containing the Excel file data. The stream position is not reset after reading.</param>
+    /// <param name="sheetName">The name of the worksheet to query. If not specified, the first sheet is used.</param>
+    /// <param name="leaveOpen">True to leave the stream open after the query is completed, otherwise false.</param>
+    /// <param name="cancellationToken">A token to cancel the asynchronous operation.</param>
+    /// <remarks>
+    /// Cells are returned in document order, one <see cref="ExcelCell"/> per cell element in the file, so cells that were never written are skipped.
+    /// </remarks>
+    [CreateSyncVersion]
+    public async IAsyncEnumerable<ExcelCell> QueryCellsAsync(Stream stream, string? sheetName = null, bool leaveOpen = false, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        var reader = await OpenXmlReader.CreateAsync(stream, null, leaveOpen, cancellationToken).ConfigureAwait(false);
+        await using var disposableReader = reader.ConfigureAwait(false);
+
+        await foreach (var cell in reader.QueryCellsAsync(sheetName, cancellationToken).ConfigureAwait(false))
+            yield return cell;
+    }
+
+    /// <summary>
     /// Queries a named table in an Excel worksheet and returns dynamic objects representing each row.
     /// </summary>
     /// <param name="path">The path to the Excel document.</param>

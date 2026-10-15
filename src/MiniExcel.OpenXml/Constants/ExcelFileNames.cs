@@ -16,6 +16,9 @@ internal static class ExcelFileNames
 
     internal static string Worksheet(int sheetId) => $"xl/worksheets/sheet{sheetId}.xml";
     internal static string SheetRels(int sheetId) => $"xl/worksheets/_rels/sheet{sheetId}.xml.rels";
+    internal static string ChartSheet(int sheetId) => $"xl/chartsheets/sheet{sheetId}.xml";
+    internal static string ChartSheetRels(int sheetId) => $"xl/chartsheets/_rels/sheet{sheetId}.xml.rels";
+    internal static string Chart(int chartIndex) => $"xl/charts/chart{chartIndex}.xml";
     internal static string Drawing(int sheetIndex) => $"xl/drawings/drawing{sheetIndex}.xml";
     internal static string DrawingRels(int sheetIndex) => $"xl/drawings/_rels/drawing{sheetIndex}.xml.rels";
     internal static string DrawingRels(string drawingFileName) => $"xl/drawings/_rels/{drawingFileName}.rels";

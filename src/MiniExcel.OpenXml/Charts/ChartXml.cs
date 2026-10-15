@@ -67,6 +67,8 @@ internal static class ChartXml
             throw new InvalidOperationException("The gap width of a plot must be from 0 to 500.");
         if (new[] { chart.XAxis, chart.YAxis, chart.SecondaryXAxis, chart.SecondaryYAxis }.Any(a => a.LabelRotation is < -90 or > 90))
             throw new InvalidOperationException("The label rotation of an axis must be from -90 to 90 degrees.");
+        if (new[] { chart.XAxis, chart.YAxis, chart.SecondaryXAxis, chart.SecondaryYAxis }.SelectMany(a => new[] { a.Minimum, a.Maximum, a.MajorUnit }).Any(v => v is { } d && (double.IsNaN(d) || double.IsInfinity(d))))
+            throw new InvalidOperationException("The minimum, maximum and major unit of an axis must be finite numbers.");
 
         foreach (var group in chart.Plots.GroupBy(p => p.UseSecondaryAxes))
         {

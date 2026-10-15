@@ -98,6 +98,9 @@ public sealed partial class OpenXmlExporter
         bool printHeader = true, bool overwriteSheet = false, OpenXmlConfiguration? configuration = null, 
         IProgress<int>? progress = null, CancellationToken cancellationToken = default)
     {
+        if (value is OpenXmlChartSheet)
+            throw new NotSupportedException("Chart sheets can't be added to a copy of an existing workbook");
+
         var writer = await OpenXmlWriter
             .CreateForCopyAsync(inputStream, outputStream, value, sheetName, printHeader, configuration, cancellationToken)
             .ConfigureAwait(false);

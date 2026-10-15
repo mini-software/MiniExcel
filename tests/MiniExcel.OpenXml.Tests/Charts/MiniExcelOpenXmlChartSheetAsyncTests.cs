@@ -196,6 +196,26 @@ public class MiniExcelOpenXmlChartSheetAsyncTests
     }
 
     [Fact]
+    public async Task ChartSheetCanNotBeAddedToACopyAsync()
+    {
+        using var stream = await ExportAsync(SpeedChart());
+        using var output = new MemoryStream();
+
+        await Assert.ThrowsAsync<NotSupportedException>(() => _exporter.CopyAndAddSheetAsync(stream, output, new OpenXmlChartSheet(SpeedChart()), sheetName: "Another"));
+    }
+
+    [Theory]
+    [InlineData(double.PositiveInfinity)]
+    [InlineData(double.NaN)]
+    public async Task NonFiniteAxisValueIsRejectedAsync(double value)
+    {
+        var chart = SpeedChart();
+        chart.YAxis.Maximum = value;
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => ExportAsync(chart));
+    }
+
+    [Fact]
     public async Task ScatterAndColumnPlotsCanNotShareAxesAsync()
     {
         var chart = SpeedChart();

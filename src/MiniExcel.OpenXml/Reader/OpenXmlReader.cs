@@ -7,7 +7,7 @@ namespace MiniExcelLib.OpenXml.Reader;
 
 internal partial class OpenXmlReader : IMiniExcelReader
 {
-    private static readonly string[] RelationshiopNs = [Schemas.SpreadsheetmlXmlRelationships, Schemas.SpreadsheetmlXmlStrictRelationships];
+    private static readonly string[] RelationshipNs = [Schemas.SpreadsheetmlXmlRelationships, Schemas.SpreadsheetmlXmlStrictRelationships];
     
     protected static readonly string[] Ns = [Schemas.SpreadsheetmlXmlMain, Schemas.SpreadsheetmlXmlStrictNs];
     protected readonly OpenXmlConfiguration _config;
@@ -555,7 +555,7 @@ internal partial class OpenXmlReader : IMiniExcelReader
                                 sheetName,
                                 reader.GetAttribute("state"),
                                 uint.TryParse(reader.GetAttribute("sheetId"), out var  sheetId) ? sheetId : 0,
-                                reader.GetAttribute("id", RelationshiopNs),
+                                reader.GetAttribute("id", RelationshipNs),
                                 sheetCount == activeSheetIndex
                             );
                             sheetCount++;

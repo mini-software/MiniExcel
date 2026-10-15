@@ -1,5 +1,3 @@
-using LicenseContext = OfficeOpenXml.LicenseContext;
-
 namespace MiniExcelLib.OpenXml.Tests.Cells;
 
 public class QueryCellsTests

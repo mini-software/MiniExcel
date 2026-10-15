@@ -1,6 +1,6 @@
 using System.Drawing;
+using MiniExcelLib.Core.Helpers;
 using OfficeOpenXml.Drawing;
-using LicenseContext = OfficeOpenXml.LicenseContext;
 
 namespace MiniExcelLib.OpenXml.Tests.Cells;
 
@@ -105,7 +105,9 @@ public class QueryCellsAsyncTests
         sheet.Cells["A1"].Value = 0.233;
         sheet.Cells["A1"].Style.Numberformat.Format = "0.0%";
         sheet.Cells["A2"].Value = 5;
-        using var stream = new MemoryStream(package.GetAsByteArray());
+
+        await using var stream = new MemoryStream();
+        await package.SaveAsAsync(stream);
 
         var cells = await _excelImporter.QueryCellsAsync(stream).ToDictionaryAsync(c => c.Reference);
 
@@ -142,13 +144,20 @@ public class QueryCellsAsyncTests
         using (var archive = new ZipArchive(stream, ZipArchiveMode.Update, leaveOpen: true))
         {
             var entry = archive.GetEntry("xl/worksheets/sheet1.xml")!;
+
             string xml;
-            using (var reader = new StreamReader(entry.Open()))
+            using (var reader = new StreamReader(await entry.OpenAsync()))
+            {
                 xml = await reader.ReadToEndAsync();
+            }
 
             Assert.Contains("r=\"A2\"", xml);
             entry.Delete();
-            using var writer = new StreamWriter(archive.CreateEntry("xl/worksheets/sheet1.xml").Open());
+
+            var newEntry = archive.CreateEntry("xl/worksheets/sheet1.xml");
+            await using var entryStream = await newEntry.OpenAsync();
+            await using var writer = new StreamWriter(entryStream);
+
             await writer.WriteAsync(xml.Replace("r=\"A2\"", "r=\"XFE2\""));
         }
         stream.Position = 0;

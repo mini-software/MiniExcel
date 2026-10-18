@@ -1,4 +1,5 @@
 ﻿using System.Text.RegularExpressions;
+using System.Xml.Linq;
 using MiniExcelLib.Core.Enums;
 using MiniExcelLib.Core.Exceptions;
 using MiniExcelLib.Core.Helpers;
@@ -1534,6 +1535,68 @@ public class MiniExcelGithubIssuesTests(ITestOutputHelper output)
             _excelExporter.Export(path.ToString(), value);
             var sheetXml = SheetHelper.GetZipFileContent(path.ToString(), "xl/worksheets/sheet1.xml");
             Assert.Contains("xml:space=\"preserve\"", sheetXml);
+        }
+    }
+
+    /// Prefix and suffix blank space are hidden by Excel after FillTemplate - https://github.com/mini-software/MiniExcel/issues/295
+    [Fact]
+    public void TestIssue295()
+    {
+        static XElement GetInlineText(string sheetXml, string cellReference)
+        {
+            XNamespace ns = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
+            var cell = XDocument.Parse(sheetXml)
+                .Descendants(ns + "c")
+                .Single(c => c.Attribute("r")?.Value == cellReference);
+
+            return cell.Element(ns + "is")!.Element(ns + "t")!;
+        }
+
+        {
+            using var path = AutoDeletingPath.Create();
+            var templatePath = PathHelper.GetFile("xlsx/TestTemplateEasyFill.xlsx");
+            var value = new
+            {
+                Name = "  Jack",
+                CreateDate = new DateTime(2021, 01, 01),
+                VIP = true,
+                Points = 123
+            };
+            _excelTemplater.FillTemplate(path.ToString(), templatePath, value);
+
+            var sheetXml = SheetHelper.GetZipFileContent(path.ToString(), "xl/worksheets/sheet1.xml");
+            var a2 = GetInlineText(sheetXml, "A2");
+            Assert.Equal("  Jack", a2.Value);
+            Assert.Equal("preserve", a2.Attribute(XNamespace.Xml + "space")?.Value);
+
+            var e2 = GetInlineText(sheetXml, "E2");
+            Assert.Equal("  Jack has 123 points", e2.Value);
+            Assert.Equal("preserve", e2.Attribute(XNamespace.Xml + "space")?.Value);
+        }
+        {
+            using var path = AutoDeletingPath.Create();
+            var templatePath = PathHelper.GetFile("xlsx/TestTemplateBasicIEmumerableFill.xlsx");
+            var value = new
+            {
+                employees = new[]
+                {
+                    new { name = "  Jack", department = "HR  " },
+                    new { name = "Lisa", department = " IT " }
+                }
+            };
+            _excelTemplater.FillTemplate(path.ToString(), templatePath, value);
+
+            var sheetXml = SheetHelper.GetZipFileContent(path.ToString(), "xl/worksheets/sheet1.xml");
+            foreach (var (cellReference, expected) in new[] { ("A2", "  Jack"), ("B2", "HR  "), ("A3", "Lisa"), ("B3", " IT ") })
+            {
+                var t = GetInlineText(sheetXml, cellReference);
+                Assert.Equal(expected, t.Value);
+                Assert.Equal("preserve", t.Attribute(XNamespace.Xml + "space")?.Value);
+            }
+
+            var rows = _excelImporter.Query(path.ToString()).ToList();
+            Assert.Equal("  Jack", rows[1].A);
+            Assert.Equal(" IT ", rows[2].B);
         }
     }
 

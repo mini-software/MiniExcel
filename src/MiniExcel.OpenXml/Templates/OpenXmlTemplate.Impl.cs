@@ -54,6 +54,7 @@ internal partial class OpenXmlTemplate
         InjectSharedStrings(sharedStrings, rows);
         GetMergeCells(worksheet);
         UpdateDimensionAndGetRowsInfo(inputMaps, worksheet, rows, !mergeCells);
+        PreserveInlineStringSpaces(rows);
 
 #if NET
         var writer = XmlWriter.Create(stream, DocXmlWriterSettings);
@@ -90,6 +91,7 @@ internal partial class OpenXmlTemplate
         InjectSharedStrings(sharedStrings, rows);
         GetMergeCells(worksheet);
         UpdateDimensionAndGetRowsInfo(inputMaps, worksheet, rows, !mergeCells);
+        PreserveInlineStringSpaces(rows);
 
 #if NET
         var writer = XmlWriter.Create(outputZipSheetEntryStream, DocXmlWriterSettings);
@@ -1064,6 +1066,23 @@ internal partial class OpenXmlTemplate
                 var isNode = new XElement(SpreadsheetNs + "is", tNode);
                 cell.Add(isNode);
                 cell.SetAttributeValue("t", ExcelDataTypes.InlineString);
+            }
+        }
+    }
+
+    // Excel drops leading and trailing blanks from a <t> without xml:space="preserve" (https://github.com/mini-software/MiniExcel/issues/295).
+    // Runs after the single values are filled in; a <t> still holding a placeholder gets its value later, so it is kept as well.
+    private static void PreserveInlineStringSpaces(IEnumerable<XElement> rows)
+    {
+        foreach (var row in rows)
+        {
+            foreach (var cell in row.Elements(SpreadsheetNs + "c"))
+            {
+                if (cell.Element(SpreadsheetNs + "is")?.Element(SpreadsheetNs + "t") is not { Value: { Length: > 0 } text } t)
+                    continue;
+
+                if (char.IsWhiteSpace(text[0]) || char.IsWhiteSpace(text[text.Length - 1]) || text.Contains("{{"))
+                    t.SetAttributeValue(XNamespace.Xml + "space", "preserve");
             }
         }
     }

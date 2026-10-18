@@ -150,7 +150,7 @@ public class MiniExcelGiteeIssuesTests
         var sheetXml = SheetHelper.GetZipFileContent(path.ToString(), "xl/worksheets/sheet1.xml");
         // Template now uses inlineStr format (<is><t>...</t></is>) instead of SharedStrings (<v>...</v>)
         Assert.Contains("<t>Hello &amp; World &lt; , &gt; , \" , '</t>", sheetXml);
-        Assert.Contains("<t>Hello &amp; Value &lt; , &gt; , \" , '</t>", sheetXml);
+        Assert.Contains("<t xml:space=\"preserve\">Hello &amp; Value &lt; , &gt; , \" , '</t>", sheetXml);
     }
 
     [Fact]

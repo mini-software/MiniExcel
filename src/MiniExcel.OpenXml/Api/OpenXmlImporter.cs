@@ -522,12 +522,12 @@ public sealed partial class OpenXmlImporter
     /// Cells are returned in document order, one <see cref="ExcelCell"/> per cell element in the file, so cells that were never written are skipped.
     /// </remarks>
     [CreateSyncVersion]
-    public async IAsyncEnumerable<ExcelCell> QueryCellsAsync(string path, string? sheetName = null, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    public async IAsyncEnumerable<ExcelCell> QueryCellsWithMetadataAsync(string path, string? sheetName = null, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         var stream = FileHelper.OpenSharedRead(path);
         await using var disposableStream = stream.ConfigureAwait(false);
 
-        await foreach (var cell in QueryCellsAsync(stream, sheetName, false, cancellationToken).ConfigureAwait(false))
+        await foreach (var cell in QueryCellsWithMetadataAsync(stream, sheetName, false, cancellationToken).ConfigureAwait(false))
             yield return cell;
     }
 
@@ -542,12 +542,12 @@ public sealed partial class OpenXmlImporter
     /// Cells are returned in document order, one <see cref="ExcelCell"/> per cell element in the file, so cells that were never written are skipped.
     /// </remarks>
     [CreateSyncVersion]
-    public async IAsyncEnumerable<ExcelCell> QueryCellsAsync(Stream stream, string? sheetName = null, bool leaveOpen = false, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    public async IAsyncEnumerable<ExcelCell> QueryCellsWithMetadataAsync(Stream stream, string? sheetName = null, bool leaveOpen = false, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         var reader = await OpenXmlReader.CreateAsync(stream, null, leaveOpen, cancellationToken).ConfigureAwait(false);
         await using var disposableReader = reader.ConfigureAwait(false);
 
-        await foreach (var cell in reader.QueryCellsAsync(sheetName, cancellationToken).ConfigureAwait(false))
+        await foreach (var cell in reader.QueryCellsWithMetadataAsync(sheetName, cancellationToken).ConfigureAwait(false))
             yield return cell;
     }
 

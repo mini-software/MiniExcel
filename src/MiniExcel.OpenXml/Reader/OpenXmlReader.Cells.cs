@@ -6,7 +6,7 @@ namespace MiniExcelLib.OpenXml.Reader;
 internal partial class OpenXmlReader
 {
     [CreateSyncVersion]
-    internal async IAsyncEnumerable<ExcelCell> QueryCellsAsync(string? sheetName, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    internal async IAsyncEnumerable<ExcelCell> QueryCellsWithMetadataAsync(string? sheetName, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
 

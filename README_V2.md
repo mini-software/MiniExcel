@@ -449,12 +449,12 @@ importer.Query(path, configuration: config)
 
 #### 13. Read cell formulas, font colors and number formats
 
-`Query` returns only the cached values. To find out which cells hold formulas, or how they are formatted, use `QueryCells`, which yields every stored cell of a worksheet:
+`Query` returns only the cached values. To find out which cells hold formulas, or how they are formatted, use `QueryCellsWithMetadata`, which yields every stored cell of a worksheet:
 
 ```csharp
 var importer = MiniExcelV2.Importers.GetOpenXmlImporter();
 
-foreach (var cell in importer.QueryCells(path, sheetName: "Sheet1"))
+foreach (var cell in importer.QueryCellsWithMetadata(path, sheetName: "Sheet1"))
 {
     Console.WriteLine($"{cell.Reference}: {cell.Value}");
 

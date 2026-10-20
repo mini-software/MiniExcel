@@ -4,12 +4,12 @@ using OfficeOpenXml.Drawing;
 
 namespace MiniExcelLib.OpenXml.Tests.Cells;
 
-public class QueryCellsAsyncTests
+public class QueryCellsWithMetadataAsyncTests
 {
     private readonly OpenXmlImporter _excelImporter = MiniExcelV2.Importers.GetOpenXmlImporter();
     private readonly OpenXmlExporter _excelExporter = MiniExcelV2.Exporters.GetOpenXmlExporter();
 
-    public QueryCellsAsyncTests()
+    public QueryCellsWithMetadataAsyncTests()
     {
         ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
     }
@@ -41,10 +41,10 @@ public class QueryCellsAsyncTests
     }
 
     [Fact]
-    public async Task QueryCells_ReturnsValuesAndReferencesAsync()
+    public async Task QueryCellsWithMetadata_ReturnsValuesAndReferencesAsync()
     {
         using var stream = CreateWorkbook();
-        var cells = await _excelImporter.QueryCellsAsync(stream).ToDictionaryAsync(c => c.Reference);
+        var cells = await _excelImporter.QueryCellsWithMetadataAsync(stream).ToDictionaryAsync(c => c.Reference);
 
         Assert.Equal(1d, cells["A1"].Value);
         Assert.Equal(1, cells["A1"].RowIndex);
@@ -55,10 +55,10 @@ public class QueryCellsAsyncTests
     }
 
     [Fact]
-    public async Task QueryCells_ReportsFormulasAsync()
+    public async Task QueryCellsWithMetadata_ReportsFormulasAsync()
     {
         using var stream = CreateWorkbook();
-        var cells = await _excelImporter.QueryCellsAsync(stream).ToDictionaryAsync(c => c.Reference);
+        var cells = await _excelImporter.QueryCellsWithMetadataAsync(stream).ToDictionaryAsync(c => c.Reference);
 
         Assert.False(cells["A1"].HasFormula);
         Assert.Null(cells["A1"].Formula);
@@ -78,10 +78,10 @@ public class QueryCellsAsyncTests
     }
 
     [Fact]
-    public async Task QueryCells_ReportsFontColorsAsync()
+    public async Task QueryCellsWithMetadata_ReportsFontColorsAsync()
     {
         using var stream = CreateWorkbook();
-        var cells = await _excelImporter.QueryCellsAsync(stream).ToDictionaryAsync(c => c.Reference);
+        var cells = await _excelImporter.QueryCellsWithMetadataAsync(stream).ToDictionaryAsync(c => c.Reference);
 
         Assert.Equal("FFFF0000", cells["A2"].FontColor?.Rgb);
         Assert.Null(cells["A2"].FontColor?.Theme);
@@ -98,7 +98,7 @@ public class QueryCellsAsyncTests
     }
 
     [Fact]
-    public async Task QueryCells_ReportsNumberFormatsAsync()
+    public async Task QueryCellsWithMetadata_ReportsNumberFormatsAsync()
     {
         using var package = new ExcelPackage();
         var sheet = package.Workbook.Worksheets.Add("Sheet1");
@@ -109,7 +109,7 @@ public class QueryCellsAsyncTests
         await using var stream = new MemoryStream();
         await package.SaveAsAsync(stream);
 
-        var cells = await _excelImporter.QueryCellsAsync(stream).ToDictionaryAsync(c => c.Reference);
+        var cells = await _excelImporter.QueryCellsWithMetadataAsync(stream).ToDictionaryAsync(c => c.Reference);
 
         Assert.Equal("0.0%", cells["A1"].NumberFormat);
         Assert.Equal(0.233, cells["A1"].Value);
@@ -117,7 +117,7 @@ public class QueryCellsAsyncTests
     }
 
     [Fact]
-    public async Task QueryCells_SelectsSheetByNameAsync()
+    public async Task QueryCellsWithMetadata_SelectsSheetByNameAsync()
     {
         using var stream = new MemoryStream();
         var sheets = new Dictionary<string, object>
@@ -128,7 +128,7 @@ public class QueryCellsAsyncTests
         await _excelExporter.ExportAsync(stream, sheets);
         stream.Position = 0;
 
-        var cells = await _excelImporter.QueryCellsAsync(stream, "Second").ToListAsync();
+        var cells = await _excelImporter.QueryCellsWithMetadataAsync(stream, "Second").ToListAsync();
 
         Assert.Equal(["A1", "A2"], cells.Select(c => c.Reference));
         Assert.Equal(["Value", "second"], cells.Select(c => c.Value));
@@ -136,7 +136,7 @@ public class QueryCellsAsyncTests
     }
 
     [Fact]
-    public async Task QueryCells_RejectsOutOfRangeCellReferenceAsync()
+    public async Task QueryCellsWithMetadata_RejectsOutOfRangeCellReferenceAsync()
     {
         using var stream = new MemoryStream();
         await _excelExporter.ExportAsync(stream, new[] { new { Value = "value" } });
@@ -162,7 +162,7 @@ public class QueryCellsAsyncTests
         }
         stream.Position = 0;
 
-        var exception = await Assert.ThrowsAsync<InvalidDataException>(() => _excelImporter.QueryCellsAsync(stream).ToListAsync().AsTask());
+        var exception = await Assert.ThrowsAsync<InvalidDataException>(() => _excelImporter.QueryCellsWithMetadataAsync(stream).ToListAsync().AsTask());
         Assert.Contains("XFE2", exception.Message);
     }
 }

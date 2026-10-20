@@ -1,19 +1,19 @@
 namespace MiniExcelLib.OpenXml.Tests.Cells;
 
-public class QueryCellsTests
+public class QueryCellsWithMetadataTests
 {
     private readonly OpenXmlImporter _excelImporter = MiniExcelV2.Importers.GetOpenXmlImporter();
 
-    public QueryCellsTests()
+    public QueryCellsWithMetadataTests()
     {
         ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
     }
 
     [Fact]
-    public void QueryCells_ReportsFormulasAndFontColors()
+    public void QueryCellsWithMetadata_ReportsFormulasAndFontColors()
     {
-        using var stream = QueryCellsAsyncTests.CreateWorkbook();
-        var cells = _excelImporter.QueryCells(stream).ToDictionary(c => c.Reference);
+        using var stream = QueryCellsWithMetadataAsyncTests.CreateWorkbook();
+        var cells = _excelImporter.QueryCellsWithMetadata(stream).ToDictionary(c => c.Reference);
 
         Assert.False(cells["A1"].HasFormula);
         Assert.True(cells["B1"].HasFormula);

@@ -57,6 +57,15 @@ public class QueryExcelBenchmark : BenchmarkBase
         }
     }
 
+    [Benchmark(Description = "MiniExcel QueryCellsWithMetadata")]
+    public void MiniExcel_QueryCellsWithMetadata()
+    {
+        foreach (var cell in _importer.QueryCellsWithMetadata(FilePath))
+        {
+            _ = cell;
+        }
+    }
+
     [Benchmark(Description = "MiniExcel QueryFirst with Mapping")]
     public void MiniExcel_QueryFirst_Mapping_Test()
     {

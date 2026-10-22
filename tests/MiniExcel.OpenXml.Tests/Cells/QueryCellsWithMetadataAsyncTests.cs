@@ -1,0 +1,168 @@
+using System.Drawing;
+using MiniExcelLib.Core.Helpers;
+using OfficeOpenXml.Drawing;
+
+namespace MiniExcelLib.OpenXml.Tests.Cells;
+
+public class QueryCellsWithMetadataAsyncTests
+{
+    private readonly OpenXmlImporter _excelImporter = MiniExcelV2.Importers.GetOpenXmlImporter();
+    private readonly OpenXmlExporter _excelExporter = MiniExcelV2.Exporters.GetOpenXmlExporter();
+
+    public QueryCellsWithMetadataAsyncTests()
+    {
+        ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+    }
+
+    internal static MemoryStream CreateWorkbook()
+    {
+        using var package = new ExcelPackage();
+        var sheet = package.Workbook.Worksheets.Add("Sheet1");
+
+        sheet.Cells["A1"].Value = 1;
+        sheet.Cells["A2"].Value = 2;
+        sheet.Cells["A2"].Style.Font.Color.SetColor(Color.Red);
+        sheet.Cells["A3"].Value = 3;
+        sheet.Cells["A3"].Style.Font.Color.SetColor(eThemeSchemeColor.Text1);
+        sheet.Cells["A4"].Value = "text";
+        sheet.Cells["A4"].Style.Font.Color.SetColor(eThemeSchemeColor.Accent2);
+        sheet.Cells["A4"].Style.Font.Color.Tint = 0.4m;
+
+        // Assigning one formula to a range makes EPPlus store it as a shared formula
+        sheet.Cells["B1:B3"].Formula = "A1*2";
+        sheet.Cells["C1"].Formula = "\"x\"&A1";
+
+        package.Workbook.Calculate();
+
+        var stream = new MemoryStream();
+        package.SaveAs(stream);
+        stream.Position = 0;
+        return stream;
+    }
+
+    [Fact]
+    public async Task QueryCellsWithMetadata_ReturnsValuesAndReferencesAsync()
+    {
+        using var stream = CreateWorkbook();
+        var cells = await _excelImporter.QueryCellsWithMetadataAsync(stream).ToDictionaryAsync(c => c.Reference);
+
+        Assert.Equal(1d, cells["A1"].Value);
+        Assert.Equal(1, cells["A1"].RowIndex);
+        Assert.Equal(1, cells["A1"].ColumnIndex);
+        Assert.Equal("text", cells["A4"].Value);
+        Assert.Equal(4, cells["A4"].RowIndex);
+        Assert.Equal(3, cells["C1"].ColumnIndex);
+    }
+
+    [Fact]
+    public async Task QueryCellsWithMetadata_ReportsFormulasAsync()
+    {
+        using var stream = CreateWorkbook();
+        var cells = await _excelImporter.QueryCellsWithMetadataAsync(stream).ToDictionaryAsync(c => c.Reference);
+
+        Assert.False(cells["A1"].HasFormula);
+        Assert.Null(cells["A1"].Formula);
+
+        Assert.True(cells["B1"].HasFormula);
+        Assert.Equal("A1*2", cells["B1"].Formula);
+        Assert.Equal(2d, cells["B1"].Value);
+
+        // Cells sharing the formula of B1 carry no formula text of their own
+        Assert.True(cells["B3"].HasFormula);
+        Assert.Null(cells["B3"].Formula);
+        Assert.Equal(6d, cells["B3"].Value);
+
+        Assert.True(cells["C1"].HasFormula);
+        Assert.Equal("\"x\"&A1", cells["C1"].Formula);
+        Assert.Equal("x1", cells["C1"].Value);
+    }
+
+    [Fact]
+    public async Task QueryCellsWithMetadata_ReportsFontColorsAsync()
+    {
+        using var stream = CreateWorkbook();
+        var cells = await _excelImporter.QueryCellsWithMetadataAsync(stream).ToDictionaryAsync(c => c.Reference);
+
+        Assert.Equal("FFFF0000", cells["A2"].FontColor?.Rgb);
+        Assert.Null(cells["A2"].FontColor?.Theme);
+
+        Assert.Equal(1, cells["A3"].FontColor?.Theme);
+        Assert.Null(cells["A3"].FontColor?.Rgb);
+        Assert.Equal(0, cells["A3"].FontColor?.Tint);
+
+        Assert.Equal(5, cells["A4"].FontColor?.Theme);
+        Assert.Equal(0.4, cells["A4"].FontColor!.Tint, 6);
+
+        Assert.Null(cells["A1"].FontColor?.Rgb);
+        Assert.Null(cells["A1"].FontColor?.Theme);
+    }
+
+    [Fact]
+    public async Task QueryCellsWithMetadata_ReportsNumberFormatsAsync()
+    {
+        using var package = new ExcelPackage();
+        var sheet = package.Workbook.Worksheets.Add("Sheet1");
+        sheet.Cells["A1"].Value = 0.233;
+        sheet.Cells["A1"].Style.Numberformat.Format = "0.0%";
+        sheet.Cells["A2"].Value = 5;
+
+        await using var stream = new MemoryStream();
+        await package.SaveAsAsync(stream);
+
+        var cells = await _excelImporter.QueryCellsWithMetadataAsync(stream).ToDictionaryAsync(c => c.Reference);
+
+        Assert.Equal("0.0%", cells["A1"].NumberFormat);
+        Assert.Equal(0.233, cells["A1"].Value);
+        Assert.Null(cells["A2"].NumberFormat);
+    }
+
+    [Fact]
+    public async Task QueryCellsWithMetadata_SelectsSheetByNameAsync()
+    {
+        using var stream = new MemoryStream();
+        var sheets = new Dictionary<string, object>
+        {
+            ["First"] = new[] { new { Value = "first" } },
+            ["Second"] = new[] { new { Value = "second" } }
+        };
+        await _excelExporter.ExportAsync(stream, sheets);
+        stream.Position = 0;
+
+        var cells = await _excelImporter.QueryCellsWithMetadataAsync(stream, "Second").ToListAsync();
+
+        Assert.Equal(["A1", "A2"], cells.Select(c => c.Reference));
+        Assert.Equal(["Value", "second"], cells.Select(c => c.Value));
+        Assert.All(cells, c => Assert.False(c.HasFormula));
+    }
+
+    [Fact]
+    public async Task QueryCellsWithMetadata_RejectsOutOfRangeCellReferenceAsync()
+    {
+        using var stream = new MemoryStream();
+        await _excelExporter.ExportAsync(stream, new[] { new { Value = "value" } });
+
+        using (var archive = new ZipArchive(stream, ZipArchiveMode.Update, leaveOpen: true))
+        {
+            var entry = archive.GetEntry("xl/worksheets/sheet1.xml")!;
+
+            string xml;
+            using (var reader = new StreamReader(await entry.OpenAsync()))
+            {
+                xml = await reader.ReadToEndAsync();
+            }
+
+            Assert.Contains("r=\"A2\"", xml);
+            entry.Delete();
+
+            var newEntry = archive.CreateEntry("xl/worksheets/sheet1.xml");
+            await using var entryStream = await newEntry.OpenAsync();
+            await using var writer = new StreamWriter(entryStream);
+
+            await writer.WriteAsync(xml.Replace("r=\"A2\"", "r=\"XFE2\""));
+        }
+        stream.Position = 0;
+
+        var exception = await Assert.ThrowsAsync<InvalidDataException>(() => _excelImporter.QueryCellsWithMetadataAsync(stream).ToListAsync().AsTask());
+        Assert.Contains("XFE2", exception.Message);
+    }
+}

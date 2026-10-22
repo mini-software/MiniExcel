@@ -447,6 +447,32 @@ var importer = MiniExcelV2.Importers.GetOpenXmlImporter();
 importer.Query(path, configuration: config)
 ```
 
+#### 13. Read cell formulas, font colors and number formats
+
+`Query` returns only the cached values. To find out which cells hold formulas, or how they are formatted, use `QueryCellsWithMetadata`, which yields every stored cell of a worksheet:
+
+```csharp
+var importer = MiniExcelV2.Importers.GetOpenXmlImporter();
+
+foreach (var cell in importer.QueryCellsWithMetadata(path, sheetName: "Sheet1"))
+{
+    Console.WriteLine($"{cell.Reference}: {cell.Value}");
+
+    if (cell.HasFormula)
+        Console.WriteLine($"  formula: {cell.Formula ?? "(shared)"}");
+
+    if (cell.FontColor?.Rgb is { } rgb)
+        Console.WriteLine($"  font color: {rgb}");
+
+    if (cell.NumberFormat is not null)
+        Console.WriteLine($"  number format: {cell.NumberFormat}");
+}
+```
+
+Cells covered by a shared formula report `HasFormula` as `true` but leave `Formula` null, since only the first cell of the range stores the formula text.
+Font colors can also be theme colors (`Theme` and `Tint`), indexed colors (`Indexed`) or automatic (`Auto`).
+`NumberFormat` is null for cells in the General format.
+
 
 ### Create/Export Excel  <a name="docs-export" />
 

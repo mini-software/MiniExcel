@@ -157,7 +157,7 @@ internal partial class OpenXmlWriter
         return sb.ToString();
     }
 
-    private (string StyleIndex, string DataType, string? CellValue) GetCellValue(int rowIndex, int cellIndex, object value, MiniExcelColumnMapping? columnMapping, bool valueIsNull)
+    private (string StyleIndex, string DataType, string? CellValue) GetCellValue(int rowIndex, int cellIndex, object value, MiniExcelColumnMapping? columnMapping, bool valueIsNull, bool useRuntimeType = false)
     {
         if (valueIsNull)
             return (RegularCellStyleIndex, GetStringType(), string.Empty);
@@ -168,7 +168,7 @@ internal partial class OpenXmlWriter
             return (styleIndex, GetStringType(), str);
         }
 
-        var type = GetValueType(value, columnMapping);
+        var type = useRuntimeType ? Nullable.GetUnderlyingType(value.GetType()) ?? value.GetType() : GetValueType(value, columnMapping);
 
         if (columnMapping is { ExcelFormat: not null, ExcelFormatId: -1 } && value is IFormattable formattableValue)
         {

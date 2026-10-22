@@ -183,7 +183,7 @@ internal partial class OpenXmlWriter
             oldStylesContext = new SheetStyleBuilderContext(_zipContentsMap, copiedArchive, Utf8WithBom);
             SheetStyleBuilderBase builder = _configuration.TableStyles switch
             {
-                TableStyles.None => new MinimalSheetStyleBuilder(oldStylesContext),
+                TableStyles.None => new MinimalSheetStyleBuilder(oldStylesContext, _configuration.StyleOptions),
                 TableStyles.Default => new DefaultSheetStyleBuilder(oldStylesContext, _configuration.StyleOptions),
                 _ => throw new InvalidEnumArgumentException(nameof(_configuration.TableStyles), (int)_configuration.TableStyles, typeof(TableStyles))
             };

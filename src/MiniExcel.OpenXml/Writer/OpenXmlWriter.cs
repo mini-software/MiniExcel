@@ -482,7 +482,7 @@ internal sealed partial class OpenXmlWriter : IMiniExcelWriter
         }
 
         /*Prefix and suffix blank space will lost after SaveAs #294*/
-        var preserveSpace = cellValue.StartsWith(" ") || cellValue.EndsWith(" ");
+        var preserveSpace = XmlHelper.HasLeadingOrTrailingWhiteSpace(cellValue);
         await writer.WriteAsync(WorksheetXml.Cell(columnReference, dataType, styleIndex, cellValue, preserveSpace: preserveSpace, columnType: columnType), cancellationToken).ConfigureAwait(false);
     }
 

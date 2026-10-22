@@ -42,6 +42,12 @@ internal static partial class XmlHelper
         return XmlConvert.DecodeName(decodeStr);
     }
     
+    /// <summary>
+    /// Excel drops leading and trailing blanks (spaces, tabs, line breaks) from a &lt;t&gt; without xml:space="preserve".
+    /// </summary>
+    public static bool HasLeadingOrTrailingWhiteSpace(string? text)
+        => text is { Length: > 0 } && (char.IsWhiteSpace(text[0]) || char.IsWhiteSpace(text[text.Length - 1]));
+
     public static string MinifyXml(string xml) => xml
         .Replace("\r", "")
         .Replace("\n", "")

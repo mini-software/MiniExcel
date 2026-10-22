@@ -1538,6 +1538,25 @@ public class MiniExcelGithubIssuesTests(ITestOutputHelper output)
         }
     }
 
+    /// A leading or trailing tab or line break is a blank too, inline and shared - https://github.com/mini-software/MiniExcel/issues/294
+    [Theory]
+    [InlineData("\tJack", StringStorageMode.Inline, true)]
+    [InlineData("Jack\n", StringStorageMode.Inline, true)]
+    [InlineData("Ja\tck", StringStorageMode.Inline, false)]
+    [InlineData("\tJack", StringStorageMode.Shared, true)]
+    [InlineData("Jack\n", StringStorageMode.Shared, true)]
+    [InlineData("Ja\tck", StringStorageMode.Shared, false)]
+    public void TestIssue294WhiteSpace(string name, StringStorageMode mode, bool preserved)
+    {
+        using var path = AutoDeletingPath.Create();
+        var value = new[] { new { Name = name } };
+        _excelExporter.Export(path.ToString(), value, configuration: new OpenXmlConfiguration { StringStorageMode = mode });
+
+        var part = mode == StringStorageMode.Shared ? "xl/sharedStrings.xml" : "xl/worksheets/sheet1.xml";
+        var xml = SheetHelper.GetZipFileContent(path.ToString(), part);
+        Assert.Contains(preserved ? $"<x:t xml:space=\"preserve\">{name}</x:t>" : $"<x:t>{name}</x:t>", xml);
+    }
+
     /// Prefix and suffix blank space are hidden by Excel after FillTemplate - https://github.com/mini-software/MiniExcel/issues/295
     [Fact]
     public void TestIssue295()

@@ -78,7 +78,7 @@ internal static class ExcelXml
         {
             sb.Append("<x:si><x:t");
 
-            if (text.StartsWith(" ") || text.EndsWith(" "))
+            if (XmlHelper.HasLeadingOrTrailingWhiteSpace(text))
                 sb.Append(" xml:space=\"preserve\"");
             
             sb.Append($">{XmlHelper.EncodeXml(text)}</x:t></x:si>");

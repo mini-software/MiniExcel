@@ -4919,4 +4919,37 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
         Assert.Equal(7.4, result[1].Altitude);
         Assert.Equal(8.6, result[2].Altitude);
     }
+
+    // https://github.com/mini-software/MiniExcel/issues/1034
+    [Theory]
+    [InlineData(14)]
+    [InlineData(15)]
+    [InlineData(16)]
+    [InlineData(17)]
+    [InlineData(22)]
+    public void QueryReadsBuiltInDateFormatsAsDateTime(int numFmtId)
+    {
+        using var path = AutoDeletingPath.Create();
+        MiniExcel.SaveAs(path.ToString(), new[] { new { Value = "control" } });
+        Helpers.ReplaceStylesXml(path.ToString(), $"""
+            <?xml version="1.0" encoding="utf-8"?>
+            <styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+                <cellXfs count="2">
+                    <xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" />
+                    <xf numFmtId="{numFmtId}" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1" />
+                </cellXfs>
+            </styleSheet>
+            """);
+        Helpers.ReplaceFirstSheetXml(path.ToString(), """
+            <?xml version="1.0" encoding="utf-8"?>
+            <worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+                <dimension ref="A1" />
+                <sheetData><row r="1"><c r="A1" s="1"><v>46327</v></c></row></sheetData>
+            </worksheet>
+            """);
+
+        var row = MiniExcel.Query(path.ToString()).Single();
+
+        Assert.Equal(new DateTime(2026, 11, 1), (object)row.A);
+    }
 }

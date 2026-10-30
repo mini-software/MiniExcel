@@ -23,4 +23,9 @@ public class OpenXmlHeaderStyle
     /// Vertical alignment
     /// </summary>
     public VerticalCellAlignment VerticalAlignment { get; set; } = VerticalCellAlignment.Bottom;
+
+    /// <summary>
+    /// The height of the header row in points, or null for the default height
+    /// </summary>
+    public double? RowHeight { get; set; }
 }

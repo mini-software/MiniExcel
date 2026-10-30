@@ -213,7 +213,7 @@ internal partial class OpenXmlStyles
         { 14, new NumberFormatString("d/m/yyyy", typeof(DateTime?)) },
         { 15, new NumberFormatString("d-mmm-yy", typeof(DateTime?)) },
         { 16, new NumberFormatString("d-mmm", typeof(DateTime?)) },
-        { 17, new NumberFormatString("mmm-yy", typeof(TimeSpan)) },
+        { 17, new NumberFormatString("mmm-yy", typeof(DateTime?)) },
         { 18, new NumberFormatString("h:mm AM/PM", typeof(TimeSpan?)) },
         { 19, new NumberFormatString("h:mm:ss AM/PM", typeof(TimeSpan?)) },
         { 20, new NumberFormatString("h:mm", typeof(TimeSpan?)) },

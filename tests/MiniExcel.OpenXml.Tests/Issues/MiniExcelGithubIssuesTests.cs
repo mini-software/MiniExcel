@@ -3284,4 +3284,37 @@ public class MiniExcelGithubIssuesTests(ITestOutputHelper output)
         Assert.Equal("C3:C4", mergedCells[1]);
         Assert.Equal("A7:A8", mergedCells[2]);
     }
+
+    // https://github.com/mini-software/MiniExcel/issues/1034
+    [Theory]
+    [InlineData(14)]
+    [InlineData(15)]
+    [InlineData(16)]
+    [InlineData(17)]
+    [InlineData(22)]
+    public void QueryReadsBuiltInDateFormatsAsDateTime(int numFmtId)
+    {
+        using var path = AutoDeletingPath.Create();
+        _excelExporter.Export(path.FilePath, new[] { new { Value = "control" } });
+        SheetHelper.ReplaceStylesXml(path.FilePath, $"""
+            <?xml version="1.0" encoding="utf-8"?>
+            <styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+                <cellXfs count="2">
+                    <xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" />
+                    <xf numFmtId="{numFmtId}" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1" />
+                </cellXfs>
+            </styleSheet>
+            """);
+        SheetHelper.ReplaceFirstSheetXml(path.FilePath, """
+            <?xml version="1.0" encoding="utf-8"?>
+            <worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+                <dimension ref="A1" />
+                <sheetData><row r="1"><c r="A1" s="1"><v>46327</v></c></row></sheetData>
+            </worksheet>
+            """);
+
+        var row = _excelImporter.Query(path.FilePath).Single();
+
+        Assert.Equal(new DateTime(2026, 11, 1), (object)row.A);
+    }
 }

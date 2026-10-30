@@ -164,7 +164,6 @@ public class MiniExcelGithubIssuesTests(ITestOutputHelper output)
             Tests = Enumerable.Range(1, 5).Select((_, i) => new { test1 = i, test2 = i })
         };
 
-        var rows = _excelImporter.Query(templatePath).ToList();
         _excelTemplater.FillTemplate(path.ToString(), templatePath, value);
     }
 
@@ -479,11 +478,20 @@ public class MiniExcelGithubIssuesTests(ITestOutputHelper output)
     [Fact]
     public void Issue150()
     {
-        Assert.Throws<NotSupportedException>(() =>  { using var path = AutoDeletingPath.Create(); _excelExporter.Export(path.ToString(), new[] { 1, 2 }); });
-        Assert.Throws<NotSupportedException>(() =>  { using var path = AutoDeletingPath.Create(); _excelExporter.Export(path.ToString(), new[] { "1", "2" }); });
-        Assert.Throws<NotSupportedException>(() =>  { using var path = AutoDeletingPath.Create(); _excelExporter.Export(path.ToString(), new[] { '1', '2' }); });
-        Assert.Throws<NotSupportedException>(() =>  { using var path = AutoDeletingPath.Create(); _excelExporter.Export(path.ToString(), new[] { DateTime.Now }); });
-        Assert.Throws<NotSupportedException>(() =>  { using var path = AutoDeletingPath.Create(); _excelExporter.Export(path.ToString(), new[] { Guid.NewGuid() }); });
+        object[] invalidExportData = 
+        [
+            new[] { 1, 2 },
+            new[] { "1", "2" },
+            new[] { '1', '2' },
+            new[] { DateTime.Now },
+            new[] { Guid.NewGuid() }
+        ];
+
+        foreach (var item in invalidExportData)
+        {
+            using var path = AutoDeletingPath.Create();
+            Assert.Throws<NotSupportedException>(() => _excelExporter.Export(path.ToString(), item));
+        }
     }
 
     [Fact]
@@ -1541,12 +1549,12 @@ public class MiniExcelGithubIssuesTests(ITestOutputHelper output)
     /// A leading or trailing tab or line break is a blank too, inline and shared - https://github.com/mini-software/MiniExcel/issues/294
     [Theory]
     [InlineData("\tJack", StringStorageMode.Inline, true)]
-    [InlineData("Jack\n", StringStorageMode.Inline, true)]
-    [InlineData("Ja\tck", StringStorageMode.Inline, false)]
     [InlineData("\tJack", StringStorageMode.Shared, true)]
-    [InlineData("Jack\n", StringStorageMode.Shared, true)]
+    [InlineData("Ja\tck", StringStorageMode.Inline, false)]
     [InlineData("Ja\tck", StringStorageMode.Shared, false)]
-    public void TestIssue294WhiteSpace(string name, StringStorageMode mode, bool preserved)
+    [InlineData("  Jack", StringStorageMode.Inline, true)]
+    [InlineData("  Jack", StringStorageMode.Shared, true)]
+    public void TestIssue294WhiteSpaceAndTab(string name, StringStorageMode mode, bool preserved)
     {
         using var path = AutoDeletingPath.Create();
         var value = new[] { new { Name = name } };
@@ -1555,6 +1563,22 @@ public class MiniExcelGithubIssuesTests(ITestOutputHelper output)
         var part = mode == StringStorageMode.Shared ? "xl/sharedStrings.xml" : "xl/worksheets/sheet1.xml";
         var xml = SheetHelper.GetZipFileContent(path.ToString(), part);
         Assert.Contains(preserved ? $"<x:t xml:space=\"preserve\">{name}</x:t>" : $"<x:t>{name}</x:t>", xml);
+    }
+
+    [Theory]
+    [InlineData(StringStorageMode.Inline)]
+    [InlineData(StringStorageMode.Shared)]
+    public void TestIssue294NewLine(StringStorageMode mode)
+    {
+        var name = $"Jack{Environment.NewLine}";
+
+        using var path = AutoDeletingPath.Create();
+        var value = new[] { new { Name = name } };
+        _excelExporter.Export(path.ToString(), value, configuration: new OpenXmlConfiguration { StringStorageMode = mode });
+
+        var part = mode == StringStorageMode.Shared ? "xl/sharedStrings.xml" : "xl/worksheets/sheet1.xml";
+        var xml = SheetHelper.GetZipFileContent(path.ToString(), part);
+        Assert.Contains($"<x:t xml:space=\"preserve\">{name}</x:t>", xml);
     }
 
     /// Prefix and suffix blank space are hidden by Excel after FillTemplate - https://github.com/mini-software/MiniExcel/issues/295
@@ -1679,17 +1703,10 @@ public class MiniExcelGithubIssuesTests(ITestOutputHelper output)
         await _excelExporter.ExportAsync(path, value, overwriteFile: true);
     }
 
-    [Fact]
-    public void TestIssue310()
-    {
-        using var path = AutoDeletingPath.Create();
-        var value = new[] { new TestIssue310Dto { V1 = null }, new TestIssue310Dto { V1 = 2 } };
-        _excelExporter.Export(path.ToString(), value);
-        var rows = _excelImporter.Query<TestIssue310Dto>(path.ToString()).ToList();
-    }
-
-    [Fact]
-    public void TestIssue310_Fix497()
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void TestIssue310(bool enableWriteNullCellValue)
     {
         using var path = AutoDeletingPath.Create();
         var value = new[]
@@ -1697,8 +1714,11 @@ public class MiniExcelGithubIssuesTests(ITestOutputHelper output)
             new TestIssue310Dto { V1 = null },
             new TestIssue310Dto { V1 = 2 }
         };
-        _excelExporter.Export(path.ToString(), value, configuration: new OpenXmlConfiguration { EnableWriteNullValueCell = false });
+        _excelExporter.Export(path.ToString(), value, configuration: new OpenXmlConfiguration { EnableWriteNullValueCell = enableWriteNullCellValue });
         var rows = _excelImporter.Query<TestIssue310Dto>(path.ToString()).ToList();
+        
+        Assert.Equal(2, rows.Count);
+        Assert.Null(rows[0].V1);
     }
 
     [Fact]
@@ -1925,7 +1945,7 @@ public class MiniExcelGithubIssuesTests(ITestOutputHelper output)
             var reader = table.CreateDataReader();
             _excelExporter.Export(path.ToString(), reader);
             var xml = SheetHelper.GetZipFileContent(path.ToString(), "xl/worksheets/sheet1.xml");
-            var cnt = Regex.Count(xml, "<x:autoFilter ref=\"A1:B3\" />");
+            Assert.Contains("<x:autoFilter ref=\"A1:B3\" />", xml);
         }
         {
             using var table = new DataTable();
@@ -1938,7 +1958,7 @@ public class MiniExcelGithubIssuesTests(ITestOutputHelper output)
             var reader = table.CreateDataReader();
             _excelExporter.Export(path.ToString(), reader, false);
             var xml = SheetHelper.GetZipFileContent(path.ToString(), "xl/worksheets/sheet1.xml");
-            var cnt = Regex.Count(xml, "<x:autoFilter ref=\"A1:B2\" />");
+            Assert.Contains("<x:autoFilter ref=\"A1:B2\" />", xml);
         }
         {
             using var table = new DataTable();
@@ -1949,7 +1969,7 @@ public class MiniExcelGithubIssuesTests(ITestOutputHelper output)
             var reader = table.CreateDataReader();
             _excelExporter.Export(path.ToString(), reader);
             var xml = SheetHelper.GetZipFileContent(path.ToString(), "xl/worksheets/sheet1.xml");
-            var cnt = Regex.Count(xml, "<x:autoFilter ref=\"A1:B1\" />");
+            Assert.Contains("<x:autoFilter ref=\"A1:B1\" />", xml);
         }
     }
 
@@ -3246,6 +3266,8 @@ public class MiniExcelGithubIssuesTests(ITestOutputHelper output)
         Assert.Equal("A1:C7", SheetHelper.GetFirstSheetDimensionRefValue(actual.FilePath));
         Assert.Equal(ReadValues(expected.FilePath), actualRows);
         Assert.Equal("Keaton", actualRows[6][1]);
+        List<object?[]> ReadValues(string path)
+            => _excelImporter.Query(path).Select(row => ((IDictionary<string, object?>)row).Values.ToArray()).ToList();
     }
 
     [Fact]
@@ -3262,7 +3284,4 @@ public class MiniExcelGithubIssuesTests(ITestOutputHelper output)
         Assert.Equal("C3:C4", mergedCells[1]);
         Assert.Equal("A7:A8", mergedCells[2]);
     }
-
-    private List<object?[]> ReadValues(string path) =>
-        _excelImporter.Query(path).Select(row => ((IDictionary<string, object?>)row).Values.ToArray()).ToList();
 }

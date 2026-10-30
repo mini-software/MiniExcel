@@ -91,6 +91,21 @@ internal static class Helpers
         writer.Write(worksheetXml);
     }
 
+    internal static void ReplaceStylesXml(string path, string stylesXml)
+    {
+        using var stream = File.Open(path, FileMode.Open, FileAccess.ReadWrite);
+        using var archive = new ZipArchive(stream, ZipArchiveMode.Update, false, Encoding.UTF8);
+        var styles = archive.Entries.Single(w =>
+            w.FullName.Equals("xl/styles.xml", StringComparison.OrdinalIgnoreCase) ||
+            w.FullName.Equals("/xl/styles.xml", StringComparison.OrdinalIgnoreCase));
+        var entryName = styles.FullName;
+        styles.Delete();
+
+        var replacement = archive.CreateEntry(entryName);
+        using var writer = new StreamWriter(replacement.Open(), new UTF8Encoding(false));
+        writer.Write(stylesXml);
+    }
+
     internal static string? GetFirstSheetDimensionRefValue(string path)
     {
         var ns = new XmlNamespaceManager(new NameTable());

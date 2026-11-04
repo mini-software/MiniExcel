@@ -109,7 +109,7 @@ internal static class ExcelXml
     }
 
     internal static string WorksheetRelationship(SheetDto sheetDto)
-        => $"""<Relationship Id="{sheetDto.Id}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="/{sheetDto.Path}" />""";
+        => $"""<Relationship Id="{sheetDto.Id}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/{(sheetDto.IsChartSheet ? "chartsheet" : "worksheet")}" Target="/{sheetDto.Path}" />""";
 
     internal static string ImageRelationship(FileDto image)
         => $"""<Relationship Id="{image.Id}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="/{image.Path}" />""";

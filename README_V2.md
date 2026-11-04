@@ -771,6 +771,28 @@ exporter.Export("Book1.xlsx", dt, configuration: config);
 
 ![image](docs/images/freeze-pane-1.png)
 
+#### 14. Per-cell formulas and formatting
+
+Wrapping a value in `OpenXmlCellValue` sets a formula, number format or style for that one cell, overriding the column's settings:
+
+```csharp
+var rows = new[]
+{
+    new Dictionary<string, object?>
+    {
+        ["Input"] = 3,
+        ["Share"] = new OpenXmlCellValue(0.25) { NumberFormat = "0.0%", Style = { FontColor = Color.Red } },
+        ["Double"] = new OpenXmlCellValue(6) { Formula = "A2*2" }
+    }
+};
+
+var exporter = MiniExcelV2.Exporters.GetOpenXmlExporter();
+exporter.Export("Book1.xlsx", rows);
+```
+
+The value given with a formula is written as its cached result, which Excel shows until it recalculates. Pass `null` to leave the result for Excel to calculate.
+A cell with only a style keeps the number format it would otherwise have had.
+
 
 ### Fill Data To Excel Template <a name="docs-template" />
 

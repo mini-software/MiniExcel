@@ -67,6 +67,16 @@ internal static class WorksheetXml
         };
     }
 
+    /// <summary>
+    /// A formula cell, with its cached result when <paramref name="cachedValue"/> is not null.
+    /// </summary>
+    internal static string FormulaCell(string cellReference, string? cellType, string styleIndex, string formula, string? cachedValue)
+    {
+        var type = cachedValue is null ? "" : $" t=\"{cellType}\"";
+        var value = cachedValue is null ? "" : $"<x:v>{XmlHelper.EncodeXml(cachedValue)}</x:v>";
+        return $"""<x:c r="{cellReference}"{type} s="{styleIndex}"><x:f>{XmlHelper.EncodeXml(formula)}</x:f>{value}</x:c>""";
+    }
+
     internal static string Autofilter(string dimensionRef) => $"<x:autoFilter ref=\"{dimensionRef}\" />";
     internal static string Drawing(int sheetIndex) => $"<x:drawing r:id=\"rDrawing{sheetIndex}\" />";
 }

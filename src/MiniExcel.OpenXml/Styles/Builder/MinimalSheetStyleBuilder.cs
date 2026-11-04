@@ -20,20 +20,7 @@ internal partial class MinimalSheetStyleBuilder(SheetStyleBuilderContext context
     [CreateSyncVersion]
     protected override async Task GenerateNumFmtAsync()
     {
-        const int numFmtIndex = 166;
-        var index = 0;
-        foreach (var map in Context.SheetStyleFormatsCache.FormatMappings)
-        {
-            index++;
-
-            /*
-             * <x:numFmt numFmtId="{numFmtIndex + i}" formatCode="{item.Format}" />
-             */
-            await NewWriter.WriteStartElementAsync(OldReader.Prefix, "numFmt", OldReader.NamespaceURI).ConfigureAwait(false);
-            await NewWriter.WriteAttributeStringAsync(null, "numFmtId", null, (numFmtIndex + index + Context.OldElementInfos.NumFmtCount).ToString()).ConfigureAwait(false);
-            await NewWriter.WriteAttributeStringAsync(null, "formatCode", null, map.Format).ConfigureAwait(false);
-            await NewWriter.WriteEndElementAsync().ConfigureAwait(false);
-        }
+        await GenerateCustomNumFmtsAsync().ConfigureAwait(false);
     }
 
     [CreateSyncVersion]
@@ -44,6 +31,8 @@ internal partial class MinimalSheetStyleBuilder(SheetStyleBuilderContext context
          */
         await NewWriter.WriteStartElementAsync(OldReader.Prefix, "font", OldReader.NamespaceURI).ConfigureAwait(false);
         await NewWriter.WriteEndElementAsync().ConfigureAwait(false);
+
+        await GenerateCustomFontsAsync().ConfigureAwait(false);
     }
 
     [CreateSyncVersion]
@@ -119,20 +108,37 @@ internal partial class MinimalSheetStyleBuilder(SheetStyleBuilderContext context
         await NewWriter.WriteAttributeStringAsync(null, "applyNumberFormat", null, "1").ConfigureAwait(false);
         await NewWriter.WriteEndElementAsync().ConfigureAwait(false);
 
-        const int numFmtIndex = 166;
-        for (var i = 1; i <= Context.CustomFormatCount; i++)
-        {
-            /*
-             * <x:xf numFmtId="{numFmtIndex + i}" applyNumberFormat="1"
-             */
-            await NewWriter.WriteStartElementAsync(OldReader.Prefix, "xf", OldReader.NamespaceURI).ConfigureAwait(false);
-            await NewWriter.WriteAttributeStringAsync(null, "numFmtId", null, (numFmtIndex + i).ToString()).ConfigureAwait(false);
-            await NewWriter.WriteAttributeStringAsync(null, "fontId", null, "0").ConfigureAwait(false);
-            await NewWriter.WriteAttributeStringAsync(null, "fillId", null, "0").ConfigureAwait(false);
-            await NewWriter.WriteAttributeStringAsync(null, "borderId", null, "0").ConfigureAwait(false);
-            await NewWriter.WriteAttributeStringAsync(null, "xfId", null, "0").ConfigureAwait(false);
-            await NewWriter.WriteAttributeStringAsync(null, "applyNumberFormat", null, "1").ConfigureAwait(false);
-            await NewWriter.WriteEndElementAsync().ConfigureAwait(false);
-        }
+        await GenerateCustomCellXfsAsync().ConfigureAwait(false);
+    }
+
+    [CreateSyncVersion]
+    protected override async Task GenerateCustomFontAsync(string argb)
+    {
+        /*
+         * <x:font><x:color rgb="{argb}" /></x:font>
+         */
+        await NewWriter.WriteStartElementAsync(OldReader.Prefix, "font", OldReader.NamespaceURI).ConfigureAwait(false);
+        await NewWriter.WriteStartElementAsync(OldReader.Prefix, "color", OldReader.NamespaceURI).ConfigureAwait(false);
+        await NewWriter.WriteAttributeStringAsync(null, "rgb", null, argb).ConfigureAwait(false);
+        await NewWriter.WriteEndElementAsync().ConfigureAwait(false);
+        await NewWriter.WriteEndElementAsync().ConfigureAwait(false);
+    }
+
+    [CreateSyncVersion]
+    protected override async Task GenerateCustomCellXfAsync(string numFmtId, string? fontId)
+    {
+        /*
+         * <x:xf numFmtId="{numFmtId}" fontId="{fontId}" fillId="0" borderId="0" xfId="0" applyNumberFormat="1" applyFont="1" />
+         */
+        await NewWriter.WriteStartElementAsync(OldReader.Prefix, "xf", OldReader.NamespaceURI).ConfigureAwait(false);
+        await NewWriter.WriteAttributeStringAsync(null, "numFmtId", null, numFmtId).ConfigureAwait(false);
+        await NewWriter.WriteAttributeStringAsync(null, "fontId", null, fontId ?? "0").ConfigureAwait(false);
+        await NewWriter.WriteAttributeStringAsync(null, "fillId", null, "0").ConfigureAwait(false);
+        await NewWriter.WriteAttributeStringAsync(null, "borderId", null, "0").ConfigureAwait(false);
+        await NewWriter.WriteAttributeStringAsync(null, "xfId", null, "0").ConfigureAwait(false);
+        await NewWriter.WriteAttributeStringAsync(null, "applyNumberFormat", null, "1").ConfigureAwait(false);
+        if (fontId is not null)
+            await NewWriter.WriteAttributeStringAsync(null, "applyFont", null, "1").ConfigureAwait(false);
+        await NewWriter.WriteEndElementAsync().ConfigureAwait(false);
     }
 }

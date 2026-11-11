@@ -196,7 +196,11 @@ internal static class TypeHelper
         }
         else if (pInfo.ExcludeNullableType == typeof(double)) // && (!Regex.IsMatch(itemValue.ToString(), @"^-?\d+(\.\d+)?([eE][-+]?\d+)?$") || itemValue.ToString().Trim().Equals("NaN")))
         {
-            if (double.TryParse(Convert.ToString(itemValue, config.Culture), NumberStyles.Any, config.Culture, out var doubleValue))
+            if (itemValue is double f64)
+            {
+                newValue = f64;   
+            }
+            else if (double.TryParse(Convert.ToString(itemValue, config.Culture), NumberStyles.Any, config.Culture, out var doubleValue))
             {
                 newValue = doubleValue;
             }
@@ -208,9 +212,36 @@ internal static class TypeHelper
                     : throw new InvalidCastException($"Value \"{itemValue}\" cannot be cast to double");
             }
         }
+        else if (pInfo.ExcludeNullableType == typeof(decimal))
+        {
+            if (itemValue is decimal dec)
+            {
+                newValue = dec;
+            }
+            else if (itemValue is double f64)
+            {
+#if NET11_0_OR_GREATER
+                newValue = ConvertToDecimalWithLegacyApproximation(f64);
+#else
+                newValue = Convert.ToDecimal(f64, CultureInfo.InvariantCulture);
+#endif
+            }
+            else if (decimal.TryParse(Convert.ToString(itemValue, config.Culture), NumberStyles.Any, config.Culture, out var decimalValue))
+            {
+                newValue = decimalValue;
+            }
+            else
+            {
+                var invariantString = Convert.ToString(itemValue, CultureInfo.InvariantCulture);
+                newValue = decimal.TryParse(invariantString, NumberStyles.Any, CultureInfo.InvariantCulture,
+                    out var value)
+                    ? value
+                    : throw new InvalidCastException($"Value \"{itemValue}\" cannot be cast to decimal");
+            }
+        }
         else if (pInfo.ExcludeNullableType == typeof(bool))
         {
-            var vs = itemValue.ToString();
+            var vs = itemValue?.ToString();
             if (vs == "1")
                 newValue = true;
             else if (vs == "0")
@@ -244,6 +275,22 @@ internal static class TypeHelper
         pInfo.Property.SetValue(v, newValue);
         return newValue;
     }
+
+#if NET11_0_OR_GREATER
+    /// <summary>Converts the specified double value to decimal using the same approximation applied by versions of .NET no greater than 10.</summary>
+    /// <remarks>
+    /// In .NET 11 conversion APIs such as <see cref="Decimal(double)" /> and <see cref="Convert.ToDecimal(double)" /> among others
+    /// have been changed to approximate the resulting value more accurately. Unfortunately this is a significant breaking change for us
+    /// as we relied upon this truncation to discard unwanted decimal digits when mapping doubles (our default numeric type) to decimals.
+    /// This method is therefore a workaround to ensure backwards compatibility with previous versions of the library.
+    /// </remarks>
+    private static decimal ConvertToDecimalWithLegacyApproximation(double value)
+    {
+        Span<char> text = stackalloc char[32];
+        value.TryFormat(text, out var length, "G15", CultureInfo.InvariantCulture);
+        return decimal.Parse(text[..length], NumberStyles.Float, CultureInfo.InvariantCulture);
+    }
+#endif
 
 #if !NET45
     public static bool IsAsyncEnumerable(this Type type, out Type genericArgument)

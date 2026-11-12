@@ -37,6 +37,41 @@ The issue template will help you on the way once again:
     * Unit tests for the changes have been added
     * Documentation has been updated where necessary
 
+### Automatic review requests
+
+PRs targeting `master` automatically request active members of the
+[`core-reviewers` team](https://github.com/orgs/mini-software/teams/core-reviewers)
+when opened, reopened, marked ready for review, or updated. The PR author,
+already requested reviewers, and anyone who has already submitted a review are
+excluded. Draft PRs do not request reviews. The three-approval merge requirement
+is configured separately in repository rules.
+
+Maintainers can update the reviewer list by adding or removing team members;
+pending organization invitations must be accepted before members are included.
+Removing a member does not revoke existing review requests or their separately
+granted repository permissions.
+
+Before enabling the [reviewer workflow](.github/workflows/auto-reviewers.yml),
+configure a fine-grained personal access token with `mini-software` as the resource
+owner and only the organization **Members: read** permission. Store it as the
+repository Actions secret `CORE_REVIEWERS_TOKEN` and ensure any required
+organization approval is complete. Rotate the token before it expires. The token
+only reads team membership; review requests use the workflow's `GITHUB_TOKEN`
+with **Pull requests: write** permission.
+
+After the workflow is merged into `master`, use its **Run workflow** action with
+a PR number to refresh reviewers on an existing PR. Team changes are otherwise
+picked up on the next supported PR event, not immediately when membership changes.
+The workflow uses `pull_request_target` to support fork PRs without checking out
+or executing PR code. Missing credentials, team access errors, and unconfirmed
+review requests fail the workflow explicitly.
+
+Run the reviewer workflow tests with:
+
+```sh
+node --test .github/tests/auto-reviewers.test.cjs
+```
+
 ## AI Usage
 
 The use of AI agents is allowed for generating bugfixes, unit tests and documentation.

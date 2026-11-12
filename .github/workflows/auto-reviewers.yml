@@ -1,0 +1,117 @@
+name: Request core reviewers
+
+on:
+  pull_request_target:
+    branches: [master]
+    types: [opened, reopened, ready_for_review, synchronize]
+  workflow_dispatch:
+    inputs:
+      pull_request_number:
+        description: Open PR targeting master to refresh reviewers
+        required: true
+        type: string
+
+permissions:
+  pull-requests: write
+
+concurrency:
+  group: core-reviewers-${{ github.event.pull_request.number || inputs.pull_request_number }}
+  cancel-in-progress: false
+
+jobs:
+  request-reviewers:
+    if: github.event_name == 'workflow_dispatch' || !github.event.pull_request.draft
+    runs-on: ubuntu-latest
+    steps:
+      - name: Read current team members
+        id: team
+        uses: actions/github-script@v7
+        env:
+          CORE_REVIEWERS_TOKEN: ${{ secrets.CORE_REVIEWERS_TOKEN }}
+        with:
+          github-token: ${{ secrets.CORE_REVIEWERS_TOKEN }}
+          result-encoding: string
+          script: |
+            if (!process.env.CORE_REVIEWERS_TOKEN) {
+              throw new Error('Configure CORE_REVIEWERS_TOKEN with organization Members: read permission.');
+            }
+
+            const members = await github.paginate(github.rest.teams.listMembersInOrg, {
+              org: context.repo.owner,
+              team_slug: 'core-reviewers',
+              per_page: 100
+            });
+            const reviewers = members
+              .filter(member => member.type !== 'Bot')
+              .map(member => member.login);
+            if (reviewers.length === 0) {
+              throw new Error('The core-reviewers team has no active human members.');
+            }
+            core.info(`Loaded ${reviewers.length} active core reviewers.`);
+            return JSON.stringify(reviewers);
+
+      - name: Request missing reviewers
+        uses: actions/github-script@v7
+        env:
+          TEAM_REVIEWERS: ${{ steps.team.outputs.result }}
+          INPUT_PR_NUMBER: ${{ inputs.pull_request_number }}
+        with:
+          script: |
+            const input = context.payload.pull_request?.number ?? process.env.INPUT_PR_NUMBER;
+            const pull_number = Number(input);
+            if (!/^[1-9]\d*$/.test(String(input)) || !Number.isSafeInteger(pull_number)) {
+              throw new Error('A positive integer pull request number is required.');
+            }
+            const params = { ...context.repo, pull_number };
+            const { data: pull } = await github.rest.pulls.get(params);
+            if (pull.state !== 'open' || pull.draft || pull.base.ref !== 'master') {
+              core.notice('Skipping: the PR must be open, ready for review, and target master.');
+              return;
+            }
+
+            const { data: requested } = await github.rest.pulls.listRequestedReviewers(params);
+            const reviews = await github.paginate(github.rest.pulls.listReviews, {
+              ...params,
+              per_page: 100
+            });
+            const excluded = new Set([
+              pull.user.login,
+              ...requested.users.map(user => user.login),
+              ...reviews.map(review => review.user.login)
+            ].map(login => login.toLowerCase()));
+            const reviewers = JSON.parse(process.env.TEAM_REVIEWERS);
+            const missing = [];
+            for (const login of reviewers) {
+              const key = login.toLowerCase();
+              if (!excluded.has(key)) {
+                missing.push(login);
+                excluded.add(key);
+              }
+            }
+            if (missing.length === 0) {
+              core.info('All eligible team members have already been requested or reviewed.');
+              return;
+            }
+
+            // GitHub can omit reviewers from oversized requests, so limit each batch.
+            for (let offset = 0; offset < missing.length; offset += 15) {
+              await github.rest.pulls.requestReviewers({
+                ...params,
+                reviewers: missing.slice(offset, offset + 15)
+              });
+            }
+
+            const { data: updated } = await github.rest.pulls.listRequestedReviewers(params);
+            const updatedReviews = await github.paginate(github.rest.pulls.listReviews, {
+              ...params,
+              per_page: 100
+            });
+            const confirmed = new Set([
+              ...updated.users.map(user => user.login),
+              ...updatedReviews.map(review => review.user.login)
+            ].map(login => login.toLowerCase()));
+            const unconfirmed = missing.filter(login => !confirmed.has(login.toLowerCase()));
+            if (unconfirmed.length > 0) {
+              throw new Error(`GitHub did not confirm review requests for: ${unconfirmed.join(', ')}`);
+            }
+            core.info(`Requested ${missing.length} additional core reviewers.`);

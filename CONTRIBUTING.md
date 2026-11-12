@@ -43,8 +43,8 @@ PRs targeting `master` automatically request active members of the
 [`core-reviewers` team](https://github.com/orgs/mini-software/teams/core-reviewers)
 when opened, reopened, marked ready for review, or updated. The PR author,
 already requested reviewers, and anyone who has already submitted a review are
-excluded. Draft PRs do not request reviews. The three-approval merge requirement
-is configured separately in repository rules.
+excluded. Draft PRs do not request reviews. Merge approval requirements are
+configured separately from review invitations.
 
 Maintainers can update the reviewer list by adding or removing team members;
 pending organization invitations must be accepted before members are included.
@@ -66,10 +66,55 @@ The workflow uses `pull_request_target` to support fork PRs without checking out
 or executing PR code. Missing credentials, team access errors, and unconfirmed
 review requests fail the workflow explicitly.
 
-Run the reviewer workflow tests with:
+### Approval requirements
+
+The review policy for PRs targeting `master` is:
+
+* Ordinary changes: at least **one approval** from someone other than the author.
+* Important changes with the `major-change` label: at least **three approvals**.
+
+Approvals must come from users with Write or higher repository permissions.
+Invitations, comments, author approvals, bot reviews, and dismissed approvals do
+not count. A later approval or change request supersedes that user's earlier
+decision; a comment does not cancel an approval. Existing native protections
+still apply, including blocking unresolved change requests.
+
+Maintainers should add `major-change` before review for public API changes,
+architecture changes, breaking changes, or other high-impact modifications.
+Do not remove the label merely to bypass the three-approval requirement.
+This is a project policy, not an ASF-wide requirement for every GitHub PR.
+
+The [approval workflow](.github/workflows/review-approval-policy.yml) publishes
+the commit status **Review approval policy**. It refreshes all open, non-draft
+PRs on PR/label changes and after the
+[read-only review notification workflow](.github/workflows/review-changed.yml)
+completes. This two-workflow design supports fork reviews without granting the
+notification workflow secrets or write permissions, or running PR code in the
+privileged workflow. Neither workflow requires `CORE_REVIEWERS_TOKEN`.
+
+Changes are processed asynchronously. Wait for the approval workflow to finish
+after changing labels or reviews, then check the status before merging.
+Maintainers can manually run **Review approval policy** to refresh existing PRs.
+PRs sharing a head commit also share its status, so all such open, non-draft PRs
+must meet their individual approval requirements.
+
+To activate enforcement without a gap:
+
+1. Merge these workflows into `master` while retaining the current three-approval
+   native rule.
+2. Run **Review approval policy** and verify its commit status on open PRs.
+3. In the `main` ruleset, require the **Review approval policy** status check from
+   **GitHub Actions**, then lower the native required approvals to **one** in the
+   same ruleset update. Preserve the existing bypass policy.
+
+Do not lower the native approval count before the required status check is
+configured. Team-based automatic invitations additionally require the secret
+described above, but tiered approval enforcement does not.
+
+Run the reviewer and approval workflow tests with:
 
 ```sh
-node --test .github/tests/auto-reviewers.test.cjs
+node --test .github/tests/auto-reviewers.test.cjs .github/tests/review-approval-policy.test.cjs
 ```
 
 ## AI Usage

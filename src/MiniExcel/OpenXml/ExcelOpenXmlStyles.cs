@@ -115,22 +115,18 @@ internal class ExcelOpenXmlStyles
 
     public object ConvertValueByStyleFormat(int index, object value)
     {
+        if (value is not double number)
+            return value;
+
         var sf = GetStyleFormat(index);
         if (sf?.Type == null)
             return value;
 
         if (sf.Type == typeof(DateTime?))
-        {
-            if (double.TryParse(value?.ToString(), out var s))
-            {
-                return DateTimeHelper.IsValidOADateTime(s) ? DateTime.FromOADate(s) : value;
-            }
-        }
-        else if (sf.Type == typeof(TimeSpan?))
-        {
-            if (double.TryParse(value?.ToString(), out var number))
-                return TimeSpan.FromDays(number);
-        }
+            return DateTimeHelper.IsValidOADateTime(number) ? DateTime.FromOADate(number) : value;
+
+        if (sf.Type == typeof(TimeSpan?))
+            return TimeSpan.FromDays(number);
 
         return value;
     }

@@ -106,6 +106,21 @@ internal static class Helpers
         writer.Write(stylesXml);
     }
 
+    internal static void ReplaceSharedStringsXml(string path, string sharedStringsXml)
+    {
+        using var stream = File.Open(path, FileMode.Open, FileAccess.ReadWrite);
+        using var archive = new ZipArchive(stream, ZipArchiveMode.Update, false, Encoding.UTF8);
+        var sharedStrings = archive.Entries.Single(w =>
+            w.FullName.Equals("xl/sharedStrings.xml", StringComparison.OrdinalIgnoreCase) ||
+            w.FullName.Equals("/xl/sharedStrings.xml", StringComparison.OrdinalIgnoreCase));
+        var entryName = sharedStrings.FullName;
+        sharedStrings.Delete();
+
+        var replacement = archive.CreateEntry(entryName);
+        using var writer = new StreamWriter(replacement.Open(), new UTF8Encoding(false));
+        writer.Write(sharedStringsXml);
+    }
+
     internal static string? GetFirstSheetDimensionRefValue(string path)
     {
         var ns = new XmlNamespaceManager(new NameTable());

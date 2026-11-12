@@ -4952,4 +4952,54 @@ public class MiniExcelIssueTests(ITestOutputHelper output)
 
         Assert.Equal(new DateTime(2026, 11, 1), (object)row.A);
     }
+
+    // https://github.com/mini-software/MiniExcel/issues/1041
+    [Fact]
+    public void QueryReturnsTextCellsWithDateOrTimeFormatAsString()
+    {
+        using var path = AutoDeletingPath.Create();
+        MiniExcel.SaveAs(path.ToString(), new[] { new { Value = "control" } });
+        Helpers.ReplaceStylesXml(path.ToString(), """
+            <?xml version="1.0" encoding="utf-8"?>
+            <styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+                <cellXfs count="3">
+                    <xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" />
+                    <xf numFmtId="14" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1" />
+                    <xf numFmtId="21" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1" />
+                </cellXfs>
+            </styleSheet>
+            """);
+        Helpers.ReplaceSharedStringsXml(path.ToString(), """
+            <?xml version="1.0" encoding="utf-8"?>
+            <sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="2" uniqueCount="2">
+                <si><t>6200</t></si>
+                <si><t>0.5</t></si>
+            </sst>
+            """);
+        Helpers.ReplaceFirstSheetXml(path.ToString(), """
+            <?xml version="1.0" encoding="utf-8"?>
+            <worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+                <dimension ref="A1:F1" />
+                <sheetData>
+                    <row r="1">
+                        <c r="A1" s="1"><v>46327</v></c>
+                        <c r="B1" s="1" t="s"><v>0</v></c>
+                        <c r="C1" s="1" t="str"><v>6200</v></c>
+                        <c r="D1" s="1" t="inlineStr"><is><t>6200</t></is></c>
+                        <c r="E1" s="2"><v>0.5</v></c>
+                        <c r="F1" s="2" t="s"><v>1</v></c>
+                    </row>
+                </sheetData>
+            </worksheet>
+            """);
+
+        var row = MiniExcel.Query(path.ToString()).Single();
+
+        Assert.Equal(new DateTime(2026, 11, 1), (object)row.A);
+        Assert.Equal("6200", (object)row.B);
+        Assert.Equal("6200", (object)row.C);
+        Assert.Equal("6200", (object)row.D);
+        Assert.Equal(TimeSpan.FromHours(12), (object)row.E);
+        Assert.Equal("0.5", (object)row.F);
+    }
 }

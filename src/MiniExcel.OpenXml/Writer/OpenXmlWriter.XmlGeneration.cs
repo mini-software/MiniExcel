@@ -1,3 +1,4 @@
+using MiniExcelLib.OpenXml.Charts;
 using static MiniExcelLib.Core.Helpers.ImageHelper;
 
 namespace MiniExcelLib.OpenXml.Writer;
@@ -15,6 +16,7 @@ internal partial class OpenXmlWriter
     
     private readonly Dictionary<string, string> _zipContentsMap = [];
     private readonly Dictionary<string, int> _sharedStrings = [];
+    private readonly Dictionary<int, OpenXmlChart> _charts = [];
     
     private IEnumerable<(SheetDto Sheet, object? Data)> GetSheets()
     {
@@ -385,6 +387,11 @@ internal partial class OpenXmlWriter
             drawing.AppendLine(ExcelXml.ImageRelationship(image));
         }
 
+        if (_charts.ContainsKey(sheetIndex))
+        {
+            drawing.AppendLine(ChartXml.ChartRelationship(sheetIndex));
+        }
+
         return drawing.ToString();
     }
 
@@ -401,14 +408,19 @@ internal partial class OpenXmlWriter
             }
         }
 
+        if (_charts.ContainsKey(sheetIndex))
+        {
+            drawing.Append(ChartXml.ChartSheetAnchor(sheetIndex));
+        }
+
         return drawing.ToString();
     }
 
-    private (string WorkbookContents, string WorkbookRelsContents, Dictionary<int, string> SheetRelsContents) GenerateWorkbookItems()
+    private (string WorkbookContents, string WorkbookRelsContents, Dictionary<string, string> SheetRelsContents) GenerateWorkbookItems()
     {
         var workbookContents = new StringBuilder();
         var workbookRelsContents = new StringBuilder();
-        var sheetsRelsDict = new Dictionary<int, string>();
+        var sheetsRelsDict = new Dictionary<string, string>();
 
         var sheetId = 0;
         foreach (var sheetDto in _sheets)
@@ -419,7 +431,7 @@ internal partial class OpenXmlWriter
             workbookRelsContents.AppendLine(ExcelXml.WorksheetRelationship(sheetDto));
             
             //TODO: support multiple drawing
-            sheetsRelsDict.Add(sheetDto.SheetIdx, ExcelXml.DrawingRelationship(sheetId));
+            sheetsRelsDict.Add(sheetDto.RelsPath, ExcelXml.DrawingRelationship(sheetId));
         }
 
         return (workbookContents.ToString(), workbookRelsContents.ToString(), sheetsRelsDict);

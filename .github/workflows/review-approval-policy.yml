@@ -1,0 +1,105 @@
+name: Review approval policy
+
+on:
+  pull_request_target:
+    branches: [master]
+    types: [opened, reopened, synchronize, ready_for_review, converted_to_draft, labeled, unlabeled, edited, closed]
+  workflow_run:
+    workflows: [PR review changed]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  pull-requests: read
+  statuses: write
+
+concurrency:
+  group: review-approval-policy
+  cancel-in-progress: false
+
+jobs:
+  check-approvals:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Refresh approval requirements
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const statusContext = 'Review approval policy';
+            const pulls = await github.paginate(github.rest.pulls.list, {
+              ...context.repo,
+              state: 'open',
+              base: 'master',
+              per_page: 100
+            });
+            const groups = new Map();
+            for (const pull of pulls.filter(pull => !pull.draft)) {
+              const group = groups.get(pull.head.sha) ?? [];
+              group.push(pull);
+              groups.set(pull.head.sha, group);
+            }
+            if (groups.size === 0) {
+              core.info('No open, ready-for-review PRs target master.');
+              return;
+            }
+            const writeStatus = (sha, state, description) => github.rest.repos.createCommitStatus({
+              ...context.repo,
+              sha,
+              state,
+              context: statusContext,
+              description: description.slice(0, 140),
+              target_url: `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`
+            });
+            for (const sha of groups.keys()) {
+              await writeStatus(sha, 'pending', 'Checking current labels and eligible approvals.');
+            }
+
+            const permissions = new Map();
+            for (const [sha, group] of groups) {
+              const results = [];
+              for (const pull of group) {
+                const required = pull.labels.some(label => label.name.toLowerCase() === 'major-change') ? 3 : 1;
+                const reviews = await github.paginate(github.rest.pulls.listReviews, {
+                  ...context.repo,
+                  pull_number: pull.number,
+                  per_page: 100
+                });
+                const latest = new Map();
+                for (const review of reviews.sort((left, right) => left.id - right.id)) {
+                  if (['APPROVED', 'CHANGES_REQUESTED', 'DISMISSED'].includes(review.state)) {
+                    latest.set(review.user.login.toLowerCase(), review);
+                  }
+                }
+                let approvals = 0;
+                for (const [login, review] of latest) {
+                  if (review.state !== 'APPROVED' || review.user.type === 'Bot' ||
+                      login === pull.user.login.toLowerCase()) {
+                    continue;
+                  }
+                  if (!permissions.has(login)) {
+                    const { data } = await github.rest.repos.getCollaboratorPermissionLevel({
+                      ...context.repo,
+                      username: review.user.login
+                    });
+                    permissions.set(login, ['write', 'maintain', 'admin'].includes(data.permission));
+                  }
+                  if (permissions.get(login)) {
+                    approvals++;
+                  }
+                }
+                results.push({ number: pull.number, required, approvals });
+              }
+
+              // Commit statuses are shared by PRs with the same head SHA.
+              const waiting = results.filter(result => result.approvals < result.required);
+              if (waiting.length > 0) {
+                const description = waiting
+                  .map(result => `#${result.number}: ${result.approvals}/${result.required} eligible approvals`)
+                  .join('; ');
+                await writeStatus(sha, 'pending', description);
+                core.info(description);
+              } else {
+                await writeStatus(sha, 'success', `Approval policy satisfied for ${group.length} open PR(s).`);
+                core.info(`Approval policy satisfied for ${group.map(pull => `#${pull.number}`).join(', ')}.`);
+              }
+            }

@@ -28,7 +28,9 @@ internal sealed partial class SheetStyleBuilderContext(Dictionary<string, string
     public XmlWriter? NewXmlWriter { get; private set; }
     public SheetStyleElementInfos OldElementInfos { get; private set; } = null!;
     public SheetStyleElementInfos GeneratedElementInfos { get; private set; } = null!;
-    public int CustomFormatCount => SheetStyleFormatsCache.FormatMappingsCount;
+    public int CustomNumberFormatCount => SheetStyleFormatsCache.NumberFormats.Count;
+    public int CustomFontCount => SheetStyleFormatsCache.FontColors.Count;
+    public int CustomCellFormatCount => SheetStyleFormatsCache.CellFormats.Count;
 
     [CreateSyncVersion]
     public async Task CreateAsync(SheetStyleElementInfos generatedElementInfos, CancellationToken cancellationToken = default)
@@ -115,6 +117,9 @@ internal sealed partial class SheetStyleBuilderContext(Dictionary<string, string
     {
         SheetStyleFormatsCache.AddMappings(mappings);
     }
+
+    public int GetCellFormatIndex(string? numberFormat, int builtInNumberFormatId, System.Drawing.Color? fontColor)
+        => SheetStyleFormatsCache.GetCellFormatIndex(numberFormat, builtInNumberFormatId, fontColor);
     
     [CreateSyncVersion]
     public async Task FinalizeAndUpdateZipDictionaryAsync(CancellationToken cancellationToken = default)

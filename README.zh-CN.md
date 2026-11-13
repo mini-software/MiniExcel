@@ -9,14 +9,6 @@
 
 ---
 
-[<img align="right" src="https://github.com/dotnet-foundation/swag/blob/main/logo/dotnetfoundation_v4.png?raw=true" width="100" />](https://www.dotnetfoundation.org/)
-
-<div align="center">
-<p>该项目属于 <a href="https://www.dotnetfoundation.org/">.NET 基金会</a> ，并根据其<a href="https://www.dotnetfoundation.org/code-of-conduct">行为准则</a> 运作。</p>
-</div>
-
----
-
 <div align="center">
 <p> 您的 <a href="https://github.com/mini-software/miniexcel">Star</a>、<a href="https://miniexcel.github.io">赞助</a> 和 <a href="https://edu.51cto.com/course/32914.html">购买视频</a> 能帮助 MiniExcel 成长 </p>
 </div>

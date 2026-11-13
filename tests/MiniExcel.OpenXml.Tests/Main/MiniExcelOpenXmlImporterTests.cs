@@ -370,6 +370,16 @@ public class MiniExcelOpenXmlImporterTests(ITestOutputHelper output)
     }
 
     [Fact]
+    public void TimeSpanKeepsWholeSeconds()
+    {
+        using var path = AutoDeletingPath.Create();
+        MiniExcelV2.Exporters.GetOpenXmlExporter().Export(path.ToString(), new[] { new { Duration = TimeSpan.FromSeconds(11) } });
+
+        var row = _excelImporter.Query(path.ToString(), true).First();
+        Assert.Equal(TimeSpan.FromSeconds(11), (TimeSpan)row.Duration);
+    }
+
+    [Fact]
     public void TestDatetimeSpanFormat_ClosedXml()
     {
         var path = PathHelper.GetFile("xlsx/TestDatetimeSpanFormat_ClosedXml.xlsx");

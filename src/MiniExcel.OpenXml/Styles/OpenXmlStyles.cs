@@ -192,7 +192,7 @@ internal partial class OpenXmlStyles
             return DateTimeHelper.IsValidOADateTime(number) ? DateTime.FromOADate(number) : value;
 
         if (sf.Type == typeof(TimeSpan?))
-            return TimeSpan.FromDays(number);
+            return TimeSpan.FromMilliseconds(Math.Round(number * 86400000d));
 
         return value;
     }

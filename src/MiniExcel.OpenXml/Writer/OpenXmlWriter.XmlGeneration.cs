@@ -11,8 +11,6 @@ internal partial class OpenXmlWriter
     private const string FillCellStyleIndex = "4";
     private const string TimeCellStyleIndex = "5";
     
-    private static readonly DateTime ExcelZeroDate = new(1899, 12, 31);
-    
     private readonly Dictionary<string, string> _zipContentsMap = [];
     private readonly Dictionary<string, int> _sharedStrings = [];
     
@@ -357,9 +355,6 @@ internal partial class OpenXmlWriter
 
     private (string, string, string) GetTimeSpanValue(TimeSpan value, MiniExcelColumnMapping? columnMapping)
     {
-        if (value.TotalDays >= 1)
-            return GetDateTimeValue(ExcelZeroDate + value, columnMapping);
-
         var cellValue = value.TotalDays.ToString(CultureInfo.InvariantCulture);
         var format = columnMapping?.ExcelFormatId is { } fmt and not -1 ? fmt.ToString() : TimeCellStyleIndex;
 

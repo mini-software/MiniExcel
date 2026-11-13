@@ -14,6 +14,16 @@ public class MiniExcelOpenXmlExporterTests(ITestOutputHelper output)
    
     
     [Fact]
+    public void TimeSpanOfADayOrMoreStaysADuration()
+    {
+        using var path = AutoDeletingPath.Create();
+        _excelExporter.Export(path.ToString(), new[] { new { Duration = TimeSpan.FromHours(36.25) } });
+
+        var row = _excelImporter.Query(path.ToString(), true).First();
+        Assert.Equal(TimeSpan.FromHours(36.25), (TimeSpan)row.Duration);
+    }
+
+    [Fact]
     public void SaveAsControlChracter()
     {
         using var path = AutoDeletingPath.Create();

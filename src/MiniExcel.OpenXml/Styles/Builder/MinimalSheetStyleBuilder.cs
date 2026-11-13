@@ -1,6 +1,6 @@
 ﻿namespace MiniExcelLib.OpenXml.Styles.Builder;
 
-internal partial class MinimalSheetStyleBuilder(SheetStyleBuilderContext context) : SheetStyleBuilderBase(context)
+internal partial class MinimalSheetStyleBuilder(SheetStyleBuilderContext context, OpenXmlStyleOptions? styleOptions = null) : SheetStyleBuilderBase(context)
 {
     private static readonly SheetStyleElementInfos GenerateElementInfos = new()
     {
@@ -88,6 +88,8 @@ internal partial class MinimalSheetStyleBuilder(SheetStyleBuilderContext context
          * <x:xf numFmtId="21" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1" />
          * */
 
+        // The second xf is the header's, which takes the alignment of a header style but not its fill
+        var headerStyle = styleOptions?.HeaderStyle;
         for (int i = 0; i < 3; i++)
         {
             await NewWriter.WriteStartElementAsync(OldReader.Prefix, "xf", OldReader.NamespaceURI).ConfigureAwait(false);
@@ -96,6 +98,28 @@ internal partial class MinimalSheetStyleBuilder(SheetStyleBuilderContext context
             await NewWriter.WriteAttributeStringAsync(null, "fillId", null, "0").ConfigureAwait(false);
             await NewWriter.WriteAttributeStringAsync(null, "borderId", null, "0").ConfigureAwait(false);
             await NewWriter.WriteAttributeStringAsync(null, "xfId", null, "0").ConfigureAwait(false);
+            if (i == 1 && headerStyle is not null)
+            {
+                /*
+                 * <x:alignment horizontal="center" vertical="center" wrapText="1" />
+                 */
+                await NewWriter.WriteAttributeStringAsync(null, "applyAlignment", null, "1").ConfigureAwait(false);
+                await NewWriter.WriteStartElementAsync(OldReader.Prefix, "alignment", OldReader.NamespaceURI).ConfigureAwait(false);
+                await NewWriter.WriteAttributeStringAsync(null, "horizontal", null, headerStyle.HorizontalAlignment switch
+                {
+                    HorizontalCellAlignment.Center => "center",
+                    HorizontalCellAlignment.Right => "right",
+                    _ => "general"
+                }).ConfigureAwait(false);
+                await NewWriter.WriteAttributeStringAsync(null, "vertical", null, headerStyle.VerticalAlignment switch
+                {
+                    VerticalCellAlignment.Top => "top",
+                    VerticalCellAlignment.Center => "center",
+                    _ => "bottom"
+                }).ConfigureAwait(false);
+                await NewWriter.WriteAttributeStringAsync(null, "wrapText", null, headerStyle.WrapText ? "1" : "0").ConfigureAwait(false);
+                await NewWriter.WriteEndElementAsync().ConfigureAwait(false);
+            }
             await NewWriter.WriteEndElementAsync().ConfigureAwait(false);
         }
 

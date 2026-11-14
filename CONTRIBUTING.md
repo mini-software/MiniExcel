@@ -55,7 +55,9 @@ Before enabling the [reviewer workflow](.github/workflows/auto-reviewers.yml),
 configure a fine-grained personal access token with `mini-software` as the resource
 owner and only the organization **Members: read** permission. Store it as the
 repository Actions secret `CORE_REVIEWERS_TOKEN` and ensure any required
-organization approval is complete. Rotate the token before it expires. The token
+organization approval is complete. If `core-reviewers` is secret, the token owner
+must be a member of that team or an organization owner. Rotate the token before
+it expires. The token
 only reads team membership; review requests use the workflow's `GITHUB_TOKEN`
 with **Pull requests: write** permission.
 

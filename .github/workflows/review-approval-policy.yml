@@ -66,6 +66,9 @@ jobs:
                 });
                 const latest = new Map();
                 for (const review of reviews.sort((left, right) => left.id - right.id)) {
+                  if (review.user == null) {
+                    continue;
+                  }
                   if (['APPROVED', 'CHANGES_REQUESTED', 'DISMISSED'].includes(review.state)) {
                     latest.set(review.user.login.toLowerCase(), review);
                   }
@@ -77,11 +80,19 @@ jobs:
                     continue;
                   }
                   if (!permissions.has(login)) {
-                    const { data } = await github.rest.repos.getCollaboratorPermissionLevel({
-                      ...context.repo,
-                      username: review.user.login
-                    });
-                    permissions.set(login, ['write', 'maintain', 'admin'].includes(data.permission));
+                    let permission = 'none';
+                    try {
+                      const { data } = await github.rest.repos.getCollaboratorPermissionLevel({
+                        ...context.repo,
+                        username: review.user.login
+                      });
+                      permission = data.permission;
+                    } catch (error) {
+                      if (error.status !== 404) {
+                        throw error;
+                      }
+                    }
+                    permissions.set(login, ['write', 'maintain', 'admin'].includes(permission));
                   }
                   if (permissions.get(login)) {
                     approvals++;

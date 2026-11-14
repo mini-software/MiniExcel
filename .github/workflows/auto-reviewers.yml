@@ -3,7 +3,7 @@ name: Request core reviewers
 on:
   pull_request_target:
     branches: [master]
-    types: [opened, reopened, ready_for_review, synchronize]
+    types: [opened, reopened, edited, ready_for_review, synchronize]
   workflow_dispatch:
     inputs:
       pull_request_number:

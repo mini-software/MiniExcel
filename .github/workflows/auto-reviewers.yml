@@ -20,7 +20,7 @@ concurrency:
 
 jobs:
   request-reviewers:
-    if: (github.event_name == 'workflow_dispatch' || !github.event.pull_request.draft) && !endsWith(github.actor, '[bot]')
+    if: github.event_name == 'workflow_dispatch' || (!github.event.pull_request.draft && github.event.pull_request.user.type != 'Bot')
     runs-on: ubuntu-latest
     steps:
       - name: Read current team members

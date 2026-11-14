@@ -59,7 +59,7 @@ organization approval is complete. If `core-reviewers` is secret, the token owne
 must be a member of that team or an organization owner. Rotate the token before
 it expires. The token
 only reads team membership; review requests use the workflow's `GITHUB_TOKEN`
-with **Pull requests: write** permission.
+with **Pull requests: write** permission. 
 
 After the workflow is merged into `master`, use its **Run workflow** action with
 a PR number to refresh reviewers on an existing PR. Team changes are otherwise
@@ -67,6 +67,7 @@ picked up on the next supported PR event, not immediately when membership change
 The workflow uses `pull_request_target` to support fork PRs without checking out
 or executing PR code. Missing credentials, team access errors, and unconfirmed
 review requests fail the workflow explicitly.
+For PRs opened by Dependabot or other bots the review request must be triggered explicitly. 
 
 ### Approval requirements
 

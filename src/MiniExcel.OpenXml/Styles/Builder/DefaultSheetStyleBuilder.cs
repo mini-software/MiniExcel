@@ -496,13 +496,13 @@ internal partial class DefaultSheetStyleBuilder(SheetStyleBuilderContext context
         await NewWriter.WriteEndElementAsync().ConfigureAwait(false);
 
         /*
-         * <x:xf numFmtId="21" fontId="0" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyFill="1" applyBorder="1" applyAlignment="1" applyProtection="1">
+         * <x:xf numFmtId="46" fontId="0" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyFill="1" applyBorder="1" applyAlignment="1" applyProtection="1">
          *     <x:alignment horizontal="general" vertical="bottom" textRotation="0" wrapText="0" indent="0" relativeIndent="0" justifyLastLine="0" shrinkToFit="0" readingOrder="0" />
          *     <x:protection locked="1" hidden="0" />
          * </x:xf>
          */
         await NewWriter.WriteStartElementAsync(OldReader.Prefix, "xf", OldReader.NamespaceURI).ConfigureAwait(false);
-        await NewWriter.WriteAttributeStringAsync(null, "numFmtId", null, "21").ConfigureAwait(false);
+        await NewWriter.WriteAttributeStringAsync(null, "numFmtId", null, "46").ConfigureAwait(false);
         await NewWriter.WriteAttributeStringAsync(null, "fontId", null, $"{Context.OldElementInfos.FontCount}").ConfigureAwait(false);
         await NewWriter.WriteAttributeStringAsync(null, "fillId", null, $"{Context.OldElementInfos.FillCount}").ConfigureAwait(false);
         await NewWriter.WriteAttributeStringAsync(null, "borderId", null, $"{Context.OldElementInfos.BorderCount + 1}").ConfigureAwait(false);

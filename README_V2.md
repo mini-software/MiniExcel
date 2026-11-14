@@ -176,17 +176,20 @@ Check what we are planning for future versions [here](https://github.com/mini-so
 
 ### Performance
 
-The code for the benchmarks can be found in [MiniExcel.Benchmarks](benchmarks/MiniExcel.Benchmarks/Program.cs).
+The code for the benchmarks is maintained in the separate [MiniExcel.Benchmarks repository](https://github.com/mini-software/MiniExcel.Benchmarks).
 
-The main file used to test performance is [**Test100,000x10.xlsx**](benchmarks/MiniExcel.Benchmarks/Test100%2C000x10.xlsx), a document containing 100,000 rows * 10 columns whose cells are filled with unique strings.
+The main file used to test performance is [**Test100,000x10.xlsx**](https://github.com/mini-software/MiniExcel.Benchmarks/blob/main/benchmarks/MiniExcel.Benchmarks/data/Test100%2C000x10.xlsx), a document containing 100,000 rows * 10 columns whose cells are filled with unique strings.
 
 To run all the benchmarks use:
 
 ```bash
-dotnet run --project .\benchmarks\MiniExcel.Benchmarks -c Release -f net9.0 -filter "*" --join
+git clone --recurse-submodules https://github.com/mini-software/MiniExcel.Benchmarks.git
+cd MiniExcel.Benchmarks
+dotnet run --project .\benchmarks\MiniExcel.Benchmarks -c Release -f net10.0 -- --filter "*" --join
 ```
 
-You can find the benchmarks' results for the latest release [here](benchmarks/results).
+You can find recorded benchmark results [here](https://github.com/mini-software/MiniExcel.Benchmarks/tree/main/benchmarks/results).
+EPPlus/NPOI comparisons are optional; review the benchmark repository's license instructions before running them.
 
 
 ## Documentation

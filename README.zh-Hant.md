@@ -68,10 +68,12 @@ MiniExcel 簡單、高效避免OOM的.NET處理Excel查、寫、填充工具。
 
 ### 性能比較、測試
 
-Benchmarks  邏輯可以在 [MiniExcel.Benchmarks](benchmarks/MiniExcel.Benchmarks/Program.cs) 查看或是提交 PR，運行指令
+Benchmarks 已遷移至獨立倉庫 [MiniExcel.Benchmarks](https://github.com/mini-software/MiniExcel.Benchmarks)，可在該處查看程式碼或提交 PR。EPPlus/NPOI 對比為可選專案，執行前請閱讀該倉庫的授權說明。執行指令：
 
 ```bash
-dotnet run -p .\benchmarks\MiniExcel.Benchmarks\ -c Release -f netcoreapp3.1 -- -f * --join
+git clone --recurse-submodules https://github.com/mini-software/MiniExcel.Benchmarks.git
+cd MiniExcel.Benchmarks
+dotnet run --project .\benchmarks\MiniExcel.Benchmarks -c Release -f net10.0 -- --filter "*" --join
 ```
 
 最後一次運行規格、結果 :
@@ -90,7 +92,7 @@ Benchmark History :  [Link](https://github.com/mini-software/MiniExcel/issues/27
 
 #### 導入、查詢 Excel 比較
 
-邏輯 : 以 [**Test1,000,000x10.xlsx**](benchmarks/MiniExcel.Benchmarks/Test1%2C000%2C000x10.xlsx) 做基準與主流框架做性能測試，總共 1,000,000 行 * 10 列筆 "HelloWorld"，文件大小 23 MB
+以下為歷史結果。目前基準資料與執行說明見獨立倉庫的 [測試資料](https://github.com/mini-software/MiniExcel.Benchmarks/tree/main/benchmarks/MiniExcel.Benchmarks/data)。
 
 
 | Library      | Method                       | 最大記憶體耗用 |         平均時間 |

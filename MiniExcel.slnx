@@ -1,9 +1,5 @@
 <Solution>
 
-  <Folder Name="/benchmarks/">
-    <Project Path="benchmarks\MiniExcel.Benchmarks\MiniExcel.Benchmarks.csproj" />
-  </Folder>
-
   <Folder Name="/Docs and settings/">
     <File Path=".editorconfig" />
     <File Path=".gitattributes" />
@@ -27,7 +23,6 @@
   <Folder Name="/Docs and settings/github/workflows/">
     <File Path=".github/workflows/cli-release.yml" />
     <File Path=".github/workflows/release-v1.yml" />
-    <File Path=".github\workflows\benchmark.yml" />
     <File Path=".github\workflows\codeql-analysis.yml" />
     <File Path=".github\workflows\dotnet.yml" />
   </Folder>

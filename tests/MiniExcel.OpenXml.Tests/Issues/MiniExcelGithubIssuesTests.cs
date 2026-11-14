@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+using ClosedXML.Excel;
+using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using MiniExcelLib.Core.Enums;
 using MiniExcelLib.Core.Exceptions;
@@ -6,8 +7,6 @@ using MiniExcelLib.Core.Helpers;
 using MiniExcelLib.OpenXml.Picture;
 using MiniExcelLib.OpenXml.Tests.Utils;
 using MiniExcelLib.Tests.Common.Utils;
-using NPOI.XSSF.UserModel;
-using LicenseContext = OfficeOpenXml.LicenseContext;
 
 namespace MiniExcelLib.OpenXml.Tests.Issues;
 
@@ -19,12 +18,53 @@ public class MiniExcelGithubIssuesTests(ITestOutputHelper output)
     private readonly OpenXmlExporter _excelExporter =  MiniExcelV2.Exporters.GetOpenXmlExporter();
     private readonly OpenXmlTemplater _excelTemplater =  MiniExcelV2.Templaters.GetOpenXmlTemplater();
 
-    static MiniExcelGithubIssuesTests()
-    {
-        ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
-    }
 
     private static bool IsDateFormatString(string formatCode) => DateTimeHelper.IsDateTimeFormat(formatCode);
+
+    private static void AssertPictureAt(ZipArchive archive, string? sheetName, int column, int row)
+    {
+        XNamespace spreadsheet = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
+        XNamespace relationships = "http://schemas.openxmlformats.org/officeDocument/2006/relationships";
+        XNamespace drawing = "http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing";
+        XNamespace art = "http://schemas.openxmlformats.org/drawingml/2006/main";
+
+        var sheets = ReadPart("xl/workbook.xml").Descendants(spreadsheet + "sheet");
+        var sheet = sheetName is null ? sheets.First() : sheets.Single(s => (string?)s.Attribute("name") == sheetName);
+        var sheetPath = RelatedPart("xl/workbook.xml", (string)sheet.Attribute(relationships + "id")!);
+        var drawingId = (string)ReadPart(sheetPath).Descendants(spreadsheet + "drawing").First().Attribute(relationships + "id")!;
+        var drawingPath = RelatedPart(sheetPath, drawingId);
+
+        // Inspect anchors directly: older drawing parts can have a nonstandard root that ClosedXML rejects.
+        var picture = ReadPart(drawingPath).Descendants(drawing + "from")
+            .Where(from => (int?)from.Element(drawing + "col") == column && (int?)from.Element(drawing + "row") == row)
+            .Select(from => from.Parent?.Element(drawing + "pic"))
+            .FirstOrDefault(pic => pic is not null);
+        Assert.NotNull(picture);
+
+        var imageId = (string)picture.Descendants(art + "blip").First().Attribute(relationships + "embed")!;
+        var image = archive.GetEntry(RelatedPart(drawingPath, imageId));
+        Assert.NotNull(image);
+        Assert.True(image.Length > 0);
+        return;
+
+        XDocument ReadPart(string path)
+        {
+            var entry = archive.GetEntry(path);
+            Assert.NotNull(entry);
+            using var stream = entry.Open();
+            return XDocument.Load(stream);
+        }
+
+        string RelatedPart(string part, string id)
+        {
+            var slash = part.LastIndexOf('/');
+            var relsPath = part[..(slash + 1)] + "_rels/" + part[(slash + 1)..] + ".rels";
+            var relationship = ReadPart(relsPath).Root!.Elements()
+                .Single(rel => (string?)rel.Attribute("Id") == id);
+            var target = (string)relationship.Attribute("Target")!;
+            return new Uri(new Uri("http://package/" + part), target).AbsolutePath.TrimStart('/');
+        }
+    }
 
     [Fact]
     public void CellReferenceConverterEnforcesWorksheetLimits()
@@ -560,10 +600,10 @@ public class MiniExcelGithubIssuesTests(ITestOutputHelper output)
             Assert.Equal(6, rows.Count);
             Assert.Equal("Sheet1", _excelImporter.GetSheetNames(path).First());
 
-            using var p = new ExcelPackage(new FileInfo(path));
-            var ws = p.Workbook.Worksheets.First();
+            using var p = new XLWorkbook(path);
+            var ws = p.Worksheets.First();
             Assert.Equal("Sheet1", ws.Name);
-            Assert.Equal("Sheet1", p.Workbook.Worksheets["Sheet1"].Name);
+            Assert.Equal("Sheet1", p.Worksheet("Sheet1").Name);
         }
         {
             var path = PathHelper.GetFile("xlsx/TestIssue157.xlsx");
@@ -573,11 +613,11 @@ public class MiniExcelGithubIssuesTests(ITestOutputHelper output)
                 Assert.Equal(6, rows.Count);
                 Assert.Equal("Sheet1", _excelImporter.GetSheetNames(path).First());
             }
-            using (var p = new ExcelPackage(new FileInfo(path)))
+            using (var p = new XLWorkbook(path))
             {
-                var ws = p.Workbook.Worksheets.First();
+                var ws = p.Worksheets.First();
                 Assert.Equal("Sheet1", ws.Name);
-                Assert.Equal("Sheet1", p.Workbook.Worksheets["Sheet1"].Name);
+                Assert.Equal("Sheet1", p.Worksheet("Sheet1").Name);
             }
 
             {
@@ -1324,13 +1364,13 @@ public class MiniExcelGithubIssuesTests(ITestOutputHelper output)
         Assert.Single(rowsWritten);
         Assert.Equal(2, rowsWritten[0]);
 
-        using var package = new ExcelPackage(path);
-        var cells = package.Workbook.Worksheets.First().Cells;
+        using var package = new XLWorkbook(path);
+        var cells = package.Worksheets.First();
 
-        Assert.Equal(date1, DateTime.FromOADate((double)cells["B2"].Value));
-        Assert.Equal("01 04, 2021", cells["B2"].Text);
-        Assert.Equal(date2, DateTime.FromOADate((double)cells["B3"].Value));
-        Assert.Equal("04 05, 2020", cells["B3"].Text);
+        Assert.Equal(date1, cells.Cell("B2").GetDateTime());
+        Assert.Equal("01 04, 2021", cells.Cell("B2").GetFormattedString());
+        Assert.Equal(date2, cells.Cell("B3").GetDateTime());
+        Assert.Equal("04 05, 2020", cells.Cell("B3").GetFormattedString());
     }
 
     // No error exception throw when reading xls file #242
@@ -1363,11 +1403,11 @@ public class MiniExcelGithubIssuesTests(ITestOutputHelper output)
             _excelTemplater.FillTemplate(ms, templatePath, value);
 
             ms.Seek(0, SeekOrigin.Begin);
-            using var package = new ExcelPackage(ms);
-            var cells = package.Workbook.Worksheets[0].Cells;
+            using var package = new XLWorkbook(ms);
+            var cells = package.Worksheet(1);
 
-            Assert.Equal("2021", cells["A2"].Text);
-            Assert.Equal("2022", cells["B2"].Text);
+            Assert.Equal("2021", cells.Cell("A2").GetFormattedString());
+            Assert.Equal("2022", cells.Cell("B2").GetFormattedString());
         }
         //export
         {
@@ -1382,13 +1422,13 @@ public class MiniExcelGithubIssuesTests(ITestOutputHelper output)
             Assert.Equal(1, rowsWritten[0]);
 
             ms.Seek(0, SeekOrigin.Begin);
-            using var package = new ExcelPackage(ms);
+            using var package = new XLWorkbook(ms);
 
-            var cells = package.Workbook.Worksheets[0].Cells;
-            Assert.Equal(dt1, DateTime.FromOADate((double)cells["A2"].Value));
-            Assert.Equal("2021", cells["A2"].Text);
-            Assert.Equal(dt2, DateTime.FromOADate((double)cells["B2"].Value));
-            Assert.Equal("2022", cells["B2"].Text);
+            var cells = package.Worksheet(1);
+            Assert.Equal(dt1, cells.Cell("A2").GetDateTime());
+            Assert.Equal("2021", cells.Cell("A2").GetFormattedString());
+            Assert.Equal(dt2, cells.Cell("B2").GetDateTime());
+            Assert.Equal("2022", cells.Cell("B2").GetFormattedString());
         }
     }
 
@@ -1681,11 +1721,11 @@ public class MiniExcelGithubIssuesTests(ITestOutputHelper output)
         ];
         await _excelExporter.ExportAsync(path.FilePath, value, overwriteFile: true);
 
-        using var package = new ExcelPackage(path.ToString());
-        var cells = package.Workbook.Worksheets[0].Cells;
+        using var package = new XLWorkbook(path.ToString());
+        var cells = package.Worksheet(1);
         
-        Assert.Equal(dt, DateTime.FromOADate((double)cells["A2"].Value));
-        Assert.Equal("22-01-2022", cells["A2"].Text);
+        Assert.Equal(dt, cells.Cell("A2").GetDateTime());
+        Assert.Equal("22-01-2022", cells.Cell("A2").GetFormattedString());
     }
 
     [Fact]
@@ -1732,12 +1772,12 @@ public class MiniExcelGithubIssuesTests(ITestOutputHelper output)
         ];
        _excelExporter.Export(path.ToString(), value);
 
-       using var package = new ExcelPackage(path.ToString());
-       var cells = package.Workbook.Worksheets[0].Cells;
+       using var package = new XLWorkbook(path.ToString());
+       var cells = package.Worksheet(1);
 
-       var fmt = cells["A2"].Style.Numberformat.Format;
-       Assert.Equal(12_345.68.ToString(fmt), cells["A2"].Text);
-       Assert.Equal(12_345.6789, (double)cells["A2"].Value);
+       var fmt = cells.Cell("A2").Style.NumberFormat.Format;
+       Assert.Equal(12_345.68.ToString(fmt), cells.Cell("A2").GetFormattedString());
+       Assert.Equal(12_345.6789, cells.Cell("A2").GetDouble());
     }
 
     // SaveAs and Query support btye[] base64 converter - https://github.com/mini-software/MiniExcel/issues/318
@@ -2311,15 +2351,15 @@ public class MiniExcelGithubIssuesTests(ITestOutputHelper output)
         _excelExporter.Export(ms, data);
         ms.Seek(0, SeekOrigin.Begin);
         
-        using var package = new ExcelPackage(ms);
-        var cells = package.Workbook.Worksheets.First().Cells;
+        using var package = new XLWorkbook(ms);
+        var cells = package.Worksheets.First();
         
-        Assert.Equal(542.0, cells["A2"].Value);
-        Assert.Equal(542.0.ToString("R$ #,##0.00"), cells["A2"].Text);
-        Assert.Equal(DateTime.Today, DateTime.FromOADate((double)cells["B2"].Value));
-        Assert.Equal(DateTime.Today.ToString("dd/MM/yyyy"), cells["B2"].Text);
-        Assert.Equal(300.0, cells["C2"].Value);
-        Assert.Equal(300.0.ToString("R$ #,##0.00"), cells["C2"].Text);
+        Assert.Equal(542.0, cells.Cell("A2").GetDouble());
+        Assert.Equal("R$ #,##0.00", cells.Cell("A2").Style.NumberFormat.Format);
+        Assert.Equal(DateTime.Today, cells.Cell("B2").GetDateTime());
+        Assert.Equal(DateTime.Today.ToString("dd/MM/yyyy"), cells.Cell("B2").GetFormattedString());
+        Assert.Equal(300.0, cells.Cell("C2").GetDouble());
+        Assert.Equal("R$ #,##0.00", cells.Cell("C2").Style.NumberFormat.Format);
     }
     
     [Fact]
@@ -2373,13 +2413,13 @@ public class MiniExcelGithubIssuesTests(ITestOutputHelper output)
         var rows = _excelImporter.Query(path, true).ToList();
         {
             using var stream = new FileStream(path, FileMode.Open, FileAccess.Read);
-            using var workbook = new XSSFWorkbook(stream);
+            using var workbook = new XLWorkbook(stream);
 
-            var sheet = workbook.GetSheetAt(0);
-            var a2 = sheet.GetRow(1).GetCell(0);
-            var b2 = sheet.GetRow(1).GetCell(1);
-            Assert.Equal((string)rows[0].id.ToString(), a2.NumericCellValue.ToString(CultureInfo.InvariantCulture));
-            Assert.Equal((string)rows[0].name.ToString(), b2.StringCellValue);
+            var sheet = workbook.Worksheet(1);
+            var a2 = sheet.Cell("A2");
+            var b2 = sheet.Cell("B2");
+            Assert.Equal((string)rows[0].id.ToString(), a2.GetDouble().ToString(CultureInfo.InvariantCulture));
+            Assert.Equal((string)rows[0].name.ToString(), b2.GetString());
         }
     }
 
@@ -2693,21 +2733,21 @@ public class MiniExcelGithubIssuesTests(ITestOutputHelper output)
          _excelTemplater.FillTemplate(path.ToString(), templatePath, data);
 
         using var stream = File.OpenRead(path.ToString());
-        using var workbook = new XSSFWorkbook(stream);
-        var sheet = workbook.GetSheetAt(0);
-        var row = sheet.GetRow(0);
-        var cell = row.GetCell(0);
-        Assert.Equal("value1", cell.ToString());
-        Assert.Equal(0, cell.ColumnIndex);
-        Assert.Equal(0, cell.RowIndex);
-        Assert.Equal("value2", row.GetCell(1).ToString());
-        Assert.Equal(1, row.GetCell(1).ColumnIndex);
-        Assert.Equal(0, row.GetCell(1).RowIndex);
+        using var workbook = new XLWorkbook(stream);
+        var sheet = workbook.Worksheet(1);
+        var row = sheet.Row(1);
+        var cell = row.Cell(1);
+        Assert.Equal("value1", cell.GetString());
+        Assert.Equal(1, cell.Address.ColumnNumber);
+        Assert.Equal(1, cell.Address.RowNumber);
+        Assert.Equal("value2", row.Cell(2).GetString());
+        Assert.Equal(2, row.Cell(2).Address.ColumnNumber);
+        Assert.Equal(1, row.Cell(2).Address.RowNumber);
         for (int i = 0; i < list.Count; i++)
         {
-            var rowData = sheet.GetRow(i + 1);
-            Assert.Equal(list[i].value1.ToString(), rowData.GetCell(0).ToString());
-            Assert.Equal(list[i].value2.ToString(), rowData.GetCell(1).ToString());
+            var rowData = sheet.Row(i + 2);
+            Assert.Equal(list[i].value1.ToString(), rowData.Cell(1).GetString());
+            Assert.Equal(list[i].value2.ToString(), rowData.Cell(2).GetString());
         }
     }
 
@@ -2879,17 +2919,9 @@ public class MiniExcelGithubIssuesTests(ITestOutputHelper output)
 
         _excelTemplater.AddPicture(path.FilePath, images);
 
-        using var package = new ExcelPackage(new FileInfo(path.FilePath));
-
-        // Check picture in the first sheet (C3)  
-        var firstSheet = package.Workbook.Worksheets[0];
-        var pictureInC3 = firstSheet.Drawings.OfType<OfficeOpenXml.Drawing.ExcelPicture>().FirstOrDefault(p => p.From.Column == 2 && p.From.Row == 2);
-        Assert.NotNull(pictureInC3);
-
-        // Check picture in the "Demo" sheet (C9)  
-        var demoSheet = package.Workbook.Worksheets["Demo"];
-        var pictureInC9 = demoSheet.Drawings.OfType<OfficeOpenXml.Drawing.ExcelPicture>().FirstOrDefault(p => p.From.Column == 2 && p.From.Row == 8);
-        Assert.NotNull(pictureInC9);
+        using var archive = ZipFile.OpenRead(path.FilePath);
+        AssertPictureAt(archive, null, 2, 2); // C3 in the first sheet
+        AssertPictureAt(archive, "Demo", 2, 8); // C9
     }
 
     [Fact]
@@ -2929,16 +2961,9 @@ public class MiniExcelGithubIssuesTests(ITestOutputHelper output)
 
         _excelTemplater.AddPicture(path.FilePath, images);
 
-        using var package = new ExcelPackage(new FileInfo(path.FilePath));
-        // Check picture in the first sheet (C3)  
-        var firstSheet = package.Workbook.Worksheets[0];
-        var pictureInC3 = firstSheet.Drawings.OfType<OfficeOpenXml.Drawing.ExcelPicture>().FirstOrDefault(p => p.From.Column == 2 && p.From.Row == 2);
-        Assert.NotNull(pictureInC3);
-
-        // Check picture in the "Demo" sheet (C9)  
-        var demoSheet = package.Workbook.Worksheets["Demo"];
-        var pictureInC9 = demoSheet.Drawings.OfType<OfficeOpenXml.Drawing.ExcelPicture>().FirstOrDefault(p => p.From.Column == 2 && p.From.Row == 8);
-        Assert.NotNull(pictureInC9);
+        using var archive = ZipFile.OpenRead(path.FilePath);
+        AssertPictureAt(archive, null, 2, 2); // C3 in the first sheet
+        AssertPictureAt(archive, "Demo", 2, 8); // C9
 
         // TODO:check C3 image WidthPx = 80px, HeightPx = 24px, C9 WidthPx=500,HeightPx=500 
     }
@@ -2982,23 +3007,9 @@ public class MiniExcelGithubIssuesTests(ITestOutputHelper output)
 
             _excelTemplater.AddPicture(path.FilePath, images);
 
-            using var package = new ExcelPackage(new FileInfo(path.FilePath));
-            
-            // Check picture in the first sheet (C3)  
-            var firstSheet = package.Workbook.Worksheets[0];
-            var pictureInC3 = firstSheet.Drawings
-                .OfType<OfficeOpenXml.Drawing.ExcelPicture>()
-                .FirstOrDefault(p => p.From.Column == 2 && p.From.Row == 2);
-            
-            Assert.NotNull(pictureInC3);
-
-            // Check picture in the "Demo" sheet (C9)  
-            var demoSheet = package.Workbook.Worksheets["Demo"];
-            var pictureInC9 = demoSheet.Drawings
-                .OfType<OfficeOpenXml.Drawing.ExcelPicture>()
-                .FirstOrDefault(p => p.From.Column == 2 && p.From.Row == 8);
-            
-            Assert.NotNull(pictureInC9);
+            using var archive = ZipFile.OpenRead(path.FilePath);
+            AssertPictureAt(archive, null, 2, 2); // C3 in the first sheet
+            AssertPictureAt(archive, "Demo", 2, 8); // C9
         }
 
         {
@@ -3034,45 +3045,12 @@ public class MiniExcelGithubIssuesTests(ITestOutputHelper output)
 
             _excelTemplater.AddPicture(path.FilePath, images);
 
-            using var package = new ExcelPackage(new FileInfo(path.FilePath));
-            // Check picture in the first sheet (C3)  
-            var firstSheet1 = package.Workbook.Worksheets[0];
-            var pictureInC3 = firstSheet1.Drawings
-                .OfType<OfficeOpenXml.Drawing.ExcelPicture>()
-                .FirstOrDefault(p => p.From.Column == 2 && p.From.Row == 2);
-                
-            Assert.NotNull(pictureInC3);
-
-            // Check picture in the "Demo" sheet (C9)  
-            var demoSheet1 = package.Workbook.Worksheets["Demo"];
-            var pictureInC9 = demoSheet1.Drawings
-                .OfType<OfficeOpenXml.Drawing.ExcelPicture>()
-                .FirstOrDefault(p => p.From.Column == 2 && p.From.Row == 8);
-                
-            Assert.NotNull(pictureInC9);
-
-            // Check picture in the first sheet (D3)
-            var firstSheet2 = package.Workbook.Worksheets[0];
-            var pictureInD3 = firstSheet2.Drawings
-                .OfType<OfficeOpenXml.Drawing.ExcelPicture>()
-                .FirstOrDefault(p => p.From.Column == 3 && p.From.Row == 2);
-                
-            Assert.NotNull(pictureInD3);
-
-            // Check picture in the "Demo" sheet (D9)
-            var demoSheet2 = package.Workbook.Worksheets["Demo"];
-            var pictureInD9 = demoSheet2.Drawings
-                .OfType<OfficeOpenXml.Drawing.ExcelPicture>()
-                .FirstOrDefault(p => p.From.Column == 3 && p.From.Row == 8);
-                
-            Assert.NotNull(pictureInD9);
-
-            // Check picture in the "Demo" sheet (F9)
-            var pictureInF9 = demoSheet2.Drawings
-                .OfType<OfficeOpenXml.Drawing.ExcelPicture>()
-                .FirstOrDefault(p => p.From.Column == 5 && p.From.Row == 8);
-                
-            Assert.NotNull(pictureInF9);
+            using var archive = ZipFile.OpenRead(path.FilePath);
+            AssertPictureAt(archive, null, 2, 2); // C3 in the first sheet
+            AssertPictureAt(archive, "Demo", 2, 8); // C9
+            AssertPictureAt(archive, null, 3, 2); // D3 in the first sheet
+            AssertPictureAt(archive, "Demo", 3, 8); // D9
+            AssertPictureAt(archive, "Demo", 5, 8); // F9
         }
     }
 

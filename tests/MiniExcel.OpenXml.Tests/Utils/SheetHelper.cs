@@ -1,6 +1,7 @@
 ﻿using System.Xml;
 using System.Xml.Linq;
 using System.Xml.XPath;
+using ClosedXML.Excel;
 
 namespace MiniExcelLib.OpenXml.Tests.Utils;
 
@@ -169,11 +170,11 @@ internal static class SheetHelper
     {
         var stream = new MemoryStream();
         
-        using var package = new ExcelPackage(stream);
-        package.Workbook.Worksheets.Add("Sheet1");
-        package.Workbook.Worksheets.Add("Sheet2");
-        package.Workbook.Worksheets.Add("Sheet3");
-        package.Save();
+        using var workbook = new XLWorkbook();
+        workbook.Worksheets.Add("Sheet1");
+        workbook.Worksheets.Add("Sheet2");
+        workbook.Worksheets.Add("Sheet3");
+        workbook.SaveAs(stream);
 
         stream.Position = 0; 
         return stream;

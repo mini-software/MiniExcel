@@ -8,7 +8,7 @@ Notes for coding agents and new contributors. [CONTRIBUTING.md](CONTRIBUTING.md)
 - `src/MiniExcel.OpenXml.FluentMapping`: the mapping importer and exporter.
 - `src/MiniExcel`: the `MiniExcel` package, a facade that keeps the v1 static API working on top of v2.
 - `tests/MiniExcel.OpenXml.Tests`, `tests/MiniExcel.Csv.Tests`: xUnit tests.
-- `benchmarks/MiniExcel.Benchmarks`: BenchmarkDotNet benchmarks.
+- Benchmarks are maintained in the separate [MiniExcel.Benchmarks repository](https://github.com/mini-software/MiniExcel.Benchmarks), not this solution.
 
 ## Code
 
@@ -23,7 +23,7 @@ Notes for coding agents and new contributors. [CONTRIBUTING.md](CONTRIBUTING.md)
 
 ## Benchmarks
 
-- Query, create and template benchmarks are in `benchmarks/MiniExcel.Benchmarks/BenchmarkSections`. Performance changes should show before and after numbers from these, run on the same machine.
+- Query, create and template benchmarks are in the separate [MiniExcel.Benchmarks repository](https://github.com/mini-software/MiniExcel.Benchmarks). Clone it with submodules and follow its README. Performance changes should show before and after numbers from these, run on the same machine.
 - Select methods with a filter that includes the class name, e.g. `--filter '*QueryExcelBenchmark.MiniExcel*'`. The namespace contains "MiniExcel", so `*MiniExcel*` alone runs every benchmark registered in `Program.cs`.
 - The configured job is a short run (3 iterations), which is enough for large differences. For changes of around 10%, add `--iterationCount 15 --launchCount 3`.
 

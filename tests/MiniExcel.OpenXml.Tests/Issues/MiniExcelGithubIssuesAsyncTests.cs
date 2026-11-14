@@ -1,4 +1,5 @@
-﻿using MiniExcelLib.Core.Exceptions;
+using ClosedXML.Excel;
+using MiniExcelLib.Core.Exceptions;
 using MiniExcelLib.OpenXml.Tests.Utils;
 using MiniExcelLib.Tests.Common.Utils;
 
@@ -12,10 +13,6 @@ public class MiniExcelGithubIssuesAsyncTests(ITestOutputHelper output)
     private readonly OpenXmlExporter _excelExporter =  MiniExcelV2.Exporters.GetOpenXmlExporter();
     private readonly OpenXmlTemplater _excelTemplater =  MiniExcelV2.Templaters.GetOpenXmlTemplater();
 
-    static MiniExcelGithubIssuesAsyncTests()
-    {
-        ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
-    }
 
     [Fact]
     public async Task QueryAsyncRejectsRowIndexOutsideWorksheetLimits()
@@ -485,10 +482,10 @@ public class MiniExcelGithubIssuesAsyncTests(ITestOutputHelper output)
             Assert.Equal(6, rows.Count);
             Assert.Equal("Sheet1", (await _excelImporter.GetSheetNamesAsync(path))[0]);
 
-            using var p = new ExcelPackage(new FileInfo(path));
-            var ws = p.Workbook.Worksheets[0];
+            using var p = new XLWorkbook(path);
+            var ws = p.Worksheet(1);
             Assert.Equal("Sheet1", ws.Name);
-            Assert.Equal("Sheet1", p.Workbook.Worksheets["Sheet1"].Name);
+            Assert.Equal("Sheet1", p.Worksheet("Sheet1").Name);
         }
         {
             var path = PathHelper.GetFile("xlsx/TestIssue157.xlsx");
@@ -497,11 +494,11 @@ public class MiniExcelGithubIssuesAsyncTests(ITestOutputHelper output)
                 Assert.Equal(6, rows.Count);
                 Assert.Equal("Sheet1", (await _excelImporter.GetSheetNamesAsync(path))[0]);
             }
-            using (var p = new ExcelPackage(new FileInfo(path)))
+            using (var p = new XLWorkbook(path))
             {
-                var ws = p.Workbook.Worksheets.First();
+                var ws = p.Worksheets.First();
                 Assert.Equal("Sheet1", ws.Name);
-                Assert.Equal("Sheet1", p.Workbook.Worksheets["Sheet1"].Name);
+                Assert.Equal("Sheet1", p.Worksheet("Sheet1").Name);
             }
 
             {
@@ -1121,13 +1118,13 @@ public class MiniExcelGithubIssuesAsyncTests(ITestOutputHelper output)
         Assert.Single(rowsWritten);
         Assert.Equal(2, rowsWritten[0]);
 
-        using var package = new ExcelPackage(path);
-        var cells = package.Workbook.Worksheets[0].Cells;
+        using var package = new XLWorkbook(path);
+        var cells = package.Worksheet(1);
 
-        Assert.Equal(date1, DateTime.FromOADate((double)cells["B2"].Value));
-        Assert.Equal("01 04, 2021", cells["B2"].Text);
-        Assert.Equal(date2, DateTime.FromOADate((double)cells["B3"].Value));
-        Assert.Equal("04 05, 2020", cells["B3"].Text);
+        Assert.Equal(date1, cells.Cell("B2").GetDateTime());
+        Assert.Equal("01 04, 2021", cells.Cell("B2").GetFormattedString());
+        Assert.Equal(date2, cells.Cell("B3").GetDateTime());
+        Assert.Equal("04 05, 2020", cells.Cell("B3").GetFormattedString());
     }
 
     /// No error exception throw when reading xls file
@@ -1160,11 +1157,11 @@ public class MiniExcelGithubIssuesAsyncTests(ITestOutputHelper output)
             await _excelTemplater.FillTemplateAsync(ms, templatePath, value);
 
             ms.Seek(0, SeekOrigin.Begin);
-            using var package = new ExcelPackage(ms);
-            var cells = package.Workbook.Worksheets[0].Cells;
+            using var package = new XLWorkbook(ms);
+            var cells = package.Worksheet(1);
 
-            Assert.Equal("2021", cells["A2"].Text);
-            Assert.Equal("2022", cells["B2"].Text);
+            Assert.Equal("2021", cells.Cell("A2").GetFormattedString());
+            Assert.Equal("2022", cells.Cell("B2").GetFormattedString());
         }
         //export
         {
@@ -1179,13 +1176,13 @@ public class MiniExcelGithubIssuesAsyncTests(ITestOutputHelper output)
             Assert.Equal(1, rowsWritten[0]);
 
             ms.Seek(0, SeekOrigin.Begin);
-            using var package = new ExcelPackage(ms);
+            using var package = new XLWorkbook(ms);
 
-            var cells = package.Workbook.Worksheets[0].Cells;
-            Assert.Equal(dt1, DateTime.FromOADate((double)cells["A2"].Value));
-            Assert.Equal("2021", cells["A2"].Text);
-            Assert.Equal(dt2, DateTime.FromOADate((double)cells["B2"].Value));
-            Assert.Equal("2022", cells["B2"].Text);
+            var cells = package.Worksheet(1);
+            Assert.Equal(dt1, cells.Cell("A2").GetDateTime());
+            Assert.Equal("2021", cells.Cell("A2").GetFormattedString());
+            Assert.Equal(dt2, cells.Cell("B2").GetDateTime());
+            Assert.Equal("2022", cells.Cell("B2").GetFormattedString());
         }
     }
 
@@ -1211,12 +1208,12 @@ public class MiniExcelGithubIssuesAsyncTests(ITestOutputHelper output)
         await _excelExporter.ExportAsync(ms, data);
         ms.Seek(0, SeekOrigin.Begin);
         
-        using var package = new ExcelPackage(ms);
-        var cells = package.Workbook.Worksheets.First().Cells;
+        using var package = new XLWorkbook(ms);
+        var cells = package.Worksheets.First();
         
-        Assert.Equal(542.0, cells["A2"].Value);
-        Assert.Equal(DateTime.Today, DateTime.FromOADate((double)cells["B2"].Value));
-        Assert.Equal(300.0, cells["C2"].Value);
+        Assert.Equal(542.0, cells.Cell("A2").GetDouble());
+        Assert.Equal(DateTime.Today, cells.Cell("B2").GetDateTime());
+        Assert.Equal(300.0, cells.Cell("C2").GetDouble());
     }
 
     [Fact]
@@ -1236,11 +1233,11 @@ public class MiniExcelGithubIssuesAsyncTests(ITestOutputHelper output)
         await _excelExporter.ExportAsync(ms, data, configuration: config);
         ms.Seek(0, SeekOrigin.Begin);
 
-        using var package = new ExcelPackage(ms);
-        var cell = package.Workbook.Worksheets[0].Cells["A2"];
+        using var package = new XLWorkbook(ms);
+        var cell = package.Worksheet(1).Cell("A2");
 
         Assert.Equal("1550432695793487872", cell.GetValue<string>());
-        Assert.Equal("@", cell.Style.Numberformat.Format);
+        Assert.Equal("@", cell.Style.NumberFormat.Format);
     }
 
     [Fact]

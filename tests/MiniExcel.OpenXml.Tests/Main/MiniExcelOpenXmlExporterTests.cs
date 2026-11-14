@@ -12,10 +12,6 @@ public class MiniExcelOpenXmlExporterTests(ITestOutputHelper output)
     private readonly OpenXmlImporter _excelImporter =  MiniExcelV2.Importers.GetOpenXmlImporter();
     private readonly OpenXmlExporter _excelExporter =  MiniExcelV2.Exporters.GetOpenXmlExporter();
    
-    static MiniExcelOpenXmlExporterTests()
-    {
-        ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
-    }
     
     [Fact]
     public void SaveAsControlChracter()
@@ -249,18 +245,18 @@ public class MiniExcelOpenXmlExporterTests(ITestOutputHelper output)
 
              _excelExporter.Export(path, table, sheetName: "R&D");
 
-            using var p = new ExcelPackage(new FileInfo(path));
-            var ws = p.Workbook.Worksheets.First();
+            using var p = new XLWorkbook(path);
+            var ws = p.Worksheets.First();
 
-            Assert.Equal("a", ws.Cells["A1"].Value.ToString());
-            Assert.Equal("b", ws.Cells["B1"].Value.ToString());
-            Assert.Equal("c", ws.Cells["C1"].Value.ToString());
-            Assert.Equal("d", ws.Cells["D1"].Value.ToString());
+            Assert.Equal("a", ws.Cell("A1").GetString());
+            Assert.Equal("b", ws.Cell("B1").GetString());
+            Assert.Equal("c", ws.Cell("C1").GetString());
+            Assert.Equal("d", ws.Cell("D1").GetString());
 
-            Assert.Equal(@"""<>+-*//}{\\n", ws.Cells["A2"].Value.ToString());
-            Assert.Equal("1234567890", ws.Cells["B2"].Value.ToString());
-            Assert.True(ws.Cells["C2"].GetCellValue<bool>());
-            Assert.Equal(now, ws.Cells["D2"].GetCellValue<DateTime>());
+            Assert.Equal(@"""<>+-*//}{\\n", ws.Cell("A2").GetString());
+            Assert.Equal("1234567890", ws.Cell("B2").GetString());
+            Assert.True(ws.Cell("C2").GetBoolean());
+            Assert.Equal(now, ws.Cell("D2").GetDateTime());
 
             Assert.Equal("R&D", ws.Name);
         }
@@ -638,18 +634,18 @@ public class MiniExcelOpenXmlExporterTests(ITestOutputHelper output)
         Assert.Single(rowsWritten);
         Assert.Equal(2, rowsWritten[0]);
 
-        using var p = new ExcelPackage(new FileInfo(path.ToString()));
-        var ws = p.Workbook.Worksheets.First();
+        using var p = new XLWorkbook(path.ToString());
+        var ws = p.Worksheets.First();
 
-        Assert.Equal("a", ws.Cells["A1"].Value.ToString());
-        Assert.Equal("b", ws.Cells["B1"].Value.ToString());
-        Assert.Equal("c", ws.Cells["C1"].Value.ToString());
-        Assert.Equal("d", ws.Cells["D1"].Value.ToString());
+        Assert.Equal("a", ws.Cell("A1").GetString());
+        Assert.Equal("b", ws.Cell("B1").GetString());
+        Assert.Equal("c", ws.Cell("C1").GetString());
+        Assert.Equal("d", ws.Cell("D1").GetString());
 
-        Assert.Equal(@"""<>+-*//}{\\n", ws.Cells["A2"].Value.ToString());
-        Assert.Equal("1234567890", ws.Cells["B2"].Value.ToString());
-        Assert.True(ws.Cells["C2"].GetCellValue<bool>());
-        Assert.Equal(now, ws.Cells["D2"].GetValue<DateTime>());
+        Assert.Equal(@"""<>+-*//}{\\n", ws.Cell("A2").GetString());
+        Assert.Equal("1234567890", ws.Cell("B2").GetString());
+        Assert.True(ws.Cell("C2").GetBoolean());
+        Assert.Equal(now, ws.Cell("D2").GetDateTime());
     }
 
     [Fact]
@@ -860,18 +856,18 @@ public class MiniExcelOpenXmlExporterTests(ITestOutputHelper output)
             var rowsWritten = _excelExporter.InsertSheet(path, table, sheetName: "Sheet1");
             Assert.Equal(2, rowsWritten);
 
-            using var p = new ExcelPackage(path);
-            var sheet1 = p.Workbook.Worksheets[0];
+            using var p = new XLWorkbook(path);
+            var sheet1 = p.Worksheet(1);
 
-            Assert.Equal("a", sheet1.Cells["A1"].Value.ToString());
-            Assert.Equal("b", sheet1.Cells["B1"].Value.ToString());
-            Assert.Equal("c", sheet1.Cells["C1"].Value.ToString());
-            Assert.Equal("d", sheet1.Cells["D1"].Value.ToString());
+            Assert.Equal("a", sheet1.Cell("A1").GetString());
+            Assert.Equal("b", sheet1.Cell("B1").GetString());
+            Assert.Equal("c", sheet1.Cell("C1").GetString());
+            Assert.Equal("d", sheet1.Cell("D1").GetString());
 
-            Assert.Equal(@"""<>+-*//}{\\n", sheet1.Cells["A2"].Value.ToString());
-            Assert.Equal("1234567890", sheet1.Cells["B2"].Value.ToString());
-            Assert.True(sheet1.Cells["C2"].GetCellValue<bool>());
-            Assert.Equal(now, sheet1.Cells["D2"].GetCellValue<DateTime>());
+            Assert.Equal(@"""<>+-*//}{\\n", sheet1.Cell("A2").GetString());
+            Assert.Equal("1234567890", sheet1.Cell("B2").GetString());
+            Assert.True(sheet1.Cell("C2").GetBoolean());
+            Assert.Equal(now, sheet1.Cell("D2").GetDateTime());
 
             Assert.Equal("Sheet1", sheet1.Name);
         }
@@ -885,17 +881,17 @@ public class MiniExcelOpenXmlExporterTests(ITestOutputHelper output)
             var rowsWritten = _excelExporter.InsertSheet(path, table, sheetName: "Sheet2");
             Assert.Equal(2, rowsWritten);
 
-            using var p = new ExcelPackage(path);
-            var sheet2 = p.Workbook.Worksheets[1];
+            using var p = new XLWorkbook(path);
+            var sheet2 = p.Worksheet(2);
 
-            Assert.Equal("Column1", sheet2.Cells["A1"].Value.ToString());
-            Assert.Equal("Column2", sheet2.Cells["B1"].Value.ToString());
+            Assert.Equal("Column1", sheet2.Cell("A1").GetString());
+            Assert.Equal("Column2", sheet2.Cell("B1").GetString());
 
-            Assert.Equal("MiniExcel", sheet2.Cells["A2"].Value.ToString());
-            Assert.Equal("1", sheet2.Cells["B2"].Value.ToString());
+            Assert.Equal("MiniExcel", sheet2.Cell("A2").GetString());
+            Assert.Equal("1", sheet2.Cell("B2").GetString());
 
-            Assert.Equal("Github", sheet2.Cells["A3"].Value.ToString());
-            Assert.Equal("2", sheet2.Cells["B3"].Value.ToString());
+            Assert.Equal("Github", sheet2.Cell("A3").GetString());
+            Assert.Equal("2", sheet2.Cell("B3").GetString());
 
             Assert.Equal("Sheet2", sheet2.Name);
         }
@@ -924,11 +920,11 @@ public class MiniExcelOpenXmlExporterTests(ITestOutputHelper output)
         
             Assert.Equal(1, rowsWritten);
         
-            using var p = new ExcelPackage(path);
-            var sheet2 = p.Workbook.Worksheets[1];
+            using var p = new XLWorkbook(path);
+            var sheet2 = p.Worksheet(2);
         
-            Assert.Equal("Test", sheet2.Cells["A1"].Value.ToString());
-            Assert.True(sheet2.Cells["B1"].Text == now.ToString("dd.MM.yyyy HH:mm:ss"));
+            Assert.Equal("Test", sheet2.Cell("A1").GetString());
+            Assert.True(sheet2.Cell("B1").GetFormattedString() == now.ToString("dd.MM.yyyy HH:mm:ss"));
             Assert.Equal("Sheet2", sheet2.Name);
         }
         {
@@ -956,17 +952,17 @@ public class MiniExcelOpenXmlExporterTests(ITestOutputHelper output)
             });
             Assert.Equal(2, rowsWritten);
 
-            using var p = new ExcelPackage(path);
-            var sheet3 = p.Workbook.Worksheets[2];
+            using var p = new XLWorkbook(path);
+            var sheet3 = p.Worksheet(3);
 
-            Assert.Equal("Column1", sheet3.Cells["A1"].Value.ToString());
-            Assert.Equal("Its Date", sheet3.Cells["B1"].Value.ToString());
+            Assert.Equal("Column1", sheet3.Cell("A1").GetString());
+            Assert.Equal("Its Date", sheet3.Cell("B1").GetString());
 
-            Assert.Equal("MiniExcel", sheet3.Cells["A2"].Value.ToString());
-            Assert.True(sheet3.Cells["B2"].Text == now.ToString("dd.MM.yyyy HH:mm:ss"));
+            Assert.Equal("MiniExcel", sheet3.Cell("A2").GetString());
+            Assert.True(sheet3.Cell("B2").GetFormattedString() == now.ToString("dd.MM.yyyy HH:mm:ss"));
 
-            Assert.Equal("Github", sheet3.Cells["A3"].Value.ToString());
-            Assert.True(sheet3.Cells["B3"].Text == now.ToString("dd.MM.yyyy HH:mm:ss"));
+            Assert.Equal("Github", sheet3.Cell("A3").GetString());
+            Assert.True(sheet3.Cell("B3").GetFormattedString() == now.ToString("dd.MM.yyyy HH:mm:ss"));
 
             Assert.Equal("Sheet3", sheet3.Name);
         }
@@ -1004,17 +1000,17 @@ public class MiniExcelOpenXmlExporterTests(ITestOutputHelper output)
             table.Rows.Add("Github", 2);
 
             _excelExporter.CopyAndAddSheet(firstPath, secondPath, table, sheetName: "Sheet2");
-            using var p = new ExcelPackage(secondPath);
-            var sheet2 = p.Workbook.Worksheets[1];
+            using var p = new XLWorkbook(secondPath);
+            var sheet2 = p.Worksheet(2);
 
-            Assert.Equal("Column1", sheet2.Cells["A1"].Value.ToString());
-            Assert.Equal("Column2", sheet2.Cells["B1"].Value.ToString());
+            Assert.Equal("Column1", sheet2.Cell("A1").GetString());
+            Assert.Equal("Column2", sheet2.Cell("B1").GetString());
 
-            Assert.Equal("MiniExcel", sheet2.Cells["A2"].Value.ToString());
-            Assert.Equal(1, (double)sheet2.Cells["B2"].Value);
+            Assert.Equal("MiniExcel", sheet2.Cell("A2").GetString());
+            Assert.Equal(1, sheet2.Cell("B2").GetDouble());
 
-            Assert.Equal("Github", sheet2.Cells["A3"].Value.ToString());
-            Assert.Equal(2, (double)sheet2.Cells["B3"].Value);
+            Assert.Equal("Github", sheet2.Cell("A3").GetString());
+            Assert.Equal(2, sheet2.Cell("B3").GetDouble());
 
             Assert.Equal("Sheet2", sheet2.Name);
         }
@@ -1035,12 +1031,12 @@ public class MiniExcelOpenXmlExporterTests(ITestOutputHelper output)
                 ]
             }, overwriteSheet: true);
 
-            using var p = new ExcelPackage(thirdPath);
-            var sheet2 = p.Workbook.Worksheets[1];
+            using var p = new XLWorkbook(thirdPath);
+            var sheet2 = p.Worksheet(2);
 
             Assert.Equal("Sheet2", sheet2.Name);
-            Assert.Equal("Test", sheet2.Cells["A1"].Value);
-            Assert.Equal(dt.ToString("dd.MM.yyyy HH:mm:ss"), sheet2.Cells["B1"].Text);
+            Assert.Equal("Test", sheet2.Cell("A1").GetString());
+            Assert.Equal(dt.ToString("dd.MM.yyyy HH:mm:ss"), sheet2.Cell("B1").GetFormattedString());
         }
         {
             using var table = new DataTable();
@@ -1069,17 +1065,17 @@ public class MiniExcelOpenXmlExporterTests(ITestOutputHelper output)
                 ]
             });
 
-            using var p = new ExcelPackage(ms);
-            var sheet3 = p.Workbook.Worksheets[2];
+            using var p = new XLWorkbook(ms);
+            var sheet3 = p.Worksheet(3);
 
-            Assert.Equal("Column1", sheet3.Cells["A1"].Value);
-            Assert.Equal("Date", sheet3.Cells["B1"].Value);
+            Assert.Equal("Column1", sheet3.Cell("A1").GetString());
+            Assert.Equal("Date", sheet3.Cell("B1").GetString());
 
-            Assert.Equal("MiniExcel", sheet3.Cells["A2"].Value);
-            Assert.Equal(dt.ToString("dd.MM.yyyy HH:mm:ss"), sheet3.Cells["B2"].Text);
+            Assert.Equal("MiniExcel", sheet3.Cell("A2").GetString());
+            Assert.Equal(dt.ToString("dd.MM.yyyy HH:mm:ss"), sheet3.Cell("B2").GetFormattedString());
 
-            Assert.Equal("Github", sheet3.Cells["A3"].Value);
-            Assert.Equal(dt.ToString("dd.MM.yyyy HH:mm:ss"), sheet3.Cells["B3"].Text);
+            Assert.Equal("Github", sheet3.Cell("A3").GetString());
+            Assert.Equal(dt.ToString("dd.MM.yyyy HH:mm:ss"), sheet3.Cell("B3").GetFormattedString());
 
             Assert.Equal("Sheet3", sheet3.Name);
         }
@@ -1123,9 +1119,9 @@ public class MiniExcelOpenXmlExporterTests(ITestOutputHelper output)
         Assert.Throws<ArgumentException>(() => _excelExporter.InsertSheet(ms2, Array.Empty<object>(), sheetName: "Sheet[]"));
         
         using var ms3 = new MemoryStream();
-        using var package = new ExcelPackage(ms3);
-        package.Workbook.Worksheets.Add("Sheet1");
-        package.Save();
+        using var package = new XLWorkbook();
+        package.Worksheets.Add("Sheet1");
+        package.SaveAs(ms3);
         
         ms1.Seek(0, SeekOrigin.Begin);
         Assert.Throws<ArgumentException>(() => MiniExcelV2.Editors.GetOpenXmlEditor().AlterSheetInfo(ms3, "Sheet1", "Sheet*"));
@@ -1147,8 +1143,8 @@ public class MiniExcelOpenXmlExporterTests(ITestOutputHelper output)
             _excelExporter.Export(ms, Array.Empty<LocalizationSupportDto>());
             ms.Seek(0, SeekOrigin.Begin);
             
-            using var package = new ExcelPackage(ms);
-            var cells = package.Workbook.Worksheets[0].Cells;
+            using var package = new XLWorkbook(ms);
+            var cells = package.Worksheet(1);
 
             var (firstName, lastName, address, age) = cultureId switch
             {
@@ -1158,10 +1154,10 @@ public class MiniExcelOpenXmlExporterTests(ITestOutputHelper output)
                 _ => throw new UnreachableException()
             };
             
-            Assert.Equal(firstName, cells["A1"].Value);
-            Assert.Equal(lastName, cells["B1"].Value);
-            Assert.Equal(address, cells["C1"].Value);
-            Assert.Equal(age, cells["D1"].Value);
+            Assert.Equal(firstName, cells.Cell("A1").GetString());
+            Assert.Equal(lastName, cells.Cell("B1").GetString());
+            Assert.Equal(address, cells.Cell("C1").GetString());
+            Assert.Equal(age, cells.Cell("D1").GetString());
         }
         finally
         {
@@ -1195,8 +1191,8 @@ public class MiniExcelOpenXmlExporterTests(ITestOutputHelper output)
                 configuration: new OpenXmlConfiguration { DynamicColumns =  cols });
             
             stream.Seek(0, SeekOrigin.Begin);
-            using var package = new ExcelPackage(stream);
-            var cells = package.Workbook.Worksheets[0].Cells;
+            using var package = new XLWorkbook(stream);
+            var cells = package.Worksheet(1);
 
             var (firstName, lastName, address, age) = cultureId switch
             {
@@ -1206,10 +1202,10 @@ public class MiniExcelOpenXmlExporterTests(ITestOutputHelper output)
                 _ => throw new UnreachableException()
             };
             
-            Assert.Equal(firstName, cells["A1"].Value);
-            Assert.Equal(lastName, cells["B1"].Value);
-            Assert.Equal(address, cells["C1"].Value);
-            Assert.Equal(age, cells["D1"].Value);
+            Assert.Equal(firstName, cells.Cell("A1").GetString());
+            Assert.Equal(lastName, cells.Cell("B1").GetString());
+            Assert.Equal(address, cells.Cell("C1").GetString());
+            Assert.Equal(age, cells.Cell("D1").GetString());
         }
         finally
         {

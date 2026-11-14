@@ -1,3 +1,4 @@
+using ClosedXML.Excel;
 using MiniExcelLib.OpenXml.Models;
 using MiniExcelLib.Tests.Common.Utils;
 using static MiniExcelLib.OpenXml.Tests.Utils.SheetHelper;
@@ -21,10 +22,10 @@ public class MiniExcelAlterSheetTests
 
         // Assert
         stream.Position = 0;
-        using var package = new ExcelPackage(stream);
+        using var workbook = new XLWorkbook(stream);
         
-        Assert.Null(package.Workbook.Worksheets[originalName]);
-        Assert.NotNull(package.Workbook.Worksheets[newName]);
+        Assert.False(workbook.Worksheets.Contains(originalName));
+        Assert.True(workbook.Worksheets.Contains(newName));
     }
 
     [Fact]
@@ -40,10 +41,10 @@ public class MiniExcelAlterSheetTests
 
         // Assert
         stream.Position = 0;
-        using var package = new ExcelPackage(stream);
+        using var workbook = new XLWorkbook(stream);
         
         // Assert that the sheet at the new index is indeed our target sheet
-        Assert.Equal(targetSheet, package.Workbook.Worksheets[newIndex].Name);
+        Assert.Equal(targetSheet, workbook.Worksheet(newIndex + 1).Name);
     }
 
     [Fact]
@@ -58,10 +59,10 @@ public class MiniExcelAlterSheetTests
 
         // Assert
         stream.Position = 0;
-        using var package = new ExcelPackage(stream);
+        using var workbook = new XLWorkbook(stream);
         
-        var sheet = package.Workbook.Worksheets[targetSheet];
-        Assert.Equal(eWorkSheetHidden.Hidden, sheet.Hidden);
+        var sheet = workbook.Worksheet(targetSheet);
+        Assert.Equal(XLWorksheetVisibility.Hidden, sheet.Visibility);
     }
 
     [Fact]
@@ -84,18 +85,18 @@ public class MiniExcelAlterSheetTests
 
         // Assert
         stream.Position = 0;
-        using var package = new ExcelPackage(stream);
+        using var workbook = new XLWorkbook(stream);
         
         // 1. Check Name
-        Assert.Null(package.Workbook.Worksheets[originalName]);
-        var modifiedSheet = package.Workbook.Worksheets[newName];
+        Assert.False(workbook.Worksheets.Contains(originalName));
+        var modifiedSheet = workbook.Worksheet(newName);
         Assert.NotNull(modifiedSheet);
 
         // 2. Check Index (Should now be the first sheet)
-        Assert.Equal(newName, package.Workbook.Worksheets[newIndex].Name);
+        Assert.Equal(newName, workbook.Worksheet(newIndex + 1).Name);
 
         // 3. Check State
-        Assert.Equal(eWorkSheetHidden.VeryHidden, modifiedSheet.Hidden);
+        Assert.Equal(XLWorksheetVisibility.VeryHidden, modifiedSheet.Visibility);
     }
 
     [Fact]
@@ -115,12 +116,12 @@ public class MiniExcelAlterSheetTests
         _excelEditor.AlterSheetInfo(path.FilePath, targetSheet);
 
         // Assert
-        using var package = new ExcelPackage(path.FilePath);
-        var sheet = package.Workbook.Worksheets[targetSheet];
+        using var workbook = new XLWorkbook(path.FilePath);
+        var sheet = workbook.Worksheet(targetSheet);
 
         // Ensure defaults remain intact
         Assert.NotNull(sheet);
-        Assert.Equal("Sheet1", package.Workbook.Worksheets[0].Name); 
-        Assert.Equal(eWorkSheetHidden.Visible, sheet.Hidden);
+        Assert.Equal("Sheet1", workbook.Worksheet(1).Name);
+        Assert.Equal(XLWorksheetVisibility.Visible, sheet.Visibility);
     }
 }

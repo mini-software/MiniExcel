@@ -37,6 +37,30 @@ The issue template will help you on the way once again:
     * Unit tests for the changes have been added
     * Documentation has been updated where necessary
 
+## Test and benchmark dependencies
+
+The default solution and regular unit tests do not reference EPPlus or NPOI.
+OpenXML regression tests use ClosedXML 0.105.0 (MIT) and direct package/XML
+assertions. The xUnit 2.9.3 test framework is licensed under Apache-2.0.
+These license declarations are from the pinned NuGet packages; this is not a
+blanket compliance assessment of every transitive dependency or test fixture.
+
+All benchmarks, input data, historical results, and the benchmark workflow
+are maintained separately in
+[mini-software/MiniExcel.Benchmarks](https://github.com/mini-software/MiniExcel.Benchmarks).
+The benchmark repository pins MiniExcel source as a Git submodule. No benchmark
+project is referenced by this solution, production packages, or regular
+CI/release builds, and benchmark sources are not part of this repository's
+new source-release archives.
+
+EPPlus 7.7.3 and NPOI 2.8.0 are used only by the optional comparison project
+in that repository. Its
+[instructions](https://github.com/mini-software/MiniExcel.Benchmarks/tree/main/benchmarks/MiniExcel.ComparisonBenchmarks)
+describe the package licenses and explicit opt-in requirements. Moving a
+dependency to another repository does not waive its license conditions.
+Confirm the intended usage and ASF source/binary release contents with mentors
+during incubation. Historical tags and archives are unchanged by this move.
+
 ## AI Usage
 
 The use of AI agents is allowed for generating bugfixes, unit tests and documentation.

@@ -12,10 +12,6 @@ public class MiniExcelOpenXmlImporterTests(ITestOutputHelper output)
     private readonly OpenXmlImporter _excelImporter =  MiniExcelV2.Importers.GetOpenXmlImporter();
     private readonly OpenXmlExporter _excelExporter =  MiniExcelV2.Exporters.GetOpenXmlExporter();
    
-    static MiniExcelOpenXmlImporterTests()
-    {
-        ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
-    }
 
     [Fact]
     public void CustomAttributeWihoutVaildPropertiesTest()

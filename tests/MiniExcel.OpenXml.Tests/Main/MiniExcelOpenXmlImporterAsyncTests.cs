@@ -1,4 +1,5 @@
-﻿using ExcelDataReader;
+using ClosedXML.Excel;
+using ExcelDataReader;
 using MiniExcelLib.Core.Exceptions;
 using MiniExcelLib.OpenXml.Tests.Utils;
 using MiniExcelLib.Tests.Common.Utils;
@@ -10,10 +11,6 @@ public class MiniExcelOpenXmlImporterAsyncTests
     private readonly OpenXmlImporter _excelImporter =  MiniExcelV2.Importers.GetOpenXmlImporter();
     private readonly OpenXmlExporter _excelExporter =  MiniExcelV2.Exporters.GetOpenXmlExporter();
    
-    static MiniExcelOpenXmlImporterAsyncTests()
-    {
-        ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
-    }
 
     [Fact]
     public async Task CustomAttributeWihoutVaildPropertiesTest()
@@ -463,9 +460,9 @@ public class MiniExcelOpenXmlImporterAsyncTests
         await Assert.ThrowsAsync<ArgumentException>(() => _excelExporter.InsertSheetAsync(ms2, Array.Empty<object>(), sheetName: "Sheet[]"));
         
         await using var ms3 = new MemoryStream();
-        using var package = new ExcelPackage(ms3);
-        package.Workbook.Worksheets.Add("Sheet1");
-        await package.SaveAsync();
+        using var package = new XLWorkbook();
+        package.Worksheets.Add("Sheet1");
+        package.SaveAs(ms3);
         
         ms1.Seek(0, SeekOrigin.Begin);
         await Assert.ThrowsAsync<ArgumentException>(() => MiniExcelV2.Editors.GetOpenXmlEditor().AlterSheetInfoAsync(ms3, "Sheet1", "Sheet*"));

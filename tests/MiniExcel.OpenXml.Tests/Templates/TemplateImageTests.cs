@@ -1,9 +1,11 @@
 using System.Reflection;
 using System.Xml.Linq;
 using ClosedXML.Excel;
+using DocumentFormat.OpenXml.Packaging;
+using DocumentFormat.OpenXml.Spreadsheet;
+using SpreadsheetPicture = DocumentFormat.OpenXml.Drawing.Spreadsheet.Picture;
 using MiniExcelLib.OpenXml.Templates;
 using MiniExcelLib.Tests.Common.Utils;
-using OfficeOpenXml.Drawing;
 
 namespace MiniExcelLib.OpenXml.Tests.Templates;
 
@@ -19,11 +21,6 @@ public class TemplateImageTests(ITestOutputHelper output)
     private readonly OpenXmlTemplater _templater = MiniExcelV2.Templaters.GetOpenXmlTemplater();
     private readonly ITestOutputHelper _output = output;
 
-    static TemplateImageTests()
-    {
-        ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
-    }
-    
     private static byte[] TestPng() => File.ReadAllBytes(PathHelper.GetFile("xlsx/Issue327/TestIssue327.png"));
 
     private static string GetSheetXml(string xlsxPath, int sheetIndex = 1)
@@ -69,17 +66,34 @@ public class TemplateImageTests(ITestOutputHelper output)
     {
         AssertPackageIsValid(xlsxPath);
 
-        // A real OpenXML consumer must be able to open the workbook and see the images.
-        using (var package = new ExcelPackage(new FileInfo(xlsxPath)))
-        {
-            Assert.Equal(expectedImages, package.Workbook.Worksheets[0].Drawings.OfType<ExcelPicture>().Count());
-        }
+        AssertConsumerPictureCount(xlsxPath, 0, expectedImages);
 
         // OPC-level check: the drawing part must resolve to a declared content type, otherwise Excel
-        // repairs the file by dropping the drawing (the failure EPPlus does not surface).
+        // repairs the file by dropping the drawing.
         using var opcPackage = Package.Open(xlsxPath, FileMode.Open, FileAccess.Read, FileShare.Read);
         var drawingPart = opcPackage.GetPart(new Uri("/xl/drawings/drawing1.xml", UriKind.Relative));
         Assert.Equal("application/vnd.openxmlformats-officedocument.drawing+xml", drawingPart.ContentType);
+    }
+
+    private static void AssertConsumerPictureCount(string xlsxPath, int sheetIndex, int expectedImages)
+    {
+        // The SDK reads the original package without ClosedXML's 31-character picture-name restriction.
+        using var document = SpreadsheetDocument.Open(xlsxPath, false);
+        var workbookPart = document.WorkbookPart!;
+        var sheet = workbookPart.Workbook.Sheets!.Elements<Sheet>().ElementAt(sheetIndex);
+        var worksheetPart = Assert.IsType<WorksheetPart>(workbookPart.GetPartById(sheet.Id!));
+        var drawing = Assert.Single(worksheetPart.Worksheet.Elements<Drawing>());
+        var drawingPart = Assert.IsType<DrawingsPart>(worksheetPart.GetPartById(drawing.Id!));
+        var pictures = drawingPart.WorksheetDrawing!.Descendants<SpreadsheetPicture>().ToList();
+        Assert.Equal(expectedImages, pictures.Count);
+        foreach (var picture in pictures)
+        {
+            var embedId = picture.BlipFill!.Blip!.Embed!.Value!;
+            var imagePart = Assert.IsType<ImagePart>(drawingPart.GetPartById(embedId));
+            Assert.StartsWith("image/", imagePart.ContentType);
+            using var imageStream = imagePart.GetStream(FileMode.Open, FileAccess.Read);
+            Assert.NotEqual(-1, imageStream.ReadByte());
+        }
     }
 
     private static (long Width, long Height) GetAnchorSize(string xlsxPath)
@@ -651,8 +665,7 @@ public class TemplateImageTests(ITestOutputHelper output)
 
         Assert.Equal(2, GetMediaEntries(path.ToString()).Count);
 
-        using var package = new ExcelPackage(new FileInfo(path.ToString()));
-        Assert.Equal(2, package.Workbook.Worksheets[0].Drawings.OfType<ExcelPicture>().Count());
+        AssertConsumerPictureCount(path.ToString(), 0, 2);
     }
 
     [Fact]
@@ -779,9 +792,8 @@ public class TemplateImageTests(ITestOutputHelper output)
         AssertDrawingReferencesIntegrity(path.ToString(), firstDrawing);
         AssertDrawingReferencesIntegrity(path.ToString(), secondDrawing);
 
-        using var package = new ExcelPackage(new FileInfo(path.ToString()));
-        Assert.Single(package.Workbook.Worksheets[0].Drawings.OfType<ExcelPicture>());
-        Assert.Single(package.Workbook.Worksheets[1].Drawings.OfType<ExcelPicture>());
+        AssertConsumerPictureCount(path.ToString(), 0, 1);
+        AssertConsumerPictureCount(path.ToString(), 1, 1);
     }
 
     [Fact]

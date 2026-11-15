@@ -1,6 +1,6 @@
-using System.Drawing;
+using System.Xml.Linq;
+using ClosedXML.Excel;
 using MiniExcelLib.Core.Helpers;
-using OfficeOpenXml.Drawing;
 
 namespace MiniExcelLib.OpenXml.Tests.Cells;
 
@@ -9,33 +9,57 @@ public class QueryCellsWithMetadataAsyncTests
     private readonly OpenXmlImporter _excelImporter = MiniExcelV2.Importers.GetOpenXmlImporter();
     private readonly OpenXmlExporter _excelExporter = MiniExcelV2.Exporters.GetOpenXmlExporter();
 
-    public QueryCellsWithMetadataAsyncTests()
-    {
-        ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
-    }
-
     internal static MemoryStream CreateWorkbook()
     {
-        using var package = new ExcelPackage();
-        var sheet = package.Workbook.Worksheets.Add("Sheet1");
-
-        sheet.Cells["A1"].Value = 1;
-        sheet.Cells["A2"].Value = 2;
-        sheet.Cells["A2"].Style.Font.Color.SetColor(Color.Red);
-        sheet.Cells["A3"].Value = 3;
-        sheet.Cells["A3"].Style.Font.Color.SetColor(eThemeSchemeColor.Text1);
-        sheet.Cells["A4"].Value = "text";
-        sheet.Cells["A4"].Style.Font.Color.SetColor(eThemeSchemeColor.Accent2);
-        sheet.Cells["A4"].Style.Font.Color.Tint = 0.4m;
-
-        // Assigning one formula to a range makes EPPlus store it as a shared formula
-        sheet.Cells["B1:B3"].Formula = "A1*2";
-        sheet.Cells["C1"].Formula = "\"x\"&A1";
-
-        package.Workbook.Calculate();
+        using var workbook = new XLWorkbook();
+        var sheet = workbook.AddWorksheet("Sheet1");
+        sheet.Cell("A1").Value = 1;
+        sheet.Cell("A2").Value = 2;
+        sheet.Cell("A2").Style.Font.FontColor = XLColor.Red;
+        sheet.Cell("A3").Value = 3;
+        sheet.Cell("A3").Style.Font.FontColor = XLColor.FromTheme(XLThemeColor.Text1);
+        sheet.Cell("A4").Value = "text";
+        sheet.Cell("A4").Style.Font.FontColor = XLColor.FromTheme(XLThemeColor.Accent2, 0.4);
 
         var stream = new MemoryStream();
-        package.SaveAs(stream);
+        workbook.SaveAs(stream);
+
+        // Write shared formula records and cached values explicitly; ClosedXML saves ordinary formulas.
+        using (var archive = new ZipArchive(stream, ZipArchiveMode.Update, leaveOpen: true))
+        {
+            var entry = archive.GetEntry("xl/worksheets/sheet1.xml")!;
+            XDocument document;
+            using (var input = entry.Open())
+                document = XDocument.Load(input);
+            XNamespace ns = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
+            var rows = document.Descendants(ns + "row").ToArray();
+            rows[0].Add(
+                new XElement(ns + "c", new XAttribute("r", "B1"),
+                    new XElement(ns + "f", new XAttribute("t", "shared"),
+                        new XAttribute("si", "0"), new XAttribute("ref", "B1:B3"), "A1*2"),
+                    new XElement(ns + "v", "2")),
+                new XElement(ns + "c", new XAttribute("r", "C1"), new XAttribute("t", "str"),
+                    new XElement(ns + "f", "\"x\"&A1"), new XElement(ns + "v", "x1")));
+            for (var index = 1; index < 3; index++)
+            {
+                rows[index].Add(new XElement(ns + "c", new XAttribute("r", $"B{index + 1}"),
+                    new XElement(ns + "f", new XAttribute("t", "shared"), new XAttribute("si", "0")),
+                    new XElement(ns + "v", (index + 1) * 2)));
+            }
+
+            entry.Delete();
+            using (var output = archive.CreateEntry("xl/worksheets/sheet1.xml").Open())
+                document.Save(output);
+
+            var stylesEntry = archive.GetEntry("xl/styles.xml")!;
+            XDocument styles;
+            using (var input = stylesEntry.Open())
+                styles = XDocument.Load(input);
+            styles.Descendants(ns + "font").First().Element(ns + "color")?.Remove();
+            stylesEntry.Delete();
+            using var stylesOutput = archive.CreateEntry("xl/styles.xml").Open();
+            styles.Save(stylesOutput);
+        }
         stream.Position = 0;
         return stream;
     }
@@ -100,14 +124,15 @@ public class QueryCellsWithMetadataAsyncTests
     [Fact]
     public async Task QueryCellsWithMetadata_ReportsNumberFormatsAsync()
     {
-        using var package = new ExcelPackage();
-        var sheet = package.Workbook.Worksheets.Add("Sheet1");
-        sheet.Cells["A1"].Value = 0.233;
-        sheet.Cells["A1"].Style.Numberformat.Format = "0.0%";
-        sheet.Cells["A2"].Value = 5;
+        using var workbook = new XLWorkbook();
+        var sheet = workbook.AddWorksheet("Sheet1");
+        sheet.Cell("A1").Value = 0.233;
+        sheet.Cell("A1").Style.NumberFormat.Format = "0.0%";
+        sheet.Cell("A2").Value = 5;
 
         await using var stream = new MemoryStream();
-        await package.SaveAsAsync(stream);
+        workbook.SaveAs(stream);
+        stream.Position = 0;
 
         var cells = await _excelImporter.QueryCellsWithMetadataAsync(stream).ToDictionaryAsync(c => c.Reference);
 

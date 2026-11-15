@@ -11,14 +11,6 @@
 
 ---
 
-[<img align="right" src="https://github.com/dotnet-foundation/swag/blob/main/logo/dotnetfoundation_v4.png?raw=true" width="100" />](https://www.dotnetfoundation.org/)
-
-<div align="center">
-<p>This project is part of the <a href="https://www.dotnetfoundation.org/">.NET Foundation</a> and operates under their <a href="https://www.dotnetfoundation.org/code-of-conduct">code of conduct</a>. </p>
-</div>
-
----
-
 <div align="center">
  Your <a href="https://github.com/mini-software/MiniExcel">Stars</a> or <a href="https://miniexcel.github.io">Donations</a> can make MiniExcel better
 </div>
@@ -123,17 +115,20 @@ See the [project roadmap](https://github.com/mini-software/MiniExcel/projects/1?
 
 ### Performance
 
-The benchmark source code is available in [MiniExcel.Benchmarks](benchmarks/MiniExcel.Benchmarks/Program.cs).
+The benchmark source code is maintained in the separate [MiniExcel.Benchmarks repository](https://github.com/mini-software/MiniExcel.Benchmarks).
 
-The primary benchmark file is [**Test100,000x10.xlsx**](benchmarks/MiniExcel.Benchmarks/data/Test100%2C000x10.xlsx), which contains 100,000 rows and 10 columns filled with unique strings.
+The primary benchmark file is [**Test100,000x10.xlsx**](https://github.com/mini-software/MiniExcel.Benchmarks/blob/main/benchmarks/MiniExcel.Benchmarks/data/Test100%2C000x10.xlsx), which contains 100,000 rows and 10 columns filled with unique strings.
 
 To run all benchmarks, use:
 
 ```bash
-dotnet run --project .\benchmarks\MiniExcel.Benchmarks -c Release -f net9.0 -- --filter "*" --join
+git clone --recurse-submodules https://github.com/mini-software/MiniExcel.Benchmarks.git
+cd MiniExcel.Benchmarks
+dotnet run --project .\benchmarks\MiniExcel.Benchmarks -c Release -f net10.0 -- --filter "*" --join
 ```
 
-You can find the benchmarks' results for the latest release [here](benchmarks/results).
+You can find recorded benchmark results [here](https://github.com/mini-software/MiniExcel.Benchmarks/tree/main/benchmarks/results).
+EPPlus/NPOI comparisons are optional; review the benchmark repository's license instructions before running them.
 
 
 ### Excel Query/Import  <a name="getstart1"></a>

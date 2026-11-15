@@ -9,11 +9,6 @@ public class MiniExcelTemplateAsyncTests
     private readonly OpenXmlImporter _excelImporter =  MiniExcelV2.Importers.GetOpenXmlImporter();
     private readonly OpenXmlTemplater _excelTemplater =  MiniExcelV2.Templaters.GetOpenXmlTemplater();
     
-    static MiniExcelTemplateAsyncTests()
-    {
-        ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
-    }
-
     [Fact]
     public async Task DatatableTemptyRowTest()
     {

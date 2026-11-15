@@ -4,11 +4,6 @@ public class QueryCellsWithMetadataTests
 {
     private readonly OpenXmlImporter _excelImporter = MiniExcelV2.Importers.GetOpenXmlImporter();
 
-    public QueryCellsWithMetadataTests()
-    {
-        ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
-    }
-
     [Fact]
     public void QueryCellsWithMetadata_ReportsFormulasAndFontColors()
     {

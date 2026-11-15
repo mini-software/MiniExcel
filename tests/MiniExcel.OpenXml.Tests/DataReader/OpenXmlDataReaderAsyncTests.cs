@@ -6,11 +6,6 @@ public class OpenXmlDataReaderAsyncTests
 {
     private readonly OpenXmlImporter _excelImporter = MiniExcelV2.Importers.GetOpenXmlImporter();
 
-    static OpenXmlDataReaderAsyncTests()
-    {
-        ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
-    }
-
     [Fact]
     public async Task GetDataReader_WithSimpleData_ReturnsValidDataReader()
     {

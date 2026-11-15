@@ -1,6 +1,7 @@
 ﻿using System.Xml;
 using System.Xml.Linq;
 using System.Xml.XPath;
+using ClosedXML.Excel;
 
 namespace MiniExcelLib.OpenXml.Tests.Utils;
 
@@ -103,6 +104,21 @@ internal static class SheetHelper
         writer.Write(stylesXml);
     }
 
+    internal static void ReplaceSharedStringsXml(string path, string sharedStringsXml)
+    {
+        using var stream = File.Open(path, FileMode.Open, FileAccess.ReadWrite);
+        using var archive = new ZipArchive(stream, ZipArchiveMode.Update, false, Encoding.UTF8);
+        var sharedStrings = archive.Entries.Single(w =>
+            w.FullName.Equals("xl/sharedStrings.xml", StringComparison.OrdinalIgnoreCase) ||
+            w.FullName.Equals("/xl/sharedStrings.xml", StringComparison.OrdinalIgnoreCase));
+        var entryName = sharedStrings.FullName;
+        sharedStrings.Delete();
+
+        var replacement = archive.CreateEntry(entryName);
+        using var writer = new StreamWriter(replacement.Open(), new UTF8Encoding(false));
+        writer.Write(sharedStringsXml);
+    }
+
     internal static string? GetFirstSheetDimensionRefValue(string path)
     {
         var ns = new XmlNamespaceManager(new NameTable());
@@ -154,11 +170,11 @@ internal static class SheetHelper
     {
         var stream = new MemoryStream();
         
-        using var package = new ExcelPackage(stream);
-        package.Workbook.Worksheets.Add("Sheet1");
-        package.Workbook.Worksheets.Add("Sheet2");
-        package.Workbook.Worksheets.Add("Sheet3");
-        package.Save();
+        using var workbook = new XLWorkbook();
+        workbook.Worksheets.Add("Sheet1");
+        workbook.Worksheets.Add("Sheet2");
+        workbook.Worksheets.Add("Sheet3");
+        workbook.SaveAs(stream);
 
         stream.Position = 0; 
         return stream;

@@ -1,8 +1,8 @@
+using System.Xml.Linq;
 using MiniExcelLib.Core.Enums;
 using MiniExcelLib.OpenXml.Picture;
 using MiniExcelLib.OpenXml.Tests.Utils;
 using MiniExcelLib.Tests.Common.Utils;
-using OfficeOpenXml.Drawing;
 
 namespace MiniExcelLib.OpenXml.Tests.Templates;
 
@@ -64,36 +64,52 @@ public class MiniExcelTemplateTests
         var mediaEntries = zip.Entries.Where(x => x.FullName.StartsWith("xl/media/")).ToList();
         Assert.Equal(pictures.Length, mediaEntries.Count);
 
-        // Assert (use EPPlus to verify that images are inserted correctly)
-        using var package = new ExcelPackage(new FileInfo(path.FilePath));
+        XNamespace spreadsheetNs = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
+        XNamespace drawingNs = "http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing";
+        XNamespace artNs = "http://schemas.openxmlformats.org/drawingml/2006/main";
+        XNamespace relationshipNs = "http://schemas.openxmlformats.org/officeDocument/2006/relationships";
+        XNamespace packageNs = "http://schemas.openxmlformats.org/package/2006/relationships";
 
-        var sheet = package.Workbook.Worksheets[0];
-        var picB2 = sheet.Drawings
-            .OfType<ExcelPicture>()
-            .FirstOrDefault(p => p.EditAs == eEditAs.Absolute);
+        using var sheetStream = zip.GetEntry("xl/worksheets/sheet1.xml")!.Open();
+        var drawingId = XDocument.Load(sheetStream).Descendants(spreadsheetNs + "drawing")
+            .Single().Attribute(relationshipNs + "id")!.Value;
+        using var sheetRelsStream = zip.GetEntry("xl/worksheets/_rels/sheet1.xml.rels")!.Open();
+        var drawingRelationship = XDocument.Load(sheetRelsStream).Descendants(packageNs + "Relationship")
+            .Single(r => (string?)r.Attribute("Id") == drawingId);
+        Assert.EndsWith("/drawing", (string)drawingRelationship.Attribute("Type")!);
 
+        var drawingUri = new Uri(new Uri("http://package/xl/worksheets/sheet1.xml"),
+            (string)drawingRelationship.Attribute("Target")!);
+        var drawingPath = drawingUri.AbsolutePath.TrimStart('/');
+        using var drawingStream = zip.GetEntry(drawingPath)!.Open();
+        var anchors = XDocument.Load(drawingStream).Root!.Elements()
+            .Where(a => a.Element(drawingNs + "pic") is not null).ToList();
+
+        // Inspect raw EMUs so that loading an image cannot round away a size regression.
+        var picB2 = anchors.FirstOrDefault(a => a.Name == drawingNs + "absoluteAnchor");
         Assert.NotNull(picB2);
-        Assert.Equal(1920 * 9525, picB2.Size.Width);
-        Assert.Equal(1032 * 9525, picB2.Size.Height);
-        //Console.WriteLine("✅ AbsoluteAnchor image exists and the size is as expected (1920x1032)");
+        Assert.Equal(1920L * 9525, (long)picB2.Element(drawingNs + "ext")!.Attribute("cx")!);
+        Assert.Equal(1032L * 9525, (long)picB2.Element(drawingNs + "ext")!.Attribute("cy")!);
 
-        //Console.WriteLine("✅ Image inserted successfully (B2 - AbsoluteAnchor)");
+        Assert.Contains(anchors, a => a.Name == drawingNs + "twoCellAnchor"
+            && (string?)a.Element(drawingNs + "from")?.Element(drawingNs + "col") == "3"
+            && (string?)a.Element(drawingNs + "from")?.Element(drawingNs + "row") == "3"
+            && ((string?)a.Attribute("editAs") is null or "twoCell"));
+        Assert.Contains(anchors, a => a.Name == drawingNs + "oneCellAnchor"
+            && (string?)a.Element(drawingNs + "from")?.Element(drawingNs + "col") == "5"
+            && (string?)a.Element(drawingNs + "from")?.Element(drawingNs + "row") == "5");
 
-        // Validate image at D4 (ImgType.TwoCellAnchor)
-        var picD4 = sheet.Drawings
-            .OfType<ExcelPicture>()
-            .FirstOrDefault(p => p is { EditAs: eEditAs.TwoCell, From: { Column: 3, Row: 3 } });
-
-        Assert.NotNull(picD4);
-        //Console.WriteLine("✅ Image inserted successfully (D4 - TwoCellAnchor)");
-
-        // Validate image at F6 (ImgType.OneCellAnchor)
-        var picF6 = sheet.Drawings
-            .OfType<ExcelPicture>()
-            .FirstOrDefault(p => p is { EditAs: eEditAs.OneCell, From: { Column: 5, Row: 5 } });
-
-        Assert.NotNull(picF6);
-        //Console.WriteLine("✅ Image inserted successfully (F6 - OneCellAnchor)");
+        var drawingRelsPath = drawingPath.Insert(drawingPath.LastIndexOf('/') + 1, "_rels/") + ".rels";
+        using var drawingRelsStream = zip.GetEntry(drawingRelsPath)!.Open();
+        var imageRelationships = XDocument.Load(drawingRelsStream).Descendants(packageNs + "Relationship").ToList();
+        foreach (var anchor in anchors)
+        {
+            var embedId = anchor.Descendants(artNs + "blip").Single().Attribute(relationshipNs + "embed")!.Value;
+            var imageRelationship = imageRelationships.Single(r => (string?)r.Attribute("Id") == embedId);
+            Assert.EndsWith("/image", (string)imageRelationship.Attribute("Type")!);
+            var imageUri = new Uri(drawingUri, (string)imageRelationship.Attribute("Target")!);
+            Assert.NotNull(zip.GetEntry(imageUri.AbsolutePath.TrimStart('/')));
+        }
     }
 
     [Fact]
@@ -1024,33 +1040,73 @@ public class MiniExcelTemplateTests
         using var path = AutoDeletingPath.Create();
         await _excelTemplater.FillTemplateAsync(path.ToString(), templatePath, value, true);
 
-        using var package = new ExcelPackage(path.ToString());
-        var sheets = package.Workbook.Worksheets;
+        // Inspect the original XML: generated sheet parts currently lack the content-type
+        // overrides required by the SDK, independently of the sheet expansion tested here.
+        using var zip = ZipFile.OpenRead(path.ToString());
+        XNamespace spreadsheetNs = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
+        XNamespace relationshipNs = "http://schemas.openxmlformats.org/officeDocument/2006/relationships";
+        XNamespace packageNs = "http://schemas.openxmlformats.org/package/2006/relationships";
+        using var workbookStream = zip.GetEntry("xl/workbook.xml")!.Open();
+        using var relationshipsStream = zip.GetEntry("xl/_rels/workbook.xml.rels")!.Open();
+        var workbook = XDocument.Load(workbookStream);
+        var relationships = XDocument.Load(relationshipsStream);
+        var sheets = workbook.Descendants(spreadsheetNs + "sheet").Select(sheet =>
+        {
+            var id = (string)sheet.Attribute(relationshipNs + "id")!;
+            var relationship = relationships.Descendants(packageNs + "Relationship")
+                .Single(r => (string?)r.Attribute("Id") == id);
+            Assert.EndsWith("/worksheet", (string)relationship.Attribute("Type")!);
+            var sheetUri = new Uri(new Uri("http://package/xl/workbook.xml"),
+                (string)relationship.Attribute("Target")!);
+            using var sheetStream = zip.GetEntry(sheetUri.AbsolutePath.TrimStart('/'))!.Open();
+            return (Name: (string)sheet.Attribute("name")!, Xml: XDocument.Load(sheetStream));
+        }).ToList();
+
+        var sharedStrings = new List<string>();
+        if (zip.GetEntry("xl/sharedStrings.xml") is { } sharedStringsEntry)
+        {
+            using var sharedStringsStream = sharedStringsEntry.Open();
+            sharedStrings = XDocument.Load(sharedStringsStream).Descendants(spreadsheetNs + "si")
+                .Select(si => string.Concat(si.Descendants(spreadsheetNs + "t").Select(t => t.Value))).ToList();
+        }
+
+        string CellText(XDocument sheet, string address)
+        {
+            var cell = sheet.Descendants(spreadsheetNs + "c")
+                .Single(c => (string?)c.Attribute("r") == address);
+            var text = cell.Element(spreadsheetNs + "v")?.Value ?? "";
+            return (string?)cell.Attribute("t") switch
+            {
+                "s" => sharedStrings[int.Parse(text, CultureInfo.InvariantCulture)],
+                "inlineStr" => string.Concat(cell.Descendants(spreadsheetNs + "t").Select(t => t.Value)),
+                _ => text
+            };
+        }
         
         Assert.Equal(7, sheets.Count);
 
         Assert.Equal("Sheet1", sheets[0].Name);
-        Assert.Equal("1", sheets[0].Cells["A1"].Text);
-        Assert.Equal("5", sheets[0].Cells["A5"].Text);
-        Assert.Equal("E Fund Money A", sheets[0].Cells["B1"].Text);
-        Assert.Equal("ICBC Credit Suisse New Energy", sheets[0].Cells["B5"].Text);
-        Assert.Equal("FUND_000001", sheets[0].Cells["C1"].Text);
-        Assert.Equal("FUND_000005", sheets[0].Cells["C5"].Text);
-        Assert.Equal("2019", sheets[0].Cells["E1"].Text);
-        Assert.Equal("2022", sheets[0].Cells["E5"].Text);
+        Assert.Equal("1", CellText(sheets[0].Xml, "A1"));
+        Assert.Equal("5", CellText(sheets[0].Xml, "A5"));
+        Assert.Equal("E Fund Money A", CellText(sheets[0].Xml, "B1"));
+        Assert.Equal("ICBC Credit Suisse New Energy", CellText(sheets[0].Xml, "B5"));
+        Assert.Equal("FUND_000001", CellText(sheets[0].Xml, "C1"));
+        Assert.Equal("FUND_000005", CellText(sheets[0].Xml, "C5"));
+        Assert.Equal("2019", CellText(sheets[0].Xml, "E1"));
+        Assert.Equal("2022", CellText(sheets[0].Xml, "E5"));
         
         Assert.Equal("Southern Growth Mixed", sheets[2].Name);
-        Assert.Equal("2", sheets[2].Cells["A1"].Text);
-        Assert.Equal("Southern Growth Mixed", sheets[2].Cells["B1"].Text);
-        Assert.Equal(new DateOnly(2020, 3, 10).ToString(CultureInfo.CurrentCulture), sheets[2].Cells["C1"].Text);
-        Assert.Equal(new DateOnly(2025, 1, 1).ToString(CultureInfo.CurrentCulture), sheets[2].Cells["A3"].Text);
+        Assert.Equal("2", CellText(sheets[2].Xml, "A1"));
+        Assert.Equal("Southern Growth Mixed", CellText(sheets[2].Xml, "B1"));
+        Assert.Equal(new DateOnly(2020, 3, 10).ToString(CultureInfo.CurrentCulture), CellText(sheets[2].Xml, "C1"));
+        Assert.Equal(new DateOnly(2025, 1, 1).ToString(CultureInfo.CurrentCulture), CellText(sheets[2].Xml, "A3"));
 
         Assert.Equal("Sheet3", sheets[^1].Name);
-        Assert.Equal("E Fund Money A", sheets[^1].Cells["A1"].Text);
-        Assert.Equal("ICBC Credit Suisse New Energy", sheets[^1].Cells["A5"].Text);
-        Assert.Equal(new DateOnly(2026, 1, 1).ToString(CultureInfo.CurrentCulture), sheets[^1].Cells["B1"].Text);
-        Assert.Equal(new DateOnly(2026, 1, 1).ToString(CultureInfo.CurrentCulture), sheets[^1].Cells["B5"].Text);
-        Assert.Equal("1", sheets[^1].Cells["C1"].Text);
-        Assert.Equal("1", sheets[^1].Cells["C5"].Text);
+        Assert.Equal("E Fund Money A", CellText(sheets[^1].Xml, "A1"));
+        Assert.Equal("ICBC Credit Suisse New Energy", CellText(sheets[^1].Xml, "A5"));
+        Assert.Equal(new DateOnly(2026, 1, 1).ToString(CultureInfo.CurrentCulture), CellText(sheets[^1].Xml, "B1"));
+        Assert.Equal(new DateOnly(2026, 1, 1).ToString(CultureInfo.CurrentCulture), CellText(sheets[^1].Xml, "B5"));
+        Assert.Equal("1", CellText(sheets[^1].Xml, "C1"));
+        Assert.Equal("1", CellText(sheets[^1].Xml, "C5"));
     }
 }

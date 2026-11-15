@@ -180,15 +180,18 @@ internal partial class OpenXmlStyles
 
     public object? ConvertValueByStyleFormat(int index, object? value)
     {
+        if (value is not double number)
+            return value;
+
         var sf = GetStyleFormat(index);
         
         if (sf?.Type is null)
             return value;
 
-        if (sf.Type == typeof(DateTime?) && double.TryParse(value?.ToString(), out var s))
-            return DateTimeHelper.IsValidOADateTime(s) ? DateTime.FromOADate(s) : value;
+        if (sf.Type == typeof(DateTime?))
+            return DateTimeHelper.IsValidOADateTime(number) ? DateTime.FromOADate(number) : value;
 
-        if (sf.Type == typeof(TimeSpan?) && double.TryParse(value?.ToString(), out var number))
+        if (sf.Type == typeof(TimeSpan?))
             return TimeSpan.FromDays(number);
 
         return value;

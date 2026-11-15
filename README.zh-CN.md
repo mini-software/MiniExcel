@@ -9,14 +9,6 @@
 
 ---
 
-[<img align="right" src="https://github.com/dotnet-foundation/swag/blob/main/logo/dotnetfoundation_v4.png?raw=true" width="100" />](https://www.dotnetfoundation.org/)
-
-<div align="center">
-<p>该项目属于 <a href="https://www.dotnetfoundation.org/">.NET 基金会</a> ，并根据其<a href="https://www.dotnetfoundation.org/code-of-conduct">行为准则</a> 运作。</p>
-</div>
-
----
-
 <div align="center">
 <p> 您的 <a href="https://github.com/mini-software/miniexcel">Star</a>、<a href="https://miniexcel.github.io">赞助</a> 和 <a href="https://edu.51cto.com/course/32914.html">购买视频</a> 能帮助 MiniExcel 成长 </p>
 </div>
@@ -105,10 +97,12 @@ miniexcel convert --input input.xlsx --output output.csv --overwrite
 
 ### 性能比较、测试
 
-Benchmarks  逻辑可以在 [MiniExcel.Benchmarks](benchmarks/MiniExcel.Benchmarks/Program.cs) 查看或是提交 PR，运行指令
+Benchmarks 已迁移至独立仓库 [MiniExcel.Benchmarks](https://github.com/mini-software/MiniExcel.Benchmarks)，可在那里查看代码或提交 PR。EPPlus/NPOI 对比为可选项目，运行前请阅读该仓库的许可说明。运行指令：
 
 ```bash
-dotnet run -p .\benchmarks\MiniExcel.Benchmarks\ -c Release -f netcoreapp3.1 -- -f * --join
+git clone --recurse-submodules https://github.com/mini-software/MiniExcel.Benchmarks.git
+cd MiniExcel.Benchmarks
+dotnet run --project .\benchmarks\MiniExcel.Benchmarks -c Release -f net10.0 -- --filter "*" --join
 ```
 
 最后一次运行规格、结果 :
@@ -126,7 +120,7 @@ Benchmark History :  [Link](https://github.com/mini-software/MiniExcel/issues/27
 
 
 #### 导入、查询 Excel 比较
-逻辑 : 以 [**Test1,000,000x10.xlsx**](benchmarks/MiniExcel.Benchmarks/Test1%2C000%2C000x10.xlsx) 做基准与主流框架做性能测试，总共 1,000,000 行 * 10 列笔 "HelloWorld"，文件大小 23 MB
+以下为历史结果。当前基准数据与运行说明见独立仓库的 [测试数据](https://github.com/mini-software/MiniExcel.Benchmarks/tree/main/benchmarks/MiniExcel.Benchmarks/data)。
 
 
 | Library      | Method                       | 最大内存耗用 |         平均时间 |

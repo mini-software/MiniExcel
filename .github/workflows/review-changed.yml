@@ -1,0 +1,14 @@
+name: PR review changed
+
+on:
+  pull_request_review:
+    types: [submitted, dismissed]
+
+permissions: {}
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Signal trusted approval refresh
+        run: echo "Review changed; the trusted approval policy workflow will refresh open PRs."

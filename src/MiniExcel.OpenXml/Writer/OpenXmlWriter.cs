@@ -1,4 +1,5 @@
 using MiniExcelLib.Core.WriteAdapters;
+using MiniExcelLib.OpenXml.Charts;
 using MiniExcelLib.OpenXml.Reader;
 using MiniExcelLib.OpenXml.Styles.Builder;
 
@@ -63,6 +64,11 @@ internal sealed partial class OpenXmlWriter : IMiniExcelWriter
 #else
         using var disposableArchive = _archive;
 #endif
+        foreach (var chartSheet in GetSheets().Select(s => s.Data).OfType<OpenXmlChartSheet>())
+        {
+            ChartXml.Validate(chartSheet.Chart);
+        }
+
         await CreateZipEntryAsync(ExcelFileNames.Rels, ExcelContentTypes.Relationships, ExcelXml.DefaultRels, cancellationToken).ConfigureAwait(false);
 
         await using var sbc = _sheetStyleBuilderContext.ConfigureAwait(false);
@@ -75,6 +81,13 @@ internal sealed partial class OpenXmlWriter : IMiniExcelWriter
         {
             _sheets.Add(sheet.Sheet); //TODO:remove
             _currentSheetIndex = sheet.Sheet.SheetIdx;
+
+            if (sheet.Data is OpenXmlChartSheet chartSheet)
+            {
+                await CreateChartSheetXmlAsync(sheet.Sheet, chartSheet.Chart, cancellationToken).ConfigureAwait(false);
+                rowsWritten.Add(0);
+                continue;
+            }
 
             var rows = await CreateSheetXmlAsync(sheet.Data, sheet.Sheet.Path, progress, cancellationToken).ConfigureAwait(false);
             rowsWritten.Add(rows);
@@ -116,7 +129,8 @@ internal sealed partial class OpenXmlWriter : IMiniExcelWriter
             {
                 Name = sheet.Name,
                 SheetIdx = (int)sheet.Id,
-                State = sheet.State
+                State = sheet.State,
+                IsChartSheet = sheet.Path?.Contains("chartsheets/") is true
             })
         );
 
@@ -192,6 +206,16 @@ internal sealed partial class OpenXmlWriter : IMiniExcelWriter
 
         _zipContentsMap.Add(sheetPath, ExcelContentTypes.Worksheet);
         return rowsWritten;
+    }
+
+    [CreateSyncVersion]
+    private async Task CreateChartSheetXmlAsync(SheetDto sheet, OpenXmlChart chart, CancellationToken cancellationToken)
+    {
+        sheet.IsChartSheet = true;
+        _charts.Add(sheet.SheetIdx, chart);
+
+        await CreateZipEntryAsync(sheet.Path, ExcelContentTypes.ChartSheet, ChartXml.ChartSheet(sheet.SheetIdx), cancellationToken).ConfigureAwait(false);
+        await CreateZipEntryAsync(ExcelFileNames.Chart(sheet.SheetIdx), ExcelContentTypes.Chart, ChartXml.Chart(chart), cancellationToken).ConfigureAwait(false);
     }
 
     [CreateSyncVersion]
@@ -568,9 +592,8 @@ internal sealed partial class OpenXmlWriter : IMiniExcelWriter
     private async Task GenerateWorkbookAsync(bool removeOriginalEntry = false, CancellationToken cancellationToken = default)
     {
         var (workbookXml, workbookRelsXml, sheetsRelsXml) = GenerateWorkbookItems();
-        foreach (var (index, contents) in sheetsRelsXml)
+        foreach (var (sheetRelsXmlPath, contents) in sheetsRelsXml)
         {
-            var sheetRelsXmlPath = ExcelFileNames.SheetRels(index);
             if (removeOriginalEntry)
                 _archive.Entries.SingleOrDefault(s => s.FullName == sheetRelsXmlPath)?.Delete();
 

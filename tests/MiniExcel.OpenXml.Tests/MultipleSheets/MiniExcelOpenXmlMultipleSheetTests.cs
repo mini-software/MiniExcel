@@ -255,4 +255,40 @@ public class MiniExcelOpenXmlMultipleSheetTests
             Assert.NotEmpty(rows);
         }
     }
+
+    [Fact]
+    public void WriteSheetStatesAsOpenXmlValuesTest()
+    {
+        var configuration = new OpenXmlConfiguration
+        {
+            DynamicSheets =
+            [
+                new DynamicExcelSheetAttribute("visibleSheet") { Name = "Visible", State = SheetState.Visible },
+                new DynamicExcelSheetAttribute("hiddenSheet") { Name = "Hidden", State = SheetState.Hidden },
+                new DynamicExcelSheetAttribute("veryHiddenSheet") { Name = "VeryHidden", State = SheetState.VeryHidden }
+            ]
+        };
+
+        var rows = new[] { new { Name = "Jack" } };
+        var sheets = new Dictionary<string, object>
+        {
+            ["visibleSheet"] = rows,
+            ["hiddenSheet"] = rows,
+            ["veryHiddenSheet"] = rows
+        };
+
+        using var file = AutoDeletingPath.Create();
+        var path = file.ToString();
+
+        MiniExcelV2.Exporters.GetOpenXmlExporter().Export(path, sheets, configuration: configuration);
+
+        using var archive = ZipFile.OpenRead(path);
+        using var reader = new StreamReader(archive.GetEntry("xl/workbook.xml")!.Open());
+        var workbook = reader.ReadToEnd();
+
+        // ECMA-376 ST_SheetState: visible, hidden, veryHidden
+        Assert.Contains("name=\"Visible\" sheetId=\"1\" state=\"visible\"", workbook);
+        Assert.Contains("name=\"Hidden\" sheetId=\"2\" state=\"hidden\"", workbook);
+        Assert.Contains("name=\"VeryHidden\" sheetId=\"3\" state=\"veryHidden\"", workbook);
+    }
 }

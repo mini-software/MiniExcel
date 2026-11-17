@@ -612,6 +612,38 @@ public class MiniExcelTemplateTests
     }
 
     [Fact]
+    public void TemplateValuesDoNotDependOnCurrentCulture()
+    {
+        var templatePath = PathHelper.GetFile("xlsx/TestTemplateEasyFill.xlsx");
+        using var path = AutoDeletingPath.Create();
+
+        var currentCulture = CultureInfo.CurrentCulture;
+        try
+        {
+            // In de-DE "." is the group separator, so "01.01.2021" also reads as the number 1012021
+            CultureInfo.CurrentCulture = new CultureInfo("de-DE");
+            var value = new
+            {
+                Name = "Jack",
+                CreateDate = new DateOnly(2021, 01, 01),
+                VIP = true,
+                Points = 1.5
+            };
+            _excelTemplater.FillTemplate(path.ToString(), templatePath, value);
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = currentCulture;
+        }
+
+        var rows = _excelImporter.Query(path.ToString()).ToList();
+        object createDate = rows[1].B;
+        object points = rows[1].D;
+        Assert.Equal("01.01.2021", createDate);
+        Assert.Equal(1.5, points);
+    }
+
+    [Fact]
     public void TemplateBasicTest()
     {
         var templatePath = PathHelper.GetFile("xlsx/TestTemplateEasyFill.xlsx");

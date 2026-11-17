@@ -1424,7 +1424,7 @@ internal partial class OpenXmlTemplate
                         {
                             SetCellType(cell, ExcelDataTypes.InlineString);
                         }
-                        else if (decimal.TryParse(cellValueStr, out var outV))
+                        else if (TryParseNumber(resolvedValue, cellValueStr, out var outV))
                         {
                             SetCellType(cell, ExcelDataTypes.Numeric);
                             cellValueStr = outV.ToString(CultureInfo.InvariantCulture);
@@ -1468,6 +1468,16 @@ internal partial class OpenXmlTemplate
             var digit = StringHelper.GetNumber(refs[0]);
             dimension.SetAttributeValue("ref", $"A1:{letter}{digit + maxRowIndexDiff}");
         }
+    }
+
+    // Parse with the invariant culture: with the current culture a value such as the date "01.01.2021"
+    // reads as 1012021 where "." is the group separator (de-DE, tr-TR).
+    private static bool TryParseNumber(object? value, string? text, out decimal number)
+    {
+        if (value is IFormattable formattable && TypeHelper.IsNumericType(value.GetType()))
+            text = formattable.ToString(null, CultureInfo.InvariantCulture);
+
+        return decimal.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out number);
     }
 
     private static bool EvaluateStatement(object? tagValue, string comparisonOperator, string value)

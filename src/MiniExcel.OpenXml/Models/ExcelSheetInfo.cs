@@ -10,6 +10,11 @@ internal class ExcelSheetInfo
     {
         Name = ExcelSheetName,
         SheetIdx = sheetIndex, 
-        State = ExcelSheetState.ToString().ToLower()
+        State = ExcelSheetState switch
+        {
+            SheetState.Hidden => "hidden",
+            SheetState.VeryHidden => "veryHidden",
+            _ => "visible"
+        }
     };
 }

@@ -358,10 +358,12 @@ internal partial class OpenXmlReader : IMiniExcelReader
                     if (mergeCells?.MergesValues.ContainsKey(aR) ?? false)
                     {
                         mergeCells.MergesValues[aR] = cellValue;
+                        mergeCells.MergesStyles[aR] = aS;
                     }
                     else if (mergeCells?.MergesMap.TryGetValue(aR, out var mergeKey) ?? false)
                     {
                         mergeCells.MergesValues.TryGetValue(mergeKey, out cellValue);
+                        mergeCells.MergesStyles.TryGetValue(mergeKey, out aS);
                     }
                 }
 

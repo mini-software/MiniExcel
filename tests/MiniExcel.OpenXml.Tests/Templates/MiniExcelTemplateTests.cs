@@ -641,6 +641,12 @@ public class MiniExcelTemplateTests
         object points = rows[1].D;
         Assert.Equal("01.01.2021", createDate);
         Assert.Equal(1.5, points);
+
+        // A value in exponent notation that underflows decimal is not written as 0
+        using var tinyPath = AutoDeletingPath.Create();
+        _excelTemplater.FillTemplate(tinyPath.ToString(), templatePath, new { Name = "Jack", CreateDate = new DateOnly(2021, 01, 01), VIP = true, Points = 1e-30 });
+        object tinyPoints = _excelImporter.Query(tinyPath.ToString()).ToList()[1].D;
+        Assert.NotEqual(0d, Convert.ToDouble(tinyPoints, CultureInfo.InvariantCulture));
     }
 
     [Fact]

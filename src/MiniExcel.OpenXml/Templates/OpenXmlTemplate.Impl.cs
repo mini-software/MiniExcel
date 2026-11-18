@@ -1472,12 +1472,16 @@ internal partial class OpenXmlTemplate
 
     // Parse with the invariant culture: with the current culture a value such as the date "01.01.2021"
     // reads as 1012021 where "." is the group separator (de-DE, tr-TR).
+    // No exponent: "1E-30" would underflow decimal to 0, so such values keep their text as before.
+    private const NumberStyles TemplateNumberStyles =
+        NumberStyles.AllowLeadingWhite | NumberStyles.AllowTrailingWhite | NumberStyles.AllowLeadingSign | NumberStyles.AllowDecimalPoint;
+
     private static bool TryParseNumber(object? value, string? text, out decimal number)
     {
         if (value is IFormattable formattable && TypeHelper.IsNumericType(value.GetType()))
             text = formattable.ToString(null, CultureInfo.InvariantCulture);
 
-        return decimal.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out number);
+        return decimal.TryParse(text, TemplateNumberStyles, CultureInfo.InvariantCulture, out number);
     }
 
     private static bool EvaluateStatement(object? tagValue, string comparisonOperator, string value)

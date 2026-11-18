@@ -3345,4 +3345,39 @@ public class MiniExcelGithubIssuesTests(ITestOutputHelper output)
         Assert.Equal(TimeSpan.FromHours(12), (object)row.E);
         Assert.Equal("0.5", (object)row.F);
     }
+
+    // https://github.com/mini-software/MiniExcel/issues/550
+    [Fact]
+    public void FillMergedCellsAppliesTheStyleOfTheFirstCellOfTheMergedRange()
+    {
+        using var path = AutoDeletingPath.Create();
+        _excelExporter.Export(path.FilePath, new[] { new { Value = "control" } });
+        SheetHelper.ReplaceStylesXml(path.FilePath, """
+            <?xml version="1.0" encoding="utf-8"?>
+            <styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+                <cellXfs count="2">
+                    <xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" />
+                    <xf numFmtId="14" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1" />
+                </cellXfs>
+            </styleSheet>
+            """);
+        SheetHelper.ReplaceFirstSheetXml(path.FilePath, """
+            <?xml version="1.0" encoding="utf-8"?>
+            <worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+                <dimension ref="A1:A3" />
+                <sheetData>
+                    <row r="1"><c r="A1" s="1"><v>46327</v></c></row>
+                    <row r="2"><c r="A2" /></row>
+                    <row r="3"><c r="A3" s="0" /></row>
+                </sheetData>
+                <mergeCells count="1"><mergeCell ref="A1:A3" /></mergeCells>
+            </worksheet>
+            """);
+
+        var config = new OpenXmlConfiguration { FillMergedCells = true };
+        var rows = _excelImporter.Query(path.FilePath, configuration: config).ToList();
+
+        Assert.Equal(3, rows.Count);
+        Assert.All(rows, row => Assert.Equal(new DateTime(2026, 11, 1), (object)row.A));
+    }
 }

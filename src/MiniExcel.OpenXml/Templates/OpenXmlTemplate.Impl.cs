@@ -617,7 +617,8 @@ internal partial class OpenXmlTemplate
             {
                 if (lines[i].Contains("@if") || lines[i].Contains("@elseif"))
                 {
-                    var newLines = lines[i]
+                    // The line comes from the cell XML, where ">" and "<" are stored as "&gt;" and "&lt;"
+                    var newLines = System.Net.WebUtility.HtmlDecode(lines[i])
                         .Replace("@elseif(", "")
                         .Replace("@if(", "")
                         .Replace(")", "")

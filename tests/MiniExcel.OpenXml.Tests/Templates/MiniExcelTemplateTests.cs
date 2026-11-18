@@ -517,6 +517,29 @@ public class MiniExcelTemplateTests
         Assert.Equal("A1:D9", dimension);
     }
 
+    [Theory]
+    [InlineData("@if(score > 3)", "high")]
+    [InlineData("@if(score < 3)", "low")]
+    [InlineData("@if(score >= 4)", "high")]
+    [InlineData("@if(score <= 3)", "low")]
+    public void IfStatementSupportsGreaterAndLessThanOperators(string condition, string expected)
+    {
+        // The cell XML stores ">" and "<" as "&gt;" and "&lt;"
+        using var templatePath = AutoDeletingPath.Create();
+        var templateRows = new[]
+        {
+            new Dictionary<string, object> { ["Name"] = "{{items.name}}", ["Grade"] = $"{condition}\nhigh\n@else\nlow\n@endif" }
+        };
+        MiniExcelV2.Exporters.GetOpenXmlExporter().Export(templatePath.ToString(), templateRows);
+
+        using var path = AutoDeletingPath.Create();
+        _excelTemplater.FillTemplate(path.ToString(), templatePath.ToString(), new { items = new[] { new { name = "Jack", score = 4 } } });
+
+        var rows = _excelImporter.Query(path.ToString()).ToList();
+        string grade = rows[1].B;
+        Assert.Equal(expected, grade.Trim());
+    }
+
     [Fact]
     public void TestIEnumerableType()
     {

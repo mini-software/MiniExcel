@@ -1474,7 +1474,8 @@ internal partial class OpenXmlTemplate
     {
         return tagValue switch
         {
-            double dtg when double.TryParse(value, out var doubleNumber) => comparisonOperator switch
+            // Numbers in the template are read with the invariant culture: with the current culture "3.5" is 35 where "." is the group separator
+            double dtg when double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out var doubleNumber) => comparisonOperator switch
             {
                 "==" => dtg.Equals(doubleNumber),
                 "!=" => !dtg.Equals(doubleNumber),
@@ -1485,7 +1486,7 @@ internal partial class OpenXmlTemplate
                 _ => throw new InvalidDataException($"Invalid comparison oeprator: {comparisonOperator}")
             },
             
-            int itg when int.TryParse(value, out var intNumber) => comparisonOperator switch
+            int itg when int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var intNumber) => comparisonOperator switch
             {
                 "==" => itg.Equals(intNumber),
                 "!=" => !itg.Equals(intNumber),

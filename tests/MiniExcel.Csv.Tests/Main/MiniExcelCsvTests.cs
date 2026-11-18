@@ -19,6 +19,34 @@ public class MiniExcelCsvTests
     }
 
     [Fact]
+    public void TabInsideValueIsNotASeparatorTest()
+    {
+        using var file = AutoDeletingPath.Create(ExcelType.Csv);
+        var path = file.ToString();
+        File.WriteAllText(path, "Name,Note,Qty\nA,hello,1\nB,col1\tcol2,2\n");
+
+        var rows = _csvImporter.Query(path, true).ToList();
+
+        Assert.Equal("col1\tcol2", rows[1].Note);
+        Assert.Equal("2", rows[1].Qty);
+    }
+
+    [Fact]
+    public void RegexSpecialSeperatorTest()
+    {
+        using var file = AutoDeletingPath.Create(ExcelType.Csv);
+        var path = file.ToString();
+        File.WriteAllText(path, "Name|Note|Qty\nA|b|1\n");
+
+        var config = new CsvConfiguration { Seperator = '|' };
+        var rows = _csvImporter.Query(path, true, configuration: config).ToList();
+
+        Assert.Equal("A", rows[0].Name);
+        Assert.Equal("b", rows[0].Note);
+        Assert.Equal("1", rows[0].Qty);
+    }
+
+    [Fact]
     public void SeperatorTest()
     {
         using var file = AutoDeletingPath.Create(ExcelType.Csv);

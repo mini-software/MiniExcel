@@ -90,8 +90,16 @@ internal sealed partial class CsvReader : IMiniExcelReader
                 }
 
                 var headCell = ExpandoHelper.CreateEmptyByHeaders(headRows);
-                for (int i = 0; i <= read.Length - 1; i++)
-                    headCell[headRows[i]] = read[i];
+                if (_config.ReadEmptyFieldsAsDefault)
+                {
+                    for (int i = 0; i <= read.Length - 1; i++)
+                        headCell[headRows[i]] = read[i] is var value and not "" ? value : null;
+                }
+                else
+                {
+                    for (int i = 0; i <= read.Length - 1; i++)
+                        headCell[headRows[i]] = read[i];
+                }
 
                 yield return headCell;
                 continue;

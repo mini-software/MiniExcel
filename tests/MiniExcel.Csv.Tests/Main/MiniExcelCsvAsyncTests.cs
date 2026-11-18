@@ -348,6 +348,31 @@ public class MiniExcelCsvAsyncTests
     }
 
     [Fact]
+    public async Task CsvReadEmptyFieldsAsDefaultWithHeaderRowTest()
+    {
+        using var file = AutoDeletingPath.Create(ExcelType.Csv);
+        var path = file.ToString();
+        await File.WriteAllTextAsync(path, "C1,C2\nA1,\n,B2\n");
+
+        var config = new CsvConfiguration { ReadEmptyFieldsAsDefault = true };
+
+        var rows = _csvImporter.Query(path, hasHeaderRow: true, configuration: config).ToList();
+        Assert.Equal("A1", rows[0].C1);
+        Assert.Null(rows[0].C2);
+        Assert.Null(rows[1].C1);
+        Assert.Equal("B2", rows[1].C2);
+
+        var asyncRows = await _csvImporter.QueryAsync(path, hasHeaderRow: true, configuration: config).ToListAsync();
+        Assert.Null(asyncRows[0].C2);
+        Assert.Null(asyncRows[1].C1);
+
+        using var reader = _csvImporter.GetDataReader(path, hasHeaderRow: true, configuration: config);
+        Assert.True(reader.Read());
+        Assert.Equal("A1", reader.GetValue(0));
+        Assert.True(reader.IsDBNull(1));
+    }
+
+    [Fact]
     public async Task SaveAsByAsyncEnumerable()
     {
         using var file = AutoDeletingPath.Create();

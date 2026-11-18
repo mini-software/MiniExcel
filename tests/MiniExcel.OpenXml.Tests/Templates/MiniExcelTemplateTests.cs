@@ -440,6 +440,38 @@ public class MiniExcelTemplateTests
     }
 
     [Fact]
+    public void IfStatementComparesNumbersIndependentlyOfCurrentCulture()
+    {
+        using var templatePath = AutoDeletingPath.Create();
+        var templateRows = new[]
+        {
+            new Dictionary<string, object> { ["Name"] = "{{items.name}}", ["Grade"] = "@if(score == 3.5)\nhigh\n@else\nlow\n@endif" }
+        };
+        MiniExcelV2.Exporters.GetOpenXmlExporter().Export(templatePath.ToString(), templateRows);
+
+        using var path = AutoDeletingPath.Create();
+        var currentCulture = CultureInfo.CurrentCulture;
+        try
+        {
+            // In de-DE "." is the group separator, so the literal 3.5 also reads as 35
+            CultureInfo.CurrentCulture = new CultureInfo("de-DE");
+            var value = new
+            {
+                items = new[] { new { name = "Jack", score = 3.5 } }
+            };
+            _excelTemplater.FillTemplate(path.ToString(), templatePath.ToString(), value);
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = currentCulture;
+        }
+
+        var rows = _excelImporter.Query(path.ToString()).ToList();
+        string grade = rows[1].B;
+        Assert.Equal("high", grade.Trim());
+    }
+
+    [Fact]
     public void TestGithubProject()
     {
         var templatePath = PathHelper.GetFile("xlsx/TestTemplateGithubProjects.xlsx");

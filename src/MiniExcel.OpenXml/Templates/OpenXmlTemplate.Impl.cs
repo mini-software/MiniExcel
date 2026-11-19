@@ -1419,12 +1419,22 @@ internal partial class OpenXmlTemplate
                             continue;
                         }
 
-                        var cellValueStr = resolvedValue?.ToString(); // value did encodexml, so don't duplicate encode value (https://gitee.com/dotnetchina/MiniExcel/issues/I4DQUN)
+                        // Convert to string using invariant culture: if the current culture were to be set to de-DE or tr-TR
+                        // a value such as the date "01.01.2021" would read as the number 1012021 once converted back to decimal,
+                        // for "." is utilized as the group separator.
+                        var cellValueStr = resolvedValue is IFormattable formattable && TypeHelper.IsNumericType(resolvedValue.GetType())
+                            ? formattable.ToString(null, CultureInfo.InvariantCulture)
+                            : resolvedValue?.ToString();
+
+                        // No exponent: "1E-30" would underflow decimal to 0, so such values keep their text as before.
+                        const NumberStyles allowedNumberStyles =
+                            NumberStyles.AllowLeadingWhite | NumberStyles.AllowTrailingWhite | NumberStyles.AllowLeadingSign | NumberStyles.AllowDecimalPoint;
+
                         if (isMultiMatch || resolvedValue is string) // if matchs count over 1 need to set type=str (https://user-images.githubusercontent.com/12729184/114530109-39d46d00-9c7d-11eb-8f6b-52ad8600aca3.png)
                         {
                             SetCellType(cell, ExcelDataTypes.InlineString);
                         }
-                        else if (TryParseNumber(resolvedValue, cellValueStr, out var outV))
+                        else if (decimal.TryParse(cellValueStr, allowedNumberStyles, CultureInfo.InvariantCulture, out var outV))
                         {
                             SetCellType(cell, ExcelDataTypes.Numeric);
                             cellValueStr = outV.ToString(CultureInfo.InvariantCulture);
@@ -1468,20 +1478,6 @@ internal partial class OpenXmlTemplate
             var digit = StringHelper.GetNumber(refs[0]);
             dimension.SetAttributeValue("ref", $"A1:{letter}{digit + maxRowIndexDiff}");
         }
-    }
-
-    // Parse with the invariant culture: with the current culture a value such as the date "01.01.2021"
-    // reads as 1012021 where "." is the group separator (de-DE, tr-TR).
-    // No exponent: "1E-30" would underflow decimal to 0, so such values keep their text as before.
-    private const NumberStyles TemplateNumberStyles =
-        NumberStyles.AllowLeadingWhite | NumberStyles.AllowTrailingWhite | NumberStyles.AllowLeadingSign | NumberStyles.AllowDecimalPoint;
-
-    private static bool TryParseNumber(object? value, string? text, out decimal number)
-    {
-        if (value is IFormattable formattable && TypeHelper.IsNumericType(value.GetType()))
-            text = formattable.ToString(null, CultureInfo.InvariantCulture);
-
-        return decimal.TryParse(text, TemplateNumberStyles, CultureInfo.InvariantCulture, out number);
     }
 
     private static bool EvaluateStatement(object? tagValue, string comparisonOperator, string value)

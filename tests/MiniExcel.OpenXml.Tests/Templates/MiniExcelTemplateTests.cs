@@ -644,7 +644,17 @@ public class MiniExcelTemplateTests
 
         // A value in exponent notation that underflows decimal is not written as 0
         using var tinyPath = AutoDeletingPath.Create();
-        _excelTemplater.FillTemplate(tinyPath.ToString(), templatePath, new { Name = "Jack", CreateDate = new DateOnly(2021, 01, 01), VIP = true, Points = 1e-30 });
+
+        try
+        {
+            CultureInfo.CurrentCulture = new CultureInfo("sv-SE");
+            _excelTemplater.FillTemplate(tinyPath.ToString(), templatePath, new { Name = "Jack", CreateDate = new DateOnly(2021, 01, 01), VIP = true, Points = 1e-30 });
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = currentCulture;
+        }
+
         object tinyPoints = _excelImporter.Query(tinyPath.ToString()).ToList()[1].D;
         Assert.NotEqual(0d, Convert.ToDouble(tinyPoints, CultureInfo.InvariantCulture));
     }

@@ -171,7 +171,7 @@ internal sealed partial class CsvReader : IMiniExcelReader
         
         //this code from S.O : https://stackoverflow.com/a/11365961/9131476
         return Regex.Split(row, $"{Regex.Escape(_config.Seperator.ToString())}(?=(?:[^\"]|\"[^\"]*\")*$)")
-            .Select(s => DoubleQuotesRegexImpl.Replace(s.Replace("\"\"", "\""), ""))
+            .Select(s => DoubleQuotesRegexImpl.Replace(s, "").Replace("\"\"", "\""))
             .ToArray();
     }
 

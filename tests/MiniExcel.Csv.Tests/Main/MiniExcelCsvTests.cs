@@ -490,6 +490,19 @@ public class MiniExcelCsvTests
         }
     }
 
+    [Fact]
+    public void ReadFieldsMadeOnlyOfQuotesTest()
+    {
+        using var file = AutoDeletingPath.Create(ExcelType.Csv);
+        var path = file.ToString();
+
+        string[] values = ["\"", "\"\"", "\"a\"", "a\"", "\"a"];
+        _csvExporter.Export(path, values.Select(v => new { v }));
+
+        var rows = _csvImporter.Query(path, hasHeaderRow: true).ToList();
+        Assert.Equal(values, rows.Select(r => (string)r.v));
+    }
+
     private static string Generate(string value)
     {
         using var file = AutoDeletingPath.Create(ExcelType.Csv);

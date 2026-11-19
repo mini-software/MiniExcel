@@ -667,6 +667,54 @@ public class MiniExcelTemplateTests
     }
 
     [Fact]
+    public void TemplateValuesDoNotDependOnCurrentCulture()
+    {
+        var templatePath = PathHelper.GetFile("xlsx/TestTemplateEasyFill.xlsx");
+        using var path = AutoDeletingPath.Create();
+
+        var currentCulture = CultureInfo.CurrentCulture;
+        try
+        {
+            // In de-DE "." is the group separator, so "01.01.2021" also reads as the number 1012021
+            CultureInfo.CurrentCulture = new CultureInfo("de-DE");
+            var value = new
+            {
+                Name = "Jack",
+                CreateDate = new DateOnly(2021, 01, 01),
+                VIP = true,
+                Points = 1.5
+            };
+            _excelTemplater.FillTemplate(path.ToString(), templatePath, value);
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = currentCulture;
+        }
+
+        var rows = _excelImporter.Query(path.ToString()).ToList();
+        object createDate = rows[1].B;
+        object points = rows[1].D;
+        Assert.Equal("01.01.2021", createDate);
+        Assert.Equal(1.5, points);
+
+        // A value in exponent notation that underflows decimal is not written as 0
+        using var tinyPath = AutoDeletingPath.Create();
+
+        try
+        {
+            CultureInfo.CurrentCulture = new CultureInfo("sv-SE");
+            _excelTemplater.FillTemplate(tinyPath.ToString(), templatePath, new { Name = "Jack", CreateDate = new DateOnly(2021, 01, 01), VIP = true, Points = 1e-30 });
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = currentCulture;
+        }
+
+        object tinyPoints = _excelImporter.Query(tinyPath.ToString()).ToList()[1].D;
+        Assert.NotEqual(0d, Convert.ToDouble(tinyPoints, CultureInfo.InvariantCulture));
+    }
+
+    [Fact]
     public void TemplateBasicTest()
     {
         var templatePath = PathHelper.GetFile("xlsx/TestTemplateEasyFill.xlsx");

@@ -1420,12 +1420,22 @@ internal partial class OpenXmlTemplate
                             continue;
                         }
 
-                        var cellValueStr = resolvedValue?.ToString(); // value did encodexml, so don't duplicate encode value (https://gitee.com/dotnetchina/MiniExcel/issues/I4DQUN)
+                        // Convert to string using invariant culture: if the current culture were to be set to de-DE or tr-TR
+                        // a value such as the date "01.01.2021" would read as the number 1012021 once converted back to decimal,
+                        // for "." is utilized as the group separator.
+                        var cellValueStr = resolvedValue is IFormattable formattable && TypeHelper.IsNumericType(resolvedValue.GetType())
+                            ? formattable.ToString(null, CultureInfo.InvariantCulture)
+                            : resolvedValue?.ToString();
+
+                        // No exponent: "1E-30" would underflow decimal to 0, so such values keep their text as before.
+                        const NumberStyles allowedNumberStyles =
+                            NumberStyles.AllowLeadingWhite | NumberStyles.AllowTrailingWhite | NumberStyles.AllowLeadingSign | NumberStyles.AllowDecimalPoint;
+
                         if (isMultiMatch || resolvedValue is string) // if matchs count over 1 need to set type=str (https://user-images.githubusercontent.com/12729184/114530109-39d46d00-9c7d-11eb-8f6b-52ad8600aca3.png)
                         {
                             SetCellType(cell, ExcelDataTypes.InlineString);
                         }
-                        else if (decimal.TryParse(cellValueStr, out var outV))
+                        else if (decimal.TryParse(cellValueStr, allowedNumberStyles, CultureInfo.InvariantCulture, out var outV))
                         {
                             SetCellType(cell, ExcelDataTypes.Numeric);
                             cellValueStr = outV.ToString(CultureInfo.InvariantCulture);

@@ -75,38 +75,4 @@ public sealed partial class MappingTemplater()
 
         await FillTemplateAsync(outputStream, templateStream, values, cancellationToken).ConfigureAwait(false);
     }
-
-#region Obsolete
-[CreateSyncVersion, Obsolete("Please use FillTemplate or FillTemplateAsync instead.")]
-public Task ApplyTemplateAsync<T>(
-    string? outputPath,
-    string? templatePath,
-    IEnumerable<T>? values,
-    CancellationToken cancellationToken = default) where T : class
-{
-    return FillTemplateAsync(outputPath, templatePath, values, cancellationToken);
 }
-
-[CreateSyncVersion, Obsolete("Please use FillTemplate or FillTemplateAsync instead.")]
-public Task ApplyTemplateAsync<T>(
-    Stream? outputStream,
-    Stream? templateStream,
-    IEnumerable<T>? values,
-    CancellationToken cancellationToken = default) where T : class
-{
-    return FillTemplateAsync(outputStream, templateStream, values, cancellationToken);
-}
-
-
-[CreateSyncVersion, Obsolete("Please use FillTemplate or FillTemplateAsync instead.")]
-public Task ApplyTemplateAsync<T>(
-    Stream? outputStream,
-    byte[]? templateBytes,
-    IEnumerable<T>? values,
-    CancellationToken cancellationToken = default) where T : class
-{
-    return FillTemplateAsync(outputStream, templateBytes, values, cancellationToken);
-}
-#endregion
-}
-

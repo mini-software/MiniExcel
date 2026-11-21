@@ -58,7 +58,7 @@ Version 2.0 of MiniExcel is now available with a new, modular, focused API,
 separate NuGet packages for OpenXml and CSV functionality, full support for asynchronously streaming queries through `IAsyncEnumerable`,
 and more.
 
-For more information, see the [new documentation](README_V2.md) and the [upgrade notes](V2-Upgrade-Notes.md).
+For more information, see the [new documentation](README.md) and the [upgrade notes](V2-Upgrade-Notes.md).
 
 
 ### Get Started

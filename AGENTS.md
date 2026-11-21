@@ -29,4 +29,5 @@ Notes for coding agents and new contributors. [CONTRIBUTING.md](CONTRIBUTING.md)
 
 ## Documentation
 
-- v2 usage is documented in `README_V2.md`. A new feature adds a numbered section there.
+- v2 usage is documented in `README.md`. A new feature adds a numbered section there.
+- v1 usage is documented in `README_V1.md`.

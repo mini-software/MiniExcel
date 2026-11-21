@@ -1,7 +1,7 @@
 # MiniExcel
 [![](https://trendshift.io/api/badge/repositories/3859)](https://trendshift.io/repositories/3859?utm_source=repository-badge&amp;utm_medium=badge&amp;utm_campaign=badge-repository-3859)
 
-[![NuGet](https://img.shields.io/nuget/v/MiniExcel.svg)](https://www.nuget.org/packages/MiniExcel)&nbsp;[![Downlods](https://img.shields.io/nuget/dt/MiniExcel.svg)](https://www.nuget.org/packages/MiniExcel)&nbsp;[![.NET Version](https://img.shields.io/badge/.NET-%3E%3D%204.5-red.svg)](https://www.nuget.org/packages/MiniExcel)&nbsp;[![Github Stars](https://img.shields.io/github/stars/mini-software/MiniExcel?logo=github)](https://github.com/mini-software/MiniExcel)&nbsp;[![Gitee Stars](https://gitee.com/dotnetchina/MiniExcel/badge/star.svg)](https://gitee.com/dotnetchina/MiniExcel)&nbsp;[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/mini-software/MiniExcel)
+[![NuGet](https://img.shields.io/nuget/v/MiniExcel.svg)](https://www.nuget.org/packages/MiniExcel)&nbsp;[![Downlods](https://img.shields.io/nuget/dt/MiniExcel.svg)](https://www.nuget.org/packages/MiniExcel)&nbsp;[![.NET Version](https://img.shields.io/badge/.NET-%3E%3D%204.6.2-red.svg)](https://www.nuget.org/packages/MiniExcel)&nbsp;[![Github Stars](https://img.shields.io/github/stars/mini-software/MiniExcel?logo=github)](https://github.com/mini-software/MiniExcel)&nbsp;[![Gitee Stars](https://gitee.com/dotnetchina/MiniExcel/badge/star.svg)](https://gitee.com/dotnetchina/MiniExcel)&nbsp;[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/mini-software/MiniExcel)
 
 ---
 
@@ -122,7 +122,7 @@ var values = new[] // can also be a strong type
 {
     new { Column1 = "MiniExcel", Column2 = 1 },
     new { Column1 = "Github", Column2 = 2 }
-}
+};
 exporter.Export(outputPath, values);
 
 // or
@@ -295,10 +295,12 @@ var sheetNames = excelImporter.GetSheetNames(path);
 
 ```csharp
 var excelImporter = MiniExcelV2.Importers.GetOpenXmlImporter();
-var columns = excelImporter.GetColumnNames(path); 
 
-// columns = [ColumnName1, ColumnName2, ...] when there is a header row
-// columns = ["A","B",...] otherwise
+// when the first row is treated as a header
+var headerColumnNames = excelImporter.GetColumnNames(path, hasHeaderRow: true); // result: [ColumnName1, ColumnName2, ...]
+
+// when the first row is not treated as a header
+var noHeaderColumnNames = excelImporter.GetColumnNames(path, hasHeaderRow: false); // result: ["A","B",...]
 
 ```
 #### 7. Retrieve Comments from an Excel worksheet
@@ -362,7 +364,7 @@ var table = excelImporter.QueryAsDataTable(path);
 
 ```csharp
 var excelImporter = MiniExcelV2.Importers.GetOpenXmlImporter();
-excelImporter.Query(path, startCell: "B3")
+excelImporter.Query(path, startCell: "B3");
 ```
 ![image](https://user-images.githubusercontent.com/12729184/117260316-8593c400-ae81-11eb-9877-c087b7ac2b01.png)
 
@@ -404,7 +406,7 @@ var config = new OpenXmlConfiguration
 };
 
 var importer = MiniExcelV2.Importers.GetOpenXmlImporter();
-importer.Query(path, configuration: config)
+importer.Query(path, configuration: config);
 ```
 
 You can use also change the disk caching triggering file size beyond the default 5 MB:
@@ -417,7 +419,7 @@ var config = new OpenXmlConfiguration
 };
 
 var importer = MiniExcelV2.Importers.GetOpenXmlImporter();
-importer.Query(path, configuration: config)
+importer.Query(path, configuration: config);
 ```
 
 #### 13. Read cell formulas, font colors and number formats
@@ -461,7 +463,7 @@ var values = new[]
 {
     new { Column1 = "MiniExcel", Column2 = 1 },
     new { Column1 = "Github", Column2 = 2}
-}
+};
 exporter.Export(path, values);
 ```
 
@@ -479,7 +481,7 @@ ExportTest[] values =
 [
     new() { Column1 = "MiniExcel", Column2 = 1 },
     new() { Column1 = "Github", Column2 = 2}
-]
+];
 exporter.Export(path, values);
 ```
 
@@ -603,7 +605,7 @@ MiniExcel supports the functionality of inserting a new sheet into an existing E
 
 ```csharp
 var config = new OpenXmlConfiguration { FastMode = true };    
-var value = new { ID = 3, Name = "Mike", InDate = new DateTime(2021, 04, 23) };
+var value = new[] { new { ID = 3, Name = "Mike", InDate = new DateTime(2021, 04, 23) } };
 
 var exporter = MiniExcelV2.Exporters.GetOpenXmlExporter();
 exporter.InsertSheet(path, value, sheetName: "Sheet2", configuration: config);
@@ -758,6 +760,8 @@ Template:
 
 Code:
 ```csharp
+var templater = MiniExcelV2.Templaters.GetOpenXmlTemplater();
+
 // 1. By POCO
 var value = new
 {
@@ -766,7 +770,7 @@ var value = new
     VIP = true,
     Points = 123
 };
-MiniExcel.SaveAsByTemplate(path, templatePath, value);
+templater.FillTemplate(path, templatePath, value);
 
 
 // 2. By Dictionary
@@ -777,7 +781,7 @@ var value = new Dictionary<string, object>()
     ["VIP"] = true,
     ["Points"] = 123
 };
-MiniExcel.SaveAsByTemplate(path, templatePath, value);
+templater.FillTemplate(path, templatePath, value);
 ```
 
 Result:
@@ -928,7 +932,7 @@ var value = new
     Ts = new[] 
     {
         poco,
-        new TestIEnumerableTypePoco{},
+        new Poco { },
         null,
         poco
     }
@@ -1111,7 +1115,7 @@ _Other examples_:
 | Formula | Example                                                                                        |
 |---------|------------------------------------------------------------------------------------------------|
 | Sum     | `$=SUM(C{{$enumrowstart}}:C{{$enumrowend}})`                                                   |
-| Count   | `COUNT(C{{$enumrowstart}}:C{{$enumrowend}})`                                                   |
+| Count   | `$=COUNT(C{{$enumrowstart}}:C{{$enumrowend}})`                                                   |
 | Range   | `$=MAX(C{{$enumrowstart}}:C{{$enumrowend}}) - MIN(C{{$enumrowstart}}:C{{$enumrowend}})`        |
 
 
@@ -1172,7 +1176,7 @@ If the fund entity contains a `SheetName` property, the generated sheet will be 
 If no `SheetName` property exists, they will be named sequentially (e.g. fund1, fund2, fund3, etc).
 
 Within each fund sheet, the primary object is the fund itself; you may reference fields directly in the template with placeholders like `{{Id}}` or `{{Name}}`.
-Nested property references such as `{{Fund.Identy.Type}}` are supported.
+Nested property references such as `{{Funds.Identity.Type}}` are supported.
 
 Result:
 <img width="890" height="999" alt="image" src="https://github.com/user-attachments/assets/fae209ec-b3e2-4f2e-94e4-3b52a37dc364" />
@@ -1647,7 +1651,7 @@ The default line break is `\r\n`, but you can customize it using the `CsvConfigu
 ```csharp
 var config = new CsvConfiguration
 {
-    NewLine='\n'
+    NewLine="\n"
 };
 
 var exporter = MiniExcelV2.Exporters.GetCsvExporter();
@@ -1734,7 +1738,7 @@ var value = new[]
     new { ID = 4, Name = "Frank", InDate = new DateTime(2021, 06, 07) },
     new { ID = 5, Name = "Gloria", InDate = new DateTime(2022, 05, 03) },
 };
-exporter.AppendToCsv(path, value);
+exporter.Append(path, value);
 ```
 
 ### Other functionalities <a name="docs-other" />
@@ -1902,7 +1906,7 @@ table.Rows.Add(new object[] { "Department" }.Concat(employees.Select(e => (objec
 table.Rows.Add(new object[] { "City" }.Concat(employees.Select(e => (object)e.City)).ToArray());
 table.Rows.Add(new object[] { "Country" }.Concat(employees.Select(e => (object)e.Country)).ToArray());
 
-MiniExcel.SaveAs(path, table, printHeader: false);
+MiniExcel.Exporters.GetOpenXmlExporter().Export(path, table, printHeader: false);
 ```
 
 If you need template styling, one workaround is to use scalar placeholders (e.g. `{{Name_1}}`, `{{Name_2}}` ...) and fill a dictionary (requires a fixed maximum number of columns).

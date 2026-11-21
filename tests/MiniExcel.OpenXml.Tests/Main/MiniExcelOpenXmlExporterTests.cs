@@ -40,8 +40,11 @@ public class MiniExcelOpenXmlExporterTests(ITestOutputHelper output)
         var input = chars.Select(s => new { Test = s.ToString() });
          _excelExporter.Export(path.ToString(), input);
 
-        var rows2 = _excelImporter.Query(path.ToString(), true).Select(s => s.Test).ToArray();
         var rows1 = _excelImporter.Query<SaveAsControlChracterVO>(path.ToString()).Select(s => s.Test).ToArray();
+        Assert.Equal(33, rows1.Length);
+
+        var rows2 = _excelImporter.Query(path.ToString(), true).Select(s => s.Test).ToArray();
+        Assert.Equal(33, rows2.Length);
     }
 
     [Fact]
@@ -934,7 +937,7 @@ public class MiniExcelOpenXmlExporterTests(ITestOutputHelper output)
             var sheet2 = p.Worksheet(2);
         
             Assert.Equal("Test", sheet2.Cell("A1").GetString());
-            Assert.True(sheet2.Cell("B1").GetFormattedString() == now.ToString("dd.MM.yyyy HH:mm:ss"));
+            Assert.Equal(now.ToString("dd.MM.yyyy HH:mm:ss", CultureInfo.InvariantCulture), sheet2.Cell("B1").GetFormattedString(CultureInfo.InvariantCulture));
             Assert.Equal("Sheet2", sheet2.Name);
         }
         {
@@ -969,10 +972,10 @@ public class MiniExcelOpenXmlExporterTests(ITestOutputHelper output)
             Assert.Equal("Its Date", sheet3.Cell("B1").GetString());
 
             Assert.Equal("MiniExcel", sheet3.Cell("A2").GetString());
-            Assert.True(sheet3.Cell("B2").GetFormattedString() == now.ToString("dd.MM.yyyy HH:mm:ss"));
+            Assert.Equal(now.ToString("dd.MM.yyyy HH:mm:ss", CultureInfo.InvariantCulture), sheet3.Cell("B2").GetFormattedString(CultureInfo.InvariantCulture));
 
             Assert.Equal("Github", sheet3.Cell("A3").GetString());
-            Assert.True(sheet3.Cell("B3").GetFormattedString() == now.ToString("dd.MM.yyyy HH:mm:ss"));
+            Assert.Equal(now.ToString("dd.MM.yyyy HH:mm:ss", CultureInfo.InvariantCulture), sheet3.Cell("B3").GetFormattedString(CultureInfo.InvariantCulture));
 
             Assert.Equal("Sheet3", sheet3.Name);
         }
@@ -1046,7 +1049,7 @@ public class MiniExcelOpenXmlExporterTests(ITestOutputHelper output)
 
             Assert.Equal("Sheet2", sheet2.Name);
             Assert.Equal("Test", sheet2.Cell("A1").GetString());
-            Assert.Equal(dt.ToString("dd.MM.yyyy HH:mm:ss"), sheet2.Cell("B1").GetFormattedString());
+            Assert.Equal(dt.ToString("dd.MM.yyyy HH:mm:ss", CultureInfo.InvariantCulture), sheet2.Cell("B1").GetFormattedString(CultureInfo.InvariantCulture));
         }
         {
             using var table = new DataTable();
@@ -1082,10 +1085,10 @@ public class MiniExcelOpenXmlExporterTests(ITestOutputHelper output)
             Assert.Equal("Date", sheet3.Cell("B1").GetString());
 
             Assert.Equal("MiniExcel", sheet3.Cell("A2").GetString());
-            Assert.Equal(dt.ToString("dd.MM.yyyy HH:mm:ss"), sheet3.Cell("B2").GetFormattedString());
+            Assert.Equal(dt.ToString("dd.MM.yyyy HH:mm:ss", CultureInfo.InvariantCulture), sheet3.Cell("B2").GetFormattedString(CultureInfo.InvariantCulture));
 
             Assert.Equal("Github", sheet3.Cell("A3").GetString());
-            Assert.Equal(dt.ToString("dd.MM.yyyy HH:mm:ss"), sheet3.Cell("B3").GetFormattedString());
+            Assert.Equal(dt.ToString("dd.MM.yyyy HH:mm:ss", CultureInfo.InvariantCulture), sheet3.Cell("B3").GetFormattedString(CultureInfo.InvariantCulture));
 
             Assert.Equal("Sheet3", sheet3.Name);
         }

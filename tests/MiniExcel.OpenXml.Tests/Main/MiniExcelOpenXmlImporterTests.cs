@@ -338,7 +338,7 @@ public class MiniExcelOpenXmlImporterTests(ITestOutputHelper output)
     {
         var path = PathHelper.GetFile("xlsx/TestTypeMapping_AutoCheckFormat.xlsx");
         using var stream = File.OpenRead(path);
-        var rows = _excelImporter.Query<AutoCheckType>(stream).ToList();
+        _ = _excelImporter.Query<AutoCheckType>(stream).ToList();
     }
 
     [Fact]
@@ -384,7 +384,7 @@ public class MiniExcelOpenXmlImporterTests(ITestOutputHelper output)
         var row = _excelImporter.Query(stream).First();
         var a = row.A;
         var b = row.B;
-        Assert.Equal(DateTime.Parse("2021-03-20T23:39:42.3130000"), (DateTime)a);
+        Assert.Equal(new DateTime(2021, 3, 20, 23, 39, 42, 313), (DateTime)a);
         Assert.Equal(TimeSpan.FromHours(10), (TimeSpan)b);
     }
 

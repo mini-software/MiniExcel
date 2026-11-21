@@ -14,7 +14,7 @@ public class MiniExcelMappingTemplateTests
         {
             double serialDate => DateTime.FromOADate(serialDate),
             DateTime dt => dt,
-            _ => DateTime.Parse(value?.ToString() ?? "")
+            _ => DateTime.Parse(value?.ToString() ?? "", CultureInfo.InvariantCulture)
         };
     }
 
@@ -125,8 +125,8 @@ public class MiniExcelMappingTemplateTests
         
         // Test stream overload
         using var outputPath = AutoDeletingPath.Create();
-        using (var outputStream = File.Create(outputPath.ToString()))
-        using (var templateStream = File.OpenRead(templatePath.ToString()))
+        await using (var outputStream = File.Create(outputPath.ToString()))
+        await using (var templateStream = File.OpenRead(templatePath.ToString()))
         {
             var templater = MiniExcelV2.Templaters.GetMappingTemplater(registry);
             await templater.FillTemplateAsync(outputStream, templateStream, [data]);
@@ -167,7 +167,7 @@ public class MiniExcelMappingTemplateTests
         };
         
         using var outputPath = AutoDeletingPath.Create();
-        using (var outputStream = File.Create(outputPath.ToString()))
+        await using (var outputStream = File.Create(outputPath.ToString()))
         {
             var templater = MiniExcelV2.Templaters.GetMappingTemplater(registry);
             await templater.FillTemplateAsync(outputStream, templateBytes, [data]);

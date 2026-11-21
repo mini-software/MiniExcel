@@ -418,7 +418,7 @@ public class GithubIssuesTests
         using var path = AutoDeletingPath.Create(ExcelType.Csv);
         var value = new[]
         {
-            new TestIssue305Dto{ Dt = DateTimeOffset.Parse("2022-01-22")},
+            new TestIssue305Dto{ Dt = new DateTimeOffset(2022, 1, 22, 0, 0, 0, TimeSpan.Zero)},
             new TestIssue305Dto{ Dt = null}
         };
         _csvExporter.Export(path.ToString(), value);
@@ -505,7 +505,7 @@ public class GithubIssuesTests
                 };
                 var rows = _csvImporter.Query<TestIssue316Dto>(path, configuration: config).ToList();
 
-                Assert.Equal("2018-12-05 00:00:00", rows[0].CreateTime.ToString("yyyy-MM-dd HH:mm:ss"));
+                Assert.Equal("2018-12-05 00:00:00", rows[0].CreateTime.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture));
                 Assert.Equal(123456789m, rows[0].Amount);
             }
 
@@ -516,7 +516,7 @@ public class GithubIssuesTests
                 };
                 var rows = _csvImporter.Query<TestIssue316Dto>(path, configuration: config).ToList();
 
-                Assert.Equal("2018-05-12 00:00:00", rows[0].CreateTime.ToString("yyyy-MM-dd HH:mm:ss"));
+                Assert.Equal("2018-05-12 00:00:00", rows[0].CreateTime.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture));
                 Assert.Equal(123456.789m, rows[0].Amount);
             }
         }
@@ -562,10 +562,10 @@ public class GithubIssuesTests
 
         var values = new Issue507V01[]
         {
-            new() { A = "Github", B = DateTime.Parse("2021-01-01"), C = "abcd", D = 123 },
-            new() { A = "Microsoft \nTest 1", B = DateTime.Parse("2021-02-01"), C = "efgh", D = 123 },
-            new() { A = "Microsoft \rTest 2", B = DateTime.Parse("2021-02-01"), C = "ab\nc\nd", D = 123 },
-            new() { A = "Microsoft\"\" \r\nTest\n3", B = DateTime.Parse("2021-02-01"), C = "a\"\"\nb\n\nc", D = 123 },
+            new() { A = "Github", B = new DateTime(2021, 1, 1), C = "abcd", D = 123 },
+            new() { A = "Microsoft \nTest 1", B = new DateTime(2021, 2, 1), C = "efgh", D = 123 },
+            new() { A = "Microsoft \rTest 2", B = new DateTime(2021, 2, 1), C = "ab\nc\nd", D = 123 },
+            new() { A = "Microsoft\"\" \r\nTest\n3", B = new DateTime(2021, 2, 1), C = "a\"\"\nb\n\nc", D = 123 },
         };
 
         var config = new CsvConfiguration
@@ -604,10 +604,10 @@ public class GithubIssuesTests
     {
         var values = new Issue507V02[]
         {
-            new() { B = DateTime.Parse("2021-01-01"), D = 123 },
-            new() { B = DateTime.Parse("2021-02-01"), D = 123 },
-            new() { B = DateTime.Parse("2021-02-01"), D = 123 },
-            new() { B = DateTime.Parse("2021-02-01"), D = 123 },
+            new() { B = new DateTime(2021, 1, 1), D = 123 },
+            new() { B = new DateTime(2021, 2, 1), D = 123 },
+            new() { B = new DateTime(2021, 2, 1), D = 123 },
+            new() { B = new DateTime(2021, 2, 1), D = 123 },
         };
 
         var config = new CsvConfiguration

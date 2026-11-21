@@ -122,7 +122,6 @@ namespace MiniExcelLib.OpenXml.Tests.FluentMapping
             // Act
             var mapping = registry.GetMapping<SimpleEntity>();
             var grid = mapping.OptimizedCellGrid!;
-            var boundaries = mapping.OptimizedBoundaries!;
 
             // Assert
             // Grid should be 3x3 (rows 2-4, columns B-D which is 2-4)
@@ -303,7 +302,7 @@ namespace MiniExcelLib.OpenXml.Tests.FluentMapping
         {
             // Arrange
             var registry = new MappingRegistry();
-            registry.Configure<SimpleEntity>(cfg =>
+            registry.Configure<SimpleEntity>(_ =>
             {
                 // No mappings
             });

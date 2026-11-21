@@ -136,6 +136,8 @@ public class MiniExcelTemplateTests
             _excelTemplater.FillTemplate(path.ToString(), templatePath, value);
 
             var rows = _excelImporter.Query(path.ToString()).ToList();
+            Assert.Equal(4, rows.Count);
+            
             var dimension = SheetHelper.GetFirstSheetDimensionRefValue(path.ToString());
             Assert.Equal("A1:C5", dimension);
         }
@@ -161,6 +163,8 @@ public class MiniExcelTemplateTests
             _excelTemplater.FillTemplate(path.ToString(), templatePath, value);
 
             var rows = _excelImporter.Query(path.ToString()).ToList();
+            Assert.Equal(5, rows.Count);            
+
             var dimension = SheetHelper.GetFirstSheetDimensionRefValue(path.ToString());
             Assert.Equal("A1:C5", dimension);
         }
@@ -1199,8 +1203,8 @@ public class MiniExcelTemplateTests
         XNamespace spreadsheetNs = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
         XNamespace relationshipNs = "http://schemas.openxmlformats.org/officeDocument/2006/relationships";
         XNamespace packageNs = "http://schemas.openxmlformats.org/package/2006/relationships";
-        using var workbookStream = zip.GetEntry("xl/workbook.xml")!.Open();
-        using var relationshipsStream = zip.GetEntry("xl/_rels/workbook.xml.rels")!.Open();
+        await using var workbookStream = zip.GetEntry("xl/workbook.xml")!.Open();
+        await using var relationshipsStream = zip.GetEntry("xl/_rels/workbook.xml.rels")!.Open();
         var workbook = XDocument.Load(workbookStream);
         var relationships = XDocument.Load(relationshipsStream);
         var sheets = workbook.Descendants(spreadsheetNs + "sheet").Select(sheet =>
@@ -1218,9 +1222,12 @@ public class MiniExcelTemplateTests
         var sharedStrings = new List<string>();
         if (zip.GetEntry("xl/sharedStrings.xml") is { } sharedStringsEntry)
         {
-            using var sharedStringsStream = sharedStringsEntry.Open();
-            sharedStrings = XDocument.Load(sharedStringsStream).Descendants(spreadsheetNs + "si")
-                .Select(si => string.Concat(si.Descendants(spreadsheetNs + "t").Select(t => t.Value))).ToList();
+            await using var sharedStringsStream = sharedStringsEntry.Open();
+            var doc = await XDocument.LoadAsync(sharedStringsStream, LoadOptions.None, CancellationToken.None);
+            sharedStrings = doc
+                .Descendants(spreadsheetNs + "si")
+                .Select(si => string.Concat(si.Descendants(spreadsheetNs + "t").Select(t => t.Value)))
+                .ToList();
         }
 
         string CellText(XDocument sheet, string address)

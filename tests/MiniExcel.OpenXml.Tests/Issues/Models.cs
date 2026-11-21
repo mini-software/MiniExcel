@@ -240,7 +240,7 @@ internal class Issue869
 internal class Issue880
 {
     public string? Test { get; set; }
-    public string? this[int i] => "";
+    public string this[int i] => "";
 }
 
 internal class Issue888Dto

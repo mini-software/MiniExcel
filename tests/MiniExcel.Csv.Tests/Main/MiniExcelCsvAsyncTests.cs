@@ -366,8 +366,8 @@ public class MiniExcelCsvAsyncTests
         Assert.Null(asyncRows[0].C2);
         Assert.Null(asyncRows[1].C1);
 
-        using var reader = _csvImporter.GetDataReader(path, hasHeaderRow: true, configuration: config);
-        Assert.True(reader.Read());
+        await using var reader = _csvImporter.GetDataReader(path, hasHeaderRow: true, configuration: config);
+        Assert.True(await reader.ReadAsync());
         Assert.Equal("A1", reader.GetValue(0));
         Assert.True(reader.IsDBNull(1));
     }
@@ -488,7 +488,7 @@ public class MiniExcelCsvAsyncTests
                 {
                     //We need to compare Dates properly as they will be formatted differently in CSV
                     //Note: if dates have millisecond precision that will be lost when saving to CSV
-                    DateTime.TryParse(resultDataTable.Rows[i][j].ToString(), out var resultDate);
+                    DateTime.TryParse(resultDataTable.Rows[i][j].ToString(), CultureInfo.InvariantCulture, out var resultDate);
                     Assert.Equal((DateTime)dataTable.Rows[i][j], resultDate);
                 }
                 else

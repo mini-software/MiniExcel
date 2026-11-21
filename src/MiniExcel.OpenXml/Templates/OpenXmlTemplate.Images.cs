@@ -89,7 +89,7 @@ internal partial class OpenXmlTemplate
     }
 
     private string GetFormattedValueWithImages(PropertyInfo? propInfo, object? cellValue, Type? type)
-        => GetImageMarker(cellValue) ?? GetFormattedValue(propInfo, cellValue, type);
+        => GetImageMarker(cellValue) ?? GetFormattedValue(propInfo, cellValue, type, _configuration.Culture);
 
     /// <summary>
     /// Walks the remaining segments of a dotted placeholder expression from an already resolved root

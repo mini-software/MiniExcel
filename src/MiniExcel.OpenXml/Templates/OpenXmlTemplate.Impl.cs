@@ -820,7 +820,7 @@ internal partial class OpenXmlTemplate
     /// Formats the given cell value into a string representation suitable for OpenXml injection.
     /// Handles specific types like booleans, dates, enums, and numeric values.
     /// </summary>
-    private static string GetFormattedValue(PropertyInfo? propInfo, object? cellValue, Type? type)
+    private static string GetFormattedValue(PropertyInfo? propInfo, object? cellValue, Type? type, CultureInfo culture)
     {
         string? cellValueStr;
         if (type == typeof(bool))
@@ -829,7 +829,7 @@ internal partial class OpenXmlTemplate
         }
         else if (type == typeof(DateTime))
         {
-            cellValueStr = ConvertToDateTimeString(propInfo, cellValue);
+            cellValueStr = ConvertToDateTimeString(propInfo, cellValue, culture);
         }
         else if (type?.IsEnum is true)
         {
@@ -1020,14 +1020,14 @@ internal partial class OpenXmlTemplate
         rowXml.Append(rowElement.FirstNode);
     }
 
-    private static string? ConvertToDateTimeString(PropertyInfo? propInfo, object? cellValue)
+    private static string? ConvertToDateTimeString(PropertyInfo? propInfo, object? cellValue, CultureInfo culture)
     {
         //TODO:c.SetAttribute("t", "d"); and custom format
         var format = propInfo?.GetAttributeValue((MiniExcelFormatAttribute x) => x.Format)
                      ?? propInfo?.GetAttributeValue((MiniExcelColumnAttribute x) => x.Format)
                      ?? "yyyy-MM-dd HH:mm:ss";
 
-        return (cellValue as DateTime?)?.ToString(format);
+        return (cellValue as DateTime?)?.ToString(format, culture);
     }
 
     //TODO: need to optimize
@@ -1448,7 +1448,7 @@ internal partial class OpenXmlTemplate
                         else if (resolvedValue is DateTime timestamp)
                         {
                             //c.SetAttribute("t", "d");
-                            cellValueStr = timestamp.ToString("yyyy-MM-dd HH:mm:ss");
+                            cellValueStr = timestamp.ToString("yyyy-MM-dd HH:mm:ss", _configuration.Culture);
                         }
 
                         if (string.IsNullOrEmpty(cellValueStr) && string.IsNullOrEmpty(cell.Attribute("t")?.Value))

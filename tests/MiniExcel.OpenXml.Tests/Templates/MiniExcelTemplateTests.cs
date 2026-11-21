@@ -715,6 +715,45 @@ public class MiniExcelTemplateTests
     }
 
     [Fact]
+    public void TemplateDatesIgnoreCurrentCulture()
+    {
+        var culture = CultureInfo.CurrentCulture;
+        try
+        {
+            // th-TH formats dates with the Buddhist calendar (2021 is 2564) and fi-FI separates hours with "."
+            foreach (var name in new[] { "th-TH", "fi-FI" })
+            {
+                CultureInfo.CurrentCulture = new CultureInfo(name);
+
+                using var scalarPath = AutoDeletingPath.Create();
+                _excelTemplater.FillTemplate(scalarPath.ToString(), PathHelper.GetFile("xlsx/TestTemplateEasyFill.xlsx"), new
+                {
+                    Name = "Jack",
+                    CreateDate = new DateTime(2021, 01, 01, 13, 45, 0),
+                    VIP = true,
+                    Points = 123
+                });
+                var scalarRows = _excelImporter.Query(scalarPath.ToString()).ToList();
+                Assert.Equal("2021-01-01 13:45:00", scalarRows[1].B);
+
+                using var listPath = AutoDeletingPath.Create();
+                _excelTemplater.FillTemplate(listPath.ToString(), PathHelper.GetFile("xlsx/TestTemplateGithubProjects.xlsx"), new
+                {
+                    User = "ITWeiHan",
+                    Projects = new[] { new { Name = "MiniExcel", Link = "https://github.com/mini-software/MiniExcel", Star = 146, CreateTime = new DateTime(2021, 03, 01, 13, 45, 0) } },
+                    TotalStar = 146
+                });
+                var listRows = _excelImporter.Query(listPath.ToString()).ToList();
+                Assert.Contains(listRows, row => ((IDictionary<string, object>)row).Values.Contains("2021-03-01 13:45:00"));
+            }
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = culture;
+        }
+    }
+
+    [Fact]
     public void TemplateBasicTest()
     {
         var templatePath = PathHelper.GetFile("xlsx/TestTemplateEasyFill.xlsx");

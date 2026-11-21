@@ -1,25 +1,6 @@
 ## MiniExcel
 
-<div>
-    <a href="https://www.nuget.org/packages/MiniExcel">
-        <img src="https://img.shields.io/nuget/v/MiniExcel.svg" alt="NuGet">
-    </a>
-    <a href="https://www.nuget.org/packages/MiniExcel">
-        <img src="https://img.shields.io/nuget/dt/MiniExcel.svg" alt="">
-    </a>
-    <a href="https://gitee.com/dotnetchina/MiniExcel">
-        <img src="https://gitee.com/dotnetchina/MiniExcel/badge/star.svg" alt="star">
-    </a>
-    <a href="https://github.com/mini-software/MiniExcel" rel="nofollow">
-        <img src="https://img.shields.io/github/stars/mini-software/MiniExcel?logo=github" alt="GitHub stars">
-    </a>
-    <a href="https://www.nuget.org/packages/MiniExcel">
-        <img src="https://img.shields.io/badge/.NET-%3E%3D%204.5-red.svg" alt="version">
-    </a>
-    <a href="https://deepwiki.com/mini-software/MiniExcel">
-        <img src="https://deepwiki.com/badge.svg" alt="Ask DeepWiki">
-    </a>
-</div>
+[![NuGet](https://img.shields.io/nuget/v/MiniExcel.svg)](https://www.nuget.org/packages/MiniExcel)&nbsp;[![Downlods](https://img.shields.io/nuget/dt/MiniExcel.svg)](https://www.nuget.org/packages/MiniExcel)&nbsp;[![.NET Version](https://img.shields.io/badge/.NET-%3E%3D%204.5-red.svg)](https://www.nuget.org/packages/MiniExcel)&nbsp;[![Github Stars](https://img.shields.io/github/stars/mini-software/MiniExcel?logo=github)](https://github.com/mini-software/MiniExcel)&nbsp;[![Gitee Stars](https://gitee.com/dotnetchina/MiniExcel/badge/star.svg)](https://gitee.com/dotnetchina/MiniExcel)&nbsp;[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/mini-software/MiniExcel)
 
 ---
 
@@ -69,11 +50,12 @@ public class UserAccount
     public decimal Points { get; set; }
 }
 
-var userRows = MiniExcel.Query<UserAccount>(path);
+var importer = MiniExcelV2.Importers.GetOpenXmlImporter();
 
-// or simply
+var stronglyTypedRows = importer.Query<UserAccount>(path);
 
-var dynamicRows = MiniExcel.Query(path);
+
+var dynamicRows = importer.Query(path);
 ```
 
 #### Exporting
@@ -81,6 +63,8 @@ var dynamicRows = MiniExcel.Query(path);
 There are multiple ways to exprt data to an Excel document:
 
 ```csharp
+var exporter = MiniExcelV2.Exporters.GetOpenXmlExporter();
+
 // From strongly typed objects
 
 var values = new[]
@@ -88,7 +72,7 @@ var values = new[]
     new { Name = "MiniExcel", Value = 1 },
     new { Name = "Github", Value = 2 }
 };
-MiniExcel.SaveAs(yourPath, values);
+exporter.Export(yourPath, values);
 
 
 // From anonymous objects
@@ -104,7 +88,7 @@ TestType[] values =
     new TestType { Name = "MiniExcel", Value = 1 },
     new TestType { Name = "Github", Value = 2 }
 ];
-MiniExcel.SaveAs(yourPath, values);
+exporter.Export(yourPath, values);
 
 
 //From a IEnumerable<IDictionary<string, object>>
@@ -114,7 +98,7 @@ new List<Dictionary<string, object>>() dicts =
     new Dictionary<string, object> { { "Name", "MiniExcel" }, { "Value", 1 } },
     new Dictionary<string, object> { { "Name", "Github" }, { "Value", 2 } }
 ];
-MiniExcel.SaveAs(yourPath, dicts);
+exporter.Export(yourPath, dicts);
 
 
 // Directly from a IDataReader
@@ -130,7 +114,7 @@ cmd.CommandText = """
     """;
 
 using var reader = cmd.ExecuteReader();
-MiniExcel.SaveAs(yourPath, reader);
+exporter.Export(yourPath, reader);
 
 
 // From a DataTable
@@ -141,5 +125,7 @@ table.Columns.Add("Value", typeof(int));
 table.Rows.Add("MiniExcel", 1);
 table.Rows.Add("Github", 2);
 
-MiniExcel.SaveAs(path, table);
+exporter.Export(path, table);
 ```
+
+MiniExcel provides many other features such as importing and exporting CSV files, Excel template filling, complex mapping and configuration options, and more. The complete documentation can be found on [GitHub](https://github.com/mini-software/MiniExcel/blob/master/README.md).

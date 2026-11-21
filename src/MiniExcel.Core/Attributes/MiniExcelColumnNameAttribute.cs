@@ -6,8 +6,6 @@ public class MiniExcelColumnNameAttribute(string columnName, string[]? aliases =
 {
     private ResourceManager? _resourceManager;
 
-    [Obsolete("Please use the \"Name\" property instead")]
-    public string ExcelColumnName { get; set; } = columnName;
     public string Name { get; set; } = columnName;
     public string[] Aliases { get; set; } = aliases ?? [];
     

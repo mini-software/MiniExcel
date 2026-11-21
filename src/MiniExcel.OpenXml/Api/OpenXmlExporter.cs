@@ -189,36 +189,4 @@ public sealed partial class OpenXmlExporter
         
         return await writer.SaveAsAsync(progress, cancellationToken).ConfigureAwait(false);
     }
-
-    /// <summary>
-    /// Modify the properties of a worksheet in the specified document.
-    /// </summary>
-    /// <param name="path">The path to the OpenXml document.</param>
-    /// <param name="sheetName">The name of the worksheet to modify.</param>
-    /// <param name="newSheetName">The new name to assign to the worksheet, or <c>null</c> to leave as is.</param>
-    /// <param name="newSheetIndex">The position in the workbook to assign to the worksheet, or <c>null</c> to leave as is.</param>
-    /// <param name="newSheetState">The visibility state to assign to the worksheet, or <c>null</c> to leave as is.</param>
-    /// <param name="cancellationToken">The token to monitor for cancellation requests</param>
-    [CreateSyncVersion]
-    [Obsolete("This method will be removed in the full release, please use MiniExcelV2.Editors.GetOpenXmlEditor().AlterSheetInfo instead.")]
-    public async Task AlterSheetAsync(string path, string sheetName, string? newSheetName = null, int? newSheetIndex = null, SheetState? newSheetState = null, CancellationToken cancellationToken = default)
-    {
-        await new OpenXmlEditor().AlterSheetInfoAsync(path, sheetName, newSheetName, newSheetIndex, newSheetState, cancellationToken).ConfigureAwait(false);
-    }
-
-    /// <summary>
-    /// Modify the properties of a worksheet in the specified document.
-    /// </summary>
-    /// <param name="stream">The stream to the OpenXml document.</param>
-    /// <param name="sheetName">The name of the worksheet to modify.</param>
-    /// <param name="newSheetName">The new name to assign to the worksheet, or <c>null</c> to leave as is.</param>
-    /// <param name="newSheetIndex">The position in the workbook to assign to the worksheet, or <c>null</c> to leave as is.</param>
-    /// <param name="newSheetState">The visibility state to assign to the worksheet, or <c>null</c> to leave as is.</param>
-    /// <param name="cancellationToken">The token to monitor for cancellation requests</param>
-    [CreateSyncVersion]
-    [Obsolete("This method will be removed in the full release, please use MiniExcelV2.Editors.GetOpenXmlEditor().AlterSheetInfo instead.")]
-    public async Task AlterSheetAsync(Stream stream, string sheetName, string? newSheetName = null, int? newSheetIndex = null, SheetState? newSheetState = null, CancellationToken cancellationToken = default)
-    {
-        await new OpenXmlEditor().AlterSheetInfoAsync(stream, sheetName, newSheetName, newSheetIndex, newSheetState, cancellationToken).ConfigureAwait(false);
-    }
 }

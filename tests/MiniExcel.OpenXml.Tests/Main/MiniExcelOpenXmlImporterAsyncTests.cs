@@ -213,7 +213,7 @@ public class MiniExcelOpenXmlImporterAsyncTests
         var a = row["A"];
         var b = row["B"];
 
-        Assert.Equal(DateTime.Parse("2021-03-20T23:39:42.3130000"), (DateTime)a);
+        Assert.Equal(new DateTime(2021, 3, 20, 23, 39, 42,313), (DateTime)a);
         Assert.Equal(TimeSpan.FromHours(10), (TimeSpan)b);
     }
 
@@ -469,26 +469,38 @@ public class MiniExcelOpenXmlImporterAsyncTests
     }
 
     [Fact]
-    public async Task MultipleResultSets()
+    public async Task MultipleResultSetsSingleSet()
     {
-        await using var stream =File.OpenRead(PathHelper.GetFile("xlsx/TestTypeMapping.xlsx"));
+        await using var stream = File.OpenRead(PathHelper.GetFile("xlsx/TestTypeMapping.xlsx"));
         await using var dr = await OpenXmlDataReader.CreateAsync(stream, hasHeaderRow: true, leaveOpen: true);
+
         await dr.ReadAsync();
         var v1 = dr.GetValue(0);
+        Assert.Equal("78DE23D2-DCB6-BD3D-EC67-C112BBC322A2", v1.ToString());
+
         var nr = await dr.NextResultAsync();
+        Assert.False(nr);
         await dr.ReadAsync();
+
         var v2 = dr.GetValue(0);
+        Assert.Equal("20D3BFCE-27C3-AD3E-4F70-35C81C7E8E45", v2.ToString());
     }
 
     [Fact]
-    public void MultipleResultSets2()
+    public async Task MultipleResultSetsValidSets()
     {
-        using var stream = File.OpenRead(PathHelper.GetFile("xlsx/TestMultiSheet.xlsx"));
-        using var dr = OpenXmlDataReader.Create(stream, leaveOpen: true);
-        dr.Read();
+        await using var stream = File.OpenRead(PathHelper.GetFile("xlsx/TestMultiSheet.xlsx"));
+        await using var dr = await OpenXmlDataReader.CreateAsync(stream, leaveOpen: true);
+
+        await dr.ReadAsync();
         var v1 = dr.GetValue(0);
-        var nr = dr.NextResult();
-        dr.Read();
+        Assert.Equal(2d, v1);
+
+        var nr = await dr.NextResultAsync();
+        Assert.True(nr);
+
+        await dr.ReadAsync();
         var v2 = dr.GetValue(0);
+        Assert.Equal(1d, v2);
     }
 }

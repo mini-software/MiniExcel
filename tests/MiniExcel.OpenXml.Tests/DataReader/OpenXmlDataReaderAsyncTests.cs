@@ -157,7 +157,7 @@ public class OpenXmlDataReaderAsyncTests
     public async Task GetDataReader_ReadSyncFromAsync_ThrowsException()
     {
         var path = PathHelper.GetFile("xlsx/TestTypeMapping.xlsx");
-        using var stream = File.OpenRead(path);
+        await using var stream = File.OpenRead(path);
         await using var reader = await _excelImporter.GetAsyncDataReader(stream, hasHeaderRow: true);
 
         Assert.Throws<InvalidOperationException>(() => reader.Read());
@@ -167,8 +167,8 @@ public class OpenXmlDataReaderAsyncTests
     public async Task GetDataReader_ReadAsyncFromSync_ReadsCorrectly()
     {
         var path = PathHelper.GetFile("xlsx/TestTypeMapping.xlsx");
-        using var stream = File.OpenRead(path);
-        using var reader = _excelImporter.GetDataReader(stream, hasHeaderRow: true);
+        await using var stream = File.OpenRead(path);
+        await using var reader = _excelImporter.GetDataReader(stream, hasHeaderRow: true);
 
         Assert.True(await reader.ReadAsync());
         Assert.Equal("Wade", reader.GetString(1));

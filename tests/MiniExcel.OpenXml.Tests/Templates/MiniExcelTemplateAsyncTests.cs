@@ -33,6 +33,7 @@ public class MiniExcelTemplateAsyncTests
             };
             await _excelTemplater.FillTemplateAsync(path.ToString(), templatePath, value);
             var rows = await _excelImporter.QueryAsync(path.ToString()).ToListAsync();
+            Assert.Equal(4, rows.Count);
 
             var dimension = SheetHelper.GetFirstSheetDimensionRefValue(path.ToString());
             Assert.Equal("A1:C5", dimension);
@@ -58,6 +59,7 @@ public class MiniExcelTemplateAsyncTests
             
             await _excelTemplater.FillTemplateAsync(path.ToString(), templatePath, value);
             var rows = await _excelImporter.QueryAsync(path.ToString()).ToListAsync();
+            Assert.Equal(5, rows.Count);
 
             var dimension = SheetHelper.GetFirstSheetDimensionRefValue(path.ToString());
             Assert.Equal("A1:C5", dimension);

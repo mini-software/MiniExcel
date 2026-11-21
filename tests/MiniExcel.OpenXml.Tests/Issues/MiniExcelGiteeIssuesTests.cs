@@ -239,7 +239,7 @@ public class MiniExcelGiteeIssuesTests
         try
         {
             var path = PathHelper.GetFile("xlsx/TestIssueI3X2ZL_datetime_error.xlsx");
-            var rows = _excelImporter.Query<IssueI3X2ZLDTO>(path, startCell: "B3").ToList();
+            _ = _excelImporter.Query<IssueI3X2ZLDTO>(path, startCell: "B3").ToList();
         }
         catch (InvalidCastException ex)
         {
@@ -252,7 +252,7 @@ public class MiniExcelGiteeIssuesTests
         try
         {
             var path = PathHelper.GetFile("xlsx/TestIssueI3X2ZL_int_error.xlsx");
-            var rows = _excelImporter.Query<IssueI3X2ZLDTO>(path).ToList();
+            _ = _excelImporter.Query<IssueI3X2ZLDTO>(path).ToList();
         }
         catch (InvalidCastException ex)
         {

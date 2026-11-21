@@ -1776,7 +1776,7 @@ public class MiniExcelGithubIssuesTests(ITestOutputHelper output)
        var cells = package.Worksheet(1);
 
        var fmt = cells.Cell("A2").Style.NumberFormat.Format;
-       Assert.Equal(12_345.68.ToString(fmt), cells.Cell("A2").GetFormattedString());
+       Assert.Equal(12_345.68.ToString(fmt, CultureInfo.InvariantCulture), cells.Cell("A2").GetFormattedString(CultureInfo.InvariantCulture));
        Assert.Equal(12_345.6789, cells.Cell("A2").GetDouble());
     }
 
@@ -1818,14 +1818,14 @@ public class MiniExcelGithubIssuesTests(ITestOutputHelper output)
         using var path = AutoDeletingPath.Create();
         var value = new Dictionary<string, object>
         {
-            { "sheet1",new[]{ new { id = 1, date = DateTime.Parse("2022-01-01") } }},
-            { "sheet2",new[]{ new { id = 2, date = DateTime.Parse("2022-01-01") } }},
+            { "sheet1", new[]{ new { id = 1, date = new DateTime(2022, 1, 01) } }},
+            { "sheet2", new[]{ new { id = 2, date = new DateTime(2022, 1, 01) } }},
         };
         _excelExporter.Export(path.ToString(), value);
 
         var xml = SheetHelper.GetZipFileContent(path.ToString(), "xl/worksheets/_rels/sheet2.xml.rels");
-        var cnt = Regex.Matches(xml, "Id=\"rDrawing2\"").Count;
-        Assert.True(cnt == 1);
+        var cnt = Regex.Count(xml, "Id=\"rDrawing2\"");
+        Assert.Equal(1, cnt);
     }
 
     [Fact]
@@ -2357,7 +2357,7 @@ public class MiniExcelGithubIssuesTests(ITestOutputHelper output)
         Assert.Equal(542.0, cells.Cell("A2").GetDouble());
         Assert.Equal("R$ #,##0.00", cells.Cell("A2").Style.NumberFormat.Format);
         Assert.Equal(DateTime.Today, cells.Cell("B2").GetDateTime());
-        Assert.Equal(DateTime.Today.ToString("dd/MM/yyyy"), cells.Cell("B2").GetFormattedString());
+        Assert.Equal(DateTime.Today.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture), cells.Cell("B2").GetFormattedString(CultureInfo.InvariantCulture));
         Assert.Equal(300.0, cells.Cell("C2").GetDouble());
         Assert.Equal("R$ #,##0.00", cells.Cell("C2").Style.NumberFormat.Format);
     }

@@ -256,24 +256,22 @@ public class MiniExcelCsvTests
             ];
             _csvExporter.Export(path.ToString(), values);
 
-            using (var reader = new StreamReader(path.ToString()))
-            using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+            using var reader = new StreamReader(path.ToString());
+            using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
+            var records = csv.GetRecords<dynamic>().ToList();
             {
-                var records = csv.GetRecords<dynamic>().ToList();
-                {
-                    var row = records[0] as IDictionary<string, object>;
-                    Assert.Equal(@"""<>+-*//}{\\n", row!["1"]);
-                    Assert.Equal("1234567890", row["2"]);
-                    Assert.Equal("True", row["3"]);
-                    Assert.Equal("2021-01-01 00:00:00", row["4"]);
-                }
-                {
-                    var row = records[1] as IDictionary<string, object>;
-                    Assert.Equal("<test>Hello World</test>", row!["1"]);
-                    Assert.Equal("-1234567890", row["2"]);
-                    Assert.Equal("False", row["3"]);
-                    Assert.Equal("2021-01-02 00:00:00", row["4"]);
-                }
+                var row = records[0] as IDictionary<string, object>;
+                Assert.Equal(@"""<>+-*//}{\\n", row!["1"]);
+                Assert.Equal("1234567890", row["2"]);
+                Assert.Equal("True", row["3"]);
+                Assert.Equal("2021-01-01 00:00:00", row["4"]);
+            }
+            {
+                var row = records[1] as IDictionary<string, object>;
+                Assert.Equal("<test>Hello World</test>", row!["1"]);
+                Assert.Equal("-1234567890", row["2"]);
+                Assert.Equal("False", row["3"]);
+                Assert.Equal("2021-01-02 00:00:00", row["4"]);
             }
         }
     }
@@ -307,20 +305,18 @@ public class MiniExcelCsvTests
             var rowsWritten = _csvExporter.Export(path.ToString(), table);
             Assert.Equal(2, rowsWritten);
 
-            using (var reader = new StreamReader(path.ToString()))
-            using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
-            {
-                var records = csv.GetRecords<dynamic>().ToList();
-                Assert.Equal(@"""<>+-*//}{\\n", records[0].a);
-                Assert.Equal("1234567890", records[0].b);
-                Assert.Equal("True", records[0].c);
-                Assert.Equal("2021-01-01 00:00:00", records[0].d);
+            using var reader = new StreamReader(path.ToString());
+            using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
+            var records = csv.GetRecords<dynamic>().ToList();
+            Assert.Equal(@"""<>+-*//}{\\n", records[0].a);
+            Assert.Equal("1234567890", records[0].b);
+            Assert.Equal("True", records[0].c);
+            Assert.Equal("2021-01-01 00:00:00", records[0].d);
 
-                Assert.Equal("<test>Hello World</test>", records[1].a);
-                Assert.Equal("-1234567890", records[1].b);
-                Assert.Equal("False", records[1].c);
-                Assert.Equal("2021-01-02 00:00:00", records[1].d);
-            }
+            Assert.Equal("<test>Hello World</test>", records[1].a);
+            Assert.Equal("-1234567890", records[1].b);
+            Assert.Equal("False", records[1].c);
+            Assert.Equal("2021-01-02 00:00:00", records[1].d);
         }
     }
 
@@ -509,7 +505,7 @@ public class MiniExcelCsvTests
         var path = file.ToString();
 
         using (var writer = new StreamWriter(path))
-        using (var csv = new global::CsvHelper.CsvWriter(writer, CultureInfo.InvariantCulture))
+        using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
         {
             var records = Enumerable.Range(1, 1).Select(_ => new { v1 = value, v2 = value });
             csv.WriteRecords(records);

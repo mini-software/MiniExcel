@@ -823,13 +823,18 @@ internal partial class OpenXmlTemplate
     private static string GetFormattedValue(PropertyInfo? propInfo, object? cellValue, Type? type, CultureInfo culture)
     {
         string? cellValueStr;
-        if (type == typeof(bool))
+        if (cellValue is null or DBNull)
         {
-            cellValueStr = (bool)cellValue! ? "1" : "0";
+            cellValueStr = "";
+        }
+        else if (type == typeof(bool))
+        {
+            cellValueStr = cellValue is true ? "1" : "0";
         }
         else if (type == typeof(DateTime))
         {
-            cellValueStr = ConvertToDateTimeString(propInfo, cellValue, culture);
+            var date = ConvertToDateTimeString(propInfo, cellValue, culture);
+            cellValueStr = XmlHelper.EncodeXml(date);
         }
         else if (type?.IsEnum is true)
         {
@@ -1379,7 +1384,7 @@ internal partial class OpenXmlTemplate
                             //maxRowIndexDiff = dt.Rows.Count <= 1 ? 0 : dt.Rows.Count-1;
                             xRowInfo.PropsMap = dt.Columns.Cast<DataColumn>().ToDictionary(col =>
                                 col.ColumnName,
-                                col => new MemberInfo { UnderlyingMemberType = Nullable.GetUnderlyingType(col.DataType) }
+                                col => new MemberInfo { UnderlyingMemberType = Nullable.GetUnderlyingType(col.DataType) ?? col.DataType }
                             );
                         }
 

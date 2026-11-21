@@ -736,6 +736,17 @@ public class MiniExcelTemplateTests
                 var scalarRows = _excelImporter.Query(scalarPath.ToString()).ToList();
                 Assert.Equal("2021-01-01 13:45:00", scalarRows[1].B);
 
+                // A date inside other text skips the DateTime branch of the scalar path
+                using var mixedTemplatePath = AutoDeletingPath.Create();
+                MiniExcelV2.Exporters.GetOpenXmlExporter().Export(mixedTemplatePath.ToString(), new[]
+                {
+                    new Dictionary<string, object> { ["Label"] = "Created: {{CreateDate}}" }
+                });
+                using var mixedPath = AutoDeletingPath.Create();
+                _excelTemplater.FillTemplate(mixedPath.ToString(), mixedTemplatePath.ToString(), new { CreateDate = new DateTime(2021, 01, 01, 13, 45, 0) });
+                var mixedRows = _excelImporter.Query(mixedPath.ToString()).ToList();
+                Assert.Equal("Created: 2021-01-01 13:45:00", mixedRows[1].A);
+
                 using var listPath = AutoDeletingPath.Create();
                 _excelTemplater.FillTemplate(listPath.ToString(), PathHelper.GetFile("xlsx/TestTemplateGithubProjects.xlsx"), new
                 {

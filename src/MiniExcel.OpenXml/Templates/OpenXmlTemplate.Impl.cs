@@ -1423,9 +1423,13 @@ internal partial class OpenXmlTemplate
                         // Convert to string using invariant culture: if the current culture were to be set to de-DE or tr-TR
                         // a value such as the date "01.01.2021" would read as the number 1012021 once converted back to decimal,
                         // for "." is utilized as the group separator.
-                        var cellValueStr = resolvedValue is IFormattable formattable && TypeHelper.IsNumericType(resolvedValue.GetType())
-                            ? formattable.ToString(null, CultureInfo.InvariantCulture)
-                            : resolvedValue?.ToString();
+                        // Dates are formatted here rather than only in the DateTime branch below, so that a date inside other
+                        // text ("Created: {{CreateDate}}") also uses the configured culture, as in the IEnumerable rows.
+                        var cellValueStr = resolvedValue is DateTime dateValue
+                            ? dateValue.ToString("yyyy-MM-dd HH:mm:ss", _configuration.Culture)
+                            : resolvedValue is IFormattable formattable && TypeHelper.IsNumericType(resolvedValue.GetType())
+                                ? formattable.ToString(null, CultureInfo.InvariantCulture)
+                                : resolvedValue?.ToString();
 
                         // No exponent: "1E-30" would underflow decimal to 0, so such values keep their text as before.
                         const NumberStyles allowedNumberStyles =

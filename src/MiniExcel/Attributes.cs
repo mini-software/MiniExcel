@@ -13,7 +13,15 @@ public sealed class ExcelColumnIndexAttribute : MiniExcelColumnIndexAttribute
     public ExcelColumnIndexAttribute(string excelColumnName) : base(excelColumnName) { }
 }
 
-public sealed class ExcelColumnNameAttribute(string excelColumnName) : MiniExcelColumnNameAttribute(columnName: excelColumnName);
+public sealed class ExcelColumnNameAttribute(string excelColumnName)
+    : MiniExcelColumnNameAttribute(columnName: excelColumnName)
+{
+    public string ExcelColumnName 
+    {
+        get => Name;
+        set => Name = value;
+    }
+}
 
 public sealed class ExcelColumnWidthAttribute(double width) : MiniExcelColumnWidthAttribute(width);
 

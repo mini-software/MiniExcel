@@ -1,7 +1,7 @@
 # MiniExcel
 [![](https://trendshift.io/api/badge/repositories/3859)](https://trendshift.io/repositories/3859?utm_source=repository-badge&amp;utm_medium=badge&amp;utm_campaign=badge-repository-3859)
 
-[![NuGet](https://img.shields.io/nuget/v/MiniExcel.svg)](https://www.nuget.org/packages/MiniExcel)&nbsp;[![Downlods](https://img.shields.io/nuget/dt/MiniExcel.svg)](https://www.nuget.org/packages/MiniExcel)&nbsp;[![.NET Version](https://img.shields.io/badge/.NET-%3E%3D%204.6.2-red.svg)](https://www.nuget.org/packages/MiniExcel)&nbsp;[![Github Stars](https://img.shields.io/github/stars/mini-software/MiniExcel?logo=github)](https://github.com/mini-software/MiniExcel)&nbsp;[![Gitee Stars](https://gitee.com/dotnetchina/MiniExcel/badge/star.svg)](https://gitee.com/dotnetchina/MiniExcel)&nbsp;[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/mini-software/MiniExcel)
+[![NuGet](https://img.shields.io/nuget/v/MiniExcel.svg)](https://www.nuget.org/packages/MiniExcel)&nbsp;[![Downloads](https://img.shields.io/nuget/dt/MiniExcel.svg)](https://www.nuget.org/packages/MiniExcel)&nbsp;[![.NET Version](https://img.shields.io/badge/.NET-%3E%3D%204.6.2-red.svg)](https://www.nuget.org/packages/MiniExcel)&nbsp;[![Github Stars](https://img.shields.io/github/stars/mini-software/MiniExcel?logo=github)](https://github.com/mini-software/MiniExcel)&nbsp;[![Gitee Stars](https://gitee.com/dotnetchina/MiniExcel/badge/star.svg)](https://gitee.com/dotnetchina/MiniExcel)&nbsp;[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/mini-software/MiniExcel)
 
 ---
 
@@ -370,7 +370,7 @@ excelImporter.Query(path, startCell: "B3");
 
 #### 11. Fill Merged Cells
 
-If the Excel sheet being queried contains merged cells it is possble to enable the option to fill every row with the merged value.
+If the Excel sheet being queried contains merged cells it is possible to enable the option to fill every row with the merged value.
 
 ```csharp
 var config = new OpenXmlConfiguration
@@ -540,7 +540,7 @@ exporter.Export("test.xlsx", table);
 
 ####  5. Dapper Query
 
-Thanks to @shaofing (PR #552), by instatiating a `CommandDefinition` with the flag `CommandFlags.NoCache`, you can pass a Dapper query directly in the `Export` function instead of the corresponding `IDataReader`:
+Thanks to @shaofing (PR #552), by instantiating a `CommandDefinition` with the flag `CommandFlags.NoCache`, you can pass a Dapper query directly in the `Export` function instead of the corresponding `IDataReader`:
 
 ```csharp
 using var connection = YourDbConnection();
@@ -1858,7 +1858,7 @@ var dim = importer.GetSheetDimensions(path);
 #### 9. Retrieve Table Data
 
 It is possible to query arbitrary tables from any worksheet. 
-You can either keep it dynamic or map it to a strong-typed object like reqular queries: 
+You can either keep it dynamic or map it to a strong-typed object like regular queries: 
 
 ```csharp
 var importer = MiniExcelV2.Importers.GetOpenXmlImporter();
@@ -1926,7 +1926,7 @@ foreach (var sheet in sheetNames)
 }
 ```
 
-#### Q. Can I retrieve informations about what sheets are visible or active?
+#### Q. Can I retrieve information about what sheets are visible or active?
 
 A. You can use the `GetSheetInformations` method:
 

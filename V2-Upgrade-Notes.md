@@ -10,6 +10,8 @@
 - You can only access the conversion methods `ConvertCsvToXlsx` and `ConvertXlsxToCsv` from the `MiniExcelConverter` utility class, which is part of the full MiniExcel package.
 - If the full MiniExcel package is downloaded, the previous namespace will coexist along the new one, containing a facade `MiniExcel` static class with all the original methods' signatures for backwards compatibility.
 - `IConfiguration` is now `IMiniExcelConfiguration`, but most methods now require the proper implementation (`OpenXmlConfiguration` or `CsvConfiguration`) to be provided rather than the interface
+- Mapping utility attributes have been renamed to have a "MiniExcel" prefix (e.g. `ExcelColumnAttribute` -> `MiniExcelColumnAttribute`)
+- `MiniExcelColumnNameAttribute.ExcelColumnName` property has been renamed to `MiniExcelColumnNameAttribute.Name`, and `CsvConfiguration.ReadEmptyStringAsNull` has been renamed `CsvConfiguration.ReadEmptyFieldsAsDefault`
 - MiniExcel now fully supports asynchronously streaming the queries, 
 so the return type for `OpenXmlImporter.QueryAsync` is `IAsyncEnumerable<T>` instead of `Task<IEnumerable<T>>`
 - When applying a template, unlike version 1.x, the flag for overwriting an already existing file must be provided explicitly.

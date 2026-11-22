@@ -108,6 +108,13 @@ public class MiniExcelGithubIssuesTests(ITestOutputHelper output)
     }
 
     [Fact]
+    public void CellReferenceConverterChecksEveryLetterOfColumnsPastMaximum()
+    {
+        Assert.Equal(0, CellReferenceConverter.GetNumericalIndex("XFE!"));
+        Assert.Throws<InvalidDataException>(() => CellReferenceConverter.GetNumericalIndex("XFE"));
+    }
+
+    [Fact]
     public void QueryRangeAcceptsMaximumWorksheetCoordinates()
     {
         using var path = AutoDeletingPath.Create();

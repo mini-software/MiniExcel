@@ -39,9 +39,8 @@ public static class CellReferenceConverter
             if (c is < 'A' or > 'Z')
                 return 0;
 
-            columnNumber = columnNumber * 26 + c - 'A' + 1;
-            if (columnNumber > MaxColumnNumber)
-                break;
+            if (columnNumber <= MaxColumnNumber)
+                columnNumber = columnNumber * 26 + c - 'A' + 1;
         }
 
         if (columnNumber == 0)

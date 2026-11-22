@@ -30,9 +30,24 @@ public static class CellReferenceConverter
     {
         columnName ??= string.Empty;
         if (AlphabetMappingToInt.TryGetValue(columnName, out var columnIndex))
-            EnsureMappingsUpTo(columnIndex);
+            return columnIndex;
 
-        return columnIndex;
+        // Only names up to the preloaded or already requested index are cached, so work the rest out from the letters
+        var columnNumber = 0;
+        foreach (var c in columnName)
+        {
+            if (c is < 'A' or > 'Z')
+                return 0;
+
+            if (columnNumber <= MaxColumnNumber)
+                columnNumber = columnNumber * 26 + c - 'A' + 1;
+        }
+
+        if (columnNumber == 0)
+            return 0;
+
+        EnsureMappingsUpTo(columnNumber - 1);
+        return columnNumber - 1;
     }
 
     private static void EnsureMappingsUpTo(int columnIndex)

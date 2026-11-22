@@ -94,6 +94,26 @@ public class MiniExcelGithubIssuesTests(ITestOutputHelper output)
             Assert.Equal(expectedColumn, column);
     }
 
+    [Theory]
+    [InlineData("A", 0)]
+    [InlineData("IV", 255)]
+    [InlineData("IW", 256)]
+    [InlineData("AAA", 702)]
+    [InlineData("XFD", 16383)]
+    public void CellReferenceConverterGetsIndexOfColumnsPastPreloadedRange(string columnName, int expectedIndex)
+    {
+        Assert.Equal(expectedIndex, CellReferenceConverter.GetNumericalIndex(columnName));
+        Assert.Equal(expectedIndex, new MiniExcelColumnIndexAttribute(columnName).ExcelColumnIndex);
+        Assert.Equal(expectedIndex, new MiniExcelColumnAttribute { IndexName = columnName }.Index);
+    }
+
+    [Fact]
+    public void CellReferenceConverterChecksEveryLetterOfColumnsPastMaximum()
+    {
+        Assert.Equal(0, CellReferenceConverter.GetNumericalIndex("XFE!"));
+        Assert.Throws<InvalidDataException>(() => CellReferenceConverter.GetNumericalIndex("XFE"));
+    }
+
     [Fact]
     public void QueryRangeAcceptsMaximumWorksheetCoordinates()
     {

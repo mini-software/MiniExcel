@@ -133,6 +133,21 @@ public class OpenXmlDataReaderTests
     }
 
     [Fact]
+    public void GetDataReader_GetCharsWithNullBuffer_ReturnsFieldLength()
+    {
+        var path = PathHelper.GetFile("xlsx/TestTypeMapping.xlsx");
+        using var reader = _excelImporter.GetDataReader(path, hasHeaderRow: true);
+
+        Assert.True(reader.Read());
+        var length = reader.GetChars(1, 0, null, 0, 0);
+        Assert.Equal(4, length);
+
+        var buffer = new char[length];
+        Assert.Equal(4, reader.GetChars(1, 0, buffer, 0, buffer.Length));
+        Assert.Equal("Wade", new string(buffer));
+    }
+
+    [Fact]
     public void GetDataReader_WithMultipleSheets_ReadsAllSheets()
     {
         var path = PathHelper.GetFile("xlsx/TestMultiSheet.xlsx");

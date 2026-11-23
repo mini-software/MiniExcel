@@ -112,6 +112,22 @@ public class CsvDataReaderTests
     }
 
     [Fact]
+    public void GetDataReader_GetCharsWithNullBuffer_ReturnsFieldLength()
+    {
+        var path = PathHelper.GetFile("csv/TestDataReaderHeader.csv");
+        using var stream = File.OpenRead(path);
+        using var reader = _csvImporter.GetDataReader(stream, hasHeaderRow: true);
+
+        Assert.True(reader.Read());
+        var length = reader.GetChars(0, 0, null, 0, 0);
+        Assert.Equal(4, length);
+
+        var buffer = new char[length];
+        Assert.Equal(4, reader.GetChars(0, 0, buffer, 0, buffer.Length));
+        Assert.Equal("John", new string(buffer));
+    }
+
+    [Fact]
     public void GetDataReader_NextResult_ThrowsNotSupportedException()
     {
         var path = PathHelper.GetFile("csv/TestDataReaderHeader.csv");

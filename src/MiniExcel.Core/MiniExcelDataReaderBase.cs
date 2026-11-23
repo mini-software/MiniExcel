@@ -99,11 +99,12 @@ public abstract class MiniExcelDataReaderBase : IMiniExcelDataReader
     public virtual long GetChars(int i, long fieldoffset, char[]? buffer, int bufferoffset, int length)
     {
         var s = GetString(i);
+        if (buffer is null)
+            return s.Length;
+
         var len = Math.Min(length, s.Length - (int)fieldoffset);
         var subs = s.Substring((int)fieldoffset, len);
-
-        if (buffer is not null)
-            subs.AsSpan().CopyTo(buffer.AsSpan(bufferoffset));
+        subs.AsSpan().CopyTo(buffer.AsSpan(bufferoffset));
 
         return subs.Length;
     }

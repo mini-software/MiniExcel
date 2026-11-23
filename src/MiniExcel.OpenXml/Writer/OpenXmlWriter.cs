@@ -457,7 +457,7 @@ internal sealed partial class OpenXmlWriter : IMiniExcelWriter
 
         if (_configuration.EnableWriteNullValueCell && valueIsNull)
         {
-            await writer.WriteAsync(WorksheetXml.EmptyCell(columnReference, RegularCellStyleIndex), cancellationToken).ConfigureAwait(false);
+            await writer.WriteAsync(WorksheetXml.EmptyCell(columnReference, DefaultCellStyleIndex), cancellationToken).ConfigureAwait(false);
             return;
         }
 

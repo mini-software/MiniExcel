@@ -3,6 +3,23 @@ namespace MiniExcelLibs.OpenXml;
 
 public sealed class OpenXmlConfiguration : MiniExcelLib.OpenXml.OpenXmlConfiguration, IConfiguration
 {
+    public OpenXmlConfiguration()
+    {
+        // Needs assignment inside the constructor so that it also assigns the base property through the forwarding setter,
+        // so that the facade object and the original object are kept in sync from the start. 
+        StyleOptions = new OpenXmlStyleOptions();
+    }
+
+    public new OpenXmlStyleOptions StyleOptions
+    {
+        get;
+        set
+        {
+            field = value;
+            base.StyleOptions = value;
+        }
+    }
+
     public new TableStyles TableStyles
     {
         get => base.TableStyles switch
@@ -20,13 +37,23 @@ public sealed class OpenXmlConfiguration : MiniExcelLib.OpenXml.OpenXmlConfigura
 
 public sealed class OpenXmlStyleOptions : MiniExcelLib.OpenXml.Styles.OpenXmlStyleOptions
 {
+    public new OpenXmlHeaderStyle? HeaderStyle
+    {
+        get;
+        set
+        {
+            field = value;
+            base.HeaderStyle = value;
+        }
+    }
+
     public new HorizontalCellAlignment HorizontalAlignment
     {
         get => base.HorizontalAlignment switch
         {
             MiniExcelLib.Core.Enums.HorizontalCellAlignment.Right => HorizontalCellAlignment.Right,
             MiniExcelLib.Core.Enums.HorizontalCellAlignment.Center => HorizontalCellAlignment.Center,
-            _ => HorizontalCellAlignment.Left,
+            _ => HorizontalCellAlignment.Left
         };
         set => base.HorizontalAlignment = value switch
         {

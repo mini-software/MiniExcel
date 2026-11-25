@@ -324,7 +324,7 @@ internal partial class OpenXmlWriter
     private (string, string, string) GetDateTimeValue(DateTime value, MiniExcelColumnMapping? columnMapping)
     {
         string? cellValue;
-        if (!ReferenceEquals(_configuration.Culture, CultureInfo.InvariantCulture))
+        if (string.IsNullOrEmpty(columnMapping?.ExcelFormat) && !ReferenceEquals(_configuration.Culture, CultureInfo.InvariantCulture))
         {
             cellValue = value.ToString(_configuration.Culture);
             return (RegularCellStyleIndex, ExcelDataTypes.CalculatedString, cellValue);

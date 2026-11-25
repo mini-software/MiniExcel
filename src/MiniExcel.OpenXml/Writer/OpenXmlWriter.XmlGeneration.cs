@@ -342,10 +342,10 @@ internal partial class OpenXmlWriter
         // Excel says 1900 was a leap year  :( Replicate an incorrect behavior thanks
         // to Lotus 1-2-3 decision from 1983...
         // https://github.com/ClosedXML/ClosedXML/blob/develop/ClosedXML/Extensions/DateTimeExtensions.cs#L45
-        const int nonExistent1900Feb29SerialDate = 60;
+        const double serialDate01March1900 = 61d;
 
         var oaDate = value.ToOADate();
-        if (oaDate <= nonExistent1900Feb29SerialDate)
+        if (oaDate < serialDate01March1900)
         {
             oaDate--;
         }

@@ -14,6 +14,9 @@ internal sealed partial class OpenXmlWriter : IMiniExcelWriter
     private readonly OpenXmlConfiguration _configuration;
     private readonly List<SheetDto> _sheets = [];
     private readonly List<FileDto> _files = [];
+
+    // Table parts by sheet index, written once all sheets are done
+    private readonly Dictionary<int, string> _tables = [];
     
     private readonly string _sheetName;
     private readonly bool _printHeader;
@@ -86,6 +89,7 @@ internal sealed partial class OpenXmlWriter : IMiniExcelWriter
         await GenerateSharedStringsAsync(cancellationToken).ConfigureAwait(false);
         await GenerateDrawingRelsAsync(cancellationToken).ConfigureAwait(false);
         await GenerateDrawingsAsync(cancellationToken).ConfigureAwait(false);
+        await GenerateTablesAsync(cancellationToken).ConfigureAwait(false);
         await GenerateWorkbookAsync(false, cancellationToken).ConfigureAwait(false);
         await GenerateContentTypesAsync(cancellationToken).ConfigureAwait(false);
 
@@ -97,6 +101,8 @@ internal sealed partial class OpenXmlWriter : IMiniExcelWriter
     {
         if (!_configuration.FastMode)
             throw new InvalidOperationException("Insert requires fast mode to be enabled");
+        if (_configuration.Table is not null)
+            throw new NotSupportedException("Tables can't be added when inserting a sheet into an existing workbook");
 
 #if NET10_0_OR_GREATER
         await using var disposableArchive = _archive.ConfigureAwait(false);
@@ -290,7 +296,7 @@ internal sealed partial class OpenXmlWriter : IMiniExcelWriter
             var currentRowIndex = 0;
             if (_printHeader)
             {
-                await PrintHeaderAsync(writer, mappings!, cancellationToken).ConfigureAwait(false);
+                await PrintHeaderAsync(writer, mappings!, _configuration.StyleOptions.HeaderStyle?.RowHeight, cancellationToken).ConfigureAwait(false);
                 currentRowIndex++;
             }
 
@@ -331,12 +337,19 @@ internal sealed partial class OpenXmlWriter : IMiniExcelWriter
 
             await writer.WriteAsync(WorksheetXml.EndSheetData, cancellationToken).ConfigureAwait(false);
 
-            if (_configuration.AutoFilter)
+            // A sheet can't have its own autofilter on top of a table's
+            var table = _configuration.Table is { } tableOptions ? GetTableXml(tableOptions, mappings, maxRowIndex, maxColumnIndex) : null;
+            if (_configuration.AutoFilter && _configuration.Table is null)
             {
                 await writer.WriteAsync(WorksheetXml.Autofilter(GetDimensionRef(maxRowIndex, maxColumnIndex)), cancellationToken).ConfigureAwait(false);
             }
 
             await writer.WriteAsync(WorksheetXml.Drawing(_currentSheetIndex), cancellationToken).ConfigureAwait(false);
+            if (table is not null)
+            {
+                _tables[_currentSheetIndex] = table;
+                await writer.WriteAsync(WorksheetXml.TableParts(_currentSheetIndex), cancellationToken).ConfigureAwait(false);
+            }
             await writer.WriteAsync(WorksheetXml.EndWorksheet, cancellationToken).ConfigureAwait(false);
 
             if (_archive.Mode == ZipArchiveMode.Update && dimensionPlaceholderPostition != 0)
@@ -414,10 +427,10 @@ internal sealed partial class OpenXmlWriter : IMiniExcelWriter
     }
 
     [CreateSyncVersion]
-    private static async Task PrintHeaderAsync(MiniExcelStreamWriter writer, List<MiniExcelColumnMapping?> mappings, CancellationToken cancellationToken = default)
+    private static async Task PrintHeaderAsync(MiniExcelStreamWriter writer, List<MiniExcelColumnMapping?> mappings, double? rowHeight, CancellationToken cancellationToken = default)
     {
         const int yIndex = 1;
-        await writer.WriteAsync(WorksheetXml.StartRow(yIndex), cancellationToken).ConfigureAwait(false);
+        await writer.WriteAsync(WorksheetXml.StartRow(yIndex, rowHeight), cancellationToken).ConfigureAwait(false);
 
         var xIndex = 1;
         foreach (var map in mappings)
@@ -511,7 +524,7 @@ internal sealed partial class OpenXmlWriter : IMiniExcelWriter
     {
         SheetStyleBuilderBase builder = _configuration.TableStyles switch
         {
-            TableStyles.None => new MinimalSheetStyleBuilder(_sheetStyleBuilderContext),
+            TableStyles.None => new MinimalSheetStyleBuilder(_sheetStyleBuilderContext, _configuration.StyleOptions),
             TableStyles.Default => new DefaultSheetStyleBuilder(_sheetStyleBuilderContext, _configuration.StyleOptions),
             _ => throw new InvalidEnumArgumentException(nameof(_configuration.TableStyles), (int)_configuration.TableStyles, typeof(TableStyles))
         };
@@ -562,6 +575,16 @@ internal sealed partial class OpenXmlWriter : IMiniExcelWriter
             ExcelContentTypes.Drawing,
             ExcelXml.DefaultDrawing(drawing),
             cancellationToken).ConfigureAwait(false);
+    }
+
+    [CreateSyncVersion]
+    private async Task GenerateTablesAsync(CancellationToken cancellationToken)
+    {
+        foreach (var (sheetIndex, table) in _tables)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            await CreateZipEntryAsync(ExcelFileNames.Table(sheetIndex), ExcelContentTypes.Table, table, cancellationToken).ConfigureAwait(false);
+        }
     }
 
     [CreateSyncVersion]

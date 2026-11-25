@@ -120,6 +120,26 @@ internal static class ExcelXml
     internal static string DrawingRelationship(int sheetIndex, string drawingFileName)
         => $"""<Relationship Id="rDrawing{sheetIndex}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing" Target="../drawings/{drawingFileName}" />""";
 
+    internal static string Table(int id, string name, string reference, bool hasHeaderRow, IReadOnlyList<string> columnNames, OpenXmlTableOptions options)
+    {
+        static string Flag(bool value) => value ? "1" : "0";
+
+        var sb = new StringBuilder();
+        sb.Append("""<?xml version="1.0" encoding="UTF-8" standalone="yes"?>""");
+        sb.Append($"""<table xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" id="{id}" name="{name}" displayName="{name}" ref="{reference}"{(hasHeaderRow ? "" : " headerRowCount=\"0\"")} totalsRowShown="0">""");
+        if (hasHeaderRow && options.ShowFilterButton)
+            sb.Append($"""<autoFilter ref="{reference}" />""");
+
+        sb.Append($"""<tableColumns count="{columnNames.Count}">""");
+        for (var i = 0; i < columnNames.Count; i++)
+            sb.Append($"""<tableColumn id="{i + 1}" name="{XmlHelper.EncodeXml(columnNames[i])}" />""");
+        sb.Append("</tableColumns>");
+
+        sb.Append($"""<tableStyleInfo name="{XmlHelper.EncodeXml(options.Style)}" showFirstColumn="{Flag(options.ShowFirstColumn)}" showLastColumn="{Flag(options.ShowLastColumn)}" showRowStripes="{Flag(options.ShowRowStripes)}" showColumnStripes="{Flag(options.ShowColumnStripes)}" />""");
+        sb.Append("</table>");
+        return sb.ToString();
+    }
+
     internal static string TableRelationship(int sheetIndex)
         => $"""<Relationship Id="rTable{sheetIndex}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/table" Target="../tables/table{sheetIndex}.xml"/>""";
 

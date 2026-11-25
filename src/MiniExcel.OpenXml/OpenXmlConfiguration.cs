@@ -9,6 +9,12 @@ public class OpenXmlConfiguration : MiniExcelBaseConfiguration
     public bool FillMergedCells { get; set; }
     public TableStyles TableStyles { get; set; } = TableStyles.Default;
     public bool AutoFilter { get; set; } = true;
+
+    /// <summary>
+    /// When set, each sheet's data is written as an Excel table in this style. The sheet-level <see cref="AutoFilter"/> is then left out.
+    /// </summary>
+    public OpenXmlTableOptions? Table { get; set; }
+
     public bool RightToLeft { get; set; } = false;
     public int FreezeRowCount { get; set; } = 1;
     public int FreezeColumnCount { get; set; } = 0;

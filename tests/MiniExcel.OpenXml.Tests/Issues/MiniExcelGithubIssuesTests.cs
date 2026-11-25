@@ -3400,4 +3400,25 @@ public class MiniExcelGithubIssuesTests(ITestOutputHelper output)
         Assert.Equal(3, rows.Count);
         Assert.All(rows, row => Assert.Equal(new DateTime(2026, 11, 1), (object)row.A));
     }
+
+    [Fact]
+    public async Task TestIssue1073_CultureWithFormatSerializesCorrectly()
+    {
+        var date = new DateTime(2026, 11, 25);
+
+        var rows = new[] { new Issue1073Dto { Date = date } };
+        var config = new OpenXmlConfiguration
+        {
+            Culture = CultureInfo.GetCultureInfo("ja-JP")
+        };
+
+        using var ms = new MemoryStream();
+        await _excelExporter.ExportAsync(ms, rows, configuration: config);
+        
+        ms.Seek(0, SeekOrigin.Begin);
+        using var wb = new XLWorkbook(ms);
+        var cell = wb.Worksheet(1).Cell("A2");
+        
+        Assert.Equal(date, cell.Value.GetDateTime());
+    }
 }

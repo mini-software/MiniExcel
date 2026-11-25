@@ -89,15 +89,17 @@ internal sealed partial class CsvReader : IMiniExcelReader
                     continue;
                 }
 
+                // fields past the last header have no column name, so they are left out
                 var headCell = ExpandoHelper.CreateEmptyByHeaders(headRows);
+                var fieldCount = Math.Min(read.Length, headRows.Count);
                 if (_config.ReadEmptyFieldsAsDefault)
                 {
-                    for (int i = 0; i <= read.Length - 1; i++)
+                    for (int i = 0; i < fieldCount; i++)
                         headCell[headRows[i]] = read[i] is var value and not "" ? value : null;
                 }
                 else
                 {
-                    for (int i = 0; i <= read.Length - 1; i++)
+                    for (int i = 0; i < fieldCount; i++)
                         headCell[headRows[i]] = read[i];
                 }
 

@@ -690,6 +690,40 @@ public class GithubIssuesTests
     }
 
     [Fact]
+    public async Task ExtraFieldsWithHeaderRow()
+    {
+        // fields past the last header have no column name, so they are left out like in the OpenXml reader
+        const string text = "A,B\n1,2,\n3,4,5,6\n";
+
+        using var path = AutoDeletingPath.Create(ExcelType.Csv);
+        File.WriteAllText(path.ToString(), text);
+
+        var rows = _csvImporter.Query(path.ToString(), hasHeaderRow: true).ToList();
+        var asyncRows = await _csvImporter.QueryAsync(path.ToString(), hasHeaderRow: true).ToListAsync();
+
+        foreach (var result in new[] { rows, asyncRows })
+        {
+            Assert.Equal(2, result.Count);
+            var first = (IDictionary<string, object?>)result[0];
+            var second = (IDictionary<string, object?>)result[1];
+            Assert.Equal(["A", "B"], first.Keys);
+            Assert.Equal("1", first["A"]);
+            Assert.Equal("2", first["B"]);
+            Assert.Equal(["A", "B"], second.Keys);
+            Assert.Equal("3", second["A"]);
+            Assert.Equal("4", second["B"]);
+        }
+
+        using var reader = _csvImporter.GetDataReader(path.ToString(), hasHeaderRow: true);
+        Assert.Equal(2, reader.FieldCount);
+        Assert.True(reader.Read());
+        Assert.Equal("2", reader.GetValue(1));
+        Assert.True(reader.Read());
+        Assert.Equal("4", reader.GetValue(1));
+        Assert.False(reader.Read());
+    }
+
+    [Fact]
     public void Issue979NoHeader()
     {
         var csvConfig = new CsvConfiguration

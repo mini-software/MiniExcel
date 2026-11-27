@@ -259,6 +259,12 @@ internal class Issue951Dto
     public object this[string? test] => new();
 }
 
+public class Issue1073Dto
+{
+    [MiniExcelFormat("yyyy/MM/dd")]
+    public DateTime Date { get; set; }
+}
+
 internal class TestIssueI4YCLQ_2Dto
 {
     [MiniExcelColumnIndex("A")] public string? 站点编码 { get; set; }

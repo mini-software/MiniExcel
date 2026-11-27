@@ -270,7 +270,9 @@ internal partial class OpenXmlReader : IMiniExcelReader
                             synthesizedCellCount += (long)(emptyRowCount + selfClosingRowCount) * columnCount;
 
                             if (synthesizedCellCount > maxSynthesizedCells)
-                                throw new InvalidDataException($"The worksheet exceeds the configured limit of {maxSynthesizedCells} synthesized empty cells.");
+                                throw new InvalidDataException(
+                                    $"The worksheet exceeds the configured limit of {maxSynthesizedCells} synthesized empty cells. " +
+                                    $"Increase {nameof(OpenXmlConfiguration)}.{nameof(OpenXmlConfiguration.MaxSynthesizedCells)} or set it to null to disable the limit.");
                         }
 
                         var query = QueryRowAsync(reader, isFirstRow, startRowIndex, nextRowIndex, rowIndex, 

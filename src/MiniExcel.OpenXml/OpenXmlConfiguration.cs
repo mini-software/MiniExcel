@@ -22,7 +22,10 @@ public class OpenXmlConfiguration : MiniExcelBaseConfiguration
 
     /// <summary>
     /// Maximum number of cells that may be synthesized for implicit empty rows during a query.
-    /// Each synthesized row counts as at least one cell. Set to <see langword="null" /> to disable the limit.
+    /// Each synthesized row counts as one cell per column being read: the header columns when a header row is used,
+    /// otherwise every column up to the last column of the sheet or the requested <c>endColumnIndex</c>, so a wide
+    /// <c>QueryRange</c> reaches the limit after a few empty rows.
+    /// The limit does not apply when <see cref="IgnoreEmptyRows" /> is enabled. Set to <see langword="null" /> to disable the limit.
     /// </summary>
     public long? MaxSynthesizedCells { get; set; } = 100_000;
     

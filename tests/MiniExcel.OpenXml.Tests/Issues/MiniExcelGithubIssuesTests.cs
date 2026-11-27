@@ -158,6 +158,39 @@ public class MiniExcelGithubIssuesTests(ITestOutputHelper output)
         Assert.Contains("synthesized empty cells", exception.Message);
     }
 
+    /// <summary>
+    /// https://github.com/mini-software/MiniExcel/issues/1075
+    /// </summary>
+    [Fact]
+    public void QueryRangeSynthesizedCellLimitNamesTheSettingAndCanBeDisabled()
+    {
+        using var path = AutoDeletingPath.Create();
+        _excelExporter.Export(path.FilePath, new[] { new { Value = "control" } });
+        SheetHelper.ReplaceFirstSheetXml(path.FilePath, """
+            <?xml version="1.0" encoding="utf-8"?>
+            <worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+                <sheetData>
+                    <row r="1"><c r="A1" t="str"><v>top</v></c></row>
+                    <row r="150"><c r="A150" t="str"><v>bottom</v></c></row>
+                </sheetData>
+            </worksheet>
+            """);
+
+        // Each of the 148 empty rows counts as the 1000 requested columns, which exceeds the default limit
+        var exception = Assert.Throws<InvalidDataException>(() =>
+            _excelImporter.QueryRange(path.FilePath, startColumnIndex: 1, endColumnIndex: 1000).ToList());
+        Assert.Contains(nameof(OpenXmlConfiguration.MaxSynthesizedCells), exception.Message);
+
+        var config = new OpenXmlConfiguration { MaxSynthesizedCells = null };
+        var rows = _excelImporter.QueryRange(path.FilePath, startColumnIndex: 1, endColumnIndex: 1000, configuration: config).ToList();
+        Assert.Equal(150, rows.Count);
+        Assert.Equal("bottom", (string)rows[149].A);
+
+        var ignoreEmptyRowsConfig = new OpenXmlConfiguration { IgnoreEmptyRows = true };
+        var nonEmptyRows = _excelImporter.QueryRange(path.FilePath, startColumnIndex: 1, endColumnIndex: 1000, configuration: ignoreEmptyRowsConfig).ToList();
+        Assert.Equal(2, nonEmptyRows.Count);
+    }
+
     [Theory]
     [InlineData("1048577")]
     [InlineData("2000000000")]

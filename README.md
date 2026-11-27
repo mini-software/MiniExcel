@@ -457,6 +457,25 @@ Cells covered by a shared formula report `HasFormula` as `true` but leave `Formu
 Font colors can also be theme colors (`Theme` and `Tint`), indexed colors (`Indexed`) or automatic (`Auto`).
 `NumberFormat` is null for cells in the General format.
 
+#### 14. Limit on empty cells
+
+Rows that are missing from the worksheet are returned as empty rows. To protect against worksheets that declare a huge range with little data, a query throws an `InvalidDataException` once the empty cells it would have to fill in exceed `MaxSynthesizedCells` (100,000 by default).
+Each empty row counts as the number of columns being read, so a `QueryRange` with a wide `endColumnIndex` reaches the limit after a few empty rows (e.g. 148 empty rows × 1000 columns).
+
+To read such worksheets raise the limit, or set it to `null` to disable it:
+
+```csharp
+var config = new OpenXmlConfiguration
+{
+    MaxSynthesizedCells = 10_000_000 // or null to disable the limit
+};
+
+var importer = MiniExcelV2.Importers.GetOpenXmlImporter();
+var rows = importer.QueryRange(path, startColumnIndex: 1, endColumnIndex: 1000, configuration: config);
+```
+
+The limit does not apply when `IgnoreEmptyRows` is enabled, since empty rows are then skipped.
+
 
 ### Create/Export Excel  <a name="docs-export" />
 

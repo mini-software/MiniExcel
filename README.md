@@ -1,7 +1,16 @@
-# MiniExcel
-[![](https://trendshift.io/api/badge/repositories/3859)](https://trendshift.io/repositories/3859?utm_source=repository-badge&amp;utm_medium=badge&amp;utm_campaign=badge-repository-3859)
+<h1 align="center">MiniExcel</h1>
+<p align="center">
+    <a href="https://trendshift.io/repositories/3859?utm_source=repository-badge&amp;utm_medium=badge&amp;utm_campaign=badge-repository-3859"><img src="https://trendshift.io/api/badge/repositories/3859" alt="Trendshift"></a>
+</p>
 
-[![NuGet](https://img.shields.io/nuget/v/MiniExcel.svg)](https://www.nuget.org/packages/MiniExcel)&nbsp;[![Downloads](https://img.shields.io/nuget/dt/MiniExcel.svg)](https://www.nuget.org/packages/MiniExcel)&nbsp;[![.NET Version](https://img.shields.io/badge/.NET-%3E%3D%204.6.2-red.svg)](https://www.nuget.org/packages/MiniExcel)&nbsp;[![Github Stars](https://img.shields.io/github/stars/mini-software/MiniExcel?logo=github)](https://github.com/mini-software/MiniExcel)&nbsp;[![Gitee Stars](https://gitee.com/dotnetchina/MiniExcel/badge/star.svg)](https://gitee.com/dotnetchina/MiniExcel)&nbsp;[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/mini-software/MiniExcel)
+<p align="center">
+    <a href="https://www.nuget.org/packages/MiniExcel"><img src="https://img.shields.io/nuget/v/MiniExcel.svg" alt="NuGet"></a>&nbsp;
+    <a href="https://www.nuget.org/packages/MiniExcel"><img src="https://img.shields.io/nuget/dt/MiniExcel.svg" alt="Downloads"></a>&nbsp;
+    <a href="https://www.nuget.org/packages/MiniExcel"><img src="https://img.shields.io/badge/.NET-%3E%3D%204.6.2-red.svg" alt=".NET Version"></a>&nbsp;
+    <a href="https://github.com/mini-software/MiniExcel"><img src="https://img.shields.io/github/stars/mini-software/MiniExcel?logo=github" alt="Github Stars"></a>&nbsp;
+    <a href="https://gitee.com/dotnetchina/MiniExcel"><img src="https://gitee.com/dotnetchina/MiniExcel/badge/star.svg" alt="Gitee Stars"></a>&nbsp;
+    <a href="https://deepwiki.com/mini-software/MiniExcel"><img src="https://deepwiki.com/badge.svg" alt="Ask DeepWiki"></a>
+</p>
 
 ---
 

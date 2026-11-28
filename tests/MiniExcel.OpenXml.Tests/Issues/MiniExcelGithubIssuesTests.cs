@@ -3557,4 +3557,29 @@ public class MiniExcelGithubIssuesTests(ITestOutputHelper output)
 
         Assert.Equal(["B4:C4", "B6:C6"], GetMergeRefs(filled));
     }
+
+    [Fact]
+    public void TestIssue1078_FillTemplateShouldKeepMergesWhoseRowIsNotWrittenInsideGroup()
+    {
+        using var template = new MemoryStream();
+        using (var wb = new XLWorkbook())
+        {
+            var ws = wb.AddWorksheet("Sheet1");
+            ws.Cell("A1").Value = "@group";
+            ws.Range("B2:C2").Merge();
+            ws.Cell("A3").Value = "{{items.name}}";
+            ws.Cell("A4").Value = "@endgroup";
+            wb.SaveAs(template);
+        }
+
+        using var filled = new MemoryStream();
+        var items = new[] { new { name = "a" }, new { name = "b" } };
+        _excelTemplater.FillTemplate(filled, template, new Dictionary<string, object?> { ["items"] = items });
+
+        Assert.Equal(["B1:C1", "B3:C3"], GetMergeRefs(filled));
+        filled.Seek(0, SeekOrigin.Begin);
+        var rows = _excelImporter.Query(filled).ToList();
+        Assert.Equal("a", rows[1].A);
+        Assert.Equal("b", rows[3].A);
+    }
 }

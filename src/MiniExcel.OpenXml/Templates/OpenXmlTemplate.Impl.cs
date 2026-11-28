@@ -200,6 +200,23 @@ internal partial class OpenXmlTemplate
         }
     }
 
+    // The first row of a group may have no collection, e.g. an empty row added above for a merge,
+    // so take the values of the first row in the group that has one.
+    private IList<object> GetGroupValues(int firstRowNo)
+    {
+        for (var rowNo = firstRowNo; rowNo < _xRowInfos.Count; rowNo++)
+        {
+            var rowInfo = _xRowInfos[rowNo];
+            if ((rowInfo.CellIlListValues ?? rowInfo.CellIEnumerableValues?.Cast<object>().ToList()) is { } values)
+                return values;
+
+            if (rowInfo.Row.Elements(SpreadsheetNs + "c").Any(c => c.Value == "@endgroup"))
+                break;
+        }
+
+        return [];
+    }
+
     private static IEnumerable<ConditionalFormatRange> ParseConditionalFormatRanges(XElement worksheet)
     {
         var conditionalFormatting = worksheet.Element(SpreadsheetNs + "conditionalFormatting");
@@ -413,7 +430,7 @@ internal partial class OpenXmlTemplate
 
             if (groupingStarted && !isCellIEnumerableValuesSet)
             {
-                cellIEnumerableValues = rowInfo.CellIlListValues ?? rowInfo.CellIEnumerableValues?.Cast<object>().ToList() ?? [];
+                cellIEnumerableValues = GetGroupValues(rowNo);
                 isCellIEnumerableValuesSet = true;
             }
 
@@ -427,7 +444,7 @@ internal partial class OpenXmlTemplate
                     groupRowCount++;
                 }
 
-                if (cellIEnumerableValues is not null)
+                if (cellIEnumerableValues is not null && rowInfo.CellIEnumerableValues is not null)
                 {
                     rowInfo.CellIEnumerableValuesCount = 1;
 

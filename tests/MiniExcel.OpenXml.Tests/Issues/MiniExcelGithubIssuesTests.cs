@@ -3487,7 +3487,7 @@ public class MiniExcelGithubIssuesTests(ITestOutputHelper output)
     [Fact]
     public void FillTemplateShouldKeepSchemaOrderBetweenSheetDataAndMergeCells()
     {
-        var templatePath = PathHelper.GetFile(@"xlsx\TestIssue1077.xlsx");
+        var templatePath = PathHelper.GetFile("xlsx/TestIssue1077.xlsx");
         using var ms = new MemoryStream();
         _excelTemplater.FillTemplate(ms, templatePath, new Dictionary<string, object?> { ["name"] = "Jack" });
 

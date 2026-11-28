@@ -3454,4 +3454,53 @@ public class MiniExcelGithubIssuesTests(ITestOutputHelper output)
         
         Assert.Equal(date, cell.Value.GetDateTime());
     }
+    
+    [Fact]
+    public void TestIssue1077_FillTemplateShouldWriteSheetProtectionBeforeMergeCells()
+    {
+        using var template = new MemoryStream();
+        using (var wb = new XLWorkbook())
+        {
+            var ws = wb.AddWorksheet("Sheet1");
+            ws.Cell("A1").Value = "{{name}}";
+            ws.Cell("B1").Value = "merged";
+            ws.Range("B1:C1").Merge();
+            ws.Protect();
+            wb.SaveAs(template);
+        }
+
+        using var filled = new MemoryStream();
+        _excelTemplater.FillTemplate(filled, template, new Dictionary<string, object?> { ["name"] = "Jack" });
+
+        filled.Seek(0, SeekOrigin.Begin);
+        using var zip = new ZipArchive(filled);
+        using var stream = zip.GetEntry("xl/worksheets/sheet1.xml")!.Open();
+        var names = XDocument.Load(stream).Root!.Elements().Select(e => e.Name.LocalName).ToList();
+
+        var protection = names.IndexOf("sheetProtection");
+        var merge = names.IndexOf("mergeCells");
+        Assert.True(protection >= 0, "sheetProtection is missing: " + string.Join(",", names));
+        Assert.True(merge >= 0, "mergeCells is missing: " + string.Join(",", names));
+        Assert.True(protection < merge, "sheetProtection must come before mergeCells: " + string.Join(",", names));
+    }
+
+    [Fact]
+    public void FillTemplateShouldKeepSchemaOrderBetweenSheetDataAndMergeCells()
+    {
+        var templatePath = PathHelper.GetFile("xlsx/TestIssue1077.xlsx");
+        using var ms = new MemoryStream();
+        _excelTemplater.FillTemplate(ms, templatePath, new Dictionary<string, object?> { ["name"] = "Jack" });
+
+        ms.Seek(0, SeekOrigin.Begin);
+        using var zip = new ZipArchive(ms);
+        using var stream = zip.GetEntry("xl/worksheets/sheet1.xml")!.Open();
+        var names = XDocument.Load(stream).Root!.Elements().Select(e => e.Name.LocalName).ToList();
+
+        string[] expected =
+        [
+            "dimension", "sheetViews", "sheetFormatPr", "cols", "sheetData", "sheetCalcPr", "sheetProtection", "protectedRanges",
+            "scenarios", "autoFilter", "sortState", "dataConsolidate", "customSheetViews", "mergeCells", "phoneticPr", "pageMargins"
+        ];
+        Assert.Equal(expected, names);
+    }
 }

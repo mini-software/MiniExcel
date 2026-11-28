@@ -54,7 +54,6 @@ internal partial class OpenXmlTemplate
         InjectSharedStrings(sharedStrings, rows);
         GetMergeCells(worksheet);
         AddMissingMergeAnchorCells(newSheetData);
-        AddMissingGroupRows(newSheetData);
         UpdateDimensionAndGetRowsInfo(inputMaps, worksheet, rows, !mergeCells);
         PreserveInlineStringSpaces(rows);
 
@@ -93,7 +92,6 @@ internal partial class OpenXmlTemplate
         InjectSharedStrings(sharedStrings, rows);
         GetMergeCells(worksheet);
         AddMissingMergeAnchorCells(newSheetData);
-        AddMissingGroupRows(newSheetData);
         UpdateDimensionAndGetRowsInfo(inputMaps, worksheet, rows, !mergeCells);
         PreserveInlineStringSpaces(rows);
 
@@ -164,16 +162,33 @@ internal partial class OpenXmlTemplate
             return;
 
         var rowsByIndex = new Dictionary<int, XElement>();
+        var groups = new List<(int Start, int End)>();
+        var groupStart = 0;
         foreach (var row in sheetData.Elements(SpreadsheetNs + "row"))
         {
-            if (int.TryParse(row.Attribute("r")?.Value, out var rowIndex))
-                rowsByIndex[rowIndex] = row;
+            if (!int.TryParse(row.Attribute("r")?.Value, out var rowIndex))
+                continue;
+
+            rowsByIndex[rowIndex] = row;
+            var values = row.Elements(SpreadsheetNs + "c").Select(c => c.Value).ToList();
+            if (values.Contains("@group"))
+                groupStart = rowIndex;
+            else if (values.Contains("@endgroup") && groupStart > 0)
+            {
+                groups.Add((groupStart, rowIndex));
+                groupStart = 0;
+            }
         }
 
         foreach (var mergeCell in _xMergeCellInfos.Values)
         {
             if (!rowsByIndex.TryGetValue(mergeCell.Y1, out var row))
             {
+                // A group repeats its body by the number of rows it has, so a row added inside it
+                // would change where each pass is written. Leave such merges as they are.
+                if (groups.Any(g => mergeCell.Y1 > g.Start && mergeCell.Y1 < g.End))
+                    continue;
+
                 row = new XElement(SpreadsheetNs + "row", new XAttribute("r", mergeCell.Y1));
                 var nextRow = sheetData.Elements(SpreadsheetNs + "row")
                     .FirstOrDefault(r => int.TryParse(r.Attribute("r")?.Value, out var index) && index > mergeCell.Y1);
@@ -200,50 +215,6 @@ internal partial class OpenXmlTemplate
             else
                 nextCell.AddBeforeSelf(anchor);
         }
-    }
-
-    // Each pass of a group advances by the number of rows in its body, so a row left out of sheetData inside
-    // the body would make two passes write the same row. Add an empty <row> for each one.
-    private static void AddMissingGroupRows(XElement sheetData)
-    {
-        var inGroup = false;
-        var previousRowIndex = 0;
-        foreach (var row in sheetData.Elements(SpreadsheetNs + "row").ToList())
-        {
-            if (!int.TryParse(row.Attribute("r")?.Value, out var rowIndex))
-                continue;
-
-            if (inGroup)
-            {
-                for (var missing = previousRowIndex + 1; missing < rowIndex; missing++)
-                    row.AddBeforeSelf(new XElement(SpreadsheetNs + "row", new XAttribute("r", missing)));
-            }
-
-            var values = row.Elements(SpreadsheetNs + "c").Select(c => c.Value).ToList();
-            if (values.Contains("@group"))
-                inGroup = true;
-            else if (values.Contains("@endgroup"))
-                inGroup = false;
-
-            previousRowIndex = rowIndex;
-        }
-    }
-
-    // The first row of a group may have no collection, e.g. an empty row added above for a merge,
-    // so take the values of the first row in the group that has one.
-    private IList<object> GetGroupValues(int firstRowNo)
-    {
-        for (var rowNo = firstRowNo; rowNo < _xRowInfos.Count; rowNo++)
-        {
-            var rowInfo = _xRowInfos[rowNo];
-            if ((rowInfo.CellIlListValues ?? rowInfo.CellIEnumerableValues?.Cast<object>().ToList()) is { } values)
-                return values;
-
-            if (rowInfo.Row.Elements(SpreadsheetNs + "c").Any(c => c.Value == "@endgroup"))
-                break;
-        }
-
-        return [];
     }
 
     private static IEnumerable<ConditionalFormatRange> ParseConditionalFormatRanges(XElement worksheet)
@@ -459,7 +430,7 @@ internal partial class OpenXmlTemplate
 
             if (groupingStarted && !isCellIEnumerableValuesSet)
             {
-                cellIEnumerableValues = GetGroupValues(rowNo);
+                cellIEnumerableValues = rowInfo.CellIlListValues ?? rowInfo.CellIEnumerableValues?.Cast<object>().ToList() ?? [];
                 isCellIEnumerableValuesSet = true;
             }
 
@@ -473,7 +444,7 @@ internal partial class OpenXmlTemplate
                     groupRowCount++;
                 }
 
-                if (cellIEnumerableValues is not null && rowInfo.CellIEnumerableValues is not null)
+                if (cellIEnumerableValues is not null)
                 {
                     rowInfo.CellIEnumerableValuesCount = 1;
 

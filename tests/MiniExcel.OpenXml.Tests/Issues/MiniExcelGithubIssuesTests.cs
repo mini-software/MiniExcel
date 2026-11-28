@@ -3503,4 +3503,92 @@ public class MiniExcelGithubIssuesTests(ITestOutputHelper output)
         ];
         Assert.Equal(expected, names);
     }
+
+    private static List<string> GetMergeRefs(Stream filled)
+    {
+        filled.Seek(0, SeekOrigin.Begin);
+        using var zip = new ZipArchive(filled, ZipArchiveMode.Read, leaveOpen: true);
+        using var stream = zip.GetEntry("xl/worksheets/sheet1.xml")!.Open();
+        XNamespace ns = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
+        return XDocument.Load(stream).Descendants(ns + "mergeCell")
+            .Select(m => m.Attribute("ref")!.Value)
+            .Order()
+            .ToList();
+    }
+
+    [Fact]
+    public void TestIssue1078_FillTemplateShouldKeepMergesWhoseTopLeftCellIsNotWritten()
+    {
+        using var template = new MemoryStream();
+        using (var wb = new XLWorkbook())
+        {
+            var ws = wb.AddWorksheet("Sheet1");
+            ws.Cell("A1").Value = "{{name}}";
+            ws.Cell("B1").Value = "merged";
+            ws.Range("B1:C1").Merge();
+            ws.Range("D1:E1").Merge();
+            ws.Range("A3:C3").Merge();
+            wb.SaveAs(template);
+        }
+
+        using var filled = new MemoryStream();
+        _excelTemplater.FillTemplate(filled, template, new Dictionary<string, object?> { ["name"] = "Jack" });
+
+        Assert.Equal(["A3:C3", "B1:C1", "D1:E1"], GetMergeRefs(filled));
+    }
+
+    [Fact]
+    public void TestIssue1078_FillTemplateShouldMoveMergesWhoseTopLeftCellIsNotWritten()
+    {
+        using var template = new MemoryStream();
+        using (var wb = new XLWorkbook())
+        {
+            var ws = wb.AddWorksheet("Sheet1");
+            ws.Cell("A1").Value = "{{items.name}}";
+            ws.Range("B2:C2").Merge();
+            ws.Cell("A4").Value = "end";
+            ws.Range("B4:C4").Merge();
+            wb.SaveAs(template);
+        }
+
+        using var filled = new MemoryStream();
+        var items = new[] { new { name = "a" }, new { name = "b" }, new { name = "c" } };
+        _excelTemplater.FillTemplate(filled, template, new Dictionary<string, object?> { ["items"] = items });
+
+        Assert.Equal(["B4:C4", "B6:C6"], GetMergeRefs(filled));
+    }
+
+    [Theory]
+    [InlineData(2, 3, 4)]
+    [InlineData(4, 2, 5)]
+    public void TestIssue1078_FillTemplateShouldNotAddRowsInsideGroup(int mergeRow, int listRow, int endRow)
+    {
+        using var template = new MemoryStream();
+        using (var wb = new XLWorkbook())
+        {
+            var ws = wb.AddWorksheet("Sheet1");
+            ws.Cell("A1").Value = "@group";
+            ws.Range($"B{mergeRow}:C{mergeRow}").Merge();
+            ws.Cell($"A{listRow}").Value = "{{items.name}}";
+            ws.Cell($"A{endRow}").Value = "@endgroup";
+            wb.SaveAs(template);
+        }
+
+        using var filled = new MemoryStream();
+        var items = new[] { new { name = "a" }, new { name = "b" } };
+        _excelTemplater.FillTemplate(filled, template, new Dictionary<string, object?> { ["items"] = items });
+
+        filled.Seek(0, SeekOrigin.Begin);
+        using var zip = new ZipArchive(filled, ZipArchiveMode.Read, leaveOpen: true);
+        using var stream = zip.GetEntry("xl/worksheets/sheet1.xml")!.Open();
+        XNamespace ns = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
+        var rowIndexes = XDocument.Load(stream).Descendants(ns + "row")
+            .Select(r => int.Parse(r.Attribute("r")!.Value))
+            .ToList();
+        Assert.Equal(rowIndexes.Distinct().Order(), rowIndexes);
+
+        filled.Seek(0, SeekOrigin.Begin);
+        var names = _excelImporter.Query(filled).Select(r => (string?)r.A).Where(v => !string.IsNullOrEmpty(v));
+        Assert.Equal(["a", "b"], names);
+    }
 }

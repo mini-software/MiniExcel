@@ -53,6 +53,7 @@ internal partial class OpenXmlTemplate
 
         InjectSharedStrings(sharedStrings, rows);
         GetMergeCells(worksheet);
+        AddMissingMergeAnchorCells(newSheetData);
         UpdateDimensionAndGetRowsInfo(inputMaps, worksheet, rows, !mergeCells);
         PreserveInlineStringSpaces(rows);
 
@@ -90,6 +91,7 @@ internal partial class OpenXmlTemplate
 
         InjectSharedStrings(sharedStrings, rows);
         GetMergeCells(worksheet);
+        AddMissingMergeAnchorCells(newSheetData);
         UpdateDimensionAndGetRowsInfo(inputMaps, worksheet, rows, !mergeCells);
         PreserveInlineStringSpaces(rows);
 
@@ -148,6 +150,53 @@ internal partial class OpenXmlTemplate
         {
             var mergeCell = new XMergeCell(cell);
             _xMergeCellInfos[mergeCell.XY1] = mergeCell;
+        }
+    }
+
+    // A merge is carried through the fill by the <c> of its top-left cell, but a blank cell with the default
+    // style may be left out of sheetData, and so may a row with no cells. Add an empty <c> (and <row>) for
+    // such a merge, otherwise it is not written back.
+    private void AddMissingMergeAnchorCells(XElement sheetData)
+    {
+        if (_xMergeCellInfos.Count == 0)
+            return;
+
+        var rowsByIndex = new Dictionary<int, XElement>();
+        foreach (var row in sheetData.Elements(SpreadsheetNs + "row"))
+        {
+            if (int.TryParse(row.Attribute("r")?.Value, out var rowIndex))
+                rowsByIndex[rowIndex] = row;
+        }
+
+        foreach (var mergeCell in _xMergeCellInfos.Values)
+        {
+            if (!rowsByIndex.TryGetValue(mergeCell.Y1, out var row))
+            {
+                row = new XElement(SpreadsheetNs + "row", new XAttribute("r", mergeCell.Y1));
+                var nextRow = sheetData.Elements(SpreadsheetNs + "row")
+                    .FirstOrDefault(r => int.TryParse(r.Attribute("r")?.Value, out var index) && index > mergeCell.Y1);
+
+                if (nextRow is null)
+                    sheetData.Add(row);
+                else
+                    nextRow.AddBeforeSelf(row);
+
+                rowsByIndex[mergeCell.Y1] = row;
+            }
+
+            var cells = row.Elements(SpreadsheetNs + "c").ToList();
+            if (cells.Any(c => c.Attribute("r")?.Value == mergeCell.XY1))
+                continue;
+
+            var anchor = new XElement(SpreadsheetNs + "c", new XAttribute("r", mergeCell.XY1));
+            var nextCell = cells.FirstOrDefault(c =>
+                c.Attribute("r")?.Value is { } r &&
+                CellReferenceConverter.GetNumericalIndex(StringHelper.GetLetters(r)) > mergeCell.X1);
+
+            if (nextCell is null)
+                row.Add(anchor);
+            else
+                nextCell.AddBeforeSelf(anchor);
         }
     }
 

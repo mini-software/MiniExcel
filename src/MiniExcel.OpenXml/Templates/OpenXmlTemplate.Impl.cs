@@ -54,6 +54,7 @@ internal partial class OpenXmlTemplate
         InjectSharedStrings(sharedStrings, rows);
         GetMergeCells(worksheet);
         AddMissingMergeAnchorCells(newSheetData);
+        AddMissingGroupRows(newSheetData);
         UpdateDimensionAndGetRowsInfo(inputMaps, worksheet, rows, !mergeCells);
         PreserveInlineStringSpaces(rows);
 
@@ -92,6 +93,7 @@ internal partial class OpenXmlTemplate
         InjectSharedStrings(sharedStrings, rows);
         GetMergeCells(worksheet);
         AddMissingMergeAnchorCells(newSheetData);
+        AddMissingGroupRows(newSheetData);
         UpdateDimensionAndGetRowsInfo(inputMaps, worksheet, rows, !mergeCells);
         PreserveInlineStringSpaces(rows);
 
@@ -197,6 +199,33 @@ internal partial class OpenXmlTemplate
                 row.Add(anchor);
             else
                 nextCell.AddBeforeSelf(anchor);
+        }
+    }
+
+    // Each pass of a group advances by the number of rows in its body, so a row left out of sheetData inside
+    // the body would make two passes write the same row. Add an empty <row> for each one.
+    private static void AddMissingGroupRows(XElement sheetData)
+    {
+        var inGroup = false;
+        var previousRowIndex = 0;
+        foreach (var row in sheetData.Elements(SpreadsheetNs + "row").ToList())
+        {
+            if (!int.TryParse(row.Attribute("r")?.Value, out var rowIndex))
+                continue;
+
+            if (inGroup)
+            {
+                for (var missing = previousRowIndex + 1; missing < rowIndex; missing++)
+                    row.AddBeforeSelf(new XElement(SpreadsheetNs + "row", new XAttribute("r", missing)));
+            }
+
+            var values = row.Elements(SpreadsheetNs + "c").Select(c => c.Value).ToList();
+            if (values.Contains("@group"))
+                inGroup = true;
+            else if (values.Contains("@endgroup"))
+                inGroup = false;
+
+            previousRowIndex = rowIndex;
         }
     }
 

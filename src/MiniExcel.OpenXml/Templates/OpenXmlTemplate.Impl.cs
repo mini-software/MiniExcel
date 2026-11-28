@@ -240,6 +240,21 @@ internal partial class OpenXmlTemplate
         var beforeSheetData = worksheet.Element(SpreadsheetNs + "sheetData")?.ElementsBeforeSelf() ?? [];
         var afterSheetData = (worksheet.Element(SpreadsheetNs + "sheetData")?.ElementsAfterSelf() ?? []).ToList();
 
+        // Extract all elements that come after sheetData but before autoFilter to insert them back after the data has been handled
+        var betweenSheetDataAndAutoFilter = afterSheetData.FindAll(e =>
+            e.Name.LocalName is "sheetCalcPr" or "sheetProtection" or "protectedRanges" or "scenarios");
+        afterSheetData.RemoveAll(e =>
+            e.Name.LocalName is "sheetCalcPr" or "sheetProtection" or "protectedRanges" or "scenarios");
+        
+        // Extract all elements that come after autoFilter but before mergeCells to add them back at the correct place after autoFilter has been handled
+        var betweenAutoFilterAndMergeCells = afterSheetData.FindAll(e =>
+            e.Name.LocalName is "sortState" or "dataConsolidate" or "customSheetViews");
+        afterSheetData.RemoveAll(e =>
+            e.Name.LocalName is "sortState" or "dataConsolidate" or "customSheetViews");
+
+        // Shadowing the remaining elements in afterSheetData to mark that they are to be inserted after mergeCells has been handled
+        var afterMergeCells = afterSheetData;
+
         await writer.WriteStartElementAsync(null, "worksheet", Schemas.SpreadsheetmlXmlMain).ConfigureAwait(false);
         foreach (var attr in worksheet.Attributes())
         {
@@ -479,7 +494,7 @@ internal partial class OpenXmlTemplate
         // ECMA-376 element order: sheetData → sheetCalcPr → sheetProtection → protectedRanges → scenarios →
         // autoFilter → sortState → dataConsolidate → customSheetViews → mergeCells → phoneticPr → conditionalFormatting
         // 0. elements of the original sheet that must come before autoFilter and mergeCells (#1077)
-        foreach (var element in afterSheetData.Where(e => e.Name.LocalName is "sheetCalcPr" or "sheetProtection" or "protectedRanges" or "scenarios"))
+        foreach (var element in betweenSheetDataAndAutoFilter)
         {
 #if NET
             await element.WriteToAsync(writer, cancellationToken).ConfigureAwait(false);
@@ -495,7 +510,7 @@ internal partial class OpenXmlTemplate
         }
 
         // 1b. elements of the original sheet that sit between autoFilter and mergeCells
-        foreach (var element in afterSheetData.Where(e => e.Name.LocalName is "sortState" or "dataConsolidate" or "customSheetViews"))
+        foreach (var element in betweenAutoFilterAndMergeCells)
         {
 #if NET
             await element.WriteToAsync(writer, cancellationToken).ConfigureAwait(false);
@@ -532,7 +547,7 @@ internal partial class OpenXmlTemplate
         var shouldWriteDrawing = hasImagesForSheet && !worksheet.Elements(SpreadsheetNs + "drawing").Any();
         var drawingWritten = false;
 
-        foreach (var afterElement in afterSheetData.Where(e => e.Name.LocalName is not ("sheetCalcPr" or "sheetProtection" or "protectedRanges" or "scenarios" or "sortState" or "dataConsolidate" or "customSheetViews")))
+        foreach (var afterElement in afterMergeCells)
         {
             if (shouldWriteDrawing && !drawingWritten)
             {
